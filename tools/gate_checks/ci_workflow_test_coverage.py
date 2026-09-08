@@ -42,6 +42,7 @@ taxonomy markers under `tests/parity/`, and does not auto-apply `slow`/`extra_sl
 
 import ast
 import subprocess
+import tomllib
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -225,21 +226,49 @@ def directory_is_slow_only_legitimate(files_in_dir: List[str], repo_root: Path) 
     return all(file_is_fully_slow_marked(repo_root / f) for f in files_in_dir)
 
 
+def pytest_norecursedirs(pyproject_path: Path) -> Set[str]:
+    """Reads `[tool.pytest.ini_options].norecursedirs` from `pyproject_path` (the same list
+    `pytest` itself consults). Returns an empty set if the file or key is missing -- never raises,
+    since a coverage check should not itself become a hard dependency on `pyproject.toml`'s exact
+    shape."""
+    if not pyproject_path.exists():
+        return set()
+    data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    entries = data.get("tool", {}).get("pytest", {}).get("ini_options", {}).get("norecursedirs", [])
+    return set(entries)
+
+
+def directory_is_excluded_from_pytest_collection(directory: str, norecursedirs: Set[str]) -> bool:
+    """True iff any path segment of `directory` matches a `norecursedirs` basename -- mirrors
+    pytest's own basename-matching semantics (`norecursedirs` matches directory basenames
+    anywhere in the recursion path, not full paths, per `pyproject.toml`'s own confirmed
+    convention). A directory excluded this way is never collected in ANY job (fast-lane or
+    `slow`), so it cannot be a "silently orphaned, would otherwise run" gap this check exists to
+    catch -- e.g. `tests/archive/`, an intentional frozen-historical-snapshot location
+    (`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`), not an oversight."""
+    return bool(set(Path(directory).parts) & norecursedirs)
+
+
 def check_ci_workflow_test_coverage(
     workflow_path: Path,
     repo_root: Path,
     test_files: Optional[List[str]] = None,
+    norecursedirs: Optional[Set[str]] = None,
 ) -> List[dict]:
     """Aggregate check: every real test directory (`git ls-files`-discovered, one entry per
     directory directly containing a `test_*.py` file) must be covered by at least one fast-lane
     job's explicit `pytest` path list, or be entirely `slow`/`extra_slow`-marked (in which case
-    the `slow` job's blanket scan legitimately covers it).
+    the `slow` job's blanket scan legitimately covers it), or excluded from pytest collection
+    entirely via `pyproject.toml`'s `norecursedirs` (in which case it cannot silently fail to run
+    in CI -- it is never collected anywhere, by design).
 
     Returns a flat `list[dict]` of `{"condition", "status", "evidence"}`, matching
     `done_checker_static.run_static_precheck`'s shape. `status` is `PASS` or `FAIL`.
 
     `test_files`: injectable file list (paths relative to `repo_root`) for fixture-based testing
     without a real git repo. `None` (the default) shells out to `git ls_test_files(repo_root)`.
+    `norecursedirs`: injectable override for fixture-based testing. `None` (the default) reads
+    `repo_root / "pyproject.toml"` via `pytest_norecursedirs()`.
     """
     workflow_text = workflow_path.read_text(encoding="utf-8")
     job_paths = parse_job_pytest_paths(workflow_text)
@@ -253,9 +282,27 @@ def check_ci_workflow_test_coverage(
     files = test_files if test_files is not None else git_ls_test_files(repo_root)
     dir_map = directories_from_test_files(files)
 
+    resolved_norecursedirs = (
+        norecursedirs if norecursedirs is not None
+        else pytest_norecursedirs(repo_root / "pyproject.toml")
+    )
+
     results: List[dict] = []
     for directory in sorted(dir_map):
         files_in_dir = dir_map[directory]
+
+        if directory_is_excluded_from_pytest_collection(directory, resolved_norecursedirs):
+            results.append({
+                "condition": f"ci_test_dir_covered:{directory}",
+                "status": "PASS",
+                "evidence": (
+                    f"{directory} has no fast-lane job path entry, but is excluded from pytest "
+                    f"collection entirely via pyproject.toml's [tool.pytest.ini_options] "
+                    f"norecursedirs -- it is never collected by any job (fast-lane or slow), by "
+                    f"design, so it cannot silently fail to run."
+                ),
+            })
+            continue
 
         if is_directory_covered(directory, fastlane_paths):
             results.append({

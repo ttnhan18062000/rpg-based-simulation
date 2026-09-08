@@ -256,6 +256,13 @@ class TestStaticGuards:
 
         assert rc.CACHE_DB_PATH != ks._DEFAULT_DB
 
+    def test_retrieval_cache_imports_open_connection_with_limits_from_new_location(self):
+        """TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE moved open_connection_with_limits() out of
+        the (now-archived) tools/knowledge_gateway_redaction.py into tools/write_path_guard.py."""
+        source = Path(rc.__file__).read_text()
+        assert "from tools import knowledge_gateway_redaction" not in source
+        assert "from tools import write_path_guard" in source
+
 
 # ---------------------------------------------------------------------------
 # Lifecycle backstop — manual prune (Durable State Rule / Decision C)

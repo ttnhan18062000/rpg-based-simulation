@@ -48,9 +48,11 @@ if str(_REPO_ROOT) not in sys.path:
 # TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING) — open_connection_with_limits() applies its own
 # §9 connection-tuning defaults to the real CACHE_DB_PATH, per _get_level1_connection() below. The
 # 3 legacy marker-only tables' own 8 _get_connection() call sites are untouched (DD4) and never call
-# this module. One-directional dependency only: knowledge_gateway_redaction.py imports nothing from
-# this module (verified by direct read), so no import cycle is created.
-from tools import knowledge_gateway_redaction as _kgr_redaction  # noqa: E402
+# this module. One-directional dependency only: write_path_guard.py imports nothing from this
+# module (verified by direct read), so no import cycle is created. Relocated from
+# knowledge_gateway_redaction.py by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE once the Knowledge
+# Gateway MCP package that module belonged to was archived.
+from tools import write_path_guard as _write_path_guard  # noqa: E402
 
 # Manually bumped on breaking changes to this module's own key-derivation or invalidation logic —
 # no existing "version of retrieval logic" concept exists anywhere in the repo to derive this from.
@@ -624,12 +626,12 @@ def read_current_run_sidecar() -> dict:
 
 def _get_access_log_connection() -> sqlite3.Connection:
     """Mirrors _get_level1_connection()/_get_level2_connection()'s own connection-tuning mechanics
-    exactly — opens CACHE_DB_PATH via knowledge_gateway_redaction.open_connection_with_limits(),
-    not the plain _get_connection() the 3 legacy tables use. Runs migration_001 first (creates
+    exactly — opens CACHE_DB_PATH via write_path_guard.open_connection_with_limits(), not the
+    plain _get_connection() the 3 legacy tables use. Runs migration_001 first (creates
     retrieval_cache_generation, a prerequisite migration_005 assumes exists — same ordering
     constraint _ensure_level2_schema_for_read()'s own docstring already documents for
     migration_002), then migration_005 itself."""
-    conn = _kgr_redaction.open_connection_with_limits(CACHE_DB_PATH)
+    conn = _write_path_guard.open_connection_with_limits(CACHE_DB_PATH)
     migration_001_add_level1_tables(conn)
     migration_005_add_cache_access_log_table(conn)
     return conn
@@ -1033,12 +1035,12 @@ def check_provider_result_cache(
 
 
 def _get_level1_connection() -> sqlite3.Connection:
-    """DD4/DD2 — opens CACHE_DB_PATH via knowledge_gateway_redaction.open_connection_with_limits()
-    (that helper's own §9 connection-tuning defaults), not the plain _get_connection() the 3 legacy
+    """DD4/DD2 — opens CACHE_DB_PATH via write_path_guard.open_connection_with_limits() (that
+    helper's own §9 connection-tuning defaults), not the plain _get_connection() the 3 legacy
     tables use.
     Ensures the Level 1 table and the redaction_policy_version column (DD3, migration_003) exist
     before any write."""
-    conn = _kgr_redaction.open_connection_with_limits(CACHE_DB_PATH)
+    conn = _write_path_guard.open_connection_with_limits(CACHE_DB_PATH)
     migration_001_add_level1_tables(conn)
     migration_003_add_redaction_policy_version_column(conn)
     return conn
@@ -1058,7 +1060,7 @@ def write_provider_result_cache(
     """INSERT OR REPLACE by the (query_hash, repo_branch_scope) primary key — the sole real write
     path for this table (orchestrated only by
     tools/knowledge_gateway_cache.py::perform_cache_write(), after
-    knowledge_gateway_redaction.evaluate_write_candidate() has already returned ALLOW; never called
+    write_path_guard.evaluate_write_candidate() has already returned ALLOW; never called
     with raw/unredacted content)."""
     conn = _get_level1_connection()
     try:
@@ -1226,15 +1228,15 @@ def check_context_packet_cache(
 
 def _get_level2_connection() -> sqlite3.Connection:
     """Mirrors _get_level1_connection() exactly in its own connection-tuning mechanics — opens
-    CACHE_DB_PATH via knowledge_gateway_redaction.open_connection_with_limits() (that helper's own
-    §9 connection-tuning defaults), not the plain _get_connection() the 3 legacy tables use.
+    CACHE_DB_PATH via write_path_guard.open_connection_with_limits() (that helper's own §9
+    connection-tuning defaults), not the plain _get_connection() the 3 legacy tables use.
     Ensures the Level 2 table and its migration_004 write-path columns exist before any write.
     Also runs migration_001_add_level1_tables() first (deviation from plan.md's literal text,
     discovered during Test-phase execution — see _ensure_level2_schema_for_read()'s own docstring
     for the full explanation): migration_002_add_level2_tables() assumes
     retrieval_cache_generation already exists, which only migration_001 creates, and Level 2's
     write hook is reached before the Level 1 write hook on a genuinely fresh DB (plan.md Step 5)."""
-    conn = _kgr_redaction.open_connection_with_limits(CACHE_DB_PATH)
+    conn = _write_path_guard.open_connection_with_limits(CACHE_DB_PATH)
     migration_001_add_level1_tables(conn)
     migration_002_add_level2_tables(conn)
     migration_004_add_level2_write_path_columns(conn)
@@ -1275,7 +1277,7 @@ def write_context_packet_cache(
 ) -> None:
     """INSERT OR REPLACE by the packet_id primary key — the sole real write path for this table
     (orchestrated only by tools/knowledge_gateway_cache.py::perform_context_packet_cache_write(),
-    after knowledge_gateway_redaction.evaluate_write_candidate() has already returned ALLOW; never
+    after write_path_guard.evaluate_write_candidate() has already returned ALLOW; never
     called with raw/unredacted content). Mirrors write_provider_result_cache()'s shape exactly,
     including its conn.commit()/finally: conn.close() structure."""
     conn = _get_level2_connection()

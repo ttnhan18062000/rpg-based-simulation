@@ -8875,7 +8875,12 @@
     Sec.18.1 repeated-demand design using only deterministic intent/entity_id/normalized_filters/query_hash).
   proof_type: regression
   test_path: tests/tools/test_kgmcp_measurement_baseline.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    only this entry's test_path (tests/tools/test_kgmcp_measurement_baseline.py) moved
+    to tests/archive/test_kgmcp_measurement_baseline.py -- the v2_evidence source,
+    tools/agent-monitoring/kgmcp_baseline_corpus.py, was left in place (Step 12's
+    explicit no-op) and is unaffected. test_path below describes the pre-archival
+    live state and is kept as historical record, not re-derived.
   support_boundary: Agent-orchestration/measurement tooling only -- no simulation
     behavior involved, no src/ file touched. No live Knowledge Gateway MCP gateway
     code added or wired anywhere (tools/search_mcp.py, tools/retrieval_cache.py, tools/hybrid_retrieval.py,
@@ -8920,7 +8925,10 @@
     provider_capabilities_graphify.json (frozen capability descriptors consumed read-only).
   proof_type: regression
   test_path: tests/tools/test_knowledge_gateway_router.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: Agent-orchestration/knowledge-retrieval tooling only -- no simulation
     behavior involved, no src/ file touched. No live MCP tool surface added or wired
     anywhere (no def knowledge_context(/def knowledge_status( in any tools/*.py, no
@@ -8979,7 +8987,10 @@
     time).
   proof_type: regression
   test_path: tests/tools/test_knowledge_gateway_packet_assembly.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: Agent-orchestration/knowledge-retrieval tooling only -- no simulation
     behavior involved, no src/ file touched. No live MCP tool surface added or wired
     anywhere (no def knowledge_context(/def knowledge_status( in any tools/*.py, no
@@ -9047,7 +9058,10 @@
     not hand-written assertions).
   proof_type: regression
   test_path: tests/tools/test_knowledge_gateway_mcp.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: Agent-orchestration/knowledge-retrieval tooling only -- no simulation
     behavior involved, no src/ file touched. Exactly {knowledge_context, knowledge_status}
     registered on the FastMCP server (test enumerates server._tool_manager._tools.keys());
@@ -9120,7 +9134,10 @@
     annotation added), Sec.20 Phase 1 bullet (annotated Done).'
   proof_type: regression
   test_path: tests/tools/test_knowledge_gateway_failure_semantics.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: Agent-orchestration/knowledge-retrieval tooling only -- no simulation
     behavior involved, no src/ file touched. Only the 5 Phase-1-applicable Sec.16
     rows are proven; the 4 Phase-2-deferred rows (Graphify stale, Context Search stale,
@@ -9184,7 +9201,10 @@
     Sec.4 (the 3 predeclared threshold formulas measured against, unedited).'
   proof_type: regression
   test_path: tests/tools/test_kgmcp_phase1_baseline_comparison.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'Agent-orchestration/knowledge-retrieval measurement tooling only
     -- no simulation behavior involved, no src/ file touched. Measurement-only: no
     frozen gateway/router/packet-assembly/corpus/Phase-0-runner code is edited (verified
@@ -9383,48 +9403,41 @@
     evidence_cache_identity_contract.md Sec.4).'
   status: verified
   priority: P1
-  v2_evidence: 'tools/knowledge_gateway_redaction.py:59 (module-level `redaction_policy_version:
-    int = 1`), :61-63 (`SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`/`ALLOWED_SOURCE_TYPES`),
-    :88-93 (`check_allowlist()`), :100-132 (`_HOME_PATH_PATTERN` at :103, `_ABS_PATH_PATTERN`
-    at :108, `_hash_text()` at :111-112, `redact_content()` at :115-132), :140-178
-    (`_SECRET_SCAN_PATTERNS` dict at :140-158 -- originally 4 entries as built by
-    this ticket (AWS access key ID, generic api_key assignment, PEM private-key header,
-    Bearer token), expanded to 10 entries by the sibling TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
-    own post-Security-Review fix (see INFRA-343''s support_boundary and the module
-    docstring''s "Update" paragraph) -- `scan_for_secrets()` at :161-178), :185-190
-    (`check_size_cap()`, `MAX_PAYLOAD_BYTES=65536` constant at :68 -- recalibrated
-    from the original 8192 by TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION,
-    tracked separately by INFRA-345), :197-253 (Sec.7 CATEGORY_* constants at :197-202,
-    `check_never_cache_categories()` at :215-253), :260-304 (`WriteDecision` frozen
-    dataclass at :260-267, `evaluate_write_candidate()` orchestrator at :270-304 --
-    secret-scan step at :289-291 scans `raw_content`, not the redacted text, per a
-    Security-Review fix: a redaction placeholder can swallow an adjacent secret with
-    no separator, so scanning post-redaction risked a false negative independent of
-    the redundant re-scan inside `check_never_cache_categories()`), :311-364 (Sec.9:
-    `open_connection_with_limits()` at :311-327, `check_db_size_within_limit()` at
-    :330-331, `execute_bounded_transaction()` at :334-342, `acquire_write_guard()`/`release_write_guard()`
-    at :349-364), :376-444 (Sec.10: `CacheRowSnapshot` dataclass at :376-393, 6 `gc_eligible_*`
-    predicates at :396-430, `gc_eligibility_never_flags_protected_evidence()` at :433-444).
-    Line numbers corrected as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
-    post-Security-Review fix pass, which prepended a new module-docstring "Update"
-    paragraph and expanded `_SECRET_SCAN_PATTERNS`/added `_TOKEN_SHAPED_SECRET_PATTERNS`,
-    shifting every symbol below its own insertion point; the underlying claims about
-    what this ticket (REDACTION-WRITE-PATH) itself built are otherwise unchanged.
-    Line numbers further corrected as of TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION,
-    which lengthened the `MAX_PAYLOAD_BYTES` inline comment and `check_size_cap()`''s
-    docstring (recalibrating the constant itself from 8192 to 65536, tracked separately
-    by INFRA-345), shifting every symbol from `check_allowlist()` onward by a uniform
-    +6 lines (verified line-by-line against the live file; :59 and :61-63 are unaffected
-    since they precede the insertion point at :68); the underlying claims about what
-    this ticket (REDACTION-WRITE-PATH) itself built remain otherwise unchanged.'
+  v2_evidence: 'Relocated by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE: the symbols
+    with a real consumer outside the Knowledge Gateway MCP package now live in tools/write_path_guard.py
+    -- tools/write_path_guard.py:48 (module-level `redaction_policy_version: int =
+    1`), :50-52 (`SOURCE_TYPE_CONTEXT_SEARCH`/`SOURCE_TYPE_GRAPHIFY`/`ALLOWED_SOURCE_TYPES`),
+    :76-81 (`check_allowlist()`), :91 (`_HOME_PATH_PATTERN`), :96 (`_ABS_PATH_PATTERN`),
+    :99-100 (`_hash_text()`), :103-120 (`redact_content()`), :128-146 (`_SECRET_SCAN_PATTERNS`
+    dict, 10 entries), :149-166 (`scan_for_secrets()`), :173-178 (`check_size_cap()`,
+    `MAX_PAYLOAD_BYTES=65536` constant at :57), :185-241 (Sec.7: `CATEGORY_*` constants
+    at :185-190, `_TOKEN_SHAPED_SECRET_PATTERNS` at :194-196, `check_never_cache_categories()`
+    at :203-241), :249-292 (`WriteDecision` frozen dataclass at :249-255, `evaluate_write_candidate()`
+    orchestrator at :258-292), :300-316 (Sec.9''s `open_connection_with_limits()`
+    only -- WAL mode, busy_timeout=5000, chmod 0600 only on first creation). The remaining
+    Sec.9/Sec.10 symbols this entry originally documented had no real consumer outside
+    the (now-archived) Knowledge Gateway MCP package and stayed behind, unmoved, in
+    the trimmed tools/archive/knowledge_gateway_redaction.py (no longer live code):
+    tools/archive/knowledge_gateway_redaction.py:33 (`SQLITE_MAX_DB_SIZE_BYTES`),
+    :36-37 (`check_db_size_within_limit()`), :40-48 (`execute_bounded_transaction()`),
+    :51-70 (`_write_locks`/`_write_locks_guard`/`acquire_write_guard()`/`release_write_guard()`),
+    :77-150 (Sec.10: `CACHE_STATUS_WRITE_COMPLETE` at :77, `_PROTECTED_EVIDENCE_KINDS`
+    at :79, `CacheRowSnapshot` dataclass at :82-99, 6 `gc_eligible_*` predicates at
+    :102-136, `gc_eligibility_never_flags_protected_evidence()` at :139-150). This
+    is a pure code-location move -- no behavior change to any symbol''s own logic;
+    the original claims about what TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH itself
+    built (and the subsequent TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING Security-Review
+    pattern-set expansion) remain accurate, only their file location changed.'
   proof_type: regression
-  test_path: 'tests/tools/test_knowledge_gateway_redaction.py (65 tests as of TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING''s
-    post-Security-Review fix, all passing: TestModuleDisclosure x1, TestAllowlist
-    x3, TestRedactionAndHashing x5, TestSecretScan x24 (originally x10 as built by
-    this ticket; +14 added by the sibling ticket''s post-Security-Review fix), TestSizeCap
-    x4, TestNeverCacheCategories x9 (originally x7; +2 added by the same fix), TestRedactionPolicyVersion
-    x2, TestSqliteOperationalLimits x7, TestGcEligibility x8, TestWorkflowIsolationGuards
-    x2)'
+  test_path: 'tests/tools/test_write_path_guard.py (54 tests, behavior-parity port
+    of the original tests/tools/test_knowledge_gateway_redaction.py -- now archived
+    at tests/archive/test_knowledge_gateway_redaction.py, excluded from default collection
+    -- covering every symbol that moved: TestModuleDisclosure x1, TestAllowlist x3,
+    TestRedactionAndHashing x5, TestSecretScan x24, TestSizeCap x5, TestNeverCacheCategories
+    x9, TestRedactionPolicyVersion x2, TestSqliteOperationalLimits x4 (open_connection_with_limits()
+    coverage only -- the archived module''s own check_db_size_within_limit/execute_bounded_transaction/acquire_write_guard/release_write_guard/GC-eligibility
+    coverage stayed behind in the archived test file, historical record only), TestWorkflowIsolationGuards
+    x1)'
   divergence_note: null
   support_boundary: 'This ticket builds pure, directly-testable functions only --
     zero wiring into the live gateway. tools/knowledge_gateway_router.py, tools/knowledge_gateway_packet_assembly.py,
@@ -9475,7 +9488,7 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: tools/knowledge_gateway_cache.py:142-159 (`compute_lookup_identity()`),
+  v2_evidence: 'tools/archive/knowledge_gateway_cache.py:142-159 (`compute_lookup_identity()`),
     :167-171 (`select_validation_basis()`), :201-203 (`is_branch_compatible()`), :206-211
     (`working_tree_overlap_forces_revalidation()`), :214-229 (`revalidate_cache_row()`
     -- Non-collapse rule, consulted only after a lookup HIT), :290-313 (`perform_cache_lookup()`
@@ -9485,43 +9498,45 @@
     (`migration_003_add_redaction_policy_version_column()`, PRAGMA table_info-guarded;
     `LEVEL1_CACHE_COLUMNS` grew 21->22 at :115-142), :685-688 (`ProviderResultCacheLookup`),
     :702-747 (`check_provider_result_cache()` -- DD10 PK+Python-comparison identity
-    check), :750-759 (`_get_level1_connection()`, opens CACHE_DB_PATH via `knowledge_gateway_redaction.open_connection_with_limits()`),
-    :762-800 (`write_provider_result_cache()` -- sole real INSERT OR REPLACE path),
-    :803-816 (`record_provider_result_cache_hit()`), :819-841 (`provider_result_cache_stats()`);
-    tools/knowledge_gateway_mcp.py:128-135 (`_load_cache_module()`, unshifted -- precedes
-    both of this ticket's insertion points), :246-264 (Level 1 cache-check hook in
-    `_run_knowledge_context()`, fail-open try/except at :253-257; shifted below the
-    new Level 2 cache-check hook this ticket -- TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING/INFRA-349
-    -- inserted immediately before it at :222-244, own fail-open try/except at :229-235),
-    :362-368 (Level 1 cache-write hook, fail-open try/except at :364-367; shifted
-    below the new Level 2 cache-write hook this same ticket inserted immediately before
-    it at :353-360), :390-473 (`_run_knowledge_status()`, real Level 1 cache-domain
-    fields populated at :435-451 from `provider_result_cache_stats()`; this same ticket
-    additively appended Level 2 fields at :453-470). Line numbers corrected as of
-    TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS (INFRA-346), whose migration_002_add_level2_tables(conn)
-    insertion (between migration_001 and migration_003) plus the new LEVEL2_CACHE_COLUMNS
-    block shifted every function/class this entry cites below migration_001 in tools/retrieval_cache.py;
-    the real/tested shape of every cited function (migration_003_add_redaction_policy_version_column,
+    check), :750-759 (`_get_level1_connection()`, opens CACHE_DB_PATH via `write_path_guard.open_connection_with_limits()`
+    -- relocated from `knowledge_gateway_redaction.open_connection_with_limits()`
+    by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE), :762-800 (`write_provider_result_cache()`
+    -- sole real INSERT OR REPLACE path), :803-816 (`record_provider_result_cache_hit()`),
+    :819-841 (`provider_result_cache_stats()`); tools/archive/knowledge_gateway_mcp.py:128-135
+    (`_load_cache_module()`, unshifted -- precedes both of this ticket''s insertion
+    points), :246-264 (Level 1 cache-check hook in `_run_knowledge_context()`, fail-open
+    try/except at :253-257; shifted below the new Level 2 cache-check hook this ticket
+    -- TCK-20260816-KGMCP-P3-PACKET-CACHE-READ-WRITE-WIRING/INFRA-349 -- inserted
+    immediately before it at :222-244, own fail-open try/except at :229-235), :362-368
+    (Level 1 cache-write hook, fail-open try/except at :364-367; shifted below the
+    new Level 2 cache-write hook this same ticket inserted immediately before it at
+    :353-360), :390-473 (`_run_knowledge_status()`, real Level 1 cache-domain fields
+    populated at :435-451 from `provider_result_cache_stats()`; this same ticket additively
+    appended Level 2 fields at :453-470). Line numbers corrected as of TCK-20260816-KGMCP-P3-PACKET-CACHE-SCHEMA-MIGRATIONS
+    (INFRA-346), whose migration_002_add_level2_tables(conn) insertion (between migration_001
+    and migration_003) plus the new LEVEL2_CACHE_COLUMNS block shifted every function/class
+    this entry cites below migration_001 in tools/retrieval_cache.py; the real/tested
+    shape of every cited function (migration_003_add_redaction_policy_version_column,
     ProviderResultCacheLookup, check_provider_result_cache, _get_level1_connection,
     write_provider_result_cache, record_provider_result_cache_hit, provider_result_cache_stats)
     is unaffected by that shift -- confirmed byte-identical apart from position via
-    direct diff against this ticket's own change set, which touches only tools/retrieval_cache.py's
-    schema_version constant, LEVEL2_CACHE_COLUMNS, migration_001's INSERT literal,
-    and migration_002 itself (see INFRA-346). Line numbers into tools/knowledge_gateway_mcp.py
+    direct diff against this ticket''s own change set, which touches only tools/retrieval_cache.py''s
+    schema_version constant, LEVEL2_CACHE_COLUMNS, migration_001''s INSERT literal,
+    and migration_002 itself (see INFRA-346). Line numbers into tools/archive/knowledge_gateway_mcp.py
     corrected as of TCK-20260816-KGMCP-P3-PACKET-DEDUP-BUDGET-ENFORCEMENT (INFRA-347),
     whose two `budget_truncated`/`omitted_statement_count` insertions (fallback_response
     dict, then the main response dict) shifted every function/hook this entry cites
-    below its first insertion point in tools/knowledge_gateway_mcp.py; the real/tested
-    shape of every cited hook/function is unaffected by the shift -- confirmed via
-    `git diff HEAD -- tools/knowledge_gateway_mcp.py` showing exactly two +2-line
-    additive hunks, both inside `_run_knowledge_context()`'s response dicts, with
-    no other lines touched (see INFRA-347). Line numbers into tools/knowledge_gateway_cache.py
+    below its first insertion point in tools/archive/knowledge_gateway_mcp.py; the
+    real/tested shape of every cited hook/function is unaffected by the shift -- confirmed
+    via `git diff HEAD -- tools/archive/knowledge_gateway_mcp.py` showing exactly
+    two +2-line additive hunks, both inside `_run_knowledge_context()`''s response
+    dicts, with no other lines touched (see INFRA-347). Line numbers into tools/archive/knowledge_gateway_cache.py
     corrected a second time as of TCK-20260816-KGMCP-P3-PACKET-DEPENDENCY-INVALIDATION
     (INFRA-348), whose new "Step 9" section (_level2_repo_branch_scope()/revalidate_context_packet_row(),
     55 net new lines) was inserted immediately after revalidate_cache_row() and before
     perform_cache_lookup(), plus a 5-line module-docstring correction above it --
-    confirmed via `git diff HEAD -- tools/knowledge_gateway_cache.py` showing exactly
-    those two additive hunks and no other lines touched. compute_lookup_identity()/select_validation_basis()/is_branch_compatible()/working_tree_overlap_forces_revalidation()/revalidate_cache_row()
+    confirmed via `git diff HEAD -- tools/archive/knowledge_gateway_cache.py` showing
+    exactly those two additive hunks and no other lines touched. compute_lookup_identity()/select_validation_basis()/is_branch_compatible()/working_tree_overlap_forces_revalidation()/revalidate_cache_row()
     shift only from the docstring hunk (+5); perform_cache_lookup()/perform_cache_write()
     (and their internal :341-342/:365/:366 line refs) shift by the full +59 (docstring
     +5, Step 9 insertion +54) since both sit after the insertion point. The real/tested
@@ -9531,26 +9546,41 @@
     immediately after `migration_003` and 4 new columns to `LEVEL2_CACHE_COLUMNS`
     in tools/retrieval_cache.py (shifting `ProviderResultCacheLookup`/`check_provider_result_cache`/`_get_level1_connection`/`write_provider_result_cache`/`record_provider_result_cache_hit`/`provider_result_cache_stats`,
     all of which sit below both insertions), added a new `CONTEXT_PACKET_RESPONSE_SCHEMA_VERSION`
-    module constant immediately before `compute_lookup_identity()` in tools/knowledge_gateway_cache.py
+    module constant immediately before `compute_lookup_identity()` in tools/archive/knowledge_gateway_cache.py
     (uniform +5 shift to every function this entry cites in that file), and inserted
     two new, independent Level 2 fail-open hooks immediately before each of the Level
-    1 cache-check/cache-write hooks in tools/knowledge_gateway_mcp.py (shifting both
-    Level 1 hooks and `_run_knowledge_status()` below them). The real/tested shape
-    of every cited function/hook is unaffected by any of these shifts -- confirmed
+    1 cache-check/cache-write hooks in tools/archive/knowledge_gateway_mcp.py (shifting
+    both Level 1 hooks and `_run_knowledge_status()` below them). The real/tested
+    shape of every cited function/hook is unaffected by any of these shifts -- confirmed
     via direct read of the current file state, not inherited arithmetic (see INFRA-349).
+    Path prefixes for tools/knowledge_gateway_cache.py and tools/knowledge_gateway_mcp.py
+    corrected to tools/archive/ by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE, which
+    archived both files (no longer live code, deregistered from .mcp.json) and moved
+    tools/retrieval_cache.py''s own open_connection_with_limits() dependency to the
+    new, gateway-independent tools/write_path_guard.py (see INFRA-342). The tools/archive/knowledge_gateway_cache.py:370
+    citation of `knowledge_gateway_redaction.evaluate_write_candidate()` is deliberately
+    left unrewritten: that archived file''s own internal import of knowledge_gateway_redaction
+    was left unfixed by the same ticket (a considered decision, not an oversight --
+    see that ticket''s plan.md Step 9), so this citation still accurately describes
+    that frozen file''s own literal source text, which is no longer live/callable.'
   proof_type: regression
-  test_path: 'tests/tools/test_knowledge_gateway_cache.py (20 tests: identity/revalidation/orchestrator
+  test_path: 'tests/archive/test_knowledge_gateway_cache.py (20 tests: identity/revalidation/orchestrator
     unit+fixture tests plus architecture guards, including test_per_key_stampede_guard_prevents_concurrent_duplicate_write
-    and test_size_cap_gate_skips_write_without_raising_when_db_over_ceiling); tests/tools/test_knowledge_gateway_mcp.py
+    and test_size_cap_gate_skips_write_without_raising_when_db_over_ceiling); tests/archive/test_knowledge_gateway_mcp.py
     (9 new AC1/AC2/AC4/AC5/AC6/fail-open integration tests plus narrowed test_knowledge_status_omits_all_cache_specific_fields_enumerated);
     tests/tools/test_retrieval_cache.py::TestProviderResultCache,tests/tools/test_retrieval_cache.py::TestMigration003,tests/tools/test_retrieval_cache.py::TestProviderResultCacheStats
-    (16 new test methods); tests/tools/test_knowledge_gateway_failure_semantics.py
-    (13-test matrix, unmodified pass + new _isolated_cache_db fixture); tests/tools/test_knowledge_gateway_redaction.py::TestSecretScan,tests/tools/test_knowledge_gateway_redaction.py::TestNeverCacheCategories
+    (16 new test methods); tests/archive/test_knowledge_gateway_failure_semantics.py
+    (13-test matrix, unmodified pass + new _isolated_cache_db fixture); tests/archive/test_knowledge_gateway_redaction.py::TestSecretScan,tests/archive/test_knowledge_gateway_redaction.py::TestNeverCacheCategories
     (16 new tests added by this ticket''s own post-Security-Review fix: 14 new TestSecretScan
     detection/reject-outright pairs for github_token/slack_token/openai_api_key/anthropic_api_key/generic_password_or_secret_assignment/basic_auth_in_url
     plus 2 cross-match tests (test_openai_pattern_does_not_mismatch_an_anthropic_key,
     test_anthropic_pattern_does_not_mismatch_an_openai_key), plus 2 new TestNeverCacheCategories
-    token-vs-credential classification tests)'
+    token-vs-credential classification tests) -- all 4 test files above moved to tests/archive/
+    (excluded from default pytest collection via pyproject.toml norecursedirs) by
+    TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE, historical record of this ticket''s
+    own pre-archival state, not re-derived; tests/tools/test_retrieval_cache.py''s
+    own 3 cited classes (TestProviderResultCache, TestMigration003, TestProviderResultCacheStats)
+    are unaffected -- that file was not archived and its cited tests still pass.'
   divergence_note: null
   support_boundary: 'This is the first ticket to perform real INSERT writes into retrieval_provider_result_cache_rows
     -- all real writes gated by evaluate_write_candidate() returning ALLOW, no raw/unredacted
@@ -9644,7 +9674,10 @@
     Phase 1''s own identical guard, test_kgmcp_phase1_baseline_comparison.py::test_no_frozen_kgmcp_dependency_edited,
     in isolation, which also fails today for the identical reason with zero involvement
     from this ticket; disclosed honestly here as 16/17, not claimed as 17/17)'
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'Agent-orchestration/knowledge-retrieval measurement tooling only
     -- no simulation behavior involved, no src/ file touched. Measurement-only: this
     ticket does not modify tools/knowledge_gateway_mcp.py, tools/knowledge_gateway_router.py,
@@ -9717,7 +9750,10 @@
     updated to track the new constant), plus tests/docs/test_redaction_retention_policy_doc.py::test_payload_size_cap_doc_matches_live_module_constant
     (new -- cross-checks the doc''s stated cap value against the live module constant
     so doc and code can never silently drift apart on a future recalibration).'
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This is a pure constant/doc recalibration, not a redesign: no
     change to what gets cached (response envelope shrinking, field exclusion, compression
     -- that remains Phase 3''s explicit "Enforce caller budgets using measured output
@@ -9805,7 +9841,10 @@
     is created in the isolated tmp_path cache directory), tests/tools/test_knowledge_gateway_redaction.py::TestRedactionPolicyVersion::test_redaction_policy_version_distinct_from_retrieval_version
     (corrected assertion: `rc.retrieval_cache_schema_version == 2`, was `== 1`, to
     track this ticket''s constant bump; no other assertion in that test touched)'
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: "Schema/migration only: this ticket adds no read/write function\
     \ against the new `retrieval_context_packet_cache_rows` table (no `check_*_cache`/`write_*_cache`-style\
     \ function ships here), and no read/write wiring into the live gateway exists\
@@ -9939,7 +9978,10 @@
     All 60 tests in both files (38+22) reconfirmed passing this session via `.venv/bin/python3
     -m pytest tests/tools/test_knowledge_gateway_packet_assembly.py tests/tools/test_knowledge_gateway_mcp.py
     -q`.'
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This ticket hardens already-existing Phase 1 dedup/budget mechanisms
     -- it does NOT originate them: dedup and budget-token flow (deduplicate_statements()/assemble_within_budget()/kgmcp_char_heuristic_v1())
     already existed as real, tested code before this ticket, per the corrected INFRA-336
@@ -10041,7 +10083,10 @@
     or no_junction_table_or_new_sqlite_table"` (10 passed); the pre-existing AST-based
     architecture guard test_module_does_not_import_knowledge_gateway_router_or_packet_assembly
     reconfirmed passing separately.'
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: This ticket builds real, tested dependency-aggregation and targeted-invalidation
     LOGIC -- it is NOT yet wired into a live Level 2 lookup/write path. No Level 2
     check_context_packet_cache()/write_context_packet_cache() pair exists anywhere
@@ -10168,14 +10213,10 @@
     tests/tools/test_knowledge_gateway_redaction.py tests/tools/test_knowledge_gateway_contract_schemas.py
     tests/tools/test_knowledge_gateway_packet_assembly.py tests/docs/test_redaction_retention_policy_doc.py
     -q`).'
-  divergence_note: 'docs/guidelines/intentional_divergences.md Sec.2.45 ("Level 2
-    Lookup Identity Includes Exact budget_tokens, Not budget_class") -- Level 2''s
-    compute_context_packet_lookup_identity() includes the literal budget_tokens integer
-    in packet_id''s hash input and in check_context_packet_cache()''s disambiguation
-    comparison, diverging from evidence_cache_identity_contract.md Sec.1''s budget_class-only
-    rule. Rationale class: Bounded -- scoped only to Level 2''s new identity function;
-    Level 1''s compute_lookup_identity() is unmodified. Verification: test_identical_repeated_knowledge_context_call_is_a_genuine_level2_cache_hit
-    and tests/tools/test_retrieval_cache.py::TestContextPacketCache::test_level2_lookup_disambiguates_by_budget_tokens_not_just_budget_class.'
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This is the ticket that makes Level 2 genuinely reachable from
     the production knowledge_context call path for the first time -- unlike its 3
     prior siblings, which each built real, tested, but not-yet-wired pieces: INFRA-346
@@ -10283,7 +10324,10 @@
     tests including a genuine run_corpus() invocation for the zero-mutation guard
     (test_zero_mutation_of_agent_monitoring_and_manifest_across_full_run) and real
     stale-rejection/unrelated-change/branch-partition round trips.
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   proof_type: regression
   support_boundary: 'Agent-orchestration/knowledge-retrieval measurement tooling only
     -- no simulation behavior involved, no src/ file touched. Measurement-only: this
@@ -10367,7 +10411,10 @@
     :713-723 (_provider_id_for_evidence_id()''s parity: branch). See test_path.'
   proof_type: differential
   test_path: tests/tools/test_knowledge_gateway_packet_assembly.py::test_parity_id_query_reaches_real_entry_lookup_end_to_end
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: "Passthrough only, per docs/plans/knowledge-gateway-mcp-proposal.md\
     \ \xA73.3 -- the adapter never overrides or replaces docs/parity_ledger/*.yaml's\
     \ own authoritative status. impact()/health() and changed_paths threading are\
@@ -10431,7 +10478,10 @@
     passing).'
   proof_type: regression
   test_path: tests/tools/test_knowledge_gateway_mcp.py::test_level2_hit_rejected_on_changed_paths_intersection_triggers_real_refresh
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This entry documents (a) -- cache-validity revalidation -- as
     already live and tested at both cache levels, and explicitly declines (b) -- routing
     changed_paths into the Parity adapter''s impact(changed_path=...) call. Reasoning,
@@ -10544,7 +10594,10 @@
     docs/engine/contracts/knowledge_gateway_mcp/phase4_direct_tool_comparison.md
   test_path: tests/tools/test_kgmcp_phase4_direct_tool_comparison.py
   proof_type: differential
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This entry certifies the real, measured gateway-vs-direct-tool
     comparison result itself, not only sound methodology (unlike INFRA-344/350/353''s
     ''methodology, not conclusion'' framing) -- because this ticket''s own job was
@@ -10613,7 +10666,10 @@
     tests/tools/fixtures/kgmcp_phase5_working_log_snapshot.json; docs/engine/contracts/knowledge_gateway_mcp/phase5_repeated_demand_measurement.md
   proof_type: regression
   test_path: tests/tools/test_kgmcp_phase5_repeated_demand_measurement.py, tests/docs/test_phase5_repeated_demand_measurement_doc.py
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This entry certifies the measurement methodology was sound (a
     real, non-corpus, non-synthetic data source used and justified; the equivalence-detection
     method genuinely mirrors proposal Sec.11.2''s conservative multi-signal shape,
@@ -10696,7 +10752,10 @@
     (25, frozen-hash guard narrowed). 182 tests total, independently re-verified twice
     this session -- once by Architecture-Verify, once by an independent Test-phase
     re-run.
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
   support_boundary: 'This entry certifies the widened per-statement/conflict budget-cost
     accounting and the new conflicts_truncated/omitted_conflict_count visibility fields
     are real, measured, and tested -- every previously failing corpus entry''s full
@@ -10761,7 +10820,10 @@
     (up from 2/7), docs/engine/contracts/knowledge_gateway_mcp/phase3_pilot_acceptance_measurement.md.'
   test_path: tests/tools/test_knowledge_gateway_packet_assembly.py::test_previously_uncounted_verification_field_now_affects_cost_and_inclusion,
     tests/tools/test_knowledge_gateway_mcp.py::test_response_statement_context_evidence_fragments_match_shared_source_of_truth
-  divergence_note: null
+  divergence_note: Archived 2026-09-07 by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE;
+    code now lives at tools/archive/<same filename>, tests at tests/archive/<same
+    filename>. v2_evidence/test_path below describe the pre-archival live state and
+    are kept as historical record, not re-derived.
 - id: INFRA-358
   text: 'Engine-liveness /health and external-watchdog alert wiring -- TCK-20260817-ENGINE-LIVENESS-HEALTH-EPIC.
     Previously /health (src/api/server.py) was a hardcoded {"status": "ok"} stub with

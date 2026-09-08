@@ -31,7 +31,7 @@ import pytest
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
-_MCP_MODULE_PATH = _TOOLS_DIR / "knowledge_gateway_mcp.py"
+_MCP_MODULE_PATH = _TOOLS_DIR / "archive" / "knowledge_gateway_mcp.py"
 
 
 def _load_mcp_module():

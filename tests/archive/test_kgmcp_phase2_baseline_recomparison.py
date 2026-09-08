@@ -230,7 +230,7 @@ def test_q2_q5_recall_still_fails_for_the_documented_architectural_reason():
     if router_spec_key not in sys.modules:
         import importlib.util
         spec = importlib.util.spec_from_file_location(
-            router_spec_key, _TOOLS_DIR / "knowledge_gateway_router.py"
+            router_spec_key, _TOOLS_DIR / "archive" / "knowledge_gateway_router.py"
         )
         mod = importlib.util.module_from_spec(spec)
         sys.modules[router_spec_key] = mod

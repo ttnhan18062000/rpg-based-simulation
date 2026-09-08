@@ -15,9 +15,21 @@ tags: [ai, agent-monitoring, data-quality]
 into a bigger epic would only add coordination overhead with no shared component to justify it
 (§71's separation criteria). Grouped into one doc here purely for planning-doc convenience — they
 remain four independent units of work, not one epic.
-**Roadmap**: `roadmap.md` — one Horizon-0 item (now BLOCKED, see §1 below), three Horizon-2 items.
+**Roadmap**: `roadmap.md` — one Horizon-0 item (UNBLOCKED 2026-09-07, see §1 below), three
+Horizon-2 items.
 
-## 1. Remove/archive knowledge-gateway (BLOCKED — see below; originally Horizon 0, start now)
+## 1. Remove/archive knowledge-gateway (UNBLOCKED 2026-09-07 — see below; Horizon 0, start now)
+
+**Status update (2026-09-07)**: the blocking condition below is resolved.
+`TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified by the repository owner to **Option C —
+deprecate/remove**, explicitly superseding the original "keep as-is" ratification, via
+`TCK-20260907-KGMCP-DEPRECATION-EPIC` (see `keep_or_deprecate_decision.md` §4 for the full record,
+citing a month of real usage data and external research gathered since the original ratification).
+Execution of milestones 1-2 below proceeds under that epic's M2; milestones 3-4 (the 2-week
+monitoring window and eventual delete) are a separate, explicitly filed follow-on once 1-2 land —
+not silently deferred. The rest of this section is left as-written below for historical context
+(the original blocking analysis and the two open gaps it found), superseded by this status update
+where it conflicts.
 
 **Revised during the 2026-09-04 `create-tickets` investigation pass (PR #124)**: this item directly
 conflicts with an already-ratified decision. **`TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`** (closed

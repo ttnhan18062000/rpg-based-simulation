@@ -240,5 +240,6 @@ advisory hook is live and stable, tracked as a follow-on to this epic rather tha
 - `.claude/settings.json` — current `permissions.allow` list and hook registration pattern to
   extend.
 - `.claude/settings.local.json` — the git-ignored file M2's baseline/diff check targets.
-- `tools/knowledge_gateway_redaction.py` — source of `scan_for_secrets()` (line 161) for M4.
+- `tools/write_path_guard.py` — source of `scan_for_secrets()` (line 149) for M4 (relocated from
+  `tools/knowledge_gateway_redaction.py` by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`).
 - `agent-monitoring/tools.jsonl` — the real usage data M1 mines.

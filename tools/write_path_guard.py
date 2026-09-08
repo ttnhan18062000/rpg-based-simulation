@@ -1,54 +1,43 @@
-"""
-tools/knowledge_gateway_redaction.py — Pure, directly-testable write-path enforcement functions
-for `docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §2-§10: the §2
-provider-source allowlist, §3 redaction + hashing, the §4 secret-scan baseline (expanded to 10
-patterns — see below), the §5 64 KiB payload size cap, §6 `redaction_policy_version` stamping via
-`WriteDecision`, the §7 never-cache enumeration (6 independent categories), §9 SQLite operational
-limits, and the §10 cache-GC eligibility predicates plus the identity-contract's SYMBOL/FILE
-never-flag rule.
+"""tools/write_path_guard.py — Pure, directly-testable write-path enforcement functions for
+`docs/engine/contracts/knowledge_gateway_mcp/redaction_retention_policy.md` §2-§9: the §2
+provider-source allowlist, §3 redaction + hashing, the §4 secret-scan baseline (10 patterns), the
+§5 64 KiB payload size cap, §6 `redaction_policy_version` stamping via `WriteDecision`, the §7
+never-cache enumeration (6 independent categories), and §9's `open_connection_with_limits()`
+connection-tuning helper.
 
-What this is: pure functions and dataclasses only. `evaluate_write_candidate()` is the single
-orchestrator tying the §2-§7 checks together in a fixed order and returning a `WriteDecision`.
-Nothing here opens `knowledge-index/retrieval_cache.db` at its real path, issues an
-`INSERT`/`UPDATE` against `retrieval_provider_result_cache_rows`, or is imported by
-`tools/knowledge_gateway_router.py`, `tools/knowledge_gateway_packet_assembly.py`, or
-`tools/knowledge_gateway_mcp.py` — this ticket ships functions the next ticket
-(`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`) calls, never a live write path.
+What this is: pure functions and dataclasses only, independent of any particular caller. This
+module was extracted from `tools/knowledge_gateway_redaction.py` by
+`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` as a pure code-location move (no behavior change)
+once the Knowledge Gateway MCP itself was archived (`TCK-20260907-KGMCP-DEPRECATION-EPIC` M2) —
+these functions have real, live consumers outside the gateway package
+(`tools/retrieval_cache.py`'s own connection-opening helpers; the planned
+`governance_capability_policy_epic.md` M4 secret-exposure hook) and needed a stable home that
+would not itself get archived alongside the gateway. `evaluate_write_candidate()` is the single
+orchestrator tying the §2-§7 checks together in a fixed order and returning a `WriteDecision`,
+independent of which caller — the archived gateway, `retrieval_cache.py`, or a future Bash hook —
+is doing the writing.
 
-What this is not: no schema/migration change to `tools/retrieval_cache.py`
-(`redaction_policy_version` stays in-memory only on `WriteDecision`, per this ticket's plan.md
-DD2), no automatic cache-GC wiring (the `gc_eligible_*` predicates never call `DELETE` or
-`tools/retrieval_cache.py::prune()`).
+The §9 `check_db_size_within_limit()`/`execute_bounded_transaction()` helpers, the write-guard
+pair (`acquire_write_guard()`/`release_write_guard()`), and all of §10 (cache-GC eligibility
+predicates) stayed behind in the archived `tools/archive/knowledge_gateway_redaction.py` — none of
+those has a real consumer outside the now-archived gateway package.
 
 Security-baseline disclosure (§4/§11, quoted verbatim, not paraphrased away): "This baseline
 ruleset is a documented starting point, not a production-complete secret scanner. It is
 explicitly NEW (not a reuse of any existing repository tooling) and explicitly
 non-production-complete. It must be reviewed and expanded by a security-focused pass before
-Phase 2 payload caching goes live." This ticket's own shipping is not blocked by that
-precondition — it wires nothing into a live request path (see plan.md DD3).
+Phase 2 payload caching goes live."
 
-**Update (`TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`, post-Security-Review):** that ticket's
-own Security-Review phase found the original 4-pattern baseline had concrete, named gaps (no
-named-service token formats, no generic password/secret-named assignment, no basic-auth-in-URL
-form) and, as an explicitly narrow/bounded fix required to close that ticket's own blocking gate,
-expanded `_SECRET_SCAN_PATTERNS` from 4 to 10 entries: the original AWS/generic-api-key/PEM/Bearer
-4 plus GitHub tokens, Slack tokens, OpenAI API keys, Anthropic API keys, generic password/secret
-assignment, and basic-auth-in-URL. This closes the "reviewed and expanded by a security-focused
-pass before Phase 2 payload caching goes live" precondition for the go-live moment that ticket
-represents. It does **not** convert this baseline into a production-complete secret scanner —
-that disclosure (quoted above and unmodified) still applies to the expanded set: 10 well-known,
-low-false-positive-risk shapes is still a documented starting point, not exhaustive coverage of
-every credential format, and remains open to further expansion by a future pass.
-
-Built for TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH; the §4 pattern-set expansion described above
-was added by `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`.
+Originally built for TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH as part of
+`tools/knowledge_gateway_redaction.py`; the §4 pattern-set expansion (4 to 10 patterns) was added
+by `TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING`'s own Security-Review pass. Extracted into this
+standalone module by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`.
 """
 from __future__ import annotations
 
 import hashlib
 import re
 import sqlite3
-import threading
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -73,7 +62,6 @@ MAX_PAYLOAD_BYTES: int = 65536            # §5, redaction_retention_policy.md:1
                                            # ~2.15x the observed max, rounded to the nearest clean
                                            # power of two (64 KiB).
 
-SQLITE_MAX_DB_SIZE_BYTES: int = 256 * 1024 * 1024   # §9 table, redaction_retention_policy.md:208
 SQLITE_BUSY_TIMEOUT_MS: int = 5000                  # §9 table, redaction_retention_policy.md:213
 SQLITE_FILE_MODE: int = 0o600                       # §9 table, redaction_retention_policy.md:210
 
@@ -305,7 +293,8 @@ def evaluate_write_candidate(
 
 
 # ---------------------------------------------------------------------------
-# §9 — SQLite operational limits
+# §9 — SQLite operational limits (connection-opening only; the rest of §9 stayed behind in the
+# archived tools/archive/knowledge_gateway_redaction.py)
 # ---------------------------------------------------------------------------
 
 def open_connection_with_limits(db_path: Path) -> sqlite3.Connection:
@@ -325,120 +314,3 @@ def open_connection_with_limits(db_path: Path) -> sqlite3.Connection:
     if created_now:
         db_path.chmod(SQLITE_FILE_MODE)
     return conn
-
-
-def check_db_size_within_limit(db_path: Path) -> bool:
-    return not db_path.exists() or db_path.stat().st_size < SQLITE_MAX_DB_SIZE_BYTES
-
-
-def execute_bounded_transaction(conn: sqlite3.Connection, statements: list[tuple[str, tuple]]) -> None:
-    """Executes each (sql, params) pair then commits exactly once — never leaves an open
-    transaction across calls. Generic: contains no literal INSERT/UPDATE text of its own; callers
-    supply statements. This ticket calls it with zero real statements in its own tests/production
-    use — it exists as the reusable primitive child 3 wires real writes through.
-    """
-    for sql, params in statements:
-        conn.execute(sql, params)
-    conn.commit()
-
-
-_write_locks: dict[str, threading.Lock] = {}
-_write_locks_guard = threading.Lock()
-
-
-def acquire_write_guard(cache_key: str) -> bool:
-    """Non-blocking, in-process only — not multi-process safe (§9's own text offers either an
-    INSERT OR IGNORE sentinel row or an in-process lock; this module chooses the in-process lock,
-    see plan.md DD8). True if this caller may proceed; False if another in-process caller already
-    holds the guard for cache_key.
-    """
-    with _write_locks_guard:
-        lock = _write_locks.setdefault(cache_key, threading.Lock())
-    return lock.acquire(blocking=False)
-
-
-def release_write_guard(cache_key: str) -> None:
-    with _write_locks_guard:
-        lock = _write_locks.get(cache_key)
-    if lock is not None and lock.locked():
-        lock.release()
-
-
-# ---------------------------------------------------------------------------
-# §10 — Cache-GC eligibility predicates
-# ---------------------------------------------------------------------------
-
-CACHE_STATUS_WRITE_COMPLETE = "complete"
-
-_PROTECTED_EVIDENCE_KINDS: frozenset[str] = frozenset({"SYMBOL", "FILE"})
-
-
-@dataclass(frozen=True)
-class CacheRowSnapshot:
-    """Plan-invented convenience shape for this ticket's own pure-function GC-eligibility testing
-    (plan.md DD7) — NOT a 1:1 mirror of LEVEL1_CACHE_COLUMNS (tools/retrieval_cache.py:104-128),
-    which has no cache_status column. CACHE-READ-WRITE-WIRING must decide how any field here that
-    has no real column counterpart (cache_status, evidence_kind,
-    only_change_is_provider_generation_bump) maps onto the real 21-column row shape when it wires
-    real read/write logic; this ticket's GC checks are validated only against this synthetic
-    snapshot.
-    """
-    repo_branch_scope: str
-    provider_generation: str
-    hit_count: int
-    created_at: float
-    last_hit_at: float | None
-    cache_status: str | None            # Plan-invented; see docstring above
-    evidence_kind: str | None           # e.g. "SYMBOL" / "FILE" — see evidence_identity_kinds.schema.json
-    only_change_is_provider_generation_bump: bool = False
-
-
-def gc_eligible_expired_exact_query_result(
-    snapshot: CacheRowSnapshot, *, now: float, max_age_seconds: float
-) -> bool:
-    return (now - snapshot.created_at) > max_age_seconds
-
-
-def gc_eligible_deleted_branch_packet(snapshot: CacheRowSnapshot, *, branch_exists: bool) -> bool:
-    return not branch_exists
-
-
-def gc_eligible_obsolete_provider_version_row(
-    snapshot: CacheRowSnapshot, *, current_provider_generation: str
-) -> bool:
-    return snapshot.provider_generation != current_provider_generation
-
-
-def gc_eligible_low_use_regenerable_packet(
-    snapshot: CacheRowSnapshot, *, low_use_threshold: int
-) -> bool:
-    return snapshot.hit_count < low_use_threshold
-
-
-def gc_eligible_stale_row_superseded_by_refresh(
-    snapshot: CacheRowSnapshot, *, superseded: bool
-) -> bool:
-    return superseded
-
-
-def gc_eligible_failed_incomplete_write(snapshot: CacheRowSnapshot) -> bool:
-    """True iff snapshot.cache_status is present and is anything other than the terminal
-    CACHE_STATUS_WRITE_COMPLETE status (§10: "a row left in a non-terminal cache_status by an
-    interrupted write, never a row with a completed, valid cache_status"). None means this
-    synthetic field's real-table counterpart does not apply — never flagged as failed.
-    """
-    return snapshot.cache_status is not None and snapshot.cache_status != CACHE_STATUS_WRITE_COMPLETE
-
-
-def gc_eligibility_never_flags_protected_evidence(snapshot: CacheRowSnapshot) -> bool:
-    """True (never-flag) iff snapshot.evidence_kind is SYMBOL/FILE and
-    only_change_is_provider_generation_bump is True — enforces
-    evidence_cache_identity_contract.md §4's fallback rule (quoted at
-    redaction_retention_policy.md:244-246): such a row must never be evicted on a bare
-    PROVIDER_GENERATION bump alone. Callers must consult this before honoring any of the 6
-    predicates above.
-    """
-    return (
-        snapshot.evidence_kind in _PROTECTED_EVIDENCE_KINDS
-        and snapshot.only_change_is_provider_generation_bump
-    )
