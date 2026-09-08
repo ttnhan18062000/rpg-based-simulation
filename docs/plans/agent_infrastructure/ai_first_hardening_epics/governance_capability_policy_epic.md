@@ -146,7 +146,18 @@ identifiable by agent, tool, and workflow/phase — not a silent or ambiguous fa
 any wave is a single-file frontmatter revert, documented as trivial before that wave starts, not
 figured out after something breaks.
 
-### M4 — Bash secret-exposure advisory hook (gated on the cross-epic extraction step — see `roadmap.md`)
+### M4 — Bash secret-exposure advisory hook (gated on nothing — SHIPPED)
+
+**SHIPPED** by `TCK-20260904-BASH-SECRET-SCAN-HOOK` — a new `PreToolUse[4]` entry in
+`.claude/settings.json`'s `hooks` block, matcher `Bash`, reusing `tools/write_path_guard.py::scan_for_secrets()`
+unmodified (the cross-epic extraction and the `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` re-ratification
+that had blocked this milestone both resolved by `TCK-20260907-KGMCP-DEPRECATION-EPIC`/
+`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`), and verified by
+`tests/tools/test_bash_secret_scan_hook.py` (positive-fire on synthetic secret-shaped commands
+across 4 of the 10 patterns, negative-no-fire on ordinary commands, a dedicated
+`test_hook_never_emits_permission_decision_or_deny` anti-drift guard, fail-open behavior on
+malformed/missing stdin, and a byte-identical-module regression guard) plus
+`tests/tools/test_settings_json_hooks_wiring.py` (structural `PreToolUse` array-length assertion).
 
 Reuse `scan_for_secrets(text: str) -> str | None` as-is (it already returns the matching pattern's
 key or `None`, and its own docstring already states the caller must reject outright, never
@@ -225,9 +236,10 @@ advisory hook is live and stable, tracked as a follow-on to this epic rather tha
   went live. All 16 `.claude/agents/*.md` files carry explicit `tools:` frontmatter reflecting the
   post-rollout scope. A later tightening pass (post-epic, not part of M3 itself) uses real
   post-rollout evidence, not M1's original data alone.
-- M4: the Bash secret-exposure hook is registered in `.claude/settings.json`, fires correctly
-  against a synthetic command containing a secret-shaped literal in a test run, and does not fire
-  on ordinary commands.
+- M4: confirmed — the Bash secret-exposure hook is registered in `.claude/settings.json`
+  (`PreToolUse[4]`), fires correctly against a synthetic command containing a secret-shaped
+  literal in a test run, and does not fire on ordinary commands (`tests/tools/test_bash_secret_scan_hook.py`,
+  shipped by `TCK-20260904-BASH-SECRET-SCAN-HOOK`).
 - M5: the two Horizon-0 exit conditions this epic owns are confirmed true, feeding `roadmap.md`'s
   shared gate.
 

@@ -88,6 +88,15 @@
             "command": "FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('file_path',''))\" 2>/dev/null || true); case \"$FILE\" in */tickets/*|*/staging_artifacts/*|*/src/*|*/tests/*|*/docs/*) if ls tickets/inprogress/*.md >/dev/null 2>&1; then RUN_ID=$(python3 -c \"import json,os; sid=os.environ.get('CLAUDE_CODE_SESSION_ID',''); path='.claude/current_run.'+sid if sid and os.path.exists('.claude/current_run.'+sid) else '.claude/current_run'; print(json.load(open(path)).get('run_id') or '')\" 2>/dev/null || true); if [ -z \"$RUN_ID\" ]; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id. If you are hand-orchestrating implement-ticket.js, write the sidecar (writeSidecar shape: run_id/seq/phase/agent/execution_id/provider) before continuing, or tool_call_count/cost_proxy_score will read 0 for this phase.\"}}'; fi; fi ;; esac"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,sys\ntry:\n    from tools.write_path_guard import scan_for_secrets\n    d=json.load(sys.stdin)\n    m=scan_for_secrets(d.get('tool_input',d).get('command',''))\n    if m: print(json.dumps({'hookSpecificOutput':{'hookEventName':'PreToolUse','additionalContext':'secret-scan: possible '+m+' pattern detected in this Bash command. Advisory only, not blocked.'}}))\nexcept Exception:\n    pass\" 2>/dev/null || true"
+          }
+        ]
       }
     ],
     "PostToolUse": [

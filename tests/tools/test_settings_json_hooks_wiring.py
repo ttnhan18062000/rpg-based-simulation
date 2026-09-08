@@ -72,7 +72,8 @@ def test_existing_hook_writers_untouched():
     # Do NOT touch: the permissions.allow block or the existing PreToolUse/PostToolUse array
     # contents (plan.md Step 3's explicit constraint).
     settings = _load_settings()
-    assert len(settings["hooks"]["PreToolUse"]) == 4
+    # Count includes the new TCK-20260904-BASH-SECRET-SCAN-HOOK PreToolUse[4] entry.
+    assert len(settings["hooks"]["PreToolUse"]) == 5
     assert len(settings["hooks"]["PostToolUse"]) == 4
     assert "permissions" in settings
     assert "allow" in settings["permissions"]

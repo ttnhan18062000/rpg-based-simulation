@@ -26,7 +26,7 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | # | Item | Bucket | Horizon | Detail doc |
 |---|---|---|---|---|
 | 1 | Per-agent least-privilege tool scoping | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M1, M3) |
-| 2 | Bash secret-exposure advisory hook | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M4) |
+| 2 | ~~Bash secret-exposure advisory hook~~ **SHIPPED** — `TCK-20260904-BASH-SECRET-SCAN-HOOK` landed M4 | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M4 — shipped) |
 | 3 | Versioned capability-envelope baseline | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M2) |
 | 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
 | 5 | ~~Convert 2 proven-failing prose rules to hooks~~ **SHIPPED** — M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3 (`TCK-20260904-TEST-SCOPER-HANG-GUARD`) both landed | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M2, M3 — both shipped) |
@@ -90,6 +90,16 @@ invocation. This moves item 10 out of the "3 still Horizon-2-only" group above, 
 Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 2, 3, 7, 9, plus item
 1's remaining waves).
 
+**Item 2 — shipped (2026-09-08)**: `TCK-20260904-BASH-SECRET-SCAN-HOOK` landed this item's full
+scoped milestone — a new `PreToolUse[4]` entry in `.claude/settings.json` reusing
+`tools/write_path_guard.py::scan_for_secrets()` unmodified, advisory-only, verified by
+`tests/tools/test_bash_secret_scan_hook.py` (see `governance_capability_policy_epic.md`'s M4
+section for the shipped detail). Both of this item's own blockers — the `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`
+re-ratification and the `scan_for_secrets()` extraction — were resolved separately by
+`TCK-20260907-KGMCP-DEPRECATION-EPIC` and `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`. This
+moves item 2 out of the "7 remaining to implement" count above, leaving **6 remaining to implement
+overall (1, 3, 7, 9, plus item 1's remaining waves)**.
+
 ## Epics and detail docs
 
 ### Horizon 0 — start now
@@ -97,8 +107,9 @@ Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 
 - **Epic G — Governance &amp; Capability Policy** (`governance_capability_policy_epic.md`): items
   1–3. Per-agent tool scoping (item 1) is **partially shipped** — M1 and M3's Wave 1 landed via
   `TCK-20260904-AGENT-TOOL-USAGE-BASELINE` and `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`; Wave
-  2/3 remain open (see the note above). The Bash secret-exposure advisory hook (item 2, M4) and the
-  capability-envelope baseline (item 3, M2) are unaffected and still open.
+  2/3 remain open (see the note above). The Bash secret-exposure advisory hook (item 2, M4) has
+  **shipped** (see "Item 2 — shipped" paragraph below); the capability-envelope baseline (item 3,
+  M2) is unaffected and still open.
 - **Epic H — Guardrail Enforcement** (`guardrail_enforcement_epic.md`): item 5 — **SHIPPED** (item
   4, AST boundary enforcement, is separately superseded — already shipped, see item 4's inventory
   row above). Both prose-rule-to-hook conversions with directly observed repeated-failure evidence
