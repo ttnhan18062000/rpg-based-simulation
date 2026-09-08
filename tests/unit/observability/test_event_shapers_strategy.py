@@ -8,7 +8,7 @@ ENABLE_PUSH_EVENT_SHAPERS already defaults ON from Phase 1's cutover — see
 stored_artifacts/TCK-20260806-PUSH-SHAPER-REGISTRY-STRATEGY/investigation.md's Key finding 2.
 """
 from __future__ import annotations
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
 
@@ -205,7 +205,7 @@ def test_agency_events_fire_end_to_end_for_winning_adventure_route(monkeypatch):
         lambda entity, cache: True,
     )
 
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+    def _fake_decide(entity, candidates, **kwargs):
         selected = AdventureRouteOption(
             family=RouteFamily.TAKE_EASY_QUEST,
             score=2.0,
@@ -218,7 +218,13 @@ def test_agency_events_fire_end_to_end_for_winning_adventure_route(monkeypatch):
             selected=selected, rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    monkeypatch.setattr(AdventureDecisionService, "decide", _fake_decide)
+    # TCK-20260908-ADVENTURE-DECIDE-MOCK-SIGNATURE-DRIFT-HARDENING: autospec-wrapped so a
+    # future AdventureDecisionService.decide() signature change is caught structurally at
+    # mock-call time, not by depending on this hand-rolled stub staying manually in sync.
+    monkeypatch.setattr(
+        AdventureDecisionService, "decide",
+        create_autospec(AdventureDecisionService.decide, side_effect=_fake_decide),
+    )
 
     hero = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
     tick = 42

@@ -3569,30 +3569,42 @@
     threshold is not promoted to nemesis status by virtue of the role tag alone.'
   support_boundary: null
 - id: SOC-248
-  text: 'EmotionUpdateService.update_on_event() is wired into NearDeathHardeningPhase.apply()
-    for the "near_death" event_kind: when an entity survives a hit with projected
-    HP <= 10% of current max HP, fear and panic increase (+0.4/+0.5, capped at 1.0)
-    and confidence decreases (-0.3, floored at 0.0) on EmotionalModel. The updated
-    model is written via a nested replace() into entity.cognition.subjective.emotion
-    and staged on EntityUpdate.cognition_bundle_set alongside the existing max_hp_delta=5
-    hardening effect (both set together, neither dropped). Same-tick collision handling:
-    if an earlier phase (e.g. MemoryUpdatePhase) already set cognition_bundle_set
-    for this entity this tick, the emotion update is built on top of that already-updated
-    bundle, not the stale pre-tick entity.cognition, so earlier same-tick cognition
-    changes are never clobbered by the whole-bundle EntityUpdate.merge() last-writer-wins
-    semantics. Distinct from the unrelated AppraisalSystem.evaluate_emotional_state()
-    per-tick tactical appraisal.'
+  text: 'SocialBond.role (RelationshipRole) gains its first real, live production
+    writer. RelationshipService.process_update() (src/systems/social_systems/relationships.py)
+    now derives role from the bond own resulting sentiment whenever a real sentiment_delta
+    is applied (already a live signal from contracts.py/combat.py/appraisal.py): sentiment
+    >= FRIEND_SENTIMENT_THRESHOLD(0.8) -> FRIEND, sentiment <= RIVAL_SENTIMENT_THRESHOLD(-0.8)
+    -> RIVAL, else the existing role is left untouched (sticky, one-crossing-per-real-sentiment-change;
+    a familiarity-only or zero-sentiment_delta bond_update never touches role, matching
+    last_interaction_tick_set own set-if-provided precedent from SOC-247). Explicit
+    SocialBondUpdate.role_set (SOC-247, previously the only write path, with zero
+    real non-test callers anywhere in src/) is evaluated first and still honored as
+    a real override when supplied. The 0.8/-0.8 thresholds mirror appraisal.py own
+    real, already-established TOTAL_DISTRUST bound (bond.sentiment < -0.8, SOC-...
+    appraisal hard-reject gate), not an invented magic number. Before this entry,
+    PartyCompositionScorer.score_role_affinity() (SOC-247) role_term was silently
+    always 0.0 in every real production FORM_PARTY route call (src/domains/adventure/generator.py,
+    the only real caller that passes actor=), since role was permanently NEUTRAL.
+    Remains deliberately independent of nemesis_ids/grudge_history per SOC-247 own
+    design intent.'
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: src/domains/emotion/emotion_service.py (EmotionUpdateService.update_on_event());
-    src/engine/pipeline_phases/hardening.py (NearDeathHardeningPhase.apply() call
-    site) (TCK-20260824-WIRE-ORPHANED-MECHANISMS)
-  proof_type: parity
-  test_path: tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_updates_emotional_model
-    tests/unit/engine/test_near_death_hardening_emotion.py::test_near_death_hardening_preserves_same_tick_cognition_bundle_set
+  v2_evidence: src/systems/social_systems/relationships.py::RelationshipService.process_update()
+    (new FRIEND_SENTIMENT_THRESHOLD/RIVAL_SENTIMENT_THRESHOLD class constants + role
+    derivation in the bond_updates loop). Real live reachability confirmed via src/domains/adventure/generator.py:140
+    (PartyCompositionScorer.score(actor=entity), the real FORM_PARTY route call site
+    that passes actor= and therefore evaluates score_role_affinity()/role_term). TCK-20260907-SOCIALBOND-ROLE-WRITE-PATH.
+  proof_type: regression
+  test_path: tests/unit/social/test_relationships.py::test_sustained_positive_sentiment_derives_role_to_friend
   divergence_note: null
-  support_boundary: null
+  support_boundary: Covers SocialBond.role write-path liveness only. Does not cover
+    SocialMemoryService.check_nemesis_promotion()/tick_place_attachment(), a separately-found
+    dormant pair on an adjacent field (nemesis_ids/place_attachment) disclosed in
+    docs/mechanics/07_social_political_dynamics.md Section 3 but not fixed by this
+    ticket. Does not add SocialBond field coverage to src/replay/fingerprint.py (a
+    pre-existing gap predating this ticket -- familiarity/sentiment were already excluded
+    there too).
 - id: SOC-249
   text: "Trade appraisal via ContractKind.MERCHANT routes through the shared bond.sentiment-priority-else-trust_history\
     \ prelude (hard-cancel at trust_score<0.2 / bond.sentiment<-0.8 / betrayal-history)\
@@ -4201,7 +4213,12 @@
     the one live per-tick caller, has no CampaignState access -- no bridge exists
     between per-tick AuthoritativeState and episode-boundary CampaignState today --
     so the live call site still supplies only the 0.0 default; the parameter itself
-    is real, tested end-to-end via a Culture-Drift integration test, not a dead stub.'
+    is real, tested end-to-end via a Culture-Drift integration test, not a dead stub.
+    CORRECTION (TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE, 2026-09-07): the disclosed
+    gap above is now closed -- GroupPhase.resolve() reads a real, non-default loyalty_pressure
+    via AuthoritativeState.region_loyalty_pressure, a per-episode snapshot CampaignOrchestrator
+    now populates from CampaignState.region_cultures at episode start. See SOC-276
+    for the bridge mechanism itself.'
   status: verified
   priority: P2
   legacy_evidence: null
@@ -4213,13 +4230,15 @@
   proof_type: parity
   test_path: tests/unit/social/test_loyalty_drift.py, tests/unit/social/test_party_lifecycle.py::test_effective_defection_threshold_lowered_by_loyalty_pressure,
     tests/unit/social/test_party_lifecycle.py::test_check_defection_fires_earlier_with_loyalty_pressure,
-    tests/integration/culture/test_loyalty_drift_campaign.py
+    tests/integration/culture/test_loyalty_drift_campaign.py, tests/integration/campaigns/test_loyalty_pressure_campaign_bridge.py
   divergence_note: null
-  support_boundary: Only takes effect where a real loyalty_pressure value is supplied
-    -- the one live per-tick caller (GroupPhase.resolve()) has no CampaignState access
-    today and uses the 0.0 default, so this signal is currently a no-op in the default
-    single-episode Kernel path, matching the M5 batch's own "built, not yet visible
-    in play" precedent.
+  support_boundary: 'CORRECTED, TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE (2026-09-07):
+    GroupPhase.resolve() now reads a real bridged loyalty_pressure value (via AuthoritativeState.region_loyalty_pressure,
+    resolved per-group from the group anchor real region) instead of the 0.0 default
+    -- this signal is live in any Campaign-mode run past episode 0, not a no-op. Still
+    0.0 for a group whose anchor resolves to no region, or a region with no region_cultures
+    entry yet (e.g. episode 0, or a non-Campaign single-episode SimulationAnalysisRunner
+    path that never populates region_loyalty_pressure at all).'
 - id: SOC-275
   text: CampaignScorecardEvaluator.evaluate() reports reputation_inheritance_check
     and nemesis_transfer_check, derived from entity_arc_reports major_events of event_type="died"
@@ -4247,3 +4266,42 @@
     run in production -- that is covered separately by tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py
     and test_nemesis_relation_and_chronicle_fidelity_campaign.py, real production
     code paths with scripted/deterministic inputs, not through this scorer.
+- id: SOC-276
+  text: 'TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: a real per-episode bridge carries
+    idea 56 own region_cultures signal from CampaignState into per-tick-reachable
+    AuthoritativeState. CampaignOrchestrator._build_initial_state() populates a new
+    AuthoritativeState.region_loyalty_pressure: Dict[str, float] field (region_id
+    -> LoyaltyDriftService.compute_loyalty_pressure() output) once per episode, sorted-iteration
+    over region_cultures.keys() for determinism. GroupPhase.resolve() resolves each
+    group real region via its own anchor position (SpatialQueryService.get_region_at(),
+    not a member cached navigation.region_id, so the lookup does not depend on that
+    per-entity caches own freshness for a group-level decision) and reads region_loyalty_pressure.get(region.id,
+    0.0) -- None-safe fallback to the exact pre-bridge 0.0 default when the anchor
+    resolves to no region, or that region has no region_cultures entry yet. CORRECTION
+    (TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD, 2026-09-07): found
+    real gap -- ApplyPath.apply_generation() (src/engine/apply.py) never carried region_loyalty_pressure
+    forward past the first Kernel.tick_once() call, silently resetting it to {} from
+    tick 2 onward -- so the ''live in any Campaign-mode run past episode 0'' claim
+    above was only true for the episode''s first tick, not the whole episode as intended.
+    Fixed: apply_generation() now passes region_loyalty_pressure=prior_state.region_loyalty_pressure
+    through its AuthoritativeState(...) constructor, verified via a direct multi-tick
+    test.'''
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: src/core/state.py (AuthoritativeState.region_loyalty_pressure field,
+    repr=False/compare=False -- read-only per-tick input snapshotted at episode start,
+    not durable Kernel-produced state, matching feature_flags own precedent). src/domains/campaigns/orchestrator.py
+    (_build_initial_state() population). src/engine/pipeline_phases/groups.py (GroupPhase.resolve()
+    consumption via SpatialQueryService.get_region_at()).
+  proof_type: regression
+  test_path: tests/integration/campaigns/test_loyalty_pressure_campaign_bridge.py;
+    tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py
+  divergence_note: null
+  support_boundary: Bridges idea 56 (LoyaltyDriftService/region_cultures) only. Idea
+    57 (FameDeriver/LegendFact, the epic own other shared-blocker idea) is explicitly
+    out of this ticket own scope -- its real consumer chain (PerceptionUpdatePhase,
+    MotivationBiasService) has zero real production callers anywhere in src/ today,
+    a materially larger, separate gap than a CampaignState-to-AuthoritativeState data
+    bridge; not addressed here, escalated back to the orchestrating session rather
+    than silently expanded into or dropped from this ticket.

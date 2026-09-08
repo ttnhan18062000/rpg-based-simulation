@@ -45,6 +45,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **Engine / Campaigns** | `CampaignState` Direct Mutation Bypasses `patches.py` for Episode-Boundary Deriver Exporters | **Bounded** | RATIFIED |
 | **Social/Clan** | Clan Reputation Folded Into P0-Certified `appraise_contract()` Stranger-Judgment Formula | **Bounded** | RATIFIED |
 | **Combat / Legality** | Mid-Tick Faction Mutation Can Flip a P0-Certified Friendly-Fire Legality Outcome by the Next Tick | **Bounded** | RATIFIED |
+| **AI / Motivation-Adventure Scoring** | Doctrine/Values Motivation Chain Confirmed Dead; Culture Drift Wired Into `personality_bias` Instead | **Bounded** | RATIFIED |
 
 ---
 
@@ -1573,6 +1574,177 @@ This document is the canonical record of intentional behavior shifts in `src` co
   applied at the next tick boundary via `ApplyPath.apply_partial()`. `docs/parity_ledger/
   combat_movement.yaml` COMB-294's own `v2_evidence` cross-references COMB-323 (this ticket's own
   parity entry) and this divergence entry in place, rather than leaving the interaction undisclosed.
+- **Status**: RATIFIED
+
+---
+
+### 2.53 Doctrine/Values Motivation Chain Confirmed Dead; Culture Drift Wired Into `personality_bias` Instead (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE) — cross-referenced as STRAT-227
+- **Subsystem**: AI / Motivation-Adventure Scoring
+- **Old Behavior**: `MotivationBiasService.compute_bias_multiplier()` (`src/domains/motivation/
+  service.py`), `DoctrineResolver.resolve()` (`src/domains/motivation/resolver.py`), and the
+  `IdentityDoctrine`/`ValuePreferenceProfile` records they operate on (`src/core/cognition.py`) were
+  assumed to be the live personality/doctrine-driven route-bias path — the intended integration point
+  for idea 57's (Living Legend Feedback Loop) Culture Drift signal, per the ticket's own inherited
+  investigation text.
+- **New Behavior**: Confirmed dead in production, not merely under-used. `DoctrineResolver.resolve()`
+  has zero real (non-test) callers: the only two `identity(class_id=...)` construction sites in the
+  whole codebase (`src/testing/scenario_runner.py`, `src/domains/campaigns/runner.py`) are test/
+  single-episode-analysis utilities, not the real corpus-world entity population path, so every real
+  entity's `class_id` stays at the bare default and `IdentityDoctrine` never differentiates in
+  production. `ValuePreferenceProfile`'s fields all default to exactly `0.5`, so `compute_bias_
+  multiplier()`'s `(value - 0.5) * 0.5` terms are mathematically guaranteed to evaluate to `0.0` for
+  every real entity even if the service were called. `compute_bias_multiplier()` itself has zero real
+  callers anywhere in `src/`. This entire chain is superseded by `AdventureRouteScorer.score()`'s own
+  already-live `personality_bias` mechanism (`src/domains/adventure/scoring.py`, STRAT-227), which
+  does the same conceptual job (personality/context → route-family bias) with real, populated
+  per-entity trait data instead. Culture Drift is now wired directly into that live `personality_bias`
+  block as a new additive branch — `AuthoritativeState.region_culture_states` (bridged once per
+  episode from `CampaignOrchestrator._build_initial_state()`, mirroring the existing `region_loyalty_
+  pressure` bridge pattern) is threaded through `AdventureGoalScorer.score()` →
+  `AdventureDecisionService.decide()` → `AdventureRouteScorer.score()`'s new `culture_state` parameter,
+  which adds `CulturalBiasApplicator.compute_culture_delta()` (`src/domains/culture/applicator.py`,
+  E62C, already shipped and live) for a small, real, family-specific tag set. The dead Doctrine/Values
+  chain itself is deliberately NOT revived and NOT deleted in this ticket — each of its four modules
+  now carries a "CONFIRMED DEAD LEGACY CODE" docstring disclosure cross-referencing this entry, rather
+  than being left silently unexplained.
+- **Rationale**: **Bounded**. Reviving a confirmed-dead chain (2 further dead subsystems' worth of
+  scope, per this ticket's own iterative investigation history) to carry one narrow signal would have
+  been materially out of proportion to the ask; extending the one real, already-live personality-bias
+  choke point with an additive branch is the minimal change that achieves the same real gameplay
+  effect without resurrecting or deleting unrelated legacy code, both of which were out of this
+  ticket's scope. Ratified by the orchestrating session via explicit user decision (2026-09-07:
+  "Decide now: bypass legacy, extend personality_bias") after the dead-chain finding was independently
+  re-verified against real source.
+- **Verification**: New Culture Drift branch in `AdventureRouteScorer.score()` covered by a dedicated
+  unit test proving a populated `CultureState` measurably changes `final_score` versus `culture_state=
+  None` for at least one real `RouteFamily`/tag combination (see this ticket's own Test Summary for
+  the exact test path). `docs/parity_ledger/strategic_cognition.yaml` STRAT-227's own `text`/
+  `v2_evidence` fields were updated in place to describe the new branch; `docs/mechanics/
+  04_strategic_cognition.md` §6.4 was updated with the corresponding note.
+- **`personality_bias`'s real conceptual scope, added 2026-09-07 after independent review**:
+  `personality_bias` has now been extended 3 times — this entry's own Culture Drift branch, idea
+  57's Living Legend branch (§2.53 itself, `LegendFact.fame`), and idea 62/63's Belief Institution
+  branch (§2.55). Its real, current conceptual scope is: **every additive per-tick signal that
+  plausibly biases which adventure route family an entity gravitates toward, keyed by real,
+  already-populated per-entity/per-region/per-episode state** — not "wherever the one live hook
+  happens to be" as a default reflex. A future 4th addition should be checked against that
+  definition explicitly (does the new signal genuinely bias route-family choice the same way these
+  3 do, or does it belong somewhere else in the pipeline) rather than added by the same "it's the
+  only live hook" reasoning without re-confirming fit.
+- **Dead Doctrine/Values/Culture chain retirement — resolved 2026-09-08**
+  (`TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT`): real user decision, **delete outright**.
+  `src/domains/motivation/service.py` (`MotivationBiasService`) and
+  `src/domains/motivation/resolver.py` (`DoctrineResolver`) were deleted entirely;
+  `IdentityDoctrine`/`ValuePreferenceProfile` classes removed from `src/core/cognition.py`, along
+  with the now-unused `doctrine`/`values` fields on `MotivationModel` (confirmed those fields were
+  themselves never read outside the deleted `compute_bias_multiplier()`). No real external reference
+  to these exact module/class paths was found outside `src/` before deleting. Docstring
+  cross-references in `AdventureRouteScorer.score()`, `CulturalBiasApplicator`, and
+  `CultureDriftExporter`/`CultureDriftImporter` updated to stop pointing at now-deleted code.
+- **Status**: RATIFIED
+
+---
+
+### 2.54 CHURCH's BLESSING/RESURRECTION Service Labels — Considered "Place and Disclose Inert," Reverted to Deferred (TCK-20260907-CHURCH-CONTENT-AUTHORING)
+- **Subsystem**: World Content / Town Buildings
+- **Finding, unchanged from the original investigation**: `BuildingRegistry._templates[CHURCH]
+  ["services"] = ["BLESSING", "RESURRECTION"]` (`src/town/buildings.py:23`) are inert data labels
+  with zero real code reading them anywhere in `src/`, unlike every sibling building service
+  (`REST`/`CRAFT`/`TRADE`/`QUEST`/`INTEL`, each with a real handler). `BuildingRegistry.
+  get_services()` itself has zero call sites outside tests. This part of the finding stands and is
+  not in question.
+- **Decision history**: this ticket's first pass placed `CHURCH` into `frontier_village_core`
+  anyway with the inertness formally disclosed (matching the "No Live Consumer Yet" precedent
+  shape) — ratified via the orchestrating session's own `AskUserQuestion` to the real user,
+  2026-09-07. **Reverted the same day**, after an independent review (`rpg-feature-planning`
+  session, requested specifically to scrutinize this decision) argued the precedent didn't
+  actually fit: `fame_legend_contract.md`'s "No Live Consumer Yet" cases have a live, correct
+  *derivation* with only the *consumption* pending — here, placing `CHURCH` produced literally zero
+  observable effect from any system or player perspective (confirmed by the original ticket's own
+  calibration run — no `CHURCH`-specific event ever fired). Idea 30 (`ItemInstanceService`,
+  `TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION`) faced the structurally identical shape — neither
+  producer nor consumer wired — and was deferred outright, not half-built. The reviewer's
+  conclusion, accepted by the real user: CHURCH should get the same treatment as idea 30, not the
+  fame_legend precedent's treatment.
+- **Current behavior**: `CHURCH` is **not** placed in any world module.
+  `data/content/world/buildings.yaml` and `data/content/world_modules/frontier_village_core.yaml`
+  were reverted to their pre-ticket state; `sandbox_world` was recompiled to confirm `church_0` no
+  longer appears in its resolved output.
+- **Rationale**: **Bounded** (deferred, matching idea 30's own precedent, not "placed but inert").
+  Building real BLESSING/RESURRECTION service-handling logic remains out of this P3 backlog item's
+  scope; placing the building without it produces no real value and risks silently implying
+  functionality that isn't there.
+- **Status**: RATIFIED (revised) — see `TCK-20260907-CHURCH-CONTENT-AUTHORING`'s own updated
+  Completion Summary for the full record of both decisions.
+
+---
+
+### 2.55 Chronicle Fidelity Drift and Belief Institution Gain a Live Consumer via `personality_bias` (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING)
+- **Subsystem**: AI / Adventure Route Scoring, World Dynamics
+- **Old Behavior**: idea 62 (Chronicle Fidelity Drift, `src/domains/fidelity/`) and idea 63 (Belief
+  Institution, `src/domains/belief_institution/`) shipped 2026-09-05 each explicitly disclosed as
+  having no live consumer — the terminal ideas in the M5 Fame → Fidelity → Belief-Institution chain,
+  unit-tested only. This epic's own scoping pass on 2026-09-07 further mis-stated idea 62 as
+  "blocked on idea 63 not existing," a stale premise corrected by
+  `TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`.
+- **New Behavior**: Both wired into `AdventureRouteScorer.score()`'s live `personality_bias`
+  mechanism, following the exact bridge-and-wire pattern §2.53 established for idea 57's own
+  `LegendFact`/Living Legend branch. `CampaignOrchestrator._build_initial_state()` snapshots
+  `CampaignState.belief_institutions` into `AuthoritativeState.entity_belief_institutions`
+  (`Dict[int, Tuple[BeliefInstitution, ...]]`, keyed directly off each institution's own real
+  `adherent_entity_ids` — no separate `clans` lookup needed) and `CampaignState.historical_drift`
+  into `AuthoritativeState.event_fidelity` (`Dict[str, float]`, entry_id → fidelity scalar only, not
+  the full `FidelityCarryForward` record). Both are carried forward every tick by
+  `ApplyPath.apply_generation()` in the same commit that introduced them, avoiding the exact
+  regression `TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD` fixed for the sibling
+  fields. `AdventureGoalScorer.score()` resolves both per entity and threads them through
+  `AdventureDecisionService.decide()` into a new `AdventureRouteScorer.score()` branch: for
+  `QUEST_OPPORTUNITY` routes, the strongest fidelity-scaled `belief_strength` among the entity's real
+  adherent memberships (max, not sum — one entity in N belief institutions is conceptually one
+  "does my in-group revere a legend" signal, not N independent ones) adds `strongest * 0.30` to
+  `personality_bias`, additive and independent of the trait, Culture Drift, and Living Legend
+  branches above it.
+- **Rationale**: **Bounded**. Reused the existing bridge/wire infrastructure §2.53/idea-57 already
+  built rather than inventing a new consumer mechanism — the minimal change that gives both real
+  chains an actual gameplay effect. `FidelityState`'s own scaling role (dampening a belief's weight
+  by how faithfully accurate its origin event's historical record remains) was chosen over inventing
+  a second, separate `RouteFamily` branch for fidelity alone, since fidelity has no independent
+  per-entity meaning outside the belief-institution context it decays alongside — evaluated and
+  rejected as a candidate for `PROTECT_TARGET` (would require a real escort-target-to-legend-subject
+  cross-reference not evidenced by any existing data shape) in favor of this simpler, directly-
+  evidenced design. Ratified by the orchestrating session via explicit user decision (2026-09-07:
+  "Add a new wiring ticket now") after the stale-premise finding was independently re-verified
+  against real source (`src/domains/fidelity/`, `src/domains/belief_institution/`).
+- **Verification**: New branch covered by
+  `tests/unit/domains/adventure/test_belief_institution_route_bias.py` (6 tests: additive bonus,
+  unmapped-route no-op, empty-tuple/omitted equivalence, fidelity scaling including missing-entry
+  1.0 default, strongest-not-summed across multiple memberships, additivity with the Living Legend
+  branch). Bridge construction covered by two new tests in
+  `tests/unit/domains/campaigns/test_fame_wiring.py`
+  (`test_build_initial_state_bridges_belief_institutions_and_fidelity_by_entity_id`). Carry-forward
+  covered by 4 new tests in `tests/unit/engine/test_apply_generation_episode_bridge_carryforward.py`.
+  `docs/parity_ledger/world_dynamics.yaml` `WORLD-BELIEF-001`/`WORLD-FIDELITY-001`'s own
+  `support_boundary` fields updated in place to record the resolved "no live consumer" gap. No full
+  emergent-corpus calibration run was attempted: belief institutions require multi-episode Chronicle-
+  fame accumulation to form naturally (a real `Clan` + a subject crossing `FAME_THRESHOLD` + at
+  least one completed episode), making deterministic single-shot corpus seeding impractical within
+  this ticket's scope — the real production code paths (`_build_initial_state()`,
+  `apply_generation()`, `AdventureRouteScorer.score()`) are exercised directly instead, matching the
+  same evidentiary bar §2.53's own Culture Drift/Living Legend branches used.
+- **Why `QUEST_OPPORTUNITY` specifically, added 2026-09-07 after independent review**: the real
+  reason is implementation convenience, and this note names that explicitly rather than leaving it
+  implicit. `QUEST_OPPORTUNITY` was chosen because `BeliefInstitution.belief_strength` is
+  conceptually a Clan-scoped derivative of `LegendFact.fame` (per its own model docstring — equal to
+  the legendary subject's own fame when the subject is a clan member), so it reuses the Living
+  Legend branch's exact real semantic tie to heroic quest-seeking with the least new code — not
+  because `QUEST_OPPORTUNITY` is the only, or even the most obviously fitting, route family a
+  belief-institution signal could plausibly bias. A more SOCIAL-adjacent route family (e.g. one tied
+  to defending or rallying around a religious/institutional site) was not evaluated in depth, mainly
+  because no existing `RouteFamily` cleanly represents that shape today. A future idea that wants
+  belief-institution bias on a different route family should treat this as a real, re-openable
+  design question, not a settled architectural constraint — it should re-derive its own reasoning
+  from `BeliefInstitution`'s real fields rather than assuming `QUEST_OPPORTUNITY` is the only valid
+  hook.
 - **Status**: RATIFIED
 
 ---

@@ -518,12 +518,52 @@ wiring table.
 | `QUEST_OPPORTUNITY` | `greed` | **0.50** |
 | `BUY_UPGRADE`, `COMBAT_ENGAGE`, `DEFER_WITH_REASON` | (none) | 0.0 |
 
-Only one family match applies per route. Maximum personality_bias = 0.50 (greed routes).
+Only one family match applies per route. Maximum personality_bias = 0.50 (greed routes) from the
+trait-based table above.
 
 **Calibration history:** Weights were raised from a uniform 0.25 (E11C, 2026-06-28) after the
 E11B 1k-tick personality audit showed greed and sociability had Δ<0.05 effect on route
 selection. Bravery already exerts strong influence via risk_multiplier (multiplicative path)
 and was not changed.
+
+**Culture Drift branch (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, 2026-09-07):** an
+independent, additive second contribution to `personality_bias`, layered on top of the
+trait-based table above (both can apply to the same route at once — this branch is not part of
+the "only one family match" rule). When `AdventureRouteScorer.score()` receives a `culture_state`
+(the entity's current region's `CultureState`, bridged once per episode from
+`CampaignState.region_cultures` via `AuthoritativeState.region_culture_states`), and the route's
+family has a real Culture Drift tag mapping, `personality_bias` also receives
+`CulturalBiasApplicator.compute_culture_delta()`'s additive delta (E62C, bounded to
+`[-0.5, 1.0]`, reused unchanged from the already-shipped Culture Drift subsystem):
+
+| RouteFamily | Culture tags |
+|---|---|
+| `RECOVER` | `recovery`, `caution` |
+| `HUNT_WEAK_ENEMY` | `combat` |
+| `OWN_SURVIVAL` | `survival`, `flee` |
+| `FORM_PARTY` | `party` |
+| `PROTECT_TARGET` | `loyalty` |
+
+Every other `RouteFamily` value has no Culture Drift mapping and contributes 0.0 from this
+branch. This bypasses the pre-existing `MotivationBiasService`/`DoctrineResolver`/
+`IdentityDoctrine`/`ValuePreferenceProfile` chain, which was confirmed dead in production (see
+`docs/guidelines/intentional_divergences.md` §2.53 for the full disclosure).
+
+**Living Legend branch (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, 2026-09-07):** a third
+independent, additive contribution to `personality_bias`, layered on top of both the trait-based
+table and the Culture Drift branch above (all three can apply to the same route at once). When
+`AdventureRouteScorer.score()` receives a `legend_fact` (this entity's own `LegendFact`, bridged
+once per episode from `CampaignState.entity_fame` via `AuthoritativeState.entity_legend_facts`,
+gated by `LegendFactService.for_entity()`'s own `FAME_THRESHOLD = 0.5` check) and
+`route.family == RouteFamily.QUEST_OPPORTUNITY`, `personality_bias` also receives
+`legend_fact.fame * 0.30` — idea 57's "Living Legend Feedback Loop": a subject whose own
+Chronicle-derived fame has crossed the threshold is further biased toward the very kind of
+heroic deed (`QUEST_OPPORTUNITY`) that produces more fame. At `fame = 1.0` (the maximum), this
+contributes up to `0.30`, on top of `QUEST_OPPORTUNITY`'s existing `greed * 0.50` trait term (see
+§6.7 for the family's separate `expected_benefit` capability-matching multiplier, which this term
+does not affect). No other `RouteFamily` has a Living Legend mapping and contributes 0.0 from
+this branch. See `docs/world/fame_legend_contract.md` for the full `LegendFact`/`FameCarryForward`
+model this reads.
 
 ### 6.5 blocker_penalty = 2.0 — Justification
 

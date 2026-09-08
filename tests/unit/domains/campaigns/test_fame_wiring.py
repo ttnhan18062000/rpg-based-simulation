@@ -10,7 +10,10 @@ populated from one _advance_state() call.
 from unittest.mock import MagicMock
 
 from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator
-from src.domains.campaigns.state import EpisodeSummary, NarrativeLedgerEntry
+from src.domains.campaigns.state import EntityCarryForward, EpisodeSummary, NarrativeLedgerEntry
+from src.domains.fame.model import FameCarryForward, FameState
+from src.domains.fidelity.model import FidelityCarryForward, FidelityState
+from src.domains.belief_institution.model import BeliefInstitution, BeliefInstitutionCarryForward
 
 
 def _make_manifest() -> CampaignManifest:
@@ -59,3 +62,86 @@ def test_fame_wiring_advance_state_calls_fame_exporter_alongside_culture_and_fid
     assert "hero_1" in orch.state.entity_fame
     assert orch.state.entity_fame["hero_1"].derived_episode == 0
     assert orch.state.entity_fame["hero_1"].fame.fame > 0.0
+
+
+# --- TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: entity_legend_facts bridge ------------------
+# Import-side counterpart to the export-side test above: proves _build_initial_state() itself
+# (not just a hand-constructed AuthoritativeState) turns CampaignState.entity_fame into the
+# bridged entity_legend_facts snapshot via the real LegendFactService.for_entity() threshold gate.
+
+
+def test_build_initial_state_bridges_entity_fame_above_threshold_into_entity_legend_facts():
+    manifest = _make_manifest()
+    orch = CampaignOrchestrator(manifest)
+
+    # One subject above FAME_THRESHOLD (0.5), one below -- proves the bridge reuses
+    # LegendFactService.for_entity()'s own gate rather than dumping raw fame unconditionally.
+    orch.state.entity_fame["hero_1"] = FameCarryForward(
+        subject_id="hero_1", fame=FameState(fame=0.7), derived_episode=0,
+    )
+    orch.state.entity_fame["hero_2"] = FameCarryForward(
+        subject_id="hero_2", fame=FameState(fame=0.2), derived_episode=0,
+    )
+    # An alive carry-forward entity is required for _build_initial_state() to reach the bridge
+    # logic at all -- with none, it early-returns a bare fresh AuthoritativeState (episode-0 path).
+    orch.state.persistent_entities[1] = EntityCarryForward(
+        entity_id=1, level=1, xp=0, equipment={}, reputation=1.0, alive=True,
+    )
+
+    state = orch._build_initial_state(episode_seed=1)
+
+    assert "hero_1" in state.entity_legend_facts
+    assert state.entity_legend_facts["hero_1"].fame == 0.7
+    assert "hero_2" not in state.entity_legend_facts
+
+
+# --- TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: entity_belief_institutions/event_fidelity
+# bridge. Same import-side pattern as the entity_legend_facts test above: proves
+# _build_initial_state() itself turns CampaignState.belief_institutions/historical_drift into
+# the bridged per-entity-id snapshot + entry_id-fidelity-scalar dicts.
+
+
+def test_build_initial_state_bridges_belief_institutions_and_fidelity_by_entity_id():
+    manifest = _make_manifest()
+    orch = CampaignOrchestrator(manifest)
+
+    orch.state.belief_institutions["clan_1:ev_a"] = BeliefInstitutionCarryForward(
+        key="clan_1:ev_a",
+        institution=BeliefInstitution(
+            origin_event_id="ev_a", clan_id="clan_1", adherent_entity_ids=(1, 2), belief_strength=0.6,
+        ),
+        derived_episode=0,
+    )
+    orch.state.belief_institutions["clan_2:ev_b"] = BeliefInstitutionCarryForward(
+        key="clan_2:ev_b",
+        institution=BeliefInstitution(
+            origin_event_id="ev_b", clan_id="clan_2", adherent_entity_ids=(2,), belief_strength=0.3,
+        ),
+        derived_episode=0,
+    )
+    orch.state.historical_drift["ev_a"] = FidelityCarryForward(
+        entry_id="ev_a", fidelity=FidelityState(fidelity=0.9), derived_episode=0,
+    )
+    # An alive carry-forward entity is required for _build_initial_state() to reach the bridge
+    # logic at all -- same requirement as the entity_legend_facts test above.
+    orch.state.persistent_entities[1] = EntityCarryForward(
+        entity_id=1, level=1, xp=0, equipment={}, reputation=1.0, alive=True,
+    )
+
+    state = orch._build_initial_state(episode_seed=1)
+
+    # Entity 1 is a real adherent of clan_1's institution only.
+    assert 1 in state.entity_belief_institutions
+    assert len(state.entity_belief_institutions[1]) == 1
+    assert state.entity_belief_institutions[1][0].clan_id == "clan_1"
+    # Entity 2 is a real adherent of both institutions.
+    assert 2 in state.entity_belief_institutions
+    assert {inst.clan_id for inst in state.entity_belief_institutions[2]} == {"clan_1", "clan_2"}
+    # An entity with no real belief-institution membership is simply absent, not a None/empty
+    # placeholder entry -- matches entity_legend_facts's own "hero_2 not in ..." contract above.
+    assert 3 not in state.entity_belief_institutions
+
+    assert state.event_fidelity["ev_a"] == 0.9
+    # ev_b has no historical_drift entry -- correctly absent from the bridged dict, not defaulted
+    # to 1.0 here (the 1.0 default lives in the scorer's own None-safe lookup, not the bridge).
+    assert "ev_b" not in state.event_fidelity

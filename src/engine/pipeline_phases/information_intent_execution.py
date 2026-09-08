@@ -49,10 +49,20 @@ class InformationIntentExecutionPhase:
             if entity is None:
                 continue
 
-            for candidate in ent_upd.intent_results:
-                if not isinstance(candidate, ActionIntent):
-                    continue
+            candidates = [c for c in ent_upd.intent_results if isinstance(c, ActionIntent)]
+            if not candidates:
+                continue
 
+            # Strip the raw, unresolved ActionIntent entries from this entity's own
+            # intent_results BEFORE executing them. Without this, they survive unchanged
+            # (EntityUpdate.merge() concatenates intent_results additively below), get
+            # installed as entity.identity.latest_intent_results, and crash
+            # StrategicWorkQueue.build() (reads .accepted unconditionally off every
+            # entry, a field only real IntentResult objects have).
+            remaining_results = [r for r in ent_upd.intent_results if not isinstance(r, ActionIntent)]
+            refined_entity_updates[eid] = replace(refined_entity_updates[eid], intent_results=remaining_results)
+
+            for candidate in candidates:
                 adapter_updates = ActionIntentAdapter.execute(
                     entity=entity,
                     intent=candidate,

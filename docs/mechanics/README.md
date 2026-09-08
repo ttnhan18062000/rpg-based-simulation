@@ -61,6 +61,13 @@ The structural laws of data-driven setup.
 *   Entity & Resource Distribution
 *   Integrity Validation Laws
 
+### [07: Social & Political Dynamics](07_social_political_dynamics.md)
+Trust, contracts, reputation, and party/group coordination.
+*   Trust Appraisal & Social Contracts
+*   Reputation (two distinct systems)
+*   Contract Lifecycle & Consequences
+*   Party & Group Coordination
+
 ---
 
 ## Sub-Contract Index
@@ -78,6 +85,6 @@ The following companion docs extend the Mechanics Bible chapters with formula de
 
 ## Compliance Status
 
-Chapters 01–04 and 06 are **Certified Level 1 (Authoritative)** as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source (resource respawn interval, trauma delta per death). See `06_worldbuilding_foundation.md §Compliance Status` for the per-chapter table.
+Chapters 01–04, 06, and 07 are **Certified Level 1 (Authoritative)** — 07 as of 2026-09-07, the rest as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source (resource respawn interval, trauma delta per death). See `06_worldbuilding_foundation.md §Compliance Status` for the per-chapter table.
 
 Sub-contracts are **Authoritative (P1)** as of 2026-06-13 and are verified against source code. They do not replace chapters — they extend them.

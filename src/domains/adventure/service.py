@@ -8,9 +8,14 @@ and constructs the final bridge state using RouteToProjectMapper.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional, TYPE_CHECKING
 
 from src.core.state import EntityState, ResourceNodeState
+
+if TYPE_CHECKING:
+    from src.domains.culture.model import CultureState
+    from src.domains.fame.legend import LegendFact
+    from src.domains.belief_institution.model import BeliefInstitution
 from src.domains.adventure.schema import (
     RouteFamily,
     AdventureRouteOption,
@@ -35,11 +40,28 @@ class AdventureDecisionService:
         resource_nodes: Optional[Dict[int, ResourceNodeState]] = None,
         faction_directives: Optional[list] = None,
         factions: Optional[Any] = None,
+        culture_state: Optional["CultureState"] = None,
+        legend_fact: Optional["LegendFact"] = None,
+        belief_institutions: Optional[Tuple["BeliefInstitution", ...]] = None,
+        event_fidelity: Optional[Dict[str, float]] = None,
     ) -> AdventureDecisionResult:
         """
         Evaluate candidates, score them using Personality biased heuristics,
         and select the highest scoring valid option.
-        
+
+        culture_state (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE, optional): the entity's
+        real current region's CultureState, threaded through unchanged to
+        AdventureRouteScorer.score()'s own Culture Drift bias branch.
+
+        legend_fact (TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING, optional): this entity's own
+        LegendFact (None if their fame hasn't crossed FAME_THRESHOLD), threaded through unchanged
+        to AdventureRouteScorer.score()'s own Living Legend bias branch.
+
+        belief_institutions / event_fidelity (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING,
+        both optional): this entity's own real BeliefInstitution adherent memberships and the
+        entry_id -> fidelity scalar map, threaded through unchanged to
+        AdventureRouteScorer.score()'s own Belief Institution reinforcement bias branch.
+
         Args:
             entity: The current EntityState (immutable view)
             candidates: List of generated AdventureRouteOptions
@@ -75,6 +97,10 @@ class AdventureDecisionService:
                 resource_nodes=resource_nodes,
                 faction_directives=faction_directives,
                 factions=factions,
+                culture_state=culture_state,
+                legend_fact=legend_fact,
+                belief_institutions=belief_institutions,
+                event_fidelity=event_fidelity,
             )
             scored_candidates.append(scored)
 

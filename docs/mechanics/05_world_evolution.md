@@ -643,12 +643,17 @@ same `ChronicleGrouper().group(narrative_ledger)` result, never a separately (re
 `NarrativeLedgerEntry.entry_id`. Events absent from a given episode's hierarchy keep their prior
 fidelity snapshot unchanged until the next derivation.
 
-### No Live Consumer Yet
+### Live Consumer (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING, 2026-09-07)
 
-Unlike Cultural Drift's `CulturalBiasApplicator` overlay, this mechanism ships with **no live
-reader wired in**. `FidelityImporter.get_fidelity()` is a thin, `None`-safe lookup helper with no
-call site — the intended eventual consumer is idea 63 ("Belief Grows Around Real History"), not
-yet built. This is a disclosed, accepted gap, not a hidden incompleteness.
+Previously ships with no live reader wired in — `FidelityImporter.get_fidelity()` was a thin,
+`None`-safe lookup helper with no call site. Now bridged: `CampaignOrchestrator._build_initial_
+state()` snapshots `historical_drift` into `AuthoritativeState.event_fidelity` (entry_id →
+fidelity scalar), carried forward every tick by `ApplyPath.apply_generation()`.
+`AdventureGoalScorer.score()` threads it into `AdventureRouteScorer.score()`'s Belief Institution
+`personality_bias` branch (see §"Live Consumer" below), where it scales a belief institution's own
+`belief_strength` contribution by how faithfully accurate its origin event's historical record
+still is — a belief formed around a heavily-mythologized/decayed-fidelity event carries less
+real-history weight than one still close to the original record.
 
 ### Acceptance Signal
 
@@ -834,13 +839,21 @@ two-track split. `BeliefInstitution` models population-scale organized reverence
 individual entity's own tactical belief or knowledge. Neither existing class is modified or
 imported by this mechanism.
 
-### No Live Consumer Yet
+### Live Consumer (TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING, 2026-09-07)
 
-This mechanism ships with **no live reader wired in** — it is the terminal idea in the M5
-Fame → Fidelity → Belief-Institution chain, and the whole chain remains "built, not yet visible in
-play." No new SimQ scoring pillar or `CHURCH` building (`"BLESSING"`/`"RESURRECTION"`) wiring is
-added — both are explicitly out of scope, per the source design's own "too underspecified to build
-around responsibly" caveat.
+Previously the terminal idea in the M5 Fame → Fidelity → Belief-Institution chain with no live
+reader wired in. Now bridged into `AdventureRouteScorer.score()`'s live `personality_bias`
+mechanism, mirroring idea 57's own Living Legend branch (§9 above): `CampaignOrchestrator.
+_build_initial_state()` snapshots `belief_institutions` into `AuthoritativeState.entity_belief_
+institutions` (entity_id → tuple of real adherent `BeliefInstitution` snapshots, keyed directly off
+each institution's own `adherent_entity_ids`), carried forward every tick by `ApplyPath.
+apply_generation()`. `AdventureGoalScorer.score()` resolves it per entity; for `QUEST_OPPORTUNITY`
+routes, the strongest fidelity-scaled `belief_strength` among the entity's real memberships (max,
+not summed across multiple institutions) adds to `personality_bias` — a clan's organized reverence
+for a real legend reinforces the same heroic quest-seeking fame itself reinforces, channeled through
+group identity rather than individual renown. No new SimQ scoring pillar or `CHURCH` building
+(`"BLESSING"`/`"RESURRECTION"`) wiring is added — both remain explicitly out of scope, per the
+source design's own "too underspecified to build around responsibly" caveat.
 
 ### Acceptance Signal
 

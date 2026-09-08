@@ -76,15 +76,37 @@ have no live path connecting them to the rest of the simulation.
    own comment — zero real production call sites. Unlike items 1-3, this requires a real product
    decision (flip the flag ON and verify, or leave deliberately dormant pending a real consumer),
    not a wiring fix — flagged for that decision, not resolved here.
-5. **Idea 62 (`FidelityDeriver`) remains blocked on idea 63 (Belief/Religion) not existing yet** —
-   confirmed unchanged: idea 63's own schema is still flagged genuinely underspecified (see M9's own
-   scoping). Out of this plan's scope entirely; revisit only once idea 63 itself is designed.
+   **Resolved, 2026-09-07** (`TCK-20260907-ITEM-INSTANCE-HISTORY-DECISION`, `tickets/done/`): also
+   confirmed **zero real consumer** exists (not just zero producer, unlike every other item in this
+   list) — real user decision, **defer**, `ENABLE_ITEM_INSTANCE_HISTORY` stays `OFF`.
+5. **CORRECTED, 2026-09-07 — this item's original premise was stale and factually wrong.** This
+   plan originally claimed "Idea 62 (`FidelityDeriver`) remains blocked on idea 63 (Belief/Religion)
+   not existing yet." That was already false at the time this plan was written: **both idea 62
+   (Chronicle Fidelity Drift, `src/domains/fidelity/`) and idea 63 (Belief Institution,
+   `src/domains/belief_institution/`) shipped 2026-09-05** as `TCK-20260905-CHRONICLE-FIDELITY-DRIFT`
+   and `TCK-20260905-BELIEF-INSTITUTION-DESIGN` (see
+   `docs/plans/rpg_design_roadmap/rpg_m5_memory_reputation_epic.md` lines 139-182, and
+   `docs/world/belief_institution_contract.md`) — this plan's own 2026-09-07 scoping pass re-asserted
+   the stale premise without re-checking it. **The real remaining gap is "no live consumer,"
+   structurally identical to item 1's idea 56/57 gap before this epic's own
+   `ROUTE-BIAS-SCORING-INFRASTRUCTURE`/`LEGEND-FACT-ROUTE-BIAS-WIRING` tickets wired them into
+   `personality_bias`.** Real user decision, 2026-09-07 (via `AskUserQuestion`, prompted by
+   `TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`'s own investigation): scope a new wiring ticket
+   now, matching the idea 56/57 pattern — see `TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING`.
 6. **Ideas 50 (Material-Gated Evolution) and 64 (The Empty Chair) were confirmed unbuilt during M9's
    scoping** — building either is real new-feature work, a product decision for the roadmap owner, not
    an "observe and fix" item. Out of this plan's scope; not re-ticketed here.
+   **Resolved, 2026-09-07** (`TCK-20260907-DORMANT-IDEA-DISPOSITION-DECISIONS`, `tickets/done/`):
+   real user decision, **schedule both for a future milestone** (see `rpg_design_roadmap.md` §M10 —
+   Deferred Ideas Backlog) rather than retire.
 7. **The `CHURCH` building's Blessing/Resurrection services are fully coded and placed in zero of the
    20 world modules** — a pure content-authoring gap (add the building to at least one module's
    composition), no code required. Lowest priority since it's isolated and low-risk either way.
+   **Resolved, 2026-09-07** (`TCK-20260907-CHURCH-CONTENT-AUTHORING`, `tickets/done/`): premise was
+   wrong — `BLESSING`/`RESURRECTION` have zero real code reading them anywhere, unlike this plan's
+   other content-only gaps. Real user decision (after two revisions, see the ticket's own
+   Completion Summary): **deferred**, same treatment as idea 30 (`TCK-20260907-ITEM-INSTANCE-
+   HISTORY-DECISION`) — `CHURCH` is not placed in any world module.
 
 ## Out of Scope
 

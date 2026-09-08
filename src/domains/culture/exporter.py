@@ -6,7 +6,10 @@ cross-episode culture persistence (Epic 6.2B).
 
 CultureDriftExporter.export() is called from CampaignOrchestrator._advance_state()
 after social memories are updated. CultureDriftImporter.get_culture() is a thin
-lookup helper used by E62C (MotivationBiasService wiring).
+lookup helper used by E62C, now wired into AdventureRouteScorer.score()'s
+personality_bias mechanism (TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE) — the
+original MotivationBiasService this docstring referred to was confirmed dead and
+deleted (TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT).
 """
 
 from __future__ import annotations

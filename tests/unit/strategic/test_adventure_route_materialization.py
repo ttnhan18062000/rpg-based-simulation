@@ -11,6 +11,7 @@ carry a non-None target_id.
 from __future__ import annotations
 
 from dataclasses import replace as dc_replace
+from unittest.mock import create_autospec
 
 from src.ai.goals import GoalRegistry
 from src.ai.goals.base import GoalScore
@@ -49,7 +50,13 @@ def _eligible(monkeypatch):
 
 
 def _fake_decide_factory(raw_score, family, target_node_id=None):
-    def _fake_decide(entity, candidates, tick=0, resource_nodes=None, faction_directives=None, factions=None):
+    """Wraps the fake behavior in create_autospec(AdventureDecisionService.decide) so a future
+    signature change is caught structurally at mock-call time
+    (TCK-20260908-ADVENTURE-DECIDE-MOCK-SIGNATURE-DRIFT-HARDENING), not by depending on this
+    file's own hand-rolled stub staying manually in sync (the regression class
+    TCK-20260907-DORMANT-CLOSURE-CI-REGRESSION-FIXUP fixed after-the-fact)."""
+
+    def _fake_decide(entity, candidates, **kwargs):
         selected = AdventureRouteOption(
             family=family,
             score=raw_score,
@@ -62,7 +69,7 @@ def _fake_decide_factory(raw_score, family, target_node_id=None):
             selected=selected, rejected=(), proposed_project=None, proposed_objective=None, trace={},
         )
 
-    return _fake_decide
+    return create_autospec(AdventureDecisionService.decide, side_effect=_fake_decide)
 
 
 def test_adventure_route_winner_materializes_with_raw_score_not_utility(monkeypatch):

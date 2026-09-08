@@ -750,7 +750,79 @@ class CampaignOrchestrator:
                 for event in evaluate_social_consequence(entity, faction_id, self._state, tick=0):
                     self._event_recorder.record(event)
 
-        return AuthoritativeState(tick=0, seed=episode_seed, entities=entities)
+        # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: snapshot idea 56's region_cultures signal
+        # into per-tick-reachable state at episode start -- the real bridge GroupPhase.resolve()
+        # (the one live caller of LoyaltyDriftService.compute_loyalty_pressure() via
+        # effective_defection_threshold()/check_defection()) has needed since TCK-20260905-
+        # DRIFTING-LOYALTY-SIGNAL shipped it with an always-0.0 default. Sorted iteration per this
+        # ticket's own AC4 determinism requirement -- feeds a plain dict keyed by region_id, not an
+        # unsorted set/iteration order into any durable structure's own key order.
+        from src.systems.social_systems.loyalty_drift import LoyaltyDriftService
+
+        region_loyalty_pressure = {
+            region_id: LoyaltyDriftService.compute_loyalty_pressure(self._state, region_id)
+            for region_id in sorted(self._state.region_cultures.keys())
+        }
+
+        # TCK-20260907-ROUTE-BIAS-SCORING-INFRASTRUCTURE: snapshot region_cultures's own
+        # CultureState objects (not a derived scalar, unlike region_loyalty_pressure above) so
+        # AdventureGoalScorer.score() can feed a real Culture Drift bias branch into
+        # AdventureRouteScorer.score()'s personality_bias term. Same sorted-iteration
+        # determinism discipline as region_loyalty_pressure immediately above.
+        region_culture_states = {
+            region_id: self._state.region_cultures[region_id].culture
+            for region_id in sorted(self._state.region_cultures.keys())
+        }
+
+        # TCK-20260907-LEGEND-FACT-ROUTE-BIAS-WIRING: snapshot idea 57's own Chronicle-derived fame
+        # signal into per-tick-reachable state, mirroring region_culture_states's own bridge pattern
+        # immediately above. LegendFactService.for_entity() is the real, already-shipped
+        # threshold-gate (returns None below FAME_THRESHOLD) — reused unchanged rather than
+        # re-deriving the threshold check here, so only subjects that actually cross it end up in
+        # the bridged dict. Sorted iteration over entity_fame.keys() for the same determinism
+        # discipline as region_loyalty_pressure/region_culture_states.
+        from src.domains.fame.legend import LegendFactService
+
+        entity_legend_facts = {}
+        for subject_id in sorted(self._state.entity_fame.keys()):
+            fact = LegendFactService.for_entity(self._state, subject_id)
+            if fact is not None:
+                entity_legend_facts[subject_id] = fact
+
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: snapshot idea 63's belief_institutions
+        # (keyed "{clan_id}:{origin_event_id}") into a per-entity-id dict — each
+        # BeliefInstitution's own adherent_entity_ids already carries the real int entity ids
+        # directly, so no separate clans lookup is needed. One entity can be a real adherent of
+        # more than one belief institution at once (different clans/legends), hence the tuple
+        # value rather than a single BeliefInstitution. Sorted iteration over
+        # belief_institutions.keys() for the same determinism discipline as
+        # region_loyalty_pressure/region_culture_states/entity_legend_facts above.
+        entity_belief_institutions: Dict[int, tuple] = {}
+        for _key, _carry_forward in sorted(self._state.belief_institutions.items()):
+            institution = _carry_forward.institution
+            for eid in institution.adherent_entity_ids:
+                entity_belief_institutions[eid] = entity_belief_institutions.get(eid, ()) + (institution,)
+
+        # TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING: snapshot idea 62's historical_drift
+        # (keyed by NarrativeLedgerEntry.entry_id) into a plain entry_id -> fidelity scalar dict —
+        # only the scalar is needed to scale entity_belief_institutions's own belief_strength
+        # contribution at scoring time, not the full FidelityCarryForward record. Sorted
+        # iteration for the same determinism discipline as the bridges above.
+        event_fidelity = {
+            entry_id: _carry_forward.fidelity.fidelity
+            for entry_id, _carry_forward in sorted(self._state.historical_drift.items())
+        }
+
+        return AuthoritativeState(
+            tick=0,
+            seed=episode_seed,
+            entities=entities,
+            region_loyalty_pressure=region_loyalty_pressure,
+            region_culture_states=region_culture_states,
+            entity_legend_facts=entity_legend_facts,
+            entity_belief_institutions=entity_belief_institutions,
+            event_fidelity=event_fidelity,
+        )
 
     # ── spawn helpers ──────────────────────────────────────────────────────────
 

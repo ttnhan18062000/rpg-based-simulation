@@ -1995,7 +1995,14 @@
   proof_type: contract
   test_path: tests/unit/domains/chronicle/test_fidelity_deriver.py
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING (2026-09-07): gained
+    a real live consumer. CampaignOrchestrator._build_initial_state() bridges
+    CampaignState.historical_drift into AuthoritativeState.event_fidelity (entry_id
+    -> fidelity scalar), carried forward every tick by ApplyPath.apply_generation().
+    AdventureGoalScorer.score() threads it into AdventureRouteScorer.score(), which
+    scales the Belief Institution personality_bias branch''s own belief_strength
+    contribution by the matching origin_event_id''s fidelity -- previously no live
+    consumer existed anywhere.'
 - id: WORLD-FIDELITY-002
   text: 'FidelityDeriver.derive() is deterministic: calling it twice with the same
     ChronicleHierarchy input produces byte-identical output. FidelityCarryForward
@@ -2075,9 +2082,19 @@
     tests/unit/domains/belief_institution/test_deriver.py::test_no_belief_institution_without_qualifying_legend_fact,
     tests/unit/domains/belief_institution/test_deriver.py::test_belief_institution_origin_event_prefers_posthumous_hero_death
   divergence_note: null
-  support_boundary: Ships with no live consumer -- terminal idea in the M5 Fame ->
-    Fidelity -> Belief-Institution chain, unit-tested only, not wired into any live
-    pipeline phase.
+  support_boundary: 'RESOLVED, TCK-20260907-CHRONICLE-BELIEF-CONSUMER-WIRING
+    (2026-09-07): previously "ships with no live consumer" (terminal idea in the
+    M5 Fame -> Fidelity -> Belief-Institution chain, unit-tested only). Now bridged:
+    CampaignOrchestrator._build_initial_state() snapshots belief_institutions into
+    AuthoritativeState.entity_belief_institutions (entity_id -> tuple of real adherent
+    BeliefInstitution snapshots, keyed directly off each institution''s own
+    adherent_entity_ids -- no separate clans lookup needed), carried forward every
+    tick by ApplyPath.apply_generation(). AdventureGoalScorer.score() resolves it
+    per entity and threads it into AdventureRouteScorer.score(), which adds a
+    QUEST_OPPORTUNITY personality_bias bonus (strongest fidelity-scaled institution
+    among the entity''s real memberships, not summed) -- mirrors the idea 57 Living
+    Legend branch''s own real semantic tie between group identity and heroic
+    quest-seeking. See docs/guidelines/intentional_divergences.md section 2.53.'
 - id: WORLD-BELIEF-002
   text: 'BeliefInstitutionDeriver.derive() is pure/stateless/deterministic: calling
     it twice with the same (hierarchy, campaign_state, clans) inputs produces byte-identical

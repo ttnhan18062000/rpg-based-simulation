@@ -151,9 +151,10 @@ class PartyLifecycleService:
         output — high regional faction-conflict exposure LOWERS the threshold by up
         to 2 grievances, mirroring composition_score's own bonus shape in the
         opposite direction. Defaults to 0.0 (no effect), reproducing the exact
-        pre-idea-56 behavior for any caller that does not supply it -- the current
-        live caller (GroupPhase.resolve()) has no CampaignState to derive a real
-        value from and is unchanged; see docs/world/culture_drift_contract.md.
+        pre-idea-56 behavior for any caller that does not supply it. The live caller
+        (GroupPhase.resolve()) now supplies a real bridged value in any Campaign-mode
+        run past episode 0 (TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE); see
+        docs/world/culture_drift_contract.md.
         The result is floored at 1 -- grievance-driven defection is never made
         impossible by a hostile-culture region alone.
         """

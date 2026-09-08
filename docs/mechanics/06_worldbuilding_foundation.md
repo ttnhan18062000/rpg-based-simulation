@@ -250,5 +250,6 @@ own documented read-only/deterministic contract one call further down the same c
 | 04 Strategic Cognition | Verified | Corrected: interruption formula uses resistance_multiplier (TCK-20260619-P0-DOC-REPAIR); blocker kinds, perception radius 10.0, info decay 50 ticks (TCK-20260627-P3C-DOC-CURRENCY) |
 | 05 World Evolution | Partially verified | 2 uncertain claims remain: resource respawn interval, trauma delta per death (not traced to source) |
 | 06 Worldbuilding Foundation | Verified | Structural claims confirmed (TCK-20260619-P0-DOC-REPAIR, TCK-20260627-P3C-DOC-CURRENCY); town_center derivation rule documented (TCK-20260824-TOWN-CENTER-POINTER-FIX) |
+| 07 Social & Political Dynamics | Verified | New chapter authored, every formula independently spot-checked against source; corrected 5 materially-fabricated sections in the promoted-from doc (`docs/simulation/social_systems_contract.md`) rather than transcribing them unverified (TCK-20260905-SOCIAL-MECHANICS-BIBLE-CHAPTER) |
 
-Chapters 01–04 and 06 are **Certified Level 1 (Authoritative)** as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source.
+Chapters 01–04, 06, and 07 are **Certified Level 1 (Authoritative)** — 07 as of 2026-09-07, the rest as of 2026-06-27. Chapter 05 is **Partially Verified** — structural mechanics confirmed, 2 numeric constants unverified against source.
