@@ -1,0 +1,8 @@
+schema_version: "worldcomposition.v1"
+world_id: "camp_maturity_calibration_pilot"
+name: "Camp/Nest Maturity Calibration Pilot"
+description: "Unit-tier isolation world proving CampService.process_camps()'s raid and Nest-spread branches (RAID_MATURITY_THRESHOLD=80.0) fire in a real, practical-length run -- TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE's own real user decision (dedicated calibration world with seeded near-threshold maturity, not a production balance-constant change). Composes frontier_village_core + camp_maturity_calibration_pilot, the latter seeding a CAMP (goblin) and a NEST (wolf) both at maturity=79.5 so the real ~160,000-tick production accrual gate is bypassed via content alone, leaving only the real, practical last_raid_tick>=500 gate. With ENABLE_CAMP_NEST_SPREAD=ON (via this world's own calibration profile), the goblin camp (not in CampService.NEST_RACE_KINDS) takes the raid branch and the wolf nest (in NEST_RACE_KINDS) takes the Nest-spread branch in the same run -- both real branches proven in one calibration."
+modules:
+  - "frontier_village_core"
+  - "camp_maturity_calibration_pilot"
+generation_seed: 505

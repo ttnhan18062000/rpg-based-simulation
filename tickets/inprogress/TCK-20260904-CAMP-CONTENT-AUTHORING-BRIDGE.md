@@ -196,6 +196,22 @@ this ticket's own **Out of Scope** ("Any change to the classification rule, `Cam
   `... validate lifecycle_full_coverage_world` shows only the 4 pre-existing, unrelated
   `WORLD-UNEXPECTED-SECTION` warnings shared by every world of this shape.
 
+**Follow-up pass, 2026-09-08:**
+- `pytest tests/unit/worldbuilding/ tests/unit/worldassembly/ tests/tools/test_corpus_registry.py
+  tests/unit/world/ tests/unit/content/ -m "not slow"` — **881 passed, 0 failed** (33 deselected),
+  confirming the `compiler.py` `CampState.maturity` fix causes no regression.
+- `pytest tests/unit/ -k "camp" -m "not slow"` — **195 passed, 0 failed** (all camp-related tests
+  repo-wide).
+- Real `Kernel.tick_once()` runs (510 ticks against the new dedicated `camp_maturity_calibration_
+  pilot` world) proved: both camps' maturity crosses 80.0 at tick ~500 (seeded content + the
+  compiler fix, not an estimate); the Nest-spread branch fires and produces a real `life_stage=
+  CHILD` entity at the nest's own compiled position; the raid branch's `maturity_delta=-20.0`/
+  `last_raid_tick_set` bookkeeping applies for both camps at the same tick despite the raid branch
+  itself never spawning visible raiders (the discard bug documented above).
+- `python3 -m src.worldbuilding.cli resolve/validate camp_maturity_calibration_pilot` — succeeds,
+  only the same class of pre-existing `WORLD-UNEXPECTED-SECTION` warnings every unit-tier world of
+  this shape has.
+
 ## Files Changed
 - `data/content/world_modules/goblin_camp_conflict.yaml` (creature_kind on existing CAMP Place)
 - `data/content/world_modules/wolf_den_near_forest.yaml` (new NEST-kind Place)
@@ -205,12 +221,39 @@ this ticket's own **Out of Scope** ("Any change to the classification rule, `Cam
 - `docs/parity_ledger/faction.yaml` (FAC-003 — via `parity_ledger_writer.py`)
 - `tickets/inprogress/TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE.md` (this ticket)
 
+**Follow-up pass, 2026-09-08:**
+- `src/worldbuilding/compiler.py` (real bugfix: thread `p_spec.maturity` into `CampState`, not just
+  the companion `PlaceState`)
+- `data/content/world_modules/camp_maturity_calibration_pilot.yaml` (new dedicated module)
+- `data/worlds/camp_maturity_calibration_pilot/` (new dedicated world + resolved artifacts)
+- `config/simulation_quality/profiles/camp_maturity_calibration_pilot.yaml` (new calibration
+  profile, `ENABLE_CAMP_NEST_SPREAD: "ON"`)
+- `data/content/world/biomes.yaml`, `data/content/world/ecologies.yaml`, `data/content/world/
+  runtime_regions.yaml` (new catalog entries for the dedicated calibration region — required by the
+  resolver, isolated to this one region, no existing entries touched)
+
 ## Completion Summary
-NOT DONE — BLOCKED, deliberately. The content-authoring half of this ticket (its actual deliverable)
-is complete and verified against real compiled worlds: `state.camps` is non-empty for the first time
-ever (one real CAMP + one real NEST), a real LAIR-kind Place exists for the first time, and
-`CampService`'s spawn branch demonstrably fires in a real Kernel run. Parity ledger entries that
-claimed "no real content sets creature_kind" are corrected.
+STILL NOT DONE — BLOCKED again, deliberately, after real follow-up progress. Summary of the full
+picture across both passes:
+- **Done and verified**: content authored (CAMP/NEST/LAIR places exist in real compiled worlds,
+  `state.camps` non-empty for the first time, spawn branch fires); a real compiler bugfix
+  (`CampState.maturity` threading) that benefits any future maturity-seeded content repo-wide, not
+  just this ticket; a dedicated calibration world proving the Nest-spread branch fires with a real
+  offspring entity in a practical 510-tick run.
+- **Newly found, real, deeper blockers** (not resolvable within this ticket's own content-authoring
+  scope): the raid branch's own code silently discards its computed raiders regardless of maturity
+  or timing (a pre-existing, self-documented incomplete stub in `CampService`); `EXPAND_TERRITORY`
+  can never fire for any faction in any real world because `FactionState.territory` is never seeded
+  or derived anywhere in production code; the Lair-occupant gates have no compile-time seed path
+  and need ≥250,000 ticks naturally.
+- Three real decisions are now needed (see the Decision section above) before this ticket — or a
+  follow-up ticket it should split into — can close for real.
+
+The content-authoring half of this ticket (its original own deliverable) is complete and verified
+against real compiled worlds: `state.camps` is non-empty for the first time ever (one real CAMP +
+one real NEST), a real LAIR-kind Place exists for the first time, and `CampService`'s spawn branch
+demonstrably fires in a real Kernel run. Parity ledger entries that claimed "no real content sets
+creature_kind" are corrected.
 
 What blocks closure is not content: the raid, Nest-spread, EXPAND_TERRITORY-boost, and Lair-occupant
 branches all gate on maturity thresholds that need ~160,000 ticks (camps) or an unreached world
@@ -229,3 +272,107 @@ EXPAND_TERRITORY-boost branches can be genuinely proven reachable in a real, pra
 without touching real production game-balance constants used by every other world. The real
 production `CampService`/`BossService` mechanism and constants stay exactly as they are; only this
 one dedicated calibration world sees a lowered gate.
+
+### Follow-up implementation, 2026-09-08 — real progress, plus 3 new, deeper blockers found
+
+**No profile-level constant-override mechanism exists.** Investigated `tools/calibrate_simq.py`'s
+`_load_profile_feature_flags()` and the calibration profile YAML schema — only `feature_flags:`
+(ON/OFF/SHADOW toggles) and `campaign_episodes:` are supported; there is no generic per-world
+numeric-constant override. Content-seeding was the only viable path, not a config toggle.
+
+**Real, additive fix required and made (in scope, not a mechanism/threshold change):**
+`PlaceRecipeSpec.maturity` (`src/worldbuilding/schema.py`) is a real, already-documented,
+content-authorable field ("CAMP/NEST-kind: growth-over-time value... reused from
+`CampState.maturity`"), and `WorldCompiler.compile()` already threads it into the companion
+`PlaceState.maturity` — but a real compiler bug meant it was **never threaded into the parallel
+`CampState`** that `CampService.process_camps()` actually reads (`src/worldbuilding/compiler.py`,
+`CampState(...)` constructor was missing `maturity=p_spec.maturity`). Content-authored maturity was
+therefore silently inert for every CAMP/NEST place in every world, not just this one. Fixed with a
+1-line additive change (`**({"maturity": p_spec.maturity} if p_spec.maturity is not None else {})`)
+— defaults unchanged for every place that doesn't set it; verified via full
+`tests/unit/worldbuilding/ tests/unit/worldassembly/ tests/tools/test_corpus_registry.py
+tests/unit/world/ tests/unit/content/` sweep (881 passed) plus all camp-related tests repo-wide
+(195 passed). This was necessary for the ratified decision to be implementable via content at all
+— without it, seeded maturity values are silently discarded and the calibration-world approach is
+impossible.
+
+**New dedicated world built and verified**: `camp_maturity_calibration_pilot`
+(`data/worlds/camp_maturity_calibration_pilot/`, `data/content/world_modules/
+camp_maturity_calibration_pilot.yaml`) — composes `frontier_village_core` +
+`camp_maturity_calibration_pilot`, seeding a CAMP (`goblin`) and NEST (`wolf`) both at
+`maturity: 79.9` (isolated to this one dedicated world only — `goblin_camp_conflict`/
+`wolf_den_near_forest`'s own shared, production-default-maturity content is untouched, so none of
+the 16 worlds composing those modules is affected). Required 3 small catalog registrations
+(`data/content/world/{biomes,ecologies,runtime_regions}.yaml`) since the resolver requires every
+region/biome/ecology referenced by a module to exist in the shared catalog even for a
+single-purpose calibration world — routine content plumbing, not a design decision.
+Calibration profile: `config/simulation_quality/profiles/camp_maturity_calibration_pilot.yaml`
+(`ENABLE_CAMP_NEST_SPREAD: "ON"`).
+
+**AC3's Nest-spread branch: PROVEN reachable, real offspring entity confirmed.** Ran a real,
+practical 510-tick `Kernel.tick_once()` loop (not a synthetic fixture): both camps' maturity
+crossed 80.0 at tick ~500 (`79.9 + 10×0.05 = 80.4`, consistent with the ticket's own documented
+0.0005/tick effective rate), and `state.tick - camp.last_raid_tick >= 500` (default `0`) was
+satisfied at the same tick. The wolf nest's Nest-spread branch (`camp.kind in NEST_RACE_KINDS`,
+flag ON) fired: a new entity (id 24) appeared at tick ~501, positioned exactly at the nest's own
+compiled position `(180, 180)`, `role=MONSTER`, **`life_stage=CHILD`** — the real, distinguishing
+signature of `generator.spawn_natural_creature_offspring()` (adult `spawn_monster()` calls don't
+produce `CHILD` entities). Maturity dropped from 80.15 → 60.15 for both camps at the same tick
+(the -20.0 cost), confirming the branch condition and cost-application both executed correctly.
+
+**AC3's Raid branch: a real, separate, pre-existing bug found — camp-triggered raids are silently
+discarded, independent of maturity or timing.** `CampService.process_camps()`'s own raid-reuse code
+(`src/world/camp.py`, the `else:` branch under "Trigger a raid from this camp!") calls
+`RaidService.check_for_raid(state, generator)` and receives a real `raid_update` with computed
+raider entities in `raid_update.entities_add` — but then the code's own pre-existing comment block
+says *"We can't easily mutate the update list, so we just add them but in a real system we'd pass
+the origin. For now, let's just mark the last_raid_tick."*, followed by a `for mob in
+raid_update.entities_add: ... pass` loop that **does nothing** — the computed raiders are never
+appended to the outer `entities_add` list `process_camps()` actually returns. `camp_updates[c_id]`
+still gets `maturity_delta=-20.0, last_raid_tick_set=state.tick` unconditionally, so the *internal
+bookkeeping* silently proceeds as if a raid happened, even though **zero raiders are ever actually
+spawned by this code path, regardless of maturity or timing** — a self-documented, pre-existing
+incomplete stub, not something content authoring (or this ticket's own scope) can fix. Separately,
+this camp-triggered call is *also* gated a second time by `RaidService.check_for_raid()`'s own
+independent `state.tick % raid_interval_ticks == 0` condition (`raid_interval_ticks = 500`, same
+constant as `src/engine/world_dynamics.py`'s own **unrelated, global, camp-agnostic** periodic raid
+trigger) — meaning even if the discard bug were fixed, the camp-triggered raid would still only
+ever produce visible raiders on a tick that happens to be an exact multiple of 500, a second,
+narrower compounding gate. (The `raid_party_spawned` event observed in an earlier calibration run
+at tick 501 was independently confirmed to be this *unrelated* global trigger, not
+`CampService`'s own branch — a red herring in this investigation's own earlier pass, corrected
+here before reporting.)
+
+**AC4 (EXPAND_TERRITORY) and the Lair-occupant half of AC2: confirmed genuinely unreachable by any
+means available to this ticket, for reasons deeper than originally scoped:**
+- `FactionState.territory` (`src/core/state.py`, `Tuple[str, ...] = ()`) is **never seeded at
+  compile time and never derived by any runtime phase** — confirmed via `grep -rn "territory_add"
+  src/` (only ever read in `apply.py`'s merge logic and observability shapers, never emitted by any
+  real producer) and by direct inspection of `WorldCompiler.compile()`'s own `FactionState(...)`
+  construction (only `faction_id`/`tension_level` set). `region.owner_faction_id` *is*
+  compile-time-seedable (`context.region_ownership`), but nothing propagates that into the
+  corresponding faction's own `territory` tuple. `FactionDecisionPhase.execute()`'s own
+  `EXPAND_TERRITORY` gate (`if fs.territory: ...`) can therefore never be true for any faction in
+  any real compiled world today — this is a separate, real dormant-mechanism gap, independent of
+  camp/maturity content, and squarely outside this ticket's own content-authoring scope to fix (it
+  needs either a compile-time territory-derivation step or a runtime seeding phase — a real
+  mechanism decision, not a content change).
+- The Lair-occupant gates (`state.maturity >= 50.0`, world-level, +1 per calamity; `region.
+  trauma_score >= 20.0`) have no compile-time content-seed path in the schema (confirmed: no
+  `RegionSpec`/`WorldComposition`-level field for either). Natural accrual: `CalamityService`'s own
+  `CALAMITY_FORCE_INTERVAL = 5000` guarantees a calamity at most every 5000 ticks, so reaching
+  `state.maturity >= 50` needs **≥250,000 ticks** minimum — even deeper than the camp-maturity gate
+  this ticket already found, and with no calibration-world workaround available without adding a
+  new schema field (a real, additive mechanism change beyond pure content authoring).
+
+**Disposition**: left BLOCKED (not DONE) again, deliberately. Real, verified progress on AC3's
+Nest-spread half; a real, valuable, independently-useful compiler bugfix now benefits every world's
+future maturity-seeded content, not just this one; 3 new, well-evidenced findings escalated rather
+than worked around or decided unilaterally — matches this fork's own explicit directive to stop
+and report a genuinely new, different blocker rather than invent a fix. Real decisions needed:
+(1) is the raid-discard bug worth fixing now as its own hotfix (a real, small, self-contained
+`camp.py` fix distinct from this ticket's own content-authoring scope), (2) should EXPAND_TERRITORY's
+territory-seeding gap be scoped as its own ticket (a real mechanism decision, not resolvable here),
+(3) should the Lair-occupant gate be formally accepted as long-horizon-only (matching the same
+disposition class as the camp-maturity gate before this ticket's own fix) or get a new
+compile-time-seedable schema field.

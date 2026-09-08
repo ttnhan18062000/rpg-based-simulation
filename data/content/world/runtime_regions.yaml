@@ -154,3 +154,12 @@
   tags: ["shelter", "wilderness", "survival"]
   danger_level: 0
   controlling_faction: "neutral"
+
+# TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE: calibration-only region, isolated to
+# camp_maturity_calibration_pilot world only.
+- id: "monster_calibration_zone"
+  display_name: "Monster Calibration Zone"
+  biome: "monster_calibration_zone"
+  tags: ["forest", "calibration"]
+  danger_level: 2
+  controlling_faction: "goblin_warband"
