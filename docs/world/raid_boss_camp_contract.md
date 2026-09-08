@@ -164,7 +164,8 @@ camp-triggered discard bug.
 
 Two conditions must both be met:
 
-1. `camp.maturity >= 50`
+1. `state.maturity >= 50` (world-level, not per-camp — see `BossService.BOSS_SPAWN_THRESHOLD`;
+   corrected here from a doc typo that read `camp.maturity`, TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN)
 2. `region.trauma >= 20`
 
 Both gates must pass simultaneously. If only one is met, no boss spawns.

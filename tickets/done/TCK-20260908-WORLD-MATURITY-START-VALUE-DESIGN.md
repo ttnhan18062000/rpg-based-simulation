@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN
-phase: open
+phase: done
 date: 2026-09-08
 tags: [world, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [world, architecture]
 Decide whether a world should be compilable at a non-zero starting world maturity
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -74,12 +74,17 @@ a materially wider blast radius than the schema gap suggests.
   blast-radius awareness, per Scope above).
 
 ## Acceptance Criteria
-- [ ] A complete list of `state.maturity`-gated mechanisms exists, produced by a real survey of
-      `src/`, so the disclosure describes the true scope of what is long-horizon-gated.
-- [ ] The accepted gap is recorded in `docs/guidelines/intentional_divergences.md` with a rationale
-      class and a verification path — not left as only a ticket-body note.
-- [ ] No schema change and no gate-value change are made. If the survey produces evidence that
-      genuinely overturns the decision, stop and raise it rather than acting on it unilaterally.
+- [x] A complete list of `state.maturity`-gated mechanisms exists, produced by a real survey of
+      `src/`, so the disclosure describes the true scope of what is long-horizon-gated. Found
+      `check_for_boss_spawn()` (world_boss/ancient_sentinel, region-scoped) shares the exact same
+      gate as `check_for_lair_spawn()` — not mentioned by this ticket's own original framing.
+      Also found `spawn_stronghold()`'s own maturity-based stat scaling (real, reachable) and
+      `spawn_calamity()`'s own identical scaling pattern (confirmed dead — zero callers anywhere).
+- [x] The accepted gap is recorded in `docs/guidelines/intentional_divergences.md` §2.56 with a
+      rationale class (Bounded) and a verification path — not left as only a ticket-body note.
+- [x] No schema change and no gate-value change are made. The survey did not turn up evidence that
+      overturns the decision — confirmed genuinely long-horizon (no other consumer depends on
+      reaching the threshold sooner).
 
 ## Related Tickets
 - `TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE` (`tickets/done/` — found this gap during its own
@@ -102,7 +107,8 @@ a materially wider blast radius than the schema gap suggests.
 None yet.
 
 ## Related Stored Artifacts
-None yet — created by this ticket's own Investigate/Plan phases once picked up for implementation.
+`stored_artifacts/TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN/` (investigation.md, plan.md,
+test_plan.md)
 
 ## Related Code Areas
 - `src/world/calamity.py` (`CalamityService.apply()`, `MATURITY_INTERVAL`)
@@ -116,8 +122,53 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
 
 ## Implementation Notes
 
+Decision was already made (user, 2026-09-08: accept as long-horizon-only, no schema field, no
+gate recalibration). Remaining work was the blast-radius survey and the disclosure entry.
+
+**Survey** (`grep -rn "state\.maturity\b" src/`, excluding tests): found 6 real reference sites,
+classified into gates, scalers, and non-consumers — see `intentional_divergences.md` §2.56 for the
+full breakdown. Two findings beyond the ticket's own original framing:
+1. `BossService.check_for_boss_spawn()` (region-scoped `world_boss`/`ancient_sentinel`) shares the
+   exact same `state.maturity>=50` gate as `check_for_lair_spawn()` — the ticket named only the
+   Lair-occupant case; both mechanisms have been equally unreachable, all along, for the same
+   reason.
+2. `EntityGenerator.spawn_calamity()` (`generator.py:238-251`) has the same `state.maturity`-scaled
+   stat pattern as `spawn_stronghold()`, but a repo-wide grep (including tests) confirms **zero
+   callers anywhere** — dead code, unrelated to the maturity threshold itself. Noted in the
+   disclosure for survey completeness; not filed as its own cleanup ticket since it has zero
+   runtime impact (a judgment call, not escalated — happy to file it separately if reviewed and
+   disagreed with).
+
+**Doc correction**: `docs/world/raid_boss_camp_contract.md`'s own "Boss — Spawn conditions"
+section read `camp.maturity >= 50`, inconsistent with that same doc's own correct
+`state.maturity >= 50` phrasing two paragraphs later (the Lair-generalization note). Corrected —
+a real doc/code parity fix directly adjacent to this ticket's own investigation area, per the
+Authoritative Mechanics Rule.
+
+**`intentional_divergences.md` §2.56** records the full survey, the accept-and-disclose decision
+and its rationale (Bounded — rejecting a global `starting_world_maturity` field because its blast
+radius covers every consumer above at once, unlike the scoped `CampState.maturity` content-
+authoring fix `TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE` already shipped for camps/nests), and
+the two beyond-scope findings above.
+
+No production code changed beyond the doc correction (a comment/prose fix, not a behavior change).
+
 ## Test Summary
+`pytest tests/unit/world/ -m "not slow and not extra_slow"` → 332 passed, 0 failed (confirms the
+doc-only change introduced no regression — expected, since no `src/` behavior changed).
 
 ## Files Changed
+- `docs/guidelines/intentional_divergences.md` — new §2.56.
+- `docs/world/raid_boss_camp_contract.md` — corrected `camp.maturity` → `state.maturity` typo in
+  the Boss spawn-conditions section.
 
 ## Completion Summary
+Confirmed via a real survey (not assumed) that `state.maturity`'s long-horizon (~50,000-tick) gate
+affects both the world_boss/ancient_sentinel and Lair-occupant spawn mechanisms identically, plus
+stronghold elite-stat scaling — a wider blast radius than this ticket's own original Lair-occupant
+framing named. Recorded the already-decided accept-and-disclose disposition in
+`docs/guidelines/intentional_divergences.md` §2.56 with the full survey, per the Authoritative
+Mechanics Rule. Corrected a real, directly-adjacent doc/code inconsistency
+(`docs/world/raid_boss_camp_contract.md`'s own internal contradiction on which value the boss
+spawn gate reads) found while investigating. No schema change, no gate-value change, no other
+production code changed — exactly as the standing decision specified.
