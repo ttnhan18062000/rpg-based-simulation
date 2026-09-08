@@ -2,6 +2,7 @@
 # Compliance IDs: INFRA-196, INFRA-197
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
 import logging
@@ -104,6 +105,35 @@ class CanonicalStateHasher:
         
         # 4. RNG Checkpoint
         data["rng_checkpoint"] = state.rng_checkpoint
+
+        # 5. Dormant Mechanism Closure epic bridge fields
+        # (TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE): confirmed via direct test
+        # that two states differing ONLY in one of these 6 fields previously produced identical
+        # hashes -- a real determinism-verification gap, not benign (personality_bias's own
+        # contribution from these fields is not guaranteed to flip any entity's resulting
+        # decision/state on the same tick it changes, so a real divergence here could silently
+        # escape detection at a certification/replay checkpoint).
+        data["region_loyalty_pressure"] = dict(sorted(state.region_loyalty_pressure.items()))
+        data["region_culture_states"] = {
+            k: v.to_dict() for k, v in sorted(state.region_culture_states.items())
+        }
+        data["entity_legend_facts"] = {
+            k: v.to_dict() for k, v in sorted(state.entity_legend_facts.items())
+        }
+        # List[InformationSourceProfile], not keyed -- sort by (source_id, source_kind) for a
+        # stable canonical order independent of insertion order.
+        data["information_source_profiles"] = sorted(
+            (dataclasses.asdict(p) for p in state.information_source_profiles),
+            key=lambda d: (str(d.get("source_id")), str(d.get("source_kind"))),
+        )
+        data["entity_belief_institutions"] = {
+            str(k): [
+                inst.to_dict()
+                for inst in sorted(v, key=lambda i: (i.origin_event_id, i.clan_id))
+            ]
+            for k, v in sorted(state.entity_belief_institutions.items())
+        }
+        data["event_fidelity"] = dict(sorted(state.event_fidelity.items()))
 
         return data
 

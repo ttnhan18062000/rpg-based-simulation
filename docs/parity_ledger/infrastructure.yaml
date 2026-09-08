@@ -12322,3 +12322,36 @@
     fix does not change that. The new unit_information_routing_pilot profile (TCK-20260907-ROUTE-NEW-QUERY-CORPUS-SCENARIO)
     is the only shipped world that turns this flag ON, specifically to exercise this
     exact code path.
+- id: INFRA-413
+  text: 'CanonicalStateHasher.to_canonical_data() (src/engine/checkpoint.py) now includes
+    the 6 AuthoritativeState bridge fields the Dormant Mechanism Closure epic added
+    (region_loyalty_pressure, region_culture_states, entity_legend_facts, information_source_profiles,
+    entity_belief_institutions, event_fidelity), each with the same sorted/deterministic-iteration
+    discipline the pre-existing collections use. Before TCK-20260907-CAMPAIGN-BRIDGE-FIELDS-STATE-HASH-COVERAGE
+    these 6 were absent by omission, so two AuthoritativeStates differing ONLY in
+    one of them produced byte-identical canonical hashes -- confirmed by direct reproduction,
+    a real determinism-verification gap rather than a benign omission. The ''downstream
+    mutation makes it observable anyway'' argument does not hold: these fields feed
+    AdventureRouteScorer.score()''s personality_bias, whose contribution is additive
+    and not guaranteed to flip the selected RouteFamily on the same tick the field
+    diverges, so a real divergence could persist undetected across a certification/replay
+    checkpoint that relies on final_state_hash. information_source_profiles is a List
+    with no natural key, so it is sorted by (source_id, source_kind) to keep the hash
+    insertion-order-independent; entity_belief_institutions'' per-entity tuples are
+    sorted by (origin_event_id, clan_id) for the same reason.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'src/engine/checkpoint.py (CanonicalStateHasher.to_canonical_data()
+    section 5, added alongside an `import dataclasses` for InformationSourceProfile''s
+    asdict() serialization -- it is a frozen slots dataclass with no to_dict() of
+    its own, unlike CultureState/LegendFact/BeliefInstitution which each supply one).
+    Regression sweep after the change: 362 passed / 0 failed across tests/unit/engine/,
+    tests/unit/replay/, tests/unit/kernel/, tests/integration/kernel/, plus tests/unit/domains/progression/test_progression_decision_canonical_hash.py.
+    No performance regression: real calibration run `tools/calibrate_simq.py --name
+    urban_political --seed 42 --ticks 200` completed in 7.99s with overall_grade=S,
+    unchanged pillar profile.'
+  test_path: tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py::test_region_loyalty_pressure_difference_changes_hash;
+    tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py::test_information_source_profiles_hash_is_insertion_order_independent
+  divergence_note: null
+  proof_type: regression
