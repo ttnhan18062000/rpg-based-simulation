@@ -96,6 +96,17 @@ are themselves unreachable.
 - `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT` (origin of this finding; that
   ticket's own Finding 3 explicitly could not answer whether war/siege/calamity fire at full
   episode length because of this truncation)
+- `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION` — **hypothesized (not yet confirmed)
+  shared root cause**, raised by peer review (`rpg-feature-planning`, 2026-09-08): under
+  `RuntimeMode.DEGRADED`/`ScanPolicy.EXACT_DIRTY`, non-urgent entities (including freshly-spawned
+  ones with no active AI goal) are permanently excluded from movement candidacy; if most of a
+  `campaign_life_arc` episode's entities fall into that category, nothing moves, no movement events
+  are generated, `kernel._current_tick_event_count` stays at 0, and this ticket's own stall counter
+  climbs to the threshold — one phenomenon (event-silence under `EXACT_DIRTY`), not two unrelated
+  bugs. Not traced end to end; the cheap falsification test is logging
+  `_current_tick_event_count` per tick in a `campaign_life_arc` episode and checking whether it goes
+  to 0 at the same tick `RuntimeMode` enters `DEGRADED`. Whoever picks up either ticket first should
+  check this before treating the two as independent.
 
 ## Related Docs
 None yet.

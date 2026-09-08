@@ -158,6 +158,26 @@ fixed as part of THIS ticket (out of its own named scope, a doc-parity nit unrel
 drift) — noted here for traceability; corrected as part of `WORLD-MATURITY-START-VALUE-DESIGN`'s
 own work instead, since that ticket already touches this exact doc section.
 
+**Addendum (2026-09-08, post-closure, peer review during `DIRTY-SET-PASSIVE-DECAY-CONSUMER-
+INVESTIGATION`'s pickup):** the "did not fire within the 52-tick episodes observed" wording above
+is itself still weaker than what the evidence actually supports. Independently confirmed by reading
+`ScenarioRuntimeService._evaluate_after_tick()` (`src/engine/scenario_runtime.py:340-357`) and
+`Kernel.tick_once()`'s event-count computation (`src/engine/kernel.py:1000-1078`,
+`generated_events = EventExtractor.extract(...)` plus grief/shaper/violation/governor-mode events):
+the stall counter increments on **any** tick where the kernel produced **zero** `SimulationEvent`
+objects of **any** kind — not just war/siege/calamity events. `STALLED` fires at
+`stall_counter > 50`. The observed ~52-tick truncation therefore means these episodes produced no
+simulation events of any kind for roughly 50 consecutive ticks starting around tick 2, not merely
+"no war/siege/calamity events." The correct, stronger claim: **these 52-tick episodes tell us
+nothing about whether war/siege/calamity can fire, because the simulation itself went event-silent
+almost immediately — the runs were effectively dead, not merely short.** This does not change the
+ticket's own disposition (no baseline exists to refresh, no code change warranted by this
+investigation) but corrects the evidentiary framing above. See
+`TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION` (cross-referenced with a hypothesized,
+not yet confirmed, shared root cause with
+`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`) for the actual resolution of why the
+simulation goes silent.
+
 ## Test Summary
 - `grep -rn "campaign" tests/simulation_quality/fixtures/grade_anchors.json
   tests/simulation_quality/fixtures/expected_world_flag_state.json` — zero hits, confirmed twice
@@ -187,4 +207,8 @@ A real-run observation (war/siege/calamity did not fire within observed 52-tick 
 initially overstated as a structural conclusion; caught by peer review and corrected to the
 honestly narrower claim, with the actual cause of the episode truncation (a stall-detector timeout)
 traced and filed as its own separate, real ticket rather than resolved as an aside or dropped
-silently. No baseline refresh and no code change are warranted by this investigation itself.
+silently. Post-closure addendum (see Implementation Notes) further corrected the framing: the
+52-tick episodes produced zero simulation events of any kind for ~50 consecutive ticks, not merely
+zero war/siege/calamity events — the runs were event-silent, not just short, so no observation from
+them bears on subsystem reachability either way. No baseline refresh and no code change are
+warranted by this investigation itself.

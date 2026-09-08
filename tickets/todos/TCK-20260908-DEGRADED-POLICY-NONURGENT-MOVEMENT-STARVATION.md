@@ -136,6 +136,15 @@ a fix without a real decision on the disposition.**
   verification is deferred to this ticket)
 - TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION (a different, already-ruled-out
   mechanism for the same symptom class — confirmed not the cause here)
+- TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION — **hypothesized (not yet confirmed)
+  shared root cause**, raised by peer review (`rpg-feature-planning`, 2026-09-08): if
+  `campaign_life_arc` episodes enter `RuntimeMode.DEGRADED` early and most entities have no active
+  AI goal, this ticket's own starvation loop would silence movement (and any events it would have
+  generated) across the whole episode, which is exactly the ~50-consecutive-zero-event pattern that
+  ticket's own stall detector fires on. Not traced end to end from this side either. Whoever
+  investigates this ticket's own Scope item ("how often, and under what real conditions, is
+  `DEGRADED`/`EXACT_DIRTY` actually entered in practice") should check `campaign_life_arc`
+  specifically as one such real condition, rather than only a synthetic/generic long-run.
 
 ## Related Docs
 - Wherever the existing Kernel wall-clock mid-tick throttle determinism finding is recorded

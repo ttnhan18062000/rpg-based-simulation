@@ -112,3 +112,22 @@ episodes truncate at 52 ticks is filed as its own ticket rather than left as an 
 valid, evidenced null result per the ticket's own Acceptance Criteria escape clause. No baseline
 refresh and no code change are warranted by this investigation; one new follow-up ticket is filed
 for the truncation itself.
+
+**Addendum (2026-09-08, post-closure):** Finding 3's own event-stream numbers, re-read with the
+stall-detector mechanism now understood in full (`src/engine/scenario_runtime.py:340-357`,
+`src/engine/kernel.py:1000-1078`), say more than this Conclusion originally drew from them. Of the
+event stream quoted above (156 `scenario_objective_progressed`, 18 `world_emergence_event`, 3
+`scenario_stalled`, 3 `GovernorModeChanged`): the 18 `world_emergence_event`s all occurred at tick
+1; `scenario_objective_progressed` is recorded by `ScenarioRuntimeService` itself *after*
+`kernel.tick_once()` returns each tick and therefore never contributes to
+`_current_tick_event_count` (the stall counter reads the kernel's own per-tick event count, computed
+before that scenario-level bookkeeping event is recorded). So the real kernel-generated event count
+was effectively zero from around tick 2 onward in every one of the 3 episodes — consistent with,
+not merely "not enough to prove," the stall detector firing at tick ~52. The finding is therefore
+stronger than originally stated: **these episodes did not merely run short; they were
+kernel-event-silent almost immediately, so no inference about war/siege/calamity reachability can
+be drawn from them at all, in either direction.** See
+`TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION` for the resolution of *why* the kernel
+goes event-silent (hypothesized, not yet confirmed, to share a root cause with
+`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`'s non-urgent movement exclusion under
+`ScanPolicy.EXACT_DIRTY` — cross-referenced there).
