@@ -124,8 +124,13 @@ def test_combat_risk_belief_is_produced_and_consumed_across_real_ticks():
     )
 
 
-def test_isolated_entity_gets_no_combat_risk_belief_in_a_real_run():
-    """Negative control: no nearby hostile -> the producer must not fabricate a belief."""
+def test_isolated_entity_gets_low_risk_combat_belief_in_a_real_run():
+    """
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): no nearby hostile
+    now yields a real, current LOW-risk belief (not an absent one) through the real authoritative
+    apply path -- restoring the "current assessment, replaced every tick" invariant this module
+    documents, which the hostility filter would otherwise leave permanently stale.
+    """
     lone = _combatant(1, 0.0, 0.0, hp=100, atk=10)
     faraway = _combatant(2, 400.0, 400.0, hp=100, atk=10)
     state = _state_with_flags([lone, faraway])
@@ -134,4 +139,6 @@ def test_isolated_entity_gets_no_combat_risk_belief_in_a_real_run():
         refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
         state = ApplyPath.apply_generation(state, refined, next_tick=state.tick + 1)
 
-    assert state.entities[1].strategic.beliefs.get("combat_risk") is None
+    belief = state.entities[1].strategic.beliefs.get("combat_risk")
+    assert belief is not None
+    assert belief.claim == "LOW"

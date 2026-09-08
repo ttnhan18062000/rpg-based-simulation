@@ -317,6 +317,55 @@ Results: ticket-scoped suite **89 passed, 0 failed**. Broader regression sweep
 - `tests/integration/domains/test_combat_risk_belief_end_to_end.py` (1 test updated with explicit
   factions)
 
+**Second correction (2026-09-08, same review round) — the hostility filter above introduced a new
+staleness bug, found by peer review, independently verified against real code before fixing:**
+
+The `if not hostile_candidates: continue` early-out (added by the first correction, immediately
+above) means `build_combat_risk_belief()` is now only reached on ticks where a hostile is actually
+in range. Once the hostile dies or leaves, the belief's last-written value is never touched again —
+verified there is genuinely nothing that would clear it: `BeliefCycleSystem.decay_stale_beliefs()`
+(`src/systems/strategic_systems/belief.py`) iterates `entity.strategic.leads` only, despite its
+name, and has zero call sites anywhere in `src/` (confirmed via grep); `last_refreshed_tick` is
+written in three places and read for expiry nowhere; `HelpNeedEvaluator.evaluate()` reads `.claim`
+with no staleness check and does not consult `certainty` at all. Net effect: the first time an
+entity meets a HIGH/EXTREME-risk hostile, `combat_support_needed` (severity 0.6/0.8) would fire and
+then never clear, long after the threat is gone — a real, **newly introduced** regression (the
+pre-hostility-filter version's accidental every-tick refresh from an arbitrary neighbor happened to
+keep the belief fresh, so this exact failure mode could not occur before the first correction). It
+also directly contradicts this module's own documented invariant (`COMBAT_RISK_BELIEF_ID`'s
+comment: "a *current* assessment that each tick replaces in place").
+
+**Fix** (the smallest of three options considered, restoring the stated invariant at zero added
+`evaluate()` cost — the two alternatives, a consumer-side staleness window in `HelpNeedEvaluator` or
+implementing real belief decay, were both rejected as either spreading the staleness contract into
+the wrong place or being a much larger change than this ticket's own scope): when
+`hostile_candidates` is empty, `CombatEngagementPhase.apply()` now writes a real no-threat
+(`death_risk=0.0` → `LOW`) `combat_risk` belief before the early-out, rather than skipping the
+write entirely. Posture/intent resolution is still correctly skipped (no target exists), but the
+belief itself is now genuinely refreshed every tick regardless of hostile presence, matching the
+documented invariant.
+
+Two new regression tests (`tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py`):
+`test_phase_writes_low_risk_belief_when_no_hostile_nearby` (isolated actor gets a real LOW belief,
+not none) and `test_stale_combat_risk_belief_clears_once_hostile_leaves_range` (the exact
+reproduction: an actor carrying a stale HIGH-risk belief from a prior tick gets it replaced with
+LOW the next tick it has no hostile candidate). Both confirmed to fail against the pre-this-fix code
+(reverted the file to the immediately-prior correction, reran — both failed with `assert 1 in {}`)
+and pass with the fix. Three existing tests that asserted the old (now-wrong) "no belief when no
+hostile" behavior were updated to assert the corrected LOW-belief behavior instead:
+`test_phase_writes_no_threat_belief_without_skipping_posture_for_entity_without_relevant_target`
+(renamed from `test_phase_skips_entity_without_relevant_target`,
+`tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py`) and
+`test_isolated_entity_gets_low_risk_combat_belief_in_a_real_run` (renamed from
+`test_isolated_entity_gets_no_combat_risk_belief_in_a_real_run`,
+`tests/integration/domains/test_combat_risk_belief_end_to_end.py`).
+
+Full `tests/unit/domains tests/integration/domains` sweep after this fix: **998 passed, 0 failed**.
+
+**Separate follow-up filed, not fixed here** (per explicit scoping from the review that found this):
+`BeliefCycleSystem.decay_stale_beliefs()`'s name promises belief decay but the function only ever
+touches `leads` and has no live callers — `TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP`.
+
 ## Completion Summary
 `entity.strategic.beliefs["combat_risk"]` had a real, deliberately-designed, tested consumer
 (`HelpNeedEvaluator.evaluate()`) and **zero** production producer — only tests constructed it, using

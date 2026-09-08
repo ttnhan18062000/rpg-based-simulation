@@ -147,6 +147,24 @@ class CombatEngagementPhase:
                             _consider(e)
 
             if not hostile_candidates:
+                # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): the
+                # hostility filter above removed the accidental every-tick refresh the old
+                # arbitrary-neighbor version relied on to keep this module's own documented
+                # invariant true (COMBAT_RISK_BELIEF_ID's docstring: "a *current* assessment
+                # that each tick replaces in place"). Without this, the belief only got written
+                # while a hostile was in range and then stuck permanently at its last value once
+                # the threat left or died -- HelpNeedEvaluator.evaluate() has no staleness check
+                # and BeliefCycleSystem.decay_stale_beliefs() only touches `leads`, never
+                # `beliefs`, so nothing else would ever clear it. Writing a real no-threat (LOW)
+                # assessment here, before the early-out, restores the invariant at zero added
+                # evaluate() cost -- no target means no posture/intent resolution, but it does
+                # mean a real, current "no threat" belief.
+                no_threat_belief = build_combat_risk_belief(death_risk=0.0, current_tick=state.tick)
+                entity_updates[actor.id] = EntityUpdate(
+                    entity_id=actor.id,
+                    intent_results=[],
+                    strategic=StrategicUpdate(beliefs_add_or_update=[no_threat_belief]),
+                )
                 continue
 
             # Evaluate exactly the nearest hostile candidate -- one evaluate() call per actor

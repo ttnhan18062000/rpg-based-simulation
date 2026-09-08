@@ -15,6 +15,8 @@ Three layers:
      defensive degrade-not-raise path for a malformed claim.
 """
 
+import dataclasses
+
 import pytest
 
 from src.core.builder import V2EntityBuilder
@@ -158,20 +160,65 @@ def test_combat_risk_is_written_from_the_nearest_hostile_not_an_arbitrary_neighb
     assert beliefs[0].claim != RiskLevel.LOW.value
 
 
-def test_phase_emits_no_belief_when_no_targets_nearby():
-    """Isolated actor -> no evaluation happens -> no combat_risk belief written."""
+def test_phase_writes_low_risk_belief_when_no_hostile_nearby():
+    """
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): an isolated actor
+    (no hostile candidate at all) must still get a real, current LOW-risk belief written -- not
+    no belief. This restores the module's own documented invariant (COMBAT_RISK_BELIEF_ID's
+    docstring: "a *current* assessment that each tick replaces in place"), which the hostility
+    filter broke by removing the accidental every-tick refresh the old arbitrary-neighbor version
+    relied on. No target means no posture/intent resolution, but it does mean a real "no threat"
+    assessment -- see test_stale_combat_risk_belief_clears_once_hostile_leaves_range below for
+    the exact staleness scenario this exists to fix.
+    """
     actor = _entity(1, 0.0, 0.0)
     far = _entity(2, 500.0, 500.0)
     state = _state([actor, far])
 
     update = CombatEngagementPhase.apply(state)
 
-    for eu in update.entity_updates.values():
-        if eu.strategic is not None:
-            assert not [
-                b for b in eu.strategic.beliefs_add_or_update
-                if b.id == COMBAT_RISK_BELIEF_ID
-            ]
+    assert actor.id in update.entity_updates
+    eu = update.entity_updates[actor.id]
+    assert eu.property_updates == {}, "no target -- no posture/intent resolution should happen"
+    beliefs = [b for b in eu.strategic.beliefs_add_or_update if b.id == COMBAT_RISK_BELIEF_ID]
+    assert len(beliefs) == 1
+    assert beliefs[0].claim == RiskLevel.LOW.value
+    assert beliefs[0].certainty == 0.0
+
+
+def test_stale_combat_risk_belief_clears_once_hostile_leaves_range():
+    """
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): reproduces the
+    exact stickiness bug found by peer review. An actor with an existing HIGH-risk combat_risk
+    belief from a prior tick (hostile since died/left) must have it replaced with a fresh LOW
+    reading the next tick it has no hostile candidate -- not left stuck at HIGH forever, which
+    would permanently raise HelpNeedEvaluator's combat_support_needed (severity 0.6/0.8) long
+    after the real threat is gone.
+    """
+    stale_belief = BeliefEntry(
+        id=COMBAT_RISK_BELIEF_ID, subject=COMBAT_RISK_BELIEF_ID, claim=RiskLevel.HIGH.value,
+        certainty=0.6, source="observation", created_tick=0, last_refreshed_tick=0,
+    )
+    actor = _entity(1, 0.0, 0.0)
+    actor = dataclasses.replace(
+        actor,
+        strategic=dataclasses.replace(actor.strategic, beliefs={COMBAT_RISK_BELIEF_ID: stale_belief}),
+    )
+    far = _entity(2, 500.0, 500.0)
+    state = _state([actor, far])
+
+    update = CombatEngagementPhase.apply(state)
+
+    assert actor.id in update.entity_updates
+    beliefs = [
+        b for b in update.entity_updates[actor.id].strategic.beliefs_add_or_update
+        if b.id == COMBAT_RISK_BELIEF_ID
+    ]
+    assert len(beliefs) == 1
+    assert beliefs[0].claim == RiskLevel.LOW.value, (
+        "a stale HIGH-risk belief must be replaced with a fresh LOW reading once the hostile "
+        "that produced it is no longer in range, not left stuck at its old value"
+    )
 
 
 def test_belief_lands_in_durable_state_under_the_consumer_lookup_key():

@@ -37,14 +37,23 @@ def _state(entities) -> AuthoritativeState:
     )
 
 
-def test_phase_skips_entity_without_relevant_target():
+def test_phase_writes_no_threat_belief_without_skipping_posture_for_entity_without_relevant_target():
+    """
+    TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): no hostile in range
+    still writes a real LOW combat_risk belief (restoring the "current assessment, replaced every
+    tick" invariant), even though there is correctly no posture/target to set.
+    """
     actor = _entity(1, x=0.0, y=0.0)
     target_far = _entity(2, x=50.0, y=50.0) # way out of sensory range (dist > 10)
     state = _state([actor, target_far])
-    
+
     update = CombatEngagementPhase.apply(state)
-    
-    assert not update.entity_updates
+
+    assert actor.id in update.entity_updates
+    eu = update.entity_updates[actor.id]
+    assert eu.property_updates == {}
+    assert eu.strategic is not None
+    assert eu.strategic.beliefs_add_or_update[0].claim == "LOW"
 
 
 def test_phase_runs_when_hostile_enters_range():
