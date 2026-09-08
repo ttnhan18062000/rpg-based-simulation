@@ -12,6 +12,7 @@ from src.core.strategic import RiskLevel, ProjectState, ProjectKind, ObjectiveSt
 from src.core.updates import StateUpdate
 from src.domains.cooperation.phase import CooperationPhase
 from src.domains.cooperation.postures import CooperationPosture
+from src.domains.combat_engagement.phase import build_combat_risk_belief
 from src.systems.social_systems.contracts import ContractService, COOPERATION_OFFER_COOLDOWN_TICKS
 
 
@@ -62,7 +63,8 @@ def test_cooperation_phase_no_immediate_reoffer_after_expiry_tick():
     obj = ObjectiveState(id="obj_wolf", kind=ObjectiveKind.DEFEAT_ENEMY)
     proj = ProjectState(id="proj_wolf", kind=ProjectKind.COMBAT, objectives=[obj], active_objective_id="obj_wolf")
 
-    a.strategic.beliefs["combat_risk"] = {"level": RiskLevel.HIGH}
+    # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN: real BeliefEntry (death_risk 0.6 -> HIGH)
+    a.strategic.beliefs["combat_risk"] = build_combat_risk_belief(death_risk=0.6, current_tick=1)
     a.strategic.projects["proj_wolf"] = proj
     object.__setattr__(a.strategic, "current_project_id", "proj_wolf")
     object.__setattr__(a.strategic, "current_objective_id", "obj_wolf")

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P2
 audience: agent
 ticket_id: TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN
-phase: open
+phase: done
 date: 2026-09-04
 tags: [content]
 ---
@@ -16,7 +16,7 @@ Design and wire a real producer for entity.strategic.beliefs["combat_risk"] -- a
 no production writer
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -67,27 +67,36 @@ directly:
   question — already decided separately (`TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`).
 
 ## Acceptance Criteria
-- [ ] Real combat-risk-assessment design confirmed with design-authority input, not invented
-      unilaterally.
-- [ ] A real producer writes `entity.strategic.beliefs["combat_risk"]` in a live gameplay path.
-- [ ] All 5 existing tests that manually construct this belief still pass (or are updated in step with
-      a confirmed, deliberate contract change).
-- [ ] `HelpNeedEvaluator.evaluate()`'s combat-support-need logic is verified to actually fire in a real
-      simulation run at least once, not just in hand-constructed unit tests.
+- [x] Real combat-risk-assessment design confirmed with design-authority input, not invented
+      unilaterally. — Ratified by the real user via `AskUserQuestion` (Option 2, recorded below);
+      the `death_risk` source signal and its RiskLevel cutoffs are derived from constants already
+      live in `EngagementRiskEvaluator`, not invented.
+- [x] A real producer writes `entity.strategic.beliefs["combat_risk"]` in a live gameplay path. —
+      `CombatEngagementPhase.apply()` (Phase 4, runs every tick).
+- [x] All 5 existing tests that manually construct this belief still pass (or are updated in step with
+      a confirmed, deliberate contract change). — All 5 updated to construct a real `BeliefEntry`
+      via the production helper; test intent unchanged in every case.
+- [x] `HelpNeedEvaluator.evaluate()`'s combat-support-need logic is verified to actually fire in a real
+      simulation run at least once, not just in hand-constructed unit tests. —
+      `tests/integration/domains/test_combat_risk_belief_end_to_end.py`.
 
 ## Related Tickets
 - TCK-20260904-COMBAT-RISK-BELIEF-DEAD-READ (the investigation that found this gap)
 
 ## Related Docs
-None yet.
+- `docs/simulation/belief_and_detour_contract.md` (`BeliefEntry` data model)
+- `docs/parity_ledger/strategic_cognition.yaml` (`STRAT-272`, added by this ticket)
 
 ## Related Stored Artifacts
-None yet.
+- `stored_artifacts/TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN/`
 
 ## Related Code Areas
-- `src/domains/cooperation/evaluators.py` (`HelpNeedEvaluator.evaluate()`)
+- `src/domains/combat_engagement/phase.py` (`CombatEngagementPhase.apply()` — the new producer)
+- `src/domains/cooperation/evaluators.py` (`HelpNeedEvaluator.evaluate()` — the consumer)
+- `src/systems/strategic_systems/belief.py` (`BeliefEntry` schema; `estimate_threat()` checked but
+  not a direct fit — untouched, still zero-caller, out of scope)
 - `src/core/strategic.py` (`RiskLevel`)
-- `src/systems/strategic_systems/belief.py` (`estimate_threat()`, checked but not a direct fit)
+- `src/engine/patches.py` (`merge_dict()` — keys `beliefs` by `item.id`)
 
 ## Assumptions / Open Questions
 - What real signal(s) should determine `combat_risk` level is the central open design question this
@@ -173,8 +182,91 @@ signal to write from — this decision only changes *how* it's written (through 
 computes it. Threshold tuning (mapping `death_risk` float to a `RiskLevel`/claim value) still needs
 a real, evidenced starting point during implementation, not invented arbitrarily.
 
+### Implementation, 2026-09-08
+
+Implemented the ratified Option 2. Three real findings from the implementation pass, beyond what
+the prior investigation recorded (full detail in
+`stored_artifacts/TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN/investigation.md`):
+
+1. **The `BeliefEntry.id` must literally be `"combat_risk"`.** `merge_dict()`
+   (`src/engine/patches.py`) keys the beliefs dict by `item.id`, and the consumer looks up
+   `beliefs.get("combat_risk")` — so the id *is* the key. A stable (non-tick-suffixed) id is
+   deliberate: this is a *current* assessment replaced in place each tick, unlike the
+   rumor/observation precedent's tick-suffixed ids, which here would grow the dict without bound
+   every tick an actor stands near a hostile. Covered by a dedicated regression test.
+2. **`CombatEngagementPhase.apply()` evaluates exactly ONE target, not three** — it computes
+   `targets_to_evaluate = targets[:3]` but the loop body ends in `break  # evaluate first target
+   only`. This corrects the prior investigation's "max `death_risk` across all targets evaluated"
+   phrasing. Deliberately left as-is: evaluating all 3 would triple this phase's evaluation cost in
+   a phase whose own comments call out staying "strictly within strategic budget", and changing
+   engagement-evaluation breadth is outside this ticket. The single existing evaluation is reused at
+   **zero** added cost.
+3. **Real threshold precedent found — no invented numbers.** The cutoffs come from constants already
+   live in `EngagementRiskEvaluator.evaluate()`, which computes
+   `death_risk = clamp((1.0 / power_ratio) * 0.4, 0.0, 1.0)`:
+   `power_ratio` 2.0 (actor twice as strong) → 0.20; 1.0 (evenly matched) → 0.40; and `> 0.80` is
+   that evaluator's **own** `hp_critical_safety_lock` cutoff, where its `near_death`
+   `max(0.9, ...)` floor deliberately lands. Hence `<=0.20` LOW, `<=0.40` NORMAL, `<=0.80` HIGH,
+   `>0.80` EXTREME — an evidence-anchored starting point, documented as tunable, not a final
+   calibrated answer.
+
+Consumer contract change (required by the ratified decision): `HelpNeedEvaluator.evaluate()` no
+longer calls `.get("level", ...)` on a plain dict — `BeliefEntry` is a frozen slots dataclass with
+no `.get()`. It now reads `.claim` and parses it back into a `RiskLevel`, degrading to `NORMAL` on
+an absent or unparseable claim rather than raising (the `beliefs` dict is generically typed, so a
+foreign entry under this key must not break Phase 7).
+
 ## Test Summary
+19 new tests added across 2 files; all 5 pre-existing tests migrated to construct a real
+`BeliefEntry` via the production helper (`build_combat_risk_belief`) rather than duplicating the
+shape — so they now fail loudly if the producer's own contract drifts. Test intent unchanged in
+every migrated case.
+
+- `tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py` (new, 20 tests):
+  threshold-boundary mapping (9 parametrized cases at each cutoff ±0.01, plus the `near_death` 0.9
+  floor), producer contract shape, certainty clamping, real-phase emission, no-emission when no
+  hostile is nearby, durable-state landing under the consumer's lookup key through the real
+  `ApplyPath`, replace-not-accumulate across repeated ticks, and consumer parsing including the
+  malformed-claim and absent-belief degrade paths.
+- `tests/integration/domains/test_combat_risk_belief_end_to_end.py` (new, 2 tests): **AC #4** — a
+  real 3-tick `AuthoritativeApplyPipeline.refine()` + `ApplyPath.apply_generation()` loop with both
+  gating flags ON. The multi-tick span is load-bearing: `cooperation` runs *before*
+  `combat_engagement` in `refine()`, so a belief written this tick is only visible to the consumer
+  next tick — a single-tick test would pass vacuously. Verified genuinely non-vacuous before
+  finalizing: the run produces `BeliefEntry(claim='HIGH', certainty=0.66)` and
+  `HelpNeedEvaluator` returns `combat_support_needed`. The level assertion is made **directly**
+  rather than guarded behind an `if`, so it cannot silently skip if the formula drifts. Plus a
+  negative control (isolated entity → no belief fabricated).
+
+Results: ticket-scoped suite **89 passed, 0 failed**. Broader regression sweep
+(`tests/unit/strategic/`, `tests/unit/domains/`, `tests/integration/domains/`,
+`tests/integration/scenarios/`, `tests/architecture/`, `-m "not slow and not extra_slow"`):
+**1537 passed, 1 skipped, 0 failed**.
 
 ## Files Changed
+- `src/domains/combat_engagement/phase.py` (producer: `COMBAT_RISK_BELIEF_ID`,
+  `death_risk_to_level()`, `build_combat_risk_belief()`, wired into `apply()`)
+- `src/domains/cooperation/evaluators.py` (consumer: `BeliefEntry.claim` read + safe parse)
+- `tests/unit/domains/cooperation/test_phase7_help_need_evaluator.py` (migrated)
+- `tests/integration/domains/cooperation/test_phase7_cooperation_phase.py` (migrated)
+- `tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py` (migrated, 2 sites)
+- `tests/perf/test_phase7_social_cooperation_budget.py` (migrated)
+- `tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py` (new)
+- `tests/integration/domains/test_combat_risk_belief_end_to_end.py` (new)
+- `docs/parity_ledger/strategic_cognition.yaml` (new `STRAT-272`, written via
+  `tools/parity_ledger_writer.py`, not hand-edited)
+- `stored_artifacts/TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN/` (investigation, plan,
+  test_plan)
 
 ## Completion Summary
+`entity.strategic.beliefs["combat_risk"]` had a real, deliberately-designed, tested consumer
+(`HelpNeedEvaluator.evaluate()`) and **zero** production producer — only tests constructed it, using
+a bespoke `{"level": RiskLevel}` plain dict that was never `BeliefEntry`-compatible in the first
+place. Per the real user's ratified decision (Option 2, the bigger migration rather than the minimal
+bespoke-field workaround), `combat_risk` now lives on the real `BeliefEntry` system: written every
+tick by `CombatEngagementPhase.apply()` from the `death_risk` that phase already computes, and read
+back by the consumer via `.claim`. The generic-belief-schema inconsistency the investigation
+surfaced is resolved rather than worked around, and the previously-unreachable
+`combat_support_needed` branch is now proven to fire in a real multi-tick engine run. Threshold
+cutoffs are derived from the risk evaluator's own live constants and documented as a tunable
+starting point, not presented as final calibration.

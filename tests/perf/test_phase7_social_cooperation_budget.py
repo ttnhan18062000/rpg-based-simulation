@@ -12,6 +12,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.strategic import RiskLevel, ProjectState, ProjectKind, ObjectiveState, ObjectiveKind
 from src.core.updates import StateUpdate
 from src.domains.cooperation.phase import CooperationPhase
+from src.domains.combat_engagement.phase import build_combat_risk_belief
 from tests.tools.perf_assertions import assert_perf_threshold
 
 
@@ -31,7 +32,10 @@ def test_cooperation_phase_performance_budget_100_entities():
             # Active objective & high risk
             obj = ObjectiveState(id=f"obj_{i}", kind=ObjectiveKind.DEFEAT_ENEMY)
             proj = ProjectState(id=f"proj_{i}", kind=ProjectKind.COMBAT, objectives=[obj], active_objective_id=f"obj_{i}")
-            ent.strategic.beliefs["combat_risk"] = {"level": RiskLevel.HIGH}
+            # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN: real BeliefEntry (0.6 -> HIGH)
+            ent.strategic.beliefs["combat_risk"] = build_combat_risk_belief(
+                death_risk=0.6, current_tick=1
+            )
             ent.strategic.projects[f"proj_{i}"] = proj
             object.__setattr__(ent.strategic, "current_project_id", f"proj_{i}")
             object.__setattr__(ent.strategic, "current_objective_id", f"obj_{i}")
