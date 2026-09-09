@@ -66,3 +66,28 @@ before any `src/` change is made.
 - Re-verifying grief/nemesis reachability — that is
   `TCK-20260909-GRIEF-NEMESIS-CAMPAIGN-REVERIFICATION`'s own scope, filed separately and blocked on
   this ticket's own closure.
+
+## Resolution (post-implementation, both decisions confirmed with real evidence)
+
+- **Decision 2 (repository lifetime)**: (a) confirmed correct with evidence, not preference — both
+  `CatalogRepository` and `WorldModuleRepository` verified genuinely immutable after `load_all()`
+  (every `get_*`/`list_*` method is a pure read; no downstream consumer mutates them). Built once
+  in `__init__()`.
+- **Decision 1 (position-resolution scope)**: recommendation (defer) was correct, but "accept
+  co-located spawn as-is" was NOT — verified empirically per peer review's explicit instruction,
+  and co-location genuinely trips a sustained `LAW-OCCUPANCY-COLLISION` hard-law violation (41
+  occurrences over a real 70-tick run) and inflates `cooperation_event` to ~79% of all activity.
+  Added an explicitly-labeled interim scatter workaround
+  (`CampaignOrchestrator._scatter_catalog_entities()`) rather than shipping the degenerate result;
+  real position resolution still deferred to
+  `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`, which removes the workaround once it
+  lands.
+- **New decision, not anticipated in this plan's own original two**: `ScenarioSetupResolver`'s
+  default `compositions_dir` (`data/content/world_compositions/`) was found to have already
+  diverged from `data/worlds/<id>/world.yaml` for `frontier_living_world` (the real
+  `campaign_life_arc` world) — a real, distinct source-of-truth question, not anticipated when this
+  plan was written. Resolved per direct user decision, citing
+  `docs/architecture/world_repository_layout.md`'s own ADR: `CatalogScenarioStateBuilder` is now
+  constructed with `compositions_dir=Path("data/worlds")`, Campaign-only, with
+  `ScenarioSetupResolver._load_composition()` taught to accept both the nested and flat layouts.
+  Repo-wide consolidation filed separately (`TCK-20260909-WORLD-COMPOSITION-DIRECTORY-CONSOLIDATION`).
