@@ -28,10 +28,13 @@ import pytest
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _TOOLS_DIR = _REPO_ROOT / "tools"
+# TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS: the runners themselves moved to tools/archive/;
+# kgmcp_baseline_corpus.py did not move and stays under _MONITORING_TOOLS_DIR.
+_ARCHIVE_DIR = _TOOLS_DIR / "archive"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
 
-_RUNNER_MODULE_PATH = _MONITORING_TOOLS_DIR / "kgmcp_phase2_gateway_runner.py"
-_PHASE1_RUNNER_MODULE_PATH = _MONITORING_TOOLS_DIR / "kgmcp_phase1_gateway_runner.py"
+_RUNNER_MODULE_PATH = _ARCHIVE_DIR / "kgmcp_phase2_gateway_runner.py"
+_PHASE1_RUNNER_MODULE_PATH = _ARCHIVE_DIR / "kgmcp_phase1_gateway_runner.py"
 _CORPUS_MODULE_PATH = _MONITORING_TOOLS_DIR / "kgmcp_baseline_corpus.py"
 _CONTRACT_MD = _CONTRACTS_DIR / "measurement_baseline_contract.md"
 _PHASE1_RESULTS_MD = _CONTRACTS_DIR / "phase1_baseline_comparison.md"

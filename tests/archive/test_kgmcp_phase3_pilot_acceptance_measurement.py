@@ -61,9 +61,12 @@ import pytest
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _TOOLS_DIR = _REPO_ROOT / "tools"
+# TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS: the runners themselves moved to tools/archive/;
+# kgmcp_baseline_corpus.py did not move and stays under _MONITORING_TOOLS_DIR.
+_ARCHIVE_DIR = _TOOLS_DIR / "archive"
 _CONTRACTS_DIR = _REPO_ROOT / "docs" / "engine" / "contracts" / "knowledge_gateway_mcp"
 
-_RUNNER_MODULE_PATH = _MONITORING_TOOLS_DIR / "kgmcp_phase3_gateway_runner.py"
+_RUNNER_MODULE_PATH = _ARCHIVE_DIR / "kgmcp_phase3_gateway_runner.py"
 _RESULTS_MD = _CONTRACTS_DIR / "phase3_pilot_acceptance_measurement.md"
 _PHASE1_RESULTS_MD = _CONTRACTS_DIR / "phase1_baseline_comparison.md"
 _PHASE2_RESULTS_MD = _CONTRACTS_DIR / "phase2_baseline_recomparison.md"
@@ -117,6 +120,12 @@ _FROZEN_FILE_HASHES = {
     _TOOLS_DIR / "knowledge_gateway_cache.py": (
         "4b74cef3615bf5325750c40c7feacac1059820833de893a69c63f7003841d0cc"
     ),
+    # Left pointing at the pre-archival tools/agent-monitoring/ location (not tools/archive/),
+    # same as this file's own knowledge_gateway_cache.py entry above and the sibling
+    # test_kgmcp_phase4_direct_tool_comparison.py's identical dict: PR #147 never updated these
+    # secondary/incidental frozen-hash sibling references when it archived files, only each test's
+    # own primary module-under-test path (_RUNNER_MODULE_PATH above). Frozen historical record,
+    # consistent with that precedent — not touched by TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS.
     _MONITORING_TOOLS_DIR / "kgmcp_phase1_gateway_runner.py": (
         "b514bfca9df527d70085fead430f28c11829ea801ba5e1826e97e19434fca44d"
     ),
