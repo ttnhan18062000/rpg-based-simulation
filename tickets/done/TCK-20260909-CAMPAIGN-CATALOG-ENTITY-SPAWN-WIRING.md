@@ -351,6 +351,15 @@ from that scoped run by design — run directly instead: 4 passed, 0 failed).
   `<compositions_dir>/<id>/world.yaml` layout before the flat `<compositions_dir>/<id>.yaml`
   layout; backward-compatible for every existing caller (default `compositions_dir` never has the
   nested shape, so the check falls through unchanged).
+- `tests/architecture/test_phase18_import_boundaries.py` — post-push CI caught a real, mechanical
+  regression this ticket's own edit caused (not a new architectural violation): the
+  `__init__()`/`_build_initial_state()` additions shifted `orchestrator.py`'s existing, already-
+  reviewed `from src.observability.events import SimulationEvent` import from line 447 to 487.
+  `_DOMAINS_OBSERVABILITY_PINNED`'s line-keyed exception no longer matched. Re-pinned to 487,
+  following the exact precedent already documented in this same dict's own comment for an earlier
+  ticket's identical collateral line-shift (`TCK-20260905-FAME-DERIVER-LEGEND-FACT`). Verified via
+  `pytest tests/architecture tests/docs tests/integrity tests/static tests/refactor -m "not slow
+  and not extra_slow"` — 237 passed (was 236 passed, 1 failed).
 - `tests/unit/domains/campaigns/test_campaign_orchestrator.py` — `_make_manifest()`/
   `_real_episode_spec()` helpers set real `id`/`perspective`/`initial_conditions`;
   `test_build_initial_state_episode_zero_carries_compiled_regions_and_places` updated to assert
