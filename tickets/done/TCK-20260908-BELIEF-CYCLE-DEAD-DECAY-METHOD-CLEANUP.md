@@ -128,6 +128,9 @@ considered and rejected were (a) recording it as an accepted divergence without 
 - TCK-20260909-KNOWLEDGE-FACT-EFFECTIVE-CERTAINTY-DEAD-CODE-DISPOSITION (new, filed alongside this
   ticket — a second, independent "documented as absent but actually exists, zero callers" pattern
   found while correcting the STRAT-239 parity-ledger entry's own wrong `test_path`)
+- TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION (new, filed after peer review —
+  the capacity_enforcement.py/enforce_bandwidth() preemption found while writing this ticket's own
+  capacity-interaction test)
 
 ## Related Docs
 - `docs/simulation/belief_and_detour_contract.md` — the authoritative contract for LEG-RPG-150
@@ -186,14 +189,19 @@ decay" claim is accurate (confirmed by peer review; not flagged as wrong). The o
 (abandoned vs. unfinished intent) isn't resolvable from code alone — filed as
 `TCK-20260909-KNOWLEDGE-FACT-EFFECTIVE-CERTAINTY-DEAD-CODE-DISPOSITION`.
 
-**Second adjacent finding, flagged not filed**: writing the `capacity_enforcement.py` interaction
-test surfaced that `StrategicIntelligenceSystem.fused_strategic_pass()` already calls
-`DetourSuggestionSystem.enforce_bandwidth()`, which independently duplicates `capacity_enforcement.
-py`'s own `max_leads` pruning (different scoring function, different trigger condition, runs much
-earlier in the pipeline) — confirmed via direct tracing that it fires before
-`capacity_enforcement.py`'s own dedicated phase ever sees an over-capacity entity. Not this
-ticket's own scope; noted in investigation.md and flagged to peer review rather than filed
-unilaterally, since it may already be a known, accepted redundancy.
+**Second adjacent finding, flagged then filed after peer review sharpened it**: writing the
+`capacity_enforcement.py` interaction test surfaced that `StrategicIntelligenceSystem.
+fused_strategic_pass()` already calls `DetourSuggestionSystem.enforce_bandwidth()`, which runs
+much earlier in the pipeline and independently enforces `max_leads` too — confirmed via direct
+tracing that it fires and prunes before `capacity_enforcement.py`'s own dedicated phase ever sees
+an over-capacity entity. Peer review's own comparison sharpened this beyond "duplication": the two
+are not equivalent — `enforce_bandwidth()` only ever sees the pre-tick state (no awareness of this
+tick's own pending lead updates), while `capacity_enforcement.py`'s own trigger correctly accounts
+for them. The cruder, pending-update-blind mechanism runs first and can preempt the more correct
+one entirely, the same "real, tested code whose behavior is preempted" shape as this session's
+other findings — just at the level of which live mechanism's decision wins, not whether either
+runs. Filed as `TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION` (P2) rather than
+left as an aside — not this ticket's own scope, and not investigated or resolved here.
 
 **This session's recurring finding, recorded per peer review's own request**: this is (by this
 session's own running count) at least the 6th-7th instance of real, often unit-tested code with no
