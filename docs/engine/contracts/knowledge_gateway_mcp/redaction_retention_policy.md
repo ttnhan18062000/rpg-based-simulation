@@ -15,6 +15,21 @@ placed under `docs/engine/contracts/knowledge_gateway_mcp/` alongside the siblin
 identity-contract documents produced by `TCK-20260814-KGMCP-CONTRACT-SCHEMAS` and
 `TCK-20260814-KGMCP-EVIDENCE-CACHE-IDENTITY`.
 
+> **Scope note (added by TCK-20260909-KGMCP-DOC-STATUS-SWEEP):** This document's frontmatter
+> `status:` remains `active`, but its content is now mixed-currency following the archival of the
+> Knowledge Gateway MCP gateway (`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`). **Still live and
+> enforced today:** §2 Eligible Source Types / Allowlist, §3 Redaction Rules, §4 Secret-Scan
+> Disclosure, §5 Payload Size Cap, §6 Redaction-Policy Version, §7 Never-Cache Enumeration, and —
+> within §9 — only the `open_connection_with_limits()` paragraph (WAL mode, busy_timeout, chmod
+> 0600). This subset is implemented today in `tools/write_path_guard.py`, the current source of
+> truth for the live behavior, and §4's `scan_for_secrets()` is called directly by the live
+> `PreToolUse:Bash` secret-scan hook (`.claude/settings.json`). **Historical, describing only the
+> archived payload-caching feature:** §1's framing (future cached payload rows), §8 Token-Counting
+> Method, the remainder of §9 (`check_db_size_within_limit()`, `execute_bounded_transaction()`,
+> `acquire_write_guard()`/`release_write_guard()`), §10 Cache-GC Defaults, and §11 Ratification
+> Status. These sections are retained for historical/audit context only and no longer describe
+> currently-enforced behavior.
+
 ## 1. Purpose
 
 This document extends, and does not supersede,
