@@ -12417,3 +12417,13 @@
     tests/unit/engine/test_campaign_bridge_fields_state_hash_coverage.py::test_information_source_profiles_hash_is_insertion_order_independent
   divergence_note: null
   proof_type: regression
+- id: INFRA-414
+  text: 'Bash secret-exposure advisory PreToolUse hook (TCK-20260904-BASH-SECRET-SCAN-HOOK):
+    new .claude/settings.json PreToolUse[4] entry, matcher Bash, reuses tools/write_path_guard.py::scan_for_secrets()
+    unmodified, advisory-only via hookSpecificOutput.additionalContext, never permissionDecision/deny.'
+  status: verified
+  priority: P0
+  v2_evidence: tests/tools/test_bash_secret_scan_hook.py positive/negative-fire behavioral
+    tests, executed via subprocess against the live .claude/settings.json command
+    string
+  test_path: tests/tools/test_bash_secret_scan_hook.py

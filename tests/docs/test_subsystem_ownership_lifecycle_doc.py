@@ -146,20 +146,42 @@ def test_accountable_role_column_never_names_a_person():
             )
 
 
-def test_bash_secret_scan_hook_not_given_shipped_style_row():
+def test_bash_secret_scan_hook_has_real_shipped_row():
+    """TCK-20260904-BASH-SECRET-SCAN-HOOK shipped for real (PR #149) — the hook is live in
+    .claude/settings.json's PreToolUse array, reusing tools/write_path_guard.py::scan_for_secrets().
+    This subsystem is no longer speculative/pre-ship, so its table row must NOT be marked
+    "BLOCKED"/"not yet built" (the opposite of the pre-ship expectation this test originally
+    encoded), and it must no longer appear in "## Excluded Subsystems" — it has a real ownership
+    row instead. This test's own name/body were updated by
+    TCK-20260908-HOTFIX-OWNERSHIP-LIFECYCLE-DOC-STALE-PRESHIP-GUARD once the hook actually shipped.
+    """
     text = _read(_DOC)
     rows = _table_rows(text)
-    matching_rows = [r for r in rows if re.search(r"secret[- ]scan|secret-exposure", r, re.I)]
-    if matching_rows:
-        for row in matching_rows:
-            assert "BLOCKED" in row or "not yet built" in row, (
-                "bash secret-scan hook row must be visibly marked speculative/pre-ship"
-            )
+    data_rows = rows[2:]
+    matching_rows = [
+        r for r in data_rows if re.search(r"secret[- ]scan|secret-exposure", r, re.I)
+    ]
+    assert matching_rows, "bash secret-scan hook must have a real ownership-table row now that it has shipped"
+    for row in matching_rows:
+        assert "BLOCKED" not in row and "not yet built" not in row, (
+            "bash secret-scan hook has shipped — its row must no longer read as speculative/pre-ship"
+        )
+        assert "TCK-20260904-BASH-SECRET-SCAN-HOOK" in row, (
+            "shipped row must cite the shipping ticket for traceability"
+        )
+        cells = [c.strip() for c in row.strip().strip("|").split("|")]
+        assert len(cells) == 5 and all(cells), "shipped row must have 5 non-empty cells like every other row"
+        assert cells[1] in _ROLE_VOCABULARY, (
+            f"shipped row's accountable role must be a declared vocabulary role: {cells[1]!r}"
+        )
+
     exclusions_start = text.index("## Excluded Subsystems")
     exclusions_end = text.index("## Related Docs")
     exclusions_section = text[exclusions_start:exclusions_end]
-    assert "TCK-20260904-BASH-SECRET-SCAN-HOOK" in exclusions_section
-    assert "BLOCKED" in exclusions_section
+    assert "TCK-20260904-BASH-SECRET-SCAN-HOOK" not in exclusions_section, (
+        "bash secret-scan hook has shipped and has a real ownership row — "
+        "it must no longer be listed as an excluded/blocked subsystem"
+    )
 
 
 def test_telemetry_retention_epic_no_longer_cites_roadmap_role_vocabulary():
