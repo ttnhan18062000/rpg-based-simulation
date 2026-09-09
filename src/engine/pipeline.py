@@ -392,6 +392,15 @@ class AuthoritativeApplyPipeline:
         
         update = run_phase("strategic_intelligence", update, lambda u: StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))
         t2 = time.perf_counter_ns()
+        # TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP: LEG-RPG-150 lead-staleness decay.
+        # Must run here, between strategic_intelligence (where leads get created) and
+        # lead_contradiction (LEG-RPG-125) -- a lead that is both stale and contradicted in the
+        # same tick must end up EXHAUSTED (contradiction's own unconditional write), not merely
+        # VAGUE (this phase's own one-step demotion); StateUpdate.merge()'s per-entity
+        # EntityUpdate.merge() resolves same-tick writes to the same lead by list-order (last
+        # phase to run wins), so ordering here is load-bearing, not incidental.
+        from src.systems.strategic_systems.belief import BeliefCycleSystem
+        update = run_phase("belief_staleness_decay", update, lambda u: u.merge(BeliefCycleSystem.resolve_lead_staleness(state)))
         update = run_phase("lead_contradiction", update, lambda u: AuthoritativeApplyPipeline._enforce_lead_contradiction(state, u))
         update = run_phase("near_death_hardening", update, lambda u: AuthoritativeApplyPipeline._apply_near_death_hardening(state, u))
         t3 = time.perf_counter_ns()

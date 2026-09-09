@@ -32,14 +32,14 @@ class TestBeliefDecay:
         leads = {"l1": LeadState(id="l1", kind="location", subject="gold",
                                   certainty=LeadCertainty.APPROXIMATE, discovered_tick=90)}
         entity = _make_entity_with_leads(leads=leads)
-        result = BeliefCycleSystem.decay_stale_beliefs(entity, current_tick=100)
+        result = BeliefCycleSystem.decay_stale_leads(entity, current_tick=100)
         assert len(result.leads_add_or_update) == 0
 
     def test_stale_approximate_decays_to_vague(self):
         leads = {"l1": LeadState(id="l1", kind="location", subject="gold",
                                   certainty=LeadCertainty.APPROXIMATE, discovered_tick=10)}
         entity = _make_entity_with_leads(leads=leads)
-        result = BeliefCycleSystem.decay_stale_beliefs(entity, current_tick=100)
+        result = BeliefCycleSystem.decay_stale_leads(entity, current_tick=100)
         assert len(result.leads_add_or_update) == 1
         assert result.leads_add_or_update[0].certainty == LeadCertainty.VAGUE
 
@@ -47,7 +47,7 @@ class TestBeliefDecay:
         leads = {"l1": LeadState(id="l1", kind="location", subject="gold",
                                   certainty=LeadCertainty.VAGUE, discovered_tick=10)}
         entity = _make_entity_with_leads(leads=leads)
-        result = BeliefCycleSystem.decay_stale_beliefs(entity, current_tick=100)
+        result = BeliefCycleSystem.decay_stale_leads(entity, current_tick=100)
         assert len(result.leads_add_or_update) == 1
         assert result.leads_add_or_update[0].certainty == LeadCertainty.EXHAUSTED
 
@@ -55,7 +55,7 @@ class TestBeliefDecay:
         leads = {"l1": LeadState(id="l1", kind="location", subject="gold",
                                   certainty=LeadCertainty.PRECISE, discovered_tick=10)}
         entity = _make_entity_with_leads(leads=leads)
-        result = BeliefCycleSystem.decay_stale_beliefs(entity, current_tick=100)
+        result = BeliefCycleSystem.decay_stale_leads(entity, current_tick=100)
         assert len(result.leads_add_or_update) == 0
 
 
