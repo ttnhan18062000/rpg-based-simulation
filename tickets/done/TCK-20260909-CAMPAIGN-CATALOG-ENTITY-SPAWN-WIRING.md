@@ -143,6 +143,10 @@ realism — or scope real position resolution as part of this fix), not silently
   receives 3 scenario-bookkeeping event types, never the kernel-generated stream — found while
   writing this ticket's own real test coverage; open question whether Campaign SimQ scoring
   depends on the stream it isn't getting)
+- `TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE` (new; the second recorded
+  occurrence of this ticket's own post-push CI re-pin — the line-keyed pinning mechanism itself is
+  brittle and its legitimate-maintenance failure mode is diff-indistinguishable from a prohibited
+  gate-weakening edit, per peer review)
 
 ## Related Docs
 - `docs/architecture/world_repository_layout.md` (the ADR governing the `compositions_dir`
@@ -359,7 +363,12 @@ from that scoped run by design — run directly instead: 4 passed, 0 failed).
   following the exact precedent already documented in this same dict's own comment for an earlier
   ticket's identical collateral line-shift (`TCK-20260905-FAME-DERIVER-LEGEND-FACT`). Verified via
   `pytest tests/architecture tests/docs tests/integrity tests/static tests/refactor -m "not slow
-  and not extra_slow"` — 237 passed (was 236 passed, 1 failed).
+  and not extra_slow"` — 237 passed (was 236 passed, 1 failed). **This is now the second recorded
+  occurrence of the same collateral drift** — per peer review, the line-keyed pinning mechanism
+  itself is brittle, and its failure mode (a legitimate re-pin) is diff-indistinguishable from the
+  prohibited gate-weakening edit the Gate Integrity rule exists to catch, costing real reviewer
+  scrutiny each time. Filed `TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE` (P3) to
+  make the pinning key stable instead — not fixed here.
 - `tests/unit/domains/campaigns/test_campaign_orchestrator.py` — `_make_manifest()`/
   `_real_episode_spec()` helpers set real `id`/`perspective`/`initial_conditions`;
   `test_build_initial_state_episode_zero_carries_compiled_regions_and_places` updated to assert
