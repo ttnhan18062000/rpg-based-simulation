@@ -56,11 +56,28 @@ class ScenarioSetupResolver:
         )
 
     def _load_composition(self, scenario: SimulationScenarioDefinition) -> WorldCompositionSpec:
-        comp_path = self._compositions_dir / f"{scenario.world_composition}.yaml"
-        if not comp_path.is_file():
+        # TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: two accepted layouts, tried in this
+        # order. (1) The unified, ADR-correct per-world directory layout
+        # (docs/architecture/world_repository_layout.md: "the existing unified world repository
+        # root at data/worlds/... The root source file inside a world folder is always
+        # world.yaml") -- `<compositions_dir>/<world_id>/world.yaml`. Tried first since it's the
+        # canonical layout going forward. (2) The flat, single-file layout
+        # `<compositions_dir>/<world_id>.yaml` -- this repo's existing default
+        # `compositions_dir` (`data/content/world_compositions/`) only has this shape, so this
+        # remains the fallback for every caller that hasn't opted into the per-world layout (i.e.
+        # everyone except CampaignOrchestrator, which points compositions_dir at data/worlds/).
+        # Nested-first is safe for existing callers: `data/content/world_compositions/<id>/`
+        # never exists, so the check falls through to the flat file exactly as before.
+        nested_path = self._compositions_dir / scenario.world_composition / "world.yaml"
+        flat_path = self._compositions_dir / f"{scenario.world_composition}.yaml"
+        if nested_path.is_file():
+            comp_path = nested_path
+        elif flat_path.is_file():
+            comp_path = flat_path
+        else:
             raise ValueError(
                 f"[scenario={scenario.id!r}] World composition {scenario.world_composition!r} "
-                f"not found at {comp_path}"
+                f"not found at {nested_path} or {flat_path}"
             )
         with open(comp_path, "r", encoding="utf-8") as f:
             raw = yaml.safe_load(f)

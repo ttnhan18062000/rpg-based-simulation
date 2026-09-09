@@ -2,7 +2,7 @@
 import inspect
 
 import pytest
-from src.core.state import AuthoritativeState, RegionState, CampState
+from src.core.state import AuthoritativeState, RegionState, CampState, PlaceState, PlaceKind
 from src.systems.world_systems.generator import EntityGenerator
 from src.engine.world_dynamics import WorldDynamicsSystem
 from src.core.updates import StateUpdate, CampUpdate
@@ -51,22 +51,54 @@ def test_camp_clearing_reward():
     assert update.world_updates["forest"].trauma_delta == -10.0
 
 def test_camp_raid_trigger():
-    # Setup state with high maturity camp
+    # Setup state with high maturity camp and a real settlement to raid
+    # (TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: a raid with no CITY place to target is skipped
+    # entirely -- no maturity cost, no cooldown reset -- so this test seeds one).
     from src.world.camp import CampService
     state = AuthoritativeState(
         tick=500,
         seed=42,
         regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=10.0)},
-        camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=90.0, last_raid_tick=0)}
+        camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=90.0, last_raid_tick=0)},
+        places={"town_1": PlaceState(place_id="town_1", region_id="forest", kind=PlaceKind.CITY, position=(10, 10))},
     )
     generator = EntityGenerator(seed=42)
-    
+
     update = CampService.process_camps(state, generator)
-    
+
     # Verify maturity reduction (raid cost)
     assert update.camp_updates["camp_1"].maturity_delta == -20.0
     # Verify last_raid_tick updated
     assert update.camp_updates["camp_1"].last_raid_tick_set == 500
+    # Verify raiders were actually spawned (TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: this used
+    # to be silently discarded -- the whole point of the fix).
+    assert any(e.kind == "goblin_raider" for e in update.entities_add)
+
+
+def test_camp_raid_trigger_skips_entirely_with_no_city_place_no_cost_charged():
+    """
+    TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: a raid-eligible camp in a world with no CITY place
+    to target must skip the raid entirely -- no raiders, AND critically no maturity cost or
+    last_raid_tick reset either. Charging the cost anyway would silently rebuild the exact bug
+    this ticket exists to fix (a camp charged for a raid that never happened), flagged explicitly
+    during peer review as the one place this fix could regress into its own bug.
+    """
+    from src.world.camp import CampService
+    state = AuthoritativeState(
+        tick=500,
+        seed=42,
+        regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=10.0)},
+        camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=90.0, last_raid_tick=0)},
+        # No places at all -- no CITY to target.
+    )
+    generator = EntityGenerator(seed=42)
+
+    update = CampService.process_camps(state, generator)
+
+    # Only the plain per-tick growth delta from step 1 -- no raid cost applied.
+    assert update.camp_updates["camp_1"].maturity_delta == pytest.approx(0.05)
+    assert update.camp_updates["camp_1"].last_raid_tick_set is None
+    assert not any(e.kind == "goblin_raider" for e in update.entities_add)
 
 
 # TCK-20260904-CAMP-NEST-CLASSIFICATION
@@ -92,6 +124,7 @@ def test_camp_flag_off_nest_kind_camp_still_raids():
         seed=42,
         regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=10.0)},
         camps={"camp_1": CampState(id="camp_1", kind="wolf", position=(50, 50), maturity=90.0, last_raid_tick=0)},
+        places={"town_1": PlaceState(place_id="town_1", region_id="forest", kind=PlaceKind.CITY, position=(10, 10))},
     )
     generator = EntityGenerator(seed=42)
 
@@ -110,6 +143,7 @@ def test_camp_flag_on_camp_kind_still_raids():
         seed=42,
         regions={"forest": RegionState(id="forest", name="The Deep Woods", kind="forest", bounds=(0, 0, 100, 100), trauma_score=10.0)},
         camps={"camp_1": CampState(id="camp_1", kind="goblin", position=(50, 50), maturity=90.0, last_raid_tick=0)},
+        places={"town_1": PlaceState(place_id="town_1", region_id="forest", kind=PlaceKind.CITY, position=(10, 10))},
         feature_flags={"ENABLE_CAMP_NEST_SPREAD": "ON"},
     )
     generator = EntityGenerator(seed=42)
@@ -272,7 +306,10 @@ def test_campservice_raid_and_spawn_branches_not_newly_flag_gated():
         regions=[
             RegionSpec(
                 id="forest", type="wilderness", bounds=(0, 0, 100, 100),
-                places=[PlaceSpec(id="camp_1", kind="camp", position=(50, 50), creature_kind="goblin")],
+                places=[
+                    PlaceSpec(id="camp_1", kind="camp", position=(50, 50), creature_kind="goblin"),
+                    PlaceSpec(id="town_1", kind="city", position=(10, 10)),
+                ],
             ),
         ],
     )

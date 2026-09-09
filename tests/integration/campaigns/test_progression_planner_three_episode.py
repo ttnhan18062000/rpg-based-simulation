@@ -18,10 +18,22 @@ def _make_manifest(n_episodes: int = 3) -> CampaignManifest:
     # compiles spec.world_composition (WorldRepository + WorldCompiler), so each
     # episode spec needs a real string world_id -- a bare MagicMock's
     # .world_composition is another MagicMock and fails world-id validation.
+    #
+    # TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: `id`/`perspective`/
+    # `initial_conditions` also set to real values -- the episode-0 branch now really
+    # calls ScenarioSetupResolver.resolve(), which builds a strictly-typed pydantic
+    # model from these fields. The real entities this spawns are never read by this
+    # test (each `_run_episode()` call below overwrites `final_state.entities` with
+    # its own synthetic entities before `_advance_state()` ever sees them), so no
+    # assertion in this file changes -- this test exercises progression-plan carry-
+    # forward logic given a controlled entity roster, not the catalog spawn itself.
     episodes = []
-    for _ in range(n_episodes):
+    for i in range(n_episodes):
         ep = MagicMock()
+        ep.id = f"prog_test_ep{i}"
         ep.world_composition = "unit_faction_tension"
+        ep.perspective = "hero_guild_perspective"
+        ep.initial_conditions = {}
         episodes.append(ep)
     return CampaignManifest(id="prog_test", episodes=episodes)
 

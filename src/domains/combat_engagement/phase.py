@@ -168,8 +168,11 @@ class CombatEngagementPhase:
                 # that meant every living actor got a fresh EntityUpdate.strategic every tick --
                 # ds.strategic_entities permanently non-empty, defeating dirty-set short-
                 # circuiting for every downstream phase gated on "strategic", and (per
-                # apply_plan.py's invalidate_read_model gate) invalidating the read model every
-                # tick too. An actor with no existing combat_risk belief (never met a hostile)
+                # ReadModelCache's own dirty_set.all_dirty_entities check,
+                # src/api/read_model_cache.py -- NOT apply_plan.py's `invalidate_read_model` field,
+                # confirmed dead code, never read anywhere outside its own definition; correction
+                # from TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION) invalidating
+                # the read model every tick too. An actor with no existing combat_risk belief (never met a hostile)
                 # correctly needs no write at all -- HelpNeedEvaluator already degrades an absent
                 # belief to NORMAL, identical to a real LOW belief for its own purposes -- and an
                 # actor already sitting at LOW needs no re-write either. Only a stale non-LOW

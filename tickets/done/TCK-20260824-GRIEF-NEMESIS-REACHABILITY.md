@@ -333,3 +333,25 @@ both new event types. The real scoped Test-phase pytest command now passes both 
 and both new scorer tests; the 3 originally-flagged failures remain, confirmed unrelated
 pre-existing/environment noise (full detail in Implementation Notes and plan.md's Deviations
 section).
+
+**Addendum (2026-09-08, not reopened — flagged during
+`TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION`'s own root-cause determination, per peer
+review `rpg-feature-planning`):** `campaign_life_arc` — the profile this ticket created "specifically
+to test grief/nemesis reachability" — has since been confirmed to run with **zero entities for its
+entire episode** (`CampaignOrchestrator._build_initial_state()` never spawns any; see that ticket's
+own Implementation Notes for the full trace). This ticket's own "reachable" claim decomposes into
+two parts: (1) `CampaignOrchestrator.run_episode()` is reachable from a real production entrypoint —
+confirmed by `tests/integration/tools/test_calibrate_simq_campaign_mode.py`, a pure wiring test,
+genuinely unaffected by the entity-count gap; (2) `grief_urgency_triggered`/`nemesis_relation_formed`
+events "are emitted from... paths" (this ticket's own Completion Summary, above) — verified only via
+`tests/simulation_quality/test_social_scorer.py`'s `TestGriefNemesis` class, which constructs a
+**synthetic** event envelope directly (`scorer.score(_env("grief_urgency_triggered"), _ctx())`) and
+never runs a real campaign episode. No test in this ticket confirms a real `campaign_life_arc` run
+ever actually produced a grief/nemesis event from genuine entity death — and given the zero-entity
+finding, it structurally cannot have, since no entity has ever died in one. This does not mean the
+underlying emission code paths are wrong (they are independently unit-tested elsewhere, not audited
+as part of this addendum) — only that this ticket's own Completion Summary phrasing reads more
+confident about live, in-simulation reachability than what was actually verified. Not reopened;
+recorded for whoever scopes the `campaign_life_arc` entity-spawn fix, since re-verifying grief/
+nemesis reachability against a real, populated episode should be part of that fix's own test
+evidence once entities exist.
