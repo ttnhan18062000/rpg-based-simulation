@@ -165,6 +165,16 @@ None — hotfix tier, self-evident intent per project convention; no staging art
 - `_GATEWAY_MODULE_PATH` itself (`_TOOLS_DIR / "knowledge_gateway_mcp.py"`) is left unfixed for the
   same reason — the module it points at is permanently gone, deliberately never repointed at
   `tools/archive/`, since these scripts have no remaining purpose to actually run.
+  **Governing rule, stated explicitly** (raised by peer review of the PR — the two calls above read
+  as inconsistent without it): fix only breakage this ticket's own `git mv` would introduce into
+  code that was working immediately before the move (`_MONITORING_TOOLS_DIR`/`kgmcp_baseline_corpus.py`);
+  never repair breakage that already existed in code being archived (`_GATEWAY_MODULE_PATH`,
+  `from tools import knowledge_gateway_redaction`). Note this means the `_MONITORING_TOOLS_DIR` fix
+  buys no functional runnability by itself — with `_GATEWAY_MODULE_PATH` still dead, none of these
+  5 scripts can actually execute either way. The fix is still correct: it restores each script to
+  exactly the state PR #147 itself left it in (broken only on the gateway import, not on anything
+  this hotfix's own move would have additionally broken), rather than leaving this ticket
+  responsible for a second, unrelated breakage on top of the first.
 - Updated the 5 already-archived, collection-excluded sibling test files' PRIMARY module-under-test
   path (`_RUNNER_MODULE_PATH`, read via `.read_text()` at module level in all 5, so an unfixed path
   would raise even at collection time if ever un-excluded) to `_ARCHIVE_DIR / "kgmcp_phase*.py"`,
