@@ -148,6 +148,46 @@ class CampaignOrchestrator:
             episode_index=0,
         )
 
+        # TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: built once and reused across every
+        # episode in this campaign, not per-episode. Both CatalogRepository and
+        # WorldModuleRepository are pure read-only lookups after load_all() completes (confirmed:
+        # every get_*/list_* method only reads self.<index>[...], no method other than load_all()
+        # itself writes to instance state, and no downstream consumer --
+        # WorldAssemblyResolver/ArchetypeEntityFactory/WorldEntitySpawner -- mutates the repository
+        # objects it's given) -- so sharing one instance across episodes carries no state-leak risk
+        # to episode isolation, and avoids repeating the same directory-walk+YAML-parse load_all()
+        # I/O on every episode of the same campaign.
+        #
+        # compositions_dir is pointed at data/worlds/, NOT the default data/content/
+        # world_compositions/ -- per docs/architecture/world_repository_layout.md's own ADR
+        # ("Rather than creating separate directories for raw templates, specs, and compositions,
+        # we will maintain the existing unified world repository root at data/worlds/... The
+        # schema version within the YAML determines how the repository indexes it", naming
+        # worldcomposition.v1 as one of the accepted schema versions there) -- data/content/
+        # world_compositions/ is the anomaly, not data/worlds/. Confirmed by direct diff that they
+        # can genuinely drift: data/worlds/frontier_living_world/world.yaml has 7 modules
+        # (including trading_company_hub) via the richer module_refs form plus
+        # information_source_profiles/pending_information_responses; the data/content/ copy has
+        # only 6 modules via the plain `modules:` shorthand and neither of those two fields.
+        # WorldCompositionNormalizer.normalize() (called inside WorldAssemblyResolver.assemble())
+        # accepts either shape, so pointing here at the richer, ADR-correct location costs nothing.
+        # Scoped to Campaign's own resolution only -- see
+        # TCK-20260909-WORLD-COMPOSITION-DIRECTORY-CONSOLIDATION for the repo-wide migration this
+        # ADR still calls for but which this ticket deliberately does not do.
+        from pathlib import Path
+
+        from src.content.repository import CatalogRepository
+        from src.scenarios.catalog_state_builder import CatalogScenarioStateBuilder
+        from src.worldmodules.repository import WorldModuleRepository
+
+        catalog = CatalogRepository("data/content")
+        catalog.load_all()
+        module_repo = WorldModuleRepository()
+        module_repo.load_all()
+        self._catalog_builder = CatalogScenarioStateBuilder(
+            catalog, module_repo, compositions_dir=Path("data/worlds")
+        )
+
     @property
     def state(self) -> CampaignState:
         """Current mutable CampaignState. Read-only property; do not replace."""
@@ -601,6 +641,58 @@ class CampaignOrchestrator:
             for entity_id, entity in final_state.entities.items()
         }
 
+    @staticmethod
+    def _scatter_catalog_entities(
+        entities: Dict[int, "EntityState"], episode_seed: int
+    ) -> Dict[int, "EntityState"]:
+        """
+        INTERIM WORKAROUND, not a fix (TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING) — delete
+        this method once real position resolution lands in `WorldEntitySpawner` itself, tracked as
+        `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`.
+
+        `WorldEntitySpawner.spawn_from_context()` places every entity it spawns at the identical
+        `default_position` — a real, pre-existing defect in that shared pipeline (confirmed: no
+        caller anywhere in the codebase has ever overridden `default_position`, and
+        `ResolvedEntityProfile` carries no position/region field for it to use even if a caller
+        wanted to). Every prior consumer of that pipeline was test-only and never noticed. Campaign
+        mode is the first live consumer, so it is the first place this surfaces as a real problem:
+        spawning every entity onto the same tile trips `LAW-OCCUPANCY-COLLISION`
+        (`src/observability/hard_law_monitor.py`) repeatedly, every tick, for as long as any two
+        entities remain co-located — confirmed via a real 70-tick run producing 41 sustained
+        ERROR-severity violations — and inflates proximity-gated systems (`cooperation_event`,
+        `contract_offer_created`) into the dominant share of all simulation activity, which does
+        not look like a plausible simulation.
+
+        This scatters each entity onto a distinct tile via a small deterministic grid (guarantees
+        no two entities share an `(int(x), int(y))` tile, matching `LAW-OCCUPANCY-COLLISION`'s own
+        int-truncated tile check), with the grid's own base offset seeded from `episode_seed` (via
+        `DeterministicRNG`, the same mechanism `RaidService.spawn_raid()` already uses for its own
+        scatter) so replays of the same episode seed produce the same layout. This is arbitrary
+        placement, NOT authored `world_composition` placement — it stops the hard-law violations,
+        it does not make Campaign-mode spatially meaningful. Campaign episodes remain unsuitable
+        for any spatial, proximity, or distance-dependent measurement (raid targeting,
+        distance-based scoring, etc.) until real position resolution lands.
+        """
+        from dataclasses import replace as dc_replace
+        from src.platform.rng import DeterministicRNG
+        from src.core.enums import Domain
+
+        rng = DeterministicRNG(episode_seed)
+        base_x = rng.get_float(Domain.CALAMITY, 0, 0) * 20.0
+        base_y = rng.get_float(Domain.CALAMITY, 0, 1) * 20.0
+
+        grid_width = 4
+        spacing = 2.0
+        scattered: Dict[int, "EntityState"] = {}
+        for i, (entity_id, entity) in enumerate(sorted(entities.items())):
+            ox = base_x + (i % grid_width) * spacing
+            oy = base_y + (i // grid_width) * spacing
+            scattered[entity_id] = dc_replace(
+                entity,
+                navigation=dc_replace(entity.navigation, position=(ox, oy)),
+            )
+        return scattered
+
     def _build_initial_state(
         self, episode_seed: int, spec: "SimulationScenarioDefinition"
     ) -> "AuthoritativeState":
@@ -653,11 +745,24 @@ class CampaignOrchestrator:
         }
 
         if not alive_carry_forwards:
-            # Episode 0 or no surviving entities — start fresh, but with real
-            # region/place topology now that compilation actually runs.
+            # Episode 0 or no surviving entities — start fresh, with real region/place topology
+            # (WorldCompiler.compile(), above) AND real entities
+            # (TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING).
+            #
+            # Before this ticket, this branch never populated `entities` at all — every
+            # campaign_life_arc-shaped episode ran with zero entities for its entire duration
+            # (TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION's own root-cause finding).
+            #
+            # NOT valid for any spatial, proximity, or distance-dependent measurement (e.g. raid
+            # targeting, distance-based scoring) — see the interim scatter note below.
+            catalog_result = self._catalog_builder.build(spec, seed=episode_seed)
+            entities = CampaignOrchestrator._scatter_catalog_entities(
+                catalog_result.state.entities, episode_seed
+            )
             return AuthoritativeState(
                 tick=0,
                 seed=episode_seed,
+                entities=entities,
                 regions=compiled_regions,
                 places=compiled_places,
             )

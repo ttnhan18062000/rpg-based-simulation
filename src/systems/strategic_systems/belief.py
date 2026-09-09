@@ -10,13 +10,16 @@ Covers:
 """
 from __future__ import annotations
 from dataclasses import replace, dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 from src.core.state import EntityState
 from src.core.strategic import (
     LeadState, LeadCertainty, HypothesisState, SourceTrustEntry
 )
-from src.core.updates import StrategicUpdate
+from src.core.updates import EntityUpdate, StateUpdate, StrategicUpdate
+
+if TYPE_CHECKING:
+    from src.core.state import AuthoritativeState
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,15 +43,24 @@ class BeliefCycleSystem:
     """
 
     @staticmethod
-    def decay_stale_beliefs(
+    def decay_stale_leads(
         entity: EntityState,
         current_tick: int,
         decay_rate: float = 0.02,
         stale_threshold: int = 50
     ) -> StrategicUpdate:
         """
-        LEG-RPG-150: Beliefs decay over time.
+        LEG-RPG-150: Leads decay over time.
         Leads that haven't been refreshed lose certainty.
+
+        TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP: renamed from
+        `decay_stale_beliefs` -- this method only ever touches `entity.strategic.leads`, never
+        `entity.strategic.beliefs` (BeliefEntry); the old name caused a real misreading
+        (TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN's own correction round needed a
+        producer-side no-threat-belief write specifically because nothing decays `beliefs`, and
+        the author initially assumed this method covered it). See `resolve_lead_staleness()`
+        below for the real per-tick pipeline entry point -- this method itself is pure, per-entity
+        decision logic with no caller of its own.
         """
         leads_to_update = []
 
@@ -77,6 +89,41 @@ class BeliefCycleSystem:
             return StrategicUpdate()
 
         return StrategicUpdate(leads_add_or_update=leads_to_update)
+
+    @staticmethod
+    def resolve_lead_staleness(state: "AuthoritativeState") -> StateUpdate:
+        """
+        Real per-tick pipeline entry point for LEG-RPG-150 staleness decay
+        (TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP). `decay_stale_leads()` above is
+        pure, per-entity decision logic with no caller of its own -- this orchestrates it across
+        every entity for one real tick, mirroring `LeadContradictionSystem.enforce()`'s own
+        deterministic-iteration shape (same alive/active filter, same sorted-id iteration) since
+        this phase must run immediately before `lead_contradiction` in the pipeline sequence for a
+        lead that is both stale and contradicted in the same tick to correctly end up EXHAUSTED
+        (contradiction's own unconditional EXHAUSTED write) rather than merely VAGUE (this
+        method's own one-step demotion) -- see docs/simulation/belief_and_detour_contract.md and
+        this ticket's own investigation.md for the full ordering rationale.
+        """
+        entity_updates: Dict[int, EntityUpdate] = {}
+
+        for entity in sorted(state.entities.values(), key=lambda e: e.id):
+            if not getattr(entity.combat, "alive", False):
+                continue
+            if not getattr(entity.lifecycle, "active", True):
+                continue
+            if not entity.strategic or not entity.strategic.leads:
+                continue
+
+            strat_upd = BeliefCycleSystem.decay_stale_leads(entity, state.tick)
+            if strat_upd.is_noop():
+                continue
+
+            entity_updates[entity.id] = EntityUpdate(
+                entity_id=entity.id,
+                strategic=strat_upd,
+            )
+
+        return StateUpdate(entity_updates=entity_updates)
 
     @staticmethod
     def process_rumor(

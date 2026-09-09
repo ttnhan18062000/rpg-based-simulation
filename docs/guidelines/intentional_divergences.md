@@ -1747,6 +1747,68 @@ This document is the canonical record of intentional behavior shifts in `src` co
   hook.
 - **Status**: RATIFIED
 
+### 2.56 World Boss, Lair-Occupant, and Stronghold Spawn Gates Are Long-Horizon (~50,000-Tick) Only — Accepted, Not Fixed (TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN)
+- **Subsystem**: World Evolution / Boss & Lair Spawning
+- **Old Behavior**: `BossService.check_for_boss_spawn()` (region-scoped `world_boss`/
+  `ancient_sentinel`) and `BossService.check_for_lair_spawn()` (place-scoped Lair occupants) both
+  gate on `state.maturity >= BossService.BOSS_SPAWN_THRESHOLD` (`50.0`) AND `region.trauma_score >=
+  20.0`. `state.maturity` is a single global counter, incremented by 1 on a plain, unconditional
+  periodic schedule (`CalamityService.apply()`, `state.tick % MATURITY_INTERVAL == 0`,
+  `MATURITY_INTERVAL = 1000`, not tied to whether a calamity actually fires) — reaching `>= 50`
+  needs ~50,000 ticks, far beyond any practical calibration run (this repo's own runs are
+  200-5,000 ticks). Was believed (before this ticket's own survey) to gate only Lair occupants;
+  the same threshold also gates the older, region-scoped `world_boss`/`ancient_sentinel` mechanism
+  identically — both were equally unreachable in any practical run, all along, for the same reason.
+- **New Behavior**: none — this is an accept-and-disclose entry, not a fix. **Decision (user,
+  2026-09-08)**: do not add a compile-time `starting_world_maturity` schema field, and do not
+  lower the `>= 50` threshold. Both alternatives were considered and rejected: a schema field has
+  the widest blast radius (it fast-forwards every `state.maturity`-gated mechanism at once, not
+  just boss/Lair spawning — `state.maturity` has no per-lair or per-region equivalent, unlike
+  `CampState.maturity`, which content authoring already fixed for camps/nests via
+  `TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE`); lowering the threshold would change when
+  bosses/lairs appear in every existing world. Neither is justified without demonstrated demand,
+  and there is none today.
+- **Full survey of `state.maturity` consumers** (per this ticket's own Scope, required so this
+  disclosure states the true blast radius rather than only the originally-named Lair-occupant
+  case): `grep -rn "state\.maturity\b" src/` (excluding tests) found:
+  - `BossService.check_for_boss_spawn()` / `.check_for_lair_spawn()` (`src/world/boss.py:92,218`)
+    — the two spawn gates this entry covers.
+  - `RaidService.check_for_raid()` / `RaidService.spawn_raid()` (`src/world/raid.py:40`,
+    `src/world/camp.py:125`) — `raid_size = 3 + state.maturity` scaling, not a gate; since
+    `state.maturity` stays near 0 in any practical run, `raid_size` is effectively always the base
+    value (~3). Already tracked separately, not duplicated here:
+    `TCK-20260908-RAID-SIZE-FORMULA-DOC-CODE-MISMATCH`.
+  - `EntityGenerator.spawn_stronghold()` (`src/systems/world_systems/generator.py:254-266`) —
+    stronghold HP/DEF scaling by `state.maturity`, real and reachable (called from
+    `FactionInfluenceService.process_conquest_lifecycle()`, `src/world/influence.py:94`, on
+    region conquest). Same practical consequence as the boss/Lair gates: strongholds always spawn
+    at baseline stats, the scaling term never meaningfully engages.
+  - `EntityGenerator.spawn_calamity()` (`generator.py:238-251`) — the same `state.maturity`-scaled
+    stat pattern for a "massive World Boss (Calamity)", but confirmed via a repo-wide grep
+    (including tests) to have **zero callers anywhere** — dead code, unrelated to the maturity
+    threshold itself (nothing ever reaches `>= 50` OR `< 50`; the function is simply never
+    invoked). Noted here for completeness of the survey, not filed as its own cleanup ticket — it
+    has zero runtime impact, unlike the gates above.
+  - `checkpoint.py`, `api/presenters/state_presenter.py`, `replay/fingerprint.py` — pure
+    read/serialization of `state.maturity`, not gates or scalers.
+  - `engine/apply.py:308` — the carry-forward assignment for `state.maturity` itself (via
+    `update.maturity_set`), not a consumer.
+- **Doc correction made alongside this survey**: `docs/world/raid_boss_camp_contract.md`'s own
+  "Boss — Spawn conditions" section incorrectly read `camp.maturity >= 50` — the real gate is
+  `state.maturity` (world-level, not per-camp), inconsistent with that same doc's own correct
+  `state.maturity >= 50` phrasing two paragraphs later in its Lair-generalization note. Corrected.
+- **Rationale**: **Bounded**. Both the world_boss/ancient_sentinel and Lair-occupant mechanisms,
+  and stronghold elite-stat scaling, are accepted as genuinely long-horizon-only content — real,
+  correct code with no demonstrated need to make reachable sooner. The alternative
+  (`starting_world_maturity`) was rejected specifically because its blast radius is a single
+  global counter affecting every consumer above at once, not a scoped content-authoring change
+  like the camp/nest maturity fix this same investigation chain already shipped
+  (`TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE`).
+- **Verification**: No test change — this ticket makes no behavioral change. Confirmed via direct
+  `grep` survey (not assumed) that no other `state.maturity` consumer beyond those listed above
+  exists in `src/`.
+- **Status**: RATIFIED
+
 ---
 
 ## 3. Unsupported / Retired Behavior

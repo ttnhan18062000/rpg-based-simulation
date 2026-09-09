@@ -1,12 +1,13 @@
 """Tests for ApplyPath.apply_generation()'s episode-scoped bridge carry-forward
-(TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD) and the persistent
+(TCK-20260907-APPLY-GENERATION-EPISODE-BRIDGE-CARRYFORWARD), the persistent
 information_source_profiles catalog reclassification
-(TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION)."""
+(TCK-20260907-INFORMATION-SOURCE-PROFILES-PERSISTENCE-DECISION), and the compiled-world
+Place topology carry-forward gap (TCK-20260908-HOTFIX-STATE-PLACES-APPLY-CARRYFORWARD-GAP)."""
 
 from dataclasses import replace as dc_replace
 
 from src.core.builder import V2EntityBuilder
-from src.core.state import AuthoritativeState
+from src.core.state import AuthoritativeState, PlaceState, PlaceKind
 from src.core.updates import StateUpdate
 from src.domains.culture.model import CultureState
 from src.domains.fame.legend import LegendFact
@@ -132,3 +133,39 @@ def test_default_empty_source_profiles_stay_empty_no_regression():
     state = AuthoritativeState(tick=0, seed=42, entities={1: entity})
     new_state = ApplyPath.apply_generation(state, StateUpdate())
     assert new_state.information_source_profiles == []
+
+
+_PLACE = PlaceState(
+    place_id="hometown_city", region_id="hometown", kind=PlaceKind.CITY, position=(25.0, 25.0)
+)
+
+
+def _state_with_places() -> AuthoritativeState:
+    entity = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
+    state = AuthoritativeState(tick=0, seed=42, entities={1: entity})
+    return dc_replace(state, places={"hometown_city": _PLACE})
+
+
+def test_places_survives_apply_generation():
+    """TCK-20260908-HOTFIX-STATE-PLACES-APPLY-CARRYFORWARD-GAP: places (idea 66's compiled
+    world topology) was never carried forward, silently resetting to {} after the first tick,
+    in every simulation mode -- not just Campaign mode (see TCK-20260904-CAMPAIGN-REGION-PLACE-
+    CARRY, a different, already-fixed bug about initial construction, not tick-to-tick
+    carry-forward)."""
+    state = _state_with_places()
+    new_state = ApplyPath.apply_generation(state, StateUpdate())
+    assert new_state.places == {"hometown_city": _PLACE}
+
+
+def test_places_survives_multiple_generations():
+    state = _state_with_places()
+    for _ in range(5):
+        state = ApplyPath.apply_generation(state, StateUpdate())
+    assert state.places == {"hometown_city": _PLACE}
+
+
+def test_default_empty_places_stay_empty_no_regression():
+    entity = V2EntityBuilder(1).kind("hero").location(0.0, 0.0).build()
+    state = AuthoritativeState(tick=0, seed=42, entities={1: entity})
+    new_state = ApplyPath.apply_generation(state, StateUpdate())
+    assert new_state.places == {}

@@ -2871,20 +2871,28 @@
   divergence_note: null
   support_boundary: null
 - id: STRAT-239
-  text: 'Belief/lead staleness threshold is 50 ticks (default stale_threshold parameter
-    in BeliefCycleSystem.decay_stale_beliefs). APPROXIMATE leads demote to VAGUE;
-    VAGUE leads demote to EXHAUSTED. PRECISE leads do not decay. Doc claimed "every
-    100 ticks".
-
-    '
+  text: Belief/lead staleness threshold is 50 ticks (default stale_threshold parameter
+    in BeliefCycleSystem.decay_stale_leads, renamed from decay_stale_beliefs by TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP).
+    APPROXIMATE leads demote to VAGUE; VAGUE leads demote to EXHAUSTED. PRECISE leads
+    do not decay. Doc claimed "every 100 ticks".
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: "src/systems/strategic_systems/belief.py:47 \u2014 stale_threshold:\
     \ int = 50 (default). Verified by TCK-20260627-P3C-DOC-CURRENCY; docs/mechanics/04_strategic_cognition.md\
-    \ corrected from 100 to 50 ticks.\n"
+    \ corrected from 100 to 50 ticks.\n\nCorrection (TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP,\
+    \ 2026-09-09): this entry previously read status=verified on the strength of evidence\
+    \ that only confirmed the stale_threshold constant's existence, plus a test_path\
+    \ that actually verified an unrelated function (effective_certainty() on KnowledgeFact,\
+    \ not LeadState) -- the demotion behavior this entry's own text describes had\
+    \ never executed once, since decay_stale_beliefs()/decay_stale_leads() had zero\
+    \ callers anywhere in src/. TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP\
+    \ wired it into the real per-tick pipeline (BeliefCycleSystem.resolve_lead_staleness(),\
+    \ called from src/engine/pipeline.py between strategic_intelligence and lead_contradiction)\
+    \ -- the behavioral claim in this entry's own text became true in practice only\
+    \ as of that ticket, not before, despite this entry's own prior verified status.\n"
   proof_type: parity
-  test_path: tests/unit/cognition/test_information_seeking.py::TestKnowledgeStalenessDecay::test_lead_staleness_decay_reduces_confidence
+  test_path: tests/unit/strategic/test_belief_staleness_decay_pipeline.py::test_resolve_lead_staleness_demotes_stale_lead_from_real_per_tick_call
   divergence_note: null
   support_boundary: null
 - id: STRAT-240

@@ -15,7 +15,7 @@ tags: [determinism]
 Determine whether the published dirty_set's omission of passive-decay-only entity changes causes real phase-skip or read-model-staleness bugs
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -111,25 +111,44 @@ investigation scope is therefore exactly the two consumers above, not three.**
   decision checkpoint.
 
 ## Acceptance Criteria
-- [ ] Real (not synthetic-only) test evidence exists for whether `phase_graph.py`'s phase
+- [x] Real (not synthetic-only) test evidence exists for whether `phase_graph.py`'s phase
       short-circuiting actually skips a phase on a passive-decay-only tick, and whether that skip is
-      observably consequential.
-- [ ] Real test evidence exists for whether `apply_plan.py`'s read-model invalidation actually
+      observably consequential. Confirmed: skipped, but not consequential — see Implementation
+      Notes / Consumer #1.
+- [x] Real test evidence exists for whether the true read-model consumer (`ReadModelCache`, not
+      `apply_plan.py`'s dead `invalidate_read_model` field — see Implementation Notes) actually
       leaves a stale read model for at least one tick following a passive-decay-only change.
-- [ ] A clear, evidenced verdict (confirmed bug / confirmed benign / inconclusive) is recorded for
-      each of the two consumers in this ticket's Implementation Notes.
-- [ ] If either consumer is confirmed a real bug, a fix-approach decision is obtained (per this
-      repo's decision-routing convention) before any implementation begins, and that decision is
-      recorded here with its rationale.
-- [ ] If no consumer is confirmed a real bug, the ticket closes with that finding documented and no
-      further code change — this is a legitimate, valuable outcome for an investigation ticket, not
-      a failure to complete it.
+      Confirmed: yes, real staleness.
+- [x] A clear, evidenced verdict (confirmed bug / confirmed benign / inconclusive) is recorded for
+      each of the two consumers in this ticket's Implementation Notes. Consumer #1: confirmed
+      benign. Consumer #2: confirmed bug (at `ReadModelCache`, corrected from the ticket's own
+      original naming of `apply_plan.py`'s dead field).
+- [x] Consumer #2 is confirmed a real bug — a fix-approach decision was obtained via peer review
+      (`rpg-feature-planning`) before any implementation began. **Decision**: a narrow fix scoped to
+      `ReadModelCache` (supplementary post-apply dirty-id source from the already-computed
+      `ApplyPlan.dirty_tags_by_entity`), not widening the shared `update.dirty_set` publication
+      (unnecessary now that Consumer #1 is confirmed benign) — but explicitly conditioned on first
+      weighing a second, materially different option the peer raised: wiring the dormant
+      `BiologicalSystem.update()` (a real, unwired, explicit-`EntityUpdate`-producing decay
+      implementation found during this investigation) in as the actual fix, which would eliminate
+      this whole class of staleness at the source rather than patching the cache. Both options are
+      recorded, with rationale, in the two follow-up tickets below — this investigation ticket
+      itself implements neither, per its own Scope.
+- [x] No further code change beyond what an investigation ticket may make in passing: corrected one
+      stale comment (`src/domains/combat_engagement/phase.py:171`) that cited the dead
+      `invalidate_read_model` field as if it were live — a real doc/code-comment parity fix found
+      during this investigation, directly adjacent to its own scope.
 
 ## Related Tickets
 - TCK-20260908-HOTFIX-INCREMENTAL-MIDRUN-DEACTIVATE-RECOLOR-GAP (sibling hotfix; origin of this
   finding; fixed the render-path symptom without touching this root gap)
 - TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE (content change that exposed the render-path symptom,
   unrelated to this ticket's own scope)
+- TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS (new, filed not implemented — the actual
+  Consumer #2 fix, per the decision above)
+- TCK-20260908-BIOLOGICAL-SYSTEM-DEAD-CODE-DISPOSITION (new, filed not implemented — the dormant
+  "wire real EntityUpdates" alternative fix option, must be weighed before
+  READMODEL-CACHE-PASSIVE-DECAY-STALENESS picks its final approach)
 
 ## Related Docs
 - docs/engine/kernel.md (7-phase deterministic loop — relevant context for the phase-gating
@@ -160,13 +179,88 @@ this ticket is picked up.
   should be the recorded finding.
 
 ## Implementation Notes
-_(pending — this ticket is filed, not yet picked up for investigation)_
+
+Full investigation in
+`staging_artifacts/TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION/investigation.md`.
+
+**Consumer #1 (phase short-circuiting, `near_death_hardening`/`evolution`): CONFIRMED BENIGN.**
+Both phases only ever iterate `update.entity_updates` — the exact same source
+`DirtySetBuilder.mark_from_update()` reads to populate the dirty_set. A passive-decay-only entity
+is invisible to both at once, by the same structural cause, so the tick-wide skip never discards
+real pending work for either phase. Proved with a real `AuthoritativeApplyPipeline.refine()` run
+plus running both phases directly (bypassing the skip) on the same input.
+
+**Consumer #2: CONFIRMED BUG, at a different site than originally named.** The ticket's own
+Request Summary named `apply_plan.py:72`'s `invalidate_read_model` field — re-grepped and confirmed
+it is dead code, never read anywhere outside its own definition. The real, live consumer of this
+gap is `ReadModelCache` (`src/api/read_model_cache.py`), wired every tick in
+`V2EngineManager._update_latest_state()` off the same published `kernel.status.dirty_set`, backing
+the real `get_entity`/`get_entities_paged` API endpoints. Its per-entity cache is only invalidated
+for IDs in `dirty_set.all_dirty_entities` — a passive-decay-only entity's cached DTO is never
+popped, so the API serves a stale snapshot indefinitely for whatever fields only changed via
+passive decay.
+
+Real, evidence-based scenario: an entity already dead in combat on a prior tick, whose only
+remaining change is passive hunger accrual + `lifecycle.active` cleanup, with zero `EntityUpdate`
+staged. An earlier scenario attempt (a *live* entity dying from passive decay for the first time)
+was rejected — `strategic_intelligence`'s own always-on goal scoring
+(`src/ai/goals/scorers.py`, `COMBAT_RETREAT`/`TOWN_RETURN` fallback) assigns *some* project to
+essentially any live, cognitively active entity every tick regardless of HP, incidentally marking
+it dirty via a different domain and masking the bug. This narrows, but does not eliminate, the
+real blast radius: the bug reproduces for any entity that has already stopped acting (death, or
+similarly excluded from strategic processing) whose passive attribute decay continues.
+
+**Peer review (`rpg-feature-planning`) routing, per this ticket's own Scope**: proposed fix-approach
+decision sent 2026-09-08 — since Consumer #1 turned out benign, recommend the ticket's own option
+(b) (a narrow fix scoped to `ReadModelCache` specifically, e.g. a supplementary post-apply dirty-id
+set sourced from the already-computed but currently apply()-local
+`ApplyPlan.dirty_tags_by_entity`), not option (a) (widening the shared `update.dirty_set` itself,
+which would also affect phase gating even though that's now confirmed unnecessary). Awaiting
+peer concurrence before recording a final decision and closing.
+
+Aside, not investigated further (out of this ticket's own scope, flagged for the fix-approach
+discussion rather than dropped): `src/systems/biological_system.py`'s `BiologicalSystem.update()`
+is a second, unwired, explicit-`EntityUpdate`-producing biological decay implementation — dead
+code, referenced only by its own test. Possibly the dormant "make passive decay dirty-set-visible"
+path that never got wired in; relevant context for whoever picks up the follow-up fix ticket.
 
 ## Test Summary
-_(pending)_
+New file `tests/unit/engine/test_dirty_set_passive_decay_consumers.py` — 4 tests, all real
+`AuthoritativeApplyPipeline.refine()`/`ApplyPath.apply_generation()`/`ReadModelCache` calls, no
+mocking. All 4 pass. Scoped regression run (`pytest tests/unit/api/test_read_model_cache.py
+tests/unit/domains/optimization/test_phase_dependency_graph.py tests/unit/engine/ -m "not slow and
+not extra_slow"`, via `/home/u24desktop/Working/venv/bin/python3`) — 228 passed, 1 skipped, 3
+deselected, 0 failed.
 
 ## Files Changed
-_(pending)_
+- `tests/unit/engine/test_dirty_set_passive_decay_consumers.py` (new).
+- `staging_artifacts/TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION/` (investigation.md,
+  plan.md, test_plan.md — new).
+- `src/domains/combat_engagement/phase.py` (one comment corrected — cited the dead
+  `apply_plan.py` `invalidate_read_model` field as if live; now cites the real
+  `ReadModelCache`/`dirty_set.all_dirty_entities` mechanism, with a pointer to this ticket).
+- `tickets/todos/TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS.md` (new, filed not
+  implemented — Consumer #2's actual fix).
+- `tickets/todos/TCK-20260908-BIOLOGICAL-SYSTEM-DEAD-CODE-DISPOSITION.md` (new, filed not
+  implemented — the alternative fix-option candidate raised during this investigation).
+
+No other `src/` file changed — investigation-tier ticket; the confirmed fix for Consumer #2 lands
+in its own follow-up ticket per the routed decision, not implemented here.
 
 ## Completion Summary
-_(pending)_
+Investigated both named consumers of the published `dirty_set`'s omission of passive-decay-only
+entity changes, with real pipeline/apply test evidence for each (not reasoning alone). Consumer #1
+(phase short-circuiting, `near_death_hardening`/`evolution`): confirmed benign — both phases only
+ever act on entities already present in `update.entity_updates`, the same source the dirty_set
+itself is built from, so the skip structurally cannot discard real pending work. Consumer #2
+(read-model invalidation): confirmed a real, live bug, but at a different site than this ticket's
+own Request Summary originally named — `apply_plan.py`'s `invalidate_read_model` field is dead
+code (confirmed by grep, corrected a stale comment that had assumed otherwise); the real consumer
+is `ReadModelCache`, wired live in the API path, which serves stale entity data for entities whose
+only per-tick change is passive decay, unbounded by any eviction (confirmed via a second grep that
+`ReadModelCache` is never registered with `CacheRegistry`). A fix-approach decision was routed
+through peer review before any implementation, per this ticket's own Scope and this repo's
+decision-routing convention — resulting in two new, unimplemented follow-up tickets: the narrow
+`ReadModelCache` fix, and a real, peer-escalated alternative (wiring a dormant, unwired
+`BiologicalSystem.update()` implementation found during this investigation) that the fix ticket
+must explicitly weigh before choosing its final approach, rather than defaulting past it.

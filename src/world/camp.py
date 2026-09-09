@@ -100,22 +100,45 @@ class CampService:
                             last_raid_tick_set=state.tick
                         )
                     else:
-                        # Trigger a raid from this camp!
+                        # Trigger a raid from this camp, anchored at the camp's own position and
+                        # targeting the nearest real settlement (TCK-20260908-CAMP-RAID-ORIGIN-
+                        # SPAWN-FIX). RaidService.check_for_raid() is NOT called here -- its own
+                        # internal tick%raid_interval_ticks gate is a different, unrelated cadence
+                        # that would suppress raiders on ~499/500 of the ticks this branch is
+                        # actually eligible to fire on. The camp's own maturity/last_raid_tick
+                        # cadence (checked above) is the real gate for this path.
+                        from src.core.state import PlaceKind
                         from src.world.raid import RaidService
-                        # For now, we reuse RaidService logic but anchored here
-                        raid_update = RaidService.check_for_raid(state, generator)
-                        # Adjust positions to camp
-                        for mob in raid_update.entities_add:
-                            # We can't easily mutate the update list, so we just add them
-                            # but in a real system we'd pass the origin.
-                            # For now, let's just mark the last_raid_tick.
-                            pass
 
-                        camp_updates[c_id] = CampUpdate(
-                            id=c_id,
-                            maturity_delta=-20.0, # Cost of raiding
-                            last_raid_tick_set=state.tick
-                        )
+                        nearest_city = None
+                        nearest_dist_sq = None
+                        for place in state.places.values():
+                            if place.kind != PlaceKind.CITY:
+                                continue
+                            dist_sq = ((place.position[0] - camp.position[0]) ** 2 +
+                                       (place.position[1] - camp.position[1]) ** 2)
+                            if nearest_dist_sq is None or dist_sq < nearest_dist_sq:
+                                nearest_city = place
+                                nearest_dist_sq = dist_sq
+
+                        if nearest_city is not None:
+                            raid_size = RaidService.RAID_BASE_SIZE + state.maturity
+                            raid_update = RaidService.spawn_raid(
+                                state, generator,
+                                origin=camp.position,
+                                target=nearest_city.position,
+                                raid_size=raid_size,
+                            )
+                            entities_add.extend(raid_update.entities_add)
+                            camp_updates[c_id] = CampUpdate(
+                                id=c_id,
+                                maturity_delta=-20.0, # Cost of raiding
+                                last_raid_tick_set=state.tick
+                            )
+                        # else: no settlement to raid -- skip entirely. Do NOT apply the maturity
+                        # cost or reset last_raid_tick here; that would charge the camp for a raid
+                        # that never happened, rebuilding this exact ticket's own bug. The
+                        # growth-only CampUpdate from step 1 above is left untouched.
 
             # 4. Natural-Creature Reproduction
             if flags.get("ENABLE_REPRODUCTION_NATURAL_CREATURE_PATH", "OFF") == "ON":

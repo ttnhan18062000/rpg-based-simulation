@@ -39,15 +39,31 @@ def _make_manifest(n_episodes: int = 3, base_seed: int = 0) -> CampaignManifest:
     real, tiny unit-tier corpus world (`unit_faction_tension`) rather than left
     as a bare MagicMock — `_build_initial_state()` now really calls
     `WorldRepository.load_world_with_context(spec.world_composition)`, which
-    needs a real string world_id, not a MagicMock. Only `regions`/`places` are
-    threaded from this real compile into the returned state (never `entities`),
-    so every existing entity/faction/carry-forward assertion in this file is
-    unaffected — confirmed by re-running the full file after this change.
+    needs a real string world_id, not a MagicMock.
+
+    TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: `id`/`perspective`/
+    `initial_conditions` are now also set to real values — `_build_initial_state()`'s
+    episode-0 branch calls `CatalogScenarioStateBuilder.build()` (via
+    `ScenarioSetupResolver.resolve()`), which builds a real, strictly-typed
+    `ResolvedScenarioSetup` pydantic model from `scenario.id`/`.perspective` — a bare
+    MagicMock for either now fails pydantic's `string_type` validation instead of
+    silently working. `unit_faction_tension` has no `default_perspectives` declared
+    (`_validate_perspective()` skips validation when that list is empty), so any real
+    perspective string is accepted; `hero_guild_perspective` is used here purely for
+    consistency with the other real-scenario tests in this file, not because this
+    world requires it. Every existing entity/faction/carry-forward assertion in this
+    file that does NOT touch the episode-0 branch is unaffected — confirmed by
+    re-running the full file after this change; the one assertion that WAS
+    (deliberately) written against an always-empty episode-0 world is updated
+    separately, see `test_build_initial_state_episode_zero_carries_compiled_regions_and_places`.
     """
     episodes = []
-    for _ in range(n_episodes):
+    for i in range(n_episodes):
         ep = MagicMock()
+        ep.id = f"test_campaign_ep{i}"
         ep.world_composition = "unit_faction_tension"
+        ep.perspective = "hero_guild_perspective"
+        ep.initial_conditions = {}
         episodes.append(ep)
     return CampaignManifest(id="test_campaign", episodes=episodes, base_seed=base_seed)
 
@@ -470,17 +486,36 @@ def test_run_episode_flushes_pending_grief_triggers_before_reading_final_state()
 # ---------------------------------------------------------------------------
 
 def _real_episode_spec(world_id: str = "unit_faction_tension") -> MagicMock:
-    """Episode spec whose world_composition names a real, tiny corpus world."""
+    """Episode spec whose world_composition names a real, tiny corpus world.
+
+    TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: `id`/`perspective`/
+    `initial_conditions` set to real values for the same reason as `_make_manifest()`,
+    above — `ScenarioSetupResolver.resolve()` now genuinely runs for the episode-0
+    branch and needs real strings, not MagicMock attributes.
+    """
     spec = MagicMock()
+    spec.id = f"test_spec_{world_id}"
     spec.world_composition = world_id
+    spec.perspective = "hero_guild_perspective"
+    spec.initial_conditions = {}
     return spec
 
 
 def test_build_initial_state_episode_zero_carries_compiled_regions_and_places():
-    """Episode 0 (no surviving carry-forwards) must get real compiled regions/places.
+    """Episode 0 (no surviving carry-forwards) must get real compiled regions/places,
+    AND real entities.
 
     Before TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY this branch returned a bare
     AuthoritativeState(tick=0, seed=...) with regions={} / places={}.
+
+    TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: before that ticket, this same
+    branch also always returned `entities={}` — this test used to assert exactly that
+    (`state.entities == {}`) as an intentional invariant. That was the actual bug the
+    later ticket fixed (`campaign_life_arc` ran with zero entities for its entire
+    episode); the old assertion was correct for the code as it stood, but described a
+    real defect, not a design contract worth preserving. Updated to assert the new,
+    intended behavior instead of silently deleting the coverage — deliberately NOT
+    just relaxed to "don't crash"; a real non-empty entities dict is now asserted.
     """
     orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
     assert orch.state.persistent_entities == {}, "precondition: episode-0 branch"
@@ -489,7 +524,7 @@ def test_build_initial_state_episode_zero_carries_compiled_regions_and_places():
 
     assert state.regions, (
         "episode 0 must receive real compiled regions — an empty dict is the exact "
-        "pre-fix bug this ticket exists to close"
+        "pre-fix bug TCK-20260904-CAMPAIGN-REGION-PLACE-CARRY exists to close"
     )
     assert all(
         hasattr(region, "id") and region.id == region_id
@@ -499,10 +534,15 @@ def test_build_initial_state_episode_zero_carries_compiled_regions_and_places():
     # modules declare no Places — assert the type/carry, not a non-empty count).
     assert isinstance(state.places, dict)
     assert state.tick == 0 and state.seed == 7, "seed/tick contract unchanged"
-    assert state.entities == {}, (
-        "episode 0 must NOT inherit the compiled world's own entity roster — only "
-        "region/place topology is threaded from the compile"
+    assert state.entities, (
+        "episode 0 must receive real spawned entities — an empty dict is the exact "
+        "pre-fix bug TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING exists to close "
+        "(campaign_life_arc previously ran with zero entities for its entire episode)"
     )
+    assert all(
+        hasattr(entity, "id") and entity.id == entity_id
+        for entity_id, entity in state.entities.items()
+    ), "spawned entities must be real EntityState objects keyed by their own id"
 
 
 def test_build_initial_state_survivor_branch_also_carries_compiled_regions_and_places():

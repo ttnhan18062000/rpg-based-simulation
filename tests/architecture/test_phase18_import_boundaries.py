@@ -169,11 +169,15 @@ def test_observability_domains_systems_import_allowlist():
 # Line 437->440 re-pinned by TCK-20260905-FAME-DERIVER-LEGEND-FACT: adding the
 # FameExporter.export() call/import in orchestrator.py._advance_state() shifted this line
 # down by 3, per the sibling Fidelity ticket's own documented collateral-drift lesson.
+# Line 447->487 re-pinned by TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: adding
+# CatalogRepository/WorldModuleRepository/CatalogScenarioStateBuilder construction to
+# __init__() and the entity-spawn/scatter call in _build_initial_state() shifted this line
+# down by 40, same collateral-drift pattern as above -- the import itself is unchanged.
 _DOMAINS_OBSERVABILITY_PINNED = {
     ("src/domains/campaigns/narrative_ledger.py", 71): (
         "src.observability.events", ("SimulationEvent",),
     ),
-    ("src/domains/campaigns/orchestrator.py", 447): (
+    ("src/domains/campaigns/orchestrator.py", 487): (
         "src.observability.events", ("SimulationEvent",),
     ),
 }
