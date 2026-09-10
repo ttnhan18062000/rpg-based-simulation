@@ -9384,34 +9384,40 @@
   status: unsupported
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'The dedicated regression evidence this entry cited -- tests/archive/test_knowledge_gateway_cache.py
-    (20 tests: identity/revalidation/orchestrator unit+fixture tests plus architecture
-    guards, including test_per_key_stampede_guard_prevents_concurrent_duplicate_write
-    and test_size_cap_gate_skips_write_without_raising_when_db_over_ceiling); tests/archive/test_knowledge_gateway_mcp.py
-    (9 new AC1/AC2/AC4/AC5/AC6/fail-open integration tests plus narrowed test_knowledge_status_omits_all_cache_specific_fields_enumerated);
-    tests/tools/test_retrieval_cache.py::TestProviderResultCache,tests/tools/test_retrieval_cache.py::TestMigration003,tests/tools/test_retrieval_cache.py::TestProviderResultCacheStats
-    (16 new test methods); tests/archive/test_knowledge_gateway_failure_semantics.py
-    (13-test matrix, unmodified pass + new _isolated_cache_db fixture); tests/archive/test_knowledge_gateway_redaction.py::TestSecretScan,tests/archive/test_knowledge_gateway_redaction.py::TestNeverCacheCategories
-    (16 new tests added by this ticket''s own post-Security-Review fix: 14 new TestSecretScan
-    detection/reject-outright pairs for github_token/slack_token/openai_api_key/anthropic_api_key/generic_password_or_secret_assignment/basic_auth_in_url
-    plus 2 cross-match tests (test_openai_pattern_does_not_mismatch_an_anthropic_key,
-    test_anthropic_pattern_does_not_mismatch_an_openai_key), plus 2 new TestNeverCacheCategories
-    token-vs-credential classification tests) -- all 4 test files above moved to tests/archive/
-    (excluded from default pytest collection via pyproject.toml norecursedirs) by
-    TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE, historical record of this ticket''s
-    own pre-archival state, not re-derived; tests/tools/test_retrieval_cache.py''s
-    own 3 cited classes (TestProviderResultCache, TestMigration003, TestProviderResultCacheStats)
-    are unaffected -- that file was not archived and its cited tests still pass. --
-    was hard-deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY (first archived
-    by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE, now permanently removed) and
-    no longer exists anywhere in the repo, archived or otherwise. No regression-locking
-    test evidence for this entry''s claim survives anywhere in the repo.'
+  v2_evidence: 'This entry''s `text` field describes three components; their current
+    state differs and is stated precisely here rather than blanket-claimed (Architecture-Review
+    finding on PR #152, independently re-verified against real code before this correction):
+    (1) the new tools/knowledge_gateway_cache.py orchestration (compute_lookup_identity(),
+    perform_cache_lookup()/perform_cache_write(), revalidate_cache_row(), is_branch_compatible(),
+    etc.) was hard-deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY (first archived
+    by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE) and no longer exists anywhere
+    in the repo. (2) tools/knowledge_gateway_mcp.py''s _run_knowledge_context()/_run_knowledge_status()
+    cache-hook wiring described by this entry was hard-deleted in the same ticket.
+    (3) tools/retrieval_cache.py''s own read/write functions this entry also describes
+    -- check_provider_result_cache(), write_provider_result_cache(), record_provider_result_cache_hit(),
+    provider_result_cache_stats(), _get_level1_connection(), ProviderResultCacheLookup
+    -- were NOT deleted and remain live in tools/retrieval_cache.py today, still covered
+    by tests/tools/test_retrieval_cache.py::TestProviderResultCache/TestMigration003/TestProviderResultCacheStats
+    (confirmed passing, 116/116 for the full test file). However, these functions
+    now have zero live caller anywhere in the repo -- the only code that ever invoked
+    them (component (2) above) is deleted, so component (3) is tested but unreachable
+    dead code as of this correction, not evidence that the entry''s own claim (real
+    cache read/write WIRING INTO THE LIVE gateway) still holds. A follow-up ticket
+    to decide keep-vs-remove for this now-orphaned code is a separate, real scope
+    call, not resolved here.'
   proof_type: regression
-  test_path: null
-  divergence_note: Knowledge Gateway MCP dedicated test evidence for this entry hard-deleted
-    by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY; the behavior this entry's `text`
-    field describes is inapplicable, not verified -- no regression-locking test evidence
-    exists anywhere in the repo.
+  test_path: tests/tools/test_retrieval_cache.py::TestProviderResultCache,tests/tools/test_retrieval_cache.py::TestMigration003,tests/tools/test_retrieval_cache.py::TestProviderResultCacheStats
+  divergence_note: 'Corrected on PR #152 (Architecture-Review finding, independently
+    re-verified): the prior version of this note incorrectly stated no regression-locking
+    test evidence survives anywhere in the repo. That was wrong -- tests/tools/test_retrieval_cache.py::TestProviderResultCache/TestMigration003/TestProviderResultCacheStats
+    are live, collected, and passing today, and directly cover the tools/retrieval_cache.py
+    functions this entry''s text also describes. `status: unsupported` is kept because
+    this entry''s actual claim is specifically about real wiring into a LIVE Knowledge
+    Gateway MCP gateway -- that gateway (tools/knowledge_gateway_cache.py, tools/knowledge_gateway_mcp.py''s
+    cache hooks) is permanently deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY,
+    so the wiring itself is genuinely gone even though the underlying tools/retrieval_cache.py
+    functions it once called still exist and remain tested as orphaned, unreachable
+    code.'
   support_boundary: 'This is the first ticket to perform real INSERT writes into retrieval_provider_result_cache_rows
     -- all real writes gated by evaluate_write_candidate() returning ALLOW, no raw/unredacted
     bypass path anywhere (confirmed by a static AST guard test, test_no_raw_insert_statement_bypasses_redaction_anywhere_in_cache_module).

@@ -303,6 +303,34 @@ fixed here, per this ticket's own scope boundaries. Not a blocker for this ticke
 of Done: this ticket's actual regression surface (`write_path_guard.py`/`retrieval_cache.py` and
 the archival-adjacent tests it's responsible for) all pass; this finding is orthogonal.
 
+**Post-DoD peer-review correction (PR #152 review by `agent-working-design`, 2026-09-10)**:
+`INFRA-343`'s original disposition (Rule A, `status: unsupported`, `test_path: null`) overclaimed.
+Its own `v2_evidence` already noted "`tests/tools/test_retrieval_cache.py`'s own 3 cited classes
+... are unaffected — that file was not archived and its cited tests still pass," yet the same
+entry's `divergence_note`/rewritten `v2_evidence` also asserted "no regression-locking test
+evidence exists anywhere in the repo" — a direct self-contradiction. Independently re-verified
+before accepting the finding: `check_provider_result_cache()`, `write_provider_result_cache()`,
+`record_provider_result_cache_hit()`, `check_context_packet_cache()`, `write_context_packet_cache()`
+all confirmed still present in `tools/retrieval_cache.py`; the 6 specific test names the reviewer
+cited confirmed present in `tests/tools/test_retrieval_cache.py` at the cited line numbers; the
+full file confirmed passing 116/116; and confirmed via `grep` that none of these functions have any
+live caller anywhere in `tools/`/`src/` outside `tools/retrieval_cache.py` itself and its tests —
+i.e. genuinely tested but orphaned dead code now that the gateway wiring that once called them
+(`tools/knowledge_gateway_cache.py`, `tools/knowledge_gateway_mcp.py`'s cache hooks) is deleted.
+**Fixed**: `status` stays `unsupported` (this entry's specific claim — real wiring into a *live*
+gateway — is genuinely gone, since that wiring/gateway no longer exists), but `test_path` was
+corrected from `null` to the surviving `tests/tools/test_retrieval_cache.py::
+TestProviderResultCache/TestMigration003/TestProviderResultCacheStats` citation, and both
+`v2_evidence`/`divergence_note` were rewritten to precisely distinguish the 3 components this
+entry's `text` actually describes: (1) the gateway orchestration module — deleted; (2) the MCP
+cache-hook wiring — deleted; (3) the underlying `tools/retrieval_cache.py` functions — survive,
+tested, passing, but reachable from nothing since (1)/(2) are gone. Applied directly via
+`tools/parity_ledger_writer.py::write_entry()` (never a raw `Edit`); `validate_entry()` confirms
+the corrected entry is still schema-valid; `git diff` confirms the fix touched only `INFRA-343`'s
+own single field-block, no other entry. A follow-up ticket to decide keep-vs-remove for the
+now-orphaned `retrieval_cache.py` functions is a separate, real scope call, flagged by the reviewer
+but explicitly not resolved here.
+
 ## Files Changed
 
 - `tools/archive/knowledge_gateway_cache.py` (deleted)
