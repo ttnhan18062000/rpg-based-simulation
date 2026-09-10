@@ -8852,10 +8852,10 @@
   v2_evidence: The dedicated regression evidence this entry cited -- tests/tools/test_kgmcp_measurement_baseline.py
     -- was hard-deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY (first archived
     by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE, now permanently removed) and
-    no longer exists anywhere in the repo, archived or otherwise. The other source
-    this entry's v2_evidence originally cited, tools/agent-monitoring/kgmcp_baseline_corpus.py,
-    remains live and untouched by either ticket -- only this entry's own dedicated
-    regression test is gone.
+    no longer exists anywhere in the repo. The other source this entry's v2_evidence
+    originally cited, tools/agent-monitoring/kgmcp_baseline_corpus.py, was itself
+    deleted by TCK-20260910-KGMCP-MEASUREMENT-TOOLING-REMOVAL -- no evidence for this
+    entry survives anywhere in the repo.
   proof_type: regression
   test_path: null
   divergence_note: Knowledge Gateway MCP dedicated test evidence for this entry hard-deleted
