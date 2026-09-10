@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-KGMCP-DEPRECATION-EPIC
-phase: open
+phase: done
 date: 2026-09-07
 tags: [mcp, governance]
 ---
@@ -15,7 +15,7 @@ tags: [mcp, governance]
 Re-ratify and execute Knowledge Gateway MCP (KGMCP) deprecation
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 epic
@@ -121,17 +121,26 @@ Bucket-B/C items).
       importable from `tools/write_path_guard.py`, independent of the gateway; gateway modules
       are archived to `tools/archive/` and deregistered from `.mcp.json`. **DONE 2026-09-07** via
       `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`.
-- [ ] M2 steps 3-4: a 2-week zero-call monitoring window is confirmed; the gateway is
-      hard-deleted. Filed as `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (currently `BLOCKED`
-      on the time-based monitoring window).
-- [ ] M3 (contingent on M1 -> keep): `roadmap.md` item 6 and `standalone_items.md` §1
-      updated to reflect the re-affirmed decision; no code touched.
+- [x] M2 steps 3-4: a 2-week zero-call monitoring window is confirmed; the gateway is
+      hard-deleted. **DONE 2026-09-10** via `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` — the
+      time-based monitoring window itself was formally superseded by a dated, evidence-backed
+      Early Closure Decision (repository owner confirmation) rather than fully elapsing; the
+      zero-call-site re-verification the window existed to provide was still performed, fresh,
+      before the delete.
+- [x] **N/A** — M3 (contingent on M1 -> keep) was the branch for re-affirming Option A; M1
+      instead re-ratified to **Option C — deprecate** (`keep_or_deprecate_decision.md` §4), so
+      M3's own condition never triggers. Marked N/A explicitly, not left as an open box, so this
+      doesn't read as unfinished work: `roadmap.md` item 6 and `standalone_items.md` §1 were
+      updated anyway (to reflect deprecation, not the "keep" scenario M3 describes), as a natural
+      consequence of M2's own execution — see M2's Implementation Notes above and
+      `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`'s own doc updates.
 
 ## Related Tickets
 - `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (`tickets/done/`, closed 2026-09-07) — executed
   this epic's M2 steps 1-2 (extract shared redaction symbols, archive the gateway modules).
-- `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (`tickets/inprogress/`, `BLOCKED`) — will execute
-  M2 steps 3-4 (2-week zero-call monitoring window, then hard-delete) once the window clears.
+- `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (`tickets/done/`) — executed M2 steps 3-4 (2-week
+  zero-call monitoring window, then hard-delete) on 2026-09-10, via a documented Early Closure
+  Decision superseding the time-based window rather than fully elapsing it.
 - `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` (done) — the decision this epic re-opens.
 - `TCK-20260818-KGMCP-EFFICIENCY-REMEDIATION-EPIC`, `TCK-20260816-KGMCP-P4-DIRECT-TOOL-
   COMPARISON`, `TCK-20260818-KGMCP-POST-CAP-FIX-RECOMPARISON`, `TCK-20260816-KGMCP-P5-
@@ -213,14 +222,51 @@ beyond just `scan_for_secrets()`) was resolved by repointing its 3 call sites at
 before archival. 5 gateway modules + 15 dedicated test files archived; `.mcp.json` deregistered;
 the accidental `done-checker`/`test-scoper` allowlist grant removed; 21 parity-ledger entries
 updated. Steps 3-4 (2-week monitoring window, delete) filed as a separate follow-on ticket
-(`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`, `BLOCKED` on the time window), not silently
-deferred.
+(`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`).
+
+**M2 (2026-09-10) — steps 3-4 DONE** via `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`: rather than
+waiting out the remaining ~12 days of the scheduled 2-week window, the repository owner explicitly
+confirmed proceeding now, recorded as a dated, evidence-backed Early Closure Decision (same
+attribution shape as this epic's own M1 re-ratification — the owner's confirmation is the
+operative fact, the verification evidence is supporting material under it). A fresh
+zero-call-site sweep was still run before the delete (not skipped because of the confirmation),
+confirming zero live call sites remained. Hard-deleted all 26 archived files (11 under
+`tools/archive/`, 15 under `tests/archive/`, including 5 orphaned phase-comparison runner scripts
+`TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS` had separately found and archived in the
+interim); updated all 21 `docs/parity_ledger/infrastructure.yaml` entries via
+`tools/parity_ledger_writer.py` (3 rounds of architecture review caught 2 real disposition errors
+before landing, plus a post-merge peer-review finding — `INFRA-343` — fixed in a follow-up
+commit); removed the now-dead `"archive"` `pyproject.toml` `norecursedirs` entry. This completes
+all 4 of M2's steps — the epic's own execution phase is now fully done.
+
+**M3 — N/A.** M1 re-ratified to Option C (deprecate), not a re-affirmed Option A, so M3's own
+"if re-affirmed to keep" condition never triggers — see the Acceptance Criteria checkbox above for
+the explicit disposition and reasoning. `roadmap.md` item 6 and `standalone_items.md` §1 were
+still updated (by M2's own execution, reflecting deprecation rather than the keep scenario M3
+describes) — closing that documentation loop was M2's natural consequence, not a separate M3
+deliverable.
 
 ## Test Summary
-(filled in once M2, if reached, has real changes to test)
+No direct test coverage for this epic ticket itself (epic tier, no direct implementation). Each
+milestone's own child ticket carried its own test coverage: `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`
+(M2 steps 1-2) and `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (M2 steps 3-4) both ran and passed
+their own full scoped regression suites, documented in their own Test Summary sections.
 
 ## Files Changed
-(filled in per-milestone)
+No direct file changes by this epic ticket itself — all substantive changes landed via its child
+tickets: `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` and `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`
+(both `tickets/done/`), plus the M1 re-ratification's own doc updates
+(`keep_or_deprecate_decision.md` §4, `audit_phase0_5.md` §5, `knowledge-gateway-mcp-proposal.md`
+§25, `roadmap.md`, `standalone_items.md`).
 
 ## Completion Summary
+Re-ratified the Knowledge Gateway MCP keep-or-deprecate decision from Option A (keep) to Option C
+(deprecate/remove), on fresh evidence the repository owner explicitly reviewed and decided on
+(never an agent-chosen outcome), then executed the full 4-step removal: extract the shared,
+gateway-independent write-path-guard logic (`tools/write_path_guard.py`), archive the remaining
+gateway modules and tests, run a monitoring window (formally superseded by an explicit, dated,
+evidence-backed owner confirmation rather than fully elapsed), then hard-delete everything
+archived. All 3 milestones resolved: M1 DONE, M2 DONE (all 4 steps, across 2 child tickets), M3
+N/A (moot once M1 landed on deprecate rather than keep). No code in `src/` was touched at any
+point — this epic and both its child tickets were pure tooling/governance/doc work.
 (filled in at close)

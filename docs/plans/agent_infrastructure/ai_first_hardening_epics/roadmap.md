@@ -30,7 +30,7 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 3 | ~~Versioned capability-envelope baseline~~ **SHIPPED** — `TCK-20260904-CAPABILITY-ENVELOPE-BASELINE` | A — Committed | H0 (was) | `governance_capability_policy_epic.md` (M2 — shipped) |
 | 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
 | 5 | ~~Convert 2 proven-failing prose rules to hooks~~ **SHIPPED** — M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3 (`TCK-20260904-TEST-SCOPER-HANG-GUARD`) both landed | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M2, M3 — both shipped) |
-| 6 | Remove/archive knowledge-gateway — **UNBLOCKED 2026-09-07**: `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` re-ratified to Option C (deprecate) via `TCK-20260907-KGMCP-DEPRECATION-EPIC`; execution (M2) in progress | A — Committed | H0, start-now | `standalone_items.md` (§1) |
+| 6 | ~~Remove/archive knowledge-gateway~~ **SHIPPED** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` re-ratified to Option C (deprecate) via `TCK-20260907-KGMCP-DEPRECATION-EPIC`; execution (M2, all 4 steps) completed by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (steps 1-2) and `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (steps 3-4) | A — Committed | H0 (was) | `standalone_items.md` (§1 — shipped) |
 | 7 | ~~Migrate the 2 remaining sidecar stragglers~~ **SHIPPED** — corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass (`tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`); the last straggler, `.claude/settings.json`'s inline `Edit\|Write` hook, migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` | A — Committed | H1 (was) | `workflow_reliability_epic.md` (M1 — shipped) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
 | 9 | ~~Model-diverse reviewer — deploy shadow logging~~ **SHIPPED** — `TCK-20260904-SHADOW-REVIEWER-LOGGING` | A — Committed | H1 (was) | `review_independence_epic.md` (M1 — shipped) |
@@ -100,9 +100,15 @@ re-ratification and the `scan_for_secrets()` extraction — were resolved separa
 moves item 2 out of the "7 remaining to implement" count above, leaving **6 remaining to implement
 overall (1, 3, 7, 9, plus item 1's remaining waves)**.
 
-**Items 3, 9, 11, 12, 14, 15 — shipped; item 7 count corrected (2026-09-10)**: a routine inventory
-re-check (`TCK-20260910-AI-FIRST-ROADMAP-INVENTORY-SYNC`) found this table had drifted —
-`tickets/done/` was cross-checked item by item rather than trusted from a prior snapshot. Item 3
+**Items 3, 6, 9, 11, 12, 14, 15 — shipped; item 7 count corrected (2026-09-10)**: a routine
+inventory re-check (`TCK-20260910-AI-FIRST-ROADMAP-INVENTORY-SYNC`) found this table had drifted —
+`tickets/done/` was cross-checked item by item rather than trusted from a prior snapshot. Item 6's
+own row (above) is fixed in this same pass: it read "execution (M2) in progress" even after
+`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (M2 steps 3-4, completing the milestone) merged —
+`TCK-20260907-KGMCP-DEPRECATION-EPIC` is now fully executed, all four M2 steps done. This does not
+change the "remaining to implement" tally below: item 6 was never counted in that Bucket-A total in
+the first place (tracked separately, per the original 2026-09-04 snapshot's own "item 6 is BLOCKED,
+not committed/start-now" framing above) — this fix closes out its own row/status only. Item 3
 (`TCK-20260904-CAPABILITY-ENVELOPE-BASELINE`), item 9 (`TCK-20260904-SHADOW-REVIEWER-LOGGING`),
 item 11 (`TCK-20260904-WORKING-LOG-CSV-PARSER`), item 12
 (`TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST`), item 14
