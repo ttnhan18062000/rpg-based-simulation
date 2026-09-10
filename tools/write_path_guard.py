@@ -58,7 +58,7 @@ MAX_PAYLOAD_BYTES: int = 65536            # §5, redaction_retention_policy.md:1
                                            # by TCK-20260816-HOTFIX-KGMCP-CACHE-SIZE-CAP-RECALIBRATION
                                            # from the real 7-entry corpus's observed cold response
                                            # range (~10,612-30,548 bytes,
-                                           # tests/tools/fixtures/kgmcp_phase2_baseline_recomparison_results.json),
+                                           # docs/engine/contracts/knowledge_gateway_mcp/phase2_baseline_recomparison.md:56,62),
                                            # ~2.15x the observed max, rounded to the nearest clean
                                            # power of two (64 KiB).
 
