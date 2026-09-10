@@ -11235,11 +11235,32 @@
     blanket-banned importing os anywhere in this file as an overly broad proxy for
     no os.chmod usage -- narrowed to drop only that redundant proxy clause; the direct
     chmod/busy_timeout string checks it also contains remain fully enforced unchanged.
-  status: verified
+  status: unsupported
   priority: P2
-  v2_evidence: tools/retrieval_cache.py, tools/agent-monitoring/post_tool_hook.py
-  test_path: tests/tools/test_retrieval_cache.py::TestReadCurrentRunSidecar::test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist
-  divergence_note: null
+  v2_evidence: 'TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL deleted read_current_run_sidecar(),
+    _sidecar_run_is_stale(), _ticket_file_exists(), and _CURRENT_RUN_SIDECAR_PATH
+    from tools/retrieval_cache.py -- one link further down the same dead chain that
+    ticket already removed log_cache_access() from: log_cache_access() was read_current_run_sidecar()''s
+    sole production caller, and once it was gone this function (and its two file-existence
+    helpers) had none. Its own test class, TestReadCurrentRunSidecar (tests/tools/test_retrieval_cache.py,
+    8 tests including the one this entry cited) and its _write_sidecar()/_make_inprogress_ticket()/_make_done_ticket()
+    fixtures were removed in the same change, since they exercised only the now-deleted
+    function. post_tool_hook.py''s own, separately-maintained inlined sidecar reader
+    (the thing this entry''s text says the function ''mirrors'') is untouched -- confirmed
+    no import or call site anywhere in tools/, src/, tests/, or .claude/ outside retrieval_cache.py''s
+    own file and comments citing it by name. migration_005_add_cache_access_log_table()
+    (the schema this function''s return value fed) is kept, per the same ticket''s
+    own scope guard treating migrations as pure, standalone, historically-retained
+    schema functions -- its docstring was reworded to past tense rather than left
+    claiming a still-live reader.'
+  test_path: null
+  divergence_note: 'Corrected by TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL
+    (2026-09-11, folded in after an independent peer review of the ticket''s own PR
+    flagged this function as an orphaned one-hop-further consequence of the same removal):
+    the scoped-sidecar-preference feature this entry certified is deleted wholesale,
+    along with its dedicated test class. `status` moved from `verified` to `unsupported`
+    and `test_path` to null since no direct evidence for this entry''s own claim survives
+    -- the behavior itself no longer exists to test.'
 - id: INFRA-391
   text: 'tools/agent_orchestration_claude_adapter/terminal_status_extractor.py''s
     extract_literal_statuses()/extract_all_terminal_statuses() gained a content-based

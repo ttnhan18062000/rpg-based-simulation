@@ -38,15 +38,6 @@ from tools import retrieval_cache as rc  # noqa: E402
 def _isolated_cache_db(tmp_path, monkeypatch):
     monkeypatch.setattr(rc, "CACHE_DB_PATH", tmp_path / "retrieval_cache.db")
     monkeypatch.setattr(rc, "_MANIFEST_PATH", tmp_path / "manifest.json")
-    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: every
-    # write_provider_result_cache()/record_provider_result_cache_hit()/write_context_packet_cache()/
-    # record_context_packet_cache_hit() call now also calls log_cache_access() internally, which
-    # reads `.claude/current_run` and checks `tickets/{inprogress,done}/` for staleness — pointed
-    # at a nonexistent tmp_path location by default so every pre-existing test in this file (which
-    # never touches the access log at all) stays fully hermetic, never depending on this real
-    # repo's actual sidecar file or ticket corpus.
-    monkeypatch.setattr(rc, "_CURRENT_RUN_SIDECAR_PATH", tmp_path / "current_run")
-    monkeypatch.setattr(rc, "_REPO_ROOT", tmp_path)
     yield
 
 
@@ -958,9 +949,12 @@ class TestLevel2Migrations:
         # "no os.chmod-based permission hacks" -- but the two chmod-specific string checks below
         # already test that real concern precisely and remain fully enforced unchanged. The
         # blanket `os` import ban was an overly broad proxy that this ticket's own legitimate,
-        # unrelated need (os.environ.get("CLAUDE_CODE_SESSION_ID") in read_current_run_sidecar())
-        # ran into; narrowing this one redundant clause is not a weakening of the real, still-
-        # enforced invariant (no chmod, no busy_timeout PRAGMA tricks in the migration code).
+        # unrelated need (os.environ.get("CLAUDE_CODE_SESSION_ID") in the now-removed
+        # read_current_run_sidecar(), TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL) ran
+        # into; narrowing this one redundant clause is not a weakening of the real, still-enforced
+        # invariant (no chmod, no busy_timeout PRAGMA tricks in the migration code) -- left
+        # narrowed rather than re-widened back to a blanket os-import ban, since a future,
+        # unrelated legitimate need for `os` shouldn't have to fight this test again either.
         source = Path(rc.__file__).read_text()
         assert "PRAGMA journal_mode" not in source
         assert "PRAGMA busy_timeout" not in source
@@ -1108,23 +1102,13 @@ class TestContextPacketCacheStats:
 
 
 # ---------------------------------------------------------------------------
-# KGMCP cache-access-log — TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD
+# retrieval_cache_access_log schema — TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-
+# USAGE-DASHBOARD. The writer/reader chain that used this table (log_cache_access(),
+# read_current_run_sidecar(), _sidecar_run_is_stale(), TestReadCurrentRunSidecar and its
+# _write_sidecar()/_make_inprogress_ticket()/_make_done_ticket() fixtures below) was removed by
+# TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL; migration_005 itself is kept as a pure,
+# standalone schema function, so its own tests below stay.
 # ---------------------------------------------------------------------------
-
-def _write_sidecar(tmp_path: Path, **fields) -> None:
-    (tmp_path / "current_run").write_text(json.dumps(fields))
-
-
-def _make_inprogress_ticket(tmp_path: Path, ticket_id: str) -> None:
-    d = tmp_path / "tickets" / "inprogress"
-    d.mkdir(parents=True, exist_ok=True)
-    (d / f"{ticket_id}.md").write_text("# fake ticket\n")
-
-
-def _make_done_ticket(tmp_path: Path, ticket_id: str) -> None:
-    d = tmp_path / "tickets" / "done"
-    d.mkdir(parents=True, exist_ok=True)
-    (d / f"{ticket_id}.md").write_text("# fake ticket\n")
 
 
 class TestMigration005CacheAccessLog:
@@ -1195,108 +1179,3 @@ class TestMigration005CacheAccessLog:
             "run_id", "seq", "phase", "agent", "execution_id", "provider", "ticket_id",
             "sidecar_stale", "ts",
         }
-
-class TestReadCurrentRunSidecar:
-    def test_returns_all_none_and_not_stale_when_sidecar_file_absent(self):
-        result = rc.read_current_run_sidecar()
-        assert result == {
-            "run_id": None, "seq": None, "phase": None, "agent": None, "execution_id": None,
-            "provider": None, "ticket_id": None, "sidecar_stale": False,
-        }
-
-    def test_reads_real_sidecar_fields(self, tmp_path):
-        _write_sidecar(
-            tmp_path, run_id="TCK-A", seq=2, phase="Implement", agent="implementer",
-            execution_id="x1", provider="anthropic",
-        )
-        result = rc.read_current_run_sidecar()
-        assert result["run_id"] == "TCK-A"
-        assert result["seq"] == 2
-        assert result["phase"] == "Implement"
-        assert result["agent"] == "implementer"
-        assert result["execution_id"] == "x1"
-        assert result["provider"] == "anthropic"
-
-    def test_malformed_sidecar_json_fails_silently_to_all_none(self, tmp_path):
-        (tmp_path / "current_run").write_text("{not valid json")
-        result = rc.read_current_run_sidecar()
-        assert result["run_id"] is None
-        assert result["sidecar_stale"] is False
-
-    def test_sidecar_stale_true_when_run_id_ticket_is_already_done_not_inprogress(self, tmp_path):
-        """Reproduces the exact live failure mode this ticket's own Scope item 6 documents:
-        .claude/current_run points at a ticket that has already moved to tickets/done/."""
-        _make_done_ticket(tmp_path, "TCK-20260101-FAKE-CLOSED")
-        _write_sidecar(tmp_path, run_id="TCK-20260101-FAKE-CLOSED", seq=1, phase="Verify", agent="done-checker")
-        result = rc.read_current_run_sidecar()
-        assert result["sidecar_stale"] is True
-
-    def test_sidecar_not_stale_when_ticket_is_genuinely_inprogress(self, tmp_path):
-        _make_inprogress_ticket(tmp_path, "TCK-20260101-FAKE-OPEN")
-        _write_sidecar(tmp_path, run_id="TCK-20260101-FAKE-OPEN", seq=1, phase="Implement", agent="implementer")
-        result = rc.read_current_run_sidecar()
-        assert result["sidecar_stale"] is False
-
-    def test_sidecar_not_stale_when_no_ticket_id_at_all_ad_hoc_work(self, tmp_path):
-        # No run_id starting with TCK- and no explicit ticket_id -- ad-hoc, non-ticket work. This
-        # is honestly "unattributed", not "stale" -- a real, distinct signal (see
-        # compute_kgmcp_cache_efficiency_metrics's own "unattributed" bucket).
-        _write_sidecar(tmp_path, run_id="ad-hoc-session", seq=1, phase="Investigate", agent="claude")
-        result = rc.read_current_run_sidecar()
-        assert result["sidecar_stale"] is False
-
-    def test_run_id_only_sidecar_reports_effective_ticket_id_not_none(self, tmp_path):
-        """TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION: the real shape every sidecar writer
-        produces (run_id only, no explicit ticket_id key) must resolve 'ticket_id' to the run_id
-        fallback, not raw None — this is exactly why per-ticket cache-efficiency breakdown was
-        100% 'unattributed' before this fix."""
-        _write_sidecar(
-            tmp_path, run_id="TCK-20260101-REAL-WORK", seq=1, phase="Implement", agent="implementer",
-        )
-        result = rc.read_current_run_sidecar()
-        assert result["ticket_id"] == "TCK-20260101-REAL-WORK"
-
-    def test_explicit_ticket_id_field_used_over_run_id_when_both_present(self, tmp_path):
-        _make_done_ticket(tmp_path, "TCK-20260101-CHILD-CLOSED")
-        _write_sidecar(
-            tmp_path, run_id="EPIC-20260101-PARENT", ticket_id="TCK-20260101-CHILD-CLOSED",
-            seq=1, phase="Implement", agent="implementer",
-        )
-        result = rc.read_current_run_sidecar()
-        assert result["ticket_id"] == "TCK-20260101-CHILD-CLOSED"
-        assert result["sidecar_stale"] is True
-
-    def test_scoped_sidecar_wins_over_stale_unscoped_when_both_exist(self, tmp_path, monkeypatch):
-        # TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: mirrors post_tool_hook.py's own
-        # scoped-file preference (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE).
-        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "sess-real")
-        _write_sidecar(
-            tmp_path, run_id="TCK-STALE-FOREIGN", seq=99, phase="Finalize", agent="implementer",
-        )
-        (tmp_path / "current_run.sess-real").write_text(
-            json.dumps({"run_id": "TCK-REAL", "seq": 3, "phase": "Implement", "agent": "implementer"})
-        )
-        result = rc.read_current_run_sidecar()
-        assert result["run_id"] == "TCK-REAL"
-        assert result["seq"] == 3
-        assert result["phase"] == "Implement"
-
-    def test_no_scoped_file_falls_back_to_unscoped_and_deletes_nothing(self, tmp_path, monkeypatch):
-        # TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: deliberately does NOT adopt
-        # post_tool_hook.py's null-sentinel-on-absence write side effect (see
-        # read_current_run_sidecar()'s own docstring for the reasoning) — falls back to the
-        # unscoped file, same as pre-TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION, and never
-        # deletes any file (no pruning logic of its own, per this ticket's Out of Scope).
-        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "sess-no-scoped-file")
-        _write_sidecar(tmp_path, run_id="TCK-UNSCOPED", seq=1, phase="Scope", agent="ticket-scoper")
-        stale_other_scoped = tmp_path / "current_run.sess-other"
-        stale_other_scoped.write_text(json.dumps({"run_id": "TCK-OTHER", "seq": 9}))
-        old_time = time.time() - (25 * 3600)
-        os.utime(stale_other_scoped, (old_time, old_time))
-
-        result = rc.read_current_run_sidecar()
-        assert result["run_id"] == "TCK-UNSCOPED"
-        assert result["phase"] == "Scope"
-        # No new file-deletion side effect: the unrelated, genuinely stale scoped file for a
-        # DIFFERENT session is untouched — pruning stays solely owned by post_tool_hook.py.
-        assert stale_other_scoped.exists()

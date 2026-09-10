@@ -257,14 +257,19 @@ the ticket's own explicit AC requirement to record which resolution was chosen a
 ## Test Summary
 
 All scoped test lanes green, zero regressions:
-- `tests/tools/test_retrieval_cache.py` — 71 passed
+- `tests/tools/test_retrieval_cache.py` — 71 passed pre-Deviation-5, **61 passed post-Deviation-5**
+  (8 removed with `TestReadCurrentRunSidecar`, 2 net-removed helper-only lines elsewhere)
 - `tests/tools/test_evidence_cache_identity_contract.py` — 19 passed
 - `tests/tools/test_generate_retro.py` — 149 passed
 - `tests/tools/test_agent_ops_dashboard_stats.py` + `test_agent_ops_dashboard_api_boundary.py` +
   `test_agent_ops_dashboard_frontend_api_surface.py` — 25 passed
 - `tests/tools/test_parity_ledger_writer.py` — 19 passed
+- `tests/tools/test_post_tool_hook.py`, `test_settings_json_hooks_wiring.py`,
+  `test_settings_json_edit_write_hook_sidecar_scope.py` (re-run post-Deviation-5, comment-only
+  changes in these files) — all pass
 - `tests/tools/ -m "not slow"` (full lane) — 2467 passed, 17 skipped, 28 deselected, 1 pre-existing
-  xfail (unrelated)
+  xfail (unrelated) — pre-Deviation-5; re-scoped lane (295 tests across the 8 directly-touched
+  files) re-run green post-Deviation-5, see plan.md's own Deviation 5 entry for exact command
 - `tests/api/ -m "not slow"` (full lane, per AC6) — 144 passed
 - `dashboard-frontend`: `npm test` — 145 passed (15 test files)
 
@@ -290,9 +295,21 @@ accidentally broken.
   never a raw Edit)
 - `docs/observability/agent_ops_dashboard_contract.md`
 - `docs/guides/agent_ops_dashboard.md`
-- `staging_artifacts/TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL/plan.md` (added a
-  "Deviations" section documenting the 4 mechanical corrections found during Implement)
-- `tickets/inprogress/TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL.md` (this file)
+- `stored_artifacts/TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL/plan.md` (a "Deviations"
+  section documenting the 4 mechanical corrections found during Implement, plus a Deviation 5
+  entry added post-Finalize for the fold-in below)
+- `tools/agent-monitoring/post_tool_hook.py` (comment-only, Deviation 5)
+- `tests/tools/test_settings_json_hooks_wiring.py` (comment-only, Deviation 5)
+- `tickets/done/TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL.md` (this file)
+
+**Post-Finalize fold-in (Deviation 5, 2026-09-11):** an independent peer review of the PR found
+`read_current_run_sidecar()`/`_sidecar_run_is_stale()`/`_ticket_file_exists()`/
+`_CURRENT_RUN_SIDECAR_PATH` in `tools/retrieval_cache.py` had themselves become orphaned once
+`log_cache_access()` (their sole production caller) was removed above — one link further down the
+same dead chain this ticket exists to remove. Verified independently, then removed, along with the
+now-unused `import os`, the `TestReadCurrentRunSidecar` test class, and updated the
+`migration_005_add_cache_access_log_table()` docstring and `docs/parity_ledger/infrastructure.yaml`'s
+`INFRA-390` entry (via the writer). Full detail in plan.md's own Deviation 5 entry.
 
 `staging_artifacts/TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL/investigation.md` and
 `test_plan.md` were created during this run's own Investigate phase (untracked, not yet committed)
@@ -308,9 +325,12 @@ render block, CLI wiring); and — per the repository owner's Option A decision 
 `kgmcp_cache_efficiency` field and its 5 supporting model classes across
 `src/api/agent_ops_dashboard/` and the React dashboard. `migration_001`/`migration_005` and the
 broader orphaned-surface family (`provider_result_cache_stats`, `context_packet_cache_stats`,
-`migration_002/003/004`, the Level 1/2 connection/schema helpers, both `*Lookup` dataclasses,
-`read_current_run_sidecar`) were deliberately left standing, unchanged, per the ticket's own scope
-boundary. Both parity-ledger entries touched by this change (INFRA-343, INFRA-379) were updated via
-the schema-validating writer. All 6 acceptance criteria are satisfied; every scoped test lane
-(2467+144+145 tests across Python and the frontend) passes with zero regressions. Pure
-deletion/cleanup — no behavior change to any surviving code path.
+`migration_002/003/004`, the Level 1/2 connection/schema helpers, both `*Lookup` dataclasses) were
+deliberately left standing, unchanged, per the ticket's own scope boundary. `read_current_run_sidecar()`
+and its two helpers were initially left standing on the same reasoning, but an independent
+post-Finalize peer review correctly caught that this reasoning didn't hold once `log_cache_access()`
+(its sole caller) was gone — see Deviation 5 above; they are removed as of this version of the
+ticket. Three parity-ledger entries touched by this change (INFRA-343, INFRA-379, INFRA-390) were
+updated via the schema-validating writer. All 6 acceptance criteria are satisfied; every scoped
+test lane (2467+144+145 tests pre-Deviation-5, 295/295 re-scoped tests post-Deviation-5) passes
+with zero regressions. Pure deletion/cleanup — no behavior change to any surviving code path.

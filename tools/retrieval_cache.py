@@ -32,7 +32,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import sqlite3
 import sys
 import time
@@ -459,22 +458,24 @@ def migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None:
     _get_access_log_connection() below. Ordinal 5, the next open ordinal after migration_004 (no
     migration_005_* exists anywhere in this file before this ticket).
 
-    Column shape: `cache_level` ('level1_provider_result' | 'level2_context_packet') plus
-    event-type-appropriate key columns (query_hash/repo_branch_scope for Level 1, packet_id for
-    Level 2 — both nullable, since only one set is ever populated per row) identify *which* cache
-    row the event concerns; `event_type` ('hit' | 'write' | 'invalidate' — this ticket's own
-    instrumentation only ever writes 'hit'/'write', since neither cache level has a distinct
-    invalidate call site today, see log_cache_access()'s docstring) identifies *what* happened;
-    run_id/seq/phase/agent/execution_id/provider/ticket_id are sourced from the same
-    `.claude/current_run` sidecar mechanism tools/agent-monitoring/post_tool_hook.py:46-63 already
-    uses for tools.jsonl attribution (read_current_run_sidecar() below, not reinvented).
-    `sidecar_stale` is a real, file-existence-checked flag (see _sidecar_run_is_stale()) — TRUE
-    when the sidecar's own ticket points at a ticket that has already moved to tickets/done/ (the
-    exact live failure mode this ticket's own Scope item 6 documents), so a reader can distinguish
-    "no attribution recorded" from "attribution recorded but known-untrustworthy" instead of
-    silently trusting stale data. Every column here stays within the MAY-list vocabulary
-    (docs/observability/retrieval_retention_redaction_policy.md) — IDs, hashes (by reference, never
-    raw content), counts via aggregation, timestamps; no prompt/chunk/payload text.
+    Column shape (historical — the writer/reader chain that populated and read this table,
+    log_cache_access()/read_current_run_sidecar()/_sidecar_run_is_stale(), was removed by
+    TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL; this migration itself is kept as a pure,
+    standalone schema function per that ticket's own scope guard): `cache_level`
+    ('level1_provider_result' | 'level2_context_packet') plus event-type-appropriate key columns
+    (query_hash/repo_branch_scope for Level 1, packet_id for Level 2 — both nullable, since only
+    one set was ever populated per row) identified *which* cache row an event concerned;
+    `event_type` ('hit' | 'write' | 'invalidate' — the removed instrumentation only ever wrote
+    'hit'/'write', since neither cache level had a distinct invalidate call site) identified *what*
+    happened; run_id/seq/phase/agent/execution_id/provider/ticket_id were sourced from the same
+    `.claude/current_run` sidecar mechanism tools/agent-monitoring/post_tool_hook.py:46-63 still
+    uses for tools.jsonl attribution. `sidecar_stale` was a real, file-existence-based staleness
+    flag — TRUE when the sidecar's own ticket pointed at a ticket that had already moved to
+    tickets/done/, so a reader could distinguish "no attribution recorded" from "attribution
+    recorded but known-untrustworthy" instead of silently trusting stale data. Every column here
+    stayed within the MAY-list vocabulary (docs/observability/retrieval_retention_redaction_policy.md)
+    — IDs, hashes (by reference, never raw content), counts via aggregation, timestamps; no
+    prompt/chunk/payload text.
     """
     conn.execute(
         """
@@ -507,118 +508,13 @@ def migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None:
 
 
 # ---------------------------------------------------------------------------
-# KGMCP cache-access-log — work attribution for Level 1/Level 2 cache hit/write events
-# (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD)
+# Note: the KGMCP cache-access-log work-attribution section that previously lived here
+# (_CURRENT_RUN_SIDECAR_PATH, _ticket_file_exists(), _sidecar_run_is_stale(),
+# read_current_run_sidecar()) was removed by TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL.
+# log_cache_access() — the only production caller of read_current_run_sidecar() — was removed in
+# the same ticket as part of the broader dead cache-access-log chain; this section was the next
+# link down that chain once its sole caller was gone.
 # ---------------------------------------------------------------------------
-
-# Relative path, matching tools/agent-monitoring/post_tool_hook.py:54's own literal
-# Path(".claude/current_run") — a module attribute (not an inline literal) specifically so tests
-# can monkeypatch it the same way the _isolated_cache_db fixture already monkeypatches
-# CACHE_DB_PATH/_MANIFEST_PATH.
-_CURRENT_RUN_SIDECAR_PATH = Path(".claude/current_run")
-
-
-def _ticket_file_exists(lifecycle: str, ticket_id: str) -> bool:
-    """True if tickets/{lifecycle}/{ticket_id}.md exists, either directly or nested one level
-    under a todos-style subfolder (tickets/done/{folder}/{ticket_id}.md — CLAUDE.md's own Workflow
-    Rule moves a whole completed folder there). Direct-path stat first (O(1), covers the large
-    majority of tickets, which are flat) — rglob only as a fallback, so the common case never pays
-    a directory-tree-scan cost."""
-    base = _REPO_ROOT / "tickets" / lifecycle
-    if not base.is_dir():
-        return False
-    direct = base / f"{ticket_id}.md"
-    if direct.is_file():
-        return True
-    return any(base.rglob(f"{ticket_id}.md"))
-
-
-def _sidecar_run_is_stale(effective_ticket_id: str | None) -> bool:
-    """Real, file-existence-based staleness check (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-
-    AND-SKILL-USAGE-DASHBOARD Scope item 6) — reproduced live during this ticket's own
-    investigation: `.claude/current_run` held `{"run_id": "TCK-20260817-HOTFIX-DECISION-TRACE-
-    SELECTED-MOCK-SCORE", ...}` while that exact ticket already lived under tickets/done/, not
-    tickets/inprogress/ — a `search_docs` call made during unrelated, ad-hoc investigation would
-    have been silently attributed to that already-closed ticket had this check not existed. Only
-    ever returns True when `effective_ticket_id` is set AND it resolves to a real tickets/done/
-    file AND it does NOT also exist under tickets/inprogress/ — an ad-hoc call with no ticket_id at
-    all (None) is correctly NOT flagged stale (it is simply unattributed, a different and equally
-    honest signal, not a false positive here)."""
-    if not effective_ticket_id:
-        return False
-    if _ticket_file_exists("inprogress", effective_ticket_id):
-        return False
-    return _ticket_file_exists("done", effective_ticket_id)
-
-
-def read_current_run_sidecar() -> dict:
-    """Mirrors tools/agent-monitoring/post_tool_hook.py's `.claude/current_run` read pattern —
-    same key names (run_id/seq/phase/agent/execution_id/provider/ticket_id), same fail-silent-to-
-    None-on-any-error convention — reused, not reinvented (no shared helper module previously
-    existed to import; post_tool_hook.py's own version is inlined in a try/except block, not an
-    importable function). Adds one field beyond that mechanism's own scope: `sidecar_stale` (see
-    _sidecar_run_is_stale()).
-
-    TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION: the returned `ticket_id` key is the *effective*
-    ticket ID, not the sidecar's raw `ticket_id` field — an explicit `ticket_id` wins when present,
-    otherwise `run_id` is used when it starts with "TCK-" (the common case for hotfix/standard
-    workflows, where run_id already *is* the ticket_id). Before this fix, the raw `sidecar.get(
-    "ticket_id")` was returned instead (always None, since no sidecar writer ever sets that
-    distinct explicit key) while the effective/fallback value was computed but only used
-    internally for the `sidecar_stale` check below — silently leaving every real caller's
-    `ticket_id` field null. `log_cache_access()` is this function's sole production consumer.
-
-    TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: prefers the per-session scoped sidecar
-    (`<_CURRENT_RUN_SIDECAR_PATH>.<CLAUDE_CODE_SESSION_ID>`) over the unscoped file when a scoped
-    file exists for this process's session, mirroring post_tool_hook.py's own scoped-file
-    preference (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE). Deliberately does NOT adopt
-    post_tool_hook.py's later null-sentinel-on-absence behavior (TCK-20260824-SIDECAR-ADHOC-NULL-
-    ATTRIBUTION) when no scoped file exists — falls back to the unscoped file instead, same as
-    before that ticket. Two reasons, not an oversight: (1) this function is called from CLI/
-    library contexts with no session_id to key a sentinel by other than the env var, and giving a
-    read-only function a new write side effect (writing a sentinel file) is exactly the kind of
-    expanded responsibility this ticket's own Out of Scope excludes; (2) unlike tools.jsonl (which
-    had no staleness signal at all until fixed), this function already carries its own adequate
-    safeguard for the single worst failure mode — attribution to an already-closed ticket — via
-    `sidecar_stale` below, so blind unscoped-fallback here is materially less risky than it was
-    for post_tool_hook.py."""
-    session_id = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
-    scoped_path = (
-        _CURRENT_RUN_SIDECAR_PATH.parent / f"{_CURRENT_RUN_SIDECAR_PATH.name}.{session_id}"
-        if session_id
-        else None
-    )
-    sidecar_path = (
-        scoped_path if scoped_path is not None and scoped_path.exists() else _CURRENT_RUN_SIDECAR_PATH
-    )
-
-    run_id = seq = phase = agent = execution_id = provider = ticket_id = None
-    try:
-        sidecar = json.loads(sidecar_path.read_text())
-        run_id = sidecar.get("run_id") or None
-        seq = sidecar.get("seq") or None
-        phase = sidecar.get("phase") or None
-        agent = sidecar.get("agent") or None
-        execution_id = sidecar.get("execution_id") or None
-        provider = sidecar.get("provider") or None
-        ticket_id = sidecar.get("ticket_id") or None
-    except Exception:
-        pass
-
-    effective_ticket_id = ticket_id or (
-        run_id if run_id and run_id.startswith("TCK-") else None
-    )
-
-    return {
-        "run_id": run_id,
-        "seq": seq,
-        "phase": phase,
-        "agent": agent,
-        "execution_id": execution_id,
-        "provider": provider,
-        "ticket_id": effective_ticket_id,
-        "sidecar_stale": _sidecar_run_is_stale(effective_ticket_id),
-    }
 
 
 def _validate_may_list_kwargs(kwargs: dict, *, table: str) -> dict:

@@ -696,3 +696,47 @@ All four were run through the full scoped test lanes (Step 11) after the fix —
 skipped / 28 deselected (slow) / 1 pre-existing xfail across `tests/tools/ -m "not slow"`, plus 145
 passed across the frontend `npm test` lane. No production behavior changed as a result of any of
 these four fixes — they are test-infrastructure-only corrections.
+
+## Deviation 5 (post-Finalize, 2026-09-11, from an independent peer review of the PR)
+
+**Deviation 1's own reasoning — `read_current_run_sidecar()` "is still used by... which Step 2
+explicitly retains" — was itself incomplete: it checked that `_CURRENT_RUN_SIDECAR_PATH` had a
+caller within the file, but never checked whether `read_current_run_sidecar()` *itself* still had
+any caller anywhere, after this ticket deleted `log_cache_access()` (its sole production
+consumer).** An independent peer review of the merged-ready PR caught this — verified directly
+before acting on it: zero call sites for `read_current_run_sidecar()` remained anywhere in
+`tools/`, `src/`, `tests/` (outside its own now-removed test class), or `.claude/`, and
+`tools/agent-monitoring/post_tool_hook.py` (the only other file that ever mentioned it) referenced
+it only in a comment, never an import — it has always maintained its own, separate inlined sidecar
+reader.
+
+Removed from `tools/retrieval_cache.py`: `read_current_run_sidecar()`, `_sidecar_run_is_stale()`,
+`_ticket_file_exists()` (used only by `_sidecar_run_is_stale()`), `_CURRENT_RUN_SIDECAR_PATH`, and
+the now-unused `import os` (its sole use was `os.environ.get("CLAUDE_CODE_SESSION_ID")` inside the
+deleted function). Removed from `tests/tools/test_retrieval_cache.py`: the `TestReadCurrentRunSidecar`
+class (8 tests) and its `_write_sidecar()`/`_make_inprogress_ticket()`/`_make_done_ticket()`
+fixtures, plus the now-vestigial `monkeypatch.setattr(rc, "_CURRENT_RUN_SIDECAR_PATH", ...)` /
+`monkeypatch.setattr(rc, "_REPO_ROOT", ...)` lines in the file's autouse `_isolated_cache_db`
+fixture (the first attribute no longer exists — every test in the file failed setup until this was
+removed; the second was a no-op even before this change, since nothing at runtime reads `_REPO_ROOT`
+after import). `migration_005_add_cache_access_log_table()`'s retained docstring, which described
+the table's column shape in terms of the now-removed functions, was reworded to past tense.
+Stale cross-references fixed in `tools/agent-monitoring/post_tool_hook.py:73` and
+`tests/tools/test_settings_json_hooks_wiring.py:85` (both cited `read_current_run_sidecar()` by
+name in a comment). `docs/parity_ledger/infrastructure.yaml`'s `INFRA-390` entry (the dedicated
+ledger entry for this function's scoped-sidecar-preference behavior) updated via
+`tools/parity_ledger_writer.py::write_entry()` — `status: verified` → `unsupported`, `test_path` →
+`null`, `v2_evidence`/`divergence_note` rewritten. `INFRA-410` (a different feature —
+`.claude/settings.json`'s hook — whose `text` field cites `read_current_run_sidecar()` by name as
+the pattern it originally mirrored) left untouched: its own subject is unaffected, and INFRA-390's
+own updated entry now explains the removal for a reader who follows the citation.
+
+Re-ran the full previously-scoped test lanes after this fix: `pytest
+tests/tools/test_retrieval_cache.py tests/tools/test_post_tool_hook.py
+tests/tools/test_settings_json_hooks_wiring.py
+tests/tools/test_settings_json_edit_write_hook_sidecar_scope.py
+tests/tools/test_parity_ledger_writer.py tests/tools/test_generate_retro.py
+tests/tools/test_evidence_cache_identity_contract.py
+tests/tools/test_agent_ops_dashboard_stats.py -q` — 295/295 pass. No production behavior beyond
+the additional dead-code removal itself changed; nothing this deviation removes had any live
+caller before removal.
