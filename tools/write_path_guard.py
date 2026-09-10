@@ -19,8 +19,8 @@ is doing the writing.
 
 The §9 `check_db_size_within_limit()`/`execute_bounded_transaction()` helpers, the write-guard
 pair (`acquire_write_guard()`/`release_write_guard()`), and all of §10 (cache-GC eligibility
-predicates) stayed behind in the archived `tools/archive/knowledge_gateway_redaction.py` — none of
-those has a real consumer outside the now-archived gateway package.
+predicates) were deliberately not carried into this module — they had no real consumer outside
+the gateway package, which `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` hard-deleted.
 
 Security-baseline disclosure (§4/§11, quoted verbatim, not paraphrased away): "This baseline
 ruleset is a documented starting point, not a production-complete secret scanner. It is
@@ -293,8 +293,9 @@ def evaluate_write_candidate(
 
 
 # ---------------------------------------------------------------------------
-# §9 — SQLite operational limits (connection-opening only; the rest of §9 stayed behind in the
-# archived tools/archive/knowledge_gateway_redaction.py)
+# §9 — SQLite operational limits (connection-opening only; the rest of §9 was deliberately not
+# carried into this module and no longer exists anywhere in the repo — hard-deleted by
+# TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY)
 # ---------------------------------------------------------------------------
 
 def open_connection_with_limits(db_path: Path) -> sqlite3.Connection:
