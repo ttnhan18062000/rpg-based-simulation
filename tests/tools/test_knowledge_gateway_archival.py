@@ -1,6 +1,8 @@
-"""Architecture guard for TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE's own archival step: the
-Knowledge Gateway MCP package no longer lives at its original `tools/` paths, and each module has
-a mirror file under `tools/archive/`.
+"""Architecture guard for the Knowledge Gateway MCP removal: the package no longer exists anywhere
+in the repo, neither at its original `tools/` paths (archived by
+TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE) nor at `tools/archive/` (hard-deleted by
+TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY). Only the extracted, gateway-independent
+`write_path_guard.py` remainder survives.
 """
 from __future__ import annotations
 
@@ -26,10 +28,10 @@ def test_gateway_modules_archived_not_present_at_old_paths():
         assert not old_path.exists(), f"expected {old_path} to no longer exist (archived)"
 
 
-def test_gateway_modules_exist_at_archive_location():
+def test_gateway_modules_no_longer_exist_at_archive_location():
     for filename in _ARCHIVED_FILENAMES:
         archived_path = _ARCHIVE_DIR / filename
-        assert archived_path.exists(), f"expected archived file at {archived_path}"
+        assert not archived_path.exists(), f"expected {archived_path} to be hard-deleted, not archived"
 
 
 def test_write_path_guard_exists_and_is_not_archived():

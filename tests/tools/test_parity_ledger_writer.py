@@ -272,7 +272,14 @@ class TestInfra352DocumentsChangedPathsIntegrationDecision:
     unnoticed. Mirrors the doc-content-assertion pattern in
     test_evidence_cache_identity_contract.py::
     test_changed_paths_intersected_with_cached_evidence_paths_approach_is_documented (asserts
-    specific substrings are present in a frozen doc rather than re-testing the underlying code)."""
+    specific substrings are present in a frozen doc rather than re-testing the underlying code).
+
+    TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY hard-deleted this entry's sole test_path citation
+    (tests/tools/test_knowledge_gateway_mcp.py, archived then deleted) with no live successor, so
+    the entry moved status: verified -> unsupported / test_path -> null per that ticket's Step 8
+    Rule A. The `text`/`support_boundary` content-lock assertions below are unaffected and still
+    apply -- only the status/test_path assertions were updated to match.
+    """
 
     @staticmethod
     def _infra_352_entry():
@@ -294,5 +301,5 @@ class TestInfra352DocumentsChangedPathsIntegrationDecision:
             in entry["support_boundary"]
         )
 
-        assert entry["status"] == "verified"
-        assert entry["test_path"]
+        assert entry["status"] == "unsupported"
+        assert entry["test_path"] is None

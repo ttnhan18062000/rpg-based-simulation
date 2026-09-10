@@ -426,12 +426,14 @@ def test_fixture_loose_files_need_every_one_individually_listed_to_pass():
 # surfaced a real gap this checker's original design didn't anticipate: a norecursedirs-excluded
 # directory is never collected in ANY job, so it cannot be a "silently orphaned" violation this
 # checker exists to catch, but the checker had no way to know that.
+# TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY later hard-deleted tests/archive/ itself and removed
+# the now-dead "archive" norecursedirs entry, completing the cleanup this region tracks.
 # ---------------------------------------------------------------------------
 
 
 def test_pytest_norecursedirs_reads_real_pyproject_toml():
     norecursedirs = pytest_norecursedirs(_REPO_ROOT / "pyproject.toml")
-    assert "archive" in norecursedirs
+    assert "archive" not in norecursedirs
     assert "stored_artifacts" in norecursedirs
 
 
@@ -476,13 +478,6 @@ def test_fixture_norecursedirs_excluded_directory_passes_instead_of_failing():
         assert by_condition["ci_test_dir_covered:tests/unit/covered"]["status"] == "PASS"
         assert by_condition["ci_test_dir_covered:tests/slowdir"]["status"] == "PASS"
 
-
-def test_check_against_real_repo_state_recognizes_tests_archive_as_norecursedirs_excluded():
-    results = check_ci_workflow_test_coverage(_REAL_WORKFLOW_PATH, _REPO_ROOT)
-    by_condition = {r["condition"]: r for r in results}
-    archive = by_condition["ci_test_dir_covered:tests/archive"]
-    assert archive["status"] == "PASS"
-    assert "norecursedirs" in archive["evidence"]
 
 
 # ---------------------------------------------------------------------------

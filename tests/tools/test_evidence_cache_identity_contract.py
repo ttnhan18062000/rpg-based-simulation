@@ -5,9 +5,10 @@ Phase 0 is contract-only: no gateway, routing, cache-invalidation, or migration 
 These tests structurally validate the frozen contract artifacts under
 `docs/engine/contracts/knowledge_gateway_mcp/` (`evidence_cache_identity_contract.md`,
 `evidence_identity_kinds.schema.json`, `cache_migration_plan.md`), using the same raw-`json.loads()`
-/`Path.read_text()`/`ast.parse()` pattern as `tests/tools/test_knowledge_gateway_contract_schemas.py`
-and `tests/tools/test_retrieval_cache.py::TestStaticGuards` — no `jsonschema` dependency, no import
-of live cache-invalidation code (none exists to import at Phase 0).
+/`Path.read_text()`/`ast.parse()` pattern `tests/tools/test_retrieval_cache.py::TestStaticGuards`
+uses — no `jsonschema` dependency, no import of live cache-invalidation code (none exists to import
+at Phase 0). (The former sibling cross-check against `test_knowledge_gateway_contract_schemas.py`
+was removed when that file was hard-deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY.)
 
 Test #2 and Test #9 read the real, untouched `tools/retrieval_cache.py` via `ast.parse()` /
 `Path.read_text()` only — they are regression guards against that module, not tests of new code
@@ -30,7 +31,6 @@ _EVIDENCE_KINDS_SCHEMA = _CONTRACTS_DIR / "evidence_identity_kinds.schema.json"
 _MIGRATION_PLAN_MD = _CONTRACTS_DIR / "cache_migration_plan.md"
 _SHARED_ENUMS = _CONTRACTS_DIR / "shared_enums.schema.json"
 _REQUEST_SCHEMA = _CONTRACTS_DIR / "knowledge_context_request.schema.json"
-_SIBLING_SCHEMA_TEST = _REPO_ROOT / "tests" / "archive" / "test_knowledge_gateway_contract_schemas.py"
 
 _RETRIEVAL_CACHE_PY = _REPO_ROOT / "tools" / "retrieval_cache.py"
 
@@ -407,8 +407,7 @@ def test_no_migration_library_dependency_introduced():
 
 
 # ---------------------------------------------------------------------------
-# Test 11 — new evidence-kinds schema file parses, has its own schema_version, and does not
-#           collide with the sibling contract-schemas test's fixed file list
+# Test 11 — new evidence-kinds schema file parses and has its own schema_version
 # ---------------------------------------------------------------------------
 
 def test_new_schema_file_parses_and_has_own_schema_version():
@@ -418,12 +417,6 @@ def test_new_schema_file_parses_and_has_own_schema_version():
     assert schema["schema_version"] == 1
     assert schema["$schema"]
     assert schema["title"]
-
-    sibling_test_source = _SIBLING_SCHEMA_TEST.read_text()
-    assert "evidence_identity_kinds.schema.json" not in sibling_test_source, (
-        "the sibling contract-schemas test's fixed _ALL_SCHEMA_FILES list must not be extended "
-        "to include this ticket's new schema file"
-    )
 
 
 # ---------------------------------------------------------------------------
