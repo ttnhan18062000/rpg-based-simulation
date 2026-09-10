@@ -69,11 +69,11 @@ try:
     except Exception:
         pass
 
-    # Read workflow sidecar for run_id / seq. See also tools/retrieval_cache.py's
-    # read_current_run_sidecar() — a separate reader of the same file convention for the KGMCP
-    # cache-access log, deliberately NOT unified into a shared helper (TCK-20260824-RETRIEVAL-
-    # CACHE-SIDECAR-UNIFY's own reasoning) but kept in sync by convention; check it when changing
-    # this block. TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: prefer a
+    # Read workflow sidecar for run_id / seq. tools/retrieval_cache.py previously carried a
+    # separate reader of the same file convention (read_current_run_sidecar(), for the KGMCP
+    # cache-access log) — removed by TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL along
+    # with that log's own writer chain; this hook's own inlined reader is unaffected.
+    # TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: prefer a
     # per-session scoped file (`.claude/current_run.<session_id>`) over the shared unscoped file —
     # the shared file is overwritten by every concurrent session's own writeSidecar() call, so
     # reading it unconditionally silently misattributes tool calls to whichever session wrote it

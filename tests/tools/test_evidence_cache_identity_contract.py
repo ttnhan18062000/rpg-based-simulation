@@ -119,7 +119,6 @@ def test_no_shared_code_or_table_conflates_lookup_hit_with_validity_proof():
     }
     for lookup_fn in (
         "check_index_cache", "check_query_cache", "check_packet_cache",
-        "check_provider_result_cache",
     ):
         assert lookup_fn in function_names, f"expected lookup function {lookup_fn} not found"
 
@@ -155,16 +154,16 @@ def test_no_shared_code_or_table_conflates_lookup_hit_with_validity_proof():
     # divergence from this file's own Non-collapse rule Bullet 1, ratified because no
     # check_*/write_* lookup function exists yet for that table (separately guarded by
     # tests/tools/test_retrieval_cache.py::TestLevel2Migrations::
-    # test_no_actual_read_write_functions_added_for_the_new_level2_table). The real rule this
-    # test protects -- Bullet 2, no lookup FUNCTION return shape ever carries a freshness/
+    # test_check_and_write_functions_no_longer_exist_for_the_removed_level2_table). The real rule
+    # this test protects -- Bullet 2, no lookup FUNCTION return shape ever carries a freshness/
     # verification verdict -- stays enforced by the three check_*_cache Result dataclass
-    # field-set assertions above; narrowed here to every current lookup function's own source
-    # (including check_provider_result_cache, Level 1's own real lookup function, added post-hoc
-    # to this loop by Architecture-Verify's own review of this ticket) instead of a blanket
-    # whole-file substring ban the ratified Level 2 schema columns would otherwise always trip.
+    # field-set assertions above; narrowed here to every current lookup function's own source.
+    # check_provider_result_cache (Level 1's own real lookup function) was briefly in this loop
+    # between TCK-20260816 and TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL, which
+    # deleted it along with its only production caller -- the loop is back to just the three live,
+    # unrelated index/query/packet lookup functions.
     for lookup_fn in (
         "check_index_cache", "check_query_cache", "check_packet_cache",
-        "check_provider_result_cache",
     ):
         fn_node = next(
             node for node in ast.walk(tree)

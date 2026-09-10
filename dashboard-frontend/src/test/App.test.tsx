@@ -83,14 +83,6 @@ function mockStatsFetch() {
       total_skill_invocations: 0, unparseable: 0, per_skill: {}, per_skill_per_run: {},
       derivation: 'Derived from tools.jsonl Skill-tool rows.',
     },
-    kgmcp_cache_efficiency: {
-      total_hits: 0, total_writes: 0, overall_reuse_rate: null, per_ticket: {}, per_agent: {},
-      repeated_refetch_window_seconds: 300, repeated_refetches: [], dead_writes: [],
-      dead_write_count: 0,
-      coverage: { search_calls_total: 0, cache_events_total: 0, coverage_rate: null },
-      verdict: 'NO DATA', verdict_explanation: 'Nothing to evaluate yet.',
-      stale_attribution_count: 0, derivation: 'Derived from retrieval_cache_access_log rows.',
-    },
   }
   const ticketBody = {
     scanned_files: 1,
