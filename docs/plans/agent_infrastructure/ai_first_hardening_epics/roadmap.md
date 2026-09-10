@@ -115,12 +115,15 @@ overall (1, 3, 7, 9, plus item 1's remaining waves)**.
   row above). Both prose-rule-to-hook conversions with directly observed repeated-failure evidence
   have landed: M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3
   (`TCK-20260904-TEST-SCOPER-HANG-GUARD`).
-- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **UNBLOCKED
-  2026-09-07** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified to Option C (deprecate) via
+- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **CLOSED
+  2026-09-10** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified to Option C (deprecate) via
   `TCK-20260907-KGMCP-DEPRECATION-EPIC` (see item 6's inventory row above and
   `keep_or_deprecate_decision.md` §4 for the full re-ratification record). Not an epic —
-  independent value, independent rollback — and shares one real dependency with Epic G's M4
-  (`scan_for_secrets()` extraction), now being executed together per the epic's M2.
+  independent value, independent rollback — and shared one real dependency with Epic G's M4
+  (`scan_for_secrets()` extraction), executed together per the epic's M2 steps 1-2; M2 steps 3-4
+  (monitoring window, then hard-delete) were completed by
+  `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` on 2026-09-10. All four milestones now done, no work
+  remains under this item.
 
 ### Horizon 1 — ready, schedule later (horizon label is strategic staging, not an automatic execution-order constraint — three items below have no H0-gate dependency at all)
 
@@ -293,10 +296,13 @@ conditions:
    normal advisory operation.
 3. Both converted guardrail hooks (item 5) show **zero recurrence** of their target failure
    pattern across ≥2 subsequent weekly retro reports.
-4. `knowledge-gateway` (item 6) archived with **zero renewed calls** observed over 2 weeks — item 6
-   was re-ratified to deprecate on 2026-09-07 (see item 6's inventory row above) and archival
-   (`TCK-20260907-KGMCP-DEPRECATION-EPIC` M2 steps 1-2) is in progress; this condition's 2-week
-   monitoring window (M2 steps 3-4) starts once archival lands, tracked as a separate follow-on.
+4. `knowledge-gateway` (item 6) archived with **zero renewed calls** — satisfied. Item 6 was
+   re-ratified to deprecate on 2026-09-07 (see item 6's inventory row above); archival
+   (`TCK-20260907-KGMCP-DEPRECATION-EPIC` M2 steps 1-2) landed the same day, and
+   `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` executed M2 steps 3-4 on 2026-09-10 via its own
+   documented Early Closure Decision (a repo-visible zero-call-site re-verification substituted
+   for the remaining ~12 days of the scheduled 2-week calendar wait, not a full elapsed-time
+   observation) — zero renewed calls confirmed, gateway files hard-deleted.
 
 ### Eval-pilot exit gate (item 13)
 

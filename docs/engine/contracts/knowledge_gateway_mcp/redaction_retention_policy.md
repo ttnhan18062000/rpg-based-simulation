@@ -86,7 +86,8 @@ justified decision to keep it unlabeled) — not a silent omission.
 
 **Moot as of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (2026-09-07):** `tools/knowledge_gateway_router.py`
 and `tools/knowledge_gateway_cache.py` (the two modules this gap was about) are now archived at
-`tools/archive/knowledge_gateway_router.py`/`tools/archive/knowledge_gateway_cache.py`, and the
+`tools/archive/knowledge_gateway_router.py`/`tools/archive/knowledge_gateway_cache.py` — hard-deleted
+by `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`, no longer present anywhere in the repo — and the
 Knowledge Gateway MCP's `.mcp.json` registration is removed — there is no longer any live call path
 that can reach this routing decision. The gap described above is preserved as historical record,
 not because it still needs a follow-up fix in production.
@@ -153,9 +154,10 @@ reads and writes into the live `knowledge_context` request path
 (`tools/knowledge_gateway_mcp.py::_run_knowledge_context()`), so cache writes governed by this
 ruleset became genuinely reachable from a real, running MCP tool call — the condition this
 precondition's own "before Phase 2 payload caching goes live" language names. (As of
-`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`, `tools/knowledge_gateway_mcp.py` is archived at
-`tools/archive/knowledge_gateway_mcp.py` and deregistered from `.mcp.json` — this call path is no
-longer live; the ruleset itself lives on, relocated, in `tools/write_path_guard.py`.) That ticket's own
+`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`, `tools/knowledge_gateway_mcp.py` was archived at
+`tools/archive/knowledge_gateway_mcp.py` and deregistered from `.mcp.json` — hard-deleted by
+`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`, no longer present anywhere in the repo — this call
+path is no longer live; the ruleset itself lives on, relocated, in `tools/write_path_guard.py`.) That ticket's own
 Architecture Review ruling (DD5) made no claim that this precondition was satisfied at Implement
 time; its own Security-Review phase subsequently found the original four-pattern baseline had
 concrete, named gaps and required — as a narrow, bounded fix, not a redesign — the expansion to ten
@@ -218,9 +220,10 @@ stamped value: the module-level constant `redaction_policy_version = 1`
 (`tools/write_path_guard.py:48`) and the `WriteDecision.redaction_policy_version` field
 (`tools/write_path_guard.py:255`), stamped on every `ALLOW` and `REJECT` decision
 returned by `evaluate_write_candidate()`, added by `TCK-20260815-KGMCP-P2-REDACTION-WRITE-PATH`
-(relocated from `tools/knowledge_gateway_redaction.py` — now archived at
-`tools/archive/knowledge_gateway_redaction.py` — to `tools/write_path_guard.py` by
-`TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`).
+(relocated from `tools/knowledge_gateway_redaction.py` — archived at
+`tools/archive/knowledge_gateway_redaction.py`, hard-deleted by
+`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` and no longer present anywhere in the repo — to
+`tools/write_path_guard.py` by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`).
 Its distinctness from the other 3 version axes named above is verified by a dedicated test in
 `tests/tools/test_write_path_guard.py`.
 
@@ -249,8 +252,9 @@ populated on write, not left null. No new `source_type` literal was introduced f
 the same 2-entry allowlist (§2) is reused unmodified.
 
 **Citation no longer live as of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`:** this test file
-moved to `tests/archive/test_knowledge_gateway_cache.py` (excluded from default pytest collection)
-and, per that ticket's own Implementation Notes, is one of 5 archived test files that fail
+moved to `tests/archive/test_knowledge_gateway_cache.py` (excluded from default pytest collection) —
+hard-deleted by `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`, no longer present anywhere in the
+repo — and, per that ticket's own Implementation Notes, is one of 5 archived test files that fail
 collection outright when run directly (a plain `from tools import knowledge_gateway_cache` import
 of a module now itself archived without an `__init__.py`) — it is a frozen historical record of a
 finding that was true and independently verified at the time, not a currently-executable test. The
@@ -331,10 +335,12 @@ cache read/write implementation. `kgmcp_char_heuristic_v1` was implemented as a 
 as part of its token-budgeted assembly work (§15); see
 `test_kgmcp_char_heuristic_v1_matches_frozen_formula`
 (`tests/tools/test_knowledge_gateway_packet_assembly.py:111`) for the formula-parity test.
-As of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`, both citations above are archived, frozen
+As of `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`, both citations above were archived, frozen
 snapshots — `tools/archive/knowledge_gateway_packet_assembly.py` and
 `tests/archive/test_knowledge_gateway_packet_assembly.py` (the latter excluded from default pytest
-collection via `pyproject.toml`'s `norecursedirs`) — no longer live/executed code.
+collection via `pyproject.toml`'s `norecursedirs`) — no longer live/executed code; both were
+hard-deleted by `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` and no longer exist anywhere in the
+repo.
 
 **Ratification (§24 item 4):** approved as drafted by the repository owner on 2026-08-15, recorded
 in `TCK-20260815-HOTFIX-KGMCP-PHASE0-RATIFICATION`. `kgmcp_char_heuristic_v1` and its ±20%
@@ -357,9 +363,10 @@ call dependency on it. `check_db_size_within_limit(db_path)` (enforces the 256 M
 transaction), and `acquire_write_guard()` / `release_write_guard()` (the per-key stampede guard, an
 in-process lock keyed by cache key — not multi-process safe, see the functions' own docstrings) had
 no real consumer outside the Knowledge Gateway MCP package and stayed behind in
-`tools/knowledge_gateway_redaction.py`, now archived (no longer live code) at
+`tools/knowledge_gateway_redaction.py`, archived (no longer live code) at
 `tools/archive/knowledge_gateway_redaction.py` alongside the rest of the deregistered Knowledge
-Gateway MCP.
+Gateway MCP — hard-deleted by `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`, no longer present
+anywhere in the repo.
 `tools/retrieval_cache.py` itself remains byte-unchanged by this work — `db_path` is a required,
 caller-supplied parameter with no default onto `tools.retrieval_cache.CACHE_DB_PATH`, and
 `test_sqlite_defaults_not_silently_implemented` (`tests/docs/test_redaction_retention_policy_doc.py`)
