@@ -9384,29 +9384,26 @@
   status: unsupported
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'This entry''s `text` field describes three components; their current
-    state differs and is stated precisely here rather than blanket-claimed (Architecture-Review
-    finding on PR #152, independently re-verified against real code before this correction):
-    (1) the new tools/knowledge_gateway_cache.py orchestration (compute_lookup_identity(),
-    perform_cache_lookup()/perform_cache_write(), revalidate_cache_row(), is_branch_compatible(),
-    etc.) was hard-deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY (first archived
-    by TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE) and no longer exists anywhere
-    in the repo. (2) tools/knowledge_gateway_mcp.py''s _run_knowledge_context()/_run_knowledge_status()
-    cache-hook wiring described by this entry was hard-deleted in the same ticket.
-    (3) tools/retrieval_cache.py''s own read/write functions this entry also describes
-    -- check_provider_result_cache(), write_provider_result_cache(), record_provider_result_cache_hit(),
-    provider_result_cache_stats(), _get_level1_connection(), ProviderResultCacheLookup
-    -- were NOT deleted and remain live in tools/retrieval_cache.py today, still covered
-    by tests/tools/test_retrieval_cache.py::TestProviderResultCache/TestMigration003/TestProviderResultCacheStats
-    (confirmed passing, 116/116 for the full test file). However, these functions
-    now have zero live caller anywhere in the repo -- the only code that ever invoked
-    them (component (2) above) is deleted, so component (3) is tested but unreachable
-    dead code as of this correction, not evidence that the entry''s own claim (real
-    cache read/write WIRING INTO THE LIVE gateway) still holds. A follow-up ticket
-    to decide keep-vs-remove for this now-orphaned code is a separate, real scope
-    call, not resolved here.'
+  v2_evidence: 'Re-verified after TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL
+    (the removal this ticket''s own PR #152 correction anticipated: ''A follow-up
+    ticket to decide keep-vs-remove for this now-orphaned code''). The three functions
+    PR #152''s correction cited as tested-but-unreachable-dead-code -- check_provider_result_cache(),
+    write_provider_result_cache(), record_provider_result_cache_hit() -- are now deleted
+    outright from tools/retrieval_cache.py, along with their sibling Level 2 functions
+    (check_context_packet_cache(), write_context_packet_cache(), record_context_packet_cache_hit())
+    and the log_cache_access()/read_cache_access_log()/_get_access_log_connection()
+    access-log chain they fed. The three sibling functions PR #152 also cited -- provider_result_cache_stats(),
+    _get_level1_connection(), ProviderResultCacheLookup -- were deliberately left
+    standing by TCK-20260910''s own scope decision (its plan.md Unresolved Question
+    #1: the broader orphaned-surface family is not expanded into), but now carry zero
+    test coverage of their own: tests/tools/test_retrieval_cache.py::TestProviderResultCacheStats
+    (this entry''s own test_path citation) was removed in the same change, per the
+    ticket''s own Scope text, since the underlying function has no remaining production
+    caller to justify a dedicated test class. This entry''s `status: unsupported`
+    verdict (real wiring into a live Knowledge Gateway MCP gateway) is unaffected
+    -- that gateway was already permanently deleted before this ticket ran.'
   proof_type: regression
-  test_path: tests/tools/test_retrieval_cache.py::TestProviderResultCache,tests/tools/test_retrieval_cache.py::TestMigration003,tests/tools/test_retrieval_cache.py::TestProviderResultCacheStats
+  test_path: null
   divergence_note: 'Corrected on PR #152 (Architecture-Review finding, independently
     re-verified): the prior version of this note incorrectly stated no regression-locking
     test evidence survives anywhere in the repo. That was wrong -- tests/tools/test_retrieval_cache.py::TestProviderResultCache/TestMigration003/TestProviderResultCacheStats
@@ -9417,7 +9414,21 @@
     cache hooks) is permanently deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY,
     so the wiring itself is genuinely gone even though the underlying tools/retrieval_cache.py
     functions it once called still exist and remain tested as orphaned, unreachable
-    code.'
+    code.
+
+
+    Second correction (TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL, 2026-09-10):
+    the tools/retrieval_cache.py functions PR #152''s correction above described as
+    "tested as orphaned, unreachable dead code" are no longer accurate as written.
+    Three of the six (check_provider_result_cache, write_provider_result_cache, record_provider_result_cache_hit)
+    were deleted outright by this ticket, along with their Level 2 counterparts and
+    the log_cache_access/read_cache_access_log access-log chain. The other three (provider_result_cache_stats,
+    _get_level1_connection, ProviderResultCacheLookup) were deliberately retained
+    as standing, zero-caller code (this ticket''s own scope explicitly declined to
+    expand into that broader cleanup), but their dedicated test class (TestProviderResultCacheStats)
+    was removed, so they are now untested as well as unreachable. `test_path` is set
+    to null accordingly -- no test in this shard''s evidence chain still exercises
+    any of the six functions this entry''s `text` field describes.'
   support_boundary: 'This is the first ticket to perform real INSERT writes into retrieval_provider_result_cache_rows
     -- all real writes gated by evaluate_write_candidate() returning ALLOW, no raw/unredacted
     bypass path anywhere (confirmed by a static AST guard test, test_no_raw_insert_statement_bypasses_redaction_anywhere_in_cache_module).
@@ -10861,27 +10872,33 @@
     8561'' for this concept turned out on inspection to actually belong to the unrelated
     INFRA-332 entry). No numeric/formula logic changed in either function or in the
     coverage_rate computation itself -- explanatory text only.'
-  status: verified
+  status: unsupported
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/agent-monitoring/generate_retro.py:783-846 (`compute_kgmcp_cache_efficiency_metrics()`
-    gains `all_tools` parameter; docstring addendum explaining the window-mismatch
-    root cause and the all_tools-preferred/tools-fallback resolution). tools/agent-monitoring/generate_retro.py:994-997
-    (`compute_retro_metrics()` threads `all_tools` through). tools/agent-monitoring/generate_retro.py:1573-1576
-    (`generate()` forwards its own existing `all_tools` parameter into compute_retro_metrics()).
-    tests/tools/test_generate_retro.py::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools,
-    ::test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one,
-    ::test_compute_retro_metrics_threads_all_tools_into_coverage_denominator, ::test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
-    -- prove the exact 500%-uncorrected/50%-corrected reconciliation end-to-end through
-    generate(), and that an uncapped ratio still renders its real value (500%) when
-    both sides are genuinely all-time. src/api/agent_ops_dashboard/ingest.py''s own
-    compute_retro_metrics() call was inspected and confirmed unaffected: it already
-    passes `tools=self._tools_all` (the all-time corpus, not period-scoped) for its
-    own period-selection semantics, so its coverage_rate was already all-time-vs-all-time
-    before this fix and needed no change.'
+  v2_evidence: 'TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL deleted the
+    entire feature this entry''s `text` field describes: compute_kgmcp_cache_efficiency_metrics(),
+    _kgmcp_verdict(), KGMCP_REFETCH_WINDOW_SECONDS, and the ''## KGMCP Cache Efficiency''
+    Markdown render block in tools/agent-monitoring/generate_retro.py -- along with
+    the entire retrieval_cache_access_log write/read chain (log_cache_access()/read_cache_access_log(),
+    and the six Level 1/Level 2 cache functions that were its only production callers)
+    that fed it. The previously-cited line ranges (generate_retro.py:783-846, :994-997,
+    :1573-1576) no longer exist. All four previously-cited tests -- test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_window_matched_via_all_tools,
+    test_compute_kgmcp_cache_efficiency_metrics_coverage_rate_never_capped_even_when_over_one,
+    test_compute_retro_metrics_threads_all_tools_into_coverage_denominator, test_generate_kgmcp_coverage_uses_all_tools_denominator_not_period_scoped_tools
+    -- were removed from tests/tools/test_generate_retro.py in the same change, since
+    they exercised only the now-deleted function. The all_tools-vs-tools coverage-denominator
+    reconciliation this entry documented is moot: there is no more coverage_rate computation
+    to reconcile a denominator for.'
   proof_type: regression
-  test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
-  divergence_note: null
+  test_path: null
+  divergence_note: 'Corrected by TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL
+    (2026-09-10): the compute_kgmcp_cache_efficiency_metrics()/_kgmcp_verdict() caveat-text
+    feature this entry certified is deleted wholesale, along with its four proof tests.
+    `status` moved from `verified` to `unsupported` and `test_path` to null since
+    no direct evidence for this entry''s own claim survives -- the golden-fixture
+    test previously cited (test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus)
+    still passes, but only proves the retro''s non-KGMCP output is unchanged; it was
+    never direct evidence of the caveat-text claim itself, only an adjacent citation.'
 - id: INFRA-380
   text: 'CI job summary reporting: each of the 9 fast-lane pytest jobs in .github/workflows/test.yml
     emits --junit-xml=reports/junit/<job-key>.xml, and a subsequent if: always() ''Job
