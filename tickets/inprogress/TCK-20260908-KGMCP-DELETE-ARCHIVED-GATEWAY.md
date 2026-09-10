@@ -48,9 +48,19 @@ could not happen in that same session:
    this cleanup).
 
 ## Scope
-- Confirm the 2-week zero-call window: re-run `grep -rn "tools/archive/knowledge_gateway\|tools\.archive\.knowledge_gateway"` across `tools/`, `src/`, `tests/`, `.claude/`, `docs/` (excluding the archived files' own self-references and this ticket's own history) to confirm zero new call sites appeared since `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` landed. Also confirm `agent-monitoring/` shows zero tool-call records referencing `mcp__knowledge-gateway__*` in the intervening window (the registration is already gone, so this should trivially hold, but confirm rather than assume).
+- Confirm the 2-week zero-call window: re-run `grep -rln "knowledge_gateway" tools/ src/ tests/ .claude/ docs/ | grep -v '^tools/archive/\|^tests/archive/'` (widened from an earlier archived-path-only pattern, `tools/archive/knowledge_gateway\|tools\.archive\.knowledge_gateway`, per `TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS` — that narrower form only ever matched the NEW post-archival path form and would never have caught the 5 `tools/agent-monitoring/kgmcp_phase*_runner.py` scripts that hotfix found and archived, which referenced the OLD pre-archival path form, e.g. `tools/knowledge_gateway_mcp.py`. The bare `knowledge_gateway` stem, filtered to exclude self-references inside `tools/archive/`/`tests/archive/` themselves, catches both forms) across `tools/`, `src/`, `tests/`, `.claude/`, `docs/` (excluding the archived files' own self-references and this ticket's own history — plus historical doc/ticket prose citing the module by name, which is expected and not a live call site) to confirm zero new call sites appeared since `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` landed. Also confirm `agent-monitoring/` shows zero tool-call records referencing `mcp__knowledge-gateway__*` in the intervening window (the registration is already gone, so this should trivially hold, but confirm rather than assume).
 - Hard-delete `tools/archive/knowledge_gateway_{mcp,router,packet_assembly,cache,redaction}.py` and `tools/archive/start_knowledge_gateway_mcp.sh`.
 - Hard-delete the 15 files under `tests/archive/` moved by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (see that ticket's `stored_artifacts/TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE/plan.md` Step 8 for the exact 15-file list).
+- Hard-delete the 5 `kgmcp_phase{1,2,3,4,4_warm}_*runner.py` scripts under `tools/archive/` and their
+  5 sibling test files under `tests/archive/` (`test_kgmcp_phase1_baseline_comparison.py`,
+  `test_kgmcp_phase2_baseline_recomparison.py`, `test_kgmcp_phase3_pilot_acceptance_measurement.py`,
+  `test_kgmcp_phase4_direct_tool_comparison.py`, `test_kgmcp_phase4_warm_direct_tool_comparison.py`)
+  — added to this ticket's delete scope by `TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS`,
+  which archived them here (they were previously orphaned under `tools/agent-monitoring/`,
+  referencing the pre-archival gateway path). Peer review of that hotfix's PR flagged that this
+  ticket's own delete list had not been updated to include them, leaving them to be missed by the
+  eventual delete the same way the original archival missed them — fixed here rather than left as
+  a second instance of the same gap.
 - Remove the `"archive"` entry from `pyproject.toml`'s `norecursedirs` if, at delete time, no other directory named `archive` still holds test files that need the exclusion (check `find tests -type d -iname archive` first — if `tests/archive/` itself is removed by this ticket and nothing else populates it, the exclusion is dead weight).
 - Confirm `tools/write_path_guard.py` and its consumers (`tools/retrieval_cache.py`) are unaffected — this ticket deletes only the archived remainder, never the extracted, still-live module.
 - Update `docs/parity_ledger/infrastructure.yaml`'s 21 entries this ticket's own predecessor annotated (INFRA-334, 335-339, 342-352, 354-357) to reflect the final delete — INFRA-342/343 in particular may need a `status` change (`verified` -> `missing` or similar) since their cited `v2_evidence`/`test_path` will no longer exist anywhere in the repo, archived or not, once this ticket lands. Follow this repo's Authoritative Mechanics Rule and use `tools/parity_ledger_writer.py`, never a raw `Edit`.
@@ -74,6 +84,9 @@ could not happen in that same session:
 - [ ] A fresh repo-wide sweep confirms zero live call sites reference any `tools/archive/knowledge_gateway_*` module or `tools/archive/start_knowledge_gateway_mcp.sh`, outside their own archived files and historical doc/ticket text.
 - [ ] `tools/archive/knowledge_gateway_{mcp,router,packet_assembly,cache,redaction}.py` and `tools/archive/start_knowledge_gateway_mcp.sh` are hard-deleted.
 - [ ] The 15 test files under `tests/archive/` (per the predecessor ticket's Step 8 list) are hard-deleted.
+- [ ] The 5 `kgmcp_phase{1,2,3,4,4_warm}_*runner.py` scripts under `tools/archive/` and their 5
+      sibling test files under `tests/archive/` (added to scope by
+      `TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS`) are hard-deleted.
 - [ ] `pyproject.toml`'s `norecursedirs` no longer carries a now-dead `"archive"` entry, unless something else still legitimately needs it.
 - [ ] `tools/write_path_guard.py` and `tools/retrieval_cache.py` remain fully functional, confirmed via `pytest tests/tools/ tests/docs/ -v` passing in full.
 - [ ] `docs/parity_ledger/infrastructure.yaml`'s 21 previously-annotated entries are updated to reflect the final delete, via `tools/parity_ledger_writer.py`.
@@ -82,6 +95,11 @@ could not happen in that same session:
 - `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (done) — executed M2 steps 1-2; this ticket
   executes M2 steps 3-4, the direct predecessor whose archive locations (`tools/archive/`,
   `tests/archive/`) this ticket deletes.
+- `TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS` (done) — archived 5 additional
+  `kgmcp_phase*_runner.py` scripts (plus their 5 sibling tests) into these same `tools/archive/`
+  / `tests/archive/` locations after this ticket was already opened; also widened this ticket's
+  own verification grep pattern (Scope, first bullet). This ticket's delete list/ACs were updated
+  to include those 10 additional files.
 - `TCK-20260907-KGMCP-DEPRECATION-EPIC` (`tickets/inprogress/`) — the parent epic this ticket
   completes (M2, final steps).
 - `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` (done) — the original ratification, superseded by the
@@ -104,7 +122,10 @@ could not happen in that same session:
 ## Related Code Areas
 - `tools/archive/knowledge_gateway_{mcp,router,packet_assembly,cache,redaction}.py`
 - `tools/archive/start_knowledge_gateway_mcp.sh`
-- `tests/archive/` (15 files)
+- `tests/archive/` (20 files — 15 from `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` + 5 added by
+  `TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS`)
+- `tools/archive/kgmcp_phase{1,2,3,4,4_warm}_*runner.py` (5 files, added by
+  `TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS`)
 - `pyproject.toml` (`norecursedirs`)
 - `docs/parity_ledger/infrastructure.yaml`
 

@@ -76,10 +76,18 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-_TOOLS_DIR = Path(__file__).resolve().parent.parent
-_MONITORING_TOOLS_DIR = Path(__file__).resolve().parent
+# TCK-20260909-HOTFIX-KGMCP-ORPHANED-PHASE-RUNNERS: relocated here from tools/agent-monitoring/
+# alongside its own already-archived test; _MONITORING_TOOLS_DIR now points explicitly at that
+# original directory (not this file's own parent) so the still-live kgmcp_baseline_corpus.py
+# import below keeps resolving after the move. _ARCHIVE_DIR keeps the sibling
+# kgmcp_phase1_gateway_runner import below resolving now that both files live here.
+_ARCHIVE_DIR = Path(__file__).resolve().parent
+_TOOLS_DIR = _ARCHIVE_DIR.parent
+_MONITORING_TOOLS_DIR = _TOOLS_DIR / "agent-monitoring"
 _REPO_ROOT = _TOOLS_DIR.parent
 
+if str(_ARCHIVE_DIR) not in sys.path:
+    sys.path.insert(0, str(_ARCHIVE_DIR))
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
 if str(_TOOLS_DIR) not in sys.path:
