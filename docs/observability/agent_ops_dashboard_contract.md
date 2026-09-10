@@ -69,8 +69,7 @@ never a raw dict at the route boundary.
 `phase_status_distribution: Dict[str, Dict[str, int]]`,
 `spend_proxy_by_phase`/`spend_proxy_by_agent: Dict[str, SpendProxyStats]`,
 `summary_quality: SummaryQualityStats`, `slow_runs: List[SlowRunEntry]`,
-`outliers: OutlierStats`, `skill_usage: SkillUsageSection`,
-`kgmcp_cache_efficiency: KgmcpCacheEfficiencyStats`) is a field-for-field
+`outliers: OutlierStats`, `skill_usage: SkillUsageSection`) is a field-for-field
 mirror of `tools/agent-monitoring/generate_retro.py::compute_retro_metrics()`'s
 return dict — the route computes nothing of its own, it only wraps that
 function's output in typed models. A literal `None` key in
@@ -79,27 +78,24 @@ nor `status` set) is sanitized to the string `"unknown"` at this API boundary
 only — `compute_retro_metrics()` itself is untouched, preserving its
 byte-identical-CLI-output guarantee.
 
-`skill_usage`/`kgmcp_cache_efficiency` (TCK-20260818-STANDARD-KGMCP-CACHE-
-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD) are the newest two fields. `skill_usage`
-is a field-for-field mirror of `build_skill_usage_section()`'s dict (raw
-per-skill `Skill`-tool-invocation counts from `tools.jsonl`, now threaded
+`skill_usage` (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-
+DASHBOARD) is a field-for-field mirror of `build_skill_usage_section()`'s dict
+(raw per-skill `Skill`-tool-invocation counts from `tools.jsonl`, now threaded
 through `compute_retro_metrics()`'s own `tools` parameter rather than computed
 separately by `generate()` — the CLI Markdown report's own `su` local reads
 `metrics["skill_usage"]` too, so both consumers always report identical
-numbers). `kgmcp_cache_efficiency` mirrors
-`compute_kgmcp_cache_efficiency_metrics()`'s dict — real per-ticket/per-agent
-Level 1/Level 2 KGMCP retrieval-cache hit/write counts, `overall_reuse_rate`,
-`repeated_refetches`/`dead_writes` detection, a `coverage` comparison against
-real `search_docs`/`graphify` tool-call volume, and a rule-based `verdict`/
-`verdict_explanation` summary — computed from
-`tools/retrieval_cache.py::read_cache_access_log()`'s real
-`retrieval_cache_access_log` rows (a new, additive, append-only table; see
-`docs/engine/contracts/knowledge_gateway_mcp/cache_migration_plan.md` §2's
-`migration_005_add_cache_access_log_table`), always the full corpus regardless
-of the request's `days`/`all`/`week` period selection (these rows are
-attributed via the `.claude/current_run` sidecar at call time, not any
-`runs.jsonl` timestamp — same rationale as the pre-existing Retrieval Quality
-retro section's own `--all`-only precedent).
+numbers). That same ticket originally also added a `kgmcp_cache_efficiency`
+field mirroring `compute_kgmcp_cache_efficiency_metrics()`'s dict — Level 1/
+Level 2 KGMCP retrieval-cache hit/write counts sourced from
+`tools/retrieval_cache.py::read_cache_access_log()`. TCK-20260910-RETRIEVAL-
+CACHE-ACCESS-LOG-CHAIN-REMOVAL removed that field, its 5 supporting model
+classes, and the entire access-log chain feeding it: the Knowledge Gateway MCP
+deprecation (`TCK-20260907-KGMCP-DEPRECATION-EPIC`/
+`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`) had already deleted the sole
+writer to `retrieval_cache_access_log`, leaving the field permanently
+reporting zero. `AgentMonitoringStats` no longer carries this field at all
+(full removal, not a nullable stub — the repository owner's decision, matching
+the CLI retro's own outright removal of the corresponding Markdown section).
 
 `phase_status_distribution` has the identical `{phase: {ok, failed, blocked,
 skipped}}` shape as `agent_status_distribution` (open `Dict[str, int]` inner
@@ -182,14 +178,11 @@ AND-SKILL-USAGE-DASHBOARD, which needed it for `skill_usage`) — since
 `get_agent_monitoring_stats` needs the same unfiltered/undeduplicated shape
 `generate_retro.py`'s own CLI passes to `compute_retro_metrics()`, not
 `_runs_by_id`'s deduplicated-by-`run_id` view (which would silently
-under-count retried tickets). `get_agent_monitoring_stats` additionally calls
-`tools/retrieval_cache.py::read_cache_access_log()` fresh on every request
-(read-only, never raises — returns `[]` on a fresh/never-migrated
-`retrieval_cache.db`) for the `kgmcp_cache_efficiency` field, rather than
-tracking that separate SQLite file's mtime in `_current_source_state()` — its
-low write volume and this cache's own "recompute is cheap" precedent (already
-established by `get_ticket_corpus_stats`/`get_glossary` below) made a third
-mtime-tracked source not worth the added `_rebuild()` complexity.
+under-count retried tickets). `get_agent_monitoring_stats` previously also
+called `tools/retrieval_cache.py::read_cache_access_log()` fresh on every
+request for the (now-removed, see above) `kgmcp_cache_efficiency` field;
+TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL removed that call along
+with the field and its import.
 
 `get_ticket_corpus_stats` is the **one** `DashboardCache` method that does not
 read from the mtime-cached parse state at all — it performs its own fresh
@@ -309,18 +302,18 @@ shows a value that at least one matching ticket actually has.
   than a partial render of just the successful domain. Renders two
   `<section>`s (Agent Monitoring, Ticket Corpus) built from `BarChart`,
   `GroupedBarChart`, and `StatTile`, plus plain `<table>`s (top agents
-  by call volume, slow runs, per-ticket/per-agent KGMCP stats) following
-  `TicketsView.tsx`'s existing table conventions. The per-ticket "Incomplete
-  artifacts" table was removed (kept the aggregate "Artifact completeness"
-  `StatTile` only) — the underlying data remains fully available via
-  `GET /api/stats/tickets`'s `artifact_completeness.incomplete` field, just
-  not rendered as a UI table. As of TCK-20260818-STANDARD-KGMCP-CACHE-
-  ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD, the Agent Monitoring section also
-  renders a "Skill usage" subsection (`StatTile` + `BarChart` over
-  `skill_usage.per_skill`) and a "KGMCP cache efficiency" subsection — a
-  color-coded verdict callout (`kgmcp-verdict`, green/yellow/red by
-  `EFFECTIVE`/`MODERATE`/`LOW VALUE`&`NOT IN USE`) plus headline `StatTile`s
-  and per-ticket/per-agent tables sourced from `kgmcp_cache_efficiency`.
+  by call volume, slow runs) following `TicketsView.tsx`'s existing table
+  conventions. The per-ticket "Incomplete artifacts" table was removed (kept
+  the aggregate "Artifact completeness" `StatTile` only) — the underlying data
+  remains fully available via `GET /api/stats/tickets`'s
+  `artifact_completeness.incomplete` field, just not rendered as a UI table.
+  As of TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-
+  DASHBOARD, the Agent Monitoring section also renders a "Skill usage"
+  subsection (`StatTile` + `BarChart` over `skill_usage.per_skill`). That same
+  ticket also added a "KGMCP cache efficiency" subsection (a color-coded
+  verdict callout plus headline `StatTile`s and per-ticket/per-agent tables);
+  TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL removed it entirely —
+  no `kgmcp`-testid'd element remains in `StatsView.tsx`.
 - `components/BarChart.tsx` — generic single-hue horizontal magnitude bar
   chart (`{label, value}[]` in, sorted desc and capped to `maxBars` by
   default, or `sortByValue={false}` to preserve caller order for a
