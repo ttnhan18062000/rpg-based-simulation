@@ -201,3 +201,15 @@ framed to lead with the proof that the obvious fix is wrong, and cross-reference
 finding from Batch B that shares the same underlying root cause (the catalog spawn path not
 carrying population identity through) — so whoever picks up either ticket can see one fix to
 `WorldEntitySpawner` might close both rather than scoping each narrowly.
+
+**One more distinction worth recording explicitly, per peer review** (not filed as its own
+ticket — thin evidence, not a confirmed defect): AC3's own test proves
+`information_source_profiles` is **threaded and consumable** (the real `InformationQueryRouter`
+returns a real candidate from it) — it does NOT prove the data is **actually consumed in
+practice** during a normal episode. A real 70-tick `frontier_living_world` run produced zero
+routing activity even with the fix applied, because no actor happened to have an unresolved
+`self_model.knowledge.unknowns` entry in that window — a separate strategic-cognition
+precondition this ticket's own scope never claimed to guarantee. This batch has largely been
+about exactly this gap (declared/threaded vs. actually observed), so it's worth stating rather
+than leaving implicit: if a future investigation finds the router never fires in real play,
+this note — not a fresh trace — is the starting point.
