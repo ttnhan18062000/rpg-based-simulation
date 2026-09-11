@@ -74,14 +74,17 @@ here.
 
 This test fails until Step 3 lands, which is intended: enforcement cannot be merged ahead of remediation.
 
-## Step 5 — Close the one real instruction gap: `implement-epic.js`
+## Step 5 — No workflow change; pin the existing instruction
 
-`implement-ticket.js:1671` already instructs `phase: done` / `status: historical`; leave it unchanged
-(investigation.md §8). `implement-epic.js` does not, for the epic ticket it moves to `tickets/done/` (line
-874 area), and epic closures drift 91.7%. Add the same instruction there, worded like line 1671.
+`implement-ticket.js:1671` already instructs `phase: done` / `status: historical`; leave it unchanged. No
+workflow has an epic-close step to add an instruction to (investigation.md §8, second correction), so there
+is no prompt to change here.
 
-This is secondary. Step 4's corpus test is what actually prevents drift, because an instruction alone
-leaves 24.6% drift on `implement-ticket` closes.
+- Add a static test pinning line 1671's instruction, so it can't be silently removed.
+- Epic drift is covered by Step 4's corpus test, whoever moves the epic into `tickets/done/`.
+- **File a follow-on ticket at close:** `implement-epic.js` has no step that closes the epic ticket itself
+  (set `status: historical` / `phase: done`, move it to `tickets/done/`) once all children are done. Adding
+  one is new workflow behavior and outside this ticket's metadata-consistency scope.
 
 ## Step 6 — Parity ledger
 
