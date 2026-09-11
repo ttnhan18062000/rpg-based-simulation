@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT
-phase: inprogress
+phase: done
 date: 2026-09-07
 tags: [registry, process-improvement, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [registry, process-improvement, data-quality]
 227 of 1850 tickets/done/*.md files have stale `status: active`/`phase: open` frontmatter instead of `status: historical`/`phase: done`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
