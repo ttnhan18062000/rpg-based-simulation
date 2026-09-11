@@ -54,15 +54,23 @@ KNOWN_DUPLICATE_BLOCKS = {
 
 def _merge_union_glob_patterns() -> list[str]:
     """Read .gitattributes directly rather than hardcoding the glob list separately, so
-    this test tracks .gitattributes' own coverage instead of silently drifting from it."""
+    this test tracks .gitattributes' own coverage instead of silently drifting from it.
+
+    Takes the first whitespace-separated token as the path and looks for `merge=union`
+    anywhere among the remaining tokens, rather than requiring the line to end in
+    ` merge=union` -- a path can carry other attributes too (e.g. `text eol=lf`, added by
+    TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION), and `merge=union` need not be
+    the last one.
+    """
     content = (REPO_ROOT / ".gitattributes").read_text(encoding="utf-8")
     patterns = []
     for line in content.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        if line.endswith(" merge=union"):
-            patterns.append(line[: -len(" merge=union")].strip())
+        tokens = line.split()
+        if "merge=union" in tokens[1:]:
+            patterns.append(tokens[0])
     return patterns
 
 

@@ -12159,3 +12159,37 @@
     infrastructure), nor INFRA-331 itself (which this entry extends but does not restate
     -- INFRA-331 remains the record for validate_entry()''s original four rules and
     write_entry()''s upsert+index-rebuild behavior).'
+- id: INFRA-416
+  text: TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION -- every writer of
+    a merge=union-covered file (tickets/working_log.csv, agent-monitoring/data/*/*.jsonl)
+    must emit LF only. tools/agent-monitoring/record_hand_orchestrated_closure.py:207
+    was the one CRLF writer (csv.writer with no lineterminator defaults to \r\n);
+    fixed to lineterminator="\n". .gitattributes now carries text eol=lf ahead of
+    merge=union on both paths, so line-ending is normalized for any future writer's
+    output at commit time -- the mechanism that turned 3 of 4 recent batch PR merges
+    into a duplicated working_log.csv block (same rows added on both branches with
+    different line endings look like two different additions to the merge, and merge=union
+    keeps both).
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'tools/agent-monitoring/record_hand_orchestrated_closure.py:207 --
+    csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n"). .gitattributes
+    -- "agent-monitoring/data/*/*.jsonl text eol=lf merge=union" and "tickets/working_log.csv
+    text eol=lf merge=union" (both previously merge=union only). tests/integrity/test_merge_union_no_cr_bytes.py
+    sweeps every file _merge_union_glob_patterns()/_covered_files() (imported, not
+    reimplemented, from test_no_duplicate_content_blocks.py -- that helper was itself
+    fixed to tokenize the attribute line instead of requiring merge=union to be the
+    trailing suffix, since the new text eol=lf token now sits ahead of it) for a CR
+    byte. tests/integrity/test_merge_union_crlf_duplication_repro.py runs real version-control
+    commands in a throwaway repo: proves the duplicate first reproduces with merge=union
+    alone (two branches appending the same rows with different line endings), then
+    proves text eol=lf removes both the duplicate and the CR bytes.'
+  proof_type: regression
+  test_path: tests/integrity/test_merge_union_no_cr_bytes.py::test_no_cr_byte_in_any_merge_union_file,
+    tests/integrity/test_merge_union_crlf_duplication_repro.py::test_merge_union_alone_duplicates_rows_shared_across_branches_with_different_line_endings,
+    tests/integrity/test_merge_union_crlf_duplication_repro.py::test_text_eol_lf_prevents_the_duplication_and_leaves_no_cr,
+    tests/tools/test_record_hand_orchestrated_closure.py
+  divergence_note: null
+  support_boundary: null
+  evidence_kind: runtime_observation
