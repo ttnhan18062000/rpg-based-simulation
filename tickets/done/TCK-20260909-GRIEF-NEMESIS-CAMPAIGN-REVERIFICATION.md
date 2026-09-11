@@ -96,6 +96,9 @@ start until that ticket closes with entities genuinely spawning in `campaign_lif
   created this gap)
 - `TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION` (new — the real bug found
   during this investigation that blocks `nemesis_relation_formed`/grief's episode-boundary path)
+- `TCK-20260911-COOPERATION-TRUST-HISTORY-ZERO-ACCUMULATION-INVESTIGATION` (new, filed after
+  further peer-review tracing — the deeper open question behind grief's own inconclusive
+  mid-episode result: why `trust_history` never accumulates despite a complete-looking pipeline)
 
 ## Related Docs
 None yet.
@@ -189,7 +192,14 @@ or only synthetically) is answered honestly for all three legs it covers:
 
 No fix was attempted for anything found broken or blocked, matching this ticket's own explicit
 scope. Both real findings are filed or recorded precisely, not folded into a vague "revisit later"
-note: the survivor-position bug has its own standard-tier ticket with real reproduction evidence;
-the trust-history question is recorded as an open, deliberately-unfiled observation (thin evidence,
-not a confirmed defect) rather than either ignored or over-escalated into a ticket the evidence
-doesn't yet support.
+note: the survivor-position bug has its own standard-tier ticket with real reproduction evidence.
+
+**Addendum (2026-09-11):** the trust-history question, initially left as a deliberately-unfiled
+observation (this ticket's own thin, single-run evidence), was pursued further per peer review
+(`rpg-feature-planning`), which traced the real trust-delta computation/application chain
+(`cooperation/services.py` → `cooperation/phase.py` → `relationships.py`) and confirmed it looks
+complete end to end — unlike prior "unwired path" findings in this arc, nothing in the chain is
+obviously dead or stubbed. That distinction (a complete-looking pipeline producing zero real
+output, vs. a demonstrably unwired one) is exactly what raised this from "thin, don't file" to a
+real, scoped investigation question. Filed as
+`TCK-20260911-COOPERATION-TRUST-HISTORY-ZERO-ACCUMULATION-INVESTIGATION`.
