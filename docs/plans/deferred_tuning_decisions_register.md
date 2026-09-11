@@ -143,14 +143,40 @@ real run is reachability.
 **Deferred from:** `TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION` (open)
 
 Multi-episode campaigns currently reconstruct every survivor at `(0.0, 0.0)`, colliding immediately.
-The wiring fix (deterministic placement from each survivor's own `spawn_region`, reusing
-`TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s de-confliction) proceeds now without
-waiting on this.
+
+**Corrected (2026-09-11) — the original entry here favored the authored `spawn_region` option as
+"defensible and deterministic" before this was checked. It is wrong: `spawn_region` does not
+survive past `WorldEntitySpawner.spawn_from_context()`.** That method hardcodes
+`EntitySpawnContext(spawn_region=None, ...)`, so no campaign-spawned entity's `spawn_region` ever
+reaches `EntityCarryForward`, `StrategicComponent.home_region_id`, or anywhere else on the live
+entity — reusing `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s
+`_resolve_spawn_position()` directly is not available; it requires a `spawn_region` string no
+survivor has. Recovering it would need new wiring across `entity_spawner.py` +
+`archetype_factory.py` + a new `EntityCarryForward` field (see the newly-filed threading-gap
+ticket below) — a materially bigger change than this entry originally implied.
+
+The wiring fix instead carries each survivor's own `entity.navigation.position` (their real last
+position when the episode ended, already computed live by the simulation) into a new
+`EntityCarryForward.last_position` field, reused at reconstruction with a light deconfliction pass
+(`_DECONFLICT_PROBE_OFFSETS`, no region-bounds machinery needed). This is both the cheaper fix and
+the one the data actually supports.
+
+**Second correction, also found before implementation started**: region *bounds* are authored and
+stable across episodes (`RegionSpec.bounds`, read verbatim by `WorldCompiler.compile()`), but
+per-tile terrain (`compiler.py`'s `rng.weighted_choice` over `terrain_variants`) and building
+placement (`rng.get_int(..., seed=episode_seed)` into `blocked_tiles`) are both drawn from the
+per-episode seeded RNG (`episode_seed = base_seed + episode_index`, different every episode). A
+carried `last_position` is therefore only guaranteed to be within its region's bounds next
+episode, not guaranteed walkable or building-free — `blocked_tiles` is a real legality gate
+(`src/engine/legality.py:70-76`), not cosmetic. The fix needs a validity check with a fallback for
+when the carried position lands on now-blocked terrain, not a bare carry-through.
 
 **Open, non-blocking:** where survivors *should* narratively reappear between episodes — their last
 known position, a settlement, their home region, or their original authored `spawn_region`. These
-imply different campaign fictions. The wiring fix picks the last option as the one that is
-defensible and deterministic; revisit when campaign narrative structure is designed.
+imply different campaign fictions; last-known-position is the wiring fix's pragmatic default given
+what's actually recoverable, not a narrative conclusion. Revisit when campaign narrative structure
+is designed — including whether `spawn_region` threading (see below) later makes the "authored
+region" option viable again.
 
 ### D-08 · Divergent thresholds lost to superseded-code deletion
 **Deferred from:** `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT` (done),

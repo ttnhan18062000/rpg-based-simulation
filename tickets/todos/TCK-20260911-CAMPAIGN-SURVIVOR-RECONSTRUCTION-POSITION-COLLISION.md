@@ -69,19 +69,29 @@ path; this is the other half (the survivor-reconstruction path), reachable only 
 fixed and real survivors started existing.
 
 ## Scope
-- Design real position resolution for survivor-reconstructed entities. The most direct option:
-  reuse the same deterministic de-confliction mechanism
-  `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION` already built
-  (`_hash_point_in_bounds`/`_resolve_spawn_position` in `src/worldassembly/resolver.py`) — anchor
-  survivors on a real region from the freshly-compiled `compiled_regions` (already available in
-  `_build_initial_state()`'s own scope) rather than inventing a second mechanism. Confirm during
-  Investigate whether that's directly reusable or needs its own variant (survivors don't have a
-  `spawn_region` the way freshly-spawned populations do — decide what region a returning survivor
-  should anchor to; e.g. their last-known region, or a fixed "return to town" region).
+- ~~Design real position resolution... reuse `_hash_point_in_bounds`/`_resolve_spawn_position`...~~
+  **Superseded by pre-implementation investigation (2026-09-11) — see Assumptions/Open Questions.**
+  `_resolve_spawn_position()` is not directly reusable: it requires a `spawn_region` string, and no
+  survivor has one (`spawn_region` never reaches the live entity at all — see
+  `TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP`, filed from this finding). The real
+  fix: add `EntityCarryForward.last_position: Optional[Tuple[float, float]]`, populate it at
+  extraction time from `entity.navigation.position` (the entity's real position when the episode
+  ended), and reuse it at reconstruction — with a **validity check and fallback**, not a bare
+  carry-through, since per-tile terrain/`blocked_tiles` are redrawn per episode's own seeded RNG
+  even though region bounds stay authored/stable (confirmed: `compiler.py`'s `rng.weighted_choice`
+  over `terrain_variants` and `rng.get_int(...)` for building placement both use
+  `episode_seed = base_seed + episode_index`, different every episode). A carried position may land
+  within its region's bounds but on now-blocked terrain — `blocked_tiles` is a real legality gate
+  (`src/engine/legality.py:70-76`), not cosmetic. Deconfliction against *other* survivors can reuse
+  `_DECONFLICT_PROBE_OFFSETS` directly (no region-bounds machinery needed for that part).
 - Fix or remove the misleading `orchestrator.py:733-736` comment as part of this change.
 - Real test evidence: a multi-episode Campaign run with multiple survivors (matching this
   investigation's own real 13-survivor case) must NOT trip `LAW-SPAWN-OCCUPANCY` in episode 1+,
   and episode 1+ must run to a plausible completion, not stall almost immediately.
+- Include a real test for the terrain-instability edge case specifically (a carried position that
+  would land on a tile blocked in the new episode's compile, not just the multi-survivor collision
+  case) — this is a distinct failure mode from the one this ticket was originally filed for, and
+  needs its own coverage, not just incidental coverage from the collision fix.
 
 ## Out of Scope
 - `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s own episode-0 catalog-spawn path —
@@ -103,29 +113,57 @@ fixed and real survivors started existing.
 ## Related Tickets
 - `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION` — sibling finding, same underlying
   problem class (no real spatial placement), different code path (survivor reconstruction, not
-  catalog spawn), only reachable once that ticket's own fix let real survivors exist.
+  catalog spawn), only reachable once that ticket's own fix let real survivors exist. Its own
+  `_resolve_spawn_position()` mechanism is NOT directly reusable here — see Scope.
 - `TCK-20260909-GRIEF-NEMESIS-CAMPAIGN-REVERIFICATION` — origin of this finding; blocked by this
   bug for its own `nemesis_relation_formed`/episode-boundary-grief reverification, which needs a
   real multi-episode run this bug currently prevents.
 - `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING` — made Campaign mode's entities real in the
   first place, which is why survivors (and therefore this bug's real consequence) exist at all now.
+- `TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP` — filed from this ticket's own
+  pre-implementation investigation; the prerequisite if the narrative answer to D-07 (below) is
+  ever "survivors return to their authored region" rather than "last known position."
 
 ## Related Docs
-None yet.
+- `docs/plans/deferred_tuning_decisions_register.md` D-07 — the open narrative question (where
+  survivors *should* reappear) this ticket's wiring fix answers pragmatically (last-known-position)
+  without resolving; corrected 2026-09-11 to reflect this ticket's own investigation findings.
 
 ## Related Stored Artifacts
 None yet — standard tier, staging artifacts created when picked up.
 
 ## Related Code Areas
 - `src/domains/campaigns/orchestrator.py` (`_build_initial_state()`'s survivor-reconstruction
-  branch, lines ~733-772)
-- `src/worldassembly/resolver.py` (`_hash_point_in_bounds`/`_resolve_spawn_position`, the existing
-  de-confliction mechanism this fix should likely reuse)
+  branch, lines ~733-772; `_extract_entity_carry_forwards()`, lines ~510-548, needs the new
+  `last_position` capture)
+- `src/domains/campaigns/state.py` (`EntityCarryForward`, needs the new `last_position` field)
+- `src/worldassembly/resolver.py` (`_hash_point_in_bounds`/`_resolve_spawn_position` — NOT directly
+  reusable, requires a `spawn_region` no survivor has; `_DECONFLICT_PROBE_OFFSETS` IS reusable for
+  the lighter survivor-vs-survivor deconfliction pass)
+- `src/worldbuilding/compiler.py` (per-episode terrain/`blocked_tiles` generation — the source of
+  the geometry-instability risk a validity check must guard against)
+- `src/engine/legality.py:70-76` (`blocked_tiles` as a real legality gate, confirming this isn't
+  cosmetic)
 
 ## Assumptions / Open Questions
-- What region a returning survivor should anchor to (last-known region from carry-forward data,
-  vs. a fixed region such as the episode's own town/hometown region) is not decided here — real
-  Investigate/Plan work for whoever picks this up.
+- ~~What region a returning survivor should anchor to... is not decided here~~ **Superseded by
+  pre-implementation investigation (2026-09-11)**: not resolved by picking a region at all — the
+  real fix carries the survivor's own last live position (`entity.navigation.position` at episode
+  end), not a region anchor. See Scope and D-08's sibling entry, D-07, in
+  `docs/plans/deferred_tuning_decisions_register.md` (corrected the same day, before this ticket's
+  own implementation started).
+- **New, confirmed before implementation**: region bounds are stable across episodes (authored,
+  read verbatim from `RegionSpec.bounds`), but terrain and building placement inside those bounds
+  are NOT — both draw from `DeterministicRNG(episode_seed)`, and `episode_seed` differs every
+  episode (`base_seed + episode_index`). A carried `last_position` can be within-bounds but on
+  newly-blocked terrain in the next episode. **Needs a validity check with fallback** (e.g., re-run
+  a deconfliction/nearest-open-tile search when the carried position lands in `blocked_tiles`, or
+  fall back to a `default_position` the way `WorldEntitySpawner.spawn_from_context()` already does
+  when no better position is available) — do not ship a bare carry-through of `last_position`
+  without this.
+- Whether `EntityCarryForward.last_position` should be `Optional` (falling back to a sentinel like
+  `None` for entities carried forward before this field existed, e.g. mid-flight save data) is a
+  real implementation detail for whoever picks this up — not resolved here.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
