@@ -173,11 +173,19 @@ def test_observability_domains_systems_import_allowlist():
 # CatalogRepository/WorldModuleRepository/CatalogScenarioStateBuilder construction to
 # __init__() and the entity-spawn/scatter call in _build_initial_state() shifted this line
 # down by 40, same collateral-drift pattern as above -- the import itself is unchanged.
+# Line 487->498 re-pinned during the "Dormant-mechanism follow-ups" Batch C arc (Batch B's
+# TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION deleted _scatter_catalog_entities()
+# and added new docstrings/comments to __init__() and _build_initial_state(); Batch C's
+# TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY renamed event_recorder to
+# scenario_event_recorder and added cross-reference docstrings; Batch C's
+# TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED threaded
+# information_source_profiles) -- net +11 lines above the import, same collateral-drift
+# pattern as both prior re-pins -- the import itself is unchanged.
 _DOMAINS_OBSERVABILITY_PINNED = {
     ("src/domains/campaigns/narrative_ledger.py", 71): (
         "src.observability.events", ("SimulationEvent",),
     ),
-    ("src/domains/campaigns/orchestrator.py", 487): (
+    ("src/domains/campaigns/orchestrator.py", 498): (
         "src.observability.events", ("SimulationEvent",),
     ),
 }
