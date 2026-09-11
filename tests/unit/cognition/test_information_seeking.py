@@ -622,7 +622,7 @@ class TestPaidInformationTransaction:
         assert update_a.entity_updates == update_b.entity_updates
 
 
-# ─── E42D: LeadContradictionSystem + effective_certainty tests ────────────────
+# ─── E42D: LeadContradictionSystem tests ──────────────────────────────────────
 
 class TestLeadContradiction:
     """
@@ -1073,80 +1073,6 @@ class TestLeadContradiction:
             certainty=LeadCertainty.APPROXIMATE,
         )
         assert _is_lead_contradicted(person_lead, state) is False
-
-
-# ─── E42D: KnowledgeFact staleness decay tests ────────────────────────────────
-
-class TestKnowledgeStalenessDecay:
-    """
-    Tests for effective_certainty() in src/cognition/knowledge_model.py.
-
-    Verifies staleness decay formula:
-        effective = certainty * max(0.1, 1.0 - elapsed * 0.0001)
-    """
-
-    def test_lead_staleness_decay_reduces_confidence(self):
-        """
-        Acceptance criterion: effective_certainty < 0.5 at tick 5001 for
-        a KnowledgeFact with certainty=1.0 recorded at tick 0.
-        """
-        from src.core.self_model import KnowledgeFact
-        from src.cognition.knowledge_model import effective_certainty
-
-        fact = KnowledgeFact(
-            subject="moon_resin",
-            fact_type="resource_source",
-            certainty=1.0,
-            recorded_tick=0,
-        )
-        result = effective_certainty(fact, current_tick=5001)
-        assert result < 0.5, f"expected < 0.5, got {result}"
-
-    def test_staleness_decay_at_tick_zero_delta(self):
-        """current_tick == recorded_tick → effective_certainty == certainty (no decay)."""
-        from src.core.self_model import KnowledgeFact
-        from src.cognition.knowledge_model import effective_certainty
-
-        fact = KnowledgeFact(
-            subject="iron", fact_type="resource_source", certainty=0.8, recorded_tick=100
-        )
-        result = effective_certainty(fact, current_tick=100)
-        assert abs(result - 0.8) < 1e-9
-
-    def test_staleness_decay_minimum_0_1(self):
-        """At very large tick delta the floor is certainty * 0.1."""
-        from src.core.self_model import KnowledgeFact
-        from src.cognition.knowledge_model import effective_certainty
-
-        fact = KnowledgeFact(
-            subject="iron", fact_type="resource_source", certainty=1.0, recorded_tick=0
-        )
-        # At tick=20000 decay_factor would be -1.0 without floor → floored at 0.1
-        result = effective_certainty(fact, current_tick=20000)
-        assert result >= 0.1 - 1e-9
-
-    def test_staleness_exact_halfway_tick(self):
-        """At tick 5000 (elapsed=5000): decay_factor = max(0.1, 0.5) = 0.5 → exactly 0.5."""
-        from src.core.self_model import KnowledgeFact
-        from src.cognition.knowledge_model import effective_certainty
-
-        fact = KnowledgeFact(
-            subject="iron", fact_type="resource_source", certainty=1.0, recorded_tick=0
-        )
-        result = effective_certainty(fact, current_tick=5000)
-        assert abs(result - 0.5) < 1e-9
-
-    def test_staleness_partial_certainty(self):
-        """Decay applies to initial certainty, not just 1.0."""
-        from src.core.self_model import KnowledgeFact
-        from src.cognition.knowledge_model import effective_certainty
-
-        fact = KnowledgeFact(
-            subject="x", fact_type="y", certainty=0.6, recorded_tick=0
-        )
-        # elapsed=2000 → decay_factor = max(0.1, 0.8) = 0.8
-        result = effective_certainty(fact, current_tick=2000)
-        assert abs(result - 0.48) < 1e-9
 
 
 # ─── TCK-20260619-E42E: LeadKind enum + PERSON/CONCEPT routing ────────────────

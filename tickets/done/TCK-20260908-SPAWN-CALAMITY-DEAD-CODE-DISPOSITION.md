@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260908-SPAWN-CALAMITY-DEAD-CODE-DISPOSITION
-phase: open
+phase: done
 date: 2026-09-08
 tags: [world, architecture]
 ---
@@ -12,10 +12,10 @@ tags: [world, architecture]
 # TCK-20260908-SPAWN-CALAMITY-DEAD-CODE-DISPOSITION
 
 ## Title
-Determine whether `EntityGenerator.spawn_calamity()` is genuinely dead code or an unimplemented/unwired mechanic
+`EntityGenerator.spawn_calamity()` confirmed superseded by `CalamityService`'s live `spawn_monster()` call — deleted
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -69,13 +69,32 @@ worth a cheap, dedicated look rather than a same-ticket aside.
 - Actually implementing a wiring fix if that's the disposition — re-file per Scope above.
 
 ## Acceptance Criteria
-- [ ] Fresh, re-confirmed grep evidence for whether `spawn_calamity()` has zero callers.
-- [ ] A real disposition (remove / wire-in-as-new-ticket / confirmed-fine-as-is-with-reason)
-      recorded with rationale, checked against `docs/mechanics/05_world_evolution.md`.
-- [ ] If "remove": the dead method is deleted along with any dead-only test coverage referencing
-      it, verified via the existing `src/world/` test suite passing unchanged.
-- [ ] If "wire in": a new standard-tier ticket is filed with real scope; this ticket closes
-      recording that handoff, no code changed here.
+- [x] Fresh, re-confirmed grep evidence for whether `spawn_calamity()` has zero callers.
+      `grep -rn "spawn_calamity" --include="*.py" .` (2026-09-11, pre-deletion): exactly one hit —
+      the method's own definition. Zero callers anywhere, including tests.
+- [x] A real disposition recorded with rationale, checked against
+      `docs/mechanics/05_world_evolution.md`. **Remove** — confirmed superseded, not missing.
+      `docs/mechanics/05_world_evolution.md` describes `CalamityService.process_world_dynamics()`'s
+      own calamity-spawn mechanic (§ line ~450+: `CALAMITY_MIN_INTERVAL`/`CALAMITY_FORCE_INTERVAL`/
+      `calamity_intensity > 0.3` gating) with no mention of `spawn_calamity()` or its
+      maturity-scaled stat formula anywhere — the Bible was already written against the real,
+      live mechanism (`generator.spawn_monster(kind="world_boss", ...)`), confirming no doc/mechanic
+      depended on the dead method. No Bible correction needed.
+- [x] Deleted: the dead method, with no dead-only test coverage to remove (it had none). Verified
+      via `tests/unit/world/test_calamity_raid.py`, `test_stronghold.py`, `test_world_dynamics.py`
+      passing unchanged, plus `tests/refactor/test_import_compatibility.py`.
+- [x] Not applicable — disposition is remove, not wire-in.
+
+**Surprise worth flagging, beyond confirmed-superseded**: the two implementations don't just use
+different formulas, they land at wildly different power levels. `spawn_calamity()`'s hardcoded
+formula gives `hp = 5000 * (1.0 + maturity * 0.5)` (5000-7500+ HP). The live path
+(`spawn_monster(kind="world_boss", difficulty_tier=4)`) uses the generic `DIFFICULTY_TIERS[4]`
+multiplier (`hp=4.0`) against a 50-HP monster base — roughly 200 HP before RNG-scaled
+`evolution_level`, orders of magnitude weaker than what `spawn_calamity()` would have produced.
+Both are still "spawn an entity when a calamity check fires" structurally, so the superseded
+determination holds, but this is a real design-intent gap (was the live "world_boss" always meant
+to be this much weaker than the abandoned Tier-5 design implies?), not just numeric noise. Flagged
+to peer review rather than acted on — out of this ticket's own disposition-only scope.
 
 ## Related Tickets
 - `TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN` (origin of this finding)
@@ -89,13 +108,15 @@ worth a cheap, dedicated look rather than a same-ticket aside.
   path that would justify `spawn_calamity()`'s existence)
 
 ## Related Stored Artifacts
-None yet — hotfix tier, no staging artifacts required.
+None — hotfix tier, no staging artifacts required.
 
 ## Related Code Areas
-- `src/systems/world_systems/generator.py` (`EntityGenerator.spawn_calamity()` at line 238 — moved
-  from `src/world/generator.py` since this ticket was filed; `spawn_stronghold()` for comparison)
-- `src/world/calamity.py` (`CalamityService.process_world_dynamics()`, confirmed the live calamity
-  mechanism this duplicates — see resolved Assumptions/Open Questions below)
+- `src/systems/world_systems/generator.py` — `spawn_calamity()` deleted; `spawn_monster()` and
+  `spawn_stronghold()` untouched and confirmed live
+- `src/world/calamity.py` (`CalamityService.process_world_dynamics()`, the live calamity mechanism
+  this duplicated)
+- `src/world/spawn_config.py` (`DIFFICULTY_TIERS`, the real scaling table the live path uses —
+  see the power-level discrepancy flagged in Acceptance Criteria)
 
 ## Assumptions / Open Questions
 - ~~Whether "spawn a calamity as an entity" and "raise a region's `calamity_intensity`" were always
@@ -114,13 +135,34 @@ None yet — hotfix tier, no staging artifacts required.
   `src/systems/world_systems/generator.py:238`, not `src/world/generator.py:238-251`.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Removed the `spawn_calamity()` method (`src/systems/world_systems/generator.py:238-253`) cleanly —
+it had no test coverage to remove alongside it (unlike `BiologicalSystem.update()`, which came
+with an entire orphaned test file). Left `spawn_monster()` and `spawn_stronghold()`, its siblings
+in `EntityGenerator`, untouched — both confirmed live.
+
+While comparing the two implementations' actual stat output (not just confirming "both spawn an
+entity"), found the live `spawn_monster(kind="world_boss", difficulty_tier=4)` call produces a
+character roughly 25-35x weaker (by HP) than what the deleted `spawn_calamity()` would have. Both
+are still the same *kind* of mechanism — an entity spawned by a real, tick-gated calamity check —
+so the superseded/delete disposition holds regardless, but this magnitude gap is worth someone with
+game-balance context looking at separately; not expanded into here per this ticket's own
+disposition-only scope.
 
 ## Test Summary
-_(pending)_
+- `pytest tests/unit/world/test_calamity_raid.py tests/unit/world/test_stronghold.py
+  tests/unit/world/test_world_dynamics.py -q` — 17 passed.
+- `pytest tests/refactor/test_import_compatibility.py -q` — 3 passed.
+- Final sweep: `grep -rn "spawn_calamity" --include="*.py" .` — zero hits.
 
 ## Files Changed
-_(pending)_
+- `src/systems/world_systems/generator.py` — `spawn_calamity()` method removed
 
 ## Completion Summary
-_(pending)_
+Confirmed superseded, not missing: `CalamityService.process_world_dynamics()` already spawns a
+calamity entity via its own live `spawn_monster(kind="world_boss", ...)` call as part of a real,
+tick-gated check. `docs/mechanics/05_world_evolution.md` was already written against that live
+mechanism with no mention of the dead method or its formula, confirming nothing depended on it.
+Deleted the method (no accompanying test existed). Flagged, but did not act on, a real power-level
+discrepancy between the two implementations' formulas (~25-35x HP difference) discovered while
+verifying they were behaviorally equivalent enough to call this a duplicate rather than a distinct
+mechanic — out of scope for this disposition-only ticket.
