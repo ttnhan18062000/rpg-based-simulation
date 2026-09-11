@@ -106,6 +106,9 @@ tests and parity-ledger entries have both, at times, certified as if it did.
 - `TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP` (origin of this finding)
 - `TCK-20260908-BIOLOGICAL-SYSTEM-DEAD-CODE-DISPOSITION`,
   `TCK-20260908-SPAWN-CALAMITY-DEAD-CODE-DISPOSITION` (precedent: same disposition-ticket pattern)
+- `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION` (filed from this
+  ticket's own investigation — the bigger, separate finding that `self_model.knowledge.facts`
+  itself has no decision-time reader at all, not just its now-deleted decay helper)
 
 ## Related Docs
 - `docs/simulation/belief_and_detour_contract.md` (confirms `KnowledgeFact` "no decay" — accurate,
