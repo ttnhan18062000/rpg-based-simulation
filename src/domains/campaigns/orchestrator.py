@@ -706,6 +706,7 @@ class CampaignOrchestrator:
         from dataclasses import replace as dc_replace
 
         from src.core.models.inventory import EquipSlot
+        from src.core.builder import V2EntityBuilder
         from src.core.state import AuthoritativeState, EntityState, PersonalityComponent
         from src.core.updates import SocialUpdate
         from src.domains.campaigns.survivor_placement import (
@@ -778,26 +779,36 @@ class CampaignOrchestrator:
             # cf.kind is "" for pre-existing carry-forward records serialized before this field
             # existed -- fall back to the prior (buggy) "entity" literal rather than guessing a
             # real archetype for data this old.
-            base = EntityState(id=eid, kind=cf.kind or "entity")
-
-            # Apply carried identity fields: level/xp (pre-existing) plus role/faction/
-            # properties/traits/personality (TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-
-            # RESTORED-ON-RECONSTRUCTION) -- together these make a reconstructed survivor
-            # identity-equivalent to a freshly-spawned entity, not just carrying XP forward.
-            identity = dc_replace(
-                base.identity,
-                evolution_level=cf.level,
-                evolution_points=cf.xp,
-                role=cf.role,
-                faction=cf.faction,
-                properties=dict(cf.properties),
-                traits=set(cf.traits),
-                personality=PersonalityComponent(
-                    greed=cf.personality.get("greed", 0.0),
-                    bravery=cf.personality.get("bravery", 0.0),
-                    sociability=cf.personality.get("sociability", 0.0),
-                    industry=cf.personality.get("industry", 0.0),
-                ),
+            #
+            # Identity fields (role/faction/properties/traits/personality/evolution_level/
+            # evolution_points) are built via V2EntityBuilder's own identity-construction method
+            # below, NOT a raw dataclass replacement call on the identity component directly --
+            # tests/architecture/test_role_set_identity_patch_only_guard.py and
+            # test_faction_mutation_write_paths.py statically enforce that role and faction may
+            # only be mutated through the authoritative IdentityPatch's own apply step (live
+            # tick-time mutation) OR V2EntityBuilder's own initial-construction seeding (pre-tick,
+            # not a live mutation) -- the same allowlisted exemption ArchetypeEntityFactory's own
+            # build_entity() already relies on for a real spawn. This IS initial-episode
+            # construction, so the builder path is the correct one, not a bypass of the same rule
+            # real spawns already follow.
+            base = (
+                V2EntityBuilder(eid)
+                .kind(cf.kind or "entity")
+                .identity(
+                    role=cf.role,
+                    faction=cf.faction,
+                    evolution_level=cf.level,
+                    evolution_points=cf.xp,
+                    properties=dict(cf.properties),
+                    traits=set(cf.traits),
+                    personality=PersonalityComponent(
+                        greed=cf.personality.get("greed", 0.0),
+                        bravery=cf.personality.get("bravery", 0.0),
+                        sociability=cf.personality.get("sociability", 0.0),
+                        industry=cf.personality.get("industry", 0.0),
+                    ),
+                )
+                .build()
             )
 
             # Apply carried equipment (convert string keys back to EquipSlot enum).
@@ -840,7 +851,6 @@ class CampaignOrchestrator:
 
             entities[eid] = dc_replace(
                 base,
-                identity=identity,
                 equipment=equipment,
                 social=social,
                 navigation=navigation,

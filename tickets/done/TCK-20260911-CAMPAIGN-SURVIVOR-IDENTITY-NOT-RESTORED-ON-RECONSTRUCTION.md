@@ -244,10 +244,10 @@ entity, not a field-by-field enumeration.
 - `_extract_entity_carry_forwards()`: captures all six unconditionally (same reasoning as
   `last_position` from the predecessor ticket — these aren't opt-in carry-forward preferences,
   they're the entity's own identity).
-- `_build_initial_state()`'s survivor branch: `kind` set on `EntityState` construction itself
-  (replacing the `kind="entity"` literal, falling back to `"entity"` only for pre-existing records
-  missing `cf.kind`); `role`/`faction`/`properties`/`traits`/`personality` folded into the same
-  `identity = dc_replace(...)` call that already carried `evolution_level`/`evolution_points`.
+- `_build_initial_state()`'s survivor branch: `kind`/`role`/`faction`/`evolution_level`/
+  `evolution_points`/`properties`/`traits`/`personality` are all built via
+  `V2EntityBuilder(eid).kind(...).identity(...)` — **not** a raw `dataclasses.replace()` on the
+  identity component directly. See the CI-failure note below for why.
 - Personality carried verbatim rather than re-derived — see resolved Assumptions/Open Questions
   above for the reasoning.
 
@@ -256,6 +256,22 @@ premise with a direct code read before filing it (not assumed): the `stats_dirty
 in `src/engine/apply.py` only fires on a level increase *relative to the entity's own current tick
 state*, which never applies to a freshly-reconstructed initial entity — a real, separate
 divergence, correctly not folded into this ticket.
+
+**Real CI failure, found and fixed post-merge-approval, before landing (2026-09-12):** the first
+implementation built `role`/`faction` via a direct
+`dataclasses.replace(identity_component, role=cf.role, faction=cf.faction, ...)` call. Two
+architecture guard tests (`tests/architecture/test_role_set_identity_patch_only_guard.py`,
+`tests/architecture/test_faction_mutation_write_paths.py`) correctly caught this as a real
+violation: those two fields may only be mutated through the authoritative `IdentityPatch`'s own
+apply step (live tick-time mutation) or `V2EntityBuilder`'s own initial-construction seeding
+(pre-tick, not a live mutation) — the same allowlisted exemption `ArchetypeEntityFactory.
+build_entity()` already relies on for a real spawn. Reconstruction IS initial-episode
+construction, so the fix was to route through `V2EntityBuilder.identity()` (the sanctioned path)
+instead of the raw dataclass replacement, matching the real spawn path's own construction style
+exactly rather than inventing a second, competing way to set these two fields. Re-verified
+against the full `tests/architecture`/`tests/docs`/`tests/integrity`/`tests/static`/
+`tests/refactor` suite (246 passed) and the full campaigns suite (170 unit + 19 integration + 3
+real acceptance tests, all producing identical results to before the fix) before re-pushing.
 
 ## Test Summary
 - `pytest tests/unit/domains/campaigns/ -q` — 170 passed (includes new round-trip tests for all
