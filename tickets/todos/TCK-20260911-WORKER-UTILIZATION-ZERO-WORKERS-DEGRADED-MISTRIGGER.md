@@ -69,6 +69,33 @@ world (post `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`): `DEGRADED`/`EX
 fires at tick 1, identically. The entity count was never the cause — confirms this is the real,
 general governor mis-trigger, not an artifact of the empty-world reproduction.
 
+**Sibling sentinel checked, per peer review (`rpg-feature-planning`, 2026-09-11) — same defect
+shape exists, but confirmed structurally unreachable, not merely unobserved.** The 3 lines
+immediately below the `worker_utilization` sentinel (`worker_manager.py:235-238`) have an
+identical pattern:
+```python
+queue_utilization = (
+    peak_queued / self._max_queue_depth
+    if self._max_queue_depth > 0 else 1.0
+)
+```
+`ResourceGovernor._get_indicated_mode()` (`governor.py:88`) reads both with `or` — if
+`queue_utilization`'s own `1.0` sentinel could fire on any of the same 3 real call sites, fixing
+`worker_utilization` alone would leave `DEGRADED` still forced by the other half of the same
+condition, appearing fixed while changing nothing observable. **Checked directly, not assumed
+safe**: `RuntimeProfile.max_queue_depth` (`src/config/profiles.py:30`) is a Pydantic field with
+`Field(..., gt=0)` — strictly greater than zero, unlike `max_worker_count`'s own `Field(..., ge=0)`
+(allows zero, the actual root cause above). `max_queue_depth<=0` therefore **cannot be constructed
+anywhere in this codebase** — Pydantic validation rejects it at construction time, not merely
+"nobody happens to pass 0 today." Confirmed via a full grep of every real `max_queue_depth=`
+construction site (`src/config/profiles.py`, `src/domains/campaigns/runner.py`,
+`src/engine/scenario_checkpoint.py`, `src/engine/scenario_runtime.py`,
+`src/observability/readiness/harness.py`, `src/perf/profiles.py`) — every one passes a real
+positive integer (100-50000), none pass 0, and none could pass 0 even if they tried.
+**`queue_utilization`'s own sentinel branch is real, identically-shaped dead code — structurally
+unreachable, not a live second mis-trigger risk to this ticket's own fix.** Scope updated below to
+record this explicitly rather than leave it silently unaddressed.
+
 ## Scope
 - Decide the correct semantic for `worker_utilization` when `max_workers <= 0`: most likely `0.0`
   (workers are deliberately disabled — there is no worker-based pressure signal to report at all,
@@ -76,7 +103,11 @@ general governor mis-trigger, not an artifact of the empty-world reproduction.
   signal the governor needs from some other path when running in worker-disabled mode — check
   whether any other pressure signal (`tick_compute_ms`, `work_debt_total`, `queue_utilization`)
   already covers real compute pressure independently in this mode, so `worker_utilization` isn't
-  the *only* thing standing between `NORMAL` and a real overload going undetected.
+  the *only* thing standing between `NORMAL` and a real overload going undetected. **Note:**
+  `queue_utilization` itself does NOT need its own sentinel fixed as part of this ticket — see the
+  "Sibling sentinel checked" finding above; its `<=0 → 1.0` branch is structurally unreachable
+  (`max_queue_depth` is Pydantic `gt=0`), so it is only relevant here as a candidate *real* pressure
+  signal to lean on, not as a second defect to patch.
 - Fix `WorkerManager.get_stats()`'s sentinel value (or, if the real fix belongs at the governor's
   own evaluation layer instead — e.g. `ResourceGovernor._get_indicated_mode()` should skip the
   `worker_utilization` check entirely when `profile.max_worker_count <= 0` rather than relying on
