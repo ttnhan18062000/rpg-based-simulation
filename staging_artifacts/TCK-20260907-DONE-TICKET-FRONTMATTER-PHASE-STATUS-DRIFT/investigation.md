@@ -1,6 +1,6 @@
 ---
 status: active
-layer: ai
+layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT
@@ -84,9 +84,10 @@ This separates three causes:
    relates a ticket's location to its status/phase. Affects every path.
 2. **The check is not reached.** 125 of the 138 schema-invalid files come from hand-orchestrated or
    unrecorded closes, which never run `done_checker`.
-3. **Nothing instructs the canonical value.** The string `historical` appears nowhere in
-   `.claude/workflows/implement-ticket.js`. The pipeline gets it right 84% of the time by imitating existing
-   tickets, not because any step says to.
+3. **The instruction exists but nothing verifies it, and one workflow lacks it.** *(Corrected — see §8.)*
+   `implement-ticket.js:1671` has told Finalize to set `phase: done` and `status: historical` since
+   2026-06-12. Tickets closed through it still drift. `implement-epic.js` has no such instruction for the
+   epic ticket it closes.
 
 **The ticket's proposed fix — a new condition in `done_checker` — is necessary but insufficient.** It fixes
 cause 1 for pipeline closes and does nothing for cause 2, where the drift is worst.
@@ -109,3 +110,29 @@ investigation's author was working in this exact area.
 
 `TCK-20260804-BACKLOG-PHASE-VALIDATOR-FIX` added `backlog` to `PHASE_VALUES` after a legitimate value was
 found missing — the precedent for deciding whether `epic_scoped` belongs in the enum.
+
+## 8. Correction (after Review NEEDS_CHANGES, 2026-09-11)
+
+§4's cause 3 said the string `historical` appears nowhere in `implement-ticket.js`. **That was wrong.**
+Line 1671 has carried the instruction since commit `ff0235a71` (2026-06-12); the search that produced the
+claim was faulty. Re-diagnosis, grouping done tickets dated on/after 2026-06-01 by the workflow in their
+`runs.jsonl` records:
+
+| Closed via (runs.jsonl) | Before 2026-06-12 | After 2026-06-12 |
+|---|---|---|
+| `implement-ticket` | 0 / 64 drift (0.0%) | **249 / 1012 (24.6%)** |
+| `implement-epic` | — | **11 / 12 (91.7%)** |
+| no run record | 1 / 49 | 134 / 273 (49.1%) |
+
+(This grouping uses run records rather than event agents, so its percentages differ from §4's 16.2% table.
+The direction is the same.)
+
+What this means:
+- **The instruction exists but isn't enough.** A quarter of tickets with an `implement-ticket` run still
+  drift after it was added. Some are hand-closed tickets whose runs were recorded afterwards; others are
+  Finalize not following the prompt. Either way the fix is enforcement (plan Steps 1 and 4), not more
+  prompt text.
+- **`implement-epic.js` never instructs the epic ticket's frontmatter.** Its only reference to the epic's
+  done file is line 874. That is the one real instruction gap, and it explains the 91.7%.
+- §4's causes 1 and 2 stand.
+
