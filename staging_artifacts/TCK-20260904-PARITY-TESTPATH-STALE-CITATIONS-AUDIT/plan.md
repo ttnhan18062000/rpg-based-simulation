@@ -63,6 +63,32 @@ Verified safe for `TestValidateEntryAgainstRealMultiSegmentCorpus`: all 10 of it
 Prose that currently lives in `test_path` belongs in `support_boundary` (the existing field for "what
 this verification does and does not cover"). The contract error message should say so.
 
+## Step 3a — Narrow the P0 `test_path` rule (approved by repository owner, 2026-09-11)
+
+Found at Review (NEEDS_CHANGES): `validate_entry()` (`tools/parity_ledger_writer.py:84-87`) and
+`schema.json` `allOf[2]` require a non-empty `test_path` for **every** P0 entry, regardless of status.
+All 21 Class B/C entries are P0, so Step 4's `status: missing, test_path: null` write would be rejected.
+The rule is also already contradicted by the ledger: 15 P0 entries on `main` are `missing`/`unsupported`
+with `test_path: null` (e.g. `SUB-325`, `SUB-326`, `INFRA-010`), and the writer cannot re-write any of
+them today.
+
+A P0 entry whose status says the behavior is not verified cannot have a passing test, so requiring one
+only invites a fake or stale citation — the exact defect this ticket fixes. Change, in both places
+together:
+
+- P0 with `status` in `{missing, unsupported}` → `test_path` **not** required; instead
+  `support_boundary` **is** required, non-empty (the gap must be explained, not just blank).
+- P0 with any other status → unchanged (`test_path` required).
+- Update the `# mirrors schema.json` comment; `schema.json` and `validate_entry()` must stay in lockstep.
+
+Rejected alternatives (recorded for Review): downgrading the 21 entries off P0 — priority is importance,
+not evidence quality, and would hide real gaps; deferring Class B/C — leaves 21 P0 entries citing deleted
+or nonexistent tests.
+
+Not in scope: the 15 pre-existing P0 `missing`/`unsupported` entries and the 222 P0 `legacy_verified`
+entries without `test_path`. The first group becomes writable but is not rewritten here; the second is
+unaffected by this change. Both belong to the evidence-standard follow-on.
+
 ## Step 4 — Resolve the 28 stale entries
 
 All writes via `tools/parity_ledger_writer.write_entry()`. Never a raw YAML edit. P0 entries first.
@@ -74,7 +100,7 @@ coverage was lost.
 - **Class A (7):** confirm the successor tests the entry's claim, run it, repoint `test_path` to the
   clean citation, set `evidence_kind: invocation`. `STRAT-014` is already confirmed at symbol level.
 - **Class B (7):** if coverage is found under another name, treat as Class A. Otherwise set
-  `status: missing`, `test_path: null`, and record in `support_boundary` which test was deleted, from
+  `status: missing`, `test_path: null` (permitted by Step 3a), and record in `support_boundary` which test was deleted, from
   which commit, and that the behavior is unverified rather than known-broken.
 - **Class C (14):** same procedure as Class B, but `support_boundary` must state the cited file never
   existed in this repository. Check `WORLD-061`/`WORLD-062` against `tests/unit/world/` first.
@@ -117,4 +143,8 @@ post-Step-1 baseline; against the pre-change count it would be contaminated by t
 - **Step 1 changes `absent_file` counts** that other tools or dashboards may read. Check consumers of the
   health summary before landing.
 - **Class B/C outcomes change P0 entries from `verified` to `missing`.** That is the honest result, but
-  it is a visible downgrade of 21 entries; the completion summary should say so plainly.
+  it is a visible downgrade of 21 entries; the completion summary should say so plainly. They stay P0
+  (Step 3a) so the gaps remain visible at the right priority.
+- **Step 3a relaxes a ledger contract.** It is narrow (two statuses) and swaps the requirement for a
+  stricter one (`support_boundary`), but any consumer that assumes "P0 implies `test_path`" must be
+  checked — grep `tools/` for that assumption before landing.
