@@ -94,17 +94,6 @@ None yet — hotfix tier, no staging artifacts required.
 ## Assumptions / Open Questions
 - Whether abandoned or unfinished is the central, deliberately-unresolved question this ticket
   exists to answer — not assumed either way here.
-- **Third option to check, per peer review during `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT`
-  (2026-09-11), not confirmed here, just flagged**: "abandoned" and "unfinished" aren't the only two
-  possibilities — this codebase now has 3 independently confirmed instances of a third shape,
-  **superseded** (a real implementation left in place alongside a *different* live mechanism doing
-  the same job): `EntityGenerator.spawn_calamity()` vs. `CalamityService.
-  process_world_dynamics()`'s own inline `spawn_monster()` call, `BiologicalSystem.update()` vs.
-  `apply.py`'s own passive hunger/sleep-debt decay, and the `src/domains/optimization/` package (8
-  modules) vs. `ResourceGovernor`/`GovernorPolicy`. Worth a real check during Investigate — is there
-  a *different* live mechanism computing certainty/staleness for `KnowledgeFact` or a sibling type,
-  that `effective_certainty()` might duplicate rather than being the sole (missing) implementation
-  of decay — before concluding abandoned or unfinished.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
