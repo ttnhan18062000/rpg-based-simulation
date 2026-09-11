@@ -352,14 +352,25 @@
   support_boundary: null
 - id: WORLD-061
   text: Weather affects perception, evasion, and movement speed.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: src/world/environment.py
   proof_type: parity
-  test_path: tests_v2/world/test_weather.py
+  test_path: tests/unit/world/test_weather.py::test_weather_modifiers
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Original tests_v2/world/test_weather.py citation was a phantom
+    -- that path never existed in this repository''s history (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    Repointed to a real, passing successor under the same real tests/unit/world/ directory.
+    The successor asserts STORM weather changes the perception and evasion multipliers;
+    EnvironmentService.get_weather_multipliers also changes move_speed for STORM/SNOW/BLIZZARD,
+    but the test does not separately assert that field, and no other test in the repository
+    does either (confirmed: this is the only test file calling get_weather_multipliers).
+    Corrected from a `verified` overclaim to `missing` during PR review, applying
+    the same standard as COMB-002''s correction: a two-of-three-covered compound claim
+    does not meet the plan''s own bar for a Class A repoint. test_path is kept, since
+    real coverage exists for the perception/evasion two-thirds.'
+  evidence_kind: invocation
 - id: WORLD-062
   text: Regions transform their kind based on trauma and calamity thresholds.
   status: verified
@@ -367,9 +378,13 @@
   legacy_evidence: null
   v2_evidence: src/world/transformation.py
   proof_type: parity
-  test_path: tests_v2/world/test_transformations.py
+  test_path: tests/unit/world/test_transformations.py
   divergence_note: null
-  support_boundary: null
+  support_boundary: Original tests_v2/world/test_transformations.py citation was a
+    phantom -- that path never existed in this repository's history (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    Repointed to a real, passing successor under the same real tests/unit/world/ directory,
+    which directly exercises both trauma-only and trauma+calamity transformation thresholds.
+  evidence_kind: invocation
 - id: WORLD-030
   text: Camp reinforcements occur on schedule.
   status: verified

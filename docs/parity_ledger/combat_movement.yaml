@@ -1,25 +1,43 @@
 - id: COMB-001
   text: Manhattan distance is the shared spatial metric for movement and combat range
     where claimed.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/legality.py` (`get_manhattan_dist`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_movement_parity.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_movement_parity.py` (containing `test_movement_parity_with_oracle`)
+    was deleted in commit 6e5c2899 ('Implement resource v2 enhanced phases') with
+    no successor found anywhere in the current tree (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    `missing` here means unverified, not known-broken -- the engine likely still implements
+    Manhattan-distance movement/range; what is missing is test evidence.
+  evidence_kind: null
 - id: COMB-002
   text: Cardinal/tile movement and occupancy legality are explicit.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/movement.py` (`resolve_move` cardinal clamping), `src/engine/legality.py`
     (`verify_occupancy`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_movement_parity.py`'
+  test_path: tests/unit/domains/optimization/test_occupancy_snapshot.py::test_movement_legality_uses_snapshot_result_equivalent_to_current_logic
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Cited `tests_v2/parity/test_movement_parity.py` was deleted in
+    commit 6e5c2899 (''Implement resource v2 enhanced phases'') with no successor
+    of that specific test. A separate, real test under tests/unit/domains/optimization/
+    (tagged ''Compliance IDs: COMB-002, COMB-003'' in its own header) directly invokes
+    LegalityServiceV2.verify_occupancy -- one of this entry''s two cited functions
+    -- and asserts OCCUPANCY_VIOLATION/LEGAL correctly (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    It covers the ''occupancy legality is explicit'' half of this entry''s compound
+    claim; no test was found covering the ''cardinal/tile movement clamping'' (resolve_move)
+    half specifically. Corrected from a `verified` overclaim to `missing` during PR
+    review: the plan''s own bar for a Class A repoint is that the successor tests
+    the entry''s claim, and a half-covered compound claim does not meet it. test_path
+    is kept as a valid partial citation, not nulled, since real coverage does exist
+    for the occupancy-legality half.'
+  evidence_kind: invocation
 - id: COMB-003
   text: Occupied-tile movement is rejected or redirected rather than silently overlapped.
   status: verified
@@ -28,30 +46,41 @@
   v2_evidence: '`src/engine/movement.py` (rejection via `NavigationUpdate`), `src/engine/pipeline.py`
     (`_resolve_occupancy_conflicts`)'
   proof_type: parity
-  test_path: '`tests_v2/test_occupancy_conflicts.py`'
+  test_path: tests/unit/movement/test_occupancy_conflicts.py::test_occupancy_conflict_resolution
   divergence_note: null
   support_boundary: null
+  evidence_kind: invocation
 - id: COMB-004
   text: Melee legality depends on adjacency/engagement rules, not raw damage stats.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/legality.py` (`is_adjacent`, `get_engaged_hostiles`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_combat_parity.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_combat_parity.py` (containing `test_damage_formula_parity`)
+    was deleted in commit 6e5c2899 ('Implement resource v2 enhanced phases') with
+    no successor found anywhere in the current tree (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    `missing` here means unverified, not known-broken -- the engine likely still implements
+    melee adjacency legality; what is missing is test evidence.
+  evidence_kind: null
 - id: COMB-005
   text: Ranged legality depends on range and line-of-sight rules.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/legality.py` (`verify_attack_legality` checks range and
     `has_line_of_sight`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_combat_parity.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_combat_parity.py` (containing `test_evasion_absence_divergence`)
+    was deleted in commit 6e5c2899 ('Implement resource v2 enhanced phases') with
+    no successor found anywhere in the current tree (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    `missing` here means unverified, not known-broken -- the engine likely still implements
+    ranged range/LOS legality; what is missing is test evidence.
+  evidence_kind: null
 - id: COMB-006
   text: AoE legality is split into impact-center legality and radius application.
     Impact-center is validated by verify_aoe_legality (range + LoS to center). Radius
@@ -77,7 +106,7 @@
   support_boundary: null
 - id: COMB-008
   text: Quiet ticks still advance passive world consequences.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/apply.py` (`ApplyPath.apply_generation` ages entities,
@@ -86,31 +115,51 @@
     ticket this entry''s own "gains readiness" claim did not match source (no readiness
     regen existed anywhere); corrected here rather than left silently inaccurate.'
   proof_type: parity
-  test_path: '`tests_v2/test_substrate_hardening.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Cited `tests_v2/test_substrate_hardening.py` was deleted in commit
+    6e5c2899 (''Implement resource v2 enhanced phases''). A same-named successor exists
+    at tests/unit/core/test_substrate_hardening.py, but it tests a different claim
+    -- that typed state updates (navigation/task intent, HP) survive ApplyPath.apply_generation
+    correctly -- not this entry''s claim that quiet ticks (no explicit update) still
+    advance passive world consequences (hunger/sleep debt, hazard damage, readiness
+    regen). No test found anywhere in the current tree exercises quiet-tick passive
+    advancement (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT: a surviving filename
+    is not evidence of surviving coverage). `missing` here means unverified, not known-broken.'
+  evidence_kind: null
 - id: COMB-009
   text: Disengagement, pursuit, target stickiness, and opportunity consequences are
     explicit rules.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/movement.py` (triggers `resolve_opportunity_attack`),
     `src/engine/tactical.py` (stickiness logic)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_oa_parity.py`, `tests_v2/parity/test_tactical_parity.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_oa_parity.py` and `tests_v2/parity/test_tactical_parity.py`
+    (containing `test_no_oa_if_no_hostiles`, `test_oa_triggered_on_disengagement_hardened`)
+    were both deleted in commit 6e5c2899 ('Implement resource v2 enhanced phases')
+    with no successor found anywhere in the current tree (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    `missing` here means unverified, not known-broken -- the engine likely still implements
+    opportunity-attack/stickiness logic; what is missing is test evidence.
+  evidence_kind: null
 - id: COMB-010
   text: Anti-stalemate logic handles repeated chase/kite/step-back loops.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/tactical.py` (uses `stale_ticks` to trigger `STALEMATE_BREAK`)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_tactical_parity.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_tactical_parity.py` (containing `test_retreat_threshold_divergence`)
+    was deleted in commit 6e5c2899 ('Implement resource v2 enhanced phases') with
+    no successor found anywhere in the current tree (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    `missing` here means unverified, not known-broken -- the engine likely still implements
+    anti-stalemate logic; what is missing is test evidence.
+  evidence_kind: null
 - id: COMB-011
   text: Movement intentions exist as semantic modes (pursue, retreat, hold, reposition,
     intercept, guard, regroup).
@@ -135,15 +184,20 @@
   support_boundary: null
 - id: COMB-013
   text: Tactical choice is a bounded choice among legal actions, not a geometry exploit.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/tactical.py` (bounded by visibility and `evaluate_entity_intent`),
     `src/engine/pipeline.py` (post-refinement legality checks)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_tactical_parity.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_tactical_parity.py` (containing `test_target_selection_parity`)
+    was deleted in commit 6e5c2899 ('Implement resource v2 enhanced phases') with
+    no successor found anywhere in the current tree (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    `missing` here means unverified, not known-broken -- the engine likely still bounds
+    tactical choice; what is missing is test evidence.
+  evidence_kind: null
 - id: COMB-014
   text: "`test_reactive_cover_seeking`: Reactive cover seeking \u2014 Verify that\
     \ actor seeks cover only when a ranged threat is visible.."

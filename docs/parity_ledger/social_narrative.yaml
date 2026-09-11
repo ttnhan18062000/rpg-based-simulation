@@ -575,15 +575,20 @@
 - id: SOC-052
   text: "`test_entity_integration`: Entity integration \u2014 Verify Entity and IdentityComponent\
     \ absorb new Phase 3 fields.."
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/core/state.py` (`EntityState` has `group_id`, `AptitudeComponent`
     has growth fields)'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_entity_construction.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_entity_construction.py` never existed
+    in this repository at any point in its history (confirmed against the complete
+    git-history inventory of every path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This `verified` entry was never backed by a test here. `missing` here means unverified,
+    not known-broken.
+  evidence_kind: null
 - id: SOC-053
   text: "`test_world_state_registry`: World state registry \u2014 Verify GroupRegistry\
     \ integration in WorldState.."

@@ -17,7 +17,6 @@ shape: plain functions, plain tuple/dict returns, no argparse/CLI — consumed e
 `python3 -c "..."`.
 """
 
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -29,49 +28,7 @@ if str(_TOOLS_DIR) not in sys.path:
 import yaml
 from parity_ledger_scan import CANONICAL_LEDGER_FILES  # noqa: E402
 from gate_checks.parity_updater_static import expected_subsystems_for_files  # noqa: E402
-
-_BACKTICK_FULL_RE = re.compile(r"^`([^`]+)`$")
-_DELIM_SPLIT_RE = re.compile(r"\s*[,+;]\s*")
-_NODE_ID_RE = re.compile(r"^[\w./\-]+\.py(::[\w \[\]./:\-]+)?$")
-
-
-def _strip_full_backtick(s: str) -> str:
-    match = _BACKTICK_FULL_RE.match(s)
-    return match.group(1) if match else s
-
-
-def parse_test_path_citations(raw) -> "tuple[list[str] | None, str | None]":
-    """Parse a ledger entry's raw `test_path` string into a list of invocable citations.
-
-    Returns (citations, None) on success, or (None, error) on a hard-FAIL/unparseable case. Never
-    raises. Handles the four legacy shapes found in the real ledger (investigation.md's format
-    survey): clean node-id, single backtick-wrapped, comma/`+`/`;`-joined multi-citation, and
-    unparseable parenthetical-annotated prose.
-    """
-    if raw is None or not str(raw).strip():
-        return (None, "test_path is null/missing")
-
-    stripped = str(raw).strip()
-    parts = _DELIM_SPLIT_RE.split(stripped)
-
-    if len(parts) > 1:
-        resolved = []
-        for part in parts:
-            candidate = _strip_full_backtick(part.strip())
-            if not _NODE_ID_RE.match(candidate):
-                return (
-                    None,
-                    "unparseable test_path (multi-citation candidate but one segment did not "
-                    f"resolve to a clean path): {raw!r}",
-                )
-            resolved.append(candidate)
-        return (resolved, None)
-
-    candidate = _strip_full_backtick(stripped)
-    if _NODE_ID_RE.match(candidate):
-        return ([candidate], None)
-
-    return (None, f"unparseable test_path: {raw!r}")
+from parity_test_path import parse_test_path_citations  # noqa: E402,F401
 
 
 def check_test_path(test_path_raw, base_dir: Path = Path(".")) -> "tuple[str, str]":

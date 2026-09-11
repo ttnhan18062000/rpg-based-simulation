@@ -66,6 +66,6 @@ Regenerate: `make docs-registry`. Browse: `make docs-serve` → [http://localhos
 
 **Resumability.** The `implement-ticket` workflow accepts `ticket_id` to skip phases already completed. This makes re-runs after a gate failure cheap.
 
-**Parity discipline.** Any behavior change flows through `parity-updater` before the ticket closes. P0 parity entries require a passing `test_path` — the workflow enforces this.
+**Parity discipline.** Any behavior change flows through `parity-updater` before the ticket closes. P0 parity entries require a passing `test_path` — except `status: missing`/`unsupported`, which require a non-empty `support_boundary` instead (`docs/parity_ledger/schema.json`) — the workflow enforces this.
 
 **No silent scope creep.** The `planner` maps every step to a specific acceptance criterion. The `done-checker` verifies scope match before the ticket moves to `done/`.

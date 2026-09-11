@@ -2,59 +2,88 @@
   text: Strategic state is first-class and survives across ticks (directives, projects,
     objectives, concerns, blockers, obligations, contracts, offers, leads, candidate
     zones, hypotheses).
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/core/strategic.py` (Full model implementation) '
   proof_type: parity
-  test_path: '`tests_v2/parity/test_strategic_persistence.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_strategic_persistence.py` never existed
+    in this repository at any point in its history (confirmed against the complete
+    git-history inventory of every path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This `verified` entry was never backed by a test here. `missing` here means unverified,
+    not known-broken.
+  evidence_kind: null
 - id: STRAT-002
   text: Current project/objective continuity is explicit and bounded.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/core/strategic.py` (`current_project_id`, `current_objective_id`
     in `StrategicComponent`)'
   proof_type: parity
-  test_path: tests_v2/parity/test_strategic_persistence.py
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_strategic_persistence.py` never existed
+    in this repository at any point in its history (confirmed against the complete
+    git-history inventory of every path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This `verified` entry was never backed by a test here. `missing` here means unverified,
+    not known-broken.
+  evidence_kind: null
 - id: STRAT-003
   text: Project switching uses interruption resistance / margin logic, not full rescore
     every tick.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/systems/strategic.py` (`evaluate_project_switch` uses `retention_bonus`) '
   proof_type: parity
-  test_path: '`tests_v2/parity/test_strategic_persistence.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_strategic_persistence.py` never existed
+    in this repository at any point in its history (confirmed against the complete
+    git-history inventory of every path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This `verified` entry was never backed by a test here. `missing` here means unverified,
+    not known-broken.
+  evidence_kind: null
 - id: STRAT-004
   text: Current project gets reservation/retention priority inside bounded strategic
     slices.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/systems/strategic.py` implements `resume_project`. Verified in
     `tests_v2/parity/test_strategic_persistence.py` and `tests_v2/strategic/test_interruption_resistance.py`.'
   proof_type: parity
-  test_path: '`tests_v2/parity/test_strategic_persistence.py::test_strategic_combat_interruption`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/parity/test_strategic_persistence.py::test_strategic_combat_interruption`
+    -- both the file and the symbol -- never existed in this repository at any point
+    in its history (confirmed against the complete git-history inventory of every
+    path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This entry's own text also claims coverage from `tests_v2/strategic/test_interruption_resistance.py`,
+    whose real successor (tests/unit/strategic/test_interruption_resistance.py) tests
+    cognition-profile derivation (see STRAT-014), not this entry's specific claim
+    about current-project reservation/retention priority. This `verified` entry was
+    never backed by a test here. `missing` here means unverified, not known-broken.
+  evidence_kind: null
 - id: STRAT-005
   text: Blockers are inferred from project/objective state and can be accurate or
     misdiagnosed under bounded cognition.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/systems/strategic.py` (`generate_crafting_blockers` and `resolve_blockers`) '
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_blocker_resolution.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/strategic/test_blocker_resolution.py` never existed
+    in this repository at any point in its history (confirmed against the complete
+    git-history inventory of every path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This `verified` entry was never backed by a test here. `missing` here means unverified,
+    not known-broken.
+  evidence_kind: null
 - id: STRAT-006
   text: Leads are retained under profile-specific bandwidth limits.
   status: verified
@@ -116,24 +145,46 @@
 - id: STRAT-011
   text: Event interpretation can mutate directives, projects, concerns, and source
     trust.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/systems/strategic.py` (`process_outcome` and `recalibrate_source_trust`) '
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_event_interpretation.py`'
+  test_path: tests/unit/strategic/test_event_interpretation.py::TestDirectiveEvent
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Cited `tests_v2/strategic/test_event_interpretation.py` was deleted
+    in commit 6e5c2899 (''Implement resource v2 enhanced phases''); a same-named successor
+    exists at tests/unit/strategic/test_event_interpretation.py (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    Corrected from a `verified` overclaim to `missing` during PR review: this entry''s
+    claim is compound (directives, projects, concerns, source trust), and TestDirectiveEvent
+    -- the cited class -- only exercises EventInterpreter.interpret_directive_event,
+    covering the ''directives'' quarter. The successor file''s other classes (TestStrategicPivotOnDanger,
+    TestNearDeath) exercise concern/project mutation via EventInterpreter.interpret_regional_danger/interpret_near_death,
+    but are not part of this citation. ''Source trust'' is not mutated by EventInterpreter''s
+    own 4 methods (interpret_regional_danger/interpret_scar_detection/interpret_near_death/interpret_directive_event)
+    at all -- this entry''s own v2_evidence field cites `process_outcome`/`recalibrate_source_trust`,
+    which live in src/systems/strategic_systems/intelligence.py and src/systems/social_systems/appraisal.py
+    respectively, neither exercised by this test_path. Whether those functions are
+    the real intended successor for the ''source trust'' sub-claim is a behavior-identification
+    question outside this ticket''s citation-hygiene scope -- disclosed here, not
+    resolved. test_path is kept since real coverage does exist for the ''directives''
+    sub-claim.'
+  evidence_kind: invocation
 - id: STRAT-012
   text: Knowledge remains uncertain (leads/candidate zones/hypotheses) until resolved.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/core/strategic.py` (`LeadCertainty` enum and `LeadState` fields) '
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_uncertainty_contract.py`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Cited `tests_v2/strategic/test_uncertainty_contract.py` never
+    existed in this repository at any point in its history (confirmed against the
+    complete git-history inventory of every path ever committed under tests_v2/; TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+    This `verified` entry was never backed by a test here. `missing` here means unverified,
+    not known-broken.
+  evidence_kind: null
 - id: STRAT-013
   text: Cognition graph export exposes persisted strategic state without becoming
     the source of truth.
@@ -147,15 +198,32 @@
   support_boundary: null
 - id: STRAT-014
   text: '`test_accurate_diagnosis_high_wisdom`: Accurate diagnosis high wisdom.'
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/systems/strategic.py` derives profile from stats. Verified in
     `tests_v2/strategic/test_interruption_resistance.py`.'
   proof_type: parity
-  test_path: '`tests_v2/strategic/test_interruption_resistance.py::TestCognitionProfile`'
+  test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Corrected from a `verified` overclaim to `missing` during PR
+    review -- this is a genuine content mismatch, not partial coverage. The cited
+    successor (tests/unit/strategic/test_interruption_resistance.py::TestCognitionProfile)
+    exercises StrategicIntelligenceSystem.derive_cognition_profile() (that higher
+    WIS/INT/PER stats produce larger strategic capacities -- max_leads/max_concerns/interruption_resistance).
+    The original deleted test (recovered from git history at commit d428d082, tests/ai/test_bounded_blockers.py::test_accurate_diagnosis_high_wisdom)
+    tested a completely different function, BlockerInferenceService.infer_blockers(ctx,
+    obj, CognitionCapacityProfile(judgment_stability=..., evidence_quality=..., ...))
+    -- that a high-judgment-stability/evidence-quality profile (itself derived from
+    wisdom) produces correct blocker diagnosis for an objective. The current StrategicIntelligenceSystem.infer_blockers(entity,
+    last_task, last_payload, navigation_failure, current_project) has a different
+    signature entirely, is purely deterministic rule-based logic with no wisdom/profile
+    parameter, and no test anywhere in the current tree asserts a wisdom-scaling effect
+    on blocker-diagnosis accuracy (confirmed: zero ''wisdom'' references in any of
+    the 5 current test files exercising infer_blockers, and zero ''diagnos*'' references
+    anywhere in src/systems/ or src/ai/). test_path nulled rather than kept, since
+    the cited test genuinely does not test this entry''s claim at all.'
+  evidence_kind: null
 - id: STRAT-015
   text: '`test_misdiagnosis_low_wisdom`: Misdiagnosis low wisdom.'
   status: verified

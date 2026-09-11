@@ -62,6 +62,7 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from parity_index_baseline import _sha256_hex, serialize_manifest  # noqa: E402
+from parity_test_path import parse_test_path_citations  # noqa: E402
 
 SCHEMA_VERSION = 1
 IMPORTER_VERSION = "1.0.0"
@@ -69,7 +70,6 @@ IMPORTER_VERSION = "1.0.0"
 DEFAULT_LEDGER_DIR = Path("docs/parity_ledger")
 DEFAULT_DB_PATH = Path("parity-index/parity.db")
 
-_TEST_PATH_DECLARED_RE = re.compile(r"^tests/[\w./:-]+\.py(::[\w_]+)?$")
 _PATH_REF_RE = re.compile(r"\b(?:src|tools|tests|docs)/[\w./-]+\.\w+\b")
 _TICKET_REF_RE = re.compile(r"\bTCK-\d{8}-[A-Z0-9-]+\b")
 _CONSTRAINT_DOC_PREFIXES = (
@@ -288,8 +288,10 @@ def _populate_ref_tables(conn: sqlite3.Connection) -> None:
         )
 
     for entry_id, v2_evidence, legacy_evidence, text, test_path in rows:
-        if test_path and _TEST_PATH_DECLARED_RE.match(test_path):
-            _insert("test_refs", entry_id, test_path, "declared", "test_path")
+        citations, _err = parse_test_path_citations(test_path)
+        if citations:
+            for citation in citations:
+                _insert("test_refs", entry_id, citation, "declared", "test_path")
 
         for source_field, field_value in (
             ("v2_evidence", v2_evidence),
@@ -374,8 +376,8 @@ def _path_resolves(path: str) -> bool:
     dashboard-frontend/src/App.tsx, cited in the ledger as plain src/App.tsx.
 
     A declared test_path may carry a `::test_function` pytest node-id suffix (see
-    _TEST_PATH_DECLARED_RE); that suffix is not part of the filesystem path, so it
-    is stripped before the existence check. This module already disclaims
+    parity_test_path.parse_test_path_citations); that suffix is not part of the filesystem path,
+    so it is stripped before the existence check. This module already disclaims
     symbol-level verification ("no symbol-level reference data" -- see
     v1_decisions_phase0.md "Path-only links"), so checking only the file component
     is consistent with its existing, stated scope, not a new leniency."""

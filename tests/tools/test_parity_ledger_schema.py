@@ -12,6 +12,9 @@ regression to the raw JSON structure -- only a test that actually parses this fi
 import json
 from pathlib import Path
 
+import jsonschema
+import pytest
+
 _SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / "docs" / "parity_ledger" / "schema.json"
 
 
@@ -22,3 +25,33 @@ def test_schema_json_parses_and_has_fixed_allof_structure():
     assert "if" not in items
     assert "then" not in items
     assert len(items["allOf"]) == 3
+
+
+def _base_entry(**overrides):
+    entry = {
+        "id": "SUB-001",
+        "text": "x",
+        "status": "missing",
+        "priority": "P1",
+    }
+    entry.update(overrides)
+    return entry
+
+
+class TestEvidenceKindField:
+    """Step 2 (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT): evidence_kind is optional,
+    schema-only, with no enforcement rule in this ticket."""
+
+    @pytest.mark.parametrize("value", ["existence", "invocation", "runtime_observation", None])
+    def test_accepts_each_declared_value_and_null(self, value):
+        schema = json.loads(_SCHEMA_PATH.read_text())
+        jsonschema.validate([_base_entry(evidence_kind=value)], schema)
+
+    def test_rejects_unknown_value(self):
+        schema = json.loads(_SCHEMA_PATH.read_text())
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate([_base_entry(evidence_kind="eyeballed")], schema)
+
+    def test_field_is_not_required(self):
+        schema = json.loads(_SCHEMA_PATH.read_text())
+        jsonschema.validate([_base_entry()], schema)
