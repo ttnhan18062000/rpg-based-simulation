@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import yaml
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
 from pydantic import BaseModel, Field, ConfigDict
+
+logger = logging.getLogger(__name__)
 
 from src.content.repository import CatalogRepository
 from src.worldmodules.repository import WorldModuleRepository
@@ -1007,9 +1010,20 @@ def _resolve_spawn_position(
             region_claimed.add(probe)
             return (float(probe[0]), float(probe[1]))
 
-    # Probe sequence exhausted -- degenerate region too small for the number of populations
-    # sharing it. Real, unavoidable collision; not a bug in this pass. Fall back to the
-    # (already-claimed) candidate rather than raising.
+    # Probe sequence exhausted. This is NOT necessarily a degenerate (too-small) region -- the
+    # probe set is 12 fixed offsets covering only a +/-2 box (13 candidate positions) around the
+    # hash point, so exhaustion is also reachable in a large region whose local neighborhood
+    # around that one point happens to be saturated, even with thousands of free tiles
+    # elsewhere in the same region. Falling back beats raising and failing the compile, but the
+    # fallback is a REAL, observable degradation: it reintroduces exactly the
+    # LAW-OCCUPANCY-COLLISION condition this ticket exists to eliminate. Must not be silent --
+    # log it so a future occurrence is diagnosable in one grep, not another multi-day trace.
+    logger.warning(
+        "Spawn-position de-confliction exhausted its probe sequence for key=%r in "
+        "spawn_region=%r -- falling back to an already-claimed position %r, which will "
+        "trigger a real LAW-OCCUPANCY-COLLISION violation for this entity.",
+        key, spawn_region, candidate,
+    )
     region_claimed.add(candidate)
     return (float(candidate[0]), float(candidate[1]))
 

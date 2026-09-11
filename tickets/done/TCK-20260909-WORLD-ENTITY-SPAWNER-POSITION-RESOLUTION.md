@@ -170,6 +170,16 @@ divergence.
      `>= 1`, since `RegionSpec.validate_bounds` already guarantees `min_x <= max_x`), with a
      regression test (`test_degenerate_single_point_region_never_exceeds_bounds`) added so it can't
      regress silently.
+   - **Peer review, pre-merge:** the exhausted-probe fallback (when de-confliction genuinely can't
+     find a free tile) silently reintroduced the exact `LAW-OCCUPANCY-COLLISION` condition this
+     ticket exists to eliminate — a real, unobservable degradation path, not acceptable given this
+     entire batch has been about conditions that were real, harmful, and unobservable. Added a
+     `logger.warning` naming the region, the key, and the collision, with a regression test
+     (`test_exhausted_probe_sequence_logs_a_warning`) confirming it fires. Also corrected the
+     fallback's own comment, which claimed exhaustion only happens in a "degenerate region too
+     small" — false: the probe set is 12 fixed offsets covering only a +/-2 box (13 candidates), so
+     exhaustion is also reachable in a large region whose local neighborhood around one hash point
+     is saturated, with thousands of free tiles elsewhere in the same region.
 3. **`src/worldassembly/entity_spawner.py`** — one-line change in `spawn_from_context()`'s loop:
    `position = profile.spawn_position if profile.spawn_position is not None else default_position`.
    No signature change.
@@ -190,11 +200,12 @@ divergence.
 
 ## Test Summary
 - New unit tests, `tests/unit/worldassembly/test_resolver.py` (`TestHashPointInBounds`,
-  `TestResolveSpawnPosition`, 11 new tests): determinism, in-bounds guarantee, the degenerate
+  `TestResolveSpawnPosition`, 12 new tests): determinism, in-bounds guarantee, the degenerate
   single-point regression case, unknown/empty `spawn_region` → `None`, real de-confliction (forced
   collision via monkeypatch, and a genuinely degenerate 1x1 region exhausting the probe sequence
-  without raising), and confirming the pure-function-per-call contract (no state leaks across
-  separate `resolve()`-equivalent calls).
+  without raising), confirming the pure-function-per-call contract (no state leaks across separate
+  `resolve()`-equivalent calls), and (post-review) confirming the exhausted-probe fallback logs a
+  `logger.warning` naming the region and key.
 - New integration tests, `tests/integration/worldassembly/test_world_entity_spawner.py` (3 new):
   `spawn_position` used when set, `default_position` fallback when unset, and a **real-corpus**
   regression (`bandit_road_trade_pressure.yaml`, which has exactly one region and two population

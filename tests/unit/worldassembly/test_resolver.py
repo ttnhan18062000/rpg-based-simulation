@@ -405,6 +405,22 @@ class TestResolveSpawnPosition:
         ]
         assert all(p == (5.0, 5.0) for p in positions)
 
+    def test_exhausted_probe_sequence_logs_a_warning(self, caplog):
+        """Peer review: the exhausted-probe fallback reintroduces a real
+        LAW-OCCUPANCY-COLLISION-triggering collision -- it must never be silent. Confirms the
+        warning names the region and key, not just a generic message."""
+        import logging
+        from src.worldassembly.resolver import _resolve_spawn_position
+        region_bounds = {"tiny": (5, 5, 5, 5)}
+        claimed: dict = {}
+        with caplog.at_level(logging.WARNING, logger="src.worldassembly.resolver"):
+            for i in range(3):
+                _resolve_spawn_position(f"pop_{i}", "tiny", region_bounds, claimed)
+        warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert warnings, "expected at least one warning once the probe sequence is exhausted"
+        assert "tiny" in warnings[0].getMessage()
+        assert "pop_1" in warnings[0].getMessage() or "pop_2" in warnings[0].getMessage()
+
     def test_pure_function_no_shared_state_across_calls(self):
         """A fresh `claimed` dict per call (as CompileProfileResolver.resolve() does per
         invocation) must not see collisions from an unrelated prior call -- confirms this
