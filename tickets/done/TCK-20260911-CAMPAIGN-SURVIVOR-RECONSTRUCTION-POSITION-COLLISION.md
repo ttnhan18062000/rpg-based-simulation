@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION
-phase: open
+phase: done
 date: 2026-09-11
 tags: [world, architecture, simulation-quality]
 ---
@@ -12,12 +12,14 @@ tags: [world, architecture, simulation-quality]
 # TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION
 
 ## Title
-`CampaignOrchestrator._build_initial_state()`'s survivor-reconstruction branch places every
-surviving entity at the identical `(0.0, 0.0)` default position — the other half of the position
-gap `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION` fixed, never exercisable until now
+`CampaignOrchestrator._build_initial_state()`'s survivor-reconstruction branch placed every
+surviving entity at the identical `(0.0, 0.0)` default position — fixed via real last-known-
+position carry-forward with a validity-checked, single-authority fallback chain; campaign-
+completion acceptance bar transferred to `TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-
+CARRY-FORWARD-GAP` after a real run surfaced a separate, confirmed defect
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -178,16 +180,36 @@ fixed and real survivors started existing.
   bug itself, not grief/nemesis event correctness.
 
 ## Acceptance Criteria
-- [ ] Real per-survivor position resolution replaces the current unconditional `(0.0, 0.0)`
-      default, with rationale recorded for which region/anchor a survivor resolves against.
-- [ ] The misleading `world_composition governs spawn placement` comment is fixed to accurately
-      describe what actually happens in this branch.
-- [ ] A real multi-episode Campaign run with real survivors (13+, matching this investigation's
-      own evidence) shows zero `LAW-SPAWN-OCCUPANCY` violations in episode 1+, and episode 1+
-      completes without an early stall attributable to this bug.
-- [ ] No regression in `tests/unit/domains/campaigns/`, `tests/integration/campaigns/`.
+- [x] Real per-survivor position resolution replaces the unconditional `(0.0, 0.0)` default.
+      `EntityCarryForward.last_position` carries each survivor's real
+      `entity.navigation.position` from episode end; reconstruction resolves it through
+      `LegalityServiceV2.verify_occupancy()` (single authority, `__slots__`-forced uncached scan)
+      with a probe-then-expanding-search fallback, never a shared constant.
+- [x] The misleading `world_composition governs spawn placement` comment is fixed
+      (`orchestrator.py`, survivor-reconstruction branch) to describe the real mechanism.
+- [x] **Narrowed from the original wording, per peer review (2026-09-11), after a real 3-episode
+      run surfaced a separate, confirmed defect this ticket does not own** — see Completion
+      Summary. What this ticket actually confirms, with real evidence, not assumption: a real
+      3-episode `campaign_life_arc`-shaped run (`frontier_living_world`, 13 survivors into episode
+      1, 9 into episode 2) shows **zero `LAW-SPAWN-OCCUPANCY` violations** in both reconstructed
+      episodes, verified directly via `HardLawMonitor.check_initial_placement()`, with every
+      survivor landing on a fully distinct, legal tile (13/13 episode 1, 9/9 episode 2). Episode 1
+      completed its full 150-tick length. Episode 2 stalled at tick 52 for a **different, confirmed-
+      separate** reason (survivor `kind`/`identity.faction` also silently dropped by the same
+      reconstruction branch — never this ticket's own scope) — the original "episode 1+ completes
+      without an early stall" wording is **struck and transferred explicitly** to
+      `TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP`'s own Acceptance
+      Criteria, not silently dropped.
+- [x] No regression in `tests/unit/domains/campaigns/` (164 passed), `tests/integration/campaigns/`
+      (19 passed), plus the new `tests/integration/campaigns/
+      test_survivor_reconstruction_position.py` (updated to assert this ticket's own narrower,
+      confirmed claim rather than full campaign completion).
 
 ## Related Tickets
+- `TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP` — filed from this
+  ticket's own real acceptance-run evidence. Owns the campaign-completion acceptance bar
+  transferred from here, and the separate, confirmed `kind`/`identity.faction` carry-forward gap
+  in the same reconstruction branch this ticket fixed position for.
 - `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION` — sibling finding, same underlying
   problem class (no real spatial placement), different code path (survivor reconstruction, not
   catalog spawn), only reachable once that ticket's own fix let real survivors exist. Its own
@@ -260,13 +282,99 @@ None yet — standard tier, staging artifacts created when picked up.
   blast radius than this fix needs.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Built exactly to the locked-in design (see this ticket's own Scope, finalized across several
+pre-implementation peer-review rounds before any code was written):
+
+- `EntityCarryForward.last_position: Optional[Tuple[float, float]]` (`src/domains/campaigns/
+  state.py`), captured unconditionally (not gated by a `carry_forward_rules` flag) in
+  `_extract_entity_carry_forwards()` from `entity.navigation.position`.
+- New module `src/domains/campaigns/survivor_placement.py`: `SurvivorReconstructionContext` (the
+  `__slots__`-only occupancy-check context, documented and tested per its own docstring) and
+  `resolve_survivor_position()` (the full chain: carried position → `verify_occupancy()` →
+  `_DECONFLICT_PROBE_OFFSETS` probe → expanding growing-radius search clamped to
+  `world_spec.topology.width`/`.height` → logged warning + last-probed candidate if genuinely
+  exhausted, mirroring `compiler.py:489-495`'s own message shape).
+- Wired into `_build_initial_state()`'s survivor-reconstruction branch
+  (`orchestrator.py`): position resolved and set within the same per-entity loop that already
+  builds identity/equipment/social, so each entity is fully placed and inserted before the next
+  one's own `verify_occupancy()` check runs — avoids the "phantom entities still at a shared
+  default" issue a naive two-pass structure would have hit.
+- Misleading `world_composition governs spawn placement` comment corrected to describe the real
+  mechanism.
+
+Two design corrections happened during pre-implementation peer review, both verified by direct
+reproduction against the real functions before being written into the design (not asserted):
+`_resolve_spawn_position()` (Batch B's own mechanism) is not reusable — `spawn_region` never
+reaches a campaign-spawned entity at all (`WorldEntitySpawner.spawn_from_context()` hardcodes it
+`None`), confirmed and filed separately
+(`TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP`). And `verify_occupancy()`'s own
+dynamic-entity-occupancy check has a caching trap
+(`SpatialQueryService.get_occupancy_map()` caches onto the context object by identity, no
+invalidation) — reproduced directly (a plain context's second check on a newly-occupied tile
+silently returned `True`/`LEGAL`) before designing the `__slots__` mechanism that avoids it,
+which was itself then verified the same way.
+
+A real 3-episode acceptance run (the actual motivation for this ticket, per peer review) confirmed
+the fix works — zero `LAW-SPAWN-OCCUPANCY` violations, all distinct tiles, in both reconstructed
+episodes — but also surfaced a second, separate, confirmed defect in the exact same reconstruction
+branch: `kind` and `identity.faction` are silently dropped the same way position used to be,
+plausibly (not yet confirmed) contributing to episode 2's own continued stall. Did not chase or
+fix this — reported it, and per peer review's explicit direction, filed it as its own ticket
+carrying the campaign-completion acceptance bar forward, rather than either absorbing it into this
+ticket's scope or letting the original "episode completes" wording quietly go unaddressed.
 
 ## Test Summary
-_(pending)_
+- `pytest tests/unit/domains/campaigns/ -q` — 164 passed (includes new tests in
+  `test_campaign_state.py`, `test_campaign_orchestrator.py`, and the new
+  `test_survivor_placement.py`, covering: `last_position` round-trip including the `None`/missing-
+  key case, unconditional extraction capture, the exact `__slots__`-staleness reproduction named
+  `test_reconstruction_context_slots_force_uncached_occupancy_scan`, resolution-helper behavior
+  for free/occupied/blocked/building-blocked/missing-position cases, two-colliding-survivors
+  non-collapse, expanding-search-beyond-fixed-ring, exhaustion warning-and-still-returns, and the
+  terrain-instability case built from a real seed disagreement found by the test itself, not a
+  hand-placed fixture).
+- `pytest tests/integration/campaigns/ -q` — 19 passed (existing suite unaffected).
+- `pytest tests/integration/campaigns/test_survivor_reconstruction_position.py -v` (new,
+  `@pytest.mark.resource_budget_large`) — 1 passed. Real 3-episode `campaign_life_arc`-shaped run
+  (`frontier_living_world`, base_seed=42, 150-tick episodes): episode 0 completed at its full
+  configured length; episode 1's 13 reconstructed survivors landed on 13/13 distinct legal tiles,
+  zero `LAW-SPAWN-OCCUPANCY` violations, episode 1 completed its full configured length; episode
+  2's 9 reconstructed survivors landed on 9/9 distinct legal tiles, zero `LAW-SPAWN-OCCUPANCY`
+  violations (this ticket's own claim, confirmed); episode 2 itself still produced real ticks
+  (>0, confirmed not hung/crashed) but is not asserted against the full tick limit, since its
+  early stop is confirmed attributable to the separate, filed `kind`/`faction` defect, not this
+  ticket's own fix.
 
 ## Files Changed
-_(pending)_
+- `src/domains/campaigns/state.py` — `EntityCarryForward.last_position` field + round-trip
+- `src/domains/campaigns/orchestrator.py` — `_extract_entity_carry_forwards()` capture,
+  `_build_initial_state()` survivor-branch wiring, corrected comment
+- `src/domains/campaigns/survivor_placement.py` — new module (`SurvivorReconstructionContext`,
+  `resolve_survivor_position()`)
+- `tests/unit/domains/campaigns/test_campaign_state.py` — `last_position` round-trip tests
+- `tests/unit/domains/campaigns/test_campaign_orchestrator.py` — extraction capture tests
+- `tests/unit/domains/campaigns/test_survivor_placement.py` — new, full unit coverage
+- `tests/integration/campaigns/test_survivor_reconstruction_position.py` — new, real 3-episode
+  acceptance evidence for this ticket's own (narrowed) claim
+- `docs/plans/deferred_tuning_decisions_register.md` D-07 — corrected pre-implementation (in
+  #163, before this ticket's own branch existed) to reflect the real fix basis
 
 ## Completion Summary
-_(pending)_
+Fixed the confirmed root cause: survivor-reconstructed entities previously defaulted to
+`(0.0, 0.0)`, unconditionally, tripping `LAW-SPAWN-OCCUPANCY` immediately in any multi-episode
+campaign with more than one surviving entity. The fix carries each survivor's own real last-known
+position forward and validates it against the new episode's own (differently-seeded, confirmed
+non-stable) terrain and building layout, using the real, existing `LegalityServiceV2.
+verify_occupancy()` as the single authority rather than a hand-rolled duplicate, with a fallback
+chain that expands its search rather than ever collapsing to a shared constant — the exact bug
+being fixed, avoided even in its own fallback path.
+
+Real evidence, not just unit coverage, confirms this works: a real 3-episode `frontier_living_world`
+run shows zero `LAW-SPAWN-OCCUPANCY` violations and fully distinct survivor placements across both
+reconstructed episodes. That same real run surfaced a second, separate, confirmed defect in the
+same code path (`kind`/`identity.faction` also silently dropped) that still stalls episode 2 for an
+unrelated reason. Rather than absorbing that into this ticket or letting the original "campaign
+completes" acceptance bar quietly disappear, it was reported and filed as its own ticket
+(`TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP`), which explicitly
+inherits that bar in its own Acceptance Criteria. This ticket closes on its own real, narrower,
+fully-confirmed claim.

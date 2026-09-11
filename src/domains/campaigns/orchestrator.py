@@ -543,6 +543,14 @@ class CampaignOrchestrator:
                     entity.social.public_reputation if rules.carry_reputation else 0.0
                 ),
                 alive=entity.lifecycle.active,  # lifecycle.active, NOT combat.alive
+                # Unconditional (not gated by a carry_forward_rules flag): position isn't an
+                # opt-in carry-forward rule, it's required for the entity to be placeable at
+                # all next episode -- TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-
+                # COLLISION.
+                last_position=(
+                    float(entity.navigation.position[0]),
+                    float(entity.navigation.position[1]),
+                ),
             )
 
         return result
@@ -685,6 +693,10 @@ class CampaignOrchestrator:
         from src.core.models.inventory import EquipSlot
         from src.core.state import AuthoritativeState, EntityState
         from src.core.updates import SocialUpdate
+        from src.domains.campaigns.survivor_placement import (
+            SurvivorReconstructionContext,
+            resolve_survivor_position,
+        )
         from src.systems.social_systems.relationships import RelationshipService
         from src.worldbuilding.compiler import WorldCompiler
         from src.worldbuilding.repository import WorldRepository
@@ -730,11 +742,19 @@ class CampaignOrchestrator:
                 # Implementation Notes for the real actor_id-mismatch finding that blocks it.
             )
 
-        # Reconstruct minimal EntityState objects from carry-forward snapshots.
-        # Fields not captured in EntityCarryForward (e.g. combat state, position,
-        # current HP) are left at EntityState defaults — the scenario's setup_tags
-        # and world_composition govern spawn placement.
+        # Reconstruct EntityState objects from carry-forward snapshots. Position is real,
+        # validity-checked, and deconflicted -- TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-
+        # POSITION-COLLISION. Fields not captured in EntityCarryForward at all (e.g. combat
+        # state, current HP) are left at EntityState defaults; this branch never calls into
+        # WorldEntitySpawner/WorldCompiler.compile()'s own entity placement, so nothing about
+        # world_composition otherwise governs survivor placement.
         entities: Dict[int, EntityState] = {}
+        reconstruction_ctx = SurvivorReconstructionContext(
+            terrain=compiled_state.terrain,
+            blocked_tiles=compiled_state.blocked_tiles,
+            buildings=compiled_state.buildings,
+            entities=entities,  # same dict object, mutated in place as each survivor is placed
+        )
         for eid, cf in alive_carry_forwards.items():
             base = EntityState(id=eid, kind="entity")
 
@@ -769,11 +789,26 @@ class CampaignOrchestrator:
                 base.social, SocialUpdate(reputation_set=cf.reputation)
             )
 
+            # Resolve a real position BEFORE inserting into `entities` -- resolve_survivor_
+            # position()'s own occupancy check reads reconstruction_ctx.entities (the same dict
+            # this loop is building), so only already-placed survivors are visible when this
+            # one is resolved, never later/unresolved ones sitting at a shared default.
+            resolved_pos = resolve_survivor_position(
+                eid,
+                cf.last_position,
+                reconstruction_ctx,
+                world_spec.topology.width,
+                world_spec.topology.height,
+                compiled_regions,
+            )
+            navigation = dc_replace(base.navigation, position=resolved_pos)
+
             entities[eid] = dc_replace(
                 base,
                 identity=identity,
                 equipment=equipment,
                 social=social,
+                navigation=navigation,
             )
 
         # Apply social memory import for entities that have a prior record.
