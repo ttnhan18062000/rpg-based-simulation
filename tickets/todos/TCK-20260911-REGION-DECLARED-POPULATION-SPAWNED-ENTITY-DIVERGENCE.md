@@ -114,6 +114,16 @@ non-test-only consumer.
   surfacing this divergence's real-world relevance for the first time)
 - `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT` (adjacent pattern — implemented-but-diverged
   state, not implemented-but-unreachable code; related family of findings from the same batch)
+- `TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH` — **likely the same root
+  cause, not just a related symptom.** That ticket found `WorldEntitySpawner` never sets
+  `properties["population_id"]` on what it spawns (unlike `WorldCompiler.compile()`'s own classic
+  pipeline, which does), causing `pending_information_responses`' `target_population_id` →
+  `actor_id` resolution to silently misdeliver seeded facts to unrelated entities in Campaign
+  mode. Both tickets are instances of **the catalog spawn path not carrying population identity
+  through** — this ticket's own `count` non-expansion, and that ticket's missing `population_id`
+  tag. Whoever picks up either one should check whether one fix — threading real `PopulationSpec`
+  identity (`id`, individual index within `count`) into `WorldEntitySpawner`'s own output — closes
+  both, rather than scoping each narrowly and potentially fixing the same underlying gap twice.
 
 ## Related Docs
 - `docs/world/assembly_contract.md`

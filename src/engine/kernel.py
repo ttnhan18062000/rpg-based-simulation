@@ -1321,6 +1321,12 @@ class Kernel:
 
     @property
     def event_recorder(self) -> Any:
+        """The real per-tick event stream (combat, cooperation, hard-law, etc.), fed by
+        EventExtractor.extract() every tick and written to this run's own
+        data/runs/{run_id}/simulation_events.jsonl. Distinct from
+        ScenarioRuntimeService/CampaignOrchestrator's own `scenario_event_recorder`, a
+        narrow scenario/campaign-bookkeeping-only side channel unrelated to this one
+        (TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY)."""
         return self._event_recorder
 
     @property

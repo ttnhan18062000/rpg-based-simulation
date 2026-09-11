@@ -260,3 +260,14 @@ confirms zero `LAW-OCCUPANCY-COLLISION` and a plausible event mix via real place
 was found and fixed in my own first implementation draft (a degenerate-region off-by-one in the
 hash formula) via direct manual verification before it reached a committed test — caught early
 enough to add a permanent regression test rather than ship it.
+
+**Addendum (2026-09-11):** this ticket fixed real placement for the episode-0 catalog-spawn path
+only. `CampaignOrchestrator._build_initial_state()`'s OTHER branch — survivor-reconstruction for
+episode N>0 — never touches `WorldEntitySpawner` at all and still places every reconstructed
+survivor at the identical `(0.0, 0.0)` default, confirmed at real scale (13 of 16 survivors
+colliding, tripping a real `LAW-SPAWN-OCCUPANCY` violation) during
+`TCK-20260909-GRIEF-NEMESIS-CAMPAIGN-REVERIFICATION`'s own real multi-episode investigation. Never
+exercisable before now — Campaign mode had zero entities, so zero survivors, until this ticket's
+own sibling (`TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`) and this ticket landed. Filed as
+`TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION`, the other half of this same
+underlying gap.

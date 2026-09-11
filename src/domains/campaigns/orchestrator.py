@@ -139,10 +139,21 @@ class CampaignOrchestrator:
     def __init__(
         self,
         manifest: CampaignManifest,
-        event_recorder: Optional["EventRecorder"] = None,
+        scenario_event_recorder: Optional["EventRecorder"] = None,
     ) -> None:
+        """
+        `scenario_event_recorder` is a narrow, scenario/campaign-bookkeeping-only side
+        channel (episode outcome + chronicle/nemesis events emitted directly by this
+        class) — TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY. It is NOT the
+        real per-tick kernel event stream (combat, cooperation, hard-law, etc.); that lives
+        separately on each episode's own `Kernel` (via `ScenarioRuntimeService`), as
+        `Kernel.event_recorder`, and is what `data/runs/{episode_run_id}/
+        simulation_events.jsonl` (and SimQ scoring) actually reads. The two are unrelated
+        objects that happened to share a name; do not assume this parameter carries the
+        full stream.
+        """
         self._manifest = manifest
-        self._event_recorder = event_recorder
+        self._scenario_event_recorder = scenario_event_recorder
         self._state = CampaignState(
             campaign_id=manifest.id,
             episode_index=0,
@@ -226,7 +237,7 @@ class CampaignOrchestrator:
         from src.engine.scenario_runtime import ScenarioRuntimeService
 
         svc = ScenarioRuntimeService(
-            spec, initial_state=initial_state, event_recorder=self._event_recorder
+            spec, initial_state=initial_state, scenario_event_recorder=self._scenario_event_recorder
         )
         try:
             svc.start()
@@ -362,10 +373,10 @@ class CampaignOrchestrator:
     ) -> None:
         """Emit grief_urgency_triggered for each newly-created modifier.
 
-        No-op when event_recorder is None (production default when no recorder injected,
+        No-op when scenario_event_recorder is None (production default when no recorder injected,
         and the case for a test double built via object.__new__() without __init__).
         """
-        if getattr(self, "_event_recorder", None) is None:
+        if getattr(self, "_scenario_event_recorder", None) is None:
             return
         for eid, gum in modifiers.items():
             self._emit_domain_event(
@@ -427,10 +438,10 @@ class CampaignOrchestrator:
     def _emit_nemesis_event(self, relation: NemesisRelation, tick: int) -> None:
         """Emit nemesis_relation_formed for a newly-formed NemesisRelation.
 
-        No-op when event_recorder is None (production default when no recorder injected,
+        No-op when scenario_event_recorder is None (production default when no recorder injected,
         and the case for a test double built via object.__new__() without __init__).
         """
-        if getattr(self, "_event_recorder", None) is None:
+        if getattr(self, "_scenario_event_recorder", None) is None:
             return
         self._emit_domain_event(
             event_type="nemesis_relation_formed",
@@ -450,9 +461,9 @@ class CampaignOrchestrator:
     ) -> None:
         """Emit chronicle_entry_created to the event bus for each new ledger entry.
 
-        No-op when event_recorder is None (production default when no recorder injected).
+        No-op when scenario_event_recorder is None (production default when no recorder injected).
         """
-        if self._event_recorder is None:
+        if self._scenario_event_recorder is None:
             return
         for entry in entries:
             self._emit_domain_event(
@@ -485,7 +496,7 @@ class CampaignOrchestrator:
         emission through here instead of adding new per-call-site imports.
         """
         from src.observability.events import SimulationEvent
-        self._event_recorder.record(SimulationEvent(
+        self._scenario_event_recorder.record(SimulationEvent(
             event_type=event_type,
             event_category=event_category,
             tick=tick,
@@ -713,6 +724,10 @@ class CampaignOrchestrator:
                 entities=catalog_result.state.entities,
                 regions=compiled_regions,
                 places=compiled_places,
+                information_source_profiles=compiled_state.information_source_profiles,
+                # pending_information_responses is deliberately NOT threaded here yet -- see
+                # TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED's own
+                # Implementation Notes for the real actor_id-mismatch finding that blocks it.
             )
 
         # Reconstruct minimal EntityState objects from carry-forward snapshots.
@@ -825,16 +840,16 @@ class CampaignOrchestrator:
 
         # E43E: evaluate cross-episode social consequences at episode-entity-spawn time.
         # Read-only — evaluate_social_consequence() never mutates entities/campaign_state;
-        # emitted via self._event_recorder.record() (SimulationEvent, not WorldEvent —
+        # emitted via self._scenario_event_recorder.record() (SimulationEvent, not WorldEvent —
         # this constructor call has no StateUpdate/ApplyPath merge step available).
         from src.systems.social_systems.consequence_events import evaluate_social_consequence
 
-        if self._event_recorder is not None:
+        if self._scenario_event_recorder is not None:
             for eid in sorted(entities.keys()):
                 entity = entities[eid]
                 faction_id = f"faction_{entity.identity.faction}"
                 for event in evaluate_social_consequence(entity, faction_id, self._state, tick=0):
-                    self._event_recorder.record(event)
+                    self._scenario_event_recorder.record(event)
 
         # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: snapshot idea 56's region_cultures signal
         # into per-tick-reachable state at episode start -- the real bridge GroupPhase.resolve()
@@ -905,6 +920,9 @@ class CampaignOrchestrator:
             entities=entities,
             regions=compiled_regions,
             places=compiled_places,
+            information_source_profiles=compiled_state.information_source_profiles,
+            # pending_information_responses intentionally not threaded here either -- see the
+            # episode-0 branch's own comment above.
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
             entity_legend_facts=entity_legend_facts,

@@ -216,7 +216,10 @@ def test_observability_domains_systems_import_allowlist():
 # docs/audits/D14_coupling_depth.md's Coupling Inventory together -- not a silent addition.
 # Keyed by (rel_path, module, names) with an exact expected count, not (rel_path, lineno):
 # TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE, so an unrelated line-shifting
-# edit above a pinned import no longer breaks the pin.
+# edit above a pinned import no longer breaks the pin. This superseded a line-keyed re-pin that
+# landed on `main` after this branch diverged (orchestrator.py's import moved 487->498 during
+# the "Dormant-mechanism follow-ups" Batch C arc, commit ef3ac48f) -- the content key below
+# doesn't care, since the module/names pair is unchanged.
 _DOMAINS_OBSERVABILITY_PINNED: dict[PinnedKey, int] = {
     ("src/domains/campaigns/narrative_ledger.py", "src.observability.events", ("SimulationEvent",)): 1,
     ("src/domains/campaigns/orchestrator.py", "src.observability.events", ("SimulationEvent",)): 1,
