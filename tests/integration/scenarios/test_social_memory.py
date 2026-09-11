@@ -216,7 +216,7 @@ def test_consequence_events_fire_at_episode_entity_spawn():
     evaluate_social_consequence() is called per spawned entity in
     CampaignOrchestrator._build_initial_state(); a LEGENDARY_ARRIVAL-qualifying
     social memory record (faction_reputation["default"] >= 0.9) produces an
-    event that reaches self._event_recorder.record() — not silently dropped.
+    event that reaches self._scenario_event_recorder.record() — not silently dropped.
 
     Also proves the read-only contract: _build_initial_state() does not mutate
     campaign_state or the newly-built entities dict beyond what the existing
@@ -231,7 +231,7 @@ def test_consequence_events_fire_at_episode_entity_spawn():
     manifest = CampaignManifest(id="test_consequence_campaign", episodes=[spec0])
     recorder = EventRecorder()
     try:
-        orchestrator = CampaignOrchestrator(manifest, event_recorder=recorder)
+        orchestrator = CampaignOrchestrator(manifest, scenario_event_recorder=recorder)
 
         orchestrator._state.persistent_entities[1] = EntityCarryForward(
             entity_id=1, level=5, xp=100, equipment={}, reputation=0.95, alive=True,

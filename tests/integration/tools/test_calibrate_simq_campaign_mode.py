@@ -58,7 +58,7 @@ def test_calibrate_simq_campaign_profile_runs_multiple_episodes(monkeypatch):
 
     event_types = {json.loads(line)["event_type"] for line in lines}
     # scenario_objective_completed only reaches the merged JSONL because Step 1b
-    # (orchestrator.py:172) wires self._event_recorder through to ScenarioRuntimeService —
+    # (orchestrator.py:172) wires self._scenario_event_recorder through to ScenarioRuntimeService —
     # this is the real end-to-end proof that a genuine CampaignOrchestrator.run_episode()
     # call, not test scaffolding, produced this data.
     assert "scenario_objective_completed" in event_types, (

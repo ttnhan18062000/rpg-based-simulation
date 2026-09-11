@@ -427,11 +427,11 @@ def test_episode_summary_run_id_defaults_empty_when_svc_run_id_none():
 # ---------------------------------------------------------------------------
 
 def test_run_episode_passes_event_recorder_to_scenario_runtime():
-    """Step 1b: run_episode() must wire self._event_recorder through to
+    """Step 1b: run_episode() must wire self._scenario_event_recorder through to
     ScenarioRuntimeService — previously silently dropped at orchestrator.py:172."""
     manifest = _make_manifest(n_episodes=1)
     spy_recorder = MagicMock()
-    orch = CampaignOrchestrator(manifest, event_recorder=spy_recorder)
+    orch = CampaignOrchestrator(manifest, scenario_event_recorder=spy_recorder)
 
     mock_svc = MagicMock()
     mock_svc.final_state = _make_mock_final_state(entities={})
@@ -445,7 +445,7 @@ def test_run_episode_passes_event_recorder_to_scenario_runtime():
         orch.run_episode()
 
     _, kwargs = mock_ctor.call_args
-    assert kwargs.get("event_recorder") is spy_recorder
+    assert kwargs.get("scenario_event_recorder") is spy_recorder
 
 
 # ---------------------------------------------------------------------------
