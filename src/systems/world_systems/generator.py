@@ -235,23 +235,6 @@ class EntityGenerator:
             .inventory(gold=int(base_gold))
             .build())
 
-    def spawn_calamity(self, state: AuthoritativeState, kind: str, pos: tuple[float, float]) -> EntityState:
-        """Spawn a massive World Boss (Calamity) with elite scaling."""
-        entity_id = self.get_next_id()
-        
-        # Calamities are Tier 5 (implicit)
-        hp = 5000 * (1.0 + state.maturity * 0.5)
-        atk = 150 * (1.0 + state.maturity * 0.2)
-        def_val = 100 * (1.0 + state.maturity * 0.2)
-        
-        from src.core.builder import V2EntityBuilder
-        return (V2EntityBuilder(entity_id)
-            .kind(kind)
-            .location(*pos)
-            .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=50 + state.maturity * 5)
-            .combat(hp=int(hp), max_hp=int(hp), atk=int(atk), def_stat=int(def_val), readiness=100.0)
-            .build())
-
     def spawn_stronghold(self, state: AuthoritativeState, pos: tuple[float, float]) -> EntityState:
         """Spawn a static stronghold building-entity."""
         entity_id = self.get_next_id()

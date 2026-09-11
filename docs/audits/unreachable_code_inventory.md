@@ -90,6 +90,18 @@ rates and death thresholds across the simulation. The same risk applies to C1 be
 `GracefulDegradationManager`'s pressure thresholds (1.0/0.95/0.8) are not the same numbers as
 `ResourceGovernor`'s (1.5x/1.0x/0.7x) either, and neither has been checked against the other yet.
 
+**Independent corroboration, predating this audit entirely.** `TCK-20260831-CREATURE-TERRITORY-
+LIFECYCLE`'s own commit message (2026-08-31, `a2954cfaa`) states: "Investigation found the
+ticket's own premise about BiologicalSystem's HERO/VILLAGER gate was wrong -- that gate is dead
+code; the design is purely additive instead, no divergence entry needed." Someone hit this exact
+dead gate ten days before this audit existed, correctly identified it as dead, routed around it —
+and didn't file anything. That's the same "findings die in prose" failure this audit's own
+cluster-ticket discipline exists to prevent, with an independent witness who predates the whole
+arc. `BiologicalSystem.update()`, its shim, and its orphaned test file have since been deleted
+(`TCK-20260908-BIOLOGICAL-SYSTEM-DEAD-CODE-DISPOSITION`); the drifted numbers are preserved in
+`docs/plans/deferred_tuning_decisions_register.md` (D-08) in case the live values later prove
+wrong.
+
 ## Organizing axis: mechanism vs. surface, not zero-anywhere vs. test-only
 
 Per peer review: raw reachability status (zero-anywhere vs. test-only) is a column in the
