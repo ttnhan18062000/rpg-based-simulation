@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260821-VISUAL-SHAPE-METRIC
-phase: open
+phase: done
 date: 2026-08-21
 tags: [visualization, simulation-quality, world]
 ---

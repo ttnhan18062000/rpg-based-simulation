@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-WORLDDAT-NEWMODS
-phase: inprogress
+phase: done
 date: 2026-06-14
 tags: [worldmodules, data, content, new-modules]
 ---

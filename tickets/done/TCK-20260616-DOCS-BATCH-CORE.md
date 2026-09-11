@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P1
 audience: agent
 ticket_id: TCK-20260616-DOCS-BATCH-CORE
-phase: open
+phase: done
 date: 2026-06-16
 tags: [documentation, readability, phase-language-removal, core]
 ---

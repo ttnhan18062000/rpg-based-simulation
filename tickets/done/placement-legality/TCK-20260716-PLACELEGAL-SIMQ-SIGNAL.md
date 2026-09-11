@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260716-PLACELEGAL-SIMQ-SIGNAL
-phase: open
+phase: done
 date: 2026-07-16
 tags: [simulation-quality, observability, world]
 ---

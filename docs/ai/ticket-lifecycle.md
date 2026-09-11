@@ -553,7 +553,7 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 | 9 | Repo consistent | No leftover temp files |
 | 10 | data/runs/ cleaned | — script-checked; primary cleanup now happens immediately before this check, inside done-checker's own Step 0a (as of TCK-20260714-DATA-RUNS-VERIFY-REGEN) — closes the gap where Parity/Verify's own re-verification work could regenerate artifacts after the post-Test checkpoint (Test section above, now a documented-intent no-op — see its Reliability caveat) had already run. `run_static_precheck`'s data_runs_clean check (Step 0b) remains the backstop confirmation read. |
 | 11 | No material gaps | All follow-up items (e.g. fallback reporting) marked complete or explicitly flagged |
-| 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked |
+| 12 | Frontmatter valid (ticket + staging artifacts) | — script-checked; as of `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT`, `check_frontmatter_valid()` also asserts `status`/`phase` agree with the ticket's physical location via `validate_frontmatter.py::check_ticket_location_consistency()` (`tickets/done/` requires `status: historical` + `phase: done`; `tickets/inprogress/` forbids `phase: done`) — independently re-enforced repo-wide by a corpus test over every real `tickets/done/**/*.md` file, so this catches drift from hand-orchestrated/unrecorded closes too, not just per-ticket Verify runs |
 | 13 | **Agent monitoring** _(pre-marked PASS)_ | Written by workflow `writeMonitoring` after READY_TO_CLOSE |
 
 ---

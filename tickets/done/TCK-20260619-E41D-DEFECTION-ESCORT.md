@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: social
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E41D-DEFECTION-ESCORT
-phase: open
+phase: done
 date: 2026-06-20
 tags: [party, defection, betrayal, escort, route-scoring, phase-4]
 ---

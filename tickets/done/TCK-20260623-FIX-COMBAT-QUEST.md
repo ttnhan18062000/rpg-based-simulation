@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260623-FIX-COMBAT-QUEST
-phase: open
+phase: done
 date: 2026-06-23
 tags: [test-repair, combat, quest, reward, social]
 ---

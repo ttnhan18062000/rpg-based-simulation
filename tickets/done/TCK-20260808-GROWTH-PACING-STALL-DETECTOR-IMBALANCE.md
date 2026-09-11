@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-GROWTH-PACING-STALL-DETECTOR-IMBALANCE
-phase: open
+phase: done
 date: 2026-08-08
 tags: [progression, combat, simulation-quality]
 ---

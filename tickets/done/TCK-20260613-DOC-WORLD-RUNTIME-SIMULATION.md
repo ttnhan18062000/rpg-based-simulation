@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260613-DOC-WORLD-RUNTIME-SIMULATION
-phase: open
+phase: done
 date: 2026-06-13
 tags: [documentation, world, ecology, calamity, threat, raid, boss, spawn, consequences, sovereignty, providers]
 ---

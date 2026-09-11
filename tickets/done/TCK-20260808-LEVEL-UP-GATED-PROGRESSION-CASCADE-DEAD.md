@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P1
 audience: agent
 ticket_id: TCK-20260808-LEVEL-UP-GATED-PROGRESSION-CASCADE-DEAD
-phase: open
+phase: done
 date: 2026-08-08
 tags: [progression, combat, simulation-quality]
 ---

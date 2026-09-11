@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: misc
 authority: P1
 audience: agent
 ticket_id: TCK-20260613-DOC-HARDENING-EPIC
-phase: open
+phase: done
 date: 2026-06-13
 tags: [documentation, agent-search, logic-contracts]
 ---

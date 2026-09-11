@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE
-phase: open
+phase: done
 date: 2026-08-18
 tags: [engine, determinism, bug, debugging, root-cause, testing]
 ---

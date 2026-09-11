@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260618-AUDIT-D13-TYPES
-phase: open
+phase: done
 date: 2026-06-18
 tags: [audit, type-safety, mypy, annotations, validation, api-boundary]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: misc
 authority: P1
 audience: agent
 ticket_id: TCK-20260612-LOCAL-CTX-HTTP-API
-phase: open
+phase: done
 date: 2026-06-12
 tags: [tooling, rag, knowledge-search, fastapi, agent-tool]
 ---

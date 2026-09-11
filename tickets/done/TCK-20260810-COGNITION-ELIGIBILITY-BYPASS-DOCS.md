@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260810-COGNITION-ELIGIBILITY-BYPASS-DOCS
-phase: open
+phase: done
 date: 2026-08-10
 tags: [cognition, strategy]
 ---

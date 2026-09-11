@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260817-STANDARD-SIMQ-NARRATIVE-EVENT-EMISSION-REGRESSION-FRONTIER
-phase: open
+phase: done
 date: 2026-08-17
 tags: [simulation-quality, calibration, corpus, investigation, root-cause]
 ---

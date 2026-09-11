@@ -1,10 +1,10 @@
 ---
-status: epic_scoped
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E53D-HISTORY
-phase: scoped
+phase: done
 date: 2026-06-22
 tags: [faction, history-integration, narrative-ledger, chronicle, grand-strategy-archive, epic, phase-5]
 ---

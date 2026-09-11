@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20260810-MONITORING-NEGATIVE-DURATION-BULK-CLEANUP
-phase: open
+phase: done
 date: 2026-08-10
 tags: [agent-monitoring]
 ---

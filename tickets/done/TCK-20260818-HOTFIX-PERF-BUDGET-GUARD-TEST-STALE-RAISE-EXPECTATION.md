@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260818-HOTFIX-PERF-BUDGET-GUARD-TEST-STALE-RAISE-EXPECTATION
-phase: open
+phase: done
 date: 2026-08-18
 tags: [testing, bug]
 ---
