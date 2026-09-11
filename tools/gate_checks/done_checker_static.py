@@ -38,7 +38,12 @@ _TOOLS_DIR = Path(__file__).resolve().parent.parent
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from validate_frontmatter import validate_file, validate_directory, extract_frontmatter  # noqa: E402
+from validate_frontmatter import (  # noqa: E402
+    validate_file,
+    validate_directory,
+    extract_frontmatter,
+    check_ticket_location_consistency,
+)
 from generate_registry import generate_registry  # noqa: E402
 from ticket_field_values import check_ticket_field_values  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
@@ -296,6 +301,14 @@ def check_frontmatter_valid(
     registry = load_registry()
 
     ticket_errors = validate_file(ticket_path, registry=registry)
+
+    # Location consistency (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT): a ticket's
+    # status/phase can each be individually enum-valid while disagreeing with which tickets/
+    # subdirectory it sits in -- validate_file's per-field enum checks alone miss that class.
+    # Not folded into validate_file itself; called explicitly here, same as the corpus test.
+    if ticket_path.exists():
+        ticket_fm = extract_frontmatter(ticket_path.read_text(encoding="utf-8")) or {}
+        ticket_errors += check_ticket_location_consistency(ticket_path, ticket_fm)
 
     if tier == "hotfix" and not staging_dir.exists():
         if ticket_errors:

@@ -117,3 +117,37 @@ it into INFRA-180.
   remediation commit is mechanical and re-runnable: on conflict, re-run the script against the new tree
   rather than hand-merging.
 - **Stale drift reports.** Other tools that count frontmatter states will see different numbers after Step 3.
+
+## Deviations (recorded at Implement, 2026-09-11)
+
+- **Step 1's location rule is NOT folded into `_validate_ticket`/`validate_file`.** The plan's own wording
+  ("Add to `tools/validate_frontmatter.py`... Also wire it into `done_checker_static.check_frontmatter_valid()`")
+  is consistent with either an implicit (baked into `_validate_ticket`, inherited by every `validate_file`
+  call) or explicit (a standalone function, called only where wanted) design. Implicit was tried first and
+  rejected: ~15 pre-existing fixtures in `tests/tools/test_validate_frontmatter.py` construct ticket
+  frontmatter under `tmp_path/tickets/done/` using `_ticket_fm()`'s non-canonical default
+  (`status: active`), and would have needed editing to keep passing — collateral changes to unrelated,
+  already-passing tests for a rule that's supposed to be additive. The explicit design (a standalone
+  `check_ticket_location_consistency(path, fm)` function, called only by `check_frontmatter_valid()` and the
+  Step 4 corpus test) needed zero edits to any pre-existing test — confirmed by running the full pre-existing
+  `test_validate_frontmatter.py` + `test_done_checker_static.py` suite (206 tests) unchanged before adding
+  any new test. Kept the explicit design for that reason.
+- **Bulk remediation (Step 3) and the corpus test (Step 4) are scoped to files whose `ticket_id` matches
+  `^TCK-\d{8}-`**, not literally every `.md` under `tickets/done/`. Discovered at implementation time: 77
+  folder-level `SEQUENCE.md` files have no frontmatter at all (trivially out of scope), and 37 more files
+  have frontmatter but a non-TCK-shaped `ticket_id` — `tickets/done/README.md` (`ticket_id: INDEX`, a
+  docs-site index page predating the ticket schema, already failing today's validator for an unrelated,
+  pre-existing reason: no `phase` field at all) plus 36 pre-TCK-convention legacy files
+  (`METRICS-01.md`, `bug-01-diagonal-hunt-move-conflict.md`, `infra-0X-*.md`, `resource_v2_*.md`, etc.).
+  Scoping out these 37 files, the fresh non-canonical count is exactly 395 — unchanged from investigation's
+  2026-09-11 snapshot. Fixing README.md's missing-`phase`-field gap is a separate, pre-existing schema issue
+  outside this ticket's status/phase-drift scope, not addressed here.
+- **A 10th epic-scoped-shaped ticket found beyond investigation's 9**: `TCK-20260619-E53D-HISTORY.md` has
+  `status: epic_scoped` / `phase: scoped` (fields transposed relative to the other 9's
+  `status: done` / `phase: epic_scoped`), which is why investigation §5's `grep "^phase: epic_scoped"`
+  missed it. Step 2's decision (normalize to `historical`/`done`, leave body `## Status` alone) was applied
+  to it too for consistency — see the ticket's Implementation Notes for the resulting 3-of-10 (not 2-of-9)
+  frontmatter/body disagreement disclosure.
+- **`implement-epic.js` epic-close follow-on filed as `TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING`**,
+  in `tickets/todos/` (standard tier) rather than `tickets/inprogress/` — it's real future work, not urgent
+  enough to start immediately alongside this ticket's own closure.
