@@ -293,6 +293,12 @@ this ticket's own scope is fully remediated.
 - `staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/plan.md` — added a
   `## Deviations` section documenting the explicit-vs-implicit Step 1 design choice, the TCK-ID
   scoping decision for Steps 3/4, and the 10th epic file found beyond investigation's 9.
+- `CLAUDE.md` (Doc phase: added a note on the new location-consistency rule in the Ticket Format
+  section).
+- `docs/guidelines/frontmatter_schema.md` (Doc phase: added a "Cross-field rule (location
+  consistency)" subsection to the ticket content-type schema).
+- `docs/ai/ticket-lifecycle.md` (Doc phase: expanded DoD condition 12's table row to cite the new
+  check).
 - Not committed (one-off, not a durable tool): `scratchpad/remediate_ticket_frontmatter.py`,
   `scratchpad/verify_body_hashes.py`, `scratchpad/update_parity_entries.py` (all under this
   session's scratchpad directory, outside the repo).
