@@ -256,3 +256,28 @@ pattern helper, normalized 22 CR rows that had accumulated in `tickets/working_l
 investigation.md's snapshot (same already-diagnosed writer, content unchanged, no data loss), and
 recorded one new parity-ledger entry (`INFRA-416`) via the sanctioned `write_entry()` path. No
 `src/` file was touched.
+
+**Two follow-on notes from peer review (agent-working-design), both confirmed real:**
+
+1. **A second CRLF source exists, distinct from `record_hand_orchestrated_closure.py`.** The 22nd
+   remediated row (the one already flagged in plan.md's Deviations as not matching the known
+   writer's fingerprint) was traced to a hand-written `working_log.csv` append made directly by
+   this same session's own PR #164 Finalize commit (`c4d42635`), not to the closure script. The
+   new CR-byte detector will catch a recurrence either way; if one shows up, file it rather than
+   re-diagnosing from scratch.
+
+2. **`text eol=lf` only normalizes content at commit time going forward — it does not retroactively
+   touch CRLF bytes already committed on other, still-open branches.** This was independently
+   confirmed while merging `origin/main` into this branch to resolve a `docs/REGISTRY.yaml`
+   conflict before PR #167 could get CI: the merge reverted this ticket's own 5 already-normalized
+   rows back to CRLF (since `main` hadn't yet seen this branch's `.gitattributes` fix at the time)
+   and picked up 1 new CRLF row from `origin/main`'s own PR #165 commit -- 6 CR bytes total, caught
+   immediately by this ticket's own CR-byte detector, renormalized and verified byte-for-byte
+   before completing the merge (see the merge commit `404e357a` on this branch for full detail).
+   No duplicate content block formed in that merge (`test_no_duplicate_content_blocks.py` passed
+   throughout), but this is a live demonstration of the exact risk: any long-lived branch that
+   already carries CRLF rows in its own commits can still produce one more duplicate on its next
+   merge of `main`, until that branch also merges `main` (to pick up this fix) and runs
+   `git add --renormalize tickets/working_log.csv agent-monitoring/data` once on its own copies.
+   Worth relaying to `rpg-implementer` and `rpg-feature-planning` if either has a long-lived branch
+   still open.
