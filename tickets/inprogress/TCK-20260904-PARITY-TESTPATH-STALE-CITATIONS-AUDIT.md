@@ -253,6 +253,7 @@ scoped regression command + 14 individually-run cited tests + 1 corrective re-ru
 - `docs/ai/README.md` (Doc phase: narrowed the "P0 parity entries require a passing test_path" claim)
 - `docs/ai/agents.md` (Doc phase: narrowed parity-updater's P0 entry-update rule + noted evidence_kind)
 - `docs/testing/how_to_add_requirement_tests.md` (Doc phase: added evidence_kind step + missing/unsupported carve-out note)
+- `docs/parity_ledger/infrastructure.yaml` (Parity phase: added `INFRA-415`, documenting the write-time contract change itself)
 
 ## Completion Summary
 Implemented the full 6-step plan (1, 2, 3, 3a, 4, 5). A shared `parity_test_path.py` parser now
