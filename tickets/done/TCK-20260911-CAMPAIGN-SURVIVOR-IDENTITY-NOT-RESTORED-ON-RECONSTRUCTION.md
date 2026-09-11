@@ -273,6 +273,22 @@ against the full `tests/architecture`/`tests/docs`/`tests/integrity`/`tests/stat
 `tests/refactor` suite (246 passed) and the full campaigns suite (170 unit + 19 integration + 3
 real acceptance tests, all producing identical results to before the fix) before re-pushing.
 
+This routing turned out to be more than a check-satisfying fix, per peer review: it makes the
+ticket's own governing invariant ("a reconstructed survivor is identity-equivalent to a spawned
+entity") **structural** rather than something maintained by hand across a field list — spawn and
+reconstruction now both build identity through the same `V2EntityBuilder`, so the next field added
+to `ArchetypeEntityFactory.build_entity()` is far harder to silently miss on the reconstruction
+side.
+
+**Noted, not filed**: the architecture guards that caught this (`test_role_set_identity_patch_
+only_guard.py`, `test_faction_mutation_write_paths.py`) scan file text, not the AST — an
+explanatory code comment that happened to quote the banned `replace(...role=...faction=...)`
+pattern literally tripped the same regex as real code would. Rephrasing the comment was the
+correct response, not weakening the guard. A text-scanning guard will occasionally false-trip on
+comments this way; one occurrence with a trivial fix isn't worth its own ticket, but a second
+occurrence would establish a pattern worth handing to whoever owns the line-keyed-pinning-
+brittleness class of finding.
+
 ## Test Summary
 - `pytest tests/unit/domains/campaigns/ -q` — 170 passed (includes new round-trip tests for all
   six fields in `test_campaign_state.py`, unconditional-capture tests in
