@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E63A-GATE-VERIFY
-phase: open
+phase: done
 date: 2026-06-22
 tags: [feature-packs, decision-gate, registry-architecture, docs, phase-6]
 ---

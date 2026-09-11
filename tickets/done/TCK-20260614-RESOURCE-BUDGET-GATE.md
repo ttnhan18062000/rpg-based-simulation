@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-RESOURCE-BUDGET-GATE
-phase: open
+phase: done
 date: 2026-06-14
 tags: [resource-safety, budget, subsystem, governor, performance]
 ---

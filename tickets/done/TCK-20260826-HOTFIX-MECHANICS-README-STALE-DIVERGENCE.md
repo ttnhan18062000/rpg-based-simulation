@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P2
 audience: agent
 ticket_id: TCK-20260826-HOTFIX-MECHANICS-README-STALE-DIVERGENCE
-phase: open
+phase: done
 date: 2026-08-26
 tags: [documentation]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20260830-HOTFIX-AGENTS-MD-37-TO-39-PHASE-COUNT-DRIFT
-phase: open
+phase: done
 date: 2026-08-30
 tags: [architecture]
 ---

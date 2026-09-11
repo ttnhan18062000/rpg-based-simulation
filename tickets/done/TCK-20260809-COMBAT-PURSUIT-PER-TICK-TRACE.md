@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE
-phase: open
+phase: done
 date: 2026-08-09
 tags: [combat, simulation-quality]
 ---

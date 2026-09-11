@@ -273,6 +273,64 @@ _VALIDATORS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Ticket location consistency (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT)
+#
+# A ticket's status/phase can each be individually enum-valid (e.g. status: active, phase: open)
+# while still being wrong for the tickets/ subdirectory the file physically sits in -- that class
+# of drift is invisible to _validate_ticket's per-field enum checks above, which is why this is a
+# separate function rather than another _check_enum call. Deliberately NOT called from
+# _validate_ticket/validate_file: callers that want it (done_checker_static.check_frontmatter_valid,
+# the corpus test) call it explicitly, so a plain validate_file/validate_directory sweep over
+# tickets/ (e.g. from an unrelated tool) does not silently start enforcing directory placement too.
+# ---------------------------------------------------------------------------
+
+TICKET_LOCATION_RULES = {
+    "done": {"status": "historical", "phase": "done"},
+    "inprogress": {"phase_not": "done"},
+}
+# Only tickets/done/ and tickets/inprogress/ are enforced -- the evidence for this rule covers
+# only those two directories. tickets/todos/ is left for a future ticket: add one more key here,
+# not a rewrite, when that's ready.
+
+
+def _ticket_directory(path) -> str | None:
+    """Return the tickets/<x> path segment immediately below `tickets/`, or None if `path` is
+    not under a `tickets/` directory at all."""
+    parts = Path(path).parts
+    if "tickets" not in parts:
+        return None
+    idx = parts.index("tickets")
+    return parts[idx + 1] if idx + 1 < len(parts) else None
+
+
+def check_ticket_location_consistency(path, fm: dict) -> list[str]:
+    """A ticket's `status`/`phase` frontmatter must agree with which `tickets/` subdirectory it
+    physically sits in, per TICKET_LOCATION_RULES. Returns [] for a directory not covered by the
+    rule (including any file not under `tickets/` at all)."""
+    filepath = str(path)
+    rule = TICKET_LOCATION_RULES.get(_ticket_directory(path))
+    if rule is None:
+        return []
+
+    errors = []
+    if "status" in rule and fm.get("status") != rule["status"]:
+        errors.append(
+            f"{filepath}: status: location requires status: {rule['status']!r}, "
+            f"got {fm.get('status')!r}"
+        )
+    if "phase" in rule and fm.get("phase") != rule["phase"]:
+        errors.append(
+            f"{filepath}: phase: location requires phase: {rule['phase']!r}, "
+            f"got {fm.get('phase')!r}"
+        )
+    if "phase_not" in rule and fm.get("phase") == rule["phase_not"]:
+        errors.append(
+            f"{filepath}: phase: location forbids phase: {rule['phase_not']!r}"
+        )
+    return errors
+
+
 def validate_file(
     path: Path, content_type_override: str | None = None, registry: dict | None = None
 ) -> list[str]:

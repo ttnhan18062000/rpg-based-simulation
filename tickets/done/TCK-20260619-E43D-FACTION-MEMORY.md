@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: social
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E43D-FACTION-MEMORY
-phase: open
+phase: done
 date: 2026-06-20
 tags: [social-memory, faction-memory, collective-hostility, phase-4]
 ---

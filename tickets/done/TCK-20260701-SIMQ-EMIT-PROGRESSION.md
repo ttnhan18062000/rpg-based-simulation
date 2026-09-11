@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260701-SIMQ-EMIT-PROGRESSION
-phase: open
+phase: done
 date: 2026-07-01
 tags: [simq, event-emission, progression, scoring]
 ---

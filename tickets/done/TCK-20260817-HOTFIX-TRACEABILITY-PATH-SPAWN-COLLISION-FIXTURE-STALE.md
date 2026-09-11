@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260817-HOTFIX-TRACEABILITY-PATH-SPAWN-COLLISION-FIXTURE-STALE
-phase: open
+phase: done
 date: 2026-08-17
 tags: [simulation-quality, testing, bug]
 ---

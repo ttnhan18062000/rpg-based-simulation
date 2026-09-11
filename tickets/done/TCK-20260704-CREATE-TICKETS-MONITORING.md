@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260704-CREATE-TICKETS-MONITORING
-phase: open
+phase: done
 date: 2026-07-04
 tags: [agent-monitoring, create-tickets, observability]
 ---

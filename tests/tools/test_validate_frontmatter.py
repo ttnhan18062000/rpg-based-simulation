@@ -12,6 +12,7 @@ Groups:
   8. Anti-drift enum assertions
 """
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -40,6 +41,7 @@ extract_frontmatter = _vfm.extract_frontmatter
 detect_content_type = _vfm.detect_content_type
 validate_file = _vfm.validate_file
 validate_directory = _vfm.validate_directory
+check_ticket_location_consistency = _vfm.check_ticket_location_consistency
 
 STATUS_VALUES = _vfm.STATUS_VALUES
 LAYER_VALUES = _vfm.LAYER_VALUES
@@ -424,6 +426,130 @@ class TestDirectoryScan:
         empty.mkdir()
         results = validate_directory(empty)
         assert results == {}
+
+
+# ---------------------------------------------------------------------------
+# Group 6a — Ticket location consistency (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT)
+#
+# `check_ticket_location_consistency` is a cross-field rule independent of _validate_ticket's
+# per-field enums: a file can have an individually-valid status and an individually-valid phase
+# while still being wrong for the tickets/ subdirectory it sits in (e.g. status: active,
+# phase: open sitting in tickets/done/ — both enum-valid, both wrong for that location). It is not
+# wired into validate_file/_validate_ticket (see the function's own docstring/comment in
+# validate_frontmatter.py) so these tests call it directly rather than through validate_file.
+# ---------------------------------------------------------------------------
+
+class TestTicketLocationConsistency:
+    def test_done_historical_done_passes(self, tmp_path):
+        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        fm = {"status": "historical", "phase": "done"}
+        assert check_ticket_location_consistency(path, fm) == []
+
+    def test_done_active_open_fails(self, tmp_path):
+        # Both fields are individually enum-valid — this is exactly the class the existing
+        # per-field enum checks in _validate_ticket cannot catch on their own.
+        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        fm = {"status": "active", "phase": "open"}
+        errors = check_ticket_location_consistency(path, fm)
+        assert errors != []
+        assert any("status" in e for e in errors)
+        assert any("phase" in e for e in errors)
+
+    def test_done_active_done_fails(self, tmp_path):
+        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        fm = {"status": "active", "phase": "done"}
+        errors = check_ticket_location_consistency(path, fm)
+        assert any("status" in e for e in errors)
+        assert not any("phase" in e for e in errors)
+
+    def test_done_done_done_fails(self, tmp_path):
+        # status: done is invalid per STATUS_VALUES too — the location rule still independently
+        # flags it, so the corpus test doesn't depend on the enum check having run first.
+        path = tmp_path / "tickets" / "done" / "TCK-X.md"
+        fm = {"status": "done", "phase": "done"}
+        errors = check_ticket_location_consistency(path, fm)
+        assert any("status" in e for e in errors)
+
+    def test_inprogress_phase_done_fails(self, tmp_path):
+        path = tmp_path / "tickets" / "inprogress" / "TCK-X.md"
+        fm = {"status": "active", "phase": "done"}
+        errors = check_ticket_location_consistency(path, fm)
+        assert any("phase" in e for e in errors)
+
+    def test_inprogress_active_inprogress_passes(self, tmp_path):
+        path = tmp_path / "tickets" / "inprogress" / "TCK-X.md"
+        fm = {"status": "active", "phase": "inprogress"}
+        assert check_ticket_location_consistency(path, fm) == []
+
+    def test_todos_location_not_enforced(self, tmp_path):
+        # Deliberately deferred (plan.md Step 1) — tickets/todos/ has no rule yet.
+        path = tmp_path / "tickets" / "todos" / "some-folder" / "TCK-X.md"
+        fm = {"status": "active", "phase": "open"}
+        assert check_ticket_location_consistency(path, fm) == []
+
+    def test_non_tickets_path_not_enforced(self, tmp_path):
+        path = tmp_path / "docs" / "mechanics" / "test.md"
+        fm = {"status": "active", "phase": "open"}
+        assert check_ticket_location_consistency(path, fm) == []
+
+
+# ---------------------------------------------------------------------------
+# Group 6a2 — Corpus enforcement over the real tickets/done/ tree
+#
+# Path-independent enforcement (plan.md Step 4): unlike the fixture-based tests above, this runs
+# the location rule over every real file under tickets/done/, regardless of what closed it
+# (pipeline, hand-orchestrated, or unrecorded) — this is what actually fixes the drift, since the
+# per-ticket done_checker check above only ever runs for the one ticket being closed. This test
+# fails before the Step 3 bulk remediation lands and passes after — that failing-then-passing
+# transition is the point: it proves the test would catch a real regression, not just pass on
+# already-clean data.
+# ---------------------------------------------------------------------------
+
+_REAL_TCK_ID = re.compile(r"^TCK-\d{8}-")
+
+
+def _corpus_location_errors(root: Path) -> list[str]:
+    """Location errors for every real ticket file under `root` (recursive). Skips files with no
+    frontmatter block (folder-level SEQUENCE.md files) and files whose ticket_id does not match
+    the TCK-YYYYMMDD- shape (e.g. tickets/done/README.md, ticket_id: INDEX — a docs-site index
+    page, not a ticket instance; and a handful of pre-ticket-schema legacy files like
+    tickets/done/bug-01-diagonal-hunt-move-conflict.md that predate the TCK- convention entirely
+    and were never in scope for this ticket's remediation)."""
+    errors = []
+    for md_file in sorted(root.rglob("*.md")):
+        fm = extract_frontmatter(md_file.read_text(encoding="utf-8", errors="replace"))
+        if fm is None:
+            continue
+        ticket_id = fm.get("ticket_id")
+        if not isinstance(ticket_id, str) or not _REAL_TCK_ID.match(ticket_id):
+            continue
+        errors.extend(check_ticket_location_consistency(md_file, fm))
+    return errors
+
+
+class TestTicketLocationConsistencyCorpus:
+    def test_real_tickets_done_corpus_is_fully_canonical(self):
+        errors = _corpus_location_errors(_REPO_ROOT / "tickets" / "done")
+        assert errors == [], (
+            f"{len(errors)} non-canonical ticket file(s) under tickets/done/: {errors[:10]}"
+        )
+
+    def test_corpus_check_catches_a_reverted_file(self, tmp_path):
+        # Negative-path proof (plan.md Step 4): a synthetic tmp_path corpus, not the real tree —
+        # never mutate the real tickets/done/ corpus to prove a check can fail.
+        done_dir = tmp_path / "tickets" / "done"
+        done_dir.mkdir(parents=True)
+        _write(
+            done_dir / "TCK-20260101-OK.md",
+            _ticket_fm(ticket_id="TCK-20260101-OK", status="historical", phase="done"),
+        )
+        drifted = _write(
+            done_dir / "TCK-20260102-DRIFTED.md",
+            _ticket_fm(ticket_id="TCK-20260102-DRIFTED", status="active", phase="open"),
+        )
+
+        errors = _corpus_location_errors(tmp_path / "tickets")
+        assert any(str(drifted) in e for e in errors), errors
 
 
 # ---------------------------------------------------------------------------

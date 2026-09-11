@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260618-AUDIT-D03-BEHAVIOR
-phase: open
+phase: done
 date: 2026-06-18
 tags: [audit, behavioral-emergence, simulation-quality, stasis, rejections, quests, economy]
 ---

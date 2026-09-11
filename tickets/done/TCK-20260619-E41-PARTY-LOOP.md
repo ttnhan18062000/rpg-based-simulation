@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: social
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E41-PARTY-LOOP
-phase: epic_scoped
+phase: done
 date: 2026-06-19
 tags: [party, social, cooperation, reward-split, escort, betrayal, epic, phase-4]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: systems
 authority: P2
 audience: agent
 ticket_id: TCK-20260809-STALE-DOCS-AI-BRAIN-ARCHITECTURE-AUDIT
-phase: open
+phase: done
 date: 2026-08-09
 tags: [documentation, cognition]
 ---

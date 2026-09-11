@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260614-WORLDMOD-PARAMS
-phase: open
+phase: done
 date: 2026-06-14
 tags: [worldmodules, parameters, expression, validation]
 ---

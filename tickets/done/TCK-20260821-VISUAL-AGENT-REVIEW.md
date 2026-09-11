@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260821-VISUAL-AGENT-REVIEW
-phase: open
+phase: done
 date: 2026-08-21
 tags: [visualization, simulation-quality, determinism, world]
 ---

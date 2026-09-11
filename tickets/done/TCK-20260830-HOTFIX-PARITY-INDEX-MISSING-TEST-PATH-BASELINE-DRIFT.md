@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20260830-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT
-phase: open
+phase: done
 date: 2026-08-30
 tags: [testing, calibration]
 ---

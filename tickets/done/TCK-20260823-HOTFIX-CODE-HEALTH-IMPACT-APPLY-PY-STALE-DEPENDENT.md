@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20260823-HOTFIX-CODE-HEALTH-IMPACT-APPLY-PY-STALE-DEPENDENT
-phase: open
+phase: done
 date: 2026-08-23
 tags: [testing]
 ---

@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E61C-PLAN-SCORER
-phase: open
+phase: done
 date: 2026-06-22
 tags: [progression-planner, adventure-scoring, route-family, plan-advance-bonus]
 ---

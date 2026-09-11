@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-PROGRESSION-GROWTH-ECONOMY-UNREACHABLE-IN-PRACTICE
-phase: open
+phase: done
 date: 2026-08-08
 tags: [progression, combat, feature-flags]
 ---

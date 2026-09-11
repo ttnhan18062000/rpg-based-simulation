@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20260825-LIVE-MAP-TPS-BUDGET-RECHECK
-phase: open
+phase: done
 date: 2026-08-25
 tags: [performance, engine]
 ---

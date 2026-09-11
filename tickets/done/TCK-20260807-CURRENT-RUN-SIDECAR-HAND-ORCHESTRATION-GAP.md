@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260807-CURRENT-RUN-SIDECAR-HAND-ORCHESTRATION-GAP
-phase: open
+phase: done
 date: 2026-08-07
 tags: [agent-monitoring, process-improvement, hooks]
 ---

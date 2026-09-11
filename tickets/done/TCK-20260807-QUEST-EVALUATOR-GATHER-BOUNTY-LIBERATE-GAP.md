@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260807-QUEST-EVALUATOR-GATHER-BOUNTY-LIBERATE-GAP
-phase: open
+phase: done
 date: 2026-08-07
 tags: [simulation-quality, progression]
 ---

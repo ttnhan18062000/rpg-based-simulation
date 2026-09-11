@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260623-FIX-ARENA
-phase: implement
+phase: done
 date: 2026-06-23
 tags: [test-repair, arena, quest, simulation, teardown]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-HERO-ADVENTURE-ROUTING-DEFAULT-OFF
-phase: open
+phase: done
 date: 2026-08-08
 tags: [feature-flags, progression, world]
 ---
