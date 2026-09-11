@@ -244,3 +244,19 @@ logic) to their independently-verified correct post-cleanup values, documented i
 this ticket and in plan.md's new Deviations section.
 
 A second, unrelated real finding surfaced during Finalize: `tickets/done/TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS.md`'s own frontmatter reads `status: active`/`phase: open` despite sitting in `tickets/done/` — confirmed present since that ticket's original 2026-08-26 closure commit, not something introduced by this ticket's own edit (a body-only correction paragraph). A repo-wide check found this is not isolated: 227 of 1850 `tickets/done/*.md` files carry the same mismatch, uncaught by `validate_frontmatter.py` because each field is individually valid — the missing check is cross-field (phase/status vs. physical directory) consistency. Filed as a separate follow-up ticket, `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT`, rather than fixed here (out of this ticket's own scope).
+
+**Addendum (2026-09-11, confirmed production recurrence, per `rpg-feature-planning` review of PR #158):**
+CI's `Architecture / docs / static` job caught a fresh 15-line byte-identical block in
+`tickets/working_log.csv` (physical lines 1849-1863 duplicated at 1869-1883, differing only in
+CRLF vs. LF on one line) — same defect class this ticket root-caused (a merge that duplicated
+already-shared content rather than deduping it; the `working_log.csv` change on `dormant-followups-batch3`
+landed via a real `git merge origin/main`, not a squash, but the duplication shape — a whole
+contiguous block repeated verbatim, one line's line-ending differing — matches this ticket's own
+Step 6 finding exactly, and `test_no_duplicate_content_blocks.py`, this ticket's own detection
+mechanism, is what caught it). This is a confirmed live recurrence of the tracked defect class, not
+a new theorized risk — it changes the priority case for the still-open, deliberately-unremediated
+`agent-monitoring/data/2026-W36/tools.jsonl` instance (Step 7 above) from "one historical incident"
+to "a recurring pattern this repo's merge/CI conventions do not fully prevent." Fixed directly on
+that branch (redundant copy removed, verified byte-for-byte before deletion, exact CI job command
+re-run locally to confirm) — recorded here as evidence only, per this ticket's own Out of Scope;
+not reopened or otherwise touched.
