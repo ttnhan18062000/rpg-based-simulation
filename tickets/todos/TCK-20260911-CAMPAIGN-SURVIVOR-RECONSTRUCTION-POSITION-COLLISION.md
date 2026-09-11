@@ -128,6 +128,17 @@ fixed and real survivors started existing.
     *same* object, with `_occupancy_map_cache` never successfully written (confirmed via
     `getattr(ctx, "_occupancy_map_cache", "NOT_SET")` staying `"NOT_SET"` after multiple calls) —
     versus the plain-object version demonstrably going stale in the same scenario, above.
+  - **This mechanism is correct but silently fragile — its correctness lives in an absence** (the
+    slots list not containing `_occupancy_map_cache`) **and an exception path nothing at the call
+    site names.** Someone later adding a field for an unrelated reason, or "tidying" what looks like
+    an arbitrary attribute list, silently re-enables the cached path and the staleness bug returns
+    with no visible cause. Two things the implementation must do, not just the test:
+    1. Comment the `__slots__` declaration itself as **deliberately exhaustive** — this exact list,
+       no more — because the uncached `.entities` scan (path 3) depends on `get_occupancy_map`'s
+       `object.__setattr__` call failing, and any new slot risks making it succeed instead.
+    2. Name the required staleness-regression test (see below) directly in that comment, so a future
+       reader who's tempted to extend the slots list is pointed at the test that would catch it,
+       not left to discover the mechanism by reading `spatial_query.py` from scratch.
   - **The fallback chain must never terminate at a shared default position** — that reproduces the
     original bug in a narrower, harder-to-notice form (several invalid carried positions all
     collapsing to the same fallback point). The chain: carried `last_position` → if
@@ -154,7 +165,10 @@ fixed and real survivors started existing.
   review's own instruction not to assume this — mutate the context's `.entities` dict between two
   `verify_occupancy()` calls on the *same* context object and confirm the second call reflects the
   mutation (the exact scenario already reproduced during this ticket's own investigation; the test
-  should encode that reproduction, not just cite it).
+  should encode that reproduction, not just cite it). Name it
+  `test_reconstruction_context_slots_force_uncached_occupancy_scan` (or equivalent) and reference
+  that exact name from the `__slots__` declaration's own comment (see above) — the test and the
+  comment must point at each other, so extending the slots list is never a silent decision.
 
 ## Out of Scope
 - `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s own episode-0 catalog-spawn path —
@@ -236,6 +250,14 @@ None yet — standard tier, staging artifacts created when picked up.
 - Whether `EntityCarryForward.last_position` should be `Optional` (falling back to a sentinel like
   `None` for entities carried forward before this field existed, e.g. mid-flight save data) is a
   real implementation detail for whoever picks this up — not resolved here.
+- **Adjacent finding, not this ticket's problem, worth a head start for whoever hits it next**:
+  `SpatialQueryService.get_occupancy_map()` caches its result onto the passed context by **object
+  identity alone**, with no invalidation — fine for the per-tick pipeline where contexts are
+  short-lived, but a live trap for any future code that reuses one context object across a mutation
+  of `.entities`, the way this ticket's own reconstruction loop does. Confirmed directly during this
+  investigation (see the `__slots__` discussion above). Not fixed here — this ticket routes around
+  it rather than changing `get_occupancy_map()`'s own caching behavior, which would be a much wider
+  blast radius than this fix needs.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
