@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS
-phase: open
+phase: done
 date: 2026-08-26
 tags: [registry, process-improvement, debugging]
 ---

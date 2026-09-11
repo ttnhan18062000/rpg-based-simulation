@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260804-SKILL-CATALOG-MODERNIZATION-EPIC
-phase: open
+phase: done
 date: 2026-08-04
 tags: [skills, workflows, process-improvement]
 ---

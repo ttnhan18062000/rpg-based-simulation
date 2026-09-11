@@ -399,7 +399,7 @@ class TestScenarioRuntimeServiceEventRecorder:
         # No victory conditions → ObjectiveEvaluator returns RUNNING immediately,
         # so stall detector runs.
         spec = _make_spec()
-        svc = ScenarioRuntimeService(spec, event_recorder=mock_recorder)
+        svc = ScenarioRuntimeService(spec, scenario_event_recorder=mock_recorder)
 
         # Mock kernel with zero events so stall counter increments.
         # state.tick=0 means tick_limit condition (not present) doesn't trigger.
@@ -427,7 +427,7 @@ class TestScenarioRuntimeServiceEventRecorder:
         mock_recorder = MagicMock()
         # tick_limit=1 means state.tick >= 1 → OBJECTIVE_MET
         spec = _make_spec(victory_conditions=[{"kind": "tick_limit", "value": 1}])
-        svc = ScenarioRuntimeService(spec, event_recorder=mock_recorder)
+        svc = ScenarioRuntimeService(spec, scenario_event_recorder=mock_recorder)
 
         mock_kernel = _make_mock_kernel(event_count=1)
         mock_kernel.state.tick = 1  # ObjectiveEvaluator reads kernel.state.tick
@@ -452,7 +452,7 @@ class TestScenarioRuntimeServiceEventRecorder:
         # entity_count=1 condition: alive < 1 → OBJECTIVE_FAILED
         # ObjectiveEvaluator checks: alive = sum(1 for e in state.entities.values() if e.combat.alive)
         spec = _make_spec(victory_conditions=[{"kind": "entity_count", "value": 1}])
-        svc = ScenarioRuntimeService(spec, event_recorder=mock_recorder)
+        svc = ScenarioRuntimeService(spec, scenario_event_recorder=mock_recorder)
 
         # Mock kernel with empty entities dict → alive count = 0 < 1 → OBJECTIVE_FAILED
         mock_kernel = _make_mock_kernel(event_count=0)
@@ -474,7 +474,7 @@ class TestScenarioRuntimeServiceEventRecorder:
         from src.engine.scenario_runtime import ScenarioRuntimeService, ScenarioObjectiveState
 
         spec = _make_spec(victory_conditions=[{"kind": "tick_limit", "value": 1}])
-        svc = ScenarioRuntimeService(spec)  # no event_recorder
+        svc = ScenarioRuntimeService(spec)  # no scenario_event_recorder
 
         mock_kernel = _make_mock_kernel(event_count=1)
         mock_kernel.state.tick = 1  # ObjectiveEvaluator reads kernel.state.tick

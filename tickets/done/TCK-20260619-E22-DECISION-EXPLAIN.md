@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E22-DECISION-EXPLAIN
-phase: open
+phase: done
 date: 2026-06-19
 tags: [decision-explanation, observability, rest-api, route-trace, cognition, epic, phase-2]
 ---

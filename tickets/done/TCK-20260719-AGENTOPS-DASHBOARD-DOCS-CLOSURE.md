@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260719-AGENTOPS-DASHBOARD-DOCS-CLOSURE
-phase: open
+phase: done
 date: 2026-07-19
 tags: [dashboard, observability, documentation]
 ---

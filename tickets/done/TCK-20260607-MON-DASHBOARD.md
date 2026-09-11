@@ -1,5 +1,5 @@
 ---
-status: done
+status: historical
 layer: observability
 authority: P1
 audience: agent

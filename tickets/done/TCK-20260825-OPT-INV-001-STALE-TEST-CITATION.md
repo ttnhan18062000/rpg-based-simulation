@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20260825-OPT-INV-001-STALE-TEST-CITATION
-phase: open
+phase: done
 date: 2026-08-25
 tags: [performance, testing]
 ---

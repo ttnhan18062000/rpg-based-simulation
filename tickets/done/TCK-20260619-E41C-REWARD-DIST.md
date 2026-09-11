@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: social
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E41C-REWARD-DIST
-phase: open
+phase: done
 date: 2026-06-20
 tags: [party, reward-distribution, class-synergy, phase-4]
 ---

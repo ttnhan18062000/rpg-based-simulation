@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260720-CLAUDE-MD-CONSISTENCY-FIXES
-phase: open
+phase: done
 date: 2026-07-20
 tags: [documentation, claude-md]
 ---

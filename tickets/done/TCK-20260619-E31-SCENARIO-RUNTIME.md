@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E31-SCENARIO-RUNTIME
-phase: epic_scoped
+phase: done
 date: 2026-06-19
 tags: [scenario-runtime, checkpoint, objective-state, service-api, gameplay-loop, epic, phase-3]
 ---

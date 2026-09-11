@@ -3,12 +3,12 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-11
 ---
 
 # Lifecycle Systems Contract
 
-**Source:** `src/systems/lifecycle_systems/lifecycle.py`, `src/systems/lifecycle_systems/biological.py`, `src/systems/lifecycle_systems/genetics.py`
+**Source:** `src/systems/lifecycle_systems/lifecycle.py`, `src/engine/apply.py` (`ApplyPath._compute_entity_changes`, passive branch), `src/systems/lifecycle_systems/genetics.py`
 **Related docs:** [docs/mechanics/01_entity_anatomy.md](../mechanics/01_entity_anatomy.md) (P0 mechanics law parent), [docs/simulation/domains/adventure_contract.md](domains/adventure_contract.md) (biological pressure → routing)
 
 ---
@@ -64,26 +64,40 @@ bug from 2026-05-18 only newly exposed by increased death frequency post-navigat
 
 ---
 
-## Biological — `biological.py`
+## Biological — `ApplyPath._compute_entity_changes` (`src/engine/apply.py`)
 
-`BiologicalSystem.update()` applies biological pressure accumulation every tick.
+Biological pressure accumulation runs inline in the authoritative apply path's passive branch,
+gated by cadence (`is_bio_due`), not as a separate system module. **Corrected 2026-09-11**: this
+section previously described `BiologicalSystem.update()` (`src/systems/lifecycle_systems/
+biological.py`), a parallel implementation that was never wired into the pipeline and has been
+deleted as confirmed dead code (`TCK-20260908-BIOLOGICAL-SYSTEM-DEAD-CODE-DISPOSITION`) — its
+decay rates and thresholds had drifted from the real live values below, so the two were never
+interchangeable.
 
 ### Applies to
 
-Only `HERO` and `VILLAGER` entity kinds. Monsters and NPCs do not have biological needs in the current implementation.
+All entity kinds with `entity.lifecycle.active` true (or due for a lifecycle tick) — `biological`
+is a default-populated component on every `EntityState`, and `_compute_entity_changes` applies no
+kind filter. This is broader than the deleted `BiologicalSystem.update()`'s HERO/VILLAGER-only
+gate; monsters and NPCs do accrue hunger/sleep-debt pressure in the live implementation.
 
 ### Biological pressure rates
 
-| Pressure | Rate | Damage condition |
-|---|---|---|
-| Hunger | +0.5 per tick | `hunger > 90` → HP −1 per tick (starvation) |
-| Sleep debt | +0.3 per tick | `sleep_debt > 95` → HP −1 per tick (exhaustion) |
+Per Mechanics Bible [`01_entity_anatomy.md` §4](../mechanics/01_entity_anatomy.md#4-biological-laws-decay--needs)
+(bit-identical parity, authoritative):
 
-Both pressures accumulate monotonically until the entity eats (resets hunger) or rests (resets sleep_debt). There is no passive decay.
+| Pressure | Rate (per tick, cadence-scaled) | Damage condition |
+|---|---|---|
+| Hunger | `+0.1 * cadence.biological` | `hunger >= 95.0` → HP −2 per lifecycle tick (starvation) |
+| Sleep debt | `+0.05 * cadence.biological` | `sleep_debt >= 98.0` → HP −1 per lifecycle tick (exhaustion) |
+
+Both pressures accumulate monotonically until the entity eats (resets hunger) or rests (resets sleep_debt). There is no passive decay of the pressures themselves — only of HP once a threshold is crossed.
 
 ### Output
 
-Returns `StateUpdate` with `BiologicalUpdate(hunger_delta, sleep_debt_delta)` and `CombatUpdate(hp_delta)` for entities hitting damage thresholds.
+Folded directly into the same `StateUpdate`/entity `changes` dict `_compute_entity_changes`
+produces for the tick — not a separate `EntityUpdate`. HP loss is applied via the same function's
+lifecycle/health-decay branch (`combat.hp_delta` equivalent), gated by `is_life_due` cadence.
 
 ### Connection to need interpretation
 

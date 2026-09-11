@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260623-FIX-STAT-FORMULAS
-phase: open
+phase: done
 date: 2026-06-23
 tags: [test-repair, stats, progression, optimization, parity]
 ---

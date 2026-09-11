@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260807-SIMQ-COMBAT-SCORE-TOLERANCE-DRIFT-INVESTIGATION
-phase: open
+phase: done
 date: 2026-08-07
 tags: [simulation-quality, combat]
 ---

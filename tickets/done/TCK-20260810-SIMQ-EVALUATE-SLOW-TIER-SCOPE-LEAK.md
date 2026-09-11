@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260810-SIMQ-EVALUATE-SLOW-TIER-SCOPE-LEAK
-phase: open
+phase: done
 date: 2026-08-10
 tags: [simulation-quality, calibration, performance]
 ---

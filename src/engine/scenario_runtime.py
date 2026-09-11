@@ -125,19 +125,29 @@ class ScenarioRuntimeService:
         "_stall_counter",
         "_last_event_tick",
         "_initial_state",
-        "_event_recorder",
+        "_scenario_event_recorder",
     )
 
     def __init__(
         self,
         spec: "SimulationScenarioDefinition",
         initial_state: Optional["AuthoritativeState"] = None,
-        event_recorder: Optional["EventRecorder"] = None,
+        scenario_event_recorder: Optional["EventRecorder"] = None,
     ) -> None:
+        """
+        `scenario_event_recorder` is a narrow, scenario-bookkeeping-only side channel —
+        it only ever receives `scenario_objective_completed`/`progressed`/`stalled`
+        (TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY). It is NOT the real
+        per-tick kernel event stream (combat, cooperation, hard-law, etc.) — that lives on
+        the `Kernel` this service builds internally, as its own separate `event_recorder`
+        property (`Kernel.event_recorder`, fed by `EventExtractor.extract()` every tick).
+        The two are unrelated objects that happened to share a name; do not assume this
+        parameter carries the full stream.
+        """
         self._spec = spec
         self._kernel = None
         self._initial_state = initial_state
-        self._event_recorder = event_recorder
+        self._scenario_event_recorder = scenario_event_recorder
         self._state: ScenarioObjectiveState = ScenarioObjectiveState.RUNNING
         self._tick: int = 0
         self._paused: bool = False
@@ -303,9 +313,9 @@ class ScenarioRuntimeService:
             if result != ScenarioObjectiveState.RUNNING:
                 self._state = result
                 self._paused = True
-                if self._event_recorder is not None:
+                if self._scenario_event_recorder is not None:
                     from src.observability.events import SimulationEvent
-                    self._event_recorder.record(SimulationEvent(
+                    self._scenario_event_recorder.record(SimulationEvent(
                         event_type="scenario_objective_completed",
                         event_category="infrastructure",
                         tick=self._tick,
@@ -321,9 +331,9 @@ class ScenarioRuntimeService:
                 return
             # scenario_objective_progressed: fires every tick while objective is still RUNNING
             # to signal forward progress (intermediate signal distinct from scenario_objective_completed)
-            if self._event_recorder is not None and self._tick > 0:
+            if self._scenario_event_recorder is not None and self._tick > 0:
                 from src.observability.events import SimulationEvent
-                self._event_recorder.record(SimulationEvent(
+                self._scenario_event_recorder.record(SimulationEvent(
                     event_type="scenario_objective_progressed",
                     event_category="infrastructure",
                     tick=self._tick,
@@ -357,9 +367,9 @@ class ScenarioRuntimeService:
             if self._stall_counter > STALL_THRESHOLD:
                 self._state = ScenarioObjectiveState.STALLED
                 self._paused = True
-                if self._event_recorder is not None:
+                if self._scenario_event_recorder is not None:
                     from src.observability.events import SimulationEvent
-                    self._event_recorder.record(SimulationEvent(
+                    self._scenario_event_recorder.record(SimulationEvent(
                         event_type="scenario_stalled",
                         event_category="infrastructure",
                         tick=self._tick,

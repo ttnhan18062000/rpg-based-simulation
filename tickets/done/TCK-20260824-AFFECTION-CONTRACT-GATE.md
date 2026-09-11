@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: systems
 authority: P1
 audience: agent
 ticket_id: TCK-20260824-AFFECTION-CONTRACT-GATE
-phase: open
+phase: done
 date: 2026-08-24
 tags: [social, information]
 ---

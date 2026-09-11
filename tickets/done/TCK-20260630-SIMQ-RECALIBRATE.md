@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260630-SIMQ-RECALIBRATE
-phase: open
+phase: done
 date: 2026-06-30
 tags: [simulation-quality, simq, calibration, grade-thresholds]
 ---

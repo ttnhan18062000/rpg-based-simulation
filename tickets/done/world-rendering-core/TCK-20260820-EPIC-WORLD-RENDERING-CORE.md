@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-EPIC-WORLD-RENDERING-CORE
-phase: open
+phase: done
 date: 2026-08-20
 tags: [rendering, visualization, world, simulation-quality, architecture, determinism]
 ---

@@ -105,12 +105,16 @@ def test_real_campaign_episode_does_not_stall_early():
 def test_real_campaign_episode_event_stream_is_plausible_not_degenerate():
     """Same real scenario shape and real Kernel ticks as run_episode() itself uses internally,
     but with a kernel._event_listeners hook attached so the full per-tick SimulationEvent stream
-    can be inspected -- CampaignOrchestrator.run_episode()'s own `event_recorder` parameter only
-    ever receives scenario-level bookkeeping events (scenario_objective_progressed/completed/
-    stalled, emitted directly by ScenarioRuntimeService._evaluate_after_tick()), never the
-    kernel-generated combat/cooperation/hard-law events this test needs to see -- confirmed by
-    running this test against `event_recorder=` first and observing it collects only those 2
-    scenario-level event types, zero of anything else, regardless of what the kernel itself does.
+    can be inspected -- CampaignOrchestrator.run_episode()'s own `scenario_event_recorder`
+    parameter (renamed from `event_recorder`, TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY,
+    to disambiguate it from Kernel's own, unrelated `event_recorder` property) only ever receives
+    scenario-level bookkeeping events (scenario_objective_progressed/completed/stalled, emitted
+    directly by ScenarioRuntimeService._evaluate_after_tick()), never the kernel-generated
+    combat/cooperation/hard-law events this test needs to see -- confirmed by running this test
+    against `scenario_event_recorder=` first and observing it collects only those 2 scenario-level
+    event types, zero of anything else, regardless of what the kernel itself does. Note: that
+    narrow stream is NOT what Campaign SimQ scoring reads -- SimQ reads each episode's own
+    Kernel.event_recorder output instead, confirmed by direct empirical test in the ticket above.
 
     Checks the two real risks peer review specifically asked to be verified rather than assumed:
     entity co-location tripping LAW-OCCUPANCY-COLLISION (a real, sustained ERROR-severity hard-law
@@ -126,7 +130,7 @@ def test_real_campaign_episode_event_stream_is_plausible_not_degenerate():
     spec = orch._manifest.episodes[0]
     initial_state = orch._build_initial_state(42, spec)
 
-    svc = ScenarioRuntimeService(spec, initial_state=initial_state, event_recorder=None)
+    svc = ScenarioRuntimeService(spec, initial_state=initial_state, scenario_event_recorder=None)
     svc._kernel = svc._build_kernel()
     svc._kernel._event_listeners = [lambda events: recorder.events.extend(events)]
     svc.start(tick_limit=70)

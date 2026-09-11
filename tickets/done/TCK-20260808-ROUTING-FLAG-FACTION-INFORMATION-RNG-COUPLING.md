@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING
-phase: open
+phase: done
 date: 2026-08-08
 tags: [feature-flags, determinism]
 ---

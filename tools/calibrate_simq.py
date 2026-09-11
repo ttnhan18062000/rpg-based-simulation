@@ -422,8 +422,15 @@ def _run_campaign_engine(
         base_seed=seed,
     )
 
+    # campaign_recorder only ever receives scenario/campaign-level bookkeeping events
+    # (scenario_objective_*, nemesis_relation_formed, chronicle_entry_created) --
+    # TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY. The real per-tick kernel
+    # stream (combat, cooperation, hard-law) that SimQ scoring actually needs comes from
+    # each episode's own Kernel.event_recorder instead, written to its own
+    # data/runs/{episode_run_id}/simulation_events.jsonl and appended below -- confirmed
+    # by that ticket's investigation not to be missing from SimQ's replay input.
     campaign_recorder = EventRecorder(run_dir=campaign_run_dir, max_events=5000, enabled=True)
-    orchestrator = CampaignOrchestrator(manifest, event_recorder=campaign_recorder)
+    orchestrator = CampaignOrchestrator(manifest, scenario_event_recorder=campaign_recorder)
 
     start = time.perf_counter()
     episode_run_ids: list[str] = []

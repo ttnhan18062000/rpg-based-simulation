@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260720-TIMELINE-RANGE-CONTROL
-phase: open
+phase: done
 date: 2026-07-20
 tags: [dashboard, observability]
 ---

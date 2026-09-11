@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260822-HOTFIX-RENDERING-CI-COVERAGE-GAP
-phase: open
+phase: done
 date: 2026-08-22
 tags: [testing]
 ---

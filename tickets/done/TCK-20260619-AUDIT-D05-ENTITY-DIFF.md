@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-AUDIT-D05-ENTITY-DIFF
-phase: open
+phase: done
 date: 2026-06-19
 tags: [audit, entity-differentiation, personality, class, behavioral-arcs]
 ---

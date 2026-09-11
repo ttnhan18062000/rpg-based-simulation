@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260804-CREATE-TICKETS-SKILL-SYNC
-phase: open
+phase: done
 date: 2026-08-04
 tags: [skills, workflows]
 ---

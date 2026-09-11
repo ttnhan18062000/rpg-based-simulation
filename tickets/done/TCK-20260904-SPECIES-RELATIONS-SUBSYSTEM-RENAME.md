@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-SPECIES-RELATIONS-SUBSYSTEM-RENAME
-phase: open
+phase: done
 date: 2026-09-04
 tags: [content, combat, social]
 ---

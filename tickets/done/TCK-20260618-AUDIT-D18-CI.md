@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260618-AUDIT-D18-CI
-phase: open
+phase: done
 date: 2026-06-18
 tags: [audit, ci, release-pipeline, certification, github-actions]
 ---

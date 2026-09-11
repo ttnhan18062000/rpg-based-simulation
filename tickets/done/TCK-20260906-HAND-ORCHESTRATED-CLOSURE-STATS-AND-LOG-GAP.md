@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP
-phase: open
+phase: done
 date: 2026-09-06
 tags: [agent-monitoring, data-quality]
 ---

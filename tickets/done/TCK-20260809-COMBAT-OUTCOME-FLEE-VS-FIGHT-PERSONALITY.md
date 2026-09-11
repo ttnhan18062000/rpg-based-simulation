@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P2
 audience: agent
 ticket_id: TCK-20260809-COMBAT-OUTCOME-FLEE-VS-FIGHT-PERSONALITY
-phase: open
+phase: done
 date: 2026-08-09
 tags: [combat, simulation-quality]
 ---

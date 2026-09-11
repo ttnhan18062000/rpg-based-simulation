@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: misc
 authority: P1
 audience: agent
 ticket_id: TCK-20260616-DOCS-ARCHIVE-SPECS-PERF-PLANS
-phase: open
+phase: done
 date: 2026-06-16
 tags: [documentation, archive, migration-records]
 ---
