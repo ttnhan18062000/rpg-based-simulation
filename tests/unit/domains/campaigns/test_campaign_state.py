@@ -121,6 +121,42 @@ def test_entity_carry_forward_dead():
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION:
+# EntityCarryForward.last_position round-trips, including the None case for
+# pre-existing carry-forward records serialized before this field existed.
+# ---------------------------------------------------------------------------
+
+def test_entity_carry_forward_last_position_defaults_to_none():
+    entity = _make_entity()
+    assert entity.last_position is None
+
+
+def test_entity_carry_forward_last_position_round_trip():
+    entity = dataclasses.replace(_make_entity(), last_position=(12.0, -3.0))
+    restored = EntityCarryForward.from_dict(entity.to_dict())
+    assert restored.last_position == (12.0, -3.0)
+    assert restored == entity
+
+
+def test_entity_carry_forward_last_position_none_round_trip():
+    entity = _make_entity()
+    d = entity.to_dict()
+    assert d["last_position"] is None
+    restored = EntityCarryForward.from_dict(d)
+    assert restored.last_position is None
+
+
+def test_entity_carry_forward_from_dict_missing_last_position_key():
+    """Pre-existing serialized records from before this field existed have no
+    "last_position" key at all -- from_dict() must not KeyError on them."""
+    entity = _make_entity()
+    d = entity.to_dict()
+    del d["last_position"]
+    restored = EntityCarryForward.from_dict(d)
+    assert restored.last_position is None
+
+
+# ---------------------------------------------------------------------------
 # AC-5: FactionCarryForward constructs and round-trips
 # ---------------------------------------------------------------------------
 

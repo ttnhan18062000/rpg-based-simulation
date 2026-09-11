@@ -85,6 +85,7 @@ def _make_mock_entity(
     reputation: float = 1.3,
     equip_slots: dict | None = None,
     equip_durability: dict | None = None,
+    position: tuple[float, float] = (10.0, 20.0),
 ) -> MagicMock:
     """Build a mock EntityState with controlled field values."""
     entity = MagicMock()
@@ -96,6 +97,7 @@ def _make_mock_entity(
     entity.social.public_reputation = reputation
     entity.equipment.slots = equip_slots or {}
     entity.equipment.durability = equip_durability or {}
+    entity.navigation.position = position
     return entity
 
 
@@ -166,6 +168,42 @@ def test_advance_state_extracts_entity_carry_forward():
     assert result[1].equipment["slots"]["MAIN_HAND"] == "sword_iron"
     assert result[1].equipment["durability"]["MAIN_HAND"] == pytest.approx(0.9)
     assert result[2].alive is False
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION:
+# _extract_entity_carry_forwards captures last_position unconditionally
+# ---------------------------------------------------------------------------
+
+def test_extract_entity_carry_forward_captures_last_position():
+    manifest = _make_manifest()
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(entity_id=1, position=(42.0, -7.0))
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].last_position == (42.0, -7.0)
+
+
+def test_extract_entity_carry_forward_last_position_not_gated_by_carry_rules():
+    """Unlike level/xp/reputation, last_position is not an opt-in carry-forward
+    rule -- it's captured even when carry_level/carry_xp/carry_reputation are off."""
+    manifest = _make_manifest()
+    manifest = dataclasses.replace(
+        manifest,
+        carry_forward_rules=CarryForwardRules(
+            carry_level=False, carry_xp=False, carry_reputation=False, carry_equipment=False,
+        ),
+    )
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(entity_id=1, position=(5.0, 5.0))
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].last_position == (5.0, 5.0)
+    assert result[1].level == 1  # confirms carry_level=False actually took effect
 
 
 # ---------------------------------------------------------------------------
