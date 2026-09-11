@@ -84,14 +84,41 @@ fixed and real survivors started existing.
   within its region's bounds but on now-blocked terrain — `blocked_tiles` is a real legality gate
   (`src/engine/legality.py:70-76`), not cosmetic. Deconfliction against *other* survivors can reuse
   `_DECONFLICT_PROBE_OFFSETS` directly (no region-bounds machinery needed for that part).
+- **Corrected again (2026-09-11), per peer review, before implementation — locking in the real
+  validity-check shape:**
+  - `blocked_tiles` is one of three static gates checked by legality, not the gate.
+    `LegalityServiceV2.verify_occupancy(pos, state_or_context, ignore_entity_id=None)`
+    (`src/engine/legality.py:53-116`) already checks WALL terrain (`state.terrain`), `blocked_tiles`,
+    buildings (`building_tiles`/`buildings`), transient claims, and dynamic entity occupancy —
+    duck-typed on `state_or_context: Any` via `getattr`, so it accepts anything shaped enough like
+    `AuthoritativeState` (terrain/blocked_tiles/buildings/entities). **Call this directly rather
+    than hand-rolling a fourth copy of occupancy rules** — a private reimplementation is exactly the
+    parallel-implementation pattern this whole batch has been deleting, and it would drift the first
+    time someone adds a fourth gate to the real one. Confirmed during this investigation that its
+    signature fits the reconstruction context cleanly (pass a context carrying `compiled_state`'s
+    `terrain`/`blocked_tiles`/`buildings` plus the `entities` dict being incrementally built in the
+    same reconstruction loop, for survivor-vs-survivor occupancy).
+  - **The fallback chain must never terminate at a shared default position** — that reproduces the
+    original bug in a narrower, harder-to-notice form (several invalid carried positions all
+    collapsing to the same fallback point). The chain: carried `last_position` → if
+    `verify_occupancy()` rejects it, deterministic outward probe reusing
+    `_DECONFLICT_PROBE_OFFSETS`, checking `verify_occupancy()` (all gates) plus this reconstruction
+    pass's own claimed-set at each step → if the probe sequence is exhausted without finding a free
+    tile, **expand the search rather than collapsing to a constant** (e.g. widen the probe radius,
+    matching the spirit of `_resolve_spawn_position`'s own escalation, not its literal region-bounds
+    mechanism). If genuinely exhausted, log a warning naming the entity and the region, mirroring
+    `compiler.py:489-495`'s own `LAW-SPAWN-OCCUPANCY` exhaustion-warning precedent (`f"entity {id}
+    ... could not be placed on a free tile in region '{region_id}' ... region is fully packed"`) —
+    never a silent stack, which is the exact failure mode this whole ticket exists to eliminate.
 - Fix or remove the misleading `orchestrator.py:733-736` comment as part of this change.
 - Real test evidence: a multi-episode Campaign run with multiple survivors (matching this
   investigation's own real 13-survivor case) must NOT trip `LAW-SPAWN-OCCUPANCY` in episode 1+,
   and episode 1+ must run to a plausible completion, not stall almost immediately.
-- Include a real test for the terrain-instability edge case specifically (a carried position that
-  would land on a tile blocked in the new episode's compile, not just the multi-survivor collision
-  case) — this is a distinct failure mode from the one this ticket was originally filed for, and
-  needs its own coverage, not just incidental coverage from the collision fix.
+- Include a real test for the terrain-instability edge case specifically: a survivor whose carried
+  position is valid in episode 0 and blocked in episode 1 — construct it by finding a real tile the
+  two episode seeds disagree on (not by hand-placing a fixture), so the test exercises the actual
+  mechanism rather than an idealized version of it. This is a distinct failure mode from the one
+  this ticket was originally filed for, and needs its own coverage.
 
 ## Out of Scope
 - `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s own episode-0 catalog-spawn path —
@@ -140,10 +167,11 @@ None yet — standard tier, staging artifacts created when picked up.
 - `src/worldassembly/resolver.py` (`_hash_point_in_bounds`/`_resolve_spawn_position` — NOT directly
   reusable, requires a `spawn_region` no survivor has; `_DECONFLICT_PROBE_OFFSETS` IS reusable for
   the lighter survivor-vs-survivor deconfliction pass)
-- `src/worldbuilding/compiler.py` (per-episode terrain/`blocked_tiles` generation — the source of
-  the geometry-instability risk a validity check must guard against)
-- `src/engine/legality.py:70-76` (`blocked_tiles` as a real legality gate, confirming this isn't
-  cosmetic)
+- `src/worldbuilding/compiler.py` (per-episode terrain/`blocked_tiles`/building generation — the
+  source of the geometry-instability risk a validity check must guard against; lines 489-495 are
+  the `LAW-SPAWN-OCCUPANCY` exhaustion-warning precedent to mirror, not just cite)
+- `src/engine/legality.py:53-116` (`LegalityServiceV2.verify_occupancy()` — the real, existing
+  occupancy check to call directly for the validity gate; do not hand-roll a copy)
 
 ## Assumptions / Open Questions
 - ~~What region a returning survivor should anchor to... is not decided here~~ **Superseded by
