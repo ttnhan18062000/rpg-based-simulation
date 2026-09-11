@@ -92,8 +92,11 @@ Step 1 changes what `check_frontmatter_valid()` / `validate_frontmatter.py` enfo
 `tools/parity_ledger_writer.write_entry()` only:
 
 - **INFRA-180** — validator enforcement scope: add the location-aware cross-field rule.
-- **INFRA-278** — `check_frontmatter_valid` close-time enum validation: note the added cross-field check.
 - **INFRA-305** — cites `check_frontmatter_valid()` at specific line numbers: refresh them after Step 1.
+
+Not INFRA-278: it covers `## Tier`/`## Priority` body-field enums (`check_ticket_field_values_valid()`),
+and its support_boundary explicitly excludes `## Status`/`layer:`. Step 1 changes nothing it describes
+(corrected after Review round 2).
 
 Add a new entry only if the corpus-wide test (Step 4) is judged a distinct durable behavior. Otherwise fold
 it into INFRA-180.
