@@ -12188,8 +12188,12 @@
   proof_type: regression
   test_path: tests/integrity/test_merge_union_no_cr_bytes.py::test_no_cr_byte_in_any_merge_union_file,
     tests/integrity/test_merge_union_crlf_duplication_repro.py::test_merge_union_alone_duplicates_rows_shared_across_branches_with_different_line_endings,
-    tests/integrity/test_merge_union_crlf_duplication_repro.py::test_text_eol_lf_prevents_the_duplication_and_leaves_no_cr,
-    tests/tools/test_record_hand_orchestrated_closure.py
+    tests/integrity/test_merge_union_crlf_duplication_repro.py::test_text_eol_lf_prevents_the_duplication_and_leaves_no_cr
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'tests/tools/test_record_hand_orchestrated_closure.py also covers
+    the same csv.writer call (row content/structure correctness after the lineterminator
+    change) but is deliberately excluded from test_path above: its assertions read
+    via Path.read_text(), which performs universal newline translation, so it cannot
+    actually distinguish CRLF from LF and is not evidence for this entry''s LF-only
+    claim -- only the two test_path entries above exercise that at the byte level.'
   evidence_kind: runtime_observation
