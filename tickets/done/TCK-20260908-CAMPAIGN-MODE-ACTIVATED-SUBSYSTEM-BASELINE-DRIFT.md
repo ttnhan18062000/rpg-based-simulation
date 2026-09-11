@@ -178,6 +178,20 @@ not yet confirmed, shared root cause with
 `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`) for the actual resolution of why the
 simulation goes silent.
 
+**Second addendum (2026-09-11, Batch A triage, per `rpg-feature-planning`):** the silence is now
+fixed (`TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`), and `TCK-20260908-CAMPAIGN-LIFE-ARC-
+EPISODE-STALL-TRUNCATION`'s own closure re-ran a real, full-length (200-tick), 16-entity
+`campaign_life_arc` episode to answer this Finding 3 for real. **The answer**:
+`war_declared`/`military_conflict_resolved`/`territory_ownership_changed`/`calamity_spawned` all
+occurred **zero** times in that run — the episode is no longer silent (1542 real events across 18
+types, `OBJECTIVE_MET` at tick 200, `stall_counter=0` throughout), but these 4 specific conditional
+subsystems still did not fire in this one real seed/run. This is a real, honest answer — not "still
+can't tell" (the earlier addendum's caveat no longer applies) and not "confirmed broken" (a single
+non-firing run of a conditional, probabilistic mechanism is not proof of a defect on its own). Not
+re-investigated further here; if war/siege/calamity reachability specifically needs a stronger
+answer (e.g. multiple seeds, or a scenario composition more likely to produce a persisting war
+pair), that is real, separate follow-up work, not implied by this addendum.
+
 ## Test Summary
 - `grep -rn "campaign" tests/simulation_quality/fixtures/grade_anchors.json
   tests/simulation_quality/fixtures/expected_world_flag_state.json` — zero hits, confirmed twice

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260908-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION
-phase: open
+phase: done
 date: 2026-09-08
 tags: [simulation-quality, calibration, corpus]
 ---
@@ -25,7 +25,7 @@ problem). Retitled to name the real finding. **Do not fix this ticket by raising
 of Scope below.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -117,16 +117,36 @@ are themselves unreachable.
       assumed). **Confirmed real gap, `EXACT_DIRTY` hypothesis ruled out**: the episode has zero
       entities throughout — `CampaignOrchestrator._build_initial_state()` never spawns any. See
       Implementation Notes.
-- [ ] A disposition is recorded and, if a fix is warranted, implemented with test evidence that
+- [x] A disposition is recorded and, if a fix is warranted, implemented with test evidence that
       the simulation produces real activity across the episode (not merely that episodes now run
       to their full configured tick count — running longer while still silent is not a fix).
-- [ ] The fix, if any, is NOT a `STALL_THRESHOLD` change or any other alteration to what the stall
-      detector counts (see Out of Scope) — verified by checking the diff touches
-      `scenario_runtime.py` only if fixing a genuine bug in the detector's own logic (e.g. an
-      off-by-one), never its threshold or event-counting policy as a workaround.
-- [ ] `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s own Finding 3 (whether
+      **Resolved by `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`**: real entities now spawn
+      via `CatalogScenarioStateBuilder`, producing genuine, non-zero activity every tick (not
+      merely a longer silent run) — re-verified directly here (2026-09-11) with a real,
+      uninstrumented 200-tick `campaign_life_arc` episode: `ScenarioObjectiveState.OBJECTIVE_MET`
+      at tick 200, `stall_counter=0` throughout, **zero ticks with a zero event count across all
+      198 recorded ticks**, 1542 total events across 18 distinct types (combat, cooperation,
+      economy, progression, ecology). Independently re-ran the existing
+      `tests/integration/campaigns/test_catalog_entity_spawn_wiring.py` suite (4/4 passing) before
+      trusting this.
+- [x] The fix, if any, is NOT a `STALL_THRESHOLD` change or any other alteration to what the stall
+      detector counts (see Out of Scope). **Confirmed** — `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-
+      SPAWN-WIRING`'s own diff touches only `src/domains/campaigns/orchestrator.py` and
+      `src/scenarios/resolver.py`; `scenario_runtime.py`/`STALL_THRESHOLD` untouched.
+- [x] `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s own Finding 3 (whether
       war/siege/calamity fire within a full-length episode) is revisited once episodes run long
       enough to test it for real, and that ticket's own record is updated if the answer changes.
+      **Revisited (2026-09-11), real answer recorded**: in the same real 200-tick, 16-entity run
+      above, `war_declared`, `military_conflict_resolved`, `territory_ownership_changed`, and
+      `calamity_spawned` all occurred **zero** times. The episode now genuinely runs long enough
+      and has real entities to test this — but these specific conditional subsystems (which need a
+      persisting war pair or a region crossing `calamity_intensity > 0.3`, per
+      `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT`'s own citations) did not
+      trigger in this one real run/seed. This is a real, honest answer — not "still can't tell" (the
+      simulation is no longer silent) and not "confirmed broken" (one run not firing a conditional,
+      probabilistic mechanism is not proof of a defect) — recorded as-is in that ticket's own file,
+      cross-referenced there rather than re-investigated further here (out of this ticket's own
+      scope).
 
 ## Related Tickets
 - `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT` (origin of this finding; that
@@ -274,17 +294,27 @@ organic load. Filed as its own P3 disposition ticket:
 `TCK-20260908-GOVERNOR-DEGRADED-AT-TICK-ONE-EMPTY-WORLD-DISPOSITION`.
 
 ## Test Summary
-Determination only — no new automated test added yet (the throwaway probe script used for this
-finding lived in the job's own tmp scratch directory, not committed). The actual fix ticket (once
-scoped) will need real test coverage; this ticket's own AC for "why" is now answered, but its
-"disposition recorded and, if warranted, implemented" AC item remains open pending the routed
-scope decision.
+Closed by verification, not new implementation in this ticket itself (the real fix landed in
+`TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`). Re-verified independently here, 2026-09-11:
+- `tests/integration/campaigns/test_catalog_entity_spawn_wiring.py` — 4/4 passing, re-run directly
+  (not just trusted from the fix ticket's own record).
+- A fresh, real, uninstrumented 200-tick `campaign_life_arc` probe (`CampaignOrchestrator` →
+  `ScenarioRuntimeService`, real `Kernel` ticks, no monkeypatching): `ScenarioObjectiveState.
+  OBJECTIVE_MET` at tick 200, `stall_counter=0` throughout, 0/198 zero-event ticks, 1542 total
+  events across 18 real event types. `war_declared`/`military_conflict_resolved`/
+  `territory_ownership_changed`/`calamity_spawned` all 0 in this run — a real, honest answer to
+  this ticket's last open AC, not further chased (out of scope; these are conditional/probabilistic
+  subsystems, one non-firing run is not evidence of a defect).
 
 ## Files Changed
-None yet — determination only, per explicit peer-review instruction not to implement before the
-scope decision is routed to the user.
+None directly by this ticket (verification/closure only). The real fix's files are recorded in
+`TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`'s own Files Changed section.
 
 ## Completion Summary
-_(pending — ticket stays open; the "why" question this ticket's own Scope named is now answered
-with real evidence, but the actual fix implementation awaits a scoped decision on which of at least
-3 real candidate spawn-wiring approaches to take)_
+Root cause (zero entities spawned for any `campaign_life_arc` episode) was determined by this
+ticket and fixed by `TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING`. Closed here after
+independent re-verification (2026-09-11, `TCK-20260909-CAMPAIGN-LIFE-ARC-EPISODE-STALL-TRUNCATION`
+Batch A triage, per `rpg-feature-planning`): a real 200-tick episode now runs its full configured
+length with continuous genuine activity (0/198 zero-event ticks), the stall detector itself was
+never touched, and this ticket's own deferred war/siege/calamity reachability question was revisited
+with a real answer (did not fire in this specific run — recorded honestly, not chased further).
