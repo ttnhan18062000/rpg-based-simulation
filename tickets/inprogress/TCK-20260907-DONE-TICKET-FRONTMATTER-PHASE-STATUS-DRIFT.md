@@ -4,7 +4,7 @@ layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT
-phase: open
+phase: inprogress
 date: 2026-09-07
 tags: [registry, process-improvement, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [registry, process-improvement, data-quality]
 227 of 1850 tickets/done/*.md files have stale `status: active`/`phase: open` frontmatter instead of `status: historical`/`phase: done`
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -69,15 +69,34 @@ in"), not a schema violation of either field in isolation.
   `tickets/done/` mismatch class found here; a symmetric check for the other directories may be a
   natural follow-on but is not required by this ticket's own evidence.
 
+### Scope amendment (Investigate, 2026-09-11)
+- **The count is 395, not 227, and ~138 of them are schema-invalid.** Values like `status: done` /
+  `open` and `phase: epic_scoped` are rejected by the existing single-field enum. That means the
+  validator never runs on them, which is a second root cause beyond the missing cross-field rule.
+- **Root cause is the closing path.** Drift is 16.2% for pipeline closes, 41.0% for
+  hand-orchestrated closes, and 53.5% for closes with no monitoring record. `validate_frontmatter.py`
+  runs only in `done_checker`, and only for the ticket being closed; nothing checks `tickets/done/` as
+  a whole. `implement-ticket.js` never says `historical`.
+- **Fix widened accordingly:** cross-field rule + `done_checker` wiring (as proposed), **plus** a
+  path-independent corpus test over all of `tickets/done/`, **plus** an explicit Finalize instruction.
+- **9 epic-tier tickets use `phase: epic_scoped` deliberately.** Plan recommends normalizing them to
+  `done` rather than adding the value to the enum. The decision gets recorded before the bulk edit.
+- Full evidence: `staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/`.
+
 ## Acceptance Criteria
 - [ ] A durable, evidence-based root-cause finding for why this gap recurs (a specific closure
       path, or genuinely random/inconsistent Finalize execution) is documented
 - [ ] A new automated check catches this class of mismatch going forward, wired into an existing
       gate (Finalize/Verify) rather than left as a manual audit
-- [ ] An explicit, evidence-based decision is made and recorded on remediating the 227
-      already-affected files (bulk-fix now, or a stated reason to defer) — not silence
-- [ ] If a bulk fix is performed, a before/after count confirms exactly 227 files changed, only the
-      2 frontmatter fields touched, and zero body-content bytes altered
+- [ ] A corpus-wide test enforces the rule over every file in `tickets/done/`, independent of the
+      closing path
+- [ ] `implement-ticket.js`'s Finalize prompt explicitly instructs `status: historical` /
+      `phase: done`
+- [ ] The `epic_scoped` decision (normalize vs. enum addition) is recorded before remediation
+- [ ] An explicit, evidence-based decision is made and recorded on remediating the already-affected
+      files (395 as of 2026-09-11; re-count at implementation) — not silence
+- [ ] If a bulk fix is performed, a before/after count confirms the changed-file count equals the
+      fresh before-count, only the 2 frontmatter fields touched, and zero body-content bytes altered
 
 ## Related Tickets
 - `TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS` (done) — the specific instance that surfaced this
@@ -106,6 +125,10 @@ None.
   mechanically-uniform diff.
 
 ## Implementation Notes
+Investigate and Plan are complete; see
+`staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/`. Plan order:
+cross-field rule → `epic_scoped` decision → bulk remediation (separate commit, dry-run script) →
+corpus test → Finalize instruction. Implementation is handed to `agent-working-implementer`.
 
 ## Test Summary
 
