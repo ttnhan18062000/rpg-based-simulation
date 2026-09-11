@@ -32,7 +32,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import sqlite3
 import sys
 import time
@@ -459,22 +458,24 @@ def migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None:
     _get_access_log_connection() below. Ordinal 5, the next open ordinal after migration_004 (no
     migration_005_* exists anywhere in this file before this ticket).
 
-    Column shape: `cache_level` ('level1_provider_result' | 'level2_context_packet') plus
-    event-type-appropriate key columns (query_hash/repo_branch_scope for Level 1, packet_id for
-    Level 2 — both nullable, since only one set is ever populated per row) identify *which* cache
-    row the event concerns; `event_type` ('hit' | 'write' | 'invalidate' — this ticket's own
-    instrumentation only ever writes 'hit'/'write', since neither cache level has a distinct
-    invalidate call site today, see log_cache_access()'s docstring) identifies *what* happened;
-    run_id/seq/phase/agent/execution_id/provider/ticket_id are sourced from the same
-    `.claude/current_run` sidecar mechanism tools/agent-monitoring/post_tool_hook.py:46-63 already
-    uses for tools.jsonl attribution (read_current_run_sidecar() below, not reinvented).
-    `sidecar_stale` is a real, file-existence-checked flag (see _sidecar_run_is_stale()) — TRUE
-    when the sidecar's own ticket points at a ticket that has already moved to tickets/done/ (the
-    exact live failure mode this ticket's own Scope item 6 documents), so a reader can distinguish
-    "no attribution recorded" from "attribution recorded but known-untrustworthy" instead of
-    silently trusting stale data. Every column here stays within the MAY-list vocabulary
-    (docs/observability/retrieval_retention_redaction_policy.md) — IDs, hashes (by reference, never
-    raw content), counts via aggregation, timestamps; no prompt/chunk/payload text.
+    Column shape (historical — the writer/reader chain that populated and read this table,
+    log_cache_access()/read_current_run_sidecar()/_sidecar_run_is_stale(), was removed by
+    TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL; this migration itself is kept as a pure,
+    standalone schema function per that ticket's own scope guard): `cache_level`
+    ('level1_provider_result' | 'level2_context_packet') plus event-type-appropriate key columns
+    (query_hash/repo_branch_scope for Level 1, packet_id for Level 2 — both nullable, since only
+    one set was ever populated per row) identified *which* cache row an event concerned;
+    `event_type` ('hit' | 'write' | 'invalidate' — the removed instrumentation only ever wrote
+    'hit'/'write', since neither cache level had a distinct invalidate call site) identified *what*
+    happened; run_id/seq/phase/agent/execution_id/provider/ticket_id were sourced from the same
+    `.claude/current_run` sidecar mechanism tools/agent-monitoring/post_tool_hook.py:46-63 still
+    uses for tools.jsonl attribution. `sidecar_stale` was a real, file-existence-based staleness
+    flag — TRUE when the sidecar's own ticket pointed at a ticket that had already moved to
+    tickets/done/, so a reader could distinguish "no attribution recorded" from "attribution
+    recorded but known-untrustworthy" instead of silently trusting stale data. Every column here
+    stayed within the MAY-list vocabulary (docs/observability/retrieval_retention_redaction_policy.md)
+    — IDs, hashes (by reference, never raw content), counts via aggregation, timestamps; no
+    prompt/chunk/payload text.
     """
     conn.execute(
         """
@@ -507,219 +508,13 @@ def migration_005_add_cache_access_log_table(conn: sqlite3.Connection) -> None:
 
 
 # ---------------------------------------------------------------------------
-# KGMCP cache-access-log — work attribution for Level 1/Level 2 cache hit/write events
-# (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD)
+# Note: the KGMCP cache-access-log work-attribution section that previously lived here
+# (_CURRENT_RUN_SIDECAR_PATH, _ticket_file_exists(), _sidecar_run_is_stale(),
+# read_current_run_sidecar()) was removed by TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL.
+# log_cache_access() — the only production caller of read_current_run_sidecar() — was removed in
+# the same ticket as part of the broader dead cache-access-log chain; this section was the next
+# link down that chain once its sole caller was gone.
 # ---------------------------------------------------------------------------
-
-# Relative path, matching tools/agent-monitoring/post_tool_hook.py:54's own literal
-# Path(".claude/current_run") — a module attribute (not an inline literal) specifically so tests
-# can monkeypatch it the same way the _isolated_cache_db fixture already monkeypatches
-# CACHE_DB_PATH/_MANIFEST_PATH.
-_CURRENT_RUN_SIDECAR_PATH = Path(".claude/current_run")
-
-_ACCESS_LOG_VALID_CACHE_LEVELS = frozenset({"level1_provider_result", "level2_context_packet"})
-_ACCESS_LOG_VALID_EVENT_TYPES = frozenset({"hit", "write", "invalidate"})
-
-
-def _ticket_file_exists(lifecycle: str, ticket_id: str) -> bool:
-    """True if tickets/{lifecycle}/{ticket_id}.md exists, either directly or nested one level
-    under a todos-style subfolder (tickets/done/{folder}/{ticket_id}.md — CLAUDE.md's own Workflow
-    Rule moves a whole completed folder there). Direct-path stat first (O(1), covers the large
-    majority of tickets, which are flat) — rglob only as a fallback, so the common case never pays
-    a directory-tree-scan cost."""
-    base = _REPO_ROOT / "tickets" / lifecycle
-    if not base.is_dir():
-        return False
-    direct = base / f"{ticket_id}.md"
-    if direct.is_file():
-        return True
-    return any(base.rglob(f"{ticket_id}.md"))
-
-
-def _sidecar_run_is_stale(effective_ticket_id: str | None) -> bool:
-    """Real, file-existence-based staleness check (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-
-    AND-SKILL-USAGE-DASHBOARD Scope item 6) — reproduced live during this ticket's own
-    investigation: `.claude/current_run` held `{"run_id": "TCK-20260817-HOTFIX-DECISION-TRACE-
-    SELECTED-MOCK-SCORE", ...}` while that exact ticket already lived under tickets/done/, not
-    tickets/inprogress/ — a `search_docs` call made during unrelated, ad-hoc investigation would
-    have been silently attributed to that already-closed ticket had this check not existed. Only
-    ever returns True when `effective_ticket_id` is set AND it resolves to a real tickets/done/
-    file AND it does NOT also exist under tickets/inprogress/ — an ad-hoc call with no ticket_id at
-    all (None) is correctly NOT flagged stale (it is simply unattributed, a different and equally
-    honest signal, not a false positive here)."""
-    if not effective_ticket_id:
-        return False
-    if _ticket_file_exists("inprogress", effective_ticket_id):
-        return False
-    return _ticket_file_exists("done", effective_ticket_id)
-
-
-def read_current_run_sidecar() -> dict:
-    """Mirrors tools/agent-monitoring/post_tool_hook.py's `.claude/current_run` read pattern —
-    same key names (run_id/seq/phase/agent/execution_id/provider/ticket_id), same fail-silent-to-
-    None-on-any-error convention — reused, not reinvented (no shared helper module previously
-    existed to import; post_tool_hook.py's own version is inlined in a try/except block, not an
-    importable function). Adds one field beyond that mechanism's own scope: `sidecar_stale` (see
-    _sidecar_run_is_stale()).
-
-    TCK-20260826-KGMCP-CACHE-TICKET-ATTRIBUTION: the returned `ticket_id` key is the *effective*
-    ticket ID, not the sidecar's raw `ticket_id` field — an explicit `ticket_id` wins when present,
-    otherwise `run_id` is used when it starts with "TCK-" (the common case for hotfix/standard
-    workflows, where run_id already *is* the ticket_id). Before this fix, the raw `sidecar.get(
-    "ticket_id")` was returned instead (always None, since no sidecar writer ever sets that
-    distinct explicit key) while the effective/fallback value was computed but only used
-    internally for the `sidecar_stale` check below — silently leaving every real caller's
-    `ticket_id` field null. `log_cache_access()` is this function's sole production consumer.
-
-    TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY: prefers the per-session scoped sidecar
-    (`<_CURRENT_RUN_SIDECAR_PATH>.<CLAUDE_CODE_SESSION_ID>`) over the unscoped file when a scoped
-    file exists for this process's session, mirroring post_tool_hook.py's own scoped-file
-    preference (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE). Deliberately does NOT adopt
-    post_tool_hook.py's later null-sentinel-on-absence behavior (TCK-20260824-SIDECAR-ADHOC-NULL-
-    ATTRIBUTION) when no scoped file exists — falls back to the unscoped file instead, same as
-    before that ticket. Two reasons, not an oversight: (1) this function is called from CLI/
-    library contexts with no session_id to key a sentinel by other than the env var, and giving a
-    read-only function a new write side effect (writing a sentinel file) is exactly the kind of
-    expanded responsibility this ticket's own Out of Scope excludes; (2) unlike tools.jsonl (which
-    had no staleness signal at all until fixed), this function already carries its own adequate
-    safeguard for the single worst failure mode — attribution to an already-closed ticket — via
-    `sidecar_stale` below, so blind unscoped-fallback here is materially less risky than it was
-    for post_tool_hook.py."""
-    session_id = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
-    scoped_path = (
-        _CURRENT_RUN_SIDECAR_PATH.parent / f"{_CURRENT_RUN_SIDECAR_PATH.name}.{session_id}"
-        if session_id
-        else None
-    )
-    sidecar_path = (
-        scoped_path if scoped_path is not None and scoped_path.exists() else _CURRENT_RUN_SIDECAR_PATH
-    )
-
-    run_id = seq = phase = agent = execution_id = provider = ticket_id = None
-    try:
-        sidecar = json.loads(sidecar_path.read_text())
-        run_id = sidecar.get("run_id") or None
-        seq = sidecar.get("seq") or None
-        phase = sidecar.get("phase") or None
-        agent = sidecar.get("agent") or None
-        execution_id = sidecar.get("execution_id") or None
-        provider = sidecar.get("provider") or None
-        ticket_id = sidecar.get("ticket_id") or None
-    except Exception:
-        pass
-
-    effective_ticket_id = ticket_id or (
-        run_id if run_id and run_id.startswith("TCK-") else None
-    )
-
-    return {
-        "run_id": run_id,
-        "seq": seq,
-        "phase": phase,
-        "agent": agent,
-        "execution_id": execution_id,
-        "provider": provider,
-        "ticket_id": effective_ticket_id,
-        "sidecar_stale": _sidecar_run_is_stale(effective_ticket_id),
-    }
-
-
-def _get_access_log_connection() -> sqlite3.Connection:
-    """Mirrors _get_level1_connection()/_get_level2_connection()'s own connection-tuning mechanics
-    exactly — opens CACHE_DB_PATH via write_path_guard.open_connection_with_limits(), not the
-    plain _get_connection() the 3 legacy tables use. Runs migration_001 first (creates
-    retrieval_cache_generation, a prerequisite migration_005 assumes exists — same ordering
-    constraint _ensure_level2_schema_for_read()'s own docstring already documents for
-    migration_002), then migration_005 itself."""
-    conn = _write_path_guard.open_connection_with_limits(CACHE_DB_PATH)
-    migration_001_add_level1_tables(conn)
-    migration_005_add_cache_access_log_table(conn)
-    return conn
-
-
-def log_cache_access(
-    cache_level: str,
-    event_type: str,
-    *,
-    query_hash: str | None = None,
-    repo_branch_scope: str | None = None,
-    packet_id: str | None = None,
-) -> None:
-    """Appends one row to retrieval_cache_access_log for a real Level 1/Level 2 cache hit or
-    write. Called from the 4 real instrumented call sites below
-    (record_provider_result_cache_hit/write_provider_result_cache/
-    record_context_packet_cache_hit/write_context_packet_cache) — never from check_*_cache()
-    (a bare lookup is not itself a genuine hit; DD9's Non-collapse rule, same distinction
-    record_provider_result_cache_hit()'s own docstring already draws). No 'invalidate' call site
-    exists yet for either cache level (neither table has a distinct invalidation function today,
-    only INSERT OR REPLACE writes) — 'invalidate' remains a valid, schema-supported event_type for
-    a future caller, never emitted by this ticket's own instrumentation.
-
-    CLAUDE.md hard rule: "Monitoring write failure must never fail the workflow." This function
-    never raises — any failure (malformed sidecar, DB-open failure, disk-full) is swallowed
-    silently, exactly like tools/agent-monitoring/post_tool_hook.py's own top-level try/except,
-    so a logging failure here can never break the real cache write/hit it is instrumenting.
-    """
-    try:
-        if cache_level not in _ACCESS_LOG_VALID_CACHE_LEVELS:
-            return
-        if event_type not in _ACCESS_LOG_VALID_EVENT_TYPES:
-            return
-        sidecar = read_current_run_sidecar()
-        conn = _get_access_log_connection()
-        try:
-            conn.execute(
-                "INSERT INTO retrieval_cache_access_log "
-                "(cache_level, event_type, query_hash, repo_branch_scope, packet_id, run_id, seq, "
-                " phase, agent, execution_id, provider, ticket_id, sidecar_stale, ts) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (
-                    cache_level,
-                    event_type,
-                    query_hash,
-                    repo_branch_scope,
-                    packet_id,
-                    sidecar["run_id"],
-                    sidecar["seq"],
-                    sidecar["phase"],
-                    sidecar["agent"],
-                    sidecar["execution_id"],
-                    sidecar["provider"],
-                    sidecar["ticket_id"],
-                    int(sidecar["sidecar_stale"]),
-                    time.time(),
-                ),
-            )
-            conn.commit()
-        finally:
-            conn.close()
-    except Exception:
-        pass
-
-
-def read_cache_access_log() -> list[dict]:
-    """Read-only: every row of retrieval_cache_access_log as a list of dicts, ordered by ts —
-    consumed by tools/agent-monitoring/generate_retro.py::compute_kgmcp_cache_efficiency_metrics().
-    Mirrors provider_result_cache_stats()/context_packet_cache_stats()'s own "never raise on a
-    fresh/never-migrated DB" pattern: returns [] (not an exception) if the table does not exist
-    yet. Never mutates."""
-    conn = _get_connection()
-    try:
-        table_exists = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' "
-            "AND name='retrieval_cache_access_log'"
-        ).fetchone()
-        if table_exists is None:
-            return []
-        rows = conn.execute(
-            "SELECT * FROM retrieval_cache_access_log ORDER BY ts"
-        ).fetchall()
-        columns = [d[0] for d in conn.execute(
-            "SELECT * FROM retrieval_cache_access_log LIMIT 0"
-        ).description]
-    finally:
-        conn.close()
-    return [dict(zip(columns, row)) for row in rows]
 
 
 def _validate_may_list_kwargs(kwargs: dict, *, table: str) -> dict:
@@ -986,54 +781,6 @@ def _ensure_level1_schema_for_read() -> None:
         conn.close()
 
 
-def check_provider_result_cache(
-    query_hash: str,
-    repo_branch_scope: str,
-    *,
-    normalized_intent: str,
-    filters_json: str,
-    budget_class: str,
-    routing_policy_version: int,
-) -> ProviderResultCacheLookup:
-    """SELECT by the real primary key (query_hash, repo_branch_scope), then compare the stored
-    normalized_intent/filters/budget_class/routing_policy_version columns against the caller's
-    current computed values (DD10 — the PK alone is narrower than the full §1 6-field lookup
-    identity: filters/budget_class/routing_policy_version are ordinary columns, not part of the
-    primary key). Any mismatch is a MISS, not STALE_REJECTED — a different-identity case, not a
-    staleness case, mirroring check_query_cache()'s own existing pattern of comparing
-    corpus_generation/retrieval_version in Python after a broader SQL SELECT.
-    routing_policy_version is stored as TEXT (see migration_001's CREATE TABLE) — the caller's int
-    is coerced via str() for the comparison, matching exactly how write_provider_result_cache()
-    below persists it, so the two sides are never compared across mismatched types.
-    """
-    _ensure_level1_schema_for_read()
-    conn = _get_connection()
-    try:
-        row = conn.execute(
-            "SELECT * FROM retrieval_provider_result_cache_rows "
-            "WHERE query_hash = ? AND repo_branch_scope = ?",
-            (query_hash, repo_branch_scope),
-        ).fetchone()
-        columns = [d[0] for d in conn.execute(
-            "SELECT * FROM retrieval_provider_result_cache_rows LIMIT 0"
-        ).description]
-    finally:
-        conn.close()
-    if row is None:
-        return ProviderResultCacheLookup(status=MISS, reason_code="no_cached_row", row=None)
-    row_dict = dict(zip(columns, row))
-    if (
-        row_dict["normalized_intent"] != normalized_intent
-        or row_dict["filters"] != filters_json
-        or row_dict["budget_class"] != budget_class
-        or row_dict["routing_policy_version"] != str(routing_policy_version)
-    ):
-        return ProviderResultCacheLookup(
-            status=MISS, reason_code="identity_mismatch_on_shared_key", row=None
-        )
-    return ProviderResultCacheLookup(status=HIT, reason_code=None, row=row_dict)
-
-
 def _get_level1_connection() -> sqlite3.Connection:
     """DD4/DD2 — opens CACHE_DB_PATH via write_path_guard.open_connection_with_limits() (that
     helper's own §9 connection-tuning defaults), not the plain _get_connection() the 3 legacy
@@ -1044,74 +791,6 @@ def _get_level1_connection() -> sqlite3.Connection:
     migration_001_add_level1_tables(conn)
     migration_003_add_redaction_policy_version_column(conn)
     return conn
-
-
-def write_provider_result_cache(
-    *,
-    query_hash: str, normalized_intent: str, resolved_entity_ids_json: str, filters_json: str,
-    budget_class: str, routing_policy_version: int, repo_branch_scope: str,
-    provider_name_json: str, adapter_version_json: str, result_payload: str,
-    source_ids_json: str, source_paths_json: str, provider_generation: str,
-    evidence_fingerprints_json: str, validated_negative_scopes: str | None,
-    adapter_version_at_validation_json: str, working_tree_overlap_json: str,
-    provider_generation_at_validation: str,
-    redaction_policy_version: int | None = None,
-) -> None:
-    """INSERT OR REPLACE by the (query_hash, repo_branch_scope) primary key — the sole real write
-    path for this table (orchestrated only by
-    tools/knowledge_gateway_cache.py::perform_cache_write(), after
-    write_path_guard.evaluate_write_candidate() has already returned ALLOW; never called
-    with raw/unredacted content)."""
-    conn = _get_level1_connection()
-    try:
-        conn.execute(
-            "INSERT OR REPLACE INTO retrieval_provider_result_cache_rows "
-            "(query_hash, normalized_intent, resolved_entity_ids, filters, budget_class, "
-            " routing_policy_version, repo_branch_scope, provider_name, adapter_version, "
-            " result_payload, source_ids, source_paths, provider_generation, "
-            " evidence_fingerprints, validated_negative_scopes, adapter_version_at_validation, "
-            " working_tree_overlap, provider_generation_at_validation, redaction_policy_version, "
-            " created_at, last_hit_at, hit_count)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 0)",
-            (
-                query_hash, normalized_intent, resolved_entity_ids_json, filters_json, budget_class,
-                str(routing_policy_version), repo_branch_scope, provider_name_json,
-                adapter_version_json, result_payload, source_ids_json, source_paths_json,
-                provider_generation, evidence_fingerprints_json, validated_negative_scopes,
-                adapter_version_at_validation_json, working_tree_overlap_json,
-                provider_generation_at_validation, redaction_policy_version, time.time(),
-            ),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: logged on its own
-    # connection, after the real write has already committed and closed — a logging failure here
-    # can never roll back or block the write above (log_cache_access() also never raises itself).
-    log_cache_access(
-        "level1_provider_result", "write", query_hash=query_hash, repo_branch_scope=repo_branch_scope
-    )
-
-
-def record_provider_result_cache_hit(query_hash: str, repo_branch_scope: str) -> None:
-    """Called only after a genuine, revalidated HIT (never on a bare lookup hit — DD9) —
-    increments hit_count and stamps last_hit_at."""
-    conn = _get_level1_connection()
-    try:
-        conn.execute(
-            "UPDATE retrieval_provider_result_cache_rows "
-            "SET hit_count = hit_count + 1, last_hit_at = ? "
-            "WHERE query_hash = ? AND repo_branch_scope = ?",
-            (time.time(), query_hash, repo_branch_scope),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: see write path's
-    # own comment above — logged after the real hit-count update has committed and closed.
-    log_cache_access(
-        "level1_provider_result", "hit", query_hash=query_hash, repo_branch_scope=repo_branch_scope
-    )
 
 
 def provider_result_cache_stats() -> dict:
@@ -1178,54 +857,6 @@ def _ensure_level2_schema_for_read() -> None:
         conn.close()
 
 
-def check_context_packet_cache(
-    query_key_hash: str,
-    *,
-    normalized_intent: str,
-    entity_ids_json: str,
-    repository_id: str,
-    branch: str,
-    budget_tokens: int,
-) -> ContextPacketCacheLookup:
-    """SELECT by the non-unique query_key_hash column (`.fetchall()`, never `.fetchone()` —
-    packet_id is the real primary key, query_key_hash carries no uniqueness constraint) and
-    disambiguate in Python against normalized_intent/entity_ids/repository_id/branch/
-    budget_requested (plan.md PD3). Any row returned but not matching every field is a MISS with
-    reason_code="identity_mismatch_on_shared_key" (mirrors check_provider_result_cache's own
-    analogous Level 1 case); zero rows returned is a MISS with reason_code="no_cached_row".
-    budget_requested is stored as INTEGER (migration_002's CREATE TABLE) — compared directly
-    against the caller's int, no type-coercion gap exists here (unlike Level 1's
-    routing_policy_version, which is stored as TEXT).
-    """
-    _ensure_level2_schema_for_read()
-    conn = _get_connection()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM retrieval_context_packet_cache_rows WHERE query_key_hash = ?",
-            (query_key_hash,),
-        ).fetchall()
-        columns = [d[0] for d in conn.execute(
-            "SELECT * FROM retrieval_context_packet_cache_rows LIMIT 0"
-        ).description]
-    finally:
-        conn.close()
-    if not rows:
-        return ContextPacketCacheLookup(status=MISS, reason_code="no_cached_row", row=None)
-    for row in rows:
-        row_dict = dict(zip(columns, row))
-        if (
-            row_dict["normalized_intent"] == normalized_intent
-            and row_dict["entity_ids"] == entity_ids_json
-            and row_dict["repository_id"] == repository_id
-            and row_dict["branch"] == branch
-            and row_dict["budget_requested"] == budget_tokens
-        ):
-            return ContextPacketCacheLookup(status=HIT, reason_code=None, row=row_dict)
-    return ContextPacketCacheLookup(
-        status=MISS, reason_code="identity_mismatch_on_shared_key", row=None
-    )
-
-
 def _get_level2_connection() -> sqlite3.Connection:
     """Mirrors _get_level1_connection() exactly in its own connection-tuning mechanics — opens
     CACHE_DB_PATH via write_path_guard.open_connection_with_limits() (that helper's own §9
@@ -1241,99 +872,6 @@ def _get_level2_connection() -> sqlite3.Connection:
     migration_002_add_level2_tables(conn)
     migration_004_add_level2_write_path_columns(conn)
     return conn
-
-
-def write_context_packet_cache(
-    *,
-    packet_id: str,
-    normalized_intent: str,
-    query_key_hash: str,
-    entity_ids_json: str,
-    answer: str | None,
-    statements_json: str,
-    context_items_json: str,
-    evidence_json: str,
-    conflicts_json: str,
-    evidence_dependencies_json: str,
-    provenance_providers_json: str,
-    providers_consulted_this_call_json: str,
-    repository_id: str,
-    branch: str,
-    head_commit: str | None,
-    working_tree_fingerprint: str | None,
-    provider_generations_json: str,
-    policy_version: str,
-    response_schema_version: int,
-    budget_requested: int | None,
-    budget_returned: int | None,
-    status: str,
-    freshness: str,
-    verification: str,
-    lifecycle: str | None,
-    redaction_policy_version: int | None,
-    budget_truncated: bool | None,
-    omitted_statement_count: int | None,
-    provider_failures_json: str | None,
-) -> None:
-    """INSERT OR REPLACE by the packet_id primary key — the sole real write path for this table
-    (orchestrated only by tools/knowledge_gateway_cache.py::perform_context_packet_cache_write(),
-    after write_path_guard.evaluate_write_candidate() has already returned ALLOW; never
-    called with raw/unredacted content). Mirrors write_provider_result_cache()'s shape exactly,
-    including its conn.commit()/finally: conn.close() structure."""
-    conn = _get_level2_connection()
-    try:
-        conn.execute(
-            "INSERT OR REPLACE INTO retrieval_context_packet_cache_rows "
-            "(packet_id, normalized_intent, query_key_hash, entity_ids, answer, statements, "
-            " context_items, evidence, conflicts, evidence_dependencies, provenance_providers, "
-            " providers_consulted_this_call, repository_id, branch, head_commit, "
-            " working_tree_fingerprint, provider_generations, policy_version, "
-            " response_schema_version, budget_requested, budget_returned, status, freshness, "
-            " verification, lifecycle, redaction_policy_version, budget_truncated, "
-            " omitted_statement_count, provider_failures, created_at, last_validated_at, "
-            " hit_count)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-            " ?, ?, ?, ?, ?, NULL, 0)",
-            (
-                packet_id, normalized_intent, query_key_hash, entity_ids_json, answer,
-                statements_json, context_items_json, evidence_json, conflicts_json,
-                evidence_dependencies_json, provenance_providers_json,
-                providers_consulted_this_call_json, repository_id, branch, head_commit,
-                working_tree_fingerprint, provider_generations_json, policy_version,
-                response_schema_version, budget_requested, budget_returned, status, freshness,
-                verification, lifecycle, redaction_policy_version,
-                int(budget_truncated) if budget_truncated is not None else None,
-                omitted_statement_count, provider_failures_json, time.time(),
-            ),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: see Level 1 write
-    # path's own comment (write_provider_result_cache()) — logged after the real write has
-    # already committed and closed.
-    log_cache_access("level2_context_packet", "write", packet_id=packet_id)
-
-
-def record_context_packet_cache_hit(packet_id: str) -> None:
-    """Called only after a genuine, revalidated HIT (never on a bare lookup hit) — increments
-    hit_count and stamps last_validated_at. Mirrors record_provider_result_cache_hit() exactly,
-    adapted for the packet_id primary key and Level 2's last_validated_at column name (Level 1's
-    equivalent column is named last_hit_at)."""
-    conn = _get_level2_connection()
-    try:
-        conn.execute(
-            "UPDATE retrieval_context_packet_cache_rows "
-            "SET hit_count = hit_count + 1, last_validated_at = ? WHERE packet_id = ?",
-            (time.time(), packet_id),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-    # TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD: see Level 1 hit
-    # path's own comment (record_provider_result_cache_hit()) — logged after the real hit-count
-    # update has committed and closed.
-    log_cache_access("level2_context_packet", "hit", packet_id=packet_id)
 
 
 def context_packet_cache_stats() -> dict:

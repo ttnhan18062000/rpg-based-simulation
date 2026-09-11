@@ -18,7 +18,16 @@ remain four independent units of work, not one epic.
 **Roadmap**: `roadmap.md` — one Horizon-0 item (UNBLOCKED 2026-09-07, see §1 below), three
 Horizon-2 items.
 
-## 1. Remove/archive knowledge-gateway (UNBLOCKED 2026-09-07 — see below; Horizon 0, start now)
+## 1. Remove/archive knowledge-gateway (CLOSED 2026-09-10 — see below; all 4 milestones executed)
+
+**Status update (2026-09-10)**: milestones 3-4 (below) executed by
+`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` on 2026-09-10, via that ticket's own documented Early
+Closure Decision — a repo-visible zero-call-site re-verification substituted for the remaining
+~12 days of the scheduled 2-week calendar wait, per direct user instruction, not a full elapsed
+2-week monitoring window. All `tools/archive/`/`tests/archive/` Knowledge Gateway MCP files were
+hard-deleted (11 source files + 15 test files), and `pyproject.toml`'s now-dead `"archive"`
+`norecursedirs` entry was removed. Item 1 (§1) is now fully closed — no work remains under this
+heading.
 
 **Status update (2026-09-07)**: the blocking condition below is resolved.
 `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified by the repository owner to **Option C —

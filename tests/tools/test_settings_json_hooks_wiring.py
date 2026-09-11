@@ -72,7 +72,8 @@ def test_existing_hook_writers_untouched():
     # Do NOT touch: the permissions.allow block or the existing PreToolUse/PostToolUse array
     # contents (plan.md Step 3's explicit constraint).
     settings = _load_settings()
-    assert len(settings["hooks"]["PreToolUse"]) == 4
+    # Count includes the new TCK-20260904-BASH-SECRET-SCAN-HOOK PreToolUse[4] entry.
+    assert len(settings["hooks"]["PreToolUse"]) == 5
     assert len(settings["hooks"]["PostToolUse"]) == 4
     assert "permissions" in settings
     assert "allow" in settings["permissions"]
@@ -81,8 +82,10 @@ def test_existing_hook_writers_untouched():
 def test_edit_write_hook_reads_scoped_sidecar_via_env_var():
     # TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE, AC #1 / AC #4: the Edit|Write PreToolUse hook's
     # RUN_ID=$(...) subshell must read the session-scoped sidecar file first (falling back to the
-    # unscoped file), mirroring tools/retrieval_cache.py::read_current_run_sidecar()'s preference
-    # order rather than the old unscoped-only read.
+    # unscoped file) rather than the old unscoped-only read. Originally modeled on
+    # tools/retrieval_cache.py::read_current_run_sidecar()'s scoped-then-unscoped preference order
+    # (INFRA-410); that function was removed by TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-
+    # REMOVAL, this hook's own independent behavior is unaffected.
     settings = _load_settings()
     command = settings["hooks"]["PreToolUse"][3]["hooks"][0]["command"]
 

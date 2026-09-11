@@ -48,7 +48,6 @@ from retrieval_cache import (  # noqa: E402
     INDEX_CACHE_CATEGORY,
     QUERY_CACHE_CATEGORY,
     PACKET_CACHE_CATEGORY,
-    read_cache_access_log,
 )
 
 RUNS_FILE = Path("agent-monitoring/data")
@@ -691,328 +690,8 @@ def _flag_outliers(items, group_key_fn, value_fn, multiplier=OUTLIER_MEDIAN_MULT
     return flagged
 
 
-
-# KGMCP cache-access-log grouping window (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-
-# USAGE-DASHBOARD): a "write" event for the same real cache row (same cache_level + query_hash/
-# repo_branch_scope, or same cache_level + packet_id) following ANY prior event for that same row
-# within this many seconds is flagged as a repeated refetch — content that a HIT should have
-# served instead of a fresh provider round-trip / packet assembly. 300s (5 min) is a deliberate,
-# generous window: shorter windows would flag ordinary independent re-queries across unrelated
-# phases of the same run as "repeated," which is not the wasted-refetch signal this is meant to
-# surface.
-KGMCP_REFETCH_WINDOW_SECONDS = 300
-
-
-def _kgmcp_access_log_group_key(row: dict):
-    if row.get("cache_level") == "level2_context_packet":
-        return ("level2_context_packet", row.get("packet_id"))
-    return ("level1_provider_result", row.get("query_hash"), row.get("repo_branch_scope"))
-
-
-def _kgmcp_verdict(
-    total_hits: int,
-    total_writes: int,
-    dead_write_count: int,
-    repeated_refetch_count: int,
-    search_calls_total: int,
-    coverage_rate: float | None,
-) -> tuple[str, str]:
-    """Turns the raw counters below into a single glanceable verdict + explanation — the actual
-    headline ask behind this section ("is the knowledge gateway cache good, is it inefficient"),
-    not just a table of numbers a reader has to interpret themselves. Every clause here is a
-    direct, literal readout of an already-computed number — no fabricated score, no LLM judgment
-    call, just a rule-based label over real counts. Returns (verdict_label, explanation_text).
-
-    A low `coverage_rate` is architectural, not a fixable cache inefficiency: this cache
-    (`retrieval_cache.py::log_cache_access()`) is wired only into `knowledge_gateway_mcp.py`'s
-    `knowledge_context`/`knowledge_status` tools, while the hard-rule-mandated
-    `mcp__knowledge-search__search_docs` is served by a completely separate, uninstrumented
-    implementation (`knowledge_search.py`) that never touches this cache path at all. The
-    low-coverage clause appended below says so explicitly rather than implying the cache itself
-    is underperforming (TCK-20260824-RETRO-METRIC-CAVEATS).
-    """
-    total_events = total_hits + total_writes
-
-    if total_events == 0:
-        if search_calls_total > 0:
-            return (
-                "NOT IN USE",
-                f"Zero KGMCP cache hit/write events recorded against {search_calls_total} real "
-                "search_docs/graphify/ToolSearch calls in this corpus — retrieval work is not "
-                "touching the cache path at all. This is a bypass, not merely low reuse: the "
-                "cache cannot be judged efficient or inefficient because it is not being "
-                "exercised."
-            )
-        return (
-            "NO DATA",
-            "No KGMCP cache activity and no search/graphify tool calls recorded in this corpus — "
-            "nothing to evaluate yet.",
-        )
-
-    reuse_rate = total_hits / total_events
-    parts = []
-    if reuse_rate >= 0.5:
-        verdict = "EFFECTIVE"
-        parts.append(
-            f"{reuse_rate * 100:.0f}% of cache access events were hits (reuse) rather than fresh "
-            "writes — the cache is meaningfully saving repeated retrieval work."
-        )
-    elif reuse_rate >= 0.2:
-        verdict = "MODERATE"
-        parts.append(
-            f"Only {reuse_rate * 100:.0f}% of cache access events were hits — the cache is reused "
-            "sometimes but still does a lot of write-once work."
-        )
-    else:
-        verdict = "LOW VALUE"
-        parts.append(
-            f"Only {reuse_rate * 100:.0f}% of cache access events were hits — the cache is mostly "
-            "write-once, rarely reused."
-        )
-
-    if dead_write_count:
-        parts.append(
-            f"{dead_write_count} write(s) were never hit before being superseded (or before the "
-            "end of the observed log) — wasted writes with no payoff so far."
-        )
-
-    if repeated_refetch_count:
-        parts.append(
-            f"{repeated_refetch_count} repeated refetch(es) detected within "
-            f"{KGMCP_REFETCH_WINDOW_SECONDS}s of a prior access to the same row — duplicated work "
-            "the cache should have caught but didn't."
-        )
-
-    if search_calls_total > 0:
-        if coverage_rate is not None and coverage_rate < 0.5:
-            parts.append(
-                f"Coverage is low: {total_events} cache event(s) against {search_calls_total} "
-                f"real search/graphify calls ({coverage_rate * 100:.0f}% coverage) — much "
-                "retrieval activity bypasses the cache path entirely, so even a high reuse rate "
-                "on the events that DO reach the cache understates the real gap. This reflects "
-                "two independently-implemented tools (only knowledge_context/knowledge_status "
-                "are cache-instrumented; search_docs is served by a separate, uninstrumented "
-                "implementation), not a fixable inefficiency in the cache itself."
-            )
-            if verdict == "EFFECTIVE":
-                verdict = "MODERATE"
-
-    return verdict, " ".join(parts)
-
-
-def compute_kgmcp_cache_efficiency_metrics(
-    access_log_rows: list[dict], tools: list[dict] | None = None,
-    all_tools: list[dict] | None = None,
-) -> dict:
-    """Pure, read-only computation over `access_log_rows` — tools/retrieval_cache.py::
-    read_cache_access_log()'s real output, or a fixture list in the same row shape in tests —
-    plus `tools` (tools.jsonl rows, same shape build_search_count_section() already consumes)
-    for the coverage-vs-usage signal below. Mirrors compute_retrieval_metrics()'s own shape (a
-    pure function over already-loaded data, never opens retrieval_cache.db itself) so this stays
-    independently testable and so the CLI Markdown report (generate()) and the JSON API
-    (DashboardCache.get_agent_monitoring_stats()) compute from the exact same call, never two
-    independently-drifting implementations.
-
-    This is deliberately more than a raw hit/write counter — the real ask behind this section is
-    "can a human glance at this and judge whether the knowledge gateway cache is working well or
-    not," so four distinct efficiency signals are computed, each answering a different question a
-    raw count alone cannot:
-    - `overall_reuse_rate`/per-ticket/per-agent reuse_rate — hit / (hit + write): is the cache
-      mostly reused (high value) or mostly write-once (low value)?
-    - `repeated_refetches` — same real cache row written again within
-      KGMCP_REFETCH_WINDOW_SECONDS of a prior access: duplicated work the cache should have
-      caught but didn't.
-    - `dead_writes`/`dead_write_count` — a write never hit before the next write to that same row
-      (or before the end of the observed log): wasted writes with no payoff so far.
-    - `coverage` — real search_docs/graphify/ToolSearch call volume (from `tools`, via
-      build_search_count_section()) compared against total cache access events: how much real
-      retrieval activity even touches the cache path at all, vs. bypasses it entirely. A period
-      with substantial search/graphify activity but zero cache events is a real, notable finding
-      (cache not being used at all) — surfaced explicitly by `verdict`, never hidden by only
-      reporting rates that are undefined/zero without an accompanying "coverage: 0" flag.
-    `verdict`/`verdict_explanation` (see _kgmcp_verdict()) fold all four signals into one
-    glanceable label + 1-3 sentence explanation, so a reader is never left to eyeball a table of
-    numbers to answer "is this good or bad."
-
-    A low `coverage_rate` (`coverage["coverage_rate"]`) is an architectural fact, not a fixable
-    cache inefficiency: this cache (`retrieval_cache.py::log_cache_access()`) is wired only into
-    `tools/knowledge_gateway_mcp.py`'s `knowledge_context`/`knowledge_status` tools, while the
-    hard-rule-mandated `mcp__knowledge-search__search_docs` — the actual bulk of real search
-    volume feeding `search_calls_total` above — is served by a completely separate,
-    uninstrumented implementation (`tools/knowledge_search.py`, confirmed zero references to
-    `retrieval_cache`/`knowledge_gateway_cache`) that never touches this cache path at all. A
-    near-zero coverage number therefore reflects two independently-implemented tools, only one
-    of which is cache-instrumented, not evidence the cache is being underused where it applies
-    (TCK-20260824-RETRO-METRIC-CAVEATS).
-
-    `search_calls_total` (the coverage denominator) is deliberately computed from `all_tools`
-    when the caller supplies it, not the period-scoped `tools` (TCK-20260826-KGMCP-COVERAGE-RATE-
-    OVERFLOW). `access_log_rows` (the numerator's source) is always the all-time corpus — main()
-    never period-slices `kgmcp_access_log` (see generate()'s own docstring) — so pairing that
-    all-time numerator against a period-scoped `tools` denominator produced values like 1059.3%
-    on a one-week report: not a real coverage signal, just a time-window mismatch. Falls back to
-    `tools` when `all_tools` is not supplied (e.g. a direct unit-test call with only `tools` set),
-    preserving prior behavior exactly for those callers.
-
-    `ticket_id`/`agent` absent on a row (ad-hoc, non-workflow calls, or a stale/unmigrated sidecar
-    — see tools/retrieval_cache.py::read_current_run_sidecar()) are grouped under the literal
-    "unattributed" key, matching build_search_count_section()'s own established run_id=None ->
-    "unattributed" convention, reused here rather than reinvented.
-    """
-    total_hits = sum(1 for r in access_log_rows if r.get("event_type") == "hit")
-    total_writes = sum(1 for r in access_log_rows if r.get("event_type") == "write")
-    stale_attributed = sum(1 for r in access_log_rows if r.get("sidecar_stale"))
-
-    def _reuse_rate(hit: int, write: int):
-        denom = hit + write
-        return round(hit / denom, 4) if denom else None
-
-    per_ticket = defaultdict(lambda: {"hit": 0, "write": 0})
-    per_agent = defaultdict(lambda: {"hit": 0, "write": 0})
-    for r in access_log_rows:
-        event_type = r.get("event_type")
-        if event_type not in ("hit", "write"):
-            continue
-        ticket_id = r.get("ticket_id") or "unattributed"
-        agent = r.get("agent") or "unattributed"
-        per_ticket[ticket_id][event_type] += 1
-        per_agent[agent][event_type] += 1
-
-    per_ticket_out = {
-        t: {"hit": c["hit"], "write": c["write"], "reuse_rate": _reuse_rate(c["hit"], c["write"])}
-        for t, c in per_ticket.items()
-    }
-    per_agent_out = {
-        a: {"hit": c["hit"], "write": c["write"], "reuse_rate": _reuse_rate(c["hit"], c["write"])}
-        for a, c in per_agent.items()
-    }
-
-    grouped = defaultdict(list)
-    for r in access_log_rows:
-        if r.get("ts") is None:
-            continue
-        grouped[_kgmcp_access_log_group_key(r)].append(r)
-
-    repeated_refetches = []
-    dead_writes = []
-    for rows in grouped.values():
-        rows_sorted = sorted(rows, key=lambda r: r["ts"])
-
-        # Repeated-refetch detection: any 'write' following ANY prior event (hit or write) for
-        # this same real cache row within the window.
-        for i in range(1, len(rows_sorted)):
-            cur = rows_sorted[i]
-            if cur.get("event_type") != "write":
-                continue
-            prev = rows_sorted[i - 1]
-            gap = cur["ts"] - prev["ts"]
-            if gap <= KGMCP_REFETCH_WINDOW_SECONDS:
-                repeated_refetches.append(
-                    {
-                        "cache_level": cur.get("cache_level"),
-                        "run_id": cur.get("run_id"),
-                        "ticket_id": cur.get("ticket_id") or "unattributed",
-                        "agent": cur.get("agent") or "unattributed",
-                        "gap_s": round(gap, 1),
-                        "prior_run_id": prev.get("run_id"),
-                        "prior_event_type": prev.get("event_type"),
-                    }
-                )
-
-        # Dead-write detection: a 'write' with no 'hit' between it and the next 'write' for the
-        # same row (or the end of the observed log, if it is the row's most recent write) never
-        # paid off within the data this function can see.
-        write_positions = [i for i, r in enumerate(rows_sorted) if r.get("event_type") == "write"]
-        for pos, i in enumerate(write_positions):
-            next_write_i = (
-                write_positions[pos + 1] if pos + 1 < len(write_positions) else len(rows_sorted)
-            )
-            window = rows_sorted[i + 1:next_write_i]
-            if not any(r.get("event_type") == "hit" for r in window):
-                w = rows_sorted[i]
-                dead_writes.append(
-                    {
-                        "cache_level": w.get("cache_level"),
-                        "run_id": w.get("run_id"),
-                        "ticket_id": w.get("ticket_id") or "unattributed",
-                        "agent": w.get("agent") or "unattributed",
-                        "ts": w.get("ts"),
-                    }
-                )
-
-    # TCK-20260826-KGMCP-COVERAGE-RATE-OVERFLOW: access_log_rows (the numerator's source) is
-    # always the all-time corpus (see generate()'s own docstring on kgmcp_access_log never being
-    # period-sliced) — so the denominator must also be all-time, or coverage_rate compares two
-    # different time windows and can exceed 100% for a reason that has nothing to do with real
-    # cache coverage (e.g. 1059.3% on a --week report: all-time cache events over one week's
-    # worth of search calls). `all_tools` (already loaded once, unfiltered, in main() for the
-    # Zero-Invocation Skill Flags section) is preferred when the caller explicitly supplies it;
-    # `tools` remains the fallback so every pre-existing direct call/test with only `tools` set
-    # keeps its exact prior behavior.
-    search_calls_total = build_search_count_section(
-        all_tools if all_tools is not None else (tools or [])
-    )["total"]
-    total_events = total_hits + total_writes
-    coverage_rate = (total_events / search_calls_total) if search_calls_total else None
-
-    verdict, verdict_explanation = _kgmcp_verdict(
-        total_hits, total_writes, len(dead_writes), len(repeated_refetches),
-        search_calls_total, coverage_rate,
-    )
-
-    return {
-        "total_hits": total_hits,
-        "total_writes": total_writes,
-        "overall_reuse_rate": _reuse_rate(total_hits, total_writes),
-        "per_ticket": per_ticket_out,
-        "per_agent": per_agent_out,
-        "repeated_refetch_window_seconds": KGMCP_REFETCH_WINDOW_SECONDS,
-        "repeated_refetches": repeated_refetches,
-        "dead_writes": dead_writes,
-        "dead_write_count": len(dead_writes),
-        "coverage": {
-            "search_calls_total": search_calls_total,
-            "cache_events_total": total_events,
-            "coverage_rate": coverage_rate,
-        },
-        "verdict": verdict,
-        "verdict_explanation": verdict_explanation,
-        "stale_attribution_count": stale_attributed,
-        "derivation": (
-            "Derived from tools/retrieval_cache.py::read_cache_access_log()'s real "
-            "retrieval_cache_access_log rows (Level 1 provider-result + Level 2 context-packet "
-            "cache hit/write events only — 'invalidate' is a schema-supported but never-emitted "
-            "event_type today) plus tools.jsonl's real search_docs/graphify/ToolSearch call "
-            "volume (via build_search_count_section(), for `coverage` only). reuse_rate = hit / "
-            "(hit + write) per ticket/agent/overall — the fraction of real access events served "
-            "from cache rather than re-fetched. repeated_refetches flags a 'write' event for the "
-            "same real cache row (same cache_level + query_hash/repo_branch_scope, or same "
-            f"cache_level + packet_id) following any prior event for that row within "
-            f"{KGMCP_REFETCH_WINDOW_SECONDS}s — content re-fetched instead of reused. "
-            "dead_writes flags a 'write' never followed by a 'hit' before the next write to that "
-            "same row (or the end of the observed log) — a wasted write, as of what this function "
-            "can currently see (a row that is still live may yet be hit later; this is not a "
-            "permanent-deadness claim past the observed data). coverage compares total cache "
-            "events against real search/graphify tool-call volume — a period with substantial "
-            "search activity but few/zero cache events means retrieval work is bypassing the "
-            "cache path, a real, distinct finding from a low reuse_rate. `ticket_id`/`agent` "
-            "absent on a row (ad-hoc calls or a stale sidecar) are grouped under the literal "
-            "'unattributed' key, mirroring build_search_count_section()'s run_id=None convention. "
-            "`stale_attribution_count` counts rows whose `.claude/current_run` sidecar pointed at "
-            "an already-closed ticket at log time (tools/retrieval_cache.py::"
-            "_sidecar_run_is_stale()) — a real, disclosed known limitation of sidecar-based "
-            "attribution (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD "
-            "Scope item 6), not a fixed one; these rows are still counted in hit/write/reuse-rate "
-            "totals above, just flagged rather than silently trusted or dropped. `verdict`/"
-            "`verdict_explanation` are a rule-based summary of the four signals above (reuse rate, "
-            "repeated refetches, dead writes, coverage) — every clause is a literal readout of an "
-            "already-computed number, never a fabricated score."
-        ),
-    }
-
-
 def compute_retro_metrics(
-    runs, events, tickets_root=None, tools=None, kgmcp_access_log=None, all_tools=None,
+    runs, events, tickets_root=None, tools=None, all_tools=None,
 ) -> dict:
     """Pure computation over `runs`/`events` — the same metrics `generate()` has always rendered
     to Markdown, extracted (TCK-20260718-RETRO-STATS-REFACTOR) so a JSON API
@@ -1286,19 +965,15 @@ def compute_retro_metrics(
             "cost_proxy_score": outliers_cost_proxy_score,
         },
         # Additive (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD):
-        # `tools`/`kgmcp_access_log` default to None, so every pre-existing caller that omits them
-        # (the CLI's own historical positional-args call pattern, and every pre-existing test
-        # constructed before this ticket) gets these two keys computed over an empty list — real,
-        # not fabricated, values (build_skill_usage_section([])/compute_kgmcp_cache_efficiency_
-        # metrics([])'s own genuine zero/empty-input output), never omitted from the dict. This
-        # keeps the "CLI Markdown report and JSON API stay logically consistent" property
-        # TCK-20260718-RETRO-STATS-REFACTOR established: both consumers read these same two keys
-        # from this one function, rather than generate() computing skill_usage separately (as it
-        # did before this ticket) and the JSON API never seeing it at all.
+        # `tools` defaults to None, so every pre-existing caller that omits it (the CLI's own
+        # historical positional-args call pattern, and every pre-existing test constructed before
+        # this ticket) gets this key computed over an empty list — a real, not fabricated, value
+        # (build_skill_usage_section([])'s own genuine zero/empty-input output), never omitted
+        # from the dict. This keeps the "CLI Markdown report and JSON API stay logically
+        # consistent" property TCK-20260718-RETRO-STATS-REFACTOR established: both consumers read
+        # this same key from this one function, rather than generate() computing skill_usage
+        # separately (as it did before this ticket) and the JSON API never seeing it at all.
         "skill_usage": build_skill_usage_section(tools or []),
-        "kgmcp_cache_efficiency": compute_kgmcp_cache_efficiency_metrics(
-            kgmcp_access_log or [], tools=tools or [], all_tools=all_tools
-        ),
     }
 
 
@@ -1564,7 +1239,6 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    kgmcp_access_log=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1581,30 +1255,20 @@ def generate(
     substitute `tools` (or any other implicit default) for a missing `all_tools` here: doing so
     was a confirmed architecture-review violation (2026-08-15) that silently coupled 121+
     pre-existing tests' synthetic fixtures to the real, unmocked skills catalog.
-
-    `kgmcp_access_log` (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-DASHBOARD)
-    is, like `all_tools`, deliberately never period-sliced by the caller — main() always passes
-    the full corpus regardless of --days/--week/--all, mirroring the existing `## Retrieval
-    Quality` section's own precedent ("visible under --all, not --days/--week, since these run_ids
-    are deliberately unlinked from any runs.jsonl row") for the same reason: retrieval_cache.db's
-    access-log rows are attributed via the `.claude/current_run` sidecar at call time, not via any
-    runs.jsonl timestamp this function's period filters already operate on.
     """
     metrics = compute_retro_metrics(
-        runs, events, tickets_root, tools=tools, kgmcp_access_log=kgmcp_access_log,
-        all_tools=all_tools,
+        runs, events, tickets_root, tools=tools, all_tools=all_tools,
     )
     retrieval_metrics = compute_retrieval_metrics(events)
     shadow_comparison = compute_shadow_baseline_comparison(events)
     tool_safety = compute_tool_safety_metrics(events, tools or [])
     sit = compute_search_investigation_trend(tools or [])
     pircc = compute_parity_index_readpath_call_count(tools or [])
-    # su/kce are read from `metrics` (compute_retro_metrics()'s own output), not recomputed via a
+    # su is read from `metrics` (compute_retro_metrics()'s own output), not recomputed via a
     # second, separate call — guarantees this Markdown renderer and the JSON API
-    # (DashboardCache.get_agent_monitoring_stats()) always report identical numbers for both
-    # sections, since both now source from the exact same compute_retro_metrics() call.
+    # (DashboardCache.get_agent_monitoring_stats()) always report identical numbers for this
+    # section, since both now source from the exact same compute_retro_metrics() call.
     su = metrics["skill_usage"]
-    kce = metrics["kgmcp_cache_efficiency"]
     zif = compute_zero_invocation_skill_flags(all_tools) if all_tools is not None else None
     rs = metrics["run_summary"]
     gate_counter = Counter(metrics["gate_failure_breakdown"])
@@ -2118,101 +1782,6 @@ def generate(
     lines.append(f"_{pircc['derivation']}_")
     lines.append("")
 
-    # KGMCP Cache Efficiency (TCK-20260818-STANDARD-KGMCP-CACHE-ATTRIBUTION-AND-SKILL-USAGE-
-    # DASHBOARD): unlike most sections in this file, this one ALWAYS renders, mirroring Parity
-    # Index Read-Path Usage's own precedent immediately above — "zero cache activity" is itself
-    # the reportable finding (a real, documented failure mode: substantial search_docs/graphify
-    # investigation activity with zero corresponding cache-DB events means the cache path is being
-    # bypassed entirely, not merely underused), never a period this section should stay silent
-    # about. Always reflects the FULL retrieval_cache_access_log corpus regardless of the report's
-    # own --days/--week/--all period selection — see generate()'s own docstring for why (mirrors
-    # `## Retrieval Quality`'s established "visible under --all only, in spirit" precedent for
-    # KGMCP-adjacent data unlinked from runs.jsonl periods).
-    lines.append("## KGMCP Cache Efficiency")
-    lines.append("")
-    lines.append(
-        "_Reflects the full retrieval_cache_access_log corpus regardless of this report's "
-        "--days/--week/--all period selection — these rows are logged against "
-        "`.claude/current_run` sidecar attribution at call time, not `runs.jsonl` timestamps._"
-    )
-    lines.append("")
-    lines.append(
-        "_A low coverage rate is architectural, not a fixable cache inefficiency: only "
-        "`knowledge_gateway_mcp.py`'s `knowledge_context`/`knowledge_status` tools are wired "
-        "into this cache; the hard-rule-mandated `mcp__knowledge-search__search_docs` is served "
-        "by a completely separate, uninstrumented implementation (`knowledge_search.py`) that "
-        "never touches this cache path at all._"
-    )
-    lines.append("")
-    lines.append(f"**Cache Efficiency: {kce['verdict']}** — {kce['verdict_explanation']}")
-    lines.append("")
-
-    reuse_str = "n/a" if kce["overall_reuse_rate"] is None else f"{kce['overall_reuse_rate'] * 100:.1f}%"
-    coverage = kce["coverage"]
-    coverage_str = "n/a" if coverage["coverage_rate"] is None else f"{coverage['coverage_rate'] * 100:.1f}%"
-    lines.append("| Metric | Value |")
-    lines.append("|---|---|")
-    lines.append(f"| Total hits | {kce['total_hits']} |")
-    lines.append(f"| Total writes | {kce['total_writes']} |")
-    lines.append(f"| Overall reuse rate | {reuse_str} |")
-    lines.append(f"| Dead writes (never hit) | {kce['dead_write_count']} |")
-    lines.append(f"| Repeated refetches (within {kce['repeated_refetch_window_seconds']}s) | {len(kce['repeated_refetches'])} |")
-    lines.append(f"| Real search/graphify calls (coverage denominator) | {coverage['search_calls_total']} |")
-    lines.append(f"| Coverage rate (cache events / search calls) | {coverage_str} |")
-    if kce["stale_attribution_count"]:
-        lines.append(f"| Stale-sidecar-attributed rows | {kce['stale_attribution_count']} |")
-    lines.append("")
-
-    if kce["per_ticket"]:
-        lines.append("### Per-Ticket")
-        lines.append("")
-        lines.append("| Ticket | Hits | Writes | Reuse rate |")
-        lines.append("|---|---|---|---|")
-        for ticket in sorted(kce["per_ticket"]):
-            row = kce["per_ticket"][ticket]
-            rr = "n/a" if row["reuse_rate"] is None else f"{row['reuse_rate'] * 100:.1f}%"
-            lines.append(f"| {ticket} | {row['hit']} | {row['write']} | {rr} |")
-        lines.append("")
-
-    if kce["per_agent"]:
-        lines.append("### Per-Agent")
-        lines.append("")
-        lines.append("| Agent | Hits | Writes | Reuse rate |")
-        lines.append("|---|---|---|---|")
-        for agent in sorted(kce["per_agent"]):
-            row = kce["per_agent"][agent]
-            rr = "n/a" if row["reuse_rate"] is None else f"{row['reuse_rate'] * 100:.1f}%"
-            lines.append(f"| {agent} | {row['hit']} | {row['write']} | {rr} |")
-        lines.append("")
-
-    if kce["repeated_refetches"]:
-        lines.append(
-            f"### Repeated Refetches (within {kce['repeated_refetch_window_seconds']}s of a prior access)"
-        )
-        lines.append("")
-        lines.append("| Cache Level | Run | Ticket | Agent | Gap (s) | Prior Run |")
-        lines.append("|---|---|---|---|---|---|")
-        for rf in kce["repeated_refetches"]:
-            lines.append(
-                f"| {rf['cache_level']} | {rf['run_id']} | {rf['ticket_id']} | {rf['agent']} | "
-                f"{rf['gap_s']} | {rf['prior_run_id']} |"
-            )
-        lines.append("")
-
-    if kce["dead_writes"]:
-        lines.append("### Dead Writes (never hit)")
-        lines.append("")
-        lines.append("| Cache Level | Run | Ticket | Agent |")
-        lines.append("|---|---|---|---|")
-        for dw in kce["dead_writes"]:
-            lines.append(
-                f"| {dw['cache_level']} | {dw['run_id']} | {dw['ticket_id']} | {dw['agent']} |"
-            )
-        lines.append("")
-
-    lines.append(f"_{kce['derivation']}_")
-    lines.append("")
-
     # Skill Usage (TCK-20260810-SKILL-USAGE-RETRO-TRACKING): two subsections of genuinely
     # different scope under one heading — a period-scoped per-skill invocation count (trended
     # report-over-report via index.md's Skill Invocations column, gated like Search & Investigation
@@ -2273,9 +1842,6 @@ def main():
 
     all_runs, all_events = _load_runs_and_events()
     all_tools = _load_source(DEFAULT_TOOLS_FILE, "tools")
-    # Never period-sliced (see generate()'s own docstring) — read_cache_access_log() never raises
-    # (returns [] on a fresh/never-migrated retrieval_cache.db), so no try/except is needed here.
-    all_kgmcp_access_log = read_cache_access_log()
 
     if args.all:
         runs = all_runs
@@ -2304,7 +1870,6 @@ def main():
 
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
-        kgmcp_access_log=all_kgmcp_access_log,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

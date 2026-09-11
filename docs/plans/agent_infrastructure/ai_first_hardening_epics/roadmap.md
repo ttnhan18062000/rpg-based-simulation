@@ -26,20 +26,20 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | # | Item | Bucket | Horizon | Detail doc |
 |---|---|---|---|---|
 | 1 | Per-agent least-privilege tool scoping | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M1, M3) |
-| 2 | Bash secret-exposure advisory hook | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M4) |
-| 3 | Versioned capability-envelope baseline | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M2) |
+| 2 | ~~Bash secret-exposure advisory hook~~ **SHIPPED** — `TCK-20260904-BASH-SECRET-SCAN-HOOK` landed M4 | A — Committed | H0, start now | `governance_capability_policy_epic.md` (M4 — shipped) |
+| 3 | ~~Versioned capability-envelope baseline~~ **SHIPPED** — `TCK-20260904-CAPABILITY-ENVELOPE-BASELINE` | A — Committed | H0 (was) | `governance_capability_policy_epic.md` (M2 — shipped) |
 | 4 | ~~AST-based import-boundary enforcement~~ **SUPERSEDED — already shipped** on `main` (`TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`, found during the 2026-09-04 `create-tickets` investigation pass) | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M1 note; remaining scope is M2/M3) |
 | 5 | ~~Convert 2 proven-failing prose rules to hooks~~ **SHIPPED** — M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3 (`TCK-20260904-TEST-SCOPER-HANG-GUARD`) both landed | A — Committed | H0 (was) | `guardrail_enforcement_epic.md` (M2, M3 — both shipped) |
-| 6 | Remove/archive knowledge-gateway — **UNBLOCKED 2026-09-07**: `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` re-ratified to Option C (deprecate) via `TCK-20260907-KGMCP-DEPRECATION-EPIC`; execution (M2) in progress | A — Committed | H0, start-now | `standalone_items.md` (§1) |
+| 6 | ~~Remove/archive knowledge-gateway~~ **SHIPPED** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` re-ratified to Option C (deprecate) via `TCK-20260907-KGMCP-DEPRECATION-EPIC`; execution (M2, all 4 steps) completed by `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE` (steps 1-2) and `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (steps 3-4) | A — Committed | H0 (was) | `standalone_items.md` (§1 — shipped) |
 | 7 | ~~Migrate the 2 remaining sidecar stragglers~~ **SHIPPED** — corrected to 1 remaining during the 2026-09-04 `create-tickets` investigation pass (`tools/retrieval_cache.py` was already migrated by `TCK-20260824-RETRIEVAL-CACHE-SIDECAR-UNIFY`); the last straggler, `.claude/settings.json`'s inline `Edit\|Write` hook, migrated by `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` | A — Committed | H1 (was) | `workflow_reliability_epic.md` (M1 — shipped) |
 | 8 | ~~`tools.jsonl` sharding + reconciled lifecycle~~ **SUPERSEDED — already shipped** on `main` (PR #112, `TCK-20260902/903-MONITORING-*`, found during planning discussion) | A — Committed | H1 (was) | `telemetry_retention_epic.md` (M1 note; remaining scope is M2/M3) |
-| 9 | Model-diverse reviewer — deploy shadow logging | A — Committed | H1, schedule later | `review_independence_epic.md` (M1) |
+| 9 | ~~Model-diverse reviewer — deploy shadow logging~~ **SHIPPED** — `TCK-20260904-SHADOW-REVIEWER-LOGGING` | A — Committed | H1 (was) | `review_independence_epic.md` (M1 — shipped) |
 | 10 | ~~Extend `cost_proxy_score` coverage~~ **SHIPPED (code) — real-run confirmation outstanding**: `TCK-20260904-COST-PROXY-EPIC-TICKETS` added sidecar coverage to `implement-epic.js` (all 4 real top-level `agent()` sites) and `create-tickets.js` (4 of 7 real sites — `writeMonitoring` and the 2 `pipeline()` fan-out sites are permanently excluded, not a gap) and widened `record_events.py`'s workflow filter; this item's own acceptance signal (non-null `cost_proxy_score` after each workflow's next real run) has not yet been directly confirmed | A — Committed | H2 (was) | `standalone_items.md` (§2) |
-| 11 | `working_log.csv` parser and cleanup | A — Committed | H2, schedule later | `standalone_items.md` (§3) |
-| 12 | Provider-portability conformance test | A — Committed | H2, schedule later | `standalone_items.md` (§4) |
+| 11 | ~~`working_log.csv` parser and cleanup~~ **SHIPPED** — `TCK-20260904-WORKING-LOG-CSV-PARSER` | A — Committed | H2 (was) | `standalone_items.md` (§3 — shipped) |
+| 12 | ~~Provider-portability conformance test~~ **SHIPPED** — `TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST` | A — Committed | H2 (was) | `standalone_items.md` (§4 — shipped) |
 | 13 | Filtered replay eval pilot + dataset hygiene + metric design — **EXECUTED, all 3 Exit Criteria MET** (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT) — items 18-20 unblocked per the Eval-pilot exit gate | B — Experiment | H1 | `agent_evaluation_foundation_experiment.md` |
-| 14 | Ticket-claim detection logging | B — Experiment | H1 | `workflow_reliability_epic.md` (M2) |
-| 15 | Phase-level resume — design/validation-rule resolution | B — Experiment | H1 | `workflow_reliability_epic.md` (M3) |
+| 14 | ~~Ticket-claim detection logging~~ **SHIPPED** — `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` | B — Experiment | H1 (was) | `workflow_reliability_epic.md` (M2 — shipped) |
+| 15 | ~~Phase-level resume — design/validation-rule resolution~~ **SHIPPED** — `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` | B — Experiment | H1 (was) | `workflow_reliability_epic.md` (M3 — shipped) |
 | 16 | Model-diverse reviewer — shadow comparison &amp; cutover decision | B — Experiment | H2 | `review_independence_epic.md` (M2) |
 | 17 | Bash secret-exposure hook — blocking-escalation decision | B — Experiment | H2 | `governance_capability_policy_epic.md` (follow-on, post-M5) |
 | 18 | Model-based routing for mechanical agents | C — Future option | H2, blocked | `bucket_c_future_options.md` |
@@ -90,6 +90,42 @@ invocation. This moves item 10 out of the "3 still Horizon-2-only" group above, 
 Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 2, 3, 7, 9, plus item
 1's remaining waves).
 
+**Item 2 — shipped (2026-09-08)**: `TCK-20260904-BASH-SECRET-SCAN-HOOK` landed this item's full
+scoped milestone — a new `PreToolUse[4]` entry in `.claude/settings.json` reusing
+`tools/write_path_guard.py::scan_for_secrets()` unmodified, advisory-only, verified by
+`tests/tools/test_bash_secret_scan_hook.py` (see `governance_capability_policy_epic.md`'s M4
+section for the shipped detail). Both of this item's own blockers — the `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE`
+re-ratification and the `scan_for_secrets()` extraction — were resolved separately by
+`TCK-20260907-KGMCP-DEPRECATION-EPIC` and `TCK-20260907-KGMCP-REDACTION-EXTRACT-ARCHIVE`. This
+moves item 2 out of the "7 remaining to implement" count above, leaving **6 remaining to implement
+overall (1, 3, 7, 9, plus item 1's remaining waves)**.
+
+**Items 3, 6, 9, 11, 12, 14, 15 — shipped; item 7 count corrected (2026-09-10)**: a routine
+inventory re-check (`TCK-20260910-AI-FIRST-ROADMAP-INVENTORY-SYNC`) found this table had drifted —
+`tickets/done/` was cross-checked item by item rather than trusted from a prior snapshot. Item 6's
+own row (above) is fixed in this same pass: it read "execution (M2) in progress" even after
+`TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (M2 steps 3-4, completing the milestone) merged —
+`TCK-20260907-KGMCP-DEPRECATION-EPIC` is now fully executed, all four M2 steps done. This does not
+change the "remaining to implement" tally below: item 6 was never counted in that Bucket-A total in
+the first place (tracked separately, per the original 2026-09-04 snapshot's own "item 6 is BLOCKED,
+not committed/start-now" framing above) — this fix closes out its own row/status only. Item 3
+(`TCK-20260904-CAPABILITY-ENVELOPE-BASELINE`), item 9 (`TCK-20260904-SHADOW-REVIEWER-LOGGING`),
+item 11 (`TCK-20260904-WORKING-LOG-CSV-PARSER`), item 12
+(`TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST`), item 14
+(`TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING`), and item 15
+(`TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN`) have all shipped — each confirmed `DONE` in
+its own ticket file, not assumed from this list. Separately, item 7's own inventory row (above) has
+read **SHIPPED** since `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE` landed on 2026-09-04, but the
+"6 remaining" count in the paragraph directly above was never updated to drop it — a pre-existing
+prose omission, not a new ship, caught by this same re-check. This moves items 3, 9, 11, and 12 out
+of the "3 still Horizon-2-only" / Horizon-2 standalone-items group (leaving **0 still
+Horizon-2-only** — see the Horizon 2 section below), and items 3, 7, 9 out of the "remaining to
+implement" count, leaving **item 1's remaining waves (Wave 2/3) as the only Bucket-A item still
+open**. Items 14 and 15 (Bucket B) both being fully shipped also means item 13's Eval-pilot exit
+gate no longer has any unshipped Bucket-B sibling in the same epic grouping (`workflow_reliability_
+epic.md`) — noted here for completeness, it does not itself change any gate's own evidence-based
+trigger condition.
+
 ## Epics and detail docs
 
 ### Horizon 0 — start now
@@ -97,34 +133,39 @@ Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 
 - **Epic G — Governance &amp; Capability Policy** (`governance_capability_policy_epic.md`): items
   1–3. Per-agent tool scoping (item 1) is **partially shipped** — M1 and M3's Wave 1 landed via
   `TCK-20260904-AGENT-TOOL-USAGE-BASELINE` and `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`; Wave
-  2/3 remain open (see the note above). The Bash secret-exposure advisory hook (item 2, M4) and the
-  capability-envelope baseline (item 3, M2) are unaffected and still open.
+  2/3 remain open (see the note above). The Bash secret-exposure advisory hook (item 2, M4) has
+  **shipped** (see "Item 2 — shipped" paragraph below); the capability-envelope baseline (item 3,
+  M2) has **shipped** too, `TCK-20260904-CAPABILITY-ENVELOPE-BASELINE` (see the "Items 3, 9, 11,
+  12, 14, 15 — shipped" note above).
 - **Epic H — Guardrail Enforcement** (`guardrail_enforcement_epic.md`): item 5 — **SHIPPED** (item
   4, AST boundary enforcement, is separately superseded — already shipped, see item 4's inventory
   row above). Both prose-rule-to-hook conversions with directly observed repeated-failure evidence
   have landed: M2 (`TCK-20260904-DOC-COVERAGE-REVERSE-CHECK`) and M3
   (`TCK-20260904-TEST-SCOPER-HANG-GUARD`).
-- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **UNBLOCKED
-  2026-09-07** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified to Option C (deprecate) via
+- **Standalone — knowledge-gateway removal** (`standalone_items.md` §1): item 6, **CLOSED
+  2026-09-10** — `TCK-20260824-KGMCP-KEEP-OR-DEPRECATE` was re-ratified to Option C (deprecate) via
   `TCK-20260907-KGMCP-DEPRECATION-EPIC` (see item 6's inventory row above and
   `keep_or_deprecate_decision.md` §4 for the full re-ratification record). Not an epic —
-  independent value, independent rollback — and shares one real dependency with Epic G's M4
-  (`scan_for_secrets()` extraction), now being executed together per the epic's M2.
+  independent value, independent rollback — and shared one real dependency with Epic G's M4
+  (`scan_for_secrets()` extraction), executed together per the epic's M2 steps 1-2; M2 steps 3-4
+  (monitoring window, then hard-delete) were completed by
+  `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` on 2026-09-10. All four milestones now done, no work
+  remains under this item.
 
 ### Horizon 1 — ready, schedule later (horizon label is strategic staging, not an automatic execution-order constraint — three items below have no H0-gate dependency at all)
 
-- **Epic — Workflow Reliability** (`workflow_reliability_epic.md`): items 7, 14, 15. Item 7
-  (sidecar stragglers) is Bucket A / READY with **no H0-gate dependency** — it may start in
-  parallel with Horizon 0, capacity allowing; the `.claude/settings.json` overlap noted below is a
-  git coordination concern, not an architectural one. Items 14–15 are Bucket-B experiment/design
-  work within the same epic grouping, matching the frozen proposal's own worked-example grouping
-  (sidecar migration + phase resume + ticket-claim detection = one epic).
+- **Epic — Workflow Reliability** (`workflow_reliability_epic.md`): items 7, 14, 15 — all three
+  **shipped** (item 7 via `TCK-20260904-SIDECAR-SETTINGS-HOOK-MIGRATE`; items 14–15 via
+  `TCK-20260907-TICKET-CLAIM-DETECTION-LOGGING` and `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN`
+  respectively — see the "Items 3, 9, 11, 12, 14, 15 — shipped" note above), matching the frozen
+  proposal's own worked-example grouping (sidecar migration + phase resume + ticket-claim detection
+  = one epic).
 - **Epic — Telemetry &amp; Retention** (`telemetry_retention_epic.md`): item 8's original scope is
   **superseded — already shipped** on `main` (found mid-planning; see the epic doc's M1 note).
   Remaining live scope is the repo-wide artifact-retention classification and ownership
   documentation (M2/M3), unaffected by the H0 gate — may start immediately, capacity allowing.
 - **Standalone — Review Independence, M1 only** (`review_independence_epic.md`): item 9 (shadow
-  logging deployment). Independent value, independent rollback, independent of the H0 gate.
+  logging deployment) — **shipped**, `TCK-20260904-SHADOW-REVIEWER-LOGGING`.
 - **Experiment — Agent Evaluation Foundation** (`agent_evaluation_foundation_experiment.md`):
   item 13. The single highest-leverage piece of evidence-generating work in the whole roadmap —
   every Bucket-C item downstream is gated on its exit criteria.
@@ -132,9 +173,12 @@ Horizon-2-only — items 11–12** and **7 remaining to implement** overall (1, 
 ### Horizon 2 — ready, schedule later / experiment follow-ons
 
 - **Standalone items** (`standalone_items.md` §2–4): items 10–12 — three independent, low-effort
-  committed items. Item 10 (`cost_proxy_score` coverage) has since **shipped**
-  (`TCK-20260904-COST-PROXY-EPIC-TICKETS`, see the item-10 note above); `working_log.csv` cleanup
-  (11) and the provider conformance test (12) remain open.
+  committed items, all now shipped. Item 10 (`cost_proxy_score` coverage) shipped
+  (`TCK-20260904-COST-PROXY-EPIC-TICKETS`, see the item-10 note above; its own acceptance-signal
+  confirmation remains outstanding). `working_log.csv` cleanup (11,
+  `TCK-20260904-WORKING-LOG-CSV-PARSER`) and the provider conformance test (12,
+  `TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST`) both shipped 2026-09-10 (see the "Items 3,
+  9, 11, 12, 14, 15 — shipped" note above).
 - **Experiment follow-ons**: item 16 (`review_independence_epic.md` M2) and item 17
   (`governance_capability_policy_epic.md`'s post-M5 follow-on) — both are decisions that can only
   be made once their Horizon-0/1 committed counterpart has run long enough to produce real data.
@@ -282,10 +326,13 @@ conditions:
    normal advisory operation.
 3. Both converted guardrail hooks (item 5) show **zero recurrence** of their target failure
    pattern across ≥2 subsequent weekly retro reports.
-4. `knowledge-gateway` (item 6) archived with **zero renewed calls** observed over 2 weeks — item 6
-   was re-ratified to deprecate on 2026-09-07 (see item 6's inventory row above) and archival
-   (`TCK-20260907-KGMCP-DEPRECATION-EPIC` M2 steps 1-2) is in progress; this condition's 2-week
-   monitoring window (M2 steps 3-4) starts once archival lands, tracked as a separate follow-on.
+4. `knowledge-gateway` (item 6) archived with **zero renewed calls** — satisfied. Item 6 was
+   re-ratified to deprecate on 2026-09-07 (see item 6's inventory row above); archival
+   (`TCK-20260907-KGMCP-DEPRECATION-EPIC` M2 steps 1-2) landed the same day, and
+   `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` executed M2 steps 3-4 on 2026-09-10 via its own
+   documented Early Closure Decision (a repo-visible zero-call-site re-verification substituted
+   for the remaining ~12 days of the scheduled 2-week calendar wait, not a full elapsed-time
+   observation) — zero renewed calls confirmed, gateway files hard-deleted.
 
 ### Eval-pilot exit gate (item 13)
 

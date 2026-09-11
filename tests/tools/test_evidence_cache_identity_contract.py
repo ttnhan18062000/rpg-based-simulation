@@ -5,9 +5,10 @@ Phase 0 is contract-only: no gateway, routing, cache-invalidation, or migration 
 These tests structurally validate the frozen contract artifacts under
 `docs/engine/contracts/knowledge_gateway_mcp/` (`evidence_cache_identity_contract.md`,
 `evidence_identity_kinds.schema.json`, `cache_migration_plan.md`), using the same raw-`json.loads()`
-/`Path.read_text()`/`ast.parse()` pattern as `tests/tools/test_knowledge_gateway_contract_schemas.py`
-and `tests/tools/test_retrieval_cache.py::TestStaticGuards` — no `jsonschema` dependency, no import
-of live cache-invalidation code (none exists to import at Phase 0).
+/`Path.read_text()`/`ast.parse()` pattern `tests/tools/test_retrieval_cache.py::TestStaticGuards`
+uses — no `jsonschema` dependency, no import of live cache-invalidation code (none exists to import
+at Phase 0). (The former sibling cross-check against `test_knowledge_gateway_contract_schemas.py`
+was removed when that file was hard-deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY.)
 
 Test #2 and Test #9 read the real, untouched `tools/retrieval_cache.py` via `ast.parse()` /
 `Path.read_text()` only — they are regression guards against that module, not tests of new code
@@ -30,7 +31,6 @@ _EVIDENCE_KINDS_SCHEMA = _CONTRACTS_DIR / "evidence_identity_kinds.schema.json"
 _MIGRATION_PLAN_MD = _CONTRACTS_DIR / "cache_migration_plan.md"
 _SHARED_ENUMS = _CONTRACTS_DIR / "shared_enums.schema.json"
 _REQUEST_SCHEMA = _CONTRACTS_DIR / "knowledge_context_request.schema.json"
-_SIBLING_SCHEMA_TEST = _REPO_ROOT / "tests" / "archive" / "test_knowledge_gateway_contract_schemas.py"
 
 _RETRIEVAL_CACHE_PY = _REPO_ROOT / "tools" / "retrieval_cache.py"
 
@@ -119,7 +119,6 @@ def test_no_shared_code_or_table_conflates_lookup_hit_with_validity_proof():
     }
     for lookup_fn in (
         "check_index_cache", "check_query_cache", "check_packet_cache",
-        "check_provider_result_cache",
     ):
         assert lookup_fn in function_names, f"expected lookup function {lookup_fn} not found"
 
@@ -155,16 +154,16 @@ def test_no_shared_code_or_table_conflates_lookup_hit_with_validity_proof():
     # divergence from this file's own Non-collapse rule Bullet 1, ratified because no
     # check_*/write_* lookup function exists yet for that table (separately guarded by
     # tests/tools/test_retrieval_cache.py::TestLevel2Migrations::
-    # test_no_actual_read_write_functions_added_for_the_new_level2_table). The real rule this
-    # test protects -- Bullet 2, no lookup FUNCTION return shape ever carries a freshness/
+    # test_check_and_write_functions_no_longer_exist_for_the_removed_level2_table). The real rule
+    # this test protects -- Bullet 2, no lookup FUNCTION return shape ever carries a freshness/
     # verification verdict -- stays enforced by the three check_*_cache Result dataclass
-    # field-set assertions above; narrowed here to every current lookup function's own source
-    # (including check_provider_result_cache, Level 1's own real lookup function, added post-hoc
-    # to this loop by Architecture-Verify's own review of this ticket) instead of a blanket
-    # whole-file substring ban the ratified Level 2 schema columns would otherwise always trip.
+    # field-set assertions above; narrowed here to every current lookup function's own source.
+    # check_provider_result_cache (Level 1's own real lookup function) was briefly in this loop
+    # between TCK-20260816 and TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL, which
+    # deleted it along with its only production caller -- the loop is back to just the three live,
+    # unrelated index/query/packet lookup functions.
     for lookup_fn in (
         "check_index_cache", "check_query_cache", "check_packet_cache",
-        "check_provider_result_cache",
     ):
         fn_node = next(
             node for node in ast.walk(tree)
@@ -407,8 +406,7 @@ def test_no_migration_library_dependency_introduced():
 
 
 # ---------------------------------------------------------------------------
-# Test 11 — new evidence-kinds schema file parses, has its own schema_version, and does not
-#           collide with the sibling contract-schemas test's fixed file list
+# Test 11 — new evidence-kinds schema file parses and has its own schema_version
 # ---------------------------------------------------------------------------
 
 def test_new_schema_file_parses_and_has_own_schema_version():
@@ -418,12 +416,6 @@ def test_new_schema_file_parses_and_has_own_schema_version():
     assert schema["schema_version"] == 1
     assert schema["$schema"]
     assert schema["title"]
-
-    sibling_test_source = _SIBLING_SCHEMA_TEST.read_text()
-    assert "evidence_identity_kinds.schema.json" not in sibling_test_source, (
-        "the sibling contract-schemas test's fixed _ALL_SCHEMA_FILES list must not be extended "
-        "to include this ticket's new schema file"
-    )
 
 
 # ---------------------------------------------------------------------------

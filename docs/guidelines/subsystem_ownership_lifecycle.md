@@ -36,15 +36,13 @@ citation by defining the vocabulary here instead.
 | Test-scoper hang guard (`SubagentStop` hook, `tools/agent-monitoring/subagent_stop_background_guard.py` — shipped by `TCK-20260904-TEST-SCOPER-HANG-GUARD`) | Workflow Runtime Maintainer | The harness's `SubagentStop` payload schema changes (e.g. `background_tasks` field renamed/reshaped), or a new hook event key is added that could supersede this mechanism | A real subagent background-hang recurrence is observed despite the hook being wired in `.claude/settings.json`, or the hook's one-time self-referential retry rate is observed to compound rather than resolve | `test-scoper.md`'s prose Background Commands section and this hook are both superseded by a first-party Claude Code feature that makes turn-end background-task blocking a harness default; migration ticket recorded here |
 | Artifact-retention classification table (`docs/guidelines/artifact_retention_classification.md`, M2 deliverable of this same epic) | Documentation Governance Maintainer | A new persistent artifact class is introduced anywhere in the repo (new top-level dir/file family) | A merged ticket introduces such a class and it is not reflected in the 8-row table within the same PR | The classification table is folded into a different repo-wide artifact index; migration ticket recorded here |
 | Subsystem ownership & lifecycle table (this doc) | Documentation Governance Maintainer | Any future ticket creates, materially changes, or retires a subsystem this table covers | A merged ticket changes a covered subsystem's shape/lifecycle without a corresponding row edit in the same PR (no automated check exists for this yet — accepted gap, named here rather than silently left) | This table is superseded by a different tracking mechanism (e.g. folded into `docs/REGISTRY.yaml` metadata); migration ticket recorded here |
+| Bash secret-exposure advisory hook (`PreToolUse` hook, `.claude/settings.json` — `governance_capability_policy_epic.md` M4; shipped by `TCK-20260904-BASH-SECRET-SCAN-HOOK`) | Workflow Runtime Maintainer | `tools/write_path_guard.py::scan_for_secrets()`'s signature or `_SECRET_SCAN_PATTERNS` set changes, or the harness's `PreToolUse` payload shape changes | A synthetic secret-shaped command stops producing `additionalContext` in `test_bash_secret_scan_hook.py` despite the hook still being wired, or a real false-positive/false-negative pattern is observed in normal operation | The Bucket-B blocking-escalation decision (`roadmap.md` item 17) supersedes this advisory-only hook with a blocking one, or the hook is folded into a broader command-risk policy; migration ticket recorded here |
 
 ## Excluded Subsystems
 
 The following in-batch subsystems are deliberately **not** given a table row, with the reasoning
 stated explicitly rather than left implicit:
 
-- **Bash secret-exposure advisory hook** — excluded — subsystem is BLOCKED
-  (`TCK-20260904-BASH-SECRET-SCAN-HOOK`), no code exists yet; add a row when it ships and is
-  unblocked.
 - **AST import-boundary enforcement** — excluded — ownership is a matter for whoever maintains the
   already-shipped `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`'s code, not re-assigned here;
   this subsystem predates the AI-First Hardening batch entirely and was only discovered
