@@ -98,16 +98,47 @@ fixed and real survivors started existing.
     signature fits the reconstruction context cleanly (pass a context carrying `compiled_state`'s
     `terrain`/`blocked_tiles`/`buildings` plus the `entities` dict being incrementally built in the
     same reconstruction loop, for survivor-vs-survivor occupancy).
+  - **One authority for entity-vs-entity collision, not two.** `verify_occupancy()`'s own "Dynamic
+    Entities" branch already rejects an occupied tile by scanning the passed context's `.entities`
+    — a separate claimed-set duplicates that rule. **Drop the claimed-set; `verify_occupancy()` is
+    the single authority**, per peer review. But its dynamic-entity check has 3 sub-paths with
+    different staleness behavior, and only one is safe to rely on across a reconstruction loop that
+    mutates `.entities` in place on a *reused* context object:
+    1. `state_or_context.occupancy_snapshot` if present/non-`None` — skip by never declaring this
+       attribute on the reconstruction context.
+    2. else `SpatialQueryService.get_occupancy_map(state_or_context)` — **dangerous**: it caches its
+       result onto the context object itself via `object.__setattr__(state, "_occupancy_map_cache",
+       mapping)`, keyed only by object identity, with no invalidation. Reusing one context object
+       across the survivor loop would cache the occupancy map from whichever `.entities` state
+       existed at the *first* call and silently return that stale map on every later call — **this
+       was directly reproduced**, not just reasoned about: a plain context object's second
+       `verify_occupancy()` call, checking a tile occupied by an entity added after the first call,
+       returned `True`/`LEGAL` — a silently-approved occupied tile.
+    3. else, on `AttributeError`/`TypeError` from path 2, a **direct, uncached scan of
+       `.entities`** — the only path that reflects the dict as currently mutated.
+    **Force path 3 deterministically**: define the reconstruction context as a `__slots__`-only
+    class exposing exactly `terrain`, `blocked_tiles`, `buildings`, `building_tiles`,
+    `transient_claims`, `entities` — no `occupancy_snapshot` slot (skips path 1), and no free
+    attribute slot for `get_occupancy_map`'s `object.__setattr__(..., "_occupancy_map_cache", ...)`
+    to land in, so that call raises `AttributeError`, propagates out of `get_occupancy_map`, and is
+    caught by `verify_occupancy()`'s own `except (AttributeError, TypeError)` — landing on path 3
+    every single call, regardless of whether the same context object is reused across the whole
+    loop. **Verified directly** (not assumed): a `__slots__`-restricted context correctly rejected a
+    tile occupied by an entity added to `.entities` *between* two `verify_occupancy()` calls on the
+    *same* object, with `_occupancy_map_cache` never successfully written (confirmed via
+    `getattr(ctx, "_occupancy_map_cache", "NOT_SET")` staying `"NOT_SET"` after multiple calls) —
+    versus the plain-object version demonstrably going stale in the same scenario, above.
   - **The fallback chain must never terminate at a shared default position** — that reproduces the
     original bug in a narrower, harder-to-notice form (several invalid carried positions all
     collapsing to the same fallback point). The chain: carried `last_position` → if
-    `verify_occupancy()` rejects it, deterministic outward probe reusing
-    `_DECONFLICT_PROBE_OFFSETS`, checking `verify_occupancy()` (all gates) plus this reconstruction
-    pass's own claimed-set at each step → if the probe sequence is exhausted without finding a free
-    tile, **expand the search rather than collapsing to a constant** (e.g. widen the probe radius,
-    matching the spirit of `_resolve_spawn_position`'s own escalation, not its literal region-bounds
-    mechanism). If genuinely exhausted, log a warning naming the entity and the region, mirroring
-    `compiler.py:489-495`'s own `LAW-SPAWN-OCCUPANCY` exhaustion-warning precedent (`f"entity {id}
+    `verify_occupancy()` rejects it (against the `__slots__` context, so entity-vs-entity is
+    correctly live), deterministic outward probe reusing `_DECONFLICT_PROBE_OFFSETS`, checking
+    `verify_occupancy()` again at each candidate (no separate claimed-set) → if the probe sequence
+    is exhausted without finding a free tile, **expand the search rather than collapsing to a
+    constant** (e.g. widen the probe radius, matching the spirit of `_resolve_spawn_position`'s own
+    escalation, not its literal region-bounds mechanism). If genuinely exhausted, log a warning
+    naming the entity and the region, mirroring `compiler.py:489-495`'s own `LAW-SPAWN-OCCUPANCY`
+    exhaustion-warning precedent (`f"entity {id}
     ... could not be placed on a free tile in region '{region_id}' ... region is fully packed"`) —
     never a silent stack, which is the exact failure mode this whole ticket exists to eliminate.
 - Fix or remove the misleading `orchestrator.py:733-736` comment as part of this change.
@@ -119,6 +150,11 @@ fixed and real survivors started existing.
   two episode seeds disagree on (not by hand-placing a fixture), so the test exercises the actual
   mechanism rather than an idealized version of it. This is a distinct failure mode from the one
   this ticket was originally filed for, and needs its own coverage.
+- Include a real test asserting the `__slots__` context takes path 3 deterministically, per peer
+  review's own instruction not to assume this — mutate the context's `.entities` dict between two
+  `verify_occupancy()` calls on the *same* context object and confirm the second call reflects the
+  mutation (the exact scenario already reproduced during this ticket's own investigation; the test
+  should encode that reproduction, not just cite it).
 
 ## Out of Scope
 - `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s own episode-0 catalog-spawn path —
@@ -166,7 +202,15 @@ None yet — standard tier, staging artifacts created when picked up.
 - `src/domains/campaigns/state.py` (`EntityCarryForward`, needs the new `last_position` field)
 - `src/worldassembly/resolver.py` (`_hash_point_in_bounds`/`_resolve_spawn_position` — NOT directly
   reusable, requires a `spawn_region` no survivor has; `_DECONFLICT_PROBE_OFFSETS` IS reusable for
-  the lighter survivor-vs-survivor deconfliction pass)
+  probing candidate tiles, though the entity-vs-entity collision check itself is
+  `verify_occupancy()`, not a separate claimed-set — see below)
+- `src/engine/spatial_query.py:104-120` (`SpatialQueryService.get_occupancy_map()` — caches its
+  result **onto the state/context object itself** via `object.__setattr__(state,
+  "_occupancy_map_cache", mapping)`, keyed by nothing but object identity. Reused across a loop
+  with a mutating `.entities` dict, this silently returns a stale map — confirmed by direct
+  reproduction, not just read: a plain context object's second `verify_occupancy()` call on a tile
+  occupied by an entity added *after* the first call returned `True`/`LEGAL`, silently approving an
+  occupied tile.)
 - `src/worldbuilding/compiler.py` (per-episode terrain/`blocked_tiles`/building generation — the
   source of the geometry-instability risk a validity check must guard against; lines 489-495 are
   the `LAW-SPAWN-OCCUPANCY` exhaustion-warning precedent to mirror, not just cite)
