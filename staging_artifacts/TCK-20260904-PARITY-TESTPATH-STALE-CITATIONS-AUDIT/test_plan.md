@@ -45,6 +45,20 @@ tags: [testing, registry]
 - Re-run the full writer suite; any fixture using a prose `test_path` gets its fixture fixed, not the
   contract relaxed.
 
+## Step 3a — narrowed P0 rule
+
+- P0 + `missing` + `test_path: null` + non-empty `support_boundary` → accepted.
+- P0 + `unsupported` + `test_path: null` + non-empty `support_boundary` → accepted.
+- P0 + `missing` + `test_path: null` + `support_boundary` null or `""` → **rejected** (the gap must be
+  explained).
+- P0 + `verified` / `divergent` / `legacy_verified` + `test_path: null` → still **rejected**.
+- P1/P2 behavior unchanged.
+- Lockstep: validate the same fixtures against `schema.json` with `jsonschema` and assert it agrees with
+  `validate_entry()` on every case above — prevents the two copies of the rule drifting apart.
+- A real pre-existing entry (`SUB-325`) with a `support_boundary` added passes `validate_entry()`; as-is
+  (null `support_boundary`) it is still rejected — documents that the 15 legacy entries need explanation,
+  not just permission.
+
 ## Step 4 — the 28 entries
 
 - For every repointed entry, run its new `test_path` and record the result:

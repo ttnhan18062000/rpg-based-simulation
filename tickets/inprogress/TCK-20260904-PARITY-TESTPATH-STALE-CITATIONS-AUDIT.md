@@ -104,6 +104,9 @@ Ordered — each step is a precondition for the next. See `plan.md`.
   `support_boundary` stating what was lost and whether the file ever existed here. No entry is left
   pointing at a nonexistent file. (Originally worded as a `divergence_note`; the schema requires that
   field only for `divergent`, so `support_boundary` is the correct field for `missing`.)
+- `schema.json` and `validate_entry()` both allow a P0 entry with `status: missing`/`unsupported` to have
+  a null `test_path` **only** with a non-empty `support_boundary`; every other P0 entry still requires
+  `test_path` (Step 3a, approved by the repository owner 2026-09-11 after Review NEEDS_CHANGES).
 - All P0 entries among the stale set are fixed first and verified.
 - `absent_file` is recorded after Step 1 (expected to **rise** as newly-visible entries surface), and
   after Step 4 has decreased from that baseline by exactly the number of citations resolved. The original
