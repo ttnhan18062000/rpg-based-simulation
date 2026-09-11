@@ -12076,3 +12076,72 @@
     tests, executed via subprocess against the live .claude/settings.json command
     string
   test_path: tests/tools/test_bash_secret_scan_hook.py
+- id: INFRA-415
+  text: 'TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT -- extends tools/parity_ledger_writer.py''s
+    write-time contract (first introduced by INFRA-331). Three additions: (1) a shared
+    test_path citation parser, tools/parity_test_path.py::parse_test_path_citations(),
+    extracted so tools/parity_index.py and tools/gate_checks/mechanics_auditor_static.py
+    parse test_path through one function instead of two independently-maintained regexes
+    -- parity_index.py''s own prior _TEST_PATH_DECLARED_RE accepted only a single
+    path with at most one `::` level and silently missed backtick-wrapped/multi-citation/multi-level
+    node-id shapes; (2) a new evidence_kind field (existence/invocation/runtime_observation/null),
+    validated in validate_entry() and mirrored in docs/parity_ledger/schema.json''s
+    properties.evidence_kind.enum; (3) Step 3a''s narrowed P0 rule -- a P0 entry whose
+    status is missing or unsupported now requires support_boundary instead of test_path
+    (an unverified P0 claim cannot honestly cite a passing test), while every other
+    P0 status keeps the original test_path-required rule; kept lockstep-tested against
+    schema.json''s matching if/else restructure of the P0 conditional. Also adds a
+    write-time-only rule schema.json cannot express: a non-null test_path must parse
+    via the shared citation parser or the write is rejected (existing on-disk entries
+    with unparseable citations are fixed only when next written, never swept en masse).'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: tools/parity_test_path.py::parse_test_path_citations() (clean node-id,
+    single-backtick-wrapped, comma/+/;-joined multi-citation, and unparseable-prose
+    classification; mechanics_auditor_static.py re-imports this module's names directly,
+    not a copy). tools/parity_ledger_writer.py::validate_entry() -- evidence_kind
+    check against _EVIDENCE_KIND_VALUES (lines ~103-108), Step 3a's narrowed P0 rule
+    via _P0_TEST_PATH_EXEMPT_STATUSES = ("missing", "unsupported") (lines ~93-101),
+    and the write-time test_path-must-parse contract (lines ~110-125). docs/parity_ledger/schema.json
+    -- new properties.evidence_kind (type+enum incl. null) and the P0 conditional
+    restructured into if(priority==P0 and status in [missing,unsupported])->require
+    support_boundary / else if(priority==P0)->require test_path. 50 passed via `pytest
+    tests/tools/test_parity_ledger_writer.py tests/tools/test_parity_ledger_schema.py
+    tests/tools/test_parity_test_path.py -q` (run with the project .venv, since the
+    bare interpreter lacks pydantic).
+  proof_type: regression
+  test_path: tests/tools/test_parity_test_path.py::test_clean_node_id_parses_to_single_citation,
+    tests/tools/test_parity_test_path.py::test_single_backtick_wrapped_path_is_unwrapped,
+    tests/tools/test_parity_test_path.py::test_multi_citation_delimiters_all_split_correctly,
+    tests/tools/test_parity_test_path.py::test_unparseable_prose_returns_none_and_error,
+    tests/tools/test_parity_test_path.py::test_two_level_node_id_is_accepted, tests/tools/test_parity_test_path.py::test_null_and_empty_test_path_are_unparseable_not_crashes,
+    tests/tools/test_parity_test_path.py::test_mechanics_auditor_static_reimports_same_function_object,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryRejections::test_writer_rejects_p0_missing_status_without_support_boundary,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryRejections::test_writer_rejects_p0_verified_missing_test_path_unchanged,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryRejections::test_writer_rejects_p0_legacy_verified_missing_test_path,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryRejections::test_writer_rejects_unparseable_test_path,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryAcceptance::test_writer_accepts_p0_missing_or_unsupported_with_support_boundary,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryAcceptance::test_writer_accepts_evidence_kind_values,
+    tests/tools/test_parity_ledger_writer.py::TestValidateEntryAcceptance::test_writer_accepts_verified_p0_with_existence_evidence_kind,
+    tests/tools/test_parity_ledger_writer.py::TestEvidenceKindRejections::test_writer_rejects_unknown_evidence_kind,
+    tests/tools/test_parity_ledger_writer.py::TestStep3aLockstepWithSchemaJson::test_schema_and_validate_entry_agree,
+    tests/tools/test_parity_ledger_writer.py::TestStep3aRealLegacyEntryNeedsExplanation::test_sub_325_as_is_still_rejected,
+    tests/tools/test_parity_ledger_writer.py::TestStep3aRealLegacyEntryNeedsExplanation::test_sub_325_passes_once_support_boundary_is_added,
+    tests/tools/test_parity_ledger_schema.py::TestEvidenceKindField::test_accepts_each_declared_value_and_null,
+    tests/tools/test_parity_ledger_schema.py::TestEvidenceKindField::test_rejects_unknown_value,
+    tests/tools/test_parity_ledger_schema.py::TestEvidenceKindField::test_field_is_not_required
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/parity-ledger-tooling infrastructure only
+    -- no simulation behavior involved, and no src/ file was touched by this ticket
+    (confirmed changed-file list: tools/, tests/tools/, docs/parity_ledger/, docs/ai/,
+    docs/testing/, tickets/, staging_artifacts/ only). This entry documents only the
+    write-time contract change to tools/parity_ledger_writer.py::validate_entry()
+    and docs/parity_ledger/schema.json (evidence_kind field + Step 3a''s narrowed
+    P0 rule) plus the new shared tools/parity_test_path.py parser -- it does not re-document
+    or supersede the 28 individual stale-citation corrections this same ticket made
+    across combat_movement/progression/social_narrative/strategic_cognition/substrate/town_resource/world_dynamics.yaml
+    (those are per-entry fixes recorded in each entry''s own v2_evidence, not new
+    infrastructure), nor INFRA-331 itself (which this entry extends but does not restate
+    -- INFRA-331 remains the record for validate_entry()''s original four rules and
+    write_entry()''s upsert+index-rebuild behavior).'

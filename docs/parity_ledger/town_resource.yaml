@@ -54,11 +54,14 @@
   v2_evidence: '`src/engine/pipeline.py` (suppression logic in `_route_combat_intent`
     and `_resolve_occupancy_conflicts`)'
   proof_type: parity
-  test_path: '`tests/unit/movement/test_occupancy_conflicts.py` (verifies conflict
-    resolution behavior; path corrected 2026-09-02, was `tests_v2/test_occupancy_conflicts.py`
-    -- that path never existed in this repo, only in a pre-migration test tree)'
+  test_path: tests/unit/movement/test_occupancy_conflicts.py
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Path corrected 2026-09-02 from `tests_v2/test_occupancy_conflicts.py`.
+    That prior correction''s own claim that the old path ''never existed in this repo''
+    was itself inaccurate (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT): `tests_v2/test_occupancy_conflicts.py`
+    did exist and was deleted in commit 6e5c2899 (''Implement resource v2 enhanced
+    phases''). The current citation is a real, passing successor test, not a preserved
+    rename.'
 - id: TOWN-006
   text: Conflict resolution preserves one authoritative outcome per tick.
   status: verified
@@ -67,10 +70,13 @@
   v2_evidence: '`src/engine/pipeline.py` (`_resolve_occupancy_conflicts` with deterministic
     sorting)'
   proof_type: parity
-  test_path: '`tests/unit/movement/test_occupancy_conflicts.py` (path corrected 2026-09-02,
-    was `tests_v2/test_occupancy_conflicts.py`)'
+  test_path: tests/unit/movement/test_occupancy_conflicts.py
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Path corrected 2026-09-02 from `tests_v2/test_occupancy_conflicts.py`.
+    For the record (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT): `tests_v2/test_occupancy_conflicts.py`
+    did exist and was deleted in commit 6e5c2899 (''Implement resource v2 enhanced
+    phases''). The current citation is a real, passing successor test, not a preserved
+    rename.'
 - id: TOWN-007
   text: Worker decision-making is decoupled from authoritative application.
   status: verified
@@ -123,10 +129,10 @@
   v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve`
     checks `can_add_items` against pending state)'
   proof_type: parity
-  test_path: '`tests/rpg/test_resource_conservation_v2.py` (proves node is not depleted
-    if inventory is full)'
+  test_path: tests/unit/resource/test_resource_contract.py::test_law_of_capacity_enforcement
   divergence_note: null
   support_boundary: null
+  evidence_kind: invocation
 - id: TOWN-012
   text: Loot/harvest can abort because of inventory weight pressure.
   status: verified
@@ -135,9 +141,10 @@
   v2_evidence: '`src/core/conservation.py` (`ResourceTransactionResolver.resolve`
     checks `can_add_items` against pending state)'
   proof_type: parity
-  test_path: '`tests/rpg/test_resource_conservation_v2.py`'
+  test_path: tests/unit/resource/test_resource_contract.py::test_law_of_weight_enforcement
   divergence_note: null
   support_boundary: null
+  evidence_kind: invocation
 - id: TOWN-013
   text: Inventory state tracks both slots and weight/carry burden.
   status: verified

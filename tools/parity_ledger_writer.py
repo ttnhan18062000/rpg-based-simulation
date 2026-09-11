@@ -3,13 +3,13 @@
 Built for TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL: before this module, nothing enforced
 docs/parity_ledger/schema.json's rules when a ledger shard was actually written --
 .claude/agents/parity-updater.md's "What to Do" section edited YAML via raw Read/Edit with no
-validation step. `validate_entry` hand-rolls the same four rules schema.json's `items.allOf`
-block expresses (rather than loading and interpreting the JSON file at runtime with a
-`jsonschema` call -- `jsonschema` is importable in this venv but not declared in any
-requirements*.txt, so it is an incidental transitive dependency, not a safe, already-present
-choice). Each check below cites the exact schema.json allOf branch it mirrors; any future edit
-to that file's rules must be mirrored here by hand -- nothing enforces the two representations
-stay in sync automatically.
+validation step. `validate_entry` hand-rolls the same rules schema.json's `items.allOf` block and
+`properties` enums express (rather than loading and interpreting the JSON file at runtime with a
+`jsonschema` call), plus one write-time-only rule schema.json cannot express (test_path must parse
+via the shared citation parser -- see below). Each check below cites the exact schema.json branch
+it mirrors; any future edit to that file's rules must be mirrored here by hand -- nothing enforces
+the two representations stay in sync automatically (TestStep3aLockstepWithSchemaJson in
+tests/tools/test_parity_ledger_writer.py runs both against the same fixtures to catch drift).
 
 This module lives beside, not inside, tools/parity_index.py: that module's own docstring states
 twice it "never writes into docs/parity_ledger/ and implements no mutation CLI," and
@@ -43,11 +43,20 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from parity_index import DEFAULT_LEDGER_DIR, DEFAULT_DB_PATH, build  # noqa: E402
+from parity_test_path import parse_test_path_citations  # noqa: E402
 
 # mirrors docs/parity_ledger/schema.json:9-11 (properties.id.pattern) -- byte-identical, must
 # never drift (TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT: the two fell out of sync once
 # already, silently rejecting live multi-segment shard ids like WORLD-DEMO-001)
 _ID_PATTERN = re.compile(r"^[A-Z]+(-[A-Z]+)*-[0-9]{3}$")
+
+# mirrors docs/parity_ledger/schema.json's properties.evidence_kind.enum
+_EVIDENCE_KIND_VALUES = {"existence", "invocation", "runtime_observation"}
+
+# Statuses for which Step 3a's narrowed P0 rule substitutes support_boundary for test_path --
+# a P0 entry saying the behavior is unverified cannot have a passing test citation, so requiring
+# one only invites a fake or stale citation (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
+_P0_TEST_PATH_EXEMPT_STATUSES = ("missing", "unsupported")
 
 
 class EntryValidationError(Exception):
@@ -81,10 +90,39 @@ def validate_entry(entry: dict) -> None:
     if entry.get("status") == "divergent":
         _require_non_empty_string(entry, "divergence_note")
 
-    # mirrors docs/parity_ledger/schema.json's items.allOf[2]: priority == P0 ->
-    # test_path required, non-null
+    # mirrors docs/parity_ledger/schema.json's items.allOf[2] (narrowed by Step 3a,
+    # TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT): priority == P0 with status in
+    # {missing, unsupported} -> support_boundary required instead of test_path; every other P0
+    # status keeps the original test_path-required rule.
     if entry.get("priority") == "P0":
-        _require_non_empty_string(entry, "test_path")
+        if entry.get("status") in _P0_TEST_PATH_EXEMPT_STATUSES:
+            _require_non_empty_string(entry, "support_boundary")
+        else:
+            _require_non_empty_string(entry, "test_path")
+
+    # mirrors docs/parity_ledger/schema.json's properties.evidence_kind.enum
+    evidence_kind = entry.get("evidence_kind")
+    if evidence_kind is not None and evidence_kind not in _EVIDENCE_KIND_VALUES:
+        raise EntryValidationError(
+            "evidence_kind", f"must be one of {sorted(_EVIDENCE_KIND_VALUES)} or null"
+        )
+
+    # Write-time format contract (Step 3, TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT):
+    # a non-null test_path must parse via the shared citation parser, or the write is rejected.
+    # Applies only to entries passed through write_entry() -- never a sweep of on-disk entries
+    # (TCK-20260705-GATE-DET-MECHANICS-AUDITOR's "never a sweep" decision; ~127 existing entries
+    # have unparseable test_path and are fixed only when next written, not en masse). Not
+    # mirrored in schema.json: JSON Schema's declarative rules cannot express the shared parser's
+    # backtick-stripping/multi-citation-splitting logic, and nothing runs jsonschema validation
+    # against the full on-disk ledger today.
+    test_path = entry.get("test_path")
+    if test_path is not None:
+        _, parse_error = parse_test_path_citations(test_path)
+        if parse_error is not None:
+            raise EntryValidationError(
+                "test_path",
+                f"{parse_error}; prose/history belongs in support_boundary, not test_path",
+            )
 
 
 def write_entry(shard_filename: str, entry: dict, ledger_dir=None, db_path=None) -> dict:

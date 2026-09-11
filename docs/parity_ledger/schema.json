@@ -39,6 +39,10 @@
       },
       "support_boundary": {
         "type": ["string", "null"]
+      },
+      "evidence_kind": {
+        "type": ["string", "null"],
+        "enum": ["existence", "invocation", "runtime_observation", null]
       }
     },
     "allOf": [
@@ -67,13 +71,29 @@
       },
       {
         "if": {
-          "properties": { "priority": { "const": "P0" } }
+          "properties": {
+            "priority": { "const": "P0" },
+            "status": { "enum": ["missing", "unsupported"] }
+          },
+          "required": ["priority", "status"]
         },
         "then": {
           "properties": {
-            "test_path": { "type": "string" }
+            "support_boundary": { "type": "string", "minLength": 1 }
           },
-          "required": ["test_path"]
+          "required": ["support_boundary"]
+        },
+        "else": {
+          "if": {
+            "properties": { "priority": { "const": "P0" } },
+            "required": ["priority"]
+          },
+          "then": {
+            "properties": {
+              "test_path": { "type": "string", "minLength": 1 }
+            },
+            "required": ["test_path"]
+          }
         }
       }
     ]

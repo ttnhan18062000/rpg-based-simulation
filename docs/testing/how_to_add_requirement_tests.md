@@ -159,10 +159,13 @@ If the test protects a **P0** requirement (authority column in the traceability 
    - `v2_evidence: <path to your new test file>`
    - `test_path: <path>::<test_function_name>`
    - `priority: P0`
+   - `evidence_kind: invocation` (optional, descriptive-only field — you ran this test and confirmed it passes; no enforcement rule reads it yet)
 
 4. If no entry exists for the law, add one. The schema is in `docs/parity_ledger/schema.json`.
 
 A P0 test without a corresponding parity ledger entry is incomplete. The definition of done for a P0 requirement test requires both.
+
+Note: a P0 entry only requires a non-null `test_path` when `status` is `verified`/`divergent`/`legacy_verified`. A P0 entry with `status: missing`/`unsupported` requires a non-empty `support_boundary` instead — not relevant to this worked flow (which always ends in `verified`), but see `tools/parity_ledger_writer.py::validate_entry` if you are downgrading an existing P0 entry rather than adding a new passing test.
 
 ---
 

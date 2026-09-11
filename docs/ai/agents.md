@@ -303,7 +303,8 @@ string to feed it); it's a tool the agent invokes on demand.
 - Behavior matches Mechanics Bible → `status: verified`, update `v2_evidence` and `test_path`
 - Intentional divergence → `status: divergent`, set `divergence_note`, add to `docs/guidelines/intentional_divergences.md`
 - New behavior with no entry → add with next available ID
-- P0 entries must have a non-null `test_path` pointing to a passing test
+- P0 entries must have a non-null `test_path` pointing to a passing test, except `status: missing`/`unsupported`, which require a non-empty `support_boundary` instead of `test_path`
+- `evidence_kind` (`existence`/`invocation`/`runtime_observation`) is an optional, descriptive-only field — no enforcement rule reads it yet
 
 **When to invoke directly:** After any manual code change that affects simulation behavior.
 
