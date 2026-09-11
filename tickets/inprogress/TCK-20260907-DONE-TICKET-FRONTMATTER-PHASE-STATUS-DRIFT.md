@@ -118,7 +118,8 @@ None.
 ## Related Code Areas
 - `tools/validate_frontmatter.py`
 - `tools/gate_checks/done_checker_static.py` (`frontmatter_valid` condition)
-- `tickets/done/*.md` (227 affected files)
+- `tickets/done/*.md` (395 affected files as of 2026-09-11, per the Scope amendment — re-count at
+  implementation time; superseding the original 227 estimate)
 
 ## Assumptions / Open Questions
 - Whether the 227-file count is stable or would grow if re-checked later (more tickets close between
