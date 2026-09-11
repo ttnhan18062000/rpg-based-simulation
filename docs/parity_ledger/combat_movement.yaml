@@ -16,7 +16,7 @@
   evidence_kind: null
 - id: COMB-002
   text: Cardinal/tile movement and occupancy legality are explicit.
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
   v2_evidence: '`src/engine/movement.py` (`resolve_move` cardinal clamping), `src/engine/legality.py`
@@ -32,7 +32,11 @@
     -- and asserts OCCUPANCY_VIOLATION/LEGAL correctly (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT).
     It covers the ''occupancy legality is explicit'' half of this entry''s compound
     claim; no test was found covering the ''cardinal/tile movement clamping'' (resolve_move)
-    half specifically.'
+    half specifically. Corrected from a `verified` overclaim to `missing` during PR
+    review: the plan''s own bar for a Class A repoint is that the successor tests
+    the entry''s claim, and a half-covered compound claim does not meet it. test_path
+    is kept as a valid partial citation, not nulled, since real coverage does exist
+    for the occupancy-legality half.'
   evidence_kind: invocation
 - id: COMB-003
   text: Occupied-tile movement is rejected or redirected rather than silently overlapped.
