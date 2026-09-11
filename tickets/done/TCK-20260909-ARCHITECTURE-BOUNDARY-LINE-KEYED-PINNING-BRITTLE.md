@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE
-phase: inprogress
+phase: done
 date: 2026-09-09
 tags: [testing, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [testing, architecture]
 `test_phase18_import_boundaries.py`'s `_DOMAINS_OBSERVABILITY_PINNED` keys grandfathered exceptions by line number — brittle, and its failure mode is diff-indistinguishable from a prohibited gate-weakening edit
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
