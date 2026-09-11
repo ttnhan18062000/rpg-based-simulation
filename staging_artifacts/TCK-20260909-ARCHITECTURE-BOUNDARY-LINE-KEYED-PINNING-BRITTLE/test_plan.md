@@ -26,6 +26,14 @@ Without this test the change is unverified: the current tests pass today because
   authorized. This is the test that proves `rel_path` belongs in the key; drop it and the design regresses to
   the file-agnostic precedent.
 
+## Counts (multiplicity)
+
+- A third copy of the `intelligence.py` `SystemCadence as DefaultCadence, should_run` import (pinned at
+  count 2) **fails**.
+- Removing one of the two existing copies **fails** as a stale pin, so the count must be lowered
+  deliberately.
+- Every other pinned key at count 1: a second identical copy **fails**.
+
 ## Preserved behavior
 
 - `TYPE_CHECKING` imports (`EventRecorder` in both campaign files) are still skipped.
@@ -42,5 +50,7 @@ Full directory, not the single file: other architecture tests share `_iter_py_fi
 
 ## Doc check
 
-`docs/audits/D14_coupling_depth.md` no longer contains `orchestrator.py:418`, and both pinned entries are
-described by file, symbol, and enclosing function.
+`docs/audits/D14_coupling_depth.md` no longer contains `orchestrator.py:418`. Neither pinned-entry section
+(domains → observability, systems → engine) cites line numbers for pinned imports. Neither still
+describes a "`(file, lineno)`-exact" list. The systems → engine total (13) equals the sum of the pinned
+counts.
