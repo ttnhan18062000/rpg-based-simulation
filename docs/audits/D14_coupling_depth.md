@@ -243,16 +243,18 @@ real, currently-shipping violations exist — both lazy, method-body imports of 
 `SimulationEvent` dataclass, guarded by an event-recorder-present check immediately above each
 call site:
 
-| File | Line | Import | Pattern |
-|---|---|---|---|
-| `domains/campaigns/narrative_ledger.py:71` | `src.observability.events.SimulationEvent` | Lazy (inside `emit_chronicle_event`, guarded by `if self._event_recorder is not None:`) |
-| `domains/campaigns/orchestrator.py:418` | `src.observability.events.SimulationEvent` | Lazy (inside shared helper `_emit_domain_event()`, guarded by `if self._event_recorder is None: return` at each of its 3 callers — `_emit_chronicle_events()`, `_emit_grief_urgency_events()`, `_emit_nemesis_event()` — before every call) |
+| File | Imported symbol | Pattern |
+|---|---|---|
+| `domains/campaigns/narrative_ledger.py` | `src.observability.events.SimulationEvent` | Lazy (inside `emit_chronicle_event`, guarded by `if self._event_recorder is not None:`) |
+| `domains/campaigns/orchestrator.py` | `src.observability.events.SimulationEvent` | Lazy (inside shared helper `_emit_domain_event()`, guarded by `if self._event_recorder is None: return` at each of its 3 callers — `_emit_chronicle_events()`, `_emit_grief_urgency_events()`, `_emit_nemesis_event()` — before every call) |
 
 Both sites are enforced-pinned by
 `tests/architecture/test_phase18_import_boundaries.py::test_domains_do_not_import_observability_outside_pinned_exceptions`
-(added by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) — a `(file, lineno)`-exact
-grandfather list, not a general allowlist. Expanding this set requires updating both this doc
-and that test together, not a silent addition.
+(added by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) — a `(file, module, imported
+names)`-exact list with an expected occurrence count per key, not a `(file, lineno)` grandfather
+list and not a general allowlist (`TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE`,
+so an unrelated line-shifting edit above a pinned import no longer breaks the pin). Expanding this
+set requires updating both this doc and that test together, not a silent addition.
 
 ---
 
@@ -262,21 +264,23 @@ and that test together, not a silent addition.
 13 real, currently-shipping `systems → engine` imports exist across 5 files, both module-level
 and lazy:
 
-| File | Lines | Modules |
+| File | Imported names | Occurrences |
 |---|---|---|
-| `systems/strategic_systems/intelligence.py` | 70, 76, 79, 84, 663, 828, 832, 904, 957 | `engine.policy`, `engine.spatial_query`, `engine.cadence`, `engine.domain_logic`, `engine.cognition` |
-| `systems/strategic_systems/detour.py` | 22 | `engine.domain.lead_routing` |
-| `systems/strategic_systems/redirection.py` | 25 | `engine.cadence` |
-| `systems/economy_systems/market.py` | 50 | `engine.legality` |
-| `systems/world_systems/routine.py` | 180 | `engine.legality` |
+| `systems/strategic_systems/intelligence.py` | `GovernorPolicy` (`engine.policy`); `SpatialQueryService` (`engine.spatial_query`); `SystemCadence`, `should_run` (`engine.cadence`); `SimulationDomainLogic` (`engine.domain_logic`, ×2 identical sites); `should_run` alone (`engine.cadence`); `SystemCadence as DefaultCadence`, `should_run` (`engine.cadence`, ×2 identical sites); `AppraisalSystem` (`engine.cognition`) | 9 |
+| `systems/strategic_systems/detour.py` | `LeadRoutingSystem` (`engine.domain.lead_routing`) | 1 |
+| `systems/strategic_systems/redirection.py` | `SystemCadence`, `should_run` (`engine.cadence`) | 1 |
+| `systems/economy_systems/market.py` | `LegalityServiceV2` (`engine.legality`) | 1 |
+| `systems/world_systems/routine.py` | `LegalityServiceV2` (`engine.legality`) | 1 |
 
 All 13 sites are enforced-pinned by
 `tests/architecture/test_phase18_import_boundaries.py::test_systems_do_not_import_engine_outside_pinned_exceptions`
-(added by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) — a `(file, lineno)`-exact
-grandfather list, not a general allowlist. This is a freeze-at-baseline, not a clean, fully
-honored boundary: the pinned sites remain exactly as found, no new violation past the pinned 13
-is permitted, and expanding the pinned set requires updating both this doc and that test
-together, not a silent addition.
+(added by `TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC`) — a `(file, module, imported
+names)`-exact list with an expected occurrence count per key, not a `(file, lineno)` grandfather
+list and not a general allowlist (`TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE`,
+so an unrelated line-shifting edit above a pinned import no longer breaks the pin). This is a
+freeze-at-baseline, not a clean, fully honored boundary: the pinned sites remain exactly as
+found, no new violation past the pinned 13 is permitted, and expanding the pinned set requires
+updating both this doc and that test together, not a silent addition.
 
 ---
 
