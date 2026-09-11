@@ -592,3 +592,99 @@ def test_town_resolution_no_longer_early_exits_once_campaign_regions_are_populat
         "with regions populated, resolve() must run its real regional logic instead "
         "of hitting the `not has_town and not has_regions` early-exit"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED
+# ---------------------------------------------------------------------------
+
+def test_build_initial_state_episode_zero_carries_information_source_profiles():
+    """Real regression for the confirmed gap: information_source_profiles was computed by
+    WorldCompiler.compile() but never threaded into either _build_initial_state() branch,
+    so it stayed permanently empty for every Campaign-mode episode regardless of what the
+    world composition declared. frontier_living_world genuinely declares one
+    (town_notice_board) -- use it explicitly rather than the tiny unit_faction_tension
+    world, which declares none."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.information_source_profiles, (
+        "episode 0 must receive the real compiled information_source_profiles -- an empty "
+        "list is the exact pre-fix gap this ticket exists to close"
+    )
+    source_ids = {p.source_id for p in state.information_source_profiles}
+    assert "town_notice_board" in source_ids, (
+        f"expected frontier_living_world's own declared source, got {source_ids}"
+    )
+
+
+def test_build_initial_state_survivor_branch_also_carries_information_source_profiles():
+    """The survivor-reconstruction branch must get the same fix as episode 0."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=4, xp=900, equipment={}, reputation=0.8, alive=True
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.information_source_profiles, (
+        "the survivor-reconstruction branch must also receive real compiled "
+        "information_source_profiles, not just the episode-0 branch"
+    )
+
+
+def test_build_initial_state_does_not_thread_pending_information_responses_yet():
+    """Deliberate negative assertion, not an oversight: pending_information_responses is
+    NOT threaded (TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH --
+    doing so naively would resolve target_population_id against a completely different,
+    unused entity-numbering scheme and silently misdeliver seeded facts to the wrong
+    entity). frontier_living_world genuinely declares a non-empty
+    pending_information_responses too, so this asserts the field is still empty on the
+    real returned state despite real source content existing -- the correct, deliberate
+    behavior until the follow-up ticket lands a real fix."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.pending_information_responses == [], (
+        "pending_information_responses must stay empty until "
+        "TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH lands a real "
+        "actor-id resolution fix -- threading it naively would misdeliver to the wrong entity"
+    )
+
+
+def test_threaded_information_source_profiles_are_actually_consumable_by_the_real_router():
+    """AC3: 'information_belief phase confirmed to actually consume the now-populated data
+    ... not just that the field is non-empty on the constructed state.'
+
+    A full real-episode run doesn't reliably exercise this: InformationBeliefPhase.apply()'s
+    routing branch only fires for an actor with an unresolved self_model.knowledge.unknowns
+    entry, a separate strategic-cognition precondition unrelated to this ticket's own fix
+    (confirmed empirically: a real 70-tick frontier_living_world episode with the fix applied
+    produced zero routed/assimilated entity properties, because no actor happened to have an
+    unknown to route in that window -- not because the data path is broken). So this proves
+    the real consumer function (InformationQueryRouter.route(), the same one
+    InformationBeliefPhase.apply() calls) genuinely returns a candidate from the threaded
+    data, isolating "is the data live and consumable" from "did an actor's independent
+    strategic state happen to trigger consumption within N ticks" -- the latter is out of
+    this ticket's own scope.
+    """
+    from src.domains.information.router import InformationQueryRouter
+    from src.domains.information.schema import InformationQuery
+
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+    assert state.information_source_profiles, "precondition: the fix threaded real profiles"
+
+    actor = next(iter(state.entities.values()))
+    query = InformationQuery(subject="ore_deposits", kind="material_source")
+
+    candidates = InformationQueryRouter.route(actor, query, state, state.information_source_profiles)
+
+    assert candidates, (
+        "the real router must find a candidate from the now-threaded "
+        "information_source_profiles -- town_notice_board declares common_resource_sources, "
+        "which matches a material_source query"
+    )
+    assert any(c.source_id == "town_notice_board" for c in candidates)

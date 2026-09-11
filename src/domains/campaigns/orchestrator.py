@@ -724,6 +724,10 @@ class CampaignOrchestrator:
                 entities=catalog_result.state.entities,
                 regions=compiled_regions,
                 places=compiled_places,
+                information_source_profiles=compiled_state.information_source_profiles,
+                # pending_information_responses is deliberately NOT threaded here yet -- see
+                # TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED's own
+                # Implementation Notes for the real actor_id-mismatch finding that blocks it.
             )
 
         # Reconstruct minimal EntityState objects from carry-forward snapshots.
@@ -916,6 +920,9 @@ class CampaignOrchestrator:
             entities=entities,
             regions=compiled_regions,
             places=compiled_places,
+            information_source_profiles=compiled_state.information_source_profiles,
+            # pending_information_responses intentionally not threaded here either -- see the
+            # episode-0 branch's own comment above.
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
             entity_legend_facts=entity_legend_facts,
