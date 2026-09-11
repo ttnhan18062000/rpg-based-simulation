@@ -40,6 +40,22 @@ of them incidentally, while investigating something else:
 | `invalidate_read_model` | `src/engine/apply_plan.py:20` | Dirty-set consumer investigation |
 | Camp raid-reuse discard stub | `src/world/camp.py` | Camp content-authoring follow-up |
 | `effective_certainty()` | `src/cognition/knowledge_model.py:137` | Parity-ledger check on STRAT-239 |
+| `EntitySpawnContext.spawn_region` → `properties["spawn_region"]` write | `src/entities/archetype_factory.py:24,66-67` | Investigating `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`'s spawn-position approach |
+
+**Eighth instance (2026-09-11), found while designing the fix for
+`TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`:** `EntitySpawnContext` carries a
+`spawn_region: Optional[str] = None` field; when non-`None`, `ArchetypeEntityFactory.build_entity()`
+writes it into the built entity's `properties["spawn_region"]`. But the only real caller,
+`WorldEntitySpawner.spawn_from_context()` (`entity_spawner.py:57`), hardcodes
+`spawn_region=None` on every construction — so the write path never fires in practice — and a
+repo-wide grep for any reader of `properties["spawn_region"]` / `properties.get("spawn_region")`
+found zero consumers. Genuinely dead on both ends (never written with a real value, and nothing
+reads it even if it were). Checked specifically because it looked like it might be the intended
+hook for that ticket's own per-entity spatial-placement fix — it is not: it stores a region-name
+*string tag* on entity metadata, not spatial coordinates, so it wouldn't have served that purpose
+even if wired. That ticket is adding a new, separate `spawn_position` field rather than reusing
+this one — recorded here rather than silently fixed, per this audit ticket's own Out of Scope
+("Fixing, wiring, or deleting any of the found code... each disposition is its own ticket").
 
 The problem is not any individual entry — most have now been filed for disposition individually.
 The problem is the **pattern and the detection gap**: this codebase has a systematic divergence

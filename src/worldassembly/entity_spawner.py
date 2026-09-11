@@ -52,8 +52,11 @@ class WorldEntitySpawner:
         entity_id = base_entity_id
 
         for _key, profile in ctx.entities.items():
+            position = (
+                profile.spawn_position if profile.spawn_position is not None else default_position
+            )
             spawn = EntitySpawnContext(
-                position=default_position,
+                position=position,
                 spawn_region=None,
                 initial_alive=True,
                 initial_active=True,
