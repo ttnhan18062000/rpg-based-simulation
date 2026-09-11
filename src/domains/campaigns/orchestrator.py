@@ -551,6 +551,21 @@ class CampaignOrchestrator:
                     float(entity.navigation.position[0]),
                     float(entity.navigation.position[1]),
                 ),
+                # Unconditional, same reasoning as last_position above -- these aren't opt-in
+                # carry-forward preferences, they're the entity's own identity
+                # (TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION). A
+                # reconstructed survivor must be identity-equivalent to a spawned entity.
+                kind=entity.kind,
+                role=entity.identity.role,
+                faction=entity.identity.faction,
+                properties=dict(entity.identity.properties),
+                traits=tuple(sorted(entity.identity.traits)),
+                personality={
+                    "greed": entity.identity.personality.greed,
+                    "bravery": entity.identity.personality.bravery,
+                    "sociability": entity.identity.personality.sociability,
+                    "industry": entity.identity.personality.industry,
+                },
             )
 
         return result
@@ -691,7 +706,7 @@ class CampaignOrchestrator:
         from dataclasses import replace as dc_replace
 
         from src.core.models.inventory import EquipSlot
-        from src.core.state import AuthoritativeState, EntityState
+        from src.core.state import AuthoritativeState, EntityState, PersonalityComponent
         from src.core.updates import SocialUpdate
         from src.domains.campaigns.survivor_placement import (
             SurvivorReconstructionContext,
@@ -742,12 +757,16 @@ class CampaignOrchestrator:
                 # Implementation Notes for the real actor_id-mismatch finding that blocks it.
             )
 
-        # Reconstruct EntityState objects from carry-forward snapshots. Position is real,
-        # validity-checked, and deconflicted -- TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-
-        # POSITION-COLLISION. Fields not captured in EntityCarryForward at all (e.g. combat
-        # state, current HP) are left at EntityState defaults; this branch never calls into
-        # WorldEntitySpawner/WorldCompiler.compile()'s own entity placement, so nothing about
-        # world_composition otherwise governs survivor placement.
+        # Reconstruct EntityState objects from carry-forward snapshots. Position AND identity
+        # (kind/role/faction/properties/traits/personality) are real, restored to match what a
+        # spawned entity would have -- TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-
+        # COLLISION, TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION.
+        # Fields not captured in EntityCarryForward at all (e.g. combat.hp/.atk/.def_stat,
+        # class_id, life_stage -- see TCK-20260911-CAMPAIGN-SURVIVOR-COMBAT-STATS-NOT-
+        # RECOMPUTED-ON-RECONSTRUCTION for the combat-stats gap specifically) are left at
+        # EntityState defaults; this branch never calls into WorldEntitySpawner/
+        # WorldCompiler.compile()'s own entity placement, so nothing about world_composition
+        # otherwise governs survivor placement.
         entities: Dict[int, EntityState] = {}
         reconstruction_ctx = SurvivorReconstructionContext(
             terrain=compiled_state.terrain,
@@ -756,13 +775,29 @@ class CampaignOrchestrator:
             entities=entities,  # same dict object, mutated in place as each survivor is placed
         )
         for eid, cf in alive_carry_forwards.items():
-            base = EntityState(id=eid, kind="entity")
+            # cf.kind is "" for pre-existing carry-forward records serialized before this field
+            # existed -- fall back to the prior (buggy) "entity" literal rather than guessing a
+            # real archetype for data this old.
+            base = EntityState(id=eid, kind=cf.kind or "entity")
 
-            # Apply carried identity fields.
+            # Apply carried identity fields: level/xp (pre-existing) plus role/faction/
+            # properties/traits/personality (TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-
+            # RESTORED-ON-RECONSTRUCTION) -- together these make a reconstructed survivor
+            # identity-equivalent to a freshly-spawned entity, not just carrying XP forward.
             identity = dc_replace(
                 base.identity,
                 evolution_level=cf.level,
                 evolution_points=cf.xp,
+                role=cf.role,
+                faction=cf.faction,
+                properties=dict(cf.properties),
+                traits=set(cf.traits),
+                personality=PersonalityComponent(
+                    greed=cf.personality.get("greed", 0.0),
+                    bravery=cf.personality.get("bravery", 0.0),
+                    sociability=cf.personality.get("sociability", 0.0),
+                    industry=cf.personality.get("industry", 0.0),
+                ),
             )
 
             # Apply carried equipment (convert string keys back to EquipSlot enum).

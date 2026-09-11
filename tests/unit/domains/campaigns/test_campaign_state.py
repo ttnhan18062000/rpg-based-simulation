@@ -157,6 +157,65 @@ def test_entity_carry_forward_from_dict_missing_last_position_key():
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION:
+# EntityCarryForward.kind/role/faction/properties/traits/personality round-trip,
+# including the missing-key case for pre-existing records.
+# ---------------------------------------------------------------------------
+
+def test_entity_carry_forward_identity_fields_default():
+    entity = _make_entity()
+    assert entity.kind == ""
+    assert entity.role == 0
+    assert entity.faction == 0
+    assert entity.properties == {}
+    assert entity.traits == ()
+    assert entity.personality == {}
+
+
+def test_entity_carry_forward_identity_fields_round_trip():
+    entity = dataclasses.replace(
+        _make_entity(),
+        kind="goblin",
+        role=2,
+        faction=3,
+        properties={"archetype_id": "goblin_raider", "faction_id": "monster_horde"},
+        traits=("brave", "cunning"),
+        personality={"greed": 0.4, "bravery": 0.7, "sociability": 0.1, "industry": 0.2},
+    )
+    restored = EntityCarryForward.from_dict(entity.to_dict())
+    assert restored.kind == "goblin"
+    assert restored.role == 2
+    assert restored.faction == 3
+    assert restored.properties == {"archetype_id": "goblin_raider", "faction_id": "monster_horde"}
+    assert restored.traits == ("brave", "cunning")
+    assert restored.personality == {"greed": 0.4, "bravery": 0.7, "sociability": 0.1, "industry": 0.2}
+    assert restored == entity
+
+
+def test_entity_carry_forward_traits_serialized_sorted_for_determinism():
+    entity = dataclasses.replace(_make_entity(), traits=("zebra", "alpha", "mid"))
+    d = entity.to_dict()
+    assert d["traits"] == ["alpha", "mid", "zebra"]
+
+
+def test_entity_carry_forward_from_dict_missing_identity_keys():
+    """Pre-existing serialized records from before these fields existed have none of these
+    keys at all -- from_dict() must not KeyError, and must fall back to the same defaults a
+    bare EntityCarryForward construction would use."""
+    entity = _make_entity()
+    d = entity.to_dict()
+    for key in ("kind", "role", "faction", "properties", "traits", "personality"):
+        del d[key]
+    restored = EntityCarryForward.from_dict(d)
+    assert restored.kind == ""
+    assert restored.role == 0
+    assert restored.faction == 0
+    assert restored.properties == {}
+    assert restored.traits == ()
+    assert restored.personality == {}
+
+
+# ---------------------------------------------------------------------------
 # AC-5: FactionCarryForward constructs and round-trips
 # ---------------------------------------------------------------------------
 
