@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT
-phase: open
+phase: done
 date: 2026-09-04
 tags: [testing, registry]
 ---
@@ -15,7 +15,7 @@ tags: [testing, registry]
 Repo-wide audit and repair of stale tests_v2/tests/rpg parity-ledger test_path citations, including P0 entries
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
