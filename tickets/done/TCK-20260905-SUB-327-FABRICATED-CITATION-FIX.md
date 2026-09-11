@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260905-SUB-327-FABRICATED-CITATION-FIX
-phase: open
+phase: done
 date: 2026-09-05
 tags: [performance]
 ---

@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: world
 authority: P2
 audience: agent
 ticket_id: TCK-20260623-FIX-CONTENT-REGISTRY
-phase: open
+phase: done
 date: 2026-06-23
 tags: [test-repair, content, registry, schema]
 ---

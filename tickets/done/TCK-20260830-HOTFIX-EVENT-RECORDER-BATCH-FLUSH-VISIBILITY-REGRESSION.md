@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260830-HOTFIX-EVENT-RECORDER-BATCH-FLUSH-VISIBILITY-REGRESSION
-phase: open
+phase: done
 date: 2026-08-30
 tags: [observability, performance]
 ---

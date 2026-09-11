@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: frontend
 authority: P1
 audience: agent
 ticket_id: TCK-20260825-METADATA-PROVIDER-NONBLOCKING-FALLBACK
-phase: open
+phase: done
 date: 2026-08-25
 tags: [hud, content]
 ---

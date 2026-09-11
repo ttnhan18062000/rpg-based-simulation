@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260613-DOC-COGNITION-SUBSYSTEM
-phase: inprogress
+phase: done
 date: 2026-06-13
 tags: [documentation, cognition, self-model, capability-estimate, knowledge-model, need-interpretation, self-assessment]
 ---

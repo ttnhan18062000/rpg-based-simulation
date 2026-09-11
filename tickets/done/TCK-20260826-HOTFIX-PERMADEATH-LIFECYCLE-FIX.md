@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX
-phase: open
+phase: done
 date: 2026-08-26
 tags: [content]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P2
 audience: agent
 ticket_id: TCK-20260810-NAVIGATION-SINGLE-AXIS-STEPPING-DIAGONAL-PURSUIT-DEADLOCK
-phase: open
+phase: done
 date: 2026-08-10
 tags: [combat, engine]
 ---

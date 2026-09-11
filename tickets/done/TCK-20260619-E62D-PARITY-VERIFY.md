@@ -1,10 +1,10 @@
 ---
-status: open
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E62D-PARITY-VERIFY
-phase: open
+phase: done
 date: 2026-06-22
 tags: [culture-drift, parity, acceptance-test, docs, phase-6]
 ---

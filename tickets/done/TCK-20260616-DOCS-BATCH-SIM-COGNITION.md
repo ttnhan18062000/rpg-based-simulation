@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260616-DOCS-BATCH-SIM-COGNITION
-phase: open
+phase: done
 date: 2026-06-16
 tags: [documentation, readability, phase-language-removal, simulation, cognition]
 ---

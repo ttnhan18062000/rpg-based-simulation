@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260730-CONTEXT-PACKET-EXPOSURE-DECISION
-phase: open
+phase: done
 date: 2026-07-30
 tags: [ai, workflows]
 ---

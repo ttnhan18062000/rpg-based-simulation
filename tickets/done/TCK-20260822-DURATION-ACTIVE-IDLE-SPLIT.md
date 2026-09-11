@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260822-DURATION-ACTIVE-IDLE-SPLIT
-phase: open
+phase: done
 date: 2026-08-22
 tags: [agent-monitoring, data-quality, documentation]
 ---

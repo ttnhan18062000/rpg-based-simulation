@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260805-COMMUNITY-SKILL-SWAP-DISCLOSED
-phase: open
+phase: done
 date: 2026-08-05
 tags: [skills, workflows]
 ---

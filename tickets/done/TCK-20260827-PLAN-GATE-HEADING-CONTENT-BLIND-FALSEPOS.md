@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS
-phase: open
+phase: done
 date: 2026-08-27
 tags: [ai, workflows, bug]
 ---

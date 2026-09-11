@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION
-phase: open
+phase: done
 date: 2026-07-11
 tags: [agent-monitoring, data-quality, root-cause]
 ---

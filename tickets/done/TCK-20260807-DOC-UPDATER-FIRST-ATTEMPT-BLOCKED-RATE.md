@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260807-DOC-UPDATER-FIRST-ATTEMPT-BLOCKED-RATE
-phase: open
+phase: done
 date: 2026-08-07
 tags: [agent-monitoring, process-improvement]
 ---

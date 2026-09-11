@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE
-phase: open
+phase: done
 date: 2026-07-21
 tags: [ai, workflows, process-improvement, hooks, skills]
 ---

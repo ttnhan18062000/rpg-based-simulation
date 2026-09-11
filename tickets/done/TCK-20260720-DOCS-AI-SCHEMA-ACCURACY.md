@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260720-DOCS-AI-SCHEMA-ACCURACY
-phase: open
+phase: done
 date: 2026-07-20
 tags: [documentation, data-quality]
 ---

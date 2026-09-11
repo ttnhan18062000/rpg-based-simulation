@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260818-HOTFIX-URBAN-POLITICAL-1000T-SOCIAL-ANCHOR-STALE
-phase: open
+phase: done
 date: 2026-08-18
 tags: [simulation-quality, calibration, testing, bug]
 ---

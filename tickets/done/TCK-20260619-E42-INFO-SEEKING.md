@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E42-INFO-SEEKING
-phase: epic_scoped
+phase: done
 date: 2026-06-19
 tags: [information-seeking, belief, leads, knowledge-gap, paid-info, cognition, epic, phase-4]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-ENTITY-LIFECYCLE-SCORE-METRICS
-phase: open
+phase: done
 date: 2026-08-08
 tags: [simulation-quality, observability, world]
 ---

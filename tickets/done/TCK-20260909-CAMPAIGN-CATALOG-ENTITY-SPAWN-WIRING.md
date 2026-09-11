@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING
-phase: open
+phase: done
 date: 2026-09-09
 tags: [world, content, architecture]
 ---

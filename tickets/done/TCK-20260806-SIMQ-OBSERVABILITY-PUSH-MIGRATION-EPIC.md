@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC
-phase: open
+phase: done
 date: 2026-08-06
 tags: [observability, engine, combat, simulation-quality, performance]
 ---

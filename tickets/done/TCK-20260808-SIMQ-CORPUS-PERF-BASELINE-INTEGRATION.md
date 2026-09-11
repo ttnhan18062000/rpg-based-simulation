@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-SIMQ-CORPUS-PERF-BASELINE-INTEGRATION
-phase: open
+phase: done
 date: 2026-08-08
 tags: [simulation-quality, world, corpus, performance]
 ---
