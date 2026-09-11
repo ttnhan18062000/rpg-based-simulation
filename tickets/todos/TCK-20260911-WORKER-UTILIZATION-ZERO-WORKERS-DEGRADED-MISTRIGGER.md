@@ -96,6 +96,19 @@ positive integer (100-50000), none pass 0, and none could pass 0 even if they tr
 unreachable, not a live second mis-trigger risk to this ticket's own fix.** Scope updated below to
 record this explicitly rather than leave it silently unaddressed.
 
+**Caveat, per peer review (`rpg-feature-planning`, 2026-09-11) — this rests on two different kinds
+of evidence, not one, and they don't carry equal durability.** The Pydantic `gt=0` guard covers
+*profile-driven* construction only (`RuntimeProfile(...)` going through its own field validation).
+`WorkerManager.__init__()` itself (`worker_manager.py:56`) is `def __init__(self, max_workers: int
+= 1, max_queue_depth: int = 100, ...)` — a plain default with no validation of its own, so a direct
+`WorkerManager(max_queue_depth=0)` call bypasses the schema entirely and is not, by itself, made
+impossible by the Pydantic constraint. The unreachability claim for that direct-construction path
+rests on the exhaustive real-call-site grep instead (no code anywhere constructs it that way today)
+— an empirical result, not a structural one. **Schema-guaranteed for profile-driven construction;
+site-verified (not schema-guaranteed) for direct construction.** A future direct `WorkerManager(...)`
+caller passing `max_queue_depth=0` would not be rejected by anything today — this ticket's own fix
+should not assume that path is permanently closed, only that it is currently unused.
+
 ## Scope
 - Decide the correct semantic for `worker_utilization` when `max_workers <= 0`: most likely `0.0`
   (workers are deliberately disabled — there is no worker-based pressure signal to report at all,
