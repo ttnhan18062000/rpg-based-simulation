@@ -177,13 +177,51 @@ None yet — standard tier, staging artifacts created when picked up.
   something this filing resolves.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+_(pending — full disposition work not yet picked up; this ticket's own AC list remains open)_
+
+**Partial re-check only (2026-09-11, Batch A triage, per `rpg-feature-planning`): a real,
+non-raider scenario does NOT show this ticket's specific starvation pattern — recorded honestly as
+a genuine negative data point, not evidence the mechanism itself is safe or fixed.** Ran a real,
+uninstrumented 40-tick `campaign_life_arc`-shaped episode (same construction pattern as the sibling
+`GOVERNOR-DEGRADED-AT-TICK-ONE` re-check, real `Kernel` ticks, no monkeypatching) with the now-real
+16-entity world. Confirmed `scan_policy == ScanPolicy.EXACT_DIRTY` active throughout (per the
+sibling governor ticket's own finding — this is now known to be a general mis-trigger, not organic
+pressure, but the `EXACT_DIRTY` gate itself is real and active regardless of why). Tracked every
+entity's `navigation.position` from spawn to tick 40: **all 16/16 entities had moved from their
+initial (scattered) position by tick 40** — zero entities showed the permanent zero-net-movement
+pattern the original `goblin_raider` reproduction found.
+
+**This does not weaken the original raider evidence, and should not be read as "the starvation
+mechanism doesn't exist."** The likely reason it didn't reproduce here: this ticket's own precondition
+is narrow — "a freshly-spawned entity with a real `navigation.target` baked in at construction but
+no active AI goal, interaction, or strategic project." The `goblin_raider` reproduction specifically
+constructed entities matching that exact profile. This campaign scenario's real, catalog-spawned
+entities (via `CatalogScenarioStateBuilder`/`WorldEntitySpawner`) were not checked for whether they
+match that same precondition at spawn — plausibly they don't (no baked-in static
+`navigation.target`, and/or they pick up a real strategic project or interaction quickly through
+normal cognition/goal-scoring, satisfying `strategic_req`/`interaction_req` before ever needing pure
+non-urgent movement candidacy). **This was not verified either way** — a real, disclosed gap in this
+particular check, not glossed over. A genuine second confirmation would need an entity that matches
+the raider ticket's own exact precondition within a non-raider scenario, which this check did not
+specifically construct or verify for.
+
+**Honest summary of what this check does and doesn't establish:**
+- Does NOT reproduce the pattern in this real campaign scenario — a real, if narrower-scope-than-
+  hoped, data point.
+- Does NOT invalidate the raider evidence, which stands independently and is unaffected.
+- Does NOT establish that campaign-spawned entities are immune to the starvation mechanism — only
+  that none of them happened to be in the exact vulnerable state (no active goal + a baked-in
+  static target) during this one 40-tick run at this seed.
+- This ticket's own full AC list (real measurement of DEGRADED frequency in practice, self-recovery
+  determination, disposition decision, possible fix/documentation) remains entirely unaddressed —
+  left OPEN, not closed by this partial check.
 
 ## Test Summary
-_(pending)_
+_(pending — the full ticket's own real measurement/disposition work has not started; this partial
+re-check used a throwaway scratch probe script, not a committed test)_
 
 ## Files Changed
-_(pending)_
+_(pending — no code changed by this partial re-check)_
 
 ## Completion Summary
-_(pending)_
+_(pending — ticket remains open; only one additional, honestly-scoped data point was added)_
