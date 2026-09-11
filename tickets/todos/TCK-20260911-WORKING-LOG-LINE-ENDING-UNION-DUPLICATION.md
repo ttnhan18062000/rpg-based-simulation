@@ -33,10 +33,10 @@ cleaned it up by hand:
 
 | Occurrence | Where | Result |
 |---|---|---|
-| Batch A (#158) | merge `18000417` | 15-line block; one line differed CRLF vs LF |
+| Batch A (#158) | merge `18000417` | 15-line block (rows 1849-1863 = 1869-1883); 7 rows differ CRLF vs LF |
 | Batch B (#159) | — | clean |
 | PR #160 | merge `595473b2` | 13-line block (rows 1870-1882) |
-| Batch C (#161) | merge of `main` | duplicate block, removed by hand |
+| Batch C (#161) | merge `05c685dd` | 13-line block (same 13 rows as #160); cleanup `96832f31` |
 
 Reported by `rpg-feature-planning` and `rpg-implementer`. PR #160's instance was found in this
 session. The closed `TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP` has been collecting
@@ -62,14 +62,31 @@ assumption, and a line-ending change is an invisible rewrite. Hand cleanup can k
 deleting the copy that doesn't match `main` fixes it, deleting the other one sets up the next
 duplicate.
 
+**Batch C corroborates it (evidence from `rpg-feature-planning`, CR counts checked here):** merge
+`05c685dd` (branch `6c774dcb` × main `fe67836a`, base `e66a98bd`). The duplicate was again **13
+lines**. The branch side still carried the CRLF originals (26 CR bytes), while main at `fe67836a`
+(#160's squash, which landed the LF rewrite) had **0**. That's the mirror image of #160: two
+independent occurrences, same 13 rows. Cleanup commit `96832f31`.
+
+**Batch A confirms it on a different row set:** merge `18000417` (branch `6c51c681` × main `75478727`,
+base `cb0b23b0`). The 15 duplicated rows are RPG closures from 2026-09-08/09, none of them in the base,
+which both sides carried. In the branch-side copy, 7 of the 15 end in CRLF; in the main-side copy, 0 do.
+Identical additions would merge cleanly; additions that differ in line endings become a both-sides
+change, and union keeps both.
+
+**Writer fingerprint:** every CR row seen across all three occurrences has a microsecond-precision
+timestamp (`…:54.208358Z`), which is what `record_hand_orchestrated_closure.py` writes. Rows written
+by hand in Finalize (`…:00.000000Z`, `…:44Z`) are LF. **3 of 3 duplicates are explained by line-ending
+variance on shared rows.**
+
 This refines the earlier squash-merge explanation rather than replacing it. Squash merges keep merge
 bases older, which widens the window. But PR #160's duplicate happened on its **first** merge of
 `main`, so a stale merge base alone does not explain it; the mixed line endings do.
 
 ## Scope
 - **Investigate first (short):**
-  - Confirm the same CR/LF mechanism for Batch A (`18000417`) and Batch C (#161), using the same
-    method: CR counts at base / ours / theirs, and which rows carry `\r`.
+  - ~~Confirm the mechanism for Batch A and Batch C~~ — done during scoping (see Request Summary).
+    Re-verify it in Investigate with a scripted reproduction, not by re-reading.
   - Find what rewrote the 13 rows to LF on the #160 branch (the writer that normalizes existing rows).
   - List every writer of every `merge=union` file (`tickets/working_log.csv`,
     `agent-monitoring/data/*/*.jsonl`) and the line ending each produces.
