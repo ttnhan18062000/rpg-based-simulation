@@ -1,7 +1,7 @@
 # Compliance IDs: WORLD-ASM-001, WORLD-ASM-002
 from __future__ import annotations
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -19,7 +19,8 @@ class ResolvedEntityProfile(BaseModel):
     readiness: float
     inventory_seed: Optional[str] = None
     cognition_seed: Optional[str] = None
-    
+    spawn_position: Optional[Tuple[float, float]] = None
+
     # Archetype metadata fields (Phase 25)
     archetype_id: Optional[str] = None
     species_id: Optional[str] = None

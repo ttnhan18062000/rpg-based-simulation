@@ -66,8 +66,10 @@ def test_episode_zero_spawns_real_entities_matching_the_world_composition():
 
 @pytest.mark.slow
 def test_episode_zero_entities_are_scattered_not_co_located():
-    """Interim workaround (CampaignOrchestrator._scatter_catalog_entities) must leave every
-    entity on a distinct tile -- co-location is what trips LAW-OCCUPANCY-COLLISION below."""
+    """Real per-entity spawn positions (TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION,
+    which replaced the interim CampaignOrchestrator._scatter_catalog_entities() grid-scatter
+    workaround this test used to describe) must leave every entity on a distinct tile --
+    co-location is what trips LAW-OCCUPANCY-COLLISION below."""
     orch = CampaignOrchestrator(_campaign_life_arc_shaped_manifest())
     spec = orch._manifest.episodes[0]
 
