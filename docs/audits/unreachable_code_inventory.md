@@ -67,6 +67,29 @@ negative (missing a real instance), never a false positive — the safer failure
 coverage is incomplete for generically-named code. This is a structural limit of text-token
 matching, not a bug; a real fix needs type-aware call-graph analysis, out of this audit's own scope.
 
+## The dominant pattern: superseded, not missing
+
+The single most consequential finding of this audit is not the raw count — it's that this
+codebase's real pattern for "implemented, tested, never called" code is **a superseded earlier
+implementation left alongside its live replacement**, not an unwired feature waiting to be
+connected. Confirmed directly, by code read, for three separate pairs: `EntityGenerator.
+spawn_calamity()` vs. `CalamityService.process_world_dynamics()`'s own inline `spawn_monster()`
+call; `BiologicalSystem.update()` vs. `apply.py`'s own passive hunger/sleep-debt decay; and the
+`src/domains/optimization/` package (C1, below) vs. `ResourceGovernor`/`GovernorPolicy`.
+
+**The `BiologicalSystem.update()`/`apply.py` pair matters beyond confirming the pattern — the two
+implementations have drifted, not just duplicated.** The live path
+(`apply.py:89-100`) applies `hunger += 0.1 * cadence.biological`, `sleep_debt += 0.05 *
+cadence.biological`, with HP penalties at `hunger >= 95` / `sleep_debt >= 98`. The dead method
+applies a flat `0.5%`/`0.3%` per-tick decay with HP penalties at `90`/`95`. These are not two
+copies of the same behavior — they are two different sets of numbers for the same mechanic, and at
+some point neither was reconciled with the other. This is the sharpest argument for why
+superseded-vs-missing has to be determined *before* any "wire it in" fix: naively wiring the dead
+implementation back in would not have been merely redundant, it would have silently changed decay
+rates and death thresholds across the simulation. The same risk applies to C1 below —
+`GracefulDegradationManager`'s pressure thresholds (1.0/0.95/0.8) are not the same numbers as
+`ResourceGovernor`'s (1.5x/1.0x/0.7x) either, and neither has been checked against the other yet.
+
 ## Organizing axis: mechanism vs. surface, not zero-anywhere vs. test-only
 
 Per peer review: raw reachability status (zero-anywhere vs. test-only) is a column in the
