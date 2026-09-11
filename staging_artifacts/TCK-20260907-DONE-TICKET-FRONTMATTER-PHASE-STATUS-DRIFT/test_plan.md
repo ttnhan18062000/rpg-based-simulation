@@ -47,7 +47,7 @@ tests of workflow prompts. No `implement-epic.js` test: that workflow has no epi
 
 ## Step 6 — parity
 
-INFRA-180, INFRA-278 and INFRA-305 are rewritten through `write_entry()` and pass `validate_entry()`.
+INFRA-180 and INFRA-305 are rewritten through `write_entry()` (INFRA-278 is untouched) and pass `validate_entry()`.
 INFRA-305's line references match `check_frontmatter_valid()`'s real location after Step 1.
 
 ## Regression

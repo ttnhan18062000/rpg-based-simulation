@@ -81,7 +81,7 @@ in"), not a schema violation of either field in isolation.
   *(Corrected twice after Review.)*
 - **Fix widened accordingly:** cross-field rule + `done_checker` wiring (as proposed), **plus** a
   path-independent corpus test over all of `tickets/done/`, **plus** a test pinning `implement-ticket.js:1671`'s existing instruction, **plus** parity updates to
-  INFRA-180/278/305. A missing epic-close step in `implement-epic.js` is a follow-on ticket.
+  INFRA-180/305. A missing epic-close step in `implement-epic.js` is a follow-on ticket.
 - **9 epic-tier tickets use `phase: epic_scoped` deliberately.** Plan recommends normalizing them to
   `done` rather than adding the value to the enum. The decision gets recorded before the bulk edit.
 - Full evidence: `staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/`.
@@ -95,7 +95,7 @@ in"), not a schema violation of either field in isolation.
       closing path
 - [ ] `implement-ticket.js`'s existing Finalize instruction (line 1671) is pinned by a test
 - [ ] A follow-on ticket is filed for the missing epic-close step in `implement-epic.js`
-- [ ] INFRA-180, INFRA-278 and INFRA-305 reflect the new cross-field rule, written via `write_entry()`
+- [ ] INFRA-180 and INFRA-305 reflect the new cross-field rule, written via `write_entry()`
 - [ ] The `epic_scoped` decision (normalize vs. enum addition) is recorded before remediation
 - [ ] An explicit, evidence-based decision is made and recorded on remediating the already-affected
       files (395 as of 2026-09-11; re-count at implementation) — not silence
@@ -132,7 +132,7 @@ None.
 Investigate and Plan are complete; see
 `staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/`. Plan order:
 cross-field rule → `epic_scoped` decision → bulk remediation (separate commit, dry-run script) →
-corpus test → pin line 1671's instruction → parity (INFRA-180/278/305) → file the epic-close follow-on. Revised after
+corpus test → pin line 1671's instruction → parity (INFRA-180/305) → file the epic-close follow-on. Revised after
 Review NEEDS_CHANGES; see investigation.md §8. Implementation is handed to `agent-working-implementer`.
 
 ## Test Summary
