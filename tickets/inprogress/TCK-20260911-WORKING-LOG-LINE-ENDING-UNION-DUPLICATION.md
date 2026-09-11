@@ -4,7 +4,7 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION
-phase: open
+phase: inprogress
 date: 2026-09-11
 tags: [data-quality, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [data-quality, process-improvement]
 Mixed CRLF/LF writers make `merge=union` duplicate `tickets/working_log.csv` blocks on most batch merges
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -112,16 +112,16 @@ bases older, which widens the window. But PR #160's duplicate happened on its **
   visible in the KGMCP block; note them if they matter, but file them separately.
 
 ## Acceptance Criteria
-- [ ] The mechanism is confirmed or refuted for Batch A and Batch C, with evidence recorded (not assumed
-      from #160).
+- [x] The mechanism is confirmed or refuted for Batch A and Batch C, with evidence recorded (not assumed
+      from #160). *Confirmed during Investigate; see investigation.md §1.*
 - [ ] Every writer of a `merge=union` file produces LF; the closure script's fix has a unit test.
 - [ ] `.gitattributes` enforces LF for the `merge=union` paths, verified by committing a CRLF row in a
       scratch repo or fixture and observing normalization.
 - [ ] An integrity test fails on any `\r` in a `merge=union` file and passes on current `main`.
 - [ ] A reproduction test shows that two branches rewriting the same appended rows with different line
       endings no longer produce a duplicate block after the fix.
-- [ ] The W36 `tools.jsonl` allowlisted block is either remediated or explicitly shown to be a different
-      mechanism.
+- [x] The W36 `tools.jsonl` allowlisted block is either remediated or explicitly shown to be a different
+      mechanism. *Different mechanism: 0 CR bytes (investigation.md §4).*
 
 ## Related Tickets
 - `TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP` (done) — original incident, detection test,
@@ -149,6 +149,10 @@ bases older, which widens the window. But PR #160's duplicate happened on its **
   script that reads and rewrites the file, or a merge resolution.
 
 ## Implementation Notes
+Investigate and Plan are complete; see
+`staging_artifacts/TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION/`. Only one CRLF writer
+exists: the closure script. `main` currently has 0 CR bytes in every `merge=union` file, so no data
+remediation is needed. Implementation is handed to `agent-working-implementer`.
 
 ## Test Summary
 
