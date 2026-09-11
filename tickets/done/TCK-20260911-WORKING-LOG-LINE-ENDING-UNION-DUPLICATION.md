@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION
-phase: inprogress
+phase: done
 date: 2026-09-11
 tags: [data-quality, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [data-quality, process-improvement]
 Mixed CRLF/LF writers make `merge=union` duplicate `tickets/working_log.csv` blocks on most batch merges
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
