@@ -96,22 +96,38 @@ Ordered — each step is a precondition for the next. See `plan.md`.
 - A fresh, complete enumeration of every stale citation across all `docs/parity_ledger/*.yaml` shards is
   recorded in investigation.md. **Done** — 28 entries, classified A/B/C.
 - `parity_index.py` and `mechanics_auditor_static.py` parse `test_path` through one shared function, and
-  a two-level node-id (`path::Class::method`) is accepted by both.
+  a two-level node-id (`path::Class::method`) is accepted by both. **Done** — both import
+  `tools/parity_test_path.py::parse_test_path_citations` (the same object;
+  `test_mechanics_auditor_static_reimports_same_function_object` asserts identity); the two-level
+  node-id case is pinned by `test_two_level_node_id_is_accepted`.
 - `validate_entry()` rejects a non-null `test_path` that does not parse, and accepts all 10 entries in
-  `TestValidateEntryAgainstRealMultiSegmentCorpus` unmodified.
+  `TestValidateEntryAgainstRealMultiSegmentCorpus` unmodified. **Done** — verified unmodified/still
+  passing; new rejection covered by `test_writer_rejects_unparseable_test_path`.
 - Every one of the 28 is either (a) repointed to a test that was run and passes and covers the entry's
   claim, with `evidence_kind: invocation`; or (b) set to `status: missing` with `test_path: null` and a
   `support_boundary` stating what was lost and whether the file ever existed here. No entry is left
   pointing at a nonexistent file. (Originally worded as a `divergence_note`; the schema requires that
-  field only for `divergent`, so `support_boundary` is the correct field for `missing`.)
+  field only for `divergent`, so `support_boundary` is the correct field for `missing`.) **Done** — 9
+  repointed (all citations run and passing), 19 set to `missing` with `support_boundary`, plus
+  `TOWN-005`/`TOWN-006` corrected (30 entries total). Real numbers deviate from the plan's 7/7/14 split
+  — see plan.md's Deviations section (COMB-008 downgraded on closer read; COMB-002 recovered via an
+  independently-found real test) — `absent_file` confirms zero remaining broken citations.
 - `schema.json` and `validate_entry()` both allow a P0 entry with `status: missing`/`unsupported` to have
   a null `test_path` **only** with a non-empty `support_boundary`; every other P0 entry still requires
-  `test_path` (Step 3a, approved by the repository owner 2026-09-11 after Review NEEDS_CHANGES).
-- All P0 entries among the stale set are fixed first and verified.
+  `test_path` (Step 3a, approved by the repository owner 2026-09-11 after Review NEEDS_CHANGES). **Done**
+  — `TestStep3aLockstepWithSchemaJson` runs both representations against the same fixtures and asserts
+  identical accept/reject.
+- All P0 entries among the stale set are fixed first and verified. **Done** — all 28 are P0 (confirmed by
+  live re-scan, not just the investigation's estimate); all resolved in Step 4, verified against a fresh
+  post-fix enumeration (0 entries citing a nonexistent file).
 - `absent_file` is recorded after Step 1 (expected to **rise** as newly-visible entries surface), and
   after Step 4 has decreased from that baseline by exactly the number of citations resolved. The original
-  criterion measured against the pre-change count, which Step 1 would contaminate.
+  criterion measured against the pre-change count, which Step 1 would contaminate. **Done** — pre-Step-1:
+  103, post-Step-1 baseline: 131 (+28), post-Step-4: 103 (-28, exactly the number of stale citations
+  resolved).
 - `TOWN-005`/`TOWN-006` parse under the shared parser and no longer carry the falsified history claim.
+  **Done** — clean `test_path` citations, accurate deletion history (commit 6e5c2899) moved to
+  `support_boundary`.
 
 ## Related Tickets
 - TCK-20260904-MATERIAL-POSSESSION-PREDICATE (where this gap was found)
@@ -127,6 +143,10 @@ Ordered — each step is a precondition for the next. See `plan.md`.
 - docs/plans/archive/agent_infrastructure/parity_ledger_sqlite_context/v1_decisions_phase0.md ("Path-only links")
 - docs/plans/agent_infrastructure/reachability_verification_findings.md (Findings 1, 3, 4, 6 — on branch
   `agent-process-findings`, not yet on main)
+- docs/ai/README.md (Parity discipline bullet narrowed for the new missing/unsupported P0 carve-out)
+- docs/ai/agents.md (parity-updater Entry update rules narrowed + evidence_kind noted)
+- docs/testing/how_to_add_requirement_tests.md (Section 6 worked flow notes evidence_kind + the
+  missing/unsupported carve-out)
 
 ## Related Stored Artifacts
 - stored_artifacts/TCK-20260904-MATERIAL-POSSESSION-PREDICATE/
@@ -151,14 +171,108 @@ Ordered — each step is a precondition for the next. See `plan.md`.
   claim before repointing — `STRAT-004` shows a surviving-looking name can still have no test behind it.
 
 ## Implementation Notes
-Investigate and Plan phases complete (2026-09-11). Implementation handed to `agent-working-implementer`;
-Review is the next phase.
+Investigate and Plan phases complete (2026-09-11). Implementation executed 2026-09-11, all 5 plan
+steps plus 3a:
+
+- **Step 1**: Extracted `parse_test_path_citations()` (and its three regexes) from
+  `tools/gate_checks/mechanics_auditor_static.py` into new `tools/parity_test_path.py`.
+  `mechanics_auditor_static.py` now imports the function by name (same object, pinned by
+  `test_mechanics_auditor_static_reimports_same_function_object`). `tools/parity_index.py`'s
+  `_populate_ref_tables` now calls the shared parser instead of `_TEST_PATH_DECLARED_RE`, inserting
+  one `test_refs` row per parsed citation (was one row per entry, only for single-citation paths).
+  `_declared_test_path_exists`'s file-level `split("::", 1)[0]` check (implemented as
+  `_path_resolves`) was left untouched — index stays path-level. Measured effect: `absent_file`
+  rose from 103 (pre-Step-1) to 131 (post-Step-1 baseline) as 28 previously-invisible stale
+  citations surfaced.
+- **Step 2**: Added nullable `evidence_kind` (`existence`/`invocation`/`runtime_observation`) to
+  `schema.json`'s `properties` and mirrored as an enum check in `validate_entry()`. No enforcement
+  rule added (confirmed by `test_writer_accepts_verified_p0_with_existence_evidence_kind`).
+- **Step 3**: `validate_entry()` now rejects a non-null `test_path` that doesn't parse via the
+  shared parser, applying only to `write_entry()` calls (no sweep). Not mirrored in `schema.json`
+  (JSON Schema can't express the parser's backtick/multi-citation logic, and nothing runs
+  jsonschema validation over the full on-disk ledger).
+- **Step 3a**: Rewrote `schema.json`'s `allOf[2]` (nested if/then/else) and `validate_entry()`'s
+  mirroring block together: a P0 entry with `status` in `{missing, unsupported}` now requires
+  non-empty `support_boundary` instead of `test_path`; every other P0 status is unchanged.
+  `TestStep3aLockstepWithSchemaJson` runs both representations against 7 shared fixtures and
+  asserts identical accept/reject. Confirmed the 15 pre-existing P0 missing/unsupported null-
+  `test_path` entries (e.g. SUB-325) are unaffected by this ticket — `TestStep3aRealLegacyEntryNeedsExplanation`
+  documents SUB-325 is now writable but still rejected as-is (needs its own `support_boundary`,
+  not touched here — follow-on).
+- **Step 4**: Re-verified the 28 entries independently (not just trusting investigation.md's class
+  labels) by reading each Class A successor's actual content and running it, and by grepping
+  `Compliance IDs:`/`Logic ID` header-comment tags across `tests/` as an additional cross-check.
+  This surfaced two corrections beyond the plan's 7/7/14 split (documented in plan.md's
+  Deviations section): **COMB-008** downgraded out of Class A (successor file exists but tests a
+  different claim — typed-update preservation, not quiet-tick passive advancement); **COMB-002**
+  recovered from Class B into a repoint (a real, unrelated-looking test under
+  `tests/unit/domains/optimization/` genuinely invokes `LegalityServiceV2.verify_occupancy`, one
+  of its two cited functions). Net: **9 repointed**, **19 set to `missing`**, plus `TOWN-005`/
+  `TOWN-006` corrected — 30 entries written via `write_entry()`, all P0. Every repointed citation
+  was run and confirmed passing before being written. Verified via `yaml.safe_load` diffing that
+  entry counts/ids in all 7 touched shards are unchanged and only the intended fields moved.
+- **Step 5**: `absent_file` 103 → 131 (Step 1) → 103 (Step 4, exactly -28). `missing_test_path`
+  stayed 1315 throughout — the 19→missing entries all had a non-null (stale) `test_path` before
+  and a null one after, but `missing` status is outside that count's `{verified, divergent}` scope
+  in both states, so it never moved; no baseline literal update was needed (confirmed by running
+  `tests/tools/test_parity_index_baseline.py`, still green).
 
 ## Test Summary
-(To be filled during implementation.)
+Ran (all pass): `tests/tools/test_parity_test_path.py` (new, 7 tests), `tests/tools/test_parity_index.py`
+(41, incl. 1 new multi-citation test), `tests/tools/test_parity_index_baseline.py` (15, unmodified),
+`tests/tools/test_parity_ledger_writer.py` (36, incl. 1 updated + 11 new), `tests/tools/test_parity_ledger_schema.py`
+(7, incl. 4 new), `tests/tools/test_mechanics_auditor_static.py` (25, unmodified),
+`tests/integrity/test_parity_guards.py` (unmodified), `tests/tools/test_parity_ledger_scan.py` +
+`test_parity_updater_static.py` + `test_parity_prompt_ledger_file_list.py` + `test_retrieval_event_parity_check.py`
+(regression check, unmodified), plus every newly-cited test node individually
+(`test_occupancy_conflict_resolution`, `TestDirectiveEvent`, `test_snapshot_immutability`,
+`test_law_of_capacity_enforcement`, `test_law_of_weight_enforcement`, `test_weather_modifiers`,
+`test_transformations.py`, `TestCognitionProfile`,
+`test_movement_legality_uses_snapshot_result_equivalent_to_current_logic`). Total: 128 tests in the
+scoped regression command + 14 individually-run cited tests + 1 corrective re-run, all passing.
 
 ## Files Changed
-(To be filled during implementation.)
+- `tools/parity_test_path.py` (new)
+- `tools/gate_checks/mechanics_auditor_static.py`
+- `tools/parity_index.py`
+- `tools/parity_ledger_writer.py`
+- `docs/parity_ledger/schema.json`
+- `docs/parity_ledger/combat_movement.yaml`
+- `docs/parity_ledger/progression.yaml`
+- `docs/parity_ledger/social_narrative.yaml`
+- `docs/parity_ledger/strategic_cognition.yaml`
+- `docs/parity_ledger/substrate.yaml`
+- `docs/parity_ledger/town_resource.yaml`
+- `docs/parity_ledger/world_dynamics.yaml`
+- `tests/tools/test_parity_test_path.py` (new)
+- `tests/tools/test_parity_index.py`
+- `tests/tools/test_parity_ledger_writer.py`
+- `tests/tools/test_parity_ledger_schema.py`
+- `staging_artifacts/TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT/plan.md` (Deviations section added)
+- `tickets/inprogress/TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT.md` (this file)
+- `docs/ai/README.md` (Doc phase: narrowed the "P0 parity entries require a passing test_path" claim)
+- `docs/ai/agents.md` (Doc phase: narrowed parity-updater's P0 entry-update rule + noted evidence_kind)
+- `docs/testing/how_to_add_requirement_tests.md` (Doc phase: added evidence_kind step + missing/unsupported carve-out note)
 
 ## Completion Summary
-(To be filled on completion.)
+Implemented the full 6-step plan (1, 2, 3, 3a, 4, 5). A shared `parity_test_path.py` parser now
+backs both `parity_index.py` and `mechanics_auditor_static.py`, closing the blind spot where the
+index's own narrower regex couldn't see 345 of 613 ledger entries. `evidence_kind` is now a
+schema/writer field (descriptive only, no enforcement — that's a follow-on). `validate_entry()`
+gained a write-time format contract (non-null `test_path` must parse) and Step 3a's narrowed P0
+rule (`missing`/`unsupported` P0 entries need `support_boundary` instead of `test_path`), with
+`schema.json` kept in lockstep via a dedicated cross-check test. All 28 stale entries — plus
+`TOWN-005`/`TOWN-006`'s falsified-history precedent — were resolved through `write_entry()`: **9
+repointed to real, passing, on-topic tests** (evidence_kind: invocation), and **19 moved from
+`verified` to `missing`** with a `support_boundary` explaining exactly what was lost (a deleted
+test and its commit, or a citation to a file that never existed in this repository) and stating
+plainly that `missing` here means unverified, not known-broken. This visibly downgrades 19 P0
+entries' apparent evidence quality — the honest, correct result of finding they were never
+actually backed by a test in this repository. Per-entry investigation caught two cases the plan's
+own Class A/B/C split got wrong (COMB-008 has a same-named successor that tests something else
+entirely; COMB-002 has real coverage hiding under an unrelated directory, found only by cross-
+checking `Compliance IDs:` header comments) — both documented in plan.md's Deviations section.
+`absent_file` moved 103 → 131 → 103 exactly as the plan predicted, and `missing_test_path`'s
+baseline (1315) needed no update since `missing`-status entries fall outside its
+`{verified, divergent}` scope regardless of `test_path`. Scope holds: no mechanics/behavior were
+changed, only citation and evidence-contract hygiene.

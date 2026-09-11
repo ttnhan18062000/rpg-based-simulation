@@ -30,6 +30,8 @@ def _entry(
     test_path="tests/unit/test_x.py::test_x",
     divergence_note=None,
     proof_type=None,
+    support_boundary=None,
+    evidence_kind=None,
 ):
     return {
         "id": entry_id,
@@ -40,6 +42,8 @@ def _entry(
         "test_path": test_path,
         "divergence_note": divergence_note,
         "proof_type": proof_type,
+        "support_boundary": support_boundary,
+        "evidence_kind": evidence_kind,
     }
 
 
@@ -117,7 +121,11 @@ class TestValidateEntryRejections:
         assert excinfo.value.field == "divergence_note"
         assert shard_path.read_bytes() == before
 
-    def test_writer_rejects_p0_missing_test_path(self, tmp_path):
+    def test_writer_rejects_p0_missing_status_without_support_boundary(self, tmp_path):
+        # Step 3a (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT) narrowed this rule: a P0
+        # entry with status missing/unsupported no longer requires test_path, but now requires a
+        # non-empty support_boundary instead. This entry supplies neither, so it is still
+        # rejected -- just on the new field.
         ledger_dir, shard_path = _write_shard(tmp_path, "substrate.yaml", [_entry()])
         before = shard_path.read_bytes()
         bad_entry = _entry(
@@ -127,7 +135,46 @@ class TestValidateEntryRejections:
 
         with pytest.raises(EntryValidationError) as excinfo:
             write_entry("substrate.yaml", bad_entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db")
+        assert excinfo.value.field == "support_boundary"
+        assert shard_path.read_bytes() == before
+
+    def test_writer_rejects_p0_verified_missing_test_path_unchanged(self, tmp_path):
+        # Every P0 status other than missing/unsupported keeps the original test_path-required
+        # rule unchanged by Step 3a.
+        ledger_dir, shard_path = _write_shard(tmp_path, "substrate.yaml", [_entry()])
+        before = shard_path.read_bytes()
+        bad_entry = _entry(entry_id="SUB-002", status="verified", priority="P0", test_path=None)
+
+        with pytest.raises(EntryValidationError) as excinfo:
+            write_entry("substrate.yaml", bad_entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db")
         assert excinfo.value.field == "test_path"
+        assert shard_path.read_bytes() == before
+
+    def test_writer_rejects_p0_legacy_verified_missing_test_path(self, tmp_path):
+        ledger_dir, shard_path = _write_shard(tmp_path, "substrate.yaml", [_entry()])
+        before = shard_path.read_bytes()
+        bad_entry = _entry(
+            entry_id="SUB-002", status="legacy_verified", priority="P0",
+            v2_evidence=None, test_path=None,
+        )
+
+        with pytest.raises(EntryValidationError) as excinfo:
+            write_entry("substrate.yaml", bad_entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db")
+        assert excinfo.value.field == "test_path"
+        assert shard_path.read_bytes() == before
+
+    def test_writer_rejects_unparseable_test_path(self, tmp_path):
+        ledger_dir, shard_path = _write_shard(tmp_path, "substrate.yaml", [_entry()])
+        before = shard_path.read_bytes()
+        bad_entry = _entry(
+            entry_id="SUB-002",
+            test_path="`tests/tools/test_x.py` (indirectly via `Y` and `Z` flow)",
+        )
+
+        with pytest.raises(EntryValidationError) as excinfo:
+            write_entry("substrate.yaml", bad_entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db")
+        assert excinfo.value.field == "test_path"
+        assert "support_boundary" in excinfo.value.reason
         assert shard_path.read_bytes() == before
 
 
@@ -171,6 +218,44 @@ class TestValidateEntryAcceptance:
             "substrate.yaml", entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db"
         )
         assert result["status"] == "ok"
+
+    @pytest.mark.parametrize("status", ["missing", "unsupported"])
+    def test_writer_accepts_p0_missing_or_unsupported_with_support_boundary(self, tmp_path, status):
+        ledger_dir = tmp_path / "ledger"
+        ledger_dir.mkdir()
+        entry = _entry(
+            entry_id="SUB-005", status=status, priority="P0",
+            v2_evidence=None, test_path=None,
+            support_boundary="Cited test deleted with no successor; behavior unverified, not known-broken.",
+        )
+
+        validate_entry(entry)  # must not raise
+        result = write_entry(
+            "substrate.yaml", entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db"
+        )
+        assert result["status"] == "ok"
+
+    def test_writer_accepts_evidence_kind_values(self):
+        for evidence_kind in ("existence", "invocation", "runtime_observation", None):
+            validate_entry(_entry(evidence_kind=evidence_kind))
+
+    def test_writer_accepts_verified_p0_with_existence_evidence_kind(self):
+        """No enforcement rule in this ticket: evidence_kind is descriptive-only, so a
+        `verified` P0 entry citing `existence`-level evidence is still accepted."""
+        validate_entry(_entry(status="verified", priority="P0", evidence_kind="existence"))
+
+
+class TestEvidenceKindRejections:
+
+    def test_writer_rejects_unknown_evidence_kind(self, tmp_path):
+        ledger_dir, shard_path = _write_shard(tmp_path, "substrate.yaml", [_entry()])
+        before = shard_path.read_bytes()
+        bad_entry = _entry(entry_id="SUB-002", evidence_kind="eyeballed")
+
+        with pytest.raises(EntryValidationError) as excinfo:
+            write_entry("substrate.yaml", bad_entry, ledger_dir=ledger_dir, db_path=tmp_path / "parity.db")
+        assert excinfo.value.field == "evidence_kind"
+        assert shard_path.read_bytes() == before
 
 
 class TestArchitectureGuards:
@@ -257,6 +342,112 @@ class TestValidateEntryAgainstRealMultiSegmentCorpus:
         )
         for entry in multi_segment_entries:
             validate_entry(entry)
+
+
+_SCHEMA_PATH = Path(__file__).resolve().parent.parent.parent / "docs" / "parity_ledger" / "schema.json"
+_SUBSTRATE_LEDGER_PATH = (
+    Path(__file__).resolve().parent.parent.parent / "docs" / "parity_ledger" / "substrate.yaml"
+)
+
+
+class TestStep3aLockstepWithSchemaJson:
+    """TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT Step 3a: schema.json's allOf[2] and
+    validate_entry() must agree on every fixture below, or the two representations have drifted
+    apart -- the exact failure mode _ID_PATTERN already suffered once
+    (TCK-20260831-PARITY-LEDGER-ID-PATTERN-MULTISEGMENT)."""
+
+    @staticmethod
+    def _jsonschema_accepts(entry: dict) -> bool:
+        import json
+
+        import jsonschema
+
+        schema = json.loads(_SCHEMA_PATH.read_text())
+        try:
+            jsonschema.validate([entry], schema)
+            return True
+        except jsonschema.ValidationError:
+            return False
+
+    @staticmethod
+    def _validate_entry_accepts(entry: dict) -> bool:
+        try:
+            validate_entry(entry)
+            return True
+        except EntryValidationError:
+            return False
+
+    @pytest.mark.parametrize(
+        "entry,expect_accept",
+        [
+            (
+                _entry(status="missing", priority="P0", v2_evidence=None, test_path=None,
+                       support_boundary="test deleted, no successor found"),
+                True,
+            ),
+            (
+                _entry(status="unsupported", priority="P0", v2_evidence=None, test_path=None,
+                       support_boundary="cited file never existed in this repository"),
+                True,
+            ),
+            (
+                _entry(status="missing", priority="P0", v2_evidence=None, test_path=None,
+                       support_boundary=None),
+                False,
+            ),
+            (
+                _entry(status="missing", priority="P0", v2_evidence=None, test_path=None,
+                       support_boundary=""),
+                False,
+            ),
+            (
+                _entry(status="verified", priority="P0", test_path=None),
+                False,
+            ),
+            (
+                _entry(status="divergent", priority="P0", test_path=None, divergence_note="x"),
+                False,
+            ),
+            (
+                _entry(status="legacy_verified", priority="P0", v2_evidence=None, test_path=None),
+                False,
+            ),
+        ],
+    )
+    def test_schema_and_validate_entry_agree(self, entry, expect_accept):
+        assert self._jsonschema_accepts(entry) is expect_accept
+        assert self._validate_entry_accepts(entry) is expect_accept
+
+
+class TestStep3aRealLegacyEntryNeedsExplanation:
+    """The 15 pre-existing P0 missing/unsupported entries with null test_path (e.g. SUB-325)
+    become writable by Step 3a but are not rewritten by this ticket -- this documents that they
+    still need a real support_boundary explanation, not just permission to omit test_path."""
+
+    @staticmethod
+    def _sub_325():
+        entries = yaml.safe_load(_SUBSTRATE_LEDGER_PATH.read_text())
+        for entry in entries:
+            if entry.get("id") == "SUB-325":
+                return entry
+        raise AssertionError("SUB-325 entry not found in docs/parity_ledger/substrate.yaml")
+
+    def test_sub_325_as_is_still_rejected(self):
+        entry = self._sub_325()
+        assert entry["support_boundary"] is None
+
+        with pytest.raises(EntryValidationError) as excinfo:
+            validate_entry(entry)
+        assert excinfo.value.field == "support_boundary"
+
+    def test_sub_325_passes_once_support_boundary_is_added(self):
+        entry = dict(self._sub_325())
+        entry["support_boundary"] = (
+            "Implementation proven via exhaustive checklist audit Phase 1-11; no automated "
+            "test_path citation exists for this claim."
+        )
+
+        validate_entry(entry)  # must not raise
 
 
 _INFRASTRUCTURE_LEDGER_PATH = (

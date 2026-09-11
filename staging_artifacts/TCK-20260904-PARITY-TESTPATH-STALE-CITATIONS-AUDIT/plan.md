@@ -148,3 +148,47 @@ post-Step-1 baseline; against the pre-change count it would be contaminated by t
 - **Step 3a relaxes a ledger contract.** It is narrow (two statuses) and swaps the requirement for a
   stricter one (`support_boundary`), but any consumer that assumes "P0 implies `test_path`" must be
   checked — grep `tools/` for that assumption before landing.
+
+## Deviations (recorded during implementation, 2026-09-11)
+
+Per-entry verification during Step 4 changed two outcomes from this plan's Class A/B/C breakdown.
+Both are the plan's own methodology working as intended ("a filename match alone is not
+sufficient, and a missing filename is not proof coverage was lost") — not a departure from it.
+
+1. **COMB-008 downgraded out of Class A.** Its successor file
+   (`tests/unit/core/test_substrate_hardening.py`) exists at the same name as the deleted
+   `tests_v2/test_substrate_hardening.py`, but reading its content showed it tests typed
+   state-update preservation across `ApplyPath.apply_generation` (navigation/task intent survives,
+   HP stays off `properties`) — a different claim than COMB-008's "quiet ticks still advance
+   passive world consequences." No test anywhere in the current tree exercises quiet-tick passive
+   advancement, so COMB-008 was set to `missing` alongside Class B/C rather than repointed. This is
+   exactly the STRAT-004-style false lead the plan warned about, just found on a different entry
+   than the plan's own investigation.md flagged.
+
+2. **COMB-002 recovered into a repoint, despite being Class B (deleted, "zero of seven survive").**
+   A grep for `Compliance IDs:`/`Logic ID` header comments across `tests/` (prompted by finding the
+   same convention, with a false-positive hit, while checking WORLD-061/062 and STRAT-012 -- see
+   below) surfaced `tests/unit/domains/optimization/test_occupancy_snapshot.py`, tagged
+   `# Compliance IDs: COMB-002, COMB-003, PERF-008`. Its
+   `test_movement_legality_uses_snapshot_result_equivalent_to_current_logic` genuinely invokes
+   `LegalityServiceV2.verify_occupancy` (one of COMB-002's two cited functions) and asserts
+   `OCCUPANCY_VIOLATION`/`LEGAL` correctly -- real, passing, on-topic coverage the original
+   Class-B git-history search (by the deleted test's own function name only) could not find,
+   because it lives under an unrelated directory with no naming resemblance to the deleted file.
+   Repointed with `evidence_kind: invocation`, and `support_boundary` discloses that only the
+   "occupancy legality" half of COMB-002's compound claim is covered, not the "cardinal/tile
+   movement clamping" half (no test found for `resolve_move`'s cardinal clamping specifically).
+
+   The same `Compliance IDs:`/`Logic ID` grep also checked the two entries plan.md itself flagged
+   for special attention: `tests/unit/strategic/test_capacity_enforcement.py`'s
+   `# Logic IDs verified: STRAT-012` header and `tests/unit/worldbuilding/test_world_repository.py`'s
+   `# Compliance IDs: WORLD-060, WORLD-061, WORLD-062` header are both **mislabeled** -- neither
+   file's content tests the claim its header claims (capacity/bandwidth trimming vs. STRAT-012's
+   "knowledge remains uncertain until resolved"; declarative world-repository CRUD vs.
+   WORLD-061/062's weather/transformation claims). These were correctly left alone: STRAT-012 stays
+   `missing` as planned, and WORLD-061/062 keep their independently-found real successors under
+   `tests/unit/world/` (unaffected by this note).
+
+Net effect on the plan's own numbers: 9 repointed (not 7), 19 set to `missing` (not 21), 2
+`TOWN-005`/`TOWN-006` rewrites unchanged. Total entries touched: 30 (28 + the 2 precedent
+corrections), unchanged from the plan.

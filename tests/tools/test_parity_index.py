@@ -300,6 +300,47 @@ class TestReferenceTables:
         assert counts == {"code_refs": 0, "test_refs": 0, "constraint_refs": 0, "ticket_refs": 0}
         assert finding
 
+    def test_multi_citation_test_path_produces_one_test_refs_row_per_citation(self, tmp_path):
+        """Before TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT's Step 1, the old
+        `_TEST_PATH_DECLARED_RE` accepted only a single bare path and rejected a `,`-joined
+        multi-citation `test_path` outright -- this entry produced zero test_refs rows and its
+        stale second citation was invisible to `absent_file`. The shared parser fixes this."""
+        paths = _make_corpus(
+            tmp_path,
+            {
+                "combat_movement.yaml": [
+                    _entry(
+                        "COMB-950",
+                        v2_evidence="`src/engine/legality.py`",
+                        test_path=(
+                            "tests/tools/test_parity_index.py::test_some_function, "
+                            "tests/tools/test_nonexistent_module_xyz.py::test_other"
+                        ),
+                    )
+                ]
+            },
+        )
+
+        report = _pi.build(ledger_dir=paths["ledger_dir"], db_path=paths["db_path"])
+        assert report["status"] == "ok"
+
+        conn = sqlite3.connect(str(paths["db_path"]))
+        rows = conn.execute(
+            "SELECT path FROM test_refs WHERE entry_id = ? ORDER BY path", ("COMB-950",)
+        ).fetchall()
+        absent_file_findings = conn.execute(
+            "SELECT detail FROM entry_health WHERE entry_id = ? AND finding_type = 'absent_file'",
+            ("COMB-950",),
+        ).fetchall()
+        conn.close()
+
+        assert [row[0] for row in rows] == [
+            "tests/tools/test_nonexistent_module_xyz.py::test_other",
+            "tests/tools/test_parity_index.py::test_some_function",
+        ]
+        assert any("test_nonexistent_module_xyz.py" in detail for (detail,) in absent_file_findings)
+        assert not any("test_parity_index.py" in detail for (detail,) in absent_file_findings)
+
 
 # ---------------------------------------------------------------------------
 # Group 4 — entry_health
