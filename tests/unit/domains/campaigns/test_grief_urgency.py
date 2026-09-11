@@ -433,7 +433,7 @@ def test_advance_grief_urgencies_emits_event_only_for_newly_created():
     spy_recorder = MagicMock()
     orch = object.__new__(CampaignOrchestrator)
     orch._state = state
-    orch._event_recorder = spy_recorder
+    orch._scenario_event_recorder = spy_recorder
 
     entries = [_death_entry(dead_id=99, episode=1)]
     orch._advance_grief_urgencies(entries, episode_index=1, tick=42)
@@ -459,7 +459,7 @@ def test_advance_grief_urgencies_noop_recorder_when_none():
     state = _make_campaign_state(social_memories={1: mem})
     orch = object.__new__(CampaignOrchestrator)
     orch._state = state
-    orch._event_recorder = None
+    orch._scenario_event_recorder = None
 
     entries = [_death_entry(dead_id=99, episode=0)]
     orch._advance_grief_urgencies(entries, episode_index=0, tick=1)  # must not raise
@@ -481,7 +481,7 @@ def test_advance_nemesis_relations_emits_event_only_once_per_new_relation():
     spy_recorder = MagicMock()
     orch = object.__new__(CampaignOrchestrator)
     orch._state = state
-    orch._event_recorder = spy_recorder
+    orch._scenario_event_recorder = spy_recorder
 
     # First call — relation newly formed, must emit exactly once.
     orch._advance_nemesis_relations(episode_index=2, tick=10)
@@ -511,6 +511,6 @@ def test_advance_nemesis_relations_noop_recorder_when_none():
     state = _make_campaign_state(social_memories={1: mem})
     orch = object.__new__(CampaignOrchestrator)
     orch._state = state
-    orch._event_recorder = None
+    orch._scenario_event_recorder = None
 
     orch._advance_nemesis_relations(episode_index=2, tick=1)  # must not raise
