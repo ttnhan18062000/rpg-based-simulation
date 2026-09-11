@@ -109,6 +109,19 @@ None yet — hotfix tier, no staging artifacts required.
 - Whether the two decay mechanisms were ever meant to coexist (e.g. one is a legacy V1 holdover,
   the other its V2 replacement) or represent an incomplete migration is the central question —
   not assumed either way here.
+- **Sharpened (2026-09-11), per peer review during `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT`**:
+  confirmed directly that `src/engine/apply.py:89-100` genuinely does its own live, apply-time
+  passive hunger/sleep-debt decay (`hunger += 0.1 * cadence.biological`,
+  `sleep_debt += 0.05 * cadence.biological`, HP penalties at 95/98 thresholds) — a real, wired
+  mechanism doing the same job as `BiologicalSystem.update()`'s own hunger/sleep-debt decay (0.5%/
+  0.3% per tick, HP penalties at 90/95). Different specific numbers, same job. This is now a
+  second confirmed instance (alongside `spawn_calamity()` vs. `CalamityService.
+  process_world_dynamics()`, and the broader `src/domains/optimization/` package vs.
+  `ResourceGovernor`/`GovernorPolicy`) of the SAME shape across this codebase: **a superseded
+  earlier implementation left alongside its live replacement, not a missing/unwired feature.**
+  Does not settle this ticket's own Acceptance Criteria on its own (still need the exact formula-
+  parity comparison and git-history check this ticket's own Scope already calls for), but
+  materially raises confidence toward the "remove" disposition over "flag as fix option."
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_

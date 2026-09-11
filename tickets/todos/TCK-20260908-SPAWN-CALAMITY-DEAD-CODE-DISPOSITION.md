@@ -92,16 +92,26 @@ worth a cheap, dedicated look rather than a same-ticket aside.
 None yet — hotfix tier, no staging artifacts required.
 
 ## Related Code Areas
-- `src/world/generator.py` (`EntityGenerator.spawn_calamity()`, `spawn_stronghold()` for
-  comparison)
-- `src/world/calamity.py` (`CalamityService`, the region-level calamity mechanism this may or may
-  not duplicate)
+- `src/systems/world_systems/generator.py` (`EntityGenerator.spawn_calamity()` at line 238 — moved
+  from `src/world/generator.py` since this ticket was filed; `spawn_stronghold()` for comparison)
+- `src/world/calamity.py` (`CalamityService.process_world_dynamics()`, confirmed the live calamity
+  mechanism this duplicates — see resolved Assumptions/Open Questions below)
 
 ## Assumptions / Open Questions
-- Whether "spawn a calamity as an entity" and "raise a region's `calamity_intensity`" were always
+- ~~Whether "spawn a calamity as an entity" and "raise a region's `calamity_intensity`" were always
   meant to be two distinct mechanics, or whether `spawn_calamity()` is a superseded/abandoned
   earlier design for what `CalamityService` now does differently, is the central question — not
-  assumed either way here.
+  assumed either way here.~~ **Resolved (2026-09-11), per peer review during
+  `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT`**: `CalamityService.process_world_dynamics()`
+  (`src/world/calamity.py:23-77`, confirmed live and wired) already spawns a calamity entity
+  directly — `generator.spawn_monster(kind="world_boss", pos=target_region.center,
+  difficulty_tier=4)` — as part of its own real, tick-gated calamity check
+  (`CALAMITY_MIN_INTERVAL`/`CALAMITY_FORCE_INTERVAL` against the highest-`calamity_intensity`
+  region). This directly confirms `EntityGenerator.spawn_calamity()` is a **superseded duplicate**,
+  not a missing/unwired mechanic — the live path already spawns a calamity entity, just via
+  `spawn_monster()` with `kind="world_boss"` rather than via `spawn_calamity()` itself. Also note:
+  the file path in this ticket's own header is stale — `spawn_calamity()` now lives at
+  `src/systems/world_systems/generator.py:238`, not `src/world/generator.py:238-251`.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
