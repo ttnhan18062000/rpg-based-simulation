@@ -1,6 +1,6 @@
 ---
 status: active
-layer: ai
+layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT
@@ -39,11 +39,17 @@ Under the alternative, a test asserting `epic_scoped` is in `PHASE_VALUES`.
   pass on clean data.
 - Runtime stays small (YAML parsing only).
 
-## Step 5 — Finalize instruction
+## Step 5 — epic close instruction
 
-A static test asserting `implement-ticket.js`'s Finalize prompt contains the instruction to set
-`status: historical` and `phase: done`, following the repo's existing raw-source-text tests of workflow
-prompts.
+A static test asserting `implement-epic.js`'s epic-close step contains the `status: historical` /
+`phase: done` instruction, following the repo's existing raw-source-text tests of workflow prompts. Also
+assert `implement-ticket.js` still contains its existing line-1671 instruction, so it can't be
+silently removed.
+
+## Step 6 — parity
+
+INFRA-180, INFRA-278 and INFRA-305 are rewritten through `write_entry()` and pass `validate_entry()`.
+INFRA-305's line references match `check_frontmatter_valid()`'s real location after Step 1.
 
 ## Regression
 

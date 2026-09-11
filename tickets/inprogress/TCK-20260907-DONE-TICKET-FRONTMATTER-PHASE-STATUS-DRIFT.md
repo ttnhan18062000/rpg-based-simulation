@@ -76,9 +76,11 @@ in"), not a schema violation of either field in isolation.
 - **Root cause is the closing path.** Drift is 16.2% for pipeline closes, 41.0% for
   hand-orchestrated closes, and 53.5% for closes with no monitoring record. `validate_frontmatter.py`
   runs only in `done_checker`, and only for the ticket being closed; nothing checks `tickets/done/` as
-  a whole. `implement-ticket.js` never says `historical`.
+  a whole. `implement-ticket.js:1671` does instruct `historical`/`done`, yet 24.6% of its closes still drift;
+  `implement-epic.js` has no such instruction for epics (91.7% drift). *(Corrected after Review.)*
 - **Fix widened accordingly:** cross-field rule + `done_checker` wiring (as proposed), **plus** a
-  path-independent corpus test over all of `tickets/done/`, **plus** an explicit Finalize instruction.
+  path-independent corpus test over all of `tickets/done/`, **plus** the missing epic-close instruction in `implement-epic.js`, **plus** parity updates to
+  INFRA-180/278/305.
 - **9 epic-tier tickets use `phase: epic_scoped` deliberately.** Plan recommends normalizing them to
   `done` rather than adding the value to the enum. The decision gets recorded before the bulk edit.
 - Full evidence: `staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/`.
@@ -90,8 +92,9 @@ in"), not a schema violation of either field in isolation.
       gate (Finalize/Verify) rather than left as a manual audit
 - [ ] A corpus-wide test enforces the rule over every file in `tickets/done/`, independent of the
       closing path
-- [ ] `implement-ticket.js`'s Finalize prompt explicitly instructs `status: historical` /
-      `phase: done`
+- [ ] `implement-epic.js`'s epic-close step instructs `status: historical` / `phase: done`;
+      `implement-ticket.js:1671`'s existing instruction is pinned by a test
+- [ ] INFRA-180, INFRA-278 and INFRA-305 reflect the new cross-field rule, written via `write_entry()`
 - [ ] The `epic_scoped` decision (normalize vs. enum addition) is recorded before remediation
 - [ ] An explicit, evidence-based decision is made and recorded on remediating the already-affected
       files (395 as of 2026-09-11; re-count at implementation) — not silence
@@ -128,7 +131,8 @@ None.
 Investigate and Plan are complete; see
 `staging_artifacts/TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT/`. Plan order:
 cross-field rule → `epic_scoped` decision → bulk remediation (separate commit, dry-run script) →
-corpus test → Finalize instruction. Implementation is handed to `agent-working-implementer`.
+corpus test → `implement-epic.js` epic-close instruction → parity (INFRA-180/278/305). Revised after
+Review NEEDS_CHANGES; see investigation.md §8. Implementation is handed to `agent-working-implementer`.
 
 ## Test Summary
 

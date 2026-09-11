@@ -1,6 +1,6 @@
 ---
 status: active
-layer: ai
+layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT
@@ -34,6 +34,11 @@ feedback at close time for pipeline runs. It is not sufficient on its own; Step 
 `PHASE_VALUES`.** `EPIC_SCOPED` describes an epic that is scoped but still open; all 9 sit in
 `tickets/done/`, so `done` describes them accurately. Their body `## Status` fields are left alone — that is
 the valid body vocabulary CLAUDE.md defines, and the ticket forbids body edits.
+
+State the body split exactly: 2 of the 9 bodies say `## Status: EPIC_SCOPED` (E13, E53A), 7 say `DONE`.
+For those 2, normalizing the frontmatter to `done` leaves the body saying `EPIC_SCOPED`. That's a known
+inconsistency the ticket's no-body-edits rule forces us to accept, and it must be written down, not
+described as "preserving the distinction".
 
 Record this in Implementation Notes before touching the files. If Review prefers the other option — add
 `epic_scoped` to the enum, following `TCK-20260804-BACKLOG-PHASE-VALIDATOR-FIX` — only Step 3's handling of
@@ -69,12 +74,26 @@ here.
 
 This test fails until Step 3 lands, which is intended: enforcement cannot be merged ahead of remediation.
 
-## Step 5 — Instruct the canonical value at close
+## Step 5 — Close the one real instruction gap: `implement-epic.js`
 
-Add an explicit instruction to `implement-ticket.js`'s Finalize prompt: set frontmatter `status: historical`
-and `phase: done` when moving the ticket to `tickets/done/`. The word `historical` currently appears nowhere
-in that file (investigation.md §4, cause 3). Step 4 enforces it; this makes compliance the default instead
-of something agents infer.
+`implement-ticket.js:1671` already instructs `phase: done` / `status: historical`; leave it unchanged
+(investigation.md §8). `implement-epic.js` does not, for the epic ticket it moves to `tickets/done/` (line
+874 area), and epic closures drift 91.7%. Add the same instruction there, worded like line 1671.
+
+This is secondary. Step 4's corpus test is what actually prevents drift, because an instruction alone
+leaves 24.6% drift on `implement-ticket` closes.
+
+## Step 6 — Parity ledger
+
+Step 1 changes what `check_frontmatter_valid()` / `validate_frontmatter.py` enforce. Update, via
+`tools/parity_ledger_writer.write_entry()` only:
+
+- **INFRA-180** — validator enforcement scope: add the location-aware cross-field rule.
+- **INFRA-278** — `check_frontmatter_valid` close-time enum validation: note the added cross-field check.
+- **INFRA-305** — cites `check_frontmatter_valid()` at specific line numbers: refresh them after Step 1.
+
+Add a new entry only if the corpus-wide test (Step 4) is judged a distinct durable behavior. Otherwise fold
+it into INFRA-180.
 
 ## Out of scope
 
