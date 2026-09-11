@@ -126,6 +126,23 @@ Profiles without `archetype_id` (e.g. town NPCs, synthetic entities) → `V2Enti
 
 **Entity ID assignment:** Sequential integers starting from `base_entity_id` (default 1). IDs are assigned in `CompileContext.entities` iteration order — deterministic if `CompileContext` was built deterministically.
 
+**Spatial placement** (`TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION`): each spawned
+entity's position is `profile.spawn_position` (a field on `ResolvedEntityProfile`) when set, falling
+back to the shared `default_position` parameter only when it is `None`. `spawn_position` is resolved
+once, at `CompileProfileResolver.resolve()` time (not at spawn time), as a pure function of the
+`WorldSpec`'s own content — anchored on the population's authored `spawn_region`
+(`PopulationSpec.spawn_region`, already threaded through module assembly) and a deterministic point
+within that region's real `RegionSpec.bounds`. Multiple populations sharing one `spawn_region` is a
+normal, expected case (not rare — confirmed against real corpus modules), so position resolution
+includes deterministic de-confliction: a hashed candidate point, probed via a fixed offset sequence
+if already claimed by another population in the same `resolve()` call, scoped per-region so it never
+depends on spawner-runtime state. `spawn_position` stays `None` (and `default_position` is used) for
+any profile without a resolvable `spawn_region` — e.g. hand-constructed test profiles, or a region ID
+that isn't present in the same `WorldSpec`. This replaced Campaign-mode's own prior interim
+workaround (`CampaignOrchestrator._scatter_catalog_entities()`, an arbitrary deterministic grid
+scatter, now deleted) — this pipeline's placement is now real authored-region-anchored placement,
+not an arbitrary layout, for every consumer, not just Campaign mode.
+
 **Output:** `Dict[int, EntityState]` — loaded into `AuthoritativeState` by the caller.
 
 **Personality generation** (`TCK-20260809-WORLDENTITYSPAWNER-ZERO-PERSONALITY`): `spawn_from_context`

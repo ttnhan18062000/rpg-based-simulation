@@ -213,3 +213,101 @@ def test_spawn_from_context_different_seeds_differ(bundle, catalog):
     personalities_a = [entities_a[eid].identity.personality for eid in entities_a]
     personalities_b = [entities_b[eid].identity.personality for eid in entities_b]
     assert personalities_a != personalities_b
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION: real per-entity placement
+# ---------------------------------------------------------------------------
+
+def test_spawn_position_used_when_profile_has_one(catalog):
+    """A profile with a real spawn_position produces an EntityState at that position,
+    not the shared default_position."""
+    from src.worldassembly.context import CompileContext
+    from src.worldassembly.models import ResolvedEntityProfile
+
+    ctx = CompileContext()
+    ctx.register_entity(
+        "pop_with_position",
+        ResolvedEntityProfile(
+            legacy_role=0, legacy_faction=0, hp=10, max_hp=10, atk=1, def_stat=1,
+            attack_range=1, readiness=1.0, spawn_position=(42.0, 17.0),
+        ),
+    )
+    spawner = WorldEntitySpawner()
+    entities = spawner.spawn_from_context(ctx, catalog, default_position=(0.0, 0.0))
+    (state,) = entities.values()
+    assert state.position == (42.0, 17.0)
+
+
+def test_spawn_position_falls_back_to_default_when_unset(catalog):
+    """A profile with spawn_position=None (the field's own default) falls back to
+    default_position -- confirms backward compatibility for profiles built without a
+    spawn_region (e.g. hand-constructed test profiles, or the legacy WorldSpec path)."""
+    from src.worldassembly.context import CompileContext
+    from src.worldassembly.models import ResolvedEntityProfile
+
+    ctx = CompileContext()
+    ctx.register_entity(
+        "pop_without_position",
+        ResolvedEntityProfile(
+            legacy_role=0, legacy_faction=0, hp=10, max_hp=10, atk=1, def_stat=1,
+            attack_range=1, readiness=1.0,
+        ),
+    )
+    spawner = WorldEntitySpawner()
+    entities = spawner.spawn_from_context(ctx, catalog, default_position=(5.0, 9.0))
+    (state,) = entities.values()
+    assert state.position == (5.0, 9.0)
+
+
+@pytest.fixture(scope="module")
+def two_populations_sharing_one_region_bundle(catalog, module_repo):
+    """
+    bandit_road_trade_pressure.yaml declares exactly one region (bandit_road) and two
+    population refs (bandit_ambush_group, merchant_caravan) -- a real corpus case where
+    both necessarily resolve to the same spawn_region (no other region is in scope for
+    either population's preferred_regions to point to). This is the direct regression
+    test for "collisions are the expected case, not an edge case"
+    (staging_artifacts/.../investigation.md).
+    """
+    composition = WorldCompositionSpec(
+        schema_version="worldcomposition.v1",
+        world_id="spawner_deconfliction_test",
+        name="Spawner De-confliction Test",
+        module_refs=[
+            ModuleRefSpec(module_id="frontier_village_core", enabled=True, order=0),
+            ModuleRefSpec(module_id="bandit_road_trade_pressure", enabled=True, order=1),
+        ],
+    )
+    resolver = WorldAssemblyResolver(catalog, module_repo)
+    return resolver.assemble(composition)
+
+
+def test_populations_sharing_one_spawn_region_get_distinct_deconflicted_positions(
+    two_populations_sharing_one_region_bundle,
+):
+    """Real-corpus regression: two populations resolving to the same spawn_region must not
+    collide on the same point."""
+    ctx = two_populations_sharing_one_region_bundle.compile_context
+    world_spec = two_populations_sharing_one_region_bundle.world_spec
+
+    bandit_road = next(r for r in world_spec.regions if r.id.endswith("bandit_road"))
+    min_x, min_y, max_x, max_y = bandit_road.bounds
+
+    # Only the two populations from bandit_road_trade_pressure itself -- frontier_village_core
+    # (a required dependency of this module) contributes its own populations resolving to its
+    # own "hometown" region, which must be excluded from this bandit_road-specific check.
+    shared_region_profiles = [
+        p for k, p in ctx.entities.items()
+        if k.startswith("bandit_ambush_group_") or k.startswith("merchant_caravan_")
+    ]
+    # Both populations from this module resolve to the same (namespaced) spawn_region.
+    positions = [p.spawn_position for p in shared_region_profiles]
+    assert len(positions) >= 2, "Test requires >=2 real profiles with resolved positions"
+    assert len(set(positions)) == len(positions), (
+        f"Expected distinct de-conflicted positions, got collisions: {positions}"
+    )
+    for x, y in positions:
+        assert min_x <= x <= max_x and min_y <= y <= max_y, (
+            f"Position ({x}, {y}) outside region bounds {bandit_road.bounds}"
+        )

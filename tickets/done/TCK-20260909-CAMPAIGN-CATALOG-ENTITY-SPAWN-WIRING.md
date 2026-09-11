@@ -404,3 +404,14 @@ checking reachability, and grief/nemesis reachability re-verification now that e
 Test assertions for all 10 originally-failing tests were read individually rather than
 mechanically patched — one genuinely needed its own behavior-describing assertion updated, not
 just its mock inputs fixed.
+
+**Addendum (2026-09-11):** `TCK-20260909-WORLD-ENTITY-SPAWNER-POSITION-RESOLUTION` landed real
+per-entity spatial placement in `WorldEntitySpawner` itself (authored `spawn_region` + region
+bounds, with deterministic de-confliction). `_scatter_catalog_entities()` — this ticket's own
+explicitly-labeled interim workaround — has been deleted, and `_build_initial_state()` now uses
+`WorldEntitySpawner`'s real positions directly. The "NOT valid for any spatial, proximity, or
+distance-dependent measurement" caveat recorded throughout this ticket's own body (e.g. lines
+56-58, 397) no longer applies — re-verified via the same real 70-tick `run_episode()` evidence
+this ticket originally used: zero `LAW-OCCUPANCY-COLLISION` violations and a plausible event mix
+(`combat_initiated >= 3`, `cooperation_event` share `< 50%`), now achieved via real authored
+placement rather than the arbitrary grid-scatter.
