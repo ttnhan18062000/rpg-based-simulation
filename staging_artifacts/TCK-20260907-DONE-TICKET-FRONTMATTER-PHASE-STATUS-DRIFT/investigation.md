@@ -86,8 +86,7 @@ This separates three causes:
    unrecorded closes, which never run `done_checker`.
 3. **The instruction exists but nothing verifies it, and one workflow lacks it.** *(Corrected — see §8.)*
    `implement-ticket.js:1671` has told Finalize to set `phase: done` and `status: historical` since
-   2026-06-12. Tickets closed through it still drift. `implement-epic.js` has no such instruction for the
-   epic ticket it closes.
+   2026-06-12. Tickets closed through it still drift. No workflow closes epic tickets at all (§8).
 
 **The ticket's proposed fix — a new condition in `done_checker` — is necessary but insufficient.** It fixes
 cause 1 for pipeline closes and does nothing for cause 2, where the drift is worst.
@@ -132,7 +131,13 @@ What this means:
   drift after it was added. Some are hand-closed tickets whose runs were recorded afterwards; others are
   Finalize not following the prompt. Either way the fix is enforcement (plan Steps 1 and 4), not more
   prompt text.
-- **`implement-epic.js` never instructs the epic ticket's frontmatter.** Its only reference to the epic's
-  done file is line 874. That is the one real instruction gap, and it explains the 91.7%.
+- **No workflow closes an epic ticket.** *(Corrected again, after a second Review check.)* The first
+  version of this section cited "`implement-epic.js` line 874". That line is in `create-tickets.js`: its
+  Link phase looks up the epic only to append child IDs. `implement-epic.js` (482 lines) only moves a
+  finished `tickets/todos/{folder}/` directory. `implement-ticket.js`'s epic-tier path returns
+  `EPIC_SCOPED` without touching the epic file. So epic tickets reach `tickets/done/` by hand or in batch
+  commits (e.g. `TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC` via the #20 squash), with no
+  instruction and no check. The 91.7% row is epics with an `implement-epic` run record that were then
+  closed by hand. It shows a missing close step, not a missing line in one.
 - §4's causes 1 and 2 stand.
 

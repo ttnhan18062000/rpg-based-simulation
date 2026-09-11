@@ -39,12 +39,11 @@ Under the alternative, a test asserting `epic_scoped` is in `PHASE_VALUES`.
   pass on clean data.
 - Runtime stays small (YAML parsing only).
 
-## Step 5 — epic close instruction
+## Step 5 — pin the existing instruction
 
-A static test asserting `implement-epic.js`'s epic-close step contains the `status: historical` /
-`phase: done` instruction, following the repo's existing raw-source-text tests of workflow prompts. Also
-assert `implement-ticket.js` still contains its existing line-1671 instruction, so it can't be
-silently removed.
+A static test asserting `implement-ticket.js`'s Finalize prompt still contains the `phase: done` /
+`status: historical` instruction (currently line 1671), following the repo's existing raw-source-text
+tests of workflow prompts. No `implement-epic.js` test: that workflow has no epic-close step (follow-on).
 
 ## Step 6 — parity
 
