@@ -172,3 +172,39 @@ Out of scope here; recorded as a follow-up recommendation.
 - That every Class A successor covers its entry. File survival was checked, coverage was not.
 - Anything about the ~1572 entries with a null `test_path`, which is a separate, known state
   (`TCK-20260902-PARITY-TEST-PATH-GAP`).
+
+## 9. Correction (post-PR-review, 2026-09-11): §2's Class A table overclaimed 4 of 7 entries
+
+§2's warning that "a surviving filename is not evidence of surviving coverage" turned out to apply
+to the table's own entries, not just to the STRAT-004 cautionary tale it cites. Peer review of the
+implemented PR checked whether each Class A successor actually tests the entry's full claim, not
+just whether the cited class exists, and found:
+
+- **STRAT-014's `Confirmed` label (line 52) was itself the failure mode this document warns
+  about.** "Confirmed — `TestCognitionProfile` exists there" checked only that the class exists,
+  not that its tests match the entry's claim. The class tests
+  `StrategicIntelligenceSystem.derive_cognition_profile()` (stat-driven capacity scaling). The
+  entry's own text and the original deleted test (recovered from git history at commit d428d082,
+  `tests/ai/test_bounded_blockers.py::test_accurate_diagnosis_high_wisdom`) tested a different
+  function entirely — `BlockerInferenceService.infer_blockers()`'s wisdom-scaled diagnosis
+  accuracy, which has no successor anywhere in the current tree. This is a content mismatch, not
+  partial coverage — worse than the three below.
+- **COMB-002, WORLD-061, and STRAT-011** were
+  marked "Unverified" in §2's table (accurately — the table never claimed they were checked), but
+  the plan's own Step 4 resolved them as full Class A repoints anyway without doing the
+  per-entry claim check the table's own caveat called for. All three have genuinely compound
+  claims where the cited successor covers only part of it (COMB-002: occupancy-legality half only,
+  not cardinal/tile clamping; WORLD-061: perception/evasion two-thirds, not movement speed;
+  STRAT-011: the directives quarter of a four-part claim, and the entry's own `v2_evidence` cites
+  functions the test doesn't exercise at all).
+
+**Final resolution, corrected from this document's own Class A count of 7**: 5 entries genuinely
+repointed (COMB-003, SUB-029, TOWN-011, TOWN-012, WORLD-062 — each independently re-verified to
+test the entry's full claim, not just to exist under a matching name), 23 moved to `missing`
+(the original 19 from Class B/C, plus these 4 reclassified from an incorrect Class A repoint).
+
+**The lesson**: a cited class/file existing under a plausible name is not evidence it tests the
+entry's claim, and neither is a class existing that partially relates to the claim's domain. The
+only real check is reading the test's actual assertions against the entry's full text — every
+"Confirmed"/"repointed" label in this ticket's own artifacts should be read as "class exists and
+its assertions were read against the claim," not merely "class exists."

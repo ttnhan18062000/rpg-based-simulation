@@ -192,3 +192,27 @@ sufficient, and a missing filename is not proof coverage was lost") — not a de
 Net effect on the plan's own numbers: 9 repointed (not 7), 19 set to `missing` (not 21), 2
 `TOWN-005`/`TOWN-006` rewrites unchanged. Total entries touched: 30 (28 + the 2 precedent
 corrections), unchanged from the plan.
+
+## Deviation 6 (post-PR-review, 2026-09-11): 4 of the 9 repoints were overclaims
+
+Peer review of the PR caught that COMB-002 was left `status: verified` despite its own
+`support_boundary` (Deviation 2, above) already disclosing that only half of its compound claim
+was tested — the plan's own bar for a Class A repoint ("the successor tests the entry's claim") was
+stated but not actually re-checked against the written support_boundary text before Implement
+closed the ticket. Applying that same check to the remaining 8 repointed entries found 3 more real
+cases — full detail in investigation.md's own §9 correction, not restated here. Summary:
+
+- **COMB-002, WORLD-061**: compound claims where the cited successor covers only part of it.
+  Corrected to `status: missing`, `test_path` kept (real partial coverage exists).
+- **STRAT-011**: a 4-part compound claim where only 1 part (directives) is tested, and the entry's
+  own `v2_evidence` names two functions the cited test doesn't exercise at all. Corrected to
+  `status: missing`, `test_path` kept for the directives portion.
+- **STRAT-014**: not partial coverage — a genuine content mismatch. The cited successor tests a
+  different function than the entry's own text and the original deleted test (recovered from git
+  history) both describe. Corrected to `status: missing`, `test_path: null`.
+
+Final resolution: **5 repointed** (COMB-003, SUB-029, TOWN-011, TOWN-012, WORLD-062 — each
+independently re-verified against the full entry text, not just confirmed to exist under a
+matching name), **23 set to `missing`** (the original 19 plus these 4). `absent_file` and
+`missing_test_path` baselines unaffected — both metrics only count `verified`/`divergent` status
+entries, and all 4 corrections moved entries out of that bucket, not into it.

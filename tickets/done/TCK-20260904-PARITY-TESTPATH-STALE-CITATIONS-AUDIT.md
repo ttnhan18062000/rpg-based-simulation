@@ -263,17 +263,41 @@ schema/writer field (descriptive only, no enforcement — that's a follow-on). `
 gained a write-time format contract (non-null `test_path` must parse) and Step 3a's narrowed P0
 rule (`missing`/`unsupported` P0 entries need `support_boundary` instead of `test_path`), with
 `schema.json` kept in lockstep via a dedicated cross-check test. All 28 stale entries — plus
-`TOWN-005`/`TOWN-006`'s falsified-history precedent — were resolved through `write_entry()`: **9
-repointed to real, passing, on-topic tests** (evidence_kind: invocation), and **19 moved from
-`verified` to `missing`** with a `support_boundary` explaining exactly what was lost (a deleted
-test and its commit, or a citation to a file that never existed in this repository) and stating
-plainly that `missing` here means unverified, not known-broken. This visibly downgrades 19 P0
-entries' apparent evidence quality — the honest, correct result of finding they were never
-actually backed by a test in this repository. Per-entry investigation caught two cases the plan's
-own Class A/B/C split got wrong (COMB-008 has a same-named successor that tests something else
-entirely; COMB-002 has real coverage hiding under an unrelated directory, found only by cross-
-checking `Compliance IDs:` header comments) — both documented in plan.md's Deviations section.
-`absent_file` moved 103 → 131 → 103 exactly as the plan predicted, and `missing_test_path`'s
-baseline (1315) needed no update since `missing`-status entries fall outside its
-`{verified, divergent}` scope regardless of `test_path`. Scope holds: no mechanics/behavior were
-changed, only citation and evidence-contract hygiene.
+`TOWN-005`/`TOWN-006`'s falsified-history precedent — were resolved through `write_entry()`.
+
+Per-entry investigation caught two cases the plan's own Class A/B/C split got wrong during
+Implement (COMB-008 has a same-named successor that tests something else entirely; COMB-002 has
+real coverage hiding under an unrelated directory, found only by cross-checking `Compliance IDs:`
+header comments) — both documented in plan.md's Deviations section.
+
+**Peer review of the PR caught a further, more severe pattern after Implement**: COMB-002 was left
+`status: verified` despite its own `support_boundary` already disclosing that only half of its
+compound claim was tested. Applying the same "does the successor actually test the entry's claim"
+standard to the remaining 8 repointed entries surfaced 3 more real cases — WORLD-061 (same
+partial-coverage pattern: 2 of 3 sub-claims tested), STRAT-011 (a 4-part compound claim where only
+1 part is tested, and the entry's own `v2_evidence` cites two functions the test doesn't exercise
+at all), and STRAT-014 (a genuine content mismatch, not partial coverage — recovered the original
+deleted test from git history and confirmed it tested a completely different function than the
+cited successor; investigation.md's "Confirmed at symbol level" note had only checked the class
+existed, not that it tested the right thing). All 4 corrected post-close to `status: missing`,
+`test_path` kept where real partial coverage exists (COMB-002, WORLD-061, STRAT-011) or nulled
+where it doesn't (STRAT-014).
+
+**Final resolution: 5 entries repointed to real, passing, fully-on-claim tests**
+(`evidence_kind: invocation`), and **23 moved from `verified` to `missing`** with a
+`support_boundary` explaining exactly what was lost or overclaimed, and stating plainly that
+`missing` here means unverified, not known-broken. This visibly downgrades 23 P0 entries' apparent
+evidence quality — the honest, correct result of finding they were never actually backed by a
+fully-matching test in this repository. `absent_file` moved 103 → 131 → 103 exactly as the plan
+predicted, and `missing_test_path`'s baseline (1315) needed no update either before or after the
+post-review corrections, since `missing`-status entries fall outside its `{verified, divergent}`
+scope regardless of `test_path`. Scope holds throughout: no mechanics/behavior were changed, only
+citation and evidence-contract hygiene.
+
+Also surfaced during this run: `workflow_meta_conformance.py`'s advisory phase-conformance check
+reads a stale flat `agent-monitoring/events.jsonl` path that no longer exists (real events live
+under the weekly-sharded `agent-monitoring/data/YYYY-Www/`) — reproduces identically against an
+unrelated, already-closed ticket, confirming it's universal, not specific to this change.
+Advisory-only, never blocks. Already tracked as
+`TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS` — not a new finding needing its
+own ticket.
