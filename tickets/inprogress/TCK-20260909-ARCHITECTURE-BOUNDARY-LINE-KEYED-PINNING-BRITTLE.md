@@ -67,13 +67,15 @@ the import content is identical — real scrutiny cost on every occurrence, not 
   gate weakening, it does not change the rule.
 
 ### Scope amendment (Investigate, 2026-09-11)
-- **Widened to both line-keyed dicts.** `_SYSTEMS_ENGINE_PINNED` (10 entries,
-  `intelligence.py` ×9 + `detour.py` ×1) is also keyed by `(rel_path, lineno)` and has already
+- **Widened to both line-keyed dicts.** `_SYSTEMS_ENGINE_PINNED` (13 entries,
+  across 5 files — corrected from 10 after Review) is also keyed by `(rel_path, lineno)` and has already
   drifted once (`TCK-20260829-HOTFIX-INTELLIGENCE-CADENCE-PIN-LINENO-DRIFT`). The Out of Scope
   survey is done: no other line-keyed pin exists anywhere in `tests/`.
-- **Key is `(rel_path, module, names)`** — keeps the file, unlike the in-file content-keyed
+- **Key is `(rel_path, module, names)` → expected count.** The count is required, because
+  `intelligence.py:832` and `:904` are identical imports. It keeps the file, unlike the in-file content-keyed
   precedent `_OBS_DOMAINS_SYSTEMS_PINNED_IMPORTS`, whose loop covers only three fixed files.
-- **D14 citations for the two pinned entries become content references.** `D14_coupling_depth.md`
+- **Every D14 pinned-entry citation becomes a content reference** — both the domains→observability
+  rows and the 13-import systems→engine table (corrected after Review). `D14_coupling_depth.md`
   still cites `orchestrator.py:418` (the real line is 487) — the doc-coupling the ticket wants to
   preserve has already drifted silently.
 - **Priority: recommend P2.** The fix is small; the risk it removes is that a reviewer cannot tell a
@@ -81,14 +83,16 @@ the import content is identical — real scrutiny cost on every occurrence, not 
 
 ## Acceptance Criteria
 - [ ] `_DOMAINS_OBSERVABILITY_PINNED` **and `_SYSTEMS_ENGINE_PINNED`** are keyed on
-      `(rel_path, module, names)`, which survives an unrelated line-shifting edit above them (verified
+      `(rel_path, module, names)` with an exact expected count, so a new duplicate or a removed
+      import both fail. The key survives an unrelated line-shifting edit above them (verified
       with a real test per dict: add dummy lines above a pinned import in a `tmp_path` copy and
       confirm the pin still matches).
 - [ ] The test still correctly fails for a genuinely new, unpinned `domains -> observability`
       import.
 - [ ] A pinned `(module, names)` copied verbatim into a different file is rejected.
 - [ ] `TYPE_CHECKING`-guarded imports are still skipped.
-- [ ] The two pinned-entry citations in `docs/audits/D14_coupling_depth.md` use content references;
+- [ ] Both pinned-entry sections of `docs/audits/D14_coupling_depth.md` use content references, with no
+      line numbers for pinned imports and no "`(file, lineno)`-exact" wording left;
       `orchestrator.py:418` is gone.
 - [ ] No regression in `tests/architecture/`.
 
@@ -112,8 +116,9 @@ the import content is identical — real scrutiny cost on every occurrence, not 
 ## Implementation Notes
 Investigate and Plan are complete; see
 `staging_artifacts/TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE/`
-(`investigation.md`, `plan.md`, `test_plan.md`). Multiplicity question answered: no file imports a
-pinned symbol twice. Plan accepts that a set covers identical duplicates, and documents it in a comment.
+(`investigation.md`, `plan.md`, `test_plan.md`). Multiplicity question answered: one real duplicate
+exists (`intelligence.py:832`/`:904`). The plan keys on an exact count rather than a set. Revised after
+Review NEEDS_CHANGES (13 entries, not 10; D14 systems→engine table in scope) — see investigation.md §6.
 Implementation is handed to `agent-working-implementer`.
 
 ## Test Summary
