@@ -21,6 +21,20 @@ class ResolvedEntityProfile(BaseModel):
     cognition_seed: Optional[str] = None
     spawn_position: Optional[Tuple[float, float]] = None
 
+    # TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE: this profile represents
+    # one population GROUP, not one entity. `count` is the number of individually-spawned entities
+    # WorldEntitySpawner must materialize from it -- porting WorldCompiler.compile()'s classic
+    # pipeline behavior (compiler.py:480-546), which already expands PopulationSpec.count into
+    # `count` individually-positioned entities, into this newer catalog/archetype-native pipeline.
+    # `spawn_positions` holds one deconflicted position per individual (index-aligned, length ==
+    # count when the population's spawn_region resolved; empty when it didn't, matching the
+    # existing spawn_position=None fallback-to-default-position contract). `spawn_position` above
+    # is kept for backward compatibility -- it is spawn_positions[0] when resolved, and remains the
+    # sole source of truth for hand-constructed profiles (tests, legacy callers) that never set
+    # spawn_positions or count at all.
+    count: int = 1
+    spawn_positions: Tuple[Optional[Tuple[float, float]], ...] = Field(default_factory=tuple)
+
     # Archetype metadata fields (Phase 25)
     archetype_id: Optional[str] = None
     species_id: Optional[str] = None
