@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION
-phase: open
+phase: done
 date: 2026-09-12
 tags: [performance, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [performance, architecture]
 Delete `src/domains/optimization/diagnostics.py` — confirmed superseded, no unique behavior
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -55,9 +55,9 @@ runs. No unique behavior in `DeveloperDiagnostics` was found that isn't already 
   and reasoning, not this ticket's to fold in.
 
 ## Acceptance Criteria
-- [ ] `src/domains/optimization/diagnostics.py` deleted.
-- [ ] Grep confirms zero remaining references to `DeveloperDiagnostics`/`DiagnosticIssue` anywhere.
-- [ ] No regression in any test suite touching `src/domains/optimization/` or
+- [x] `src/domains/optimization/diagnostics.py` deleted.
+- [x] Grep confirms zero remaining references to `DeveloperDiagnostics`/`DiagnosticIssue` anywhere.
+- [x] No regression in any test suite touching `src/domains/optimization/` or
       `src/observability/alerts/`.
 
 ## Related Tickets
@@ -80,13 +80,33 @@ None — hotfix tier, no staging artifacts required.
 None — disposition is clean and already evidenced by the origin ticket's own investigation.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Re-verified the origin determination's own claim at the code, per peer instruction ("verify both
+claims hold at the code rather than inheriting them from the determination; they were made in a
+survey pass, not with deletion in hand"), not inherited: `grep -rln "DeveloperDiagnostics\|
+DiagnosticIssue" src/ tests/` returned only the module's own file and its own dedicated test file
+— zero production callers, exactly as claimed. Read the module in full (31 lines): a plain
+record-issue/generate-report aggregator with no side effects, no state shared with anything else,
+no unique capability riding along with the "dead" label (C1 guard).
+
+Deleted `src/domains/optimization/diagnostics.py` and its own dedicated test file
+(`tests/unit/diagnostics/test_phase10_developer_diagnostics.py`, 5 self-contained unit tests, no
+shared fixtures, nothing else in the file referenced elsewhere). The containing test package
+(`tests/unit/diagnostics/`) had only an empty `__init__.py` left after removing its one real test
+file, so removed the whole now-hollow package rather than leaving an empty directory.
 
 ## Test Summary
-_(pending)_
+Post-deletion: `grep -rln "DeveloperDiagnostics\|DiagnosticIssue" --include="*.py" src/ tests/`
+returns zero matches (exit code 1). `pytest tests/unit/domains/optimization/ tests/observability/
+tests/unit/observability/ -q -m "not slow and not extra_slow"`: 1215 passed, 1 skipped — no
+regression.
 
 ## Files Changed
-_(pending)_
+- `src/domains/optimization/diagnostics.py` — deleted.
+- `tests/unit/diagnostics/test_phase10_developer_diagnostics.py` — deleted.
+- `tests/unit/diagnostics/__init__.py` — deleted (now-empty test package).
 
 ## Completion Summary
-_(pending)_
+Confirmed at the code, not inherited from the origin survey: `DeveloperDiagnostics`/
+`DiagnosticIssue` had zero production callers, and its own dedicated test file was self-contained
+with nothing else depending on it. Deleted cleanly along with the now-hollow test package. No
+unique capability found riding along with the deletion (C1 guard satisfied). No regression.
