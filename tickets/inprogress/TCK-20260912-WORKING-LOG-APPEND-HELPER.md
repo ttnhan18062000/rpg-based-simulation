@@ -4,7 +4,7 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-WORKING-LOG-APPEND-HELPER
-phase: open
+phase: inprogress
 date: 2026-09-12
 tags: [data-quality, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [data-quality, process-improvement]
 One sanctioned writer for `tickets/working_log.csv` rows — Finalize agents currently hand-roll the append
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
