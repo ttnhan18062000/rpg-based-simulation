@@ -52,6 +52,12 @@ def test_entity_ledger_covers_every_entity_update_field():
         "intent_results", "property_updates",
         "moved_this_tick", "readiness_delta", "active", "kind_set",
         "new_position", "group_id_set", "self_model_bundle_set",
+        # TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-
+        # QUEUE: a same-tick transient routing signal for InformationIntentExecutionPhase to
+        # consume, like intent_results itself (also excluded) -- never merged toward durable
+        # state by any write path, so it produces no independently-observable entity mutation of
+        # its own to ledger.
+        "pending_action_intent",
     }
     entries = _load_ledger()
     covered = set()
