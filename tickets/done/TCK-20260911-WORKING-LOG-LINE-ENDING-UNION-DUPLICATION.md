@@ -259,12 +259,26 @@ recorded one new parity-ledger entry (`INFRA-416`) via the sanctioned `write_ent
 
 **Two follow-on notes from peer review (agent-working-design), both confirmed real:**
 
-1. **A second CRLF source exists, distinct from `record_hand_orchestrated_closure.py`.** The 22nd
-   remediated row (the one already flagged in plan.md's Deviations as not matching the known
-   writer's fingerprint) was traced to a hand-written `working_log.csv` append made directly by
-   this same session's own PR #164 Finalize commit (`c4d42635`), not to the closure script. The
-   new CR-byte detector will catch a recurrence either way; if one shows up, file it rather than
-   re-diagnosing from scratch.
+1. **A second, distinct CRLF source is confirmed, and it is systemic, not a one-off.** The 22nd
+   remediated row (already flagged in plan.md's Deviations as not matching the known writer's
+   fingerprint) was traced by peer review to the exact mechanism: the Finalize sub-agent for
+   TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT (this same session's own PR #164)
+   appended the row via an ad-hoc `python3 - <<'EOF' ... csv.writer(...)` heredoc, which defaults
+   to `lineterminator="\r\n"` -- the identical defect as `record_hand_orchestrated_closure.py`,
+   just written inline by an agent instead of living in a checked-in file. So this ticket's
+   "one CRLF writer" framing was incomplete, not the whole story. The blast radius is contained
+   regardless (`.gitattributes`' `eol=lf` normalizes it at commit time and this ticket's own
+   CR-byte detector catches it directly, as this ticket's own two merges with `main` already
+   demonstrated live). A one-line "use LF" prompt fix to `implement-ticket.js`'s Finalize step was
+   considered and explicitly rejected on further review: it only patches `csv.writer`'s specific
+   default and leaves the real class of problem open -- an agent improvising how to write a
+   format-sensitive row, which could just as easily drift on quoting or column order next time.
+   No sanctioned append helper currently exists for Finalize to call instead (the only candidate,
+   `record_hand_orchestrated_closure.py`, always writes its own run+events records and would
+   double-record every pipeline ticket if pointed at from Finalize). The durable fix -- one shared
+   helper owning the row format, called by both Finalize and the closure script, plus a CLAUDE.md
+   line against hand-rolling it -- is real implementation work, scoped and owned separately by
+   agent-working-design; not filed from this ticket.
 
 2. **`text eol=lf` only normalizes content at commit time going forward — it does not retroactively
    touch CRLF bytes already committed on other, still-open branches.** This was independently
