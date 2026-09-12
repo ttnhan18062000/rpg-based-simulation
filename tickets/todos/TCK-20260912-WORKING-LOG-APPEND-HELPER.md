@@ -98,21 +98,27 @@ Any branch cut before PR #167 carries CRLF rows in its **own commits**; `eol=lf`
 time and does not rewrite them. Each such branch needs one pass: merge `origin/main`, then
 `git add --renormalize tickets/working_log.csv agent-monitoring/data`, then commit if anything staged.
 
-**Verify the committed blob, not the working tree** — they can disagree:
+**Three different objects can disagree. Know which one you are reading.**
 
-```
-git show HEAD:tickets/working_log.csv | python3 -c "import sys;print(sys.stdin.buffer.read().count(b'\r'))"
-```
+| Object | How to read it | What it proves |
+|---|---|---|
+| Committed blob | `git show HEAD:tickets/working_log.csv \| python3 -c "import sys;print(sys.stdin.buffer.read().count(b'\r'))"` | Whether the merge defect recurs — `merge=union` operates on blobs |
+| Bytes on disk | `python3 -c "print(open('tickets/working_log.csv','rb').read().count(b'\r'))"` | What `tests/integrity/test_merge_union_no_cr_bytes.py` reads (`read_bytes()`, line 27) |
+| Index | `git show :tickets/working_log.csv` | Nothing durable — this is what `--renormalize` rewrites. **Never verify from this alone.** |
 
-`git add --renormalize` rewrites the **index** and deliberately leaves the working copy alone;
-`git checkout HEAD -- <path>` then silently no-ops, because git's normalized comparison considers the
-file unchanged even when its raw bytes differ. `rpg-implementer` hit this on PRs #168 and #169: a
-clean renormalize, a committed blob at 0 CR, and a working-tree check still printing 8. Forcing real
-bytes onto disk required `rm` plus a re-checkout.
+`git add --renormalize` rewrites the **index** and deliberately leaves the working copy alone.
+`git checkout HEAD -- <path>` then silently no-ops, because git's normalized comparison already
+considers the file unchanged even when its raw bytes differ. Forcing fresh bytes onto disk requires
+`rm <path>` followed by `git checkout HEAD -- <path>`.
 
-The committed blob is the object `merge=union` operates on, so it is the one that decides whether the
-defect recurs — check that one. (Reported by `rpg-feature-planning`, 2026-09-12; the working-tree
-check circulated earlier in this ticket's thread targets the wrong object.)
+Evidence: `rpg-implementer` renormalized three active branches after #167 landed and hit this on PRs
+#168 and #169 — staged blob at 0 CR while the on-disk file still read 8, and a plain re-checkout
+changed nothing until the file was deleted first. In CI the two coincide, since a fresh checkout with
+`eol=lf` in effect materializes the blob; local working trees are where they diverge.
+
+(Reported by `rpg-feature-planning` and `rpg-implementer`, 2026-09-12. The single working-tree check
+circulated earlier in this thread was not wrong about bytes, but it was the wrong object for deciding
+whether the merge defect is gone.)
 
 ## Related Tickets
 - `TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION` (PR #167) — fixed the first writer; this
