@@ -98,12 +98,29 @@ the JS prose — only the *mechanism* of writing changes, not what a Finalize ag
 put in each field.
 
 Add a pin test, `tests/tools/test_finalize_working_log_uses_helper_pin.py`, mirroring
-`test_finalize_phase_status_instruction_pin.py`'s raw-source-text pattern: asserts (a) `working_
-log_writer.py` and `--data-file` both appear in the Finalize phase block, inside `phase('Finalize')`
-and before the staging-artifacts move instruction (step 5's own text, matching the JS's own step
-ordering), and (b) the literal `python3 -c` construction with inline field interpolation is
-**absent** from that block — a negative assertion, so a future edit that reverts to inline `-c`
-embedding fails the pin instead of silently passing it.
+`test_finalize_phase_status_instruction_pin.py`'s raw-source-text pattern, scoped to the
+**Finalize agent's own prompt string** specifically — confirmed by direct read that
+`phase('Finalize')`'s block also contains 4 unrelated, legitimate orchestrator-run `python3 -c`
+self-checks *after* the agent's prompt closes (`finalizeCheckOutput`/`monitoringCheckOutput`/
+`tagDriftCheckOutput`/`phaseMetaCheckOutput`), so a negative assertion scanning the whole
+`phase('Finalize')` block would be false from the moment it's written, before any regression ever
+occurs. Scope the search to the substring between the prompt's own opening anchor
+(`` `Finalize ticket ${tid}` ``, unique to this one prompt) and its closing anchor (`` Report each
+step: DONE / SKIPPED (reason).`, `` — the literal end of the template string, immediately before
+`{ label: 'finalize' }`) — not the wider phase block.
+
+Within that scoped substring, assert:
+(a) `working_log_writer.py` and `--data-file` both appear, and step 4's text (identifiable by its
+own "4. Append to tickets/working_log.csv" leading anchor) precedes step 5's text ("Move
+staging_artifacts", matching the JS's own step ordering);
+(b) the substring `python3 -c` does **not** appear anywhere within that same scoped substring —
+not adjacency to a specific function name (Review round 2's finding: a realistic reintroduction of
+the rejected inline-`-c` pattern would have an import statement, semicolon, or quotes between the
+flag and the call, so requiring literal adjacency to `append_working_log_row(` would not fire on
+it either way; scoped-but-unqualified "does `python3 -c` appear inside this one prompt string at
+all" is both correct today — the prompt has zero legitimate uses of `-c` inline scripting once
+step 4 becomes a plain multi-arg `bash()` call — and the assertion that actually catches the
+regression).
 
 ## Step 4 — Sole-writer guard, AST-based (not grep)
 
@@ -161,12 +178,29 @@ writer, not just that it currently reports one.
 quoting=csv.QUOTE_MINIMAL, lineterminator="\n")` as its proof. Step 2 replaces that exact call
 site with a call into the helper, so that citation goes stale the moment Step 2 lands.
 
-Via `tools/parity_ledger_writer.py::write_entry()` only (never a raw YAML edit): update
-`INFRA-416`'s `v2_evidence` to cite `tools/working_log_writer.py::append_working_log_row()` (the
-new site that actually emits `lineterminator="\n"`) instead of the old line, and add
-`test_working_log_csv_has_exactly_one_writer` to its `test_path` list alongside the existing
-`test_merge_union_no_cr_bytes.py`/`test_merge_union_crlf_duplication_repro.py` entries — those two
-stay unchanged and still pass, since they check byte-level file output, not source line numbers.
+`write_entry()` does a **full-entry replace-by-id** (`tools/parity_ledger_writer.py:139-143`:
+`entries[index] = entry`), not a partial merge — confirmed by direct read. `.claude/agents/
+parity-updater.md`'s own documented procedure (Steps 2-3) is exactly "read the relevant YAML file
+to find the entry... and to see its current field values" then "construct the full entry dict" —
+this step must follow that same read-then-construct-full-dict shape, not a bare field-name mention.
+
+**Concretely:**
+1. Read `INFRA-416`'s current entry from `docs/parity_ledger/infrastructure.yaml` (via
+   `yaml.safe_load`, or by finding it in the file directly) to capture its current `text`, `status`,
+   `priority`, `divergence_note`, `proof_type`, and any other field verbatim.
+2. Construct the full entry dict: identical to what was read, except `v2_evidence` now cites
+   `tools/working_log_writer.py::append_working_log_row()` (the new site that actually emits
+   `lineterminator="\n"`) instead of the old `record_hand_orchestrated_closure.py:207` line, and
+   `test_path` gains `test_working_log_csv_has_exactly_one_writer` alongside the existing
+   `test_merge_union_no_cr_bytes.py`/`test_merge_union_crlf_duplication_repro.py` entries (those
+   two stay unchanged and still pass — they check byte-level file output, not source line numbers).
+3. Pass that full dict to `write_entry('infrastructure.yaml', entry)` — never a raw YAML edit, and
+   never a dict built from scratch with only the two changed fields.
+
+Test (test_plan.md Step 5): after `write_entry()` runs, re-read `INFRA-416` and assert every field
+other than `v2_evidence`/`test_path` is byte-identical to what it was before this step — the
+concrete, automated version of "preserve everything else," not just a prose instruction to be
+careful.
 
 ## Step 6 — CLAUDE.md
 
@@ -255,3 +289,26 @@ explicit answer in Risks; the bare-function-with-positional-args design was left
 called it acceptable, keyword-only args or a typed record was offered as an optional strengthening
 not required for approval — the JSON-file contract in Step 3 already forces call sites to name
 fields explicitly via dict keys, which captures most of that benefit without a signature change).
+
+## Deviations (Review round 2)
+
+Round 2 confirmed round 1's Findings 1-2 fully resolved (hand-walked the AST resolver against
+Step 1's exact shape; confirmed the Write-tool/`--data-file` contract removes the shell/Python
+quoting hazard). Returned `NEEDS_CHANGES` on one unresolved finding plus one new issue, both
+independently re-confirmed before this revision:
+
+1. **Step 5's `write_entry()` call risked silently dropping INFRA-416's other fields.** Confirmed
+   by direct read of `tools/parity_ledger_writer.py:128-148`: `write_entry()` does a full-entry
+   replace-by-id, and `.claude/agents/parity-updater.md`'s own documented procedure is read-the-
+   current-entry-then-construct-the-full-dict, which Step 5's original one-sentence "update
+   v2_evidence... and add to test_path" phrasing didn't actually instruct. Fixed: Step 5 now
+   spells out the 3-step read/construct-full-dict/write sequence explicitly, plus a test asserting
+   every other field is byte-identical after the write.
+2. **The Step 3 negative-assertion pin was itself found to have a scoping bug, caught before this
+   revision reached round 3**: my own first fix ("`python3 -c` must not appear anywhere in the
+   Finalize phase block") would have been false immediately, since `phase('Finalize')`'s block
+   contains 4 unrelated, legitimate orchestrator-run `python3 -c` self-checks (`finalizeCheckOutput`
+   etc.) after the agent's own prompt closes — confirmed by direct read and a live Python check
+   against the real file. Fixed: the assertion is now scoped to the Finalize agent's own prompt
+   string specifically, bounded by two anchors verified (via a live check against the real file) to
+   exist and to correctly isolate that substring from the post-Finalize self-checks.

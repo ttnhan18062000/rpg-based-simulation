@@ -32,12 +32,18 @@ tags: [data-quality, process-improvement]
 
 ## Step 3 — Finalize pin
 
-- `test_finalize_working_log_uses_helper_pin.py`: `working_log_writer.py` and `--data-file` are
-  both present in `implement-ticket.js`'s source text, inside the Finalize phase block, before the
-  staging-artifacts move instruction (step 5's own text) — mirrors `test_finalize_phase_status_
-  instruction_pin.py`'s presence/phase-block-containment/ordering shape. A 4th, negative assertion:
-  the literal substring `python3 -c` immediately followed by `append_working_log_row(` (the
-  rejected inline-embedding form) is **absent** from the Finalize block.
+- `test_finalize_working_log_uses_helper_pin.py`: scope the search to the **Finalize agent's own
+  prompt string** (the substring between the `` `Finalize ticket ${tid}` `` opening anchor and the
+  `` Report each step: DONE / SKIPPED (reason).`, `` closing anchor — verified these two anchors
+  exist and correctly bound the prompt, distinct from the 4 legitimate orchestrator-run `python3
+  -c` post-Finalize self-checks that follow after the prompt closes), not the wider
+  `phase('Finalize')` block. Within that scoped substring: `working_log_writer.py` and
+  `--data-file` are both present, and step 4's own text precedes step 5's own text — mirrors
+  `test_finalize_phase_status_instruction_pin.py`'s presence/containment/ordering shape. A 4th,
+  negative assertion: the substring `python3 -c` does not appear anywhere within that same scoped
+  prompt substring at all (not adjacency to `append_working_log_row(` — confirmed via direct read
+  that literal adjacency would not fire on a realistic reintroduction, since an import/semicolon/
+  quotes would separate the flag from the call).
 
 ## Step 4 — sole-writer guard (AST-based)
 
@@ -59,6 +65,12 @@ tags: [data-quality, process-improvement]
 
 - `write_entry()` call for `INFRA-416` succeeds; the shard's derived index rebuild reports the
   same `entry_count` as before plus zero net new entries (an update, not an insert).
+- **Field-preservation, automated, not just prose**: capture `INFRA-416`'s full entry dict before
+  this step runs; after `write_entry()`, re-read the entry and assert every field except
+  `v2_evidence`/`test_path` (`text`, `status`, `priority`, `divergence_note`, `proof_type`, and any
+  other field present) is byte-identical to the captured pre-image. Directly targets Review round
+  2's Finding 3 (`write_entry()` is a full-entry replace-by-id; a naively-constructed minimal dict
+  would silently drop `text`/`support_boundary`/etc.).
 - The two pre-existing `test_path` entries (`test_merge_union_no_cr_bytes.py`,
   `test_merge_union_crlf_duplication_repro.py`) still pass unmodified after Steps 1-2 land.
 
