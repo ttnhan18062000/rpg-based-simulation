@@ -204,7 +204,7 @@ def main() -> None:
     working_log_path = Path("tickets/working_log.csv")
     try:
         with working_log_path.open("a", newline="", encoding="utf-8") as f:
-            csv.writer(f, quoting=csv.QUOTE_MINIMAL).writerow(
+            csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerow(
                 [run_record["end_ts"], args.ticket_id, args.title, args.final_status, args.log_summary, artifacts_path]
             )
         log_ok = True
