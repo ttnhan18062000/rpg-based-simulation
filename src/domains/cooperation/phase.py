@@ -16,7 +16,8 @@ from src.domains.cooperation.services import (
     CooperationIntentBridge,
     PartyObjectiveAlignmentService,
     PartyCohesionService,
-    CooperationLearningService
+    CooperationLearningService,
+    CooperationOutcomeEvent
 )
 from src.domains.cooperation.events import (
     HelpNeedDetectedEvent,
@@ -145,18 +146,46 @@ class CooperationPhase:
         for g_id, g_rec in state.groups.items():
             rep = PartyCohesionService.evaluate(g_id, state)
             if rep.status in ("MEMBER_ABANDONING", "LEADER_LOST"):
-                # Handle group cohesion collapse: dissolve or signal retreat
-                # Map to updates by decrementing trust or updating state
+                # Handle group cohesion collapse: dissolve or signal retreat.
+                #
+                # TCK-20260911-COOPERATION-TRUST-HISTORY-ZERO-ACCUMULATION-INVESTIGATION: this
+                # branch used to hardcode `trust_delta = -0.25` inline instead of calling the
+                # real, tested CooperationLearningService.learn() -- the exact same number
+                # learn()'s own "abandoned" outcome_type computes, which is not a coincidence:
+                # this was a hand-copied shortcut for a call that should have been made. Routing
+                # through the real service also picks up grudge_delta (0.3 for "abandoned"),
+                # which the old inline version silently dropped. learn()'s own
+                # future_preference_modifier is NOT wired here -- there is no existing
+                # SocialUpdate/SocialComponent field for a persistent per-partner preference
+                # signal (Phase 7's own "future partner preference"/"cooperation memory" design
+                # intent was never built as a real field anywhere in this codebase); this is a
+                # disclosed gap, not a silent drop, and out of this fix's own narrow scope.
                 for mb_id in g_rec.member_ids:
                     mb = state.entities.get(mb_id)
                     if mb and mb_id != g_rec.leader_id:
                         mb_up = new_entity_updates.get(mb_id, EntityUpdate(entity_id=mb_id))
-                        # Decrease trust due to party abandonment or leader loss
+                        outcome = CooperationOutcomeEvent(
+                            tick=state.tick,
+                            partner_id=g_rec.leader_id,
+                            outcome_type="abandoned",
+                            description=f"Party cohesion collapse ({rep.status})",
+                        )
+                        learn_result = CooperationLearningService.learn(mb, outcome, state)
+
                         soc_up = mb_up.social or SocialUpdate()
                         new_trust = dict(soc_up.trust_delta)
-                        new_trust[g_rec.leader_id] = new_trust.get(g_rec.leader_id, 0.0) - 0.25
-                        
-                        mb_up = replace(mb_up, social=replace(soc_up, trust_delta=new_trust))
+                        new_trust[g_rec.leader_id] = (
+                            new_trust.get(g_rec.leader_id, 0.0) + learn_result.trust_delta
+                        )
+                        new_grudge = dict(soc_up.grudge_delta)
+                        new_grudge[g_rec.leader_id] = (
+                            new_grudge.get(g_rec.leader_id, 0.0) + learn_result.grudge_delta
+                        )
+
+                        mb_up = replace(
+                            mb_up,
+                            social=replace(soc_up, trust_delta=new_trust, grudge_delta=new_grudge),
+                        )
                         new_entity_updates[mb_id] = mb_up
                         
         t_duration_ms = (time.perf_counter_ns() - t_start) / 1e6

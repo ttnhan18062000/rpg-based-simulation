@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.integrity.test_no_duplicate_content_blocks import _merge_union_glob_patterns
+
 
 def _run_git(args, cwd):
     result = subprocess.run(
@@ -141,10 +143,17 @@ def test_gitattributes_line_present_for_working_log_csv():
     TCK-20260903-MONITORING-DATA-MIGRATION, which retired all 3 legacy physical shapes
     from the working tree in favor of the unified agent-monitoring/data/YYYY-Www/
     {runs,events,tools}.jsonl layout (see test_gitattributes_lines_absent_for_retired_
-    monitoring_paths below)."""
+    monitoring_paths below). TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION added
+    `text eol=lf` ahead of `merge=union` on this line, so this checks token membership via
+    the shared parser rather than an exact substring, to not re-couple this sanity guard to
+    one specific attribute ordering."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
-    assert "tickets/working_log.csv merge=union" in content
+    assert "tickets/working_log.csv" in _merge_union_glob_patterns()
+    assert any(
+        line.split()[0] == "tickets/working_log.csv" and "merge=union" in line.split()[1:]
+        for line in content.splitlines()
+    )
 
 
 def test_gitattributes_lines_absent_for_retired_monitoring_paths():
@@ -154,11 +163,12 @@ def test_gitattributes_lines_absent_for_retired_monitoring_paths():
     events.jsonl) and the shard directory this ticket's own migration produced
     (agent-monitoring/tools/) -- none of the 3 monitoring-source legacy merge=union
     lines remain; only the unified glob added by TCK-20260903-MONITORING-DATA-WRITE-
-    PATH-UNIFY does."""
+    PATH-UNIFY does (now carrying `text eol=lf` too, per TCK-20260911-WORKING-LOG-LINE-
+    ENDING-UNION-DUPLICATION -- checked via the shared parser, not an exact substring)."""
     repo_root = Path(__file__).parent.parent.parent
     content = (repo_root / ".gitattributes").read_text()
     assert "agent-monitoring/tools.jsonl merge=union" not in content
     assert "agent-monitoring/runs.jsonl merge=union" not in content
     assert "agent-monitoring/events.jsonl merge=union" not in content
     assert "agent-monitoring/tools/*.jsonl merge=union" not in content
-    assert "agent-monitoring/data/*/*.jsonl merge=union" in content
+    assert "agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()
