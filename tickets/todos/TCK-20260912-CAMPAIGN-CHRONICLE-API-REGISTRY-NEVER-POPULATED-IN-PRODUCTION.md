@@ -99,6 +99,11 @@ deployment.
 - `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION`,
   `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (same "inert end to end"
   finding shape, internal rather than public-API-facing)
+- `TCK-20260912-BEHAVIOR-ANALYTICS-PIPELINE-NEVER-STARTED-API-INERT` (the second instance of this
+  exact shape in the same batch — 7 API endpoints, a different subsystem, same "store nothing
+  populates" cause. Two instances in one batch suggests this may be systematic in this codebase,
+  not isolated — whoever picks up either ticket should check for a third before assuming these are
+  the only two, and should treat them as possibly one problem with two faces)
 
 ## Related Docs
 None yet.
