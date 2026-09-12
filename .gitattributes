@@ -14,8 +14,26 @@
 # (see investigation.md for that ticket). The actual squash-merge-safe protection is
 # tests/integrity/test_no_duplicate_content_blocks.py, which detects (not prevents)
 # any new duplicate content block landing via this path.
-agent-monitoring/data/*/*.jsonl merge=union
-tickets/working_log.csv merge=union
+#
+# CAVEAT (TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION): merge=union only
+# unions cleanly when both sides' additions are byte-identical. A line-ending mismatch
+# between writers (e.g. tools/agent-monitoring/record_hand_orchestrated_closure.py's
+# csv.writer defaulting to CRLF while every other writer emits LF) makes the *same*
+# appended rows look like two different additions to the merge, and merge=union then
+# keeps both — a real recurring defect, not a hypothetical one (3 of 4 batch PR merges
+# in 3 days duplicated a block this way; see that ticket's investigation.md). `eol=lf`
+# is added here specifically to close that gap: it normalizes every writer's output to
+# LF at commit time, so two additions that differ only in line ending become byte-
+# identical before the merge driver ever sees them, and the union collapses to one
+# copy instead of two. tests/integrity/test_merge_union_no_cr_bytes.py catches the
+# cause (a stray CR byte) directly, ahead of the next merge that would turn it into a
+# duplicate block; tests/integrity/test_merge_union_crlf_duplication_repro.py proves
+# both the defect and the fix against a real throwaway git repo.
+# Interim rule if you land on a duplicate block before a fix like this one merges: keep
+# the copy whose bytes match `main` and delete the other — deleting the copy that
+# *doesn't* match main just re-triggers the same duplication on the next such merge.
+agent-monitoring/data/*/*.jsonl text eol=lf merge=union
+tickets/working_log.csv text eol=lf merge=union
 
 # docs/REGISTRY.yaml is deliberately NOT listed here: it's a full-file rewrite on every
 # Finalize (not an append), so union-merging two independent regenerations could produce
