@@ -104,19 +104,23 @@ def test_consumer_1_phase_shortcircuit_is_confirmed_benign_not_a_bug():
     assert forced_evolution.entity_updates == refined.entity_updates
 
 
-def test_consumer_2_read_model_cache_serves_a_stale_dto_confirmed_bug():
+def test_consumer_2_read_model_cache_invalidates_passive_decay_only_change():
     """ReadModelCache (src/api/read_model_cache.py), wired live in
     V2EngineManager._update_latest_state() every tick and read by the real
-    get_entity/get_entities_paged API endpoints, invalidates a cached entity DTO only for IDs in
-    dirty_set.all_dirty_entities (ReadModelInvalidationPolicy.get_dirty_entity_ids). It is the
-    real, live consumer of this gap -- apply_plan.py's own `invalidate_read_model` field is
-    computed but never read anywhere in the codebase (confirmed dead: grep for
-    "invalidate_read_model" outside its own definition/assignment finds only a comment inside
-    src/domains/combat_engagement/phase.py that assumed it was live).
+    get_entity/get_entities_paged API endpoints, invalidates a cached entity DTO for IDs in
+    dirty_set.all_dirty_entities (ReadModelInvalidationPolicy.get_dirty_entity_ids) UNION
+    next_state._apply_time_dirty_set.all_dirty_entities -- the real, apply-time-computed DirtySet
+    that ApplyPath.apply_generation() now always attaches to the state it returns
+    (TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS), independent of the published
+    pre-apply dirty_set's own semantics (which apply_plan.py's own `invalidate_read_model` field
+    was meant to drive but never did -- confirmed dead, grep for "invalidate_read_model" outside
+    its own definition/assignment finds only a stale comment in
+    src/domains/combat_engagement/phase.py).
 
-    Real, committed state changed (hunger genuinely accrued) but the published dirty_set for this
-    tick is empty, so the cache is never told to drop this entity's DTO -- it serves the
-    pre-tick snapshot indefinitely, until something unrelated marks this entity dirty again."""
+    Real, committed state changed (hunger genuinely accrued) and the published pre-apply dirty_set
+    for this tick is empty, but next_state's own _apply_time_dirty_set now carries entity 1 --
+    apply_generation() marks any entity with a real component change, passive-decay-only included.
+    The cache correctly drops the stale DTO."""
     prior_state, refined, next_state = _run_real_passive_decay_tick()
     entity_id = 1
 
@@ -125,16 +129,23 @@ def test_consumer_2_read_model_cache_serves_a_stale_dto_confirmed_bug():
     stale_dto = cache.get_entity_dto(prior_state.entities[entity_id])
     assert stale_dto["biological"]["hunger"] == 10.0
 
-    # The real published dirty_set from this exact tick -- empty, per the prior test.
+    # The real published pre-apply dirty_set from this exact tick -- still empty, per the prior
+    # test. The fix does not change this -- other consumers (phase gating, movement cache) still
+    # see exactly what they saw before.
     assert refined.dirty_set.all_dirty_entities == set()
+
+    # But next_state's own apply-time dirty set is real and non-empty for this entity.
+    assert next_state._apply_time_dirty_set is not None
+    assert entity_id in next_state._apply_time_dirty_set.all_dirty_entities
+
     cache.update(next_state, dirty_set=refined.dirty_set)
 
     served_dto = cache.get_entity_dto(next_state.entities[entity_id])
 
-    # BUG: the cache returns the pre-tick snapshot. Hunger genuinely accrued in committed state.
-    assert served_dto is stale_dto
-    assert served_dto["biological"]["hunger"] == 10.0  # wrong -- stale
-    assert next_state.entities[entity_id].biological.hunger > 10.0  # ground truth
+    # FIXED: the cache correctly invalidated and recomputed. Hunger genuinely accrued.
+    assert served_dto is not stale_dto
+    assert served_dto["biological"]["hunger"] > 10.0
+    assert served_dto["biological"]["hunger"] == next_state.entities[entity_id].biological.hunger
 
 
 def test_consumer_2_full_scan_or_explicit_dirty_tag_avoids_the_staleness():
