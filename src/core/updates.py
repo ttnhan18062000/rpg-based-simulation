@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     )
     from src.engine.policy import GovernorPolicy
     from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
+    from src.engine.intent.action_intent import ActionIntent
 from src.core.state import ItemStack, EquipSlot, AttributeComponent, LifeStage, ItemInstance
 from src.core.models.social import RelationshipRole
 from src.core.movement_modes import MovementMode
@@ -717,6 +718,13 @@ class EntityUpdate:
     cognition_bundle_set: Optional[Any] = None
     intent_results: List[IntentResult] = field(default_factory=list)
     property_updates: Dict[str, Any] = field(default_factory=dict)
+    # TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-QUEUE:
+    # InformationBeliefPhase Branch B's routed self-model-query ActionIntent lives here now, never
+    # in intent_results (typed for IntentResult only). InformationIntentExecutionPhase reads this
+    # field directly; it is never merged toward entity.identity.latest_intent_results by any write
+    # path, so a raw ActionIntent can no longer reach that IntentResult-typed durable field by
+    # construction, regardless of whether InformationIntentExecutionPhase runs.
+    pending_action_intent: Optional[ActionIntent] = None
 
     def is_noop(self) -> bool:
         return (self.kind_set is None and self.new_position is None and 
@@ -740,6 +748,7 @@ class EntityUpdate:
                 (self.status_effect_update is None or self.status_effect_update.is_noop()) and
                 self.group_id_set is None and self.self_model_bundle_set is None and
                 self.cognition_bundle_set is None and not self.intent_results and
+                self.pending_action_intent is None and
                 not self.property_updates)
 
     def merge(self, other: EntityUpdate) -> EntityUpdate:
@@ -777,6 +786,7 @@ class EntityUpdate:
         if other.self_model_bundle_set is not None: changes["self_model_bundle_set"] = other.self_model_bundle_set
         if other.cognition_bundle_set is not None: changes["cognition_bundle_set"] = other.cognition_bundle_set
         if other.intent_results: changes["intent_results"] = self.intent_results + other.intent_results
+        if other.pending_action_intent is not None: changes["pending_action_intent"] = other.pending_action_intent
         if other.property_updates: changes["property_updates"] = {**self.property_updates, **other.property_updates}
         return replace(self, **changes)
 

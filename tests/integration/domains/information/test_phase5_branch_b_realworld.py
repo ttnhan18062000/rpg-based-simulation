@@ -47,8 +47,8 @@ def test_branch_b_query_routing_fails_silently_on_real_urban_political_state(see
     assert 23 in update.entity_updates, "expected Branch B to route a query for entity 23"
     eu = update.entity_updates[23]
     assert eu.property_updates.get("last_routed_query_subject") == "material.moon_resin.source"
-    assert len(eu.intent_results) == 1
-    intent = eu.intent_results[0]
+    intent = eu.pending_action_intent
+    assert intent is not None, "expected Branch B to route a pending_action_intent for entity 23"
     assert intent.kind == "ASK_INFORMATION"
     assert intent.target_id == "town_notice_board", "expected fallback to the free candidate"
     assert intent.payload.get("cost_paid") == 0
