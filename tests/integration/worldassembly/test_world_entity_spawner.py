@@ -98,15 +98,21 @@ def test_v2_entity_builder_only_in_legacy_guard():
 # ---------------------------------------------------------------------------
 
 def test_spawn_from_context_produces_entity_states(bundle, catalog):
-    """spawn_from_context returns at least one EntityState per CompileContext entity."""
+    """spawn_from_context returns exactly sum(profile.count) EntityState objects --
+    TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE: a profile represents
+    one population GROUP, not one entity, so this is no longer a 1:1 count."""
     ctx = bundle.compile_context
     assert len(ctx.entities) > 0, "CompileContext must have entity profiles"
 
     spawner = WorldEntitySpawner()
     entities = spawner.spawn_from_context(ctx, catalog)
 
-    assert len(entities) == len(ctx.entities), (
-        f"Expected {len(ctx.entities)} entities, got {len(entities)}"
+    expected_total = sum(profile.count for profile in ctx.entities.values())
+    assert expected_total > len(ctx.entities), (
+        "Test requires at least one real population with count > 1 to exercise expansion"
+    )
+    assert len(entities) == expected_total, (
+        f"Expected {expected_total} entities (sum of profile.count), got {len(entities)}"
     )
     for eid, state in entities.items():
         assert isinstance(state, EntityState)
@@ -116,7 +122,8 @@ def test_spawn_from_context_produces_entity_states(bundle, catalog):
 def test_archetype_native_entities_carry_archetype_id(bundle, catalog):
     """
     Profiles with archetype_id produce EntityState objects whose identity.properties
-    contain the archetype_id (set by ArchetypeEntityFactory).
+    contain the archetype_id (set by ArchetypeEntityFactory) -- for every individual
+    materialized from that profile, not just one.
     """
     ctx = bundle.compile_context
     archetype_profiles = {
@@ -127,30 +134,39 @@ def test_archetype_native_entities_carry_archetype_id(bundle, catalog):
     spawner = WorldEntitySpawner()
     entities = spawner.spawn_from_context(ctx, catalog)
 
-    entity_ids = list(entities.keys())
-    profile_keys = list(ctx.entities.keys())
+    # Group spawned entities by their tagged population_id -- the real, correct way to map
+    # entities back to their source profile now that a profile can expand into many entities
+    # (positional index alignment no longer holds).
+    by_population: dict[str, list] = {}
+    for state in entities.values():
+        pop_id = (state.identity.properties or {}).get("population_id")
+        by_population.setdefault(pop_id, []).append(state)
 
-    for i, (key, profile) in enumerate(ctx.entities.items()):
-        if not profile.archetype_id:
-            continue
-        eid = entity_ids[i]
-        state = entities[eid]
-        props = state.identity.properties or {}
-        assert props.get("archetype_id") == profile.archetype_id, (
-            f"Entity {eid} (profile {key!r}): expected archetype_id="
-            f"{profile.archetype_id!r} in identity.properties, got {props!r}"
+    for key, profile in archetype_profiles.items():
+        members = by_population.get(key, [])
+        assert len(members) == profile.count, (
+            f"Population {key!r}: expected {profile.count} entities tagged population_id="
+            f"{key!r}, found {len(members)}"
         )
+        for state in members:
+            props = state.identity.properties or {}
+            assert props.get("archetype_id") == profile.archetype_id, (
+                f"Entity {state.id} (profile {key!r}): expected archetype_id="
+                f"{profile.archetype_id!r} in identity.properties, got {props!r}"
+            )
 
 
 def test_entity_ids_start_from_base(bundle, catalog):
-    """Entity IDs are sequential starting from base_entity_id."""
+    """Entity IDs are sequential starting from base_entity_id, one per spawned individual
+    (sum of profile.count), not one per profile."""
     ctx = bundle.compile_context
     spawner = WorldEntitySpawner()
 
     entities = spawner.spawn_from_context(ctx, catalog, base_entity_id=10)
     ids = sorted(entities.keys())
+    expected_total = sum(profile.count for profile in ctx.entities.values())
     assert ids[0] == 10
-    assert ids == list(range(10, 10 + len(ctx.entities)))
+    assert ids == list(range(10, 10 + expected_total))
 
 
 def test_entity_combat_stats_are_positive(bundle, catalog):

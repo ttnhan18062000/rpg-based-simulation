@@ -106,26 +106,32 @@ def test_archetype_entities_carry_archetype_id(wolf_result, catalog, module_repo
     """
     Entities whose profile has archetype_id must carry it in identity.properties
     (set by ArchetypeEntityFactory via WorldEntitySpawner archetype-native path).
+
+    TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE: a profile can now expand
+    into `profile.count` entities, so positional-index alignment between ctx.entities and
+    wolf_result.state.entities no longer holds -- group by the real population_id tag instead.
     """
     ctx = wolf_result.setup.world_bundle.compile_context
     archetype_profiles = {k: p for k, p in ctx.entities.items() if p.archetype_id}
     assert archetype_profiles, "wolf_territory_pressure must have archetype-backed profiles"
 
-    profile_keys = list(ctx.entities.keys())
-    entity_ids = list(wolf_result.state.entities.keys())
+    by_population: dict[str, list] = {}
+    for entity in wolf_result.state.entities.values():
+        pop_id = (entity.identity.properties or {}).get("population_id")
+        by_population.setdefault(pop_id, []).append(entity)
 
-    for i, (key, profile) in enumerate(ctx.entities.items()):
-        if not profile.archetype_id:
-            continue
-        if i >= len(entity_ids):
-            break
-        eid = entity_ids[i]
-        entity = wolf_result.state.entities[eid]
-        props = entity.identity.properties or {}
-        assert props.get("archetype_id") == profile.archetype_id, (
-            f"Entity {eid} (profile {key!r}): expected archetype_id="
-            f"{profile.archetype_id!r} in identity.properties"
+    for key, profile in archetype_profiles.items():
+        members = by_population.get(key, [])
+        assert len(members) == profile.count, (
+            f"Population {key!r}: expected {profile.count} entities tagged population_id="
+            f"{key!r}, found {len(members)}"
         )
+        for entity in members:
+            props = entity.identity.properties or {}
+            assert props.get("archetype_id") == profile.archetype_id, (
+                f"Entity {entity.id} (profile {key!r}): expected archetype_id="
+                f"{profile.archetype_id!r} in identity.properties"
+            )
 
 
 def test_tick_zero_entities_alive(wolf_result):

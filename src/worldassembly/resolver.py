@@ -1102,6 +1102,26 @@ class CompileProfileResolver:
                 key, getattr(pop_spec, "spawn_region", None), region_bounds, claimed_positions
             )
 
+            # TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE: resolve one
+            # deconflicted position per individual in this population (pop_spec.count total), not
+            # just one for the population as a whole -- porting the classic compiler.py pipeline's
+            # per-individual placement into this pipeline. Individual #0 reuses the exact `key`
+            # hash above (unchanged, preserves existing behavior/tests); individuals 1..count-1 use
+            # a distinct sub-key so each gets its own deterministic candidate point, deconflicted
+            # against the SAME shared claimed_positions dict used by every other population in this
+            # resolve() call. A population whose spawn_region doesn't resolve gets spawn_position
+            # None for every individual, same as today's single-position fallback.
+            declared_count = getattr(pop_spec, "count", 1)
+            spawn_positions: Tuple[Optional[Tuple[float, float]], ...] = ()
+            if declared_count > 0:
+                extra_positions = [
+                    _resolve_spawn_position(
+                        f"{key}#{i}", getattr(pop_spec, "spawn_region", None), region_bounds, claimed_positions
+                    )
+                    for i in range(1, declared_count)
+                ]
+                spawn_positions = (spawn_position, *extra_positions)
+
             # Archetype_id is now explicit on PopulationSpec — no string scan needed
             archetype_id = pop_spec.archetype_id
 
@@ -1127,6 +1147,8 @@ class CompileProfileResolver:
                     inventory_seed=inventory_seed,
                     cognition_seed=cognition_seed,
                     spawn_position=spawn_position,
+                    count=declared_count,
+                    spawn_positions=spawn_positions,
                     # Meta parameters preserved
                     archetype_id=resolved_arch.archetype_id,
                     species_id=resolved_arch.species_id,
@@ -1156,6 +1178,8 @@ class CompileProfileResolver:
                     inventory_seed=inventory_seed,
                     cognition_seed=cognition_seed,
                     spawn_position=spawn_position,
+                    count=declared_count,
+                    spawn_positions=spawn_positions,
                 )
             ctx.register_entity(key, resolved_entity)
 
