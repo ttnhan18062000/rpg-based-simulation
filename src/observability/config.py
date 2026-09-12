@@ -237,14 +237,6 @@ class ObservabilityConfig:
         return cls.get_flag("OBS_LIVE_STREAM")
 
     @classmethod
-    def is_event_recorder_enabled(cls) -> bool:
-        return cls.get_flag("OBS_EVENT_RECORDER")
-
-    @classmethod
-    def is_entity_timeline_enabled(cls) -> bool:
-        return cls.get_flag("OBS_ENTITY_TIMELINE")
-
-    @classmethod
     def is_behavior_normalization_enabled(cls) -> bool:
         return cls.get_flag("OBS_BEHAVIOR_NORMALIZATION")
 
@@ -279,10 +271,6 @@ class ObservabilityConfig:
     @classmethod
     def is_insight_generation_enabled(cls) -> bool:
         return cls.get_flag("OBS_INSIGHT_GENERATION")
-
-    @classmethod
-    def is_warehouse_ingest_enabled(cls) -> bool:
-        return cls.get_flag("OBS_WAREHOUSE_INGEST")
 
     @classmethod
     def is_dashboard_export_enabled(cls) -> bool:

@@ -98,7 +98,16 @@ class ReadModelCache(ICacheable):
             
             all_ids = set(state.entities.keys())
             dirty_ids = ReadModelInvalidationPolicy.get_dirty_entity_ids(dirty_set, all_ids, force_full_scan)
-            
+            # TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS: supplementary invalidation
+            # source, independent of update.dirty_set's own publication semantics (which other
+            # consumers -- phase gating, movement cache -- rely on staying pre-apply-scoped).
+            # apply_time_dirty_set is the real, apply-time-computed DirtySet, which includes
+            # entities whose only per-tick change is passive decay -- always populated by
+            # ApplyPath.apply_generation() (declared field, default None; direct access is safe).
+            apply_time_dirty_set = state._apply_time_dirty_set
+            if apply_time_dirty_set is not None and not force_full_scan:
+                dirty_ids = dirty_ids | set(apply_time_dirty_set.all_dirty_entities)
+
             # Prune deleted entities
             cached_ids = set(self._entity_dtos.keys())
             deleted_ids = cached_ids - all_ids
@@ -133,6 +142,11 @@ class ReadModelCache(ICacheable):
         candidate_ids = ReadModelInvalidationPolicy.get_dirty_entity_ids(
             dirty_set, set(state.entities.keys()), force_full_scan
         )
+        # TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS: same supplementary source as
+        # update() above -- passive-decay-only entities are otherwise invisible to this delta too.
+        apply_time_dirty_set = state._apply_time_dirty_set
+        if apply_time_dirty_set is not None and not force_full_scan:
+            candidate_ids = candidate_ids | set(apply_time_dirty_set.all_dirty_entities)
 
         changed: List[Dict[str, Any]] = []
         removed: List[int] = []

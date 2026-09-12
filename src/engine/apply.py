@@ -271,12 +271,19 @@ class ApplyPath:
             for ent in update.entities_add:
                 new_entities[ent.id] = ent
 
+        # TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS: built unconditionally (the tags are
+        # already fully computed by ApplyPlanBuilder; this is cheap) rather than only when an
+        # optional audit_dirty_set collector is passed. Unlike update.dirty_set (pre-apply, built
+        # from entity_updates only), this DirtySet includes passive-decay-only entities via
+        # plan.dirty_tags_by_entity's own candidates set. Stashed on new_state below for
+        # ReadModelCache to use as a supplementary invalidation source -- never used to widen
+        # update.dirty_set's own meaning for phase gating/movement cache.
+        apply_time_dirty_set = dirty_builder.build()
         if audit_dirty_set is not None:
-            final_dirty = dirty_builder.build()
             if hasattr(audit_dirty_set, "update"):
-                audit_dirty_set.update(final_dirty)
+                audit_dirty_set.update(apply_time_dirty_set)
             elif isinstance(audit_dirty_set, list):
-                audit_dirty_set.append(final_dirty)
+                audit_dirty_set.append(apply_time_dirty_set)
 
         # 3. Final State Reconstruction
         # ---------------------------------------------------------------------
@@ -502,6 +509,8 @@ class ApplyPath:
 
         if not any_entity_changed and getattr(prior_state, "_readonly_entities_cache", None) is not None:
             object.__setattr__(new_state, "_readonly_entities_cache", prior_state._readonly_entities_cache)
+
+        object.__setattr__(new_state, "_apply_time_dirty_set", apply_time_dirty_set)
 
         if audit_dirty_set is True and update.dirty_set is not None:
             new_state.validate_dirty_set(prior_state, update.dirty_set)

@@ -50,6 +50,26 @@ design-doc declaration (unlike, e.g., `CooperationPosture.JOIN_PARTY`'s own expl
 `intent_mapping`) states facts are meant to feed any specific decision, so building one would be
 inventing gameplay design, not completing a declared one.
 
+**Correction — leads are also never created under real defaults, so this is not a working
+provenance/decision-influence split in practice.** The paragraphs above (and the "Detour Decision"
+section below) describe `KnowledgeFact` as provenance-only and `LeadState`/leads as the model that
+actually drives detour/routing decisions. That division of labour is real as *design intent*, but
+`TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION`'s own real 500-tick instrumented
+reproduction found `entity.strategic.leads` empty for every entity at every tick for the whole run —
+leads are never created under real defaults either. All four real `LeadState(...)` construction
+sites in `src/` are unreachable today, each for a different reason: `GuildIntelSystem.update()`
+(rumor-on-guild-visit) has zero callers anywhere; `GuildAction.visit()` (the guild-visit lead grant)
+is wired but gated behind `ENABLE_GUILD_QUEST_GENERATION`, default OFF, not overridden by any world
+checked so far; the belief-confirmation loop in `intelligence.py` only updates already-existing
+leads, never seeds the collection from empty; and `PaidInformationTransactionSystem.enforce()`
+requires a registered `InformationProvider`, a type with zero real construction sites anywhere in
+`src/`. So both halves of the knowledge/investigation layer — facts and leads — are inert under real
+defaults, not just the fact-writing half documented above. "Leads drive behaviour" describes what
+the code is built to do, not what it currently does in a real run. See
+`TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION` for the instrumentation and
+`TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (filed as the combined,
+correctly-sized finding) for the consolidated disposition.
+
 ---
 
 ## Belief System — `belief.py`
