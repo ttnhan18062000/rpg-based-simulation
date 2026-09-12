@@ -93,3 +93,16 @@ hiding, not unrelated flakes. Fixed at the root, not papered over: added
 `DeterministicRNG(42)`, matching the pattern already used by other real-`Kernel` tests in this
 repo (e.g. `tests/unit/kernel/test_grief_trigger_drain.py`). Re-ran the full local `tests/
 integration` suite before pushing again: 968 passed, 0 failed.
+
+**Larger implication, worth reading before bisecting any further fallout from this fix.** If the
+sentinel forced `DEGRADED` every tick for every `max_worker_count<=0` run, then `ScanPolicy.
+EXACT_DIRTY` was always the scan policy and the governor was always shedding work in that mode —
+in tests *and* in real runs, for however long this bug existed. An unknown number of code paths
+downstream of `RuntimeMode.NORMAL`/`CONSTRAINED` (full replay, un-shed scan policies, anything
+gated on *not* being in `DEGRADED`) have never executed under any observation made against a
+worker-disabled run. This fixture is the first instance found — there will likely be more. **The
+default hypothesis for any further failure surfacing after this fix is that the code path was
+always broken and simply never reached, not that this fix broke it** — the same relationship
+`TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE`'s own count-expansion fix had
+to the real `ActionIntent` crash it exposed earlier in this arc. Verify that per-instance rather
+than assuming it, but start there before hunting.

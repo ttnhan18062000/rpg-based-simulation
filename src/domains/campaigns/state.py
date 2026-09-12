@@ -122,11 +122,26 @@ class EntityCarryForward:
       personality   <- entity.identity.personality (PersonalityComponent's 4 floats, carried
                        forward verbatim as "persistent psychological traits" -- that dataclass's
                        own docstring -- not re-derived fresh each episode)
+      attributes    <- entity.attributes (AttributeComponent's 9 ints: strength/agility/vitality/
+                       endurance/intelligence/spirit/wisdom/perception/charisma), unspent_ap,
+                       learned_skills, active_breakthroughs, class_id, veterancy_points,
+                       veterancy_rank, known_recipes (TCK-20260911-CAMPAIGN-SURVIVOR-EARNED-
+                       PROGRESSION-NOT-CARRIED-FORWARD). Combat stats are a function of
+                       attributes + equipment + skills, not of evolution_level directly --
+                       `level` alone has no mechanical effect; its value lives entirely in the
+                       attributes it granted along the way via spent AP. Empty/default for
+                       pre-existing records serialized before these fields existed, matching the
+                       precedent this whole block already established for `kind`/`last_position`.
 
-    kind/role/faction/properties/traits/personality together are this entity's spawn-time
-    identity: the governing invariant this whole block satisfies is that a reconstructed
-    survivor must be identity-equivalent to a freshly-spawned entity, not merely "whichever
-    fields someone found a consumer for."
+    kind/role/faction/properties/traits/personality/attributes/unspent_ap/learned_skills/
+    active_breakthroughs/class_id/veterancy_points/veterancy_rank/known_recipes together are
+    this entity's earned state: the governing invariant this whole block satisfies is that a
+    reconstructed survivor must retain what it earned during the prior episode, not merely
+    "whichever fields someone found a consumer for." Deliberately excluded, not merely omitted:
+    `craft_target` (transient intent, not accumulation), `territory_maturity` (a creature/NPC
+    territorial mechanic, not survivor-relevant), `wounds`/`scars` (survivors are narratively
+    recovered/healed between episodes -- reconstruction intentionally resets combat injuries to
+    fresh), `cooldowns` (tick-scoped, meaningless across an episode boundary).
     """
     entity_id: int
     level: int
@@ -141,6 +156,17 @@ class EntityCarryForward:
     properties: dict = field(default_factory=dict)
     traits: Tuple[str, ...] = ()
     personality: dict = field(default_factory=dict)  # {greed, bravery, sociability, industry}
+    attributes: dict = field(default_factory=dict)  # {strength, agility, vitality, endurance,
+                                                      #  intelligence, spirit, wisdom, perception,
+                                                      #  charisma} — empty means "use component
+                                                      #  defaults" (pre-existing record)
+    unspent_ap: int = 0
+    learned_skills: Tuple[str, ...] = ()
+    active_breakthroughs: Tuple[str, ...] = ()
+    class_id: str = "NOVICE"
+    veterancy_points: int = 0
+    veterancy_rank: int = 0
+    known_recipes: Tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
         return {
@@ -157,6 +183,14 @@ class EntityCarryForward:
             "properties": self.properties,
             "traits": sorted(self.traits),
             "personality": self.personality,
+            "attributes": self.attributes,
+            "unspent_ap": self.unspent_ap,
+            "learned_skills": sorted(self.learned_skills),
+            "active_breakthroughs": sorted(self.active_breakthroughs),
+            "class_id": self.class_id,
+            "veterancy_points": self.veterancy_points,
+            "veterancy_rank": self.veterancy_rank,
+            "known_recipes": sorted(self.known_recipes),
         }
 
     @classmethod
@@ -176,6 +210,14 @@ class EntityCarryForward:
             properties=d.get("properties", {}),
             traits=tuple(sorted(d.get("traits", []))),
             personality=d.get("personality", {}),
+            attributes=d.get("attributes", {}),
+            unspent_ap=d.get("unspent_ap", 0),
+            learned_skills=tuple(sorted(d.get("learned_skills", []))),
+            active_breakthroughs=tuple(sorted(d.get("active_breakthroughs", []))),
+            class_id=d.get("class_id", "NOVICE"),
+            veterancy_points=d.get("veterancy_points", 0),
+            veterancy_rank=d.get("veterancy_rank", 0),
+            known_recipes=tuple(sorted(d.get("known_recipes", []))),
         )
 
 
