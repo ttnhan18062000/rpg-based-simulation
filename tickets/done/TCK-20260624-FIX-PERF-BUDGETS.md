@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20260624-FIX-PERF-BUDGETS
-phase: open
+phase: done
 date: 2026-06-24
 tags: [performance, perf-budget, benchmarking, adventure-decision, profiler]
 ---

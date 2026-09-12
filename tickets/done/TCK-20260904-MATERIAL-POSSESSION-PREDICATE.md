@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-MATERIAL-POSSESSION-PREDICATE
-phase: open
+phase: done
 date: 2026-09-04
 tags: [economy, progression, cognition]
 ---

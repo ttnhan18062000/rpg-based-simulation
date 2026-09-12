@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E42C-PAID-TRANSACTION
-phase: open
+phase: done
 date: 2026-06-20
 tags: [information-seeking, paid-transaction, lead-quality, resource-transfer, phase-4]
 ---

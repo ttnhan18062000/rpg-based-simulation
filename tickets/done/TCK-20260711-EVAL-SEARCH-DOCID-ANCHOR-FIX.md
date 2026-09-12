@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: misc
 authority: P1
 audience: agent
 ticket_id: TCK-20260711-EVAL-SEARCH-DOCID-ANCHOR-FIX
-phase: open
+phase: done
 date: 2026-07-11
 tags: [bug, data-quality, root-cause]
 ---

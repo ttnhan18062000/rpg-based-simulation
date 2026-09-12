@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC
-phase: open
+phase: done
 date: 2026-07-10
 tags: [ai, agent-monitoring, determinism, data-quality]
 ---

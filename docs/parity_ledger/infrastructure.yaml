@@ -1907,15 +1907,27 @@
     \ marker (`tags_enforced: true`) rather than a date cutoff, since doc frontmatter\
     \ carries no ticket_id-shaped identifier to date-gate on; the existing doc corpus\
     \ is fully grandfathered \u2014 no doc currently carries the field, so no existing\
-    \ doc is newly rejected.\n"
+    \ doc is newly rejected.\n\nOn ticket content type (TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT),\
+    \ the module also enforces a location-aware cross-field rule independent of any\
+    \ single field's enum: `check_ticket_location_consistency()` requires `tickets/done/`\
+    \ files to carry `status: historical` and `phase: done`, and forbids `tickets/inprogress/`\
+    \ files from carrying `phase: done` -- catching drift where status and phase are\
+    \ each individually enum-valid but disagree with the tickets/ subdirectory the\
+    \ file physically sits in (e.g. status: active, phase: open sitting in tickets/done/,\
+    \ both enum-valid alone). This is deliberately not folded into validate_file/_validate_ticket's\
+    \ automatic per-file validation -- callers call it explicitly: done_checker_static.check_frontmatter_valid()\
+    \ for the single ticket being closed, and a corpus-wide test for every file already\
+    \ in tickets/done/."
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/validate_frontmatter.py (_check_doc_tags, _tag_membership_errors)
+  v2_evidence: tools/validate_frontmatter.py (_check_doc_tags, _tag_membership_errors)
     + docs/guidelines/frontmatter_schema.md + docs/guidelines/tag_taxonomy.md + tests/tools/test_validate_frontmatter.py
-    (TestDocTagEnforcement, test_invalid_layer_doc_fixture_still_rejected)
-
-    '
+    (TestDocTagEnforcement, test_invalid_layer_doc_fixture_still_rejected) + tools/validate_frontmatter.py:276-331
+    (TICKET_LOCATION_RULES, _ticket_directory, check_ticket_location_consistency)
+    + tools/gate_checks/done_checker_static.py:287-327 (check_frontmatter_valid, explicit
+    call site) + tests/tools/test_validate_frontmatter.py (TestTicketLocationConsistency,
+    TestTicketLocationConsistencyCorpus)
   proof_type: null
   test_path: tests/tools/test_validate_frontmatter.py
   divergence_note: null
@@ -7392,13 +7404,15 @@
   status: verified
   priority: P2
   legacy_evidence: null
-  v2_evidence: 'tools/gate_checks/done_checker_static.py:238-284 (`check_frontmatter_valid`,
+  v2_evidence: 'tools/gate_checks/done_checker_static.py:287-327 (`check_frontmatter_valid`,
     `registry = load_registry()` threaded into both `validate_file`/`validate_directory`
-    calls), :309-336 (`_frontmatter_has_unregistered_tags`), :339-378 (`classify_checklist_failure`,
-    condition-field match + independent re-check, `_TAG_REGISTRY_REJECTION_MARKER`
-    removed) + .claude/workflows/implement-ticket.js:287-320 (`classifyChecklistFailure`,
-    now async, shells out to `_frontmatter_has_unregistered_tags` via `bash()`), :1224
-    (awaited call site) + tools/registry_query.py:1-31 (`candidate_tags_from_text`
+    calls -- line range refreshed by TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT,
+    which also added this function''s explicit `check_ticket_location_consistency()`
+    call; see INFRA-180 for that rule''s own entry), :309-336 (`_frontmatter_has_unregistered_tags`),
+    :339-378 (`classify_checklist_failure`, condition-field match + independent re-check,
+    `_TAG_REGISTRY_REJECTION_MARKER` removed) + .claude/workflows/implement-ticket.js:287-320
+    (`classifyChecklistFailure`, now async, shells out to `_frontmatter_has_unregistered_tags`
+    via `bash()`), :1224 (awaited call site) + tools/registry_query.py:1-31 (`candidate_tags_from_text`
     reads live `subsystem-topic` tags via `load_registry()`, `SEED_TAGS` tuple removed)
     + registries/tag_registry.jsonl (6 new subsystem-topic rows: combat, economy,
     resource, content, engine, strategy)

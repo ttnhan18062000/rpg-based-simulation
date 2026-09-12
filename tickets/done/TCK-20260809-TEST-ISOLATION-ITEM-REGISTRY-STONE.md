@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20260809-TEST-ISOLATION-ITEM-REGISTRY-STONE
-phase: open
+phase: done
 date: 2026-08-09
 tags: [testing]
 ---

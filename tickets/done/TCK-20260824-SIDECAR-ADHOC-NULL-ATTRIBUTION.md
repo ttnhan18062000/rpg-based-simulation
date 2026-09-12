@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260824-SIDECAR-ADHOC-NULL-ATTRIBUTION
-phase: open
+phase: done
 date: 2026-08-24
 tags: [observability, debugging]
 ---

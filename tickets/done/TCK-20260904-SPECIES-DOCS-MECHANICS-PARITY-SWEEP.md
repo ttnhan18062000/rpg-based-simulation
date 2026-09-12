@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-SPECIES-DOCS-MECHANICS-PARITY-SWEEP
-phase: open
+phase: done
 date: 2026-09-04
 tags: [content, schema]
 ---

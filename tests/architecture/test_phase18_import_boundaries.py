@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import os
+from collections import Counter
 
 
 def _type_checking_lines(tree: ast.AST) -> set[int]:
@@ -45,6 +46,53 @@ def _names_as_written(node: ast.ImportFrom) -> tuple[str, ...]:
         alias.name if alias.asname is None else f"{alias.name} as {alias.asname}"
         for alias in node.names
     ))
+
+
+PinnedKey = tuple[str, str, tuple[str, ...]]
+
+
+def _count_boundary_imports(root_dir: str, module_prefix: str) -> Counter[PinnedKey]:
+    seen: Counter[PinnedKey] = Counter()
+    for path, rel_path in _iter_py_files(root_dir):
+        tree = _parse(path)
+        skip_lines = _type_checking_lines(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if node.lineno in skip_lines:
+                continue
+            if not (node.module and node.module.startswith(module_prefix)):
+                continue
+            seen[(rel_path, node.module, _names_as_written(node))] += 1
+    return seen
+
+
+def _assert_pinned_exactly(
+    seen: Counter[PinnedKey], pinned: dict[PinnedKey, int], boundary_label: str
+) -> None:
+    for key, count in seen.items():
+        rel_path, module, names = key
+        expected = pinned.get(key)
+        assert expected is not None, (
+            f"{rel_path} imports {module} ({names}) crossing the {boundary_label} boundary "
+            f"but is not one of the pinned grandfathered exceptions -- if this is a "
+            f"deliberate, reviewed addition, pin it in this test and in "
+            f"docs/audits/D14_coupling_depth.md"
+        )
+        assert count == expected, (
+            f"{rel_path} imports {module} ({names}) {count} time(s) but the pin expects "
+            f"{expected} -- a higher count is a new duplicate of a pinned import, a lower "
+            f"count is a stale pin; update the pin deliberately in this test and in "
+            f"docs/audits/D14_coupling_depth.md if this is intended"
+        )
+    for key, expected in pinned.items():
+        rel_path, module, names = key
+        assert seen[key] == expected, (
+            f"pinned {boundary_label} exception {rel_path} ({module}, {names}) expects "
+            f"{expected} occurrence(s) but {seen[key]} were found -- a removed or changed "
+            f"import must be un-pinned deliberately in this test and in "
+            f"docs/audits/D14_coupling_depth.md, not left as a silent permission"
+        )
 
 
 def test_entity_models_do_not_import_domain_services():
@@ -166,119 +214,230 @@ def test_observability_domains_systems_import_allowlist():
 # pure SimulationEvent dataclass, guarded by an event-recorder-present check immediately
 # above. Expanding this set requires updating both this test and
 # docs/audits/D14_coupling_depth.md's Coupling Inventory together -- not a silent addition.
-# Line 437->440 re-pinned by TCK-20260905-FAME-DERIVER-LEGEND-FACT: adding the
-# FameExporter.export() call/import in orchestrator.py._advance_state() shifted this line
-# down by 3, per the sibling Fidelity ticket's own documented collateral-drift lesson.
-# Line 447->487 re-pinned by TCK-20260909-CAMPAIGN-CATALOG-ENTITY-SPAWN-WIRING: adding
-# CatalogRepository/WorldModuleRepository/CatalogScenarioStateBuilder construction to
-# __init__() and the entity-spawn/scatter call in _build_initial_state() shifted this line
-# down by 40, same collateral-drift pattern as above -- the import itself is unchanged.
-_DOMAINS_OBSERVABILITY_PINNED = {
-    ("src/domains/campaigns/narrative_ledger.py", 71): (
-        "src.observability.events", ("SimulationEvent",),
-    ),
-    ("src/domains/campaigns/orchestrator.py", 487): (
-        "src.observability.events", ("SimulationEvent",),
-    ),
+# Keyed by (rel_path, module, names) with an exact expected count, not (rel_path, lineno):
+# TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE, so an unrelated line-shifting
+# edit above a pinned import no longer breaks the pin. This superseded a line-keyed re-pin that
+# landed on `main` after this branch diverged (orchestrator.py's import moved 487->498 during
+# the "Dormant-mechanism follow-ups" Batch C arc, commit ef3ac48f) -- the content key below
+# doesn't care, since the module/names pair is unchanged.
+_DOMAINS_OBSERVABILITY_PINNED: dict[PinnedKey, int] = {
+    ("src/domains/campaigns/narrative_ledger.py", "src.observability.events", ("SimulationEvent",)): 1,
+    ("src/domains/campaigns/orchestrator.py", "src.observability.events", ("SimulationEvent",)): 1,
 }
 
 
 def test_domains_do_not_import_observability_outside_pinned_exceptions():
-    for path, rel_path in _iter_py_files("src/domains"):
-        tree = _parse(path)
-        skip_lines = _type_checking_lines(tree)
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
-                continue
-            if node.lineno in skip_lines:
-                continue
-            if not (node.module and node.module.startswith("src.observability")):
-                continue
-            key = (rel_path, node.lineno)
-            pinned = _DOMAINS_OBSERVABILITY_PINNED.get(key)
-            assert pinned is not None, (
-                f"{rel_path}:{node.lineno} imports from src.observability ({node.module}) "
-                f"but is not one of the pinned grandfathered exceptions -- domains must not "
-                f"import observability; if this is a deliberate, reviewed addition, pin it "
-                f"in this test and in docs/audits/D14_coupling_depth.md"
-            )
-            assert (node.module, _names_as_written(node)) == pinned, (
-                f"{rel_path}:{node.lineno} is a pinned exception but its import target "
-                f"changed to ({node.module}, {_names_as_written(node)}) -- update the pin "
-                f"deliberately in this test and in docs/audits/D14_coupling_depth.md if this "
-                f"is intended"
-            )
+    seen = _count_boundary_imports("src/domains", "src.observability")
+    _assert_pinned_exactly(seen, _DOMAINS_OBSERVABILITY_PINNED, "domains -> observability")
 
 
 # TCK-20260817-ARCHITECTURE-BOUNDARY-HARDENING-EPIC: pinned grandfathered exceptions to the
 # `systems -> engine` boundary, confirmed exhaustively by direct read of the 5 files below.
 # Expanding this set requires updating both this test and
 # docs/audits/D14_coupling_depth.md's Coupling Inventory together -- not a silent addition.
-_SYSTEMS_ENGINE_PINNED = {
-    ("src/systems/strategic_systems/intelligence.py", 70): (
-        "src.engine.policy", ("GovernorPolicy",),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 76): (
-        "src.engine.spatial_query", ("SpatialQueryService",),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 79): (
-        "src.engine.cadence", ("SystemCadence", "should_run"),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 84): (
-        "src.engine.domain_logic", ("SimulationDomainLogic",),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 663): (
-        "src.engine.cadence", ("should_run",),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 828): (
-        "src.engine.domain_logic", ("SimulationDomainLogic",),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 832): (
-        "src.engine.cadence", ("SystemCadence as DefaultCadence", "should_run"),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 904): (
-        "src.engine.cadence", ("SystemCadence as DefaultCadence", "should_run"),
-    ),
-    ("src/systems/strategic_systems/intelligence.py", 957): (
-        "src.engine.cognition", ("AppraisalSystem",),
-    ),
-    ("src/systems/strategic_systems/detour.py", 22): (
-        "src.engine.domain.lead_routing", ("LeadRoutingSystem",),
-    ),
-    ("src/systems/strategic_systems/redirection.py", 25): (
-        "src.engine.cadence", ("SystemCadence", "should_run"),
-    ),
-    ("src/systems/economy_systems/market.py", 50): (
-        "src.engine.legality", ("LegalityServiceV2",),
-    ),
-    ("src/systems/world_systems/routine.py", 180): (
-        "src.engine.legality", ("LegalityServiceV2",),
-    ),
+# Keyed by (rel_path, module, names) with an exact expected count, not (rel_path, lineno):
+# TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE, so an unrelated line-shifting
+# edit above a pinned import no longer breaks the pin. Two keys are genuinely duplicated
+# within intelligence.py and carry expected_count 2, not 1 -- do not "fix" these back to 1:
+# `SystemCadence as DefaultCadence, should_run` at lines 832 and 904, and `SimulationDomainLogic`
+# from src.engine.domain_logic at lines 84 and 828.
+_SYSTEMS_ENGINE_PINNED: dict[PinnedKey, int] = {
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.policy", ("GovernorPolicy",)): 1,
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.spatial_query", ("SpatialQueryService",)): 1,
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.cadence", ("SystemCadence", "should_run")): 1,
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.domain_logic", ("SimulationDomainLogic",)): 2,
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.cadence", ("should_run",)): 1,
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.cadence", ("SystemCadence as DefaultCadence", "should_run")): 2,
+    ("src/systems/strategic_systems/intelligence.py", "src.engine.cognition", ("AppraisalSystem",)): 1,
+    ("src/systems/strategic_systems/detour.py", "src.engine.domain.lead_routing", ("LeadRoutingSystem",)): 1,
+    ("src/systems/strategic_systems/redirection.py", "src.engine.cadence", ("SystemCadence", "should_run")): 1,
+    ("src/systems/economy_systems/market.py", "src.engine.legality", ("LegalityServiceV2",)): 1,
+    ("src/systems/world_systems/routine.py", "src.engine.legality", ("LegalityServiceV2",)): 1,
 }
 
 
 def test_systems_do_not_import_engine_outside_pinned_exceptions():
-    for path, rel_path in _iter_py_files("src/systems"):
-        tree = _parse(path)
-        skip_lines = _type_checking_lines(tree)
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom):
-                continue
-            if node.lineno in skip_lines:
-                continue
-            if not (node.module and node.module.startswith("src.engine")):
-                continue
-            key = (rel_path, node.lineno)
-            pinned = _SYSTEMS_ENGINE_PINNED.get(key)
-            assert pinned is not None, (
-                f"{rel_path}:{node.lineno} imports from src.engine ({node.module}) but is "
-                f"not one of the 13 pinned grandfathered exceptions -- systems must not "
-                f"import engine; if this is a deliberate, reviewed addition, pin it in this "
-                f"test and in docs/audits/D14_coupling_depth.md"
-            )
-            assert (node.module, _names_as_written(node)) == pinned, (
-                f"{rel_path}:{node.lineno} is a pinned exception but its import target "
-                f"changed to ({node.module}, {_names_as_written(node)}) -- update the pin "
-                f"deliberately in this test and in docs/audits/D14_coupling_depth.md if this "
-                f"is intended"
-            )
+    seen = _count_boundary_imports("src/systems", "src.engine")
+    _assert_pinned_exactly(seen, _SYSTEMS_ENGINE_PINNED, "systems -> engine")
+
+
+# TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE: the tests below prove the new
+# content-keyed scheme against synthetic tmp_path trees, never against src/. Each builds a
+# minimal python file, chdir's into the tmp tree so _iter_py_files' os.path.relpath() produces
+# clean src/... rel_paths, and exercises _count_boundary_imports/_assert_pinned_exactly directly.
+
+
+def test_domains_observability_pin_survives_line_shift(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "domains" / "campaigns"
+    pkg.mkdir(parents=True)
+    (pkg / "narrative_ledger.py").write_text(
+        "\n".join(f"# unrelated collateral line {i}" for i in range(20)) + "\n"
+        "def emit_chronicle_event(self):\n"
+        "    from src.observability.events import SimulationEvent\n"
+        "    return SimulationEvent\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/domains", "src.observability")
+    pinned: dict[PinnedKey, int] = {
+        ("src/domains/campaigns/narrative_ledger.py", "src.observability.events", ("SimulationEvent",)): 1,
+    }
+    _assert_pinned_exactly(seen, pinned, "domains -> observability")
+
+
+def test_systems_engine_pin_survives_line_shift(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "systems" / "strategic_systems"
+    pkg.mkdir(parents=True)
+    (pkg / "intelligence.py").write_text(
+        "\n".join(f"# unrelated collateral line {i}" for i in range(40)) + "\n"
+        "from src.engine.policy import GovernorPolicy\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/systems", "src.engine")
+    pinned: dict[PinnedKey, int] = {
+        ("src/systems/strategic_systems/intelligence.py", "src.engine.policy", ("GovernorPolicy",)): 1,
+    }
+    _assert_pinned_exactly(seen, pinned, "systems -> engine")
+
+
+def test_domains_new_unpinned_observability_import_fails(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "domains" / "campaigns"
+    pkg.mkdir(parents=True)
+    (pkg / "narrative_ledger.py").write_text(
+        "from src.observability.events import SimulationEvent\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/domains", "src.observability")
+    try:
+        _assert_pinned_exactly(seen, {}, "domains -> observability")
+    except AssertionError:
+        return
+    assert False, "expected an unpinned src.observability import to fail"
+
+
+def test_domains_pinned_import_content_change_fails(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "domains" / "campaigns"
+    pkg.mkdir(parents=True)
+    (pkg / "narrative_ledger.py").write_text(
+        "from src.observability.events import OtherEvent\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/domains", "src.observability")
+    pinned: dict[PinnedKey, int] = {
+        ("src/domains/campaigns/narrative_ledger.py", "src.observability.events", ("SimulationEvent",)): 1,
+    }
+    try:
+        _assert_pinned_exactly(seen, pinned, "domains -> observability")
+    except AssertionError:
+        return
+    assert False, "expected a changed import target to fail as unpinned"
+
+
+def test_domains_pinned_import_copied_to_different_file_fails(tmp_path, monkeypatch):
+    campaigns = tmp_path / "src" / "domains" / "campaigns"
+    other = tmp_path / "src" / "domains" / "other_domain"
+    campaigns.mkdir(parents=True)
+    other.mkdir(parents=True)
+    (campaigns / "narrative_ledger.py").write_text(
+        "from src.observability.events import SimulationEvent\n"
+    )
+    (other / "copycat.py").write_text(
+        "from src.observability.events import SimulationEvent\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/domains", "src.observability")
+    pinned: dict[PinnedKey, int] = {
+        ("src/domains/campaigns/narrative_ledger.py", "src.observability.events", ("SimulationEvent",)): 1,
+    }
+    try:
+        _assert_pinned_exactly(seen, pinned, "domains -> observability")
+    except AssertionError:
+        return
+    assert False, (
+        "expected the same (module, names) copied into a different file to fail -- rel_path "
+        "must stay part of the key"
+    )
+
+
+def test_systems_engine_duplicate_beyond_expected_count_fails(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "systems" / "strategic_systems"
+    pkg.mkdir(parents=True)
+    (pkg / "intelligence.py").write_text(
+        "def a():\n"
+        "    from src.engine.cadence import SystemCadence as DefaultCadence, should_run\n"
+        "def b():\n"
+        "    from src.engine.cadence import SystemCadence as DefaultCadence, should_run\n"
+        "def c():\n"
+        "    from src.engine.cadence import SystemCadence as DefaultCadence, should_run\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/systems", "src.engine")
+    pinned: dict[PinnedKey, int] = {
+        (
+            "src/systems/strategic_systems/intelligence.py",
+            "src.engine.cadence",
+            ("SystemCadence as DefaultCadence", "should_run"),
+        ): 2,
+    }
+    try:
+        _assert_pinned_exactly(seen, pinned, "systems -> engine")
+    except AssertionError:
+        return
+    assert False, "expected a third copy of a count-2 pinned import to fail"
+
+
+def test_systems_engine_removed_duplicate_copy_fails(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "systems" / "strategic_systems"
+    pkg.mkdir(parents=True)
+    (pkg / "intelligence.py").write_text(
+        "def a():\n"
+        "    from src.engine.cadence import SystemCadence as DefaultCadence, should_run\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/systems", "src.engine")
+    pinned: dict[PinnedKey, int] = {
+        (
+            "src/systems/strategic_systems/intelligence.py",
+            "src.engine.cadence",
+            ("SystemCadence as DefaultCadence", "should_run"),
+        ): 2,
+    }
+    try:
+        _assert_pinned_exactly(seen, pinned, "systems -> engine")
+    except AssertionError:
+        return
+    assert False, (
+        "expected a pinned count-2 import with only 1 remaining occurrence to fail as a stale "
+        "pin, not silently pass"
+    )
+
+
+def test_systems_engine_second_copy_of_count_one_pin_fails(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "systems" / "strategic_systems"
+    pkg.mkdir(parents=True)
+    (pkg / "intelligence.py").write_text(
+        "from src.engine.policy import GovernorPolicy\n"
+        "from src.engine.policy import GovernorPolicy\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/systems", "src.engine")
+    pinned: dict[PinnedKey, int] = {
+        ("src/systems/strategic_systems/intelligence.py", "src.engine.policy", ("GovernorPolicy",)): 1,
+    }
+    try:
+        _assert_pinned_exactly(seen, pinned, "systems -> engine")
+    except AssertionError:
+        return
+    assert False, "expected a second copy of a count-1 pinned import to fail"
+
+
+def test_domains_observability_type_checking_import_still_skipped(tmp_path, monkeypatch):
+    pkg = tmp_path / "src" / "domains" / "campaigns"
+    pkg.mkdir(parents=True)
+    (pkg / "narrative_ledger.py").write_text(
+        "from typing import TYPE_CHECKING\n"
+        "if TYPE_CHECKING:\n"
+        "    from src.observability.event_recorder import EventRecorder\n"
+    )
+    monkeypatch.chdir(tmp_path)
+    seen = _count_boundary_imports("src/domains", "src.observability")
+    _assert_pinned_exactly(seen, {}, "domains -> observability")

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260616-DOCS-BATCH-OBS-TEST-COMBAT
-phase: open
+phase: done
 date: 2026-06-16
 tags: [documentation, readability, phase-language-removal, observability, testing, combat, systems]
 ---

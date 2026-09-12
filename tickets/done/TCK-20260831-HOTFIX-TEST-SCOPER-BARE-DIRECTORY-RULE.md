@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260831-HOTFIX-TEST-SCOPER-BARE-DIRECTORY-RULE
-phase: open
+phase: done
 date: 2026-08-31
 tags: [architecture]
 ---

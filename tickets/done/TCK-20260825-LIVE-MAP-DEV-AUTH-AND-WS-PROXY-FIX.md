@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: frontend
 authority: P1
 audience: agent
 ticket_id: TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX
-phase: open
+phase: done
 date: 2026-08-25
 tags: [websocket, setup]
 ---

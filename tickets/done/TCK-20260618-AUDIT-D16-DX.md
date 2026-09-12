@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20260618-AUDIT-D16-DX
-phase: open
+phase: done
 date: 2026-06-18
 tags: [audit, dx, scenario-authoring, content-authoring, developer-experience]
 ---

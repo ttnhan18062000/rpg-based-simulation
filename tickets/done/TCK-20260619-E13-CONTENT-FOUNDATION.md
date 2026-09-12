@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E13-CONTENT-FOUNDATION
-phase: epic_scoped
+phase: done
 date: 2026-06-20
 tags: [content, quest-definitions, crafting-recipes, world-modules, scenarios, epic, phase-1]
 ---

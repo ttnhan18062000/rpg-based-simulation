@@ -198,6 +198,8 @@ Frontmatter block is required as the first element. Fill `layer` and `tags` base
 
 `layer` and `tags` are both registry-backed and append-only, but differ in shape: `layer` is single-value and uncategorized (it *is* the subsystem-topic dimension itself), `tags` is multi-value and split into 4 taxonomy categories (Subsystem/Topic, Process/Skill-signal, Phase/Milestone, Quality-attribute — see `docs/guidelines/tag_taxonomy.md`). `## Tier` (`hotfix | standard | epic`) and `## Status` (`OPEN | INPROGRESS | BLOCKED | DONE`, plus `EPIC_SCOPED` for epic-tier tickets) are ticket-*body* fields, not frontmatter — validated by a separate mechanism, `tools/ticket_field_values.py`, since body sections are parsed differently from frontmatter (see that module's docstring). `## Priority` is body-field too, values `P0 | P1 | P2 | P3`.
 
+**Frontmatter `status`/`phase` must also agree with the ticket's physical location**, not just be individually valid enum values: a ticket in `tickets/done/` requires `status: historical` + `phase: done`; a ticket in `tickets/inprogress/` must never have `phase: done`. `tools/validate_frontmatter.py::check_ticket_location_consistency()` enforces this (wired into `done_checker`'s `frontmatter_valid` condition, plus a corpus test over all of `tickets/done/`) — added by `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT` after finding 395 `tickets/done/*.md` files where each field was enum-valid alone but disagreed with the directory. See `docs/guidelines/frontmatter_schema.md`'s ticket section for the full rule.
+
 ---
 
 ## Testing Rule

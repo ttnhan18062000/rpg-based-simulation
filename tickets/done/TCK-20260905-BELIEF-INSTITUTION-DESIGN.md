@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260905-BELIEF-INSTITUTION-DESIGN
-phase: open
+phase: done
 date: 2026-09-05
 tags: [social, strategy]
 ---

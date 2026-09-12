@@ -1,0 +1,5162 @@
+[
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "HarvestAction",
+    "file": "src/actions/harvest.py",
+    "line": 6,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "LootAction",
+    "file": "src/actions/loot.py",
+    "line": 6,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "admission_status",
+    "file": "src/api/admission_control.py",
+    "line": 232,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "list_tickets",
+    "file": "src/api/agent_ops_dashboard/main.py",
+    "line": 35,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "list_run_timelines",
+    "file": "src/api/agent_ops_dashboard/main.py",
+    "line": 78,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_run_timeline",
+    "file": "src/api/agent_ops_dashboard/main.py",
+    "line": 96,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "ReadModelService",
+    "file": "src/api/read_model_service.py",
+    "line": 8,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_behavior_events",
+    "file": "src/api/routes/behavior.py",
+    "line": 21,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_entity_behavior_timeline",
+    "file": "src/api/routes/behavior.py",
+    "line": 54,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_entity_behavior_episodes",
+    "file": "src/api/routes/behavior.py",
+    "line": 78,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_run_behavior_scorecard",
+    "file": "src/api/routes/behavior.py",
+    "line": 108,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_run_behavior_insights",
+    "file": "src/api/routes/behavior.py",
+    "line": 127,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_run_cohorts",
+    "file": "src/api/routes/behavior.py",
+    "line": 143,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "compare_run_behavior",
+    "file": "src/api/routes/behavior.py",
+    "line": 159,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "unregister_campaign",
+    "file": "src/api/routes/campaigns.py",
+    "line": 56,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_settlement_personality",
+    "file": "src/api/routes/campaigns.py",
+    "line": 153,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "unregister_chronicle",
+    "file": "src/api/routes/chronicle.py",
+    "line": 52,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_chronicle",
+    "file": "src/api/routes/chronicle.py",
+    "line": 79,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_era_summary",
+    "file": "src/api/routes/chronicle.py",
+    "line": 118,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_entity_decisions",
+    "file": "src/api/routes/decisions.py",
+    "line": 56,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_entity_decisions_range",
+    "file": "src/api/routes/decisions.py",
+    "line": 76,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_entity_decisions_summary",
+    "file": "src/api/routes/decisions.py",
+    "line": 104,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_economy_health",
+    "file": "src/api/routes/economy.py",
+    "line": 28,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_sweep",
+    "file": "src/api/routes/history.py",
+    "line": 81,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_map",
+    "file": "src/api/routes/map.py",
+    "line": 24,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_enums",
+    "file": "src/api/routes/metadata.py",
+    "line": 28,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_items",
+    "file": "src/api/routes/metadata.py",
+    "line": 33,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_classes",
+    "file": "src/api/routes/metadata.py",
+    "line": 38,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_traits",
+    "file": "src/api/routes/metadata.py",
+    "line": 43,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_attributes",
+    "file": "src/api/routes/metadata.py",
+    "line": 48,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_buildings",
+    "file": "src/api/routes/metadata.py",
+    "line": 53,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_resources",
+    "file": "src/api/routes/metadata.py",
+    "line": 58,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_recipes",
+    "file": "src/api/routes/metadata.py",
+    "line": 63,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_scenario_status",
+    "file": "src/api/routes/scenarios.py",
+    "line": 48,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "create_checkpoint",
+    "file": "src/api/routes/scenarios.py",
+    "line": 57,
+    "decorators": [
+      "post"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "restore_checkpoint",
+    "file": "src/api/routes/scenarios.py",
+    "line": 73,
+    "decorators": [
+      "post"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "search_runs",
+    "file": "src/api/routes/search.py",
+    "line": 28,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "search_events",
+    "file": "src/api/routes/search.py",
+    "line": 74,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "search_anomalies",
+    "file": "src/api/routes/search.py",
+    "line": 131,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_metric_trend",
+    "file": "src/api/routes/search.py",
+    "line": 273,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_static",
+    "file": "src/api/routes/static.py",
+    "line": 27,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "stream_ws",
+    "file": "src/api/ws/stream.py",
+    "line": 19,
+    "decorators": [
+      "websocket"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "stream_observe_ws",
+    "file": "src/api/ws/stream.py",
+    "line": 91,
+    "decorators": [
+      "websocket"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "stream_live_events_ws",
+    "file": "src/api/ws/stream.py",
+    "line": 157,
+    "decorators": [
+      "websocket"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "CertificationHarness",
+    "file": "src/certification/harness.py",
+    "line": 33,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "PressureInjector",
+    "file": "src/certification/scenarios.py",
+    "line": 9,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_scenario_expectations",
+    "file": "src/certification/scenarios.py",
+    "line": 540,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "effective_certainty",
+    "file": "src/cognition/knowledge_model.py",
+    "line": 137,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "generate_matrix_report",
+    "file": "src/content/matrix.py",
+    "line": 729,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "validate_matrix_evidence",
+    "file": "src/content/validator.py",
+    "line": 62,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "ActionProposal",
+    "file": "src/core/actions.py",
+    "line": 10,
+    "decorators": [
+      "dataclass"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "fantasy_years_to_ticks",
+    "file": "src/core/calendar.py",
+    "line": 16,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_self_awareness",
+    "file": "src/core/cognition_accessors.py",
+    "line": 12,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_need_interpretation",
+    "file": "src/core/cognition_accessors.py",
+    "line": 16,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_capability_estimate",
+    "file": "src/core/cognition_accessors.py",
+    "line": 20,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_knowledge_model",
+    "file": "src/core/cognition_accessors.py",
+    "line": 24,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "Degradable",
+    "file": "src/core/contracts.py",
+    "line": 18,
+    "decorators": [
+      "runtime_checkable"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "KernelContractError",
+    "file": "src/core/contracts.py",
+    "line": 26,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DiagnosticReport",
+    "file": "src/core/diagnostic.py",
+    "line": 20,
+    "decorators": [
+      "dataclass"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "CandidateSelector",
+    "file": "src/core/dirty.py",
+    "line": 477,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MovementIntention",
+    "file": "src/core/enums.py",
+    "line": 39,
+    "decorators": [
+      "unique"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "to_export_state",
+    "file": "src/core/export.py",
+    "line": 37,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "StateSerializer",
+    "file": "src/core/serialization.py",
+    "line": 9,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "CampaignReportGenerator",
+    "file": "src/domains/campaigns/reports.py",
+    "line": 12,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "SimulationAnalysisRunner",
+    "file": "src/domains/campaigns/runner.py",
+    "line": 29,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "CampaignPlaceholder",
+    "file": "src/domains/campaigns/schema.py",
+    "line": 14,
+    "decorators": [
+      "dataclass"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "CampaignSpecLoader",
+    "file": "src/domains/campaigns/spec.py",
+    "line": 12,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "PartnerCandidateConsideredEvent",
+    "file": "src/domains/cooperation/events.py",
+    "line": 21,
+    "decorators": [
+      "dataclass"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "CooperationOutcomeLearnedEvent",
+    "file": "src/domains/cooperation/events.py",
+    "line": 57,
+    "decorators": [
+      "dataclass"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "PhaseBudgetManager",
+    "file": "src/domains/optimization/budget_manager.py",
+    "line": 23,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DeveloperDiagnostics",
+    "file": "src/domains/optimization/diagnostics.py",
+    "line": 11,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DirtyWorkScheduler",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 3,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MemoryCapacityLimits",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 10,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "ProviderBudgetEnforcement",
+    "file": "src/domains/optimization/provider_enforcement.py",
+    "line": 10,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "TraceVolumeGovernor",
+    "file": "src/domains/optimization/trace_governor.py",
+    "line": 12,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "RewardLedgerService",
+    "file": "src/domains/progression/ledger.py",
+    "line": 13,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_registry",
+    "file": "src/engine/capability.py",
+    "line": 48,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "_readonly_state_view",
+    "file": "src/engine/executor.py",
+    "line": 34,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MovementPlanCache",
+    "file": "src/engine/movement_cache.py",
+    "line": 27,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "ReadinessEvaluator",
+    "file": "src/engine/readiness.py",
+    "line": 7,
+    "decorators": [
+      "runtime_checkable"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DefaultReadinessEvaluator",
+    "file": "src/engine/readiness.py",
+    "line": 16,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DiscoveryService",
+    "file": "src/engine/rpg_depth.py",
+    "line": 234,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "TargetStickinessService",
+    "file": "src/engine/rpg_depth.py",
+    "line": 276,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "SemanticEntityQuery",
+    "file": "src/engine/semantic_entity_index.py",
+    "line": 188,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "TickContext",
+    "file": "src/engine/tick.py",
+    "line": 12,
+    "decorators": [
+      "dataclass"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "set_logging_context",
+    "file": "src/logging/formatter.py",
+    "line": 11,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "register_exporter",
+    "file": "src/observability/analytics/exporter.py",
+    "line": 582,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "SamplingPolicy",
+    "file": "src/observability/budget/budget_profile.py",
+    "line": 47,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DeflationRiskEvent",
+    "file": "src/observability/events.py",
+    "line": 193,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "EconomicCollapseEvent",
+    "file": "src/observability/events.py",
+    "line": 233,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "NemesisRelationFormedEvent",
+    "file": "src/observability/events.py",
+    "line": 514,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "LiveAnomalyCounters",
+    "file": "src/observability/live/anomaly_counter.py",
+    "line": 8,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DataCompletenessAuditor",
+    "file": "src/observability/mining/auditor.py",
+    "line": 13,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "DeterminismAuditor",
+    "file": "src/observability/mining/auditor.py",
+    "line": 132,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MiningExperimentController",
+    "file": "src/observability/mining/controller.py",
+    "line": 135,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MiningDatasetBuilder",
+    "file": "src/observability/mining/dataset.py",
+    "line": 191,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "EvidencePackBuilder",
+    "file": "src/observability/mining/evidence.py",
+    "line": 13,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "AIAgentInvestigationRunner",
+    "file": "src/observability/mining/orchestrator.py",
+    "line": 50,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "PatternMiningEngine",
+    "file": "src/observability/mining/patterns.py",
+    "line": 15,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "EngineeringBacklogGenerator",
+    "file": "src/observability/mining/priority.py",
+    "line": 42,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "NextExperimentRecommender",
+    "file": "src/observability/mining/recommender.py",
+    "line": 58,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MiningReviewWorkflow",
+    "file": "src/observability/mining/workflow.py",
+    "line": 13,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "MiningQualityGate",
+    "file": "src/observability/mining/workflow.py",
+    "line": 83,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_observability_queue",
+    "file": "src/observability/queue.py",
+    "line": 172,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_or_start_global_worker",
+    "file": "src/observability/queue.py",
+    "line": 181,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_active_global_worker_count",
+    "file": "src/observability/queue.py",
+    "line": 196,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "LongRunStabilityHarness",
+    "file": "src/perf/long_run_harness.py",
+    "line": 114,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "PerfRegressionGate",
+    "file": "src/perf/regression_gate.py",
+    "line": 71,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "average_scores",
+    "file": "src/rendering/grading.py",
+    "line": 169,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "IncrementalRenderer",
+    "file": "src/rendering/incremental.py",
+    "line": 25,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "dirty_entity_ids_for_render",
+    "file": "src/rendering/incremental.py",
+    "line": 145,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "compute_trail_activity",
+    "file": "src/rendering/variants.py",
+    "line": 63,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "ModifierApplicator",
+    "file": "src/scenarios/modifier_applicator.py",
+    "line": 51,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_quality_status",
+    "file": "src/simulation_quality/api/routes.py",
+    "line": 36,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_quality_pillars",
+    "file": "src/simulation_quality/api/routes.py",
+    "line": 57,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_quality_pillar_detail",
+    "file": "src/simulation_quality/api/routes.py",
+    "line": 81,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "get_quality_alerts",
+    "file": "src/simulation_quality/api/routes.py",
+    "line": 130,
+    "decorators": [
+      "get"
+    ],
+    "exclusion": "fastapi_route",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "QualityFeedMode",
+    "file": "src/simulation_quality/feed.py",
+    "line": 13,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "LeadService",
+    "file": "src/strategy/leads.py",
+    "line": 7,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "GroupService",
+    "file": "src/systems/social_systems/group_service.py",
+    "line": 5,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "function",
+    "class": null,
+    "name": "build_reward_transfer_intents",
+    "file": "src/systems/social_systems/reward_distribution.py",
+    "line": 84,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "BlacksmithAction",
+    "file": "src/town/blacksmith.py",
+    "line": 68,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "HomeAction",
+    "file": "src/town/home.py",
+    "line": 6,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "HomeStorageAction",
+    "file": "src/town/home_storage.py",
+    "line": 87,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "InnAction",
+    "file": "src/town/inn.py",
+    "line": 7,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "ShopAction",
+    "file": "src/town/shop.py",
+    "line": 112,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "GuideInformationProvider",
+    "file": "src/world/providers/information.py",
+    "line": 34,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "BlacksmithInformationProvider",
+    "file": "src/world/providers/information.py",
+    "line": 108,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "GuildInformationProvider",
+    "file": "src/world/providers/information.py",
+    "line": 144,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "RegionThreatClassifier",
+    "file": "src/world/region_threat_classifier.py",
+    "line": 26,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 1,
+    "kind": "class",
+    "class": null,
+    "name": "RegionService",
+    "file": "src/world/regions.py",
+    "line": 10,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "HarvestAction",
+    "name": "start_harvest",
+    "file": "src/actions/harvest.py",
+    "line": 10,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LootAction",
+    "name": "start_loot",
+    "file": "src/actions/loot.py",
+    "line": 10,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EngineManager",
+    "name": "is_stopped",
+    "file": "src/api/engine_manager.py",
+    "line": 354,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReadModelService",
+    "name": "world_full",
+    "file": "src/api/read_model_service.py",
+    "line": 23,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReadModelService",
+    "name": "entity_status",
+    "file": "src/api/read_model_service.py",
+    "line": 27,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReadModelService",
+    "name": "entities_paged",
+    "file": "src/api/read_model_service.py",
+    "line": 35,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CertificationHarness",
+    "name": "run_scenario",
+    "file": "src/certification/harness.py",
+    "line": 64,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CertificationResult",
+    "name": "to_json",
+    "file": "src/certification/models.py",
+    "line": 278,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PressureInjector",
+    "name": "inject_entities",
+    "file": "src/certification/scenarios.py",
+    "line": 13,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PressureInjector",
+    "name": "inject_work_debt",
+    "file": "src/certification/scenarios.py",
+    "line": 33,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ArenaInjector",
+    "name": "register_all",
+    "file": "src/certification/scenarios.py",
+    "line": 397,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CapabilityContext",
+    "name": "for_crafting",
+    "file": "src/cognition/capability_estimate.py",
+    "line": 54,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RuntimeProfile",
+    "name": "name_must_not_be_empty",
+    "file": "src/config/profiles.py",
+    "line": 72,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentPackManifest",
+    "name": "_require_at_least_one_consumer",
+    "file": "src/content/pack_manifest.py",
+    "line": 39,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentPackManifestValidator",
+    "name": "validate_or_raise",
+    "file": "src/content/pack_manifest.py",
+    "line": 84,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentReferenceGraph",
+    "name": "get_outgoing_neighbors",
+    "file": "src/content/reference_graph.py",
+    "line": 204,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_species_relationship",
+    "file": "src/content/repository.py",
+    "line": 483,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_terrain",
+    "file": "src/content/repository.py",
+    "line": 489,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_spawn_table",
+    "file": "src/content/repository.py",
+    "line": 513,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_class_table",
+    "file": "src/content/repository.py",
+    "line": 516,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_default_profile",
+    "file": "src/content/repository.py",
+    "line": 519,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_all_ids_by_type",
+    "file": "src/content/repository.py",
+    "line": 526,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CatalogRepository",
+    "name": "get_deprecated_ids",
+    "file": "src/content/repository.py",
+    "line": 566,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FoundationResolver",
+    "name": "resolve_element",
+    "file": "src/content/resolver.py",
+    "line": 118,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FoundationResolver",
+    "name": "resolve_relationship_axis",
+    "file": "src/content/resolver.py",
+    "line": 125,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FoundationResolver",
+    "name": "resolve_materials",
+    "file": "src/content/resolver.py",
+    "line": 148,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SocialDefaultsResolver",
+    "name": "resolve_faction_relationship",
+    "file": "src/content/resolver.py",
+    "line": 302,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PopulationRecipeResolver",
+    "name": "resolve_all_members",
+    "file": "src/content/resolver.py",
+    "line": 596,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpeciesDefinition",
+    "name": "validate_intelligence_tier",
+    "file": "src/content/schema.py",
+    "line": 149,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FactionDefinition",
+    "name": "validate_legacy_bucket",
+    "file": "src/content/schema.py",
+    "line": 172,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleDefinition",
+    "name": "validate_legacy_role",
+    "file": "src/content/schema.py",
+    "line": 190,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentWarmupService",
+    "name": "is_warm",
+    "file": "src/content/warmup.py",
+    "line": 51,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FactionSemanticsService",
+    "name": "get_influence_role",
+    "file": "src/content_semantics/faction.py",
+    "line": 113,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleSemanticsService",
+    "name": "get_default_inventory_profile",
+    "file": "src/content_semantics/role.py",
+    "line": 52,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleSemanticsService",
+    "name": "get_default_cognition_profile",
+    "file": "src/content_semantics/role.py",
+    "line": 56,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_cognition",
+    "file": "src/core/builder.py",
+    "line": 132,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_strategic",
+    "file": "src/core/builder.py",
+    "line": 801,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_social",
+    "file": "src/core/builder.py",
+    "line": 805,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_biological",
+    "file": "src/core/builder.py",
+    "line": 809,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_attributes",
+    "file": "src/core/builder.py",
+    "line": 817,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_aptitude",
+    "file": "src/core/builder.py",
+    "line": 821,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_equipment",
+    "file": "src/core/builder.py",
+    "line": 825,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_interaction",
+    "file": "src/core/builder.py",
+    "line": 829,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_task",
+    "file": "src/core/builder.py",
+    "line": 833,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_stamina",
+    "file": "src/core/builder.py",
+    "line": 837,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "V2EntityBuilder",
+    "name": "replace_self_model",
+    "file": "src/core/builder.py",
+    "line": 841,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtySet",
+    "name": "from_update",
+    "file": "src/core/dirty.py",
+    "line": 245,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "InventoryService",
+    "name": "can_equip_item",
+    "file": "src/core/inventory.py",
+    "line": 125,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestState",
+    "name": "is_finished",
+    "file": "src/core/models/quests.py",
+    "line": 62,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RecipeRegistry",
+    "name": "get_all",
+    "file": "src/core/recipes.py",
+    "line": 47,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StateSerializer",
+    "name": "deserialize",
+    "file": "src/core/serialization.py",
+    "line": 29,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkItem",
+    "name": "is_deferrable",
+    "file": "src/core/work.py",
+    "line": 39,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CampaignOrchestrator",
+    "name": "describe_settlement_personality",
+    "file": "src/domains/campaigns/orchestrator.py",
+    "line": 207,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CampaignOrchestrator",
+    "name": "_get_spawn_entities",
+    "file": "src/domains/campaigns/orchestrator.py",
+    "line": 935,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CampaignOrchestrator",
+    "name": "_get_spawn_factions",
+    "file": "src/domains/campaigns/orchestrator.py",
+    "line": 943,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FactionSocialMemoryExporter",
+    "name": "build_from_events",
+    "file": "src/domains/campaigns/social_memory.py",
+    "line": 162,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CampaignSpecLoader",
+    "name": "load_from_yaml",
+    "file": "src/domains/campaigns/spec.py",
+    "line": 14,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CommitmentReputationRouteImpact",
+    "name": "apply_route_bias",
+    "file": "src/domains/commitment/impact.py",
+    "line": 15,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CommitmentReputationRouteImpact",
+    "name": "apply_partner_fit_bias",
+    "file": "src/domains/commitment/impact.py",
+    "line": 31,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CommitmentPressureService",
+    "name": "compute_pressure",
+    "file": "src/domains/commitment/pressure.py",
+    "line": 14,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "OpportunityCostEvaluator",
+    "name": "evaluate_cost",
+    "file": "src/domains/emotion/opportunity_cost.py",
+    "line": 13,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RecoveryReadinessService",
+    "name": "is_ready_to_retry",
+    "file": "src/domains/emotion/recovery_service.py",
+    "line": 15,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RecoveryReadinessService",
+    "name": "register_near_death",
+    "file": "src/domains/emotion/recovery_service.py",
+    "line": 23,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LegendFactService",
+    "name": "to_world_signal",
+    "file": "src/domains/fame/legend.py",
+    "line": 76,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FeaturePackManifest",
+    "name": "to_yaml_dict",
+    "file": "src/domains/feature_packs/manifest.py",
+    "line": 66,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BeliefRouteImpactService",
+    "name": "evaluate_impact",
+    "file": "src/domains/information/route_impact.py",
+    "line": 24,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpatialMemoryUpdateService",
+    "name": "record_resource_site",
+    "file": "src/domains/memory/spatial_update.py",
+    "line": 66,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleFitEvaluator",
+    "name": "evaluate_weapon",
+    "file": "src/domains/motivation/evaluator.py",
+    "line": 23,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleFitEvaluator",
+    "name": "evaluate_armor",
+    "file": "src/domains/motivation/evaluator.py",
+    "line": 27,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleFitEvaluator",
+    "name": "evaluate_skill",
+    "file": "src/domains/motivation/evaluator.py",
+    "line": 31,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleFitEvaluator",
+    "name": "evaluate_party_role",
+    "file": "src/domains/motivation/evaluator.py",
+    "line": 35,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RoleFitEvaluator",
+    "name": "evaluate_quest",
+    "file": "src/domains/motivation/evaluator.py",
+    "line": 39,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PhaseBudgetManager",
+    "name": "check_and_consume",
+    "file": "src/domains/optimization/budget_manager.py",
+    "line": 38,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GracefulDegradationManager",
+    "name": "get_level",
+    "file": "src/domains/optimization/degradation.py",
+    "line": 30,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GracefulDegradationManager",
+    "name": "update_pressure",
+    "file": "src/domains/optimization/degradation.py",
+    "line": 33,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GracefulDegradationManager",
+    "name": "get_provider_cap",
+    "file": "src/domains/optimization/degradation.py",
+    "line": 49,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GracefulDegradationManager",
+    "name": "should_skip_phase",
+    "file": "src/domains/optimization/degradation.py",
+    "line": 58,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DeveloperDiagnostics",
+    "name": "record_issue",
+    "file": "src/domains/optimization/diagnostics.py",
+    "line": 16,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "mark_entity_dirty",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 9,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "mark_region_dirty",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 14,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "is_entity_dirty",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 19,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "is_region_dirty",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 22,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "get_dirty_entities",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 25,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "get_dirty_regions",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 28,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "next_entities",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 31,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "next_regions",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 36,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "clear_processed_entities",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 40,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DirtyWorkScheduler",
+    "name": "clear_processed_regions",
+    "file": "src/domains/optimization/dirty_scheduler.py",
+    "line": 44,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FeatureFlagManager",
+    "name": "get_all_flags",
+    "file": "src/domains/optimization/feature_flags.py",
+    "line": 187,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FeatureFlagManager",
+    "name": "is_enabled",
+    "file": "src/domains/optimization/feature_flags.py",
+    "line": 197,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "FeatureFlagManager",
+    "name": "is_shadow",
+    "file": "src/domains/optimization/feature_flags.py",
+    "line": 200,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "add_fact",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 25,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "add_opponent",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 33,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "add_reward",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 40,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "add_coop_memory",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 47,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "get_facts",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 54,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "get_opponents",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 57,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "get_rewards",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 60,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "get_coop_memories",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 63,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MemoryCapacityLimits",
+    "name": "generate_eviction_report",
+    "file": "src/domains/optimization/memory_limits.py",
+    "line": 66,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ProviderBudgetEnforcement",
+    "name": "execute_call",
+    "file": "src/domains/optimization/provider_enforcement.py",
+    "line": 30,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TraceVolumeGovernor",
+    "name": "process_events",
+    "file": "src/domains/optimization/trace_governor.py",
+    "line": 20,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RewardLedgerService",
+    "name": "record_entry",
+    "file": "src/domains/progression/ledger.py",
+    "line": 22,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RewardLedgerService",
+    "name": "mark_consumed",
+    "file": "src/domains/progression/ledger.py",
+    "line": 54,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestOpportunityGenerator",
+    "name": "from_entity_need",
+    "file": "src/domains/world_emergence/services.py",
+    "line": 252,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ApplyPath",
+    "name": "apply_passive",
+    "file": "src/engine/apply.py",
+    "line": 517,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CacheRegistry",
+    "name": "deregister_cache",
+    "file": "src/engine/cache_registry.py",
+    "line": 104,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CacheRegistry",
+    "name": "get_all_metrics",
+    "file": "src/engine/cache_registry.py",
+    "line": 110,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CapabilityRegistry",
+    "name": "is_supported",
+    "file": "src/engine/capability.py",
+    "line": 24,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CapabilityRegistry",
+    "name": "all_capabilities",
+    "file": "src/engine/capability.py",
+    "line": 36,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CapabilityRegistry",
+    "name": "capabilities_by_status",
+    "file": "src/engine/capability.py",
+    "line": 40,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CombatResolutionSystem",
+    "name": "resolve_opportunity_attack",
+    "file": "src/engine/combat.py",
+    "line": 246,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ActionIntentAdapter",
+    "name": "get_traces",
+    "file": "src/engine/intent/action_intent.py",
+    "line": 42,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ActionIntentAdapter",
+    "name": "clear_traces",
+    "file": "src/engine/intent/action_intent.py",
+    "line": 46,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "InteractionSystem",
+    "name": "get_weight",
+    "file": "src/engine/interaction.py",
+    "line": 31,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "Kernel",
+    "name": "_get_deterministic_neighbor_view",
+    "file": "src/engine/kernel.py",
+    "line": 1350,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LegalityServiceV2",
+    "name": "verify_skill_legality",
+    "file": "src/engine/legality.py",
+    "line": 334,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LegalityServiceV2",
+    "name": "get_engagement_state",
+    "file": "src/engine/legality.py",
+    "line": 429,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MetricsService",
+    "name": "detect_strategy_shifts",
+    "file": "src/engine/metrics.py",
+    "line": 75,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MilitaryConflictPhase",
+    "name": "_find_guard_entities_in_region",
+    "file": "src/engine/military_conflict.py",
+    "line": 145,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "OccupancySnapshot",
+    "name": "is_occupied",
+    "file": "src/engine/occupancy_snapshot.py",
+    "line": 50,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReadinessEvaluator",
+    "name": "is_ready",
+    "file": "src/engine/readiness.py",
+    "line": 12,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DefaultReadinessEvaluator",
+    "name": "is_ready",
+    "file": "src/engine/readiness.py",
+    "line": 18,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReplaySink",
+    "name": "check_quota",
+    "file": "src/engine/replay_sink.py",
+    "line": 111,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StaminaService",
+    "name": "derive_max_stamina",
+    "file": "src/engine/rpg_depth.py",
+    "line": 53,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StaminaService",
+    "name": "drain_attack",
+    "file": "src/engine/rpg_depth.py",
+    "line": 58,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StaminaService",
+    "name": "drain_move",
+    "file": "src/engine/rpg_depth.py",
+    "line": 64,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StaminaService",
+    "name": "drain_harvest",
+    "file": "src/engine/rpg_depth.py",
+    "line": 70,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LeashService",
+    "name": "is_at_home",
+    "file": "src/engine/rpg_depth.py",
+    "line": 223,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DiscoveryService",
+    "name": "get_discovery_threshold",
+    "file": "src/engine/rpg_depth.py",
+    "line": 238,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TerrainCostService",
+    "name": "get_path_cost",
+    "file": "src/engine/rpg_depth.py",
+    "line": 264,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TargetStickinessService",
+    "name": "should_switch_target",
+    "file": "src/engine/rpg_depth.py",
+    "line": 280,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpatialQueryService",
+    "name": "get_entities_near",
+    "file": "src/engine/spatial_query.py",
+    "line": 68,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpatialQueryService",
+    "name": "get_entities_in_bounds",
+    "file": "src/engine/spatial_query.py",
+    "line": 75,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpatialQueryService",
+    "name": "get_nodes_near",
+    "file": "src/engine/spatial_query.py",
+    "line": 82,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TacticalDecisionSystem",
+    "name": "select_best_target",
+    "file": "src/engine/tactical.py",
+    "line": 849,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabApprovalGate",
+    "name": "record_approval",
+    "file": "src/lab/audit.py",
+    "line": 37,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabApprovalGate",
+    "name": "check_approval",
+    "file": "src/lab/audit.py",
+    "line": 101,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContextPackBuilder",
+    "name": "build_investigation_pack",
+    "file": "src/lab/context.py",
+    "line": 153,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BudgetCheckResult",
+    "name": "is_ok",
+    "file": "src/lab/guardrails.py",
+    "line": 42,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DynamicWorldRepo",
+    "name": "__getattr__",
+    "file": "src/lab/mutation.py",
+    "line": 314,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowSkill",
+    "name": "populate_purpose",
+    "file": "src/lab/registry.py",
+    "line": 24,
+    "decorators": [
+      "model_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowRegistry",
+    "name": "scan_and_register",
+    "file": "src/lab/registry.py",
+    "line": 65,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowRegistry",
+    "name": "get_workflow",
+    "file": "src/lab/registry.py",
+    "line": 95,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowRegistry",
+    "name": "get_skill",
+    "file": "src/lab/registry.py",
+    "line": 101,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowRegistry",
+    "name": "list_workflows",
+    "file": "src/lab/registry.py",
+    "line": 107,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowRegistry",
+    "name": "list_skills",
+    "file": "src/lab/registry.py",
+    "line": 110,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ScenarioRepository",
+    "name": "save_scenario",
+    "file": "src/lab/repository.py",
+    "line": 79,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ExperimentRepository",
+    "name": "save_experiment",
+    "file": "src/lab/repository.py",
+    "line": 214,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MutationRepository",
+    "name": "save_mutation",
+    "file": "src/lab/repository.py",
+    "line": 549,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorkflowRequest",
+    "name": "validate_mode_requirements",
+    "file": "src/lab/request.py",
+    "line": 17,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ExpectedLimitSpec",
+    "name": "validate_limits",
+    "file": "src/lab/schema.py",
+    "line": 26,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ExperimentSpec",
+    "name": "validate_experiment_type",
+    "file": "src/lab/schema.py",
+    "line": 172,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabRunManifest",
+    "name": "validate_status",
+    "file": "src/lab/schema.py",
+    "line": 242,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MatrixSpec",
+    "name": "validate_mode",
+    "file": "src/lab/schema.py",
+    "line": 312,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabSessionStore",
+    "name": "create_session",
+    "file": "src/lab/session.py",
+    "line": 79,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabSessionStore",
+    "name": "list_sessions",
+    "file": "src/lab/session.py",
+    "line": 153,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabResultStore",
+    "name": "load_run_report",
+    "file": "src/lab/store.py",
+    "line": 94,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabResultStore",
+    "name": "load_validation_reports",
+    "file": "src/lab/store.py",
+    "line": 111,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LabResultStore",
+    "name": "load_compile_report",
+    "file": "src/lab/store.py",
+    "line": 141,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "AlertDeduplicator",
+    "name": "seen_count",
+    "file": "src/observability/alerts/deduplicator.py",
+    "line": 56,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "AlertRouter",
+    "name": "unregister_sink",
+    "file": "src/observability/alerts/router.py",
+    "line": 42,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RuleEngine",
+    "name": "apply_envelope",
+    "file": "src/observability/anomaly/rules_engine.py",
+    "line": 396,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CohortAnalyzer",
+    "name": "group_by_verdict",
+    "file": "src/observability/behavior/cohort_analyzer.py",
+    "line": 14,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BehaviorWorker",
+    "name": "process_jsonl",
+    "file": "src/observability/behavior/worker.py",
+    "line": 103,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BehaviorWorker",
+    "name": "start_queue_worker",
+    "file": "src/observability/behavior/worker.py",
+    "line": 184,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BehaviorWorker",
+    "name": "stop_queue_worker",
+    "file": "src/observability/behavior/worker.py",
+    "line": 201,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "set_flag_override",
+    "file": "src/observability/config.py",
+    "line": 193,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "clear_all_overrides",
+    "file": "src/observability/config.py",
+    "line": 202,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_raw_events_enabled",
+    "file": "src/observability/config.py",
+    "line": 232,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_live_stream_enabled",
+    "file": "src/observability/config.py",
+    "line": 236,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_event_recorder_enabled",
+    "file": "src/observability/config.py",
+    "line": 240,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_entity_timeline_enabled",
+    "file": "src/observability/config.py",
+    "line": 244,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_behavior_normalization_enabled",
+    "file": "src/observability/config.py",
+    "line": 248,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_behavior_timeline_enabled",
+    "file": "src/observability/config.py",
+    "line": 252,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_behavior_episodes_enabled",
+    "file": "src/observability/config.py",
+    "line": 256,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_behavior_metrics_enabled",
+    "file": "src/observability/config.py",
+    "line": 260,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_behavior_patterns_enabled",
+    "file": "src/observability/config.py",
+    "line": 264,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_behavior_scorecards_enabled",
+    "file": "src/observability/config.py",
+    "line": 268,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_cohort_analysis_enabled",
+    "file": "src/observability/config.py",
+    "line": 272,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_run_comparison_enabled",
+    "file": "src/observability/config.py",
+    "line": 276,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_insight_generation_enabled",
+    "file": "src/observability/config.py",
+    "line": 280,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_warehouse_ingest_enabled",
+    "file": "src/observability/config.py",
+    "line": 284,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ObservabilityConfig",
+    "name": "is_dashboard_export_enabled",
+    "file": "src/observability/config.py",
+    "line": 288,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DataCompletenessAuditor",
+    "name": "audit_completeness",
+    "file": "src/observability/mining/auditor.py",
+    "line": 17,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DeterminismAuditor",
+    "name": "audit_determinism",
+    "file": "src/observability/mining/auditor.py",
+    "line": 136,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MiningExperimentController",
+    "name": "execute_experiment",
+    "file": "src/observability/mining/controller.py",
+    "line": 139,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "EvidencePackBuilder",
+    "name": "build_evidence_pack",
+    "file": "src/observability/mining/evidence.py",
+    "line": 17,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "AIAgentInvestigationRunner",
+    "name": "run_investigation",
+    "file": "src/observability/mining/orchestrator.py",
+    "line": 54,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "EngineeringBacklogGenerator",
+    "name": "generate_backlog",
+    "file": "src/observability/mining/priority.py",
+    "line": 46,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "NextExperimentRecommender",
+    "name": "recommend_next",
+    "file": "src/observability/mining/recommender.py",
+    "line": 62,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MiningReviewWorkflow",
+    "name": "apply_review_label",
+    "file": "src/observability/mining/workflow.py",
+    "line": 17,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "MiningQualityGate",
+    "name": "evaluate_gate",
+    "file": "src/observability/mining/workflow.py",
+    "line": 87,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PhaseProfileScope",
+    "name": "set_counter",
+    "file": "src/observability/performance/profiler.py",
+    "line": 69,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PhaseProfileScope",
+    "name": "inc_counter",
+    "file": "src/observability/performance/profiler.py",
+    "line": 75,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PhaseProfiler",
+    "name": "profile_phase",
+    "file": "src/observability/performance/profiler.py",
+    "line": 91,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BoundedObservabilityQueue",
+    "name": "is_full",
+    "file": "src/observability/queue.py",
+    "line": 82,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CausalityChainReporter",
+    "name": "generate_chain",
+    "file": "src/observability/reporter.py",
+    "line": 13,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BalanceEnvelope",
+    "name": "validate_non_empty",
+    "file": "src/observability/reporting/balance_envelope.py",
+    "line": 43,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RunSetArtifactRepository",
+    "name": "create_sweep",
+    "file": "src/observability/reporting/run_set_repository.py",
+    "line": 63,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ScenarioSweepConfig",
+    "name": "parse_observability_mode",
+    "file": "src/observability/sweeper.py",
+    "line": 41,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ScenarioBalanceSummary",
+    "name": "findings_by_dimension",
+    "file": "src/observability/understanding/balance/models.py",
+    "line": 48,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DomainAnalyzer",
+    "name": "_has_required_signals",
+    "file": "src/observability/understanding/domain/base.py",
+    "line": 127,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ScenarioExpectationPack",
+    "name": "is_anomaly_acceptable",
+    "file": "src/observability/understanding/expectations/models.py",
+    "line": 93,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BaselineEvolutionPolicy",
+    "name": "validate_for_promotion",
+    "file": "src/observability/understanding/quality/baseline_evolution.py",
+    "line": 39,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "AnalyzerQualityReport",
+    "name": "unreviewed_heavy_rules",
+    "file": "src/observability/understanding/quality/models.py",
+    "line": 74,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReviewStore",
+    "name": "get_by_finding",
+    "file": "src/observability/understanding/review/store.py",
+    "line": 49,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReviewStore",
+    "name": "update_label",
+    "file": "src/observability/understanding/review/store.py",
+    "line": 53,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReviewStore",
+    "name": "label_summary",
+    "file": "src/observability/understanding/review/store.py",
+    "line": 73,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WarehouseAdapterFactory",
+    "name": "reset_adapter",
+    "file": "src/observability/warehouse/factory.py",
+    "line": 35,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WarehouseSchemaRegistry",
+    "name": "validate_sweep",
+    "file": "src/observability/warehouse/registry.py",
+    "line": 38,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LongRunStabilityHarness",
+    "name": "execute_run",
+    "file": "src/perf/long_run_harness.py",
+    "line": 125,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LongRunStabilityHarness",
+    "name": "verify_determinism_parity",
+    "file": "src/perf/long_run_harness.py",
+    "line": 299,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PerfResult",
+    "name": "from_bench_dict",
+    "file": "src/perf/regression_gate.py",
+    "line": 41,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DeterministicRNG",
+    "name": "next_float",
+    "file": "src/platform/rng.py",
+    "line": 46,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DeterministicRNG",
+    "name": "next_int",
+    "file": "src/platform/rng.py",
+    "line": 50,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpatialHashV2",
+    "name": "update_entity",
+    "file": "src/platform/spatial_hash.py",
+    "line": 21,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SpatialHashV2",
+    "name": "remove_entity",
+    "file": "src/platform/spatial_hash.py",
+    "line": 36,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BreakthroughService",
+    "name": "get_breakthrough",
+    "file": "src/progression/breakthroughs.py",
+    "line": 32,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SkillScalingService",
+    "name": "calculate_scaled_power",
+    "file": "src/progression/skills.py",
+    "line": 8,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SkillScalingService",
+    "name": "get_passive_bonus",
+    "file": "src/progression/skills.py",
+    "line": 36,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "VeterancyService",
+    "name": "get_stat_multiplier",
+    "file": "src/progression/veterancy.py",
+    "line": 21,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestService",
+    "name": "mark_rewarded",
+    "file": "src/quests/service.py",
+    "line": 35,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentSourceReport",
+    "name": "total_catalog",
+    "file": "src/runtime/bootstrap.py",
+    "line": 54,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentSourceReport",
+    "name": "total_compat",
+    "file": "src/runtime/bootstrap.py",
+    "line": 58,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContentSourceReport",
+    "name": "total_fallback",
+    "file": "src/runtime/bootstrap.py",
+    "line": 62,
+    "decorators": [
+      "property"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SimulationScenarioDefinition",
+    "name": "validate_initial_condition_keys",
+    "file": "src/scenarios/schema.py",
+    "line": 75,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SimulationScenarioDefinition",
+    "name": "validate_template_constraints",
+    "file": "src/scenarios/schema.py",
+    "line": 85,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QualityHub",
+    "name": "update_entity_count",
+    "file": "src/simulation_quality/quality_hub.py",
+    "line": 209,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QualityHub",
+    "name": "get_pillar_score",
+    "file": "src/simulation_quality/quality_hub.py",
+    "line": 213,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QualityHub",
+    "name": "get_pillar_grade",
+    "file": "src/simulation_quality/quality_hub.py",
+    "line": 216,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ScoringWeights",
+    "name": "_build_flat_index",
+    "file": "src/simulation_quality/weights.py",
+    "line": 30,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "_HealthHandler",
+    "name": "do_GET",
+    "file": "src/simulation_quality/worker.py",
+    "line": 21,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "_HealthHandler",
+    "name": "log_message",
+    "file": "src/simulation_quality/worker.py",
+    "line": 49,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LeadService",
+    "name": "create_lead",
+    "file": "src/strategy/leads.py",
+    "line": 13,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "LeadService",
+    "name": "evaluate_lead_outcome",
+    "file": "src/strategy/leads.py",
+    "line": 52,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DynamicPriceService",
+    "name": "calculate_sell_price",
+    "file": "src/systems/economy_systems/economy.py",
+    "line": 51,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GeneticsSystem",
+    "name": "apply_genetic_profile",
+    "file": "src/systems/lifecycle_systems/genetics.py",
+    "line": 54,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SkillScalingSystem",
+    "name": "compute_skill_power",
+    "file": "src/systems/lifecycle_systems/genetics.py",
+    "line": 142,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SocialAppraisalSystem",
+    "name": "recalibrate_source_trust",
+    "file": "src/systems/social_systems/appraisal.py",
+    "line": 452,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SocialAppraisalSystem",
+    "name": "update_familiarity",
+    "file": "src/systems/social_systems/appraisal.py",
+    "line": 482,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SocialAppraisalSystem",
+    "name": "calculate_recruitment_cost",
+    "file": "src/systems/social_systems/appraisal.py",
+    "line": 508,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContractService",
+    "name": "create_loan_contract",
+    "file": "src/systems/social_systems/contracts.py",
+    "line": 87,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ContractService",
+    "name": "compute_betrayal_clan_reputation_update",
+    "file": "src/systems/social_systems/contracts.py",
+    "line": 264,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GroupService",
+    "name": "calculate_cohesion",
+    "file": "src/systems/social_systems/group_service.py",
+    "line": 11,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "GroupService",
+    "name": "assign_role",
+    "file": "src/systems/social_systems/group_service.py",
+    "line": 35,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "SocialMemoryService",
+    "name": "tick_place_attachment",
+    "file": "src/systems/social_systems/memory.py",
+    "line": 13,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PartyCoordinationSystem",
+    "name": "coordinate_party_objectives",
+    "file": "src/systems/social_systems/party.py",
+    "line": 84,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PartyCoordinationSystem",
+    "name": "issue_party_command",
+    "file": "src/systems/social_systems/party.py",
+    "line": 123,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RelationshipService",
+    "name": "prune_low_salience",
+    "file": "src/systems/social_systems/relationships.py",
+    "line": 137,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReputationService",
+    "name": "get_impact",
+    "file": "src/systems/social_systems/reputation.py",
+    "line": 18,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ReputationService",
+    "name": "calculate_caution_modifier",
+    "file": "src/systems/social_systems/reputation.py",
+    "line": 22,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BeliefCycleSystem",
+    "name": "estimate_threat",
+    "file": "src/systems/strategic_systems/belief.py",
+    "line": 243,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CognitionGraphExporter",
+    "name": "is_deterministic",
+    "file": "src/systems/strategic_systems/cognition_export.py",
+    "line": 148,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StrategicIntelligenceSystem",
+    "name": "resolve_blockers",
+    "file": "src/systems/strategic_systems/intelligence.py",
+    "line": 654,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StrategicIntelligenceSystem",
+    "name": "evaluate_all_concerns",
+    "file": "src/systems/strategic_systems/intelligence.py",
+    "line": 817,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StrategicIntelligenceSystem",
+    "name": "evaluate_all_strategic_intents",
+    "file": "src/systems/strategic_systems/intelligence.py",
+    "line": 893,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StrategicIntelligenceSystem",
+    "name": "apply_routine_biasing",
+    "file": "src/systems/strategic_systems/intelligence.py",
+    "line": 949,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "StrategicIntelligenceSystem",
+    "name": "process_project_outcome",
+    "file": "src/systems/strategic_systems/intelligence.py",
+    "line": 1102,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "EntityGenerator",
+    "name": "spawn_calamity",
+    "file": "src/systems/world_systems/generator.py",
+    "line": 238,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "NarrativeMemorySystem",
+    "name": "record_turning_point",
+    "file": "src/systems/world_systems/narrative.py",
+    "line": 33,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "NarrativeMemorySystem",
+    "name": "compute_utility_bias",
+    "file": "src/systems/world_systems/narrative.py",
+    "line": 58,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "NarrativeMemorySystem",
+    "name": "has_trauma_with",
+    "file": "src/systems/world_systems/narrative.py",
+    "line": 83,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestGenerator",
+    "name": "generate_for_entity",
+    "file": "src/systems/world_systems/quest_generator.py",
+    "line": 13,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestGenerationSystem",
+    "name": "generate_from_scar",
+    "file": "src/systems/world_systems/quests.py",
+    "line": 51,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestGenerationSystem",
+    "name": "generate_from_blockers",
+    "file": "src/systems/world_systems/quests.py",
+    "line": 94,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "QuestGenerationSystem",
+    "name": "quest_to_project",
+    "file": "src/systems/world_systems/quests.py",
+    "line": 132,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RouteFamilyClassifier",
+    "name": "detect_forbidden",
+    "file": "src/testing/route_family_classifier.py",
+    "line": 49,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BuildingRegistry",
+    "name": "get_services",
+    "file": "src/town/buildings.py",
+    "line": 31,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "HomeStorageAction",
+    "name": "withdraw",
+    "file": "src/town/home_storage.py",
+    "line": 94,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TownNavigation",
+    "name": "is_in_town",
+    "file": "src/town/town_navigation.py",
+    "line": 32,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DerivedViews",
+    "name": "build_combat_readiness",
+    "file": "src/views/readiness.py",
+    "line": 23,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "DerivedViews",
+    "name": "build_adventure_readiness",
+    "file": "src/views/readiness.py",
+    "line": 43,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BossService",
+    "name": "resolve_boss_death",
+    "file": "src/world/boss.py",
+    "line": 256,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CampService",
+    "name": "resolve_camp_clearing",
+    "file": "src/world/camp.py",
+    "line": 177,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RegionalConsequenceService",
+    "name": "create_battlefield_scar",
+    "file": "src/world/consequences.py",
+    "line": 58,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RegionalConsequenceService",
+    "name": "create_raid_scar",
+    "file": "src/world/consequences.py",
+    "line": 80,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "EnvironmentService",
+    "name": "get_modifier_multipliers",
+    "file": "src/world/environment.py",
+    "line": 102,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RegionalSovereigntyService",
+    "name": "process_taxation",
+    "file": "src/world/regional_sovereignty.py",
+    "line": 24,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RegionalSovereigntyService",
+    "name": "apply_sovereignty_debuffs",
+    "file": "src/world/regional_sovereignty.py",
+    "line": 78,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RegionService",
+    "name": "find_region_at",
+    "file": "src/world/regions.py",
+    "line": 16,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "RegionService",
+    "name": "get_difficulty_tier_at",
+    "file": "src/world/regions.py",
+    "line": 45,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ThreatService",
+    "name": "record_kill",
+    "file": "src/world/threat.py",
+    "line": 51,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TransformationService",
+    "name": "apply_transformation",
+    "file": "src/world/transformation.py",
+    "line": 75,
+    "decorators": [
+      "staticmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "CompileContext",
+    "name": "set_provenance",
+    "file": "src/worldassembly/context.py",
+    "line": 58,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldCompositionSpec",
+    "name": "normalize_modules_shorthand",
+    "file": "src/worldassembly/schema.py",
+    "line": 65,
+    "decorators": [
+      "model_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "PopulationRecipeSpec",
+    "name": "_validate_count",
+    "file": "src/worldbuilding/recipe.py",
+    "line": 94,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ResourceRecipeSpec",
+    "name": "_validate_count",
+    "file": "src/worldbuilding/recipe.py",
+    "line": 113,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "BuildingRecipeSpec",
+    "name": "_validate_count",
+    "file": "src/worldbuilding/recipe.py",
+    "line": 129,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldRepository",
+    "name": "save_world",
+    "file": "src/worldbuilding/repository.py",
+    "line": 152,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldRepository",
+    "name": "resolve_asset_path",
+    "file": "src/worldbuilding/repository.py",
+    "line": 172,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "TopologySpec",
+    "name": "validate_coordinate_system",
+    "file": "src/worldbuilding/schema.py",
+    "line": 22,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldSpec",
+    "name": "_migrate_quests_field",
+    "file": "src/worldbuilding/schema.py",
+    "line": 300,
+    "decorators": [
+      "model_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldModuleRepository",
+    "name": "list_modules_by_type",
+    "file": "src/worldmodules/repository.py",
+    "line": 66,
+    "decorators": [],
+    "exclusion": "real",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "ModuleParameterSpec",
+    "name": "validate_parameter_spec",
+    "file": "src/worldmodules/schema.py",
+    "line": 38,
+    "decorators": [
+      "model_validator"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldModuleSpec",
+    "name": "register_module_type",
+    "file": "src/worldmodules/schema.py",
+    "line": 89,
+    "decorators": [
+      "classmethod"
+    ],
+    "exclusion": "real",
+    "has_test_coverage": true
+  },
+  {
+    "tier": 2,
+    "kind": "method",
+    "class": "WorldModuleSpec",
+    "name": "validate_module_type",
+    "file": "src/worldmodules/schema.py",
+    "line": 94,
+    "decorators": [
+      "field_validator",
+      "classmethod"
+    ],
+    "exclusion": "pydantic_validator",
+    "has_test_coverage": false
+  }
+]

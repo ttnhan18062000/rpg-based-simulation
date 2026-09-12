@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260804-DOCS-BULLET-LINE-SUFFIX-FIX
-phase: open
+phase: done
 date: 2026-08-04
 tags: [ai, agent-monitoring]
 ---

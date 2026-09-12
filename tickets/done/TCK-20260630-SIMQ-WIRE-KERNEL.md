@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260630-SIMQ-WIRE-KERNEL
-phase: open
+phase: done
 date: 2026-06-30
 tags: [simulation-quality, simq, integration, event-bus, observability, wiring]
 ---

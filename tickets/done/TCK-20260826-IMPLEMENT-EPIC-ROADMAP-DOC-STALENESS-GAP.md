@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260826-IMPLEMENT-EPIC-ROADMAP-DOC-STALENESS-GAP
-phase: open
+phase: done
 date: 2026-08-26
 tags: [workflows, documentation, process-improvement]
 ---

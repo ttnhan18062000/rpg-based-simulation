@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E32-CAMPAIGN-RUNTIME
-phase: epic_scoped
+phase: done
 date: 2026-06-19
 tags: [campaign-runtime, persistent-state, narrative-ledger, episode-continuity, epic, phase-3]
 ---

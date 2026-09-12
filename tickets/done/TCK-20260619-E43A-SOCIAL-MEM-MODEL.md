@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: social
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E43A-SOCIAL-MEM-MODEL
-phase: open
+phase: done
 date: 2026-06-20
 tags: [social-memory, datamodel, cross-episode, phase-4]
 ---

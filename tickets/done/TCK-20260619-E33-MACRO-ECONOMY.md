@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: economy
 authority: P1
 audience: agent
 ticket_id: TCK-20260619-E33-MACRO-ECONOMY
-phase: epic_scoped
+phase: done
 date: 2026-06-19
 tags: [macro-economy, inflation, gold-sink, health-metrics, economic-monitoring, epic, phase-3]
 ---

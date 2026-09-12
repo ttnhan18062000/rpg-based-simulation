@@ -85,17 +85,33 @@ def _make_mock_entity(
     reputation: float = 1.3,
     equip_slots: dict | None = None,
     equip_durability: dict | None = None,
+    position: tuple[float, float] = (10.0, 20.0),
+    kind: str = "human",
+    role: int = 0,
+    properties: dict | None = None,
+    traits: set | None = None,
+    personality: dict | None = None,
 ) -> MagicMock:
     """Build a mock EntityState with controlled field values."""
     entity = MagicMock()
+    entity.kind = kind
     entity.identity.evolution_level = level
     entity.identity.evolution_points = xp
     entity.identity.faction = faction
+    entity.identity.role = role
+    entity.identity.properties = properties or {}
+    entity.identity.traits = traits or set()
+    personality = personality or {"greed": 0.0, "bravery": 0.0, "sociability": 0.0, "industry": 0.0}
+    entity.identity.personality.greed = personality["greed"]
+    entity.identity.personality.bravery = personality["bravery"]
+    entity.identity.personality.sociability = personality["sociability"]
+    entity.identity.personality.industry = personality["industry"]
     entity.lifecycle.active = lifecycle_active
     entity.combat.alive = combat_alive
     entity.social.public_reputation = reputation
     entity.equipment.slots = equip_slots or {}
     entity.equipment.durability = equip_durability or {}
+    entity.navigation.position = position
     return entity
 
 
@@ -166,6 +182,93 @@ def test_advance_state_extracts_entity_carry_forward():
     assert result[1].equipment["slots"]["MAIN_HAND"] == "sword_iron"
     assert result[1].equipment["durability"]["MAIN_HAND"] == pytest.approx(0.9)
     assert result[2].alive is False
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION:
+# _extract_entity_carry_forwards captures last_position unconditionally
+# ---------------------------------------------------------------------------
+
+def test_extract_entity_carry_forward_captures_last_position():
+    manifest = _make_manifest()
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(entity_id=1, position=(42.0, -7.0))
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].last_position == (42.0, -7.0)
+
+
+def test_extract_entity_carry_forward_last_position_not_gated_by_carry_rules():
+    """Unlike level/xp/reputation, last_position is not an opt-in carry-forward
+    rule -- it's captured even when carry_level/carry_xp/carry_reputation are off."""
+    manifest = _make_manifest()
+    manifest = dataclasses.replace(
+        manifest,
+        carry_forward_rules=CarryForwardRules(
+            carry_level=False, carry_xp=False, carry_reputation=False, carry_equipment=False,
+        ),
+    )
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(entity_id=1, position=(5.0, 5.0))
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].last_position == (5.0, 5.0)
+    assert result[1].level == 1  # confirms carry_level=False actually took effect
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION:
+# _extract_entity_carry_forwards captures kind/role/faction/properties/traits/
+# personality unconditionally, matching last_position's own treatment.
+# ---------------------------------------------------------------------------
+
+def test_extract_entity_carry_forward_captures_identity_fields():
+    manifest = _make_manifest()
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(
+        entity_id=1,
+        kind="goblin",
+        role=2,
+        faction=3,
+        properties={"archetype_id": "goblin_raider", "faction_id": "monster_horde"},
+        traits={"brave", "cunning"},
+        personality={"greed": 0.4, "bravery": 0.7, "sociability": 0.1, "industry": 0.2},
+    )
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].kind == "goblin"
+    assert result[1].role == 2
+    assert result[1].faction == 3
+    assert result[1].properties == {"archetype_id": "goblin_raider", "faction_id": "monster_horde"}
+    assert set(result[1].traits) == {"brave", "cunning"}
+    assert result[1].personality == {
+        "greed": 0.4, "bravery": 0.7, "sociability": 0.1, "industry": 0.2
+    }
+
+
+def test_extract_entity_carry_forward_identity_fields_not_gated_by_carry_rules():
+    manifest = _make_manifest()
+    manifest = dataclasses.replace(
+        manifest,
+        carry_forward_rules=CarryForwardRules(
+            carry_level=False, carry_xp=False, carry_reputation=False, carry_equipment=False,
+        ),
+    )
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(entity_id=1, kind="goblin", role=2, faction=3)
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].kind == "goblin"
+    assert result[1].role == 2
+    assert result[1].faction == 3
 
 
 # ---------------------------------------------------------------------------
@@ -427,11 +530,11 @@ def test_episode_summary_run_id_defaults_empty_when_svc_run_id_none():
 # ---------------------------------------------------------------------------
 
 def test_run_episode_passes_event_recorder_to_scenario_runtime():
-    """Step 1b: run_episode() must wire self._event_recorder through to
+    """Step 1b: run_episode() must wire self._scenario_event_recorder through to
     ScenarioRuntimeService — previously silently dropped at orchestrator.py:172."""
     manifest = _make_manifest(n_episodes=1)
     spy_recorder = MagicMock()
-    orch = CampaignOrchestrator(manifest, event_recorder=spy_recorder)
+    orch = CampaignOrchestrator(manifest, scenario_event_recorder=spy_recorder)
 
     mock_svc = MagicMock()
     mock_svc.final_state = _make_mock_final_state(entities={})
@@ -445,7 +548,7 @@ def test_run_episode_passes_event_recorder_to_scenario_runtime():
         orch.run_episode()
 
     _, kwargs = mock_ctor.call_args
-    assert kwargs.get("event_recorder") is spy_recorder
+    assert kwargs.get("scenario_event_recorder") is spy_recorder
 
 
 # ---------------------------------------------------------------------------
@@ -592,3 +695,99 @@ def test_town_resolution_no_longer_early_exits_once_campaign_regions_are_populat
         "with regions populated, resolve() must run its real regional logic instead "
         "of hitting the `not has_town and not has_regions` early-exit"
     )
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED
+# ---------------------------------------------------------------------------
+
+def test_build_initial_state_episode_zero_carries_information_source_profiles():
+    """Real regression for the confirmed gap: information_source_profiles was computed by
+    WorldCompiler.compile() but never threaded into either _build_initial_state() branch,
+    so it stayed permanently empty for every Campaign-mode episode regardless of what the
+    world composition declared. frontier_living_world genuinely declares one
+    (town_notice_board) -- use it explicitly rather than the tiny unit_faction_tension
+    world, which declares none."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.information_source_profiles, (
+        "episode 0 must receive the real compiled information_source_profiles -- an empty "
+        "list is the exact pre-fix gap this ticket exists to close"
+    )
+    source_ids = {p.source_id for p in state.information_source_profiles}
+    assert "town_notice_board" in source_ids, (
+        f"expected frontier_living_world's own declared source, got {source_ids}"
+    )
+
+
+def test_build_initial_state_survivor_branch_also_carries_information_source_profiles():
+    """The survivor-reconstruction branch must get the same fix as episode 0."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=4, xp=900, equipment={}, reputation=0.8, alive=True
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.information_source_profiles, (
+        "the survivor-reconstruction branch must also receive real compiled "
+        "information_source_profiles, not just the episode-0 branch"
+    )
+
+
+def test_build_initial_state_does_not_thread_pending_information_responses_yet():
+    """Deliberate negative assertion, not an oversight: pending_information_responses is
+    NOT threaded (TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH --
+    doing so naively would resolve target_population_id against a completely different,
+    unused entity-numbering scheme and silently misdeliver seeded facts to the wrong
+    entity). frontier_living_world genuinely declares a non-empty
+    pending_information_responses too, so this asserts the field is still empty on the
+    real returned state despite real source content existing -- the correct, deliberate
+    behavior until the follow-up ticket lands a real fix."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.pending_information_responses == [], (
+        "pending_information_responses must stay empty until "
+        "TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH lands a real "
+        "actor-id resolution fix -- threading it naively would misdeliver to the wrong entity"
+    )
+
+
+def test_threaded_information_source_profiles_are_actually_consumable_by_the_real_router():
+    """AC3: 'information_belief phase confirmed to actually consume the now-populated data
+    ... not just that the field is non-empty on the constructed state.'
+
+    A full real-episode run doesn't reliably exercise this: InformationBeliefPhase.apply()'s
+    routing branch only fires for an actor with an unresolved self_model.knowledge.unknowns
+    entry, a separate strategic-cognition precondition unrelated to this ticket's own fix
+    (confirmed empirically: a real 70-tick frontier_living_world episode with the fix applied
+    produced zero routed/assimilated entity properties, because no actor happened to have an
+    unknown to route in that window -- not because the data path is broken). So this proves
+    the real consumer function (InformationQueryRouter.route(), the same one
+    InformationBeliefPhase.apply() calls) genuinely returns a candidate from the threaded
+    data, isolating "is the data live and consumable" from "did an actor's independent
+    strategic state happen to trigger consumption within N ticks" -- the latter is out of
+    this ticket's own scope.
+    """
+    from src.domains.information.router import InformationQueryRouter
+    from src.domains.information.schema import InformationQuery
+
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+    assert state.information_source_profiles, "precondition: the fix threaded real profiles"
+
+    actor = next(iter(state.entities.values()))
+    query = InformationQuery(subject="ore_deposits", kind="material_source")
+
+    candidates = InformationQueryRouter.route(actor, query, state, state.information_source_profiles)
+
+    assert candidates, (
+        "the real router must find a candidate from the now-threaded "
+        "information_source_profiles -- town_notice_board declares common_resource_sources, "
+        "which matches a material_source query"
+    )
+    assert any(c.source_id == "town_notice_board" for c in candidates)

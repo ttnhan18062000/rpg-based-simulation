@@ -84,6 +84,26 @@ Applies to files under `tickets/done/` and `tickets/inprogress/`.
 | `date` | yes | ISO 8601 date | ticket creation date |
 | `tags` | no | list of strings | see `docs/guidelines/tag_taxonomy.md` — controlled vocabulary, forward-only enforced from `2026-07-04` |
 
+**Cross-field rule (location consistency):** beyond the per-field enums above, `status`/`phase`
+must also agree with which `tickets/` subdirectory the file physically sits in — added by
+`TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT` after a corpus audit found 395
+`tickets/done/*.md` files with individually enum-valid but location-inconsistent `status`/`phase`
+values (a class the per-field enum checks above can never catch, since neither field is invalid in
+isolation).
+
+| Location | Requires |
+|---|---|
+| `tickets/done/` | `status: historical` and `phase: done` |
+| `tickets/inprogress/` | `phase` must never be `done` |
+
+Enforced by `check_ticket_location_consistency(path, fm)` in `tools/validate_frontmatter.py` —
+deliberately **not** folded into the per-field `_validate_ticket`/`validate_file` sweep above, so a
+plain `validate_file`/`validate_directory` call over `tickets/` doesn't silently start enforcing
+directory placement too. Called explicitly by two consumers: `done_checker_static.py`'s
+`check_frontmatter_valid()` (per-ticket, at Verify time) and a corpus test in
+`tests/tools/test_validate_frontmatter.py` that sweeps every real `tickets/done/**/*.md` file
+independent of how each ticket was closed.
+
 Example:
 ```yaml
 ---

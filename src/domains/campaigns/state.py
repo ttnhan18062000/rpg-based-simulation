@@ -9,7 +9,7 @@ src.core.state. The CampaignOrchestrator (E32C) owns population and extraction.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.domains.campaigns.progression_plan import ProgressionPlan
 from src.domains.campaigns.social_memory import FactionSocialMemory, SocialMemoryRecord
@@ -96,13 +96,37 @@ class EntityCarryForward:
     """Immutable snapshot of one entity's carry-forward state between episodes.
 
     Field mapping notes (for E32C extraction):
-      level       <- entity.identity.evolution_level (NOT .level)
-      xp          <- entity.identity.evolution_points (NOT .xp)
-      equipment   <- {"slots": {str(slot): item_id, ...},
-                      "durability": {str(slot): float, ...}}
-                     (keys are EquipSlot enum names as strings)
-      reputation  <- entity.social.public_reputation (single float 0.0-2.0)
-      alive       <- entity.lifecycle.active
+      level         <- entity.identity.evolution_level (NOT .level)
+      xp            <- entity.identity.evolution_points (NOT .xp)
+      equipment     <- {"slots": {str(slot): item_id, ...},
+                        "durability": {str(slot): float, ...}}
+                       (keys are EquipSlot enum names as strings)
+      reputation    <- entity.social.public_reputation (single float 0.0-2.0)
+      alive         <- entity.lifecycle.active
+      last_position <- entity.navigation.position (TCK-20260911-CAMPAIGN-SURVIVOR-
+                       RECONSTRUCTION-POSITION-COLLISION). Optional because pre-existing
+                       carry-forward records serialized before this field existed won't have
+                       it; a survivor missing last_position falls back to a deterministic
+                       per-entity search origin at reconstruction, never a shared constant.
+      kind          <- entity.kind (TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-
+                       RECONSTRUCTION). Empty string for pre-existing records serialized before
+                       this field existed; reconstruction falls back to "entity" in that case,
+                       matching the prior (buggy) behavior rather than guessing.
+      role          <- entity.identity.role (int, EntityRole)
+      faction       <- entity.identity.faction (int, Faction)
+      properties    <- entity.identity.properties (dict: archetype_id/species_id/faction_id/
+                       role_id/etc. -- get_faction_id_str() reads properties["faction_id"]
+                       BEFORE falling back to the bare faction int above, so this field matters
+                       independently of `faction`, not just redundantly with it)
+      traits        <- entity.identity.traits (set, serialized as a sorted list for determinism)
+      personality   <- entity.identity.personality (PersonalityComponent's 4 floats, carried
+                       forward verbatim as "persistent psychological traits" -- that dataclass's
+                       own docstring -- not re-derived fresh each episode)
+
+    kind/role/faction/properties/traits/personality together are this entity's spawn-time
+    identity: the governing invariant this whole block satisfies is that a reconstructed
+    survivor must be identity-equivalent to a freshly-spawned entity, not merely "whichever
+    fields someone found a consumer for."
     """
     entity_id: int
     level: int
@@ -110,6 +134,13 @@ class EntityCarryForward:
     equipment: dict          # {"slots": {...}, "durability": {...}}
     reputation: float        # public_reputation — single score; E43 adds per-faction detail
     alive: bool              # False = dead; carried but not spawned in next episode
+    last_position: Optional[Tuple[float, float]] = None
+    kind: str = ""
+    role: int = 0
+    faction: int = 0
+    properties: dict = field(default_factory=dict)
+    traits: Tuple[str, ...] = ()
+    personality: dict = field(default_factory=dict)  # {greed, bravery, sociability, industry}
 
     def to_dict(self) -> dict:
         return {
@@ -119,10 +150,18 @@ class EntityCarryForward:
             "equipment": self.equipment,
             "reputation": self.reputation,
             "alive": self.alive,
+            "last_position": list(self.last_position) if self.last_position is not None else None,
+            "kind": self.kind,
+            "role": self.role,
+            "faction": self.faction,
+            "properties": self.properties,
+            "traits": sorted(self.traits),
+            "personality": self.personality,
         }
 
     @classmethod
     def from_dict(cls, d: dict) -> "EntityCarryForward":
+        raw_pos = d.get("last_position")
         return cls(
             entity_id=d["entity_id"],
             level=d["level"],
@@ -130,6 +169,13 @@ class EntityCarryForward:
             equipment=d.get("equipment", {}),
             reputation=d["reputation"],
             alive=d["alive"],
+            last_position=tuple(raw_pos) if raw_pos is not None else None,
+            kind=d.get("kind", ""),
+            role=d.get("role", 0),
+            faction=d.get("faction", 0),
+            properties=d.get("properties", {}),
+            traits=tuple(sorted(d.get("traits", []))),
+            personality=d.get("personality", {}),
         )
 
 

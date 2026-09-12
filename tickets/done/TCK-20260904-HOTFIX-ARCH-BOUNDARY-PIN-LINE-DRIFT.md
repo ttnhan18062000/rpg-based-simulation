@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P2
 audience: agent
 ticket_id: TCK-20260904-HOTFIX-ARCH-BOUNDARY-PIN-LINE-DRIFT
-phase: open
+phase: done
 date: 2026-09-04
 tags: [testing]
 ---

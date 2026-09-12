@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP
-phase: open
+phase: done
 date: 2026-08-07
 tags: [observability, engine, simulation-quality]
 ---

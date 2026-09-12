@@ -139,10 +139,21 @@ class CampaignOrchestrator:
     def __init__(
         self,
         manifest: CampaignManifest,
-        event_recorder: Optional["EventRecorder"] = None,
+        scenario_event_recorder: Optional["EventRecorder"] = None,
     ) -> None:
+        """
+        `scenario_event_recorder` is a narrow, scenario/campaign-bookkeeping-only side
+        channel (episode outcome + chronicle/nemesis events emitted directly by this
+        class) — TCK-20260909-CAMPAIGN-EVENT-RECORDER-SCENARIO-EVENTS-ONLY. It is NOT the
+        real per-tick kernel event stream (combat, cooperation, hard-law, etc.); that lives
+        separately on each episode's own `Kernel` (via `ScenarioRuntimeService`), as
+        `Kernel.event_recorder`, and is what `data/runs/{episode_run_id}/
+        simulation_events.jsonl` (and SimQ scoring) actually reads. The two are unrelated
+        objects that happened to share a name; do not assume this parameter carries the
+        full stream.
+        """
         self._manifest = manifest
-        self._event_recorder = event_recorder
+        self._scenario_event_recorder = scenario_event_recorder
         self._state = CampaignState(
             campaign_id=manifest.id,
             episode_index=0,
@@ -226,7 +237,7 @@ class CampaignOrchestrator:
         from src.engine.scenario_runtime import ScenarioRuntimeService
 
         svc = ScenarioRuntimeService(
-            spec, initial_state=initial_state, event_recorder=self._event_recorder
+            spec, initial_state=initial_state, scenario_event_recorder=self._scenario_event_recorder
         )
         try:
             svc.start()
@@ -362,10 +373,10 @@ class CampaignOrchestrator:
     ) -> None:
         """Emit grief_urgency_triggered for each newly-created modifier.
 
-        No-op when event_recorder is None (production default when no recorder injected,
+        No-op when scenario_event_recorder is None (production default when no recorder injected,
         and the case for a test double built via object.__new__() without __init__).
         """
-        if getattr(self, "_event_recorder", None) is None:
+        if getattr(self, "_scenario_event_recorder", None) is None:
             return
         for eid, gum in modifiers.items():
             self._emit_domain_event(
@@ -427,10 +438,10 @@ class CampaignOrchestrator:
     def _emit_nemesis_event(self, relation: NemesisRelation, tick: int) -> None:
         """Emit nemesis_relation_formed for a newly-formed NemesisRelation.
 
-        No-op when event_recorder is None (production default when no recorder injected,
+        No-op when scenario_event_recorder is None (production default when no recorder injected,
         and the case for a test double built via object.__new__() without __init__).
         """
-        if getattr(self, "_event_recorder", None) is None:
+        if getattr(self, "_scenario_event_recorder", None) is None:
             return
         self._emit_domain_event(
             event_type="nemesis_relation_formed",
@@ -450,9 +461,9 @@ class CampaignOrchestrator:
     ) -> None:
         """Emit chronicle_entry_created to the event bus for each new ledger entry.
 
-        No-op when event_recorder is None (production default when no recorder injected).
+        No-op when scenario_event_recorder is None (production default when no recorder injected).
         """
-        if self._event_recorder is None:
+        if self._scenario_event_recorder is None:
             return
         for entry in entries:
             self._emit_domain_event(
@@ -485,7 +496,7 @@ class CampaignOrchestrator:
         emission through here instead of adding new per-call-site imports.
         """
         from src.observability.events import SimulationEvent
-        self._event_recorder.record(SimulationEvent(
+        self._scenario_event_recorder.record(SimulationEvent(
             event_type=event_type,
             event_category=event_category,
             tick=tick,
@@ -532,6 +543,29 @@ class CampaignOrchestrator:
                     entity.social.public_reputation if rules.carry_reputation else 0.0
                 ),
                 alive=entity.lifecycle.active,  # lifecycle.active, NOT combat.alive
+                # Unconditional (not gated by a carry_forward_rules flag): position isn't an
+                # opt-in carry-forward rule, it's required for the entity to be placeable at
+                # all next episode -- TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-
+                # COLLISION.
+                last_position=(
+                    float(entity.navigation.position[0]),
+                    float(entity.navigation.position[1]),
+                ),
+                # Unconditional, same reasoning as last_position above -- these aren't opt-in
+                # carry-forward preferences, they're the entity's own identity
+                # (TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION). A
+                # reconstructed survivor must be identity-equivalent to a spawned entity.
+                kind=entity.kind,
+                role=entity.identity.role,
+                faction=entity.identity.faction,
+                properties=dict(entity.identity.properties),
+                traits=tuple(sorted(entity.identity.traits)),
+                personality={
+                    "greed": entity.identity.personality.greed,
+                    "bravery": entity.identity.personality.bravery,
+                    "sociability": entity.identity.personality.sociability,
+                    "industry": entity.identity.personality.industry,
+                },
             )
 
         return result
@@ -672,8 +706,13 @@ class CampaignOrchestrator:
         from dataclasses import replace as dc_replace
 
         from src.core.models.inventory import EquipSlot
-        from src.core.state import AuthoritativeState, EntityState
+        from src.core.builder import V2EntityBuilder
+        from src.core.state import AuthoritativeState, EntityState, PersonalityComponent
         from src.core.updates import SocialUpdate
+        from src.domains.campaigns.survivor_placement import (
+            SurvivorReconstructionContext,
+            resolve_survivor_position,
+        )
         from src.systems.social_systems.relationships import RelationshipService
         from src.worldbuilding.compiler import WorldCompiler
         from src.worldbuilding.repository import WorldRepository
@@ -713,21 +752,63 @@ class CampaignOrchestrator:
                 entities=catalog_result.state.entities,
                 regions=compiled_regions,
                 places=compiled_places,
+                information_source_profiles=compiled_state.information_source_profiles,
+                # pending_information_responses is deliberately NOT threaded here yet -- see
+                # TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED's own
+                # Implementation Notes for the real actor_id-mismatch finding that blocks it.
             )
 
-        # Reconstruct minimal EntityState objects from carry-forward snapshots.
-        # Fields not captured in EntityCarryForward (e.g. combat state, position,
-        # current HP) are left at EntityState defaults — the scenario's setup_tags
-        # and world_composition govern spawn placement.
+        # Reconstruct EntityState objects from carry-forward snapshots. Position AND identity
+        # (kind/role/faction/properties/traits/personality) are real, restored to match what a
+        # spawned entity would have -- TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-
+        # COLLISION, TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION.
+        # Fields not captured in EntityCarryForward at all (e.g. combat.hp/.atk/.def_stat,
+        # class_id, life_stage -- see TCK-20260911-CAMPAIGN-SURVIVOR-COMBAT-STATS-NOT-
+        # RECOMPUTED-ON-RECONSTRUCTION for the combat-stats gap specifically) are left at
+        # EntityState defaults; this branch never calls into WorldEntitySpawner/
+        # WorldCompiler.compile()'s own entity placement, so nothing about world_composition
+        # otherwise governs survivor placement.
         entities: Dict[int, EntityState] = {}
+        reconstruction_ctx = SurvivorReconstructionContext(
+            terrain=compiled_state.terrain,
+            blocked_tiles=compiled_state.blocked_tiles,
+            buildings=compiled_state.buildings,
+            entities=entities,  # same dict object, mutated in place as each survivor is placed
+        )
         for eid, cf in alive_carry_forwards.items():
-            base = EntityState(id=eid, kind="entity")
-
-            # Apply carried identity fields.
-            identity = dc_replace(
-                base.identity,
-                evolution_level=cf.level,
-                evolution_points=cf.xp,
+            # cf.kind is "" for pre-existing carry-forward records serialized before this field
+            # existed -- fall back to the prior (buggy) "entity" literal rather than guessing a
+            # real archetype for data this old.
+            #
+            # Identity fields (role/faction/properties/traits/personality/evolution_level/
+            # evolution_points) are built via V2EntityBuilder's own identity-construction method
+            # below, NOT a raw dataclass replacement call on the identity component directly --
+            # tests/architecture/test_role_set_identity_patch_only_guard.py and
+            # test_faction_mutation_write_paths.py statically enforce that role and faction may
+            # only be mutated through the authoritative IdentityPatch's own apply step (live
+            # tick-time mutation) OR V2EntityBuilder's own initial-construction seeding (pre-tick,
+            # not a live mutation) -- the same allowlisted exemption ArchetypeEntityFactory's own
+            # build_entity() already relies on for a real spawn. This IS initial-episode
+            # construction, so the builder path is the correct one, not a bypass of the same rule
+            # real spawns already follow.
+            base = (
+                V2EntityBuilder(eid)
+                .kind(cf.kind or "entity")
+                .identity(
+                    role=cf.role,
+                    faction=cf.faction,
+                    evolution_level=cf.level,
+                    evolution_points=cf.xp,
+                    properties=dict(cf.properties),
+                    traits=set(cf.traits),
+                    personality=PersonalityComponent(
+                        greed=cf.personality.get("greed", 0.0),
+                        bravery=cf.personality.get("bravery", 0.0),
+                        sociability=cf.personality.get("sociability", 0.0),
+                        industry=cf.personality.get("industry", 0.0),
+                    ),
+                )
+                .build()
             )
 
             # Apply carried equipment (convert string keys back to EquipSlot enum).
@@ -754,11 +835,25 @@ class CampaignOrchestrator:
                 base.social, SocialUpdate(reputation_set=cf.reputation)
             )
 
+            # Resolve a real position BEFORE inserting into `entities` -- resolve_survivor_
+            # position()'s own occupancy check reads reconstruction_ctx.entities (the same dict
+            # this loop is building), so only already-placed survivors are visible when this
+            # one is resolved, never later/unresolved ones sitting at a shared default.
+            resolved_pos = resolve_survivor_position(
+                eid,
+                cf.last_position,
+                reconstruction_ctx,
+                world_spec.topology.width,
+                world_spec.topology.height,
+                compiled_regions,
+            )
+            navigation = dc_replace(base.navigation, position=resolved_pos)
+
             entities[eid] = dc_replace(
                 base,
-                identity=identity,
                 equipment=equipment,
                 social=social,
+                navigation=navigation,
             )
 
         # Apply social memory import for entities that have a prior record.
@@ -825,16 +920,16 @@ class CampaignOrchestrator:
 
         # E43E: evaluate cross-episode social consequences at episode-entity-spawn time.
         # Read-only — evaluate_social_consequence() never mutates entities/campaign_state;
-        # emitted via self._event_recorder.record() (SimulationEvent, not WorldEvent —
+        # emitted via self._scenario_event_recorder.record() (SimulationEvent, not WorldEvent —
         # this constructor call has no StateUpdate/ApplyPath merge step available).
         from src.systems.social_systems.consequence_events import evaluate_social_consequence
 
-        if self._event_recorder is not None:
+        if self._scenario_event_recorder is not None:
             for eid in sorted(entities.keys()):
                 entity = entities[eid]
                 faction_id = f"faction_{entity.identity.faction}"
                 for event in evaluate_social_consequence(entity, faction_id, self._state, tick=0):
-                    self._event_recorder.record(event)
+                    self._scenario_event_recorder.record(event)
 
         # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: snapshot idea 56's region_cultures signal
         # into per-tick-reachable state at episode start -- the real bridge GroupPhase.resolve()
@@ -905,6 +1000,9 @@ class CampaignOrchestrator:
             entities=entities,
             regions=compiled_regions,
             places=compiled_places,
+            information_source_profiles=compiled_state.information_source_profiles,
+            # pending_information_responses intentionally not threaded here either -- see the
+            # episode-0 branch's own comment above.
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
             entity_legend_facts=entity_legend_facts,

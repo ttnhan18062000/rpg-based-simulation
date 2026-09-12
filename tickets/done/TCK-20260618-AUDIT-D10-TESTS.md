@@ -1,10 +1,10 @@
 ---
-status: done
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260618-AUDIT-D10-TESTS
-phase: open
+phase: done
 date: 2026-06-18
 tags: [audit, test-coverage, regression-risk, test-suite-health]
 ---

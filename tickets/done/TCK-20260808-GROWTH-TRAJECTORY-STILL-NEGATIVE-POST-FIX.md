@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: mechanics
 authority: P2
 audience: agent
 ticket_id: TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX
-phase: open
+phase: done
 date: 2026-08-08
 tags: [progression, simulation-quality]
 ---

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260613-DOC-ENGINE-RUNTIME-DETAILS
-phase: open
+phase: done
 date: 2026-06-13
 tags: [documentation, engine, compaction, candidate-selection, determinism, performance]
 ---

@@ -355,3 +355,21 @@ confident about live, in-simulation reachability than what was actually verified
 recorded for whoever scopes the `campaign_life_arc` entity-spawn fix, since re-verifying grief/
 nemesis reachability against a real, populated episode should be part of that fix's own test
 evidence once entities exist.
+
+**Second addendum (2026-09-11, not reopened —
+`TCK-20260909-GRIEF-NEMESIS-CAMPAIGN-REVERIFICATION`'s own real result, once entities finally
+existed):** Real, mixed evidence — not a clean confirmation. `nemesis_relation_formed` and grief's
+episode-boundary path are **BLOCKED**: a real 3-episode `frontier_living_world` campaign showed
+episode 0 completing cleanly, but episodes 1-2 both stalling almost immediately on a real
+`LAW-SPAWN-OCCUPANCY` violation — traced to a newly-discovered bug where every survivor
+reconstructed for episode N>0 lands at the identical `(0.0, 0.0)` position (13 of 16 real
+survivors colliding), never exercisable until this same follow-up batch gave Campaign mode real
+entities in the first place. Filed as `TCK-20260911-CAMPAIGN-SURVIVOR-RECONSTRUCTION-POSITION-COLLISION`.
+Grief's mid-episode path is **INCONCLUSIVE**: a real 500-tick single episode produced 4 genuine
+entity deaths (confirmed directly via `Kernel._event_listeners`, not inferred) but zero
+`grief_urgency_triggered` events — root-caused, not just observed: every alive entity's real
+`trust_history` toward each dead entity was checked directly and found empty for the entire run,
+meaning the trigger's own precondition (`ALLY_TRUST_THRESHOLD=0.30`) was never met, not that the
+detection mechanism itself is broken. Neither result confirms nor refutes this ticket's own
+original "reachable" claim for either event type — both remain genuinely unverified through a real
+run, now for a different, more specific reason than the original zero-entity gap.
