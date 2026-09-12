@@ -297,6 +297,23 @@ structural remediation (scheduled slow-lane runs, a lighter always-on smoke subs
 else) as an explicitly open question — out of this ticket's own scope to resolve.
 
 ## Test Summary
+**Real CI failures found and fixed post-push, before landing**: the first PR push failed 2 real CI
+jobs.
+1. `Integration` — `tests/integration/domains/test_fused_loop.py` had 2 more assertions on the old
+   `intent_results`-based shape, missed on the first grep sweep because this file checks
+   `.kind == "ASK_INFORMATION"` without the literal string `"ActionIntent"` anywhere in it (my
+   first sweep grepped for files containing both `"intent_results"` and `"ActionIntent"`
+   together). Fixed the same way as the other 3 files; re-ran a broader grep pattern
+   (`"intent_results"` combined with `"ASK_INFORMATION"`/`"routed_query"`/`"Branch B"` instead of
+   `"ActionIntent"`) afterward and found no further instances.
+2. `API / tools / logging` — `tests/tools/test_entity_event_ledger.py::
+   test_entity_ledger_covers_every_entity_update_field` correctly flagged the new
+   `pending_action_intent` field as missing a ledger entry. Added it to the same exclusion set
+   `intent_results` itself is already in, for the identical reason (a same-tick transient routing
+   signal, not an independently-observable durable mutation).
+Both confirmed via real CI job failures, not assumed; both fixed and re-verified locally against
+the exact CI commands before re-pushing.
+
 - `tests/unit/engine/test_information_intent_execution_phase.py` — fully rewritten (the old shape
   no longer exists to test); 6 passed, including a new
   `test_action_intent_execution_phase_clears_pending_action_intent_after_execution` and
@@ -326,10 +343,11 @@ else) as an explicitly open question — out of this ticket's own scope to resol
   tests/unit/strategic/test_strategic_lifecycle.py tests/unit/strategic/test_strategic_memory_v2.py
   tests/integration/kernel/test_phase10_replay.py tests/integration/kernel/
   test_p1_replay_fidelity.py -q` (remaining files referencing `latest_intent_results`) — 17 passed.
-- `tests/api tests/cli tests/tools tests/logging tests/engine tests/observability` (covers
-  `state_presenter.py:128`, the API-boundary read site) — 2700 passed (confirmed as part of the
-  sibling count-expansion ticket's own CI triage on the same commit lineage; not re-run here since
-  no file in that suite is touched by this ticket's own diff beyond what that run already covered).
+- `tests/api tests/cli tests/tools tests/logging tests/engine tests/observability tests/integration
+  -m "not slow and not extra_slow" -q` (the real `Integration` + `API / tools / logging` CI
+  commands combined, covering `state_presenter.py:128`, the API-boundary read site) — 3666 passed,
+  23 skipped, 1 xfailed, re-run after both real CI failures above were fixed. This is the exact
+  final, post-fix confirmation before the PR reported green.
 
 ## Files Changed
 - `src/core/updates.py` — `EntityUpdate` gains `pending_action_intent`
@@ -340,6 +358,13 @@ else) as an explicitly open question — out of this ticket's own scope to resol
 - `tests/integration/domains/information/test_phase5_information_belief_phase.py` — 3 assertions
   updated, 1 new end-to-end regression test added
 - `tests/integration/domains/information/test_phase5_branch_b_realworld.py` — 1 assertion updated
+- `tests/integration/domains/test_fused_loop.py` — 2 assertions updated (found via a real CI
+  `Integration` job failure — missed on the first grep sweep since this file checks `.kind ==
+  "ASK_INFORMATION"` without the literal string `"ActionIntent"` anywhere in it)
+- `tests/tools/test_entity_event_ledger.py` — added `pending_action_intent` to the field-ledger
+  exclusion set (found via a real CI `API / tools / logging` job failure); excluded for the same
+  reason `intent_results` itself already is: a same-tick transient routing signal, never merged
+  toward durable state, with no independently-observable entity mutation of its own to ledger
 - `docs/testing/regression_policy.md` — new §12, CI-blind-spot finding
 
 ## Completion Summary
