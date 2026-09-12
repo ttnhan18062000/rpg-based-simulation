@@ -386,8 +386,8 @@ def test_information_belief_branch_b_routes_query_when_unknown_precondition_met(
     eu_a = refined.entity_updates.get(1)
     assert eu_a is not None
     assert eu_a.property_updates.get("last_routed_query_subject") == "material.moon_resin.source"
-    assert eu_a.intent_results, "expected a routed ASK_INFORMATION intent for entity A"
-    assert eu_a.intent_results[0].kind == "ASK_INFORMATION"
+    assert eu_a.pending_action_intent is not None, "expected a routed ASK_INFORMATION intent for entity A"
+    assert eu_a.pending_action_intent.kind == "ASK_INFORMATION"
 
     # Entity B: Step 4's fix fired for a distinct entity/subject in the same tick —
     # and its self_model write survives the merge alongside entity A's Branch B write.
@@ -522,5 +522,5 @@ def test_branch_b_fires_across_real_tick_boundary_after_self_model_patch_materia
     eu_n1 = refined_n1.entity_updates.get(1)
     assert eu_n1 is not None, "expected InformationBeliefPhase's Branch B to route a query in tick N+1"
     assert eu_n1.property_updates.get("last_routed_query_subject") == "material.moon_resin.source"
-    assert eu_n1.intent_results, "expected a routed ASK_INFORMATION intent in tick N+1"
-    assert eu_n1.intent_results[0].kind == "ASK_INFORMATION"
+    assert eu_n1.pending_action_intent is not None, "expected a routed ASK_INFORMATION intent in tick N+1"
+    assert eu_n1.pending_action_intent.kind == "ASK_INFORMATION"
