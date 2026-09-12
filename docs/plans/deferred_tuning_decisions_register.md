@@ -196,6 +196,29 @@ once chose them deliberately, and they may be better:
 **No action implied** — the live values stand. This is a record that an alternative calibration
 existed, in case current values prove wrong.
 
+### D-09 · Recruitment-offer acceptance criteria
+**Deferred from:** `TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION`
+
+Wiring `CooperationPosture.JOIN_PARTY` (the designed-but-never-connected accept half of
+recruitment-offer party formation — see that ticket's own investigation.md for the full trace) is
+**wiring** and is in scope. What conditions should govern *whether* an entity accepts a given
+pending offer — trust level toward the offerer, whether the entity's own current need matches what
+the offer provides, faction alignment, existing commitments/cooldowns, personality — is **tuning**
+and is explicitly deferred, per the user's own standing rule that acceptance-criteria design is a
+separate decision from making the mechanism reachable at all.
+
+**Shipped minimal condition** (`CooperationDecisionService.find_pending_incoming_offer()`,
+`src/domains/cooperation/services.py`): a pending, unexpired `OFFERED` `RECRUITMENT` contract
+exists targeting this entity, the offering entity is alive and active, and this entity is not
+already in a group. First qualifying offer wins, deterministically ordered. No trust check, no
+need matching, no faction check, no rejection path at all — every qualifying offer is accepted.
+
+**Accepted outcome:** an entity will accept a recruitment offer from anyone, regardless of
+trust/history/faction, as long as it isn't already grouped. This may look "too agreeable" once
+groups form frequently in real runs. That is a tuning question for a future pass, not a defect in
+the wiring — see `TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION`'s own Completion
+Summary for the real before/after evidence this minimal condition already produced.
+
 ---
 
 ## Related

@@ -182,3 +182,59 @@ def test_party_cohesion_leader_lost_writes_trust_and_grudge_via_real_learning_se
     assert member_up.social.grudge_delta[1] == pytest.approx(expected.grudge_delta)
     # Confirms this isn't the old hardcoded -0.25-only branch that silently dropped grudge.
     assert member_up.social.grudge_delta[1] != 0.0
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION: JOIN_PARTY promotes the offering
+# entity's own pending recruitment offer to ACTIVE, the real precondition
+# GroupSystem.update_groups() (a later phase) needs to actually form a group.
+# ---------------------------------------------------------------------------
+
+def test_join_party_promotes_offerers_contract_to_active_with_extended_expiry():
+    from src.core.strategic import ContractState, ContractKind, ContractStatus
+
+    offerer = (
+        V2EntityBuilder(1)
+        .kind("HERO")
+        .location(0.0, 0.0)
+        .combat(hp=100, max_hp=100, alive=True)
+        .build()
+    )
+    target = (
+        V2EntityBuilder(2)
+        .kind("HERO")
+        .location(1.0, 1.0)
+        .combat(hp=100, max_hp=100, alive=True)
+        .build()
+    )
+    contract = ContractState(
+        id="cnt_recruit_1_2_5",
+        kind=ContractKind.RECRUITMENT,
+        source_id=1,
+        target_id=2,
+        terms={"daily_pay": 0, "duration": 100},
+        status=ContractStatus.OFFERED,
+        created_tick=5,
+        expiry_tick=15,
+    )
+    offerer = replace(offerer, strategic=replace(offerer.strategic, contracts={contract.id: contract}))
+    state = AuthoritativeState(entities={1: offerer, 2: target}, tick=10, seed=123)
+
+    refined = CooperationPhase.execute(state, StateUpdate())
+
+    assert 1 in refined.entity_updates, "expected a promotion EntityUpdate for the offering entity"
+    offerer_up = refined.entity_updates[1]
+    assert offerer_up.strategic is not None
+    promoted = {c.id: c for c in offerer_up.strategic.contracts_add_or_update}
+    assert contract.id in promoted
+    activated = promoted[contract.id]
+    assert activated.status == ContractStatus.ACTIVE
+    # Real regression guard for the bug found and fixed within this same ticket: a naive
+    # status-only replace() would carry over the original ~10-tick OFFER-stage expiry_tick,
+    # causing GroupSystem.update_groups() to treat the just-accepted contract as already
+    # expired and immediately dissolve the group it just formed. accept_contract() (via
+    # SocialContractSystem.transition_contract()) must reset expiry_tick to
+    # tick + terms["duration"] instead.
+    assert activated.expiry_tick == 10 + 100, (
+        "expiry_tick must be reset to tick + duration on activation, not carried over from OFFERED"
+    )
