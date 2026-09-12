@@ -86,12 +86,26 @@ def _make_mock_entity(
     equip_slots: dict | None = None,
     equip_durability: dict | None = None,
     position: tuple[float, float] = (10.0, 20.0),
+    kind: str = "human",
+    role: int = 0,
+    properties: dict | None = None,
+    traits: set | None = None,
+    personality: dict | None = None,
 ) -> MagicMock:
     """Build a mock EntityState with controlled field values."""
     entity = MagicMock()
+    entity.kind = kind
     entity.identity.evolution_level = level
     entity.identity.evolution_points = xp
     entity.identity.faction = faction
+    entity.identity.role = role
+    entity.identity.properties = properties or {}
+    entity.identity.traits = traits or set()
+    personality = personality or {"greed": 0.0, "bravery": 0.0, "sociability": 0.0, "industry": 0.0}
+    entity.identity.personality.greed = personality["greed"]
+    entity.identity.personality.bravery = personality["bravery"]
+    entity.identity.personality.sociability = personality["sociability"]
+    entity.identity.personality.industry = personality["industry"]
     entity.lifecycle.active = lifecycle_active
     entity.combat.alive = combat_alive
     entity.social.public_reputation = reputation
@@ -204,6 +218,57 @@ def test_extract_entity_carry_forward_last_position_not_gated_by_carry_rules():
 
     assert result[1].last_position == (5.0, 5.0)
     assert result[1].level == 1  # confirms carry_level=False actually took effect
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION:
+# _extract_entity_carry_forwards captures kind/role/faction/properties/traits/
+# personality unconditionally, matching last_position's own treatment.
+# ---------------------------------------------------------------------------
+
+def test_extract_entity_carry_forward_captures_identity_fields():
+    manifest = _make_manifest()
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(
+        entity_id=1,
+        kind="goblin",
+        role=2,
+        faction=3,
+        properties={"archetype_id": "goblin_raider", "faction_id": "monster_horde"},
+        traits={"brave", "cunning"},
+        personality={"greed": 0.4, "bravery": 0.7, "sociability": 0.1, "industry": 0.2},
+    )
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].kind == "goblin"
+    assert result[1].role == 2
+    assert result[1].faction == 3
+    assert result[1].properties == {"archetype_id": "goblin_raider", "faction_id": "monster_horde"}
+    assert set(result[1].traits) == {"brave", "cunning"}
+    assert result[1].personality == {
+        "greed": 0.4, "bravery": 0.7, "sociability": 0.1, "industry": 0.2
+    }
+
+
+def test_extract_entity_carry_forward_identity_fields_not_gated_by_carry_rules():
+    manifest = _make_manifest()
+    manifest = dataclasses.replace(
+        manifest,
+        carry_forward_rules=CarryForwardRules(
+            carry_level=False, carry_xp=False, carry_reputation=False, carry_equipment=False,
+        ),
+    )
+    orch = CampaignOrchestrator(manifest)
+
+    mock_entity = _make_mock_entity(entity_id=1, kind="goblin", role=2, faction=3)
+    final_state = _make_mock_final_state(entities={1: mock_entity})
+    result = orch._extract_entity_carry_forwards(final_state)
+
+    assert result[1].kind == "goblin"
+    assert result[1].role == 2
+    assert result[1].faction == 3
 
 
 # ---------------------------------------------------------------------------

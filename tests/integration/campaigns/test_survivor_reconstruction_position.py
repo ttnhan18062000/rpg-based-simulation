@@ -13,12 +13,14 @@ level unit call.
 ticket's own confirmed claim is that survivors reconstruct at distinct, legal positions with zero
 LAW-SPAWN-OCCUPANCY violations -- verified directly below for both episode 1 and episode 2. It does
 NOT claim episode 2 (or any later episode) completes at full tick length -- that requires
-`TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP`'s own fix first (survivor
-`kind`/`identity.faction` are separately, confirmedly dropped by the same reconstruction branch;
-episode 2 stalls at tick 52 for that reason, not a position collision -- confirmed here by the fact
-that the occupancy checks below pass even though episode 2 still stalls). The full
-campaign-completion acceptance bar is transferred to that ticket's own Acceptance Criteria, not
-silently dropped -- see this module's assertions for exactly what stays proven here.
+`TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION`'s own fix first (survivor
+`kind`/`identity.role`/`.faction`/`.properties`/`.traits`/`.personality` are separately,
+confirmedly dropped by the same reconstruction branch; episode 2 stalls at tick 52 for that reason,
+not a position collision -- confirmed here by the fact that the occupancy checks below pass even
+though episode 2 still stalls). The full campaign-completion acceptance bar is transferred to that
+ticket's own Acceptance Criteria, not silently dropped -- see this module's assertions for exactly
+what stays proven here. That ticket's own real acceptance evidence, including the full-completion
+check, lives in `test_survivor_identity_reconstruction.py`, alongside this file.
 """
 import pytest
 

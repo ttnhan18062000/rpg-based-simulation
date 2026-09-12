@@ -198,7 +198,7 @@ fixed and real survivors started existing.
       separate** reason (survivor `kind`/`identity.faction` also silently dropped by the same
       reconstruction branch — never this ticket's own scope) — the original "episode 1+ completes
       without an early stall" wording is **struck and transferred explicitly** to
-      `TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP`'s own Acceptance
+      `TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION`'s own Acceptance
       Criteria, not silently dropped.
 - [x] No regression in `tests/unit/domains/campaigns/` (164 passed), `tests/integration/campaigns/`
       (19 passed), plus the new `tests/integration/campaigns/
@@ -206,7 +206,7 @@ fixed and real survivors started existing.
       confirmed claim rather than full campaign completion).
 
 ## Related Tickets
-- `TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP` — filed from this
+- `TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION` — filed from this
   ticket's own real acceptance-run evidence. Owns the campaign-completion acceptance bar
   transferred from here, and the separate, confirmed `kind`/`identity.faction` carry-forward gap
   in the same reconstruction branch this ticket fixed position for.
@@ -375,6 +375,6 @@ reconstructed episodes. That same real run surfaced a second, separate, confirme
 same code path (`kind`/`identity.faction` also silently dropped) that still stalls episode 2 for an
 unrelated reason. Rather than absorbing that into this ticket or letting the original "campaign
 completes" acceptance bar quietly disappear, it was reported and filed as its own ticket
-(`TCK-20260911-CAMPAIGN-SURVIVOR-KIND-FACTION-IDENTITY-CARRY-FORWARD-GAP`), which explicitly
+(`TCK-20260911-CAMPAIGN-SURVIVOR-IDENTITY-NOT-RESTORED-ON-RECONSTRUCTION`), which explicitly
 inherits that bar in its own Acceptance Criteria. This ticket closes on its own real, narrower,
 fully-confirmed claim.
