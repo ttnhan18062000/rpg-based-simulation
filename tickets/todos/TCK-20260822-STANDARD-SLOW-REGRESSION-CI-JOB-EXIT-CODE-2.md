@@ -47,10 +47,15 @@ tip after this session's own PRs merged cleanly on every job that actually gates
 Both `simq-corpus-diversity-slow-isolated` and `lane-legacy-regression` are confirmed to still
 exist as valid `Makefile` targets (not a broken/renamed reference).
 
-**Root cause confirmed 2026-08-26 (a prior session's own investigation of this ticket — recorded
-here 2026-09-13 after being found to exist only in that session's own memory, not durably in this
-ticket, per standing instruction that a known defect should never live only in session memory).**
-`Kernel.tick_once()` (`src/engine/kernel.py`, `_phase_resolution()`'s own mid-tick check, and a
+**This root cause was independently confirmed TWICE — 2026-08-26 and 2026-09-06 — by two separate
+sessions, neither of which wrote it into this ticket, and the second of which did not know the
+first had already found it. Recorded here 2026-09-13, the first time either finding reached this
+ticket's own body.** This is worse than an unfiled finding: the ticket existed the whole time and
+stayed empty while two different sessions independently re-derived the same answer. A known defect
+must never live only in session memory — this is what that failure mode costs in practice, not
+just in principle.
+
+The 2026-08-26 session confirmed: `Kernel.tick_once()` (`src/engine/kernel.py`, `_phase_resolution()`'s own mid-tick check, and a
 softer end-of-tick check feeding the same signal) reads real wall-clock elapsed time
 (`time.perf_counter_ns()`) mid-tick, every 10 processed entity results. If elapsed exceeds
 `profile.max_tick_budget_ms` **and `self._audit_mode` is `False`** (the default — `True` only if
@@ -71,6 +76,17 @@ same seed — attempt 1 FAILED (watchdog trip at tick 627, `governance_ecology` 
 vs. normal ~0.01-0.15ms), attempt 2 PASSED cleanly. Matches the real CI history this ticket's own
 Request Summary above documents (4/7 push-to-main runs failed with exit 2) — same
 non-determinism, different runner load each time.
+
+**The second, independent confirmation (2026-09-06)**: a different session investigated this same
+ticket's failures again, from a different specific symptom
+(`test_hero_guild_routing_seed42_1000t_cognition_grade_stability` failing with `event_count=142`
+against the guard's own `<=2` tolerance floor, inside the `simq-corpus-diversity-slow-isolated`
+step). That session reproduced the failing test locally twice under real induced load and could
+not reproduce the spike, concluding "leaning toward genuine CI-environment timing variance...not
+resolved to 100% certainty" — a real, honest, independently-reached data point, but one that never
+found the 2026-08-26 session's own already-confirmed root cause, because that finding lived only
+in the earlier session's memory, not in this ticket. Both investigations were real and correct as
+far as they went; neither had access to the other's work, because neither wrote it here.
 
 **Deferred deliberately, not an oversight**: the user was informed of this root cause and its
 recommended fix and said to let it sit (not to pursue a fix now) — this ticket stays open and
@@ -158,15 +174,20 @@ None yet.
   ticket's own investigation must resolve — not assumed either way here.
 
 ## Implementation Notes
-**2026-09-13 update: record-only, not new work.** A confirmed root cause for this ticket existed
-only in a prior session's own memory (dated 2026-08-26), not durably in this ticket file — a
-known-defect-in-session-memory-only gap, the same pattern this arc has spent weeks correcting
-elsewhere (stale doc/comment reachability claims). Transcribed the confirmed finding into Request
-Summary above, added the deferred recommended fix to Scope, cross-referenced the independently-
-found downstream consequence (`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`) and
-its own two `RuntimeMode.DEGRADED`-forcing code sites (which now carry matching in-code
-cross-references back to this ticket). No code changed by this update. The user's own "let it sit"
-instruction stands — this ticket remains `OPEN` in `tickets/todos/`, not implemented, not closed.
+**2026-09-13 update: record-only, not new work.** The durable lesson here is not just "root cause
+confirmed" — it's that this root cause was independently confirmed **twice** (2026-08-26 and
+2026-09-06) by two different sessions, and neither wrote it into this ticket, so the second never
+found the first's already-complete answer. A defect living only in session memory is bad; a
+defect re-derived twice because the ticket that exists specifically to hold it stayed empty both
+times is worse — the file was there, and it didn't help. Transcribed both investigations into
+Request Summary above (explicitly naming both dates and both symptoms, not just the final answer),
+added the deferred recommended fix to Scope, and cross-referenced the independently-found
+downstream consequence (`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`) and its own
+two `RuntimeMode.DEGRADED`-forcing code sites (which now carry matching in-code cross-references
+back to this ticket). Also corrected the two now-stale session-memory records of this finding to
+point here instead of repeating their own snapshots. No code changed by this update. The user's
+own "let it sit" instruction stands — this ticket remains `OPEN` in `tickets/todos/`, not
+implemented, not closed.
 
 ## Test Summary
 _(unchanged — no test work performed; this is a documentation-only update)_
