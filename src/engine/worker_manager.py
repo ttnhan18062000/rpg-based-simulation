@@ -225,10 +225,17 @@ class WorkerManager:
             active_now = self._active_count
             
         # Capacity utilization is PEAK active workers in this tick.
-        # Hardened Mode (MB): Use max_workers as the denominator for relative pressure
+        # Hardened Mode (MB): Use max_workers as the denominator for relative pressure.
+        # TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER: when max_workers<=0,
+        # workers are deliberately disabled (synchronous execution) -- there is no worker-based
+        # pressure to report, so the metric is inapplicable (0.0), not maximal (1.0). The prior
+        # 1.0 sentinel was read by ResourceGovernor._get_indicated_mode() as genuine 90%+
+        # saturation, forcing DEGRADED unconditionally from tick 1 regardless of real load. Real
+        # compute pressure in this mode is still caught independently via tick_compute_ms/
+        # work_debt_total/memory_estimate_mb, none of which depend on worker state.
         worker_utilization = (
-            peak_active / self._max_workers 
-            if self._max_workers > 0 else 1.0
+            peak_active / self._max_workers
+            if self._max_workers > 0 else 0.0
         )
         
         # Queue utilization is PEAK depth observed relative to limit.

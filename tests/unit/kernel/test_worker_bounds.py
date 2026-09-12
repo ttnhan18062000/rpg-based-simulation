@@ -58,3 +58,58 @@ def test_worker_pool_shutdown():
     manager = WorkerManager(max_workers=2)
     manager.shutdown()
     assert manager._pool is None
+
+
+def test_worker_utilization_is_zero_when_workers_disabled():
+    """TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER: max_workers<=0 means
+    workers are deliberately disabled (synchronous execution) -- worker_utilization must report
+    0.0 (metric inapplicable), not 1.0 (which ResourceGovernor reads as genuine 90%+ saturation
+    and escalates to DEGRADED unconditionally, regardless of real load)."""
+    manager = WorkerManager(max_workers=0)
+    stats = manager.get_stats()
+    assert stats["worker_utilization"] == 0.0
+    manager.shutdown()
+
+
+def test_worker_utilization_reflects_real_saturation_when_workers_enabled():
+    """Confirms the fix above does not regress the normal (max_workers > 0) case: real worker
+    pressure must still be reported accurately, not silently zeroed."""
+    max_workers = 2
+    manager = WorkerManager(max_workers=max_workers)
+    barrier = threading.Barrier(max_workers + 1)
+
+    def blocking_worker(packet: WorkerPacket) -> WorkerResult:
+        barrier.wait()  # Ensures both workers are active simultaneously before either returns
+        return WorkerResult(
+            source_packet_id=packet.packet_id,
+            work_id=packet.work_id,
+            entity_id=packet.subject.id,
+            work_class=packet.work_class,
+            update=MagicMock()
+        )
+
+    packets = [
+        WorkerPacket(
+            packet_id=f"test:{i}",
+            work_id=f"w:{i}",
+            tick=0, world_time=0, seed=i,
+            work_class=WorkClass.CRITICAL,
+            subject=MagicMock(id=i),
+            neighbor_view=[],
+            work_kind="ACT",
+            payload={}
+        )
+        for i in range(max_workers)
+    ]
+
+    def _release_barrier():
+        barrier.wait()
+
+    releaser = threading.Thread(target=_release_barrier)
+    releaser.start()
+    manager.execute_batch(packets, blocking_worker)
+    releaser.join()
+
+    stats = manager.get_stats()
+    assert stats["worker_utilization"] == 1.0  # peak_active == max_workers, real saturation
+    manager.shutdown()
