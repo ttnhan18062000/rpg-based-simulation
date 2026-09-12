@@ -63,3 +63,33 @@ branch is structurally unreachable (`RuntimeProfile.max_queue_depth` is Pydantic
 and every real construction site passes a real positive value) — re-verified this claim holds
 (no new `max_queue_depth=` construction sites introduced since the ticket was filed) and left it
 untouched, per the ticket's own explicit Scope note.
+
+## CI caught a real regression before merge: a fixture that only worked by accident
+
+`gh pr checks` failed `Integration` on the first push. Triaged per standing discipline (pulled
+annotations, then reproduced the exact CI command locally rather than assuming transient) — it
+reproduced locally too: `tests/integration/kernel/test_substrate_freeze_m1.py::
+TestSubstrateFreezeM1::test_apply_path_singular_authority` failed with
+`TypeError: '>=' not supported between instances of 'float' and 'MagicMock'`.
+
+Root cause: this test's own `mock_kernel_deps` fixture builds a `MagicMock()` `RuntimeProfile`
+with `max_worker_count=0` — the exact worker-disabled case this ticket's fix targets — but never
+sets `profile.degradation_threshold_ram`. Before the fix, `worker_utilization=1.0` satisfied
+`ResourceGovernor._get_indicated_mode()`'s `>= 0.9` check and returned `DEGRADED` immediately,
+never reaching the later `CONSTRAINED`-branch comparison that reads `degradation_threshold_ram`.
+The fixture's own gap was real but invisible, masked by the exact bug this ticket fixes. With
+`worker_utilization=0.0` now correctly reported, evaluation proceeds further and the gap surfaces.
+
+Fixing that alone exposed a second, cascaded gap: `GovernorPolicy.from_mode(RuntimeMode.NORMAL)`
+enables full replay (`DEGRADED` did not), so `Kernel._phase_persistence()` now actually calls
+`CanonicalStateHasher.get_hash()` on the tick's own state — which it never did under the old,
+incorrectly-DEGRADED mode — and that touches the fixture's own bare `rng = MagicMock()`, which
+isn't JSON-serializable.
+
+Both are real, evidenced consequences of this fix correctly reaching code paths the bug had been
+hiding, not unrelated flakes. Fixed at the root, not papered over: added
+`profile.degradation_threshold_ram = 0.85` (`RuntimeProfile`'s own real default,
+`src/config/profiles.py:47`) and replaced the bare `MagicMock()` rng with a real
+`DeterministicRNG(42)`, matching the pattern already used by other real-`Kernel` tests in this
+repo (e.g. `tests/unit/kernel/test_grief_trigger_drain.py`). Re-ran the full local `tests/
+integration` suite before pushing again: 968 passed, 0 failed.

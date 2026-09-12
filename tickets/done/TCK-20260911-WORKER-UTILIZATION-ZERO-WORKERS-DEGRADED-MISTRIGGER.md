@@ -243,6 +243,18 @@ test_scenario_runtime_service.py` + `test_scenario_checkpointer.py` — 41 passe
   `test_worker_utilization_reflects_real_saturation_when_workers_enabled`.
 - `tests/unit/resource/test_resource_governor_contract.py` — added
   `test_real_kernel_with_workers_disabled_stays_normal_absent_real_pressure`.
+- `tests/integration/kernel/test_substrate_freeze_m1.py` — real CI regression caught before
+  merge: `test_apply_path_singular_authority`'s own `mock_kernel_deps` fixture (a `MagicMock()`
+  profile with `max_worker_count=0`) had silently relied on the pre-fix `RuntimeMode.DEGRADED`
+  mis-trigger to short-circuit `ResourceGovernor._get_indicated_mode()` before ever reaching
+  `profile.degradation_threshold_ram` (never set on the mock) or exercising the full-replay
+  state-hashing path (`GovernorPolicy.from_mode(NORMAL)` enables it; `DEGRADED` did not, so
+  `_phase_persistence()` never touched the fixture's own bare `rng = MagicMock()`). With the real
+  fix, `NORMAL` is correctly reached and both gaps became real failures. Fixed at the root: added
+  `profile.degradation_threshold_ram = 0.85` (matching `RuntimeProfile`'s own real default) and
+  replaced the bare `MagicMock()` rng with a real `DeterministicRNG(42)`, matching the pattern
+  already used by other real-`Kernel` tests in this repo. Confirmed via full local reproduction of
+  `tests/integration` (968 passed, 0 failed) before pushing.
 - `stored_artifacts/TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER/{investigation.md,plan.md,test_plan.md}`
   — full evidence trail.
 - `tickets/done/TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER.md` — this file,
