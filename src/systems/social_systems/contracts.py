@@ -272,12 +272,14 @@ class ContractService:
         -- that method's Tuple[StrategicUpdate, List[SocialUpdate]] return shape is
         unpacked by every existing caller/test and must not change.
 
-        NOT wired to any live pipeline phase today: process_active_contracts(), the
-        only production caller of resolve_contract_outcome(), never passes
-        betrayal=True/betrayer_id -- a pre-existing gap this ticket discloses but
-        does not fix (out of scope; would require new betrayal-detection decision
-        logic in process_active_contracts()). This method is reachable only from
-        direct unit tests until a future ticket wires a real betrayal trigger.
+        NOT wired to any live pipeline phase today: ContractLifecyclePhase.resolve_expirations()
+        (src/engine/pipeline_phases/contracts.py), the sole production caller of
+        resolve_contract_outcome() since TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-
+        DETERMINATION removed the duplicate process_active_contracts() phase, never
+        passes betrayal=True/betrayer_id -- a pre-existing gap this ticket discloses
+        but does not fix (out of scope; would require new betrayal-detection decision
+        logic in resolve_expirations()). This method is reachable only from direct
+        unit tests until a future ticket wires a real betrayal trigger.
         """
         from src.core.updates import ClanUpdate
         from src.systems.social_systems.clan_lifecycle import (
@@ -289,49 +291,6 @@ class ContractService:
         if clan_id is None:
             return None
         return ClanUpdate(clan_id=clan_id, clan_reputation_delta=CLAN_REPUTATION_MISCONDUCT_DELTA)
-
-    @staticmethod
-    def process_active_contracts(
-        state: AuthoritativeState,
-        update: StateUpdate
-    ) -> StateUpdate:
-        """
-        Processes ACTIVE contracts for expiration or completion.
-        """
-        refined_entity_updates = dict(update.entity_updates)
-        current_tick = state.tick
-        
-        for e_id, entity in state.entities.items():
-            for c_id, contract in entity.strategic.contracts.items():
-                if contract.status == ContractStatus.ACTIVE:
-                    if contract.expiry_tick != -1 and current_tick > contract.expiry_tick:
-                        strat_up, bond_ups = ContractService.resolve_contract_outcome(entity, c_id, success=True, tick=current_tick)
-                        
-                        ent_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
-                        
-                        # Merge strategic update
-                        base_strat = ent_upd.strategic or StrategicUpdate()
-                        merged_strat = replace(base_strat,
-                            contracts_add_or_update=list(base_strat.contracts_add_or_update) + list(strat_up.contracts_add_or_update),
-                            directives_add_or_update=list(base_strat.directives_add_or_update) + list(strat_up.directives_add_or_update)
-                        )
-                        
-                        # Apply relevant SocialUpdate (resolve_contract_outcome returns [entity_up, other_up])
-                        my_social_up = bond_ups[0]
-                        
-                        base_social = ent_upd.social or SocialUpdate()
-                        merged_social = replace(base_social,
-                            bond_updates=list(base_social.bond_updates) + list(my_social_up.bond_updates),
-                            heroism_delta=base_social.heroism_delta + my_social_up.heroism_delta,
-                            notoriety_delta=base_social.notoriety_delta + my_social_up.notoriety_delta
-                        )
-                        
-                        refined_entity_updates[e_id] = replace(ent_upd,
-                            strategic=merged_strat,
-                            social=merged_social
-                        )
-                        
-        return replace(update, entity_updates=refined_entity_updates)
 
     @staticmethod
     def reap_expired_offers(

@@ -4129,14 +4129,16 @@
     by both producers); src/engine/pipeline_phases/groups.py GroupPhase.resolve()
     (live party-defection trigger, wired as pipeline phase "groups"); src/systems/social_systems/contracts.py
     ContractService.compute_betrayal_clan_reputation_update (pure-function-only contract-betrayal
-    path; disclosed as not reachable from process_active_contracts(), which never passes
+    path; disclosed as not reachable from its production caller, which never passes
     betrayal=True/betrayer_id -- a pre-existing gap this ticket surfaces but does not
-    fix. Corrected 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION):
-    process_active_contracts() itself is confirmed NOT reachable against a real ACTIVE-past-expiry
-    candidate in normal sequential tick progression either -- ContractLifecyclePhase.resolve_expirations()
-    (pipeline.py "contracts" phase) transitions expiring contracts away from ACTIVE first. So
-    resolve_contract_outcome() is unreachable in production today, not merely its betrayal
-    branch; see that ticket for the open single-owner determination.); src/systems/social_systems/appraisal.py
+    fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION):
+    the production caller of resolve_contract_outcome() is now ContractLifecyclePhase.resolve_expirations()
+    (pipeline.py "contracts" phase) -- the prior duplicate, ContractService.process_active_contracts(),
+    was confirmed unreachable in normal sequential tick progression (resolve_expirations() always
+    ran first and transitioned the contract away from ACTIVE) and was deleted, its consequence
+    model ported into resolve_expirations() as the sole owner. resolve_contract_outcome() is a
+    real live path as of that fix; only its betrayal branch (this entry's own subject) remains
+    disclosed-unreachable, now via resolve_expirations() instead.); src/systems/social_systems/appraisal.py
     appraise_contract() (stranger-judgment blend term, CLAN_INFLUENCE_WEIGHT = 0.2).
     Mechanics Bible: docs/mechanics/04_strategic_cognition.md Sec.10a "Clan Reputation
     & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)

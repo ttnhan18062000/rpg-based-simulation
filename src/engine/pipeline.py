@@ -413,7 +413,10 @@ class AuthoritativeApplyPipeline:
         update = run_phase("clan_lifecycle", update, lambda u: AuthoritativeApplyPipeline._resolve_clan_lifecycle(state, u))
 
         from src.systems.social_systems.contracts import ContractService
-        update = run_phase("active_contracts", update, lambda u: ContractService.process_active_contracts(state, u))
+        # Contract-expiry resolution (formerly also duplicated here via
+        # ContractService.process_active_contracts()) is owned exclusively by the
+        # "contracts" phase's ContractLifecyclePhase.resolve_expirations() above, which
+        # always runs first -- see TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION.
         update = run_phase("expired_offers", update, lambda u: ContractService.reap_expired_offers(state, u))
         
         update = run_phase("capacity_enforcement", update, lambda u: CapacityEnforcementPhase.enforce(state, u))

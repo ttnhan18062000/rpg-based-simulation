@@ -1,6 +1,19 @@
 # Plan — TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION
 
-## Status: blocked pending determination — no implementation plan yet
+## Resolution (2026-09-13): Option A chosen and implemented
+
+Peer decided Option A directly from the relative-cost writeup below (see the ticket's own
+Implementation Notes for the full writeup and the decisive finding: Option B's premise — "the full
+model is already implemented there" — was false, since `process_active_contracts()` carried its
+own missing-other-party bug). Implemented with one correction to Candidate Plan A's own step 2
+below: rather than writing new consequence logic into `transition_contract()` or a fresh call,
+`resolve_expirations()` now calls `ContractService.resolve_contract_outcome()` directly (the
+existing, already-correct model function) and applies both of its returned `SocialUpdate`s — not a
+faithful port of `process_active_contracts()`'s own logic, which would have carried its bug
+forward. Steps 1, 3, 4, 5 below were followed as written. This file's original candidate-plan
+content is kept below for the historical record of what was costed.
+
+## Status (historical, pre-resolution): blocked pending determination — no implementation plan yet
 
 This ticket does not have an implementation plan because it does not yet have a decision to
 implement. See `investigation.md` for the full evidence trail. This file records the two

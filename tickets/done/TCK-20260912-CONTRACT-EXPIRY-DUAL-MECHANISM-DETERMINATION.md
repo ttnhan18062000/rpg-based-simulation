@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION
-phase: open
+phase: done
 date: 2026-09-12
 tags: [cognition, social]
 ---
@@ -28,7 +28,7 @@ conflicting with the first when both fire. The real fix is consolidation to one 
 porting. This ticket now exists to make that determination.
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 standard
@@ -149,22 +149,31 @@ optimization package's partial supersessions) — not a fix for it.**
   determination is about *which phase*, not per-kind behavior differences.
 
 ## Acceptance Criteria
-- [ ] Real evidence (instrumentation, not code-reading alone) confirms which of the two phases
+- [x] Real evidence (instrumentation, not code-reading alone) confirms which of the two phases
       actually resolves expiring contracts today, and under what conditions both can fire together
-      — already substantially done (1,759 vs. 0 in normal progression; the test's own double-fire
-      scenario characterized precisely) but re-confirm as current when picked up.
-- [ ] A peer-routed (and, per this whole arc's standing pattern, user-routed for a genuine product/
-      architecture decision of this size) determination: which phase owns contract expiry.
-- [ ] Whichever phase is NOT the owner is fixed to stop independently transitioning `ACTIVE`
-      contracts — not merely deprioritized, actually prevented from double-firing.
-- [ ] The full documented consequence model (both-parties bond updates, at minimum) lands at the
-      one, real, reachable owner — verified via a real test, including the specific double-fire
-      scenario `test_contract_expiration_resolves_and_dissolves` already exercises, confirmed to
-      no longer produce duplicate/over-counted consequences.
-- [ ] `docs/mechanics/07_social_political_dynamics.md`'s stale reachability claim corrected.
-- [ ] No regression in existing contract-resolution tests, including
+      — 1,759 vs. 0 pre-fix; re-confirmed post-fix via a fresh 500-tick instrumented run
+      (`resolve_contract_outcome_called: 335`, now genuinely nonzero).
+- [x] A peer-routed determination: which phase owns contract expiry. Grep-level relative-cost
+      writeup sent to peer review for both options; peer decided Option A (`resolve_expirations()`
+      owns it) directly from the evidence, without escalating to the user — the deciding fact was
+      the missing-other-party bug found while costing Option B (see Implementation Notes).
+- [x] `process_active_contracts()` (the non-owner) is deleted entirely, not deprioritized —
+      genuinely removed from `src/systems/social_systems/contracts.py` and its pipeline
+      registration removed from `src/engine/pipeline.py`.
+- [x] The full documented consequence model (both-parties bond updates) lands at the one, real,
+      reachable owner — verified via `test_contract_expiration_grants_the_other_party_its_own_real_consequence`,
+      asserting exact values on both sides.
+- [x] `docs/mechanics/07_social_political_dynamics.md`'s stale reachability claim corrected (twice:
+      once mid-investigation to record the pre-fix finding, once more to record the post-fix live
+      state) — same for `docs/mechanics/04_strategic_cognition.md` and
+      `docs/parity_ledger/social_narrative.yaml`'s SOC-272 entry, which repeated the same stale
+      claim.
+- [x] No regression in existing contract-resolution tests, including
       `test_contract_expiration_resolves_and_dissolves` (updated to reflect the real, single-owner
-      resolution, not deleted or weakened).
+      resolution — kept its tick-skip construction as a regression guard, updated its assertions
+      from the old double-fire value to the real single-fire value, and removed its own unrealistic
+      dual-mirrored contract storage since that construction independently caused the same
+      mechanism's per-entity loop to double-count, unrelated to the two-mechanism bug just fixed).
 
 ## Related Tickets
 - `TCK-20260911-COOPERATION-TRUST-HISTORY-ZERO-ACCUMULATION-INVESTIGATION` (done — origin of this
@@ -207,13 +216,133 @@ optimization package's partial supersessions) — not a fix for it.**
   rather than pick unilaterally).
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**Determination (2026-09-13): Option A — `resolve_expirations()` owns contract expiry;
+`process_active_contracts()` deleted.**
+
+Relative-cost writeup sent to peer, grep-level per instruction (not a fresh investigation):
+- **Option A costs**: a same-file call swap (`SocialContractSystem` in `resolve_expirations()` is
+  a 3-line re-export shim pointing at the exact file `ContractService.resolve_contract_outcome()`
+  lives in — `src/systems/social_systems/contracts.py`), no later-phase state dependency, and
+  every one of the 10 existing tests calling `resolve_contract_outcome()` directly (not through
+  the phase) survives unchanged.
+- **Option B costs, found while costing it**: (1) `resolve_expirations()`'s `tick >= expiry_tick`
+  boundary vs. `process_active_contracts()`'s `tick > expiry_tick` (strict) would need relaxing,
+  or contracts sit ACTIVE-but-expired for a full extra tick; (2) `GroupSystem.update_groups()`'s
+  new-group-formation gate (`groups.py:272-275`, `status == ACTIVE` only) makes a same-tick-expiry
+  new-group-formation edge case concrete, not theoretical; (3) **the decisive finding**:
+  `process_active_contracts()` itself only ever applied `bond_ups[0]` (the contract holder's own
+  consequence) — never `bond_ups[1]` (the other party's), despite `resolve_contract_outcome()`
+  computing both. Option B's entire premise ("the full model is already implemented there, just
+  unreachable") was false — it would have cost three real fixes to reach a worse starting point
+  than Option A's single-file swap.
+
+Peer decided Option A directly from this evidence (no user escalation needed — the underlying
+product question, "should completion carry consequences," was already settled by the Bible's
+declared intent; the mechanism question was a real engineering determination, not a product call).
+
+**Implementation, following peer's explicit correction of my own first instinct:** peer flagged
+that porting `process_active_contracts()`'s logic "as-is" would carry its `bond_ups[1]` bug into
+the surviving path — the fix had to port the model *correctly*, not faithfully copy the bug.
+`resolve_expirations()`'s `ACTIVE` branch now calls `ContractService.resolve_contract_outcome()`
+directly (replacing the old, narrower `SocialContractSystem.transition_contract()` call) and
+applies **both** returned `SocialUpdate`s — the contract holder's own via the existing
+`_merge_entity_update()` pattern, and the other party's via a new `other_id` computation
+(`contract.target_id` if the entity is the source, else `contract.source_id`), guarded by
+`other_id in state.entities` (an entity could theoretically not exist in `state.entities` if
+removed same-tick; matches the guard pattern used and reverted from the earlier both-parties
+attempt).
+
+`ContractService.process_active_contracts()` deleted from `src/systems/social_systems/contracts.py`
+(including its own `bond_ups[0]`-only bug — recorded here explicitly as a found-and-fixed-by-
+deletion item, not a clean superseded copy: the deleted code was carrying a real defect, not just
+redundant correct logic). Its pipeline registration removed from `src/engine/pipeline.py`'s
+`"active_contracts"` phase (`ContractService.reap_expired_offers()`, a separate real function on
+the same phase, is unaffected and still runs there).
+
+**Docstring/comment corrections following the deletion** (so nothing still points at the removed
+function as a caller): `compute_betrayal_clan_reputation_update()`'s own docstring
+(`contracts.py`), the two test-file comments referencing `process_active_contracts()`
+(`test_contract_lifecycle.py`, `test_social_phase7.py`), and `docs/mechanics/04_strategic_cognition.md`'s
+§10a clan-reputation section (twice: the "Disclosed gap" paragraph and the "Out of scope"
+line) — all now correctly attribute `resolve_expirations()` as the sole production caller.
+
+**A genuinely separate, smaller finding surfaced while re-deriving the doc corrections**:
+`transition_contract()`'s own `heroism_delta = 0.05` (set when transitioning to `FULFILLED`) is
+now confirmed computed-but-always-discarded — its only two callers (`accept_contract()`, which
+transitions to `ACTIVE` not `FULFILLED`, and `resolve_contract_outcome()`, which discards the
+return value as `_` and computes its own richer `SocialUpdate` independently) never apply it to
+any entity. Documented as a disclosed, harmless dead value in the Mechanics Bible table (not worth
+its own ticket — genuinely inert, doesn't affect correctness since `resolve_contract_outcome()`'s
+own value supersedes it at the only path that matters).
+
+**Test-construction fix, distinct from the two-mechanism bug**: while updating
+`test_contract_expiration_resolves_and_dissolves`, found that its own construction (mirroring the
+same `ContractState` onto BOTH `leader.strategic.contracts` AND `member.strategic.contracts`) would
+independently cause `resolve_expirations()`'s own per-entity loop to process the same contract
+twice post-fix — once from each entity's own perspective — reproducing the same `0.1`
+double-fire number for an entirely different reason (the loop, not two competing mechanisms).
+Confirmed via direct trace: `GroupSystem`'s own group-invalidation check only ever reads the
+contract from the leader's own record (`groups.py:135-147`), so the member's mirrored copy served
+no purpose. Removed it to match the real "stored only on the offering entity" invariant confirmed
+earlier in this investigation and in the party-formation investigation — the test now exercises a
+realistic contract shape and genuinely proves single-fire behavior (`0.05`, not `0.1`).
 
 ## Test Summary
-_(pending)_
+- `pytest tests/ -k "contract" -q -m "not slow and not extra_slow"`: 390 passed, 1 skipped (389
+  pre-existing + 1 new regression test; the previously double-firing test now asserts the correct
+  single-fire value).
+- `pytest tests/unit/social/ tests/unit/domains/cooperation/ tests/unit/world/test_camp_lifecycle.py
+  tests/unit/domains/faction/test_clan_reputation_association.py
+  tests/unit/strategic/test_strategic_social_contracts.py tests/unit/core/test_p1_semantic_hardening.py
+  tests/unit/kernel/ -q -m "not slow and not extra_slow"`: 426 passed (broader regression sweep —
+  social, cooperation, groups, clan reputation, kernel).
+- `pytest tests/ -k "pipeline" -q -m "not slow and not extra_slow"`: 163 passed (no phase-ordering
+  regression from removing the `"active_contracts"` phase registration).
+- New test `test_contract_expiration_grants_the_other_party_its_own_real_consequence`
+  (`tests/unit/social/test_social_phase7.py`): real single-owner contract with a genuine
+  single-entity storage shape, exact-value assertions on BOTH parties' `heroism_delta`,
+  `notoriety_delta`, and `SocialBondUpdate` (`sentiment_delta`, `familiarity_delta`) — the specific
+  regression guard for the `bond_ups[1]` bug this ticket found and fixed.
+- Real 500-tick `frontier_living_world`/`hero_guild_perspective`/seed-7 campaign instrumentation,
+  re-run post-fix: `resolve_contract_outcome_called: 335` (nonzero — confirms the full model is now
+  a genuine live path, not merely unit-tested), completed cleanly to tick 500 with no
+  contract-related errors.
 
 ## Files Changed
-_(pending)_
+- `src/engine/pipeline_phases/contracts.py` — `resolve_expirations()`'s `ACTIVE` branch now calls
+  `ContractService.resolve_contract_outcome()` and applies both returned `SocialUpdate`s (to the
+  contract holder and the other party); import changed from `SocialContractSystem` to
+  `ContractService`; docstring updated.
+- `src/systems/social_systems/contracts.py` — `ContractService.process_active_contracts()` deleted;
+  `compute_betrayal_clan_reputation_update()`'s docstring updated to name the real caller.
+- `src/engine/pipeline.py` — `"active_contracts"` phase's `process_active_contracts()` call removed
+  (its sibling `reap_expired_offers()` call, a separate real function, stays); explanatory comment
+  added.
+- `tests/unit/social/test_social_phase7.py` — `test_contract_expiration_resolves_and_dissolves`
+  updated (single-entity contract storage, single-fire assertions); new
+  `test_contract_expiration_grants_the_other_party_its_own_real_consequence` added.
+- `tests/unit/social/test_contract_lifecycle.py` — stale docstring comment updated.
+- `docs/mechanics/07_social_political_dynamics.md` — §4.1 table and §5 "Disclosed gap" paragraph
+  updated to reflect the resolved, live state (both mid-investigation and post-fix passes).
+- `docs/mechanics/04_strategic_cognition.md` — §10a clan-reputation section's two
+  `process_active_contracts()` references updated to `resolve_expirations()`.
+- `docs/parity_ledger/social_narrative.yaml` — SOC-272's `v2_evidence` updated to reflect the real
+  caller (two passes, matching the Bible doc's own two-pass correction).
+- `staging_artifacts/TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION/` →
+  `stored_artifacts/` (this file's own move, at Finalize).
 
 ## Completion Summary
-_(pending)_
+Two live pipeline phases both resolved expiring `ACTIVE` contracts; the one the ticket originally
+named (`process_active_contracts()`) was confirmed structurally unreachable in normal sequential
+tick progression, and the reachable one implemented only a subset of the documented consequence
+model. Costed both single-owner dispositions at peer's request; Option A
+(`resolve_expirations()` owns it, `process_active_contracts()` deleted) won on evidence — Option B's
+own premise ("the full model is already implemented there") turned out to be false, since the code
+being preserved carried a real bug (never applying the other party's consequence). Implemented
+Option A correctly rather than porting the bug forward: both parties now receive real, documented
+consequences on contract expiry, verified with exact-value tests. Corrected the Mechanics Bible,
+a strategic-cognition cross-reference, and a parity ledger entry that all carried the same stale
+reachability claim. Filed the group-linkage gap
+(`TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING`) as the real prerequisite for
+failure/betrayal differentiation, left explicitly out of scope here. No known material gap left
+unstated.

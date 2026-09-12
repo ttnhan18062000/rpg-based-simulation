@@ -27,7 +27,7 @@ bug
 P2
 
 ## Request Summary
-Found during `TCK-20260912-CONTRACT-EXPIRY-ALWAYS-RESOLVES-SUCCESS-REGARDLESS-OF-OUTCOME`'s own
+Found during `TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION`'s own
 investigation, while checking whether `PartyCohesionService`'s real `MEMBER_ABANDONING`/
 `LEADER_LOST` signal (`src/domains/cooperation/services.py:327-379`, evaluated every tick for every
 active group in `CooperationPhase.execute()`) could serve as a real, live "did this contract's
@@ -44,7 +44,7 @@ group today is inference: matching `contract.source_id`/`.target_id` against a g
 than one contract or has changed groups since the contract was created.
 
 This is the prerequisite for any outcome-based social consequence keyed off real party cohesion
-(cross-referenced from `TCK-20260912-CONTRACT-EXPIRY-ALWAYS-RESOLVES-SUCCESS-REGARDLESS-OF-OUTCOME`,
+(cross-referenced from `TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION`,
 regardless of how that ticket's own dual-mechanism disposition lands) — without it, "did this
 contract's recruitment actually work out" has no real, non-inferred answer.
 
@@ -60,7 +60,7 @@ contract's recruitment actually work out" has no real, non-inferred answer.
   genuinely forms a group.
 
 ## Out of Scope
-- Whatever disposition `TCK-20260912-CONTRACT-EXPIRY-ALWAYS-RESOLVES-SUCCESS-REGARDLESS-OF-OUTCOME`
+- Whatever disposition `TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION`
   reaches on its own dual-mechanism question — this ticket is the prerequisite either way, not
   contingent on that determination.
 - Contract kinds other than `RECRUITMENT` (the only kind that forms a `GroupRecord` today) unless
@@ -76,7 +76,7 @@ contract's recruitment actually work out" has no real, non-inferred answer.
 - [ ] No regression in `tests/unit/domains/cooperation/`, `tests/integration/domains/cooperation/`.
 
 ## Related Tickets
-- `TCK-20260912-CONTRACT-EXPIRY-ALWAYS-RESOLVES-SUCCESS-REGARDLESS-OF-OUTCOME` (origin — found
+- `TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION` (done — origin — found
   while checking whether cohesion could drive contract-outcome resolution)
 - `TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION` (the ticket that wired `JOIN_PARTY`
   accept → real `GroupRecord` formation; this ticket's own timing question depends on that fix)

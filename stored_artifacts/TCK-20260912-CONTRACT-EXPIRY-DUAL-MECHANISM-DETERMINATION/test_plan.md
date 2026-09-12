@@ -1,6 +1,20 @@
 # Test Plan — TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION
 
-## Status: blocked pending determination — no new tests written yet
+## Resolution (2026-09-13)
+
+All five "Required test evidence once a plan is chosen" items below were delivered: single-fire
+proof (500-tick re-instrumentation, `resolve_contract_outcome_called: 335`, nonzero and via the
+single surviving mechanism), both-parties consequence proof
+(`test_contract_expiration_grants_the_other_party_its_own_real_consequence`, exact values both
+sides), `test_contract_expiration_resolves_and_dissolves` updated to the real single-fire value
+(`0.05`, not the old double-fire `0.1`) — plus a distinct fix to that test's own construction (see
+the ticket's Implementation Notes: its dual-mirrored contract storage independently caused a
+second, unrelated double-count within the single surviving mechanism's own per-entity loop), no
+regression across the full contract/social/cooperation/kernel/pipeline sweep, and betrayal
+confirmed to remain unreachable (unchanged, explicitly stated, not silently left ambiguous). See
+the ticket's own Test Summary for exact commands and counts.
+
+## Status (historical, pre-resolution): blocked pending determination — no new tests written yet
 
 No implementation has landed (the attempted both-parties fix was reverted — see
 `investigation.md`). This file records what evidence already exists and what a real fix, once a

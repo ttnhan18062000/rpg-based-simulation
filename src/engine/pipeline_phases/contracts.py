@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from src.core.strategic import ContractStatus
 from src.core.updates import EntityUpdate, StrategicUpdate
-from src.systems.social_contract import SocialContractSystem
+from src.systems.social_systems.contracts import ContractService
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState
@@ -37,7 +37,15 @@ class ContractLifecyclePhase:
             was honored until its duration ended.
 
         Effects:
-            - ACTIVE -> FULFILLED may create social reputation updates.
+            - ACTIVE -> FULFILLED applies the full contract-outcome consequence model
+              (ContractService.resolve_contract_outcome()) to BOTH parties -- sentiment,
+              familiarity, heroism/notoriety. This is the sole owner of contract-expiry
+              resolution (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION):
+              ContractService.process_active_contracts(), a second phase that duplicated
+              this responsibility, was deleted -- it was unreachable in normal sequential
+              tick progression (this phase always ran first and already transitioned the
+              contract away from ACTIVE) and, when it did run in edge cases, only applied
+              consequences to one party, never the other.
             - OFFERED / COUNTERED -> EXPIRED is status-only.
             - No movement, inventory transfer, or world mutation happens here.
         """
@@ -82,20 +90,36 @@ class ContractLifecyclePhase:
                     continue
 
                 if contract.status == ContractStatus.ACTIVE:
-                    # Active duration completed successfully.
-                    strat_upd, social_upd = SocialContractSystem.transition_contract(
+                    # Active duration completed successfully. Failure/betrayal
+                    # differentiation is out of scope until a real linkage exists between
+                    # a contract and its recruitment outcome
+                    # (TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING) -- success
+                    # is the only honest disposition available today.
+                    strat_upd, social_ups = ContractService.resolve_contract_outcome(
                         entity,
                         contract.id,
-                        ContractStatus.FULFILLED,
-                        state.tick,
+                        success=True,
+                        tick=state.tick,
                     )
 
                     if strat_upd.contracts_add_or_update:
+                        my_social_upd, other_social_upd = social_ups[0], social_ups[1]
                         _merge_entity_update(
                             entity_id,
                             strategic_upd=strat_upd,
-                            social_upd=social_upd,
+                            social_upd=my_social_upd,
                         )
+
+                        other_id = (
+                            contract.target_id
+                            if entity_id == contract.source_id
+                            else contract.source_id
+                        )
+                        if other_id in state.entities:
+                            _merge_entity_update(
+                                other_id,
+                                social_upd=other_social_upd,
+                            )
 
                 elif contract.status in (
                     ContractStatus.OFFERED,
