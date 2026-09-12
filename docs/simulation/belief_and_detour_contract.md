@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-06-13
+last_verified: 2026-09-12
 ---
 
 # Belief and Detour Contract
@@ -18,6 +18,37 @@ last_verified: 2026-06-13
 Beliefs are an entity's uncertain claims about world state. Detours are temporary deviations from the primary project to resolve a blocker. Together they enable entities to act on incomplete information (belief) and adapt to obstacles (detour) without abandoning long-term goals.
 
 **Relationship to `KnowledgeFact`** (`src/core/self_model.py`, see `docs/simulation/domains/information_contract.md`): `BeliefEntry` and `KnowledgeFact` are sibling, deliberately separate models, not duplicates — `src/domains/information/phase.py` is the single dispatch site that decides which one a given piece of new information becomes: raw, directly-witnessed events go to `ObservationBeliefBridge.process_observation()` (this file's `BeliefEntry`, contradiction-tracked — see "Contradiction degradation" below; not time-decayed, see `TCK-20260908-BELIEF-CYCLE-DEAD-DECAY-METHOD-CLEANUP`), while structured query responses go to `InformationAssimilationService.assimilate()` (`KnowledgeFact`, capacity-bounded, no decay). No accessor today fuses both into one "what does this entity currently believe/know about X" view — none is needed until a real consumer requires it (confirmed via `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`, which investigated and closed this as a deliberate split, not a gap to merge).
+
+**`KnowledgeFact`'s own information-assimilation subsystem is currently inert end to end**
+(`TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION`, confirmed via real
+500-tick instrumented reproduction, not code-reading alone) — stated here at its real size rather
+than as "no reader," since each half is independently, deliberately gated and nobody owns the
+whole picture:
+- **Facts are almost never written.** `InformationAssimilationService.assimilate()` is called from
+  exactly two real sites, both structurally empty in real default gameplay today: (a)
+  `InformationBeliefPhase.apply()`'s `pending_responses` path, fed from
+  `state.pending_information_responses`, never threaded into Campaign's own `AuthoritativeState`
+  (`TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH`, open); (b)
+  `ActionIntentAdapter.execute()`'s `ASK_INFORMATION` handler, reachable only if
+  `InformationIntentExecutionPhase` runs, gated `ENABLE_INFORMATION_INTENT_EXECUTION` — confirmed
+  default OFF and not enabled by any shipped world profile checked so far. A real 500-tick
+  `frontier_living_world` run produced **zero** `assimilate()` calls.
+- **Nothing reads `self_model.knowledge.facts` for a decision, even when it is populated.** Every
+  real reference outside `src/core/self_model.py` itself is a write, a passthrough, or a trace-only
+  diff — confirmed by direct grep, re-verified twice (once at the ticket's own filing, once after
+  count-expansion and `information_source_profiles` threading landed).
+- **The one decision-time structure shaped to receive this kind of data is itself always empty.**
+  See `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` (filed as its own, separate,
+  independent finding — an always-empty decision input, not conditioned on any disposition here).
+
+**Net effect**: whoever eventually revisits `ENABLE_INFORMATION_INTENT_EXECUTION` (deferred by
+`TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE` pending its own calibration validation) should know
+before flipping it that doing so alone produces facts which still reach no decision anywhere — the
+downstream half of this pipeline needs its own separate resolution, not an automatic side effect of
+enabling the flag. No consumer has been built for `KnowledgeFact` as part of documenting this: no
+design-doc declaration (unlike, e.g., `CooperationPosture.JOIN_PARTY`'s own explicit
+`intent_mapping`) states facts are meant to feed any specific decision, so building one would be
+inventing gameplay design, not completing a declared one.
 
 ---
 
