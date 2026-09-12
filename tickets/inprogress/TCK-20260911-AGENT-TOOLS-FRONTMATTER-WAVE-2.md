@@ -149,7 +149,7 @@ Added `tools/agent-monitoring/subagent_tool_audit.py` (read-only, stdlib + PyYAM
 Claude Code's own subagent transcripts under `~/.claude/projects/<repo-slug>*/<session>/subagents/
 agent-<id>.{meta.json,jsonl}` (repo-slug derived from the *main* repo root, stripping any
 `.claude/worktrees/<name>` suffix, so it correctly covers every worktree of this repo, not just the
-one it runs from). 12 fixture tests in `tests/tools/test_subagent_tool_audit.py` (`tmp_path`
+one it runs from). 11 fixture tests in `tests/tools/test_subagent_tool_audit.py` (`tmp_path`
 synthetic trees only, never real `.claude/agents/` or real transcripts).
 
 **Architecture-Verify finding, fixed:** the reviewer found `registered_agents()` byte-identically
@@ -226,14 +226,14 @@ git checkout HEAD -- .claude/agents/planner.md
 pytest tests/tools/test_wave1_agent_tools_frontmatter.py tests/tools/test_concern_investigator_agent_definition.py tests/tools/test_subagent_tool_audit.py -q
 ```
 71 passed (55 in the extended frontmatter file — 44 pre-existing Wave 1 assertions unchanged plus
-11 new Wave 2 assertions; 12 new fixture tests in `test_subagent_tool_audit.py`; the concern-investigator
+11 new Wave 2 assertions; 11 new fixture tests in `test_subagent_tool_audit.py`; the concern-investigator
 file's own tests unaffected). All fixture tests use synthetic `tmp_path` trees only — never real
 `.claude/agents/*.md` or real `~/.claude/projects/` transcripts, matching this repo's established
 convention for structural/architecture tests.
 
 ## Files Changed
 - `tools/agent-monitoring/subagent_tool_audit.py` (new) -- Step 1, caller-level audit tool
-- `tests/tools/test_subagent_tool_audit.py` (new) -- Step 1, 12 fixture tests
+- `tests/tools/test_subagent_tool_audit.py` (new) -- Step 1, 11 fixture tests
 - `docs/plans/agent_infrastructure/ai_first_hardening_epics/governance_capability_policy_epic.md` --
   Step 2 (gate definition), Step 3 (Wave 1 verdict), Step 7 (Wave 2 landed status update)
 - `.claude/agents/planner.md` -- Step 4, one `tools:` line added
