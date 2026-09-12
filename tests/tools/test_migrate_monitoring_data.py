@@ -361,8 +361,13 @@ def test_legacy_paths_removed_after_migration():
 
 
 def test_gitattributes_no_longer_references_any_of_the_3_retired_paths():
+    """Checks the unified glob via the shared _merge_union_glob_patterns() parser rather than an
+    exact substring, since TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION added `text
+    eol=lf` ahead of `merge=union` on this line, breaking a literal-suffix match."""
+    from tests.integrity.test_no_duplicate_content_blocks import _merge_union_glob_patterns
+
     content = (_REPO_ROOT / ".gitattributes").read_text()
     assert "agent-monitoring/runs.jsonl merge=union" not in content
     assert "agent-monitoring/events.jsonl merge=union" not in content
     assert "agent-monitoring/tools/*.jsonl merge=union" not in content
-    assert "agent-monitoring/data/*/*.jsonl merge=union" in content
+    assert "agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()
