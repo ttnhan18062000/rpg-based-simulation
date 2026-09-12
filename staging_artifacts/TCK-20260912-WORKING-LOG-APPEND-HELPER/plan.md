@@ -312,3 +312,18 @@ independently re-confirmed before this revision:
    against the real file. Fixed: the assertion is now scoped to the Finalize agent's own prompt
    string specifically, bounded by two anchors verified (via a live check against the real file) to
    exist and to correctly isolate that substring from the post-Finalize self-checks.
+
+## Deviations (Implement)
+
+Wording-only, no mechanism change. This plan's own Step 3 prose explains the rejected
+inline-embedding approach using the literal phrase "python3 -c". Implement initially carried that
+same literal phrase into the actual instruction text written into the Finalize agent's prompt
+string in `implement-ticket.js` — which would have made the new pin test's own negative assertion
+(`"python3 -c" not in prompt`) false the moment it was written, since the prompt itself would then
+contain the forbidden substring. Caught by running the live anchor/substring check against the
+real file before finalizing the test (`'python3 -c' in scoped_prompt` was `True` with the first
+wording, `False` after). Fixed by rewording the in-prompt caution to "never embed this text as a
+Python or shell source string (e.g. an inline `-c` script)" — identical guidance to the plan's own
+intent, without reproducing the exact trigger phrase inside the text the test itself scans. No
+change to the JSON-file / `--data-file` contract, the AST resolver design, or the parity-ledger
+read-modify-write sequence — all implemented exactly as specified above.
