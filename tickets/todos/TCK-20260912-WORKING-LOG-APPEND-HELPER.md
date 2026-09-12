@@ -92,6 +92,28 @@ existed; reducing it to one is the durable fix.
 - [ ] CLAUDE.md's After Work bullet states the rule.
 - [ ] `tests/integrity/test_merge_union_no_cr_bytes.py` still passes (it is the backstop, not the fix).
 
+### Remediation note for existing branches (2026-09-12)
+
+Any branch cut before PR #167 carries CRLF rows in its **own commits**; `eol=lf` normalizes at commit
+time and does not rewrite them. Each such branch needs one pass: merge `origin/main`, then
+`git add --renormalize tickets/working_log.csv agent-monitoring/data`, then commit if anything staged.
+
+**Verify the committed blob, not the working tree** — they can disagree:
+
+```
+git show HEAD:tickets/working_log.csv | python3 -c "import sys;print(sys.stdin.buffer.read().count(b'\r'))"
+```
+
+`git add --renormalize` rewrites the **index** and deliberately leaves the working copy alone;
+`git checkout HEAD -- <path>` then silently no-ops, because git's normalized comparison considers the
+file unchanged even when its raw bytes differ. `rpg-implementer` hit this on PRs #168 and #169: a
+clean renormalize, a committed blob at 0 CR, and a working-tree check still printing 8. Forcing real
+bytes onto disk required `rm` plus a re-checkout.
+
+The committed blob is the object `merge=union` operates on, so it is the one that decides whether the
+defect recurs — check that one. (Reported by `rpg-feature-planning`, 2026-09-12; the working-tree
+check circulated earlier in this ticket's thread targets the wrong object.)
+
 ## Related Tickets
 - `TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION` (PR #167) — fixed the first writer; this
   ticket closes the class. **Must merge first.**
