@@ -216,12 +216,74 @@ specifically construct or verify for.
   determination, disposition decision, possible fix/documentation) remains entirely unaddressed —
   left OPEN, not closed by this partial check.
 
+**Full re-check (2026-09-13, per `rpg-feature-planning`, re-measured against the now-fixed
+`TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER` sentinel): the exact original
+precondition no longer reproduces under normal conditions, AND the underlying mechanism is
+independently confirmed real under genuine sustained load. Both halves measured, not reasoned.**
+
+**Measurement 1 — exact original precondition, real production Kernel config, current (fixed)
+code.** Rebuilt the raider repro faithfully: `RaidService.spawn_raid()` (real production
+construction, `src/world/raid.py`), 3 `goblin_raider` entities with static `navigation.target`
+baked in at spawn, no AI goal, run against the real Kernel config `ScenarioRuntime._build_kernel()`
+actually uses in production (`src/engine/scenario_runtime.py:400-410` — `max_worker_count=0`,
+`max_tick_budget_ms=200.0`; this is the exact condition that triggered the now-fixed
+worker-utilization sentinel, and is very likely — though not directly confirmed, the original
+reproducer's own script was not preserved — what the original reproduction ran under, since it is
+the only real production Kernel-construction site using `max_worker_count=0`). 30 real,
+uninstrumented ticks: **0/30 ticks entered DEGRADED**; all 3 raiders moved toward target every
+tick. The specific reproduction that motivated this ticket does not reproduce anymore. Consistent
+with `rpg-feature-planning`'s own prediction.
+
+**Measurement 2 — genuine sustained load, same real Kernel config, no mocking.** Confirmed the
+starvation mechanism is not merely dead now — it is real, and still reachable under real (not
+sentinel-driven) pressure. Built a real 300-entity world (20 real raid waves via the same
+`RaidService.spawn_raid()`), same production Kernel config. Real, uninstrumented ticks: DEGRADED
+engaged at tick 23 (`tick_compute_ms` genuinely exceeded the 200ms budget — confirmed via the
+Kernel's own real watchdog alert, `compute_ms: 214-343ms` across the DEGRADED/SURVIVAL window, with
+real per-phase costs attached, not a forced/mocked signal), then escalated to SURVIVAL by the
+following few ticks and did not recover within the tested window. A wave of 15 raiders spawned
+*before* DEGRADED engaged (and thus already carrying `is_dirty`/movement history from earlier
+NORMAL/CONSTRAINED ticks) all kept moving fine even while DEGRADED was active — confirming the
+precondition really is "freshly spawned, zero prior dirty-set membership," not "spawned recently."
+
+**Measurement 3 — the decisive one: a genuinely fresh spawn injected mid-run, while the Kernel was
+already confirmed in real DEGRADED.** Once real DEGRADED was confirmed active (measurement 2, tick
+23), injected 5 more real `goblin_raider` entities (same `RaidService.spawn_raid()` construction,
+static target, zero prior ticks) directly into the live Kernel state between `tick_once()` calls.
+Result: **5/5 permanently stuck — zero net movement across all 15 subsequent ticks**, while the
+Kernel stayed in DEGRADED/SURVIVAL the entire window. This is the exact starvation pattern the
+ticket describes, reproduced under real, uninstrumented, non-mocked sustained-load conditions —
+independent of the worker-utilization sentinel bug entirely.
+
+**Disposition evidence, not yet a decision — recorded here, sent to peer review for the actual
+call:**
+- The specific finding that motivated filing this ticket (3 raiders under `max_worker_count=0`)
+  was very likely a symptom of the (now-fixed) worker-utilization sentinel bug, not organic
+  compute pressure — it no longer reproduces.
+- The underlying mechanism is real and independently reproducible under genuine sustained load —
+  not dead code, not only a sentinel artifact. Matches `rpg-feature-planning`'s own predicted
+  framing exactly: "a real mechanism that only bites under genuine sustained load — a much
+  narrower ticket than the one filed."
+- Self-recovery: not observed to recover within the tested window once entered under sustained
+  load in this specific ever-increasing-load stress scenario (300 entities, growing dirty sets)
+  — this does not establish general self-recovery behavior for a transient load spike specifically,
+  which was not separately tested.
+- This is genuinely an extension of the already-deferred wall-clock-throttle issue's own blast
+  radius (the real trigger in measurement 2/3 is `tick_compute_ms >= max_tick_budget_ms`, the same
+  mechanism as the deferred determinism finding), but the CONSEQUENCE (permanent, unrecoverable
+  starvation of a specific entity class, not mere slowdown or state divergence) is a distinct,
+  concretely-reproduced failure mode worth its own disposition call, not silently folded into the
+  deferred issue's existing "let it sit."
+
 ## Test Summary
-_(pending — the full ticket's own real measurement/disposition work has not started; this partial
-re-check used a throwaway scratch probe script, not a committed test)_
+_(pending — 3 real, uninstrumented scratch measurement scripts run this session
+(`remeasure_degraded_starvation.py`, `remeasure_degraded_starvation_under_load.py`,
+`remeasure_fresh_spawn_during_real_degraded.py`), not yet committed as tests; disposition decision
+still needed before deciding what a committed regression test should assert)_
 
 ## Files Changed
-_(pending — no code changed by this partial re-check)_
+_(pending — no code changed by this re-check; measurement only)_
 
 ## Completion Summary
-_(pending — ticket remains open; only one additional, honestly-scoped data point was added)_
+_(pending — ticket remains open; real measurement now complete per Scope's first two AC items;
+disposition decision (accept-and-document vs. scoped fix) sent to peer review, not decided here)_
