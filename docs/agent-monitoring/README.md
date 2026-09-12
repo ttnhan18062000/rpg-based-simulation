@@ -163,6 +163,24 @@ agents currently have zero real historical tool-call rows anywhere in the corpus
 `world-debugger`, `world-render-reviewer`) — flagged as a gap for whoever next scopes that
 frontmatter work, not resolved by this ticket.
 
+`tools:` frontmatter scoping has since shipped in two waves on top of this baseline: Wave 1
+(`TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE`, 2026-09-05, 11 read-oriented agent roles) and Wave 2
+(`TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2`, `architecture-reviewer`/`security-reviewer`/
+`planner`). Wave 2 also found this baseline's own `tools.jsonl` source has a real attribution
+limit for *this specific use* (evaluating whether a scoped-down agent lost a tool it needed): its
+`agent` field is the pipeline phase active during a tool call, not necessarily the real subagent
+that made it (see `docs/agent-monitoring/schema.md`'s "How tool calls are attributed to agent
+events" section) — confirmed to overstate real usage by two orders of magnitude in one measured
+case (`architecture-reviewer` showed 545 `Edit` calls in `tools.jsonl` vs. 5 real edits in its own
+subagent transcripts). Wave 2 added a caller-level sibling tool for this reason,
+`tools/agent-monitoring/subagent_tool_audit.py`, which reads Claude Code's own subagent transcripts
+(`~/.claude/projects/<repo-slug>*/<session>/subagents/agent-<id>.{meta.json,jsonl}`) directly
+instead of `tools.jsonl`, and is the required signal for evaluating each wave's post-landing
+"clean observation window" (`docs/guidelines/subsystem_ownership_lifecycle.md`'s Tools frontmatter
+rollout row). This baseline script itself is unchanged and still valid for its original purpose —
+sizing a wave's candidate scope from real per-agent tool-call patterns before landing it — the
+caveat applies specifically to using it as a post-landing denial/regression signal.
+
 ## Recording coverage for a hand-orchestrated closure
 
 If you close a ticket without going through the `Workflow` tool's `implement-ticket.js` pipeline,
