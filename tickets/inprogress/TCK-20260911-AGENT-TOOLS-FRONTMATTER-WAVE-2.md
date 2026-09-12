@@ -152,6 +152,20 @@ agent-<id>.{meta.json,jsonl}` (repo-slug derived from the *main* repo root, stri
 one it runs from). 12 fixture tests in `tests/tools/test_subagent_tool_audit.py` (`tmp_path`
 synthetic trees only, never real `.claude/agents/` or real transcripts).
 
+**Architecture-Verify finding, fixed:** the reviewer found `registered_agents()` byte-identically
+duplicated between this file and `agent_tool_usage_baseline.py`, inconsistent with this repo's own
+established convention of importing shared logic rather than reimplementing it (that file's own
+docstring cites this exact precedent for `load_data_glob`). Fixed: `agent_tool_usage_baseline.
+registered_agents()` now takes an optional `agents_dir` parameter; `subagent_tool_audit.py` imports
+and delegates to it, passing its own `AGENTS_DIR`. Confirmed both files' own fixture tests (21
+total) still pass, and a live re-run against real data still works end-to-end. The reviewer's other
+3 checks passed without changes needed: `subagent_tool_audit.py` is read-only (only `read_text()`
+calls plus one `sys.stdout.write()`, independently confirmed via `grep` and this ticket's own
+`test_run_is_read_only_fixture_untouched`); the harness-internal-transcript-layout coupling is a
+disclosed, not a blocking, limitation (the module docstring and this ticket's investigation.md both
+state transcripts are local/prunable); and the 3 Wave 2 agent files each got exactly one `tools:`
+line added, confirmed via `git diff`, nothing else changed.
+
 ### Step 2 — Gate definition
 Written into `docs/plans/agent_infrastructure/ai_first_hardening_epics/governance_capability_policy_epic.md`'s
 M3 section, replacing the undefined "clean observation window" phrase with an operational

@@ -30,6 +30,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_tool_usage_baseline import registered_agents as _registered_agents  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 AGENTS_DIR = REPO_ROOT / ".claude" / "agents"
 
@@ -55,7 +58,7 @@ def default_projects_glob(claude_home: Path = None) -> str:
 
 
 def registered_agents() -> list:
-    return sorted(p.stem for p in AGENTS_DIR.glob("*.md"))
+    return _registered_agents(AGENTS_DIR)
 
 
 def agent_tools_allowlist(agent_name: str) -> list | None:
