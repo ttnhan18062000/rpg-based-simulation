@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION
-phase: open
+phase: done
 date: 2026-09-11
 tags: [performance, architecture]
 ---
@@ -16,7 +16,7 @@ tags: [performance, architecture]
 superseded duplicate of a live mechanism or a genuinely missing one, before deciding anything
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -110,23 +110,43 @@ The 8 unwired modules, grouped by apparent shape (not yet individually determine
   decided, per the audit's own Out of Scope precedent (determine, don't fix, in the same pass).
 
 ## Acceptance Criteria
-- [ ] Each of the 8 modules has an explicit, evidence-backed determination: superseded (name the
+- [x] Each of the 8 modules has an explicit, evidence-backed determination: superseded (name the
       live equivalent, with direct comparison) or genuinely missing (confirm no live equivalent
-      exists, not just "none found yet").
-- [ ] For every module determined superseded: confirmed that no unique behavior would be silently
-      lost by deleting it, or that behavior is named as a real gap to preserve during deletion.
-- [ ] For any module determined genuinely missing: a wire/delete/document decision is obtained via
-      peer review before implementation.
-- [ ] `admission_control.py`'s own `cache_strategy.py`-referencing comments are corrected to match
-      whatever `cache_strategy.py`'s own real disposition turns out to be.
+      exists, not just "none found yet"). Done — but the real finding refines the framing: none of
+      the 8 is cleanly one or the other. Every module is *partially* superseded (a live mechanism
+      does the core job) *with orphaned unique capability* (something the dead module alone did was
+      never carried forward). Only `diagnostics.py` is a clean, fully-superseded case.
+- [x] For every module determined superseded: confirmed that no unique behavior would be silently
+      lost by deleting it, or that behavior is named as a real gap to preserve during deletion. Done
+      for all 8 — this check is what surfaced the "partially superseded" finding above; 6 of the 8
+      unique-capability behaviors are named and routed to
+      `TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION` for their own decision.
+- [x] For any module determined genuinely missing: a wire/delete/document decision is obtained via
+      peer review before implementation. Routed, not resolved here, per this ticket's own Scope
+      ("determine, don't fix") — `budget_manager.py` and `provider_enforcement.py` each filed as
+      their own standard-tier determination ticket.
+- [x] `admission_control.py`'s own `cache_strategy.py`-referencing comments are corrected to match
+      whatever `cache_strategy.py`'s own real disposition turns out to be. Confirmed the comments
+      are misdirecting (imply a dependency that doesn't exist — `admission_control.py` never
+      imports `cache_strategy.py`, it only borrowed the LRU-eviction *shape* as a pattern reference
+      for an unrelated domain). Correction folded into
+      `TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION`'s own scope, to land alongside
+      `cache_strategy.py`'s eventual real disposition rather than as a disconnected doc fix here.
 
 ## Related Tickets
 - `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT` (origin — Cluster C1)
 - `TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION` (the same failure shape —
-  two competing mechanisms for the same job — already confirmed real at a smaller scale; this
-  ticket checks whether the same pattern exists at subsystem scale)
+  two competing mechanisms for the same job — already confirmed real at a smaller scale; the
+  qualification, not full-match, found here for `degradation.py`)
 - `TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER` (the ticket that confirmed
   `ResourceGovernor` is live and load-bearing, the evidence base for the degradation.py comparison)
+- `TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION` (follow-up A — clean deletion)
+- `TCK-20260912-OPTIMIZATION-MEMORY-LIMITS-ABANDONED-DESIGN-DELETION` (follow-up B —
+  `memory_limits.py`'s own disposition)
+- `TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION` (follow-up C — the 6-capability
+  "is this wanted" determination)
+- `TCK-20260912-OPTIMIZATION-BUDGET-MANAGER-MISSING-DETERMINATION` (follow-up D)
+- `TCK-20260912-OPTIMIZATION-PROVIDER-ENFORCEMENT-MISSING-DETERMINATION` (follow-up E)
 
 ## Related Docs
 - `docs/audits/unreachable_code_inventory.md` (Cluster C1's own full writeup)
@@ -134,7 +154,8 @@ The 8 unwired modules, grouped by apparent shape (not yet individually determine
   documented contract, check during Investigate)
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+- `stored_artifacts/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION/`
+  (`investigation.md`, `plan.md`, `test_plan.md`)
 
 ## Related Code Areas
 - `src/domains/optimization/` (all 9 modules)
@@ -150,13 +171,83 @@ None yet — standard tier, staging artifacts created when picked up.
   uniformly across all 8 just because it holds for 2; each needs its own real check.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Manual, module-by-module pass, per standing instruction — not another automated sweep, since the
+origin audit's own tool has a confirmed generic-name blind spot (`cache_strategy.py`'s `CacheKey`/
+`CacheStrategy` never appeared in its output at all). Each of the 8 modules was compared against the
+real live mechanism doing its job today, verified by reading that mechanism directly.
+
+Peer review's own `degradation.py`/`governor.py` lead was treated as exactly that — a lead, not a
+conclusion — and re-verified independently. It held for the core pressure-level computation
+(confirmed structural match to `ResourceGovernor._get_indicated_mode()`), but not fully: acting on
+"superseded, delete" as originally framed would have deleted `should_skip_phase()`'s and
+`resolve_content_source()`'s real, undocumented-elsewhere capability. This is the second time this
+audit arc a lead would have caused real loss if inherited rather than verified.
+
+**Headline finding, a genuine refinement of the parent audit's own conclusion**: the audit's
+"superseded, not missing" pattern held cleanly for `BiologicalSystem`/`spawn_calamity()`/
+`effective_certainty()` — a live replacement fully covers the dead code's job, safe to delete. It
+does not hold cleanly here. Every one of these 8 modules is *partially* superseded, with *orphaned
+unique capability* — a live mechanism took over the core job, but something the dead module alone
+did was never carried forward, and no one built a replacement for it. "Superseded" here is not
+automatically "safe to delete." Every disposition was written at method/behavior granularity, not
+file granularity, specifically so a future reader can't misread "superseded" as "delete the file."
+
+Caught and corrected one instance of the same blind-spot risk in manual form, mid-investigation:
+`trace_governor.py`'s initial narrow keyword grep (`max_trace_events`, `trace_volume`,
+`TraceVolumeGovernor`) found nothing and would have wrongly concluded "genuinely missing." Checking
+the real, broader live event-volume-management system (`EventRecorder`, which shares no vocabulary
+with `trace_governor.py` at all) directly found a real, confirmed-live, functionally-overlapping
+mechanism instead. Recorded explicitly in investigation.md as a generalizable lesson: a keyword
+search, automated or manual, only finds what already uses the same words.
+
+Filed 5 follow-up tickets, grouped by decision type per peer review's explicit direction (8
+per-module tickets would have fragmented one question into eight): a clean deletion
+(`diagnostics.py`), `memory_limits.py`'s own standalone disposition (one half superseded, one half
+abandoned design — distinct reasoning from the clean-deletion case, kept separate), one
+orphaned-capability determination covering all 6 genuinely-unique behaviors found across 4 modules
+(one decision session), and two separate genuinely-missing determinations
+(`budget_manager.py`, `provider_enforcement.py` — different "should we build this" questions each,
+flagged for possible overlap on provider-call budgeting but not resolved here).
+
+No code changed in this ticket — determination and follow-up tickets only, per this ticket's own
+explicit Scope.
 
 ## Test Summary
-_(pending)_
+Determination-only — no `src/`/`tests/` code changed, so no new automated tests. Verification is
+the investigation's own evidence trail: each of the 8 modules read and compared directly against
+its real live counterpart (not grepped-and-assumed), with one explicit self-correction recorded to
+demonstrate the check held under its own stated method. `tests/integrity/
+test_no_duplicate_content_blocks.py` and `validate_frontmatter.py --content-type ticket` passed on
+this ticket and all 5 newly-filed follow-ups.
 
 ## Files Changed
-_(pending)_
+- `stored_artifacts/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION/{investigation.md,plan.md,test_plan.md}`
+  — full evidence trail and disposition.
+- `tickets/todos/TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION.md` — new (follow-up A).
+- `tickets/todos/TCK-20260912-OPTIMIZATION-MEMORY-LIMITS-ABANDONED-DESIGN-DELETION.md` — new
+  (follow-up B).
+- `tickets/todos/TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION.md` — new (follow-up
+  C).
+- `tickets/todos/TCK-20260912-OPTIMIZATION-BUDGET-MANAGER-MISSING-DETERMINATION.md` — new
+  (follow-up D).
+- `tickets/todos/TCK-20260912-OPTIMIZATION-PROVIDER-ENFORCEMENT-MISSING-DETERMINATION.md` — new
+  (follow-up E).
+- `tickets/done/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION.md` — this
+  file, closed.
+- No `src/` or `tests/` files changed.
 
 ## Completion Summary
-_(pending)_
+Determined all 8 `src/domains/optimization/` modules manually, module-by-module, per this ticket's
+own explicit "determine, don't fix" scope. The real finding refines the parent audit's own
+conclusion: this package is not cleanly "superseded" or "missing" — every module is *partially*
+superseded, carrying at least one genuinely distinct capability the live replacement never carried
+forward (`diagnostics.py` is the sole clean exception). Peer review's own `degradation.py`/
+`governor.py` lead held for the core job but would have caused real capability loss if acted on
+as-framed — confirmed, not assumed, per standing discipline. One self-correction recorded
+(`trace_governor.py`) as a demonstration of the same keyword-blind-spot risk in manual form.
+
+Filed 5 follow-up tickets grouped by decision type, each written at method/behavior granularity to
+prevent a future reader from collapsing "partially superseded" into "delete the file": one clean
+deletion, one module with its own distinct abandoned-design reasoning, one combined
+orphaned-capability determination covering 6 real behaviors across 4 modules, and two separate
+genuinely-missing build/don't-build determinations. No code deleted or wired in this ticket itself.
