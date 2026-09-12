@@ -81,6 +81,17 @@ determination, not 5 modules × 1 behavior each.)
   `DegradationLevel`/`update_pressure()`/`get_level()`, its confirmed-superseded core); if 4 isn't
   wanted, delete `cache_strategy.py` in full; if 5 isn't wanted, delete `dirty_scheduler.py` in
   full; if 6 isn't wanted, delete `trace_governor.py` in full.
+  - **Required step before any deletion — verify non-import references too, not just Python-level
+    ones.** Confirmed as a real, recurring blind spot when the two prior deletions in this same
+    package (`TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION`,
+    `TCK-20260912-OPTIMIZATION-MEMORY-LIMITS-ABANDONED-DESIGN-DELETION`) both grepped only for the
+    class/function names (Python imports) and missed two hardcoded `tests/unit/diagnostics` path
+    arguments in `.github/workflows/test.yml` — a real CI regression, caught only by CI itself, not
+    by the deletion's own verification. Before deleting any of these modules or their test files:
+    grep the module's own filename/path and its test file's own directory path (not just the class/
+    function names) across `.github/workflows/`, `Makefile`, and `docs/` — a path can be referenced
+    as a bare string (a CI job's positional pytest argument, a Makefile target, a doc's file
+    listing) with no Python import anywhere.
 - **If wanted**: the real implementation shape is a separate design question from this
   determination — do not presume it here. The strong likely direction, per this investigation's own
   findings, is to rescope each kept capability to plug into whichever live mechanism already owns
@@ -113,7 +124,8 @@ determination, not 5 modules × 1 behavior each.)
 - [ ] Each of the 6 numbered capabilities has an explicit "wanted" or "not wanted" determination,
       obtained via peer review before implementation.
 - [ ] For each "not wanted" outcome: the whole containing module/class is deleted (superseded core
-      included), confirmed via grep that zero references remain.
+      included), confirmed via grep that zero references remain — covering non-import references
+      (CI workflow paths, `Makefile` targets, doc file listings), not just Python-level imports.
 - [ ] For each "wanted" outcome: a real implementation plan exists, rescoping the capability to plug
       into the live mechanism that already owns the adjacent superseded half — not a revival of the
       dead module's own parallel state — obtained via peer review before implementation.

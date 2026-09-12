@@ -78,6 +78,11 @@ No live equivalent at any scope.
 - [ ] A peer-routed build/don't-build decision, obtained before implementation.
 - [ ] If built: real test evidence it actually catches a real unbounded/unscoped call scenario, not
       just a unit test of the mechanism in isolation.
+- [ ] If "not needed, delete": verify non-import references too, not just Python-level ones (CI
+      workflow paths, `Makefile` targets, doc file listings) before deleting the module/its test
+      file — a real, confirmed blind spot from the diagnostics/memory-limits deletions in this same
+      package (`TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION`'s own zero-references
+      grep missed two hardcoded CI path arguments, caught only by CI itself).
 
 ## Related Tickets
 - `TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION` (origin)
