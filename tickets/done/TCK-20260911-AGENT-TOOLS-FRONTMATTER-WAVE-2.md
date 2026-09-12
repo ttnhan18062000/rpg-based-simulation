@@ -141,8 +141,9 @@ inherit the same unfalsifiable gate.
   restart) still applies and affects how any observation window must be interpreted.
 
 ## Implementation Notes
-Investigate and Plan are complete; see the staging artifacts. Implementation is handed to
-`agent-working-implementer`. The per-agent rollback must be written here before Step 4 is committed.
+Investigate and Plan are complete; see the staging artifacts. Implementation was handed to
+`agent-working-implementer`. The per-agent rollback is recorded below in Step 5, written before
+Step 4's frontmatter change was committed.
 
 ### Step 1 — `subagent_tool_audit.py`
 Added `tools/agent-monitoring/subagent_tool_audit.py` (read-only, stdlib + PyYAML only). Reads
