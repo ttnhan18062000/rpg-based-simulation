@@ -11,7 +11,10 @@ tags: [data-quality, process-improvement]
 # Plan — TCK-20260912-WORKING-LOG-APPEND-HELPER
 
 Evidence in `investigation.md`. Order: build the helper, switch the one real caller to it, point
-the Finalize prose at it, add the sole-writer guard, update CLAUDE.md.
+the Finalize prose at it, add the sole-writer guard, update the parity ledger, update CLAUDE.md.
+
+**Revised after Review round 1 (NEEDS_CHANGES, 3 blocking findings, all independently
+re-confirmed before this revision — see Deviations section at the bottom for the record).**
 
 ## Step 1 — The helper module
 
@@ -22,10 +25,16 @@ name is the clearest signal of that ownership to a future reader).
 ```python
 def append_working_log_row(
     timestamp: str, ticket_id: str, title: str, status: str, summary: str, artifacts_path: str,
-    path: Path = Path("tickets/working_log.csv"),
+    path: Path = _WORKING_LOG_PATH,
 ) -> None:
 ```
 
+- `_WORKING_LOG_PATH = Path("tickets/working_log.csv")` is a **module-level constant**, not an
+  inline default expression — this is load-bearing for Step 4's AST-based guard, which resolves a
+  call's path argument back to a literal by walking name bindings; a module-level constant is a
+  single, unambiguous binding site to resolve against, where an inline `Path("...")` default
+  literal sitting only in the function signature is exactly the indirection Review found the
+  original grep-based design blind to.
 - Opens `path` with `open(path, "a", newline="", encoding="utf-8")` (matches the existing call's
   `newline=""` — required for `csv.writer` to own line-ending control, not the platform).
 - `csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")`, `.writerow([timestamp,
@@ -36,6 +45,20 @@ def append_working_log_row(
 - Docstring names both call sites it will have (the closure script, `implement-ticket.js`'s
   Finalize) so it can't quietly drift into single-caller assumptions later.
 
+**CLI wrapper, for Step 3's invocation contract:**
+
+```python
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-file", required=True, help="Path to a JSON file: "
+                         "{timestamp, ticket_id, title, status, summary, artifacts_path}")
+    args = parser.parse_args(argv)
+    fields = json.loads(Path(args.data_file).read_text(encoding="utf-8"))
+    append_working_log_row(**fields)
+```
+
+Reads the 6 field values from a **file**, not a shell/CLI argument — see Step 3 for why.
+
 ## Step 2 — Switch the one real caller
 
 `tools/agent-monitoring/record_hand_orchestrated_closure.py`: replace the inline `with
@@ -44,38 +67,114 @@ working_log_path.open(...) as f: csv.writer(...).writerow(...)` block with a cal
 `try/except OSError` / `log_ok` warning behavior around the call — this ticket does not change
 error handling, only who performs the write.
 
-## Step 3 — Point Finalize at the helper
+## Step 3 — Point Finalize at the helper, without reintroducing free-text shell/Python embedding
 
-`.claude/workflows/implement-ticket.js`'s Finalize step 4 (~line 1690): replace the per-field
-prose description with an instruction to call the helper (`python3 -c "from working_log_writer
-import append_working_log_row; append_working_log_row(...)"` or equivalent), passing the same 6
-values Finalize already computes (`tid`, ticket title, `DONE`, a one-sentence summary,
-`stored_artifacts/${tid}` or the hotfix no-staging-artifacts string). Keep the field-meaning
-comments (what `timestamp`/`summary`/`artifacts_path` should contain) — only the *mechanism* of
-writing changes, not what a Finalize agent must decide to put in each field.
+**Why not `python3 -c "...append_working_log_row(...)"` with inline values:** Finalize step 4's
+`title`/`summary` are arbitrary agent-authored text (this ticket's own title contains backticks
+and an em-dash — a real, not hypothetical, case). Asking the dispatched Finalize agent to hand-
+embed that text as Python string-literal source inside a `-c` argument reintroduces exactly the
+per-agent-improvisation hazard this ticket exists to close, just moved from CSV-quoting to
+shell/Python-quoting. Review's Finding 2 is right that "or equivalent" was not concrete enough.
+
+**Contract:** Finalize step 4's instruction becomes:
+1. Use the `Write` tool to create a JSON file (e.g. a scratch path under the ticket's own
+   `stored_artifacts/${tid}/` or an ephemeral tmp path) containing exactly `{"timestamp": ...,
+   "ticket_id": ..., "title": ..., "status": "DONE", "summary": ..., "artifacts_path": ...}`. The
+   `Write` tool's content parameter is not shell-interpreted, so arbitrary title/summary text
+   (quotes, backticks, `$`, embedded newlines) needs no escaping at all here — this is the actual
+   fix, not a different flavor of escaping.
+2. Run `python3 tools/working_log_writer.py --data-file <that path>` via `bash()`.
+
+This mirrors this repo's own existing pattern for the identical class of problem:
+`record_events.py`/`record_run.py` already take structured data via `--data '<json>'` rather than
+positional free-text args (investigation.md's own §1 evidence), because command-line argument
+embedding has the same hazard as `-c` source embedding. This ticket's contract goes one step
+further (a file instead of an inline `--data` string) specifically because `--data` still requires
+the JSON *string itself* to survive one layer of shell-argument quoting, and a title/summary
+containing a single quote can still break that; a file has no such layer at all.
+
+Keep the field-meaning comments (what `timestamp`/`summary`/`artifacts_path` should contain) in
+the JS prose — only the *mechanism* of writing changes, not what a Finalize agent must decide to
+put in each field.
 
 Add a pin test, `tests/tools/test_finalize_working_log_uses_helper_pin.py`, mirroring
-`test_finalize_phase_status_instruction_pin.py`'s raw-source-text pattern: asserts the helper
-import/call text is present, inside the Finalize phase block, at the position step 4 occupies
-(before step 5's staging-artifacts move, matching the JS's own step ordering).
+`test_finalize_phase_status_instruction_pin.py`'s raw-source-text pattern: asserts (a) `working_
+log_writer.py` and `--data-file` both appear in the Finalize phase block, inside `phase('Finalize')`
+and before the staging-artifacts move instruction (step 5's own text, matching the JS's own step
+ordering), and (b) the literal `python3 -c` construction with inline field interpolation is
+**absent** from that block — a negative assertion, so a future edit that reverts to inline `-c`
+embedding fails the pin instead of silently passing it.
 
-## Step 4 — Sole-writer guard
+## Step 4 — Sole-writer guard, AST-based (not grep)
 
-New test in `tests/tools/test_working_log_writer.py` (or appended to an existing working-log test
-file — Implement's call) that greps `tools/` and `.claude/workflows/` for any `open(` call whose
-path argument resolves to `tickets/working_log.csv` in append/write mode, and asserts the only
-match is inside `working_log_writer.py` itself. This is the ticket's actual point (per its own
-Scope: "a test asserting no module other than the helper writes tickets/working_log.csv, so a
-future second path fails in CI rather than on the next merge") — not a nice-to-have alongside the
-unit tests, the mechanism that makes "one sanctioned writer" durable rather than aspirational.
+**Why not grep:** Review's Finding 1 is confirmed correct against this very plan's own Step 1 —
+the write call is `open(path, "a", ...)`; the literal string `"tickets/working_log.csv"` lives only
+in `_WORKING_LOG_PATH`'s own assignment line, not on the `open(` line itself. A literal-text grep
+requiring both the path string and an `open(`-shaped call on the same match would find **zero**
+callsites anywhere, including the helper's own — worse than useless, since a test asserting
+"exactly one match" would pass on zero as easily as on one, hiding exactly the regression it
+exists to catch.
 
-## Step 5 — CLAUDE.md
+**Design:** `tests/tools/test_working_log_writer.py::test_working_log_csv_has_exactly_one_writer`
+walks the `ast` of every `.py` file under `tools/` (not `tests/` — fixtures there legitimately use
+`tmp_path`, a different, unrelated string):
+
+1. Parse each file with `ast.parse`.
+2. Build one **module-level** map of `name -> literal string` from every top-level assignment
+   `name = "literal"` or `name = Path("literal")`.
+3. For each function, build a **function-local** map from every parameter whose default is: a
+   string/`Path("literal")` literal directly, **or** a `Name` that resolves against the
+   module-level map from step 2 (exactly `_WORKING_LOG_PATH`'s own case in Step 1 — a
+   parameter default referencing a module constant, not embedding the literal inline).
+   Also include any local `name = "literal"` / `name = Path("literal")` assignment inside the
+   function body. This is deliberately single-hop beyond the module map (a function-local name
+   bound to *another* function-local name is not chased further) — sufficient for every real
+   writer in this codebase today (confirmed in investigation.md §1: no writer uses deeper
+   indirection than this), and a resolver that silently guesses through longer chains would be
+   exactly the kind of "looks thorough, isn't" mechanism this ticket argues against.
+4. Walk every `ast.Call` node. Match `open(arg0, arg1, ...)` or `<expr>.open(arg0, ...)` shapes.
+   Resolve `arg0`: if it's a string/`Path(...)` literal directly, take it as-is; if it's a `Name`,
+   look it up first in the enclosing function's local map (step 3), falling back to the
+   module-level map (step 2) if not found there.
+5. If the resolved value equals `"tickets/working_log.csv"` (compare as plain strings; `Path(...)`
+   wrapping doesn't change the comparison) **and** the mode argument (positional `arg1` or a
+   `mode=` keyword) indicates write/append (`"a"`, `"w"`, `"a+"`, `"w+"`, `"x"` — no default-mode
+   assumption, since `Path.open()`'s own default is `"r"`, not write), record this file:line as a
+   writer callsite.
+6. Assert the writer-callsite list has exactly one entry, and its file is
+   `tools/working_log_writer.py`.
+
+Verified against this exact plan's own Step 1 design before Implement writes it: `_WORKING_LOG_PATH
+= Path("tickets/working_log.csv")` binds the module-level name (step 2); `path: Path =
+_WORKING_LOG_PATH` binds the parameter's default to that same name (step 3's Name-resolves-
+against-module-map case); `open(path, "a", ...)` resolves `path` through the function-local map to
+`_WORKING_LOG_PATH`'s literal, mode `"a"` matches — correctly detected as the one writer.
+
+A synthetic-fixture negative test (per test_plan.md) proves the guard actually fires on a second
+writer, not just that it currently reports one.
+
+## Step 5 — Parity ledger: update INFRA-416, don't leave it stale
+
+**Review Finding 3, confirmed:** `docs/parity_ledger/infrastructure.yaml`'s `INFRA-416` entry
+(status `verified`, priority `P1`) has `v2_evidence` that literally cites
+`tools/agent-monitoring/record_hand_orchestrated_closure.py:207 -- csv.writer(f,
+quoting=csv.QUOTE_MINIMAL, lineterminator="\n")` as its proof. Step 2 replaces that exact call
+site with a call into the helper, so that citation goes stale the moment Step 2 lands.
+
+Via `tools/parity_ledger_writer.py::write_entry()` only (never a raw YAML edit): update
+`INFRA-416`'s `v2_evidence` to cite `tools/working_log_writer.py::append_working_log_row()` (the
+new site that actually emits `lineterminator="\n"`) instead of the old line, and add
+`test_working_log_csv_has_exactly_one_writer` to its `test_path` list alongside the existing
+`test_merge_union_no_cr_bytes.py`/`test_merge_union_crlf_duplication_repro.py` entries — those two
+stay unchanged and still pass, since they check byte-level file output, not source line numbers.
+
+## Step 6 — CLAUDE.md
 
 Add one sentence to the After Work bullet about `tickets/working_log.csv`: append via
 `tools/working_log_writer.py::append_working_log_row()`, never hand-roll the write (matching the
 existing "never insert after the header" sentence's own register).
 
-## Step 6 — Unit tests for the helper itself
+## Step 7 — Unit tests for the helper itself
 
 `tests/tools/test_working_log_writer.py`:
 - A field containing a comma, a quote, and an embedded newline round-trips correctly through
@@ -104,14 +203,55 @@ actually does (catch it in CI on the next run, not block it at the moment of wri
 
 ## Risks
 
-- **Import path**: `record_hand_orchestrated_closure.py` already does `sys.path.insert(0,
-  str(Path(__file__).resolve().parent))`-style imports for sibling modules in the same directory;
-  `working_log_writer.py` lives one level up (`tools/`, not `tools/agent-monitoring/`), so the
-  import needs its own path insert or a package-relative import — verify which convention the rest
-  of `tools/agent-monitoring/*.py` already uses for `tools/`-level siblings (e.g.
-  `working_log_parser` itself, if already imported anywhere under `agent-monitoring/`) before
-  picking one.
-- **Grep-based sole-writer guard false positives**: the guard must not flag the parser's own
-  read-only `open(path, newline="")` calls, or comments/docstrings that merely *mention*
-  `working_log.csv` — scope the grep to actual `open(`/`.open(` calls with a write-capable mode
-  argument, not any line containing the filename.
+- **Import path — resolved before Implement**: `tools/agent-monitoring/done_ticket_monitoring_
+  coverage.py` already imports a `tools/`-level sibling from inside `tools/agent-monitoring/` via
+  `sys.path.insert(0, str(Path(__file__).resolve().parent.parent))` then `from validate_frontmatter
+  import extract_frontmatter` — confirmed by direct read, this session. `record_hand_orchestrated_
+  closure.py` uses the identical `.parent.parent` insert for `working_log_writer`.
+- **AST resolver false positives/negatives**: the design in Step 4 must not flag the parser's own
+  read-only `open(path, newline="")` call (mode defaults to `"r"`, excluded by the write-mode
+  check) or the identical-shaped `open()` calls in unrelated modules that happen to open some other
+  file named similarly — the string-equality check against the *resolved* literal value (not
+  against any line mentioning the filename at all) is what keeps this precise, unlike a grep.
+- **Single-hop resolution ceiling**: if a future writer introduces a two-hop indirection (a
+  parameter default bound to a name that is itself bound to the literal, one level further than
+  Step 1's own module-constant hop), the guard would miss it the same way the original grep design
+  missed Step 1's one-hop case. This is a known, stated limitation, not silently assumed away —
+  acceptable because the guard's job is catching an accidental *second, differently-styled*
+  writer appearing, not defending against a writer deliberately designed to evade it.
+- **Lock-file protocol, addressed directly since it was asked for**: `tools/agent-monitoring/
+  writer.py`'s lock-file protocol (for `agent-monitoring/data/*/*.jsonl` shards) solves a
+  same-disk concurrent-process race — multiple processes appending to the identical file on one
+  machine at close to the same instant. `tickets/working_log.csv` doesn't have that hazard: each
+  row is appended once, inside one ticket's own isolated git worktree, and reconciliation across
+  worktrees happens through `git merge` (the `merge=union` + `text eol=lf` mechanism `INFRA-416`
+  and `TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION` already own), not through two
+  processes racing on one inode. A lock file would solve a problem this file doesn't have and
+  wouldn't touch the one it does.
+
+## Deviations (Review round 1)
+
+Round 1 returned `NEEDS_CHANGES` with 3 blocking findings, all independently re-confirmed against
+real files before this revision (not accepted on the reviewer's say-so alone):
+
+1. **Sole-writer guard couldn't find its own reference implementation.** The original Step 1 sketch
+   put the literal path only in an inline `Path("...")` default expression; the write call itself
+   (`open(path, "a", ...)`) carries no literal string a grep could anchor on. Confirmed by
+   re-reading the plan's own prior text. Fixed: Step 1 now uses a named module-level constant
+   (load-bearing for the guard, not cosmetic), and Step 4 is now AST-based with an explicit,
+   single-hop name-resolution design, verified by hand against Step 1's own exact shape before
+   Implement writes either file.
+2. **Step 3's invocation mechanism reintroduced the exact hazard class this ticket exists to
+   close.** Confirmed: this ticket's own title contains backticks and an em-dash, proving
+   free-text-in-shell-source is a real, not hypothetical, case. Fixed: Finalize now writes a JSON
+   file via the `Write` tool (never shell-interpreted) and the helper reads `--data-file`, rather
+   than any value passing through shell/Python source-embedding at all.
+3. **INFRA-416's `v2_evidence` would go stale.** Confirmed via direct read of
+   `docs/parity_ledger/infrastructure.yaml`: it cites the exact call site Step 2 replaces. Fixed:
+   new Step 5 updates it via `write_entry()`.
+
+Non-blocking notes both addressed in the revision: the lock-file-protocol question now has an
+explicit answer in Risks; the bare-function-with-positional-args design was left as-is (reviewer
+called it acceptable, keyword-only args or a typed record was offered as an optional strengthening
+not required for approval — the JSON-file contract in Step 3 already forces call sites to name
+fields explicitly via dict keys, which captures most of that benefit without a signature change).

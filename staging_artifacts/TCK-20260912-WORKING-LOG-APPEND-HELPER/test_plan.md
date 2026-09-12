@@ -10,7 +10,7 @@ tags: [data-quality, process-improvement]
 
 # Test Plan — TCK-20260912-WORKING-LOG-APPEND-HELPER
 
-## Step 1/6 — `working_log_writer.py`
+## Step 1/7 — `working_log_writer.py`
 
 - Appending a row with a field containing a comma, a quote, and an embedded newline round-trips
   correctly through `working_log_parser.parse_working_log()` afterward — both modules agree on
@@ -19,6 +19,11 @@ tags: [data-quality, process-improvement]
 - Appends after existing content in a `tmp_path` fixture file — never truncates, never inserts
   before the header.
 - Two consecutive appends both land, in order, at the bottom.
+- CLI mode: `main()` with `--data-file <path>` reads a JSON file
+  `{timestamp, ticket_id, title, status, summary, artifacts_path}` and appends the row — including
+  a case where a field value itself contains a literal double quote, a comma, and an embedded
+  newline, proving the file-based contract survives content that would break naive shell/Python
+  string-embedding.
 
 ## Step 2 — the real caller
 
@@ -27,26 +32,42 @@ tags: [data-quality, process-improvement]
 
 ## Step 3 — Finalize pin
 
-- `test_finalize_working_log_uses_helper_pin.py`: the helper call is present in
-  `implement-ticket.js`'s source text, inside the Finalize phase block, before the staging-artifacts
-  move instruction (step 5's own text) — mirrors `test_finalize_phase_status_instruction_pin.py`'s
-  three-assertion shape (presence, phase-block containment, ordering).
+- `test_finalize_working_log_uses_helper_pin.py`: `working_log_writer.py` and `--data-file` are
+  both present in `implement-ticket.js`'s source text, inside the Finalize phase block, before the
+  staging-artifacts move instruction (step 5's own text) — mirrors `test_finalize_phase_status_
+  instruction_pin.py`'s presence/phase-block-containment/ordering shape. A 4th, negative assertion:
+  the literal substring `python3 -c` immediately followed by `append_working_log_row(` (the
+  rejected inline-embedding form) is **absent** from the Finalize block.
 
-## Step 4 — sole-writer guard
+## Step 4 — sole-writer guard (AST-based)
 
-- Passes on the real repo tree: exactly one write-mode `open(`/`.open(` call whose path resolves
-  to `tickets/working_log.csv`, and it is inside `working_log_writer.py`.
-- Fails on a fixture tree with a second module opening the same path in append mode (proves the
-  guard actually detects a second writer, not just that it currently reports zero).
-- Does not false-positive on the parser's own read-only `open(path, newline="")` call, or on
-  comments/docstrings mentioning the filename.
+- Passes on the real repo tree: the AST walk over `tools/**/*.py` finds exactly one write-mode
+  `open`/`.open` call whose resolved path argument equals `tickets/working_log.csv`, and it is in
+  `working_log_writer.py`.
+- **Positive-resolution proof, not assumed**: a dedicated unit test for the resolver itself, run
+  against a small synthetic AST/source snippet shaped exactly like Step 1's own design (module
+  constant, parameter default referencing it by name, `open(path, "a", ...)`) — proves the
+  resolver actually chains through the parameter-default-to-module-constant hop, not just that the
+  end-to-end test happens to pass for unrelated reasons.
+- Fails on a fixture tree with a second module opening the same resolved path in append mode
+  (proves the guard actually detects a second writer, not just that it currently reports one).
+- Does not false-positive on: the parser's own read-only `open(path, newline="")` call (no write
+  mode); a module opening a different file whose variable is also named `path`; comments/
+  docstrings mentioning `working_log.csv` as plain text with no accompanying `open()` call.
 
-## Step 5 — CLAUDE.md
+## Step 5 — parity ledger
+
+- `write_entry()` call for `INFRA-416` succeeds; the shard's derived index rebuild reports the
+  same `entry_count` as before plus zero net new entries (an update, not an insert).
+- The two pre-existing `test_path` entries (`test_merge_union_no_cr_bytes.py`,
+  `test_merge_union_crlf_duplication_repro.py`) still pass unmodified after Steps 1-2 land.
+
+## Step 6 — CLAUDE.md
 
 - No automated test (prose-only doc change); confirmed by direct read at Verify.
 
 ## Regression
 
 ```
-pytest tests/tools/test_working_log_writer.py tests/tools/test_record_hand_orchestrated_closure.py tests/tools/test_finalize_working_log_uses_helper_pin.py tests/integrity/test_merge_union_no_cr_bytes.py -q
+pytest tests/tools/test_working_log_writer.py tests/tools/test_record_hand_orchestrated_closure.py tests/tools/test_finalize_working_log_uses_helper_pin.py tests/integrity/test_merge_union_no_cr_bytes.py tests/tools/test_parity_ledger_writer.py -q
 ```
