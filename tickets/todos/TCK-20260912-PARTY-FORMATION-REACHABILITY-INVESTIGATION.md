@@ -56,6 +56,24 @@ while correct, is itself party-gated and therefore not demonstrable until this t
 question is resolved. Same pattern as the survivor-reconstruction arc: position → identity → (now)
 party formation, each layer only visible once the one beneath it was fixed.
 
+## Blocking Dependency (added 2026-09-12, via peer review — read before picking this up)
+**Do not start this investigation until `TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-
+DIVERGENCE` (the `count: N` spawns-one-entity-per-group bug) is fixed and landed.** Party formation
+needs multiple compatible entities in proximity; the current count-expansion bug means
+`frontier_living_world` spawns roughly one entity per population group, scattered by region —
+substantially under-populated relative to what the world declares. Investigating party-formation
+reachability against this under-populated world risks exactly the false-negative trap this whole
+audit arc has hit twice already (the dead-episode trap; the grief/nemesis trap): concluding a
+mechanism can't fire from a run that never gave it a real chance to.
+
+**Required first step once picked up**: re-measure `state.groups` on a real run of the
+post-count-expansion world, before any party-formation-specific investigation begins. If parties
+start forming once density is real, this ticket's own premise dissolves — trust may already
+accumulate without further fixes here, meaning the transferred acceptance bar (see below) is
+satisfied by the count-expansion fix alone, and that should be reported as such rather than
+investigating a question the density fix already resolved. Only if `state.groups` stays empty at
+real density does the reachability investigation below proceed as originally scoped.
+
 ## Scope
 - Determine, with real evidence (direct instrumentation of a real run, not code-reading alone):
   does the `FORM_PARTY` route ever actually get selected and successfully executed under real
@@ -108,6 +126,11 @@ party formation, each layer only visible once the one beneath it was fixed.
   now correctly calling `CooperationLearningService.learn()` after that ticket's own repair) and
   the same-party-betrayal penalty (`SocialAppraisalSystem.process_betrayal()`, called from
   `combat_actions.py`).
+- `TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE` (**hard blocking dependency**
+  — must land first, per peer review. `count: N` currently spawns one entity per population group
+  instead of N, leaving real worlds substantially under-populated and scattered by region. This
+  ticket's own reachability question cannot be answered validly against that under-populated
+  baseline — see "Blocking Dependency" above.)
 
 ## Related Docs
 - `docs/archive/entity-enhance/entity_enhance_phase7.md` (Phase 7's own cooperation/party design
@@ -128,6 +151,13 @@ None yet — standard tier, staging artifacts created when picked up.
 - Whether zero groups forming in the one real reproduction run so far is representative of typical
   gameplay, or an artifact of that specific seed/scenario/tick-count, is the central,
   deliberately-unresolved question this ticket exists to answer — not assumed either way here.
+- **Assumed false until re-measured**: that the zero-groups result is a property of `FORM_PARTY`
+  itself rather than a downstream consequence of `TCK-20260911-REGION-DECLARED-POPULATION-
+  SPAWNED-ENTITY-DIVERGENCE`'s under-population bug. The original reproduction ran against a world
+  with roughly one entity per population group (16 entities total for `frontier_living_world`),
+  scattered by region — far short of what `count: N` was supposed to place. Per peer review: fix
+  count expansion first, then re-measure `state.groups` on the post-fix world before concluding
+  anything about party-formation reachability specifically.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
