@@ -45,17 +45,69 @@ and `make lane-legacy-regression`).
 on commit `5894f8bb` (2026-08-21, predates this session's work) and recurs on the current `main`
 tip after this session's own PRs merged cleanly on every job that actually gates PR mergeability.
 Both `simq-corpus-diversity-slow-isolated` and `lane-legacy-regression` are confirmed to still
-exist as valid `Makefile` targets (not a broken/renamed reference) — the root cause is genuinely
-unknown, not yet diagnosed to which of the 3 steps or which specific test/assertion is failing.
+exist as valid `Makefile` targets (not a broken/renamed reference).
+
+**Root cause confirmed 2026-08-26 (a prior session's own investigation of this ticket — recorded
+here 2026-09-13 after being found to exist only in that session's own memory, not durably in this
+ticket, per standing instruction that a known defect should never live only in session memory).**
+`Kernel.tick_once()` (`src/engine/kernel.py`, `_phase_resolution()`'s own mid-tick check, and a
+softer end-of-tick check feeding the same signal) reads real wall-clock elapsed time
+(`time.perf_counter_ns()`) mid-tick, every 10 processed entity results. If elapsed exceeds
+`profile.max_tick_budget_ms` **and `self._audit_mode` is `False`** (the default — `True` only if
+`Kernel(..., flags={"audit_mode": True})` is passed explicitly), it silently drops the remaining
+unprocessed entity results for that tick (`record_dropped_work`) and forces
+`RuntimeMode.DEGRADED` directly (`self._governor.force_mode(RuntimeMode.DEGRADED, ...)`). None of
+the three affected test files (`tests/integration/kernel/test_long_run_determinism.py`,
+`tests/certification/test_cert_long_run_stability.py`,
+`tests/simulation_quality/test_grade_regression.py`) set `audit_mode=True`.
+
+Since real per-tick wall-clock timing is subject to host CPU scheduling noise (GC pauses, thread
+contention, thermal throttling — not seeded or reproducible), two runs from the identical seed can
+diverge in real timing purely by machine luck, causing one run to drop entity updates the other
+processes normally — producing genuinely different final entity states and different
+`CanonicalStateHasher` hashes. **Directly proven, not just theorized**: `test_1000_tick_determinism`
+run twice in a row, identical command (`--resource-budget large`, matching real CI), same machine,
+same seed — attempt 1 FAILED (watchdog trip at tick 627, `governance_ecology` phase spiked to 36ms
+vs. normal ~0.01-0.15ms), attempt 2 PASSED cleanly. Matches the real CI history this ticket's own
+Request Summary above documents (4/7 push-to-main runs failed with exit 2) — same
+non-determinism, different runner load each time.
+
+**Deferred deliberately, not an oversight**: the user was informed of this root cause and its
+recommended fix and said to let it sit (not to pursue a fix now) — this ticket stays open and
+undecided-on-purpose, not abandoned or forgotten.
+
+**Downstream consequence, found independently and later (2026-09-13,
+`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`)**: this same mechanism — real
+wall-clock pressure forcing `RuntimeMode.DEGRADED` — was confirmed to reach a concrete, visible
+gameplay consequence beyond test-suite non-determinism: under `ScanPolicy.EXACT_DIRTY` (entered
+once `DEGRADED` triggers), a freshly-spawned entity with no active AI goal and a static navigation
+target could become permanently unable to move — a genuine starvation loop, not mere slowdown.
+That ticket's own fix (reduced-cadence movement candidacy) addressed the consequence at
+`candidate_selector.py`; it does not touch this ticket's own root cause or change this ticket's own
+disposition. Both real `RuntimeMode.DEGRADED`-forcing call sites now carry direct in-code
+cross-references back to that ticket: `ResourceGovernor._get_indicated_mode()`'s own
+`tick_compute_ms` check (`src/engine/governor.py`) and `Kernel._phase_resolution()`'s own mid-tick
+`should_throttle` → `force_mode()` call (`src/engine/kernel.py`) — so anyone revisiting either site
+from this ticket, or this ticket from either site, sees the connection without re-deriving it.
 
 ## Scope
 - Reproduce the job's exact 3-step sequence locally (or via a scoped `workflow_dispatch` run) to
-  identify exactly which step and which test/assertion produces exit code 2.
-- Fix the real root cause once identified.
+  identify exactly which step and which test/assertion produces exit code 2. **Root cause now
+  confirmed** (see Request Summary) — this step is done; recorded here as a record of what was
+  found, not new work being requested.
+- Fix the real root cause. **Deliberately deferred, not implemented here or now** — the user
+  said to let it sit. The recommended fix, if/when this is picked up: a narrow, test-only change
+  constructing `Kernel` in the three affected long-run test files with
+  `flags={"audit_mode": True}` so wall-clock throttling is disabled during determinism
+  verification, matching `audit_mode`'s existing sanctioned purpose elsewhere in `kernel.py`
+  (bypassing real-time-dependent shortcuts for audits/certification). No production behavior
+  change implied by that fix shape.
 - If the root cause turns out to be genuine environment-dependent flakiness (not a real bug),
   document it in `docs/testing/regression_policy.md` as a known category, matching the existing
   precedent for other documented flaky-test categories (e.g. live-server subprocess tests) — do
-  not leave it undocumented either way.
+  not leave it undocumented either way. (Now moot given the root cause above is a real,
+  identified logic condition, not undifferentiated flakiness — kept for completeness since the
+  disposition is still "let it sit," not "closed.")
 
 ## Out of Scope
 - Changing the job's trigger conditions (push-to-main-only, per
@@ -66,18 +118,23 @@ unknown, not yet diagnosed to which of the 3 steps or which specific test/assert
   category — different job, different symptom, not this ticket's scope).
 
 ## Acceptance Criteria
-- [ ] Root cause identified: which of the 3 steps (`simq-corpus-diversity-slow-isolated`, the main
-      `pytest tests/ -m "slow or extra_slow"` invocation, or `lane-legacy-regression`) produces
-      exit code 2, and the specific underlying error.
-- [ ] Either a real fix lands (if a genuine bug), or the failure category is documented in
-      `docs/testing/regression_policy.md` as known environment-dependent noise (if that's what
-      investigation reveals) — not left silently unresolved either way.
-- [ ] The next several push-to-main "Slow regression" runs are confirmed green (or, if
-      environment-dependent, behave consistently with the newly-documented policy).
+- [x] Root cause identified: `Kernel`'s wall-clock mid-tick throttle (`_phase_resolution()`,
+      `should_throttle = not self._audit_mode and elapsed > hard_cap`) breaks determinism when
+      `audit_mode=False` (the default, and what all 3 long-run/certification test files use) —
+      confirmed via a direct back-to-back repro, not reasoning alone.
+- [ ] A real fix lands. **Deliberately deferred** — the user said to let it sit; this remains
+      unchecked on purpose, not an oversight. Do not check this box without the user's own
+      instruction to proceed.
+- [ ] The next several push-to-main "Slow regression" runs are confirmed green — moot while the
+      fix is deferred; left unchecked, consistent with the item above.
 
 ## Related Tickets
-None — discovered as a byproduct of monitoring CI health during
-TCK-20260821-WORLD-RENDER-CORE's PR merge flow, not tied to any prior ticket.
+- Discovered as a byproduct of monitoring CI health during TCK-20260821-WORLD-RENDER-CORE's PR
+  merge flow, not tied to any prior ticket.
+- `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION` (done) — an independently-found,
+  observed downstream consequence of this same root cause (real wall-clock pressure forcing
+  `RuntimeMode.DEGRADED`), reaching movement-candidacy starvation rather than test-suite
+  non-determinism. That ticket's fix does not touch this ticket's own root cause or disposition.
 
 ## Related Docs
 - docs/testing/regression_policy.md
@@ -89,6 +146,11 @@ None yet.
 ## Related Code Areas
 - .github/workflows/test.yml (the `slow` job definition)
 - Makefile (`simq-corpus-diversity-slow-isolated`, `lane-legacy-regression` targets)
+- `src/engine/kernel.py` (`_phase_resolution()`'s own mid-tick `should_throttle` check — the
+  confirmed root cause; also directly forces `RuntimeMode.DEGRADED` via `force_mode()`)
+- `src/engine/governor.py` (`ResourceGovernor._get_indicated_mode()`'s own `tick_compute_ms`
+  check — a second, structurally separate real-wall-clock-driven path to the same
+  `RuntimeMode.DEGRADED`, confirmed under `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`)
 
 ## Assumptions / Open Questions
 - Whether this is a real, fixable bug or genuine environment-dependent flakiness under CI's
@@ -96,9 +158,21 @@ None yet.
   ticket's own investigation must resolve — not assumed either way here.
 
 ## Implementation Notes
+**2026-09-13 update: record-only, not new work.** A confirmed root cause for this ticket existed
+only in a prior session's own memory (dated 2026-08-26), not durably in this ticket file — a
+known-defect-in-session-memory-only gap, the same pattern this arc has spent weeks correcting
+elsewhere (stale doc/comment reachability claims). Transcribed the confirmed finding into Request
+Summary above, added the deferred recommended fix to Scope, cross-referenced the independently-
+found downstream consequence (`TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION`) and
+its own two `RuntimeMode.DEGRADED`-forcing code sites (which now carry matching in-code
+cross-references back to this ticket). No code changed by this update. The user's own "let it sit"
+instruction stands — this ticket remains `OPEN` in `tickets/todos/`, not implemented, not closed.
 
 ## Test Summary
+_(unchanged — no test work performed; this is a documentation-only update)_
 
 ## Files Changed
+_(this ticket file only — no source/test files changed)_
 
 ## Completion Summary
+_(unchanged — this ticket is not being closed; the fix remains deliberately deferred)_
