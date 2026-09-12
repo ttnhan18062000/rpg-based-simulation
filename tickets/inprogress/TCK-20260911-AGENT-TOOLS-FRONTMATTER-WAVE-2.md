@@ -229,6 +229,16 @@ convention for structural/architecture tests.
   forbidden-pair pins added; `_WAVE2_WAVE3_AGENTS`/its test narrowed to `_WAVE3_AGENTS`
 - `docs/plans/agent_infrastructure/ai_first_hardening_epics/roadmap.md` -- Step 7, item 1's
   Wave 2 landing status update
+- `docs/guidelines/subsystem_ownership_lifecycle.md` -- Doc-Update phase, Tools frontmatter
+  rollout row updated to record Wave 2 shipped/Wave 3 pending and cite the operational gate
+  definition and its caller-vs-phase evidence source
+- `docs/agent-monitoring/README.md` -- Doc-Update phase, Agent Tool-Usage Baseline section
+  updated to record Wave 1 + Wave 2 landed status, the `agent`-field phase-vs-caller attribution
+  caveat this ticket found, and the new `subagent_tool_audit.py` sibling tool
+- `docs/agent-monitoring/schema.md` -- Doc-Update phase, "How tool calls are attributed to agent
+  events" section gained a caveat that `agent` is the pipeline phase's literal, not necessarily
+  the real caller, with the `architecture-reviewer` 545-vs-5 evidence and a cross-reference to
+  `subagent_tool_audit.py`
 - `tickets/inprogress/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2.md` -- this file
 - `staging_artifacts/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2/` -- no changes needed; Investigate
   and Plan were already complete before this Implement pass
