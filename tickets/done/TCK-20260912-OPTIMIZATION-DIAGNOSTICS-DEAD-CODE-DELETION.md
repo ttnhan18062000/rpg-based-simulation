@@ -64,6 +64,9 @@ runs. No unique behavior in `DeveloperDiagnostics` was found that isn't already 
 - `TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION` (origin — the full
   8-module determination)
 - `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT` (the parent audit, Cluster C1)
+- `TCK-20260913-CI-WORKFLOW-STALE-DIAGNOSTICS-PATH-REFERENCE` (this deletion's own zero-references
+  grep checked Python-level imports only, missed a CI-workflow-level hardcoded path reference to
+  `tests/unit/diagnostics` — caught by real CI, fixed separately)
 
 ## Related Docs
 - `stored_artifacts/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION/

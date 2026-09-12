@@ -327,7 +327,9 @@ realistic contract shape and genuinely proves single-fire behavior (`0.05`, not 
 - `docs/mechanics/04_strategic_cognition.md` — §10a clan-reputation section's two
   `process_active_contracts()` references updated to `resolve_expirations()`.
 - `docs/parity_ledger/social_narrative.yaml` — SOC-272's `v2_evidence` updated to reflect the real
-  caller (two passes, matching the Bible doc's own two-pass correction).
+  caller (two passes, matching the Bible doc's own two-pass correction). This edit introduced a
+  real YAML syntax break (an unescaped apostrophe inside a single-quoted scalar), caught by CI and
+  fixed separately — see `TCK-20260913-PARITY-LEDGER-UNESCAPED-APOSTROPHE-YAML-BREAK`.
 - `staging_artifacts/TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION/` →
   `stored_artifacts/` (this file's own move, at Finalize).
 

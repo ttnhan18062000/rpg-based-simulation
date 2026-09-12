@@ -4131,13 +4131,13 @@
     ContractService.compute_betrayal_clan_reputation_update (pure-function-only contract-betrayal
     path; disclosed as not reachable from its production caller, which never passes
     betrayal=True/betrayer_id -- a pre-existing gap this ticket surfaces but does not
-    fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION):
+    fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION) --
     the production caller of resolve_contract_outcome() is now ContractLifecyclePhase.resolve_expirations()
     (pipeline.py "contracts" phase) -- the prior duplicate, ContractService.process_active_contracts(),
     was confirmed unreachable in normal sequential tick progression (resolve_expirations() always
     ran first and transitioned the contract away from ACTIVE) and was deleted, its consequence
     model ported into resolve_expirations() as the sole owner. resolve_contract_outcome() is a
-    real live path as of that fix; only its betrayal branch (this entry's own subject) remains
+    real live path as of that fix; only its betrayal branch (this entry''s own subject) remains
     disclosed-unreachable, now via resolve_expirations() instead.); src/systems/social_systems/appraisal.py
     appraise_contract() (stranger-judgment blend term, CLAN_INFLUENCE_WEIGHT = 0.2).
     Mechanics Bible: docs/mechanics/04_strategic_cognition.md Sec.10a "Clan Reputation
