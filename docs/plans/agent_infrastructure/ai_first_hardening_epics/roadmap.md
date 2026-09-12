@@ -126,6 +126,15 @@ gate no longer has any unshipped Bucket-B sibling in the same epic grouping (`wo
 epic.md`) — noted here for completeness, it does not itself change any gate's own evidence-based
 trigger condition.
 
+**Item 1 — Wave 2 landed (2026-09-12)**: `TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2` operationally
+defined the "clean observation window" gate that Wave 1 left unmeasurable (see
+`governance_capability_policy_epic.md`'s M3 section for the full definition and Wave 1's re-run
+verdict against it), then landed M3's Wave 2 — `architecture-reviewer`, `security-reviewer`,
+`planner` now also carry a scoped `tools:` frontmatter, evaluated at zero failures. 14 of 16 agents
+now scoped. Item 1 is still **not** fully shipped: Wave 3 (`implementer`, `parity-updater`) remains
+open, gated on Wave 2's own observation window per the same rule, and tracked as a separate future
+ticket. Item 1 therefore stays in the "remaining to implement" count until Wave 3 lands.
+
 ## Epics and detail docs
 
 ### Horizon 0 — start now

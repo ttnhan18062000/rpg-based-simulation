@@ -96,18 +96,18 @@ inherit the same unfalsifiable gate.
 - Full evidence: `staging_artifacts/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2/`.
 
 ## Acceptance Criteria
-- [ ] "Clean observation window" has a written operational definition — duration, signal, and
+- [x] "Clean observation window" has a written operational definition — duration, signal, and
       failure condition — recorded where a future wave can apply it unchanged.
-- [ ] Wave 1 is evaluated against that definition, with the verdict and its evidence recorded. If
+- [x] Wave 1 is evaluated against that definition, with the verdict and its evidence recorded. If
       the signal is weak, it is labelled weak.
-- [ ] `architecture-reviewer`, `security-reviewer`, and `planner` carry a `tools:` allowlist
+- [x] `architecture-reviewer`, `security-reviewer`, and `planner` carry a `tools:` allowlist
       derived from real usage data via the 5-way taxonomy, not from theoretical minimums.
-- [ ] A documented single-file rollback exists for each of the three, written before the change
+- [x] A documented single-file rollback exists for each of the three, written before the change
       landed.
-- [ ] `tests/tools/test_wave1_agent_tools_frontmatter.py`'s equivalent guard is extended to cover
+- [x] `tests/tools/test_wave1_agent_tools_frontmatter.py`'s equivalent guard is extended to cover
       Wave 2, so the scoping is regression-locked rather than convention-only, and its "Wave 2/3 have
       no `tools:`" guard is narrowed to Wave 3.
-- [ ] `subagent_tool_audit.py` exists with fixture tests, and the Wave 1 verdict records its real output.
+- [x] `subagent_tool_audit.py` exists with fixture tests, and the Wave 1 verdict records its real output.
 
 ## Related Tickets
 - `TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE` (done) — Wave 1; established the method, the wave
@@ -144,11 +144,94 @@ inherit the same unfalsifiable gate.
 Investigate and Plan are complete; see the staging artifacts. Implementation is handed to
 `agent-working-implementer`. The per-agent rollback must be written here before Step 4 is committed.
 
+### Step 1 — `subagent_tool_audit.py`
+Added `tools/agent-monitoring/subagent_tool_audit.py` (read-only, stdlib + PyYAML only). Reads
+Claude Code's own subagent transcripts under `~/.claude/projects/<repo-slug>*/<session>/subagents/
+agent-<id>.{meta.json,jsonl}` (repo-slug derived from the *main* repo root, stripping any
+`.claude/worktrees/<name>` suffix, so it correctly covers every worktree of this repo, not just the
+one it runs from). 12 fixture tests in `tests/tools/test_subagent_tool_audit.py` (`tmp_path`
+synthetic trees only, never real `.claude/agents/` or real transcripts).
+
+### Step 2 — Gate definition
+Written into `docs/plans/agent_infrastructure/ai_first_hardening_epics/governance_capability_policy_epic.md`'s
+M3 section, replacing the undefined "clean observation window" phrase with an operational
+definition: signal (`subagent_tool_audit.py --since <landing ts>`), failure conditions, the
+`confirmed`/`under-exercised`/`dormant`/`never used` labels with the 10-invocation `confirmed`
+threshold, the proceed rule (zero failures; weak labels stay open-risk, never folded into
+"clean"), and the machine/transcript-pruning limitation stated plainly. Not modified from
+investigation.md's own recommendation — Review did not change the threshold.
+
+### Step 3 — Wave 1 verdict, re-run (not copied from investigation.md)
+`python3 tools/agent-monitoring/subagent_tool_audit.py --since 2026-09-06T04:09:42Z`, run on
+`u24desktop`, 2026-09-11/12 (transcripts_seen: 940, transcripts_skipped_unmatched_or_missing_meta:
+185, date_range_covered: 2026-08-31T08:35:47Z to 2026-09-11T10:37:31Z):
+
+| Agent | pre | post | outside-allowlist (post) | no-such-tool (post) | Verdict |
+|---|---|---|---|---|---|
+| done-checker | 90 | 26 | 0 | 1 (`ListAgents`, session-level disable, pre-existing known case) | confirmed |
+| investigator | 60 | 17 | 0 | 0 | confirmed |
+| doc-updater | 53 | 17 | 0 | 0 | confirmed |
+| test-scoper | 68 | 14 | 0 | 0 | confirmed |
+| ticket-scoper | 90 | 3 | 0 | 0 | under-exercised |
+| mechanics-auditor | 1 | 3 | 3 (`Agent`) | 0 | under-exercised, investigated below |
+| concern-investigator | 54 | 0 | 0 | 0 | dormant |
+| spec-document-reviewer, simulation-analyst, world-debugger, world-render-reviewer | 0 | 0 | 0 | 0 | never used |
+
+Differences from investigation.md §3's counts (e.g. done-checker 23→26 post, doc-updater 14→17,
+test-scoper 11→14) are explained, not overwritten: this re-run is 1 day later and this session
+alone closed 9 more tickets in that window, each dispatching these same Wave 1 agents again — more
+elapsed activity, not a discrepancy in the tool. `ticket-scoper`/`mechanics-auditor`/
+`concern-investigator`/the 4 never-used agents match investigation.md exactly.
+
+**mechanics-auditor's 3 `Agent` calls investigated, not assumed clean:** all 3 are in one
+transcript (`agent-ac7abc41fd34e6ec8.jsonl`) at `2026-09-06T04:13:07Z`–`04:13:37Z`. Its parent
+session directory is `8553c310-aa3d-4e2b-ad90-19452165200a`; that session's own transcript's first
+real timestamp is `2026-08-29T03:44:08.385Z` — 8 days *before* Wave 1 landed
+(`2026-09-06T04:09:42Z`). Confirms (not assumes) the pre-restart-session explanation: `.claude/
+agents/` definitions do not hot-reload mid-session, so a session already running before landing
+still saw the old, unrestricted `mechanics-auditor.md` 4 minutes after the merge. Zero failures per
+the Step 2 rule — proceeding to Step 4.
+
+**Overall verdict: zero failures. 4 confirmed, 2 under-exercised, 1 dormant, 4 never used —
+matches investigation.md's expected shape exactly.** Per the Step 2 rule, Wave 2 may proceed;
+`ticket-scoper`, `mechanics-auditor`, and `concern-investigator` remain open risk for Wave 3's own
+future evaluation, not folded into "clean" here.
+
+### Step 5 — Rollback (written before Step 4 is committed)
+Confirmed via `git status --porcelain -- .claude/agents/` immediately before this Step 4 change:
+no other uncommitted change sits on any of the three files, so the clean-revert precondition holds
+and each is a plain single-file revert:
+```
+git checkout HEAD -- .claude/agents/architecture-reviewer.md
+git checkout HEAD -- .claude/agents/security-reviewer.md
+git checkout HEAD -- .claude/agents/planner.md
+```
+
 ## Test Summary
-(filled in during implementation)
+```
+pytest tests/tools/test_wave1_agent_tools_frontmatter.py tests/tools/test_concern_investigator_agent_definition.py tests/tools/test_subagent_tool_audit.py -q
+```
+71 passed (55 in the extended frontmatter file — 44 pre-existing Wave 1 assertions unchanged plus
+11 new Wave 2 assertions; 12 new fixture tests in `test_subagent_tool_audit.py`; the concern-investigator
+file's own tests unaffected). All fixture tests use synthetic `tmp_path` trees only — never real
+`.claude/agents/*.md` or real `~/.claude/projects/` transcripts, matching this repo's established
+convention for structural/architecture tests.
 
 ## Files Changed
-(filled in during implementation)
+- `tools/agent-monitoring/subagent_tool_audit.py` (new) -- Step 1, caller-level audit tool
+- `tests/tools/test_subagent_tool_audit.py` (new) -- Step 1, 12 fixture tests
+- `docs/plans/agent_infrastructure/ai_first_hardening_epics/governance_capability_policy_epic.md` --
+  Step 2 (gate definition), Step 3 (Wave 1 verdict), Step 7 (Wave 2 landed status update)
+- `.claude/agents/planner.md` -- Step 4, one `tools:` line added
+- `.claude/agents/architecture-reviewer.md` -- Step 4, one `tools:` line added
+- `.claude/agents/security-reviewer.md` -- Step 4, one `tools:` line added
+- `tests/tools/test_wave1_agent_tools_frontmatter.py` -- Step 6, Wave 2 candidate-scope +
+  forbidden-pair pins added; `_WAVE2_WAVE3_AGENTS`/its test narrowed to `_WAVE3_AGENTS`
+- `docs/plans/agent_infrastructure/ai_first_hardening_epics/roadmap.md` -- Step 7, item 1's
+  Wave 2 landing status update
+- `tickets/inprogress/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2.md` -- this file
+- `staging_artifacts/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2/` -- no changes needed; Investigate
+  and Plan were already complete before this Implement pass
 
 ## Completion Summary
 (filled in at close)

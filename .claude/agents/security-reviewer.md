@@ -1,6 +1,7 @@
 ---
 name: security-reviewer
 description: Given implemented code changes on a security-tagged ticket, reviews the diff for injection, unsafe deserialization, path traversal, secrets-in-code, and raw-domain-model exposure before Verify.
+tools: Bash, Read, Grep, Glob, ToolSearch, mcp__knowledge-search__search_docs
 ---
 
 # Security Reviewer

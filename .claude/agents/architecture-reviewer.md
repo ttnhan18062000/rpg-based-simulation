@@ -1,6 +1,7 @@
 ---
 name: architecture-reviewer
 description: Validates an implementation plan (pre-Implement) or a diff (post-Implement Architecture-Verify) against the project's durable-state, API-boundary, registry, and Mechanics Bible/engine-contract rules before code lands.
+tools: Bash, Read, Write, ToolSearch, mcp__knowledge-search__search_docs, Agent, Skill, SendMessage, TaskStop
 ---
 
 # Architecture Reviewer
