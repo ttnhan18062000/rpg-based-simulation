@@ -252,6 +252,19 @@ already re-baselined 2026-08-29). The stash-and-counterfactual method itself —
 conclusion — was surfaced to peer review as a correction to an unverified causal claim made before
 running it.
 
+**Real, in-scope regression found and fixed via CI**: pushing this ticket's own PR triggered two
+real CI job failures — `API / tools / logging` (reproduced locally: 2700 passed, 0 failed;
+concluded a transient CI-environment issue, not caused by this diff) and `Migration lanes`
+(`make lane-all-fast`, gated on changed-files path-filter, real and reproducible: `tests/unit/
+certification/test_catalog_scenario_state_builder.py::test_archetype_entities_carry_archetype_id`
+had the *exact same* positional-index bug already found and fixed once in
+`test_world_entity_spawner.py` — `entity_ids[i]` assumed 1:1 alignment with the i-th profile in
+`ctx.entities`, which breaks once a profile expands into `count` entities. A grep for the same
+`ctx.entities`/positional-index pattern across the rest of `tests/` found no further instances —
+the other 4 files matching a broader `ctx.entities` grep only iterate the profile dict directly,
+never correlate it against a separately-spawned entity list by position). Fixed the same way:
+grouped by the real `population_id` tag instead of position.
+
 ## Test Summary
 - `pytest tests/integration/worldassembly/ tests/unit/worldassembly/test_resolver.py -q` — 31
   passed (includes the 3 updated tests, now asserting the correct count-aware invariant).
@@ -259,6 +272,16 @@ running it.
   suites — 256 passed, 12 failed, 1 error on first full run; all 13 failing/erroring cases
   individually confirmed via `git stash` to be pre-existing on unmodified `main`, none caused by
   this ticket's own diff. See Implementation Notes for the full triage.
+- `pytest tests/ -m "(catalog or content_graph or worldassembly or registry_projection or
+  scenario_setup or architecture) and not strict_matrix and not slow" -q` (the real `Migration
+  lanes` CI command, `make lane-all-fast`) — 376 passed (was 1 failed, 375 passed before the
+  `test_catalog_scenario_state_builder.py` fix above).
+- `pytest tests/integration/content/test_expansion_gate.py -q` (the real `gate-expansion` CI
+  command) — 12 passed.
+- `pytest tests/api tests/cli tests/tools tests/logging tests/engine tests/observability -m "not
+  slow and not extra_slow" -q` (the real `API / tools / logging` CI command) — 2700 passed, 0
+  failed, reproducing CI's own failure locally was not possible; concluded transient/environmental,
+  not this ticket's own diff (no file under any of those paths touched by this change).
 - `tests/unit/domains/campaigns/`, `tests/integration/campaigns/`, `tests/unit/domains/demographics/`
   — unaffected by this change (this ticket's fix is confined to `src/worldassembly/`/
   `src/entities/archetype_factory.py`; no campaign/demographics code touched) — not re-run in full
@@ -275,6 +298,8 @@ running it.
   profile's `count`, tags `population_id`
 - `tests/integration/worldassembly/test_world_entity_spawner.py` — 3 tests updated to the correct
   count-aware invariant
+- `tests/unit/certification/test_catalog_scenario_state_builder.py` — 1 test with the identical
+  positional-index bug, found via a real CI `Migration lanes` failure, fixed the same way
 - `tickets/todos/TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-
   WORK-QUEUE.md` — new
 - `tickets/todos/TCK-20260912-CORPUS-DIVERSITY-NARRATIVE-PILLAR-POST-REFRESH-DRIFT.md` — new
