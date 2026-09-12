@@ -2,8 +2,10 @@
 tests/unit/engine/test_information_intent_execution_phase.py
 
 Unit tests for InformationIntentExecutionPhase (TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE):
-- filters out non-ActionIntent entries in intent_results (economy.py/patches.py-shaped
-  IntentResult objects sharing the same field must never be treated as ActionIntent).
+- executes the ActionIntent routed into EntityUpdate.pending_action_intent this tick.
+- leaves EntityUpdate.intent_results (typed for IntentResult) untouched -- Branch B no
+  longer ever writes an ActionIntent there (TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-
+  LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-QUEUE).
 - iterates entities in sorted-ID order, matching the kernel's determinism law
   (docs/engine/kernel.md line 19).
 """
@@ -40,7 +42,7 @@ def _move_intent(actor_id: int) -> ActionIntent:
     return ActionIntent(kind="MOVE_TO", actor_id=actor_id, payload={"position": (5.0, 5.0)})
 
 
-def test_action_intent_execution_phase_filters_non_action_intent_entries():
+def test_action_intent_execution_phase_noop_when_no_pending_action_intent():
     actor = _entity(1)
     state = _state([actor])
 
@@ -57,7 +59,7 @@ def test_action_intent_execution_phase_filters_non_action_intent_entries():
     assert ActionIntentAdapter.get_traces() == []
 
 
-def test_action_intent_execution_phase_only_executes_the_action_intent_entry_in_a_mixed_list():
+def test_action_intent_execution_phase_executes_pending_action_intent_alongside_real_intent_results():
     actor = _entity(1)
     state = _state([actor])
 
@@ -67,7 +69,11 @@ def test_action_intent_execution_phase_only_executes_the_action_intent_entry_in_
     )
     action_intent = _move_intent(actor.id)
     update = StateUpdate(entity_updates={
-        actor.id: EntityUpdate(entity_id=actor.id, intent_results=[real_intent_result, action_intent]),
+        actor.id: EntityUpdate(
+            entity_id=actor.id,
+            intent_results=[real_intent_result],
+            pending_action_intent=action_intent,
+        ),
     })
 
     ActionIntentAdapter.clear_traces()
@@ -78,36 +84,31 @@ def test_action_intent_execution_phase_only_executes_the_action_intent_entry_in_
     assert traces[0].intent_kind == "MOVE_TO"
 
 
-def test_action_intent_execution_phase_strips_raw_action_intent_after_execution():
-    """TCK-20260907-INFORMATION-INTENT-EXECUTION-RESULT-TYPE-MISMATCH regression.
+def test_action_intent_execution_phase_clears_pending_action_intent_after_execution():
+    """TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-QUEUE.
 
-    Before the fix, the raw ActionIntent survived unchanged in the returned
-    update's intent_results (EntityUpdate.merge() concatenates additively) and
-    later got installed as entity.identity.latest_intent_results --
-    StrategicWorkQueue.build() then crashed with AttributeError reading
-    .accepted off it (a field only real IntentResult objects have, not
-    ActionIntent).
+    Branch B now writes its routed ActionIntent to the dedicated pending_action_intent
+    field, never to intent_results (typed for IntentResult only) -- so a raw ActionIntent
+    can no longer reach entity.identity.latest_intent_results and crash
+    StrategicWorkQueue.build() (which reads .accepted unconditionally off every entry, a
+    field only real IntentResult objects have) by construction, regardless of whether
+    this phase runs. This phase's own job is only to consume and clear the field once
+    executed.
     """
     actor = _entity(1)
     state = _state([actor])
 
     action_intent = _move_intent(actor.id)
     update = StateUpdate(entity_updates={
-        actor.id: EntityUpdate(entity_id=actor.id, intent_results=[action_intent]),
+        actor.id: EntityUpdate(entity_id=actor.id, pending_action_intent=action_intent),
     })
 
     result = InformationIntentExecutionPhase.execute(state, update)
 
-    surviving = result.entity_updates[actor.id].intent_results
-    assert not any(isinstance(r, ActionIntent) for r in surviving), (
-        "raw ActionIntent must not survive execution -- StrategicWorkQueue.build() "
-        "reads .accepted unconditionally off every intent_results entry"
-    )
-    for r in surviving:
-        assert hasattr(r, "accepted"), "every surviving entry must be a real IntentResult"
+    assert result.entity_updates[actor.id].pending_action_intent is None
 
 
-def test_action_intent_execution_phase_preserves_real_intent_result_alongside_stripped_action_intent():
+def test_action_intent_execution_phase_leaves_intent_results_untouched():
     actor = _entity(1)
     state = _state([actor])
 
@@ -117,13 +118,20 @@ def test_action_intent_execution_phase_preserves_real_intent_result_alongside_st
     )
     action_intent = _move_intent(actor.id)
     update = StateUpdate(entity_updates={
-        actor.id: EntityUpdate(entity_id=actor.id, intent_results=[real_intent_result, action_intent]),
+        actor.id: EntityUpdate(
+            entity_id=actor.id,
+            intent_results=[real_intent_result],
+            pending_action_intent=action_intent,
+        ),
     })
 
     result = InformationIntentExecutionPhase.execute(state, update)
 
     surviving = result.entity_updates[actor.id].intent_results
-    assert not any(isinstance(r, ActionIntent) for r in surviving)
+    assert not any(isinstance(r, ActionIntent) for r in surviving), (
+        "an ActionIntent must never appear in intent_results -- StrategicWorkQueue.build() "
+        "reads .accepted unconditionally off every intent_results entry"
+    )
     assert real_intent_result in surviving
 
 
@@ -132,7 +140,7 @@ def test_action_intent_execution_phase_preserves_deterministic_entity_order():
     state = _state(entities)
 
     update = StateUpdate(entity_updates={
-        e.id: EntityUpdate(entity_id=e.id, intent_results=[_move_intent(e.id)])
+        e.id: EntityUpdate(entity_id=e.id, pending_action_intent=_move_intent(e.id))
         for e in entities
     })
 

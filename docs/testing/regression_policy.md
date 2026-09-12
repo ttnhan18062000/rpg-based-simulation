@@ -200,3 +200,31 @@ A second, directly analogous worked example to §9, this time for `tests/simulat
 ## 11. TCK-20260830-URBAN-POLITICAL-SOCIAL-1000T-FLOOR-DRIFT-REBASELINE Re-Baseline (Worked Example)
 
 A follow-up worked example to §9: `test_urban_political_seed42_1000t_social_grade_stability`, the one test §9's own `TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION` fix unblocked but left with a disclosed, unresolved `mean_score=36.8373` vs. `anchor_score=15.45` SOCIAL drift, has now been separately re-baselined. Two more tickets landed between that measurement and this one — `TCK-20260830-COOPERATION-OFFER-RETRY-COOLDOWN-MISSING` and `TCK-20260830-COOPERATION-OFFER-CONCURRENT-DUPLICATE-BURST` — both directly gating `contract_expired_offer`/`contract_offer_created` volume (SOCIAL's two highest-frequency scored event types here, `src/simulation_quality/scorers/social.py`). A fresh 9-trial (3-batch), evidence-backed re-measurement on top of both fixes found SOCIAL had moved further and — notably — tightened dramatically in trial-to-trial variance (~40%→~10% `event_count` spread), consistent with bounding a previously-unbounded re-offer loop and deduping a duplicate-creation burst. New anchor: `{"grade": "S", "score": 35.1038, "abs_floor": 2.5387}`, derived and verified per §9's own established 2-batch-combined-plus-verification-batch methodology (see `test_corpus_diversity.py`'s own updated docstring for the full derivation). This is a second concrete instance of §9's "Lesson": a disclosed, deferred drift measured before a related fix landed must be re-measured fresh, not assumed still accurate.
+
+---
+
+## 12. The `-m slow` Lane Is a CI Blind Spot — a Real Crash Sat Unnoticed on `main`
+
+`TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-QUEUE` found
+a real, reproducible crash in `StrategicWorkQueue.build()` (`AttributeError: 'ActionIntent' object
+has no attribute 'accepted'`) that had been present on `main` for as long as
+`InformationBeliefPhase` Branch B has existed and any real corpus world had enough population/content
+for it to fire — confirmed via `git stash`, unrelated to the ticket that happened to surface it
+(`TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE`).
+
+**Why nobody saw it**: `tests/unit/worldassembly/test_corpus_diversity.py` (the file whose tests
+actually exercise real corpus worlds at real population density, where this crash reliably fires)
+is entirely `@pytest.mark.slow`. This file is exactly the class of test this policy document's own
+§9–§11 worked examples describe re-baselining and triaging repeatedly — meaning it *is* run and
+watched periodically as a deliberate practice, just not as part of routine/default CI on every push.
+A real crash can sit on `main` between those periodic passes with nothing red in the routine
+pipeline to flag it. This is a structural gap, not a one-off miss: it is the general shape of "the
+one test lane that would catch X only runs occasionally," not specific to this one bug.
+
+**Not resolved by this entry alone.** This section exists to make the gap durable and findable, per
+the same "write it down, don't let it evaporate into prose" discipline this whole document already
+follows for re-baseline evidence. Whether the right structural fix is a scheduled/periodic CI run of
+`-m slow`, a lighter always-on smoke subset of `test_corpus_diversity.py`, or something else is an
+open question this entry deliberately does not resolve — flagged here so the next person considering
+CI cadence changes has this concrete cost (a crash invisible for an unknown but likely multi-week
+span) as real evidence, not a hypothetical.

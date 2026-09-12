@@ -120,12 +120,65 @@ def test_cooperation_phase_no_immediate_reoffer_after_expiry_tick():
 def test_phase_respects_feature_flag():
     req = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).combat(hp=20, max_hp=100).lifecycle(active=True).build())
     object.__setattr__(req.strategic, "current_objective_id", "obj_1")
-    
+
     state = AuthoritativeState(entities={1: req}, tick=1, seed=123)
     state.periodic_due_ticks["social_cooperation_disabled"] = 1
-    
+
     update = StateUpdate()
     refined = CooperationPhase.execute(state, update)
-    
+
     assert 1 not in refined.entity_updates
     assert refined.metric_counters == {}
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260911-COOPERATION-TRUST-HISTORY-ZERO-ACCUMULATION-INVESTIGATION:
+# party cohesion collapse (LEADER_LOST) must route through the real
+# CooperationLearningService.learn() -- not a hand-copied inline shortcut --
+# so trust_delta AND grudge_delta both accumulate, matching learn()'s own
+# "abandoned" outcome_type exactly.
+# ---------------------------------------------------------------------------
+
+def test_party_cohesion_leader_lost_writes_trust_and_grudge_via_real_learning_service():
+    leader = (
+        V2EntityBuilder(1)
+        .kind("HERO")
+        .location(0.0, 0.0)
+        .combat(hp=0, max_hp=100, alive=False)
+        .build()
+    )
+    member = (
+        V2EntityBuilder(2)
+        .kind("HERO")
+        .location(1.0, 1.0)
+        .combat(hp=100, max_hp=100, alive=True)
+        .build()
+    )
+    group = GroupRecord(id=1, leader_id=1, member_ids={1, 2}, anchor=(0.0, 0.0))
+    state = AuthoritativeState(
+        entities={1: leader, 2: member},
+        groups={1: group},
+        tick=5,
+        seed=123,
+    )
+
+    refined = CooperationPhase.execute(state, StateUpdate())
+
+    assert 2 in refined.entity_updates
+    member_up = refined.entity_updates[2]
+    assert member_up.social is not None
+
+    # These values come from CooperationLearningService.learn()'s own real "abandoned"
+    # outcome_type computation (services.py), not a hardcoded literal in this test --
+    # asserted against the same real service to prove the phase actually calls it.
+    from src.domains.cooperation.services import CooperationLearningService, CooperationOutcomeEvent
+    expected = CooperationLearningService.learn(
+        member,
+        CooperationOutcomeEvent(tick=5, partner_id=1, outcome_type="abandoned", description=""),
+        state,
+    )
+
+    assert member_up.social.trust_delta[1] == pytest.approx(expected.trust_delta)
+    assert member_up.social.grudge_delta[1] == pytest.approx(expected.grudge_delta)
+    # Confirms this isn't the old hardcoded -0.25-only branch that silently dropped grudge.
+    assert member_up.social.grudge_delta[1] != 0.0

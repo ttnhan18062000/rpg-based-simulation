@@ -66,8 +66,9 @@ def test_phase_routes_query_for_active_unknowns():
     assert actor.id in update.entity_updates
     prop_ups = update.entity_updates[actor.id].property_updates
     assert prop_ups.get("last_routed_query_subject") == "iron_ore"
-    assert len(update.entity_updates[actor.id].intent_results) == 1
-    assert update.entity_updates[actor.id].intent_results[0].kind == "ASK_INFORMATION"
+    intent = update.entity_updates[actor.id].pending_action_intent
+    assert intent is not None
+    assert intent.kind == "ASK_INFORMATION"
 
 
 def test_information_belief_phase_falls_back_to_next_candidate_on_resolution_failure():
@@ -105,8 +106,8 @@ def test_information_belief_phase_falls_back_to_next_candidate_on_resolution_fai
     assert actor.id in update.entity_updates
     eu = update.entity_updates[actor.id]
     assert eu.property_updates.get("last_routed_query_subject") == "iron_ore"
-    assert len(eu.intent_results) == 1
-    intent = eu.intent_results[0]
+    intent = eu.pending_action_intent
+    assert intent is not None
     assert intent.kind == "ASK_INFORMATION"
     assert intent.target_id == 3, "expected fallback past the unaffordable candidate to the free one"
     assert intent.payload.get("cost_paid") == 0
@@ -218,8 +219,8 @@ def test_action_intent_execution_phase_fires_in_real_tick_pipeline():
 def test_action_intent_execution_phase_off_by_default_is_a_noop():
     """Same setup as test_action_intent_execution_phase_fires_in_real_tick_pipeline, but
     ENABLE_INFORMATION_INTENT_EXECUTION is left unset (default OFF). Branch B still routes
-    the ActionIntent into intent_results (ENABLE_BELIEF_ASSIMILATION stays ON), but it must
-    sit inert — the flag gate must actually block production reachability."""
+    the ActionIntent into pending_action_intent (ENABLE_BELIEF_ASSIMILATION stays ON), but it
+    must sit inert, unconsumed — the flag gate must actually block production reachability."""
     from dataclasses import replace as dataclass_replace
     from src.domains.optimization.feature_flags import FeatureMode
 
@@ -234,9 +235,62 @@ def test_action_intent_execution_phase_off_by_default_is_a_noop():
 
     eu = refined.entity_updates.get(actor.id)
     assert eu is not None
-    assert eu.intent_results, "expected Branch B to still route the ActionIntent into intent_results"
+    assert eu.pending_action_intent is not None, (
+        "expected Branch B to still route the ActionIntent into pending_action_intent"
+    )
     assert eu.self_model_bundle_set is not None
     assert "iron_ore" not in eu.self_model_bundle_set.knowledge.facts, (
         "ActionIntentAdapter.execute() must not have fired while the flag is OFF"
     )
     assert "iron_ore" in eu.self_model_bundle_set.knowledge.unknowns
+
+
+def test_routed_action_intent_never_reaches_durable_latest_intent_results_flag_off():
+    """TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-CRASHES-STRATEGIC-WORK-QUEUE
+    end-to-end regression: with ENABLE_INFORMATION_INTENT_EXECUTION OFF (the shipped default --
+    the exact real-world condition that crashed StrategicWorkQueue.build() on real corpus worlds
+    at real population density), a routed self-model query must never reach
+    entity.identity.latest_intent_results (typed for IntentResult only), and
+    StrategicWorkQueue.build() must not crash on the resulting entity."""
+    from dataclasses import replace as dataclass_replace
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.core.updates import StateUpdate
+    from src.engine.patches import extract_patches, IdentityPatch
+    from src.engine.intent.action_intent import ActionIntent
+    from src.systems.strategic_systems.work_queue import StrategicWorkQueue
+    from src.core.dirty import DirtySet
+
+    state, actor = _selfmodel_execution_probe_state()
+    state = dataclass_replace(state, feature_flags={
+        "ENABLE_SELF_MODEL_COGNITION": FeatureMode.ON,
+        "ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON,
+        # ENABLE_INFORMATION_INTENT_EXECUTION deliberately left unset (default OFF).
+    })
+
+    refined = AuthoritativeApplyPipeline.refine(state, StateUpdate())
+    eu = refined.entity_updates[actor.id]
+    assert isinstance(eu.pending_action_intent, ActionIntent), (
+        "test setup assumption: Branch B routed a real ActionIntent this tick"
+    )
+
+    # Materialize the durable IdentityComponent the way the real apply pipeline would --
+    # extract_patches() -> IdentityPatch.apply() -- and confirm latest_intent_results never
+    # picks up the routed ActionIntent regardless of the flag being off.
+    patches = extract_patches(actor.id, eu)
+    identity_patches = [p for p in patches if isinstance(p, IdentityPatch)]
+    changes: dict = {}
+    for p in identity_patches:
+        p.apply(actor, changes)
+    new_identity = changes.get("identity", actor.identity)
+    assert not any(isinstance(r, ActionIntent) for r in new_identity.latest_intent_results), (
+        "a routed ActionIntent must never reach latest_intent_results, with the flag off or on"
+    )
+
+    updated_actor = dataclass_replace(actor, identity=new_identity)
+    updated_state = dataclass_replace(state, entities={**state.entities, actor.id: updated_actor})
+
+    # Must not raise -- this is the exact call site that crashed with
+    # AttributeError: 'ActionIntent' object has no attribute 'accepted'. A real (non-None) empty
+    # DirtySet is required so build() reaches the tier1 .accepted check instead of taking its own
+    # early-return path for force_full_scan/no-dirty-set.
+    StrategicWorkQueue.build(updated_state, StateUpdate(), dirty=DirtySet())

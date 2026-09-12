@@ -35,10 +35,15 @@ evolution proposal work, none previously flagged by the original 30-pattern revi
    11 of 16 agents (all read-oriented/low-mutation roles, see Wave 1's list below) now declare a
    scoped `tools:` frontmatter, so the `investigator`/`doc-updater` example above no longer holds as
    a current-state fact — both are Wave 1 agents and no longer share `implementer`'s unrestricted
-   reach. The remaining 5 (`architecture-reviewer`, `security-reviewer`, `planner` — Wave 2;
-   `implementer`, `parity-updater` — Wave 3) still inherit the full, unrestricted session-level
-   default described above, gated on Wave 1's real elapsed observation window per this milestone's
-   own sizing rule below.
+   reach.
+
+   **Status update (2026-09-12):** `TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2` operationally
+   defined the "clean observation window" gate (see below) and landed Wave 2 —
+   `architecture-reviewer`, `security-reviewer`, `planner` now also declare a scoped `tools:`
+   frontmatter, evaluated against the gate at zero failures. 14 of 16 agents now scoped. Only Wave
+   3 (`implementer`, `parity-updater` — highest blast radius, done last) still inherits the full,
+   unrestricted session-level default described above, gated on Wave 2's own observation window per
+   this milestone's own sizing rule below.
 2. **No policy layer exists between a model-issued Bash command and host execution**, outside one
    narrow path: `tools/knowledge_gateway_redaction.py::scan_for_secrets()` only guards writes into
    the knowledge-gateway cache. The dominant path — direct Bash tool calls from any of the 16
@@ -111,6 +116,48 @@ landed Wave 1 (11 read-oriented agents) only; Wave 2 (`architecture-reviewer`, `
 `planner`) and Wave 3 (`implementer`, `parity-updater`) remain unimplemented, gated on Wave 1's real
 elapsed observation window (a single session cannot manufacture that time) and tracked as separate
 future tickets, not sub-steps of the ticket that landed Wave 1.
+
+**"Clean observation window", operationally defined (`TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2`,
+2026-09-11):** Wave 1's own text used this phrase five times without defining a duration, a "clean"
+criterion, or a measurable signal — with `tools.jsonl`'s existing `agent` field unusable as that
+signal (it records the pipeline *phase* the orchestrator last announced, not the real tool caller;
+see `tools/agent-monitoring/post_tool_hook.py:122-126` and this ticket's investigation.md §2).
+
+- **Signal:** `tools/agent-monitoring/subagent_tool_audit.py --since <wave-landing timestamp on
+  main>`, run on the machine where the pipeline runs. It reads Claude Code's own subagent
+  transcripts (`~/.claude/projects/<repo-slug>*/<session>/subagents/*.{meta.json,jsonl}`) — the
+  real, caller-level record — not `tools.jsonl`.
+- **Failure (blocks the next wave):** any post-landing call to a tool outside a scoped agent's
+  allowlist, in a session that itself started after landing (enforcement not working — a call from
+  a *pre-landing* session that simply hadn't hot-reloaded yet is not a failure, since `.claude/
+  agents/` definitions never hot-reload mid-session); any `No such tool available` error for a tool
+  not in that agent's allowlist (the agent needed a tool it lacks); or any failed/blocked event
+  whose summary attributes the failure to a missing tool.
+- **Per-agent label:** `confirmed` (≥ 10 post-landing invocations, zero failures), `under-exercised`
+  (1–9), `dormant` (0 post-landing, but used before landing), `never used` (0 both).
+- **Rule:** the next wave may proceed when there are zero failures across all of the wave's agents.
+  `under-exercised` and `dormant` agents are listed by name in the next wave's own ticket as open
+  risk — never silently folded into "clean".
+- **Minimum duration:** none beyond what the invocation counts already imply. Calendar days alone
+  are a poor proxy for real exercise; the evidence is invocation counts and failure counts, not
+  elapsed time.
+- **Known limitation, stated plainly:** transcripts are local to the machine the audit runs on and
+  can be pruned by Claude Code's own transcript-retention cleanup — a verdict must name its machine
+  and date range, and a second environment's activity is invisible to a first environment's audit.
+  This makes the signal real but not exhaustive; an honest verdict says so rather than presenting
+  absence-of-evidence as evidence-of-absence.
+
+**Wave 1 verdict, caller-level (`subagent_tool_audit.py --since 2026-09-06T04:09:42Z`, run on
+`u24desktop`, 2026-09-11/12):** zero failures. `confirmed`: `done-checker`, `investigator`,
+`doc-updater`, `test-scoper`. `under-exercised`: `ticket-scoper`, `mechanics-auditor`. `dormant`:
+`concern-investigator` (only runs via `create-tickets`, which has not run since landing).
+`never used`: `spec-document-reviewer`, `simulation-analyst`, `world-debugger`,
+`world-render-reviewer`. One post-landing outside-allowlist signal was investigated rather than
+assumed clean: `mechanics-auditor` made 3 `Agent` calls at `2026-09-06T04:13Z`, 4 minutes after
+landing. Its own subagent transcript's parent session (`8553c310-aa3d-4e2b-ad90-19452165200a`)
+started `2026-08-29T03:44:08Z` — 8 days before landing — confirming (not assuming) this is the
+known pre-restart-session case the no-hot-reload constraint describes, not an enforcement gap.
+Full evidence: `stored_artifacts/TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2/`.
 
 **Offline candidate-policy replay (per agent, before that agent's wave enforces anything):** for
 every historical tool call the agent made (from M1's usage table), evaluate whether a candidate

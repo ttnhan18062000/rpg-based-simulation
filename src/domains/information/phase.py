@@ -96,9 +96,17 @@ class InformationBeliefPhase:
                     for cand in candidates:
                         result = InformationIntentResolver.resolve(actor, cand, q, state)
                         if isinstance(result, ActionIntent):
+                            # TCK-20260912-ACTIONINTENT-WRONG-TYPE-IN-LATEST-INTENT-RESULTS-
+                            # CRASHES-STRATEGIC-WORK-QUEUE: routed via the dedicated
+                            # pending_action_intent field, never intent_results (typed for
+                            # IntentResult only) -- a raw ActionIntent stored there would
+                            # otherwise survive EntityUpdate.merge()'s additive concatenation and
+                            # IdentityPatch.apply()'s unconditional write straight into
+                            # entity.identity.latest_intent_results, crashing every real reader
+                            # that assumes IntentResult shape.
                             entity_updates[actor.id] = EntityUpdate(
                                 entity_id=actor.id,
-                                intent_results=[result],
+                                pending_action_intent=result,
                                 property_updates={
                                     "last_routed_query_subject": first_unk.subject,
                                     "last_routed_query_tick": state.tick,
