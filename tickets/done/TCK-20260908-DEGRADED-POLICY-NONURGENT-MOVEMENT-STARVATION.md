@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION
-phase: open
+phase: done
 date: 2026-09-08
 tags: [determinism]
 ---
@@ -15,7 +15,7 @@ tags: [determinism]
 Under RuntimeMode.DEGRADED (ScanPolicy.EXACT_DIRTY), a freshly-spawned entity with a real navigation.target but no AI-driven activity can never become a movement candidate — permanent starvation, not mere throttling
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -118,18 +118,30 @@ a fix without a real decision on the disposition.**
   not conflate the two.
 
 ## Acceptance Criteria
-- [ ] Real measurement (not reasoning-only) of how often/under what conditions `DEGRADED`/
+- [x] Real measurement (not reasoning-only) of how often/under what conditions `DEGRADED`/
       `EXACT_DIRTY` triggers in practice, separated as cleanly as possible from debug-instrumentation
-      artifacts.
-- [ ] Real determination of whether `DEGRADED` mode self-recovers or can persist for a run's
-      remainder once triggered.
-- [ ] A real disposition decision recorded (accept-and-document vs. scoped fix), with rationale.
-- [ ] If accepted as a known consequence: `docs/guidelines/intentional_divergences.md` (or wherever
-      the existing wall-clock throttle divergence is recorded) amended to include this consequence
-      explicitly, cross-referenced from `TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX`'s own deferred
-      verification note.
-- [ ] If a scoped fix is decided: real test evidence the starvation loop is broken, without
-      regressing `EXACT_DIRTY`'s own intended compute-budget protection.
+      artifacts. Three real, uninstrumented measurements recorded in Implementation Notes: the
+      original finding no longer reproduces post-sentinel-fix; the mechanism is real and
+      independently reproducible under genuine sustained load, isolated from any fresh spawn
+      injected while DEGRADED was already confirmed active via a real watchdog trip.
+- [x] Real determination of whether `DEGRADED` mode self-recovers or can persist for a run's
+      remainder once triggered. Under sustained ever-growing real load specifically, did not
+      recover within the tested window (escalated to SURVIVAL); general self-recovery under a
+      transient load spike was not separately tested (stated honestly, not resolved here).
+- [x] A real disposition decision recorded: scoped fix, per the standing user rule (an entity that
+      can never re-enter candidacy by any action available to it is a logic defect, not
+      performance-tuning).
+- [x] Cross-referenced into the deferred wall-clock-throttle determinism issue's own code sites
+      (no single canonical doc/ticket found for it on search -- see Implementation Notes) --
+      `governor.py`'s `tick_compute_ms` DEGRADED trigger and `kernel.py`'s `_phase_resolution()`
+      mid-tick `should_throttle` both now cross-reference this ticket directly in-code.
+- [x] Scoped fix implemented: `MovementCandidateSelector`'s `EXACT_DIRTY` branch grants
+      reduced-cadence candidacy (not full re-admission) keyed on the real, general condition -- an
+      unreached navigation target -- rather than a spawn-time special case, per
+      `rpg-feature-planning`'s explicit correction of the first-proposed shape. Real test evidence
+      the starvation loop is broken (unit + real-Kernel regression + the exact 300-entity
+      acceptance-bar re-measurement), without regressing `EXACT_DIRTY`'s own work-shedding purpose
+      (bounded-fraction-per-tick admission, verified directly).
 
 ## Related Tickets
 - TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX (origin of this finding; its own real-run movement
@@ -275,15 +287,113 @@ call:**
   concretely-reproduced failure mode worth its own disposition call, not silently folded into the
   deferred issue's existing "let it sit."
 
+**Disposition (2026-09-13, per `rpg-feature-planning`): scoped fix, and reshaped.** Peer's own
+correction-vs-performance framing settled it: degradation means "moves less often," not "moves
+never" -- an entity that can never re-enter candidacy by any action available to it is a logic
+defect in the policy, not the performance pressure that triggers it, matching the standing user
+rule ("fix only if hard failure, not perf-tuning").
+
+Peer explicitly rejected my first-instinct shape ("one guaranteed candidacy tick for
+freshly-spawned entities") as a workaround shaped like a fix: every urgency condition in
+`select()` is change-driven, so the real defect is general (any entity whose target/state never
+changes), not spawn-time-specific. Peer also flagged the real constraint I hadn't weighed: full
+re-admission of every entity with an unreached target would, under real load where most entities
+plausibly have one, re-admit nearly everything and defeat `EXACT_DIRTY`'s own work-shedding
+purpose -- trading a starvation bug for a performance regression on a system already exceeding its
+tick budget.
+
+**Implemented: reduced-cadence candidacy**, keyed on the real, already-established condition (an
+unreached navigation target) rather than a spawn-time special case.
+`MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO = 20`
+(`src/engine/candidate_selector.py`): under `EXACT_DIRTY`, an otherwise-non-urgent entity with a
+real target is admitted on `(state.tick + entity_id) % 20 == 0` instead of never. The real
+readiness/move-cost gameplay gate (previously only reachable for non-`EXACT_DIRTY` policies) was
+moved earlier so it applies uniformly and isn't bypassed by the new branch. The 5 existing urgency
+conditions are entirely untouched -- a genuinely urgent entity is still selected every tick.
+
+**Acceptance-bar verification, both halves required by peer, both confirmed:** re-ran the exact
+300-entity sustained-load scenario from measurement 2/3 with the fix applied. Fresh raiders
+injected mid-run, after DEGRADED was independently confirmed active: **5/5 now show real movement**
+within the 15-tick post-injection window (each moved once, at a different tick matching its own
+`entity_id`-based cadence offset -- not simultaneously, confirming the bounded-fraction admission
+is real, not a full re-admission in disguise). DEGRADED stayed engaged throughout the same window
+(real `tick_compute_ms` continued exceeding budget every tick, real watchdog alerts present) -- the
+fix did not neutralize the governor.
+
+**Folded the relationship into the deferred wall-clock-throttle issue's own record.** Searched for
+a dedicated ticket/doc first (Context Scan order, per standing instruction) -- found none; the
+closest committed trace is a structurally related but distinct F6 finding in
+`docs/parity_ledger/infrastructure.yaml` (grade-anchor load-sensitivity under sustained
+calibration-sweep load, not this specific movement-candidacy mechanism). The "user said let it
+sit" record for the exact `kernel.py:585-596` mechanism appears to be an informal, session-only
+finding with no committed doc/ticket home. Given no single canonical file to edit, added direct
+cross-reference comments at both real code sites that force `RuntimeMode.DEGRADED` from wall-clock
+pressure -- `governor.py`'s `tick_compute_ms` check (the confirmed real driver in this ticket's own
+measurements) and `kernel.py`'s `_phase_resolution()` mid-tick `should_throttle` abort (which also
+directly calls `force_mode(RuntimeMode.DEGRADED, ...)`, confirmed via direct read to be a second,
+structurally separate path to the same mode) -- so a future reader revisiting either sees that
+their consequences reach movement candidacy, not only tick timing.
+
+Also strengthened `tests/integration/world/test_camp_raid_targeting.py` (the real-Kernel test that
+originally surfaced this ticket): its docstring previously asserted, as settled fact, that raiders
+could never move under `EXACT_DIRTY` -- now corrected to past tense with a pointer to this fix, and
+the test itself extended to run a full reduced-cadence window past raid spawn and assert real
+movement, proving the fix in the exact scenario that found the bug.
+
 ## Test Summary
-_(pending — 3 real, uninstrumented scratch measurement scripts run this session
-(`remeasure_degraded_starvation.py`, `remeasure_degraded_starvation_under_load.py`,
-`remeasure_fresh_spawn_during_real_degraded.py`), not yet committed as tests; disposition decision
-still needed before deciding what a committed regression test should assert)_
+Real, uninstrumented scratch measurement scripts (`remeasure_degraded_starvation.py`,
+`remeasure_degraded_starvation_under_load.py`, `remeasure_fresh_spawn_during_real_degraded.py`,
+re-run post-fix) -- not committed as tests (single-purpose acceptance-bar verification per peer's
+own request, reproducible from the scripts' own construction pattern, documented here rather than
+duplicated as committed test code).
+
+Committed test evidence:
+- `tests/unit/domains/optimization/test_movement_candidate_selector.py` -- 5 new tests covering
+  the reduced-cadence fix in isolation: off-cadence exclusion, on-cadence admission, the readiness
+  gate still applying, genuinely-urgent entities unaffected, and a 200-entity bounded-fraction
+  proof (only the cadence-eligible subset admitted, not all 200).
+- `tests/integration/world/test_camp_raid_targeting.py` -- extended with a real-Kernel post-spawn
+  tick run proving eventual movement in the exact scenario that surfaced this ticket.
+
+`pytest tests/unit/kernel/ tests/unit/resource/ tests/unit/domains/optimization/
+tests/integration/world/test_camp_raid_targeting.py tests/integration/kernel/ -q -m "not slow and
+not extra_slow"`: 384 passed, 1 skipped, 3 deselected -- no regression.
 
 ## Files Changed
-_(pending — no code changed by this re-check; measurement only)_
+- `src/engine/candidate_selector.py` -- `MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO`
+  constant added; `select()`'s `EXACT_DIRTY` branch changed from unconditional non-urgent
+  exclusion to reduced-cadence admission; the readiness/move-cost gate moved earlier so it applies
+  uniformly across scan policies.
+- `src/engine/governor.py` -- comment added at the `tick_compute_ms` DEGRADED trigger,
+  cross-referencing this ticket's fix and the related `kernel.py` mechanism.
+- `src/engine/kernel.py` -- comment added at `_phase_resolution()`'s mid-tick `should_throttle`
+  `force_mode(DEGRADED)` call, cross-referencing this ticket and the `governor.py` mechanism.
+- `tests/unit/domains/optimization/test_movement_candidate_selector.py` -- 5 new tests (see Test
+  Summary).
+- `tests/integration/world/test_camp_raid_targeting.py` -- docstring corrected from present-tense
+  "can never move" to past-tense with a fix pointer; test extended to assert real post-spawn
+  movement over a full reduced-cadence window.
 
 ## Completion Summary
-_(pending — ticket remains open; real measurement now complete per Scope's first two AC items;
-disposition decision (accept-and-document vs. scoped fix) sent to peer review, not decided here)_
+Re-measured against the fixed worker-utilization sentinel per peer's explicit instruction: the
+original finding no longer reproduces (0/30 DEGRADED ticks, exact original precondition), but the
+underlying mechanism is real and independently confirmed under genuine sustained load (a fresh
+spawn injected mid-run, after DEGRADED was already confirmed active via a real watchdog trip,
+stayed permanently stuck pre-fix). Peer's prediction -- "a real mechanism that only bites under
+genuine sustained load, a much narrower ticket than filed" -- was confirmed both ways by
+measurement, not assumed.
+
+Disposition: scoped fix, per the standing user rule distinguishing a genuine logic defect
+(permanent, unescapable exclusion) from performance-tuning (throttled-but-eventual movement).
+Peer corrected the first-proposed fix shape twice: rejected a spawn-time-only exemption as too
+narrow for the general defect, and flagged that full re-admission would defeat `EXACT_DIRTY`'s own
+work-shedding purpose under real load. Implemented reduced-cadence candidacy instead, keyed on the
+real condition (an unreached navigation target). Verified against peer's own explicit acceptance
+bar (both required, both confirmed): injected raiders eventually move, and DEGRADED stays engaged
+with `tick_compute_ms` still bounded -- the governor was not neutralized.
+
+Folded the relationship into the deferred wall-clock-throttle issue's own record via direct
+in-code cross-references at both real `RuntimeMode.DEGRADED`-forcing sites, since no single
+canonical doc/ticket for that deferred issue was found on search. No known material gap left
+unstated: general self-recovery under a transient (non-sustained) load spike was not separately
+tested, and is stated as such rather than assumed.
