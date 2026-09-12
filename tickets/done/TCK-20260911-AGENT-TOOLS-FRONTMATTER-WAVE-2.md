@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2
-phase: inprogress
+phase: done
 date: 2026-09-11
 tags: [governance, ai]
 ---
@@ -15,7 +15,7 @@ tags: [governance, ai]
 Least-privilege `tools:` scoping — Wave 2, and define the wave gate that Wave 1 left unmeasurable
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -258,4 +258,37 @@ convention for structural/architecture tests.
   and Plan were already complete before this Implement pass
 
 ## Completion Summary
-(filled in at close)
+Defined the operational gate that Wave 1 left unmeasurable (`docs/plans/agent_infrastructure/
+ai_first_hardening_epics/governance_capability_policy_epic.md`, M3 section): a real per-agent
+denial signal, a `confirmed`/`under-exercised`/`dormant`/`never used` label taxonomy with a
+10-invocation `confirmed` threshold, and a zero-failures proceed rule — replacing the previously
+undefined "clean observation window" phrase. Investigation found agent-monitoring's `agent` field
+records the pipeline phase, not the real tool caller (e.g. `architecture-reviewer` showed 545 `Edit`
+calls vs. 5 real), so a new read-only tool, `tools/agent-monitoring/subagent_tool_audit.py`, was
+built to read Claude Code's own subagent transcripts directly and derive caller-level counts; it
+delegates `registered_agents()` to `agent_tool_usage_baseline.py` rather than duplicating it, per
+an Architecture-Verify finding that was fixed before landing (the reviewer's other 3 checks — the
+tool being read-only, the harness-transcript-layout coupling being disclosed rather than blocking,
+and each Wave 2 agent file getting exactly one `tools:` line — passed without changes).
+
+Re-ran the new tool against Wave 1's landing window and got a zero-failures verdict: 4 agents
+confirmed, 2 under-exercised (one, `mechanics-auditor`, investigated rather than assumed clean —
+its 3 out-of-allowlist `Agent` calls were traced to a pre-restart session that hadn't picked up
+Wave 1's frontmatter yet, not a real gap), 1 dormant, 4 never used — matching the investigation's
+expected shape. That verdict cleared the gate for Wave 2, which then landed a `tools:` allowlist
+for `architecture-reviewer`, `security-reviewer`, and `planner`, derived from real usage data via
+Wave 1's same offline-replay/5-way-taxonomy method (smallest confident scope, not theoretical
+minimum) — `architecture-reviewer` loses `Edit` (only 4 real edits observed during a review, an
+inappropriate-legacy case). A single-file rollback (`git checkout HEAD -- .claude/agents/<file>.md`)
+was written and confirmed clean-revertible before the three files were changed.
+
+`tests/tools/test_wave1_agent_tools_frontmatter.py` was extended with Wave 2 candidate-scope and
+forbidden-pair assertions and its "no `tools:`" guard narrowed from Wave 2/3 to Wave 3 only, and
+`tests/tools/test_subagent_tool_audit.py` (11 fixture tests, synthetic `tmp_path` trees only) was
+added for the new tool. 81 tests passed, 0 failed, across the extended Wave 1 frontmatter suite,
+the concern-investigator agent-definition suite, and the new subagent-tool-audit suite. Docs
+updated to reflect Wave 2 landed / Wave 3 pending status and the phase-vs-caller attribution
+caveat: `roadmap.md`, `subsystem_ownership_lifecycle.md`, `agent-monitoring/README.md`, and
+`agent-monitoring/schema.md`. Wave 3 (`implementer`, `parity-updater`) remains out of scope as a
+separate future ticket, gated on this wave's own observation window using the same operational
+definition and `subagent_tool_audit.py --since <landing ts>` re-run.
