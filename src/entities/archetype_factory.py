@@ -26,6 +26,7 @@ class EntitySpawnContext:
     initial_active: bool = True
     current_tick: Optional[int] = None
     name_override: Optional[str] = None
+    population_id: Optional[str] = None
 
 
 class ArchetypeEntityFactory:
@@ -69,6 +70,8 @@ class ArchetypeEntityFactory:
             properties["name"] = spawn.name_override
         if spawn.current_tick is not None:
             properties["spawn_tick"] = spawn.current_tick
+        if spawn.population_id is not None:
+            properties["population_id"] = spawn.population_id
 
         # Legacy projection — use contract values if provided, else default (0)
         legacy_role_int = int(contract.legacy_role) if contract.legacy_role is not None else 0

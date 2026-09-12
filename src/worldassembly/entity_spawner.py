@@ -52,20 +52,30 @@ class WorldEntitySpawner:
         entity_id = base_entity_id
 
         for _key, profile in ctx.entities.items():
-            position = (
-                profile.spawn_position if profile.spawn_position is not None else default_position
-            )
-            spawn = EntitySpawnContext(
-                position=position,
-                spawn_region=None,
-                initial_alive=True,
-                initial_active=True,
-            )
+            # TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE: a profile
+            # represents one population GROUP, not one entity -- materialize profile.count
+            # individuals (porting WorldCompiler.compile()'s classic pipeline behavior), each
+            # tagged with the profile's own registration key as population_id, matching that
+            # pipeline's own `properties["population_id"] = pop_key` convention exactly.
+            positions = profile.spawn_positions or (profile.spawn_position,) * max(profile.count, 0)
+            for i in range(profile.count):
+                position = (
+                    positions[i]
+                    if i < len(positions) and positions[i] is not None
+                    else default_position
+                )
+                spawn = EntitySpawnContext(
+                    position=position,
+                    spawn_region=None,
+                    initial_alive=True,
+                    initial_active=True,
+                    population_id=_key,
+                )
 
-            state = self._spawn_one(entity_id, profile, spawn, catalog_repo, seed)
-            if state is not None:
-                result[entity_id] = state
-            entity_id += 1
+                state = self._spawn_one(entity_id, profile, spawn, catalog_repo, seed)
+                if state is not None:
+                    result[entity_id] = state
+                entity_id += 1
 
         return result
 
@@ -127,6 +137,7 @@ class WorldEntitySpawner:
                     "species_id": profile.species_id,
                     "faction_id": profile.faction_id,
                     "role_id": profile.role_id,
+                    "population_id": spawn.population_id,
                 },
                 personality=personality,
             )
