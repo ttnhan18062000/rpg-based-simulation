@@ -2824,20 +2824,24 @@
     \ an in-process registry dict (_CHRONICLE_REGISTRY) populated by register_chronicle().\
     \ No raw domain models in responses \u2014 all shaped via Pydantic presenter models.\
     \ Era milestone membership: all named_milestones whose episode index falls within\
-    \ the era's episode_ids set. Returns 404 if campaign or era not registered. (TCK-20260619-E51E-REST-API)\n"
+    \ the era's episode_ids set. Returns 404 if campaign or era not registered. (TCK-20260619-E51E-REST-API)\
+    \ Router registration is now gated (2026-09-13, TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION):\
+    \ create_v2_app() only calls app.include_router(chronicle.router, prefix='/api/v1')\
+    \ when RuntimeProfile.enable_campaign_chronicle_api is True (default False) --\
+    \ ChronicleCompiler is never instantiated in production, so this endpoint was\
+    \ always empty/404 when reachable; it is off by default now rather than removed,\
+    \ since the implementation itself is correct."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/api/routes/chronicle.py (get_chronicle, get_era_summary, register_chronicle,
+  v2_evidence: src/api/routes/chronicle.py (get_chronicle, get_era_summary, register_chronicle,
     _CHRONICLE_REGISTRY). src/api/presenters/chronicle.py (ChronicleResponse, ErasSummaryResponse,
     ChronicleEraPresenter, ChronicleEpisodePresenter, ChronicleMilestonePresenter).
-    (TCK-20260619-E51E-REST-API)
-
-    '
+    (TCK-20260619-E51E-REST-API) src/config/profiles.py::RuntimeProfile.enable_campaign_chronicle_api.
   proof_type: parity
-  test_path: 'pytest tests/api/test_chronicle_api.py -x -v
-
-    '
+  test_path: tests/api/test_chronicle_api.py::test_chronicle_rest_endpoint_returns_structured_json
+    + tests/api/test_chronicle_api.py::test_era_summary_endpoint_returns_milestone_names
+    + tests/api/test_chronicle_api.py::test_chronicle_404_unknown_campaign + tests/api/test_chronicle_api.py::test_era_summary_404_unknown_era
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-006
@@ -4130,18 +4134,18 @@
     (live party-defection trigger, wired as pipeline phase "groups"); src/systems/social_systems/contracts.py
     ContractService.compute_betrayal_clan_reputation_update (pure-function-only contract-betrayal
     path; disclosed as not reachable from its production caller, which never passes
-    betrayal=True/betrayer_id -- a pre-existing gap this ticket surfaces but does not
-    fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION) --
-    the production caller of resolve_contract_outcome() is now ContractLifecyclePhase.resolve_expirations()
+    betrayal=True/betrayer_id -- a pre-existing gap this ticket surfaces but does
+    not fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION)
+    -- the production caller of resolve_contract_outcome() is now ContractLifecyclePhase.resolve_expirations()
     (pipeline.py "contracts" phase) -- the prior duplicate, ContractService.process_active_contracts(),
-    was confirmed unreachable in normal sequential tick progression (resolve_expirations() always
-    ran first and transitioned the contract away from ACTIVE) and was deleted, its consequence
-    model ported into resolve_expirations() as the sole owner. resolve_contract_outcome() is a
-    real live path as of that fix; only its betrayal branch (this entry''s own subject) remains
-    disclosed-unreachable, now via resolve_expirations() instead.); src/systems/social_systems/appraisal.py
-    appraise_contract() (stranger-judgment blend term, CLAN_INFLUENCE_WEIGHT = 0.2).
-    Mechanics Bible: docs/mechanics/04_strategic_cognition.md Sec.10a "Clan Reputation
-    & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)
+    was confirmed unreachable in normal sequential tick progression (resolve_expirations()
+    always ran first and transitioned the contract away from ACTIVE) and was deleted,
+    its consequence model ported into resolve_expirations() as the sole owner. resolve_contract_outcome()
+    is a real live path as of that fix; only its betrayal branch (this entry''s own
+    subject) remains disclosed-unreachable, now via resolve_expirations() instead.);
+    src/systems/social_systems/appraisal.py appraise_contract() (stranger-judgment
+    blend term, CLAN_INFLUENCE_WEIGHT = 0.2). Mechanics Bible: docs/mechanics/04_strategic_cognition.md
+    Sec.10a "Clan Reputation & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)
 
     '
   proof_type: parity

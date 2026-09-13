@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-OPTIMIZATION-PROVIDER-ENFORCEMENT-MISSING-DETERMINATION
-phase: open
+phase: done
 date: 2026-09-12
 tags: [performance, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [performance, architecture]
 `provider_enforcement.py`'s provider-call rate limiting and global-scan rejection — genuinely missing at any scope; should it be built?
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -71,13 +71,24 @@ No live equivalent at any scope.
   "should we build this" question, checked for overlap here but not decided here.
 
 ## Acceptance Criteria
-- [ ] Real evidence on whether unbounded/unscoped provider calls are a real, observed risk in a
-      real run (not assumed).
-- [ ] The overlap question with `budget_manager.py`'s own determination is checked and recorded,
-      either way.
-- [ ] A peer-routed build/don't-build decision, obtained before implementation.
-- [ ] If built: real test evidence it actually catches a real unbounded/unscoped call scenario, not
-      just a unit test of the mechanism in isolation.
+- [x] Real evidence on whether unbounded/unscoped provider calls are a real, observed risk: no
+      evidence found of an observed problem. Separately, and more decisively: the module's own
+      calling convention (`entity_id`/`region_id` kwarg scoping) doesn't match how real providers
+      are actually called (`ResourceOpportunityProvider.get_opportunities()` takes a full entity,
+      derives scope internally) — the module targets a shape the codebase doesn't use, same
+      aged-out pattern as the sibling `ORPHANED-CAPABILITY-DETERMINATION`'s capabilities 1/2/4.
+- [x] The overlap question with `budget_manager.py`'s own determination is checked and recorded:
+      both ask a version of "is provider-call volume a real risk" — answered once, here, and
+      `ORPHANED-CAPABILITY-DETERMINATION`'s own capability 3 inherits this finding rather than
+      re-investigating it.
+- [x] A peer-routed (and user-routed) build/don't-build decision: don't build — delete, record the
+      idea, same reasoning as the sibling determinations.
+- [x] "If built" AC does not apply.
+- [x] Non-import-reference guard applied: `.github/workflows/*.yml`/`Makefile` checked for
+      hardcoded references to `provider_enforcement.py`/`ProviderBudgetEnforcement`/its test file
+      before deleting — zero hits. Confirmed the containing test directory
+      (`tests/unit/world/providers/`) retains other real coverage
+      (`test_resource_opportunity_provider.py`), not left hollow.
 
 ## Related Tickets
 - `TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION` (origin)
@@ -103,13 +114,36 @@ None yet — standard tier, staging artifacts created when picked up.
 - Whether this is actually needed is the entire point of this ticket — deliberately not pre-judged.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Full evidence in
+`stored_artifacts/TCK-20260912-OPTIMIZATION-PROVIDER-ENFORCEMENT-MISSING-DETERMINATION/investigation.md`.
+Reported to peer alongside the sibling determinations' own findings; disposition (delete, record)
+is the user's own decision. This ticket's own finding (the calling-convention mismatch) was the
+decisive evidence peer cited for treating this the same as `ORPHANED-CAPABILITY-DETERMINATION`'s
+capabilities 1/2/4 — an artifact of infrastructure that moved on or never arrived, not a shortcut
+to a real capability.
+
+Deleted `provider_enforcement.py` and its dedicated test file
+(`tests/unit/world/providers/test_phase10_provider_budget_enforcement.py`). Recorded the "provider
+call-rate limiting" idea in `docs/plans/design_enhancement/performance_milestones_epic.md`'s shared
+new section, explicit that a fresh implementation would need its own signature design against real
+provider call sites, not a revival of this module's own.
 
 ## Test Summary
-_(pending)_
+Covered by the shared regression sweep for all three tickets (1528 passed, 1 skipped).
+`tests/unit/world/providers/test_resource_opportunity_provider.py` (the real, live provider's own
+test) confirmed unaffected. Post-deletion grep confirms zero remaining references to
+`ProviderBudgetEnforcement`/`provider_enforcement.py`.
 
 ## Files Changed
-_(pending)_
+- `src/domains/optimization/provider_enforcement.py` — deleted.
+- `tests/unit/world/providers/test_phase10_provider_budget_enforcement.py` — deleted.
+- `docs/plans/design_enhancement/performance_milestones_epic.md` — new "Preserved capability
+  ideas" section, shared with the two sibling tickets.
 
 ## Completion Summary
-_(pending)_
+Found the module targets a calling convention (`entity_id`/`region_id` scoping) real live
+providers don't use — the decisive evidence for this batch's own "aged-out infrastructure, not a
+withheld capability" framing. Answered the provider-call-volume question once here rather than
+duplicating it in the sibling `ORPHANED-CAPABILITY-DETERMINATION`. Determined not needed now, same
+reasoning as the sibling tickets: deleted the module, recorded the idea. No known material gap left
+unstated.

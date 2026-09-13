@@ -103,6 +103,50 @@ M1–M3's measurement and tooling already being in place.
   (SIMD/vectorization, ECS-lite data-model changes beyond M2.4's narrow projection, etc.) — not
   scoped here unless independently verified and promoted.
 
+## Preserved capability ideas from the deleted `src/domains/optimization/` package (2026-09-13)
+
+`TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION`,
+`TCK-20260912-OPTIMIZATION-BUDGET-MANAGER-MISSING-DETERMINATION`, and
+`TCK-20260912-OPTIMIZATION-PROVIDER-ENFORCEMENT-MISSING-DETERMINATION` deleted the entire
+remaining `src/domains/optimization/` package (`degradation.py`, `cache_strategy.py`,
+`dirty_scheduler.py`, `trace_governor.py`, `budget_manager.py`, `provider_enforcement.py` — plus
+`diagnostics.py`/`memory_limits.py`, deleted earlier the same batch) on **priority and staleness
+grounds, not because the ideas were worthless**. Three of the eight modules (`degradation.py`'s
+phase-skip and content-source capabilities, `cache_strategy.py`) targeted concepts confirmed to
+have aged out of the current codebase entirely (stale phase-flag names, a `shop_stock`/
+`regional_pressure` naming with no corresponding live system) — those are gone for real, not worth
+reviving as written. The remaining three below are structurally real, non-redundant ideas that
+nothing today needs, removed because reviving stale 2026-era implementations would mislead future
+readers more than a clean deletion, not because the ideas are wrong. If this epic (or its
+eventual `create-tickets` pass) wants any of them, write them fresh against the infrastructure that
+exists then, rather than reviving the deleted code:
+
+- **Provider call-rate limiting** (`provider_enforcement.py`'s `ProviderBudgetEnforcement`,
+  `degradation.py`'s `get_provider_cap()`): nothing today caps or rate-limits real resource-provider
+  call volume (`src/world/providers/*`, called from `kernel.py`, `adventure_scorer.py`,
+  `action_intent.py`, `resolver.py`, `generator.py`) — no evidence this is an observed problem, but
+  the gap is real if provider-call volume ever becomes one. Note: the deleted module's own
+  `entity_id`/`region_id` scoping convention didn't match how real providers are actually called
+  (they take a full entity, derive scope internally) — a fresh implementation needs its own
+  signature design, not a revival.
+- **Per-category, mid-tick imperative budget enforcement** (`budget_manager.py`'s
+  `PhaseBudgetManager.check_and_consume()`): the live budget system (`GovernorPolicy`/
+  `PhaseBudgets`) is declarative and pre-computed, respected by convention; the wall-clock mid-tick
+  throttle + governor mode escalation (`kernel.py`'s `_phase_resolution()`,
+  `governor.py`'s `tick_compute_ms` check) is the real, live backstop, but it's coarse
+  (whole-tick, post-hoc), not per-resource-category or proactive. Zero documented incidents of a
+  phase exceeding its own declarative budget were found — this is a real gap in granularity, not a
+  confirmed missing enforcement.
+- **Bounded, incremental cross-tick dirty-work draining** (`dirty_scheduler.py`'s
+  `DirtyWorkScheduler.next_entities()`/`next_regions()`): `DirtySet` is confirmed a fresh-every-tick
+  snapshot with no persistent backlog. A bursty dirty-set spike is processed fully in one tick
+  today; nothing gradually drains one across multiple ticks.
+- **Repeated-event summarization with a preserved count** (`trace_governor.py`'s
+  `TraceVolumeGovernor.process_events()`): `EventRecorder` caps total trace volume (drops/
+  truncates); `AlertDeduplicator.should_suppress()` fully suppresses repeats within a window
+  (binary, alerts-only, a different subsystem). Neither preserves a "this happened N times" signal
+  for a repeated general trace event.
+
 ## Acceptance Signal
 
 Each milestone's items pass their own listed test/measurement bar; M3 and M4 additionally require a

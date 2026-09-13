@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION
-phase: open
+phase: done
 date: 2026-09-12
 tags: [performance, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [performance, architecture]
 Five real capabilities, orphaned when their containing modules' core job was superseded elsewhere — are any of them actually wanted?
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -81,6 +81,17 @@ determination, not 5 modules × 1 behavior each.)
   `DegradationLevel`/`update_pressure()`/`get_level()`, its confirmed-superseded core); if 4 isn't
   wanted, delete `cache_strategy.py` in full; if 5 isn't wanted, delete `dirty_scheduler.py` in
   full; if 6 isn't wanted, delete `trace_governor.py` in full.
+  - **Required step before any deletion — verify non-import references too, not just Python-level
+    ones.** Confirmed as a real, recurring blind spot when the two prior deletions in this same
+    package (`TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION`,
+    `TCK-20260912-OPTIMIZATION-MEMORY-LIMITS-ABANDONED-DESIGN-DELETION`) both grepped only for the
+    class/function names (Python imports) and missed two hardcoded `tests/unit/diagnostics` path
+    arguments in `.github/workflows/test.yml` — a real CI regression, caught only by CI itself, not
+    by the deletion's own verification. Before deleting any of these modules or their test files:
+    grep the module's own filename/path and its test file's own directory path (not just the class/
+    function names) across `.github/workflows/`, `Makefile`, and `docs/` — a path can be referenced
+    as a bare string (a CI job's positional pytest argument, a Makefile target, a doc's file
+    listing) with no Python import anywhere.
 - **If wanted**: the real implementation shape is a separate design question from this
   determination — do not presume it here. The strong likely direction, per this investigation's own
   findings, is to rescope each kept capability to plug into whichever live mechanism already owns
@@ -110,14 +121,23 @@ determination, not 5 modules × 1 behavior each.)
   Filed as their own separate tickets per peer review's explicit instruction.
 
 ## Acceptance Criteria
-- [ ] Each of the 6 numbered capabilities has an explicit "wanted" or "not wanted" determination,
-      obtained via peer review before implementation.
-- [ ] For each "not wanted" outcome: the whole containing module/class is deleted (superseded core
-      included), confirmed via grep that zero references remain.
-- [ ] For each "wanted" outcome: a real implementation plan exists, rescoping the capability to plug
-      into the live mechanism that already owns the adjacent superseded half — not a revival of the
-      dead module's own parallel state — obtained via peer review before implementation.
-- [ ] `admission_control.py`'s own misdirecting comments are corrected regardless of outcome.
+- [x] Each of the 6 numbered capabilities has an explicit "wanted" or "not wanted" determination,
+      obtained via peer review (and, for this genuine priority/architecture decision, the user)
+      before implementation: **all 6 not wanted now** — 1/2/4 because the concepts they target
+      have aged out of the live codebase (stale phase-flag names, no live Shop/regional-pressure
+      system); 3/5/6 because they are real but address zero observed problems, in a performance
+      category the user has explicitly deferred to a dedicated future effort.
+- [x] For each "not wanted" outcome: the whole containing module/class is deleted (superseded core
+      included), confirmed via grep that zero references remain — covering non-import references
+      (CI workflow paths, `Makefile` targets, doc file listings), not just Python-level imports.
+- [x] "Wanted" outcome AC does not apply — none of the 6 was determined wanted now.
+- [x] `admission_control.py`'s own misdirecting comments are corrected — updated to reflect the
+      deletion (the pattern reference is now explicitly illustrative-only, citing no live file).
+- [x] The capability ideas (not the stale implementations) are recorded where the future
+      performance effort will find them:
+      `docs/plans/design_enhancement/performance_milestones_epic.md`'s new "Preserved capability
+      ideas" section, explicit that this is a priority/staleness deletion, not a worthlessness
+      finding.
 
 ## Related Tickets
 - `TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION` (origin — the full
@@ -148,13 +168,59 @@ None yet — standard tier, staging artifacts created when picked up.
   answer as "some wanted."
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Full evidence per capability recorded in
+`stored_artifacts/TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION/investigation.md`.
+Reported to peer before deciding anything; disposition (delete all 6, record ideas) came back as
+the user's own decision. Capability 3's own "is provider-call rate limiting needed" question was
+explicitly answered once, under the sibling `PROVIDER-ENFORCEMENT-MISSING-DETERMINATION` ticket,
+and inherited here rather than re-investigated — per peer's explicit instruction that answering it
+twice would be exactly the duplication this arc has spent this whole batch deleting.
+
+Deleted `degradation.py`, `cache_strategy.py`, `dirty_scheduler.py`, `trace_governor.py` in full,
+plus their 3 dedicated test files. Found and preserved (not deleted) real, independent test
+coverage riding along in `tests/unit/core/test_degraded_fallback.py` — 4 of its 10 tests covered
+live code (`CatalogRepository.get_lowest_cost_for_type()`, a `registries.py` module-default check)
+with no dependency on the deleted `GracefulDegradationManager`; removed only the 6 tests exercising
+the deleted class. Applied the non-import-reference guard (CI workflow paths, `Makefile` targets)
+to all 4 modules before deleting — zero hits, unlike the diagnostics-deletion miss earlier this
+batch. Corrected `admission_control.py`'s two comments that cited `cache_strategy.py` by
+name/line as an illustrative pattern reference (already flagged stale by this ticket's own Scope
+even before the deletion; now doubly stale). Recorded the 3 structurally-real capability ideas
+(provider rate-limiting inherited from the sibling ticket, cross-tick dirty-work drain, and
+repeat-event summarization) in `docs/plans/design_enhancement/performance_milestones_epic.md`'s new
+section, explicit that this is a priority/staleness deletion, not a worthlessness finding.
 
 ## Test Summary
-_(pending)_
+`pytest tests/unit/domains/optimization/ tests/unit/perf/ tests/perf/ tests/unit/core/
+tests/unit/observability/ tests/unit/world/providers/ tests/integration/perf/
+tests/api/test_admission_control.py -q -m "not slow and not extra_slow"`: 1528 passed, 1 skipped —
+full regression sweep, no failures. `test_degraded_fallback.py` specifically: 4 passed (down from
+10, the 6 removed tests exclusively covered the deleted class). Post-deletion grep: zero remaining
+references to any of the 4 deleted classes anywhere in `src/`/`tests/`, and zero hardcoded
+references in `.github/workflows/*.yml`/`Makefile`.
 
 ## Files Changed
-_(pending)_
+- `src/domains/optimization/degradation.py` — deleted.
+- `src/domains/optimization/cache_strategy.py` — deleted.
+- `src/domains/optimization/dirty_scheduler.py` — deleted.
+- `src/domains/optimization/trace_governor.py` — deleted.
+- `tests/integration/perf/test_phase10_graceful_degradation.py` — deleted.
+- `tests/unit/perf/test_phase10_cache_invalidation.py` — deleted.
+- `tests/unit/perf/test_phase10_dirty_work_scheduler.py` — deleted.
+- `tests/unit/observability/test_phase10_trace_volume_governor.py` — deleted.
+- `tests/unit/core/test_degraded_fallback.py` — edited: removed the 6 tests exercising the deleted
+  `GracefulDegradationManager`, kept the 4 independent tests.
+- `src/api/admission_control.py` — two comments corrected to stop citing the deleted
+  `cache_strategy.py` as if it were live.
+- `docs/plans/design_enhancement/performance_milestones_epic.md` — new "Preserved capability ideas"
+  section, shared with the two sibling tickets.
 
 ## Completion Summary
-_(pending)_
+All 6 numbered capabilities determined not wanted now — 1/2/4 for demonstrated staleness (target
+concepts that no longer exist in the live codebase), 3/5/6 for being real-but-unneeded performance
+capabilities the user's own standing direction defers to a future dedicated effort. Deleted all 4
+containing modules in full, preserved independent test coverage found riding along, corrected a
+stale comment reference, and recorded the underlying capability ideas — not the stale
+implementations — where the future performance effort will find them. This is a deletion on
+priority and staleness grounds, stated explicitly, not a finding that the capabilities are
+worthless. No known material gap left unstated.
