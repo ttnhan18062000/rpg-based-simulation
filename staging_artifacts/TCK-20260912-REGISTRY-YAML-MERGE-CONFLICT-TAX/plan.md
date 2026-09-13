@@ -50,6 +50,7 @@ Option A (regenerate-on-conflict), in the **corrected two-part shape** found dur
 | `Makefile` | New `setup-merge-drivers` target (next to `install-hooks`): `git config merge.registry-regen.driver true`, `git config merge.registry-regen.name "regenerate docs/REGISTRY.yaml on conflict"`, copy the hook script to `.git/hooks/post-merge` + `chmod +x`. New `docs-registry-check` target: `python3 tools/generate_registry.py --check` (mirrors `parity-index-check`'s style). Add both to `.PHONY`. |
 | `.gitattributes` | Add `docs/REGISTRY.yaml merge=registry-regen` (currently only a comment saying this path is deliberately *not* merge=union'd). Keep the existing explanatory comment, add one line noting the driver is opt-in local config installed via `make setup-merge-drivers`, with a fallback note that CI's `--check` step catches drift either way. |
 | *(none — already shipped)* | `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry` already covers Acceptance Criterion #4; no new drift-check test file is added by this ticket. |
+| `tests/integrity/test_registry_merge_driver.py` (new) | See test_plan.md — a static `.gitattributes` assertion plus the durable, repo-committed version of the scratch-repo proof (both the clean-merge case and the fully-uninstalled loud-failure case), following `test_merge_union_gitattributes.py`'s exact `_run_git`/`tmp_path` pattern. |
 | `CLAUDE.md` | Update the `docs/REGISTRY.yaml` bullet under "After Work": mention `make setup-merge-drivers` as the one-time local setup that removes the manual conflict-resolution step, while keeping the existing "take either side + `make docs-registry`" instruction as the fallback for anyone who hasn't installed it. |
 | `docs/ai/ticket-lifecycle.md` or nearest doc covering PR conflict handling | Mirror the same guidance (found via search during Document-Update). |
 
@@ -64,14 +65,55 @@ Option A (regenerate-on-conflict), in the **corrected two-part shape** found dur
 - Retrofitting the merge driver onto any other generated file (e.g. `parity-index`'s SQLite
   artifact) — out of scope; this ticket is `docs/REGISTRY.yaml` only.
 
+## Conflict frequency, re-measured from real git history (not just the ticket's own table)
+
+Ticket Scope requires this independently, not trusted from the ticket's own pre-recorded table.
+`git log --all` (since PR branches are squash-merged, so the actual conflict-resolution commits
+live only on now-often-deleted PR branches, not on `main` — see below for why) filtered for the
+established convention this session and prior sessions used ("regenerate REGISTRY.yaml post-merge"
+/ "resolve docs/REGISTRY.yaml conflict") finds **at least 17 distinct real conflict-resolution
+commits** spanning 2026-08-22 through 2026-09-13 (about 3 weeks), across at least 6 distinct
+branch lineages: PR #167's branch (3 occurrences), PR #171's branch (4), PR #177's branch (4, one
+resolved live during this ticket's own investigation as its 9th occurrence per the peer's report),
+a `visual-connectivity-metric` branch, a `working-log-union-recurrence` branch, and a
+`MIGRATE-MONITORING` hotfix branch, plus several isolated `docs: regenerate REGISTRY.yaml ...`
+commits whose originating branch is no longer identifiable (deleted after merge). This corroborates
+the ticket's own narrower table (7 occurrences across PRs #160/#164/#167/#171, measured
+2026-09-10..12) as an undercount of the true, longer-running rate — the real pattern goes back at
+least three weeks, not three days. Methodology caveat: this is commit-message-based detection
+(the only durable trace available, since squash-merge discards the PR branch's own intermediate
+merge commits once merged) — not a perfect proxy for "conflict markers literally appeared," but
+the most defensible signal obtainable after the fact, and consistent with this session's own
+first-hand experience resolving these conflicts in real time.
+
+## Worktree/git-config sharing, verified (not assumed)
+
+This repo runs many concurrent `.claude/worktrees/<name>` checkouts (`git worktree list` shows 8
+at time of writing). Verified directly in this worktree: `git rev-parse --git-common-dir` →
+`/home/u24desktop/Working/rpg-based-simulation/.git` — the same shared directory for every
+worktree of this repo. `git config --get extensions.worktreeConfig` is unset (exit 1), so this repo
+does not use per-worktree config overrides — a local `git config merge.registry-regen.driver`
+write from *any* worktree lands in the one shared `.git/config` and is immediately visible to every
+other worktree. Likewise `git config --get core.hooksPath` is unset, and `git rev-parse
+--git-path hooks` resolves to the same shared `/home/u24desktop/Working/rpg-based-simulation/
+.git/hooks` for this worktree — hooks are not per-worktree either. **Conclusion: `make
+setup-merge-drivers` needs to run exactly once, from any one worktree, to cover every worktree of
+this repo.** This resolves in the *opposite* direction from the risk Review raised: it is not a
+reason the partial-install gap becomes the common case — it means installation is genuinely
+one-time and repo-wide, not per-worktree. (A fresh clone elsewhere, or a different repository
+entirely, still needs its own install — that part of the residual risk stands unchanged.)
+
 ## Acceptance-criteria map
 
 | Ticket AC | Satisfied by |
 |---|---|
+| Conflict frequency re-measured from real merge history | See "Conflict frequency, re-measured" above — 17+ real occurrences, 2026-08-22 to 2026-09-13, across 6+ branch lineages |
+| One option implemented, rejected ones and reasons recorded | Option A chosen; B and C's rejection reasons carried from the ticket's own text (see "Explicitly out of scope") |
 | Two branches that both close a ticket merge without a manual regeneration step | The driver + post-merge hook, proven in the scratch repo |
 | One-command install | `make setup-merge-drivers` |
 | Uninstalled → fails loudly, never silently takes a side | Confirmed for the fully-uninstalled case (git's own `fatal: custom merge driver ... lacks command line`); the **partially**-installed case is not loud on its own — flagged as a residual risk covered by the existing CI check, documented explicitly rather than glossed over |
 | CI check fails when committed file differs from fresh regeneration | Already shipped: `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`, cited not duplicated |
+| Every consumer listed in the ticket still works from a plain checkout | By construction, not runtime probing: this design changes nothing about `generate_registry.py`'s logic, schema, or output format (explicitly Out of Scope) — only *when* regeneration happens around a merge. A plain checkout that never runs `make setup-merge-drivers` gets the exact same committed `docs/REGISTRY.yaml` as today, read by all 9 listed consumers exactly as before. Nothing to spot-check at runtime since nothing in the read path changes. |
 
 ## Risks / open items for Review
 

@@ -13,13 +13,18 @@ tags: [data-quality, process-improvement]
 
 ## New tests
 
-- `tests/integrity/test_registry_yaml_matches_fresh_regeneration.py`
-  - `test_registry_yaml_in_sync_with_fresh_regeneration`: runs
-    `python3 tools/generate_registry.py --check` as a subprocess, asserts exit code 0. This is the
-    CI backstop (Acceptance Criterion #4) — fails whether the drift came from a bad manual merge
-    resolution, a partial merge-driver install, or an unrelated stale commit.
-- `tests/tools/test_generate_registry_hooks.py` (new, or added to an existing
-  `tests/tools/test_generate_registry*.py` file if one exists — check before creating)
+**Acceptance Criterion #4 needs no new test.** `tests/tools/test_generate_registry.py::
+TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry` already runs
+`generate_registry(..., check=True)` against the real, live `docs/REGISTRY.yaml` and is already
+collected by the "API / tools / logging" CI job (`.github/workflows/test.yml:266`). Shipped by
+`TCK-20260709-REGISTRY-DRIFT-CHECK-GATE`, re-confirmed live by `TCK-20260826-REGISTRY-PARITY-
+CONFLICT-GUARDS`. Found via `search_docs` during this ticket's own investigation (see
+investigation.md's process note) — an earlier grep-only pass had missed it and this test plan
+originally (incorrectly) proposed adding a duplicate `tests/integrity/
+test_registry_yaml_matches_fresh_regeneration.py`. That duplicate is dropped.
+
+- `tests/integrity/test_registry_merge_driver.py` (new — lives in `tests/integrity/` alongside
+  `test_merge_union_gitattributes.py`, its exact pattern precedent, not `tests/tools/`)
   - `test_setup_merge_drivers_configures_git_attributes_target`: `.gitattributes` declares
     `merge=registry-regen` for `docs/REGISTRY.yaml` (a static assertion on the committed file, not
     a live git-config check — Makefile targets that mutate local git config are exercised in the
@@ -39,8 +44,8 @@ tags: [data-quality, process-improvement]
 
 - `tests/architecture`, `tests/docs`, `tests/integrity`, `tests/static`, `tests/refactor` — the
   `arch-docs` CI job (`.github/workflows/test.yml:397-414`) already runs all of these; the new
-  `tests/integrity/test_registry_yaml_matches_fresh_regeneration.py` file lands inside that same
-  pytest invocation with no workflow YAML change.
+  `tests/integrity/test_registry_merge_driver.py` file lands inside that same pytest invocation
+  with no workflow YAML change.
 - Any existing test asserting the literal content of `.gitattributes` (grep before editing it) —
   must be updated if it enumerates every line/path.
 - `tests/tools/test_wave1_agent_tools_frontmatter.py`-style Makefile `.PHONY`-target existence
