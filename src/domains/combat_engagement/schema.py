@@ -83,6 +83,13 @@ class EngagementRiskEvaluation:
 class OpponentModel:
     """
     Persistent model representing remembered combat info for identical subjects.
+
+    `salience` (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER) drives eviction from the bounded
+    per-observer collection this model is stored in (`CognitionModel.memory.combat.opponent_stats`)
+    -- lowest-salience entry evicted when full, never oldest-first. Rises with the magnitude of
+    surprise (how wrong the prior estimate turned out to be, once corrected) and with outcome
+    severity (a near-death encounter is more salient than a routine win) -- see
+    `docs/mechanics/04_strategic_cognition.md` Sec 13.6.
     """
     subject_key: str  # e.g. "entity.42", "enemy_type.wolf"
     estimated_power: float
@@ -91,6 +98,7 @@ class OpponentModel:
     known_skill_ids: Tuple[str, ...] = field(default_factory=tuple)
     outcomes: Tuple[str, ...] = field(default_factory=tuple)
     last_updated_tick: int = 0
+    salience: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
