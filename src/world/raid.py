@@ -76,9 +76,26 @@ class RaidService:
                 pos=(ox, oy),
                 difficulty_tier=4
             )
+            # TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION: a raid mob's
+            # target above is a raw navigation assignment with no accompanying strategic project
+            # -- nothing marks "this entity is mid-raid" to the goal-scoring system, so any scorer
+            # that later assigns this entity a real project (confirmed: GuildNeedScorer, once
+            # ENABLE_GUILD_QUEST_GENERATION actually reached a real run for the first time) freely
+            # overwrites this navigation.target with its own. Real mob factions elsewhere
+            # (frontier_marches' own scout/sentinel/leader) legitimately DO run the generic
+            # project/goal system, so gating GuildNeedScorer itself by faction was rejected --
+            # it broke that live, intended behavior instead of fixing this one. A raid mob's own
+            # entire purpose is the raid; it doesn't need or use the project system at all, so
+            # max_active_projects=0 is the correct, narrow signal: every capacity-gated scorer
+            # (GuildNeedScorer today, any future one) sees zero spare capacity and no-ops,
+            # without touching any scorer's own logic or affecting non-raid monsters.
             mob = replace(
                 mob,
-                navigation=replace(mob.navigation, target=target)
+                navigation=replace(mob.navigation, target=target),
+                strategic=replace(
+                    mob.strategic,
+                    profile=replace(mob.strategic.profile, max_active_projects=0),
+                ),
             )
             entities_add.append(mob)
 
