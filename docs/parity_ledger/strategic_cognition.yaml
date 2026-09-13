@@ -4303,3 +4303,27 @@
     tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py
   divergence_note: null
   proof_type: parity
+- id: STRAT-273
+  text: An entity forms a subjective power estimate of another entity it perceives,
+    refines that estimate from real combat outcomes, and weighs the estimate against
+    its own personality (not its accuracy) before committing to a CombatPosture --
+    specified in docs/mechanics/04_strategic_cognition.md Section 13, completing and
+    enabling the existing src/domains/combat_engagement/ domain rather than a new
+    mechanism.
+  status: missing
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: 'Declared 2026-09-13 (TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER).
+    Most of the underlying machinery already exists in src/domains/combat_engagement/
+    (OpponentPerceptionService, CombatLearning, EngagementRiskEvaluator, CombatPosture)
+    but is gated behind ENABLE_COMBAT_ENGAGEMENT (default OFF) and has never run in
+    a real corpus profile. `status: missing` here means the LAW as specified in Section
+    13 (power-gap-driven observation error, the apparent-power/condition seam, salience-based
+    OpponentModel eviction, the witnessed-combat tier) is not yet implemented -- not
+    that no related code exists. See Section 13''s own Source citation for the real,
+    dormant code this entry tracks completion of.'
+  support_boundary: null
+  evidence_kind: null
