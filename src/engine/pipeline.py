@@ -312,7 +312,12 @@ class AuthoritativeApplyPipeline:
         # all push-shaper combat events (combat_engagement_started/ended, combat_resolved,
         # combat_damage, entity_killed) to zero whenever ENABLE_COMBAT_ENGAGEMENT=ON. Matches the
         # same u.merge(...) pattern already used by information_belief above.
-        update = run_phase("combat_engagement", update, lambda u: u.merge(CombatEngagementPhase.apply(state)), "ENABLE_COMBAT_ENGAGEMENT")
+        # `u` is also passed through as `tick_update` (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-
+        # POWER, Sec 13.7): by this point in the tick, `u` already carries any real CombatUpdate
+        # this tick's own action_routing produced (attacker_id set), which is what the
+        # witnessed-combat tier reads to find real fights to check for nearby witnesses -- no new
+        # event field, per the spec's own citation.
+        update = run_phase("combat_engagement", update, lambda u: u.merge(CombatEngagementPhase.apply(state, tick_update=u)), "ENABLE_COMBAT_ENGAGEMENT")
         costs["combat_engagement"] = (time.perf_counter_ns() - t_start) / 1e6
 
         # --- Phase 4: Interaction & World Effects ---

@@ -86,6 +86,142 @@ def build_combat_risk_belief(death_risk: float, current_tick: int) -> BeliefEntr
     )
 
 
+# outcome_kind values that never represent a real entity-vs-entity combat resolution, even when
+# a CombatUpdate carries an attacker_id. Mirrors src/observability/event_extractor.py's own
+# `_NON_COMBAT_OUTCOME_KINDS` check by value, not by import: src/domains/ may not import
+# src/observability/ outside a small pinned allowlist neither this module nor this ticket is on
+# (tests/architecture/test_phase18_import_boundaries.py) -- the *value* is the real, shared
+# contract (both CombatUpdate.outcome_kind values), not the module that first checked it.
+_NON_COMBAT_OUTCOME_KINDS = ("HAZARD", "REJECTED")
+
+# Witnessed-combat's own perception radius -- the same 10.0 units Sec 13.1 already establishes
+# for passive observation (SimulationDomainLogic.get_neighbor_view()), applied here to a
+# real fight's participant positions instead of to the observer's own idle scanning (Sec 13.7).
+WITNESSED_COMBAT_RADIUS = 10.0
+
+
+def _merge_observation_into_updates(
+    entity_updates: Dict[int, EntityUpdate],
+    observer: EntityState,
+    target_id: int,
+    estimate,
+    state: AuthoritativeState,
+    outcome_severity: float,
+) -> None:
+    """
+    Read-through-then-replace `observer`'s own OpponentModel for `target_id`, merging the write
+    into `entity_updates[observer.id]` in place -- reads any `cognition_bundle_set` an earlier
+    write THIS SAME tick already staged for `observer` (so a witness who is also, separately,
+    evaluating its own nearest hostile this tick does not have one write clobber the other).
+    """
+    subject_key = opponent_subject_key(target_id)
+    existing_update = entity_updates.get(observer.id)
+    base_cognition = (
+        existing_update.cognition_bundle_set
+        if existing_update is not None and existing_update.cognition_bundle_set is not None
+        else observer.cognition
+    )
+    prior_memory = base_cognition.memory.combat.opponent_stats.get(subject_key)
+
+    updated_model = OpponentModel(
+        subject_key=subject_key,
+        estimated_power=estimate.estimated_power,
+        uncertainty=estimate.uncertainty,
+        confidence=estimate.confidence,
+        known_skill_ids=prior_memory.known_skill_ids if prior_memory else (),
+        outcomes=prior_memory.outcomes if prior_memory else (),
+        last_updated_tick=state.tick,
+        salience=compute_salience(prior_memory, estimate.estimated_power, outcome_severity=outcome_severity),
+    )
+    new_combat_memory = store_opponent_model(base_cognition.memory.combat, updated_model)
+    new_memory = dataclass_replace(base_cognition.memory, combat=new_combat_memory)
+    new_cognition = dataclass_replace(base_cognition, memory=new_memory)
+
+    if existing_update is not None:
+        entity_updates[observer.id] = dataclass_replace(existing_update, cognition_bundle_set=new_cognition)
+    else:
+        entity_updates[observer.id] = EntityUpdate(
+            entity_id=observer.id, intent_results=[], cognition_bundle_set=new_cognition,
+        )
+
+
+def _apply_witnessed_combat(
+    state: AuthoritativeState,
+    tick_update: Optional[StateUpdate],
+    entity_updates: Dict[int, EntityUpdate],
+) -> None:
+    """
+    Sec 13.7: a witness is any other entity within perception radius of a real fight's own
+    participants at the tick it happened -- updates the witness's own OpponentModel for BOTH
+    participants directly (mutates `entity_updates` in place), a lesser-quality but real
+    information source, better than nothing and worse than personal combat (Sec 13.5).
+    """
+    real_fights = _real_combat_this_tick(tick_update)
+    if not real_fights:
+        return
+
+    living_active = [e for e in state.entities.values() if e.combat.alive and e.lifecycle.active]
+
+    for defender_id, attacker_id in real_fights:
+        defender = state.entities.get(defender_id)
+        attacker = state.entities.get(attacker_id)
+        if defender is None or attacker is None:
+            continue
+
+        participant_ids = {defender_id, attacker_id}
+        for witness in living_active:
+            if witness.id in participant_ids:
+                continue
+            near_defender = _within_radius(witness.navigation.position, defender.navigation.position, WITNESSED_COMBAT_RADIUS)
+            near_attacker = _within_radius(witness.navigation.position, attacker.navigation.position, WITNESSED_COMBAT_RADIUS)
+            if not (near_defender or near_attacker):
+                continue
+
+            from src.domains.combat_engagement.perception import OpponentPerceptionService
+
+            for target in (defender, attacker):
+                subject_key = opponent_subject_key(target.id)
+                existing_update = entity_updates.get(witness.id)
+                base_cognition = (
+                    existing_update.cognition_bundle_set
+                    if existing_update is not None and existing_update.cognition_bundle_set is not None
+                    else witness.cognition
+                )
+                prior_memory = base_cognition.memory.combat.opponent_stats.get(subject_key)
+                estimate = OpponentPerceptionService.estimate(witness, target, memory=prior_memory, state=state)
+                _merge_observation_into_updates(
+                    entity_updates, witness, target.id, estimate, state, outcome_severity=0.3
+                )
+
+
+def _within_radius(pos_a: Tuple[float, float], pos_b: Tuple[float, float], radius: float) -> bool:
+    dist_sq = (pos_a[0] - pos_b[0]) ** 2 + (pos_a[1] - pos_b[1]) ** 2
+    return dist_sq <= radius * radius
+
+
+def _real_combat_this_tick(tick_update: Optional[StateUpdate]) -> List[Tuple[int, int]]:
+    """
+    Real (defender_id, attacker_id) pairs from this tick's own combat resolution, per Sec 13.7:
+    "combat-resolution SimulationEvents already carry participant entity_id/target_id and a tick"
+    -- read directly from the real CombatUpdate this tick's action_routing already produced,
+    rather than waiting for a downstream event (no new event field, matching the spec's own
+    citation that positions and participant ids already exist on state the phase already has).
+    """
+    pairs: List[Tuple[int, int]] = []
+    if tick_update is None:
+        return pairs
+    for defender_id, e_upd in tick_update.entity_updates.items():
+        combat_upd = getattr(e_upd, "combat", None)
+        if combat_upd is None:
+            continue
+        attacker_id = getattr(combat_upd, "attacker_id", None)
+        outcome_kind = getattr(combat_upd, "outcome_kind", None)
+        if attacker_id is None or outcome_kind in _NON_COMBAT_OUTCOME_KINDS:
+            continue
+        pairs.append((defender_id, attacker_id))
+    return pairs
+
+
 class CombatEngagementPhase:
     """
     Evaluates dynamic pre-combat engagement postures at strategic cadence.
@@ -95,6 +231,7 @@ class CombatEngagementPhase:
     def apply(
         state: AuthoritativeState,
         context: Optional[dict] = None,
+        tick_update: Optional[StateUpdate] = None,
     ) -> StateUpdate:
         """
         Evaluate eligible actors on hostiles entering sensory visibility.
@@ -277,6 +414,11 @@ class CombatEngagementPhase:
                 strategic=strat_upd,
                 cognition_bundle_set=new_cognition,
             )
+
+        # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER (Sec 13.7): witnessed-combat third tier.
+        # Runs after the main per-actor loop above so a witness who is also itself evaluating its
+        # own nearest hostile this tick gets both writes merged, not overwritten.
+        _apply_witnessed_combat(state, tick_update, entity_updates)
 
         if entity_updates:
             update = StateUpdate(entity_updates=entity_updates)
