@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS
-phase: inprogress
+phase: done
 date: 2026-09-13
 tags: [testing, registry, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [testing, registry, data-quality]
 1677 of 2187 parity entries are in states `validate_entry()` would reject — the writer gates new writes but is not an invariant
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
