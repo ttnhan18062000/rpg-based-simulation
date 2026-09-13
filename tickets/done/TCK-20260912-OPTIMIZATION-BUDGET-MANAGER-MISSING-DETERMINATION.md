@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-OPTIMIZATION-BUDGET-MANAGER-MISSING-DETERMINATION
-phase: open
+phase: done
 date: 2026-09-12
 tags: [performance, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [performance, architecture]
 `budget_manager.py`'s imperative, stateful per-tick budget-enforcement primitive — genuinely missing, no live equivalent; should it be built?
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -72,18 +72,26 @@ trace-volume findings).
   separate "should we build this" question, checked for overlap here but not decided here.
 
 ## Acceptance Criteria
-- [ ] Real evidence on whether phases that read `GovernorPolicy`/`PhaseBudgets`' declarative limits
-      actually respect them, or whether that convention has real, evidenced gaps.
-- [ ] The overlap question with `provider_enforcement.py`'s own determination is checked and
-      recorded, either way.
-- [ ] A peer-routed build/don't-build decision, obtained before implementation.
-- [ ] If built: real test evidence the primitive actually gets exercised by a real phase under real
-      pressure, not just a unit test of the primitive in isolation.
-- [ ] If "not needed, delete": verify non-import references too, not just Python-level ones (CI
-      workflow paths, `Makefile` targets, doc file listings) before deleting the module/its test
-      file — a real, confirmed blind spot from the diagnostics/memory-limits deletions in this same
-      package (`TCK-20260912-OPTIMIZATION-DIAGNOSTICS-DEAD-CODE-DELETION`'s own zero-references
-      grep missed two hardcoded CI path arguments, caught only by CI itself).
+- [x] Real evidence on whether phases that read `GovernorPolicy`/`PhaseBudgets`' declarative limits
+      actually respect them: zero documented incidents found of a phase exceeding its own
+      declarative budget uncaught. **Corrected finding, not just "no evidence either way"**: a real,
+      live, coarser backstop already exists — the wall-clock mid-tick throttle
+      (`kernel.py`'s `_phase_resolution()`) plus `governor.py`'s `tick_compute_ms` mode-escalation
+      genuinely catches real overruns (drops work, forces DEGRADED/SURVIVAL). This reclassifies the
+      origin C1 audit's own "genuinely missing, no live equivalent" label to "partially covered by
+      a coarser live mechanism" — the same partial-supersession shape C1 established for most of
+      the rest of the package, found by checking, not inherited from the survey.
+- [x] The overlap question with `provider_enforcement.py`'s own determination is checked and
+      recorded: both ultimately ask "is provider-call volume a real risk" — answered once, under
+      `PROVIDER-ENFORCEMENT-MISSING-DETERMINATION`, not duplicated here.
+- [x] A peer-routed (and user-routed) build/don't-build decision: don't build — delete, record the
+      idea. A finer-grained version of something already live, addressing zero documented
+      incidents, in a performance category the user's own standing direction defers to a dedicated
+      future effort.
+- [x] "If built" AC does not apply.
+- [x] Non-import-reference guard applied: `.github/workflows/*.yml`/`Makefile` checked for
+      hardcoded references to `budget_manager.py`, `PhaseBudgetManager`, and its dedicated test
+      files before deleting — zero hits.
 
 ## Related Tickets
 - `TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION` (origin)
@@ -107,13 +115,41 @@ None yet — standard tier, staging artifacts created when picked up.
   pre-judged. "Not needed, delete" is as valid an outcome as "needed, build it (rescoped)."
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Full evidence in
+`stored_artifacts/TCK-20260912-OPTIMIZATION-BUDGET-MANAGER-MISSING-DETERMINATION/investigation.md`.
+The corrected classification (partial supersession by the wall-clock/governor backstop, not
+genuinely missing) was reported to peer alongside the provider-enforcement and orphaned-capability
+findings in one batch; peer explicitly flagged this correction as mattering more than the
+disposition itself, since it corrects the origin C1 audit's own classification. Disposition
+(delete, record) is the user's own decision, applying the same "real capability, zero observed
+need, performance work deferred" reasoning established for the sibling `ORPHANED-CAPABILITY-
+DETERMINATION`'s capabilities 3/5/6.
+
+Deleted `budget_manager.py`. A first grep for its dedicated test file missed one —
+`tests/unit/perf/test_phase10_phase_budget_manager.py` — caught on a second, class-name-targeted
+pass; also deleted `tests/perf/test_phase10_integrated_enhanced_stack_budget.py` (confirmed
+entirely dependent on the deleted class via a real 5-scenario perf-benchmark test, no independent
+coverage riding along — its incidental `FeatureFlagManager()` instantiation is dead-in-test-body,
+never used to gate anything, and that class has its own extensive, unaffected coverage elsewhere).
+Recorded the "per-category, mid-tick imperative budget enforcement" idea in
+`docs/plans/design_enhancement/performance_milestones_epic.md`'s shared new section.
 
 ## Test Summary
-_(pending)_
+Covered by the shared regression sweep for all three tickets (1528 passed, 1 skipped). Post-deletion
+grep confirms zero remaining references to `PhaseBudgetManager`/`budget_manager.py` in
+`src/`/`tests/`, and zero hardcoded references in `.github/workflows/*.yml`/`Makefile`.
 
 ## Files Changed
-_(pending)_
+- `src/domains/optimization/budget_manager.py` — deleted.
+- `tests/unit/perf/test_phase10_phase_budget_manager.py` — deleted.
+- `tests/perf/test_phase10_integrated_enhanced_stack_budget.py` — deleted.
+- `docs/plans/design_enhancement/performance_milestones_epic.md` — new "Preserved capability
+  ideas" section, shared with the two sibling tickets.
 
 ## Completion Summary
-_(pending)_
+Corrected the origin audit's own "genuinely missing" classification to "partially covered by a
+coarser live mechanism" (the wall-clock/governor backstop) — a real finding independent of the
+eventual disposition. Determined not needed now: the finer-grained enforcement it would add
+addresses zero documented incidents, in a performance category the user has deferred. Deleted the
+module and both its test files, recorded the underlying idea for the future performance effort. No
+known material gap left unstated.
