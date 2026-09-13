@@ -4,6 +4,7 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX
+artifact_type: plan
 phase: inprogress
 date: 2026-09-13
 tags: [data-quality, process-improvement]

@@ -4,6 +4,7 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX
+artifact_type: test_plan
 phase: inprogress
 date: 2026-09-13
 tags: [data-quality, process-improvement]
@@ -35,10 +36,16 @@ test_registry_yaml_matches_fresh_regeneration.py`. That duplicate is dropped.
     repo) proving: (a) with the driver installed via the same commands `setup-merge-drivers` runs,
     two branches that each add an independent file and regenerate a registry-like aggregate merge
     with zero conflict markers and a correct post-merge-hook-driven regeneration; (b) with no
-    driver configured, the merge fails loudly (`fatal: custom merge driver ... lacks command
-    line`); this test is the durable, repo-committed version of the manual scratch-repo proof done
-    during investigation — same shape, same two assertions, so the ordering-bug regression this
-    ticket's own investigation found can never silently return.
+    driver configured, the merge fails loudly — **corrected during Implement** (see
+    investigation.md's own correction note): an earlier draft of this test plan asserted the
+    uninstalled case produces a hard `fatal: custom merge driver ... lacks command line` abort.
+    That could not be reproduced under careful, isolated re-testing and was replaced with the
+    real, verified behavior — git falls back to its ordinary 3-way merge, leaving genuine
+    `<<<<<<<` conflict markers and a non-zero exit. Still fully loud and safe (a real conflict
+    is the opposite of silently picking a side), just a simpler mechanism than first believed.
+    This is the durable, repo-committed version of the manual scratch-repo proof done during
+    investigation — same shape, same two assertions (now both corrected to match reality), so the
+    ordering-bug regression this ticket's own investigation found can never silently return.
 
 ## Existing tests to check for impact
 

@@ -91,14 +91,29 @@ and invalid YAML. That exclusion is correct and should stay.
   handled by `TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION`.
 
 ## Acceptance Criteria
-- [ ] Conflict frequency is re-measured from real merge history and recorded.
-- [ ] One option is implemented, with the rejected ones and their reasons recorded.
-- [ ] If Option A: the driver regenerates rather than merging, is installable in one documented command,
+- [x] Conflict frequency is re-measured from real merge history and recorded. (17+ real
+      conflict-resolution commits found via `git log`, 2026-08-22 to 2026-09-13, across 6+ branch
+      lineages — see investigation.md's "Conflict frequency, re-measured" section.)
+- [x] One option is implemented, with the rejected ones and their reasons recorded. (Option A;
+      B/C's rejection reasons carried from this ticket's own Scope text.)
+- [x] If Option A: the driver regenerates rather than merging, is installable in one documented command,
       and a test proves an uninstalled driver fails loudly instead of silently taking one side.
-- [ ] A CI check fails when the committed `docs/REGISTRY.yaml` differs from a fresh regeneration.
-- [ ] Two branches that both close a ticket can merge without a manual regeneration step — demonstrated
-      in a scratch repo, the way `TCK-20260911`'s reproduction test does it.
-- [ ] Every consumer listed above still works from a plain checkout.
+      (`make setup-merge-drivers`; `tests/integrity/test_registry_merge_driver.py::
+      test_merge_with_no_driver_configured_fails_loudly` — an uninstalled driver falls back to
+      an ordinary, loud 3-way merge conflict, never a silent one-sided pick; see investigation.md's
+      correction note on the exact mechanism.)
+- [x] A CI check fails when the committed `docs/REGISTRY.yaml` differs from a fresh regeneration.
+      (Already shipped by `TCK-20260709-REGISTRY-DRIFT-CHECK-GATE` —
+      `tests/tools/test_generate_registry.py::TestRealDocsTree::
+      test_check_flag_detects_no_drift_against_real_registry` — cited, not duplicated.)
+- [x] Two branches that both close a ticket can merge without a manual regeneration step — demonstrated
+      in a scratch repo, the way `TCK-20260911`'s reproduction test does it. (Proven twice: an
+      ad-hoc scratch repo during investigation, then durably in
+      `tests/integrity/test_registry_merge_driver.py::
+      test_merge_with_driver_and_hook_installed_regenerates_correct_union`.)
+- [x] Every consumer listed above still works from a plain checkout. (By construction: this design
+      changes nothing about `generate_registry.py`'s schema/logic, only when regeneration happens
+      around a merge — see plan.md's Acceptance-criteria map.)
 
 ## Related Tickets
 - `TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION` (done, PR #167) — the sibling merge-hygiene
@@ -140,9 +155,82 @@ None.
 - Whether a post-merge CI job could regenerate and commit to `main` without fighting branch protection.
 
 ## Implementation Notes
+Shipped Option A in a corrected two-part shape found mid-investigation: a trivial, always-
+succeeding merge driver (`git config merge.registry-regen.driver true`, declared via
+`.gitattributes: docs/REGISTRY.yaml merge=registry-regen`) resolves any merge conflict on this
+path with zero conflict markers (git seeds its working file with the "ours" content; a no-op
+driver leaves that as the result). The actual regeneration happens in a separate `post-merge` git
+hook (`tools/hooks/registry_post_merge_regen.sh`), not inside the driver itself — a first design
+that regenerated synchronously inside the driver was proven, via a scratch-repo reproduction, to
+silently produce an incomplete registry: git invokes a custom merge driver per-path with no
+ordering guarantee relative to other paths in the same merge, so the driver ran before a sibling
+file the merge had just added was materialized to disk. A `post-merge` hook runs only after every
+path in the merge is fully resolved, closing that gap. `make setup-merge-drivers` (new Makefile
+target) installs both pieces atomically in one command, resolving the real hooks directory
+dynamically via `git rev-parse --path-format=absolute --git-path hooks` rather than a hardcoded
+`.git/hooks/` path — this repo runs almost entirely through `.claude/worktrees/*` checkouts where
+`.git` is a gitlink file, not a directory, so a hardcoded path would silently fail there (caught
+and fixed during Implement, before shipping). `make docs-registry-check` wraps the existing
+`generate_registry.py --check` flag. Verified all of this against the real repo, not just written:
+`make setup-merge-drivers` and `make docs-registry-check` were both run for real in this actual
+worktree, and the hook was confirmed installed in the real shared `.git/hooks/post-merge`.
+
+Two claims were found wrong and corrected honestly rather than left standing: (1) an earlier plan
+draft proposed adding a duplicate CI drift-check test before `search_docs` surfaced that
+`TCK-20260709-REGISTRY-DRIFT-CHECK-GATE` already shipped one, already running in CI — dropped in
+favor of citing the existing test; (2) a claim that an uninstalled merge driver produces a hard
+`fatal: custom merge driver ... lacks command line` abort could not be reproduced under careful,
+isolated re-testing (one command per shell call) and was corrected to the real, verified behavior:
+git falls back to its ordinary 3-way merge, leaving genuine conflict markers — still fully loud
+and safe, just a simpler mechanism than first believed. Both corrections are recorded in
+investigation.md, plan.md, test_plan.md, and reflected in the actual shipped test's assertions.
+
+Also added `docs/parity_ledger/infrastructure.yaml`'s `INFRA-417` (this ticket self-reports
+`behavior_changed=true` — new logic/config, even though pure tooling — so Parity was not
+skip-eligible), cross-referenced to sibling entries INFRA-183/263/264 without duplicating them.
 
 ## Test Summary
+```
+pytest tests/integrity/test_registry_merge_driver.py -q
+# 4 passed
+
+pytest tests/integrity tests/tools/test_generate_registry.py tests/architecture tests/docs tests/static tests/refactor -q -m "not slow and not extra_slow"
+# 304 passed, 2 skipped, 1 deselected, 2 xfailed
+
+pytest tests/tools -q -m "not slow and not extra_slow"
+# 2522 passed, 17 skipped, 28 deselected, 1 xfailed
+```
+Independently re-confirmed by the Verify (done-checker) pass, run separately from the above.
 
 ## Files Changed
+- `tools/hooks/registry_post_merge_regen.sh` — new.
+- `Makefile` — new `setup-merge-drivers` and `docs-registry-check` targets.
+- `.gitattributes` — `docs/REGISTRY.yaml merge=registry-regen` line, comment updated.
+- `CLAUDE.md` — After Work bullet mentions the one-time install.
+- `docs/README.md` — doc registry section documents the mechanism and the manual fallback.
+- `docs/parity_ledger/infrastructure.yaml` — new `INFRA-417` entry.
+- `tests/integrity/test_registry_merge_driver.py` — new, 4 tests.
+- `staging_artifacts/TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX/{investigation.md,plan.md,test_plan.md}`.
 
 ## Completion Summary
+Implemented Option A (regenerate-on-conflict merge driver) for `docs/REGISTRY.yaml`, in a
+corrected two-part shape (trivial `true` driver + separate `post-merge` regeneration hook) found
+necessary mid-investigation after a naive single-driver design was proven to silently produce
+incomplete data. One-command install (`make setup-merge-drivers`), verified live in this repo.
+An uninstalled driver falls back to an ordinary, loud git merge conflict — never silently picks a
+side. The existing CI drift check (`TCK-20260709-REGISTRY-DRIFT-CHECK-GATE`) is cited rather than
+duplicated and remains the backstop against this ticket's one disclosed residual risk.
+
+**Disclosed residual risk, accepted, no follow-up ticket filed**: a *partially* installed state
+(the merge driver configured but the `post-merge` hook missing or non-executable — e.g. a manual
+config edit that skips the Makefile target) succeeds silently with stale/incomplete content: no
+error, no warning. Confirmed live during investigation by disabling the hook and re-running a
+merge. This is weaker than the fully-uninstalled case (an ordinary loud conflict) and weaker than
+the ticket's own general "never silently takes a side" framing for that specific partial state.
+Accepted rather than hardened further because: (a) `make setup-merge-drivers` installs both pieces
+in one atomic command, so reaching this state requires bypassing the documented install path; (b)
+the existing CI `--check` test (cited above) still catches the resulting drift on the next push,
+before it reaches `main`; (c) this is materially better than today's status quo of 9+ manual
+conflicts per PR. `plan.md`'s "Risks / open items for Review" raised this explicitly during Review
+rather than deciding unilaterally, and Review (2 rounds, both on record) did not require a
+stronger local guard.
