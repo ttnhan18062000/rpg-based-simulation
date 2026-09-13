@@ -146,10 +146,31 @@ None.
 - The consumer list in Request Summary.
 
 ## Assumptions / Open Questions
-- Whether a custom merge driver runs on every path that matters here — plain merges certainly, but
-  confirm behavior under `rebase` and `cherry-pick`, and under GitHub's own merge (it does not run local
-  drivers, so the conflict must still be resolved locally before pushing; the driver saves the local
-  step, not the server-side one).
+- **Resolved by direct, isolated reproduction (post-PR-review, before merge) — not left open.**
+  Confirmed via three separate scratch repos: (1) the custom driver DOES apply during both `git
+  rebase` and `git cherry-pick`, not only `git merge` — git invokes `.gitattributes`-declared merge
+  drivers for any internal 3-way content resolution, including the ones these commands perform
+  under the hood. (2) On both paths, a genuine content conflict resolves via the trivial `true`
+  driver exactly like a plain merge: silently keeps one side (`rebase`: the branch being rebased
+  onto; `cherry-pick`: the current branch), **with zero conflict markers and zero indication
+  anything was discarded** — `rebase` reports "Successfully rebased", `cherry-pick` reports an
+  "empty" cherry-pick with no error. (3) `post-merge` fires for **neither** path (confirmed: no
+  hook invocation in either reproduction) — so the regeneration step never runs there. **This is a
+  real, disclosed gap, not fixed by this ticket**: on `rebase`/`cherry-pick`, this mechanism
+  degrades to "always silently take one side," the exact failure mode the ticket set out to avoid,
+  just relocated to two different git commands. The existing CI drift check
+  (`tests/tools/test_generate_registry.py::TestRealDocsTree::
+  test_check_flag_detects_no_drift_against_real_registry`) remains the only backstop on these two
+  paths — it still catches the resulting drift on push, before it reaches `main`, but there is no
+  local, loud signal at the time of the rebase/cherry-pick itself. Durably reproduced in
+  `tests/integrity/test_registry_merge_driver.py::
+  test_rebase_and_cherry_pick_silently_take_one_side_no_post_merge_hook`. Not hardened further in
+  this ticket (would require a `pre-rebase`/`applypatch-msg`-style safeguard, non-trivial and out
+  of this ticket's scope) — recorded here plainly per the ticket's own original question, per
+  Review's request.
+- GitHub's own server-side merge does not run local drivers — the conflict must still be resolved
+  locally before pushing; the driver saves the local step, not the server-side one. (Unchanged from
+  the original assumption — this was never in question.)
 - Whether regeneration is fully deterministic across machines (the sorting says yes; verify with two
   independent runs rather than assuming).
 - Whether a post-merge CI job could regenerate and commit to `main` without fighting branch protection.
@@ -218,8 +239,17 @@ corrected two-part shape (trivial `true` driver + separate `post-merge` regenera
 necessary mid-investigation after a naive single-driver design was proven to silently produce
 incomplete data. One-command install (`make setup-merge-drivers`), verified live in this repo.
 An uninstalled driver falls back to an ordinary, loud git merge conflict — never silently picks a
-side. The existing CI drift check (`TCK-20260709-REGISTRY-DRIFT-CHECK-GATE`) is cited rather than
-duplicated and remains the backstop against this ticket's one disclosed residual risk.
+side. The existing CI drift check (`TCK-20260709-REGISTRY-DRIFT-CHECK-GATE`'s
+`tests/tools/test_generate_registry.py::TestRealDocsTree::
+test_check_flag_detects_no_drift_against_real_registry`) is cited rather than duplicated.
+
+**This coupling is load-bearing, not incidental, and is named explicitly (per Review's request)
+in both places that matter: this Completion Summary and the hook script's own header comment
+(`tools/hooks/registry_post_merge_regen.sh`).** The driver+hook design is safe *only because* that
+specific CI test exists and runs — it is the sole backstop for two disclosed gaps this ticket does
+not close: the partial-install case below, and the rebase/cherry-pick case in Assumptions / Open
+Questions. If that test is ever deleted (e.g. by someone later trimming "redundant" coverage), this
+entire mechanism silently degrades to "always take one side" with zero detection.
 
 **Disclosed residual risk, accepted, no follow-up ticket filed**: a *partially* installed state
 (the merge driver configured but the `post-merge` hook missing or non-executable — e.g. a manual

@@ -175,6 +175,69 @@ def test_merge_with_no_driver_configured_fails_loudly(tmp_path):
     )
 
 
+def test_rebase_and_cherry_pick_silently_take_one_side_no_post_merge_hook(tmp_path):
+    """Disclosed gap, confirmed by direct request during PR review (agent-working-design):
+    the driver+hook mechanism only closes the silent-one-sided-take failure mode for `git
+    merge`. `git rebase` and `git cherry-pick` also invoke `.gitattributes`-declared merge
+    drivers for their own internal 3-way conflict resolution, but neither is a `git merge`
+    invocation, so `post-merge` never fires afterward -- the trivial `true` driver's
+    "keep one side" resolution is never followed by a regeneration. Confirmed here for both:
+    the file ends up on one side's content with zero conflict markers and zero indication
+    anything was discarded, and no `auto-regenerate` commit follows. Not fixed by this ticket
+    (would need a `pre-rebase`/sequencer-level safeguard, out of scope) -- the existing CI
+    drift check remains the only backstop on these two paths. See the ticket's own
+    Assumptions / Open Questions section for the full disclosure.
+    """
+    repo = _init_repo(tmp_path)
+    _install_driver_and_hook(repo)
+
+    _run_git(["checkout", "-q", "-b", "feature"], cwd=repo)
+    _add_entry_and_regenerate(repo, "ticket-feature.txt", "feature ticket closed\n")
+    _run_git(["add", "-A"], cwd=repo)
+    _run_git(["commit", "-q", "-m", "feature closes a ticket"], cwd=repo)
+    feature_sha = _run_git(["rev-parse", "HEAD"], cwd=repo).stdout.strip()
+
+    _run_git(["checkout", "-q", "main"], cwd=repo)
+    _add_entry_and_regenerate(repo, "ticket-main.txt", "main ticket closed\n")
+    _run_git(["add", "-A"], cwd=repo)
+    _run_git(["commit", "-q", "-m", "main closes a different ticket"], cwd=repo)
+
+    # cherry-pick feature's commit onto main -- a real conflict on REGISTRY.yaml (both sides
+    # regenerated independently with different entries and timestamps).
+    cherry_result = _run_git(
+        ["cherry-pick", feature_sha], cwd=repo, check=False,
+    )
+    registry_after_cherry_pick = (repo / "docs" / "REGISTRY.yaml").read_text()
+    assert "<<<<<<<" not in registry_after_cherry_pick, (
+        "the trivial driver never leaves conflict markers, on cherry-pick same as merge"
+    )
+    assert "entry:ticket-feature.txt" not in registry_after_cherry_pick, (
+        "cherry-pick silently kept 'ours' (main's own content) -- feature's own entry, the "
+        "very thing being cherry-picked, is silently dropped with no error and no markers"
+    )
+    log_after_cherry_pick = _run_git(["log", "--oneline", "-3"], cwd=repo).stdout
+    assert "auto-regenerate docs/REGISTRY.yaml after merge" not in log_after_cherry_pick, (
+        "post-merge must not have fired for a cherry-pick -- if this ever starts failing, "
+        "git's own behavior changed and this disclosed gap may no longer apply"
+    )
+    if cherry_result.returncode != 0:
+        _run_git(["cherry-pick", "--abort"], cwd=repo, check=False)
+
+    # rebase feature onto main -- same real conflict, different command.
+    _run_git(["checkout", "-q", "feature"], cwd=repo)
+    rebase_result = _run_git(["rebase", "main"], cwd=repo, check=False)
+    registry_after_rebase = (repo / "docs" / "REGISTRY.yaml").read_text()
+    assert "<<<<<<<" not in registry_after_rebase
+    assert "entry:ticket-feature.txt" not in registry_after_rebase, (
+        "rebase silently kept the branch being rebased onto (main's content) -- feature's own "
+        "entry is silently dropped with no error and no markers, same failure as cherry-pick"
+    )
+    log_after_rebase = _run_git(["log", "--oneline", "-3"], cwd=repo).stdout
+    assert "auto-regenerate docs/REGISTRY.yaml after merge" not in log_after_rebase
+    if rebase_result.returncode != 0:
+        _run_git(["rebase", "--abort"], cwd=repo, check=False)
+
+
 def test_gitattributes_declares_registry_regen_merge_driver():
     content = (REPO_ROOT / ".gitattributes").read_text()
     assert any(

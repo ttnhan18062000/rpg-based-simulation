@@ -11,6 +11,16 @@
 # merge is already resolved on disk, which is what makes regenerating here correct.
 #
 # No-op if generate_registry.py is missing (e.g. a stripped-down checkout).
+#
+# REQUIRED BACKSTOP -- this driver+hook pair is only safe because a separate CI test exists:
+# tests/tools/test_generate_registry.py::TestRealDocsTree::
+# test_check_flag_detects_no_drift_against_real_registry (already running in the "API / tools
+# / logging" CI job). `git rebase` and `git cherry-pick` also invoke the `.gitattributes`
+# merge driver but never run this hook (only `git merge` does), so on those two paths the
+# driver's "keep one side" resolution is never followed by a regeneration -- that CI test is
+# the ONLY thing that catches the resulting drift. If it is ever deleted or stops running,
+# this mechanism silently degrades to "always take one side" with zero detection. Do not
+# remove it without replacing this hook's own safety argument.
 
 set -euo pipefail
 

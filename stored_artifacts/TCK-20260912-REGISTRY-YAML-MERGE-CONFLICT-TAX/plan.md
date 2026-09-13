@@ -128,6 +128,18 @@ entirely, still needs its own install — that part of the residual risk stands 
 - `post-merge` hooks do not run on `git rebase` or `git cherry-pick`, only real merges. Today's
   actual pain (per the ticket's own measurements) is PR-branch merges of `origin/main`, which do
   fire `post-merge` — but this should be stated as a documented boundary, not silently assumed.
+  **Empirically confirmed post-PR-review (agent-working-design flagged this as needing an answer
+  before merge, not left as a restated open question)**: three scratch-repo reproductions confirm
+  the custom driver DOES apply during both `rebase` and `cherry-pick` (git invokes
+  `.gitattributes`-declared merge drivers for their own internal 3-way resolution too), and on
+  both paths it silently keeps one side with zero conflict markers and zero indication anything
+  was discarded — `post-merge` never fires afterward on either path, confirmed by direct
+  reproduction, not assumption. This is the same silent-one-sided-take failure the ticket exists
+  to prevent, just relocated to two other git commands; not fixed here (would need a
+  `pre-rebase`/sequencer-level safeguard, out of scope) — the existing CI drift check is the only
+  backstop on these two paths. Durably reproduced in `tests/integrity/test_registry_merge_driver.py::
+  test_rebase_and_cherry_pick_silently_take_one_side_no_post_merge_hook`. See the ticket's own
+  Assumptions / Open Questions section for the full disclosure.
 - **Found live during this ticket's own Finalize** (see the ticket's Completion Summary for full
   detail): merging via this coding assistant's sandboxed `Bash` tool did not trigger the installed
   hook automatically; manually invoking the hook script worked exactly as designed. Not a design
