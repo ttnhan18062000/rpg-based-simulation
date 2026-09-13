@@ -18,6 +18,14 @@ This supersedes the earlier, narrower `docs/plans/release-spine-and-feature-pack
 
 **There is no faction/diplomacy/war system in the current engine.** `docs/systems/grand_strategy.md` describes a legacy system (`src/systems/strategy_system.py`, `src/core/world_state.py`) that does not exist anywhere in current `src/` — only `src/content_semantics/faction.py` remains, which is catalog data, not behavior. None of the three prior planning docs caught this; they assumed some macro-political layer existed. This is the single largest concrete gap found and should weigh heavily in prioritization.
 
+**(2026-09-13) Superseded — this finding is now false.** `TCK-20260619-E53-FACTION-DIPLOMACY`
+(`tickets/done/`) shipped a fresh-built faction/diplomacy/war system; real behavior now lives in
+`src/systems/strategic.py` and `src/domains/strategic_systems/`, and `grand-strategy` is a
+registered tag (`registries/tag_registry.jsonl`: "Strategic layer: faction wars, territory
+conquest, siege mechanics"). Do not use this section's prioritization language today without
+re-checking current `src/` state; the rest of this document's per-layer table (line 30) is
+affected the same way and needs the same re-check.
+
 **Direction note:** per explicit project direction, this and every other epic below is to be designed and built fresh against the current architecture (domain ownership, authoritative mutation pipeline, typed durable state) — not ported, adapted, or kept compatible with any legacy system or semantics. `grand_strategy.md` is cited only to establish that no macro-political layer currently exists, not as a design source. The legacy doc itself is a candidate for archival/removal once the fresh system replaces its conceptual territory, rather than being kept around as a compatibility reference.
 
 ## Engine Maturity Snapshot

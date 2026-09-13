@@ -48,7 +48,11 @@ class GuildAction:
                             # this threw every tick, silently caught, for the life of every such
                             # lead. `detail` now carries the parseable coordinate the real
                             # consumers already assume, matching the same format
-                            # certification/scenarios.py's own fixture uses ("1.0,0.0").
+                            # certification/scenarios.py's own fixture uses ("1.0,0.0"). The
+                            # region-matching consumers (phase.py/contradiction.py) parse this same
+                            # coordinate via the shared src/domains/information/lead_location.py ::
+                            # resolve_location_lead_region_id() -- see
+                            # TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING.
                             detail=f"{node.position[0]},{node.position[1]}",
                             discovered_tick=state.tick,
                             certainty=LeadCertainty.VAGUE,

@@ -1335,8 +1335,7 @@
     \ confirmed event_extractor=32, event_shapers=32 exact parity for progression_plateau_detected\
     \ under ON mode post-fix, and 0 delivered under SHADOW mode"
   proof_type: parity
-  test_path: tests/unit/observability/test_event_shapers_progression.py (18 tests,
-    all passing)
+  test_path: tests/unit/observability/test_event_shapers_progression.py
   divergence_note: null
   support_boundary: "SHADOW-mode construction only \u2014 live delivery (event_extractor.py's\
     \ branches flag-gated, ENABLE_PUSH_EVENT_SHAPERS_PHASE2 flipped to a live default)\
@@ -1376,9 +1375,7 @@
     -- 2 new EVENT_TYPES entries and score() branches, both reading weights from config
     (no numeric literals).'
   proof_type: parity
-  test_path: tests/unit/observability/test_event_extractor_progression.py (new TestCapabilityGrowthStalled/
-    TestLifeArcIncoherent classes), tests/simulation_quality/test_progression_scorer.py
-    (new coverage for both event types)
+  test_path: tests/unit/observability/test_event_extractor_progression.py; tests/simulation_quality/test_progression_scorer.py
   divergence_note: "Update 2026-08-08 (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION):\
     \ this rule's own precondition (`lifecycle.generation >= 2`, a rebirth having\
     \ occurred) was structurally unreachable corpus-wide -- the rebirth-granting mechanic\
@@ -1408,10 +1405,7 @@
     as origin_pos, the only real live caller of the generator (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING''s
     GuildVisitPhase).'
   proof_type: parity
-  test_path: tests/unit/quest/test_quest_generation.py (test_explore_quest_gets_target_pos_when_origin_given,
-    test_explore_quest_target_pos_deterministic, test_explore_quest_without_origin_pos_has_no_target_pos,
-    test_non_explore_quest_has_empty_metadata_regardless_of_origin, test_evaluate_explore_completes_quest_once_entity_reaches_target_pos,
-    test_evaluate_explore_does_not_complete_quest_far_from_target_pos)
+  test_path: tests/unit/quest/test_quest_generation.py
   divergence_note: 'docs/simulation/quest_contract.md''s QuestKind table documents
     all 5 kinds (HUNT/GATHER/ EXPLORE/LIBERATE/BOUNTY) as live quest types with no
     caveat. In practice, prior to this ticket every generated quest of every kind
@@ -1453,13 +1447,7 @@
     in entity_archetypes.yaml). generate() now sets metadata={"target_kind": template.target_kind}
     for HUNT templates that declare one.'
   proof_type: parity
-  test_path: tests/unit/quest/test_quest_generation.py (test_wolf_hunt_quest_gets_real_target_kind,
-    test_slime_cull_quest_has_no_target_kind, test_evaluate_combat_victory_completes_wolf_hunt_quest_on_matching_kill,
-    test_evaluate_combat_victory_does_not_progress_wolf_hunt_quest_on_unrelated_kill,
-    test_wolf_hunt_quest_reaches_completed_status_through_real_kill_loop -- the last
-    one drives the full real generate() -> evaluate_combat_victory() -> QuestService.add_progress()
-    lifecycle through 9 real "wolf" kills to QuestStatus.COMPLETED, not just a single
-    evaluator call)
+  test_path: tests/unit/quest/test_quest_generation.py
   divergence_note: docs/simulation/quest_contract.md's QuestKind table documents HUNT
     as a live quest type with no per-template caveat. In practice, only 1 of the 2
     HUNT templates (q_wolf_hunt) is completable -- q_slime_cull's own target monster

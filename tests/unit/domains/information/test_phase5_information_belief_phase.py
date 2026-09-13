@@ -112,9 +112,15 @@ def test_region_danger_seen_observation_triggers_belief_contradiction_via_produc
     from NavigationComponent.region_id plus an active local scar inside the
     region's bounds, reaches BeliefContradictionService.detect() via
     InformationBeliefPhase.apply() for a VAGUE/APPROXIMATE-certainty location lead.
+
+    `lead.detail` follows the declared "x,y" coordinate contract
+    (docs/mechanics/04_strategic_cognition.md), resolved to a region id via
+    resolve_location_lead_region_id() -- not a region id string directly, since
+    no real producer ever emits one (TCK-20260913-LEADSTATE-DETAIL-UNTYPED-
+    POLYMORPHIC-STRING).
     """
     lead = LeadState(
-        id="lead_2", kind="location", subject="safe_road", detail="bandit_road",
+        id="lead_2", kind="location", subject="safe_road", detail="50,50",
         certainty=LeadCertainty.VAGUE,
     )
     sc = StrategicComponent(leads={"lead_2": lead})
@@ -144,10 +150,42 @@ def test_region_danger_seen_not_fired_for_precise_certainty_lead():
     """Negative case: a PRECISE-certainty lead is never degraded by region_danger_seen
     (matches BeliefContradictionService.detect()'s own VAGUE/APPROXIMATE-only guard)."""
     lead = LeadState(
-        id="lead_3", kind="location", subject="safe_road", detail="bandit_road",
+        id="lead_3", kind="location", subject="safe_road", detail="50,50",
         certainty=LeadCertainty.PRECISE,
     )
     sc = StrategicComponent(leads={"lead_3": lead})
+
+    b = _base_builder(1)
+    b.replace_strategic(sc)
+    b.replace_navigation(NavigationComponent(region_id="bandit_road"))
+    actor = b.build()
+
+    region = RegionState(id="bandit_road", name="Bandit Road", bounds=(0, 0, 100, 100))
+    scar = LocalScarState(id=1, position=(50.0, 50.0), kind="RAID_DAMAGE")
+
+    state = _state([actor], regions={"bandit_road": region}, local_scars={1: scar})
+
+    update = InformationBeliefPhase.apply(state, profiles=[])
+
+    ent_upd = update.entity_updates.get(1)
+    assert ent_upd is None or ent_upd.strategic is None or not ent_upd.strategic.leads_add_or_update
+
+
+def test_region_danger_seen_not_fired_for_pre_fix_region_id_shaped_detail():
+    """
+    TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING: before this ticket's
+    fix, region_danger_seen synthesis compared `lead.detail` directly to the
+    actor's region_id -- a comparison that never matched in practice because no
+    real producer emitted a region-id-shaped `detail` (only coordinate-shaped
+    detail is ever produced). Confirms that shape now fails resolution cleanly
+    (resolve_location_lead_region_id() returns None for a non-coordinate string)
+    rather than accidentally matching or crashing.
+    """
+    lead = LeadState(
+        id="lead_4", kind="location", subject="safe_road", detail="bandit_road",
+        certainty=LeadCertainty.VAGUE,
+    )
+    sc = StrategicComponent(leads={"lead_4": lead})
 
     b = _base_builder(1)
     b.replace_strategic(sc)

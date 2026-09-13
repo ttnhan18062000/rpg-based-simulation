@@ -61,6 +61,35 @@ def test_two_level_node_id_is_accepted():
     assert citations == ["tests/x.py::TestClass::test_method"]
 
 
+def test_bare_directory_citation_is_accepted():
+    """TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS: a bare directory (`tests/unit/lab/`)
+    is a completely normal pytest argument -- check_test_path() in mechanics_auditor_static.py
+    already handles it correctly via plain Path.exists() and `pytest <citation> -x -q`, both of
+    which work fine for a directory. The only gap was this module's own regex never accepting
+    the shape; this pins the fix."""
+    citations, err = parse_test_path_citations("tests/unit/lab/")
+
+    assert err is None
+    assert citations == ["tests/unit/lab/"]
+
+
+def test_directory_citation_without_trailing_slash_is_still_unparseable():
+    """A path with no `.py` extension and no trailing `/` stays rejected -- accepting it would
+    make an accidentally-truncated file path (someone dropped `.py` by mistake) silently look
+    like a deliberate directory citation instead of the malformed citation it actually is."""
+    citations, err = parse_test_path_citations("tests/unit/lab")
+
+    assert citations is None
+    assert "tests/unit/lab" in err
+
+
+def test_directory_citation_participates_in_multi_citation_lists():
+    citations, err = parse_test_path_citations("tests/unit/lab/; tests/unit/api/test_x.py::test_y")
+
+    assert err is None
+    assert citations == ["tests/unit/lab/", "tests/unit/api/test_x.py::test_y"]
+
+
 def test_null_and_empty_test_path_are_unparseable_not_crashes():
     for raw in (None, "", "   "):
         citations, err = parse_test_path_citations(raw)
