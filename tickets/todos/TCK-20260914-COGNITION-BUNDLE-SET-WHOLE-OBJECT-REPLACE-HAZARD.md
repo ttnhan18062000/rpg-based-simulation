@@ -67,6 +67,20 @@ other writer either ran first in the pipeline (`memory_update`) or was the only 
 its own reason. One writer can never collide with itself. The bug was real and present in the type
 the entire time; it was simply unreachable until a second live writer existed.
 
+**Why a convention/guardrail fix is probably not enough, evidenced by the enumeration itself**: 5 of
+the 6 already-safe writers got there by explicitly copying each other's read-through pattern —
+`role_model_phase.py`'s own docstring cites `habit_phase.py` as its precedent, and the same citation
+chain runs through `hardening.py`, `lifecycle.py`, and `quests.py`. The convention exists, is
+documented, and propagated well — 5-of-6 real adoption is a genuinely good track record for an
+unenforced convention. **And it still failed, in exactly the case it always fails**: both of the two
+broken sites (`combat_engagement`, `movement.py`) were new writers built without looking at a
+neighbor first. The failure mode here isn't ignorance of an existing pattern — it's not knowing a
+pattern is *needed at all*, which only a type or the merge logic itself can surface; a comment or a
+doc cannot. That a well-adopted convention still produced silent data loss is a stronger argument for
+the structural options (1/2 above) than any argument from first principles would be — option 3 (a
+guardrail test) mechanically enforces awareness where the convention already achieves it 83% of the
+time on its own, but does nothing about the 17% who don't know to look.
+
 ## Scope
 - Decide (not implement without a decision) how to make this class of bug structurally impossible,
   not just patched at each call site as writers accumulate. At minimum, weigh:
@@ -112,9 +126,16 @@ the entire time; it was simply unreachable until a second live writer existed.
 - `self_model_bundle_set` (`src/core/updates.py`), which has the identical whole-object-replace
   shape on a sibling field — worth a similar audit, but a separate field/schema
   (`SelfModelBundle`, not `CognitionModel`) and a separate ticket if warranted.
-- Making `memory_update`'s own read defensive just because it currently runs first — that's covered
-  by whichever structural fix this ticket picks (option 1 or 2 above would make it safe by
-  construction; option 3 would catch a future regression via the test).
+
+**Recommended first action when this ticket is picked up** (do this regardless of which structural
+option above is ultimately chosen — it is not conditional on that decision and shouldn't wait for
+it): give `src/domains/memory/phase.py:51` the same read-through the other 5 safe writers already
+use. It is a ~3-line change matching an existing, well-established pattern, and it removes a
+tripwire that arms itself silently the moment anyone ever reorders the pipeline to put another
+cognition writer before `memory_update` — nobody reordering phases for an unrelated reason would
+think to check cognition-write ordering first, and the failure would be the identical invisible
+data loss this ticket exists because of. Cheap, safe, and load-bearing independent of the larger
+structural question.
 
 ## Acceptance Criteria
 - A decision is recorded (with tradeoffs, not silently picked) among per-subfield merge / typed
