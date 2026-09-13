@@ -32,8 +32,9 @@ def _entity(e_id, pos, hp=100, atk=10, faction=Faction.HERO_GUILD):
     return b.build()
 
 
-def _state(entities, tick=1):
-    return AuthoritativeState(entities={e.id: e for e in entities}, tick=tick, seed=42)
+def _state(entities, tick=1, combat_engagement_on=True):
+    flags = {"ENABLE_COMBAT_ENGAGEMENT": "ON"} if combat_engagement_on else {}
+    return AuthoritativeState(entities={e.id: e for e in entities}, tick=tick, seed=42, feature_flags=flags)
 
 
 def test_real_kill_updates_both_participants_via_execute_attack():
@@ -108,3 +109,27 @@ def test_illegal_attack_produces_no_learning():
 
     assert defender.id not in updates
     assert updates[attacker.id].cognition_bundle_set is None
+
+
+def test_learning_is_gated_on_enable_combat_engagement():
+    """
+    Deliberate, not an oversight: combat-learning writes are gated on the same
+    ENABLE_COMBAT_ENGAGEMENT flag as the passive-observation writes in CombatEngagementPhase.apply()
+    -- a real, otherwise-legal KILL must produce zero cognition_bundle_set writes with the flag OFF,
+    even though damage/rewards/social consequences still resolve normally.
+    """
+    attacker = _entity(1, (10, 10), hp=15, atk=100, faction=Faction.HERO_GUILD)
+    defender = _entity(2, (10, 11), hp=1, faction=Faction.MONSTER_HORDE)
+    state = _state([attacker, defender], combat_engagement_on=False)
+
+    updates = CombatActions.execute_attack(
+        attacker, payload={"target_id": defender.id}, current_tick=state.tick,
+        context=state,
+    )
+
+    # The real defeat still resolved (damage/outcome unaffected by the flag) -- KILL or REBIRTH
+    # depending on real reward-classification rules, either way alive_set is False.
+    assert updates[defender.id].combat.alive_set is False
+    # But no OpponentModel learning occurred for either participant.
+    assert updates[attacker.id].cognition_bundle_set is None
+    assert updates[defender.id].cognition_bundle_set is None

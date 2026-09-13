@@ -1739,6 +1739,20 @@ implicit in the resolver:
   the other's in-progress result.
 - **The mapping lives in one place**, tested directly, with the translation explicit — scattering
   this logic across the resolver call sites is how a second, divergent mapping appears later.
+  Implemented as `src/domains/combat_engagement/learning_outcome.py`. **Wired at
+  `src/engine/domain/combat_actions.py`'s `CombatActions.execute_attack()`, not
+  `src/engine/combat.py` itself**: that module's own `CombatResolutionSystem.resolve_attack()`
+  returns a single `CombatUpdate` for the defender only and never has both real `EntityState`
+  objects in scope together, so it structurally cannot write both sides' `OpponentModel` at once;
+  `combat_actions.py` is the real action-handler call site that already builds both
+  `attacker_up`/`defender_up` `EntityUpdate`s from that same `CombatUpdate`.
+- **Gated on `ENABLE_COMBAT_ENGAGEMENT`, same as the passive-observation writes in
+  `CombatEngagementPhase.apply()`** — deliberate, not an oversight: the flag stays the single real
+  on/off switch for the whole feature. Without this gate, opponent memory would start accumulating
+  on every real attack in every corpus profile the moment this mapping merges, before the flag
+  itself ever flips — durable state growth (bounded, but nonzero) for a mechanism nothing reads
+  yet, and it would mean the feature is already partially live in production on merge rather than
+  at the deliberate flag-flip point this arc's own discipline calls for.
 
 ### 13.6 Memory: a third declared type, its own home, and a load-bearing eviction policy
 
