@@ -117,8 +117,23 @@ Exits 0 if valid, 1 on any violation. Content type is inferred from path (no `co
 `docs/REGISTRY.yaml` is a flat machine-readable index of all tagged docs and closed tickets. It is committed to git so agents can query it without running the script.
 
 ```bash
-make docs-registry   # Regenerate docs/REGISTRY.yaml
+make docs-registry         # Regenerate docs/REGISTRY.yaml
+make docs-registry-check   # Verify the committed file matches a fresh regeneration (no write)
 ```
+
+**Merge conflicts on `docs/REGISTRY.yaml`** (as of `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`):
+because this file is a full-file rewrite on every ticket close, concurrent branches regenerating it
+independently used to conflict on nearly every merge. Run `make setup-merge-drivers` once, from any
+worktree (it installs repo-wide, one-time — see `.gitattributes`'s `docs/REGISTRY.yaml
+merge=registry-regen` entry): a merge driver plus a `post-merge` git hook then regenerate the file
+automatically after a real `git merge`, with no manual step (`post-merge` hooks only fire on an
+actual merge, not `git rebase` or `git cherry-pick`). If the driver isn't installed, a conflict on
+this path still fails loudly — an ordinary 3-way merge conflict, git's normal behavior for an
+unconfigured `merge=` attribute — rather than silently keeping one side; resolve it the same way as
+before: take either side and rerun `make docs-registry`. A CI test
+(`tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`,
+the same `--check` logic `make docs-registry-check` runs) catches a stale or badly-resolved copy
+either way.
 
 Each entry is either a `doc` entry or a `ticket` entry (with `artifact_files` listing investigation/plan/test_plan if they exist):
 
