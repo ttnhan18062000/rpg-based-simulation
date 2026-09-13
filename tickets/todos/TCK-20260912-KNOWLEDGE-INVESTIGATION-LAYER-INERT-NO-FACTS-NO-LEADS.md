@@ -72,13 +72,31 @@ occurs at all — this is a nameable missing behaviour, not merely an inert data
        can never seed the collection from empty.
     4. `PaidInformationTransactionSystem.enforce()`
        (`src/engine/pipeline_phases/paid_information.py`) — **structurally unreachable type**,
-       requires a registered `InformationProvider`, which has zero real construction sites
-       anywhere in `src/`, in any world (not flag-gated — the type is simply never instantiated by
-       any live code path).
-- Determine whether any of the four lead-creation gaps, or the two fact-writing gaps, is worth
-  actually fixing (vs. documenting as intentional/deferred), and if so which one(s) — this is a
-  real scope/priority decision, not something to resolve unilaterally. Bring it to peer review
-  before implementing anything.
+       requires a registered `InformationProviderState` (`state.information_providers`), which has
+       zero real construction sites anywhere in `src/`, in any world (not flag-gated — the type is
+       simply never instantiated by any live code path).
+- **Added 2026-09-13, found while scoping `docs/plans/rpg_design_roadmap/
+  rpg_knowledge_investigation_closure_plan.md`**: a fifth distinct instance of the same shape, a
+  different type from gap #4 above — `src/world/providers/information.py` defines
+  `GuideInformationProvider`, `BlacksmithInformationProvider`, and `GuildInformationProvider`, each
+  producing `KnowledgeFact`s and `suggested_leads`. **None has any production caller** — the only
+  non-test references are `src/worldbuilding/compiler.py` importing the *types* to shape authored
+  seed data. Appended here rather than filed as its own ticket, per the governing plan's own
+  reasoning: it's the same "one side of a designed interaction built, the connecting call never
+  written" shape as the other four gaps, not a new category.
+- Determine whether any of the four lead-creation gaps, the fifth provider-caller gap, or the two
+  fact-writing gaps, is worth actually fixing (vs. documenting as intentional/deferred), and if so
+  which one(s) — this is a real scope/priority decision, not something to resolve unilaterally.
+  **Disposition decision, made 2026-09-13** (routed via peer review, recorded here rather than left
+  open): **connect, but scoped to one path, not all six/seven.** Provider reliability is declared
+  as a gameplay concept in three places (the `KnowledgeFact`/provider dataclass fields, the seed
+  schema, and Epic 4.2's own scope in `docs/plans/long_term_development_roadmap.md`) — building
+  toward that is closing a declared gap, not inventing gameplay, which is the same declared-intent
+  test this whole arc has applied throughout. But six-plus gaps is not one ticket, and fixing every
+  lead-creation site at once would be inventing scope beyond what's declared. The scoped
+  instruction for whoever picks this up: **connect the single path with the most machinery already
+  behind it, prove one real lead reaches one real entity in a real run, then re-decide on the
+  remaining gaps with that evidence in hand** — do not attempt all six/seven gaps in one pass.
 - Amend or supersede `docs/simulation/belief_and_detour_contract.md`'s framing as needed once a
   disposition is reached — a first-pass amendment noting both halves are inert was already carried
   in `TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION`'s own PR; this ticket may
@@ -97,34 +115,43 @@ occurs at all — this is a nameable missing behaviour, not merely an inert data
   owns the pending-responses threading gap; this ticket cross-references it, does not duplicate it.
 
 ## Acceptance Criteria
-- [ ] A single, consolidated, re-verified statement of the real disposition of both the fact-write
-      path and all four lead-creation paths, each with its own distinct root cause named (not
-      collapsed into one generic "gated" explanation).
+- [ ] A single, consolidated, re-verified statement of the real disposition of the fact-write path,
+      all four lead-creation paths, and the fifth provider-caller gap, each with its own distinct
+      root cause named (not collapsed into one generic "gated" explanation).
 - [ ] The "name the missing behaviour" test applied explicitly and honestly to this combined
       finding: does a player currently notice characters never investigating/following up on
       rumors, or is this still not observable in practice for some other reason (e.g. no other
       system currently reacts differently based on lead presence/absence either)? Answer with real
       evidence, not assumption.
-- [ ] A peer-routed design decision on disposition: document-only (same as the two originating
-      tickets), or a scoped fix for one or more of the six specific gaps — obtained before any
-      implementation.
-- [ ] If a fix is approved for any gap: real before/after evidence (same instrumentation pattern as
-      the originating tickets) that facts/leads are actually created under real conditions
-      afterward, not just that the code compiles/tests pass.
+- [x] **Disposition decision made 2026-09-13** (recorded above in Scope): connect, scoped to the
+      single provider path with the most machinery already behind it — not all six/seven gaps at
+      once. Prove one real lead reaches one real entity in a real run before deciding on the rest.
+- [ ] Real before/after evidence (same instrumentation pattern as the originating tickets) that a
+      fact/lead is actually created and delivered under real conditions for the one path connected,
+      not just that the code compiles/tests pass.
+- [ ] Not started this batch (`gameplay-gaps-batch`) — sequencing confirmed via peer, do not pick
+      up implementation until a future batch explicitly schedules it.
 
 ## Related Tickets
 - `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION` (closed; facts-never-
   written half of this finding)
 - `TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION` (closed; leads-never-created
   half of this finding, and the ticket whose own investigation surfaced this consolidated scope)
-- `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` (open; a related but distinct,
-  narrower always-empty-decision-input finding — explicitly out of this ticket's scope)
+- `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` (open; downstream of this
+  ticket's disposition per `rpg_knowledge_investigation_closure_plan.md` — if this ticket's
+  disposition never reaches (a)/connect, that ticket has no real facts to read)
 - `TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH` (open; owns one of the two
-  fact-write gaps)
+  fact-write gaps; sequenced last in the governing plan, after this ticket's disposition)
+- `TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING` (open; a fifth-and-a-half,
+  genuinely distinct defect found while scoping the governing plan — the intent handler's own
+  unpaired gold deduction, not one of this ticket's six/seven gaps; needs no disposition here)
 - `TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE` (owns the `ENABLE_INFORMATION_INTENT_EXECUTION`
   deferral)
 
 ## Related Docs
+- `docs/plans/rpg_design_roadmap/rpg_knowledge_investigation_closure_plan.md` (2026-09-13 —
+  sequences this ticket against the other three in the same initiative and records the disposition
+  decision above)
 - `docs/simulation/belief_and_detour_contract.md` (amended once already for the leads-never-created
   finding; may need a further, disposition-driven update once this ticket concludes)
 - `docs/simulation/domains/information_contract.md`
@@ -139,7 +166,10 @@ occurs at all — this is a nameable missing behaviour, not merely an inert data
 - `src/town/guild.py` (`GuildAction.visit()`, flag-gated)
 - `src/systems/strategic_systems/intelligence.py` (belief-confirmation loop, update-only)
 - `src/engine/pipeline_phases/paid_information.py` (`PaidInformationTransactionSystem.enforce()`,
-  structurally unreachable provider type)
+  structurally unreachable `InformationProviderState` type)
+- `src/world/providers/information.py` (`GuideInformationProvider`, `BlacksmithInformationProvider`,
+  `GuildInformationProvider` — the fifth gap, zero production callers, a different type from the
+  one above)
 - `src/core/self_model.py` (`KnowledgeFact`), `src/core/strategic.py` (`LeadState`)
 
 ## Assumptions / Open Questions

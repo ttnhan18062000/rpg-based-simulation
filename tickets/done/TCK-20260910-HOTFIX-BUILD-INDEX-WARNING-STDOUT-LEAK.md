@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260910-HOTFIX-BUILD-INDEX-WARNING-STDOUT-LEAK
-phase: open
+phase: done
 date: 2026-09-10
 tags: [ai, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 `tools/agent-monitoring/build_index.py`'s WARNING lines print to stdout instead of stderr, breaking JSON-output CLI contracts
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -48,6 +48,16 @@ records elsewhere in the monitoring corpus, e.g. records dating back to 2026-06-
 wrong with *current* data) leak into any CLI built on top of this loading path that assumes pure
 JSON on stdout, corrupting `retrieval_baseline_metrics.py`'s own contract.
 
+**Corrected 2026-09-13, before implementing: the ticket's own claim of "3" affected print calls is
+partly stale.** Re-checked the current code before touching anything: both `WARNING:` prints
+(non-canonical tier, missing run_id/seq/tool) **already have `file=sys.stderr`** — someone fixed
+those two independently of this ticket, without closing it. The one remaining defect is narrower
+than filed: `build()`'s own final summary print (`f"runs: {n_runs} rows, ..."`, still the same
+line the ticket names) is the only call left writing unconditionally to stdout, and it is exactly
+the one that fires on every rebuild through `generate_retro.py`'s lazy-rebuild path — including the
+path `retrieval_baseline_metrics.py` triggers, so it's still the real, live cause of the described
+test failure.
+
 ## Scope
 - Change `tools/agent-monitoring/build_index.py`'s 3 `print(f"WARNING: ...")` calls (lines 118,
   162) and the final summary print (line 204, `print(f"runs: {n_runs} rows, ...")`) to route to
@@ -74,13 +84,15 @@ JSON on stdout, corrupting `retrieval_baseline_metrics.py`'s own contract.
   the Knowledge Gateway MCP.
 
 ## Acceptance Criteria
-- [ ] `build_index.py`'s 3 WARNING/summary print statements route to stderr, not stdout.
-- [ ] `pytest tests/tools/test_retrieval_baseline_metrics.py -v` passes with the index forced
-      stale (not just a lucky fresh-index run).
-- [ ] `pytest tests/tools/test_build_index*.py -v` (if such a test file exists) still passes in
-      full — confirm no test currently depends on these lines appearing on stdout before making
-      the change.
-- [ ] No change to warning content/wording — stream destination only.
+- [x] `build_index.py`'s WARNING/summary print statements route to stderr, not stdout. **2 of 3
+      already did** (re-verified); the remaining summary print now does too.
+- [x] `pytest tests/tools/test_retrieval_baseline_metrics.py -v` passes with the index forced
+      stale (not just a lucky fresh-index run) — verified by touching `monitoring.db` to predate
+      the JSONL sources, forcing a real rebuild. 20/20 passed.
+- [x] `pytest tests/tools/test_build_index.py -v` still passes in full (21/21) — no test asserted
+      stdout capture of the summary line; the one test touching CLI output (`test_makefile_dry_run_
+      agent_monitoring_index`) checks combined stdout+stderr, unaffected.
+- [x] No change to warning content/wording — stream destination only.
 
 ## Related Tickets
 - `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY` (done) — the ticket whose own independent
@@ -104,9 +116,23 @@ None — hotfix tier, self-evident intent per project convention.
   assumption holds (no hidden stdout-scraping consumer) before implementing.
 
 ## Implementation Notes
+Re-checked the code before implementing, per standing practice — found the ticket's own "3 print
+calls need fixing" claim partly stale: the two `WARNING:` prints already had `file=sys.stderr`.
+Only `build()`'s final summary print (`f"runs: {n_runs} rows, ..."`) still wrote unconditionally
+to stdout. Added `file=sys.stderr` to that one remaining call — no wording change.
 
 ## Test Summary
+- `tests/tools/test_build_index.py`: 21/21 passed.
+- `tests/tools/test_retrieval_baseline_metrics.py`: 20/20 passed, including the target test, run
+  with the SQLite index deliberately staled (`touch -d "1 hour ago" agent-monitoring-index/
+  monitoring.db`) to force a real rebuild through `generate_retro.py`'s lazy-rebuild path — not a
+  lucky fresh-index run.
 
 ## Files Changed
+- `tools/agent-monitoring/build_index.py` — final summary print now routes to stderr.
+- `tickets/inprogress/TCK-20260910-HOTFIX-BUILD-INDEX-WARNING-STDOUT-LEAK.md` — corrected the
+  ticket's own stale "3 calls" claim before closing.
 
 ## Completion Summary
+Mechanical fix, exactly as filed once the stale part of the claim was corrected: one remaining
+`print()` call routed to stderr. No design judgment involved.
