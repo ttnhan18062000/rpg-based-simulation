@@ -27,11 +27,25 @@ class TestSubstrateFreezeM1:
         profile.utilization_survival_threshold = 0.95
         profile.max_tick_budget_ms = 10.0
         profile.max_ram_mb = 1024.0
+        # TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER: previously unset on
+        # this MagicMock -- harmless only because worker_utilization's own 1.0-when-disabled bug
+        # (max_worker_count=0 above) short-circuited ResourceGovernor._get_indicated_mode() at the
+        # worker_utilization>=0.9 check before ever reaching degradation_threshold_ram. Now that
+        # the sentinel correctly reports 0.0, evaluation proceeds further and needs a real float
+        # here, matching RuntimeProfile's own default (src/config/profiles.py:47).
+        profile.degradation_threshold_ram = 0.85
         from src.engine.cadence import SystemCadence
         profile.cadence = SystemCadence()
         
         state = AuthoritativeState(tick=0, seed=42)
-        rng = MagicMock()
+        # TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER: a bare MagicMock() rng
+        # previously worked only because RuntimeMode.DEGRADED (the sentinel bug fixed above) made
+        # GovernorPolicy.from_mode() disable full replay, so _phase_persistence() never tried to
+        # canonical-JSON-hash the state and never touched the rng object. With the real
+        # RuntimeMode.NORMAL now reached, full replay is enabled and the state IS hashed -- a real
+        # DeterministicRNG is required for that path to produce serializable data.
+        from src.platform.rng import DeterministicRNG
+        rng = DeterministicRNG(42)
         return profile, state, rng
 
     def test_kernel_phase_execution_order(self, mock_kernel_deps):

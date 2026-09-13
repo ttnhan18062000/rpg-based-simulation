@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER
-phase: open
+phase: done
 date: 2026-09-11
 tags: [determinism, architecture]
 ---
@@ -16,7 +16,7 @@ tags: [determinism, architecture]
 governor into `RuntimeMode.DEGRADED` unconditionally, regardless of actual compute pressure
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -146,15 +146,25 @@ should not assume that path is permanently closed, only that it is currently unu
   one `worker_utilization` input this ticket targets.
 
 ## Acceptance Criteria
-- [ ] A real, uninstrumented run with `max_worker_count=0` (matching `ScenarioRuntimeService`'s own
+- [x] A real, uninstrumented run with `max_worker_count=0` (matching `ScenarioRuntimeService`'s own
       real construction) starts in `RuntimeMode.NORMAL` and stays there absent real compute
       pressure — confirmed via a real multi-tick test, not a unit test of the sentinel value alone.
-- [ ] The fix is scoped to the correct layer (`WorkerManager` sentinel vs. `ResourceGovernor`'s own
-      evaluation logic) with rationale for the choice recorded.
-- [ ] Normal (`max_workers > 0`) worker-pressure-driven `DEGRADED` escalation is confirmed
-      unregressed by a real test.
-- [ ] All 3 real `max_worker_count=0` call sites (`ScenarioRuntimeService`, `ScenarioCheckpointer`,
-      `BROKER_DISABLED=1`) are confirmed correctly governed after the fix.
+      Manually reproduced before/after (DEGRADED every tick → NORMAL every tick), then codified as
+      `tests/unit/resource/test_resource_governor_contract.py::
+      test_real_kernel_with_workers_disabled_stays_normal_absent_real_pressure`.
+- [x] The fix is scoped to the correct layer (`WorkerManager` sentinel vs. `ResourceGovernor`'s own
+      evaluation logic) with rationale for the choice recorded. `WorkerManager.get_stats()` —
+      confirmed via a full consumer grep that `ResourceGovernor` is the only consumer that decides
+      anything based on this value; every other real consumer (dashboards, metrics, certification
+      reports) merely displays it, so fixing the source is correct for all of them, not a
+      governor-only special case.
+- [x] Normal (`max_workers > 0`) worker-pressure-driven `DEGRADED` escalation is confirmed
+      unregressed by a real test. `tests/unit/kernel/test_worker_bounds.py::
+      test_worker_utilization_reflects_real_saturation_when_workers_enabled` — real thread-barrier
+      saturation, `worker_utilization == 1.0` still correctly reported.
+- [x] All 3 real `max_worker_count=0` call sites (`ScenarioRuntimeService`, `ScenarioCheckpointer`,
+      `BROKER_DISABLED=1`) are confirmed correctly governed after the fix. All three test suites
+      pass (41 + 4 tests).
 
 ## Related Tickets
 - `TCK-20260908-GOVERNOR-DEGRADED-AT-TICK-ONE-EMPTY-WORLD-DISPOSITION` (origin; closed with this
@@ -167,7 +177,8 @@ should not assume that path is permanently closed, only that it is currently unu
 - `docs/architecture/simulation_watchdog.md` (adaptive governor design intent)
 
 ## Related Stored Artifacts
-None yet — created by this ticket's own Investigate/Plan phases once picked up.
+- `stored_artifacts/TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER/`
+  (`investigation.md`, `plan.md`, `test_plan.md`)
 
 ## Related Code Areas
 - `src/engine/worker_manager.py` (`WorkerManager.get_stats()`, the `worker_utilization=1.0`
@@ -177,21 +188,89 @@ None yet — created by this ticket's own Investigate/Plan phases once picked up
   (the 3 real `max_worker_count=0` call sites)
 
 ## Assumptions / Open Questions
-- Whether the correct fix layer is `WorkerManager`'s own sentinel or `ResourceGovernor`'s own
-  evaluation logic is not decided here — real Investigate/Plan work for whoever picks this up.
-- Whether any other real caller anywhere in the codebase relies on the current `1.0`-when-disabled
-  behavior (intentionally or by accident) is not yet checked beyond the 3 call sites already found
-  constructing `RuntimeProfile(max_worker_count=0)` directly — a broader grep for any code branching
-  on `worker_utilization` specifically (not just the governor) should be part of Investigate.
+- ~~Whether the correct fix layer is `WorkerManager`'s own sentinel or `ResourceGovernor`'s own
+  evaluation logic is not decided here~~ Resolved: `WorkerManager.get_stats()`, per the consumer
+  grep in investigation.md.
+- ~~Whether any other real caller anywhere in the codebase relies on the current `1.0`-when-disabled
+  behavior~~ Resolved: full grep of every real `worker_utilization` reader confirms only
+  `ResourceGovernor` branches on it; every other reader (dashboards, metrics, certification) merely
+  displays it, and is strictly more correct with the new `0.0` value.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Decided the fix layer via a real consumer grep, not assumption: every real reader of
+`worker_utilization` outside `governor.py` (`src/certification/{models,harness,recorder}.py`,
+`src/engine/{observability,kernel}.py`, `src/api/engine_manager.py`, `src/observability/
+prometheus_collector.py`, `src/observability/reporting/metric_recorder.py`, `src/observability/
+live/snapshot_provider.py`, `src/core/governance.py`) only displays or records the value — none
+branch on it. `ResourceGovernor._get_indicated_mode()` is the sole decision-maker. This settles the
+layer question: fixing `WorkerManager.get_stats()`'s own sentinel corrects the value for every
+consumer at once (all of them were equally misleading before), rather than adding a governor-only
+special case that would leave dashboards/metrics still reporting a false 100% utilization.
+
+Confirmed the fix doesn't mask a real signal: `work_debt_total`, `tick_compute_ms`, and
+`memory_estimate_mb` are all independent of worker-pool state in
+`ResourceGovernor._get_indicated_mode()`'s own logic — a genuine overload in worker-disabled mode
+still escalates correctly via these.
+
+Reproduced the bug for real before touching code: a real, uninstrumented `Kernel` with
+`max_worker_count=0` entered `RuntimeMode.DEGRADED` on every one of 5 real ticks against an empty
+world with zero compute pressure. Applied the one-line sentinel change (`1.0` → `0.0` in
+`WorkerManager.get_stats()`'s `max_workers<=0` branch). Re-ran the identical repro: `RuntimeMode.
+NORMAL` on every tick.
+
+Added real test coverage matching the ticket's own AC bar (a real multi-tick Kernel run, not a
+unit test of the sentinel value alone): `tests/unit/resource/test_resource_governor_contract.py`'s
+new test. Also added direct `WorkerManager.get_stats()` unit coverage for both the disabled case
+and the normal-saturation case (via a real thread barrier, not mocked) in
+`tests/unit/kernel/test_worker_bounds.py`, to confirm the normal `max_workers > 0` path is
+unregressed.
+
+`queue_utilization`'s identical-shaped sentinel left untouched, per the ticket's own explicit Scope
+note — re-confirmed via a fresh grep that every real `max_queue_depth=` construction site still
+passes a real positive value, matching the ticket's own original finding exactly.
 
 ## Test Summary
-_(pending)_
+`tests/unit/resource/`, `tests/unit/kernel/`, `tests/unit/engine/` (`-m "not slow and not
+extra_slow"`) — 361 passed, 2 skipped, no regression. `tests/unit/engine/
+test_scenario_runtime_service.py` + `test_scenario_checkpointer.py` — 41 passed, 1 skipped
+(2 of the 3 real call sites). `tests/cli/test_infra_isolation.py` (`BROKER_DISABLED=1`) — 4 passed.
 
 ## Files Changed
-_(pending)_
+- `src/engine/worker_manager.py` — `get_stats()`'s `worker_utilization` sentinel changed from
+  `1.0` to `0.0` when `max_workers<=0`.
+- `tests/unit/kernel/test_worker_bounds.py` — added
+  `test_worker_utilization_is_zero_when_workers_disabled` and
+  `test_worker_utilization_reflects_real_saturation_when_workers_enabled`.
+- `tests/unit/resource/test_resource_governor_contract.py` — added
+  `test_real_kernel_with_workers_disabled_stays_normal_absent_real_pressure`.
+- `tests/integration/kernel/test_substrate_freeze_m1.py` — real CI regression caught before
+  merge: `test_apply_path_singular_authority`'s own `mock_kernel_deps` fixture (a `MagicMock()`
+  profile with `max_worker_count=0`) had silently relied on the pre-fix `RuntimeMode.DEGRADED`
+  mis-trigger to short-circuit `ResourceGovernor._get_indicated_mode()` before ever reaching
+  `profile.degradation_threshold_ram` (never set on the mock) or exercising the full-replay
+  state-hashing path (`GovernorPolicy.from_mode(NORMAL)` enables it; `DEGRADED` did not, so
+  `_phase_persistence()` never touched the fixture's own bare `rng = MagicMock()`). With the real
+  fix, `NORMAL` is correctly reached and both gaps became real failures. Fixed at the root: added
+  `profile.degradation_threshold_ram = 0.85` (matching `RuntimeProfile`'s own real default) and
+  replaced the bare `MagicMock()` rng with a real `DeterministicRNG(42)`, matching the pattern
+  already used by other real-`Kernel` tests in this repo. Confirmed via full local reproduction of
+  `tests/integration` (968 passed, 0 failed) before pushing.
+- `stored_artifacts/TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER/{investigation.md,plan.md,test_plan.md}`
+  — full evidence trail.
+- `tickets/done/TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER.md` — this file,
+  closed.
 
 ## Completion Summary
-_(pending)_
+Fixed the confirmed mis-trigger: `WorkerManager.get_stats()`'s `worker_utilization` sentinel for
+`max_workers<=0` (workers deliberately disabled) changed from `1.0` (read by `ResourceGovernor` as
+genuine 90%+ saturation, forcing `DEGRADED` unconditionally from tick 1) to `0.0` (the metric is
+inapplicable, not maximal, when there are no workers to report on). Decided the fix layer via a
+real consumer grep rather than assumption — every other real reader of this value only displays
+it, so fixing the source is correct everywhere, not a governor-only special case.
+
+Reproduced the bug and its fix via a real, uninstrumented `Kernel` run (not synthetic
+`PressureSignals`), confirmed the fix doesn't mask any real pressure signal (three independent
+signals remain worker-state-agnostic), confirmed the normal `max_workers > 0` case is unregressed
+via a real thread-barrier saturation test, and confirmed all 3 real `max_worker_count=0` call
+sites remain correctly governed. `queue_utilization`'s identical-shaped sentinel re-confirmed
+structurally unreachable and left untouched, per the ticket's own explicit Scope.

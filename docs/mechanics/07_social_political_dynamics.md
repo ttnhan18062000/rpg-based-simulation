@@ -190,10 +190,10 @@ Real live writers, all confirmed via direct grep of `heroism_delta=`/`notoriety_
 
 | Trigger | Delta | Source |
 |---|---|---|
-| Contract reaches FULFILLED | `heroism_delta = 0.05` | `contracts.py::transition_contract()` |
-| Contract expiry resolved as success | `heroism_delta = 0.05` | `contracts.py::process_active_contracts()` → `resolve_contract_outcome(success=True)`, real live path |
-| Contract resolved as failure | `notoriety_delta = 0.1` | `resolve_contract_outcome(success=False)` |
-| Contract resolved as betrayal | `notoriety_delta = 0.5`, `betrayal_increment = 1` | `resolve_contract_outcome(betrayal=True, betrayer_id=...)` — **disclosed dead path**: `process_active_contracts()`, the only production caller, never passes `betrayal=True`; reachable only from direct unit tests today |
+| Contract reaches FULFILLED (internal, unused) | `heroism_delta = 0.05` | `contracts.py::transition_contract()` — **computed but discarded**: its only two callers (`accept_contract()` for the ACTIVE transition, `resolve_contract_outcome()` for the FULFILLED/FAILED/BETRAYED transition) both discard the returned `SocialUpdate` (`_`); this value is never applied to any entity. Confirmed real, not a bug worth fixing on its own — `resolve_contract_outcome()` computes its own, richer `heroism_delta` independently (row below). |
+| Contract expiry resolved as success | `heroism_delta = 0.05` (both parties) | `ContractLifecyclePhase.resolve_expirations()` (`pipeline_phases/contracts.py`, phase `"contracts"`, `pipeline.py:222`) → `resolve_contract_outcome(success=True)` — **real live path, confirmed 2026-09-13** (`TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION`). This is now the sole mechanism resolving contract expiry: the prior duplicate, `ContractService.process_active_contracts()`, was confirmed unreachable in normal sequential tick progression via direct instrumentation (500-tick campaign: 1,759 fulfillments via `resolve_expirations()`, 0 calls to `resolve_contract_outcome()` through the old duplicate path) and deleted, its full consequence model ported into `resolve_expirations()` in its place — including fixing a real found-by-deletion bug where the deleted phase only ever applied the consequence to the contract-holding party, never the other. |
+| Contract resolved as failure | `notoriety_delta = 0.1` | `resolve_contract_outcome(success=False)` — same real live path as above; still only ever called with `success=True` from `resolve_expirations()` today, so this specific branch remains unreached in production (differentiating failure requires the party-cohesion linkage `TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING` tracks) |
+| Contract resolved as betrayal | `notoriety_delta = 0.5`, `betrayal_increment = 1` | `resolve_contract_outcome(betrayal=True, betrayer_id=...)` — **disclosed dead path**: `resolve_expirations()`, the sole production caller, never passes `betrayal=True`; reachable only from direct unit tests today, same disclosed gap as before, now attributed to the correct caller |
 | Entity defects from a party group | `notoriety_delta = 2.0` | `party_lifecycle.py::check_defection()`, real live path (SOC-230) |
 | Newborn's birth-seed | `reputation_set = clamp((parent_a + parent_b) / 2.0, 0.0, 2.0)` | `ReputationService.combine_public_reputation()` (idea 53, `V2EntityBuilder.birth_record()`) |
 | Campaign episode carry-forward | `reputation_set = <carried-forward value>` | `src/domains/campaigns/{social_memory,orchestrator}.py` |
@@ -245,11 +245,25 @@ Both parties receive a `SocialBondUpdate` with the sentiment/familiarity deltas 
 deltas feed §4.1's scalar via `SocialUpdate.heroism_delta`/`notoriety_delta`. A confirmed betrayal
 also spawns an `AVENGE` `DirectiveState` and a `TurningPointState` for the wronged party.
 
-**Disclosed gap:** the `betrayal=True`/`betrayer_id` arguments are structurally real and unit-tested,
-but `process_active_contracts()` — the only production caller — only ever invokes
-`resolve_contract_outcome(success=True, ...)` on contract expiry. The betrayal-specific branch is
-reachable only from direct unit tests until a future ticket wires a real in-pipeline betrayal
-trigger for social contracts specifically (distinct from the party-defection betrayal path in §7).
+**Resolved 2026-09-13 (`TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION`):** this section
+previously stated `process_active_contracts()` was "the only production caller" and a "real live
+path" invoking `resolve_contract_outcome(success=True, ...)` on contract expiry. Direct
+instrumentation of a real 500-tick campaign run disproved this: `resolve_contract_outcome()` was
+never called through that path. A separate, earlier-running pipeline phase,
+`ContractLifecyclePhase.resolve_expirations()` (`pipeline_phases/contracts.py`, wired at
+`pipeline.py:222`), transitioned every expiring `ACTIVE` contract to `FULFILLED` first via a
+narrower `transition_contract()` call that applied only a partial, single-party consequence —
+leaving `process_active_contracts()` with no real `ACTIVE` contract to find under normal sequential
+tick progression. Two options were costed (delete the duplicate and port the full model into the
+reachable phase, vs. fix the phase ordering so the phase with the full model already implemented
+actually runs); the first was chosen — `process_active_contracts()` cost more to reach the same
+place (a phase-ordering fix plus a `GroupSystem` interaction risk plus a missing-other-party bug
+it also carried) than deleting it and porting its model in a single-file call swap. `resolve_expirations()`
+now calls `resolve_contract_outcome()` directly and applies the consequence to both parties — fixing,
+in the same change, a real bug the deleted phase carried: it computed both parties' consequences but
+only ever applied one. The full consequence model (sentiment/familiarity bond updates to both
+parties, heroism/notoriety) is a real live path as of this fix; only the betrayal branch remains
+disclosed-unreachable (see table above), unchanged by this resolution and tracked separately.
 
 **Implementing code:** `src/systems/social_systems/contracts.py`.
 
