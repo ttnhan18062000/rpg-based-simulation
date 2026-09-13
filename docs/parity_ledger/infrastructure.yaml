@@ -12203,3 +12203,34 @@
     actually distinguish CRLF from LF and is not evidence for this entry''s LF-only
     claim -- only the two test_path entries above exercise that at the byte level.'
   evidence_kind: runtime_observation
+- id: INFRA-417
+  text: 'Merge-time auto-regeneration for docs/REGISTRY.yaml: a trivial always-succeeding
+    merge driver (`git config merge.registry-regen.driver true`, declared via `.gitattributes:
+    docs/REGISTRY.yaml merge=registry-regen`) resolves merges on this path with zero
+    conflict markers, then a `post-merge` git hook (tools/hooks/registry_post_merge_regen.sh)
+    regenerates the registry and, if the parsed entries differ from the committed
+    file, stages and creates an automatic follow-up commit. Both pieces are installed
+    atomically by one `make setup-merge-drivers` target. Regeneration is deliberately
+    deferred to post-merge rather than run inside the merge driver itself, because
+    a per-path custom driver has no ordering guarantee relative to other paths in
+    the same merge and was proven, in a scratch-repo test, to silently produce an
+    incomplete registry when run synchronously. With no local driver configured (a
+    fresh clone that has not run the installer), a real conflict on this path still
+    fails the ordinary 3-way merge loudly, never silently taking one side. Companion
+    to INFRA-183 (generate_registry.py output shape), INFRA-263 (Finalize-time close-gate
+    regeneration), and INFRA-264 (CI --check drift backstop, which remains the only
+    backstop against a partially-installed driver+hook pair going silently stale)
+    -- this entry covers a fourth, distinct trigger point (git merge time), reducing
+    the manual conflict-resolution toil measured at 9+ occurrences per PR that motivated
+    this ticket. Does not touch, extend, or duplicate INFRA-183/263/264.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: tools/hooks/registry_post_merge_regen.sh + .gitattributes (docs/REGISTRY.yaml
+    merge=registry-regen) + Makefile (setup-merge-drivers, docs-registry-check targets)
+  proof_type: null
+  test_path: tests/integrity/test_registry_merge_driver.py::test_merge_with_driver_and_hook_installed_regenerates_correct_union
+  divergence_note: null
+  support_boundary: Doc/repo tooling only -- no simulation behavior involved (mirrors
+    INFRA-183/263/264's support_boundary). Purely a git-merge-workflow mechanism for
+    keeping the generated doc index in sync; not a simulation mechanics parity claim.
