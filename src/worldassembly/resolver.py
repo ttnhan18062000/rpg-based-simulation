@@ -1147,6 +1147,7 @@ class CompileProfileResolver:
                     inventory_seed=inventory_seed,
                     cognition_seed=cognition_seed,
                     spawn_position=spawn_position,
+                    spawn_region=getattr(pop_spec, "spawn_region", None),
                     count=declared_count,
                     spawn_positions=spawn_positions,
                     # Meta parameters preserved

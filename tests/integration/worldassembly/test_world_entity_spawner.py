@@ -276,6 +276,57 @@ def test_spawn_position_falls_back_to_default_when_unset(catalog):
     assert state.position == (5.0, 9.0)
 
 
+def test_spawn_region_threads_into_entity_properties(bundle, catalog):
+    """TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP: a profile's real, resolved
+    spawn_region reaches identity.properties["spawn_region"] on the spawned entity(ies), rather
+    than being hardcoded to None at spawn_from_context()'s own call site."""
+    ctx = bundle.compile_context
+    region_profiles = {
+        k: p for k, p in ctx.entities.items() if p.spawn_region
+    }
+    assert region_profiles, "Test requires at least one profile with a resolved spawn_region"
+
+    spawner = WorldEntitySpawner()
+    entities = spawner.spawn_from_context(ctx, catalog)
+
+    by_population: dict[str, list] = {}
+    for state in entities.values():
+        pop_id = (state.identity.properties or {}).get("population_id")
+        by_population.setdefault(pop_id, []).append(state)
+
+    for key, profile in region_profiles.items():
+        members = by_population.get(key, [])
+        assert members, f"Population {key!r}: expected at least one spawned entity"
+        for state in members:
+            props = state.identity.properties or {}
+            assert props.get("spawn_region") == profile.spawn_region, (
+                f"Entity {state.id} (profile {key!r}): expected spawn_region="
+                f"{profile.spawn_region!r} in identity.properties, got {props!r}"
+            )
+
+
+def test_spawn_region_none_when_profile_has_none(catalog):
+    """A hand-constructed profile with no archetype_id (legacy-guard path) and no spawn_region
+    (the field's own default) never sets properties["spawn_region"] -- the legacy guard path
+    doesn't read spawn.spawn_region at all, unaffected by this fix, which only threads the value
+    through EntitySpawnContext for the archetype-native path to consume."""
+    from src.worldassembly.context import CompileContext
+    from src.worldassembly.models import ResolvedEntityProfile
+
+    ctx = CompileContext()
+    ctx.register_entity(
+        "pop_without_region",
+        ResolvedEntityProfile(
+            legacy_role=0, legacy_faction=0, hp=10, max_hp=10, atk=1, def_stat=1,
+            attack_range=1, readiness=1.0,
+        ),
+    )
+    spawner = WorldEntitySpawner()
+    entities = spawner.spawn_from_context(ctx, catalog)
+    (state,) = entities.values()
+    assert "spawn_region" not in (state.identity.properties or {})
+
+
 @pytest.fixture(scope="module")
 def two_populations_sharing_one_region_bundle(catalog, module_repo):
     """

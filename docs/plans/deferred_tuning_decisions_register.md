@@ -178,6 +178,30 @@ what's actually recoverable, not a narrative conclusion. Revisit when campaign n
 is designed — including whether `spawn_region` threading (see below) later makes the "authored
 region" option viable again.
 
+**Third correction (2026-09-13) — the threading gap named above is now closed, but only partway.**
+`TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP` wired `spawn_region` from
+`PopulationSpec` through `ResolvedEntityProfile` (a new field, previously absent — the gap was one
+level upstream of what this entry originally guessed) and into `EntitySpawnContext`, so
+`identity.properties["spawn_region"]` is now genuinely populated on freshly-spawned
+archetype-native entities, matching what the classic `WorldCompiler.compile()` pipeline already did.
+
+**Precisely what changed and what didn't**: the value now reaches the live entity's
+`identity.properties` dict. It does **not** reach `EntityCarryForward` (which has no region field
+of any kind — confirmed via inspection, nothing to carry it into) or
+`StrategicComponent.home_region_id` (a separate, real mechanism for a different purpose — idea 59
+displacement/reproduction homes, set by `src/world/displacement.py`/`src/world/boss.py`, never
+from spawn-time `properties["spawn_region"]`). So the authored-region option is **not yet viable**
+for survivor reconstruction specifically — that would need a further hop (reading
+`properties["spawn_region"]` at episode-end and carrying it forward the same way `last_position`
+is carried today), which is new campaign-side wiring, not a byproduct of the threading fix. The
+correct summary for whoever revisits the narrative question: *profile and spawn context now carry
+the region name; campaign carry-forward still does not.*
+
+The `last_position` fix stands regardless of this correction — it remains the better default, and
+this entry's second correction (per-episode terrain/`blocked_tiles` reseeding invalidating any
+carried position's walkability) applies identically to an authored-region carry-forward if one is
+ever built.
+
 ### D-08 · Divergent thresholds lost to superseded-code deletion
 **Deferred from:** `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT` (done),
 `TCK-20260908-BIOLOGICAL-SYSTEM-DEAD-CODE-DISPOSITION`,

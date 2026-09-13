@@ -332,3 +332,23 @@ class GroupSystem:
             groups_add_or_update=groups_add_or_update,
             groups_remove=groups_remove
         )
+
+    @staticmethod
+    def find_group_for_contract(state: AuthoritativeState, contract_id: str) -> Optional[GroupRecord]:
+        """
+        O(n_groups) reverse lookup -- no contract_id -> group_id index exists in durable
+        state. Matches the established precedent for this exact shape:
+        ClanLifecycleService.find_clan_id_for_entity() (src/systems/social_systems/
+        clan_lifecycle.py) -- no evidence in this repo that group counts warrant an index.
+        Sorted iteration by group id for determinism.
+        TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING: the forward direction
+        (GroupRecord.contract_id, set at formation in update_groups() above) already
+        existed; this is the missing reverse direction. Only finds groups while they're
+        alive -- dissolved groups are removed from state.groups outright (groups_remove
+        above), so this cannot answer the question after dissolution
+        (TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED).
+        """
+        for group_id, group in sorted(state.groups.items()):
+            if group.contract_id == contract_id:
+                return group
+        return None
