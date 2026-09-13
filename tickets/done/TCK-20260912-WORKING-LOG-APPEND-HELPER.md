@@ -293,3 +293,12 @@ entry (full-dict read-modify-write, all other fields preserved) and CLAUDE.md's 
 to name the helper as mandatory. This is one sanctioned writer plus a CI guard that catches a
 second write path appearing in `tools/` — not a hard lock; an agent could still open the file
 directly, and nothing in the filesystem prevents that.
+
+**Additional honest limit, from peer review of PR #177**: the AST resolver only follows literal
+strings, module-level constants, and a single parameter-default hop. A writer that builds the path
+dynamically — `Path("tickets") / "working_log.csv"` (a `BinOp`, not a `Constant`/`Path(...)` call)
+or a local variable assigned from another local variable rather than a literal — resolves to
+`None` and passes the guard silently. The tests prove the resolver never *guesses* in that
+situation (confirmed: `_literal_value()` only handles `ast.Constant` and `Path("...")` calls, no
+`BinOp` or Name-to-Name chain), which is correct behavior, but an unresolvable path is invisible
+to the guard rather than flagged — it is not the same as zero writers existing.
