@@ -115,8 +115,12 @@ and invalid YAML. That exclusion is correct and should stay.
 - `TCK-20260912-WORKING-LOG-APPEND-HELPER` (todos) — same theme: who owns writes to a shared file.
 
 ## Related Docs
-- `CLAUDE.md` (After Work: registry regenerated unconditionally at Finalize)
-- `.gitattributes` (the exclusion comment explaining why union is unsafe here)
+- `CLAUDE.md` (After Work: registry regenerated unconditionally at Finalize, plus the new
+  `make setup-merge-drivers` one-time install note)
+- `.gitattributes` (`docs/REGISTRY.yaml merge=registry-regen`, and the comment explaining why
+  `merge=union` is unsafe here)
+- `docs/README.md` (doc registry section: `make docs-registry-check`, the merge-driver mechanism,
+  and the manual fallback)
 
 ## Related Stored Artifacts
 None.
