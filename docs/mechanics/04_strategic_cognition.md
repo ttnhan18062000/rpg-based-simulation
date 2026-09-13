@@ -1726,7 +1726,16 @@ implicit in the resolver:
     producer is `src/engine/movement.py`'s `combat_escape="EVASIVE_SUCCESS"` property update, a
     separate real call site from `src/engine/combat.py`'s resolver): a weak signal, a small
     correction only. Disengaging tells an observer something (the target chose to leave rather than
-    finish the fight) but far less than a resolved outcome does. **Wired one-sided, deliberately**:
+    finish the fight) but far less than a resolved outcome does. **Signed deliberately: magnitude
+    (`estimated_power`) is left untouched; only `confidence` rises and `uncertainty` falls, both by
+    a small, fixed amount.** An entity flees because its *existing* estimate already reads the
+    target as dangerous — if `FLED` pushed the estimate further up, the correction would confirm
+    the very belief that caused the flight (high estimate → flee → estimate rises → flee more
+    readily → estimate rises again), letting an entity become progressively more afraid of
+    something it has never actually fought, purely from its own avoidance. Holding magnitude fixed
+    while only firming up confidence captures "I got a closer look and survived" without that
+    self-confirming loop — the combat-resolution branches above remain the only thing that moves
+    magnitude meaningfully. **Wired one-sided, deliberately**:
     the fleeing entity learns a `"FLED"` correction about each real hostile it evaded
     (`apply_fled_learning()` in `src/domains/combat_engagement/learning_outcome.py`), but the
     reciprocal (each evaded hostile learning about the fleeing entity) is not written. Unlike the

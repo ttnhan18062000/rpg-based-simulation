@@ -72,9 +72,12 @@ def test_fled_produces_a_real_weak_correction():
         tick=3,
     )
 
-    # A real, but small, correction -- power estimate itself is untouched (fleeing reveals no
-    # directional signal about strength), only confidence/uncertainty move, and by less than any
-    # of the resolved-outcome corrections.
+    # A real, but small, correction -- power estimate itself is untouched, deliberately (Sec
+    # 13.5a): an entity flees because its existing estimate already reads the target as
+    # dangerous, so nudging the estimate UP on FLED would confirm the very belief that caused
+    # the flight, letting fear escalate purely from an entity's own avoidance with no real fight
+    # ever occurring. Only confidence/uncertainty move, and by less than any resolved-outcome
+    # correction.
     assert mem_updated.estimated_power == 25.0
     assert mem_updated.confidence > mem_initial.confidence
     assert mem_updated.uncertainty < mem_initial.uncertainty
