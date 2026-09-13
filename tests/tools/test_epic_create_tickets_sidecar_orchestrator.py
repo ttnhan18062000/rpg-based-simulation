@@ -9,11 +9,12 @@ untouched). Neither workflow file is executed (no JS test runner exists in this 
 
 Covers:
 - implement-epic.js: a new `writeSidecar(seq, phase, agentName)` helper, closing over a hoisted
-  `batchRunId` (declared once, before the Discover `agent()` call), wired at its 4 real top-level
-  `agent()` call sites using a disjoint, monotonic NEGATIVE seq range (-1..-4) — never positive,
-  since `batchEvents` already occupies seq=1..N under the same run_id (the
-  TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION bug class a prior draft of this ticket's
-  plan reintroduced and architecture review caught).
+  `batchRunId` (declared once, before the Discover `agent()` call), wired at its 5 real top-level
+  `agent()` call sites using a disjoint NEGATIVE seq range (-1..-5, in file order -1/-2/-3/-5/-4 —
+  see TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING, which added -5 for the epic-close step
+  between the pre-existing -3 and -4 sites) — never positive, since `batchEvents` already occupies
+  seq=1..N under the same run_id (the TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION bug class
+  a prior draft of this ticket's plan reintroduced and architecture review caught).
 - create-tickets.js: the same 4-arg helper, using this file's own `events.length + 1` seq
   numbering, wired at 4 real sites (comprehend, structure, write-sequence, link-epic) and
   EXCLUDED at 3 (writeMonitoring's own agent() call — mirrors implement-ticket.js's own permanent
@@ -63,6 +64,7 @@ _EPIC_COVERED_ADJACENCY = [
     "await writeSidecar(-2, 'Implement', 'batch-monitoring-write')\nawait agent(",
     "await writeSidecar(-3, 'Implement', 'folder-cleanup')\n  await agent(",
     "await writeSidecar(-4, 'Report', 'tracking-doc-update')\n  const trackingDocResult = await agent(",
+    "await writeSidecar(-5, 'Implement', 'epic-close')\n  await agent(",
 ]
 
 _CREATE_TICKETS_COVERED_ADJACENCY = [
@@ -73,7 +75,7 @@ _CREATE_TICKETS_COVERED_ADJACENCY = [
 ]
 
 
-def test_implement_epic_writeSidecar_precedes_each_of_its_4_covered_agent_calls():
+def test_implement_epic_writeSidecar_precedes_each_of_its_5_covered_agent_calls():
     source = _read_epic_source()
     for adjacency in _EPIC_COVERED_ADJACENCY:
         assert adjacency in source, f"expected adjacency not found: {adjacency!r}"
@@ -86,7 +88,7 @@ def test_create_tickets_writeSidecar_precedes_each_of_its_4_covered_agent_calls(
 
 
 # ---------------------------------------------------------------------------
-# 3. implement-epic.js's collision fix — exact literal seq values -1/-2/-3/-4
+# 3. implement-epic.js's collision fix — exact literal seq values -1/-2/-3/-5/-4
 #    (in that order), never a positive/colliding value. Plus exactly one
 #    batchRunId declaration, hoisted before Discover's agent( call.
 # ---------------------------------------------------------------------------
@@ -96,7 +98,11 @@ def test_implement_epic_writeSidecar_calls_use_exact_negative_seq_literals_in_or
     source = _read_epic_source()
     calls = re.findall(r"await writeSidecar\((-?\d+), '([^']+)', '([^']+)'\)", source)
     seqs = [int(c[0]) for c in calls]
-    assert seqs == [-1, -2, -3, -4], f"expected exactly [-1, -2, -3, -4] in order, got {seqs}"
+    # -5 (epic-close, TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING) sits in the file BEFORE -4
+    # (tracking-doc-update): epic-close runs at the end of the Implement phase (mirroring
+    # folder-cleanup, which immediately precedes it), while tracking-doc-update runs later, in
+    # the Report phase. Source order, not numeric magnitude, is what this test pins.
+    assert seqs == [-1, -2, -3, -5, -4], f"expected exactly [-1, -2, -3, -5, -4] in order, got {seqs}"
 
 
 def test_implement_epic_has_exactly_one_batchRunId_declaration_hoisted_before_discover():

@@ -410,6 +410,45 @@ Return "done".`,
   )
 }
 
+// ─── Epic ticket close (epic_id mode, all children done) ─────────────────────
+// TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING: `epic_id` mode had no equivalent of the
+// folder-cleanup block above — every epic ticket previously reached tickets/done/ by hand or in a
+// batch commit (confirmed in that ticket's investigation.md, citing
+// TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT's own finding of 91.7% frontmatter drift
+// on implement-epic-run epics). Mirrors the folder-cleanup block's own shape and bookkeeping tone
+// — only `epic_id` mode ever has a real epic ticket file to close (folder mode's own
+// epic_ticket_path is always "").
+
+if (batchStatus === 'DONE' && epicId) {
+  await writeSidecar(-5, 'Implement', 'epic-close')
+  await agent(
+    `Close the epic ticket itself now that all its children are done. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
+
+The epic "${epicId}" (at "${discovery.epic_ticket_path}") had all ${ticketIds.length} child ticket(s) implemented successfully. Close the epic ticket file itself:
+
+Step 1 — read the epic ticket at "${discovery.epic_ticket_path}".
+  If the file does not exist (already closed in a prior run), print "SKIPPED: epic ticket file not found" and return "done".
+
+Step 2 — update the file:
+  - In the YAML frontmatter block at the top: set \`phase: done\` and \`status: historical\`
+  - Set the body ## Status section to DONE (not EPIC_SCOPED — EPIC_SCOPED is this ticket's own
+    mid-flight scoped-but-not-yet-resolved meaning, not a terminal state for an epic every one of
+    whose children is confirmed done — see TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING
+    investigation.md §4)
+  - If a "## Completion Summary" section exists and is empty, fill it with one sentence noting all ${ticketIds.length} child ticket(s) completed via this batch run.
+
+Step 3 — move the file:
+  If the epic ticket is not already under tickets/done/, move it there:
+    Run: mv "${discovery.epic_ticket_path}" "tickets/done/${epicId}.md"
+  If it is already under tickets/done/ (already closed in a prior run), skip this step.
+
+Step 4 — print "Closed epic ${epicId} -> tickets/done/${epicId}.md" (or the SKIPPED message from Step 1/3 if applicable).
+
+Return "done".`,
+    { label: 'epic-close' }
+  )
+}
+
 // ─── Phase 3: Report ──────────────────────────────────────────────────────────
 
 phase('Report')

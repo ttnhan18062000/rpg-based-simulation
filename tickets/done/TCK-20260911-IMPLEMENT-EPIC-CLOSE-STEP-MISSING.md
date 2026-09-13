@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING
-phase: open
+phase: done
 date: 2026-09-11
 tags: [workflows, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [workflows, process-improvement]
 `implement-epic.js` has no step that closes the epic ticket itself once all children are done
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -119,8 +119,75 @@ ticket's `standard` tier.
 
 ## Implementation Notes
 
+See `staging_artifacts/TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING/investigation.md` and
+`plan.md` for the full design-question writeup (3 options considered, Option A chosen) and the
+DONE-vs-EPIC_SCOPED evidence. Summary: `implement-epic.js`'s `epic_id` mode had zero equivalent
+of its own `folder`-mode cleanup step — every epic ticket previously reached `tickets/done/` by
+hand or in a batch commit. Added a new guarded block (`if (batchStatus === 'DONE' && epicId)`)
+immediately after the existing folder-cleanup block, mirroring its shape: an agent instruction
+that sets the epic ticket's frontmatter to `phase: done`/`status: historical`, its body
+`## Status` to `DONE` (not `EPIC_SCOPED` — that value's real meaning is the mid-flight
+just-scoped state, confirmed via a live-corpus check: 46/52 already-closed epics already read
+`DONE`, and the 6 exceptions are drift from this exact missing-step bug surfacing in the
+body-status field), and moves the file to `tickets/done/{epic_id}.md`. Uses a fresh, non-colliding
+negative sidecar seq (`-5`), confirmed against every existing `writeSidecar(-N, ...)` call site
+before picking it.
+
 ## Test Summary
+
+New `tests/tools/test_implement_epic_close_step.py` (7 tests, all passing): raw-source-text pin
+against `implement-epic.js`, following `test_finalize_phase_status_instruction_pin.py`'s
+established pattern (no JS test runner exists for `.claude/workflows/*.js`). Covers: frontmatter
+instruction present, body-status instruction says DONE with the EPIC_SCOPED contrast still
+explained, `mv` instruction present, guard is `epicId` not `folder`, ordering (after
+folder-cleanup, before `phase('Report')`), bookkeeping "never fail the workflow" framing, and the
+fresh `-5` sidecar seq.
+
+Updated `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` (pre-existing pin over
+implement-epic.js's writeSidecar call set/order) to include the new `-5` call at its correct file
+position (`-1, -2, -3, -5, -4` — epic-close runs in the Implement phase, before the Report-phase
+tracking-doc-update step, despite -5 > -4 numerically) — this was a real, legitimate update to a
+test whose previous expectation genuinely became outdated by this ticket's own new code, not a
+gate-evasion edit.
+
+Manually verified (per test_plan.md, since no JS test runner can execute the agent-prompt path
+directly): `check_ticket_location_consistency()` called with the exact frontmatter values
+(`status: historical`, `phase: done`) this step's instruction specifies returns `[]` (passes),
+confirming AC4 without a real `implement-epic` run.
+
+Full suite run: `tests/tools/test_implement_epic_close_step.py`,
+`test_epic_create_tickets_sidecar_orchestrator.py`, `test_epic_tracking_doc_static.py`,
+`test_monitoring_bypass_fix.py`, `test_record_events.py`,
+`test_retrieval_event_wrapper_single_source.py`, `test_step0_ts_orchestrator.py`,
+`test_workflow_meta_conformance.py` — 104 passed, 1 xfailed (pre-existing, unrelated), 0 failed.
+
+Parity: skip-eligible (no `src/` path changed; this is pure agent-orchestration/workflow-tooling
+logic with no simulation-mechanics relevance). `find_p0_intersection` against the changed files
+returned `[]` — no P0 ledger entry depends on any of them.
 
 ## Files Changed
 
+- `.claude/workflows/implement-epic.js` — new epic-close step (guarded `epicId` block, after
+  folder-cleanup, before Report phase)
+- `tests/tools/test_implement_epic_close_step.py` (new) — 7 raw-source-text pin tests
+- `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` — updated pre-existing
+  writeSidecar call-set/order pin to include the new `-5` call
+- `docs/ai/workflows.md` — updated `implement-epic`'s Implement-phase row to describe the new
+  epic-close behavior
+
 ## Completion Summary
+
+Added the missing epic-ticket close step to `implement-epic.js`'s `epic_id` mode, closing the gap
+`TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT`'s investigation identified (91.7% of
+`implement-epic`-run epics drifted because nothing ever closed the epic ticket file itself).
+Investigation confirmed this required a genuine design decision, not a one-line wiring fix: no
+existing code path was a near-miss for this — `implement-ticket.js`'s epic-tier path runs once,
+before any children exist, and cannot detect completion; `create-tickets.js`'s Link phase fires at
+ticket creation, the wrong lifecycle stage entirely. Of the three options considered (extend
+`implement-epic.js`'s `epic_id` mode; add a re-entrant close phase to `implement-ticket.js`; a
+separate close command), the first was chosen: it's the only one that reuses state
+`implement-epic.js` already computes (`batchStatus`, `epicId`, `discovery.epic_ticket_path`)
+instead of duplicating or inventing new infrastructure, and it makes `epic_id` mode symmetric with
+the `folder`-mode cleanup step that already ships. Also settled the pre-existing DONE-vs-EPIC_SCOPED
+body-status ambiguity for closed epics with live-corpus evidence (46/52 already `DONE`) rather than
+picking one arbitrarily. No src/ or simulation-mechanics code touched; Parity is skip-eligible.
