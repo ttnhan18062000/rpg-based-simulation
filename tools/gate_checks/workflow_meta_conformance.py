@@ -43,11 +43,16 @@ for _dir in (str(_TOOLS_DIR), str(_GATE_CHECKS_DIR), str(_AGENT_MONITORING_DIR))
     if _dir not in sys.path:
         sys.path.insert(0, _dir)
 
-from done_checker_static import _jsonl_rows_for_run_id  # noqa: E402
+from done_checker_static import _jsonl_rows_for_run_id_across_weeks  # noqa: E402
 from vocabulary import infer_workflow  # noqa: E402
 
 DEFAULT_WORKFLOWS_DIR = Path(".claude/workflows")
-DEFAULT_EVENTS_PATH = Path("agent-monitoring/events.jsonl")
+# Shard root, not a single file (TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS):
+# agent-monitoring/events.jsonl was retired by TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC in
+# favor of agent-monitoring/data/<ISO-week>/events.jsonl shards. Named DEFAULT_EVENTS_ROOT (not
+# _PATH) to make the directory-root semantics explicit at the call site, matching
+# done_checker_static.py's own `data_root` convention for the same underlying helper.
+DEFAULT_EVENTS_ROOT = Path("agent-monitoring/data")
 DEFAULT_SKILLS_DIR = Path(".claude/skills")
 
 _PHASES_BLOCK_START_RE = re.compile(r"phases:\s*\[")
@@ -188,15 +193,18 @@ def check_skill_doc_covers_meta_phases(
 
 
 def collect_run_event_statuses(
-    run_id: str, events_path: Path = DEFAULT_EVENTS_PATH
+    run_id: str, data_root: Path = DEFAULT_EVENTS_ROOT
 ) -> Dict[str, Set[str]]:
-    """Return {phase: {status, ...}} for every event row matching `run_id`.
+    """Return {phase: {status, ...}} for every event row matching `run_id`, across every
+    `data_root/<week>/events.jsonl` weekly shard.
 
-    Reuses `done_checker_static.py::_jsonl_rows_for_run_id` rather than reimplementing JSONL-by-
-    run_id filtering. Returns `{}` (never raises) when `run_id` has zero rows in `events_path`.
+    Reuses `done_checker_static.py::_jsonl_rows_for_run_id_across_weeks` rather than
+    reimplementing shard-glob-and-filter a third time (it already exists for
+    `check_monitoring_write_recorded`'s identical run_id/events.jsonl lookup). Returns `{}`
+    (never raises) when `run_id` has zero rows anywhere under `data_root`.
     """
     statuses: Dict[str, Set[str]] = {}
-    for row in _jsonl_rows_for_run_id(events_path, run_id):
+    for row in _jsonl_rows_for_run_id_across_weeks(data_root, "events.jsonl", run_id):
         phase = row.get("phase")
         if phase is None:
             continue
@@ -207,7 +215,7 @@ def collect_run_event_statuses(
 def check_workflow_meta_conformance(
     run_id: str,
     workflows_dir: Path = DEFAULT_WORKFLOWS_DIR,
-    events_path: Path = DEFAULT_EVENTS_PATH,
+    data_root: Path = DEFAULT_EVENTS_ROOT,
 ) -> List[dict]:
     """Aggregate cross-reference: which of this run's workflow's declared phases have zero events.
 
@@ -234,7 +242,7 @@ def check_workflow_meta_conformance(
         }]
 
     declared_phases = extract_meta_phases(source_path)
-    event_statuses = collect_run_event_statuses(run_id, events_path)
+    event_statuses = collect_run_event_statuses(run_id, data_root)
 
     results = []
     for phase in declared_phases:
