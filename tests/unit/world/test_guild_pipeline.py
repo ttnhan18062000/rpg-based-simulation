@@ -24,7 +24,14 @@ def test_guild_visit_leads():
     strat_upd = upd.entity_updates[99].strategic
     assert len(strat_upd.leads_add_or_update) > 0
     assert strat_upd.leads_add_or_update[0].subject == "iron_ore"
-    
+
+    # TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH: `detail` must be a real,
+    # parseable "x,y" coordinate matching node.position -- not narrative text -- since every real
+    # material-blocker consumer (intelligence.py, redirection.py, scorers.py) parses it as such.
+    lead = strat_upd.leads_add_or_update[0]
+    coords = tuple(map(float, lead.detail.split(',')))
+    assert coords == (50.0, 50.0)
+
     # 3. Apply
     state = ApplyPath.apply_generation(state, upd)
     assert len(state.entities[99].strategic.leads) > 0

@@ -255,7 +255,15 @@ class DetourSuggestionSystem:
         # Material blocker + location lead for the material
         if blocker.kind == "material" and lead.kind == "location":
             if not lead.detail: return False
-            return blocker.subject in lead.detail or lead.subject == "resource_node"
+            # TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH: was
+            # `blocker.subject in lead.detail` -- worked only by coincidence, when a lead's own
+            # narrative `detail` text happened to contain the blocker's subject string. `detail`
+            # now carries a parseable coordinate, not prose, so that substring would never match
+            # again. The `blocker.subject == lead.subject` case is already handled by the direct
+            # match above; what's left here is the generic "resource_node" subject fallback,
+            # matched on `lead.subject` like the other real material-blocker consumers
+            # (intelligence.py, redirection.py, scorers.py) do, not by scanning `detail` text.
+            return lead.subject == "resource_node"
             
         # Inventory capacity blocker -> Location lead for town/shop/home
         if blocker.kind == "inventory" and blocker.subject == "capacity":
