@@ -12,8 +12,8 @@ tags: [testing, registry]
 # TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP
 
 ## Title
-A `status: verified` parity ledger entry with `test_path: null` has now recurred three times in one
-file — sweep the whole ledger for the same defect rather than fixing them one citation at a time
+A `status: verified` parity ledger entry can name a class that no longer exists in `src/` at all —
+a dangling citation, not merely a missing one
 
 ## Status
 OPEN
@@ -32,63 +32,81 @@ P1
 `docs/parity_ledger/progression.yaml`: `status: verified`, P0, with `test_path: null` and
 `proof_type: null` — a claim marked verified that was never actually backed by a test in this
 repository's history. `TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED`'s own investigation
-found the identical shape twice more **in the same file**: `PROG-014` (`status: verified`, P0,
-`test_path: null`, citing a dead V1 concept, `StatsProxy`, that doesn't exist in `src/`), and a
-third, adjacent instance in `docs/compliance/checklist.md`'s `PROG-086` entry (a citation of a
-citation — a test file that doesn't exist and a line reference to unrelated code).
+found `PROG-014` in the same file, marked `verified`, P0, `test_path: null` — but with a sharper,
+more specific defect than a bare missing citation: it names `StatsProxy`, a class confirmed to
+have **zero presence anywhere in `src/`** (a dead V1-era concept). This is a *dangling* reference,
+not merely an absent one — the entry doesn't just lack evidence, it points at something that
+doesn't exist to be evidence for. A related, adjacent instance in `docs/compliance/checklist.md`'s
+`PROG-086` entry (a citation of a citation — a test file that doesn't exist and a line reference to
+unrelated code) was corrected in the same ticket.
 
-Three occurrences of the same defect shape in one file, found across two unrelated investigations
-months apart, is a pattern, not a coincidence. Per peer review: "if the ledger says 'verified'
-where nothing was ever verified, everything downstream that trusts it inherits the error, and this
-whole arc has been paying for exactly that." This ticket exists to find out how far the pattern
-extends before more downstream work inherits a false premise from a citation nobody re-checked.
+**Scope split agreed with `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`
+(`agent-working-design`, branch `parity-writer-invalid-corpus`), 2026-09-13.** That ticket measured
+the ledger corpus-wide and found **1677 of 2187 entries (77%)** would be rejected by
+`validate_entry()` if forced through it — 1536 with no `test_path` at all (1307 P0/`verified`), the
+same bare-missing-citation shape `PROG-001`/`PROG-014` share, at a scale this ticket never
+attempted to measure. **This ticket does not own that corpus-wide policy question.** It is narrowed
+to the distinct defect it actually found and can speak to with real evidence: an entry marked
+`verified` whose named class no longer exists in `src/` at all — a dangling reference, not a bare
+missing one. `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` owns the 1307-entry policy
+question (freeze as historical baseline / flag as distinct reportable state / new status value);
+this ticket does not duplicate that measurement or pre-empt that decision.
 
-**This ticket records the need for the sweep. It does not run the sweep** — per peer instruction,
-filed now, picked up later.
+**This ticket records the need for the fix. It does not implement it** — filed now, picked up
+later.
 
 ## Scope
-- Query `docs/parity_ledger/*.yaml` (all shards, not just `progression.yaml`) for every entry where
-  `status == "verified"` and `test_path is None` (and/or `proof_type is None`) — the exact shape of
-  all three confirmed defects so far.
-- For each hit, verify independently (do not trust the entry's own `v2_evidence` prose) whether a
-  real test actually backs the claim, following the same method
-  `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` used (git-history inventory of test paths
-  ever committed, not just a present-day grep, to catch a test that existed once and was later
-  deleted along with the claim's own justification).
-- Correct each confirmed-stale entry via `tools/parity_ledger_writer.py` (the sanctioned,
+- Query `docs/parity_ledger/*.yaml` (all shards, not just `progression.yaml`) for `status:
+  verified` entries whose named class/function/module is **confirmed absent from `src/` entirely**
+  (not merely uncited) — grep each named symbol before concluding it's dangling, the same
+  verification `PROG-014` got before this ticket was filed.
+- For each hit, follow the same method `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` used:
+  a git-history inventory of the named symbol/path, not just a present-day grep, to distinguish
+  "never existed" from "existed once, was deleted along with the claim's own justification."
+- Correct each confirmed dangling entry via `tools/parity_ledger_writer.py` (the sanctioned,
   schema-validating write path) — never raw YAML edits — following `PROG-001`'s and `PROG-014`'s
-  own corrected shape (`status: missing`, `support_boundary` explaining what was actually found).
-- Note whether `docs/compliance/checklist.md` (a separate, non-schema-validated citation format)
-  has its own version of this defect at a scale worth a follow-up sweep — this ticket's own
-  PROG-086 fix was a single spot-correction, not a sweep of that file.
+  own corrected shape (`status: missing` or `status: divergent`, `support_boundary` recording the
+  dangling reference as evidence of what was actually found).
+- **Never repoint a dangling citation at a plausible-looking substitute** — the same constraint
+  `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` states for its own corpus: an entry whose
+  named class is gone becomes `missing`/`divergent` with the dangling name recorded as evidence,
+  never silently re-cited against something else that merely looks related.
 
 ## Out of Scope
+- **The corpus-wide policy question for entries with no `test_path` at all** (1307 P0/`verified`
+  entries, ~60% of the ledger) — owned by `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`.
+  This ticket does not re-measure that corpus or pre-empt that ticket's own policy decision.
 - Fixing the underlying gameplay/mechanics gap any individual stale entry describes (e.g. whether
   veterancy should modify combat) — that's each entry's own disposition question, decided
   separately, same as `PROG-014`'s.
-- Auditing `divergent`/`unsupported`/`legacy_verified` statuses for the same defect shape — this
-  ticket is scoped to `verified` + null `test_path` specifically, the exact shape confirmed three
-  times so far. A different status combination showing the same trust-erosion pattern is a
-  separate finding for whoever runs this sweep to surface, not pre-scoped here.
+- `docs/compliance/checklist.md`'s own citation-quality question at scale — this ticket's own
+  `PROG-086` fix (in the veterancy ticket that found it) was a single spot-correction, not a claim
+  that file needs its own sweep.
 
 ## Acceptance Criteria
-- [ ] A complete, ledger-wide count of `status: verified` entries with `test_path: null` (and/or
-      `proof_type: null`), broken down by shard file.
-- [ ] Each hit independently re-verified (not assumed stale from the pattern alone) before
-      correction — some may turn out to be genuinely verified via a citation format this scan
-      doesn't recognize (e.g. `proof_type: parity` entries that verify via structural comparison
-      rather than a single test file).
-- [ ] Every confirmed-stale entry corrected via `parity_ledger_writer.py`, in a single batch commit
-      referencing this ticket.
-- [ ] A determination (not necessarily a full sweep) of whether `docs/compliance/checklist.md` has
-      the same defect at meaningful scale, to decide whether it needs its own follow-up ticket.
+- [ ] A ledger-wide count of `status: verified` entries whose named class/symbol is confirmed
+      absent from `src/` (dangling), distinct from — and not double-counting — the bare-missing-
+      citation corpus `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` already measured.
+- [ ] Each hit independently re-verified via git history, not present-day grep alone, before
+      correction.
+- [ ] Every confirmed dangling entry corrected via `parity_ledger_writer.py`, recording the
+      dangling reference as evidence, never repointed at a plausible substitute.
+- [ ] Cross-referenced explicitly against `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` so a
+      reader of either ticket understands which owns which defect.
 
 ## Related Tickets
-- `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (done — found and corrected the first
-  instance, `PROG-001`; the method this sweep should reuse)
-- `TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED` (done — found and corrected the second and
-  third instances, `PROG-014` and checklist.md's `PROG-086`, while investigating a separate
-  declared-intent question; the ticket whose own finding surfaced this pattern is worth sweeping)
+- `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (done — found and corrected `PROG-001`, a
+  bare-missing-citation instance; the git-history verification method this ticket should reuse)
+- `TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED` (done — found and corrected `PROG-014`
+  (dangling `StatsProxy` reference) and checklist.md's `PROG-086`, while investigating a separate
+  declared-intent question)
+- `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (open, `agent-working-design`, branch
+  `parity-writer-invalid-corpus`) — **owns the corpus-wide policy question** (1307 P0/`verified`
+  entries with no `test_path` at all, ~60% of the ledger). Scope split agreed 2026-09-13: that
+  ticket covers bare-missing-citation entries at corpus scale; this ticket covers the narrower,
+  distinct dangling-reference defect (`PROG-014` naming a class that no longer exists) this arc's
+  own investigation actually found and verified. Never repoint a dangling citation at a plausible
+  substitute — same constraint stated in both tickets.
 
 ## Related Docs
 - `docs/parity_ledger/schema.json` (the schema `parity_ledger_writer.py`'s `validate_entry()`
@@ -107,9 +125,10 @@ None yet — standard tier, staging artifacts created when picked up.
   for querying `status`/`test_path` across all shards without hand-parsing YAML)
 
 ## Assumptions / Open Questions
-- Whether the full ledger has dozens of these or just a handful more is genuinely unknown — this
-  ticket exists specifically because nobody has looked at the whole ledger for this shape yet, only
-  at the two files two unrelated investigations happened to touch.
+- Whether other dangling-class-reference entries exist beyond `PROG-014` is genuinely unknown —
+  this ticket's own scan (confirmed absent from `src/`, not merely uncited) is a different query
+  than `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`'s own measurement, so its 1677-entry
+  count does not directly answer how many of those are also dangling versus merely uncited.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
