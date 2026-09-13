@@ -1707,10 +1707,11 @@ implicit in the resolver:
   - **`KILL`/`DEFEAT` where this participant is the survivor**: `own_hp_ratio_after >=
     NEAR_DEATH_HP_RATIO` → `"WON_EASY"` (the opponent was weaker than estimated; correct downward).
     `own_hp_ratio_after < NEAR_DEATH_HP_RATIO` → `"NEAR_DEATH"` (the opponent was far stronger than
-    estimated; correct upward, hard). `NEAR_DEATH_HP_RATIO` reuses the same threshold this repo
-    already uses elsewhere for near-death classification (`_NEAR_DEATH_THRESHOLD = 0.2`,
-    `src/observability/event_extractor.py`) rather than inventing a second one — recorded as D-12
-    in `docs/plans/deferred_tuning_decisions_register.md` alongside D-11.
+    estimated; correct upward, hard). `NEAR_DEATH_HP_RATIO` (`src/core/combat_constants.py`) reuses
+    the same `0.2` threshold this repo already uses elsewhere for near-death classification
+    (`src/observability/event_extractor.py`/`event_shapers.py`, both re-exporting the same shared
+    constant now, rather than each independently defining/re-deriving it) — recorded as D-12 in
+    `docs/plans/deferred_tuning_decisions_register.md` alongside D-11.
   - **`KILL`/`DEFEAT`/`PERMADEATH` where this participant is the one who died**: `"LOST"` (the
     opponent was stronger than expected) — regardless of `REBIRTH`/`PERMADEATH`'s own downstream
     lifecycle branching, which is orthogonal to what was *learned*. A dead entity still writing this

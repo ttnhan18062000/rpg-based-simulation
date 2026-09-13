@@ -372,10 +372,19 @@ to make then, against real data — not a reason to have withheld the axis choic
 
 §13.5a classifies a winning participant's own combat-learning outcome as `"WON_EASY"` or
 `"NEAR_DEATH"` based on whether that participant's own post-exchange `hp_ratio` fell below a
-threshold. Reuses the existing `_NEAR_DEATH_THRESHOLD = 0.2` constant already live in
-`src/observability/event_extractor.py` (and mirrored in `src/observability/event_shapers.py`)
-rather than inventing a second, potentially-divergent near-death cutoff for this feature — the
-same reuse-over-reinvention discipline as D-11's own `atk + def_stat * 0.5` term.
+threshold. This reuses the same `0.2` cutoff `src/observability/event_extractor.py`/
+`event_shapers.py` already used privately as `_NEAR_DEATH_THRESHOLD` — but that constant lived in
+an observability module, and importing it into `src/domains/combat_engagement/power.py` (gameplay
+logic) would have pointed a real mechanic at a telemetry module, the reverse of this repo's own
+`domains -> observability` import boundary (`tests/architecture/test_phase18_import_boundaries.py`).
+**Moved to a new neutral home, `src/core/combat_constants.py::NEAR_DEATH_HP_RATIO`** (same
+precedent as `src/core/social_constants.py::ALLY_TRUST_THRESHOLD`, built for exactly this class of
+domains/observability shared-constant problem) — both `event_extractor.py` (now re-exporting its
+own former `_NEAR_DEATH_THRESHOLD` name from the shared constant, so `event_shapers.py`'s existing
+import needed no change) and `power.py` read the same single source of truth. Reusing the *value*
+rather than inventing a second, potentially-divergent near-death cutoff is the same discipline as
+D-11's own `atk + def_stat * 0.5` term; moving its *home* to fix the import direction is this
+ticket's own addition on top of that reuse.
 
 **What is genuinely undecided:** whether `0.2` is the right cutoff *specifically for what counts as
 a costly enough win to trigger a hard upward correction* is not evidence-backed the way D-11's axis
