@@ -421,8 +421,11 @@ class TestStep3aLockstepWithSchemaJson:
 
 class TestStep3aRealLegacyEntryNeedsExplanation:
     """The 15 pre-existing P0 missing/unsupported entries with null test_path (e.g. SUB-325)
-    become writable by Step 3a but are not rewritten by this ticket -- this documents that they
-    still need a real support_boundary explanation, not just permission to omit test_path."""
+    became writable by Step 3a (TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT) but were
+    left unrewritten by that ticket -- documented then as still needing a real support_boundary
+    explanation, not just permission to omit test_path. TCK-20260913-PARITY-LEDGER-WRITER-
+    INVALID-CORPUS closed that gap for all 15 (its own "Class 3"), SUB-325 included -- this class
+    now documents the fixed state instead of the pre-fix one."""
 
     @staticmethod
     def _sub_325():
@@ -432,22 +435,33 @@ class TestStep3aRealLegacyEntryNeedsExplanation:
                 return entry
         raise AssertionError("SUB-325 entry not found in docs/parity_ledger/substrate.yaml")
 
-    def test_sub_325_as_is_still_rejected(self):
+    def test_sub_325_now_has_a_real_support_boundary(self):
+        """TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS wrote a real support_boundary for
+        this entry via write_entry() (never a raw YAML edit) -- it cites the pre-existing, deeper
+        investigation in docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md
+        (confirmed: no incremental add-to-cell API exists in the real rebuild-based
+        WorldIndexService architecture; the entry's claim framing is mismatched against that
+        architecture, not a missing feature) rather than resolving or re-investigating it, since
+        that plan already scopes its own reclassification follow-up."""
         entry = self._sub_325()
-        assert entry["support_boundary"] is None
+        assert entry["support_boundary"], "SUB-325 must carry a real, non-empty support_boundary"
+        assert entry["support_boundary"] != "no explanation recorded", (
+            "a real explanation was findable for this entry -- the generic placeholder must not "
+            "be used where something concrete is actually known"
+        )
+
+        validate_entry(entry)  # must not raise -- Step 3a's rule is satisfied for real now
+
+    def test_sub_325_synthetic_entry_without_support_boundary_is_still_rejected(self):
+        """Step 3a's own rule (a P0 missing/unsupported entry needs support_boundary) is still
+        real and still enforced -- proven independently of SUB-325's own current, already-fixed
+        state, using a synthetic copy with the field stripped back out."""
+        entry = dict(self._sub_325())
+        entry["support_boundary"] = None
 
         with pytest.raises(EntryValidationError) as excinfo:
             validate_entry(entry)
         assert excinfo.value.field == "support_boundary"
-
-    def test_sub_325_passes_once_support_boundary_is_added(self):
-        entry = dict(self._sub_325())
-        entry["support_boundary"] = (
-            "Implementation proven via exhaustive checklist audit Phase 1-11; no automated "
-            "test_path citation exists for this claim."
-        )
-
-        validate_entry(entry)  # must not raise
 
 
 _INFRASTRUCTURE_LEDGER_PATH = (

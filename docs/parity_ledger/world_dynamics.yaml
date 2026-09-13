@@ -1623,8 +1623,7 @@
     \ within 500 ticks on these worlds); SHADOW mode confirmed 0 WorldDynamics-specific\
     \ deliveries"
   proof_type: parity
-  test_path: tests/unit/observability/test_event_shapers_world_dynamics.py (25 tests,
-    all passing)
+  test_path: tests/unit/observability/test_event_shapers_world_dynamics.py
   divergence_note: null
   support_boundary: "SHADOW-mode construction only \u2014 live delivery is a separate,\
     \ later Phase 2 cutover ticket's scope. See docs/parity_ledger/infrastructure.yaml's\
@@ -1652,9 +1651,8 @@
     the return QuestKind.EXPLORE fallthrough, so type: "escort" content no longer
     falls through to EXPLORE. TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING.'
   proof_type: parity
-  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_helper_enum_mappers
-    (assert get_quest_kind("escort") == QuestKind.ESCORT); tests/unit/quest/test_quest_system.py::test_quest_kind_escort_enum_value_is_new_member_only
-    (enum-membership/ordinal-stability guard)
+  test_path: tests/unit/worldbuilding/test_world_compiler.py::test_helper_enum_mappers;
+    tests/unit/quest/test_quest_system.py::test_quest_kind_escort_enum_value_is_new_member_only
   divergence_note: null
   support_boundary: null
 - id: WORLD-117

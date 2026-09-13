@@ -3387,7 +3387,16 @@
   proof_type: null
   test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Status is `missing`. A deeper, pre-existing investigation (docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md)
+    already covered this exact claim and confirmed no incremental add-to-cell API
+    exists in the real architecture -- src/engine/world_index.py''s WorldIndexService
+    rebuilds the index wholesale from state each tick (dirty-tracking decides rebuild-vs-reuse-cached,
+    never incremental mutation). That plan''s own conclusion: this entry''s claim
+    framing itself is mismatched against the real architecture, not a missing feature
+    -- the true, checkable claim is closer to "a rebuild reflects newly-added entities
+    correctly". Reclassifying the claim text and giving it a real test_path is that
+    plan''s own scoped follow-up (not yet broken into child tickets); not done here
+    to avoid duplicating that already-planned work.'
 - id: SUB-326
   text: Spatial index can remove entity/object from cell.
   status: missing
@@ -3397,7 +3406,12 @@
   proof_type: null
   test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Status is `missing`. Same situation as SUB-325 (see that entry's
+    support_boundary) -- docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md
+    already found no incremental remove-from-cell API exists in the real, rebuild-based
+    WorldIndexService architecture; this entry's claim framing is mismatched against
+    that architecture, not a missing feature. Reclassification is that plan's own
+    scoped follow-up, not duplicated here.
 - id: SUB-327
   text: 'Spatial index reflects an entity''s current cell after it moves, via a real,
     verified rebuild-from-scratch on each construction -- not an atomic per-entity
@@ -4303,10 +4317,9 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_biological_state_changed_fires_through_real_kernel_tick_once,
-    ::test_stamina_changed_fires_through_real_kernel_tick_once, ::test_vitals_events_suppressed_in_light_and_long_run_modes
-
-    '
+  test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_biological_state_changed_fires_through_real_kernel_tick_once;
+    tests/unit/observability/test_event_extractor_vitals.py::test_stamina_changed_fires_through_real_kernel_tick_once;
+    tests/unit/observability/test_event_extractor_vitals.py::test_vitals_events_suppressed_in_light_and_long_run_modes'
   divergence_note: null
   support_boundary: 'Emitted events are classified `unscored_intentional` (docs/simulation_quality/
     event_type_coverage.md Section 5) -- not wired to any SimQ pillar, a deliberate
@@ -4350,10 +4363,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_attributes.py (6 tests,
-    all passing)
-
-    '
+  test_path: tests/unit/observability/test_event_extractor_attributes.py
   divergence_note: null
   support_boundary: 'Emitted event classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
     Section 5) -- not wired to any SimQ pillar. The tangential finding noted here
@@ -4404,10 +4414,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_equipment.py (9 tests,
-    all passing)
-
-    '
+  test_path: tests/unit/observability/test_event_extractor_equipment.py
   divergence_note: null
   support_boundary: 'Emitted events classified `unscored_intentional` (docs/simulation_quality/
     event_type_coverage.md Section 5) -- not wired to any SimQ pillar (ECONOMY flagged
@@ -4475,11 +4482,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_identity.py (9 tests,
-    8 hard-assert + 1 soft-warn for the real-kernel `recipe_learned` attempt, all
-    passing)
-
-    '
+  test_path: tests/unit/observability/test_event_extractor_identity.py
   divergence_note: null
   support_boundary: 'Emitted events classified `unscored_intentional` (docs/simulation_quality/
     event_type_coverage.md Section 5) -- not wired to any SimQ pillar (the ticket''s
@@ -4517,10 +4520,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/combat/test_readiness_regen.py (readiness_speed set via .combat()
-    throughout)
-
-    '
+  test_path: tests/unit/combat/test_readiness_regen.py
   divergence_note: null
   support_boundary: null
 - id: SUB-380
@@ -4657,16 +4657,14 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/content_semantics/test_personality.py (9 tests), tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_produces_real_nonzero_personality, tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_action_style_correlates_with_bravery, tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_personality_is_deterministic_given_seed, tests/unit/entities/test_archetype_entity_factory.py::
-    test_build_entity_default_seed_backward_compatible, tests/unit/worldassembly/test_entity_spawner_legacy_guard.py
-    (4 tests), tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawned_entities_have_real_nonzero_personality,
-    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawn_from_context_is_deterministic_given_seed,
-    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawn_from_context_different_seeds_differ
-
-    '
+  test_path: 'tests/unit/content_semantics/test_personality.py; tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_produces_real_nonzero_personality; tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_action_style_correlates_with_bravery; tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_personality_is_deterministic_given_seed; tests/unit/entities/test_archetype_entity_factory.py::
+    test_build_entity_default_seed_backward_compatible; tests/unit/worldassembly/test_entity_spawner_legacy_guard.py;
+    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawned_entities_have_real_nonzero_personality;
+    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawn_from_context_is_deterministic_given_seed;
+    tests/integration/worldassembly/test_world_entity_spawner.py:: test_spawn_from_context_different_seeds_differ'
   divergence_note: "See intentional_divergences.md \xA72.39 (WorldEntitySpawner/ArchetypeEntityFactory\
     \ Zero Personality, Bug Fix).\n"
   support_boundary: 'Real impact still confirmed limited to certification/integration
@@ -4975,9 +4973,7 @@
     a hardcoded field list that predated place_id, causing a runtime AttributeError
     under the tick-apply pipeline before the fix)'
   proof_type: parity
-  test_path: 'tests/unit/core/test_place_state.py (9 tests: construction, all-kind
-    construction, transformation trail, membership list, back-reference on navigation/building,
-    canonical-hash participation for PlaceState/RegionState.places/NavigationComponent.place_id)'
+  test_path: tests/unit/core/test_place_state.py
   divergence_note: null
   support_boundary: Schema only -- no WorldCompiler wiring, no content migration,
     no world recompilation. PlaceState/PlaceKind exist and are canonically covered,
@@ -5014,12 +5010,8 @@
     Paths" section (confirms both paths funnel through the same compile() call, verified
     directly rather than assumed)
   proof_type: parity
-  test_path: 'tests/unit/worldbuilding/test_place_wiring.py (6 tests: Direct path
-    construction, multiple places per region, non-Place-shaped content unchanged,
-    mixed Place-shaped/legacy regions coexisting, canonical-hash participation, invalid
-    kind rejected at schema level), tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_wires_place_shaped_region,
+  test_path: tests/unit/worldbuilding/test_place_wiring.py; tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_wires_place_shaped_region;
     tests/unit/worldassembly/test_resolver.py::test_resolve_module_contribution_region_without_places_yields_empty_list
-    (Composition path + prefix-namespacing + backward-compat coverage)'
   divergence_note: null
   support_boundary: 'Compiler capability only -- no content file under data/content/world_modules/
     declares places: yet, so no existing world''s compiled AuthoritativeState or state_hash
