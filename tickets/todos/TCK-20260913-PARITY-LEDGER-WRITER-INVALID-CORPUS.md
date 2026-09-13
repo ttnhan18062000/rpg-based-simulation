@@ -99,8 +99,14 @@ are not lost a second time.
     backwards. A ratchet (`live_missing` may never *increase*) is the obvious candidate and still
     catches the regression the test exists to catch, but read the four precedent tickets first: they
     may record a reason for equality that the comments do not.
-  Raised by `rpg-feature-planning`, 2026-09-13, who offered it either as their standalone ticket or as
-  part of this scope; taken here because it gates this sweep directly.
+  **Fix the baseline before deciding the Class 1 policy, not alongside it.** While exact equality
+  stands, options (b)/(c) look expensive purely because the test would break — which biases the
+  decision toward (a) for a reason that has nothing to do with what is right for the ledger. A ratchet
+  (`live_missing` may never *increase*) permits the downward movement (b)/(c) would cause, so once the
+  baseline is fixed the policy question is unconstrained and can be decided on its merits. Treat this
+  ticket's own recommendation of (a) as provisional until then, and re-state it after.
+  Raised by `rpg-feature-planning`, 2026-09-13, who then handed their standalone `layer: testing`
+  ticket to this one — the baseline question is owned here, with no parallel ticket open.
 - Check the "never sweep" constraint (`TCK-20260705-GATE-DET-MECHANICS-AUDITOR`) is respected: it
   forbids running pytest across the corpus. Pure validation runs no tests and is cheap (2187 entries,
   sub-second), so it is not a sweep in that sense — state this rather than assume it.
