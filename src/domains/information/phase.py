@@ -18,6 +18,7 @@ from src.domains.information.schema import InformationQuery, InformationSourcePr
 from src.domains.information.router import InformationQueryRouter
 from src.domains.information.normalizer import InformationResponseNormalizer
 from src.domains.information.assimilation import InformationAssimilationService
+from src.domains.information.lead_location import resolve_location_lead_region_id
 from src.domains.information.resolver import InformationIntentResolver
 from src.engine.intent.action_intent import ActionIntent
 
@@ -145,7 +146,7 @@ class InformationBeliefPhase:
 
                 if obs_event is None and lead.kind == "location" and lead.certainty in (
                     LeadCertainty.VAGUE, LeadCertainty.APPROXIMATE
-                ) and lead.detail == actor.navigation.region_id:
+                ) and resolve_location_lead_region_id(lead, state) == actor.navigation.region_id:
                     region_id = actor.navigation.region_id
                     region = state.regions.get(region_id) if region_id else None
                     has_active_scar = False
