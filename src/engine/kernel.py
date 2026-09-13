@@ -601,6 +601,12 @@ class Kernel:
                     logger.warning(f"Mid-tick emergency throttle triggered at {elapsed:.2f}ms. Dropping {len(self._final_results) - i} items.")
                     self._status.record_dropped_work(len(self._final_results) - i)
                     from src.core.governance import RuntimeMode
+                    # This wall-clock-dependent throttle (known, still-deferred determinism
+                    # issue under audit_mode=False) directly forces RuntimeMode.DEGRADED, same
+                    # as ResourceGovernor._get_indicated_mode()'s own tick_compute_ms signal
+                    # (governor.py) -- see that comment for the real movement-candidacy
+                    # consequence this reaches (TCK-20260908-DEGRADED-POLICY-NONURGENT-
+                    # MOVEMENT-STARVATION).
                     self._governor.force_mode(RuntimeMode.DEGRADED, self._status, self._state.tick)
                     try:
                         from src.observability.alerts.manager import AlertsManager

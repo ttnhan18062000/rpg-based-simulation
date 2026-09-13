@@ -6,6 +6,7 @@ from src.core.builder import V2EntityBuilder
 from src.core.updates import StateUpdate, EntityUpdate, NavigationUpdate
 from src.core.movement_modes import MovementMode
 from src.engine.candidate_selector import MovementCandidateSelector
+from src.engine.phase_governor import ScanPolicy
 
 
 @pytest.fixture
@@ -256,3 +257,107 @@ def test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target
     update = StateUpdate()
     selected = MovementCandidateSelector.select(state, update, [20])
     assert 20 in selected
+
+
+def _starved_style_entity(entity_id: int) -> "EntityState":
+    """A non-urgent entity with a real, unreached target and no active goal/interaction/project
+    -- the exact TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION precondition. Uses
+    PURSUE mode so WANDER's own separate cadence gate never interferes with the EXACT_DIRTY
+    assertions below."""
+    return (
+        V2EntityBuilder(entity_id)
+        .kind("ACTOR")
+        .location(10.0, 10.0)
+        .navigation(target=(20.0, 20.0), movement_mode=MovementMode.PURSUE)
+        .combat(alive=True, readiness=100.0, move_cost=10.0)
+        .lifecycle(active=True)
+        .build()
+    )
+
+
+def test_exact_dirty_excludes_starved_entity_off_its_reduced_cadence_tick():
+    entity = _starved_style_entity(1)
+    modulo = MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
+    # tick + entity_id chosen deliberately NOT a multiple of the cadence.
+    tick = modulo - 1 - 1  # (tick + 1) % modulo == modulo - 1 != 0
+    state = AuthoritativeState(tick=tick, seed=42, entities={1: entity})
+    update = StateUpdate()
+    selected = MovementCandidateSelector.select(
+        state, update, [1], scan_policy=ScanPolicy.EXACT_DIRTY
+    )
+    assert 1 not in selected
+
+
+def test_exact_dirty_admits_starved_entity_on_its_reduced_cadence_tick():
+    """The fix: an entity that can never satisfy any of the 5 urgency conditions on its own
+    (a real, unreached target, no dirty/interaction/project/tile-block signal) used to be
+    permanently excluded under EXACT_DIRTY -- a genuine starvation loop, not throttling. It must
+    now be admitted on its own reduced cadence, guaranteeing eventual movement."""
+    entity = _starved_style_entity(1)
+    modulo = MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
+    tick = modulo - 1  # (tick + entity_id) % modulo == 0
+    state = AuthoritativeState(tick=tick, seed=42, entities={1: entity})
+    update = StateUpdate()
+    selected = MovementCandidateSelector.select(
+        state, update, [1], scan_policy=ScanPolicy.EXACT_DIRTY
+    )
+    assert 1 in selected
+
+
+def test_exact_dirty_reduced_cadence_still_respects_real_readiness_gate():
+    """The reduced-cadence admission is not a bypass of real gameplay mechanics -- an entity
+    that genuinely cannot act this tick (low readiness) stays excluded even on its cadence
+    tick."""
+    entity = (
+        V2EntityBuilder(1)
+        .kind("ACTOR")
+        .location(10.0, 10.0)
+        .navigation(target=(20.0, 20.0), movement_mode=MovementMode.PURSUE)
+        .combat(alive=True, readiness=5.0, move_cost=10.0)
+        .lifecycle(active=True)
+        .build()
+    )
+    modulo = MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
+    tick = modulo - 1
+    state = AuthoritativeState(tick=tick, seed=42, entities={1: entity})
+    update = StateUpdate()
+    selected = MovementCandidateSelector.select(
+        state, update, [1], scan_policy=ScanPolicy.EXACT_DIRTY
+    )
+    assert 1 not in selected
+
+
+def test_exact_dirty_still_admits_genuinely_urgent_entities_every_tick():
+    """EXACT_DIRTY's own real urgency bypasses (target_changed/is_dirty/tile_blocked/
+    interaction_req/strategic_req) are untouched by the reduced-cadence fix -- a genuinely urgent
+    entity is still selected every tick, not only on its reduced cadence."""
+    entity = _starved_style_entity(1)
+    modulo = MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
+    off_cadence_tick = modulo - 1 - 1
+    state = AuthoritativeState(tick=off_cadence_tick, seed=42, entities={1: entity})
+    update = StateUpdate(
+        entity_updates={
+            1: EntityUpdate(entity_id=1, navigation=NavigationUpdate(target_set=(40.0, 40.0)))
+        }
+    )
+    selected = MovementCandidateSelector.select(
+        state, update, [1], scan_policy=ScanPolicy.EXACT_DIRTY
+    )
+    assert 1 in selected
+
+
+def test_exact_dirty_admits_only_a_bounded_fraction_per_tick():
+    """The whole point of a reduced cadence rather than full re-admission: under real sustained
+    load (many starved entities), only a small, bounded fraction should be admitted on any single
+    tick -- not all of them, which would defeat EXACT_DIRTY's own work-shedding purpose."""
+    modulo = MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
+    entities = {i: _starved_style_entity(i) for i in range(1, 201)}
+    tick = 1000
+    state = AuthoritativeState(tick=tick, seed=42, entities=entities)
+    update = StateUpdate()
+    selected = MovementCandidateSelector.select(
+        state, update, list(entities.keys()), budget=10_000, scan_policy=ScanPolicy.EXACT_DIRTY
+    )
+    expected = {i for i in entities if (tick + i) % modulo == 0}
+    assert set(selected) == expected
+    assert 0 < len(selected) < len(entities)

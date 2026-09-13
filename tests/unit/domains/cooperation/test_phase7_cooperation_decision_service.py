@@ -226,3 +226,84 @@ def test_risky_objective_selects_defer_when_no_partner_exists():
     
     decision = CooperationDecisionService.select(req, (need,), (candidate_record,), (fit_rep,), state)
     assert decision.selected_posture == CooperationPosture.DEFER_NO_PARTNER
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION: JOIN_PARTY accept-side wiring.
+# Contracts are only ever stored on the OFFERING entity's own strategic.contracts (never
+# mirrored to the target), so the receiving entity must scan state.entities for offers
+# addressed to it.
+# ---------------------------------------------------------------------------
+
+def _recruitment_offer(source_id: int, target_id: int, tick: int, expiry_tick: int = 0) -> ContractState:
+    return ContractState(
+        id=f"cnt_recruit_{source_id}_{target_id}_{tick}",
+        kind=ContractKind.RECRUITMENT,
+        source_id=source_id,
+        target_id=target_id,
+        terms={"daily_pay": 0, "duration": 100},
+        status=ContractStatus.OFFERED,
+        created_tick=tick,
+        expiry_tick=expiry_tick,
+    )
+
+
+def test_find_pending_incoming_offer_finds_real_offer_targeting_entity():
+    offerer = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).build())
+    target = (V2EntityBuilder(2).kind("HERO").location(1.0, 1.0).build())
+    contract = _recruitment_offer(source_id=1, target_id=2, tick=5, expiry_tick=15)
+    from dataclasses import replace
+    offerer = replace(offerer, strategic=replace(offerer.strategic, contracts={contract.id: contract}))
+    state = AuthoritativeState(entities={1: offerer, 2: target}, tick=10, seed=123)
+
+    result = CooperationDecisionService.find_pending_incoming_offer(target, state)
+    assert result == (1, contract.id)
+
+
+def test_find_pending_incoming_offer_none_when_target_already_grouped():
+    from dataclasses import replace
+    offerer = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).build())
+    target = (V2EntityBuilder(2).kind("HERO").location(1.0, 1.0).identity(group_id=99).build())
+    contract = _recruitment_offer(source_id=1, target_id=2, tick=5, expiry_tick=15)
+    offerer = replace(offerer, strategic=replace(offerer.strategic, contracts={contract.id: contract}))
+    state = AuthoritativeState(entities={1: offerer, 2: target}, tick=10, seed=123)
+
+    assert CooperationDecisionService.find_pending_incoming_offer(target, state) is None
+
+
+def test_find_pending_incoming_offer_none_when_offer_expired():
+    from dataclasses import replace
+    offerer = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).build())
+    target = (V2EntityBuilder(2).kind("HERO").location(1.0, 1.0).build())
+    contract = _recruitment_offer(source_id=1, target_id=2, tick=5, expiry_tick=8)
+    offerer = replace(offerer, strategic=replace(offerer.strategic, contracts={contract.id: contract}))
+    state = AuthoritativeState(entities={1: offerer, 2: target}, tick=10, seed=123)
+
+    assert CooperationDecisionService.find_pending_incoming_offer(target, state) is None
+
+
+def test_find_pending_incoming_offer_none_when_offerer_dead():
+    from dataclasses import replace
+    offerer = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).combat(hp=0, max_hp=100, alive=False).build())
+    target = (V2EntityBuilder(2).kind("HERO").location(1.0, 1.0).build())
+    contract = _recruitment_offer(source_id=1, target_id=2, tick=5, expiry_tick=15)
+    offerer = replace(offerer, strategic=replace(offerer.strategic, contracts={contract.id: contract}))
+    state = AuthoritativeState(entities={1: offerer, 2: target}, tick=10, seed=123)
+
+    assert CooperationDecisionService.find_pending_incoming_offer(target, state) is None
+
+
+def test_select_returns_join_party_when_pending_offer_exists_even_with_no_help_needs():
+    """A pending incoming offer takes priority over the entity's own help-needs evaluation --
+    an entity with zero help needs of its own must still be able to accept."""
+    from dataclasses import replace
+    offerer = (V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).build())
+    target = (V2EntityBuilder(2).kind("HERO").location(1.0, 1.0).build())
+    contract = _recruitment_offer(source_id=1, target_id=2, tick=5, expiry_tick=15)
+    offerer = replace(offerer, strategic=replace(offerer.strategic, contracts={contract.id: contract}))
+    state = AuthoritativeState(entities={1: offerer, 2: target}, tick=10, seed=123)
+
+    decision = CooperationDecisionService.select(target, (), (), (), state)
+    assert decision.selected_posture == CooperationPosture.JOIN_PARTY
+    assert decision.selected_partner_id == 1
+    assert decision.trace["accepted_contract_id"] == contract.id

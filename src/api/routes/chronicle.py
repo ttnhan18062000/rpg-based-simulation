@@ -30,8 +30,13 @@ router = APIRouter(prefix="/chronicle", tags=["Chronicle"])
 
 # ── Chronicle Registry ─────────────────────────────────────────────────────────
 # Maps campaign_id → chronicle JSON dict (as returned by ChronicleRenderer.render_json()).
-# Populated by register_chronicle() after a successful ChronicleCompiler.compile().
-# In tests, inject directly via register_chronicle().
+# Intended to be populated by register_chronicle() after a successful ChronicleCompiler.compile().
+# TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION: confirmed neither
+# half of that chain has a real production caller -- ChronicleCompiler() is only ever instantiated
+# in its own module and two test files; register_chronicle() is only ever called from this module
+# and its own test file. Nothing populates this registry in a real server today, so the endpoints
+# below return empty/404 for every real request, always. Only tests inject directly via
+# register_chronicle(). See the ticket above for the open disposition question.
 _CHRONICLE_REGISTRY: Dict[str, dict] = {}
 
 
@@ -47,11 +52,6 @@ def register_chronicle(campaign_id: str, data: dict) -> None:
               loaded from chronicle.json on disk.
     """
     _CHRONICLE_REGISTRY[campaign_id] = data
-
-
-def unregister_chronicle(campaign_id: str) -> None:
-    """Remove a chronicle from the registry."""
-    _CHRONICLE_REGISTRY.pop(campaign_id, None)
 
 
 def _clear_registry() -> None:

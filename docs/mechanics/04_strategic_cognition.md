@@ -1277,14 +1277,18 @@ adjacent block. The only field carrying a delta into that block is the new
   returns a `ClanUpdate` with the same delta. It is deliberately kept separate from
   `resolve_contract_outcome()` because that method's `Tuple[StrategicUpdate,
   List[SocialUpdate]]` return shape is unpacked by every existing caller/test and must not
-  change. **Disclosed gap, not fixed by this ticket:** `process_active_contracts()`
-  (`src/systems/social_systems/contracts.py:294-300`, the only production caller of
-  `resolve_contract_outcome()`, wired as pipeline phase `"active_contracts"`,
-  `src/engine/pipeline.py:407`) always calls it with `success=True` and never passes
-  `betrayal=True`/`betrayer_id` -- this pre-existing condition means
-  `compute_betrayal_clan_reputation_update()` is reachable only from direct unit tests
-  today, not from any live simulation run. A future ticket owns wiring a real
-  betrayal-detection trigger into `process_active_contracts()`.
+  change. **Disclosed gap, not fixed by this ticket. Updated 2026-09-13
+  (`TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION`):** the production caller of
+  `resolve_contract_outcome()` used to be `ContractService.process_active_contracts()`, but
+  that phase was confirmed unreachable in normal sequential tick progression (a separate,
+  earlier-running phase always transitioned the contract away from `ACTIVE` first) and was
+  deleted as a duplicate mechanism. The sole production caller today is
+  `ContractLifecyclePhase.resolve_expirations()` (`src/engine/pipeline_phases/contracts.py`,
+  wired as pipeline phase `"contracts"`, `src/engine/pipeline.py:222`), which always calls it
+  with `success=True` and never passes `betrayal=True`/`betrayer_id` -- this pre-existing
+  condition means `compute_betrayal_clan_reputation_update()` is reachable only from direct
+  unit tests today, not from any live simulation run. A future ticket owns wiring a real
+  betrayal-detection trigger into `resolve_expirations()`.
 
 **Shared constant.** `CLAN_REPUTATION_MISCONDUCT_DELTA: float = -0.25`
 (`src/systems/social_systems/clan_lifecycle.py`) is used by both producers -- no source
@@ -1338,7 +1342,7 @@ clan-reputation code paths above.
 
 **Out of scope (deliberate).** No `PublicReputationProfile`/`ReputationUpdateService`
 wiring (confirmed dead code, zero call sites). No entity->clan index structure. No live
-betrayal-detection trigger in `process_active_contracts()` (see above). No change to
+betrayal-detection trigger in `resolve_expirations()` (see above). No change to
 `_appraise_clan()`'s CLAN-join gate.
 
 **Source:** `src/core/state.py` (`ClanState.clan_reputation`); `src/core/updates.py`

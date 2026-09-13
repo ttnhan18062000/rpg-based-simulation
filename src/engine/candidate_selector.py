@@ -17,6 +17,18 @@ class MovementCandidateSelector:
     Milestone 17 Law: Enforces candidate budget and adaptive scan policy under pressure.
     """
 
+    # Under ScanPolicy.EXACT_DIRTY, an entity with a real, unreached navigation.target but none
+    # of the 5 urgency conditions (target_changed/is_dirty/tile_blocked/interaction_req/
+    # strategic_req) is admitted on this cadence rather than never at all -- see the EXACT_DIRTY
+    # branch in select() (TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION). Every
+    # urgency condition is change-driven; an entity that never changes never re-qualifies, which
+    # without this is permanent starvation, not degraded movement. Deliberately much sparser than
+    # WANDER's own cadence (3/6, see below) -- EXACT_DIRTY exists specifically because compute is
+    # already over budget, so this must guarantee eventual movement while adding only a small,
+    # bounded number of extra candidates per tick, not re-admit most entities and defeat the
+    # policy's own work-shedding purpose.
+    EXACT_DIRTY_STARVED_CADENCE_MODULO = 20
+
     @staticmethod
     def resolve_live_tracking_target(
         entity: "EntityState",
@@ -134,14 +146,21 @@ class MovementCandidateSelector:
                 urgent_selected.add(e_id)
                 continue
 
-            # Non-urgent candidate evaluation:
-            if scan_policy == ScanPolicy.EXACT_DIRTY:
-                # Under heavy degraded mode, skip non-urgent moves entirely
-                continue
-
-            # Otherwise, evaluate readiness gating and movement mode cadence
+            # Non-urgent candidate evaluation. Readiness/move-cost is a real gameplay
+            # constraint, not a policy-tuning knob -- applies uniformly regardless of scan
+            # policy.
             move_cost = entity.combat.move_cost if entity.combat.move_cost > 0 else 10.0
             if entity.combat.readiness < move_cost:
+                continue
+
+            if scan_policy == ScanPolicy.EXACT_DIRTY:
+                # Under heavy degraded mode, most non-urgent moves are skipped to shed work --
+                # but this entity is known (from the check above) to have a real, unreached
+                # target, so admit it on a sparse, bounded cadence instead of never (see
+                # EXACT_DIRTY_STARVED_CADENCE_MODULO's own docstring).
+                if (state.tick + e_id) % MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO != 0:
+                    continue
+                normal_selected.append(e_id)
                 continue
 
             if mode == MovementMode.WANDER:

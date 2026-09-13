@@ -1334,6 +1334,11 @@ class AuthoritativeState:
     _regions_global_bounds: Any = field(default=None, repr=False, compare=False)
     _has_hostiles_or_dead_cache: Any = field(default=None, repr=False, compare=False)
     _has_contracts_cache: Any = field(default=None, repr=False, compare=False)
+    # TCK-20260908-READMODEL-CACHE-PASSIVE-DECAY-STALENESS: the real, apply-time-computed DirtySet
+    # (includes passive-decay-only entities, unlike the pre-apply `update.dirty_set` used for phase
+    # gating/movement cache) -- set by ApplyPath.apply_generation(), read by ReadModelCache.update()
+    # as a supplementary invalidation source. Never widens update.dirty_set's own meaning.
+    _apply_time_dirty_set: Any = field(default=None, repr=False, compare=False)
     groups: Dict[int, GroupRecord] = field(default_factory=dict)     # Social coordination truth
     terrain: Dict[tuple[int, int], str] = field(default_factory=dict) # Local tile truth (WALL, FOREST, etc)
     global_resources: Dict[str, float] = field(default_factory=dict)
@@ -1440,6 +1445,10 @@ class AuthoritativeState:
         object.__setattr__(self, "_region_index_cache", None)
         object.__setattr__(self, "_building_region_map_cache", None)
         object.__setattr__(self, "_regions_global_bounds", None)
+        # Reset on every construction (including replace()) so a state built via any path other
+        # than ApplyPath.apply_generation() never carries forward a stale, differently-scoped
+        # apply-time dirty set. apply_generation() unconditionally repopulates it afterward.
+        object.__setattr__(self, "_apply_time_dirty_set", None)
         object.__setattr__(self, "entities", _readonly_mapping(self.entities))
         has_hostile = False
         has_contracts = False
@@ -1516,6 +1525,7 @@ class AuthoritativeState:
             processed_transaction_ids=shallow_freeze(self.processed_transaction_ids),
             _has_hostiles_or_dead_cache=self._has_hostiles_or_dead_cache,
             _has_contracts_cache=self._has_contracts_cache,
+            _apply_time_dirty_set=self._apply_time_dirty_set,
             _active_nodes_grid=self._active_nodes_grid,
             _building_map_cache=self._building_map_cache,
             occupancy_snapshot=self.occupancy_snapshot,

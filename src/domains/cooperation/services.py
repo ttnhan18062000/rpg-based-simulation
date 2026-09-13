@@ -25,6 +25,44 @@ class CooperationDecisionResult:
 
 class CooperationDecisionService:
     @staticmethod
+    def find_pending_incoming_offer(
+        entity: EntityState,
+        state: AuthoritativeState,
+    ) -> Optional[Tuple[int, str]]:
+        """
+        TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION: the accept-side counterpart to
+        CooperationIntentBridge.map_decision()'s REQUEST_HELP/HIRE_SUPPORT offer creation.
+        Contracts are only ever stored on the OFFERING entity's own strategic.contracts (never
+        mirrored to the target), so the receiving entity has to scan for offers addressed to it.
+
+        Returns (offering_entity_id, contract_id) for the first live, unexpired OFFERED
+        RECRUITMENT contract targeting `entity`, deterministically ordered (by offering entity ID,
+        then contract ID), or None. Minimal acceptance precondition per this ticket's own scope
+        (a pending offer exists and there's no disqualifying reason) -- the offering entity must be
+        alive and active, and `entity` itself must not already be in a group. Richer acceptance
+        criteria (trust, need matching, faction, existing commitments) are explicitly deferred --
+        see docs/plans/deferred_tuning_decisions_register.md.
+        """
+        if entity.identity.group_id is not None:
+            return None
+        for offerer_id in sorted(state.entities.keys()):
+            if offerer_id == entity.id:
+                continue
+            offerer = state.entities[offerer_id]
+            if not offerer.lifecycle.active or not offerer.combat.alive:
+                continue
+            for c_id in sorted(offerer.strategic.contracts.keys()):
+                contract = offerer.strategic.contracts[c_id]
+                if (
+                    contract.kind == ContractKind.RECRUITMENT
+                    and contract.status == ContractStatus.OFFERED
+                    and contract.target_id == entity.id
+                    and (contract.expiry_tick <= 0 or contract.expiry_tick > state.tick)
+                ):
+                    return offerer_id, c_id
+        return None
+
+    @staticmethod
     def select(
         entity: EntityState,
         help_needs: Tuple[HelpNeed, ...],
@@ -34,7 +72,22 @@ class CooperationDecisionService:
     ) -> CooperationDecisionResult:
         trace = {}
         rejected = {}
-        
+
+        # 0. Pending incoming recruitment offer takes priority over pursuing (or deferring) this
+        # entity's own help needs -- responding to another entity's request is a distinct decision
+        # from "do I need help for my own objective."
+        pending_offer = CooperationDecisionService.find_pending_incoming_offer(entity, state)
+        if pending_offer is not None:
+            offerer_id, contract_id = pending_offer
+            return CooperationDecisionResult(
+                entity_id=entity.id,
+                selected_posture=CooperationPosture.JOIN_PARTY,
+                selected_partner_id=offerer_id,
+                fit_score=1.0,
+                rejected_partners={},
+                trace={"accepted_contract_id": contract_id, "reason": "Accepting pending recruitment offer"},
+            )
+
         # 1. Easy objective / no needs selects SOLO
         if not help_needs:
             return CooperationDecisionResult(

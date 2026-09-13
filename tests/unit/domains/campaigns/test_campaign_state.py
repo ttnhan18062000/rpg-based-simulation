@@ -216,6 +216,70 @@ def test_entity_carry_forward_from_dict_missing_identity_keys():
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-EARNED-PROGRESSION-NOT-CARRIED-FORWARD:
+# EntityCarryForward.attributes/unspent_ap/learned_skills/active_breakthroughs/class_id/
+# veterancy_points/veterancy_rank/known_recipes round-trip, including the missing-key case
+# for pre-existing records.
+# ---------------------------------------------------------------------------
+
+def test_entity_carry_forward_earned_progression_fields_default():
+    entity = _make_entity()
+    assert entity.attributes == {}
+    assert entity.unspent_ap == 0
+    assert entity.learned_skills == ()
+    assert entity.active_breakthroughs == ()
+    assert entity.class_id == "NOVICE"
+    assert entity.veterancy_points == 0
+    assert entity.veterancy_rank == 0
+    assert entity.known_recipes == ()
+
+
+def test_entity_carry_forward_earned_progression_fields_round_trip():
+    entity = dataclasses.replace(
+        _make_entity(),
+        attributes={"strength": 50, "vitality": 50, "endurance": 20, "agility": 5,
+                    "intelligence": 5, "spirit": 5, "wisdom": 5, "perception": 5, "charisma": 5},
+        unspent_ap=15,
+        learned_skills=("fireball", "power_strike"),
+        active_breakthroughs=("iron_will",),
+        class_id="WARRIOR",
+        veterancy_points=7,
+        veterancy_rank=2,
+        known_recipes=("iron_sword_recipe",),
+    )
+    restored = EntityCarryForward.from_dict(entity.to_dict())
+    assert restored.attributes == entity.attributes
+    assert restored.unspent_ap == 15
+    assert restored.learned_skills == ("fireball", "power_strike")
+    assert restored.active_breakthroughs == ("iron_will",)
+    assert restored.class_id == "WARRIOR"
+    assert restored.veterancy_points == 7
+    assert restored.veterancy_rank == 2
+    assert restored.known_recipes == ("iron_sword_recipe",)
+    assert restored == entity
+
+
+def test_entity_carry_forward_from_dict_missing_earned_progression_keys():
+    """Pre-existing serialized records from before these fields existed have none of these
+    keys at all -- from_dict() must not KeyError, and must fall back to the same defaults a
+    bare EntityCarryForward construction would use."""
+    entity = _make_entity()
+    d = entity.to_dict()
+    for key in ("attributes", "unspent_ap", "learned_skills", "active_breakthroughs",
+                "class_id", "veterancy_points", "veterancy_rank", "known_recipes"):
+        del d[key]
+    restored = EntityCarryForward.from_dict(d)
+    assert restored.attributes == {}
+    assert restored.unspent_ap == 0
+    assert restored.learned_skills == ()
+    assert restored.active_breakthroughs == ()
+    assert restored.class_id == "NOVICE"
+    assert restored.veterancy_points == 0
+    assert restored.veterancy_rank == 0
+    assert restored.known_recipes == ()
+
+
+# ---------------------------------------------------------------------------
 # AC-5: FactionCarryForward constructs and round-trips
 # ---------------------------------------------------------------------------
 

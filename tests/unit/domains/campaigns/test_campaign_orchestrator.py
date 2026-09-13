@@ -791,3 +791,136 @@ def test_threaded_information_source_profiles_are_actually_consumable_by_the_rea
         "which matches a material_source query"
     )
     assert any(c.source_id == "town_notice_board" for c in candidates)
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260911-CAMPAIGN-SURVIVOR-EARNED-PROGRESSION-NOT-CARRIED-FORWARD
+# ---------------------------------------------------------------------------
+
+def test_reconstructed_survivor_with_no_carried_progression_gets_default_attribute_stats_not_bare_combat_defaults():
+    """AC: direct confirmation, via a real counterfactual (not code-read reasoning alone), that
+    the pre-fix code returned reconstructed survivors at CombatComponent's bare defaults
+    (max_hp=100/atk=10/def_stat=5) regardless of carried level -- reproduced by temporarily
+    reverting orchestrator.py/state.py to HEAD and re-running this exact scenario before this
+    fix landed; recorded in this ticket's own investigation.md, not re-asserted here as a
+    permanent expectation, since that would pin a defect as the encoded contract going forward.
+
+    Confirms the ticket's own root-cause finding directly: level alone has no mechanical effect
+    on combat stats -- a level=20 survivor with no carried attributes/equipment/skills gets
+    exactly the same stats get_effective_stats() would derive for ANY entity with
+    AttributeComponent's own defaults (vitality=5, endurance=5, strength=5, no gear) --
+    max_hp=112 (100 + 5*2 + int(5*0.5)), atk=12 (10 + int(5*0.5) + 0), def_stat=6
+    (5 + int(5*0.3) + 0). NOT the bare CombatComponent default (100/10/5) -- that would mean the
+    recompute never ran at all, which is exactly what pre-fix code did. Getting 112/12/6 instead
+    of 100/10/5 proves the fix's own recompute call now genuinely executes at reconstruction,
+    even when there's nothing real to recompute from."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=20, xp=5000, equipment={}, reputation=0.5, alive=True,
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec(world_id="frontier_living_world"))
+    survivor = state.entities[42]
+
+    assert survivor.identity.evolution_level == 20, "precondition: level really carried"
+    assert survivor.combat.max_hp == 112
+    assert survivor.combat.atk == 12
+    assert survivor.combat.def_stat == 6
+
+
+def test_reconstructed_survivor_combat_stats_reflect_both_earned_attributes_and_carried_equipment():
+    """AC: real fix, proven with a survivor who has BOTH carried equipment and carried
+    (non-default) attributes -- an equipment-only or attributes-only fixture would pass on a
+    half-fix, which this ticket explicitly rejects. Asserts exact expected values (not just
+    "differs from bare default"), which is only possible if both contributions are present and
+    correctly summed via the same LevelingService.recalculate_combat_stats() formula the live
+    tick-time stats_dirty path uses.
+
+    Expected, from recalculate_combat_stats()'s own documented formula:
+      max_hp   = 100 + (vitality=50 * 2) + int(endurance=20 * 0.5) + hp_bonus(0)   = 210
+      atk      = 10  + int(strength=50 * 0.5) + atk_bonus(iron_sword=10)           = 45
+      def_stat = 5   + int(vitality=50 * 0.3) + def_bonus(iron_plate=15)          = 35
+    """
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=20, xp=5000, reputation=0.5, alive=True,
+        equipment={
+            "slots": {"MAIN_HAND": "iron_sword", "TORSO": "iron_plate"},
+            "durability": {},
+        },
+        attributes={
+            "strength": 50, "vitality": 50, "endurance": 20,
+            "agility": 5, "intelligence": 5, "spirit": 5, "wisdom": 5,
+            "perception": 5, "charisma": 5,
+        },
+        class_id="NOVICE",
+        learned_skills=(),
+        active_breakthroughs=(),
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec(world_id="frontier_living_world"))
+    survivor = state.entities[42]
+
+    assert survivor.attributes.strength == 50, "precondition: attributes really carried"
+    assert survivor.equipment.slots, "precondition: equipment really carried"
+
+    assert survivor.combat.max_hp == 210, (
+        f"expected 210 (100 base + 100 vitality + 10 endurance), got {survivor.combat.max_hp} "
+        "-- if this equals the bare default (100), attributes were not carried/applied"
+    )
+    assert survivor.combat.atk == 45, (
+        f"expected 45 (10 base + 25 strength + 10 gear), got {survivor.combat.atk} -- if this "
+        "equals 35 (no gear) or 20 (no attributes), only one contribution landed, not both"
+    )
+    assert survivor.combat.def_stat == 35, (
+        f"expected 35 (5 base + 15 vitality + 15 gear), got {survivor.combat.def_stat} -- if "
+        "this equals 20 (no gear) or 5 (bare default), only one contribution landed, not both"
+    )
+    # hp is set to the newly-derived max_hp (full health) -- survivors are narratively recovered
+    # between episodes (wounds/scars intentionally not carried), not left at the stale default.
+    assert survivor.combat.hp == 210
+
+
+def test_reconstructed_survivor_earned_identity_progression_is_carried():
+    """AC: unspent_ap, learned_skills, active_breakthroughs, class_id, veterancy_points/rank,
+    known_recipes are all carried -- not just attributes/equipment."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=20, xp=5000, equipment={}, reputation=0.5, alive=True,
+        unspent_ap=15,
+        learned_skills=("power_strike", "fireball"),
+        active_breakthroughs=("iron_will",),
+        class_id="WARRIOR",
+        veterancy_points=7,
+        veterancy_rank=2,
+        known_recipes=("iron_sword_recipe",),
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec(world_id="frontier_living_world"))
+    survivor = state.entities[42]
+
+    assert survivor.identity.unspent_ap == 15
+    assert survivor.identity.learned_skills == {"power_strike", "fireball"}
+    assert survivor.identity.active_breakthroughs == {"iron_will"}
+    assert survivor.identity.class_id == "WARRIOR"
+    assert survivor.identity.veterancy_points == 7
+    assert survivor.identity.veterancy_rank == 2
+    assert survivor.identity.known_recipes == {"iron_sword_recipe"}
+
+
+def test_reconstructed_survivor_wounds_and_scars_are_deliberately_reset_not_carried():
+    """Deliberate divergence, not an oversight (per peer review): survivors are narratively
+    recovered/healed between episodes. Confirms a survivor reconstructed after a prior episode
+    still gets fresh (empty) wounds/scars, even though the earned-progression fix above proves
+    the reconstruction path is now capable of carrying real per-entity state forward -- this
+    field pair is excluded on purpose, not because carrying it was never implemented."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    orch.state.persistent_entities[42] = EntityCarryForward(
+        entity_id=42, level=20, xp=5000, equipment={}, reputation=0.5, alive=True,
+    )
+
+    state = orch._build_initial_state(11, _real_episode_spec(world_id="frontier_living_world"))
+    survivor = state.entities[42]
+
+    assert survivor.combat.wounds == []
+    assert survivor.combat.scars == []

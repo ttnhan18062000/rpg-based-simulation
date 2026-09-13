@@ -83,6 +83,17 @@ class ResourceGovernor:
         # 2. DEGRADED (2): High pressure
         if signals.work_debt_total >= profile.max_work_debt * 0.5:
             return RuntimeMode.DEGRADED
+        # Confirmed (real, uninstrumented sustained-load Kernel run, not reasoning alone --
+        # TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION) as the real driver of
+        # ScanPolicy.EXACT_DIRTY, whose own non-urgent movement-candidate exclusion used to be
+        # a genuine, permanent starvation loop for any entity that could never satisfy a
+        # change-driven urgency condition on its own (fixed in candidate_selector.py's own
+        # EXACT_DIRTY branch). This signal is a real, sustained-load-driven wall-clock
+        # measurement, same underlying condition class as (but a structurally separate code
+        # path from) _phase_resolution()'s own mid-tick `should_throttle` abort in kernel.py,
+        # a previously-identified, still-deferred determinism-breaking mechanism -- a future
+        # reader revisiting either should know both reach real gameplay consequences, not only
+        # tick timing.
         if signals.tick_compute_ms >= profile.max_tick_budget_ms:
             return RuntimeMode.DEGRADED
         if signals.worker_utilization >= 0.9 or signals.queue_utilization >= 0.9:
