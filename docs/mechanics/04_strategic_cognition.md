@@ -1690,6 +1690,55 @@ than observation, then engaging something is the natural way to see through a bl
 entity can pass as weak right up until someone actually fights it. Whoever eventually builds
 deception should know this counter already exists by construction, not invent a separate one.
 
+**§13.5a — What each real combat outcome teaches, and about whom (TCK-20260914-COMBAT-ENGAGEMENT-
+PERCEIVED-POWER).** `CombatLearning.learn()`'s own vocabulary (`WON_EASY`/`LOST`/`NEAR_DEATH`/
+`FLED`) answers "what did I learn about that opponent's strength" — a different question from
+`CombatUpdate.outcome_kind`'s own real values (`SURVIVE`/`KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH`/
+`REJECTED`, `src/engine/combat.py`), which only answer "what happened to this entity." The mapping
+between them is a real semantic decision, declared here as law before being built, not left
+implicit in the resolver:
+
+- **The classification is per-participant, keyed off *that participant's own* post-exchange HP
+  ratio and role — never a single shared outcome for both sides.** The user's own worked scenario
+  (§13.6) is decisive: an entity engages, is nearly killed, *survives*, and remembers the target as
+  far stronger than it estimated — a costly win, not a loss. If a `KILL` always mapped to
+  `WON_EASY` for the winner regardless of the winner's own cost, this scenario could never occur,
+  and the feature would have no way to produce the exact behavior it exists for.
+  - **`KILL`/`DEFEAT` where this participant is the survivor**: `own_hp_ratio_after >=
+    NEAR_DEATH_HP_RATIO` → `"WON_EASY"` (the opponent was weaker than estimated; correct downward).
+    `own_hp_ratio_after < NEAR_DEATH_HP_RATIO` → `"NEAR_DEATH"` (the opponent was far stronger than
+    estimated; correct upward, hard). `NEAR_DEATH_HP_RATIO` reuses the same threshold this repo
+    already uses elsewhere for near-death classification (`_NEAR_DEATH_THRESHOLD = 0.2`,
+    `src/observability/event_extractor.py`) rather than inventing a second one — recorded as D-12
+    in `docs/plans/deferred_tuning_decisions_register.md` alongside D-11.
+  - **`KILL`/`DEFEAT`/`PERMADEATH` where this participant is the one who died**: `"LOST"` (the
+    opponent was stronger than expected) — regardless of `REBIRTH`/`PERMADEATH`'s own downstream
+    lifecycle branching, which is orthogonal to what was *learned*. A dead entity still writing this
+    memory is harmless (nothing reads it again) and, under `REBIRTH` specifically, is real signal
+    worth having: an entity remembering what killed it in a prior life is exactly the behavior this
+    feature should produce, not a case to special-case away.
+  - **`SURVIVE`**: inconclusive for both participants — neither side's estimate should move.
+    Manufacturing confidence from a fight that resolved nothing yet (both still standing, still
+    fighting) would corrupt the estimate with a non-event.
+  - **`REJECTED`**: no learning for either participant — nothing happened.
+  - **`FLED`** (a real disengagement, not a `CombatUpdate.outcome_kind` value — its own real
+    producer is `src/engine/movement.py`'s `combat_escape="EVASIVE_SUCCESS"` property update, a
+    separate real call site from `src/engine/combat.py`'s resolver): a weak signal, a small
+    correction only. Disengaging tells an observer something (the target chose to leave rather than
+    finish the fight) but far less than a resolved outcome does.
+- **Both participants learn from the same real exchange — never survivor-only, never attacker-only.**
+  Combat is mutual observation: both sides just received the highest-quality information tier
+  available about each other (§13.5's own "combat is a second, better source" law), so both update.
+  This is also required by the same worked scenario: the entity that flees a fight it is losing is
+  precisely the one that must remember why it fled.
+- **Both writes must be deterministic and order-independent.** Evaluating "attacker learns about
+  defender" before or after "defender learns about attacker" must produce identical results either
+  way — each participant's own `CombatLearning.learn()` call reads only that participant's own
+  existing `OpponentModel` and the real, already-resolved `CombatUpdate` fields; neither call reads
+  the other's in-progress result.
+- **The mapping lives in one place**, tested directly, with the translation explicit — scattering
+  this logic across the resolver call sites is how a second, divergent mapping appears later.
+
 ### 13.6 Memory: a third declared type, its own home, and a load-bearing eviction policy
 
 **`OpponentModel` (`src/domains/combat_engagement/schema.py`) is the durable record — "this thing

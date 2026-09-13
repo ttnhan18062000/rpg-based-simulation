@@ -367,6 +367,30 @@ to make then, against real data — not a reason to have withheld the axis choic
 
 ---
 
+### D-12 · `NEAR_DEATH_HP_RATIO` threshold for combat-learning outcome classification (§13.5a, `04_strategic_cognition.md`)
+**Deferred from:** `TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER`
+
+§13.5a classifies a winning participant's own combat-learning outcome as `"WON_EASY"` or
+`"NEAR_DEATH"` based on whether that participant's own post-exchange `hp_ratio` fell below a
+threshold. Reuses the existing `_NEAR_DEATH_THRESHOLD = 0.2` constant already live in
+`src/observability/event_extractor.py` (and mirrored in `src/observability/event_shapers.py`)
+rather than inventing a second, potentially-divergent near-death cutoff for this feature — the
+same reuse-over-reinvention discipline as D-11's own `atk + def_stat * 0.5` term.
+
+**What is genuinely undecided:** whether `0.2` is the right cutoff *specifically for what counts as
+a costly enough win to trigger a hard upward correction* is not evidence-backed the way D-11's axis
+choice was — it is a defensible reuse of an existing constant, picked to avoid a second number
+rather than derived from real combat-outcome distribution data. A future balance pass, once
+`ENABLE_COMBAT_ENGAGEMENT` is live and real `WON_EASY`/`NEAR_DEATH` classification rates are
+observable, may find this threshold produces too many or too few `NEAR_DEATH` corrections relative
+to real gameplay feel.
+
+**Accepted outcome:** ships with `NEAR_DEATH_HP_RATIO = 0.2` (reusing `_NEAR_DEATH_THRESHOLD`). If
+real-run observation later shows the classification rate feels wrong, that is a tuning decision to
+make then, against real data.
+
+---
+
 ## Related
 
 - `docs/audits/D04_balance_tuning.md` — existing balance audit; this register feeds it.
