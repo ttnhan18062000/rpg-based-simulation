@@ -3387,7 +3387,16 @@
   proof_type: null
   test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Status is `missing`. A deeper, pre-existing investigation (docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md)
+    already covered this exact claim and confirmed no incremental add-to-cell API
+    exists in the real architecture -- src/engine/world_index.py''s WorldIndexService
+    rebuilds the index wholesale from state each tick (dirty-tracking decides rebuild-vs-reuse-cached,
+    never incremental mutation). That plan''s own conclusion: this entry''s claim
+    framing itself is mismatched against the real architecture, not a missing feature
+    -- the true, checkable claim is closer to "a rebuild reflects newly-added entities
+    correctly". Reclassifying the claim text and giving it a real test_path is that
+    plan''s own scoped follow-up (not yet broken into child tickets); not done here
+    to avoid duplicating that already-planned work.'
 - id: SUB-326
   text: Spatial index can remove entity/object from cell.
   status: missing
@@ -3397,7 +3406,12 @@
   proof_type: null
   test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: Status is `missing`. Same situation as SUB-325 (see that entry's
+    support_boundary) -- docs/plans/rpg_design_roadmap/rpg_spatial_index_hardening_plan.md
+    already found no incremental remove-from-cell API exists in the real, rebuild-based
+    WorldIndexService architecture; this entry's claim framing is mismatched against
+    that architecture, not a missing feature. Reclassification is that plan's own
+    scoped follow-up, not duplicated here.
 - id: SUB-327
   text: 'Spatial index reflects an entity''s current cell after it moves, via a real,
     verified rebuild-from-scratch on each construction -- not an atomic per-entity

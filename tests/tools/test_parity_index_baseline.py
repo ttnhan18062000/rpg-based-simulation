@@ -29,6 +29,14 @@ from gate_checks.parity_updater_static import derive_mapping, expected_subsystem
 
 LEDGER_DIR = _REPO_ROOT / "docs" / "parity_ledger"
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "parity_index_baseline"
+
+# Ratchet ceiling for test_baseline_manifest_does_not_coerce_missing_test_path
+# (TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS, 2026-09-13): live_missing may fall below
+# this value freely (a legitimate fix) but must never rise above it (a real regression) -- see
+# that test's own inline comment for the full history and rationale for converting from exact
+# equality. Lower this value in the same commit as a fix that legitimately reduces live_missing,
+# as a courtesy to keep the ratchet tight; never raise it.
+_MISSING_TEST_PATH_CEILING = 1315
 # Path updated (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP, 2026-08-17): this doc was
 # archived to docs/plans/archive/agent_infrastructure/... after TCK-20260731-PARITY-INDEX-BASELINE
 # closed; the original docs/plans/agent_infrastructure/... path no longer exists.
@@ -169,7 +177,32 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # gained a real `test_path` (tests/unit/movement/test_spatial_index.py::
     # test_spatial_grid_rebuild_logic), previously `null` behind a fabricated citation to a
     # nonexistent file/method (TCK-20260905-SUB-327-FABRICATED-CITATION-FIX).
-    assert live_missing == 1315
+    #
+    # Converted from exact equality to a ratchet (TCK-20260913-PARITY-LEDGER-WRITER-INVALID-
+    # CORPUS, 2026-09-13): the comment directly above this line had said for months that this
+    # count "naturally drifts downward ... it is not a frozen invariant" while the assertion
+    # below demanded exact equality anyway -- that contradiction cost four (really six, per a
+    # fuller search: TCK-20260819 x2, TCK-20260830, TCK-20260902, TCK-20260904, TCK-20260905)
+    # baseline-bump hotfix tickets, each one for a legitimate correction that had nothing to do
+    # with a real regression. None of those six tickets' own Completion Summaries record a reason
+    # for exact equality beyond "matching the file's established convention" -- there was no
+    # hidden rationale being protected by keeping it exact. `_MISSING_TEST_PATH_CEILING` below is
+    # the ratchet: a fix that lowers `live_missing` (a `test_path` added, or an entry's status
+    # moved out of `verified`/`divergent`) passes silently, with no hotfix ticket needed; a
+    # regression that raises it above the last-recorded ceiling still fails loudly, which is the
+    # actual thing this test exists to catch. Lower `_MISSING_TEST_PATH_CEILING` to the new real
+    # count after a legitimate fix, in the same commit, so the ratchet stays tight rather than
+    # drifting open -- but this is a courtesy update, not a requirement enforced by the test
+    # itself, since letting it lag behind a decrease is still safe (just a looser ratchet until
+    # someone tightens it), unlike letting it lag behind an increase.
+    assert live_missing <= _MISSING_TEST_PATH_CEILING, (
+        f"live_missing grew to {live_missing}, above the ratchet ceiling of "
+        f"{_MISSING_TEST_PATH_CEILING} -- this is a real regression (a verified/divergent entry "
+        f"lost its test_path, or a new one was added without one), not baseline drift. Never "
+        f"raise _MISSING_TEST_PATH_CEILING to make this pass -- investigate and fix the actual "
+        f"regression instead; the ceiling only ever moves down, as a courtesy update after a "
+        f"real fix, never up."
+    )
 
 
 # ---------------------------------------------------------------------------

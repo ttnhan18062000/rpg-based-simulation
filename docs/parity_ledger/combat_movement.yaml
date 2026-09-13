@@ -1503,7 +1503,9 @@
     Mark unsupported until M8 is scoped.
 
     '
-  support_boundary: null
+  support_boundary: Pre-planned placeholder for a future combat milestone (Phase 8)
+    that has not yet been defined in the design docs -- there is no current implementation
+    for this claim to verify against.
 - id: COMB-134
   text: "Phase 9 owns: (stub \u2014 pre-planned placeholder for Phase 9 combat milestone\
     \ behaviors). Combat milestone documentation currently ends at M7. Phase 9 combat\
@@ -1519,7 +1521,9 @@
     Mark unsupported until M9 is scoped.
 
     '
-  support_boundary: null
+  support_boundary: Pre-planned placeholder for a future combat milestone (Phase 9)
+    that has not yet been defined in the design docs -- there is no current implementation
+    for this claim to verify against.
 - id: COMB-135
   text: "No Part 7 item should be left implicit under a generic bucket like \u201C\
     AI improvements\u201D or \u201Cprogression tuning`"

@@ -108,7 +108,9 @@
   test_path: null
   divergence_note: RabbitMQ removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika (RabbitMQ); TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no disabled-mode code path left for
+    this claim to apply to.
 - id: INFRA-011
   text: '`DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode.'
   status: unsupported
@@ -121,7 +123,9 @@
   test_path: null
   divergence_note: Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no Kafka client code left for a DISABLE_KAFKA=1
+    branch to exist.
 - id: INFRA-012
   text: Kafka client imports do not crash when disabled.
   status: legacy_verified
@@ -154,7 +158,9 @@
   test_path: null
   divergence_note: Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no disabled-mode code path left for
+    this claim to apply to.
 - id: INFRA-015
   text: Redis client behavior remains safe when Redis package or runtime is unavailable.
   status: verified
@@ -189,7 +195,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker transport left to fall
+    back from.
 - id: INFRA-018
   text: Worker pool does not require live RabbitMQ/Kafka to execute local simulation
     behavior.
@@ -243,7 +251,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker infrastructure left
+    to be missing.
 - id: INFRA-023
   text: Chaos-enabled runs survive AI-result drop conditions without immediate simulation
     failure.
@@ -442,7 +452,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker-only metrics path left
+    to rely on.
 - id: INFRA-042
   text: Monitoring compatibility is verified under realistic stack conditions, not
     just unit stubs.
@@ -584,7 +596,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no optional-broker disabled state
+    left to execute headless against.
 - id: INFRA-055
   text: Headless run still produces the expected result artifacts (at minimum replay,
     and where applicable manifest/graph outputs).
@@ -609,7 +623,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no optional broker setup left
+    for the headless runner import to be isolated from.
 - id: INFRA-057
   text: Final-system path remains suitable for regression use rather than demo-only
     use.
@@ -695,7 +711,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker dependency left to be
+    missing.
 - id: INFRA-065
   text: Worker transport degradation falls back safely to local execution.
   status: verified
@@ -770,7 +788,8 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there are no brokers left to be missing.
 - id: INFRA-072
   text: RabbitMQ missing-package path fails closed or disables cleanly.
   status: verified
@@ -813,7 +832,9 @@
   test_path: null
   divergence_note: RabbitMQ removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no broker mode left for a RabbitMQ
+    dispatch contract to be preserved against.
 - id: INFRA-076
   text: Kafka recovery can reconstruct from snapshot plus event stream.
   status: verified
