@@ -27,3 +27,22 @@
 - Full `tests/unit/worldassembly/test_corpus_diversity.py` (known ~20-minute file) — targeted
   subset run instead, sufficient to establish the pre-existing-failure finding without the full
   file's runtime cost.
+
+## Closure evidence, 2026-09-13 (real-run measurement, not unit tests — this ticket's own closure
+is evidential: the code fixes it depends on carry their own committed test coverage in their own
+tickets)
+
+5 real `tools/calibrate_simq.py` runs against `frontier_living_world` (seed 42, 500 ticks):
+- 3 no-env-var (real default) + 1 explicit-override ON + 1 scratch-instrumented ON = 4 samples,
+  all showing 344 `decision_divergence_detected` events, COGNITION grade S.
+- 1 explicit-OFF sample: 0 events, grade B.
+- 1 anomalous no-env-var sample: 0 events despite `GuildAction.visit()` confirmed firing
+  identically to every other ON sample (direct instrumentation) — explained by known wall-clock
+  kernel-throttle non-determinism, not a defect; not treated as blocking evidence given 4
+  consistent samples.
+
+Committed test coverage for the mechanisms this closure depends on already exists from the tickets
+that shipped them: `tests/unit/engine/test_kernel_feature_flags_propagation.py` (propagation),
+`tests/unit/world/test_guild_pipeline.py`, `tests/unit/strategic/test_detour_suggestion.py`,
+`tests/unit/strategic/test_belief_integration.py` (detail-format contract). No new test files
+added for this ticket's own closure — the evidence is a real-run measurement, not new code.

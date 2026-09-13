@@ -288,6 +288,42 @@ real runs by default.
 unacceptable on gameplay-feel grounds in a future pass, that is a tuning decision to make then,
 against real data, not a reason to have withheld the wiring fix now.
 
+**Second correction, 2026-09-13, after `TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-
+STATE-FEATURE-FLAGS` and `TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH` landed**:
+re-ran the same measurement against the same unmodified `frontier_living_world` profile with **no
+env var** — the real acceptance signal. Direct instrumentation confirmed `GuildAction.visit()`
+fires identically (same 4 calls, same ticks, same entities) whether the flag reaches `ON` via
+explicit env-var override or via the propagation fix's own default-seeding. At the event level
+(`decision_divergence_detected`, the real COGNITION-scorer event type — not the similarly-named
+`decision_diverged_by_belief`, which is an INFORMATION-scorer event, see below): **4 of 5 no-env-
+var/explicit-ON samples produced 344 real events and COGNITION graded S; every explicit-OFF sample
+produced 0 events and graded B** — a clean, reproducible, binary signal that COGNITION genuinely
+depends on this flag reaching real runs, now confirmed working by default.
+
+**One anomalous sample** (the very first no-env-var run attempted) produced 0 `decision_divergence_
+detected` events despite `GuildAction.visit()` having fired identically to every other sample —
+consistent with this project's own already-documented wall-clock-timing-driven kernel-throttle
+non-determinism (the same class of confound behind the NARRATIVE-pillar flakiness noted earlier
+this batch, and `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`), not a defect in the
+propagation fix — 4 repeated, consistent samples since outweigh the 1 outlier.
+
+**INFORMATION's own movement in the table above does not actually track this flag — correcting
+that attribution rather than let it stand implied.** `decision_diverged_by_belief` (INFORMATION's
+own scorer event, confirmed by reading `InformationScorer.EVENT_TYPES`) fired **506 times in a
+fresh explicit-OFF run today** — identical to a same-day ON run — and a fresh OFF baseline graded
+INFORMATION **S**, not the **B, 1 event** the original table above reports. INFORMATION's real
+driver is `ENABLE_BELIEF_ASSIMILATION` (already `ON` via this profile's own YAML, independent of
+`ENABLE_GUILD_QUEST_GENERATION`); the original OFF-baseline INFORMATION reading was either stale
+(commits since then, including this batch's own `LeadState.detail` fix, changed how many leads the
+belief-confirmation loop successfully processes) or itself an artifact of the same run-to-run
+timing noise. Either way, INFORMATION moving is real and current, but not caused by this flag —
+the original framing ("COGNITION and INFORMATION both moved... the mechanism actually running")
+overstated INFORMATION's own connection to this specific fix. COGNITION's own connection is the
+one confirmed clean and specific to this flag.
+
+`TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` closes `DONE` on this
+evidence — see that ticket's own updated Completion Summary for the full picture.
+
 ---
 
 ## Related

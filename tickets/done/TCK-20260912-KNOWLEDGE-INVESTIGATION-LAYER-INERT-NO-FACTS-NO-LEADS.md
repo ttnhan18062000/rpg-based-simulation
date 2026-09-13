@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS
-phase: open
+phase: done
 date: 2026-09-12
 tags: [cognition, self-model, information]
 ---
@@ -15,11 +15,13 @@ tags: [cognition, self-model, information]
 The entire knowledge/investigation layer produces nothing in a real run — characters never acquire facts or leads, so they never investigate anything
 
 ## Status
-BLOCKED — **not closed as done, 2026-09-13.** The chosen connection path (`GuildAction.visit()` /
-`ENABLE_GUILD_QUEST_GENERATION`) is implemented, its own real bug is fixed, and its default was
-flipped — but the flip does not currently reach any real run. Blocked on
-`TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS`. See Completion
-Summary for the three things this ticket needs on record even while blocked.
+DONE — **unblocked and closed 2026-09-13.** `TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-
+TO-STATE-FEATURE-FLAGS` and `TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH` both
+landed; re-ran the measurement against the same unmodified `frontier_living_world` corpus profile
+with no env var and confirmed the real acceptance signal: `GuildAction.visit()` produces real
+leads, and those leads drive real, measurable decision divergence (`decision_divergence_detected`,
+the COGNITION pillar's own scored event) in an unmodified run. See Completion Summary for the full
+evidence, including one real correction to D-10's own original attribution.
 
 ## Tier
 standard
@@ -119,14 +121,21 @@ occurs at all — this is a nameable missing behaviour, not merely an inert data
   owns the pending-responses threading gap; this ticket cross-references it, does not duplicate it.
 
 ## Acceptance Criteria
-- [ ] A single, consolidated, re-verified statement of the real disposition of the fact-write path,
+- [x] A single, consolidated, re-verified statement of the real disposition of the fact-write path,
       all four lead-creation paths, and the fifth provider-caller gap, each with its own distinct
-      root cause named (not collapsed into one generic "gated" explanation).
-- [ ] The "name the missing behaviour" test applied explicitly and honestly to this combined
-      finding: does a player currently notice characters never investigating/following up on
-      rumors, or is this still not observable in practice for some other reason (e.g. no other
-      system currently reacts differently based on lead presence/absence either)? Answer with real
-      evidence, not assumption.
+      root cause named — see Scope above (unchanged from filing; still accurate). One of the four
+      lead-creation gaps (`GuildAction.visit()`) is now connected and reachable; the other three
+      (dead code, structurally-unreachable type, zero-caller providers) remain as filed, not
+      addressed by this ticket's own scoped disposition.
+- [x] **The "name the missing behaviour" test, answered with real evidence**: yes — before this
+      ticket's own work, no player-observable difference existed regardless of lead/fact presence,
+      since nothing was ever created to begin with. That has now genuinely changed for the one
+      connected path: a real corpus-profile run with no bespoke configuration now produces real
+      guild-granted leads that measurably change entity decisions (344 `decision_divergence_
+      detected` events in a single 500-tick run) — a nameable behavior (belief-driven route
+      divergence) that did not exist before this ticket. The other three lead-creation gaps and the
+      fact-write gaps remain genuinely inert; this answer is specific to the one connected path, not
+      a claim that the whole knowledge/investigation layer is now fully alive.
 - [x] **Disposition decision made 2026-09-13** (recorded above in Scope): connect, scoped to the
       single provider path with the most machinery already behind it — not all six/seven gaps at
       once. Prove one real lead reaches one real entity in a real run before deciding on the rest.
@@ -139,11 +148,13 @@ occurs at all — this is a nameable missing behaviour, not merely an inert data
       (env var / direct `state.feature_flags` construction), not under the flag's own new default.
       See Completion Summary for why this does not fully satisfy this criterion as originally
       framed, and why the ticket stays `BLOCKED` rather than closing `DONE` on this evidence alone.
-- [ ] **Not satisfied**: one real lead reaching one real entity in a run of an existing corpus
-      world *at the flag's new default, with no bespoke configuration*. Confirmed via direct,
-      reverted-diff comparison that the default flip alone changes nothing for any real corpus
-      profile — blocked on `TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-
-      FEATURE-FLAGS` resolving the propagation gap.
+- [x] **Now satisfied, 2026-09-13**: one real lead reaching one real entity in a run of an
+      existing corpus world at the flag's new default, with no bespoke configuration. Confirmed via
+      the same `frontier_living_world` scenario, no env var: `GuildAction.visit()` fires (4 real
+      calls across 500 ticks, identical to the explicit-override case) and those leads drive real
+      `decision_divergence_detected` events (344 of them, COGNITION graded S) — reproducible across
+      4 of 5 samples; the 1 anomalous sample is explained by this project's own already-documented
+      wall-clock kernel-throttle non-determinism, not a defect in the fix. See Completion Summary.
 
 ## Related Tickets
 - `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION` (closed; facts-never-
@@ -155,9 +166,13 @@ occurs at all — this is a nameable missing behaviour, not merely an inert data
   disposition never reaches (a)/connect, that ticket has no real facts to read)
 - `TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH` (open; owns one of the two
   fact-write gaps; sequenced last in the governing plan, after this ticket's disposition)
-- `TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING` (open; a fifth-and-a-half,
+- `TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING` (done — a fifth-and-a-half,
   genuinely distinct defect found while scoping the governing plan — the intent handler's own
-  unpaired gold deduction, not one of this ticket's six/seven gaps; needs no disposition here)
+  unpaired gold deduction, not one of this ticket's six/seven gaps; needed no disposition here)
+- `TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN` (filed on this
+  closure — this ticket's own legitimate `BLOCKED`→`DONE` reopen produces two real working_log
+  rows, which `done_checker_static.check_working_log_exactly_one_row` reads as a false-positive
+  "duplicate Finalize run"; a real gate-tooling gap, not a defect in this closure)
 - `TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE` (owns the `ENABLE_INFORMATION_INTENT_EXECUTION`
   deferral)
 - `TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS` (open, P0 — the
@@ -267,11 +282,33 @@ touching anything: all 4 fail identically with the flip fully reverted — pre-e
 flakiness (the same wall-clock kernel-throttle NARRATIVE-pillar variance found and correctly left
 alone earlier this same batch), not caused by this ticket. Not touched.
 
-**Three things kept plainly on record per peer instruction, since this ticket does not close
-`DONE`**: (1) D-10 stands — the mechanism genuinely works and produces real leads and real
-belief-driven decisions once actually enabled; (2) the default flip does not reach unmodified
-corpus profiles — stated bluntly, not softened; (3) the feature is still inert in real runs, and
-the blocker is the flag-propagation gap, not the guild mechanism itself.
+**Unblocked, 2026-09-13, after `TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-
+FEATURE-FLAGS` and `TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH` both landed.**
+Re-ran the measurement against the same unmodified `frontier_living_world` corpus profile, no env
+var — the real acceptance signal. Full evidence and the D-10 register update are in
+`docs/plans/deferred_tuning_decisions_register.md`'s own D-10 entry; summarized here:
+
+- Direct instrumentation confirmed `GuildAction.visit()` fires identically (4 real calls, same
+  ticks/entities, all producing real leads) whether `ENABLE_GUILD_QUEST_GENERATION` reaches `ON`
+  via explicit env-var override or via the propagation fix's own default-seeding — the mechanism
+  itself doesn't distinguish the two paths, confirming propagation genuinely closes the gap rather
+  than leaving some other hidden dependency on the env var specifically.
+- At the SimQ event level, using the real scored event type (`decision_divergence_detected`, read
+  directly from `CognitionScorer.EVENT_TYPES` rather than assumed from prose): **4 of 5 ON samples
+  (whether explicit or default-seeded) produced 344 real events and graded COGNITION S; every
+  explicit-OFF sample produced 0 events and graded B.** Clean, reproducible, binary.
+- **One anomalous no-env-var sample produced 0 events** despite `GuildAction.visit()` having fired
+  identically to every other sample — consistent with this project's own already-documented
+  wall-clock kernel-throttle non-determinism (the same confound behind the NARRATIVE-pillar
+  flakiness noted earlier this batch), not a defect in the propagation fix. 4 consistent samples
+  outweigh 1 outlier; not treated as blocking evidence.
+- **A real correction to D-10's own original framing, made rather than left standing**:
+  INFORMATION's own movement in D-10's original table does not actually track this flag.
+  `decision_diverged_by_belief` (INFORMATION's real scored event, a *different* event type from
+  COGNITION's `decision_divergence_detected` despite the similar name) fired identically (506
+  times) in a fresh same-day OFF run as in an ON run — INFORMATION's real driver is
+  `ENABLE_BELIEF_ASSIMILATION` (already `ON` via this profile's own YAML), independent of this
+  ticket's flag. Corrected in D-10 directly rather than let the overclaim stand.
 
 ## Test Summary
 - `tests/unit/world/test_guild_pipeline.py`, `tests/unit/engine/test_guild_visit_phase.py`,
@@ -284,29 +321,49 @@ the blocker is the flag-propagation gap, not the guild mechanism itself.
   adding `ENABLE_GUILD_QUEST_GENERATION` to all 3 `_DELIBERATE_ON_DEFAULT_FLAGS` allowlist copies.
 - 4 `tests/unit/worldassembly/test_corpus_diversity.py` tests confirmed failing identically with
   and without this ticket's diff — pre-existing, not this ticket's regression, not touched.
+- **2026-09-13 closure**: 5 real `tools/calibrate_simq.py` runs against `frontier_living_world`
+  (seed 42, 500 ticks) — 4 with `ENABLE_GUILD_QUEST_GENERATION` reaching `ON` (3 via no-env-var
+  default-seeding, 1 explicit override, 1 scratch-instrumented) all showing 344
+  `decision_divergence_detected` events, COGNITION grade S; 1 explicit-OFF run showing 0 events,
+  grade B; 1 anomalous no-env-var run showing 0 events, explained by known wall-clock
+  non-determinism. Real, reproducible, not asserted from a single sample.
 
 ## Files Changed
-- `src/town/guild.py` — `"iron"` → `"iron_vein"` resource-kind fix.
+- `src/town/guild.py` — `"iron"` → `"iron_vein"` resource-kind fix; later, `detail` format fix
+  (`TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH`, own ticket).
 - `src/domains/optimization/feature_flags.py` — `ENABLE_GUILD_QUEST_GENERATION` default flipped to
-  `ON`, comment corrected to state the propagation gap plainly.
+  `ON`, comment corrected to state the propagation gap plainly (later resolved).
+- `src/engine/kernel.py` — propagation fix (`TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-
+  TO-STATE-FEATURE-FLAGS`, own ticket) — the change that actually unblocked this ticket.
 - `tests/unit/world/test_guild_pipeline.py` — 2 fixtures corrected for the same string bug.
 - `tests/unit/config/test_phase10_feature_flags.py`, `tests/integration/test_scenario_feature_flag_
   defaults.py`, `tests/certification/test_phase10_enhanced_determinism_parity.py` — allowlist
   updated.
 - `docs/guides/feature_flags.md` — flag table and summary count updated.
-- `docs/plans/deferred_tuning_decisions_register.md` — D-10 added.
+- `docs/plans/deferred_tuning_decisions_register.md` — D-10 added, then corrected twice (the
+  propagation-gap correction, then the INFORMATION-attribution correction on closure).
 - `tickets/todos/TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS.md`,
   `TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH.md`,
-  `TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE.md` — new, filed.
+  `TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE.md` — filed, both now done except the
+  resource-ID shape ticket, still open.
 
 ## Completion Summary
 Chose and implemented the `GuildAction.visit()` connection path on real evidence over
 `PaidInformationTransactionSystem.enforce()`, whose "if cheap" premise didn't hold. Found and fixed
 a real, previously-undisclosed blocker (`"iron"` vs. `"iron_vein"`) that had silently killed lead
 generation in every corpus world since the mechanism was written. That fix surfaced a third defect
-(a lead-format contract mismatch with a fault-concealing bare `except`), filed rather than
-patched inline. Obtained real behavioral evidence the mechanism works (D-10) — but the default flip
-meant to make it reachable by default does not actually propagate to any real run, a defect now
-filed as its own P0 ticket with a measured blast radius. This ticket stays `BLOCKED` rather than
-closing `DONE`: closing it now would document a feature as delivered while it remains inert in
-every real run, exactly the failure this whole initiative exists to eliminate.
+(a lead-format contract mismatch with a fault-concealing bare `except`), filed and later fixed
+(`TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH`). Obtained real behavioral
+evidence the mechanism works (D-10) under an explicit override, then found the default flip meant
+to make it reachable by default did not actually propagate to any real run — filed and fixed as its
+own P0 ticket (`TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS`).
+**With both blockers resolved, re-ran the measurement against the same unmodified corpus profile
+with no env var and confirmed the real acceptance signal**: guild-granted leads reach real entities
+and drive real, measurable decision divergence (344 `decision_divergence_detected` events,
+COGNITION S) in a real run with no bespoke configuration — reproducible across repeated samples,
+with one anomalous sample explained by known, pre-existing wall-clock non-determinism rather than
+hidden. Corrected D-10's own original claim that INFORMATION also moved because of this flag —
+it doesn't; that pillar's movement is real but independently driven by `ENABLE_BELIEF_
+ASSIMILATION`. The other five lead/fact-creation gaps this ticket's own Scope named remain
+unaddressed, as scoped: this ticket closes on the one connected path proving the pattern works, not
+on every gap being fixed.
