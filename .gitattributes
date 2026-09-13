@@ -51,4 +51,13 @@ tickets/working_log.csv text eol=lf merge=union
 # branch being merged into, not one that includes this same merge's own .gitattributes change.
 # Falls back to the ordinary loud-conflict behavior above for that one merge only; every
 # subsequent merge on that branch (which now carries this line) uses the driver normally.
+# Independently hit a second time on PR #182 (branch flag-propagation-batch, which also does not
+# descend from #181's own merge commit) -- confirms this is a real, reproducible class, not a
+# one-off on this ticket's own branches.
+# Separately: activation is per-clone, not versioned -- the driver config and hook copy both live
+# outside version control, so this mechanism is simply off for any clone that never ran
+# `make setup-merge-drivers`, and a conflict from that state is indistinguishable from the
+# cold-start case above (no warning either way). Worktrees of one clone share its .git/config and
+# hooks directory, so a single setup run covers every worktree of that clone -- only separate
+# clones each need their own run.
 docs/REGISTRY.yaml merge=registry-regen
