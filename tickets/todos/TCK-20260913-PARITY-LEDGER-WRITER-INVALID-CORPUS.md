@@ -82,6 +82,25 @@ are not lost a second time.
   makes it look checked, and the fabrication would be far harder to detect afterwards than the current
   uncited state. Any change here alters status or adds an explanation; it never adds a citation that was
   not run. (Raised by `rpg-feature-planning`, 2026-09-13.)
+- **Resolve the exact-equality baseline test first — it is this sweep's gate.**
+  `tests/tools/test_parity_index_baseline.py:178` asserts `live_missing == 1314`, where `live_missing`
+  counts entries whose status is `verified`/`divergent` **and** which lack a `test_path` (line 118).
+  That set is *exactly* this ticket's Class 1 verified subset: 1307 P0/`verified` + 7 P1/`verified` =
+  1314. (`legacy_verified` is excluded from the count, which is why it reads 1314 where Class 1 totals
+  1536.) Consequences:
+  - Option (a) freeze — the count does not move; the test is unaffected.
+  - Options (b)/(c) — every entry downgraded out of `verified` **drops out of the count**, moving it
+    from 1314 toward zero and breaking an exact-equality assertion at scale.
+  - The test's own comment (lines 121-122) says the count "naturally drifts downward … it is not a
+    frozen invariant" while the assertion demands exact equality. The comment and the assertion
+    contradict each other; that contradiction is the thing to fix.
+  - It has already cost four baseline-bump hotfix tickets (2026-08-30, 09-02, 09-05, 09-13), so today
+    correcting a parity entry costs a ticket while leaving it wrong costs nothing — the incentive runs
+    backwards. A ratchet (`live_missing` may never *increase*) is the obvious candidate and still
+    catches the regression the test exists to catch, but read the four precedent tickets first: they
+    may record a reason for equality that the comments do not.
+  Raised by `rpg-feature-planning`, 2026-09-13, who offered it either as their standalone ticket or as
+  part of this scope; taken here because it gates this sweep directly.
 - Check the "never sweep" constraint (`TCK-20260705-GATE-DET-MECHANICS-AUDITOR`) is respected: it
   forbids running pytest across the corpus. Pure validation runs no tests and is cheap (2187 entries,
   sub-second), so it is not a sweep in that sense — state this rather than assume it.
@@ -107,6 +126,8 @@ are not lost a second time.
 - [ ] Every Class 3 entry has a non-empty `support_boundary`.
 - [ ] Class 1 has a recorded policy decision, not silence.
 - [ ] All writes went through `write_entry()`; no raw YAML edit of a ledger shard.
+- [ ] The baseline test no longer forces a hotfix ticket for a legitimate correction, and its comment
+      and assertion agree with each other.
 
 ### Downstream consequence (2026-09-13)
 
