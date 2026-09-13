@@ -15,6 +15,7 @@ _DELIBERATE_ON_DEFAULT_FLAGS = frozenset({
     "ENABLE_BELIEF_ASSIMILATION",        # TCK-20260824-ROLLOUT-FLAG-DECISIONS -- already ON in real corpus profiles (sandbox_world.yaml, urban_political.yaml)
     "ENABLE_SOCIAL_COOPERATION",         # TCK-20260824-ROLLOUT-FLAG-DECISIONS -- already ON in real corpus profile (urban_political.yaml)
     "ENABLE_GUILD_QUEST_GENERATION",     # TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS -- real before/after SimQ evidence (D-10)
+    "ENABLE_COMBAT_ENGAGEMENT",          # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER -- OpponentModel storage, perceived-power gap/uncertainty, witnessed-combat, and combat-learning are real, tested, and wired (docs/mechanics/04_strategic_cognition.md Sec 13)
 })
 
 

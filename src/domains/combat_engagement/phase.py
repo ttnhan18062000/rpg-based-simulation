@@ -100,6 +100,41 @@ _NON_COMBAT_OUTCOME_KINDS = ("HAZARD", "REJECTED")
 WITNESSED_COMBAT_RADIUS = 10.0
 
 
+def _read_through_cognition(
+    entity_id: int,
+    fallback_cognition,
+    entity_updates: Dict[int, EntityUpdate],
+    tick_update: Optional[StateUpdate],
+):
+    """
+    TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER (real, disclosed cross-phase bug found via
+    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py, not the ticket's own
+    unit suite): `EntityUpdate.merge()`'s own `cognition_bundle_set` field is a whole-object
+    REPLACE, not a per-subfield merge (src/core/updates.py). `memory_update` runs BEFORE
+    `combat_engagement` in the same tick's pipeline (src/engine/pipeline.py) -- if this phase built
+    its own updated CognitionModel from `entity.cognition` (the tick-START snapshot) and staged it
+    via `cognition_bundle_set`, merging that into the tick's already-accumulated `update` silently
+    DISCARDED whatever MemoryUpdatePhase (or any other earlier phase) had already written for that
+    same entity this same tick -- e.g. a real `causal.entries` write vanishing the instant
+    `ENABLE_COMBAT_ENGAGEMENT` went live, with no error, because "replace" doesn't merge sub-trees.
+
+    Priority order for the base cognition to build on top of: (1) this phase's OWN
+    already-accumulated write for this entity this call (`entity_updates` -- covers a witness who
+    is also separately evaluated by the main per-actor loop in this same `apply()` invocation),
+    (2) an EARLIER pipeline phase's write THIS SAME TICK (`tick_update` -- covers memory_update and
+    any other phase that runs before combat_engagement), (3) the tick-start snapshot on the entity
+    itself (no prior write this tick at all).
+    """
+    own_update = entity_updates.get(entity_id)
+    if own_update is not None and own_update.cognition_bundle_set is not None:
+        return own_update.cognition_bundle_set
+    if tick_update is not None:
+        prior_update = tick_update.entity_updates.get(entity_id)
+        if prior_update is not None and prior_update.cognition_bundle_set is not None:
+            return prior_update.cognition_bundle_set
+    return fallback_cognition
+
+
 def _merge_observation_into_updates(
     entity_updates: Dict[int, EntityUpdate],
     observer: EntityState,
@@ -107,20 +142,17 @@ def _merge_observation_into_updates(
     estimate,
     state: AuthoritativeState,
     outcome_severity: float,
+    tick_update: Optional[StateUpdate] = None,
 ) -> None:
     """
     Read-through-then-replace `observer`'s own OpponentModel for `target_id`, merging the write
     into `entity_updates[observer.id]` in place -- reads any `cognition_bundle_set` an earlier
-    write THIS SAME tick already staged for `observer` (so a witness who is also, separately,
-    evaluating its own nearest hostile this tick does not have one write clobber the other).
+    write THIS SAME tick already staged for `observer`, whether from this same phase call (a
+    witness who is also, separately, evaluating its own nearest hostile this tick) or from an
+    earlier pipeline phase such as memory_update (`_read_through_cognition`'s own docstring).
     """
     subject_key = opponent_subject_key(target_id)
-    existing_update = entity_updates.get(observer.id)
-    base_cognition = (
-        existing_update.cognition_bundle_set
-        if existing_update is not None and existing_update.cognition_bundle_set is not None
-        else observer.cognition
-    )
+    base_cognition = _read_through_cognition(observer.id, observer.cognition, entity_updates, tick_update)
     prior_memory = base_cognition.memory.combat.opponent_stats.get(subject_key)
 
     updated_model = OpponentModel(
@@ -137,6 +169,7 @@ def _merge_observation_into_updates(
     new_memory = dataclass_replace(base_cognition.memory, combat=new_combat_memory)
     new_cognition = dataclass_replace(base_cognition, memory=new_memory)
 
+    existing_update = entity_updates.get(observer.id)
     if existing_update is not None:
         entity_updates[observer.id] = dataclass_replace(existing_update, cognition_bundle_set=new_cognition)
     else:
@@ -181,16 +214,12 @@ def _apply_witnessed_combat(
 
             for target in (defender, attacker):
                 subject_key = opponent_subject_key(target.id)
-                existing_update = entity_updates.get(witness.id)
-                base_cognition = (
-                    existing_update.cognition_bundle_set
-                    if existing_update is not None and existing_update.cognition_bundle_set is not None
-                    else witness.cognition
-                )
+                base_cognition = _read_through_cognition(witness.id, witness.cognition, entity_updates, tick_update)
                 prior_memory = base_cognition.memory.combat.opponent_stats.get(subject_key)
                 estimate = OpponentPerceptionService.estimate(witness, target, memory=prior_memory, state=state)
                 _merge_observation_into_updates(
-                    entity_updates, witness, target.id, estimate, state, outcome_severity=0.3
+                    entity_updates, witness, target.id, estimate, state, outcome_severity=0.3,
+                    tick_update=tick_update,
                 )
 
 
@@ -349,7 +378,8 @@ class CombatEngagementPhase:
             # OpponentPerceptionService.estimate()'s own memory-blending logic was correct code
             # that never actually ran on a real memory. `subject_key` is per-individual (Sec 13.6).
             subject_key = opponent_subject_key(target.id)
-            prior_memory = actor.cognition.memory.combat.opponent_stats.get(subject_key)
+            base_cognition = _read_through_cognition(actor.id, actor.cognition, entity_updates, tick_update)
+            prior_memory = base_cognition.memory.combat.opponent_stats.get(subject_key)
 
             # 2. Subjective Pre-combat evaluation
             result = CombatEngagementDecisionService.evaluate(actor, target, state, memory=prior_memory)
@@ -403,9 +433,9 @@ class CombatEngagementPhase:
                     prior_memory, result.opponent_estimate.estimated_power, outcome_severity=0.0
                 ),
             )
-            new_combat_memory = store_opponent_model(actor.cognition.memory.combat, updated_model)
-            new_memory = dataclass_replace(actor.cognition.memory, combat=new_combat_memory)
-            new_cognition = dataclass_replace(actor.cognition, memory=new_memory)
+            new_combat_memory = store_opponent_model(base_cognition.memory.combat, updated_model)
+            new_memory = dataclass_replace(base_cognition.memory, combat=new_combat_memory)
+            new_cognition = dataclass_replace(base_cognition, memory=new_memory)
 
             entity_updates[actor.id] = EntityUpdate(
                 entity_id=actor.id,

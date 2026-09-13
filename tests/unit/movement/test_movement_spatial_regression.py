@@ -168,7 +168,7 @@ def _build_evasive_retreat_pair():
         .location(1.0, 1.0)
         .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
         .combat(hp=100, max_hp=100, alive=True, readiness=100.0, action_style=2)  # 2 = EVASIVE
-        .navigation(movement_mode=MovementMode.RETREAT)
+        .navigation(movement_mode=MovementMode.RETREAT, target=(0.0, 1.0))
         .lifecycle(active=True)
         .build()
     )
@@ -220,6 +220,57 @@ def test_evasive_retreat_no_learning_when_flag_off():
 
     assert hero_update.property_updates.get("combat_escape") == "EVASIVE_SUCCESS"
     assert hero_update.cognition_bundle_set is None
+
+
+def test_evasive_retreat_fled_learning_merges_with_earlier_same_tick_cognition_write():
+    """
+    TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: a real, disclosed cross-phase bug found via
+    tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py -- EntityUpdate.merge()'s
+    own cognition_bundle_set field is a whole-object REPLACE, not a per-subfield merge
+    (src/core/updates.py). memory_update runs BEFORE movement_routing in the real pipeline
+    (src/engine/pipeline.py); MovementSystem.resolve_move() has no access to the tick's
+    accumulated StateUpdate and reads the entity straight from state.entities (the tick-START
+    snapshot), so its own FLED-learning write (apply_fled_learning()) would silently discard
+    whatever memory_update already staged for this entity this same tick -- fixed at the
+    MovementPhase.route_movement_intent() call site (src/engine/pipeline_phases/movement.py),
+    which now patches `.cognition` from any pre-existing update before calling resolve_move().
+
+    This test proves the fix directly at MovementPhase.route_movement_intent()'s own level:
+    simulate "an earlier phase already wrote cognition_bundle_set for this entity this tick" via
+    a pre-populated `update.entity_updates[hero.id]`, then confirm the real FLED write merges on
+    top of it (both survive) instead of replacing it (the earlier write vanishing silently).
+    """
+    from src.core.cognition import CausalMemory, CausalMemoryEntry, CognitionModel
+
+    hero, monster = _build_evasive_retreat_pair()
+    state = AuthoritativeState(
+        tick=1, seed=42, entities={1: hero, 2: monster},
+        feature_flags={"ENABLE_COMBAT_ENGAGEMENT": "ON"},
+    )
+
+    sentinel_entry = CausalMemoryEntry(
+        event_id="sentinel-1", event_kind="combat_loss", interpreted_causes=("strong_enemy",),
+        confidence=0.6, future_advice=("avoid_enemy",), tick=1,
+    )
+    earlier_phase_cognition = replace(
+        hero.cognition,
+        memory=replace(hero.cognition.memory, causal=CausalMemory(entries=(sentinel_entry,))),
+    )
+    update = StateUpdate(entity_updates={
+        1: EntityUpdate(entity_id=1, cognition_bundle_set=earlier_phase_cognition),
+    })
+
+    from src.engine.pipeline_phases.movement import MovementPhase
+    refined = MovementPhase.route_movement_intent(state, update)
+
+    hero_cognition = refined.entity_updates[1].cognition_bundle_set
+    assert hero_cognition is not None
+    # The earlier phase's own causal-memory write must survive (not discarded).
+    assert hero_cognition.memory.causal.entries == (sentinel_entry,)
+    # The real FLED write must ALSO be present (not skipped in favor of the earlier write).
+    opponent_stats = hero_cognition.memory.combat.opponent_stats
+    assert "entity.2" in opponent_stats
+    assert opponent_stats["entity.2"].outcomes[-1] == "FLED"
 
 
 def test_normal_move_triggers_oa():
