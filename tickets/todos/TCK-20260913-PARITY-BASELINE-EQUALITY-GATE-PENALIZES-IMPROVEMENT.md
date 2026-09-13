@@ -15,7 +15,12 @@ tags: [testing, registry]
 `test_parity_index_baseline.py`'s exact-equality drift assertion has needed 4 hotfixes in 2 weeks — every legitimate ledger correction costs a ticket, leaving the ledger alone costs nothing
 
 ## Status
-OPEN
+BLOCKED — **handed off 2026-09-13.** `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`
+(agent-process track, branch `parity-writer-invalid-corpus`) is taking this into its own parity
+sweep's scope, since its corpus-wide correction work is exactly what would break this assertion
+repeatedly. Not staying open in parallel on this track — findings below are left in place for that
+ticket to absorb. Do not pick this ticket up here; if the agent-process track's absorption doesn't
+happen for some reason, re-open explicitly rather than assuming this ticket's own scope stands.
 
 ## Tier
 standard
@@ -53,6 +58,34 @@ this whole audit arc has been trying to encourage.
 60% of the ledger. If any meaningful slice of that sweep lands, this test breaks catastrophically
 and repeatedly: whoever runs that sweep faces a choice between a stream of baseline hotfixes
 mid-sweep, or not doing the correction work at all.
+
+**Two things found while cross-referencing that sweep, sharper than the framing above and worth
+preserving wherever this lands:**
+
+- **This test's own `live_missing == 1314` is not merely overlapping that sweep's count — it is
+  the identical figure, decomposed.** `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` measured
+  **1307 P0 + 7 P1 `verified` entries with no `test_path`** — that's exactly 1314. This test's own
+  scan additionally counts `status == "divergent"` (this ticket's count includes both), and
+  excludes `legacy_verified` entirely, which is what explains the gap between 1314 here and 1536
+  in that ticket's own "Class 1" total (`legacy_verified` entries account for the difference).
+  Worth recording explicitly so the two numbers don't look like a contradiction to whoever compares
+  them next — they're the same underlying fact measured two ways.
+- **The test's own comment (lines 121-122) already describes a ratchet; the code implements a
+  freeze.** It reads: "This count naturally drifts downward as parity ledger entries legitimately
+  gain a `test_path` over time — it is not a frozen invariant" — sitting directly above a hardcoded
+  `assert live_missing == N`. The comment states a one-directional expectation; the assertion
+  enforces exact equality in both directions. That mismatch is real evidence the equality shape was
+  inherited from whatever the test's first version happened to assert, rather than deliberately
+  chosen for a stated reason — which is itself a reason to read the four precedent tickets before
+  assuming a ratchet is unsafe, not a reason to assume it's safe.
+
+**On the ratchet candidate below, stated plainly so it isn't misread**: `assert live_missing <= N`
+does not fight `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`'s own sweep — it is compatible
+with it. A ratchet permits the count falling toward zero, which is exactly what that sweep's
+correction work does. Only the *current* exact-equality assertion breaks under that sweep, not a
+one-directional ratchet. This ticket does not rule the ratchet out; see Scope for the honest
+tradeoff still worth weighing (a large *unexplained decrease* is a real failure mode a ratchet
+alone wouldn't catch), not because the ratchet fails the improvement case.
 
 ## Scope
 This ticket is scoped as **the question, not a chosen fix** — read the four precedent tickets
@@ -100,15 +133,17 @@ Other candidates worth considering during investigation, not pre-selected:
 - [ ] No implementation without that review.
 
 ## Related Tickets
+- `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (agent-process track, `parity-writer-invalid-
+  corpus`) — **owns this ticket's scope as of 2026-09-13**, absorbing it into its own parity sweep.
+  `live_missing == 1314` here is that ticket's own `1307 P0 + 7 P1 verified` count exactly (this
+  scan additionally includes `divergent` status and excludes `legacy_verified`, explaining the gap
+  to that ticket's 1536 Class 1 total — not a contradiction between the two numbers).
 - `TCK-20260830-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT` (precedent 1)
 - `TCK-20260902-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT` (precedent 2 — states the
   "second-order guard against silent large swings" rationale)
 - `TCK-20260905-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT` (precedent 3)
-- `TCK-20260913-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT` (precedent 4, this batch)
-- `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (agent-process track, `parity-writer-invalid-
-  corpus`) — the imminent-urgency driver: if a meaningful slice of its 1307-entry corpus-wide
-  correction lands, this test breaks repeatedly under its current shape.
-- `TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP` (this batch's own narrower ticket —
+- `TCK-20260913-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT` (precedent 4, RPG side)
+- `TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP` (RPG side's own narrower ticket —
   unrelated scope, named only because it shares the same test file as a downstream consumer)
 
 ## Related Docs
@@ -127,13 +162,13 @@ None yet — standard tier, staging artifacts created when picked up.
   ticket exists to answer — not assumed either way here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+_(handed off — see Status; no implementation happened on this track)_
 
 ## Test Summary
-_(pending)_
+_(handed off — no code changed on this track)_
 
 ## Files Changed
-_(pending)_
+_(handed off — no code changed on this track)_
 
 ## Completion Summary
-_(pending)_
+_(handed off to `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`, 2026-09-13 — see Status)_
