@@ -30,7 +30,7 @@ from gate_checks.workflow_meta_conformance import (  # noqa: E402
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _WORKFLOWS_DIR = _REPO_ROOT / ".claude" / "workflows"
 _SKILLS_DIR = _REPO_ROOT / ".claude" / "skills"
-_REAL_EVENTS_PATH = _REPO_ROOT / "agent-monitoring" / "events.jsonl"
+_REAL_EVENTS_ROOT = _REPO_ROOT / "agent-monitoring" / "data"
 
 
 def _write_workflow_js(tmp_path, workflow_name, titles):
@@ -53,17 +53,22 @@ def _write_skill_md(tmp_path, workflow_name, body_text):
     (skill_dir / "SKILL.md").write_text(body_text)
 
 
-def _write_events_jsonl(tmp_path, run_id, phase_statuses):
-    """phase_statuses: list of (phase, status) tuples -> one event row each."""
+def _write_events_jsonl(tmp_path, run_id, phase_statuses, week="2026-W28"):
+    """phase_statuses: list of (phase, status) tuples -> one event row each, written under
+    tmp_path/<week>/events.jsonl (a weekly shard, TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-
+    SHARD-AWARENESS -- the retired flat agent-monitoring/events.jsonl no longer exists). Returns
+    tmp_path itself (the shard *root*, matching collect_run_event_statuses'/
+    check_workflow_meta_conformance's `data_root` parameter), not the shard file."""
     lines = []
     for i, (phase, status) in enumerate(phase_statuses, start=1):
         lines.append(json.dumps({
             "run_id": run_id, "seq": i, "phase": phase, "agent": "x",
             "status": status, "summary": "s", "ts": "2026-07-10T00:00:00Z",
         }))
-    events_path = tmp_path / "events.jsonl"
-    events_path.write_text("\n".join(lines) + ("\n" if lines else ""))
-    return events_path
+    shard_dir = tmp_path / week
+    shard_dir.mkdir(parents=True, exist_ok=True)
+    (shard_dir / "events.jsonl").write_text("\n".join(lines) + ("\n" if lines else ""))
+    return tmp_path
 
 
 # ---------------------------------------------------------------------------
@@ -116,16 +121,30 @@ def test_unresolvable_workflow_source_file_does_not_crash(tmp_path):
 
 
 def test_collect_run_event_statuses_groups_by_phase(tmp_path):
-    events_path = _write_events_jsonl(tmp_path, "TCK-FIXTURE", [
+    data_root = _write_events_jsonl(tmp_path, "TCK-FIXTURE", [
         ("Scope", "ok"), ("Investigate", "ok"), ("Parity", "skipped"),
     ])
-    statuses = collect_run_event_statuses("TCK-FIXTURE", events_path)
+    statuses = collect_run_event_statuses("TCK-FIXTURE", data_root)
     assert statuses == {"Scope": {"ok"}, "Investigate": {"ok"}, "Parity": {"skipped"}}
 
 
+def test_collect_run_event_statuses_finds_rows_only_in_a_weekly_shard(tmp_path):
+    """The regression test this ticket's own AC requires: a run_id whose events live only in a
+    weekly shard, not the (now nonexistent) flat agent-monitoring/events.jsonl file."""
+    data_root = _write_events_jsonl(
+        tmp_path, "TCK-SHARD-ONLY", [("Scope", "ok"), ("Investigate", "ok")], week="2026-W30",
+    )
+    assert not (data_root / "events.jsonl").exists(), (
+        "fixture must not also write a flat file at the root -- this test proves the shard-only "
+        "path works, not a fallback to a flat file that happens to coexist"
+    )
+    statuses = collect_run_event_statuses("TCK-SHARD-ONLY", data_root)
+    assert statuses == {"Scope": {"ok"}, "Investigate": {"ok"}}
+
+
 def test_unknown_run_id_returns_empty_or_na_not_a_crash(tmp_path):
-    events_path = _write_events_jsonl(tmp_path, "TCK-REAL-RUN", [("Scope", "ok")])
-    statuses = collect_run_event_statuses("TCK-NO-SUCH-RUN-ID", events_path)
+    data_root = _write_events_jsonl(tmp_path, "TCK-REAL-RUN", [("Scope", "ok")])
+    statuses = collect_run_event_statuses("TCK-NO-SUCH-RUN-ID", data_root)
     assert statuses == {}
 
 
@@ -136,12 +155,12 @@ def test_unknown_run_id_returns_empty_or_na_not_a_crash(tmp_path):
 
 def test_flags_declared_phase_with_zero_events(tmp_path, monkeypatch):
     _write_workflow_js(tmp_path, "implement-ticket", ["Scope", "Investigate", "Plan"])
-    events_path = _write_events_jsonl(tmp_path, "TCK-FIXTURE-1", [
+    data_root = _write_events_jsonl(tmp_path, "TCK-FIXTURE-1", [
         ("Scope", "ok"), ("Plan", "ok"),
     ])
 
     results = check_workflow_meta_conformance(
-        "TCK-FIXTURE-1", workflows_dir=tmp_path, events_path=events_path
+        "TCK-FIXTURE-1", workflows_dir=tmp_path, data_root=data_root
     )
     by_phase = {r["phase"]: r for r in results}
     assert by_phase["Investigate"]["status"] == "FAIL"
@@ -152,20 +171,36 @@ def test_flags_declared_phase_with_zero_events(tmp_path, monkeypatch):
 
 def test_does_not_flag_a_phase_with_only_skipped_status_events(tmp_path):
     _write_workflow_js(tmp_path, "implement-ticket", ["Scope", "Investigate", "Plan"])
-    events_path = _write_events_jsonl(tmp_path, "TCK-FIXTURE-2", [
+    data_root = _write_events_jsonl(tmp_path, "TCK-FIXTURE-2", [
         ("Scope", "ok"), ("Investigate", "skipped"), ("Plan", "skipped"),
     ])
 
     results = check_workflow_meta_conformance(
-        "TCK-FIXTURE-2", workflows_dir=tmp_path, events_path=events_path
+        "TCK-FIXTURE-2", workflows_dir=tmp_path, data_root=data_root
     )
     assert all(r["status"] != "FAIL" for r in results)
 
 
-def test_check_workflow_meta_conformance_unresolvable_workflow_returns_labeled_na(tmp_path):
-    events_path = _write_events_jsonl(tmp_path, "TCK-ANYTHING", [("Scope", "ok")])
+def test_check_workflow_meta_conformance_finds_declared_phase_across_multiple_weekly_shards(tmp_path):
+    """A run whose events straddle two weekly shards (a real, unremarkable shape -- a ticket that
+    starts one week and Finalizes the next) must still be found in full, not just the shard
+    containing the phase checked first."""
+    _write_workflow_js(tmp_path, "implement-ticket", ["Scope", "Finalize"])
+    _write_events_jsonl(tmp_path, "TCK-CROSS-WEEK", [("Scope", "ok")], week="2026-W29")
+    data_root = _write_events_jsonl(tmp_path, "TCK-CROSS-WEEK", [("Finalize", "ok")], week="2026-W30")
+
     results = check_workflow_meta_conformance(
-        "TCK-ANYTHING", workflows_dir=tmp_path, events_path=events_path
+        "TCK-CROSS-WEEK", workflows_dir=tmp_path, data_root=data_root
+    )
+    by_phase = {r["phase"]: r for r in results}
+    assert by_phase["Scope"]["status"] == "PASS"
+    assert by_phase["Finalize"]["status"] == "PASS"
+
+
+def test_check_workflow_meta_conformance_unresolvable_workflow_returns_labeled_na(tmp_path):
+    data_root = _write_events_jsonl(tmp_path, "TCK-ANYTHING", [("Scope", "ok")])
+    results = check_workflow_meta_conformance(
+        "TCK-ANYTHING", workflows_dir=tmp_path, data_root=data_root
     )
     assert len(results) == 1
     assert results[0]["status"] == "NA"
@@ -174,9 +209,9 @@ def test_check_workflow_meta_conformance_unresolvable_workflow_returns_labeled_n
 
 def test_check_workflow_meta_conformance_unknown_run_id_prefix_returns_labeled_na(tmp_path):
     _write_workflow_js(tmp_path, "implement-ticket", ["Scope"])
-    events_path = _write_events_jsonl(tmp_path, "TCK-X", [("Scope", "ok")])
+    data_root = _write_events_jsonl(tmp_path, "TCK-X", [("Scope", "ok")])
     results = check_workflow_meta_conformance(
-        "NOT-A-KNOWN-PREFIX-123", workflows_dir=tmp_path, events_path=events_path
+        "NOT-A-KNOWN-PREFIX-123", workflows_dir=tmp_path, data_root=data_root
     )
     assert len(results) == 1
     assert results[0]["status"] == "NA"
@@ -184,10 +219,10 @@ def test_check_workflow_meta_conformance_unknown_run_id_prefix_returns_labeled_n
 
 def test_check_workflow_meta_conformance_run_id_with_zero_events_flags_every_phase(tmp_path):
     _write_workflow_js(tmp_path, "implement-ticket", ["Scope", "Investigate"])
-    events_path = _write_events_jsonl(tmp_path, "TCK-OTHER-RUN", [("Scope", "ok")])
+    data_root = _write_events_jsonl(tmp_path, "TCK-OTHER-RUN", [("Scope", "ok")])
 
     results = check_workflow_meta_conformance(
-        "TCK-NEVER-RAN", workflows_dir=tmp_path, events_path=events_path
+        "TCK-NEVER-RAN", workflows_dir=tmp_path, data_root=data_root
     )
     assert all(r["status"] == "FAIL" for r in results)
     assert {r["phase"] for r in results} == {"Scope", "Investigate"}
@@ -219,19 +254,19 @@ def test_check_workflow_meta_conformance_run_id_with_zero_events_flags_every_pha
     ),
 )
 def test_does_not_flag_security_review_absent_when_ticket_untagged_security():
-    assert _REAL_EVENTS_PATH.exists(), (
-        f"{_REAL_EVENTS_PATH} not found — cannot replay real event data for this guard test"
+    assert _REAL_EVENTS_ROOT.exists(), (
+        f"{_REAL_EVENTS_ROOT} not found — cannot replay real event data for this guard test"
     )
-    real_rows = collect_run_event_statuses("TCK-20260710-CURRENT-RUN-SIDECAR-BASH", _REAL_EVENTS_PATH)
+    real_rows = collect_run_event_statuses("TCK-20260710-CURRENT-RUN-SIDECAR-BASH", _REAL_EVENTS_ROOT)
     assert real_rows, (
-        "TCK-20260710-CURRENT-RUN-SIDECAR-BASH rows no longer present in "
-        f"{_REAL_EVENTS_PATH} (log rotation?) — this guard test requires the real data"
+        "TCK-20260710-CURRENT-RUN-SIDECAR-BASH rows no longer present in any weekly shard under "
+        f"{_REAL_EVENTS_ROOT} (log rotation?) — this guard test requires the real data"
     )
 
     results = check_workflow_meta_conformance(
         "TCK-20260710-CURRENT-RUN-SIDECAR-BASH",
         workflows_dir=_WORKFLOWS_DIR,
-        events_path=_REAL_EVENTS_PATH,
+        data_root=_REAL_EVENTS_ROOT,
     )
     failing = [r for r in results if r["status"] == "FAIL"]
     assert failing == [], f"expected zero FAIL findings, got: {failing}"
