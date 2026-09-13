@@ -1558,6 +1558,19 @@ true power  →  apparent power  →  observation error (power-gap driven)  → 
   deception hook possible at all — if any consumer ever reads `true_power` directly instead of
   going through this pipeline, that consumer is a second, incompatible path the day deception
   ships.
+- **An entity's own strength enters the gap (§13.3) as `true_power`, never as an estimate.** This
+  is a stated law, not an accident of which term the formula happened to reach for: an entity
+  knows its own strength exactly, and only judges *others* poorly. This is defensible on its own
+  terms (an entity has far better information about itself than about a stranger) and it is a
+  structural requirement, not just a simplification — if the observer's own side of the gap were
+  also noisy, error would compound on both sides of the comparison and the estimate would carry no
+  reliable signal at all. **Fallible self-assessment — an entity over- or under-estimating its own
+  strength — is a real, declared future extension, not built here.**
+  `SelfCombatEstimateService` (`src/domains/combat_engagement/self_estimate.py`) is its natural
+  home when it is: overconfidence (an entity overestimating itself) is one of the most realistic
+  failure modes there is, and this seam is what would let it exist without touching the gap
+  formula itself — the gap would simply read a self-estimate instead of `true_power` on that side,
+  the same substitution `apparent_power` already makes for the observed side.
 
 ### 13.3 Observation error is driven by the power *gap*, not the observer alone
 
@@ -1723,6 +1736,10 @@ already has.
 - **Group power**: judging a pack rather than a single entity. Nothing in this section's model
   should assume a target is always one entity, but group assessment is not designed or built here
   — an open extension, named so a future design doesn't have to discover the gap first.
+- **Fallible self-assessment** (§13.2): an entity's own strength enters the gap exactly today, not
+  through an estimate. `SelfCombatEstimateService` is the declared future home for over- or
+  under-confident self-judgment, alongside deception and hearsay in the same "named seam, not
+  built" category.
 
 ### 13.9 Determinism
 
@@ -1751,7 +1768,8 @@ moment it becomes reachable for the first time, the same way `ENABLE_GUILD_QUEST
 **Source (specification only — remaining implementation not yet built):**
 `src/domains/combat_engagement/` (`perception.py` — `OpponentPerceptionService.estimate()`,
 `learning.py` — `CombatLearning.learn()`, `risk_evaluator.py` — `EngagementRiskEvaluator`,
-`schema.py` — `OpponentModel`/`PerceivedOpponentEstimate`/`CombatPosture`),
+`schema.py` — `OpponentModel`/`PerceivedOpponentEstimate`/`CombatPosture`, `self_estimate.py` —
+`SelfCombatEstimateService`, the declared future home for fallible self-assessment),
 `docs/simulation/domains/combat_engagement_contract.md` (the existing technical contract for this
 domain), `src/domains/memory/phase.py` (causal memory's own oldest-first eviction, the precedent
 this section deliberately does not copy), `src/worldassembly/resolver.py:947`
