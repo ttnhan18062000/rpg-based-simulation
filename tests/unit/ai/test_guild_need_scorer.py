@@ -68,3 +68,30 @@ class TestNoBuilding:
         )
         score = GuildNeedScorer().score(entity, state)
         assert score.utility == 0.0
+
+
+class TestRealRaidMobNeverScoresGuild:
+    """TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION.
+
+    End-to-end: a real RaidService.spawn_raid() mob fed directly into GuildNeedScorer must score
+    zero, even with the flag ON and a real town_hall present -- the same real conditions that
+    caused goblin_raider entities to have their raid-target navigation silently overwritten with
+    a guild project before this fix (confirmed via tests/integration/world/
+    test_camp_raid_targeting.py).
+    """
+
+    def test_real_spawned_raid_mob_scores_zero_guild_utility(self):
+        from src.systems.world_systems.generator import EntityGenerator
+        from src.world.raid import RaidService
+
+        generator = EntityGenerator(seed=42)
+        state = AuthoritativeState(tick=500, seed=42, maturity=0)
+        update = RaidService.check_for_raid(state, generator)
+        assert update.entities_add, "sanity: raid must actually spawn mobs for this test to mean anything"
+
+        raider = update.entities_add[0]
+        scored_state = _state_with_town_hall(
+            {raider.id: raider}, flags={"ENABLE_GUILD_QUEST_GENERATION": "ON"}
+        )
+        score = GuildNeedScorer().score(raider, scored_state)
+        assert score.utility == 0.0
