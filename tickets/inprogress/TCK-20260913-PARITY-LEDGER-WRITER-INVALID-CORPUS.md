@@ -70,13 +70,23 @@ are not lost a second time.
 - **Class 3 (15 missing `support_boundary`):** these are the pre-existing P0 `missing`/`unsupported`
   entries that Step 3a's narrowed rule now requires an explanation for. Write a real explanation per
   entry — "no explanation recorded" is itself the honest one where nothing is known.
-- **Class 1 (1536 without `test_path`):** decide and record the policy. Three honest options:
-  (a) accept it as the ledger's historical baseline and freeze it, so no *new* entry may omit
-  `test_path`; (b) treat P0/`verified`-without-evidence as a distinct reportable state; (c) introduce an
-  explicit status for it (e.g. `legacy_unverified`) so the claim these entries actually support is the
-  one they state. Recommend (a) with the baseline recorded, since (b) and (c) are large in different
-  ways — but (c) deserves real consideration, because today these entries *say* `verified` while
-  citing nothing.
+- **Class 1 (1537 without `test_path` at implementation time — re-measured, see investigation.md):**
+  decide and record the policy. Three honest options: (a) accept it as the ledger's historical
+  baseline and freeze it, so no *new* entry may omit `test_path`; (b) treat P0/`verified`-without-
+  evidence as a distinct reportable state; (c) introduce an explicit status for it (e.g.
+  `legacy_unverified`) so the claim these entries actually support is the one they state.
+
+  **Decided: (a), no longer provisional** (the baseline-fix precondition below is done). No new
+  code needed for the freeze itself — `validate_entry()` already requires `test_path` for any new
+  `verified`/`divergent` write, and the new ratchet baseline test now also catches a count
+  regression through any non-writer path. (b)'s reporting half already exists as a side effect of
+  this ticket's own required tool, `tools/parity_corpus_check.py` (P0/P1 breakdown in its
+  `findings`). (c) was seriously considered, not just noted and dropped: it would need a
+  `schema.json` enum change, a `validate_entry()` change, and individually re-triaging up to 1537
+  entries' status — a multi-ticket undertaking on the scale of this whole ticket or larger, out of
+  proportion to decide unilaterally here. Remains a real, credible option for a dedicated future
+  ticket if the ledger's maintainers want a sharper vocabulary than "verified" for pre-writer-era
+  entries.
 - **Never invent citations for Class 1.** Bulk-adding plausible test paths would convert an honest gap
   into a false record: the ledger would then assert verification that never happened, with a path that
   makes it look checked, and the fabrication would be far harder to detect afterwards than the current
@@ -124,16 +134,26 @@ are not lost a second time.
   premature.
 
 ## Acceptance Criteria
-- [ ] The three class counts are re-measured and recorded, with the script committed so the next person
-      re-runs rather than re-derives.
-- [ ] A corpus validation report exists and is runnable; whether it blocks is decided and documented.
-- [ ] Every Class 2 entry parses under `parity_test_path.parse_test_path_citations()`; the count of
-      malformed entries reaches 0, verified by re-running the measurement.
-- [ ] Every Class 3 entry has a non-empty `support_boundary`.
-- [ ] Class 1 has a recorded policy decision, not silence.
-- [ ] All writes went through `write_entry()`; no raw YAML edit of a ledger shard.
-- [ ] The baseline test no longer forces a hotfix ticket for a legitimate correction, and its comment
-      and assertion agree with each other.
+- [x] The three class counts are re-measured and recorded, with the script committed so the next person
+      re-runs rather than re-derives. (`tools/parity_corpus_check.py`, cross-checked at zero
+      mismatch against the real `validate_entry()`; also found a 4th class the ticket's own text
+      didn't name — see investigation.md.)
+- [x] A corpus validation report exists and is runnable; whether it blocks is decided and documented.
+      (Report-only, not a CI gate — 77%+ invalid at start makes a blocking gate unlandable.)
+- [ ] **Partial.** Every Class 2 entry parses under `parity_test_path.parse_test_path_citations()`; the count of
+      malformed entries reaches 0, verified by re-running the measurement. **56 of 124 fixed (45%);
+      68 remain** — genuinely requiring individual judgment (prose citations naming no single
+      specific file, one pre-existing bad citation, one entry whose evidence is a Makefile target
+      rather than a pytest citation). See investigation.md/plan.md for the full accounting and the
+      reasoning for not forcing the rest through guesswork. Flagged for Review.
+- [x] Every Class 3 entry has a non-empty `support_boundary`. (15/15 — `parity_corpus_check.py`
+      confirms `class3_no_support_boundary: 0`.)
+- [x] Class 1 has a recorded policy decision, not silence. (Option A — freeze — decided and
+      de-provisionalized after the baseline fix; see Scope section above.)
+- [x] All writes went through `write_entry()`; no raw YAML edit of a ledger shard.
+- [x] The baseline test no longer forces a hotfix ticket for a legitimate correction, and its comment
+      and assertion agree with each other. (Converted to a ratchet; verified it actually catches a
+      regression, not just always-passing.)
 
 ### Downstream consequence (2026-09-13)
 
@@ -180,9 +200,53 @@ partly that other sessions stop over-trusting the ledger, independent of how man
   local test path may be the wrong rule rather than the data being wrong.
 
 ## Implementation Notes
+Built `tools/parity_corpus_check.py` (report-only, cross-checked at zero mismatch against the real
+`validate_entry()` over all 2187 entries), which also surfaced a 4th defect class the ticket's own
+text didn't name (`SOC-ABAND-TYPE-01`'s bad id pattern — reported, not fixed, different defect
+class). Fixed the baseline test's exact-equality-vs-ratchet contradiction after checking all 6
+precedent hotfix tickets found no hidden rationale for exact equality. Fixed all 15 Class 3
+entries via `write_entry()`, catching and correcting a wrong claim about `SUB-325`/`SUB-326`
+before it shipped (a pre-existing, deeper investigation had already answered the same question
+better). Fixed 56 of 124 Class 2 entries: 51 via a verified normalizer (parenthetical stripping,
+shell-command extraction, multi-file `::`-shorthand expansion, multi-target pytest parsing — every
+proposed fix checked against real files/functions on disk before writing, which caught 5 real
+problems including 2 bugs in my own normalizer), plus 5 via a genuine, narrow `parity_test_path.py`
+parser extension (directory citations — verified end-to-end with the real venv python before
+committing). Decided and recorded the Class 1 policy (Option A, freeze) once the baseline blocker
+was resolved. 68 Class 2 entries remain, genuinely requiring individual judgment rather than being
+mechanically safe to auto-fix — reported honestly rather than forced to a false "0".
 
 ## Test Summary
+```
+pytest tests/tools/test_parity_test_path.py tests/tools/test_mechanics_auditor_static.py \
+       tests/tools/test_parity_ledger_writer.py tests/tools/test_parity_index.py \
+       tests/tools/test_parity_index_baseline.py -q
+# 120 passed
+```
+Every one of the 56 applied ledger fixes additionally verified against real files/functions on
+disk (not just parser acceptance) before being written — this is not captured by the pytest run
+above, since pytest doesn't execute against ledger content.
 
 ## Files Changed
+- `tools/parity_corpus_check.py` — new.
+- `tools/parity_test_path.py` — `_DIR_RE` added for directory citations.
+- `tests/tools/test_parity_test_path.py` — 3 new tests.
+- `tests/tools/test_parity_index_baseline.py` — ratchet conversion.
+- `tests/tools/test_parity_ledger_writer.py` — `TestStep3aRealLegacyEntryNeedsExplanation` updated.
+- `docs/parity_ledger/{combat_movement,faction,infrastructure,progression,social_narrative,strategic_cognition,substrate,town_resource,world_dynamics}.yaml` — 56 entries fixed via `write_entry()`.
+- `staging_artifacts/TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS/{investigation.md,plan.md,test_plan.md}`.
 
 ## Completion Summary
+Fixed the baseline test (exact-equality → ratchet), decided and recorded the Class 1 policy
+(freeze, Option A), fixed Class 3 in full (15/15), and fixed 56 of 124 Class 2 entries with a real
+parser capability extension for directory citations along the way. Found and reported a 4th defect
+class the ticket's own text never named. Caught and corrected two of my own mistakes before they
+shipped — a wrong claim about `SUB-325`/`SUB-326`'s spatial-index evidence, and two bugs in my own
+Class 2 normalizer — both via independent verification against real files, not assumed correct.
+
+**Honest gap, not silence**: AC #3 (Class 2 reaches 0) is only 45% met. The remaining 68 entries
+are prose run-summaries naming no single specific file, one genuine pre-existing bad citation, and
+one entry whose real evidence is a Makefile target rather than a pytest citation — none are safely
+auto-fixable without either guessing a citation that was never actually named (this ticket's own
+no-fabrication principle, applied to Class 2 in spirit) or a materially larger, separate parser
+redesign. Raised explicitly for Review rather than declared complete or silently descoped.
