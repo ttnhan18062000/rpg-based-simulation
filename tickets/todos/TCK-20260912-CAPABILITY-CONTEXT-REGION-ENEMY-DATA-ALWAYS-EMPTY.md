@@ -110,6 +110,10 @@ learned, or observed about that enemy or region.
   finding, found while searching for a real consumer for `KnowledgeFact`'s `danger_rating` fact
   type; explicitly declined to build that connection, filing this as its own independent finding
   instead)
+- `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (open — per
+  `docs/plans/rpg_design_roadmap/rpg_knowledge_investigation_closure_plan.md`, this ticket is
+  gated on that one's disposition decision: this is the payoff item — until real facts/leads flow,
+  this ticket's own "what should populate these fields" question has nothing real to feed it)
 
 ## Related Docs
 - `docs/cognition/capability_and_knowledge_contract.md` (the contract this ticket's disposition may
