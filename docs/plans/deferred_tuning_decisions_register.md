@@ -353,6 +353,13 @@ only so its raw 35–150 range doesn't swamp the 4.5–28 `atk`/`def_stat` term)
 calibrated against real gameplay-feel or real-run outcomes. A future balance pass may find these
 need adjusting once the mechanism is actually enabled and observable in real corpus runs.
 
+**A known gap, not a correctness issue — recorded next to the coefficients rather than left for
+whoever calibrates this to rediscover**: active breakthroughs grant permanent ability modifiers
+(`PROG-085`) that may confer real combat strength through a route other than `atk`/`def_stat`/
+`max_hp`. If so, two entities with identical stats on these three axes can differ in real danger
+that `true_power()` cannot see. Not investigated or fixed here — a refinement to weigh against
+real data once the mechanism runs, not a reason to have withheld the axis choice now.
+
 **Accepted outcome:** the formula ships with these coefficients as specified. If real-run
 observation later shows the gap distribution feels wrong (e.g. estimates cluster too confidently
 or too uncertainly across the real population of entities encountered), that is a tuning decision
