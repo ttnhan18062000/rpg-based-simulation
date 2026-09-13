@@ -169,7 +169,13 @@ def test_baseline_manifest_does_not_coerce_missing_test_path():
     # gained a real `test_path` (tests/unit/movement/test_spatial_index.py::
     # test_spatial_grid_rebuild_logic), previously `null` behind a fabricated citation to a
     # nonexistent file/method (TCK-20260905-SUB-327-FABRICATED-CITATION-FIX).
-    assert live_missing == 1315
+    # Updated from 1315 to 1314 (TCK-20260913-HOTFIX-PARITY-INDEX-MISSING-TEST-PATH-BASELINE-DRIFT,
+    # 2026-09-13): PROG-014 (docs/parity_ledger/progression.yaml, "Veterancy Ranks should boost
+    # stats via StatsProxy") moved from `status: verified` (test_path: null) to `status: missing`
+    # (still test_path: null, plus a real support_boundary) via TCK-20260912-VETERANCY-STAT-
+    # MULTIPLIER-NEVER-APPLIED -- `missing` status is never counted by this scan, so the entry
+    # drops out entirely rather than gaining a citation.
+    assert live_missing == 1314
 
 
 # ---------------------------------------------------------------------------
