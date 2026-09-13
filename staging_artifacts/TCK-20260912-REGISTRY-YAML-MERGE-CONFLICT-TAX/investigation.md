@@ -97,9 +97,24 @@ conflict markers, immediately followed by an automatic `auto-regenerate REGISTRY
 commit containing the full, correct 3-entry union (`base.txt`, `ticket-a.txt`, `ticket-b.txt`).
 
 **Fallback behavior, both failure modes tested:**
-- **Fully uninstalled** (no local `git config merge.registry-regen.driver` at all): git fails the
-  merge outright — `fatal: custom merge driver registry-regen lacks command line`, exit 128. Loud,
-  as required.
+- **Fully uninstalled** (no `merge.registry-regen.*` config at all — the common state for a fresh
+  clone): **correction, found during Implement while writing the durable test** — an earlier pass
+  through this investigation reported git aborting outright with `fatal: custom merge driver
+  registry-regen lacks command line`. That could not be reproduced under careful, isolated
+  re-testing (one command per shell call, to rule out the exit-code/chaining confusion that had
+  compounded this session's classifier-outage retries): four distinct under-configured states —
+  no config at all, `.name` set with `.driver` unset, `.driver` set to an empty string, and
+  `.driver` pointing at a nonexistent script — all produced the *same* real behavior: git silently
+  falls back to its **ordinary 3-way text merge** for the file, leaving real `<<<<<<<` conflict
+  markers and a non-zero exit, exactly like any other unresolved merge conflict. This is still
+  fully loud and safe (a real conflict requiring manual resolution is the opposite of silently
+  picking a side) — just a different, simpler mechanism than originally claimed. The earlier
+  fatal-abort observation is now believed to have been an artifact of a chained, multi-command
+  shell invocation during that portion of the investigation (several commands joined with mixed
+  `&&`/`;`, executed while classifier-timeout retries were also in flight) rather than a
+  reproducible git behavior — recorded here as a correction, not asserted as still-true. See
+  `tests/integrity/test_registry_merge_driver.py::test_merge_with_no_driver_configured_fails_loudly`
+  for the durable, isolated-per-command reproduction this correction is based on.
 - **Partially installed** (driver configured, `post-merge` hook missing or not executable): the
   merge **succeeds silently** with the pre-merge "ours" content, which can be stale/incomplete —
   confirmed live by disabling the hook and re-running the merge: no error, no warning, and the

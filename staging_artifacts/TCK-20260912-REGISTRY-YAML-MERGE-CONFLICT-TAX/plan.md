@@ -111,7 +111,7 @@ entirely, still needs its own install — that part of the residual risk stands 
 | One option implemented, rejected ones and reasons recorded | Option A chosen; B and C's rejection reasons carried from the ticket's own text (see "Explicitly out of scope") |
 | Two branches that both close a ticket merge without a manual regeneration step | The driver + post-merge hook, proven in the scratch repo |
 | One-command install | `make setup-merge-drivers` |
-| Uninstalled → fails loudly, never silently takes a side | Confirmed for the fully-uninstalled case (git's own `fatal: custom merge driver ... lacks command line`); the **partially**-installed case is not loud on its own — flagged as a residual risk covered by the existing CI check, documented explicitly rather than glossed over |
+| Uninstalled → fails loudly, never silently takes a side | Confirmed for the fully-uninstalled case: git falls back to its ordinary 3-way merge, leaving real conflict markers and a non-zero exit (corrected during Implement from an earlier, unreproducible claim of a hard `fatal: ... lacks command line` abort — see investigation.md's correction note); still fully loud and safe, just a simpler mechanism. The **partially**-installed case is not loud on its own — flagged as a residual risk covered by the existing CI check, documented explicitly rather than glossed over |
 | CI check fails when committed file differs from fresh regeneration | Already shipped: `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`, cited not duplicated |
 | Every consumer listed in the ticket still works from a plain checkout | By construction, not runtime probing: this design changes nothing about `generate_registry.py`'s logic, schema, or output format (explicitly Out of Scope) — only *when* regeneration happens around a merge. A plain checkout that never runs `make setup-merge-drivers` gets the exact same committed `docs/REGISTRY.yaml` as today, read by all 9 listed consumers exactly as before. Nothing to spot-check at runtime since nothing in the read path changes. |
 
@@ -127,3 +127,27 @@ entirely, still needs its own install — that part of the residual risk stands 
 - `post-merge` hooks do not run on `git rebase` or `git cherry-pick`, only real merges. Today's
   actual pain (per the ticket's own measurements) is PR-branch merges of `origin/main`, which do
   fire `post-merge` — but this should be stated as a documented boundary, not silently assumed.
+
+## Deviations (Implement)
+
+- **Worktree gitlink bug, self-caught before shipping**: the first draft of `setup-merge-drivers`
+  used a hardcoded relative path `.git/hooks/post-merge`. This repo runs almost entirely through
+  `.claude/worktrees/<name>` checkouts, where `.git` is a *file* (a gitlink to the real shared
+  location), not a directory — a literal `.git/hooks/` path would silently fail (or worse, create
+  a bogus `.git/hooks/` path) in every worktree except the main checkout. Fixed by resolving the
+  real path dynamically via `git rev-parse --path-format=absolute --git-path hooks` in the Makefile
+  target itself, and verified live: `make setup-merge-drivers` run from this worktree correctly
+  installed the hook into the actual shared `/home/u24desktop/Working/rpg-based-simulation/
+  .git/hooks/post-merge`, confirmed by reading that file directly afterward. `make
+  docs-registry-check` also verified working live (`"In sync: 2367 entries match ..."`).
+- **Fatal-error claim corrected while writing the durable test** — see investigation.md's own
+  correction note and `test_merge_with_no_driver_configured_fails_loudly`'s docstring. The
+  uninstalled-driver fallback is an ordinary 3-way merge conflict, not a hard abort; still fully
+  loud and safe, just a different mechanism than originally documented. All ticket ACs concerning
+  this are still satisfied — "never silently takes a side" holds either way.
+- All new/changed files verified with real command runs, not just written and assumed: the new
+  `tests/integrity/test_registry_merge_driver.py` (4 tests, all passing, including two real
+  failures caught and fixed during writing — the fatal-error assumption above, and a blank-line
+  `IndexError` in the `.gitattributes` static assertion), plus `tests/integrity`, `tests/tools/
+  test_generate_registry.py`, and the full `arch-docs` job scope (`tests/architecture tests/docs
+  tests/integrity tests/static tests/refactor`) re-run clean.
