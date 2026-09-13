@@ -281,3 +281,9 @@ merits argument that freeze is the *right* semantic answer for 1300+ pre-writer-
 remains open and credible for whoever takes it on with the scrutiny it needs; this ticket did not
 foreclose it, and does not claim to have settled which answer is *correct* on the ledger's own
 terms, only which one is responsibly scoped for a single ticket to decide alone.
+
+**Stated plainly, so nobody reading this closed ticket later mistakes "decided" for "verified"**:
+the ledger currently has 1307 P0 entries whose `status` reads `verified` while citing no evidence
+of any kind. Freeze is a decision about what happens *next* — no new entry may be written this way
+— it is not a statement that those 1307 entries' `verified` status is accurate. That semantic
+question remains open.
