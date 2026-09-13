@@ -1533,13 +1533,52 @@ The pipeline has three distinct stages, kept distinct on purpose:
 true power  →  apparent power  →  observation error (power-gap driven)  →  observer's estimate
 ```
 
-- **True power**: an entity's own real, static combat strength. `OpponentPerceptionService.
-  estimate()` already computes a target power value (`target_lvl * 20.0`, from `evolution_level`)
-  — this is the formula to extend, not `CapabilityEstimateService`'s own `atk + defense * 0.5`
-  term (§6.12), which is a different, non-symmetric ratio computed only for the acting entity
-  relative to a specific enemy, not a standalone value usable for both sides of a gap. Extending
-  the existing target-power term to also be computed for the *observer* (not only the observed, as
-  today) is what makes a symmetric gap possible without a second formula.
+- **True power**: an entity's own real, static combat strength —
+
+  ```
+  true_power(entity) = entity.combat.atk + entity.combat.def_stat * 0.5
+                        + entity.combat.max_hp * 0.1
+  ```
+
+  computed identically for both sides of a comparison. **Evidence, not preference, decided this
+  shape**: `OpponentPerceptionService.estimate()`'s current target-power term
+  (`target_lvl * 20.0`, from `evolution_level`) was checked against a real sample of 214 entities
+  compiled across 5 corpus worlds (`frontier_marches`, `frontier_living_world`,
+  `frontier_extended`, `crowded_frontier`, `quest_dense_frontier`; seed 42) — **every entity in
+  every world compiles at `evolution_level == 1`.** Levelling happens during simulation via XP, not
+  at world authoring, so a level-only term does not discriminate poorly — for a freshly compiled
+  world it does not discriminate *at all*: `gap` (§13.3) would be exactly zero for every pair, in
+  every world, at the moment this mechanism could first matter. §13.3's core promise — high
+  uncertainty exactly at even matches — would instead report maximum uncertainty for every
+  observation unconditionally, which is not the mechanism failing loudly, it is the mechanism
+  never actually running at all while every test asserting "similar power reads as uncertain"
+  passes regardless.
+  - **`evolution_level` is deliberately excluded, not merely unweighted.** Levelling grants
+    Attribute Points (`docs/mechanics/01_entity_anatomy.md` § "Level Up Rewards", +5/level), and
+    those points feed the same `Attack`/`Defense`/`Max_HP` derived-stat formulas this term already
+    reads (§`01_entity_anatomy.md` § "Derived Combat Stats": `Attack = base_atk + int(strength *
+    0.5) + gear_atk`, similarly for `Defense`/`Max_HP`). A leveled-up entity's greater strength is
+    therefore already fully present in `atk`/`def_stat`/`max_hp` — adding `evolution_level` again
+    would credit the same progression twice. This is a correctness exclusion, not a tuning choice.
+  - **`atk + def_stat * 0.5` reuses `CapabilityEstimateService`'s own existing sub-expression**
+    (§6.12's `base_power` numerator) rather than inventing a new stat term — the same 214-entity
+    sample shows this alone already spans 4.5–28.0, a real 6.22x range at identical (level-1)
+    entities, confirming it discriminates where level does not.
+  - **`max_hp` is a real, separate strength axis this term would otherwise drop.** The same sample
+    shows `max_hp` spanning 35–150 (4.3x) independent of the `atk`/`def_stat` spread — an entity
+    that takes four times as long to kill is not equally dangerous at equal attack/defense. This is
+    distinct from apparent power's own `hp_ratio` condition adjustment (§13.2, below): that
+    captures *how hurt an entity is right now*; `max_hp` here captures *how much killing a healthy
+    version of it takes*. Both are real and belong. Scaled by `0.1` here so its raw 35–150 range
+    does not swamp the 4.5–28 stat term — a first-pass coefficient, not a tuned one; see the
+    deferred-tuning register entry below.
+  - `CapabilityEstimateService`'s own `base_power` (§6.12) itself remains a different, non-
+    symmetric *ratio* against a specific enemy's danger/level, not a standalone power value — it is
+    not reusable wholesale for a symmetric gap, only its `atk + defense * 0.5` sub-term is.
+  - **The relative weights above (`0.5`, `0.1`) are a first pass, evidence-backed on which axes
+    matter and awaiting real-run calibration on how much — recorded in
+    `docs/plans/deferred_tuning_decisions_register.md` (D-11) rather than left as undiscoverable
+    magic constants.**
 - **Apparent power**: `apparent_power(entity) = true_power(entity)` adjusted for the entity's
   *current condition* — `OpponentPerceptionService.estimate()` already folds in `hp_ratio` (a
   wounded target reads as weaker: `base_power *= 0.6` below 0.3 HP) and equipment signals; this

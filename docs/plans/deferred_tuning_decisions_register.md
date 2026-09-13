@@ -326,6 +326,40 @@ evidence — see that ticket's own updated Completion Summary for the full pictu
 
 ---
 
+### D-11 · `true_power()` coefficients for Perceived Power Assessment (§13, `04_strategic_cognition.md`)
+**Deferred from:** `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`
+
+Recorded as an axes-evidence-backed, weights-unpicked first pass — the Bible section's own
+`true_power(entity) = atk + def_stat * 0.5 + max_hp * 0.1` is a real formula with real supporting
+evidence for *which* axes matter; the specific `0.5`/`0.1` coefficients are a reasonable first pass
+awaiting real-run calibration, not a tuned outcome. Naming them here rather than leaving them
+embedded, undiscoverable, in a doc's own prose is the point of this register.
+
+**The evidence that decided the axes** (not the weights): sampled 214 real entities compiled across
+5 corpus worlds (`frontier_marches`, `frontier_living_world`, `frontier_extended`,
+`crowded_frontier`, `quest_dense_frontier`; seed 42). Every entity compiles at `evolution_level ==
+1` — a level-only power term would make the gap this feature depends on exactly zero for every
+pair, in every world, at the point the mechanism could first matter. The same sample shows real,
+substantial spread on other axes at identical level: `atk` 4–24, `def_stat` 0–8, `max_hp` 35–150 —
+an `atk + def_stat * 0.5` proxy alone already spans 4.5–28.0 (6.22x). `evolution_level` itself is
+excluded from the formula entirely, not just left unweighted: Attribute Points from levelling
+already feed the `Attack`/`Defense`/`Max_HP` derived-stat formulas (`docs/mechanics/
+01_entity_anatomy.md` § "Derived Combat Stats") this term reads directly, so adding
+`evolution_level` again would double-count the same progression.
+
+**What is genuinely undecided:** the relative weights `0.5` (on `def_stat`, reused from
+`CapabilityEstimateService`'s own existing sub-expression, §6.12) and `0.1` (on `max_hp`, chosen
+only so its raw 35–150 range doesn't swamp the 4.5–28 `atk`/`def_stat` term) have not been
+calibrated against real gameplay-feel or real-run outcomes. A future balance pass may find these
+need adjusting once the mechanism is actually enabled and observable in real corpus runs.
+
+**Accepted outcome:** the formula ships with these coefficients as specified. If real-run
+observation later shows the gap distribution feels wrong (e.g. estimates cluster too confidently
+or too uncertainly across the real population of entities encountered), that is a tuning decision
+to make then, against real data — not a reason to have withheld the axis choice now.
+
+---
+
 ## Related
 
 - `docs/audits/D04_balance_tuning.md` — existing balance audit; this register feeds it.
