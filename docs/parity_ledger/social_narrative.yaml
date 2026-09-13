@@ -2433,11 +2433,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/domains/campaigns/test_narrative_ledger.py -x -v;
-    pytest tests/integration/scenarios/test_campaign_runtime.py::test_narrative_ledger_populated_with_cross_episode_events
-    -x -v -m slow
-
-    '
+  test_path: tests/unit/domains/campaigns/test_narrative_ledger.py; tests/integration/scenarios/test_campaign_runtime.py::test_narrative_ledger_populated_with_cross_episode_events
   divergence_note: null
   support_boundary: null
 - id: SOC-227
@@ -2479,10 +2475,8 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_party_lifecycle.py::test_leadership_election_picks_highest_sociability
-    -x -v; pytest tests/unit/social/test_party_lifecycle.py -x -v
-
-    '
+  test_path: tests/unit/social/test_party_lifecycle.py::test_leadership_election_picks_highest_sociability;
+    tests/unit/social/test_party_lifecycle.py
   divergence_note: null
   support_boundary: null
 - id: SOC-229
@@ -2502,11 +2496,9 @@
     \ build_reward_transfer_intents); src/domains/adventure/scoring.py (AdventureRouteScorer.score\
     \ \u2014 group param + synergy block \xA78). (TCK-20260619-E41C-REWARD-DIST)\n"
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_party_lifecycle.py::test_fair_share_protocol_distributes_by_contribution
-    -x -v; pytest tests/unit/social/test_party_lifecycle.py::test_class_synergy_bonus_applied_to_combat_routes
-    -x -v; pytest tests/unit/social/test_party_lifecycle.py -x -v
-
-    '
+  test_path: tests/unit/social/test_party_lifecycle.py::test_fair_share_protocol_distributes_by_contribution;
+    tests/unit/social/test_party_lifecycle.py::test_class_synergy_bonus_applied_to_combat_routes;
+    tests/unit/social/test_party_lifecycle.py
   divergence_note: null
   support_boundary: null
 - id: SOC-230
@@ -2532,11 +2524,9 @@
     \ (RouteFamily.PROTECT_TARGET, RouteFamily.OWN_SURVIVAL); src/engine/pipeline_phases/groups.py\
     \ (GroupPhase defection pass). (TCK-20260619-E41D-DEFECTION-ESCORT)\n"
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_party_lifecycle.py::test_betrayal_desertion_fires_on_high_grievance
-    -x -v; pytest tests/unit/social/test_party_lifecycle.py::test_escort_target_route_scores_above_survival
-    -x -v; pytest tests/unit/social/test_party_lifecycle.py -x -v
-
-    '
+  test_path: tests/unit/social/test_party_lifecycle.py::test_betrayal_desertion_fires_on_high_grievance;
+    tests/unit/social/test_party_lifecycle.py::test_escort_target_route_scores_above_survival;
+    tests/unit/social/test_party_lifecycle.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CROSS-EP-001
@@ -2558,9 +2548,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_social_memory.py -x -v
-
-    '
+  test_path: tests/unit/social/test_social_memory.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CROSS-EP-002
@@ -2633,10 +2621,8 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_social_memory.py::test_faction_hostility_persists_after_key_member_death
-    -x -v; pytest tests/unit/social/test_social_memory.py -x -v -m "not slow"
-
-    '
+  test_path: tests/unit/social/test_social_memory.py::test_faction_hostility_persists_after_key_member_death;
+    tests/unit/social/test_social_memory.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CROSS-EP-003
@@ -2657,10 +2643,8 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_social_memory.py::test_betrayal_decay_slower_than_cooperation
-    tests/unit/social/test_social_memory.py -x -v
-
-    '
+  test_path: tests/unit/social/test_social_memory.py::test_betrayal_decay_slower_than_cooperation;
+    tests/unit/social/test_social_memory.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CROSS-EP-005
@@ -2697,13 +2681,11 @@
     \ (CampaignOrchestrator._build_initial_state() call site, self._event_recorder.record())\
     \ (TCK-20260824-WIRE-ORPHANED-MECHANISMS)\n"
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_social_memory.py::test_known_traitor_event_fires_on_encounter
-    tests/unit/social/test_social_memory.py::test_faction_memory_survives_episode_without_member_npcs
-    tests/unit/social/test_social_memory.py::test_all_three_event_kinds_importable
-    tests/unit/social/test_social_memory.py -x -v -m "not slow" tests/integration/scenarios/test_social_memory.py::test_consequence_events_fire_at_episode_entity_spawn
+  test_path: tests/unit/social/test_social_memory.py::test_known_traitor_event_fires_on_encounter;
+    tests/unit/social/test_social_memory.py::test_faction_memory_survives_episode_without_member_npcs;
+    tests/unit/social/test_social_memory.py::test_all_three_event_kinds_importable;
+    tests/unit/social/test_social_memory.py; tests/integration/scenarios/test_social_memory.py::test_consequence_events_fire_at_episode_entity_spawn;
     tests/integration/scenarios/test_social_memory.py::test_consequence_events_noop_without_event_recorder
-
-    '
   divergence_note: 'Ticket pseudocode specified hostility threshold > 3.0; actual
     field range is 0.0-1.0 so correct threshold is >= 0.5 (moderate hostility = traitor-level
     offense). (TCK-20260619-E43E-CONSEQUENCE-EVENTS investigation.md)
@@ -2731,10 +2713,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/domains/chronicle/test_significance.py tests/unit/domains/chronicle/test_chronicle_compiler.py
-    -x -v
-
-    '
+  test_path: tests/unit/domains/chronicle/test_significance.py; tests/unit/domains/chronicle/test_chronicle_compiler.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-002
@@ -2755,9 +2734,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/domains/chronicle/test_chronicle_compiler.py -x -v
-
-    '
+  test_path: tests/unit/domains/chronicle/test_chronicle_compiler.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-003
@@ -2786,10 +2763,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/domains/chronicle/test_naming.py tests/unit/domains/chronicle/test_chronicle_compiler.py
-    -x -v
-
-    '
+  test_path: tests/unit/domains/chronicle/test_naming.py; tests/unit/domains/chronicle/test_chronicle_compiler.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-004
@@ -2811,9 +2785,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/domains/chronicle/test_chronicle_compiler.py -x -v
-
-    '
+  test_path: tests/unit/domains/chronicle/test_chronicle_compiler.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-005
@@ -2835,9 +2807,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/api/test_chronicle_api.py -x -v
-
-    '
+  test_path: tests/api/test_chronicle_api.py
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-006
@@ -2855,9 +2825,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/domains/chronicle/test_faction_chronicle.py -x -v
-
-    '
+  test_path: tests/unit/domains/chronicle/test_faction_chronicle.py
   divergence_note: null
   support_boundary: null
 - id: SOC-FAC-001
@@ -3296,8 +3264,7 @@
     \ double-fire, now reconciled; real, non-mocked kernel run (urban_political_seed42_500t,\
     \ ENABLE_SOCIAL_COOPERATION=ON) confirmed the fix's before/after counts"
   proof_type: parity
-  test_path: tests/unit/observability/test_event_shapers_social.py (20 tests, all
-    passing, including test_contract_expired_offer_not_double_fired_when_both_signals_present)
+  test_path: tests/unit/observability/test_event_shapers_social.py
   divergence_note: null
   support_boundary: "SHADOW-mode construction only \u2014 live delivery is a separate,\
     \ later Phase 2 cutover ticket's scope."
@@ -3394,11 +3361,7 @@
     the extractor''s own rollback branch); explicit OFF delivers exactly 1 from the
     extractor (0 from the shaper) -- confirmed no double-fire in either mode.'
   proof_type: parity
-  test_path: 'tests/unit/observability/test_event_shapers_narrative.py (13 tests:
-    registry wiring, 3-way flag gating (default/OFF/SHADOW/ON), independence from
-    ENABLE_PUSH_EVENT_SHAPERS_PHASE2, direct NarrativeShaper.shape() behavior including
-    the same non-QuestState-project exclusion TCK-20260807-QUEST-EVENT-TYPE-FILTER-BUG
-    fixed in event_extractor.py''s own version)'
+  test_path: tests/unit/observability/test_event_shapers_narrative.py
   divergence_note: 'TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC''s
     own closed ticket record (tickets/done/TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-PHASE2-EPIC.md,
     Out of Scope section) states quest_event "already come[s] from quest_system, a
@@ -4018,9 +3981,8 @@
     (execute_join_clan/execute_leave_clan); src/observability/events.py (ClanMemberLeftEvent,
     ClanSuccessionEvent). (TCK-20260903-CLAN-LIFECYCLE-SUCCESSION)
   proof_type: parity
-  test_path: pytest tests/unit/domains/faction/test_clan_state.py tests/unit/domains/faction/test_clan_succession.py
-    tests/unit/domains/faction/test_clan_lifecycle.py tests/unit/social/test_clan_appraisal.py
-    -x -v
+  test_path: tests/unit/domains/faction/test_clan_state.py; tests/unit/domains/faction/test_clan_succession.py;
+    tests/unit/domains/faction/test_clan_lifecycle.py; tests/unit/social/test_clan_appraisal.py
   divergence_note: 'Succession has no 0.2 sociability-margin gate (contrast SOC-228,
     Group''s check_leadership()); Group''s unconditional dead-leader dissolution (SOC-176/SOC-189)
     is unmodified and does not apply to Clan. asset_ids is currently always-empty/inert
@@ -4130,18 +4092,18 @@
     (live party-defection trigger, wired as pipeline phase "groups"); src/systems/social_systems/contracts.py
     ContractService.compute_betrayal_clan_reputation_update (pure-function-only contract-betrayal
     path; disclosed as not reachable from its production caller, which never passes
-    betrayal=True/betrayer_id -- a pre-existing gap this ticket surfaces but does not
-    fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION) --
-    the production caller of resolve_contract_outcome() is now ContractLifecyclePhase.resolve_expirations()
+    betrayal=True/betrayer_id -- a pre-existing gap this ticket surfaces but does
+    not fix. Updated 2026-09-13 (TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION)
+    -- the production caller of resolve_contract_outcome() is now ContractLifecyclePhase.resolve_expirations()
     (pipeline.py "contracts" phase) -- the prior duplicate, ContractService.process_active_contracts(),
-    was confirmed unreachable in normal sequential tick progression (resolve_expirations() always
-    ran first and transitioned the contract away from ACTIVE) and was deleted, its consequence
-    model ported into resolve_expirations() as the sole owner. resolve_contract_outcome() is a
-    real live path as of that fix; only its betrayal branch (this entry''s own subject) remains
-    disclosed-unreachable, now via resolve_expirations() instead.); src/systems/social_systems/appraisal.py
-    appraise_contract() (stranger-judgment blend term, CLAN_INFLUENCE_WEIGHT = 0.2).
-    Mechanics Bible: docs/mechanics/04_strategic_cognition.md Sec.10a "Clan Reputation
-    & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)
+    was confirmed unreachable in normal sequential tick progression (resolve_expirations()
+    always ran first and transitioned the contract away from ACTIVE) and was deleted,
+    its consequence model ported into resolve_expirations() as the sole owner. resolve_contract_outcome()
+    is a real live path as of that fix; only its betrayal branch (this entry''s own
+    subject) remains disclosed-unreachable, now via resolve_expirations() instead.);
+    src/systems/social_systems/appraisal.py appraise_contract() (stranger-judgment
+    blend term, CLAN_INFLUENCE_WEIGHT = 0.2). Mechanics Bible: docs/mechanics/04_strategic_cognition.md
+    Sec.10a "Clan Reputation & Guilt-by-Association Law". (TCK-20260904-CLAN-REPUTATION-ASSOCIATION)
 
     '
   proof_type: parity
