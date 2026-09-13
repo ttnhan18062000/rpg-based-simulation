@@ -2638,15 +2638,21 @@
     \ min_significance, episode) \u2014 all three query params optional and combinable.\
     \ All responses shaped through CampaignHistoryResponse / NarrativeLedgerEntryPresenter\
     \ (src/api/presenters/campaigns.py); no raw domain models exposed from API. Returns\
-    \ HTTP 404 for unknown campaign IDs. Router registered in create_v2_app() with\
-    \ prefix='/api/v1'. NarrativeLedger is a pure read facade \u2014 wraps CampaignState.narrative_ledger\
-    \ at access time; does not own or mutate the list."
+    \ HTTP 404 for unknown campaign IDs. Router registration is now gated (2026-09-13,\
+    \ TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION):\
+    \ create_v2_app() only calls app.include_router(campaigns.router, prefix='/api/v1')\
+    \ when RuntimeProfile.enable_campaign_chronicle_api is True (default False) --\
+    \ CampaignOrchestrator never calls register_campaign() in production, so this\
+    \ endpoint was always empty/404 when reachable; it is off by default now rather\
+    \ than removed, since the implementation itself is correct. NarrativeLedger is\
+    \ a pure read facade \u2014 wraps CampaignState.narrative_ledger at access time;\
+    \ does not own or mutate the list."
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: src/api/routes/campaigns.py::get_campaign_history + src/api/presenters/campaigns.py::CampaignHistoryResponse
     + src/api/presenters/campaigns.py::NarrativeLedgerEntryPresenter + src/domains/campaigns/narrative_ledger.py::NarrativeLedger.query
-    + src/api/server.py::create_v2_app
+    + src/api/server.py::create_v2_app + src/config/profiles.py::RuntimeProfile.enable_campaign_chronicle_api
   proof_type: feature
   test_path: tests/api/test_campaign_history_api.py::test_campaign_history_endpoint_returns_narrative_ledger
     + tests/api/test_campaign_history_api.py::test_campaign_history_404_unknown_campaign

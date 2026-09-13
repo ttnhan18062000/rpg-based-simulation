@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION
-phase: open
+phase: done
 date: 2026-09-12
 tags: [architecture, api-design]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, api-design]
 Two live public API endpoints read a registry that nothing populates in a real server — every real request returns empty/404, always
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -82,15 +82,17 @@ deployment.
   unilaterally.
 
 ## Acceptance Criteria
-- [ ] Real evidence (not assumption) on whether any real production code path populates either
-      registry — confirmed exhaustively, not just the initial grep.
-- [ ] Real evidence on whether these endpoints are actually reachable in a real deployment (frontend
-      usage, documentation, any real client).
-- [ ] A peer-routed determination: wiring gap (implement the real population path) vs. test-only
-      scaffolding (gate/remove/redesign) — obtained before implementing either.
-- [ ] If a fix is implemented: real evidence (an integration test hitting the real endpoint against
-      a real populated registry, not just a direct-injection unit test) that the endpoint returns
-      real data in a real deployment shape.
+- [x] Real evidence (not assumption) on whether any real production code path populates either
+      registry — confirmed exhaustively (`register_campaign`/`register_chronicle`/
+      `ChronicleCompiler(`: zero production call sites beyond their own modules and test files).
+- [x] Real evidence on whether these endpoints are actually reachable in a real deployment: zero
+      frontend references; both API test files call the handlers directly, never through
+      `create_v2_app()`.
+- [x] A peer-routed (and user-routed, for this genuine architecture/product decision) determination:
+      gate — stop exposing by default, keep the implementation. Neither wired nor removed.
+- [x] Real test evidence the gate itself works: `tests/api/test_inert_route_gating.py` — disabled
+      by default (real 404), reachable when explicitly enabled (real domain-level 404 for an
+      unregistered campaign, distinguishable from the route-not-mounted 404).
 
 ## Related Tickets
 - `TCK-20260911-CAMPAIGN-CHRONICLE-REGISTRY-UNREGISTER-DEAD` (origin — found while investigating
@@ -104,6 +106,11 @@ deployment.
   populates" cause. Two instances in one batch suggests this may be systematic in this codebase,
   not isolated — whoever picks up either ticket should check for a third before assuming these are
   the only two, and should treat them as possibly one problem with two faces)
+- `TCK-20260913-WAREHOUSE-INGESTION-NEVER-AUTOMATED-SEARCH-API-EMPTY-IN-PRACTICE` (the "check for a
+  third instance" search this ticket and its sibling both called for — found `search.py`, confirmed
+  it is NOT a third instance of this pattern: its empty state is a normal, correctable one, a real
+  CLI ingestion path exists and works when invoked, just never automated. Filed separately per that
+  distinction, not folded in)
 
 ## Related Docs
 None yet.
@@ -126,15 +133,58 @@ None yet — standard tier, staging artifacts created when picked up.
 - Whether disposition #1 or #2 applies is the entire point of this ticket — deliberately not
   pre-judged. Both are plausible from the evidence gathered so far and the answer changes the fix
   entirely (implement real wiring vs. remove/gate a surface that shouldn't be exposed as-is).
+  **Resolved by user decision: gate — disposition #2, keep the implementation.**
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Full investigation recorded in `stored_artifacts/TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-
+NEVER-POPULATED-IN-PRODUCTION/investigation.md`.
+
+Added `RuntimeProfile.enable_campaign_chronicle_api: bool = False` (`src/config/profiles.py`),
+shared by both `campaigns.router` and `chronicle.router` (one flag, since both share the same
+disposition and cause). `src/api/server.py::create_v2_app()` now only registers either router when
+the flag is `True`. Confirmed `campaigns.py` and `chronicle.py` each contain exactly the 2 affected
+endpoints and nothing else before gating.
+
+Corrected two now-stale parity ledger entries that claimed unconditional router registration —
+`INFRA-219` (`docs/parity_ledger/infrastructure.yaml`) and `SOC-CHRON-005`
+(`docs/parity_ledger/social_narrative.yaml`) — via `tools/parity_ledger_writer.py` (the sanctioned,
+schema-validating write path, per standing practice for big/structural parity ledger edits).
+`SOC-CHRON-005`'s own `test_path` field was independently already invalid (a raw shell-command
+string, not a structured citation) — fixed to real citations while touching the entry, since the
+writer's validation rejects the whole entry otherwise.
+
+Third-instance check surfaced `search.py`; filed as its own ticket per peer confirmation it's a
+different problem shape, not folded in — see this ticket's own Related Tickets.
 
 ## Test Summary
-_(pending)_
+New tests in `tests/api/test_inert_route_gating.py` (shared with the sibling ticket, 6 tests, all
+pass): disabled by default (real 404 for both routes), reachable when enabled (real domain-level
+404, distinguishable from route-not-mounted). Full `tests/api/` regression sweep (153 passed)
+confirms `test_campaign_history_api.py`/`test_chronicle_api.py` (direct-handler-call tests)
+unaffected. Full parity-tooling sweep (`test_parity_index.py`, `test_parity_index_baseline.py`,
+`test_parity_ledger_scan.py`, `test_parity_ledger_writer.py` — 97 passed) confirms both ledger
+corrections are schema-valid and the derived index rebuilds cleanly.
 
 ## Files Changed
-_(pending)_
+- `src/config/profiles.py` — `RuntimeProfile.enable_campaign_chronicle_api` field added.
+- `src/api/server.py` — `campaigns.router`/`chronicle.router` registration gated behind the new
+  flag.
+- `tests/api/test_inert_route_gating.py` — new, shared with the sibling ticket.
+- `docs/parity_ledger/infrastructure.yaml` — `INFRA-219` updated (conditional registration).
+- `docs/parity_ledger/social_narrative.yaml` — `SOC-CHRON-005` updated (conditional registration;
+  also fixed its own pre-existing invalid `test_path` format).
+- `tickets/todos/TCK-20260913-WAREHOUSE-INGESTION-NEVER-AUTOMATED-SEARCH-API-EMPTY-IN-PRACTICE.md` —
+  new ticket, the third-instance check's own real finding.
+
+## Completion Summary
+Disposition (gate) was the user's own decision, routed via peer, not picked here. Both required
+pre-checks (nothing real depends on these routes; the gating mechanism follows an existing
+`api_key_hashes` precedent) confirmed before implementing. The required "check for a third
+instance" (shared with the sibling ticket) surfaced `search.py` as a genuinely different problem
+shape, filed separately rather than folded in. Corrected two parity ledger entries whose
+"unconditionally registered" claims are now stale, using the sanctioned writer tool, and fixed an
+unrelated pre-existing format defect found while touching one of them. No known material gap left
+unstated.
 
 ## Completion Summary
 _(pending)_
