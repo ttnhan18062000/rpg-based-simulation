@@ -18,8 +18,8 @@ authority come from document frontmatter; brainstorm sources are listed only whe
 references `docs/brainstorm/`.
 
 `docs/plans/archive/` is excluded. Multi-file plan packages are collapsed into one program row, so
-milestone and supporting files are not repeated individually. This snapshot summarizes 95 Markdown
-files as 35 plan records; `plans_tracking.md` excludes itself.
+milestone and supporting files are not repeated individually. This snapshot summarizes 96 Markdown
+files as 36 plan records; `plans_tracking.md` excludes itself.
 
 ### Status key
 
@@ -63,6 +63,7 @@ files as 35 plan records; `plans_tracking.md` excludes itself.
 | [Roadmap — Live Map: Reconnection, Then Evidence-Driven Scaling](live_map_scaling_roadmap.md) | Roadmap for Live Map: Reconnection, Then Evidence-Driven Scaling. | `active` | `P1` | — | 1 |
 | [Roadmap — Live Map Rendering and Surface Integration](live_map_rendering_and_surface_integration_milestone_plan.md) | Coordinates renderer evidence, independent Live Map/HUD readiness, directional integration, browser adoption gates, conditional native validation, and [detailed work packages](render-and-art/README.md). | `active` | `P1` | [renderer architecture](../brainstorm/render-and-art/live_map_rendering_engine_architecture_proposal.md)<br>[surface-integration architecture](../brainstorm/render-and-art/live_map_hud_surface_integration_architecture.md) | 10 |
 | [Engine Long-Term Development Roadmap](long_term_development_roadmap.md) | Engine Long-Term Development Roadmap. | `active` | `P1` | — | 1 |
+| [Roadmap — Full Delivery of the Three Rendering and Art Epics](render_and_art_program_roadmap.md) | Cross-epic coordinator tying together Live Map/HUD, Aseprite CAP-A/CAP-B, and visual asset management — conditional dependency graph, gate IDs, and cross-plan wiring; does not replace the three owner packages. Copy of `docs/brainstorm/render-and-art/three_epic_full_delivery_roadmap.md`, added 2026-09-13 for parity with how `performance_optimization_roadmap.md` is placed. | `active` | `P1` | [three_epic_full_delivery_roadmap.md](../brainstorm/render-and-art/three_epic_full_delivery_roadmap.md) | 1 |
 | [RPG design roadmap program](rpg_design_roadmap/rpg_design_roadmap.md) | Sequences RPG mechanics, world, social, memory, SimQ, generation, and corpus-test milestones. | `active` | `P1` | [2026-09-02-core-rpg-knowledge-belief-axis-proposal.md](../brainstorm/2026-09-02-core-rpg-knowledge-belief-axis-proposal.md)<br>[2026-09-02-core-rpg-social-relationship-axis-proposal.md](../brainstorm/2026-09-02-core-rpg-social-relationship-axis-proposal.md)<br>+12 explicit | 16 |
 | [Epic Plan — Scripts & Tools Governance](scripts_tools_governance_epic.md) | Delivery program for Scripts & Tools Governance. | `active` | `P1` | — | 1 |
 | [Visual Asset Management and Runtime Integration — Draft Milestone Plan Package](visual-asset-management-runtime-integration/README.md) | Draft milestone plan for candidate intake, quarantine/adoption, immutable source/artifact/release records, and semantic runtime resolution feeding Live Map/HUD. | `active` | `P1` | [asset_management_and_runtime_integration_proposal.md](../brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md) | 10 |
@@ -97,4 +98,7 @@ its `performance_optimization/` child package govern performance work (the child
 draft under review, not yet authoritative); `docs/plans/engine_future_epics_roadmap.md` and
 `docs/plans/long_term_development_roadmap.md` are general gap-analysis roadmaps of uncertain
 current accuracy (see notes above) — for RPG-mechanics work specifically, prefer the actively
-maintained `rpg_design_roadmap/` (M1-M9) program over either.
+maintained `rpg_design_roadmap/` (M1-M9) program over either. For render/art/HUD work,
+`docs/plans/render_and_art_program_roadmap.md` governs cross-epic sequencing across the three
+draft packages (`render-and-art/`, `aseprite-mcp-pixel-art/`, `visual-asset-management-runtime-
+integration/`); like the performance package, it is a draft under review, not yet authoritative.
