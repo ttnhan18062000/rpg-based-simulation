@@ -419,8 +419,7 @@
     -- new EVENT_TYPES entry and score() branch, weight read from config (no numeric
     literals).'
   proof_type: parity
-  test_path: tests/unit/observability/test_event_shapers_economy_faction.py (new TestFactionTrajectoryStagnant
-    coverage), tests/simulation_quality/test_faction_scorer.py (new coverage)
+  test_path: tests/unit/observability/test_event_shapers_economy_faction.py; tests/simulation_quality/test_faction_scorer.py
   divergence_note: null
   support_boundary: Observability signal addition only -- no gameplay mechanic change.
     `grade_anchors.json` recalibrated only if a real scoped test/calibration run shows
