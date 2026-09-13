@@ -108,7 +108,9 @@
   test_path: null
   divergence_note: RabbitMQ removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika (RabbitMQ); TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no disabled-mode code path left for
+    this claim to apply to.
 - id: INFRA-011
   text: '`DISABLE_KAFKA=1` causes Kafka client code to enter explicit disabled mode.'
   status: unsupported
@@ -121,7 +123,9 @@
   test_path: null
   divergence_note: Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no Kafka client code left for a DISABLE_KAFKA=1
+    branch to exist.
 - id: INFRA-012
   text: Kafka client imports do not crash when disabled.
   status: legacy_verified
@@ -154,7 +158,9 @@
   test_path: null
   divergence_note: Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no disabled-mode code path left for
+    this claim to apply to.
 - id: INFRA-015
   text: Redis client behavior remains safe when Redis package or runtime is unavailable.
   status: verified
@@ -189,7 +195,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker transport left to fall
+    back from.
 - id: INFRA-018
   text: Worker pool does not require live RabbitMQ/Kafka to execute local simulation
     behavior.
@@ -243,7 +251,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker infrastructure left
+    to be missing.
 - id: INFRA-023
   text: Chaos-enabled runs survive AI-result drop conditions without immediate simulation
     failure.
@@ -442,7 +452,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker-only metrics path left
+    to rely on.
 - id: INFRA-042
   text: Monitoring compatibility is verified under realistic stack conditions, not
     just unit stubs.
@@ -584,7 +596,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no optional-broker disabled state
+    left to execute headless against.
 - id: INFRA-055
   text: Headless run still produces the expected result artifacts (at minimum replay,
     and where applicable manifest/graph outputs).
@@ -609,7 +623,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no optional broker setup left
+    for the headless runner import to be isolated from.
 - id: INFRA-057
   text: Final-system path remains suitable for regression use rather than demo-only
     use.
@@ -695,7 +711,9 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there is no broker dependency left to be
+    missing.
 - id: INFRA-065
   text: Worker transport degradation falls back safely to local execution.
   status: verified
@@ -770,7 +788,8 @@
   test_path: null
   divergence_note: RabbitMQ/Kafka removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika or confluent_kafka; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed both dependencies entirely, so there are no brokers left to be missing.
 - id: INFRA-072
   text: RabbitMQ missing-package path fails closed or disables cleanly.
   status: verified
@@ -813,7 +832,9 @@
   test_path: null
   divergence_note: RabbitMQ removed entirely by TCK-20260817-DEAD-INFRA-REMOVAL-EPIC;
     broker disabled-mode behavior is inapplicable, not verified.
-  support_boundary: null
+  support_boundary: V2 src/ never imported pika; TCK-20260817-DEAD-INFRA-REMOVAL-EPIC
+    removed the dependency entirely, so there is no broker mode left for a RabbitMQ
+    dispatch contract to be preserved against.
 - id: INFRA-076
   text: Kafka recovery can reconstruct from snapshot plus event stream.
   status: verified
@@ -3683,12 +3704,9 @@
     \ merge \u2014 two different entities' EntityUpdates never collide; self_model_bundle_set\
     \ prefers the later non-None set)\n"
   proof_type: parity
-  test_path: 'tests/integration/domains/test_fused_loop.py::test_information_belief_merge_preserves_self_model_writes_both_flags_on;
+  test_path: tests/integration/domains/test_fused_loop.py::test_information_belief_merge_preserves_self_model_writes_both_flags_on;
     tests/integration/domains/test_fused_loop.py::test_branch_b_on_compiled_urban_political_state_self_model_and_branch_a_coexist;
     tests/integration/domains/test_fused_loop.py::test_belief_assimilation_persists_facts
-    (regression, ENABLE_BELIEF_ASSIMILATION alone, unmodified pass required)
-
-    '
   divergence_note: "Straightforward bug fix, not an intentional behavior divergence\
     \ \u2014 the call site now matches its 3 siblings' pre-existing pattern exactly.\
     \ Documented in docs/guidelines/intentional_divergences.md \xA72.24 (Bug Fix rationale,\
@@ -4324,12 +4342,7 @@
 
     '
   proof_type: null
-  test_path: 'tests/simulation_quality/test_grade_regression.py (urban_political_seed{42,123,456}_200t
-    anchors -- materialization-half evidence only; the query-routing-half failure
-    has no dedicated regression test yet, this is exactly TCK-20260712-SIMQ-INFORMATION-ROUTING-CLOSURE''s
-    test 1, test_branch_b_query_routing_fails_silently_on_real_urban_political_state)
-
-    '
+  test_path: tests/simulation_quality/test_grade_regression.py
   divergence_note: null
   support_boundary: 'Scoped strictly to urban_political''s real compiled state at
     200 ticks, seeds 42/123/456 -- not re-verified at other worlds, tick counts, or
@@ -5293,17 +5306,13 @@
     on dashboard-build), Makefile:1 (.PHONY list includes all four new targets).
 
     '
-  test_path: 'tests/tools/test_agent_ops_dashboard_serve.py::test_serve_module_does_not_mutate_main_app_at_import_time,
-    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_exposes_same_five_routes_as_main_app,
-    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_returns_index_html_for_spa_root,
-    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_raises_clear_error_when_dist_dir_missing,
-    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_argparse_port_and_host_defaults,
-    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_module_has_no_node_npm_invocation,
-    tests/tools/test_dashboard_makefile_targets.py (9/9 passing, re-run and confirmed
-    during this parity update: `python3 -m pytest tests/tools/test_agent_ops_dashboard_serve.py
-    tests/tools/test_dashboard_makefile_targets.py -q` -> "9 passed in 0.93s")
-
-    '
+  test_path: tests/tools/test_agent_ops_dashboard_serve.py::test_serve_module_does_not_mutate_main_app_at_import_time;
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_exposes_same_five_routes_as_main_app;
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_returns_index_html_for_spa_root;
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_app_raises_clear_error_when_dist_dir_missing;
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_argparse_port_and_host_defaults;
+    tests/tools/test_agent_ops_dashboard_serve.py::test_serve_module_has_no_node_npm_invocation;
+    tests/tools/test_dashboard_makefile_targets.py
   divergence_note: null
   support_boundary: 'Production serving/build tooling only for the dashboard SPA +
     API co-mount; never mutates AuthoritativeState. Does not touch or duplicate INFRA-275
@@ -8570,12 +8579,7 @@
     own rollback branch); explicit OFF delivers exactly 1 from the extractor (0 from
     the shaper) -- confirmed no double-fire in either mode, for both event types independently.'
   proof_type: parity
-  test_path: 'tests/unit/observability/test_event_shapers_agency.py (16 tests: registry
-    wiring, 4-way flag gating for both events combined, independence from ENABLE_PUSH_EVENT_SHAPERS_QUEST,
-    direct AgencyShaper.shape() behavior for both commitment_abandoned -- including
-    the hp-delta reconstruction correctness case -- and rejection_cascade_tick --
-    including the population-aggregate-not-per-entity case and the no-prior-state-dependency
-    case)'
+  test_path: tests/unit/observability/test_event_shapers_agency.py
   divergence_note: 'Byte-for-byte identical trigger logic and payload shape to event_extractor.py''s
     own pre-fix version (SIMQ-CALIBRATED-001''s own TCK-20260701-SIMQ-EMIT-AGENCY2
     entry) -- this is a delivery mechanism migration only, not a behavior change.
@@ -9344,16 +9348,7 @@
     built (and the subsequent TCK-20260815-KGMCP-P2-CACHE-READ-WRITE-WIRING Security-Review
     pattern-set expansion) remain accurate, only their file location changed.'
   proof_type: regression
-  test_path: 'tests/tools/test_write_path_guard.py (54 tests, behavior-parity port
-    of the original tests/tools/test_knowledge_gateway_redaction.py -- previously
-    archived, now deleted by TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY, formerly
-    at tests/archive/test_knowledge_gateway_redaction.py -- covering every symbol
-    that moved: TestModuleDisclosure x1, TestAllowlist x3, TestRedactionAndHashing
-    x5, TestSecretScan x24, TestSizeCap x5, TestNeverCacheCategories x9, TestRedactionPolicyVersion
-    x2, TestSqliteOperationalLimits x4 (open_connection_with_limits() coverage only
-    -- the archived module''s own check_db_size_within_limit/execute_bounded_transaction/acquire_write_guard/release_write_guard/GC-eligibility
-    coverage stayed behind in the archived test file, historical record only), TestWorkflowIsolationGuards
-    x1)'
+  test_path: tests/tools/test_write_path_guard.py
   divergence_note: null
   support_boundary: 'This ticket builds pure, directly-testable functions only --
     zero wiring into the live gateway. tools/knowledge_gateway_router.py, tools/knowledge_gateway_packet_assembly.py,
@@ -11671,12 +11666,7 @@
     build_usage_table(), build_report()); docs/agent-monitoring/README.md "Agent Tool-Usage
     Baseline" section documents the tool and its current findings (6 of 16 registered
     agents with zero historical tool-call rows).
-  test_path: 'tests/tools/test_agent_tool_usage_baseline.py (10/10 passing: test_output_has_exactly_16_agent_rows_plus_unattributed,
-    test_agent_row_present_with_zero_count_for_agents_with_no_real_rows, test_null_and_non_matching_agent_values_bucket_to_unattributed,
-    test_glob_matches_all_dated_week_shards_and_unknown_week, test_reuses_load_data_glob_not_a_fourth_loader,
-    test_sum_of_per_agent_counts_matches_wc_l_sanity_check_on_real_corpus, test_every_nonzero_tool_entry_has_a_labeled_truncated_example,
-    test_example_is_verbatim_substring_of_a_real_row_not_paraphrased, test_script_is_read_only_against_real_agent_monitoring_data,
-    test_cli_runs_against_real_corpus_and_prints_valid_json_or_table)'
+  test_path: tests/tools/test_agent_tool_usage_baseline.py
   divergence_note: null
   proof_type: contract
 - id: INFRA-403
@@ -11697,11 +11687,7 @@
   v2_evidence: tools/capability_envelope_baseline.py (add_entry(), seed_registry(),
     load_registry(), diff_against_registry() CLI subcommands add/seed/list/diff);
     docs/ai/capability_envelope_baseline.md (registry shape, audit-only scope, why-this-exists)
-  test_path: 'tests/tools/test_capability_envelope_baseline.py (9/9 passing: test_baseline_schema_covers_all_four_settings_local_fields,
-    test_diff_script_runs_against_real_settings_local_json_produces_real_report, test_diff_script_handles_missing_settings_local_json_gracefully,
-    test_diff_script_output_states_audit_only_no_enforcement, test_clean_baseline_input_produces_empty_result,
-    test_out_of_envelope_entry_produces_flagged_result, test_baseline_registry_rejects_or_governs_duplicate_or_conflicting_entries,
-    test_diff_script_is_read_only_against_settings_local_json_and_baseline, test_seeded_entries_marked_unreviewed_and_manual_adds_marked_reviewed)'
+  test_path: tests/tools/test_capability_envelope_baseline.py
   divergence_note: null
   proof_type: contract
 - id: INFRA-404
@@ -12236,3 +12222,45 @@
   support_boundary: Doc/repo tooling only -- no simulation behavior involved (mirrors
     INFRA-183/263/264's support_boundary). Purely a git-merge-workflow mechanism for
     keeping the generated doc index in sync; not a simulation mechanics parity claim.
+- id: INFRA-418
+  text: 'TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS -- adds tools/parity_corpus_check.py,
+    a new report-only (non-blocking, no CI gate) scan that runs validate_entry() over
+    every on-disk docs/parity_ledger/*.yaml entry and classifies rejections into four
+    defect classes (no test_path; malformed test_path; no support_boundary; and a
+    4th the ticket discovered via cross-check against the real validator: a bad id
+    pattern), verified at investigation time to match validate_entry() with zero mismatches
+    across all 2187 entries. Reruns in well under a second -- no pytest execution,
+    respecting TCK-20260705-GATE-DET-MECHANICS-AUDITOR''s ''never sweep'' constraint.
+    Also extends tools/parity_test_path.py (first introduced by INFRA-415) with a
+    new _DIR_RE pattern, accepting a bare directory citation (e.g. `tests/unit/lab/`)
+    as a valid test_path shape -- a real pytest argument tools/gate_checks/mechanics_auditor_static.py::check_test_path()
+    already handled via Path.exists(), but the shared citation parser''s regex had
+    never accepted. Also converts tests/tools/test_parity_index_baseline.py''s exact-equality
+    assertion on live_missing (verified/divergent entries lacking test_path) into
+    a ratchet (_MISSING_TEST_PATH_CEILING, may only decrease), after the comment directly
+    above it had contradicted the exact-equality assertion for months (six prior hotfix
+    tickets bumped the number rather than resolving the contradiction).'
+  status: verified
+  priority: P2
+  v2_evidence: tools/parity_corpus_check.py (new report-only corpus scan, not wired
+    into any CI gate); tools/parity_test_path.py::_DIR_RE (directory-citation acceptance
+    -- second extension of the shared parser after INFRA-415 introduced it); tests/tools/test_parity_index_baseline.py
+    (_MISSING_TEST_PATH_CEILING ratchet replacing exact-equality assertion at line
+    ~198)
+  test_path: tests/tools/test_parity_test_path.py::test_bare_directory_citation_is_accepted,
+    tests/tools/test_parity_test_path.py::test_directory_citation_without_trailing_slash_is_still_unparseable,
+    tests/tools/test_parity_test_path.py::test_directory_citation_participates_in_multi_citation_lists,
+    tests/tools/test_parity_index_baseline.py::test_baseline_manifest_does_not_coerce_missing_test_path
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Agent-orchestration/parity-ledger-tooling infrastructure only
+    -- no simulation behavior involved, and no src/ file was touched by this ticket.
+    Third installment in the parity-ledger-tooling lineage after INFRA-331 (tools/parity_ledger_writer.py
+    introduced) and INFRA-415 (tools/parity_test_path.py extracted as a shared parser,
+    evidence_kind field added, Step 3a P0 rule narrowed) -- does not duplicate either.
+    tools/parity_corpus_check.py itself has no dedicated persisted test file; its
+    classification output was verified once at investigation time by cross-checking
+    against directly running validate_entry() over all 2187 live entries (zero mismatches,
+    documented in staging_artifacts/TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS/investigation.md)
+    rather than by an automated regression test -- disclosed honestly rather than
+    cited as if a persisted test exists.

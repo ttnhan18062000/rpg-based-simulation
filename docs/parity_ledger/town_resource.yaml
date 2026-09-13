@@ -40,9 +40,7 @@
   v2_evidence: '`src/engine/apply.py` (`ApplyPath.apply_generation` uses immutable
     `replace`)'
   proof_type: parity
-  test_path: '`tests/integration/kernel/test_simulation_kernel_contract.py::test_authoritative_phase_list`
-    (confirms COLLECTION, where proposals are generated, precedes RESOLUTION, where
-    mutation happens, in the authoritative phase order)'
+  test_path: tests/integration/kernel/test_simulation_kernel_contract.py::test_authoritative_phase_list
   divergence_note: null
   support_boundary: null
 - id: TOWN-005
@@ -175,9 +173,7 @@
   legacy_evidence: null
   v2_evidence: '`src/engine/town_resolution.py` (checks `tile_pos in state.town_tiles`)'
   proof_type: parity
-  test_path: '`tests/unit/world/test_town_building_contract.py::test_town_navigation_proximity`
-    (confirms town membership is derived from real entity position via `town_center`,
-    not a cosmetic flag)'
+  test_path: tests/unit/world/test_town_building_contract.py::test_town_navigation_proximity
   divergence_note: null
   support_boundary: null
 - id: TOWN-016
@@ -193,9 +189,7 @@
     \ \u2014 proposal layer applies same discount after DynamicPriceService; both\
     \ layers import from `src/systems/economy_systems/reputation_discount.py` (TCK-20260619-E33D-REP-DISCOUNTS).\n"
   proof_type: parity
-  test_path: '`tests/unit/world/test_economy_contract.py::test_shop_buy_and_sell`
-    (covers bounded buy/sell using inventory/gold truth); `tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies`
-    (covers the reputation-discount symmetry claim)'
+  test_path: tests/unit/world/test_economy_contract.py::test_shop_buy_and_sell; tests/integration/scenarios/test_macro_economy.py::test_reputation_discount_applies
   divergence_note: null
   support_boundary: null
 - id: TOWN-017
@@ -1945,9 +1939,7 @@
     \ block (L255); src/engine/pipeline.py \u2014 gold_sink run_phase wired in Phase\
     \ 5 after town_resolution.\n"
   proof_type: parity
-  test_path: 'tests/unit/economy/test_gold_sink.py (TC-C01 through TC-C12); tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
-
-    '
+  test_path: tests/unit/economy/test_gold_sink.py; tests/integration/scenarios/test_macro_economy.py::test_gold_sink_reduces_accumulation_rate
   divergence_note: null
   support_boundary: 'archetype-blocked in dungeon_crawl: gold_sink_fired calibration_hits=0
     across all runs; no service buildings (blacksmith/inn/healer_hut) and no traveling_merchant
@@ -2060,10 +2052,7 @@
     \ resource_recipes: iron_vein; data/worlds/urban_political/world_compile_report.json\
     \ \u2014 resource_node_count: 3.\n"
   proof_type: parity
-  test_path: 'tests/integration/worldassembly/test_e2e_smoke.py::test_smoke_urban_political_compiles_to_authoritative_state
-    (asserts report["resource_node_count"] >= 3 and len(state.resource_nodes) >= 3)
-
-    '
+  test_path: tests/integration/worldassembly/test_e2e_smoke.py::test_smoke_urban_political_compiles_to_authoritative_state
   divergence_note: null
   support_boundary: null
 - id: TOWN-184
