@@ -132,6 +132,28 @@ class ActionIntentAdapter:
         elif intent.kind == "ATTACK_TARGET":
             router_payload["action"] = "ATTACK"
         elif intent.kind == "ASK_INFORMATION":
+            if "query_kind" not in intent.payload:
+                # Adventure/AGENCY-domain-originated intent (ObjectiveIntentResolver) delivers no
+                # answer -- there is no query, no provider, no fact. TCK-20260913-ADVENTURE-ASK-
+                # INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING: this branch used to unconditionally
+                # deduct `cost_gold` here and record execution_result="SUCCESS" regardless -- a
+                # trace that lied about a no-op. The gold deduction itself was a dormant shape,
+                # not a currently-active charge: `cost_gold` is never populated on this path
+                # (ObjectiveIntentResolver's one real call site, tactical.py:348, passes only
+                # "position"; ObjectiveState has no field to carry a cost). Removed outright rather
+                # than left dormant, foreclosing silent activation if a future caller ever
+                # populates it, and the trace now records what actually happened.
+                trace = IntentTrace(
+                    intent_kind=intent.kind,
+                    actor_id=intent.actor_id,
+                    why_selected=intent.reason or "ask info",
+                    opportunity_source_id=intent.source_opportunity_id,
+                    requirements_checked=tuple(reqs),
+                    execution_result="NO_OP: no query_kind, Adventure-domain intent cannot deliver an answer"
+                )
+                cls._traces.append(trace)
+                return {entity.id: EntityUpdate(entity_id=entity.id)}
+
             trace = IntentTrace(
                 intent_kind=intent.kind,
                 actor_id=intent.actor_id,
@@ -141,15 +163,6 @@ class ActionIntentAdapter:
                 execution_result="SUCCESS"
             )
             cls._traces.append(trace)
-
-            if "query_kind" not in intent.payload:
-                # Adventure/AGENCY-domain-originated intent (ObjectiveIntentResolver) — behavior
-                # must stay byte-identical to pre-fix code. Do not read "cost_paid" here.
-                gold_deduct = intent.payload.get("cost_gold", 0)
-                return {entity.id: EntityUpdate(
-                    entity_id=entity.id,
-                    inventory=InventoryUpdate(gold_delta=-gold_deduct),
-                )}
 
             # Information-domain-originated (InformationIntentResolver) — close the loop.
             # Reuse the EXISTING canonical assimilation path (InformationResponseNormalizer +

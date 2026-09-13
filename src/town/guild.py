@@ -21,10 +21,18 @@ class GuildAction:
         # 1. Gather potential intelligence
         # Find some resource nodes the entity doesn't have leads for
         potential_leads = []
-        
+
         # Example: Find Iron Nodes
+        # TCK-20260913-KNOWLEDGE-LAYER-CONNECT-GUILD-VISIT-PATH: was "iron" -- the real content
+        # catalog's resource id is "iron_vein" (data/content/world/resources.yaml), so this never
+        # matched a single real resource node in any corpus world. Confirmed via a real 300-tick
+        # instrumented run against frontier_living_world (has iron_vein nodes): 0 leads produced
+        # across 7 real GuildAction.visit() calls before this fix. Hardcoding a second literal
+        # string here is itself a real, disclosed shape concern -- see
+        # TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE for where this ID should really come
+        # from; not resolved here, only corrected to match reality.
         for node in state.resource_nodes.values():
-            if node.kind == "iron":
+            if node.kind == "iron_vein":
                 lead_id = f"iron_lead_{node.id}"
                 if lead_id not in entity.strategic.leads:
                     potential_leads.append(

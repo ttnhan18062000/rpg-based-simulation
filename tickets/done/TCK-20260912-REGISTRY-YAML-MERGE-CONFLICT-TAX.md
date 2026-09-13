@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX
-phase: inprogress
+phase: done
 date: 2026-09-12
 tags: [data-quality, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [data-quality, process-improvement]
 `docs/REGISTRY.yaml` conflicts on nearly every concurrent PR — a generated file merged by hand
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
