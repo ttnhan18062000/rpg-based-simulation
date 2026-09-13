@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS
-phase: inprogress
+phase: done
 date: 2026-09-04
 tags: [agent-monitoring, observability, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, observability, data-quality]
 workflow_meta_conformance.py still reads the retired flat events.jsonl, not the weekly shard
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
