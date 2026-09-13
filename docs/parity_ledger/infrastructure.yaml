@@ -12183,3 +12183,45 @@
     actually distinguish CRLF from LF and is not evidence for this entry''s LF-only
     claim -- only the two test_path entries above exercise that at the byte level.'
   evidence_kind: runtime_observation
+- id: INFRA-418
+  text: 'TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS -- adds tools/parity_corpus_check.py,
+    a new report-only (non-blocking, no CI gate) scan that runs validate_entry() over
+    every on-disk docs/parity_ledger/*.yaml entry and classifies rejections into four
+    defect classes (no test_path; malformed test_path; no support_boundary; and a
+    4th the ticket discovered via cross-check against the real validator: a bad id
+    pattern), verified at investigation time to match validate_entry() with zero mismatches
+    across all 2187 entries. Reruns in well under a second -- no pytest execution,
+    respecting TCK-20260705-GATE-DET-MECHANICS-AUDITOR''s ''never sweep'' constraint.
+    Also extends tools/parity_test_path.py (first introduced by INFRA-415) with a
+    new _DIR_RE pattern, accepting a bare directory citation (e.g. `tests/unit/lab/`)
+    as a valid test_path shape -- a real pytest argument tools/gate_checks/mechanics_auditor_static.py::check_test_path()
+    already handled via Path.exists(), but the shared citation parser''s regex had
+    never accepted. Also converts tests/tools/test_parity_index_baseline.py''s exact-equality
+    assertion on live_missing (verified/divergent entries lacking test_path) into
+    a ratchet (_MISSING_TEST_PATH_CEILING, may only decrease), after the comment directly
+    above it had contradicted the exact-equality assertion for months (six prior hotfix
+    tickets bumped the number rather than resolving the contradiction).'
+  status: verified
+  priority: P2
+  v2_evidence: tools/parity_corpus_check.py (new report-only corpus scan, not wired
+    into any CI gate); tools/parity_test_path.py::_DIR_RE (directory-citation acceptance
+    -- second extension of the shared parser after INFRA-415 introduced it); tests/tools/test_parity_index_baseline.py
+    (_MISSING_TEST_PATH_CEILING ratchet replacing exact-equality assertion at line
+    ~198)
+  test_path: tests/tools/test_parity_test_path.py::test_bare_directory_citation_is_accepted,
+    tests/tools/test_parity_test_path.py::test_directory_citation_without_trailing_slash_is_still_unparseable,
+    tests/tools/test_parity_test_path.py::test_directory_citation_participates_in_multi_citation_lists,
+    tests/tools/test_parity_index_baseline.py::test_baseline_manifest_does_not_coerce_missing_test_path
+  divergence_note: null
+  proof_type: regression
+  support_boundary: Agent-orchestration/parity-ledger-tooling infrastructure only
+    -- no simulation behavior involved, and no src/ file was touched by this ticket.
+    Third installment in the parity-ledger-tooling lineage after INFRA-331 (tools/parity_ledger_writer.py
+    introduced) and INFRA-415 (tools/parity_test_path.py extracted as a shared parser,
+    evidence_kind field added, Step 3a P0 rule narrowed) -- does not duplicate either.
+    tools/parity_corpus_check.py itself has no dedicated persisted test file; its
+    classification output was verified once at investigation time by cross-checking
+    against directly running validate_entry() over all 2187 live entries (zero mismatches,
+    documented in staging_artifacts/TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS/investigation.md)
+    rather than by an automated regression test -- disclosed honestly rather than
+    cited as if a persisted test exists.
