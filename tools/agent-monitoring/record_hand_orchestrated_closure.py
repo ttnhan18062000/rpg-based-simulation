@@ -43,7 +43,6 @@ when using this wrapper, or the ticket will get a duplicate working_log entry.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import sys
 import time
@@ -54,6 +53,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import record_events  # noqa: E402
 import record_run  # noqa: E402
 from vocabulary import CANONICAL_TIERS  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from working_log_writer import append_working_log_row  # noqa: E402
 
 
 def build_records(
@@ -201,12 +203,10 @@ def main() -> None:
             else f"stored_artifacts/{args.ticket_id}"
         )
 
-    working_log_path = Path("tickets/working_log.csv")
     try:
-        with working_log_path.open("a", newline="", encoding="utf-8") as f:
-            csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerow(
-                [run_record["end_ts"], args.ticket_id, args.title, args.final_status, args.log_summary, artifacts_path]
-            )
+        append_working_log_row(
+            run_record["end_ts"], args.ticket_id, args.title, args.final_status, args.log_summary, artifacts_path,
+        )
         log_ok = True
     except OSError as e:
         log_ok = False
