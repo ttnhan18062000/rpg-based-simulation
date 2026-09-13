@@ -43,4 +43,12 @@ tickets/working_log.csv text eol=lf merge=union
 # this path fails the merge loudly (git's own behavior for an unconfigured `merge=`
 # attribute) rather than silently taking one side -- resolve by taking either side and
 # rerunning `make docs-registry`, same as before.
+# Cold-start caveat (confirmed live + reproduced in
+# tests/integrity/test_registry_merge_driver.py::test_cold_start_first_merge_introducing_gitattributes_falls_back_to_ordinary_conflict):
+# a branch that forked before this line existed does NOT get the driver's benefit on the one
+# merge that pulls this exact line in for the first time, even with the driver/hook already
+# installed beforehand -- git resolves merge-driver attributes from the pre-merge state of the
+# branch being merged into, not one that includes this same merge's own .gitattributes change.
+# Falls back to the ordinary loud-conflict behavior above for that one merge only; every
+# subsequent merge on that branch (which now carries this line) uses the driver normally.
 docs/REGISTRY.yaml merge=registry-regen
