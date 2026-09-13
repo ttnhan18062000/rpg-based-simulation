@@ -22,10 +22,24 @@ _BACKTICK_FULL_RE = re.compile(r"^`([^`]+)`$")
 _DELIM_SPLIT_RE = re.compile(r"\s*[,+;]\s*")
 _NODE_ID_RE = re.compile(r"^[\w./\-]+\.py(::[\w \[\]./:\-]+)?$")
 
+# A bare directory citation (e.g. `tests/unit/lab/`), added by
+# TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS: `check_test_path()` in
+# mechanics_auditor_static.py already handles this shape correctly with zero changes needed
+# there -- it resolves citations via plain `Path.exists()` (true for directories) and invokes
+# `pytest <citation> -x -q` (a directory is a completely normal pytest argument that runs every
+# test file inside it). The gap was purely this module's own regex never having accepted the
+# shape. Requires a trailing `/` specifically (not just "no `.py` extension") to stay
+# unambiguous against a malformed/truncated file path that simply forgot `.py`.
+_DIR_RE = re.compile(r"^[\w./\-]+/$")
+
 
 def _strip_full_backtick(s: str) -> str:
     match = _BACKTICK_FULL_RE.match(s)
     return match.group(1) if match else s
+
+
+def _matches_citation_shape(candidate: str) -> bool:
+    return bool(_NODE_ID_RE.match(candidate) or _DIR_RE.match(candidate))
 
 
 def parse_test_path_citations(raw) -> "tuple[list[str] | None, str | None]":
@@ -46,7 +60,7 @@ def parse_test_path_citations(raw) -> "tuple[list[str] | None, str | None]":
         resolved = []
         for part in parts:
             candidate = _strip_full_backtick(part.strip())
-            if not _NODE_ID_RE.match(candidate):
+            if not _matches_citation_shape(candidate):
                 return (
                     None,
                     "unparseable test_path (multi-citation candidate but one segment did not "
@@ -56,7 +70,7 @@ def parse_test_path_citations(raw) -> "tuple[list[str] | None, str | None]":
         return (resolved, None)
 
     candidate = _strip_full_backtick(stripped)
-    if _NODE_ID_RE.match(candidate):
+    if _matches_citation_shape(candidate):
         return ([candidate], None)
 
     return (None, f"unparseable test_path: {raw!r}")

@@ -1503,7 +1503,9 @@
     Mark unsupported until M8 is scoped.
 
     '
-  support_boundary: null
+  support_boundary: Pre-planned placeholder for a future combat milestone (Phase 8)
+    that has not yet been defined in the design docs -- there is no current implementation
+    for this claim to verify against.
 - id: COMB-134
   text: "Phase 9 owns: (stub \u2014 pre-planned placeholder for Phase 9 combat milestone\
     \ behaviors). Combat milestone documentation currently ends at M7. Phase 9 combat\
@@ -1519,7 +1521,9 @@
     Mark unsupported until M9 is scoped.
 
     '
-  support_boundary: null
+  support_boundary: Pre-planned placeholder for a future combat milestone (Phase 9)
+    that has not yet been defined in the design docs -- there is no current implementation
+    for this claim to verify against.
 - id: COMB-135
   text: "No Part 7 item should be left implicit under a generic bucket like \u201C\
     AI improvements\u201D or \u201Cprogression tuning`"
@@ -3321,11 +3325,11 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_wound_sustained_severity_mapping,
-    ::test_wound_healed_fires, ::test_scar_gained_fires; tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers;
-    tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop
-
-    '
+  test_path: 'tests/unit/observability/test_event_extractor_vitals.py:: test_wound_sustained_severity_mapping;
+    tests/unit/observability/test_event_extractor_vitals.py::test_wound_healed_fires;
+    tests/unit/observability/test_event_extractor_vitals.py::test_scar_gained_fires;
+    tests/integration/combat/test_wound_healing_permanence.py::test_wound_healed_and_scar_gained_have_zero_production_producers;
+    tests/integration/observability/test_kernel_event_recording.py::test_wound_sustained_fires_through_real_tick_once_loop'
   divergence_note: null
   support_boundary: Emitted events are classified `unscored_intentional` (docs/simulation_quality/event_type_coverage.md
     Section 5) -- not wired to any SimQ pillar. `wound_sustained` now has both a real
@@ -3480,11 +3484,8 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/movement/test_phase4_movement.py:: test_successful_move_no_longer_costs_readiness,
-    tests/unit/movement/test_position_swap.py:: test_mutual_adjacent_position_swap_succeeds
-    (extended with a readiness-unchanged assertion)
-
-    '
+  test_path: 'tests/unit/movement/test_phase4_movement.py:: test_successful_move_no_longer_costs_readiness;
+    tests/unit/movement/test_position_swap.py:: test_mutual_adjacent_position_swap_succeeds'
   divergence_note: "See intentional_divergences.md \xA72.38 (Movement Double-Costed\
     \ Readiness and Stamina for the Same Fatigue Concern, Bug Fix)\n"
   support_boundary: 'OUT_OF_RANGE (not readiness or friendly-fire) is now the dominant
@@ -4271,9 +4272,9 @@
     actor_validity.py''s is_sleeping check deliberately left on the untyped identity.properties
     dict, out of this migration''s scope.'
   proof_type: parity
-  test_path: tests/unit/combat/test_phase5_negative_cases.py::test_attacker_status_blocked,
-    tests/unit/core/test_hardening_e5.py::test_negative_case_stunned_actor_rejection,
-    ::test_negative_case_no_active_status_actor_not_blocked
+  test_path: tests/unit/combat/test_phase5_negative_cases.py::test_attacker_status_blocked;
+    tests/unit/core/test_hardening_e5.py::test_negative_case_stunned_actor_rejection;
+    tests/unit/core/test_hardening_e5.py::test_negative_case_no_active_status_actor_not_blocked
   divergence_note: null
   support_boundary: null
 - id: COMB-320

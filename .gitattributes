@@ -35,7 +35,12 @@
 agent-monitoring/data/*/*.jsonl text eol=lf merge=union
 tickets/working_log.csv text eol=lf merge=union
 
-# docs/REGISTRY.yaml is deliberately NOT listed here: it's a full-file rewrite on every
-# Finalize (not an append), so union-merging two independent regenerations could produce
-# invalid YAML. Resolve conflicts there by taking either side and rerunning
-# `make docs-registry`, not by hand-merging the diff.
+# docs/REGISTRY.yaml is a full-file rewrite on every Finalize (not an append), so
+# union-merging two independent regenerations could produce invalid YAML -- deliberately
+# NOT merge=union. Instead: `make setup-merge-drivers` (one-time, repo-wide -- see
+# TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX) installs a trivial merge driver plus a
+# post-merge hook that regenerates automatically. If not installed, a real conflict on
+# this path fails the merge loudly (git's own behavior for an unconfigured `merge=`
+# attribute) rather than silently taking one side -- resolve by taking either side and
+# rerunning `make docs-registry`, same as before.
+docs/REGISTRY.yaml merge=registry-regen
