@@ -4,7 +4,7 @@ layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS
-phase: open
+phase: inprogress
 date: 2026-09-04
 tags: [agent-monitoring, observability, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, observability, data-quality]
 workflow_meta_conformance.py still reads the retired flat events.jsonl, not the weekly shard
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 hotfix
@@ -65,11 +65,17 @@ value for whoever is meant to act on a genuine drift.
   `TCK-20260903-HOTFIX-CODEX-MONITORING-SHARD-AWARENESS`.
 
 ## Acceptance Criteria
-- [ ] `check_workflow_meta_conformance(run_id)` correctly locates events for a run_id whose rows
+- [x] `check_workflow_meta_conformance(run_id)` correctly locates events for a run_id whose rows
       exist only under `agent-monitoring/data/<week>/events.jsonl`, verified by a new test using a
       fixture run_id with rows only in a weekly shard.
-- [ ] Re-running the post-Finalize advisory check against a real, already-DONE ticket from this
+      (`test_collect_run_event_statuses_finds_rows_only_in_a_weekly_shard`, plus a second new
+      test proving a run whose events straddle two different weekly shards is found in full.)
+- [x] Re-running the post-Finalize advisory check against a real, already-DONE ticket from this
       week (e.g. `TCK-20260904-REPUTATION-LOCALITY-SCOPE`) returns `status: "CLEAN"`, not `FAIL`.
+      (This module's real status vocabulary is `PASS`/`FAIL`/`NA`, not `CLEAN` — a small
+      imprecision in this AC's own wording, not a bug; verified live:
+      `check_workflow_meta_conformance('TCK-20260904-REPUTATION-LOCALITY-SCOPE')` →
+      `summarize_conformance_results(...)` → `("PASS", "12 declared phase(s) checked, 0 FAIL")`.)
 
 ## Related Tickets
 - TCK-20260904-REPUTATION-LOCALITY-SCOPE (found this gap during its own Finalize)
@@ -91,12 +97,49 @@ None — hotfix tier.
 None.
 
 ## Implementation Notes
-
+Reused `done_checker_static.py::_jsonl_rows_for_run_id_across_weeks` directly, per the ticket's
+own instruction, rather than re-implementing shard globbing a third time. Renamed the module's
+`DEFAULT_EVENTS_PATH`/`events_path` (a single flat-file path) to `DEFAULT_EVENTS_ROOT`/`data_root`
+(a shard-root directory), matching `done_checker_static.py`'s own naming convention for the exact
+same underlying concept — confirmed safe: the only production call site
+(`implement-ticket.js:1865`) passes `run_id` positionally only, never names the parameter, so the
+rename breaks nothing live. Updated every test in `test_workflow_meta_conformance.py` that
+constructed a flat-file fixture to write a weekly-shard fixture instead (`tmp_path/<week>/
+events.jsonl`), including the pre-existing real-data replay test (`_REAL_EVENTS_PATH` →
+`_REAL_EVENTS_ROOT`, now `agent-monitoring/data`) — that test's own precondition assert
+(`real_rows` must be non-empty) had been silently vacuous since the flat file was retired (it
+would have failed at the wrong assertion, for the wrong reason, while still reporting as an
+expected `xfail`); confirmed with `--runxfail` that it now reaches its actual intended assertion
+(the documented Security-Review architecture question) rather than an unrelated file-not-found
+error.
 
 ## Test Summary
-
+```
+pytest tests/tools/test_workflow_meta_conformance.py tests/tools/test_done_checker_static.py \
+       tests/tools/test_mechanics_auditor_static.py -q
+# 156 passed, 1 xfailed
+```
+Live-verified against real repo data, not just the fixture suite: `check_workflow_meta_conformance`
+run directly against 3 real ticket run_ids from this week's shard
+(`TCK-20260904-REPUTATION-LOCALITY-SCOPE`, `TCK-20260912-WORKING-LOG-APPEND-HELPER`,
+`TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION`) — the first returns clean `PASS`; the
+other two correctly flag only the pre-existing, documented Security-Review gap (the same one the
+suite's own `xfail` test names), not the old "zero events found for every phase" false positive.
 
 ## Files Changed
-
+- `tools/gate_checks/workflow_meta_conformance.py` — shard-aware `DEFAULT_EVENTS_ROOT`,
+  `_jsonl_rows_for_run_id_across_weeks` reuse, `events_path`/`data_root` rename.
+- `tests/tools/test_workflow_meta_conformance.py` — fixture helper writes shard paths; 2 new
+  regression tests (single-shard, cross-shard); real-data replay test's own path updated and
+  re-verified to fail for its intended reason again.
 
 ## Completion Summary
+Fixed the stale flat-file path bug: `workflow_meta_conformance.py` now resolves events across
+`agent-monitoring/data/<week>/events.jsonl` weekly shards via the same shard-aware helper
+`done_checker_static.py` already uses for the identical lookup, instead of a hardcoded, retired
+flat file. Confirmed the false-positive is gone against 3 real tickets' actual event data, not
+just synthetic fixtures. Found and fixed a real side effect while touching this file: the existing
+`xfail(strict=True)` real-data replay test had been silently failing at the wrong assertion (data
+not found, due to the same stale path) rather than its intended one (an unrelated, still-open
+Security-Review architecture question) — confirmed with `--runxfail` that it now fails for the
+right reason again.
