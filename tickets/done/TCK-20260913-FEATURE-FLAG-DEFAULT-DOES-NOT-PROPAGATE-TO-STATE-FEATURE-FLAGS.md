@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS
-phase: open
+phase: done
 date: 2026-09-13
 tags: [feature-flags, engine]
 ---
@@ -16,7 +16,7 @@ Changing a flag's default in `FeatureFlagManager` is a no-op for real runs — i
 reaches `state.feature_flags`, the dict every direct-dict-gated consumer actually reads
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -121,51 +121,56 @@ unreachable gate here is in the rollout *process* itself, not the simulation. Ev
 also has no non-fabricated SHADOW-validation history behind it for the same structural reason.
 
 ## Scope
-- For each of the 9 flags in the table, determine whether its own inner literal gate is *sole*
-  (no outer `run_phase()` wrapper involved at all — e.g. `GuildNeedScorer`, a goal scorer called
-  from tactical decision-making, never from `pipeline.py`'s `refine()`) or *redundant* (an outer
-  `run_phase()` gate already exists and is the actual determinant; the inner check is
-  belt-and-suspenders, per `GuildVisitPhase`'s own docstring for its half of this shape). This
-  changes the fix's own shape per flag.
-- Design the real fix for the propagation gap: NOT "seed `state.feature_flags` from
-  `FeatureFlagManager`'s defaults" wholesale (the unmeasured-blast-radius risk above) and NOT
-  "change each inner gate's hardcoded fallback string to match" (creates two independently-edited
-  sources of truth for one concept, coincidentally agreeing today — the exact dual-mechanism shape
-  this arc has spent months deleting; the next person who edits one and not the other reproduces
-  this same silent divergence). A real design is owed here, not picked by default.
-- Once a design exists: decide whether making `SHADOW` meaningful for the *sole*-gate cases
-  (scorers with no `run_phase()`-style update-discarding wrapper to reuse) is worth building, or
-  whether the ON-based-measurement-with-explicit-override approach this arc just used for
-  `ENABLE_GUILD_QUEST_GENERATION` is the accepted alternative going forward.
-- Re-examine `TCK-20260824-ROLLOUT-FLAG-DECISIONS`'s 5 named `*-FLAG-VALIDATION` follow-up tickets
-  (and any others citing "no SHADOW-validation history exists") for whether each cited flag is
-  among the 9 — if so, that ticket's own validation plan needs revising, not just this one.
+**Superseded 2026-09-13, after peer review of this ticket's own blast-radius measurement**: the
+measured count (1 of 9 direct-dict-gated flags disagreeing, 8 agreeing by coincidence) turned
+"seed `state.feature_flags` from `FeatureFlagManager`'s defaults" from an unmeasured risk into a
+bounded, reviewable one. Peer reopened it as the leading fix, on condition that (a) the count is
+re-confirmed against current `main` before building, (b) real test coverage covers the seeding
+*mechanism* itself, not just that one flag's resulting value, and (c) the inner `.get(..., "OFF")`
+fallbacks are still not patched — that option remains rejected, unchanged from the original filing.
+Acceptance is the real acceptance signal from `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`:
+a real lead reaching a real entity in an unmodified corpus profile, no env var.
+
+- Re-confirm the 1-of-9 divergence count against current `main` before implementing.
+- Seed `state.feature_flags` from `FeatureFlagManager().serialize()` once, at the single real entry
+  point every simulation run passes through (`Kernel.__init__`), with explicit overrides already
+  present in `state.feature_flags` winning over manager defaults.
+- Cover the propagation mechanism itself with committed tests: seeding from empty, override
+  preservation, idempotency across repeated construction, and the real corpus-profile end-to-end
+  acceptance signal.
+- Do NOT patch any of the 9 inner-gate hardcoded fallback strings — unchanged from original filing.
 
 ## Out of Scope
-- Implementing any fix in this ticket — investigation, design, and the measurement above only.
-- `ENABLE_GUILD_QUEST_GENERATION`'s own resolution — tracked in
-  `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`, which closes as `BLOCKED`
-  rather than `DONE` specifically because this ticket's own propagation gap keeps its default flip
-  from reaching real runs. That ticket's own D-10 measurement evidence (the mechanism genuinely
-  works once actually reached) stands independent of this ticket's resolution.
+- Classifying each of the 9 flags sole-gate vs. redundant-gate — real design question, not required
+  to close the propagation gap itself; left open below for whoever picks it up next.
+- Re-examining `TCK-20260824-ROLLOUT-FLAG-DECISIONS`'s 5 named `*-FLAG-VALIDATION` follow-ups
+  against the 9-flag list — process/tracking work, not part of the propagation fix; left open below.
+- `ENABLE_GUILD_QUEST_GENERATION`'s own ticket resolution — tracked in
+  `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`, which closes independently
+  once this fix's real evidence is in hand.
 - The 5 `ENABLE_PUSH_EVENT_SHAPERS*` flags — different, already-disclosed, intentional bypass, no
-  divergence found.
-- Re-running the blast-radius measurement as part of this ticket's own filing — it's a live count
-  that must be re-verified at whatever point a fix is actually built, not trusted as static.
+  divergence found; untouched by this fix (they don't read `state.feature_flags.get(FLAG, "OFF")`
+  with a hardcoded literal in the same way, and already default `"ON"` to match).
 
 ## Acceptance Criteria
-- [x] The propagation-gap headline established with real evidence (not the SHADOW-only framing
-      this ticket originally shipped with).
-- [x] The blast-radius measurement performed and recorded: 1 flag currently disagrees, 8 more
-      share the same shape and currently agree by coincidence, 19 flags are unaffected.
-- [ ] Each of the 9 flags classified sole-gate vs. redundant-gate.
-- [ ] A real design for the propagation fix, ruling out both the "seed from manager defaults"
-      wholesale option (unmeasured blast radius) and the "patch each inner fallback to match"
-      option (recreates the dual-mechanism shape) as defaults, brought to peer/user review before
-      implementation.
-- [ ] `TCK-20260824-ROLLOUT-FLAG-DECISIONS`'s 5 named follow-up `*-FLAG-VALIDATION` tickets checked
-      against the 9-flag list; any citing an unobtainable SHADOW window flagged explicitly.
-- [ ] No implementation without that review.
+- [x] The propagation-gap headline established with real evidence.
+- [x] The blast-radius measurement performed, recorded, and **re-confirmed against current `main`**
+      before implementation: still 1 of 9 direct-dict-gated flags disagreeing
+      (`ENABLE_GUILD_QUEST_GENERATION`), 8 agreeing by coincidence. (Total manager-flag count moved
+      28 → 26 since filing; noted, not load-bearing to the 9-flag shape.)
+- [x] `state.feature_flags` seeded from `FeatureFlagManager`'s own defaults at `Kernel.__init__`,
+      the single real entry point every simulation run passes through.
+- [x] Explicit overrides already present in `state.feature_flags` (profile YAML, env var,
+      test-constructed state) verified to survive seeding untouched.
+- [x] Inner `.get(..., "OFF")` fallbacks left unpatched, per standing rejection of that option.
+- [x] Real test coverage for the seeding *mechanism* (not just "the value is now ON"): seed-from-empty,
+      override-preservation, and idempotency-across-repeated-construction, all committed.
+- [x] The real acceptance signal obtained: `GuildAction.visit()` fires in an unmodified
+      `frontier_marches` corpus profile run, no env var, no profile-YAML override for this flag —
+      verified both by manual instrumented run and by a committed, passing pytest test.
+- [ ] Each of the 9 flags classified sole-gate vs. redundant-gate — deferred, see Out of Scope.
+- [ ] `TCK-20260824-ROLLOUT-FLAG-DECISIONS`'s 5 named follow-ups checked against the 9-flag list —
+      deferred, see Out of Scope.
 
 ## Related Tickets
 - `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (blocked — the ticket whose
@@ -207,13 +212,51 @@ None yet — standard tier, staging artifacts created when picked up.
   — not decided here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+- Fix lands in `Kernel.__init__` (`src/engine/kernel.py`), immediately after the existing
+  `_opt_profile`/`_force_full_scan` `object.__setattr__` block, following that same
+  stamp-a-derived-value-onto-frozen-state-at-construction pattern:
+  `object.__setattr__(self._state, "feature_flags", {**FeatureFlagManager().serialize(), **dict(getattr(self._state, "feature_flags", None) or {})})`.
+  Deliberately not wrapped in a swallowing `try/except`, unlike the adjacent block —
+  `feature_flags` is a real, always-present field; a failure here should surface.
+- This seeds all 26 manager-default flags into every real run, not only
+  `ENABLE_GUILD_QUEST_GENERATION` — confirmed via a repo-wide sweep
+  (`-m "corpus_flag_guardrail or scenario_flags or feature_flag_default"`, 118 passed) that this is
+  inert for the other 17 non-dual-gated flags, since they're read exclusively through
+  `FeatureFlagManager`'s own `run_phase()` dispatch and never consult `state.feature_flags`
+  directly.
+- Two design questions from the original filing remain genuinely open, not resolved by this fix:
+  whether each of the 9 flags' inner gate should be classified sole-gate vs. redundant-gate, and
+  whether `TCK-20260824-ROLLOUT-FLAG-DECISIONS`'s 5 named `*-FLAG-VALIDATION` follow-ups need
+  revisiting. Left for whoever picks up that design work next — see Related Tickets.
+- See `staging_artifacts/.../investigation.md` for the full re-confirmation of the blast-radius
+  count against current `main`, and the reasoning for the merge-order choice (explicit overrides
+  win, manager defaults only fill gaps).
 
 ## Test Summary
-_(pending)_
+- `tests/unit/engine/test_kernel_feature_flags_propagation.py` — 4 new tests, all passing (seed-
+  from-empty, override-preservation, idempotency, real corpus-profile end-to-end acceptance signal).
+- Guild/flag/feature-flag regression sweep (9 files) — 97 passed.
+- Broader `tests/unit/engine/ tests/integration/kernel/ tests/unit/domains/optimization/` sweep
+  (`-m "not slow and not extra_slow"`) — 448 passed, 1 unrelated skip, 6 deselected.
+- Repo-wide `-m "corpus_flag_guardrail or scenario_flags or feature_flag_default"` — 118 passed.
+- No regressions found. Full detail in `staging_artifacts/.../test_plan.md`.
 
 ## Files Changed
-_(pending)_
+- `src/engine/kernel.py` — seed `state.feature_flags` from `FeatureFlagManager`'s own defaults in
+  `Kernel.__init__`.
+- `tests/unit/engine/test_kernel_feature_flags_propagation.py` — new, 4 tests covering the
+  propagation mechanism and the real acceptance signal.
+- `tickets/inprogress/` → `tickets/done/` (this ticket).
+- `staging_artifacts/TCK-20260913-.../` → `stored_artifacts/TCK-20260913-.../`.
 
 ## Completion Summary
-_(pending)_
+The propagation gap is fixed: `state.feature_flags` is now seeded from `FeatureFlagManager`'s own
+defaults at the single real entry point every simulation run passes through, with explicit
+overrides always winning. Verified against the exact acceptance signal specified — a real lead
+reaching a real entity in an unmodified `frontier_marches` corpus profile, no env var — both by a
+manual instrumented run and by a committed, passing regression test. The inner `.get(..., "OFF")`
+fallbacks were left untouched, per the standing rejection of that option. Two narrower design
+questions (sole/redundant gate classification per flag; the 5 `ROLLOUT-FLAG-DECISIONS` follow-ups)
+remain open and are recorded as such rather than silently dropped. This unblocks
+`TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`, next in this batch's strict
+order.
