@@ -106,11 +106,25 @@ class CombatActions:
                     is_permadeath_set=combat_up.is_permadeath_set
                 ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
             )
-            
+
             # Stamina drain on attack (Checklist Part 6 Section E)
             stamina_cost = 5.0 # Standard attack cost
             attacker_up = replace(attacker_up, stamina_update=StaminaUpdate(current_delta=-stamina_cost))
-            
+
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER (Sec 13.5a): combat is a real,
+            # second information source, better than passive observation -- both real participants
+            # of this exchange update their own OpponentModel from the real outcome, per the
+            # declared mapping (docs/mechanics/04_strategic_cognition.md Sec 13.5a). Neither read
+            # depends on the other having run first (order-independent by construction).
+            from src.domains.combat_engagement.learning_outcome import apply_combat_learning
+            new_attacker_cognition, new_defender_cognition = apply_combat_learning(
+                entity, target, combat_up.outcome_kind, combat_up.damage_taken, current_tick,
+            )
+            if new_attacker_cognition is not None:
+                attacker_up = replace(attacker_up, cognition_bundle_set=new_attacker_cognition)
+            if new_defender_cognition is not None:
+                defender_up = replace(defender_up, cognition_bundle_set=new_defender_cognition)
+
             return {entity.id: attacker_up, target.id: defender_up}
             
         return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}
