@@ -11,7 +11,7 @@ tags: [architecture, engine, performance, determinism, observability, testing]
 ## Purpose
 
 This groups a system-design discussion (2026-08-25, no code/test changes made) into epic-sized
-work streams the same way `docs/plans/architecture_resilience_remediation_roadmap.md` and
+work streams the same way `docs/plans/archive/architecture_resilience_remediation_roadmap.md` and
 `docs/plans/engine_future_epics_roadmap.md` already do for their own source audits — so a single
 stream can be picked, investigated properly, and turned into real tickets via the `create-tickets`
 pipeline, without committing to all of them at once.
@@ -166,6 +166,42 @@ live/concurrent server specifically, that assumption is now known to need this q
 **Full milestone breakdown:** `docs/plans/design_enhancement/performance_milestones_epic.md`
 (M1 measurement → M2 output-preserving optimizations → M3 job graph, gated on Section F below →
 M4 hierarchical/aggregate simulation, gated on the same acceptance signal as M3).
+
+**(2026-09-13, added by review) Related P2 governance package:**
+`docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md`
+proposes a separate, more formal evidence-gating process (M0 decision governance → M1 correctness
+prerequisites → M2 performance contract → M3 phase/observability → M4 assurance/Gate A → M5 exact
+optimizations → M6 Gate B). It is **not yet authorized to supersede this document** — M0-scoped
+prerequisite ticket creation (decision ownership, conflict triage, and the PERF-D1–D6 decisions
+below) is authorized; M1+ of that package stays blocked until M0 names real accountable owners.
+This roadmap's own M1–M4 above are unaffected and may proceed on their own existing gates (each
+item's determinism/fidelity risk is already justified per-item above; M3/M4 already require
+`docs/plans/design_enhancement/subphase_domain_contracts_epic.md` first plus a SimQ/arena
+regression comparison, and will hit this repo's standard architecture-reviewer gate once ticketed
+regardless of which roadmap governs them). PERF-M0-T09 (P1 roadmap and contract reconciliation) is
+the eventual single point where any real conflict between the two gets resolved through this
+roadmap's own named owners — not by either document unilaterally claiming supersession.
+
+**PERF-D1–D6 disposition (recorded 2026-09-13, per review):**
+- `PERF-D3` (capacity-debt semantics) — **fast-closed**: `AuthoritativeState.work_debt` is already
+  a plain aggregate int with no competing semantic-deferred-work pattern anywhere in `src/`,
+  matching the new package's proposed default exactly. No PERF-M0-T05 investigation needed beyond
+  recording this.
+- `PERF-D1` (determinism/control-trace, Canonical vs. Live bounded contract), `PERF-D2`
+  (portability), `PERF-D4` (performance-authority charter, this roadmap vs. the P2 package),
+  `PERF-D5` (hash-scheduling audit), `PERF-D6` (phase-count reconciliation — confirmed real: 43
+  actual `run_phase()` calls in `pipeline.py` vs. 39 documented in `authoritative_pipeline.md` vs.
+  37/38 claimed in `subphase_domain_contracts_epic.md`/`docs/audits/D19_domain_phase_inventory.md`)
+  — all remain genuinely open and require the full PERF-M0-T03/T04/T06/T07/T08 process with named
+  owners; none are closed by this note.
+
+**C-01..C-17 disposition (recorded 2026-09-13, per review):** all 17 conflicts in
+`performance_optimization_conflict_approval_review.md` are confirmed real and their proposed
+dispositions are adopted, with two corrections: C-03/C-04's worker-utilization half is already
+fixed by `TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER` (only the
+queue-utilization-zero half of that finding is still open), and C-07 should exclude this roadmap's
+M2 item 4 (DOD hot-path projection), which is already gated on M1's measurement per the table
+above, not unconditionally preselected like M2 items 3/5/6.
 
 Full detail, evidence, and per-item citations: `docs/brainstorm/performance_evolution_roadmap.html`.
 Reproduced here as the roadmap's spine, in the doc's own revised priority order — note that this
