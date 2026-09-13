@@ -29,11 +29,18 @@ Option A (regenerate-on-conflict), in the **corrected two-part shape** found dur
 3. `make setup-merge-drivers` — one command, installs both pieces (git config is unversioned local
    state and can't be shipped any other way; the hook file is copied the same way
    `make install-hooks` already installs `post-commit-reindex.sh`).
-4. A CI test asserting `docs/REGISTRY.yaml` matches a fresh regeneration — using the *existing*
-   `--check` flag on `generate_registry.py` (parsed-entry comparison, already immune to the
-   generator's own timestamp-header non-determinism). This is not optional decoration: it is the
-   only backstop against a **partial install** (driver configured, hook missing/non-executable),
-   which was confirmed live to succeed silently with stale content — no error, no warning.
+4. Acceptance Criterion #4 ("a CI check fails when the committed file differs from a fresh
+   regeneration") is **already satisfied by existing, shipped code — not a gap to fill.**
+   `tests/tools/test_generate_registry.py::TestRealDocsTree::
+   test_check_flag_detects_no_drift_against_real_registry` already calls
+   `generate_registry(..., check=True)` against the real, live `docs/REGISTRY.yaml`, and is
+   already collected by the "API / tools / logging" CI job (`.github/workflows/test.yml:266`,
+   `pytest tests/tools ...`). Shipped by `TCK-20260709-REGISTRY-DRIFT-CHECK-GATE`, re-confirmed by
+   `TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS`. This ticket cites it rather than building a
+   duplicate — see investigation.md's correction note. It remains the essential backstop against
+   a **partial install** of this ticket's new merge-driver mechanism (driver configured, hook
+   missing/non-executable), which was confirmed live to succeed silently with stale content — no
+   error, no warning — so its presence is load-bearing for this ticket even though it predates it.
 
 ## Files to add / change
 
@@ -42,7 +49,7 @@ Option A (regenerate-on-conflict), in the **corrected two-part shape** found dur
 | `tools/hooks/registry_post_merge_regen.sh` (new) | Post-merge hook body: regenerate via `python3 tools/generate_registry.py`, compare parsed entries against the committed file (reuse the same drift comparison `_check_drift` does — do not hand-roll a second one), and if different, `git add docs/REGISTRY.yaml && git commit -m "auto-regenerate docs/REGISTRY.yaml after merge"`. Modeled directly on `tools/hooks/post-commit-reindex.sh`'s style (strict mode, guard clauses, one-line install comment). |
 | `Makefile` | New `setup-merge-drivers` target (next to `install-hooks`): `git config merge.registry-regen.driver true`, `git config merge.registry-regen.name "regenerate docs/REGISTRY.yaml on conflict"`, copy the hook script to `.git/hooks/post-merge` + `chmod +x`. New `docs-registry-check` target: `python3 tools/generate_registry.py --check` (mirrors `parity-index-check`'s style). Add both to `.PHONY`. |
 | `.gitattributes` | Add `docs/REGISTRY.yaml merge=registry-regen` (currently only a comment saying this path is deliberately *not* merge=union'd). Keep the existing explanatory comment, add one line noting the driver is opt-in local config installed via `make setup-merge-drivers`, with a fallback note that CI's `--check` step catches drift either way. |
-| `tests/integrity/test_registry_yaml_matches_fresh_regeneration.py` (new) | Shells out to `python3 tools/generate_registry.py --check`, asserts exit code 0. Lives under `tests/integrity/`, already collected by the `arch-docs` CI job (`.github/workflows/test.yml:408-413`) — **no workflow YAML edit needed**, the job already runs `pytest tests/integrity`. |
+| *(none — already shipped)* | `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry` already covers Acceptance Criterion #4; no new drift-check test file is added by this ticket. |
 | `CLAUDE.md` | Update the `docs/REGISTRY.yaml` bullet under "After Work": mention `make setup-merge-drivers` as the one-time local setup that removes the manual conflict-resolution step, while keeping the existing "take either side + `make docs-registry`" instruction as the fallback for anyone who hasn't installed it. |
 | `docs/ai/ticket-lifecycle.md` or nearest doc covering PR conflict handling | Mirror the same guidance (found via search during Document-Update). |
 
@@ -63,8 +70,8 @@ Option A (regenerate-on-conflict), in the **corrected two-part shape** found dur
 |---|---|
 | Two branches that both close a ticket merge without a manual regeneration step | The driver + post-merge hook, proven in the scratch repo |
 | One-command install | `make setup-merge-drivers` |
-| Uninstalled → fails loudly, never silently takes a side | Confirmed for the fully-uninstalled case (git's own `fatal: custom merge driver ... lacks command line`); the **partially**-installed case is not loud on its own — flagged as a residual risk covered by the CI check, documented explicitly rather than glossed over |
-| CI check fails when committed file differs from fresh regeneration | New `tests/integrity/test_registry_yaml_matches_fresh_regeneration.py`, backed by the existing `--check` flag |
+| Uninstalled → fails loudly, never silently takes a side | Confirmed for the fully-uninstalled case (git's own `fatal: custom merge driver ... lacks command line`); the **partially**-installed case is not loud on its own — flagged as a residual risk covered by the existing CI check, documented explicitly rather than glossed over |
+| CI check fails when committed file differs from fresh regeneration | Already shipped: `tests/tools/test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_no_drift_against_real_registry`, cited not duplicated |
 
 ## Risks / open items for Review
 

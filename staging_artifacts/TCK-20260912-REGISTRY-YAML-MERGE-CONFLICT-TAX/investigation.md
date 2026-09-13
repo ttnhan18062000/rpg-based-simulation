@@ -22,15 +22,37 @@ tags: [data-quality, process-improvement]
 - **No `.github/workflows/*.yml` references `REGISTRY.yaml` or `generate_registry` at all** —
   `grep -rl "REGISTRY" .github/workflows/` returns zero hits. Confirmed again during this
   investigation pass.
-- **An existing `--check` CLI flag already does the right comparison.** `generate_registry.py`'s
-  `main()` wires `--check` to `generate_registry(root, output, check=True)`
-  (`tools/generate_registry.py:495-518`), which calls `_check_drift(output, output_entries)`
-  (`tools/generate_registry.py:470`) — a comparison of *parsed YAML entries*, not raw bytes, so it
-  is naturally immune to the timestamp-header issue. Verified live on this branch:
-  `python3 tools/generate_registry.py --check` → `"In sync: 2367 entries match ..."`, exit 0. This
-  directly satisfies Acceptance Criterion #4 ("a CI check fails when the committed
-  `docs/REGISTRY.yaml` differs from a fresh regeneration") — it needs to be wired into a workflow
-  step, not built.
+- **An existing `--check` CLI flag already does the right comparison, AND it is already wired
+  into CI today — Acceptance Criterion #4 is already satisfied, not a gap to fill.**
+  `generate_registry.py`'s `main()` wires `--check` to `generate_registry(root, output,
+  check=True)` (`tools/generate_registry.py:495-518`), which calls `_check_drift(output,
+  output_entries)` (`tools/generate_registry.py:470`) — a comparison of *parsed YAML entries*, not
+  raw bytes, so it is naturally immune to the timestamp-header issue. Verified live on this branch:
+  `python3 tools/generate_registry.py --check` → `"In sync: 2367 entries match ..."`, exit 0.
+
+  **Correction, found via `search_docs` (should have been run before the first grep pass — see
+  Process Note below):** `tests/tools/test_generate_registry.py::TestRealDocsTree::
+  test_check_flag_detects_no_drift_against_real_registry` (confirmed present at
+  `tests/tools/test_generate_registry.py:534-538`) already calls exactly this `--check` path
+  against the real, live `docs/REGISTRY.yaml`, and **this file is already collected by the "API /
+  tools / logging" CI job** (`.github/workflows/test.yml:266`, which runs `pytest tests/tools ...`
+  broadly). This test was added by `TCK-20260709-REGISTRY-DRIFT-CHECK-GATE` and re-confirmed
+  still-live by `TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS` (2026-08-26), which explicitly
+  investigated a custom merge driver for this exact file, found the CI-check route already
+  sufficient for the *drift-detection* half of the problem, and deliberately did not build one.
+  My initial `grep -rl "REGISTRY" .github/workflows/` (zero hits) is why this was missed on the
+  first pass — the workflow file never names "REGISTRY" as a string; it just runs a broad
+  `pytest tests/tools`, the exact same "no workflow YAML edit needed" mechanism this ticket's own
+  plan (before this correction) proposed re-inventing under a new test file. **Acceptance
+  Criterion #4 requires no new code — cite the existing test, do not duplicate it.**
+
+  This does **not** make the rest of this ticket redundant: `TCK-20260826`'s own investigation was
+  scoped narrowly to "does drift get caught after the fact" and concluded yes, sufficient — it
+  never addressed *merge-conflict frequency* (the actual, measured pain this ticket exists for:
+  9+ conflicts, each costing a manual resolution and a full CI re-run). The CI check is a
+  correctness backstop; a merge driver is a toil-reduction mechanism. They are complementary, not
+  duplicative, but this ticket must fold in and cite the existing check rather than re-implement
+  it.
 - No existing custom git merge driver config anywhere in the repo (`git config --get-regexp
   "^merge\."` → empty; merge drivers are unversioned local config by design, so this is expected,
   not a gap).
@@ -92,6 +114,16 @@ commit containing the full, correct 3-entry union (`base.txt`, `ticket-a.txt`, `
     mode**, whether caused by a partial install, a hook that didn't fire, or someone bypassing
     hooks (`git merge --no-verify` does not skip `post-merge`, but a corrupted/non-executable hook
     file would). It already exists (`generate_registry.py --check`) and just needs a workflow step.
+
+## Process note (search-before-grep gap, self-caught)
+
+This investigation started with direct grep/file reads before running the mandatory
+`search_docs`/`graphify query` step (CLAUDE.md's Context Scan hard rule). Running `search_docs`
+after the fact — "docs/REGISTRY.yaml merge conflict git merge driver regenerate" — immediately
+surfaced `TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS`, a directly relevant prior ticket that a
+grep-first approach had missed. Recording this as a reminder that the ordering rule is not
+optional even when a ticket looks self-contained: it caught a real near-duplication of already-
+shipped work here, not just a hypothetical risk.
 
 ## Conclusion
 

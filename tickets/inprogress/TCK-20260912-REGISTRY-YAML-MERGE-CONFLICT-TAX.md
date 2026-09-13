@@ -105,6 +105,13 @@ and invalid YAML. That exclusion is correct and should stay.
   fix; established the scratch-repo reproduction pattern this ticket should reuse.
 - `TCK-20260826-REGISTRY-PARITY-CONFLICT-GUARDS` (done) — added the `merge=union` paths and the
   deliberate exclusion of `docs/REGISTRY.yaml`.
+- `TCK-20260709-REGISTRY-DRIFT-CHECK-GATE` (done) — **already shipped this ticket's own Acceptance
+  Criterion #4**: `tests/tools/test_generate_registry.py::TestRealDocsTree::
+  test_check_flag_detects_no_drift_against_real_registry` already runs `generate_registry.py
+  --check` against the real, live registry inside the "API / tools / logging" CI job. Found via
+  `search_docs` during this ticket's own investigation (a first grep-only pass had missed it) —
+  cite it, do not re-implement it. It remains the correctness backstop for this ticket's new
+  merge-driver mechanism's partial-install failure mode (see investigation.md).
 - `TCK-20260912-WORKING-LOG-APPEND-HELPER` (todos) — same theme: who owns writes to a shared file.
 
 ## Related Docs
