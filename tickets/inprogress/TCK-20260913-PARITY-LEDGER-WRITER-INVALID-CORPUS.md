@@ -177,6 +177,16 @@ partly that other sessions stop over-trusting the ledger, independent of how man
 - `TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL` (done) — introduced `validate_entry()`; the corpus
   predates it.
 - `TCK-20260705-GATE-DET-MECHANICS-AUDITOR` (done) — the "never sweep" constraint to respect.
+- `TCK-20260824-PARITY-NEXT-ID-LOOKUP` (done) — this ticket's own new entry collided with `INFRA-417`
+  on a different, unrelated, already-in-review branch (`registry-merge-conflict-tax`, PR #181):
+  both independently computed "417" as next-available from the same `origin/main` fork point
+  (416), for two completely different entries. A confirmed real recurrence of that ticket's own
+  documented cross-branch limitation (`next_available_id()` cannot see uncommitted/unmerged
+  branches), not a hypothetical risk. Renumbered this ticket's own entry to `INFRA-418` (PR #181
+  was further along in review, left untouched) rather than disturbing a reviewed, CI-green PR.
+- `TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL` (todos) — the 68 Class 2 entries and 1
+  Class 4 entry this ticket did not fix, filed as a real ticket per `agent-working-design`'s
+  explicit request rather than left as an acceptance-criteria caveat with nowhere to point.
 
 ## Related Docs
 - `docs/parity_ledger/schema.json`
@@ -249,4 +259,25 @@ are prose run-summaries naming no single specific file, one genuine pre-existing
 one entry whose real evidence is a Makefile target rather than a pytest citation — none are safely
 auto-fixable without either guessing a citation that was never actually named (this ticket's own
 no-fabrication principle, applied to Class 2 in spirit) or a materially larger, separate parser
-redesign. Raised explicitly for Review rather than declared complete or silently descoped.
+redesign. Raised explicitly for Review rather than declared complete or silently descoped. Filed as
+`TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL` (see Related Tickets) rather than left as a
+prose note in this ticket alone — an AC caveat inside a closed ticket is exactly the failure mode
+`TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT`'s own four unfiled "— follow-on" notes already
+demonstrated: nobody noticed for days because nothing pointed at anything real. (Raised by
+`agent-working-design`, 2026-09-13.)
+
+**Was the Class 1 "freeze" decision re-examined on the merits, or inherited from the ticket's own
+provisional recommendation?** Asked directly by `agent-working-design`, and answered honestly
+rather than left ambiguous: re-examined, not inherited — but the tiebreaker that survived
+re-examination is still fundamentally a proportionality argument, not a fresh claim that freeze is
+semantically *better* for the ledger than `legacy_unverified` would be. Specifically: (b)'s
+reporting half was found to already exist as a side effect of this ticket's own required tool, and
+(c) was evaluated concretely (a `schema.json` enum change, a `validate_entry()` change, and
+individually re-triaging up to 1537 entries' status) and found to be a multi-ticket-scale
+undertaking whose correct scrutiny this one ticket cannot give it unilaterally. That reasoning is
+real and specific to (c)'s actual implementation shape — not "the test would break", the exact bias
+the ticket's own provisional framing warned against — but it is still a cost/scope argument, not a
+merits argument that freeze is the *right* semantic answer for 1300+ pre-writer-era entries. (c)
+remains open and credible for whoever takes it on with the scrutiny it needs; this ticket did not
+foreclose it, and does not claim to have settled which answer is *correct* on the ledger's own
+terms, only which one is responsibly scoped for a single ticket to decide alone.
