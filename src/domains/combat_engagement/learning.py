@@ -61,6 +61,17 @@ class CombatLearning:
             base_power += 25.0
             confidence = min(0.95, confidence + 0.2)
             uncertainty = max(0.05, uncertainty - 0.2)
+        elif outcome == "FLED":
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: this outcome value was named in this
+            # method's own docstring/type comment (line 26 above) since before this fix, but had no
+            # real branch here -- calling learn(outcome="FLED", ...) silently fell through every
+            # if/elif with zero numeric correction, appending "FLED" to `outcomes` but leaving
+            # base_power/confidence/uncertainty untouched. A real, disclosed defect, fixed in the
+            # same change that gives FLED a real caller (docs/mechanics/04_strategic_cognition.md
+            # Sec 13.5a: "a weak signal, a small correction only" -- disengaging tells an observer
+            # something, but far less than a resolved outcome does).
+            confidence = min(0.95, confidence + 0.03)
+            uncertainty = max(0.05, uncertainty - 0.03)
 
         # Bounded outcomes list capacity (keep last 5)
         if len(outcomes) > 5:

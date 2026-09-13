@@ -160,6 +160,68 @@ def test_retreat_evasion_skips_oa():
     # But the retreat must still move the actor.
     assert hero_update.new_position == (0.0, 1.0)
 
+def _build_evasive_retreat_pair():
+    """Same hero/monster shape as test_retreat_evasion_skips_oa, factored out for reuse."""
+    hero = (
+        V2EntityBuilder(1)
+        .kind("actor")
+        .location(1.0, 1.0)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0, action_style=2)  # 2 = EVASIVE
+        .navigation(movement_mode=MovementMode.RETREAT)
+        .lifecycle(active=True)
+        .build()
+    )
+    monster = (
+        V2EntityBuilder(2)
+        .kind("actor")
+        .location(2.0, 1.0)
+        .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE)
+        .combat(hp=100, max_hp=100, alive=True, readiness=100.0)
+        .navigation(movement_mode=MovementMode.WANDER)
+        .lifecycle(active=True)
+        .build()
+    )
+    return hero, monster
+
+
+def test_evasive_retreat_learns_fled_when_flag_on():
+    """
+    TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER (Sec 13.5a): a real evasive retreat that
+    evades a real hostile is the FLED learning signal's only real producer
+    (combat_escape="EVASIVE_SUCCESS", see test_retreat_evasion_skips_oa above). With
+    ENABLE_COMBAT_ENGAGEMENT ON, the fleeing hero must come away with a real, weak FLED
+    correction about the evaded monster -- not just the pre-existing escape_tag.
+    """
+    hero, monster = _build_evasive_retreat_pair()
+    state = AuthoritativeState(
+        tick=1, seed=42, entities={1: hero, 2: monster},
+        feature_flags={"ENABLE_COMBAT_ENGAGEMENT": "ON"},
+    )
+
+    updates = MovementSystem.resolve_move(state, hero, (0.0, 1.0), mode=MovementMode.RETREAT)
+    hero_update = updates[1]
+
+    assert hero_update.property_updates.get("combat_escape") == "EVASIVE_SUCCESS"
+    assert hero_update.cognition_bundle_set is not None
+    opponent_stats = hero_update.cognition_bundle_set.memory.combat.opponent_stats
+    assert "entity.2" in opponent_stats
+    assert opponent_stats["entity.2"].outcomes[-1] == "FLED"
+
+
+def test_evasive_retreat_no_learning_when_flag_off():
+    """Deliberate, matching Step 5a's own gating: FLED learning is OFF with the feature flag OFF,
+    even though the evasive retreat's own escape_tag still fires normally."""
+    hero, monster = _build_evasive_retreat_pair()
+    state = AuthoritativeState(tick=1, seed=42, entities={1: hero, 2: monster})
+
+    updates = MovementSystem.resolve_move(state, hero, (0.0, 1.0), mode=MovementMode.RETREAT)
+    hero_update = updates[1]
+
+    assert hero_update.property_updates.get("combat_escape") == "EVASIVE_SUCCESS"
+    assert hero_update.cognition_bundle_set is None
+
+
 def test_normal_move_triggers_oa():
     """Verify that WANDER move triggers opportunity attacks when engaged."""
     hero = create_mock_entity(1, (1.0, 1.0), role=EntityRole.HERO, mode=MovementMode.WANDER)

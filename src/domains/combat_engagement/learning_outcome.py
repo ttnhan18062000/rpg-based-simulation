@@ -67,16 +67,16 @@ _SEVERITY_BY_OUTCOME = {
 }
 
 
-def _learn_and_store(
-    learner: EntityState,
+def _apply_single_learning(
+    cognition: CognitionModel,
     opponent_id: int,
     learning_outcome: str,
     observed_damage: float,
     tick: int,
 ) -> CognitionModel:
-    """Apply one participant's own CombatLearning.learn() call and return their updated CognitionModel."""
+    """Apply one CombatLearning.learn() call against a cognition model, return the updated one."""
     subject_key = f"entity.{opponent_id}"
-    prior_memory = learner.cognition.memory.combat.opponent_stats.get(subject_key)
+    prior_memory = cognition.memory.combat.opponent_stats.get(subject_key)
 
     updated_model = CombatLearning.learn(
         memory=prior_memory,
@@ -92,9 +92,20 @@ def _learn_and_store(
         salience=compute_salience(prior_memory, updated_model.estimated_power, outcome_severity=severity),
     )
 
-    new_combat_memory = store_opponent_model(learner.cognition.memory.combat, updated_model)
-    new_memory = replace(learner.cognition.memory, combat=new_combat_memory)
-    return replace(learner.cognition, memory=new_memory)
+    new_combat_memory = store_opponent_model(cognition.memory.combat, updated_model)
+    new_memory = replace(cognition.memory, combat=new_combat_memory)
+    return replace(cognition, memory=new_memory)
+
+
+def _learn_and_store(
+    learner: EntityState,
+    opponent_id: int,
+    learning_outcome: str,
+    observed_damage: float,
+    tick: int,
+) -> CognitionModel:
+    """Apply one participant's own CombatLearning.learn() call and return their updated CognitionModel."""
+    return _apply_single_learning(learner.cognition, opponent_id, learning_outcome, observed_damage, tick)
 
 
 def apply_combat_learning(
@@ -124,3 +135,30 @@ def apply_combat_learning(
     )
 
     return new_attacker_cognition, new_defender_cognition
+
+
+def apply_fled_learning(
+    fleeing_entity: EntityState,
+    evaded_hostile_ids: Tuple[int, ...],
+    tick: int,
+) -> Optional[CognitionModel]:
+    """
+    Sec 13.5a FLED: the real producer is src/engine/movement.py's own
+    combat_escape="EVASIVE_SUCCESS" property update (a separate real call site from
+    src/engine/combat.py's resolvers, so this is never reached via apply_combat_learning() above).
+    The fleeing entity learns a weak "FLED" correction about each real hostile it evaded this tick
+    -- Sec 13.5a's own worked scenario requires this: "the entity that flees a fight it is losing
+    is precisely the one that must remember why it fled."
+
+    Deliberately one-sided: the reciprocal (each evaded hostile learning about the fleeing entity)
+    is NOT written here. Unlike the attacker/defender case above, an evaded opportunity attack
+    produces no CombatUpdate at all (skip_oa is true precisely because it never resolved) -- there
+    is no real outcome for a hostile's own post-exchange HP ratio to classify, so a hostile-side
+    write here would have no real signal backing it.
+    """
+    if not evaded_hostile_ids:
+        return None
+    cognition = fleeing_entity.cognition
+    for hostile_id in evaded_hostile_ids:
+        cognition = _apply_single_learning(cognition, hostile_id, "FLED", observed_damage=0.0, tick=tick)
+    return cognition

@@ -1726,12 +1726,21 @@ implicit in the resolver:
     producer is `src/engine/movement.py`'s `combat_escape="EVASIVE_SUCCESS"` property update, a
     separate real call site from `src/engine/combat.py`'s resolver): a weak signal, a small
     correction only. Disengaging tells an observer something (the target chose to leave rather than
-    finish the fight) but far less than a resolved outcome does.
-- **Both participants learn from the same real exchange — never survivor-only, never attacker-only.**
-  Combat is mutual observation: both sides just received the highest-quality information tier
-  available about each other (§13.5's own "combat is a second, better source" law), so both update.
-  This is also required by the same worked scenario: the entity that flees a fight it is losing is
-  precisely the one that must remember why it fled.
+    finish the fight) but far less than a resolved outcome does. **Wired one-sided, deliberately**:
+    the fleeing entity learns a `"FLED"` correction about each real hostile it evaded
+    (`apply_fled_learning()` in `src/domains/combat_engagement/learning_outcome.py`), but the
+    reciprocal (each evaded hostile learning about the fleeing entity) is not written. Unlike the
+    attacker/defender case below, an evaded opportunity attack produces no `CombatUpdate` at all
+    (`skip_oa` is true precisely because it never resolved) — there is no real outcome for a
+    hostile's own post-exchange HP ratio to classify, so a hostile-side write here would have no
+    real signal backing it.
+- **Both participants learn from the same real exchange — never survivor-only, never attacker-only —
+  for every outcome that has a real, resolved `CombatUpdate` backing both sides (`FLED`'s own
+  one-sided exception above is the one case with no such event to read from).** Combat is mutual
+  observation: both sides just received the highest-quality information tier available about each
+  other (§13.5's own "combat is a second, better source" law), so both update. This is also required
+  by the same worked scenario: the entity that flees a fight it is losing is precisely the one that
+  must remember why it fled.
 - **Both writes must be deterministic and order-independent.** Evaluating "attacker learns about
   defender" before or after "defender learns about attacker" must produce identical results either
   way — each participant's own `CombatLearning.learn()` call reads only that participant's own
