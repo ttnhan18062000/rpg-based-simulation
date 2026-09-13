@@ -226,3 +226,40 @@ class TestLeadSuppression:
             .build())
         result = DetourSuggestionSystem.suggest_detours(entity, current_tick=10)
         assert len(result) == 0  # Exhausted lead not used
+
+
+class TestSubjectsMatchMaterialBlocker:
+    """TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH.
+
+    `_subjects_match`'s material-blocker branch used to scan `lead.detail` for
+    `blocker.subject` as a substring -- which only ever worked because a narrative-text `detail`
+    happened to contain the subject string. `detail` is now a parseable coordinate, not prose,
+    so that coincidence is gone; the branch matches on `lead.subject` like the other real
+    material-blocker consumers (intelligence.py, redirection.py, scorers.py) instead.
+    """
+
+    def test_matching_subject_matches_via_direct_check_regardless_of_detail_format(self):
+        blocker = BlockerState(id="b1", kind="material", subject="iron_ore", severity=0.8)
+        lead = LeadState(id="l1", kind="location", subject="iron_ore", detail="48.0,12.0")
+        assert DetourSuggestionSystem._subjects_match(blocker, lead) is True
+
+    def test_resource_node_subject_matches_any_material_blocker_with_real_detail(self):
+        blocker = BlockerState(id="b1", kind="material", subject="iron_ore", severity=0.8)
+        lead = LeadState(id="l1", kind="location", subject="resource_node", detail="48.0,12.0")
+        assert DetourSuggestionSystem._subjects_match(blocker, lead) is True
+
+    def test_resource_node_subject_does_not_match_with_empty_detail(self):
+        blocker = BlockerState(id="b1", kind="material", subject="iron_ore", severity=0.8)
+        lead = LeadState(id="l1", kind="location", subject="resource_node", detail="")
+        assert DetourSuggestionSystem._subjects_match(blocker, lead) is False
+
+    def test_mismatched_non_resource_node_subject_no_longer_matches_via_detail_substring(self):
+        """Regression guard: the old coincidental substring match must not come back. A lead
+        whose narrative `detail` happens to contain the blocker's subject string, but whose own
+        `subject` differs and isn't the generic fallback, must not match."""
+        blocker = BlockerState(id="b1", kind="material", subject="iron_ore", severity=0.8)
+        lead = LeadState(
+            id="l1", kind="location", subject="steel_ingot",
+            detail="Rumors of iron_ore near (48.0, 12.0)",
+        )
+        assert DetourSuggestionSystem._subjects_match(blocker, lead) is False

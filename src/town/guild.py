@@ -40,7 +40,16 @@ class GuildAction:
                             id=lead_id,
                             kind="location",
                             subject="iron_ore",
-                            detail=f"Rumors of iron near {node.position}",
+                            # TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH: was
+                            # free narrative text ("Rumors of iron near {node.position}"), which
+                            # every real `kind="location"` consumer that resolves a material
+                            # blocker by navigation (intelligence.py, redirection.py, scorers.py)
+                            # parses as "x,y" floats -- confirmed via a real instrumented run that
+                            # this threw every tick, silently caught, for the life of every such
+                            # lead. `detail` now carries the parseable coordinate the real
+                            # consumers already assume, matching the same format
+                            # certification/scenarios.py's own fixture uses ("1.0,0.0").
+                            detail=f"{node.position[0]},{node.position[1]}",
                             discovered_tick=state.tick,
                             certainty=LeadCertainty.VAGUE,
                             source_entity_id=None # GUILD

@@ -35,8 +35,14 @@ def test_blocker_inference_and_detour():
     entity = replace(entity, 
                      task=replace(entity.task, work_kind="ENTITY_ACT", payload={"action": "INTERACT", "target_id": 10}))
     
-    # 3. Setup lead for "resource"
-    lead = LeadState(id="lead1", kind="location", subject="(5, 5)", detail="Alternative resource source", certainty=LeadCertainty.PRECISE)
+    # 3. Setup lead for "resource" -- TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH:
+    # was subject="(5, 5)"/detail="Alternative resource source", which only matched the inferred
+    # "resource" blocker below via `_subjects_match`'s old coincidental substring scan of `detail`
+    # ("resource" happened to appear inside the narrative text). `subject` now matches the
+    # blocker's own subject directly -- the real, intentional connection every production
+    # material-blocker consumer uses -- and `detail` carries the alternative source's actual
+    # parseable location instead of prose.
+    lead = LeadState(id="lead1", kind="location", subject="resource", detail="5.0,5.0", certainty=LeadCertainty.PRECISE)
     entity = replace(entity, strategic=replace(entity.strategic, leads={"lead1": lead}))
     
     state = AuthoritativeState(entities={1: entity}, tick=1, seed=1)
