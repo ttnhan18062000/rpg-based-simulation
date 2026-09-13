@@ -1,8 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
+maturity: shipped
+archived: 2026-09-13
 tags: [architecture, engine, observability, testing, documentation]
 ---
 
@@ -193,6 +195,11 @@ never returns from; `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` no longer surfa
 
 ### Epic F — HTTP-Layer Admission Control & Auth
 **Priority: P2, gate explicitly on deployment plans**
+**Status: Resolved** by `TCK-20260823-HTTP-API-KEY-AUTH` and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`
+(both in `tickets/done/`), tracked in full by `docs/plans/archive/http_admission_control_epic.md`.
+**(2026-09-13)** Both child tickets are confirmed shipped; the "mid-pipeline" note below is stale
+and superseded by this line.
+
 **(2026-08-19)** Deployment-plan decision confirmed by the requester: this API surface stays on a
 trusted network, no public/untrusted exposure planned. Auth and admission control (the two bullets
 below) stay explicitly deferred, not investigated further, until that changes.
@@ -200,23 +207,23 @@ below) stay explicitly deferred, not investigated further, until that changes.
 **(2026-08-23) Superseded — the gate fired.** The requester confirmed the API surface now goes on
 the **public internet, multi-tenant**, reversing the 2026-08-19 trusted-network-only confirmation.
 Priority is now **P1**. The deferred scope was investigated and split into 2 child tickets, per
-`docs/plans/http_admission_control_epic.md`'s own updated Acceptance signal section:
+`docs/plans/archive/http_admission_control_epic.md`'s own updated Acceptance signal section:
 `TCK-20260823-HTTP-API-KEY-AUTH` (per-client API-key auth, implemented — reached `tickets/done/`
-2026-08-23) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (per-client admission control
-below — implementation-complete but still mid-pipeline as of this writing).
+2026-08-23) and `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (per-client admission control,
+also reached `tickets/done/` 2026-08-23).
 
 - No rate limiting, no authentication, no per-client admission control on any REST endpoint
   (`src/api/server.py` registers only `CORSMiddleware` + `GZipMiddleware`). Auth resolved by
-  `TCK-20260823-HTTP-API-KEY-AUTH`; admission control implementation-complete by
-  `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (mid-pipeline).
+  `TCK-20260823-HTTP-API-KEY-AUTH`; admission control resolved by
+  `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`.
 - **(2026-08-19) Extracted to `TCK-20260819-HOTFIX-CORS-WILDCARD-CREDENTIALS-MISCONFIG`.**
   `CORSMiddleware(allow_origins=["*"], allow_credentials=True)` is a spec-invalid combination —
   fix regardless of exposure plans, since it signals unreviewed middleware config even though
   browsers reject the actual credentialed-wildcard case today. **Resolved** 2026-08-20.
 - Extend the observability layer's existing NORMAL/PRESSURE/DEGRADED/SURVIVAL vocabulary
   (`docs/architecture/observability_hot_path_safety_contract.md`) to the HTTP layer instead of
-  inventing a new scheme — full proposed mode design already in D23 §L. Implementation-complete
-  by `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL` (mid-pipeline, not yet in `tickets/done/`).
+  inventing a new scheme — full proposed mode design already in D23 §L. **Resolved** by
+  `TCK-20260823-HTTP-PER-CLIENT-ADMISSION-CONTROL`.
 
 *Evidence: D23 §E, §G, §L (R6).*
 
