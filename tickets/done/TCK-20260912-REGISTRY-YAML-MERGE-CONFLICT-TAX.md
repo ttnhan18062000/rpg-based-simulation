@@ -234,3 +234,18 @@ before it reaches `main`; (c) this is materially better than today's status quo 
 conflicts per PR. `plan.md`'s "Risks / open items for Review" raised this explicitly during Review
 rather than deciding unilaterally, and Review (2 rounds, both on record) did not require a
 stronger local guard.
+
+**Second finding, discovered live during this ticket's own Finalize merge (this session's coding
+assistant sandbox specifically) — not a design flaw, but a real operational caveat worth recording
+plainly**: merging `origin/main` into this branch via this sandboxed environment's `Bash` tool did
+not trigger the installed `post-merge` hook automatically (git committed the merge cleanly, but no
+`auto-regenerate` follow-up commit appeared, and `make docs-registry-check` reported real drift
+immediately after). Manually invoking the hook script directly (`bash
+$(git rev-parse --git-path hooks)/post-merge`) worked exactly as designed — regenerated, detected
+the real drift, and created the expected commit — proving the hook's own logic is correct; the gap
+is specifically that *this coding assistant's sandboxed git wrapper* did not fire it during the
+merge. The standalone scratch-repo proof (a plain, unsandboxed git binary) and this manual
+invocation both confirm the mechanism works; only merges driven through this specific sandboxed
+tool are affected. Practical implication for any future agent session operating in this same
+sandbox: after a `git merge`, don't assume the hook fired — run `make docs-registry-check` (or
+regenerate directly) and verify, the same discipline as checking any other post-merge state.

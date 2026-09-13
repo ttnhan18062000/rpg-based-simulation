@@ -128,6 +128,12 @@ entirely, still needs its own install — that part of the residual risk stands 
 - `post-merge` hooks do not run on `git rebase` or `git cherry-pick`, only real merges. Today's
   actual pain (per the ticket's own measurements) is PR-branch merges of `origin/main`, which do
   fire `post-merge` — but this should be stated as a documented boundary, not silently assumed.
+- **Found live during this ticket's own Finalize** (see the ticket's Completion Summary for full
+  detail): merging via this coding assistant's sandboxed `Bash` tool did not trigger the installed
+  hook automatically; manually invoking the hook script worked exactly as designed. Not a design
+  flaw — the mechanism itself is proven correct by the scratch-repo test and the manual run — but
+  a real operational caveat specific to this sandbox that future agent sessions here should know:
+  verify with `make docs-registry-check` after any merge rather than assuming the hook fired.
 
 ## Deviations (Implement)
 
