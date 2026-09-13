@@ -193,6 +193,15 @@ frontmatter-only corpus test**: it will catch a drifting epic's `phase`/`status`
 `## Status` has no automated CI enforcement at all — only this step's own (unverified-at-runtime)
 prompt instruction — a real, disclosed gap, not something these tests should be read as closing.
 
+**Second-round fix (post-review, agent-working-design): the fixture test's frontmatter check was
+self-referential.** The first version passed a hand-built `{"status": "historical", "phase":
+"done"}` dict straight to the validator — confirming only that a literal the test itself wrote
+satisfied the rule, not that the `re.sub` transformation above it actually produced that result. A
+broken rewrite (wrong anchor, unexpected spacing, `count=1` hitting the wrong line) would have
+sailed through undetected. Fixed by parsing the frontmatter back out of the written file via
+`extract_frontmatter()` instead. Confirmed the fix actually catches a broken rewrite before
+shipping it (a deliberately-broken `re.sub` in a scratch check correctly failed the assertion).
+
 ## Files Changed
 
 - `.claude/workflows/implement-epic.js` — new epic-close step (guarded `epicId` block, after

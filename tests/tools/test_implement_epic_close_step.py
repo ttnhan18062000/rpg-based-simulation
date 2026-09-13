@@ -124,6 +124,12 @@ def test_epic_close_step_uses_a_fresh_negative_sidecar_seq():
 # corpus test remains the actual CI-enforced backstop for the frontmatter half of this; body
 # `## Status` has no automated enforcement at all, pinned here only against the prompt's own
 # stated target, not against runtime behavior.
+# The frontmatter dict passed to the validator is parsed back OUT of the written file via
+# extract_frontmatter() (not hand-built) -- a first draft built the dict by hand, which meant a
+# broken re.sub above (wrong anchor, unexpected spacing, count=1 hitting the wrong line) would
+# have sailed through undetected, confirmed satisfying only a value the test itself asserted was
+# correct (agent-working-design review). Confirmed the fix actually catches a broken rewrite
+# before shipping it.
 # ---------------------------------------------------------------------------
 
 _SYNTHETIC_EPIC_TEMPLATE = """---
@@ -158,7 +164,7 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
     result satisfies validate_frontmatter.py's real check_ticket_location_consistency() -- the
     same function TCK-20260907's own corpus test runs over all of tickets/done/ at CI.
     """
-    from validate_frontmatter import check_ticket_location_consistency
+    from validate_frontmatter import check_ticket_location_consistency, extract_frontmatter
 
     inprogress_dir = tmp_path / "tickets" / "inprogress"
     done_dir = tmp_path / "tickets" / "done"
@@ -180,7 +186,15 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
     dest.write_text(text)
     source.unlink()
 
-    fm = {"status": "historical", "phase": "done"}
+    # Parse the frontmatter back OUT of the written file -- not hand-built -- so a broken re.sub
+    # (wrong anchor, unexpected spacing, count=1 hitting the wrong line) fails this assertion
+    # instead of a literal-by-construction dict silently sailing through.
+    written_text = dest.read_text()
+    fm = extract_frontmatter(written_text)
+    assert fm is not None, "expected the synthetic ticket to still have parseable frontmatter"
+    assert fm.get("status") == "historical" and fm.get("phase") == "done", (
+        f"the rewrite must actually produce status: historical / phase: done, got: {fm}"
+    )
     errors = check_ticket_location_consistency(str(dest), fm)
     assert errors == [], f"target frontmatter values must satisfy the real validator, got: {errors}"
 
