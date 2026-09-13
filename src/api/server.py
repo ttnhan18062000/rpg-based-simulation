@@ -124,8 +124,13 @@ def create_v2_app(
     from src.api.routes import search
     app.include_router(search.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
-    from src.api.routes import behavior
-    app.include_router(behavior.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+    # TCK-20260912-BEHAVIOR-ANALYTICS-PIPELINE-NEVER-STARTED-API-INERT: gated off by default --
+    # BehaviorWorker is never started, so every real request against these 7 endpoints returns
+    # empty/404 today. Not registering the router at all makes that honest (404 = "not exposed")
+    # rather than misleading (404/empty = "exposed but its data source was never populated").
+    if profile.enable_behavior_analytics_api:
+        from src.api.routes import behavior
+        app.include_router(behavior.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import decisions
     app.include_router(decisions.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
@@ -133,11 +138,16 @@ def create_v2_app(
     from src.api.routes import scenarios
     app.include_router(scenarios.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
-    from src.api.routes import campaigns
-    app.include_router(campaigns.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+    # TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION: gated off by
+    # default -- CampaignOrchestrator/ChronicleCompiler never populate these registries in
+    # production, so every real request against these endpoints returns empty/404 today. Same
+    # honest-404-vs-misleading-404 reasoning as the behavior-analytics gate above.
+    if profile.enable_campaign_chronicle_api:
+        from src.api.routes import campaigns
+        app.include_router(campaigns.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
-    from src.api.routes import chronicle
-    app.include_router(chronicle.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
+        from src.api.routes import chronicle
+        app.include_router(chronicle.router, prefix="/api/v1", dependencies=[Depends(require_admission)])
 
     from src.api.routes import economy
     app.include_router(economy.router, prefix="/api/v1", dependencies=[Depends(require_admission)])

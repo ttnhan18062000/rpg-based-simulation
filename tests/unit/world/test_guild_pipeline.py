@@ -7,7 +7,9 @@ from src.engine.apply import ApplyPath
 @pytest.mark.v2_contract
 def test_guild_visit_leads():
     # 1. Setup: World with iron node
-    node = ResourceNodeState(id=1, kind="iron", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
+    # TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS: real content id is
+    # "iron_vein" (was "iron", matching the same bug this fixture predates).
+    node = ResourceNodeState(id=1, kind="iron_vein", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
     entity = (V2EntityBuilder(99)
         .kind("hero")
         .location(0, 0)
@@ -51,7 +53,9 @@ def test_guild_visit_quests():
 @pytest.mark.v2_contract
 def test_guild_visit_determinism():
     # 1. Setup: Same state, same entity
-    node = ResourceNodeState(id=1, kind="iron", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
+    # TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS: real content id is
+    # "iron_vein" (was "iron", matching the same bug this fixture predates).
+    node = ResourceNodeState(id=1, kind="iron_vein", position=(50, 50), yields_item="iron_ore", remaining_charges=10, max_charges=10, required_ticks=10)
     entity = (V2EntityBuilder(99)
         .kind("hero")
         .location(0, 0)

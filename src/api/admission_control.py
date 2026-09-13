@@ -56,9 +56,12 @@ class _ClientAdmissionState:
 # (this module) and reset_admission_mode() (test-only). Mirrors src/api/auth.py's _client_keys
 # module-level singleton pattern.
 _client_state: Dict[str, _ClientAdmissionState] = {}
-_client_order: List[str] = []  # recency order, oldest first -- mirrors CacheStrategy's
-                                 # _keys_order (src/domains/optimization/cache_strategy.py:15),
-                                 # NOT collections.OrderedDict (no such precedent in this repo).
+_client_order: List[str] = []  # recency order, oldest first -- a plain list, not
+                                 # collections.OrderedDict (no such precedent in this repo). This
+                                 # borrowed the LRU-list shape of a since-deleted, never-called
+                                 # optimization-package class purely as a pattern reference, not a
+                                 # real dependency (TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-
+                                 # DETERMINATION); the pattern itself is illustrative only.
 _lock = threading.RLock()
 
 
@@ -93,9 +96,10 @@ def _prune_idle_clients(current_time: float) -> None:
 
 
 def _evict_lru_if_over_capacity() -> None:
-    """Secondary, defense-in-depth max-entries hard cap -- mirrors CacheStrategy.put()'s
-    evict-oldest-on-overflow (src/domains/optimization/cache_strategy.py:25-34). Must be called
-    while holding _lock, only when about to insert a NEW client_id."""
+    """Secondary, defense-in-depth max-entries hard cap -- an evict-oldest-on-overflow shape,
+    illustrative only (see _client_order's own comment above: the module this once mirrored,
+    src/domains/optimization/cache_strategy.py, was deleted, never having had a real caller).
+    Must be called while holding _lock, only when about to insert a NEW client_id."""
     while len(_client_state) >= _MAX_CLIENT_ENTRIES and _client_order:
         oldest = _client_order.pop(0)
         _client_state.pop(oldest, None)

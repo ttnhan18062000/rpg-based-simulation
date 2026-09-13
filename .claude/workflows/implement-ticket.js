@@ -1687,14 +1687,20 @@ ${ticketInfo.todos_source_path ? `
       - If other TCK-*.md files still exist in the folder: skip — the folder is not complete yet.
       If the source was directly in tickets/todos/ (no subfolder): skip the folder step.` : '   No todos source path recorded — skip.'}
 
-4. Append to tickets/working_log.csv (one new row, comma-separated):
-   Format: timestamp,ticket_id,title,status,summary,artifacts_path
-   - timestamp: ISO 8601 (e.g., 2026-06-06T00:00:00Z — use the current session date)
-   - ticket_id: ${tid}
-   - title: from the ticket Title section
-   - status: DONE
-   - summary: one sentence of what was implemented
-   - artifacts_path: ${tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
+4. Append to tickets/working_log.csv via the sanctioned helper — never hand-roll this write:
+   a. Use the Write tool to create a JSON file (e.g. a scratch path under
+      stored_artifacts/${tid}/ or an ephemeral tmp path) containing exactly:
+      {"timestamp": ..., "ticket_id": ..., "title": ..., "status": ..., "summary": ..., "artifacts_path": ...}
+      - timestamp: ISO 8601 (e.g., 2026-06-06T00:00:00Z — use the current session date)
+      - ticket_id: ${tid}
+      - title: from the ticket Title section
+      - status: DONE
+      - summary: one sentence of what was implemented
+      - artifacts_path: ${tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix — no staging artifacts)'}
+   b. Run: python3 tools/working_log_writer.py --data-file <path from step a>
+      The Write tool's content is never shell-interpreted, so title/summary text (quotes,
+      backticks, $, embedded newlines) needs no escaping — never embed this text as a Python
+      or shell source string (e.g. an inline `-c` script) instead of using the JSON file above.
 
 5. ${tier !== 'hotfix' ? `Move staging_artifacts/${tid}/ → stored_artifacts/${tid}/
    This step is mandatory for standard/epic tickets. Do not skip it — leftover staging dirs accumulate as debt.` : 'Hotfix: no staging artifacts to move. Delete staging_artifacts/${tid}/ if it was accidentally created (rm -rf staging_artifacts/${tid}/).'}

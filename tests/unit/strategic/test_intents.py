@@ -159,3 +159,30 @@ def test_occupation_change_unparseable_target_is_a_noop():
     traces = ActionIntentAdapter.get_traces()
     assert len(traces) == 1
     assert "FAILED_REQUIREMENTS" in traces[0].execution_result
+
+
+def test_ask_information_without_query_kind_is_a_true_noop():
+    """TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING: an Adventure-domain-
+    originated ASK_INFORMATION intent (no query_kind in payload) delivers no answer, so it must
+    not deduct gold and its trace must not claim SUCCESS."""
+    ActionIntentAdapter.clear_traces()
+    ent = (V2EntityBuilder(1)
+        .kind("hero")
+        .build())
+
+    intent = ActionIntent(
+        kind="ASK_INFORMATION",
+        actor_id=ent.id,
+        payload={"cost_gold": 10},
+        source_opportunity_id="opp_ask_1",
+        reason="test ask information, no query_kind",
+    )
+
+    updates = ActionIntentAdapter.execute(ent, intent)
+
+    assert ent.id in updates
+    assert updates[ent.id].inventory is None, "no gold deduction for a no-op query"
+
+    traces = ActionIntentAdapter.get_traces()
+    assert len(traces) == 1
+    assert traces[0].execution_result != "SUCCESS", "trace must not claim success for a no-op"

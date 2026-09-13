@@ -84,7 +84,10 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - If the ticket originated in a `tickets/todos/{folder}/` subfolder:
   - Delete the source file from the subfolder (`rm tickets/todos/{folder}/{ticket_id}.md`).
   - When **all** tickets in the folder are done, move the **entire folder** to `tickets/done/{folder}/` — this preserves `SEQUENCE.md` and any folder-level metadata (`mv tickets/todos/{folder}/ tickets/done/{folder}/`). Never leave a completed folder's skeleton in `tickets/todos/`.
-- Append to the **bottom** of `tickets/working_log.csv` (never insert after the header).
+- Append to the **bottom** of `tickets/working_log.csv` (never insert after the header) via
+  `tools/working_log_writer.py::append_working_log_row()` — never hand-roll this write (two
+  independent hand-rolled writers produced the identical CRLF defect; see
+  `TCK-20260912-WORKING-LOG-APPEND-HELPER`).
 - **Standard/epic only:** Move staging artifacts to `stored_artifacts/`.
 - Update related docs.
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.

@@ -3,27 +3,24 @@ Tests for TCK-20260627-P2N-DEGRADED-FALLBACK.
 
 Verifies:
   1. Module-level default of runtime_content_source is not "legacy_hardcoded".
-  2. GracefulDegradationManager.resolve_content_source uses catalog in degraded mode.
-  3. GracefulDegradationManager.resolve_content_source raises CatalogMissError in strict mode
-     when catalog is absent.
-  4. GracefulDegradationManager.resolve_content_source returns {} in non-strict mode when
-     catalog is absent.
-  5. CatalogRepository.get_lowest_cost_for_type returns items cheapest-first.
+  2. CatalogRepository.get_lowest_cost_for_type returns items cheapest-first.
+
+TCK-20260912-OPTIMIZATION-ORPHANED-CAPABILITY-DETERMINATION: `GracefulDegradationManager` (and
+`resolve_content_source()`, the "prefer catalog under pressure" capability this file originally
+also covered) was deleted -- confirmed to have zero real callers, and the catalog-preference
+behavior under pressure was never wired anywhere else in production. `CatalogRepository.
+get_lowest_cost_for_type()` itself is real, live, kept code (`src/content/repository.py`) and gets
+its own real coverage here independent of the deleted wrapper -- those tests are unaffected by
+that deletion and stay.
 """
 
 from __future__ import annotations
 
 import ast
-import textwrap
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
-from src.domains.optimization.degradation import (
-    CatalogMissError,
-    GracefulDegradationManager,
-)
 
 
 # ---------------------------------------------------------------------------
@@ -75,71 +72,7 @@ def test_runtime_content_source_module_default_is_not_legacy_hardcoded():
 
 
 # ---------------------------------------------------------------------------
-# 2–4. GracefulDegradationManager.resolve_content_source
-# ---------------------------------------------------------------------------
-
-def test_resolve_content_source_degraded_uses_catalog():
-    """In degraded mode, resolve_content_source delegates to catalog.get_lowest_cost_for_type."""
-    manager = GracefulDegradationManager()
-    manager.update_pressure(0.96, 1.0)  # ratio=0.96 → DEGRADED
-
-    catalog = MagicMock()
-    catalog.get_lowest_cost_for_type.return_value = {"mock_item": object()}
-
-    result = manager.resolve_content_source(catalog, "items")
-
-    catalog.get_lowest_cost_for_type.assert_called_once_with("items")
-    assert "mock_item" in result
-
-
-def test_resolve_content_source_normal_mode_uses_catalog():
-    """In normal mode, resolve_content_source also delegates to catalog (no restriction)."""
-    manager = GracefulDegradationManager()
-    # default level is NORMAL
-
-    catalog = MagicMock()
-    catalog.get_lowest_cost_for_type.return_value = {"item_x": object()}
-
-    result = manager.resolve_content_source(catalog, "resources")
-
-    catalog.get_lowest_cost_for_type.assert_called_once_with("resources")
-    assert "item_x" in result
-
-
-def test_resolve_content_source_strict_raises_on_missing_catalog():
-    """strict=True with no catalog must raise CatalogMissError."""
-    manager = GracefulDegradationManager()
-
-    with pytest.raises(CatalogMissError, match="strict mode"):
-        manager.resolve_content_source(None, "items", strict=True)
-
-
-def test_resolve_content_source_strict_error_names_content_type():
-    """CatalogMissError message must include the requested content_type for traceability."""
-    manager = GracefulDegradationManager()
-
-    with pytest.raises(CatalogMissError, match="resources"):
-        manager.resolve_content_source(None, "resources", strict=True)
-
-
-def test_resolve_content_source_non_strict_returns_empty_dict_on_missing_catalog():
-    """strict=False with no catalog must return {} (not raise, not use hardcoded path)."""
-    manager = GracefulDegradationManager()
-
-    result = manager.resolve_content_source(None, "items", strict=False)
-
-    assert result == {}
-
-
-def test_resolve_content_source_non_strict_default_is_false():
-    """Default for strict parameter is False — missing catalog must not raise by default."""
-    manager = GracefulDegradationManager()
-    result = manager.resolve_content_source(None, "items")
-    assert result == {}
-
-
-# ---------------------------------------------------------------------------
-# 5. CatalogRepository.get_lowest_cost_for_type
+# 2. CatalogRepository.get_lowest_cost_for_type
 # ---------------------------------------------------------------------------
 
 def _make_item_def(base_value: float):

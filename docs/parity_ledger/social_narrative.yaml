@@ -2796,18 +2796,24 @@
     \ an in-process registry dict (_CHRONICLE_REGISTRY) populated by register_chronicle().\
     \ No raw domain models in responses \u2014 all shaped via Pydantic presenter models.\
     \ Era milestone membership: all named_milestones whose episode index falls within\
-    \ the era's episode_ids set. Returns 404 if campaign or era not registered. (TCK-20260619-E51E-REST-API)\n"
+    \ the era's episode_ids set. Returns 404 if campaign or era not registered. (TCK-20260619-E51E-REST-API)\
+    \ Router registration is now gated (2026-09-13, TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION):\
+    \ create_v2_app() only calls app.include_router(chronicle.router, prefix='/api/v1')\
+    \ when RuntimeProfile.enable_campaign_chronicle_api is True (default False) --\
+    \ ChronicleCompiler is never instantiated in production, so this endpoint was\
+    \ always empty/404 when reachable; it is off by default now rather than removed,\
+    \ since the implementation itself is correct."
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/api/routes/chronicle.py (get_chronicle, get_era_summary, register_chronicle,
+  v2_evidence: src/api/routes/chronicle.py (get_chronicle, get_era_summary, register_chronicle,
     _CHRONICLE_REGISTRY). src/api/presenters/chronicle.py (ChronicleResponse, ErasSummaryResponse,
     ChronicleEraPresenter, ChronicleEpisodePresenter, ChronicleMilestonePresenter).
-    (TCK-20260619-E51E-REST-API)
-
-    '
+    (TCK-20260619-E51E-REST-API) src/config/profiles.py::RuntimeProfile.enable_campaign_chronicle_api.
   proof_type: parity
-  test_path: tests/api/test_chronicle_api.py
+  test_path: tests/api/test_chronicle_api.py::test_chronicle_rest_endpoint_returns_structured_json
+    + tests/api/test_chronicle_api.py::test_era_summary_endpoint_returns_milestone_names
+    + tests/api/test_chronicle_api.py::test_chronicle_404_unknown_campaign + tests/api/test_chronicle_api.py::test_era_summary_404_unknown_era
   divergence_note: null
   support_boundary: null
 - id: SOC-CHRON-006

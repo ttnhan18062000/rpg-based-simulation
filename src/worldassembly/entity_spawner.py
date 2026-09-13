@@ -66,7 +66,7 @@ class WorldEntitySpawner:
                 )
                 spawn = EntitySpawnContext(
                     position=position,
-                    spawn_region=None,
+                    spawn_region=profile.spawn_region,
                     initial_alive=True,
                     initial_active=True,
                     population_id=_key,

@@ -564,18 +564,30 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 
 1. Update ticket: Status → `DONE`, fill Completion Summary and Files Changed
 2. Move: `tickets/inprogress/{id}.md` → `tickets/done/{id}.md`
-3. Append `tickets/working_log.csv`:
-   ```
-   2026-06-06T00:00:00Z,TCK-20260606-COMBAT-RELATION,Relation Projection,DONE,Added relation projection wrapper into combat target classification,stored_artifacts/TCK-20260606-COMBAT-RELATION
-   ```
-   **If any field (title/summary/artifacts_path) contains a literal comma, wrap that field in
-   double quotes** (RFC4180), e.g.:
-   ```
-   2026-06-06T00:00:00Z,TCK-20260606-COMBAT-RELATION,Relation Projection,DONE,"Added relation projection wrapper, including tests, into combat target classification",stored_artifacts/TCK-20260606-COMBAT-RELATION
-   ```
-   Un-quoted embedded commas silently split this row into extra columns for every downstream reader
-   (`validate_working_log.py`, `knowledge_search.py`, `ticket_stats_report.py`) — this is a real,
-   recurring corruption source (see `TCK-20260904-WORKING-LOG-CSV-PARSER`).
+3. Append `tickets/working_log.csv` via the sanctioned helper, `tools/working_log_writer.py` — never
+   hand-roll this write (added by `TCK-20260912-WORKING-LOG-APPEND-HELPER`, after two independent
+   improvised writers each emitted CRLF rows and blocked `merge=union` on 3 of 4 recent batch merges):
+   a. Use the `Write` tool to create a JSON file with the 6 row fields, e.g.:
+      ```json
+      {"timestamp": "2026-06-06T00:00:00Z", "ticket_id": "TCK-20260606-COMBAT-RELATION",
+       "title": "Relation Projection", "status": "DONE",
+       "summary": "Added relation projection wrapper into combat target classification",
+       "artifacts_path": "stored_artifacts/TCK-20260606-COMBAT-RELATION"}
+      ```
+      The `Write` tool's content is never shell-interpreted, so title/summary text (quotes,
+      backticks, `$`, embedded commas, embedded newlines) needs no manual escaping or quoting here.
+   b. Run: `python3 tools/working_log_writer.py --data-file <path from step a>`. The helper owns
+      `QUOTE_MINIMAL` quoting (RFC4180 — a field with a literal comma or quote is quoted
+      automatically), LF-only line endings, the documented 6-column order, and bottom-append.
+   Never embed title/summary text as an inline `python3 -c` script or a hand-rolled
+   `csv.writer`/`open(..., "a")` call — this was the actual defect class (see
+   `TCK-20260904-WORKING-LOG-CSV-PARSER` for the downstream corruption an unescaped comma causes in
+   `validate_working_log.py`/`knowledge_search.py`/`ticket_stats_report.py`, and
+   `TCK-20260912-WORKING-LOG-APPEND-HELPER`'s Request Summary for the CRLF-row incident this helper
+   closes). A static AST-based test, `test_working_log_csv_has_exactly_one_writer`
+   (`tests/tools/test_working_log_writer.py`), asserts `tools/working_log_writer.py` is the only
+   module under `tools/` that writes this file — catching a reintroduced second writer in CI, not
+   preventing one at write time.
 4. Move: `staging_artifacts/{id}/` → `stored_artifacts/{id}/`
 5. Clean: `data/runs/*`, `reports/release_proof/*` (backstop — primary cleanup happens post-Test as of
    TCK-20260708-DATA-RUNS-CLEANUP-TIMING; this step now typically finds nothing to remove).

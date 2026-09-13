@@ -201,7 +201,10 @@ def build(args) -> int:
     conn.commit()
     conn.close()
 
-    print(f"runs: {n_runs} rows, events: {n_events} rows, tools: {n_tools} rows ({n_skipped} skipped)")
+    print(
+        f"runs: {n_runs} rows, events: {n_events} rows, tools: {n_tools} rows ({n_skipped} skipped)",
+        file=sys.stderr,
+    )
     return 0
 
 

@@ -31,13 +31,14 @@ default OFF, how per-world SimQ profiles can activate them, and how the `Rollout
 
 ## The 16 flags
 
-`FeatureFlagManager.__init__` (`feature_flags.py:13-33`) hardcodes exactly 16 flags. **12 of the
-16 default to `FeatureMode.OFF`** (confirmed in `docs/engine/known_limitations.md` §1.5); 4
-(`ENABLE_PUSH_EVENT_SHAPERS`, `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`,
-`ENABLE_PUSH_EVENT_SHAPERS_QUEST`, `ENABLE_PUSH_EVENT_SHAPERS_AGENCY`) are real, documented,
-individually-reasoned exceptions defaulting `ON` (cutover-validated replacements of existing
-behavior — not speculative rollouts); the 16th (`ENABLE_GUILD_QUEST_GENERATION`) is new gameplay
-behavior and correctly defaults `OFF` per the standard policy below:
+`FeatureFlagManager.__init__` (`feature_flags.py:13-33`) hardcodes exactly 16 flags. **11 of the
+16 default to `FeatureMode.OFF`**; 5 default `ON`: 4 are real, documented, individually-reasoned
+exceptions (`ENABLE_PUSH_EVENT_SHAPERS`, `ENABLE_PUSH_EVENT_SHAPERS_PHASE2`,
+`ENABLE_PUSH_EVENT_SHAPERS_QUEST`, `ENABLE_PUSH_EVENT_SHAPERS_AGENCY` — cutover-validated
+replacements of existing behavior, not speculative rollouts); the 5th,
+`ENABLE_GUILD_QUEST_GENERATION`, was flipped `OFF`→`ON` on real before/after SimQ evidence
+(`TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`, 2026-09-13 — see its own
+row below and `docs/plans/deferred_tuning_decisions_register.md` D-10).
 
 | Flag | Default | Controls |
 |---|---|---|

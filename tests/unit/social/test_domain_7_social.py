@@ -154,3 +154,34 @@ def test_protector_guarding():
     # Protector should move to guard leader
     assert update.task.payload_set["reason"] == "CONTRACT_OBLIGATION_GUARD"
     assert update.task.payload_set["target_id"] == 10
+
+
+def test_find_group_for_contract_returns_matching_group():
+    """TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING: the reverse (contract -> group)
+    lookup finds the real group formed from a genuine recruitment contract."""
+    leader = V2EntityBuilder(10).kind("human").location(0, 0).combat(readiness=100.0).build()
+    member = V2EntityBuilder(1).kind("human").location(0, 0).combat(readiness=100.0).build()
+    other_group = GroupRecord(id=200, leader_id=99, member_ids={99}, anchor=(5, 5), contract_id="other_contract")
+    target_group = GroupRecord(
+        id=100, leader_id=10, member_ids={1, 10}, anchor=(0, 0), contract_id="rec_contract_1",
+    )
+    state = AuthoritativeState(
+        tick=1, seed=1, entities={1: member, 10: leader}, groups={100: target_group, 200: other_group},
+    )
+
+    found = GroupSystem.find_group_for_contract(state, "rec_contract_1")
+
+    assert found is not None
+    assert found.id == 100
+
+
+def test_find_group_for_contract_returns_none_when_no_group_formed():
+    """A contract that never drove a group formation (e.g. still OFFERED, or rejected) returns
+    None rather than raising -- proves the lookup doesn't assume a group always exists."""
+    leader = V2EntityBuilder(10).kind("human").location(0, 0).combat(readiness=100.0).build()
+    group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, anchor=(0, 0), contract_id="rec_contract_1")
+    state = AuthoritativeState(tick=1, seed=1, entities={10: leader}, groups={100: group})
+
+    found = GroupSystem.find_group_for_contract(state, "contract_never_formed_a_group")
+
+    assert found is None

@@ -950,9 +950,19 @@ Each checkbox below is derived from one original test. Keep the original test na
 - [x] **PROG-085**: Breakthrough milestones grant unique permanent ability modifiers [core/state.py:269](file:///home/vboxuser/Work/rpg-based-simulation/src/core/state.py#L269)
     - `IdentityComponent.active_breakthroughs` stores unlocked modifiers.
     - TEST: `tests/unit/progression/test_breakthroughs.py`
-- [x] **PROG-086**: Veterancy Ranks grant passive efficiency buffs to specific roles [ApplyPath:454](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/apply.py#L454)
-    - `ApplyPath` calls `VeterancyService.process_points` on delta.
-    - TEST: `tests/unit/progression/test_veterancy.py`
+- [ ] **PROG-086**: Veterancy Ranks grant passive efficiency buffs to specific roles — **STALE
+      CITATION, corrected 2026-09-13 (TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED)**: both
+      citations below were wrong. `ApplyPath:454` today is unrelated state-carryforward code, not
+      veterancy; `tests/unit/progression/test_veterancy.py` does not exist (the real file is
+      `tests/unit/progression/test_leveling_veterancy.py`, which tests rank-up progression only,
+      never a stat multiplier or role-specific buff). `ApplyPath` does call
+      `VeterancyService.process_points` on delta — that part is real and live — but
+      `process_points()` only advances `veterancy_points`/`veterancy_rank`; the multiplier function
+      this entry actually describes (`VeterancyService.get_stat_multiplier()`) has zero callers
+      anywhere in `src/` or `tests/`. Unchecked pending a real disposition (see the ticket).
+    - `ApplyPath` calls `VeterancyService.process_points` on delta (real, live rank-up wiring).
+    - TEST: `tests/unit/progression/test_leveling_veterancy.py` (progression only, not the
+      multiplier/buff this entry claims)
 - [x] **PROG-087**: Traits (e.g., "Tough", "Quick") apply additive or multiplicative bonuses [core/state.py:268](file:///home/vboxuser/Work/rpg-based-simulation/src/core/state.py#L268)
     - `IdentityComponent.traits` stores permanent character modifiers.
     - TEST: `tests/unit/progression/test_traits.py`

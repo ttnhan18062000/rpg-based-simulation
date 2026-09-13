@@ -142,14 +142,26 @@
 - id: PROG-014
   text: "`test_veterancy_multipliers`: Veterancy multipliers \u2014 Veterancy Ranks\
     \ should boost stats via StatsProxy.."
-  status: verified
+  status: missing
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: VeterancyService.get_stat_multiplier() (src/progression/veterancy.py)
+    implements this formula but has zero callers anywhere in src/ or tests/ (confirmed
+    via grep) -- veterancy_rank is real and live for progression (process_points()
+    wired through patches.py/apply.py) but nothing feeds rank into a combat/stat calculation.
   proof_type: null
   test_path: null
   divergence_note: null
-  support_boundary: null
+  support_boundary: This entry was verified with test_path/proof_type both null --
+    never actually backed by a test. Cited "StatsProxy" is a dead V1 concept with
+    zero presence anywhere in src/ (TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED,
+    2026-09-13). A second citation for the same claim, docs/compliance/checklist.md
+    PROG-086, cited tests/unit/progression/test_veterancy.py and apply.py:454 as evidence;
+    neither holds up (the file does not exist, the line is unrelated carryforward
+    code) -- a citation of a citation, not independent evidence. Mechanics Bible (docs/mechanics/)
+    has zero mentions of veterancy anywhere. `missing` here means unverified and undeclared,
+    not known-broken -- this is the third instance of the TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT
+    pattern found in this same ledger file (after PROG-001).
 - id: PROG-015
   text: "`test_innate_talents_training`: Innate talents training \u2014 Talented attributes\
     \ gain 2x points, weak attributes gain 0.5x.."
