@@ -70,17 +70,26 @@ are not lost a second time.
 - **Class 3 (15 missing `support_boundary`):** these are the pre-existing P0 `missing`/`unsupported`
   entries that Step 3a's narrowed rule now requires an explanation for. Write a real explanation per
   entry — "no explanation recorded" is itself the honest one where nothing is known.
-- **Class 1 (1536 without `test_path`):** decide and record the policy. Do **not** bulk-add citations;
-  there is nothing to cite. The options are to accept it as the ledger's historical baseline and freeze
-  it (no new entry may omit `test_path`), or to treat P0/`verified`-without-evidence as a distinct
-  reportable state. Recommend the first, with the baseline recorded, because the second is a
-  multi-month re-verification project.
+- **Class 1 (1536 without `test_path`):** decide and record the policy. Three honest options:
+  (a) accept it as the ledger's historical baseline and freeze it, so no *new* entry may omit
+  `test_path`; (b) treat P0/`verified`-without-evidence as a distinct reportable state; (c) introduce an
+  explicit status for it (e.g. `legacy_unverified`) so the claim these entries actually support is the
+  one they state. Recommend (a) with the baseline recorded, since (b) and (c) are large in different
+  ways — but (c) deserves real consideration, because today these entries *say* `verified` while
+  citing nothing.
+- **Never invent citations for Class 1.** Bulk-adding plausible test paths would convert an honest gap
+  into a false record: the ledger would then assert verification that never happened, with a path that
+  makes it look checked, and the fabrication would be far harder to detect afterwards than the current
+  uncited state. Any change here alters status or adds an explanation; it never adds a citation that was
+  not run. (Raised by `rpg-feature-planning`, 2026-09-13.)
 - Check the "never sweep" constraint (`TCK-20260705-GATE-DET-MECHANICS-AUDITOR`) is respected: it
   forbids running pytest across the corpus. Pure validation runs no tests and is cheap (2187 entries,
   sub-second), so it is not a sweep in that sense — state this rather than assume it.
 
 ## Out of Scope
 - Re-verifying the behavior behind any entry, or adding tests to make claims true.
+- **Fabricating `test_path` values for uncited entries** — see the Class 1 prohibition above. This is a
+  hard constraint, not a preference.
 - **Still-unfiled follow-ons from `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT`, named here so
   they are not lost again:** (a) oracle parity is not exercised — `test_parity_guards.py` checks the
   oracle files exist and are well-formed, nothing compares behavior to them; (b) the `missing` status
@@ -98,6 +107,15 @@ are not lost a second time.
 - [ ] Every Class 3 entry has a non-empty `support_boundary`.
 - [ ] Class 1 has a recorded policy decision, not silence.
 - [ ] All writes went through `write_entry()`; no raw YAML edit of a ledger shard.
+
+### Downstream consequence (2026-09-13)
+
+`rpg-feature-planning` reports the RPG side had been citing parity entries as authoritative evidence in
+determinations. On this measurement they are changing method to verify against code rather than cite the
+ledger. Their `STRAT-239` case — `verified`, P1, whose `v2_evidence` only confirmed a default parameter
+existed while the behavior it described had never executed — was treated as an outlier at the time; at
+1307 uncited P0s it reads as a sample. Worth stating in the Completion Summary: the value of this work is
+partly that other sessions stop over-trusting the ledger, independent of how many entries get repaired.
 
 ## Related Tickets
 - `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (done, PR #160) — source of follow-ons 1 and 2,
