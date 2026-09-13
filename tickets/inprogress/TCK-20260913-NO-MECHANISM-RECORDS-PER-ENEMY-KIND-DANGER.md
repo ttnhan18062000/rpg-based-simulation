@@ -15,7 +15,12 @@ tags: [cognition, combat]
 No entity can learn that one kind of creature is more dangerous than another — nothing in the simulation ties a danger assessment to an enemy *kind*, so every combat capability estimate falls back to the same hardcoded table regardless of what an entity has actually fought
 
 ## Status
-OPEN
+BLOCKED — **on a user-level decision, 2026-09-13.** Ran the declared-intent check before building
+anything, per instruction: checked the Mechanics Bible, parity ledger,
+`docs/cognition/capability_and_knowledge_contract.md`, and Epic 4.2's own scope. **Nothing declares
+that entities should learn per-enemy-kind danger from combat experience.** See Implementation Notes
+for the full evidence. Stopping here rather than designing or building a learning mechanism nobody
+specified — reported for a decision rather than proceeding.
 
 ## Tier
 standard
@@ -126,7 +131,28 @@ None yet — standard tier, staging artifacts created when picked up.
   decided here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Ran the declared-intent check before writing any code, per explicit instruction. Full evidence in
+`staging_artifacts/.../investigation.md`; summarized here:
+
+- **Mechanics Bible**: `02_combat_laws.md` has zero mentions of per-enemy-kind danger/learning.
+  `04_strategic_cognition.md` §6.12 is the Bible's own section for `CapabilityEstimateService`, but
+  documents only the resource/recipe (`GATHER_RESOURCE`/`CRAFT_UPGRADE`) use — the real combat use
+  (`TacticalDecisionSystem.target_score()`) has no Mechanics Bible section at all.
+- **Parity ledger**: zero matches in `strategic_cognition.yaml`/`combat_movement.yaml`.
+- **`capability_and_knowledge_contract.md`**: documents the current absence (`entity.self_model.
+  capabilities` stays empty in production either way), not an intent to fill it from combat.
+  Also surfaced a second, genuinely distinct `KnowledgeFact`-writing path
+  (`KnowledgeModelService.assimilate()`, called from `SelfModelUpdatePhase.run()` on
+  `InformationResponse` events, gated `ENABLE_SELF_MODEL_COGNITION` — confirmed a different
+  mechanism from `InformationAssimilationService`, not a duplicate finding, checked carefully given
+  the similar naming) — but that path is (a) also unreachable (`ENABLE_SELF_MODEL_COGNITION`
+  defaults `OFF`, no corpus override) and (b) about being **told** a fact by a provider, not
+  **learning from combat experience** — a different mechanism even if it were live.
+- **Epic 4.2**: entirely about resource-location leads via paid information providers
+  (MERCHANT/GUILD_MASTER/ELDER) — nothing about enemy-kind danger or combat-outcome learning.
+
+**Conclusion: nothing declares this.** Reported to peer for a user-level decision rather than
+designing or building a learning mechanism nobody specified.
 
 ## Test Summary
 _(pending)_

@@ -15,7 +15,13 @@ tags: [cognition, schema]
 `LeadState.detail` is one untyped `str` field carrying three mutually incompatible real formats, discriminated by nothing — the root cause `TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH` patched one instance of, not the shape that made it possible
 
 ## Status
-OPEN
+BLOCKED — **on a design decision, 2026-09-13.** Investigation done, real design decision brought to
+peer/user review per this ticket's own AC — not implemented. Key finding: the Mechanics Bible
+already declares `detail`'s shape ("Where it is located, e.g. `(45, 12)`"), and a fresh count of
+every real producer/consumer found the picture is narrower than the original filing's "three live
+conventions": one convention (coordinates) is genuinely live end to end; one (region_id) has live
+consumers and no live producer; one (free text) has no live producer left after this batch's own
+earlier fix. See Implementation Notes.
 
 ## Tier
 standard
@@ -122,7 +128,39 @@ None yet — standard tier, staging artifacts created when picked up.
   layered as a typed accessor is the central open question — not resolved here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Full evidence in `staging_artifacts/.../investigation.md`; summarized here.
+
+**The Mechanics Bible already declares `detail`'s shape.** `docs/mechanics/04_strategic_cognition.md`
+§ "Leads (Knowledge)": "**Detail**: Where it is located (e.g., `(45, 12)`)." Per the Authoritative
+Mechanics Rule's own Precedence clause, this isn't an open design question with three equal
+options — it's the declared contract, and conventions 2/3 are divergences from it. No parity ledger
+entry currently tracks conformance to this specific line — a real, separate gap, noted for whoever
+picks this up.
+
+**Re-counted every producer/consumer fresh, per instruction not to trust the prior count:**
+- **Convention 1 (coordinates)**: live producer (`GuildAction.visit()` → `process_observation()`,
+  this batch's own fix) and 4 live consumers (`intelligence.py` x2, `redirection.py`, `scorers.py`).
+  The only convention genuinely live end to end.
+- **Convention 2 (region_id)**: 2 live consumers (`phase.py:148`, `contradiction.py:60`, inside
+  `InformationBeliefPhase`, gated `ENABLE_BELIEF_ASSIMILATION` — confirmed default `ON`, genuinely
+  reachable). **Zero live producers** — the one candidate (`GuideInformationProvider`) has zero
+  production callers; `BeliefCycleSystem.process_rumor()`'s only real caller,
+  `GuildIntelSystem.update()`, is confirmed dead code. Live consumer, no live producer — the
+  inverse of this arc's usual shape.
+- **Convention 3 (free text)**: no live producer at all, now that `GuildAction.visit()` was fixed.
+  Checked the other named candidates for reachability rather than assuming "caller-supplied" meant
+  "actually supplied": `normalizer.py`'s `details.get("clue_location", "")` always evaluates to
+  `""` (zero real writes to that dict key anywhere in `src/`); `LeadService.create_lead()` has zero
+  real callers anywhere.
+
+**This narrows the fix.** Not "design a discriminated union for three live formats" — one option
+worth naming (not decided): make the region_id consumers derive their own region from a
+coordinate-shaped `detail` via `LegalityServiceV2.get_region_for_position()` (the same real,
+existing machinery `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` already found),
+rather than keep expecting `detail` to already be a region_id — bringing all three real code paths
+into agreement with the Bible's own declared shape and giving the long-dead region_id consumers a
+real chance to fire for the first time. Reported for review, not implemented, per this ticket's own
+AC.
 
 ## Test Summary
 _(pending)_
