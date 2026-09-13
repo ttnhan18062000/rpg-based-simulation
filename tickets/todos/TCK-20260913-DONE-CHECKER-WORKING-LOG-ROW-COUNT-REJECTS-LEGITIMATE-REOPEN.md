@@ -27,6 +27,13 @@ bug
 P2
 
 ## Request Summary
+**Same family as the parity baseline's exact-count assertion and the working_log sole-writer guard
+that scans for writers rather than duplicates** (per peer review, added 2026-09-13): all three
+gates measure a *proxy* for the property they actually care about (no duplicate write) rather than
+the property itself, and all three can be fooled — this one by a legitimate second write, not just
+a real duplicate. Worth keeping that pattern in mind for whoever designs the real fix, not just this
+one check's own row count.
+
 Found while closing `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`, which was
 legitimately closed once as `BLOCKED` (a real, correctly-recorded working_log row, since the
 CLAUDE.md ticket-format's own `## Status` enum lists `BLOCKED` as a valid value alongside
