@@ -11,21 +11,22 @@ TCK-20260904-CAMP-CONTENT-AUTHORING-BRIDGE): a CAMP seeded at maturity=79.9 cros
 raid threshold within a few ticks, and the world has a real CITY place ("hometown_city",
 position (25,25)) far from the CAMP ("calibration_goblin_camp", position (160,160)) to target.
 
-Does NOT assert observed movement toward the target over further ticks. Investigated directly
-and confirmed this is not a defect in this ticket's own fix: by the tick a raid becomes eligible
-in a real multi-tick run, the adaptive governor's compute-budget watchdog has (in every
-reproduction, instrumented or not) already entered RuntimeMode.DEGRADED with
-PhaseBudgets.scan_policy=ScanPolicy.EXACT_DIRTY, and MovementCandidateSelector.select()'s own
-code deliberately skips all non-urgent movement candidates under that policy ("under heavy
-degraded mode, skip non-urgent moves entirely") -- a freshly spawned WANDER-mode raider with no
-per-tick EntityUpdate has no urgency flag, and (per peer review) no path to ever BECOME urgent
-without first being selected, so it is a genuine starvation loop, not mere throttling. This is a
-newly-observed, more visible consequence of the already-known, deliberately-deferred Kernel
-wall-clock mid-tick throttle determinism issue (same mechanism tests/integration/world/
-test_long_run_stability.py already documents and CI-skips for) -- filed as its own ticket rather
-than fixed here, per standing process: TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-
-STARVATION. Confirmed (via direct phase-graph tracing) this is NOT the dirty-set passive-decay
-gap TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION covers -- movement_routing's own
+Historically did NOT assert observed movement toward the target over further ticks. By the tick a
+raid becomes eligible in a real multi-tick run, the adaptive governor's compute-budget watchdog
+has (in every reproduction, instrumented or not) already entered RuntimeMode.DEGRADED with
+PhaseBudgets.scan_policy=ScanPolicy.EXACT_DIRTY, and MovementCandidateSelector.select() used to
+skip all non-urgent movement candidates under that policy unconditionally -- a freshly spawned
+WANDER-mode raider with no per-tick EntityUpdate has no urgency flag, and (per peer review) had no
+path to ever BECOME urgent without first being selected, so it was a genuine starvation loop, not
+mere throttling. This was a newly-observed, more visible consequence of the already-known,
+deliberately-deferred Kernel wall-clock mid-tick throttle determinism issue (same mechanism
+tests/integration/world/test_long_run_stability.py already documents and CI-skips for) -- fixed
+under TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION with a reduced-cadence admission
+for entities with a real, unreached target and no other urgency signal
+(MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO), so raiders now eventually move
+even under sustained real DEGRADED pressure -- this test now asserts that directly. Confirmed (via
+direct phase-graph tracing) this is NOT the dirty-set passive-decay gap
+TCK-20260908-DIRTY-SET-PASSIVE-DECAY-CONSUMER-INVESTIGATION covers -- movement_routing's own
 should_run_phase() check returns True unconditionally here (dirty_set is None at that point in
 refine()'s sequence), so that gate never applies to this path.
 """
@@ -108,5 +109,29 @@ def test_camp_triggered_raid_spawns_real_raiders_anchored_and_targeted_correctly
                 f"raider {e.id} targets {e.navigation.target}, expected the real settlement "
                 f"{_CITY_POS}, not a fabricated or hardcoded destination"
             )
+
+        raider_ids = [e.id for e in raiders_at_trigger]
+        start_positions = {
+            eid: kernel._state.entities[eid].navigation.position for eid in raider_ids
+        }
+
+        # Run enough further real ticks to cover a full EXACT_DIRTY reduced-cadence window
+        # (TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION) -- proves the raiders
+        # spawned above are not permanently stuck, the exact consequence this test used to
+        # document as an accepted gap.
+        modulo = 20  # MovementCandidateSelector.EXACT_DIRTY_STARVED_CADENCE_MODULO
+        for _ in range(modulo + 5):
+            kernel.tick_once()
+
+        moved = [
+            eid
+            for eid in raider_ids
+            if kernel._state.entities.get(eid) is not None
+            and kernel._state.entities[eid].navigation.position != start_positions[eid]
+        ]
+        assert moved, (
+            "no raider moved within a full reduced-cadence window -- the starvation fix "
+            "(TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION) did not take effect"
+        )
     finally:
         kernel.shutdown()

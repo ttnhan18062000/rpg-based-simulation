@@ -30,8 +30,8 @@ DEFAULT_DATA_DIR = REPO_ROOT / "agent-monitoring" / "data"
 UNATTRIBUTED = "unattributed"
 
 
-def registered_agents() -> list:
-    return sorted(p.stem for p in AGENTS_DIR.glob("*.md"))
+def registered_agents(agents_dir: Path = AGENTS_DIR) -> list:
+    return sorted(p.stem for p in agents_dir.glob("*.md"))
 
 
 def load_all_tool_rows(data_dir: Path = DEFAULT_DATA_DIR) -> list:

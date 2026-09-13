@@ -125,9 +125,10 @@ def test_contract_betrayal_produces_clan_reputation_clan_update():
     """Idea 54/M5 (SOC-268): a contract betrayal also produces a ClanUpdate
     degrading the betrayer's clan's clan_reputation, verified through
     ApplyPath. NOT wired to any live pipeline phase today --
-    process_active_contracts() never passes betrayal=True/betrayer_id (a
-    pre-existing gap, disclosed but not fixed by this ticket) -- this test
-    only proves compute_betrayal_clan_reputation_update() + apply.py correct
+    ContractLifecyclePhase.resolve_expirations(), the sole production caller of
+    resolve_contract_outcome() as of TCK-20260912-CONTRACT-EXPIRY-DUAL-MECHANISM-DETERMINATION,
+    never passes betrayal=True/betrayer_id (a pre-existing gap, disclosed but not fixed by this
+    ticket) -- this test only proves compute_betrayal_clan_reputation_update() + apply.py correct
     at the pure-function/apply-path level, not live-pipeline reachability."""
     from src.core.state import ClanState
     from src.core.updates import StateUpdate

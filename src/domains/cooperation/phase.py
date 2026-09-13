@@ -8,9 +8,11 @@ from __future__ import annotations
 import time
 from dataclasses import replace
 from src.core.state import AuthoritativeState
+from src.core.strategic import ContractStatus
 from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate, SocialUpdate, SocialBondUpdate
 from src.domains.cooperation.evaluators import HelpNeedEvaluator, PartnerFitEvaluator
 from src.domains.cooperation.providers import PartnerCandidateProvider, CandidateBudget
+from src.domains.cooperation.postures import CooperationPosture
 from src.domains.cooperation.services import (
     CooperationDecisionService,
     CooperationIntentBridge,
@@ -73,10 +75,16 @@ class CooperationPhase:
             else:
                 help_needs = HelpNeedEvaluator.evaluate(entity, state)
 
+            # TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION: an entity with no help
+            # need of its own must still be evaluated when another entity has a pending
+            # recruitment offer addressed to it -- otherwise it would never get the chance to
+            # accept regardless of what CooperationDecisionService.select() would decide.
+            pending_offer = CooperationDecisionService.find_pending_incoming_offer(entity, state)
+
             # Skip provider scanning if no help needs detected and no active party logic to process
-            if not help_needs and entity.identity.group_id is None:
+            if not help_needs and entity.identity.group_id is None and pending_offer is None:
                 continue
-                
+
             evaluation_count += 1
             
             # 2. Get scoped partner candidates
@@ -125,7 +133,41 @@ class CooperationPhase:
 
             # 5. Map cooperation posture to safe contract intent / blockers
             resolved_up = CooperationIntentBridge.map_decision(entity, decision, state)
-            
+
+            # TCK-20260912-PARTY-FORMATION-REACHABILITY-INVESTIGATION: JOIN_PARTY promotes the
+            # accepted offer on the OFFERING entity's own strategic.contracts to ACTIVE --
+            # contracts are only ever stored on the offering entity's own record (never mirrored
+            # to the target), so this writes an EntityUpdate for decision.selected_partner_id,
+            # not for `entity` itself. map_decision() has no branch for JOIN_PARTY since its
+            # single-entity-return signature can't target a different entity_id; handled here
+            # instead, mirroring the party-cohesion-collapse block below, which writes updates for
+            # entities other than the loop's own current entity for the same structural reason.
+            # Once ACTIVE, GroupSystem.update_groups() (a later phase) forms the real group from
+            # this contract on its own -- this block's only job is the status promotion.
+            if decision.selected_posture == CooperationPosture.JOIN_PARTY and decision.selected_partner_id is not None:
+                offerer_id = decision.selected_partner_id
+                contract_id = decision.trace.get("accepted_contract_id")
+                offerer = state.entities.get(offerer_id)
+                if offerer is not None and contract_id is not None:
+                    contract = offerer.strategic.contracts.get(contract_id)
+                    if contract is not None and contract.status == ContractStatus.OFFERED:
+                        # Use the already-correct, previously-dead ContractService.accept_contract()
+                        # (src/systems/social_systems/contracts.py) rather than a raw
+                        # dataclasses.replace() -- it also resets expiry_tick to
+                        # tick + contract.terms["duration"] via SocialContractSystem
+                        # .transition_contract(), which a naive status-only replace would miss,
+                        # leaving the promoted contract carrying its original ~10-tick OFFER
+                        # expiry and causing GroupSystem.update_groups() to immediately treat it
+                        # as invalid and dissolve the just-formed group.
+                        from src.systems.social_systems.contracts import ContractService
+                        promote_strat_up = ContractService.accept_contract(offerer, contract_id, state.tick)
+                        offerer_up = new_entity_updates.get(offerer_id, EntityUpdate(entity_id=offerer_id))
+                        offerer_up = offerer_up.merge(EntityUpdate(
+                            entity_id=offerer_id,
+                            strategic=promote_strat_up,
+                        ))
+                        new_entity_updates[offerer_id] = offerer_up
+
             # Retrieve or create EntityUpdate
             entity_up = new_entity_updates.get(entity_id, EntityUpdate(entity_id=entity_id))
             merged_up = entity_up.merge(resolved_up)

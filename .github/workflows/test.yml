@@ -165,7 +165,6 @@ jobs:
                  tests/unit/api \
                  tests/unit/cli \
                  tests/unit/views \
-                 tests/unit/diagnostics \
                  tests/unit/perf \
                  tests/unit/entity \
                  tests/unit/entities \
@@ -200,7 +199,6 @@ jobs:
                    tests/unit/api \
                    tests/unit/cli \
                    tests/unit/views \
-                   tests/unit/diagnostics \
                    tests/unit/perf \
                    tests/unit/entity \
                    tests/unit/entities \

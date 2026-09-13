@@ -566,6 +566,30 @@ class CampaignOrchestrator:
                     "sociability": entity.identity.personality.sociability,
                     "industry": entity.identity.personality.industry,
                 },
+                # Unconditional, same reasoning as kind/role/faction above -- earned progression,
+                # not an opt-in carry-forward preference (TCK-20260911-CAMPAIGN-SURVIVOR-EARNED-
+                # PROGRESSION-NOT-CARRIED-FORWARD). Combat stats are a function of attributes +
+                # equipment + skills, not of evolution_level directly -- without these, a
+                # reconstructed survivor's real accumulated power is lost regardless of carried
+                # level.
+                attributes={
+                    "strength": entity.attributes.strength,
+                    "agility": entity.attributes.agility,
+                    "vitality": entity.attributes.vitality,
+                    "endurance": entity.attributes.endurance,
+                    "intelligence": entity.attributes.intelligence,
+                    "spirit": entity.attributes.spirit,
+                    "wisdom": entity.attributes.wisdom,
+                    "perception": entity.attributes.perception,
+                    "charisma": entity.attributes.charisma,
+                },
+                unspent_ap=entity.identity.unspent_ap,
+                learned_skills=tuple(sorted(entity.identity.learned_skills)),
+                active_breakthroughs=tuple(sorted(entity.identity.active_breakthroughs)),
+                class_id=entity.identity.class_id,
+                veterancy_points=entity.identity.veterancy_points,
+                veterancy_rank=entity.identity.veterancy_rank,
+                known_recipes=tuple(sorted(entity.identity.known_recipes)),
             )
 
         return result
@@ -709,6 +733,7 @@ class CampaignOrchestrator:
         from src.core.builder import V2EntityBuilder
         from src.core.state import AuthoritativeState, EntityState, PersonalityComponent
         from src.core.updates import SocialUpdate
+        from src.engine.rpg_depth import SkillScalingService
         from src.domains.campaigns.survivor_placement import (
             SurvivorReconstructionContext,
             resolve_survivor_position,
@@ -807,6 +832,29 @@ class CampaignOrchestrator:
                         sociability=cf.personality.get("sociability", 0.0),
                         industry=cf.personality.get("industry", 0.0),
                     ),
+                    # Earned progression, unconditional -- same reasoning as role/faction/
+                    # traits/personality above (TCK-20260911-CAMPAIGN-SURVIVOR-EARNED-
+                    # PROGRESSION-NOT-CARRIED-FORWARD). Empty/default cf values (pre-existing
+                    # carry-forward records) fall back to V2EntityBuilder's own component
+                    # defaults, matching the precedent this whole block already established.
+                    unspent_ap=cf.unspent_ap,
+                    learned_skills=set(cf.learned_skills),
+                    active_breakthroughs=set(cf.active_breakthroughs),
+                    class_id=cf.class_id,
+                    veterancy_points=cf.veterancy_points,
+                    veterancy_rank=cf.veterancy_rank,
+                    known_recipes=set(cf.known_recipes),
+                )
+                .attributes(
+                    strength=cf.attributes.get("strength"),
+                    agility=cf.attributes.get("agility"),
+                    vitality=cf.attributes.get("vitality"),
+                    endurance=cf.attributes.get("endurance"),
+                    intelligence=cf.attributes.get("intelligence"),
+                    spirit=cf.attributes.get("spirit"),
+                    wisdom=cf.attributes.get("wisdom"),
+                    perception=cf.attributes.get("perception"),
+                    charisma=cf.attributes.get("charisma"),
                 )
                 .build()
             )
@@ -828,6 +876,38 @@ class CampaignOrchestrator:
                 base.equipment,
                 slots=slots_enum,
                 durability=durability_enum,
+            )
+
+            # TCK-20260911-CAMPAIGN-SURVIVOR-EARNED-PROGRESSION-NOT-CARRIED-FORWARD: recompute
+            # combat stats from the survivor's real carried attributes/equipment/skills/class/
+            # breakthroughs, the same function the live tick-time stats_dirty path uses
+            # (src/engine/apply.py) -- reconstruction has no prior-tick state to diff against, so
+            # that path never fires here on its own. wounds/scars stay at V2EntityBuilder's own
+            # fresh defaults (survivors are narratively recovered between episodes -- a deliberate
+            # divergence, not carried), so hp is set to the newly-derived max_hp (full health),
+            # not the bare CombatComponent default.
+            derived_stats = SkillScalingService.get_effective_stats(
+                base.attributes,
+                equipment,
+                wounds=base.combat.wounds,
+                scars=base.combat.scars,
+                learned_skills=base.identity.learned_skills,
+                traits=base.identity.traits,
+                current_role=base.combat.tactical_role,
+                active_breakthroughs=base.identity.active_breakthroughs,
+                class_id=base.identity.class_id,
+            )
+            combat = dc_replace(
+                base.combat,
+                max_hp=derived_stats["max_hp"],
+                hp=derived_stats["max_hp"],
+                atk=derived_stats["atk"],
+                def_stat=derived_stats["def_stat"],
+                evasion=derived_stats["evasion"],
+                readiness_speed=derived_stats.get("readiness_speed", base.combat.readiness_speed),
+                move_cost=derived_stats.get("move_cost", base.combat.move_cost),
+                range=derived_stats.get("range", base.combat.range),
+                tactical_role=derived_stats.get("tactical_role", base.combat.tactical_role),
             )
 
             # Apply carried reputation.
@@ -854,6 +934,7 @@ class CampaignOrchestrator:
                 equipment=equipment,
                 social=social,
                 navigation=navigation,
+                combat=combat,
             )
 
         # Apply social memory import for entities that have a prior record.

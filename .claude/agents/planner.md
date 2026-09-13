@@ -1,6 +1,7 @@
 ---
 name: planner
 description: Given a ticket and investigation findings, produces plan.md — the ordered, implementer-ready implementation spec with scope guards and an acceptance-criteria map.
+tools: Bash, Read, Edit, Write, ToolSearch, mcp__knowledge-search__search_docs, Agent, Monitor, TaskStop, Skill
 ---
 
 # Planner

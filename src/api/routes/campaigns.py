@@ -35,8 +35,13 @@ router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
 
 # ── Campaign Registry ──────────────────────────────────────────────────────────
 # Maps campaign_id → CampaignState. Populated by register_campaign().
-# In production, CampaignOrchestrator calls register_campaign() after creation.
-# In tests, inject directly via register_campaign().
+# TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION: this comment
+# previously claimed "In production, CampaignOrchestrator calls register_campaign() after
+# creation." Confirmed false -- grepped every real caller of register_campaign() in src/; none
+# exists outside this module and its own test file. Nothing populates this registry in a real
+# server today, so get_campaign_history()/get_settlement_personality() below return empty/404 for
+# every real request, always. Only tests inject directly via register_campaign(). See the ticket
+# above for the open disposition question (wiring gap vs. test-only scaffolding).
 _CAMPAIGN_REGISTRY: Dict[str, CampaignState] = {}
 
 
@@ -51,11 +56,6 @@ def register_campaign(campaign_id: str, state: CampaignState) -> None:
         state: The mutable CampaignState owned by the orchestrator.
     """
     _CAMPAIGN_REGISTRY[campaign_id] = state
-
-
-def unregister_campaign(campaign_id: str) -> None:
-    """Remove a campaign from the registry (e.g., after campaign completion)."""
-    _CAMPAIGN_REGISTRY.pop(campaign_id, None)
 
 
 def _clear_registry() -> None:

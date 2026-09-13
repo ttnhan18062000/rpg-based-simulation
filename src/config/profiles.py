@@ -67,6 +67,26 @@ class RuntimeProfile(BaseModel):
         ),
     )
 
+    # API route gating (TCK-20260912-BEHAVIOR-ANALYTICS-PIPELINE-NEVER-STARTED-API-INERT,
+    # TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION): both subsystems
+    # are fully built and tested but have no real production data source today (BehaviorWorker is
+    # never started; CampaignOrchestrator/ChronicleCompiler never populate their registries) --
+    # every real request against their endpoints returns empty/404, always, by construction. Gated
+    # off by default (fail-closed, same shape as api_key_hashes above) rather than removed, since
+    # the implementations are real and worth keeping if the data sources are ever wired -- see the
+    # two tickets' own still-open wire-vs-defer questions. src/api/server.py::create_v2_app() skips
+    # registering these routers entirely when the flag is False, so an unmounted route 404s
+    # honestly (the capability isn't exposed) rather than 404ing/empty-listing because its data
+    # source was never populated (which looks identical to a caller but is a different defect).
+    enable_behavior_analytics_api: bool = Field(
+        default=False,
+        description="Register src/api/routes/behavior.py's 7 endpoints. Off by default -- see this field's own class-level comment.",
+    )
+    enable_campaign_chronicle_api: bool = Field(
+        default=False,
+        description="Register src/api/routes/campaigns.py and chronicle.py's endpoints. Off by default -- see this field's own class-level comment.",
+    )
+
     @field_validator("name")
     @classmethod
     def name_must_not_be_empty(cls, v: str) -> str:
