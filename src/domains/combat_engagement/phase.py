@@ -18,7 +18,17 @@ from src.content_semantics.faction import get_faction_id_str, get_faction_semant
 from src.content_semantics.relation import RelationContext
 from src.domains.combat_engagement.service import CombatEngagementDecisionService
 from src.domains.combat_engagement.resolver import PostureIntentResolver
+from src.domains.combat_engagement.schema import OpponentModel
+from src.domains.combat_engagement.memory_store import compute_salience, store_opponent_model
 from src.systems.strategic_systems.belief import BeliefEntry
+
+
+def opponent_subject_key(target_id: int) -> str:
+    """
+    The per-individual OpponentModel key for a target entity (docs/mechanics/
+    04_strategic_cognition.md Sec 13.6: "keyed per individual, not per kind, for now").
+    """
+    return f"entity.{target_id}"
 
 
 # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN: the stable belief key this phase writes.
@@ -196,8 +206,16 @@ class CombatEngagementPhase:
             # per tick, matching the strategic-budget constraint this phase has always had.
             target, _nearest_dist_sq = min(hostile_candidates, key=lambda pair: pair[1])
 
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: read this actor's real, durable
+            # OpponentModel for `target` before evaluating -- previously always None (confirmed
+            # via repo-wide grep: no real caller anywhere ever passed memory=), which meant
+            # OpponentPerceptionService.estimate()'s own memory-blending logic was correct code
+            # that never actually ran on a real memory. `subject_key` is per-individual (Sec 13.6).
+            subject_key = opponent_subject_key(target.id)
+            prior_memory = actor.cognition.memory.combat.opponent_stats.get(subject_key)
+
             # 2. Subjective Pre-combat evaluation
-            result = CombatEngagementDecisionService.evaluate(actor, target, state)
+            result = CombatEngagementDecisionService.evaluate(actor, target, state, memory=prior_memory)
 
             # Apply bridge mappings
             intent, strat_upd = PostureIntentResolver.resolve(
@@ -229,11 +247,35 @@ class CombatEngagementPhase:
                     beliefs_add_or_update=list(strat_upd.beliefs_add_or_update) + [risk_belief],
                 )
 
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: persist this tick's passive
+            # observation into the actor's own durable OpponentModel collection -- read-through-
+            # then-replace, following MemoryUpdatePhase.apply()'s own precedent
+            # (src/domains/memory/phase.py) for writing a nested cognition sub-model via
+            # EntityUpdate.cognition_bundle_set. Salience uses outcome_severity=0.0 here: no
+            # combat occurred this tick, only observation (Sec 13.6's own combat-vs-observation
+            # distinction; a real combat outcome's higher severity is Step 5's own concern).
+            updated_model = OpponentModel(
+                subject_key=subject_key,
+                estimated_power=result.opponent_estimate.estimated_power,
+                uncertainty=result.opponent_estimate.uncertainty,
+                confidence=result.opponent_estimate.confidence,
+                known_skill_ids=prior_memory.known_skill_ids if prior_memory else (),
+                outcomes=prior_memory.outcomes if prior_memory else (),
+                last_updated_tick=state.tick,
+                salience=compute_salience(
+                    prior_memory, result.opponent_estimate.estimated_power, outcome_severity=0.0
+                ),
+            )
+            new_combat_memory = store_opponent_model(actor.cognition.memory.combat, updated_model)
+            new_memory = dataclass_replace(actor.cognition.memory, combat=new_combat_memory)
+            new_cognition = dataclass_replace(actor.cognition, memory=new_memory)
+
             entity_updates[actor.id] = EntityUpdate(
                 entity_id=actor.id,
                 intent_results=[],
                 property_updates=prop_updates,
                 strategic=strat_upd,
+                cognition_bundle_set=new_cognition,
             )
 
         if entity_updates:
