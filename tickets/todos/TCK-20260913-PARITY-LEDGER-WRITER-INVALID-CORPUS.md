@@ -120,6 +120,13 @@ partly that other sessions stop over-trusting the ledger, independent of how man
 ## Related Tickets
 - `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (done, PR #160) — source of follow-ons 1 and 2,
   and of the Step 3a rule that makes Class 3 visible.
+- `TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP` (open, RPG side, branch
+  `gameplay-gaps-batch`) — **scope split agreed with `rpg-feature-planning`, 2026-09-13:** theirs
+  covers the narrow *dangling-reference* case (an entry marked `verified` naming `StatsProxy`, a
+  class no longer present anywhere in `src/`); this ticket covers the corpus-wide policy question
+  (1307 uncited P0 entries, 60% of the ledger). Different defects, different fixes. Their case
+  resolves to `missing`/`divergent` with the dangling name recorded — never re-pointed at a
+  plausible substitute, per this ticket's no-fabrication constraint.
 - `TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL` (done) — introduced `validate_entry()`; the corpus
   predates it.
 - `TCK-20260705-GATE-DET-MECHANICS-AUDITOR` (done) — the "never sweep" constraint to respect.
