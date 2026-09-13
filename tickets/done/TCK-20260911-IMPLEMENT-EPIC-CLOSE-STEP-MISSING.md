@@ -126,22 +126,34 @@ of its own `folder`-mode cleanup step — every epic ticket previously reached `
 hand or in a batch commit. Added a new guarded block (`if (batchStatus === 'DONE' && epicId)`)
 immediately after the existing folder-cleanup block, mirroring its shape: an agent instruction
 that sets the epic ticket's frontmatter to `phase: done`/`status: historical`, its body
-`## Status` to `DONE` (not `EPIC_SCOPED` — that value's real meaning is the mid-flight
-just-scoped state, confirmed via a live-corpus check: 46/52 already-closed epics already read
-`DONE`, and the 6 exceptions are drift from this exact missing-step bug surfacing in the
-body-status field), and moves the file to `tickets/done/{epic_id}.md`. Uses a fresh, non-colliding
-negative sidecar seq (`-5`), confirmed against every existing `writeSidecar(-N, ...)` call site
-before picking it.
+`## Status` to `DONE` unconditionally — not only replacing `EPIC_SCOPED`, but overwriting whatever
+the field currently reads (confirmed via a corrected, recursive-glob live-corpus check: 71/79
+(89.9%) already-closed epics already read `DONE`; 7 read `EPIC_SCOPED` and 1 reads `OPEN` — a third
+drift shape, `TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`, neither `DONE` nor `EPIC_SCOPED` —
+all 8 are drift from this exact missing-step bug, and the step's unconditional "set to DONE"
+instruction corrects all three shapes the same way, not just `EPIC_SCOPED`) — and moves the file to
+`tickets/done/{epic_id}.md`. Uses a fresh, non-colliding negative sidecar seq (`-5`), confirmed
+against every existing `writeSidecar(-N, ...)` call site before picking it.
+
+**Correction (post-review, agent-working-design):** the original investigation undercounted the
+corpus 52 vs. the true 79 — it globbed only `tickets/done/TCK-*.md` and missed epic tickets living
+inside per-batch subfolders (`tickets/done/{folder}/TCK-*.md`), created by the existing
+folder-move step's own long-standing convention. Re-verified with a recursive glob; the DONE
+majority (89.9% vs. the original 88%) and the decision both survive the correction unchanged —
+see investigation.md §1/§4 for the full re-derivation.
 
 ## Test Summary
 
-New `tests/tools/test_implement_epic_close_step.py` (7 tests, all passing): raw-source-text pin
+New `tests/tools/test_implement_epic_close_step.py` (10 tests, all passing): 7 raw-source-text pins
 against `implement-epic.js`, following `test_finalize_phase_status_instruction_pin.py`'s
-established pattern (no JS test runner exists for `.claude/workflows/*.js`). Covers: frontmatter
+established pattern (no JS test runner exists for `.claude/workflows/*.js`) — frontmatter
 instruction present, body-status instruction says DONE with the EPIC_SCOPED contrast still
 explained, `mv` instruction present, guard is `epicId` not `folder`, ordering (after
 folder-cleanup, before `phase('Report')`), bookkeeping "never fail the workflow" framing, and the
-fresh `-5` sidecar seq.
+fresh `-5` sidecar seq — plus 3 parametrized fixture tests (added post-review, see the honest
+disclosure below) applying the prompt's own specified transformation to a synthetic ticket
+starting from each real drift shape (`EPIC_SCOPED`/`OPEN`/`DONE`) and checking the result against
+the real `check_ticket_location_consistency()` validator.
 
 Updated `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` (pre-existing pin over
 implement-epic.js's writeSidecar call set/order) to include the new `-5` call at its correct file
@@ -150,26 +162,43 @@ tracking-doc-update step, despite -5 > -4 numerically) — this was a real, legi
 test whose previous expectation genuinely became outdated by this ticket's own new code, not a
 gate-evasion edit.
 
-Manually verified (per test_plan.md, since no JS test runner can execute the agent-prompt path
-directly): `check_ticket_location_consistency()` called with the exact frontmatter values
-(`status: historical`, `phase: done`) this step's instruction specifies returns `[]` (passes),
-confirming AC4 without a real `implement-epic` run.
-
 Full suite run: `tests/tools/test_implement_epic_close_step.py`,
 `test_epic_create_tickets_sidecar_orchestrator.py`, `test_epic_tracking_doc_static.py`,
 `test_monitoring_bypass_fix.py`, `test_record_events.py`,
 `test_retrieval_event_wrapper_single_source.py`, `test_step0_ts_orchestrator.py`,
-`test_workflow_meta_conformance.py` — 104 passed, 1 xfailed (pre-existing, unrelated), 0 failed.
+`test_workflow_meta_conformance.py` — 107 passed, 1 xfailed (pre-existing, unrelated), 0 failed.
 
 Parity: skip-eligible (no `src/` path changed; this is pure agent-orchestration/workflow-tooling
 logic with no simulation-mechanics relevance). `find_p0_intersection` against the changed files
 returned `[]` — no P0 ledger entry depends on any of them.
 
+**Honest disclosure (post-review, agent-working-design): the 7 raw-source-text-pin tests are
+prompt-text pins, not behavior tests.** Every assertion matches literal text inside
+`implement-epic.js`'s agent prompt — that the frontmatter/body-status/`mv` instructions and the
+`epicId` guard appear, in the right order, with the right framing. None of them executes the close
+step or asserts that a real epic ticket actually ends up transformed — they pass if the prompt is
+worded correctly even if the dispatched agent ignores it, and fail on any reword that preserves
+meaning. This mirrors the existing folder-cleanup block's own test coverage in the same file (also
+a prompt-text pin, never a behavior test) — not a new gap this ticket introduced, but one this
+ticket's own new step inherits rather than closes.
+
+The 3 added fixture tests (`test_epic_close_step_target_values_satisfy_the_real_location_validator`,
+parametrized `EPIC_SCOPED`/`OPEN`/`DONE`) close part of this gap: they apply the prompt's own
+specified end-state transformation to a synthetic ticket in `tmp_path` and check the result against
+the real `check_ticket_location_consistency()` — the same function TCK-20260907's own corpus test
+runs over all of `tickets/done/` at CI. **They still do not prove the dispatched agent performs the
+transformation correctly at runtime** — no fixture can, short of a real `implement-epic` run, which
+isn't warranted for this change. **The real CI-enforced backstop remains TCK-20260907's
+frontmatter-only corpus test**: it will catch a drifting epic's `phase`/`status` frontmatter. Body
+`## Status` has no automated CI enforcement at all — only this step's own (unverified-at-runtime)
+prompt instruction — a real, disclosed gap, not something these tests should be read as closing.
+
 ## Files Changed
 
 - `.claude/workflows/implement-epic.js` — new epic-close step (guarded `epicId` block, after
   folder-cleanup, before Report phase)
-- `tests/tools/test_implement_epic_close_step.py` (new) — 7 raw-source-text pin tests
+- `tests/tools/test_implement_epic_close_step.py` (new) — 7 raw-source-text pin tests + 3
+  parametrized fixture tests against the real `check_ticket_location_consistency()` validator
 - `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` — updated pre-existing
   writeSidecar call-set/order pin to include the new `-5` call
 - `docs/ai/workflows.md` — updated `implement-epic`'s Implement-phase row to describe the new
@@ -189,5 +218,11 @@ separate close command), the first was chosen: it's the only one that reuses sta
 `implement-epic.js` already computes (`batchStatus`, `epicId`, `discovery.epic_ticket_path`)
 instead of duplicating or inventing new infrastructure, and it makes `epic_id` mode symmetric with
 the `folder`-mode cleanup step that already ships. Also settled the pre-existing DONE-vs-EPIC_SCOPED
-body-status ambiguity for closed epics with live-corpus evidence (46/52 already `DONE`) rather than
-picking one arbitrarily. No src/ or simulation-mechanics code touched; Parity is skip-eligible.
+body-status ambiguity for closed epics with live-corpus evidence (71/79 already `DONE`, corrected
+after review from an initial undercount that missed epics inside per-batch `tickets/done/`
+subfolders) rather than picking one arbitrarily, and confirmed the new step's unconditional
+"set to DONE" instruction also self-heals the one closed epic found reading `## Status: OPEN`
+(`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`), a third drift shape distinct from
+`EPIC_SCOPED`. No src/ or simulation-mechanics code touched; Parity is skip-eligible. Test coverage
+for the new step is honestly disclosed as prompt-text pins only, not behavior verification — see
+Test Summary.

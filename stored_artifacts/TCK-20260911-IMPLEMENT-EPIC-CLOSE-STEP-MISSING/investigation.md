@@ -31,14 +31,28 @@ own investigation.md §8, and independently re-checked here against the live cod
   close in the first place (`epic_ticket_path = ""` for folder mode, per Discover's own contract) —
   only `epic_id` mode ever has a real epic ticket file that needs this.
 
-**Confirmed via re-checking real closed epics, not just trusting the citation:** every one of the 52
-`tier: epic` tickets currently in `tickets/done/` has correct frontmatter (`status: historical`,
-`phase: done` — TCK-20260907's own bulk remediation already normalized this dimension). But 6 of
-those 52 still show body `## Status: EPIC_SCOPED` rather than `DONE`, despite sitting in
-`tickets/done/` with all children complete — a live symptom of the same underlying gap surfacing in
-a second field (body status) that the frontmatter-only bulk fix never touched. The other 46/52
-(88%) already read `DONE`. This is strong, independent evidence for which body-status value is the
-real convention (§4 below) — not something this ticket needs to invent.
+**Confirmed via re-checking real closed epics, not just trusting the citation — corrected once
+already (see Correction below), and re-verified against a recursive glob:** `tickets/done/` holds
+epic tickets both directly (`tickets/done/TCK-*.md`) and inside per-batch subfolders
+(`tickets/done/{folder}/TCK-*.md`, produced by the folder-move step CLAUDE.md's own "After Work"
+rule describes) — a first pass here only globbed the top-level directory and undercounted by 25
+tickets. The correct, recursive-glob population is **79** `tier: epic` tickets in `tickets/done/`
+(78 with correct frontmatter — see the OPEN case below): **71 (89.9%)** already read body
+`## Status: DONE`, **7 (8.9%)** read `EPIC_SCOPED` despite sitting in `tickets/done/` with all
+children complete (E13-CONTENT-FOUNDATION, E53A/E53B/E53C/E53D, E61-PROGRESSION,
+ENTITY-LIFECYCLE-IMPROVEMENT-EPIC) — a live symptom of the same underlying gap surfacing in a
+second field (body status) that TCK-20260907's frontmatter-only bulk fix never touched — and **1
+(1.3%)** reads `## Status: OPEN` (`TCK-20260710-AGENT-BOOKKEEPING-DETERMINISM-EPIC`) — neither
+`DONE` nor `EPIC_SCOPED`, a third drift shape distinct from the other two, confirming this field
+drifts in more than one direction once nothing ever writes it. The 89.9%/DONE majority is still
+strong, independent evidence for which body-status value is the real convention (§4 below) — the
+correction changes the exact count, not the conclusion.
+
+**The new step's fix is unconditional, not conditional on the current value** — Step 2 of the
+close-step prompt (§ plan.md, Implementation Notes) says "set the body `## Status` section to
+DONE," full stop, regardless of what it currently reads. This means it corrects all three observed
+drift shapes (`EPIC_SCOPED`, `OPEN`, and any other stale value) the same way, not just the
+`EPIC_SCOPED` case this investigation happened to notice first.
 
 **How epics actually reach `tickets/done/` today, confirmed by TCK-20260907's own investigation**:
 "by hand or in batch commits" (e.g. a PR squash-merge that happened to include a manual
@@ -90,12 +104,12 @@ invalid value, it's deciding which one this *new automated step* should write.
 
 `EPIC_SCOPED` is `implement-ticket.js`'s own return status immediately after an epic ticket is first
 scoped, before any children exist — a genuinely *mid-flight* meaning ("scoped, not yet resolved into
-children"), not a terminal one. Live-corpus evidence (§1) shows 46/52 (88%) of already-closed epics
-use `DONE`; the 6 exceptions are drift artifacts of the exact same missing-close-step problem this
-ticket fixes, manifesting in the body-status field instead of frontmatter (TCK-20260907's bulk
-remediation only ever touched frontmatter, never body `## Status`). There is no case in the live
-corpus of a *deliberately* EPIC_SCOPED-and-done epic with a documented reason — every instance
-found is drift, not intent.
+children"), not a terminal one. Live-corpus evidence (§1, corrected) shows 71/79 (89.9%) of
+already-closed epics use `DONE`; the 7 `EPIC_SCOPED` + 1 `OPEN` exceptions are drift artifacts of
+the exact same missing-close-step problem this ticket fixes, manifesting in the body-status field
+instead of frontmatter (TCK-20260907's bulk remediation only ever touched frontmatter, never body
+`## Status`). There is no case in the live corpus of a *deliberately* EPIC_SCOPED-and-done (or
+OPEN-and-done) epic with a documented reason — every instance found is drift, not intent.
 
 **Decision: the new close step writes `## Status: DONE`.** `EPIC_SCOPED` remains valid vocabulary
 for its original, narrower meaning (the mid-flight state right after Scope) — this ticket does not
