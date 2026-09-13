@@ -90,16 +90,28 @@ looks like emergent behavior and could survive undetected for months.
 - `TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED` (origin of this finding —
   closed partial, with `information_source_profiles` shipped and this field's own fix split out
   here per peer review)
-- `TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE` — **likely the same root
-  cause, not just a related symptom.** That ticket found `WorldEntitySpawner`'s catalog-native
-  pipeline never expands `PopulationSpec.count` into individually-spawned entities; this ticket
-  found the same pipeline never sets `population_id` on what it does spawn. Both are instances of
-  **the catalog spawn path not carrying population identity through** — `WorldCompiler.compile()`
-  (the classic pipeline) does both correctly; `WorldEntitySpawner` (the catalog pipeline Campaign
-  actually uses) does neither. Whoever picks up either ticket should check whether one fix —
-  threading real `PopulationSpec` identity (`id`, individual index within `count`) into
-  `WorldEntitySpawner`'s own output — closes both, rather than scoping each narrowly and
-  potentially fixing the same underlying gap twice.
+- `TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE` (done, since this ticket was
+  filed) — **this ticket's own "never sets `population_id` anywhere" claim is now stale.**
+  Re-checked 2026-09-13 while cross-referencing the spawn-region precedent below: that ticket's own
+  fix now sets `properties["population_id"]` in both `entity_spawner.py` (`population_id=_key`,
+  matching `resolver.py`'s `PopulationSpec.id`-keyed registration) and `archetype_factory.py`
+  (`properties["population_id"] = spawn.population_id`), confirmed via direct grep — zero hits is
+  no longer accurate. **This does not mean the mismatch is resolved** — this ticket's own central
+  warning applies to this exact temptation: a field being present is not the same as the resolution
+  producing the *correct* `actor_id`, which is only provable the way this ticket's own worked
+  example does it (a real `frontier_living_world` run, checking `actor_id=9` resolves to the
+  intended entity, not just that `population_id` is non-empty). Whoever picks this ticket up should
+  re-run that exact empirical check first — it may turn out Direction 1 is now already implemented
+  incidentally, or it may turn out the key format/individual-index alignment still doesn't match
+  `target_population_id`'s expectations. Not assumed either way here.
+- `TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP` (done, 2026-09-13) — **a working
+  precedent for this ticket's own Direction 1.** That ticket threaded `spawn_region` (a different
+  field, same shape of gap) from `PopulationSpec` through `ResolvedEntityProfile` and into
+  `EntitySpawnContext`/`archetype_factory.py`'s `properties` dict — the identical mechanism
+  Direction 1 would need for `population_id`/individual-index identity. The fix pattern (add the
+  field to `ResolvedEntityProfile`, set it at both `resolver.py` construction sites, read it at
+  `spawn_from_context()` instead of hardcoding a default) is now a proven, working template in this
+  exact file, not something to re-derive from scratch.
 
 ## Related Docs
 None yet.
@@ -121,6 +133,11 @@ None yet — standard tier, staging artifacts created when picked up.
   this up. Direction 1 is likely the more durable fix given its connection to
   `TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE`, but confirm rather than
   assume.
+- **Added 2026-09-13**: Direction 1 may already be partially or fully done, incidentally, by
+  `TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE`'s own fix — see the Related
+  Tickets correction above. First real step when this ticket is picked up: re-run the ticket's own
+  empirical check (`frontier_living_world`, does `actor_id=9` now resolve to the intended frontier
+  guard rather than the goblin raider) before assuming any further implementation is needed at all.
 
 ## Implementation Notes
 _(pending — filed, not yet picked up)_

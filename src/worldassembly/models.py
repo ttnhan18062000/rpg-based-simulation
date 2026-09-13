@@ -21,6 +21,13 @@ class ResolvedEntityProfile(BaseModel):
     cognition_seed: Optional[str] = None
     spawn_position: Optional[Tuple[float, float]] = None
 
+    # TCK-20260911-ENTITYSPAWNCONTEXT-SPAWN-REGION-THREADING-GAP: the population's own authored
+    # region NAME (as opposed to spawn_position's resolved x/y), carried alongside spawn_position
+    # for the same reason -- WorldEntitySpawner.spawn_from_context() threads it into
+    # EntitySpawnContext.spawn_region -> properties["spawn_region"], matching what the classic
+    # WorldCompiler.compile() pipeline already sets (compiler.py:545) for the same field.
+    spawn_region: Optional[str] = None
+
     # TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE: this profile represents
     # one population GROUP, not one entity. `count` is the number of individually-spawned entities
     # WorldEntitySpawner must materialize from it -- porting WorldCompiler.compile()'s classic
