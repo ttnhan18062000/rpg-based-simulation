@@ -245,6 +245,51 @@ Summary for the real before/after evidence this minimal condition already produc
 
 ---
 
+### D-10 · Observed behavioral shift from actually enabling `ENABLE_GUILD_QUEST_GENERATION`
+**Deferred from:** `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`
+
+Recorded as an **observed consequence**, not a tuning question needing a number decided — nothing
+here is being deferred for later calibration; it's the evidence that a previously-inert mechanism
+does what it was designed to do, once actually reached.
+
+**Correction, made the same day this was first recorded**: the measurement below was obtained by
+setting `ENABLE_GUILD_QUEST_GENERATION` via an explicit env-var override, **not** by running an
+unmodified corpus world at the flag's new `FeatureFlagManager` default. That default does not
+currently propagate to any real run at all — confirmed via `TCK-20260913-FEATURE-FLAG-DEFAULT-
+DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS`. State it bluntly: this measurement shows the mechanism
+genuinely works when actually enabled; it does **not** show the default flip delivering that
+behavior in a real run, and `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`
+stays `BLOCKED`, not `DONE`, specifically because of that gap.
+
+**Measured** (`frontier_living_world`, seed 42, 500 ticks, `tools/calibrate_simq.py`, before/after
+identical except the one flag, set via explicit override):
+
+| Pillar | OFF (before) | ON (after, explicit override) |
+|---|---|---|
+| COGNITION | B, norm +0.024, 2 events | **S, norm +3.446, 346 events** |
+| INFORMATION | B, norm +0.080, 1 event | **S, norm +30.344, 519 events** |
+| COMBAT | A, norm +1.774, 313 events | A, norm +1.272, 230 events |
+| PROGRESSION | C, norm -0.016, 58 events | B, norm +0.1844, 59 events |
+| SOCIAL | S, norm +74.792, 10021 events | S, norm +58.394, 7800 events |
+| Overall | S, score 7.9386 | S, score 9.6644 |
+
+COGNITION and INFORMATION both moved a full letter grade (B→S) with event counts jumping by two
+orders of magnitude — this is the mechanism actually running for the first time, not noise.
+`decision_diverged_by_belief` appeared 506 times in the ON run (real route-scoring decisions
+influenced by belief/lead state) — real evidence beliefs are changing decisions, which is the thing
+the whole initiative was for, obtained under an explicit override rather than the flag's own
+default. COMBAT and SOCIAL both moved down while staying in their existing letter grade — plausible
+knock-on effects of entities spending ticks on guild visits instead of other activity, not
+investigated further. PROGRESSION improved. None of these numbers need a decision; they stand as
+the record of what happens once the propagation gap above is actually resolved and this reaches
+real runs by default.
+
+**Accepted outcome:** these shifts stand as measured, unTuned. If any pillar's new grade is judged
+unacceptable on gameplay-feel grounds in a future pass, that is a tuning decision to make then,
+against real data, not a reason to have withheld the wiring fix now.
+
+---
+
 ## Related
 
 - `docs/audits/D04_balance_tuning.md` — existing balance audit; this register feeds it.

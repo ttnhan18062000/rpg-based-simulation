@@ -46,7 +46,7 @@ Verified against `origin/main` on 2026-09-13 by reading call sites and flag defa
 | Beat | State | Evidence |
 |---|---|---|
 | Recognise a gap | **Live** | `UnknownFact`; `ASK_INFORMATION` route family scored and selected (`src/domains/adventure/generator.py:116`) |
-| Ask, via the Adventure domain | **Broken — §3.1** | `action_intent.py:145-151`: deducts gold, returns nothing |
+| Ask, via the Adventure domain | **Trace lies; charge dormant — §3.1** | `action_intent.py:145-151`: records `execution_result="SUCCESS"` for a no-op; the `cost_gold` deduction never fires (never populated upstream) |
 | Ask, via the Information domain | **Built, flag-gated OFF** | `action_intent.py:153+` closes the loop correctly, but `ENABLE_INFORMATION_INTENT_EXECUTION` is `FeatureMode.OFF` (`feature_flags.py:42`) and no corpus profile turns it on |
 | Providers answer queries | **Inert, two distinct ways — §3.2** | `InformationProviderState` never constructed; and `Guide`/`Blacksmith`/`Guild` provider classes have zero production callers |
 | Assimilate an answer | **Built, never reached** | `InformationAssimilationService.assimilate()` measured firing **zero times** in a real 500-tick run |
@@ -61,29 +61,46 @@ the scale of a whole subsystem rather than a single mechanism.
 
 ## 3 · The defects, in dependency order
 
-### 3.1 · Adventure-originated ASK_INFORMATION charges gold and delivers nothing — NEW
+### 3.1 · Adventure-originated ASK_INFORMATION records a lying trace; the gold charge is dormant, not active — NEW
 
-`src/engine/intent/action_intent.py:145-151`. When an `ASK_INFORMATION` intent arrives without
-`query_kind` in its payload — which is every intent built by `ObjectiveIntentResolver`, since
-`src/domains/adventure/resolver.py` never sets that key — the handler deducts `cost_gold` from the
-entity's inventory and returns. No query, no provider, no fact.
+**Corrected 2026-09-13, after this section's original claim proved wrong under implementation.**
+The original text here said the handler "deducts `cost_gold`... the entity pays for information
+and receives none... a live gold sink that reads as commerce in economy aggregates" and reported
+that to the user as an active defect. **That was wrong.** `intent.payload.get("cost_gold", 0)`
+reads a key that is never populated anywhere in the real call chain:
+`ObjectiveIntentResolver.resolve()` has exactly one real call site (`src/engine/tactical.py:348`),
+which passes `payload={"position": target_pos} if target_pos else {}` — never `cost_gold` — and
+`ObjectiveState` (`src/core/strategic.py:303-310`) has no field to carry a cost even if one were
+wanted. The deduction is a **dormant shape**, not a currently-active charge: `gold_deduct` always
+evaluates to `0` in production today, so `InventoryUpdate(gold_delta=-0)` was a real no-op update,
+not a real economic sink. This was concluded from the handler's own code shape without checking
+whether anything upstream ever populates the key it reads — see §6 for why that error is recorded
+there too.
 
-The entity pays for information and receives none. This is strictly worse than the mechanism not
-existing: it is a live gold sink that reads as commerce in economy aggregates. It also emits an
-`IntentTrace` with `execution_result="SUCCESS"`, so the trace record actively asserts something
-that did not happen.
+**What is real and live is the trace.** `src/engine/intent/action_intent.py:145-151` (pre-fix)
+emitted an `IntentTrace` with `execution_result="SUCCESS"` unconditionally, before either branch of
+the handler ran — so every real Adventure-originated `ASK_INFORMATION` intent (confirmed real,
+scored, and selected traffic — see the table row above) recorded a trace asserting success for a
+branch that queried nothing, consulted no provider, and assimilated no fact. That is the actual
+live defect this section describes: an instrumentation record lying about what happened, not an
+active economic exploit.
 
-This was a **deliberate deferral** — the handler's own comment requires the branch stay
+This was a **deliberate deferral** — the handler's own comment required the branch stay
 "byte-identical to pre-fix code" — taken while closing the Information-domain branch beside it.
 Defensible then; it is the class of deferral this repo repeatedly loses track of.
 
 **Not covered by any existing ticket.** The open inert-layer ticket enumerates six gaps (two
 fact-write paths, four lead-creation paths); this is none of them — it is the intent handler's own
-unpaired gold deduction. **This is the one new ticket this plan adds.**
+lying trace and dormant charge shape. **This is the one new ticket this plan adds.**
 
-It is also the only item here that can proceed without a disposition decision first: it is a wrong
-regardless of whether the wider layer gets connected. If the layer stays dormant, the correct fix
-is to stop charging for nothing.
+It is also the only item here that could proceed without a disposition decision first: fixing a
+lying trace, and removing a dormant charge that would otherwise silently activate if a future
+caller ever populates `cost_gold`, are both correct regardless of whether the wider layer ever gets
+connected.
+
+**Closed**: `TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING` — trace now
+records an honest result for the no-op branch; the dormant gold-deduction shape was removed
+outright.
 
 ### 3.2 · The provider side is inert in two distinct ways
 
@@ -185,7 +202,7 @@ rather than left standing as an aspiration.
 
 | # | Ticket | State | Gate |
 |---|---|---|---|
-| 1 | `TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING` | **to file** | none — proceed |
+| 1 | `TCK-20260913-ADVENTURE-ASK-INFORMATION-CHARGES-GOLD-DELIVERS-NOTHING` | **done** | none |
 | 2 | `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` | open | §3.2 disposition decision |
 | 3 | `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` | open | blocked on #2 |
 | 4 | `TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH` | open | blocked on #2 |
@@ -228,6 +245,25 @@ Two consequences beyond the near-miss:
 This is the same failure this arc keeps finding, applied to process rather than code: **a
 confident claim about what exists, unverified against the authoritative source.** It belongs in
 the record next to the mechanisms that were documented as running while inert.
+
+**Second instance, same author, same document, 2026-09-13.** §3.1's original text claimed the
+Adventure-originated `ASK_INFORMATION` handler "deducts `cost_gold`... the entity pays for
+information and receives none... a live gold sink that reads as commerce in economy aggregates,"
+and that claim was reported to the user as an active defect. It was wrong: the deduction never
+fires in production, because nothing upstream of the handler ever populates the `cost_gold` key it
+reads (`ObjectiveIntentResolver`'s one real call site passes only `position`;
+`ObjectiveState` has no cost field at all). The implementer traced the actual call path before
+building anything and found this; §3.1 above is corrected to state it.
+
+**This is not the same root cause as the worktree error above, but it is the same *class* of
+error**: a confident claim about a mechanism's current, active behavior, drawn from reading the
+mechanism's own code, without checking whether the path that would actually exercise it is ever
+populated at runtime. Existence-of-code-shape was read as evidence of behavior. That is precisely
+the reachability-versus-existence distinction this whole document argues for elsewhere (§2's
+table, the "built but not observable" framing) — committed here, by the same author, in the
+document making that argument. Recorded with the error visible rather than tidied away, for the
+same reason §6 above is: a findings document is more useful when its own failures are legible than
+when they're quietly corrected out of the record.
 
 ---
 

@@ -16,7 +16,11 @@ tags: [cognition, self-model]
 populated by nothing, from any source — an always-empty decision input
 
 ## Status
-OPEN
+BLOCKED — **not built, 2026-09-13.** Checked for a real, live belief source before writing any
+code, per instruction. Found none exists in any real run today — see Completion Summary for the
+two independent blocked chains. Wiring either source now would produce code that is correct and
+never fires, the exact pattern this ticket exists to close; declining to add a fresh instance of it
+rather than shipping one.
 
 ## Tier
 standard
@@ -93,27 +97,41 @@ learned, or observed about that enemy or region.
   populated at their own real call sites) — not reopened here.
 
 ## Acceptance Criteria
-- [ ] Re-verified: `region_data`/`enemy_data` are confirmed empty at every real call site, with a
-      fresh grep, not inherited from this ticket's own citation.
-- [ ] A real, evidence-based determination of what should populate these fields (or that nothing
-      should, and the fields should be removed/marked speculative) — not assumed or guessed.
-- [ ] If a source is chosen: wired with real test coverage proving a populated value measurably
-      changes a real capability estimate output.
-- [ ] If no source is chosen: `docs/cognition/capability_and_knowledge_contract.md` updated to
-      state these fields are currently unpopulated by design/oversight (whichever the
-      determination finds), closing the ambiguity for future readers.
-- [ ] No regression in `tests/unit/cognition/`, `tests/unit/domains/adventure/`,
-      `tests/unit/engine/test_tactical*` (or equivalent).
+- [x] Re-verified: `region_data`/`enemy_data` are confirmed empty at every real call site, with a
+      fresh grep, not inherited from this ticket's own citation. Also re-confirmed `travel_regions`
+      still has zero production construction sites — the region half needs its own caller
+      regardless of which belief source is chosen for `enemy_data`.
+- [x] **A real, evidence-based determination made, but not the kind originally anticipated**: the
+      two live-code candidate belief sources are both currently unreachable in real runs (see
+      Completion Summary for the two independent blocked chains) — not "what should populate
+      these fields" but "nothing can populate them yet, and here's exactly why."
+- [ ] Not attempted: wiring either source now, per the disposition above — would produce code that
+      compiles and never fires.
+- [ ] Not attempted: the speculative/unfinished documentation path — premature while a real source
+      is genuinely on a clean path to existing once the two blocking tickets resolve; marking the
+      fields as speculative now would misdescribe the actual disposition (blocked, not abandoned).
+- [ ] No regression — N/A, no code changed.
 
 ## Related Tickets
 - `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION` (done — origin of this
   finding, found while searching for a real consumer for `KnowledgeFact`'s `danger_rating` fact
   type; explicitly declined to build that connection, filing this as its own independent finding
   instead)
-- `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (open — per
+- `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (blocked — per
   `docs/plans/rpg_design_roadmap/rpg_knowledge_investigation_closure_plan.md`, this ticket is
   gated on that one's disposition decision: this is the payoff item — until real facts/leads flow,
   this ticket's own "what should populate these fields" question has nothing real to feed it)
+- `TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS` (open, P0 —
+  **chain 1, step 1**: blocks the lead-belief path — `ENABLE_GUILD_QUEST_GENERATION`'s default
+  doesn't reach real runs, so no `GuildAction.visit()` lead is ever granted to confirm)
+- `TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH` (open — **chain 1, step 2**:
+  even once a lead is granted, `BeliefCycleSystem.process_observation()` is never reached — the
+  `float()` parse throws first for every guild-produced lead's `detail` format)
+- `TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION` (open, unrelated pre-existing deferral —
+  **chain 2**: `CombatEngagementPhase`'s real `combat_risk` `BeliefEntry` is gated
+  `ENABLE_COMBAT_ENGAGEMENT`, default `OFF`; also a single per-actor scalar, not the
+  per-`enemy_id`/`region_id` keyed shape `enemy_data`/`region_data` need — real adaptation work
+  even once the flag question is resolved)
 
 ## Related Docs
 - `docs/cognition/capability_and_knowledge_contract.md` (the contract this ticket's disposition may
@@ -135,13 +153,58 @@ None yet — standard tier, staging artifacts created when picked up.
   recorded as a real observation, explicitly marked unproven, not a predetermined answer.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Re-verified the origin claim before doing anything else: `region_data`/`enemy_data` are still
+empty at every real construction site; `travel_regions` still has zero production construction
+sites (unchanged since the origin ticket).
+
+Checked for a real, live source of entity belief data — per peer instruction, never world truth —
+before wiring anything, since `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`
+(worked immediately before this ticket, same batch) had just found its own connection stays
+`BLOCKED`. Found exactly two real, live-code candidates, and confirmed both are currently
+unreachable:
+
+**Chain 1 — the lead-belief path** (`GuildAction.visit()` → `entity.strategic.leads` →
+`BeliefCycleSystem.process_observation()` in `intelligence.py:416`): blocked twice over. (1) The
+lead is never granted in a real run — `ENABLE_GUILD_QUEST_GENERATION`'s default doesn't propagate
+to `state.feature_flags` (`TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-
+FLAGS`). (2) Even with a lead present, `process_observation()` sits *after* a `float()` parse on
+`lead.detail` that throws for every guild-produced lead's narrative-text format
+(`TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH`) — confirmed by reading the exact
+code path, not assumed.
+
+**Chain 2 — the combat-risk belief path** (`CombatEngagementPhase`'s real, tested `combat_risk`
+`BeliefEntry`, `src/domains/combat_engagement/phase.py`): gated `ENABLE_COMBAT_ENGAGEMENT`, default
+`OFF` (`TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION`, open, unrelated pre-existing deferral, not
+part of this batch). Even were the flag on, this belief is a single per-actor scalar ("my own
+current risk from the nearest hostile"), not the per-`enemy_id`/per-`region_id` keyed shape
+`enemy_data`/`region_data` actually need — real adaptation design work, not a direct read.
+
+`KnowledgeFact` (the third candidate the origin ticket already flagged as unproven) remains
+separately confirmed at zero real writes, per the investigation that started this whole initiative.
+
+**Disposition: do not wire either source now.** Both would produce code that compiles, has real
+test coverage, and never fires in a real run — precisely the "looks live and isn't" pattern this
+ticket exists to close, not extend. Declined for the second time in this batch, same reasoning as
+`TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS`. Stays `BLOCKED` on the two
+named chains above rather than closing `DONE` on an empty implementation or a premature
+"speculative, remove" documentation call — the fields are genuinely on a path to a real source
+once the blocking tickets resolve, not abandoned.
 
 ## Test Summary
-_(pending)_
+No code changed — investigation only. Confirmed via direct code reading (not run, since no
+mechanism to exercise exists yet): the exact line in `intelligence.py` where
+`process_observation()` sits after the throwing `float()` parse; `ENABLE_COMBAT_ENGAGEMENT`'s
+current default in `feature_flags.py`; `combat_risk`'s own single-scalar `BeliefEntry` shape.
 
 ## Files Changed
-_(pending)_
+None — investigation and disposition only; no `src/` or `tests/` changes.
 
 ## Completion Summary
-_(pending)_
+Checked for a real belief source before building, per instruction, rather than wiring against an
+assumed one. Found two real candidates in code, both currently blocked from ever reaching a real
+run — one stacked on two independent problems from this same batch (flag propagation, then a
+contract mismatch), the other on an unrelated pre-existing flag deferral plus its own shape
+mismatch (scalar vs. keyed dict). Declined to wire either, since doing so would add a fresh
+"correct but unreached" mechanism to the ticket meant to close that exact pattern. Stays `BLOCKED`,
+not `DONE`, with both chains named explicitly and the `travel_regions` region-half finding kept
+visible so it doesn't silently inherit whatever the enemy-half source eventually resolves to.

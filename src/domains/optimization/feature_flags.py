@@ -78,17 +78,34 @@ class FeatureFlagManager:
             # domains remain in the codebase, flag-gated to fire only when this is NOT "ON" —
             # setting it to "OFF" is a real, working rollback to pre-cutover behavior.
             "ENABLE_PUSH_EVENT_SHAPERS_PHASE2": FeatureMode.ON,
-            # New gameplay behavior (TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING), not a validated
-            # replacement of existing behavior — DEV-002's default-OFF policy applies (unlike the
-            # two ON-default flags above, which cut over already-proven behavior). Gates both
-            # GuildNeedScorer (src/ai/goals/scorers.py, checked via state.feature_flags directly)
-            # and the guild_visit pipeline phase (src/engine/pipeline.py, checked via
-            # FeatureFlagManager/run_phase) — belt-and-suspenders so a stale kind=="guild" project
-            # from before a flag flip can't silently complete even if the scorer alone were somehow
-            # bypassed. Formalized, not re-litigated, by TCK-20260824-ROLLOUT-FLAG-DECISIONS's own
-            # keep-OFF verdict — this is the one flag of the 8 it reviewed that already had a
-            # deliberate, documented rationale.
-            "ENABLE_GUILD_QUEST_GENERATION": FeatureMode.OFF,
+            # Flipped ON (TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS,
+            # 2026-09-13) to document intent and record real evidence the mechanism works -- but
+            # THIS DEFAULT DOES NOT CURRENTLY REACH REAL RUNS. GuildNeedScorer
+            # (src/ai/goals/scorers.py) and GuildVisitPhase's own internal check
+            # (src/engine/pipeline_phases/guild_visit.py) both read state.feature_flags directly
+            # with their own hardcoded `.get("ENABLE_GUILD_QUEST_GENERATION", "OFF")` fallback --
+            # a SEPARATE mechanism from this dict, which only feeds FeatureFlagManager's own
+            # run_phase() dispatch. state.feature_flags stays {} unless something explicitly
+            # populates it (an env var, a profile's own YAML feature_flags: block, a test
+            # constructing state directly); nothing seeds it from this dict's defaults anywhere in
+            # real code. Confirmed by reverting this exact line and re-running the same
+            # instrumented harness: zero guild-visit/GuildNeedScorer calls with or without this
+            # flip, for every real corpus profile that doesn't explicitly declare the key. Real
+            # blocker found and fixed separately: the guild-visit action (src/town/guild.py)
+            # checked node.kind == "iron" when the real content catalog's id is "iron_vein" --
+            # confirmed fixed via a real instrumented run with the key explicitly set (which does
+            # reach the mechanism). Before/after SimQ measurement under that explicit setting
+            # (frontier_living_world, seed 42, 500 ticks): COGNITION and INFORMATION both moved
+            # B->S, decision_diverged_by_belief fired 506 times -- real evidence the mechanism
+            # itself works, once actually reached. Full record: docs/plans/
+            # deferred_tuning_decisions_register.md D-10. The propagation gap that keeps this
+            # default from taking effect is now the headline of
+            # TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS (renamed
+            # from its original SHADOW-only scope) -- not fixed here; do not read this flag's value
+            # as reflecting real behavior until that ticket resolves the propagation gap. Both
+            # inner gates left unchanged on purpose (see that ticket's own reasoning against
+            # patching the fallback string directly).
+            "ENABLE_GUILD_QUEST_GENERATION": FeatureMode.ON,
             # Default ON (not OFF): validated via real-kernel checks in both SHADOW
             # (construct-only) and ON (deliver, no double-fire against event_extractor.py's own
             # rollback path) during TCK-20260807-QUEST-EVENT-PUSH-MIGRATION -- migrates
