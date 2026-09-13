@@ -130,6 +130,7 @@ whether the merge defect is gone.)
 ## Related Docs
 - `CLAUDE.md` (After Work)
 - `.gitattributes` (the `merge=union` caveat blocks)
+- `docs/ai/ticket-lifecycle.md` (Finalize step 3 — updated by Document-Update)
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION/`
@@ -267,6 +268,9 @@ unchanged — confirmed `True` for all 9 other fields (`id`, `text`, `status`, `
 - `tests/tools/test_working_log_writer.py` (new) — helper unit tests + AST sole-writer guard
   (Steps 4 and 7).
 - `tests/tools/test_finalize_working_log_uses_helper_pin.py` (new) — Step 3's instruction pin.
+- `docs/ai/ticket-lifecycle.md` (edited, Document-Update phase, commit `350279eb7`) — Finalize
+  step 3 instructions updated from the old hand-rolled csv-quoting example to the Write-tool JSON
+  + `--data-file` contract, naming the new AST sole-writer guard test.
 - `staging_artifacts/TCK-20260912-WORKING-LOG-APPEND-HELPER/investigation.md`,
   `staging_artifacts/TCK-20260912-WORKING-LOG-APPEND-HELPER/plan.md`,
   `staging_artifacts/TCK-20260912-WORKING-LOG-APPEND-HELPER/test_plan.md` — created/revised during
