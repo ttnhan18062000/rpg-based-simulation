@@ -41,6 +41,38 @@ def test_multi_citation_delimiters_all_split_correctly():
         assert citations == ["tests/a.py::test_1", "tests/b.py::test_2"], raw
 
 
+def test_pipe_delimiter_with_surrounding_whitespace_splits_correctly():
+    """TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: INFRA-221/STRAT-236's real shape --
+    ` | `-joined multi-citation, previously unparseable."""
+    raw = "tests/a.py::test_1 | tests/b.py::test_2 | tests/c.py::test_3"
+    citations, err = parse_test_path_citations(raw)
+    assert err is None, raw
+    assert citations == ["tests/a.py::test_1", "tests/b.py::test_2", "tests/c.py::test_3"]
+
+
+def test_doubled_pipe_with_no_surrounding_whitespace_is_not_treated_as_a_delimiter():
+    """Confirmed against the real corpus (TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL):
+    INFRA-405's test_path contains a literal `|| true` (a shell operator quoted inside prose,
+    the only other `|` occurrence anywhere in the ledger) -- a bare `|` delimiter would have
+    incorrectly split it into empty/garbage fragments. `\\s+\\|\\s+` requires whitespace on both
+    immediate sides of the pipe, which neither `|` inside `||` has, so it's never treated as a
+    delimiter here. (This entry is still correctly unparseable overall -- its pre-existing comma-
+    delimited parenthetical annotations already broke it before this fix, and still do; this test
+    only pins that the pipe change itself introduces no NEW incorrect split.)"""
+    raw = "tests/x.py::test_a (works, mostly); command not suffixed with swallowing || true"
+    citations, err = parse_test_path_citations(raw)
+    assert err is not None
+    assert citations is None
+
+    # Directly confirms the delimiter regex itself never treats either `|` inside `||` as a
+    # split point -- isolates the claim from the comma-splitting this fixture also triggers.
+    from parity_test_path import _DELIM_SPLIT_RE
+    doubled_pipe_only = "left side || right side"
+    assert _DELIM_SPLIT_RE.split(doubled_pipe_only) == [doubled_pipe_only], (
+        "a doubled pipe with no surrounding whitespace must never be split"
+    )
+
+
 def test_unparseable_prose_returns_none_and_error():
     raw = "`tests/tools/test_x.py` (indirectly via `Y` and `Z` flow)"
 
