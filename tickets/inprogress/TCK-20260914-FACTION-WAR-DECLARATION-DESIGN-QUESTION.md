@@ -205,6 +205,24 @@ restructured around this (now §3.2, renumbering the prior military-strength ske
 Full revised proposal: `docs/mechanics/faction_war_drivers_proposal.md` §3.2/§3.5/§3.6/§4/§6. No
 code written. Sent to peer for review.
 
+**2026-09-15, peer review round 1 — `public_reputation` spread checked over a longer run, not just
+at one point in time.** Peer's concern: a 2× range (1.0-2.0) may be too narrow to express "a king's
+betrayal reads as categorically different from a peasant's," and asked whether the spread widens
+with more play rather than assuming the earlier 3000-tick snapshot was representative. Ran a real
+5000-tick instrumented run (`urban_political`, seed=42), sampling `public_reputation`'s
+min/max/mean/distinct-count at 10 checkpoints (every 500 ticks). **Result: the spread does not
+widen at all.** `min`/`max` are pinned at exactly `1.000`/`2.000` — the field's own hard floor and
+ceiling — at every single checkpoint from tick 500 through tick 4999; `spread (max-min)` reads
+exactly `1.000` the entire time. Mean drifts *down* over the run (1.335→1.145) as new
+default-reputation spawns dilute the average, not because the range changes shape. **This
+strengthens the concern rather than resolving it** — the 2× ceiling is structural, not something
+more playtime fixes. Added to the spec (§3.2.4, §6) with the explicit conclusion: the design wants
+real importance weighting and the world does not currently have a signal strong enough to carry it
+— a finding for the user, not quietly patched over. Also added the general rule peer asked for: any
+field proposed as a discriminator must be measured for spread before a design leans on it — this is
+the second time in this arc a proposed input turned out uniform across the corpus (the first was
+entity level in the perceived-power draft).
+
 Sent to peer for review — no implementation until approved, per explicit instruction.
 
 ## Test Summary

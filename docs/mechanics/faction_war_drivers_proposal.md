@@ -213,14 +213,39 @@ attributed to the acting entities' factions, not invented from scratch.
 
 #### 3.2.4 Importance weighting — the novel piece, and an empirical correction to the candidate list
 
+**Rule applied throughout this section, worth stating on its own**: any field proposed as a
+discriminator must be measured for real spread before a design leans on it — not assumed reasonable
+because it exists and is live. This is the second time this exact class of mistake nearly happened
+in this arc (the first: the earlier perceived-power draft assumed entity level would discriminate,
+and found every one of 214 corpus entities at level 1). Two instances make it a pattern to check
+for by default, not a one-off lesson.
+
 Peer's candidates, checked against real data rather than assumed:
 
-- **`public_reputation`** (`SocialComponent.public_reputation: float = 1.0`, range 0.0–2.0) — **real,
-  live, and confirmed non-degenerate.** Measured across a real 3000-tick run
-  (`urban_political`, seed=42, 49 entities alive at end): min=1.000, max=2.000, mean=1.232, 8
-  distinct values. A genuine spread, not everyone pinned at the default. **Recommended as the
-  primary importance weight**: `IMPORTANCE_WEIGHT = public_reputation / 2.0` (normalizes to
-  roughly [0, 1], a reputable/notable entity's actions counting for more).
+- **`public_reputation`** (`SocialComponent.public_reputation: float = 1.0`, range 0.0–2.0) — real,
+  live, and *not* pinned at the default (confirmed non-degenerate: measured across a real 3000-tick
+  run, `urban_political`, seed=42, 49 entities alive at end — min=1.000, max=2.000, mean=1.232, 8
+  distinct values). **But the spread itself is narrow, and does not widen with more play.**
+  Checked explicitly across a longer 5000-tick run at ten checkpoints (every 500 ticks): `min` and
+  `max` are pinned at exactly `1.000`/`2.000` — the field's own hard floor/ceiling — at **every**
+  checkpoint from tick 500 through tick 4999, with `spread (max−min)` reading exactly `1.000` the
+  entire time. Mean actually drifts *down* over the run (1.335 → 1.145) as new low-reputation
+  spawns dilute the average, not because the range narrows or widens. **This is a finding, not
+  reassurance**: the most important entity in the world can count at most 2× a nobody
+  (`2.0 / 1.0`), and that ceiling is structural — it does not loosen given more real play. Against
+  real interaction volume (many small sentiment deltas accumulating per tick), a 2× multiplier will
+  be close to invisible; the weighting the design calls for (a king's betrayal reading as
+  categorically different from a peasant's, not merely double) **cannot be expressed by this signal
+  as it exists today.**
+
+  What a real signal would need: something with genuine range — faction leadership (confirmed
+  absent, §3.2.4 below), an office/rank system, or a widened `public_reputation` formula that
+  currently isn't proposed here. **The honest state of this design is: it wants importance
+  weighting, and the world does not yet have a signal strong enough to carry it.** Whether to build
+  one, accept the weak 2× signal as a real first pass, or omit weighting entirely for now is the
+  user's call, not decided here. **Recommended only as a placeholder, not a resolved answer**:
+  `IMPORTANCE_WEIGHT = public_reputation / 2.0` (normalizes to roughly [0, 1]) — with the explicit
+  caveat above attached, not silently dropped.
 - **`veterancy_rank`** (`EntityState.identity.veterancy_rank: int = 0`) — real, live producer exists
   (`VeterancyService.process_points()`, driven by `veterancy_points_delta`), **but confirmed
   degenerate in the same real run**: every one of the 49 alive entities was at `veterancy_rank = 0`.
@@ -399,19 +424,25 @@ dynamic conquest path at all.
 
 1. **Central design, §3.2**: a `SocialBond`-shaped `FactionSentiment` record, built from the same
    real entity-interaction producers (combat, cooperation, appraisal) that already drive
-   entity-level bonds, weighted by `public_reputation` (confirmed real and non-degenerate;
-   `veterancy_rank` confirmed degenerate and explicitly not used), decaying toward neutral on
-   staleness (new mechanism, flagged as such). Feeds the existing, untouched `tension_delta` →
-   `DiplomaticStateMachine` path. **Closes loop #3 directly and independently of territory.**
-2. **§3.1 (carried from the prior draft)**: a parallel `RegionState.owner_faction_id_str` field
+   entity-level bonds, decaying toward neutral on staleness (new mechanism, flagged as such). Feeds
+   the existing, untouched `tension_delta` → `DiplomaticStateMachine` path. **Closes loop #3
+   directly and independently of territory.**
+2. **Importance weighting is a real, unresolved gap, not a solved piece.** `veterancy_rank`
+   confirmed degenerate (everyone at rank 0), not used. `public_reputation` is real and
+   non-degenerate but its spread is structurally narrow (2× ceiling-to-floor) and **confirmed not
+   to widen with more play** (measured flat across ten checkpoints over a real 5000-tick run). The
+   design calls for a king's betrayal to read as categorically different from a peasant's; no
+   signal in the world today can express that. This is a finding for the user, not a flaw quietly
+   patched over — see §3.2.4.
+3. **§3.1 (carried from the prior draft)**: a parallel `RegionState.owner_faction_id_str` field
    closes the identity-collapse gap (FAC-010, already documented) and derives `FactionState.
    territory` for real. **Closes loop #2**, and offers a second, now-redundant path to loop #3.
-3. **Loop #1 (`military_strength`) remains genuinely open.** §3.3's vault-gold sketch is blocked on
+4. **Loop #1 (`military_strength`) remains genuinely open.** §3.3's vault-gold sketch is blocked on
    a separate ticket (`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`) and is, on its own
    terms, not addressed by the sentiment design at all — a relational signal is the wrong shape for
    raw military capability. This is the one loop this proposal cannot currently claim to close.
-4. **Consequence, stated plainly**: this design should reliably get real faction pairs to
+5. **Consequence, stated plainly**: this design should reliably get real faction pairs to
    `TENSE`/`HOSTILE` in a real run. It should **not** be expected to reliably reach `WAR` until
    loop #1 has its own real answer — a known, named gap, not an assumed success.
-5. No code has been written against this proposal. Peer/user review requested before any
+6. No code has been written against this proposal. Peer/user review requested before any
    implementation, per explicit instruction.
