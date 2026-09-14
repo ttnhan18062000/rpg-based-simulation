@@ -2950,9 +2950,16 @@
 
     '
   proof_type: null
-  test_path: tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default,test_run_manifest_world_id_explicit,test_manifest_world_id_persists_via_repo
+  test_path: tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default;
+    tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_explicit;
+    tests/unit/observability/test_run_artifact_repository.py::test_manifest_world_id_persists_via_repo
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default,test_run_manifest_world_id_explicit,test_manifest_world_id_persists_via_repo'
 - id: INFRA-231
   text: 'Lab orchestrator `STANDARD` mode maps to `ObservabilityMode.NORMAL` (not
     LIGHT). `ScenarioLabOrchestrator._resolve_obs_mode("STANDARD")` must return `ObservabilityMode.NORMAL`
@@ -2969,9 +2976,15 @@
 
     '
   proof_type: null
-  test_path: tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal,test_obs_mode_mapping_full_table
+  test_path: tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal;
+    tests/unit/lab/test_scenario_lab_orchestrator.py::test_obs_mode_mapping_full_table
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal,test_obs_mode_mapping_full_table'
 - id: INFRA-232
   text: '`QueueDrainWorker.quality_fn` is called per-envelope after `file_write_fn`
     and `stream_publish_fn`; exceptions are caught identically and do not propagate.
@@ -3032,9 +3045,15 @@
     \ rule value. Verified by direct exception-type inspection during TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION\
     \ implementation, not assumed.\n"
   proof_type: null
-  test_path: tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error,test_malformed_value_raises_validation_error
+  test_path: tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error;
+    tests/simulation_quality/test_weights.py::test_malformed_value_raises_validation_error
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error,test_malformed_value_raises_validation_error'
 - id: INFRA-271
   text: '`ScoringWeights` resolves rule-key weights on a per-pillar basis: each pillar''s
     scorer reads its own declared weight for a rule name via `ScoringWeights.for_pillar(pillar_id)["rule_key"]`
@@ -4588,7 +4607,19 @@
 
     '
   proof_type: regression
-  test_path: "tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;\
+  test_path: tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;
+    tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged;
+    tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar
+  divergence_note: null
+  support_boundary: "This entry documents corpus-scan validation coverage for the\
+    \ INFRA-271 fix only; it does not supersede, rewrite, or modify INFRA-271's own\
+    \ text/evidence/test_path, which remains an accurate, standalone description of\
+    \ the pillar-scoped lookup mechanism itself. The 14 anchors' root cause is now\
+    \ confirmed (F6-class load/timing-sensitivity, TCK-20260715-SIMQ-ANCHOR-LOAD-\
+    \ SENSITIVITY-SWEEP) -- no longer an open question as of this update.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
+    \ test_path normalized to a plain multi-citation (all citations confirmed to exist\
+    \ via grep before writing). Full original test_path preserved verbatim below for\
+    \ disclosure:\n\ntests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;\
     \ tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged;\
     \ tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar;\
     \ tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget\
@@ -4665,16 +4696,12 @@
     \ test_grade_within_anchor_band_long_run[urban_political_seed123_1000t] confirmed\
     \ passing (1 passed, non-skip) against freshly-regenerated real calibration data\
     \ generated after the override-table edit landed. See stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md\
-    \ for the full 8-draw per-pillar table and derivations.\n"
-  divergence_note: null
-  support_boundary: 'This entry documents corpus-scan validation coverage for the
-    INFRA-271 fix only; it does not supersede, rewrite, or modify INFRA-271''s own
-    text/evidence/test_path, which remains an accurate, standalone description of
-    the pillar-scoped lookup mechanism itself. The 14 anchors'' root cause is now
-    confirmed (F6-class load/timing-sensitivity, TCK-20260715-SIMQ-ANCHOR-LOAD- SENSITIVITY-SWEEP)
-    -- no longer an open question as of this update.
-
-    '
+    \ for the full 8-draw per-pillar table and derivations.\n\n\ntests/unit/worldassembly/test_corpus_diversity.py\
+    \ -m slow --resource-budget large -k \"grade_stability\" (the 14 dedicated grade_stability\
+    \ guards) was deliberately NOT added to test_path -- citing the bare file would\
+    \ misrepresent the claim, since running the whole file executes a much larger,\
+    \ different test set than the 14 filtered guards actually named as passing (same\
+    \ reasoning as COMB-308's own exclusion)."
 - id: INFRA-273
   text: 'F6 (docs/audits/D06_longrun_health.md, kernel.py''s tick-budget watchdog/mid-tick
     emergency throttle) is confirmed to extend beyond COGNITION/decision_divergence_detected
@@ -4788,17 +4815,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget
-    large -k "grade_stability" (14 dedicated guards, one per anchor, all green --
-    each guard''s own docstring cites the specific repro evidence for that anchor/pillar).
-    UPDATE 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE): `make
-    simq-corpus-diversity-slow-isolated` (all 32 `-m slow` guards in this file, run
-    as isolated per-test subprocesses; asserts a minimum collected node-ID count of
-    32 before running, failing loudly rather than silently passing on a short/empty
-    collection); `tests/static/test_corpus_diversity_ci_isolation.py` (static guard
-    proving the CI/Makefile wiring shape is correct).
-
-    '
+  test_path: tests/static/test_corpus_diversity_ci_isolation.py
   divergence_note: null
   support_boundary: "This entry documents the confirmed blast radius of F6's existing,\
     \ intentional, documented mechanism (docs/engine/kernel.md, docs/engine/performance_contract.md\
@@ -4822,7 +4839,22 @@
     \ live delivery to AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL -- not\
     \ a Phase 2 regression. `grade_anchors.json` left unrecalibrated for the same\
     \ reason as Phase 1's own cutover. See stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md\
-    \ for the full repro.\n"
+    \ for the full repro.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path\
+    \ normalized to a plain multi-citation (all citations confirmed to exist via grep\
+    \ before writing). Full original test_path preserved verbatim below for disclosure:\n\
+    \ntests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget\
+    \ large -k \"grade_stability\" (14 dedicated guards, one per anchor, all green\
+    \ -- each guard's own docstring cites the specific repro evidence for that anchor/pillar).\
+    \ UPDATE 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE): `make\
+    \ simq-corpus-diversity-slow-isolated` (all 32 `-m slow` guards in this file,\
+    \ run as isolated per-test subprocesses; asserts a minimum collected node-ID count\
+    \ of 32 before running, failing loudly rather than silently passing on a short/empty\
+    \ collection); `tests/static/test_corpus_diversity_ci_isolation.py` (static guard\
+    \ proving the CI/Makefile wiring shape is correct).\n\n\ntests/unit/worldassembly/test_corpus_diversity.py\
+    \ -m slow --resource-budget large -k \"grade_stability\", and the `make simq-corpus-diversity-slow-isolated`\
+    \ Makefile target wrapping the same filtered set, were deliberately NOT added\
+    \ to test_path for the same reason as INFRA-272 above -- only the one real, unfiltered\
+    \ pytest file (test_corpus_diversity_ci_isolation.py) is cited."
 - id: INFRA-274
   text: 'Plan-phase "unresolved questions" gate false-positive fix (TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS):
     the orchestrator''s Plan-phase gate previously tested `planText.toLowerCase().includes(''unresolved
@@ -4887,10 +4919,29 @@
 
     '
   proof_type: null
-  test_path: 'tests/tools/test_plan_gate_static.py (6/6 passing -- dedicated regression
-    coverage added: true-positive genuine heading, the exact false-positive prose
-    ("No unresolved questions: ...") that motivated this ticket, no-heading case,
-    H3-does-not-match-H2-only-contract, trailing- whitespace-after-heading, and missing-file-returns-false-not-raise).
+  test_path: tests/tools/test_plan_gate_static.py; tests/tools/test_step0_ts_orchestrator.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration workflow tooling only -- no simulation behavior
+    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for orchestrator-side
+    implement-ticket.js gate/check-logic changes). Does not touch, extend, or duplicate
+    INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
+    or INFRA-265 (Scope-phase ticket-location resolution); this is a fourth, distinct
+    gate-logic guarantee scoped to the Plan phase''s unresolved-questions check specifically.
+    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): scope unchanged
+    -- this update only makes the same gate content-aware instead of heading-presence-only;
+    it remains the single Plan-phase unresolved-questions guarantee, not a new/fifth
+    one.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_plan_gate_static.py (6/6 passing -- dedicated regression coverage
+    added: true-positive genuine heading, the exact false-positive prose ("No unresolved
+    questions: ...") that motivated this ticket, no-heading case, H3-does-not-match-H2-only-contract,
+    trailing- whitespace-after-heading, and missing-file-returns-false-not-raise).
     Closes the gap this entry originally flagged. tests/tools/test_step0_ts_orchestrator.py
     (6/6 passing) additionally confirms the surrounding planTs/writeSidecar/plan=await
     agent(...)/planText adjacency block was left structurally intact.
@@ -4903,20 +4954,6 @@
     test_heading_with_only_whitespace_body_before_next_heading_returns_false, test_heading_with_only_whitespace_body_to_eof_returns_false,
     test_heading_with_real_content_still_returns_true, test_heading_with_none_prefixed_word_not_treated_as_resolved
     (guards against a "Nonetheless, ..." false negative).
-
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration workflow tooling only -- no simulation behavior
-    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for orchestrator-side
-    implement-ticket.js gate/check-logic changes). Does not touch, extend, or duplicate
-    INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
-    or INFRA-265 (Scope-phase ticket-location resolution); this is a fourth, distinct
-    gate-logic guarantee scoped to the Plan phase''s unresolved-questions check specifically.
-    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): scope unchanged
-    -- this update only makes the same gate content-aware instead of heading-presence-only;
-    it remains the single Plan-phase unresolved-questions guarantee, not a new/fifth
-    one.
 
 
     '
@@ -5174,7 +5211,20 @@
     \ test_agent_ops_dashboard_frontend_api_surface.py test_agent_ops_dashboard_serve.py)\
     \ -> 107 passed."
   proof_type: feature
-  test_path: "tests/tools/test_agent_ops_dashboard_ingest.py (including test_get_tickets_and_across_dimensions_filters_tier_and_layer,\
+  test_path: tests/tools/test_agent_ops_dashboard_ingest.py; tests/tools/test_agent_ops_dashboard_api.py;
+    tests/tools/test_agent_ops_dashboard_concurrency.py; tests/tools/test_agent_ops_dashboard_api_boundary.py;
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py; tests/architecture/test_api_read_model_guard.py;
+    tests/tools/test_agent_ops_dashboard_serve.py; tests/tools/test_status_drift_check.py;
+    tests/tools/test_agent_ops_dashboard_stats.py; tests/tools/test_generate_retro.py;
+    tests/tools/test_ticket_stats_report.py
+  divergence_note: null
+  support_boundary: "Read-only over tickets/** and agent-monitoring/*.jsonl; never\
+    \ touches AuthoritativeState. Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE),\
+    \ the live phase/agent null-labeling gap (independent sibling ticket), and agent-monitoring\
+    \ retention/rotation (out of scope, unbounded growth accepted).\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
+    \ test_path normalized to a plain multi-citation (all citations confirmed to exist\
+    \ via grep before writing). Full original test_path preserved verbatim below for\
+    \ disclosure:\n\ntests/tools/test_agent_ops_dashboard_ingest.py (including test_get_tickets_and_across_dimensions_filters_tier_and_layer,\
     \ test_get_tickets_or_within_tag, test_get_tickets_dimension_filter_and_tag_filter_combine_with_and\
     \ \u2014 added under TCK-20260716-AGENTOPS-TICKETS-VIEW to close a pre-existing\
     \ coverage gap: this file's original scope never directly exercised get_tickets()'s\
@@ -5278,13 +5328,6 @@
     \ test_get_runs_filters_by_provider_and_execution_id (all in tests/tools/test_agent_ops_dashboard_ingest.py)\
     \ plus the pre-existing test_ingest_load_jsonl_is_validate_load_jsonl guard, re-confirmed\
     \ unmodified.\n"
-  divergence_note: null
-  support_boundary: 'Read-only over tickets/** and agent-monitoring/*.jsonl; never
-    touches AuthoritativeState. Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE),
-    the live phase/agent null-labeling gap (independent sibling ticket), and agent-monitoring
-    retention/rotation (out of scope, unbounded growth accepted).
-
-    '
 - id: INFRA-276
   text: 'Agent Ops Dashboard production serving (TCK-20260716-AGENTOPS-BUILD-SERVE):
     a sibling module src/api/agent_ops_dashboard/serve.py builds a *separate* FastAPI()
@@ -5421,7 +5464,28 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_status_drift_check.py::test_clean_corpus_passes, tests/tools/test_status_drift_check.py::test_stale_ticket_status_flagged,
+  test_path: tests/tools/test_status_drift_check.py
+  divergence_note: null
+  support_boundary: 'Ticket/run data-hygiene tooling only -- no simulation behavior
+    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for gate-check
+    tooling entries). Does not cover or claim anything about dashboard-frontend''s
+    own rendering correctness (INFRA-275/276 own that boundary; classifyFinalStatus()
+    is unmodified by any of the three status-drift tickets). Known, intentional limitation,
+    unchanged by this revision: parse_body_section (like the prior regex) requires
+    a newline directly after the `## Status` heading before capturing anything, so
+    same-line colon-suffixed `## Status: X` tickets still resolve to an empty extraction
+    and are silently skipped (6 files corpus-wide as of 2026-07-18, deliberately excluded
+    from both the 71-file fix and this check''s flagged set per plan.md''s "Colon-Suffixed
+    Files Decision" -- a candidate for a future, separately-scoped ticket, not a gap
+    in this entry''s verified claim).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_status_drift_check.py::test_clean_corpus_passes, tests/tools/test_status_drift_check.py::test_stale_ticket_status_flagged,
     tests/tools/test_status_drift_check.py::test_epic_tier_exception_ignored_by_value,
     tests/tools/test_status_drift_check.py::test_bare_scoped_no_longer_exempt_after_tightening,
     tests/tools/test_status_drift_check.py::test_legacy_naming_file_ignored_by_pattern,
@@ -5446,21 +5510,6 @@
     check_status_drift; print([f for f in check_status_drift() if f[''status'']==''FAIL''])"`
     -> 2 FAIL entries (matches v2_evidence; corrects this field''s prior stale `->
     []` claim).
-
-    '
-  divergence_note: null
-  support_boundary: 'Ticket/run data-hygiene tooling only -- no simulation behavior
-    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for gate-check
-    tooling entries). Does not cover or claim anything about dashboard-frontend''s
-    own rendering correctness (INFRA-275/276 own that boundary; classifyFinalStatus()
-    is unmodified by any of the three status-drift tickets). Known, intentional limitation,
-    unchanged by this revision: parse_body_section (like the prior regex) requires
-    a newline directly after the `## Status` heading before capturing anything, so
-    same-line colon-suffixed `## Status: X` tickets still resolve to an empty extraction
-    and are silently skipped (6 files corpus-wide as of 2026-07-18, deliberately excluded
-    from both the 71-file fix and this check''s flagged set per plan.md''s "Colon-Suffixed
-    Files Decision" -- a candidate for a future, separately-scoped ticket, not a gap
-    in this entry''s verified claim).
 
     '
 - id: INFRA-278
@@ -5506,11 +5555,38 @@
 
     '
   proof_type: feature
-  test_path: 'tests/tools/test_ticket_field_values.py (8 tests: canonical-set values,
-    LAYER_VALUES identity -- not equality -- proving no duplication, check_body_field_enum
-    PASS/FAIL/absent-section cases, check_ticket_field_values PASS/bad-priority/bad-tier
-    cases) -- 8/8 passing, re-run and confirmed during this parity update: `python3
-    -m pytest tests/tools/test_ticket_field_values.py -q` -> "8 passed". tests/tools/test_done_checker_static.py::test_run_static_precheck_
+  test_path: tests/tools/test_ticket_field_values.py; tests/tools/test_done_checker_static.py::test_run_static_precheck_blocks_on_bad_priority;
+    tests/tools/test_done_checker_static.py::test_run_static_precheck_passes_valid_priority;
+    tests/tools/test_done_checker_static.py::test_run_static_precheck_all_pass_eligible;
+    tests/tools/test_validate_frontmatter.py; tests/tools/test_status_drift_check.py;
+    tests/tools/test_agent_ops_dashboard_ingest.py; tests/tools/test_agent_ops_dashboard_api.py;
+    tests/tools/test_agent_ops_dashboard_serve.py; tests/tools/test_agent_ops_dashboard_api_boundary.py;
+    tests/tools/test_agent_ops_dashboard_concurrency.py; tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+  divergence_note: null
+  support_boundary: 'Ticket/agent-tooling data-hygiene infrastructure only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/277''s support_boundary pattern
+    for gate-check tooling entries). Does not cover or claim anything about the actual
+    corpus drift cleanup (deliberately deferred to a dependent sibling ticket, TCK-20260718-TIER-PRIORITY-CORPUS-CLEANUP,
+    which must re-run the real check function fresh rather than trust any preliminary
+    count from this ticket) or the Agent Ops Dashboard''s Tier/Layer/Priority filter
+    facets becoming canonical (deliberately deferred to TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL,
+    which depends on this entry''s TIER_VALUES/PRIORITY_VALUES/LAYER_VALUES existing
+    but does not touch them here). Known, intentional scope boundary: this entry''s
+    check_ticket_field_values() does not validate `## Status` (status_drift_check.py''s
+    own job, unwired, per that module''s documented precedent) or `layer:` (already
+    enforced by validate_frontmatter.py/check_frontmatter_valid, unchanged).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_ticket_field_values.py (8 tests: canonical-set values, LAYER_VALUES
+    identity -- not equality -- proving no duplication, check_body_field_enum PASS/FAIL/absent-section
+    cases, check_ticket_field_values PASS/bad-priority/bad-tier cases) -- 8/8 passing,
+    re-run and confirmed during this parity update: `python3 -m pytest tests/tools/test_ticket_field_values.py
+    -q` -> "8 passed". tests/tools/test_done_checker_static.py::test_run_static_precheck_
     blocks_on_bad_priority and ::test_run_static_precheck_passes_valid_priority (new),
     plus ::test_run_static_precheck_all_pass_eligible (updated: asserts 6 conditions,
     was 5) -- genuine-catch proof performed: `git stash push -- tools/gate_checks/done_checker_static.py`
@@ -5526,21 +5602,6 @@
     tests/tools/test_agent_ops_dashboard_frontend_api_surface.py -q` -> "22 passed";
     direct import sanity check confirms `src.api.agent_ops_dashboard.main.app` still
     imports cleanly after the ingest.py change.
-
-    '
-  divergence_note: null
-  support_boundary: 'Ticket/agent-tooling data-hygiene infrastructure only -- no simulation
-    behavior is involved (mirrors INFRA-263/264/265/277''s support_boundary pattern
-    for gate-check tooling entries). Does not cover or claim anything about the actual
-    corpus drift cleanup (deliberately deferred to a dependent sibling ticket, TCK-20260718-TIER-PRIORITY-CORPUS-CLEANUP,
-    which must re-run the real check function fresh rather than trust any preliminary
-    count from this ticket) or the Agent Ops Dashboard''s Tier/Layer/Priority filter
-    facets becoming canonical (deliberately deferred to TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL,
-    which depends on this entry''s TIER_VALUES/PRIORITY_VALUES/LAYER_VALUES existing
-    but does not touch them here). Known, intentional scope boundary: this entry''s
-    check_ticket_field_values() does not validate `## Status` (status_drift_check.py''s
-    own job, unwired, per that module''s documented precedent) or `layer:` (already
-    enforced by validate_frontmatter.py/check_frontmatter_valid, unchanged).
 
     '
 - id: INFRA-279
@@ -5576,8 +5637,29 @@
 
     '
   proof_type: feature
-  test_path: 'tests/tools/test_glossary_registry.py (18 tests: registry I/O, add_term
-    validation, real-seeded-registry coverage checks) and tests/tools/test_agent_ops_dashboard_glossary.py
+  test_path: tests/tools/test_glossary_registry.py; tests/tools/test_agent_ops_dashboard_glossary.py;
+    tests/tools/test_agent_ops_dashboard_api_boundary.py; tests/tools/test_agent_ops_dashboard_stats.py;
+    tests/tools/test_agent_ops_dashboard_ingest.py; tests/tools/test_agent_ops_dashboard_api.py;
+    tests/tools/test_agent_ops_dashboard_serve.py; tests/tools/test_agent_ops_dashboard_concurrency.py;
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+  divergence_note: null
+  support_boundary: 'Dashboard tooling only -- no simulation behavior is involved
+    (mirrors INFRA-263/264/265/ 277/278''s support_boundary pattern). Does not cover
+    or claim anything about the frontend actually rendering tooltips from this data
+    (deliberately deferred to the dependent sibling ticket TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND,
+    which fetches this endpoint but is not covered by this entry). Known, intentional
+    scope boundary: this endpoint is read-only -- no in-app editing UI for glossary
+    descriptions exists or is planned; new terms are added via tools/glossary_registry.py''s
+    CLI, same as Tag/Layer.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_glossary_registry.py (18 tests: registry I/O, add_term validation,
+    real-seeded-registry coverage checks) and tests/tools/test_agent_ops_dashboard_glossary.py
     (7 tests: merge happy path, layer-note-reuse proven live via an edit-and-reread
     check, empty-note-layer skipped, empty-registries no-crash, route-level 200 +
     typed shape, route signature check, real-registry end-to-end) -- both re-run and
@@ -5591,17 +5673,6 @@
     port 8420 free, rebuilt via `make dashboard-serve`, `curl -s http://localhost:8420/api/glossary`
     returned 54 real terms (35 glossary_registry + 19 non-empty-note layers), DONE/economy
     entries spot-checked with correct category/description.
-
-    '
-  divergence_note: null
-  support_boundary: 'Dashboard tooling only -- no simulation behavior is involved
-    (mirrors INFRA-263/264/265/ 277/278''s support_boundary pattern). Does not cover
-    or claim anything about the frontend actually rendering tooltips from this data
-    (deliberately deferred to the dependent sibling ticket TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND,
-    which fetches this endpoint but is not covered by this entry). Known, intentional
-    scope boundary: this endpoint is read-only -- no in-app editing UI for glossary
-    descriptions exists or is planned; new terms are added via tools/glossary_registry.py''s
-    CLI, same as Tag/Layer.
 
     '
 - id: INFRA-280
