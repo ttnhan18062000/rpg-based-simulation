@@ -119,7 +119,7 @@ This is one of at least three instances of the same underlying gap, seen from di
    beyond the session that wrote it, so the handoff reaches one reader and looks complete from both
    ends. Not hypothetical: this very PR's own `rpg_knowledge_investigation_closure_plan.md` cited
    `docs/plans/agent_infrastructure/reachability_verification_findings.md`, a doc written on
-   another branch, never pushed, cited across sessions as shared context that nobody but its author
+   another branch, at the time never pushed, cited across sessions as shared context that nobody but its author
    could actually read. It took both a sender who didn't confirm delivery and a receiver who didn't
    publish — "whose fault" is the wrong question; "neither end has a visibility check" is the right
    one.
