@@ -2952,21 +2952,6 @@
   test_path: tests/unit/domains/faction/test_betrayal_ledger.py::test_orchestrator_converts_betrayal_to_ledger_entry
   divergence_note: null
   support_boundary: null
-- id: SOC-ABAND-TYPE-01
-  text: AbandonmentEvaluator.evaluate_abandonment() returns a typed AbandonmentClassification
-    dataclass (frozen) with fields is_betrayal:bool, penalty:float, category:AbandonmentCategory
-    enum (SURVIVAL/GREEDY_DESERTION/VOLUNTARY_QUIT). No untyped Dict[str,Any] at call
-    sites.
-  status: verified
-  priority: P1
-  legacy_evidence: null
-  v2_evidence: "src/domains/commitment/abandonment.py \u2014 AbandonmentCategory(str,Enum)\
-    \ + AbandonmentClassification(frozen=True dataclass); evaluate_abandonment() annotated\
-    \ -> AbandonmentClassification. (TCK-20260627-P1F-ABANDONMENT-TYPE)"
-  proof_type: parity
-  test_path: tests/unit/domains/commitment/test_phase15_abandonment_evaluator.py::test_evaluate_abandonment_returns_typed_classification
-  divergence_note: null
-  support_boundary: null
 - id: SOC-231
   text: "Grief/rage urgency (E43F): when an entity's ally dies in episode N (entity_death\
     \ NarrativeLedgerEntry, ally trust_score \u2265 ALLY_TRUST_THRESHOLD=0.30 in SocialMemoryRecord),\
@@ -4285,3 +4270,22 @@
     a materially larger, separate gap than a CampaignState-to-AuthoritativeState data
     bridge; not addressed here, escalated back to the orchestrating session rather
     than silently expanded into or dropped from this ticket.
+- id: SOC-ABAND-TYPE-001
+  text: AbandonmentEvaluator.evaluate_abandonment() returns a typed AbandonmentClassification
+    dataclass (frozen) with fields is_betrayal:bool, penalty:float, category:AbandonmentCategory
+    enum (SURVIVAL/GREEDY_DESERTION/VOLUNTARY_QUIT). No untyped Dict[str,Any] at call
+    sites.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: "src/domains/commitment/abandonment.py \u2014 AbandonmentCategory(str,Enum)\
+    \ + AbandonmentClassification(frozen=True dataclass); evaluate_abandonment() annotated\
+    \ -> AbandonmentClassification. (TCK-20260627-P1F-ABANDONMENT-TYPE)"
+  proof_type: parity
+  test_path: tests/unit/domains/commitment/test_phase15_abandonment_evaluator.py::test_evaluate_abandonment_returns_typed_classification
+  divergence_note: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: renamed from
+    SOC-ABAND-TYPE-01 (2-digit numeric suffix, violated _ID_PATTERN''s required exactly-3-digit
+    format). Confirmed via a full-repo grep before renaming that no live file (code,
+    ledger entry, or cross-reference) named the old id -- only historical done-ticket
+    prose does, left as-is.'

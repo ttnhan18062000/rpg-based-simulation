@@ -2762,9 +2762,18 @@
 
     '
   proof_type: null
-  test_path: make typecheck-py
+  test_path: tests/static/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
+    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
+    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    ("make typecheck-py") was not a pytest citation at all -- the real evidence is
+    a build/lint gate configuration. Confirmed via a corpus-wide grep this shape is
+    a genuine one-off (no other entry cites a bare make target or similar), so a schema
+    change was not warranted for one entry. Added tests/static/test_typecheck_gate_configured.py
+    (3 static assertions pinning the same 3 facts this entry''s own text/v2_evidence
+    already claimed: pyproject.toml [tool.mypy] section, the Makefile typecheck-py
+    target, and the CI mypy step) as a real pytest citation instead.'
 - id: INFRA-222
   text: "Gross isolation guard (_guard_gross_isolation) runs unconditionally in standard\
     \ (non-audit) mode after Scheduling and Collection phases. Checks len(state.entities)\
@@ -11808,12 +11817,21 @@
   test_path: tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_agent_files_declare_tools_field,
     tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_candidate_scope_excludes_known_denied_tools,
     tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_agents_do_not_declare_disallowed_tools_field,
-    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave2_wave3_agents_do_not_gain_tools_field,
+    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave3_agents_do_not_gain_tools_field,
     tests/tools/test_wave1_agent_tools_frontmatter.py::test_concern_investigator_tools_field_unchanged_byte_identical
-    (55/55 passing per ticket Test Summary, run together with test_concern_investigator_agent_definition.py
-    and test_doc_updater_agent_file.py)
   divergence_note: null
   proof_type: contract
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: the original
+    test_path cited a function (test_wave2_wave3_agents_do_not_gain_tools_field) that
+    was never real -- only test_wave3_agents_do_not_gain_tools_field exists (confirmed
+    via grep of the real test file), corrected above. Separately (found while fixing
+    the citation, not re-investigated beyond this): tests/tools/test_wave1_agent_tools_frontmatter.py
+    now also has real Wave 2 tests (test_wave2_agent_files_declare_tools_field etc.,
+    from the later TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2 ticket, all currently
+    passing) -- meaning this entry''s own text ("Wave 2 ... explicitly deferred")
+    is now stale relative to current reality. Disclosed, not corrected here: re-verifying/updating
+    this entry''s status or text for that drift is out of this ticket''s own stated
+    scope ("Re-verifying the behavior behind any entry").'
 - id: INFRA-407
   text: 'Reverses TCK-20260719-COST-PROXY-WRITE-PATH''s deliberate ''implement-ticket
     only'' exclusion (TCK-20260904-COST-PROXY-EPIC-TICKETS, see INFRA-282 for the

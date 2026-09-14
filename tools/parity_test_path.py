@@ -19,7 +19,15 @@ job (it runs pytest on the parsed node-id).
 import re
 
 _BACKTICK_FULL_RE = re.compile(r"^`([^`]+)`$")
-_DELIM_SPLIT_RE = re.compile(r"\s*[,+;]\s*")
+# `,`/`+`/`;` split with optional surrounding whitespace, OR a single `|` with REQUIRED
+# whitespace on both sides -- added by TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL for
+# INFRA-221/STRAT-236's genuine ` | `-delimited multi-citations. A bare `|` (no whitespace
+# requirement) was checked against the real corpus first and found unsafe: INFRA-405's test_path
+# contains a literal `|| true` (a shell operator quoted inside prose, not a citation delimiter --
+# confirmed the only other `|` occurrence anywhere in the corpus). `\s+\|\s+` never matches either
+# `|` inside `||` (neither has whitespace on both immediate sides), so it splits the two genuine
+# pipe-delimited entries correctly while leaving `|| true` untouched.
+_DELIM_SPLIT_RE = re.compile(r"\s*[,+;]\s*|\s+\|\s+")
 _NODE_ID_RE = re.compile(r"^[\w./\-]+\.py(::[\w \[\]./:\-]+)?$")
 
 # A bare directory citation (e.g. `tests/unit/lab/`), added by
@@ -46,9 +54,9 @@ def parse_test_path_citations(raw) -> "tuple[list[str] | None, str | None]":
     """Parse a ledger entry's raw `test_path` string into a list of invocable citations.
 
     Returns (citations, None) on success, or (None, error) on a hard-FAIL/unparseable case. Never
-    raises. Handles the four legacy shapes found in the real ledger (investigation.md's format
-    survey): clean node-id, single backtick-wrapped, comma/`+`/`;`-joined multi-citation, and
-    unparseable parenthetical-annotated prose.
+    raises. Handles the legacy shapes found in the real ledger (investigation.md's format
+    survey): clean node-id, single backtick-wrapped, comma/`+`/`;`/` | `-joined multi-citation,
+    and unparseable parenthetical-annotated prose.
     """
     if raw is None or not str(raw).strip():
         return (None, "test_path is null/missing")
