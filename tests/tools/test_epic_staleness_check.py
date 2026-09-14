@@ -784,3 +784,92 @@ def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
     )
     blocked_section = report.split("Informational: BLOCKED epics")[1]
     assert "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC" in blocked_section
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 4 -- the debounce state file
+# (.claude/.epic_staleness_state.json) must not be tracked in git.
+# ---------------------------------------------------------------------------
+
+import subprocess  # noqa: E402
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def test_epic_staleness_state_file_is_gitignored():
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", ".claude/.epic_staleness_state.json"],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True,
+    )
+    assert result.returncode == 0, (
+        ".claude/.epic_staleness_state.json must be gitignored -- it is a debounce cache "
+        "({session_id, ts}) meaningful only to the session that wrote it, with no cross-session "
+        "or cross-clone value, that previously cost real merge conflicts (#183, #184, #186)"
+    )
+
+
+def test_epic_staleness_state_file_is_not_tracked_in_the_real_repo():
+    result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", ".claude/.epic_staleness_state.json"],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True,
+    )
+    assert result.returncode != 0, (
+        ".claude/.epic_staleness_state.json is still tracked by git -- run "
+        "`git rm --cached .claude/.epic_staleness_state.json` (the file itself stays on disk, "
+        "only its tracking is removed)"
+    )
+
+
+def test_two_branches_both_writing_the_state_file_produce_no_merge_conflict(tmp_path):
+    """Real, direct proof of the ticket's own Acceptance Criterion: a merge of two branches that
+    both triggered the hook produces no conflict on this file. Reproduces at the git level in a
+    throwaway scratch repo, mirroring this repo's own tests/integrity/ scratch-repo convention.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    def _git(*args, check=True):
+        result = subprocess.run(["git", *args], cwd=str(repo), capture_output=True, text=True)
+        if check:
+            assert result.returncode == 0, f"git {args} failed: {result.stderr}"
+        return result
+
+    _git("init", "-q", "-b", "main")
+    _git("config", "user.email", "test@example.com")
+    _git("config", "user.name", "Test")
+    (repo / ".claude").mkdir()
+    (repo / ".gitignore").write_text(".claude/.epic_staleness_state.json\n")
+    (repo / "README.md").write_text("base\n")
+    _git("add", "-A")
+    _git("commit", "-q", "-m", "base")
+
+    # Branch A: its own session writes the state file locally (untracked, never staged/committed
+    # -- exactly what the real --hook branch does).
+    _git("checkout", "-q", "-b", "branch-a")
+    (repo / ".claude" / ".epic_staleness_state.json").write_text(
+        '{"session_id": "session-a", "ts": 1.0}'
+    )
+    (repo / "a.txt").write_text("a\n")
+    _git("add", "a.txt")  # the state file is gitignored -- `git add -A` would not stage it either
+    _git("commit", "-q", "-m", "branch A change")
+
+    # Branch B: a DIFFERENT session's own state file content, also never committed.
+    _git("checkout", "-q", "main")
+    _git("checkout", "-q", "-b", "branch-b")
+    (repo / ".claude" / ".epic_staleness_state.json").write_text(
+        '{"session_id": "session-b", "ts": 2.0}'
+    )
+    (repo / "b.txt").write_text("b\n")
+    _git("add", "b.txt")
+    _git("commit", "-q", "-m", "branch B change")
+
+    merge_result = _git("merge", "branch-a", "--no-edit", check=False)
+    assert merge_result.returncode == 0, (
+        f"merge should succeed with zero conflicts on the gitignored state file, got: "
+        f"{merge_result.stdout!r} {merge_result.stderr!r}"
+    )
+    assert "CONFLICT" not in merge_result.stdout
+    # The file on disk after the merge is whichever branch's own local (untracked, uncommitted)
+    # copy was present -- git's merge machinery never touches it at all, since neither commit
+    # contains it.
+    assert (repo / "a.txt").exists() and (repo / "b.txt").exists()
