@@ -281,3 +281,10 @@ website/.docusaurus/
 .claude/current_run
 .claude/current_run.*
 .claude/.retro_nudge_state.json
+# TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 4: same shape as .retro_nudge_state.json
+# above -- a debounce cache ({session_id, ts}) written and read only by
+# tools/agent-monitoring/epic_staleness_check.py's own --hook branch to suppress a repeated nag.
+# A committed value carries another session's id and is meaningless in every other clone, while
+# still costing real merge conflicts (4 confirmed: #183, #184, #186, and a contamination on the
+# parity branch).
+.claude/.epic_staleness_state.json

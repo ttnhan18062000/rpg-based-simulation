@@ -220,28 +220,49 @@ def compute_multi_invocation_collision_report(events: list) -> str:
     return "\n".join(lines)
 
 
-def load_jsonl(path):
+def load_jsonl_with_line_count(path) -> "tuple[list, int]":
+    """Same parsing as load_jsonl, but also returns the non-blank line count derived from the
+    SAME single `path.read_text()` call -- lets a caller compare "rows produced" against "raw
+    lines present" without a second, independent read of a live, concurrently-written file
+    (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 3: two tests in
+    test_agent_tool_usage_baseline.py each read agent-monitoring/data/*/tools.jsonl twice --
+    once via their own ad-hoc `path.read_text().splitlines()` count, once via load_data_glob's
+    own separate read -- racing any concurrent session's PostToolUse hook append in between)."""
     if not path.exists():
-        return []
+        return [], 0
+    non_blank_lines = [line.strip() for line in path.read_text().splitlines() if line.strip()]
     records = []
-    for i, line in enumerate(path.read_text().splitlines(), 1):
-        line = line.strip()
-        if not line:
-            continue
+    for i, line in enumerate(non_blank_lines, 1):
         try:
             records.append(json.loads(line))
         except json.JSONDecodeError as e:
             print(f"WARNING: {path}:{i}: invalid JSON — {e}", file=sys.stderr)
+    return records, len(non_blank_lines)
+
+
+def load_jsonl(path):
+    records, _ = load_jsonl_with_line_count(path)
     return records
+
+
+def load_data_glob_with_line_count(data_dir: Path, source: str) -> "tuple[list, int]":
+    """Same shard-glob concatenation as load_data_glob, but also returns the total non-blank
+    line count across all shards, derived from the same per-shard reads (see
+    load_jsonl_with_line_count's own docstring for why this matters)."""
+    records = []
+    total_lines = 0
+    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+        shard_records, shard_lines = load_jsonl_with_line_count(shard)
+        records.extend(shard_records)
+        total_lines += shard_lines
+    return records, total_lines
 
 
 def load_data_glob(data_dir: Path, source: str) -> list:
     """Concatenate source.jsonl from every ISO-week folder under data_dir, sorted by week-folder
     name for determinism (matches record_events.py's write-side glob shape,
     tools/agent-monitoring/record_events.py:65)."""
-    records = []
-    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
-        records.extend(load_jsonl(shard))
+    records, _ = load_data_glob_with_line_count(data_dir, source)
     return records
 
 

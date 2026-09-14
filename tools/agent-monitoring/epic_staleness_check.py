@@ -8,7 +8,29 @@ discovers them — `epic_id` mode (a single `## Tier` -> `epic` ticket file in
 and `folder` mode (`tickets/todos/{folder}/` containing a `SEQUENCE.md` and/or
 an epic-tier ticket file, children parsed from `SEQUENCE.md` or sibling
 `TCK-*.md` files) — then cross-references `tickets/working_log.csv` and
-`agent-monitoring/runs.jsonl` for the most recent child-ticket activity.
+`agent-monitoring/data/*/runs.jsonl` (the weekly-sharded layout; see below)
+for the most recent child-ticket activity.
+
+**Shard-awareness fix (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item
+5)**: this module previously read a hardcoded flat `agent-monitoring/runs.jsonl`
+path, retired by `TCK-20260902-MONITORING-WEEKLY-SHARDING-EPIC` in favor of
+per-week `agent-monitoring/data/<ISO-week>/runs.jsonl` shards -- the same class
+of defect `TCK-20260904-HOTFIX-WORKFLOW-META-CONFORMANCE-SHARD-AWARENESS`
+fixed in a different consumer, surviving here because nobody checked whether
+the retirement broke every reader. `_read_runs_records` now globs the sharded
+layout via `validate.py::load_data_glob` (the module's own established bulk
+multi-shard reader, already reused by this same ticket's item 3 fix) instead
+of a single hardcoded path.
+
+**What this actually changes, established before fixing it, not assumed**:
+the dead flat path meant `_read_runs_records` always returned `[]`, so
+`resolve_child_activity`'s `most_recent` was supplied ENTIRELY by
+`tickets/working_log.csv` -- runs.jsonl data has been fully decorative in this
+check since the sharding epic landed. Since `working_log.csv` only gains a row
+when a ticket CLOSES, an epic whose children are all still genuinely in
+progress (real Scope/Investigate/Plan activity recorded in runs.jsonl, but not
+yet closed) previously showed as having NO activity at all -- a real
+under-detection gap this fix closes, not a behavior-neutral path swap.
 
 An epic whose children have shown zero activity ever (no working_log.csv row,
 no runs.jsonl record, for any child, ever) is NEVER flagged stale here — that
@@ -48,7 +70,14 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable, Optional
 
+_MONITORING_TOOLS_DIR = Path(__file__).resolve().parent
+if str(_MONITORING_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
+
+from validate import load_data_glob  # noqa: E402
+
 DEFAULT_STALENESS_WINDOW_DAYS = 5
+DEFAULT_RUNS_DATA_ROOT = Path("agent-monitoring/data")
 
 CHILD_ID_PATTERN = re.compile(r"TCK-\d{8}-[A-Z0-9-]+")
 
@@ -340,27 +369,21 @@ def _read_working_log_rows(working_log_path: Path) -> list:
         return []
 
 
-def _read_runs_records(runs_jsonl_path: Path) -> list:
+def _read_runs_records(runs_data_root: Path) -> list:
+    """Reads every agent-monitoring/data/<week>/runs.jsonl shard (TCK-20260914-MONITORING-
+    SURFACE-DEAD-MECHANISMS item 5) via the shared bulk multi-shard reader -- `runs_data_root`
+    is a directory (the sharded data root), not a single flat runs.jsonl file. Never raises:
+    load_data_glob tolerates a missing/empty data_dir."""
     try:
-        text = runs_jsonl_path.read_text()
+        return load_data_glob(runs_data_root, "runs")
     except Exception:
         return []
-    records = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            records.append(json.loads(line))
-        except Exception:
-            continue
-    return records
 
 
-def _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now, window_days):
+def _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days):
     candidates = discover_candidate_epics(inprogress_dir, todos_dir)
     working_log_rows = _read_working_log_rows(working_log_path)
-    runs_records = _read_runs_records(runs_jsonl_path)
+    runs_records = _read_runs_records(runs_data_root)
 
     stale = []
     never_started = []
@@ -380,7 +403,7 @@ def find_stale_epics(
     inprogress_dir: Path,
     todos_dir: Path,
     working_log_path: Path,
-    runs_jsonl_path: Path,
+    runs_data_root: Path,
     now: Optional[datetime] = None,
     window_days: int = DEFAULT_STALENESS_WINDOW_DAYS,
 ) -> list:
@@ -390,7 +413,7 @@ def find_stale_epics(
     here regardless of idle time (see is_epic_blocked/is_epic_stale)."""
     try:
         now = now or datetime.now(timezone.utc)
-        stale, _, _ = _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now, window_days)
+        stale, _, _ = _classify_candidates(inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days)
         return [candidate for candidate, _ in stale]
     except Exception:
         return []
@@ -404,14 +427,14 @@ def compute_stale_epics_report(
     inprogress_dir: Path,
     todos_dir: Path,
     working_log_path: Path,
-    runs_jsonl_path: Path,
+    runs_data_root: Path,
     now: Optional[datetime] = None,
     window_days: int = DEFAULT_STALENESS_WINDOW_DAYS,
 ) -> str:
     try:
         now = now or datetime.now(timezone.utc)
         stale, never_started, blocked = _classify_candidates(
-            inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now, window_days
+            inprogress_dir, todos_dir, working_log_path, runs_data_root, now, window_days
         )
 
         lines = ["--- Epic Staleness Report ---", "", "Stale epics:"]
@@ -480,7 +503,7 @@ if __name__ == "__main__":
                 Path("tickets/inprogress"),
                 Path("tickets/todos"),
                 Path("tickets/working_log.csv"),
-                Path("agent-monitoring/runs.jsonl"),
+                DEFAULT_RUNS_DATA_ROOT,
             )
 
             if stale:
@@ -505,5 +528,5 @@ if __name__ == "__main__":
             Path("tickets/inprogress"),
             Path("tickets/todos"),
             Path("tickets/working_log.csv"),
-            Path("agent-monitoring/runs.jsonl"),
+            DEFAULT_RUNS_DATA_ROOT,
         ))
