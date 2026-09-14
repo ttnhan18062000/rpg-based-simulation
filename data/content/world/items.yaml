@@ -267,3 +267,14 @@
   categories: ["material", "arcane"]
   rarity: "RARE"
   base_value: 40
+
+# STATE: ADDITIONAL (TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY)
+# The world boss's own signature loot (src/world/boss.py's check_for_boss_spawn()).
+# Was referenced by ItemStack but never registered anywhere -- silently dropped on
+# inventory add instead of ever reaching a player's inventory. base_value is a
+# first-pass provisional number, not a tuned balance answer.
+- id: "ancient_core"
+  display_name: "Ancient Core"
+  categories: ["material", "artifact", "boss_trophy"]
+  rarity: "LEGENDARY"
+  base_value: 500
