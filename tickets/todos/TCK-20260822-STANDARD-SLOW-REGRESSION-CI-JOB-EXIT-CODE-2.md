@@ -174,6 +174,63 @@ None yet.
   ticket's own investigation must resolve — not assumed either way here.
 
 ## Implementation Notes
+**2026-09-14 update: a new, structural finding — the slow suite is compound-gated by 11 jobs in
+series, not the 2 initially suspected, and not merely occasionally skipped.**
+
+`Slow regression`'s own `if:` restricts it to push-to-main/schedule/`workflow_dispatch` (as already
+known and out of scope here), but it *also* carries a real `needs:` list
+(`.github/workflows/test.yml:624-635`) of **11 jobs**: `unit-core-world`, `unit-gameplay`,
+`unit-infra`, `integration`, `api-tools`, `agent-orchestration`, `simulation-quality`, `arch-docs`,
+`frontend`, `perf-cert-arena`, `migration-lanes`. Every one of the 11 must be green **on the same
+run** or `Slow regression` is skipped, and a skip reports identically to "this run had nothing to
+check," reading neutral in the UI even though it means the determinism test underneath never
+executed.
+
+**Correction, checked directly rather than carried forward from an initial description**: an
+earlier version of this note (and the peer message that prompted it) named only 2 of these 11 —
+`api-tools` and `perf-cert-arena` — as the gate, based on the specific failures observed in the
+first two 2026-09-14 dispatch attempts. Reading the workflow file directly (rather than inferring
+the full gate from which 2 jobs happened to fail in the runs seen so far) shows the real gate is
+much wider. This isn't a minor correction: a third 2026-09-14 run (`34821834993`, `schedule` event)
+had `perf-cert-arena` pass this time, but was skipped anyway because a *different* job
+(`unit-infra`, "Unit · infra / observability") failed instead — a failure mode the 2-gate framing
+would not have predicted or explained.
+
+At least 2 of the 11 gates are independently, already-documented as flaky:
+- `api-tools` — a separate, already-known live-server/websocket/CLI-subprocess/knowledge-gateway
+  environment-noise category (out of this ticket's scope per its own "Out of Scope" section).
+- `perf-cert-arena` — intermittent, cause unknown after 4 falsified hypotheses (Python version,
+  stale local state, `hard=True` assertion sites, CPU core count), documented as
+  "unresolved-but-currently-green" rather than fixed.
+`unit-infra`'s 2026-09-14 failure has not been triaged (out of this note's scope) — flagged here
+only as a third gate now observed to fail, widening the known flaky set rather than narrowing it.
+
+**Three `workflow_dispatch`/`schedule` runs against `main` on 2026-09-14, specifically attempting to
+get a real `test_1000_tick_determinism` verdict, all three failed to reach the slow job, each for a
+different reason**:
+- Run `34820180920` (`workflow_dispatch`, against `5107e0778`): `api-tools` passed,
+  `perf-cert-arena` failed → skipped.
+- Run `34821407707` (`workflow_dispatch`, later `main` tip): **cancelled outright**, not a pass/fail
+  — pre-empted by the concurrency group when the next run (below) started during the same window.
+- Run `34821834993` (`schedule`, same tip): `api-tools` AND `perf-cert-arena` both passed this time
+  — but `unit-infra` failed instead → still skipped.
+- Earlier push-to-main runs already on record showed yet another split (`api-tools` failed,
+  `perf-cert-arena` passed) — no run has yet had all 11 gates green simultaneously.
+
+**This changes the disposition more than the original 2-gate framing already suggested.** With 11
+independent jobs in the gate and at least 3 now observed to fail across 4 total attempts (this
+session's 3 plus the earlier push-to-main record), the repo's actual safety net for long-run
+determinism looks **structurally unreachable in practice** via the normal push-to-main/schedule/
+dispatch path, not merely flaky within itself — and the true odds are worse than "two 50/50 gates in
+series" once the full 11-job list and its second observed failure mode are accounted for. This is a
+distinct, additional finding on top of the `Kernel.tick_once()` wall-clock root cause already on
+record above — that root cause explains *why* a slow-suite run that does execute might fail; this
+finding explains why a slow-suite run frequently never executes at all to even test that. The user's
+existing "let it sit" instruction covers the wall-clock root cause; this compound-gating observation
+is new information being surfaced to them, not a re-litigation of that decision. Per peer's own
+instruction, this was the last dispatch attempt for this specific investigation — recording the
+finding here and stopping, not retrying further.
+
 **2026-09-13 update: record-only, not new work.** The durable lesson here is not just "root cause
 confirmed" — it's that this root cause was independently confirmed **twice** (2026-08-26 and
 2026-09-06) by two different sessions, and neither wrote it into this ticket, so the second never

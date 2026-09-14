@@ -6,9 +6,11 @@ typed EntityUpdate/CognitionPatch apply path -- never mutating state.entities di
 State Rule) -- and that CognitionPatch/EntityUpdate.cognition_bundle_set correctly and
 independently apply to entity.cognition without disturbing entity.self_model.
 """
+from dataclasses import replace
+
 from src.core.state import AuthoritativeState, EntityState
 from src.core.updates import StateUpdate, EntityUpdate
-from src.core.cognition import CognitionModel
+from src.core.cognition import CognitionModel, MotivationModel, NamedIntentionBundle
 from src.core.self_model import SelfModelBundle
 from src.domains.memory.phase import MemoryUpdatePhase
 from src.engine.patches import extract_patches
@@ -51,3 +53,36 @@ def test_cognition_bundle_set_applies_to_entity_cognition_field():
 
     assert new_entity.cognition is new_cognition
     assert new_entity.self_model is original_self_model
+
+
+def test_memory_update_reads_through_an_earlier_same_tick_cognition_write():
+    """
+    TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD: MemoryUpdatePhase.apply() must
+    not silently discard a cognition_bundle_set an earlier phase already staged this same tick --
+    EntityUpdate.merge()'s own cognition_bundle_set field is a whole-object replace, so building
+    this phase's own updated CognitionModel from entity.cognition (the tick-START snapshot) instead
+    of the already-accumulated `update` would clobber that earlier write once merged. This phase
+    runs first in the real pipeline today, so this is a latent-risk regression test (a future phase
+    reorder would silently arm it), not a reproduction of an already-observed failure.
+    """
+    entity = EntityState(id=1, kind="HERO")
+    state = AuthoritativeState(tick=5, seed=42, entities={1: entity})
+
+    sentinel_intention = NamedIntentionBundle(text="avenge me", source_entity_id=99, created_tick=5)
+    earlier_phase_cognition = replace(
+        entity.cognition,
+        motivation=replace(entity.cognition.motivation, named_intention=sentinel_intention),
+    )
+    update = StateUpdate(entity_updates={
+        1: EntityUpdate(entity_id=1, cognition_bundle_set=earlier_phase_cognition),
+    })
+
+    result = MemoryUpdatePhase.apply(state, update)
+
+    new_cognition = result.entity_updates[1].cognition_bundle_set
+    assert new_cognition is not None
+    # The earlier phase's own write must survive (not discarded).
+    assert new_cognition.motivation.named_intention == sentinel_intention
+    # This phase's own real work (temporal urgency recalculation) must also be present -- proving
+    # the two writes merged rather than one replacing the other outright.
+    assert new_cognition.subjective.time is not entity.cognition.subjective.time

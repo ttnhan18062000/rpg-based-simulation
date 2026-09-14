@@ -74,6 +74,13 @@ class GroupPhase:
             group = groups_being_updated.get(g_id) or state.groups.get(g_id)
             if group is None:
                 continue
+            # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now
+            # retained in state.groups with dissolution_tick set, not removed -- without this
+            # check, leadership elections would keep running against every already-dissolved
+            # group, forever, since `removed_ids` (from groups_remove) no longer captures
+            # dissolution the way it used to.
+            if group.dissolution_tick is not None:
+                continue
 
             # Collect live members from state.entities for sociability scoring
             members = [
@@ -116,6 +123,10 @@ class GroupPhase:
         for g_id in sorted(all_relevant_group_ids):
             group = groups_being_updated.get(g_id) or state.groups.get(g_id)
             if group is None:
+                continue
+            # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: same reasoning as the
+            # leadership-election pass above -- skip already-dissolved groups.
+            if group.dissolution_tick is not None:
                 continue
 
             # TCK-20260907-DORMANT-SIGNAL-CAMPAIGN-BRIDGE: read idea 56's bridged loyalty-pressure

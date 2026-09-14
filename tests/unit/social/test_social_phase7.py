@@ -88,8 +88,12 @@ def test_contract_expiration_resolves_and_dissolves():
     # Apply update to see group dissolution
     final_state = ApplyPath.apply_generation(state, update)
 
-    # Group should be dissolved because contract is no longer ACTIVE
-    assert 1001 not in final_state.groups
+    # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now retained in
+    # state.groups with dissolution_tick set (in place, mirroring ClanState.dissolved_tick/
+    # CampState.active), not removed -- the group should be dissolved because the contract is no
+    # longer ACTIVE, but its record must still be present and queryable.
+    assert 1001 in final_state.groups
+    assert final_state.groups[1001].dissolution_tick == state.tick
 
 
 def test_contract_expiration_grants_the_other_party_its_own_real_consequence():
