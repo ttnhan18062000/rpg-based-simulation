@@ -262,14 +262,14 @@ footer a { color: var(--ink-faint); }
   <section id="determinism">
     <h2 class="section-title">Determinism &amp; Consistency</h2>
     <p class="section-lede">The load-bearing pillar everything else in this table is judged against.</p>
-    <p class="section-count">2 implemented &middot; 1 partial &middot; 3 not applicable</p>
+    <p class="section-count">1 implemented &middot; 2 partial &middot; 3 not applicable</p>
     <div class="cluster-grid">
       <div class="card">
         <div class="card-head">
           <h3>Deterministic Simulation</h3>
-          <span class="badge implemented">Implemented</span>
+          <span class="badge partial">Partial</span>
         </div>
-        <p class="desc">“same seed + same initial AuthoritativeState → same CanonicalStateHasher.get_hash()” — Pillar #1 of project_lawbook_m10.md, never traded away under load.</p>
+        <p class="desc">“same seed + same initial AuthoritativeState → same CanonicalStateHasher.get_hash()” — Pillar #1 of project_lawbook_m10.md. <strong>Verdict downgraded 2026-09-14 from Implemented: “never traded away under load” is not accurate.</strong> The Kernel's own mid-tick budget check is wall-clock-dependent by design — it measures elapsed real time and drops work when the budget is exceeded, so under load the same seed can produce a different hash. Root-caused independently twice (2026-08-26, 2026-09-06) and recorded in TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2; a sibling test already carries a permanent skip naming this exact mechanism. Determinism holds when the throttle does not fire, which is the common case — hence Partial rather than Not Implemented. <strong>Compounding this: the pillar is currently unmeasurable.</strong> The slow suite that runs the 1000-tick determinism check requires eleven CI jobs green on a single run; across three attempts on 2026-09-14 it was gated three different times by three different intermittent jobs, and never executed. Every miss reports as <em>skipped</em>, which reads neutral rather than as absent evidence. The strongest pillar in this document is therefore both conditionally violated and, at present, unverifiable.</p>
         <p class="source">docs/engine/deterministic_execution.md</p>
       </div>
       <div class="card">

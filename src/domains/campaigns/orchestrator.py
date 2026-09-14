@@ -771,6 +771,20 @@ class CampaignOrchestrator:
             # `_scatter_catalog_entities()` grid-scatter workaround that used to run here has been
             # deleted.
             catalog_result = self._catalog_builder.build(spec, seed=episode_seed)
+            # TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH: resolve
+            # target_population_id -> actor_id against THIS episode's own catalog-spawned roster
+            # (catalog_result.state.entities), NOT against compiled_state's own separately-ordered
+            # entity space -- WorldCompiler.compile() and WorldEntitySpawner are two independent
+            # spawn pipelines with no guaranteed actor_id alignment between them. Reuses
+            # WorldCompiler.resolve_pending_information(), the same resolution logic compile()
+            # itself uses, just pointed at a different entities dict.
+            pending_info_resps, pending_self_model_events, _pending_info_warnings = (
+                WorldCompiler.resolve_pending_information(
+                    catalog_result.state.entities,
+                    world_spec.pending_information_responses,
+                    world_spec.pending_self_model_information_events,
+                )
+            )
             return AuthoritativeState(
                 tick=0,
                 seed=episode_seed,
@@ -778,9 +792,8 @@ class CampaignOrchestrator:
                 regions=compiled_regions,
                 places=compiled_places,
                 information_source_profiles=compiled_state.information_source_profiles,
-                # pending_information_responses is deliberately NOT threaded here yet -- see
-                # TCK-20260909-CAMPAIGN-INFORMATION-SOURCE-PROFILES-NOT-THREADED's own
-                # Implementation Notes for the real actor_id-mismatch finding that blocks it.
+                pending_information_responses=pending_info_resps,
+                pending_self_model_information_events=pending_self_model_events,
             )
 
         # Reconstruct EntityState objects from carry-forward snapshots. Position AND identity
@@ -1075,6 +1088,21 @@ class CampaignOrchestrator:
             for entry_id, _carry_forward in sorted(self._state.historical_drift.items())
         }
 
+        # TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH: resolve against
+        # THIS episode's own reconstructed survivor roster (`entities`, built above from
+        # EntityCarryForward snapshots) -- `population_id` is carried forward in
+        # EntityCarryForward.properties (the same dict `entity.identity.properties` was captured
+        # from at spawn time), so a survivor who matches `target_population_id` is found
+        # correctly; a population with no surviving member this episode correctly resolves to no
+        # match (skipped, matching WorldCompiler.compile()'s own "no match" behavior) rather than
+        # misdelivering to an unrelated survivor.
+        pending_info_resps, pending_self_model_events, _pending_info_warnings = (
+            WorldCompiler.resolve_pending_information(
+                entities,
+                world_spec.pending_information_responses,
+                world_spec.pending_self_model_information_events,
+            )
+        )
         return AuthoritativeState(
             tick=0,
             seed=episode_seed,
@@ -1082,8 +1110,8 @@ class CampaignOrchestrator:
             regions=compiled_regions,
             places=compiled_places,
             information_source_profiles=compiled_state.information_source_profiles,
-            # pending_information_responses intentionally not threaded here either -- see the
-            # episode-0 branch's own comment above.
+            pending_information_responses=pending_info_resps,
+            pending_self_model_information_events=pending_self_model_events,
             region_loyalty_pressure=region_loyalty_pressure,
             region_culture_states=region_culture_states,
             entity_legend_facts=entity_legend_facts,

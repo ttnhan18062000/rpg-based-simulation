@@ -60,10 +60,43 @@ def test_perf_metropolis_stress(perf_harness, request):
     assert_perf_threshold(results["mem_rss_mb"]["max"], 1024.0, "max RSS (Metropolis 1000 entities)", op="<")
 
 @pytest.mark.perf
+@pytest.mark.extra_slow
+@pytest.mark.resource_budget_large
 def test_perf_metropolis_longevity(perf_harness, request):
     """
-    Longevity test: 100 ticks of Metropolis.
+    Longevity test: 100 ticks of Metropolis (500 entities, 5 warmup + 100 sample ticks).
     Goal: Verify no performance degradation or memory leaks.
+
+    Re-tiered to extra_slow/resource_budget_large (TCK-20260914-HOTFIX-PERF-METROPOLIS-LONGEVITY-
+    RETIER, 2026-09-14): this is a genuinely heavy benchmark on its own terms -- 500 entities
+    across 105 real ticks -- that was mistakenly left on the default "medium" (60s wall-clock)
+    budget while its sibling test_perf_metropolis_stress (1000 entities) was already re-tiered when
+    ENABLE_COMBAT_ENGAGEMENT went default-ON (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER,
+    #190). That earlier re-tier missed this test because it only produced a soft
+    PerformanceThresholdWarning locally at the time, not a hard failure -- CI's weaker (2-core)
+    runner pushes the same real cost past the 60s wall-clock limit that a faster local machine
+    stayed under, tripping tests/conftest.py's own hard TimeoutError (not the perf gate itself,
+    which still never fires here in either flag state -- assert_perf_threshold below defaults to
+    hard=False and neither assertion was touched by this re-tier).
+
+    Measured, flag ON vs OFF, same box, back to back (build_metropolis_state(entity_count=500),
+    60 ticks): mean tick time 469.84ms (ON) vs 164.60ms (OFF), a 305ms/tick (-65%) delta. Only
+    ~21% of that delta is combat_engagement's own phase cost (63ms/tick); ~79% is advancement
+    (-178ms), resolution_overhead (-85ms), cooperation (-22ms), and final_integrity (-34ms) doing
+    more real work because the world behaves differently with the flag on -- independently
+    reproducing the ~82% downstream split #190's own profiling found at 1000-entity scale. Full
+    numbers: docs/plans/design_enhancement/performance_optimization/
+    performance_m4_baseline_gate_a_epic.md's own "Confirmed field evidence" section.
+
+    IMPORTANT: passing after this re-tier means the wall clock now fits the extra_slow budget. It
+    does NOT mean performance is acceptable -- the soft avg_tps > 5.0 threshold below still
+    breaches with the flag on (~2.1 TPS) and stays visibly breached; assert_perf_threshold()
+    defaults to a soft (warning-only) gate, so a breach has never failed this test and still
+    doesn't. Read the actual reported numbers, not this test's own green/red.
+
+    This is the SECOND test re-tiered for the same underlying cause (the first was
+    test_perf_metropolis_stress, above). A third instance of the same pattern should be read as
+    evidence the cost itself needs reducing, not as another candidate for the same accommodation.
     """
     harness = perf_harness("PERF_1GB_LOCAL")
     state = build_metropolis_state(entity_count=500) 

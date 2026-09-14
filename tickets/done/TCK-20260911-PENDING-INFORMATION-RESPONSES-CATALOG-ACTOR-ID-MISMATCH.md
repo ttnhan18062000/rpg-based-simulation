@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH
-phase: open
+phase: done
 date: 2026-09-11
 tags: [world, content, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [world, content, architecture]
 The obvious fix for Campaign's `pending_information_responses` gap is wrong — threading it naively silently delivers seeded knowledge to the wrong entity
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -117,7 +117,10 @@ looks like emergent behavior and could survive undetected for months.
 None yet.
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+`staging_artifacts/TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH/investigation.md`
+— full empirical re-verification (all 16 population groups in `frontier_living_world` checked, not
+just the worked example) and the fix's design/rationale. `plan.md`/`test_plan.md` for the full
+build and test breakdown.
 
 ## Related Code Areas
 - `src/worldbuilding/compiler.py` (`WorldCompiler.compile()`, the `target_population_id` →
@@ -140,13 +143,55 @@ None yet — standard tier, staging artifacts created when picked up.
   guard rather than the goblin raider) before assuming any further implementation is needed at all.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**Re-verified the ticket's own premise empirically before implementing**, per explicit peer
+instruction: the "population_id never set anywhere" claim was confirmed stale
+(`TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE` added it since this ticket
+was filed), and the ticket's own worked example (`frontier_living_world`, `actor_id=9`) no longer
+reproduces the goblin-raider misdelivery — checked all 16 population groups in that world, not
+just the one example, zero actor_id mismatches found between `WorldCompiler.compile()`'s own
+entity space and Campaign's own catalog-spawn entity space today.
+
+**What was still real and unfinished**: neither `pending_information_responses` nor
+`pending_self_model_information_events` was threaded into Campaign's `AuthoritativeState` at all
+(2 separate "deliberately not threaded yet" comments in `orchestrator.py`). Built the real fix:
+extracted `WorldCompiler.compile()`'s own resolution logic into a shared
+`WorldCompiler.resolve_pending_information()` staticmethod (parameterized on the entities dict, so
+it isn't hardcoded to `compile()`'s own entity space), then threaded both fields into both
+`_build_initial_state()` branches, each resolving against that branch's own real entities dict
+(fresh catalog roster / reconstructed survivor roster) — never reusing `compile()`'s own resolved
+`actor_id` values, since that alignment, though empirically true for `frontier_living_world` today,
+is not a documented or structurally-guaranteed invariant between the two independently-implemented
+spawn pipelines.
+
+Full detail (including the exact empirical checks run) in staging_artifacts/investigation.md.
 
 ## Test Summary
-_(pending)_
+See staging_artifacts (→ stored_artifacts) test_plan.md for the full list. 4 new tests, all
+asserting the resolved entity's own `population_id` (not list length) — matching the ticket's own
+acceptance bar exactly, including a full real-episode `AuthoritativeApplyPipeline.refine()` run
+proving `InformationBeliefPhase.apply()` assimilates the fact into the correct entity. 1
+pre-existing negative-assertion test updated (its own premise is now resolved). Broader regression:
+673 passed, 1 skipped across worldbuilding/campaigns/worldassembly/cognition/scenario-runtime
+suites.
 
 ## Files Changed
-_(pending)_
+- `src/worldbuilding/compiler.py` — extracted `resolve_pending_information()` as a shared
+  staticmethod; `compile()` now calls it (behavior-preserving refactor).
+- `src/domains/campaigns/orchestrator.py` — threaded `pending_information_responses`/
+  `pending_self_model_information_events` into both `_build_initial_state()` branches.
+- `tests/unit/domains/campaigns/test_campaign_orchestrator.py` — 3 new tests, 1 updated.
+- `tests/integration/scenarios/test_phase5_information_belief_scenarios.py` — 1 new test.
+- `staging_artifacts/TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH/{investigation,plan,test_plan}.md`.
 
 ## Completion Summary
-_(pending)_
+Re-verified the ticket's own premise before touching any code, per explicit instruction, and found
+it partially stale: the population_id tagging fix landed since this ticket was filed, and the
+originally-reported goblin-raider misdelivery no longer reproduces for the worked example. The
+underlying threading gap was still real, though — neither pending-information field reached
+Campaign's `AuthoritativeState` at all. Built the fix as originally scoped (Direction 2: resolve
+locally against Campaign's own roster), now cheaper than the ticket anticipated since the
+population_id groundwork already existed from a different ticket. Both fields now thread into both
+episode-0 and survivor-reconstruction branches, resolved against each branch's own real entity
+space, with the acceptance bar (prove the resolved entity is correct, not just present) satisfied
+by tests that read the resolved entity's own identity, plus one full real-episode integration test
+proving the downstream `InformationBeliefPhase` consumer actually assimilates the fact correctly.
