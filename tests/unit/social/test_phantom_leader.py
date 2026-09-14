@@ -49,8 +49,13 @@ def test_phantom_leader_bug(group_state):
     
     # 2. Run GroupSystem.update_groups (simulating the pipeline call)
     group_upd = GroupSystem.update_groups(group_state, update)
-    
-    assert 101 in group_upd.groups_remove, "Group should be removed if leader is dead in the same tick"
+
+    # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now retained via
+    # groups_add_or_update with dissolution_tick set (in place, mirroring ClanState.dissolved_tick/
+    # CampState.active), not deleted via groups_remove.
+    dissolved = next((g for g in group_upd.groups_add_or_update if g.id == 101), None)
+    assert dissolved is not None, "Group should be dissolved (marked, not deleted) if leader is dead in the same tick"
+    assert dissolved.dissolution_tick == group_state.tick
 
 def test_phantom_member_removal(group_state):
     """

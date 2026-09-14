@@ -1,8 +1,10 @@
 # Investigation — TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED
 
-**Per this ticket's own explicit acceptance criteria: this is a design question with real options
-and a recommendation, not a decision. Nothing in `src/` or `tests/` is changed by this
-investigation — "No implementation proceeds until that design question is answered."**
+**Per this ticket's own explicit acceptance criteria, this document originally brought a design
+question with real options and a recommendation, not a decision, with nothing in `src/` or
+`tests/` changed. Peer/user has since reviewed it and approved Option 1 (see the Resolution
+section at the end) — the options and reasoning below are preserved as the record of that
+decision, not retroactively edited to look like the plan all along.**
 
 ## Where Group dissolution happens today
 
@@ -141,3 +143,22 @@ Wiring `PARTY_ABANDONED` (Option 3's event half) is a real, separable improvemen
 correct place for a currently-dead schema entry to finally get a producer — but it's not required
 to close this ticket's own gap, and bundling it in isn't necessary if peer/user prefers to keep
 this ticket narrowly scoped to Option 1 alone.
+
+## Resolution (2026-09-14) — Option 1 approved and built
+
+Peer approved Option 1 with two conditions: audit each of the 11 `state.groups` consumers
+individually (not just assume retention is safe) and report which needed a filter; keep
+outcome-semantics (what `dissolution_tick`/a future reason field should mean) as a separate
+question for later, not decided inside this ticket.
+
+The per-consumer audit found 2 real, previously-undiscussed hazards beyond the mechanism itself:
+`GroupPhase.resolve()` (`src/engine/pipeline_phases/groups.py`) builds its own relevant-group-id
+set directly from `state.groups.keys()`, bypassing dirty-tracking entirely — without a filter it
+would re-run leadership elections and defection checks against every already-dissolved group,
+forever. `CooperationPhase.execute()` (`src/domains/cooperation/phase.py`) iterates all of
+`state.groups.items()` with no liveness check — without a filter, a dissolved group's former
+(still-alive) members would keep receiving the "abandoned" trust/grudge social penalty every tick,
+forever. Both fixed with the same `dissolution_tick is not None: continue` guard `GroupSystem.
+update_groups()` itself needed for the `force_full_scan` fallback case. Full per-file audit table
+in plan.md. See the ticket's own Implementation Notes/Test Summary/Files Changed for the complete
+build record.

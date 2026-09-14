@@ -155,3 +155,40 @@ def test_group_canonical_dict_has_no_missing_keys():
         f"  Missing from result: {EXPECTED_KEYS - actual_keys}\n"
         f"  Unexpected in result: {actual_keys - EXPECTED_KEYS}"
     )
+
+
+# TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: now that dissolution_tick is actually
+# populated (in place, group retained) rather than dead, GroupPhase.resolve() and
+# CooperationPhase.execute() must both skip already-dissolved groups -- otherwise leadership
+# elections, defection checks, and cohesion evaluation (with its trust/grudge penalty side
+# effect) would keep re-running against every dissolved group's former members, forever.
+
+def test_group_phase_skips_already_dissolved_group_in_leadership_and_defection_passes():
+    from src.engine.pipeline_phases.groups import GroupPhase
+
+    already_dissolved = _minimal_group(id=100, dissolution_tick=3)
+    state = AuthoritativeState(tick=50, seed=1, entities={}, groups={100: already_dissolved})
+
+    result = GroupPhase.resolve(state, StateUpdate())
+
+    # Not re-written (no leadership election result, no defection result) and no leftover
+    # leadership/defection events fired for a group that no longer has any real activity.
+    assert not any(g.id == 100 for g in result.groups_add_or_update)
+    assert GroupPhase.last_tick_events == []
+    assert GroupPhase.last_tick_defection_events == []
+
+
+def test_cooperation_phase_skips_already_dissolved_group_cohesion_evaluation():
+    from src.domains.cooperation.phase import CooperationPhase
+    from src.core.builder import V2EntityBuilder
+
+    # A former member who is very much still alive and active -- if the dissolved group is not
+    # skipped, this member gets hit with the "abandoned" trust/grudge penalty every tick, forever,
+    # even though their group ended long ago and has nothing to do with them anymore.
+    former_member = V2EntityBuilder(11).identity(role=0).build()
+    already_dissolved = _minimal_group(id=100, leader_id=10, member_ids={10, 11}, dissolution_tick=3)
+    state = AuthoritativeState(tick=50, seed=1, entities={11: former_member}, groups={100: already_dissolved})
+
+    result = CooperationPhase.execute(state, StateUpdate())
+
+    assert 11 not in result.entity_updates
