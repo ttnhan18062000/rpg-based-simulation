@@ -112,9 +112,9 @@ None yet — standard tier, staging artifacts created when picked up.
   revisited, is the central open question — not assumed either way here.
 
 ## Implementation Notes
-**2026-09-14: investigation in progress, no code changed — peer has asked for the complete
-picture before any fix, ticket stays BLOCKED pending further review, not yet ready to close.**
-Full detail in staging_artifacts/investigation.md. Summary:
+**2026-09-14: investigation complete, no code changed — both peer-flagged gaps are now closed,
+bringing the full picture back for the fix decision. Ticket stays BLOCKED pending that decision,
+not yet ready to close.** Full detail in staging_artifacts/investigation.md. Summary:
 - **Ordering conclusion**: fix the tier-5 stat defect first, verify formidability, only then open
   the gate — opening the gate first would ship a broken, anticlimactic encounter.
 - **Defect 1**: `difficulty_tier=5` (used by both world-boss and Lair-occupant spawning) silently
@@ -123,16 +123,22 @@ Full detail in staging_artifacts/investigation.md. Summary:
   (`hp=200/atk=30/level=11`). Named explicitly as the 4th instance this week of the same
   silence-as-failure-mode family (dead `spatial_grid` optimization, a bare-except lead-parse
   swallow, a trace recorder logging SUCCESS for a no-op).
-- **Defect 2**: the world boss's own signature loot (`item_id="ancient_core"`) is unregistered
-  anywhere in the real content catalog — a credible crash risk once anything inspects the
-  inventory, found but not fully chased to a reproduced crash (time-boxed).
+- **Defect 2 (now chased to a definitive answer)**: the world boss's own signature loot
+  (`item_id="ancient_core"`) does NOT crash — it is silently dropped during inventory add
+  (`src/core/inventory.py::apply_update()`'s `if not defn: continue`, via the real, non-raising
+  `src.core.items.ItemRegistry` that the actual inventory/equipment pipeline uses, not the
+  raising `src.core.registries.ItemRegistry` initially assumed). A real second defect (a fixed,
+  formidable world boss would still drop nothing today), but not a build prerequisite for Defect 1.
 - **Defect 3**: both halves of the gate's own AND conjunction are independently unreached in a
   real 2000-tick run — `state.maturity` reached `1` (need `≥50`), `trauma_score` peaked at `9.92`
   (need `≥20.0`). Not "one large number."
-- **Finding 4**: a second, maturity-independent `world_boss` spawn path exists
-  (`CalamityService`), correctly tiered, but itself only reachable at `tick=5000` (the extreme top
-  edge of the corpus's own run range) and never spawns Lair occupants. Also found: an unused
-  `CALAMITY_RANDOM_CHANCE` constant, and a real drift between two parallel `_BOSS_KINDS`
+- **Finding 4/5 (now measured)**: a second, maturity-independent `world_boss` spawn path exists
+  (`CalamityService`), correctly tiered, gated on `tick % 5000 == 0` AND some region's
+  `calamity_intensity > 0.3`. A real, instrumented 5000-tick simulation (`frontier_living_world`,
+  seed=42) found `calamity_intensity` never left `0.0` in any region for the entire run — this
+  path is itself unreached in practice, independent of the maturity/trauma gate, and never spawns
+  Lair occupants regardless. Also found (filed as two small follow-up tickets, not fixed here): an
+  unused `CALAMITY_RANDOM_CHANCE` constant, and a real drift between two parallel `_BOSS_KINDS`
   observability constants.
 
 ## Test Summary

@@ -54,19 +54,48 @@ roughly around hp≈6.0-6.5x, atk≈4.0-4.5x, def≈3.2-3.5x, level 12-20 — sh
 between "what tier 5 currently produces" and "what the existing progression would suggest," not to
 propose the number.
 
-## Defect 2 (found, not fully chased) — the world boss's own signature loot item is unregistered
+## Defect 2 (chased to a definitive answer) — the world boss's own signature loot item is silently dropped, not a crash
 
-While checking whether spawn logic works correctly once past the gate, also found: the world boss's
-own loot (`ItemStack(item_id="ancient_core", quantity=1)`, `src/world/boss.py`) references an item
-id that **does not exist anywhere in the real content catalog** — confirmed via exhaustive grep of
-`data/content/`, zero matches outside this one construction site. `ItemRegistry.get()` raises a real
-`KeyError` for an unregistered id (a properly loud failure, unlike Defect 1), and multiple real
-pipeline files call `ItemRegistry.get()` on inventory contents (`src/core/inventory.py`,
-`src/core/equipment.py`, at minimum) — meaning a real code path could plausibly crash the moment
-anything inspects this entity's inventory, though the exact trigger was not chased down to a
-reproduced crash in this investigation (time-boxed; flagging as a real, credible risk rather than a
-confirmed live crash). Worth a direct check before any fix ships, not assumed safe just because
-`ItemStack` itself constructs without validating.
+Peer asked for this chased to a yes/no rather than left as "credible risk." Answer: **no, it does
+not crash — it is silently dropped.**
+
+Two parallel `ItemRegistry` classes exist in the codebase, and they behave differently:
+- `src.core.registries.ItemRegistry` — content-catalog-backed, `.get()` raises `KeyError` for an
+  unregistered id. This is the one I initially assumed was in the real pipeline. It is not: it's
+  only imported by `src/world/providers/{information,services,resources}.py` and
+  `src/engine/intent/action_intent.py`, none of which sit in the real loot/inventory path.
+- `src.core.items.ItemRegistry` — a hardcoded ~10-item dict (`iron_ore`, `wood`, `WOOD`, `herb`,
+  `bread`, `healing_potion`, etc.), `.get()` returns `Optional[ItemDefinition]`, safely `None` for
+  an unknown id, **never raises**. This is the one actually used by the real pipeline:
+  `src/core/inventory.py` and `src/core/equipment.py` both `from src.core.items import
+  ItemRegistry` (the safe one).
+
+Traced the real player-loots-corpse path end to end:
+`src/systems/economy_systems/loot.py::LootSystem.update()` (on completion, builds a
+`ResourceTransferIntent(source_kind="CORPSE", items_add=target.items, transfer_kind="LOOT")`) →
+`src/engine/economy.py` (processes the intent, no direct `ItemRegistry` call) →
+`src/core/inventory.py::apply_update()`, the real, authoritative inventory-mutation apply-path.
+Lines 170-174 of that function, the definitive finding:
+
+```python
+# 2. Handle Additions
+for add_stack in update.items_add:
+    defn = ItemRegistry.get(add_stack.item_id)
+    if not defn:
+        continue
+```
+
+`ancient_core` is unregistered in `src.core.items.ItemRegistry` (confirmed, not among its ~10
+entries) and `.get()` returns `None`, so this `continue`s — the item is silently omitted from the
+add. **`ancient_core` does not crash anything. It just never ends up in inventory.** Killing a world
+boss today, even leaving aside Defect 1's stat problem, yields zero actual reward for the one item
+the encounter exists to grant.
+
+This is a fifth instance of the same silence-as-failure-mode family named in Defect 1 — a
+lookup/fallback silently converts "this doesn't exist" into a no-op, with nothing erroring. It does
+**not** join Defect 1 as a build prerequisite (it was never a crash risk), but it does belong beside
+it as a second real defect behind the gate: even a formidable, correctly-tiered world boss (once
+Defect 1 is fixed) would currently drop nothing of its own signature loot.
 
 ## Defect 3 — the gate's own two halves are independently unreached in a realistic run
 
@@ -117,10 +146,39 @@ This path does **not** depend on `state.maturity` at all — but its own `CALAMI
 requires the run to reach at least **tick 5000**, which is the extreme top edge of the corpus's own
 stated 200-5,000 tick range, and only for `world_boss` (this path never spawns Lair occupants). Real
 producers of `calamity_intensity` exist (confirmed: region-level accumulation with a real
-`intensity_delta`, plus seasonal propagation) — this is not dead code — but whether it realistically
-crosses `0.3` by tick 5000 in practice was not measured here (time-boxed; a third full simulation run
-was judged lower-value than reporting this path's existence and its own edge-of-range timing
-constraint plainly).
+`intensity_delta`, plus seasonal propagation) — this is not dead code.
+
+### Finding 5 (peer-requested follow-up, now measured) — the calamity path does not fire in a real run, and the reason is stronger than "never crosses 0.3"
+
+Peer asked this be resolved empirically rather than left as an untested inference, since the "world
+bosses never spawn" claim is now written into three artifacts. Ran a real, instrumented 5000-tick
+`Kernel.tick_once()` simulation against `frontier_living_world` (seed=42), tracking every region's
+`calamity_intensity` on every tick and watching for any `kind="world_boss"` entity appearing.
+
+**Result: `calamity_intensity` never left `0.0` in any region for the entire 5000-tick run.** Not
+"never crossed 0.3" — it never moved at all. Correspondingly, no `world_boss` entity ever appeared
+via this path (or any path) across the whole run. `state.maturity` reached `4` by tick 5000 (roughly
+matching the `+1`-per-1000-ticks math, off by one likely from tick-budget throttling visible in the
+run's own watchdog log, not investigated further as immaterial to this question).
+
+This falsifies my own earlier framing (`intensity might realistically approach 0.3 by the top of the
+corpus range`) more thoroughly than expected — it's not close, it's exactly zero the entire time.
+Reading the two real producers explains why, without further chasing being necessary:
+- `apply_calamity_consequences()` only adds intensity on `entity.kind == "hero"` death specifically
+  inside a `region.hazard_level > 0.5` region — a narrow, specific trigger. If no hero died in a
+  high-hazard region during this run (not separately confirmed, but consistent with the observed
+  zero), this producer never fires even once.
+- `CalamityPressurePropagator.propagate_seasonal()` only spreads intensity that already exists
+  (`PROPAGATION_THRESHOLD = 0.10`) to adjacent regions — it cannot create intensity from nothing. If
+  the first producer never seeds any region above zero, propagation has nothing to spread, no matter
+  how many `SEASONAL_PROPAGATION_INTERVAL` cycles (500 ticks) pass.
+
+So this is the same shape as Defect 3 (`trauma_score` peaking at 9.92 against a 20.0 requirement) —
+a real, live mechanism that simply never accumulates enough in practice — but more extreme: trauma
+at least moves. Calamity intensity, in this real run, did not move once. **The calamity-triggered
+world_boss path is not a viable "it already works, just check timing" answer to this ticket — it is
+itself unreached in practice**, for a different and independent reason than the maturity/trauma gate
+(Defect 3).
 
 **Also found while checking this path, for completeness**: `CalamityService.CALAMITY_RANDOM_CHANCE
 = 0.005` is declared but has **zero real usages anywhere** — confirmed via exhaustive grep, only its
@@ -148,25 +206,36 @@ boss should reasonably become possible) is not this investigation's call.
 
 ## Summary for peer review
 
+Both gaps peer flagged as blocking a fix decision are now closed. Full picture:
+
 1. **Ordering matters more than any single number**: fix Defect 1 (tier-5 fallback) first, verify a
    spawned boss/lair-occupant is actually formidable, only then address gate reachability — opening
    the gate before fixing Defect 1 would make the feature actively worse than its current dormant
    state.
-2. Defect 1 is a real, previously-undiscovered defect: `difficulty_tier=5` silently produces tier-1
-   stats for both world bosses and Lair occupants. Same silence-as-failure-mode family as 3 other
-   instances found this week.
-3. Defect 2 (unregistered `ancient_core` loot item) is a real, credible crash risk, found but not
-   fully chased to a reproduced crash — worth a direct check before any fix ships.
+2. Defect 1 (previously-undiscovered): `difficulty_tier=5` silently produces tier-1 stats for both
+   world bosses and Lair occupants. Same silence-as-failure-mode family as 3 other instances found
+   this week.
+3. Defect 2 (**now chased to a definitive answer**): the unregistered `ancient_core` loot item does
+   **not** crash — it is silently dropped during inventory add (`inventory.py::apply_update()`'s
+   `if not defn: continue`, via the real, non-raising `src.core.items.ItemRegistry`, not the
+   raising `src.core.registries.ItemRegistry` I first assumed was in the pipeline). It does not
+   join Defect 1 as a build prerequisite. It is still a real second defect: even a fixed, formidable
+   world boss currently drops none of its own signature loot.
 4. Defect 3: the maturity/trauma gate's own two halves are BOTH independently unreached in a real
    2000-tick run, not just "one large number" — `state.maturity` reached only `1` (need `≥50`),
    `trauma_score` peaked at `9.92` (need `≥20.0`).
-5. Finding 4: a second, maturity-independent `world_boss` spawn path exists
-   (`CalamityService.process_world_dynamics()`), correctly using `difficulty_tier=4` (no tier-5 bug
-   there), but gated to only ever fire at `tick % 5000 == 0` — the extreme top edge of the corpus's
-   own run range — and only for world bosses, never Lair occupants. Whether it realistically
-   crosses its own `calamity_intensity > 0.3` requirement by then wasn't measured (time-boxed).
-   Also found in the same investigation: an unused `CALAMITY_RANDOM_CHANCE` constant (declared,
-   zero real usages), and a real drift between two supposedly-parallel `_BOSS_KINDS` observability
-   constants (one includes `"dragonkin"`, the other doesn't).
-6. No implementation proceeds from this investigation — per explicit instruction, and doubly so now
-   that a real harm-if-shipped-in-wrong-order risk has been identified.
+5. Finding 4/5 (**now measured**): a second, maturity-independent `world_boss` spawn path exists
+   (`CalamityService.process_world_dynamics()`), correctly using `difficulty_tier=4`, gated to only
+   ever fire at `tick % 5000 == 0` and only when some region's `calamity_intensity > 0.3` — and only
+   for world bosses, never Lair occupants. A real 5000-tick instrumented run against
+   `frontier_living_world` (seed=42) found `calamity_intensity` never left `0.0` in any region for
+   the entire run — not "never crossed 0.3," never moved at all — so no world boss spawned via this
+   path either. This is not a viable "already works" answer for this ticket; it is itself unreached,
+   for a reason independent of the maturity/trauma gate (its real producers — hero death in a
+   high-hazard region, and seasonal propagation of existing intensity — never fired in this run).
+   Also found in the same investigation, filed as two small follow-up tickets rather than fixed
+   here: an unused `CALAMITY_RANDOM_CHANCE` constant (declared, zero real usages), and a real drift
+   between two supposedly-parallel `_BOSS_KINDS` observability constants (one includes
+   `"dragonkin"`, the other doesn't).
+6. No implementation proceeds from this investigation — per explicit instruction. Bringing this
+   complete picture back for the fix decision now that both gaps are closed.
