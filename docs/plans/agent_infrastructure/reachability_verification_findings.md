@@ -230,6 +230,105 @@ Included so this is not read as one-sided.
 
 ---
 
+## 7. Status addendum (2026-09-14, `agent-working-design`)
+
+Added after publication, at the author's request, by the session this document was handed to.
+Sections 1-6 above are the original author's text and are untouched. This section records **what
+happened to each finding** across the agent-infrastructure batch that ran 2026-09-11 → 2026-09-14
+(13 tickets, 11 merged). It proposes no remedies, consistent with the document's own framing.
+
+Findings are separated into **addressed**, **reinforced**, and **no evidence either way**. Nothing
+in this document turned out to be wrong; that category is empty and is named explicitly so its
+absence is not mistaken for omission.
+
+### Addressed
+
+**Finding 3 — the parity ledger has no stated evidence standard.** Addressed, and the gap turned
+out to be larger than the document could see from one batch.
+
+- `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (PR #160) added an `evidence_kind` field
+  (`existence` / `invocation` / `runtime_observation`) to `docs/parity_ledger/schema.json`, plus a
+  write-time contract rejecting a `test_path` that does not parse.
+- `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (PR #183) then measured the corpus:
+  **1,677 of 2,187 entries (77%) were in states the sanctioned writer would reject**, of which
+  **1,536 had no `test_path` at all — 1,307 of those P0 entries asserting `verified` while citing
+  no evidence of any kind.** `STRAT-239`, this document's single cited example, was a sample rather
+  than an outlier.
+- The recorded decision was to freeze (no *new* entry may omit `test_path`), with the honest
+  caveat that this governs what happens next and is **not** a claim that those 1,307 `verified`
+  statuses are accurate. An explicit `legacy_unverified` status remains credible and unexamined; it
+  was set aside on implementation cost, not on merit.
+
+**Finding 8 — gate maintenance is diff-indistinguishable from gate weakening.** Addressed.
+`TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE` (PR #164) replaced line-number keys
+with `(rel_path, module, names) → expected count` in both pinned dicts of
+`tests/architecture/test_phase18_import_boundaries.py`. A line-shifting edit no longer breaks a pin,
+so the re-pin-versus-weaken ambiguity the finding describes no longer arises for this gate. Two
+details worth recording: the dict had **13** entries, not the 10 first counted, and one genuine
+duplicate import existed (`intelligence.py` lines 832/904), which is why the key carries a count
+rather than being a set.
+
+### Reinforced (recurred during the batch, under the same conditions)
+
+**Finding 6 — agent summaries wrong at a material rate; only independent code reading caught it.**
+Recurred, with this section's author as the primary source. Six wrong claims, each caught either by
+the implementing session refusing to act on them or by the author checking afterwards:
+
+| Claim | Reality |
+|---|---|
+| `historical` appears nowhere in `implement-ticket.js` | It is at line 1671, since 2026-06-12 |
+| Cited "line 874" of `implement-epic.js` | That file has 482 lines — another file's output was misread |
+| Five parity entries were malformed | The branch's ledger was validated with a *different checkout's* parser |
+| A branch already carried the `merge=registry-regen` line | It did not; `merge-base --is-ancestor` was never run |
+| `tools/parity_corpus_check.py` was missing from the repo | The working tree was stale; the tool exists |
+| The CI gating claim did not hold | It did, on the push-to-main run that mattered |
+
+Every one has the same cause: **an inference reported without running the single command that would
+have settled it.** The document's own framing — that confidently-wrong agent-authored claims
+propagate — held in the session reviewing the document.
+
+The countervailing half also held: in each case the other party re-derived rather than accepting the
+report, and in one instance (`rpg-feature-planning`, the CI gating claim) a correct conclusion
+initially supported by *bad* evidence survived because its author went and found the run that
+actually tested it, rather than dropping the claim under pushback.
+
+**Finding 7 — real findings default to dying in prose.** Recurred twice, both times in
+agent-infrastructure work:
+
+- `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT`'s plan listed four follow-ons "to file at
+  close", and its closed ticket repeats them as "— follow-on". **None was filed.** Discovered days
+  later while checking whether an unrelated finding was already tracked. Two were then carried into
+  `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`; the remaining two are named in its Out of Scope
+  so they cannot be lost a second time.
+- **This document itself.** Written 2026-09-09, handed off, and then readable by exactly one session
+  until 2026-09-13 — cited as shared context across sessions in the interval, and nearly shipped
+  inside another document's `## Related` list while pointing at something unpublished. A handoff
+  needs a sender who confirms delivery and a receiver who publishes; neither step existed.
+
+### No evidence either way
+
+**Findings 1, 2, 4 and 5** — verification certifying defects, agents canonizing current behavior as
+intent, investigation-tier conclusions drawn from broken measurement, and sequential masking. This
+batch was agent-process and tooling work, not simulation-behavior work, so it neither confirmed nor
+challenged them. Stated rather than omitted so a reader does not infer they were examined.
+
+### One pattern this batch adds, offered as evidence rather than as a ninth finding
+
+Eight distinct mechanisms were found that **exist, have tests, and do not measure what they appear
+to**: a parity baseline asserting exact equality while its own comment called the count "not a frozen
+invariant" (six hotfix tickets spent on legitimate corrections); a duplicate-row detector with no
+caller anywhere; that same detector excluding the defect class it would need to catch; a
+`strict=True` xfail passing for the wrong reason; a sole-writer guard blind to the improvised
+`python3 -c` writes that caused both real incidents; a merge driver inert on the one merge that
+introduces it; activation living in unversioned per-clone config; and two tests racing live corpus
+writes, whose intermittent failure silently converts a gated suite from a result into a `skipped`
+non-result.
+
+Two of those were found *inside the fix for another*. The recurring cost is not the missed detection
+— it is that each one teaches its readers to treat a signal as noise, after which genuine failures
+stop being visible. Recorded here because it is the same shape as Finding 1, observed in the
+verification surface rather than in simulation code.
+
 ## Related
 
 - `TCK-20260909-UNREACHABLE-IMPLEMENTED-CODE-AUDIT` — enumerates the codebase-side instances.
