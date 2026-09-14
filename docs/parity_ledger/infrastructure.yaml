@@ -2762,9 +2762,18 @@
 
     '
   proof_type: null
-  test_path: make typecheck-py
+  test_path: tests/static/test_typecheck_gate_configured.py::test_pyproject_declares_tool_mypy_section,
+    tests/static/test_typecheck_gate_configured.py::test_makefile_typecheck_py_target_runs_mypy_on_src,
+    tests/static/test_typecheck_gate_configured.py::test_ci_workflow_has_a_mypy_step
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    ("make typecheck-py") was not a pytest citation at all -- the real evidence is
+    a build/lint gate configuration. Confirmed via a corpus-wide grep this shape is
+    a genuine one-off (no other entry cites a bare make target or similar), so a schema
+    change was not warranted for one entry. Added tests/static/test_typecheck_gate_configured.py
+    (3 static assertions pinning the same 3 facts this entry''s own text/v2_evidence
+    already claimed: pyproject.toml [tool.mypy] section, the Makefile typecheck-py
+    target, and the CI mypy step) as a real pytest citation instead.'
 - id: INFRA-222
   text: "Gross isolation guard (_guard_gross_isolation) runs unconditionally in standard\
     \ (non-audit) mode after Scheduling and Collection phases. Checks len(state.entities)\
@@ -2941,9 +2950,16 @@
 
     '
   proof_type: null
-  test_path: tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default,test_run_manifest_world_id_explicit,test_manifest_world_id_persists_via_repo
+  test_path: tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default;
+    tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_explicit;
+    tests/unit/observability/test_run_artifact_repository.py::test_manifest_world_id_persists_via_repo
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_run_artifact_repository.py::test_run_manifest_world_id_default,test_run_manifest_world_id_explicit,test_manifest_world_id_persists_via_repo'
 - id: INFRA-231
   text: 'Lab orchestrator `STANDARD` mode maps to `ObservabilityMode.NORMAL` (not
     LIGHT). `ScenarioLabOrchestrator._resolve_obs_mode("STANDARD")` must return `ObservabilityMode.NORMAL`
@@ -2960,9 +2976,15 @@
 
     '
   proof_type: null
-  test_path: tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal,test_obs_mode_mapping_full_table
+  test_path: tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal;
+    tests/unit/lab/test_scenario_lab_orchestrator.py::test_obs_mode_mapping_full_table
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/lab/test_scenario_lab_orchestrator.py::test_standard_obs_mode_resolves_to_normal,test_obs_mode_mapping_full_table'
 - id: INFRA-232
   text: '`QueueDrainWorker.quality_fn` is called per-envelope after `file_write_fn`
     and `stream_publish_fn`; exceptions are caught identically and do not propagate.
@@ -3023,9 +3045,15 @@
     \ rule value. Verified by direct exception-type inspection during TCK-20260714-SIMQ-WEIGHTS-PILLAR-COLLISION\
     \ implementation, not assumed.\n"
   proof_type: null
-  test_path: tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error,test_malformed_value_raises_validation_error
+  test_path: tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error;
+    tests/simulation_quality/test_weights.py::test_malformed_value_raises_validation_error
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/simulation_quality/test_weights.py::test_missing_key_raises_validation_error,test_malformed_value_raises_validation_error'
 - id: INFRA-271
   text: '`ScoringWeights` resolves rule-key weights on a per-pillar basis: each pillar''s
     scorer reads its own declared weight for a rule name via `ScoringWeights.for_pillar(pillar_id)["rule_key"]`
@@ -4579,7 +4607,19 @@
 
     '
   proof_type: regression
-  test_path: "tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;\
+  test_path: tests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;
+    tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged;
+    tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar
+  divergence_note: null
+  support_boundary: "This entry documents corpus-scan validation coverage for the\
+    \ INFRA-271 fix only; it does not supersede, rewrite, or modify INFRA-271's own\
+    \ text/evidence/test_path, which remains an accurate, standalone description of\
+    \ the pillar-scoped lookup mechanism itself. The 14 anchors' root cause is now\
+    \ confirmed (F6-class load/timing-sensitivity, TCK-20260715-SIMQ-ANCHOR-LOAD-\
+    \ SENSITIVITY-SWEEP) -- no longer an open question as of this update.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
+    \ test_path normalized to a plain multi-citation (all citations confirmed to exist\
+    \ via grep before writing). Full original test_path preserved verbatim below for\
+    \ disclosure:\n\ntests/simulation_quality/test_grade_regression.py::test_grade_anchor_file_exists_and_valid;\
     \ tests/simulation_quality/test_grade_regression.py::test_grade_anchors_entry_count_unchanged;\
     \ tests/simulation_quality/test_weights.py::test_real_config_seven_known_collisions_resolve_per_pillar;\
     \ tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget\
@@ -4656,16 +4696,12 @@
     \ test_grade_within_anchor_band_long_run[urban_political_seed123_1000t] confirmed\
     \ passing (1 passed, non-skip) against freshly-regenerated real calibration data\
     \ generated after the override-table edit landed. See stored_artifacts/TCK-20260716-SIMQ-URBAN-POLITICAL-FULL-PILLAR-SWEEP/investigation.md\
-    \ for the full 8-draw per-pillar table and derivations.\n"
-  divergence_note: null
-  support_boundary: 'This entry documents corpus-scan validation coverage for the
-    INFRA-271 fix only; it does not supersede, rewrite, or modify INFRA-271''s own
-    text/evidence/test_path, which remains an accurate, standalone description of
-    the pillar-scoped lookup mechanism itself. The 14 anchors'' root cause is now
-    confirmed (F6-class load/timing-sensitivity, TCK-20260715-SIMQ-ANCHOR-LOAD- SENSITIVITY-SWEEP)
-    -- no longer an open question as of this update.
-
-    '
+    \ for the full 8-draw per-pillar table and derivations.\n\n\ntests/unit/worldassembly/test_corpus_diversity.py\
+    \ -m slow --resource-budget large -k \"grade_stability\" (the 14 dedicated grade_stability\
+    \ guards) was deliberately NOT added to test_path -- citing the bare file would\
+    \ misrepresent the claim, since running the whole file executes a much larger,\
+    \ different test set than the 14 filtered guards actually named as passing (same\
+    \ reasoning as COMB-308's own exclusion)."
 - id: INFRA-273
   text: 'F6 (docs/audits/D06_longrun_health.md, kernel.py''s tick-budget watchdog/mid-tick
     emergency throttle) is confirmed to extend beyond COGNITION/decision_divergence_detected
@@ -4779,17 +4815,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget
-    large -k "grade_stability" (14 dedicated guards, one per anchor, all green --
-    each guard''s own docstring cites the specific repro evidence for that anchor/pillar).
-    UPDATE 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE): `make
-    simq-corpus-diversity-slow-isolated` (all 32 `-m slow` guards in this file, run
-    as isolated per-test subprocesses; asserts a minimum collected node-ID count of
-    32 before running, failing loudly rather than silently passing on a short/empty
-    collection); `tests/static/test_corpus_diversity_ci_isolation.py` (static guard
-    proving the CI/Makefile wiring shape is correct).
-
-    '
+  test_path: tests/static/test_corpus_diversity_ci_isolation.py
   divergence_note: null
   support_boundary: "This entry documents the confirmed blast radius of F6's existing,\
     \ intentional, documented mechanism (docs/engine/kernel.md, docs/engine/performance_contract.md\
@@ -4813,7 +4839,22 @@
     \ live delivery to AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL -- not\
     \ a Phase 2 regression. `grade_anchors.json` left unrecalibrated for the same\
     \ reason as Phase 1's own cutover. See stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md\
-    \ for the full repro.\n"
+    \ for the full repro.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path\
+    \ normalized to a plain multi-citation (all citations confirmed to exist via grep\
+    \ before writing). Full original test_path preserved verbatim below for disclosure:\n\
+    \ntests/unit/worldassembly/test_corpus_diversity.py -m slow --resource-budget\
+    \ large -k \"grade_stability\" (14 dedicated guards, one per anchor, all green\
+    \ -- each guard's own docstring cites the specific repro evidence for that anchor/pillar).\
+    \ UPDATE 2026-07-16 (TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE): `make\
+    \ simq-corpus-diversity-slow-isolated` (all 32 `-m slow` guards in this file,\
+    \ run as isolated per-test subprocesses; asserts a minimum collected node-ID count\
+    \ of 32 before running, failing loudly rather than silently passing on a short/empty\
+    \ collection); `tests/static/test_corpus_diversity_ci_isolation.py` (static guard\
+    \ proving the CI/Makefile wiring shape is correct).\n\n\ntests/unit/worldassembly/test_corpus_diversity.py\
+    \ -m slow --resource-budget large -k \"grade_stability\", and the `make simq-corpus-diversity-slow-isolated`\
+    \ Makefile target wrapping the same filtered set, were deliberately NOT added\
+    \ to test_path for the same reason as INFRA-272 above -- only the one real, unfiltered\
+    \ pytest file (test_corpus_diversity_ci_isolation.py) is cited."
 - id: INFRA-274
   text: 'Plan-phase "unresolved questions" gate false-positive fix (TCK-20260716-PLAN-GATE-SUBSTRING-FALSEPOS):
     the orchestrator''s Plan-phase gate previously tested `planText.toLowerCase().includes(''unresolved
@@ -4878,10 +4919,29 @@
 
     '
   proof_type: null
-  test_path: 'tests/tools/test_plan_gate_static.py (6/6 passing -- dedicated regression
-    coverage added: true-positive genuine heading, the exact false-positive prose
-    ("No unresolved questions: ...") that motivated this ticket, no-heading case,
-    H3-does-not-match-H2-only-contract, trailing- whitespace-after-heading, and missing-file-returns-false-not-raise).
+  test_path: tests/tools/test_plan_gate_static.py; tests/tools/test_step0_ts_orchestrator.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration workflow tooling only -- no simulation behavior
+    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for orchestrator-side
+    implement-ticket.js gate/check-logic changes). Does not touch, extend, or duplicate
+    INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
+    or INFRA-265 (Scope-phase ticket-location resolution); this is a fourth, distinct
+    gate-logic guarantee scoped to the Plan phase''s unresolved-questions check specifically.
+    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): scope unchanged
+    -- this update only makes the same gate content-aware instead of heading-presence-only;
+    it remains the single Plan-phase unresolved-questions guarantee, not a new/fifth
+    one.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_plan_gate_static.py (6/6 passing -- dedicated regression coverage
+    added: true-positive genuine heading, the exact false-positive prose ("No unresolved
+    questions: ...") that motivated this ticket, no-heading case, H3-does-not-match-H2-only-contract,
+    trailing- whitespace-after-heading, and missing-file-returns-false-not-raise).
     Closes the gap this entry originally flagged. tests/tools/test_step0_ts_orchestrator.py
     (6/6 passing) additionally confirms the surrounding planTs/writeSidecar/plan=await
     agent(...)/planText adjacency block was left structurally intact.
@@ -4894,20 +4954,6 @@
     test_heading_with_only_whitespace_body_before_next_heading_returns_false, test_heading_with_only_whitespace_body_to_eof_returns_false,
     test_heading_with_real_content_still_returns_true, test_heading_with_none_prefixed_word_not_treated_as_resolved
     (guards against a "Nonetheless, ..." false negative).
-
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration workflow tooling only -- no simulation behavior
-    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for orchestrator-side
-    implement-ticket.js gate/check-logic changes). Does not touch, extend, or duplicate
-    INFRA-263 (Finalize-phase registry-regen gate), INFRA-264 (CI registry-drift backstop),
-    or INFRA-265 (Scope-phase ticket-location resolution); this is a fourth, distinct
-    gate-logic guarantee scoped to the Plan phase''s unresolved-questions check specifically.
-    UPDATE (TCK-20260827-PLAN-GATE-HEADING-CONTENT-BLIND-FALSEPOS): scope unchanged
-    -- this update only makes the same gate content-aware instead of heading-presence-only;
-    it remains the single Plan-phase unresolved-questions guarantee, not a new/fifth
-    one.
 
 
     '
@@ -5165,7 +5211,20 @@
     \ test_agent_ops_dashboard_frontend_api_surface.py test_agent_ops_dashboard_serve.py)\
     \ -> 107 passed."
   proof_type: feature
-  test_path: "tests/tools/test_agent_ops_dashboard_ingest.py (including test_get_tickets_and_across_dimensions_filters_tier_and_layer,\
+  test_path: tests/tools/test_agent_ops_dashboard_ingest.py; tests/tools/test_agent_ops_dashboard_api.py;
+    tests/tools/test_agent_ops_dashboard_concurrency.py; tests/tools/test_agent_ops_dashboard_api_boundary.py;
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py; tests/architecture/test_api_read_model_guard.py;
+    tests/tools/test_agent_ops_dashboard_serve.py; tests/tools/test_status_drift_check.py;
+    tests/tools/test_agent_ops_dashboard_stats.py; tests/tools/test_generate_retro.py;
+    tests/tools/test_ticket_stats_report.py
+  divergence_note: null
+  support_boundary: "Read-only over tickets/** and agent-monitoring/*.jsonl; never\
+    \ touches AuthoritativeState. Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE),\
+    \ the live phase/agent null-labeling gap (independent sibling ticket), and agent-monitoring\
+    \ retention/rotation (out of scope, unbounded growth accepted).\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
+    \ test_path normalized to a plain multi-citation (all citations confirmed to exist\
+    \ via grep before writing). Full original test_path preserved verbatim below for\
+    \ disclosure:\n\ntests/tools/test_agent_ops_dashboard_ingest.py (including test_get_tickets_and_across_dimensions_filters_tier_and_layer,\
     \ test_get_tickets_or_within_tag, test_get_tickets_dimension_filter_and_tag_filter_combine_with_and\
     \ \u2014 added under TCK-20260716-AGENTOPS-TICKETS-VIEW to close a pre-existing\
     \ coverage gap: this file's original scope never directly exercised get_tickets()'s\
@@ -5269,13 +5328,6 @@
     \ test_get_runs_filters_by_provider_and_execution_id (all in tests/tools/test_agent_ops_dashboard_ingest.py)\
     \ plus the pre-existing test_ingest_load_jsonl_is_validate_load_jsonl guard, re-confirmed\
     \ unmodified.\n"
-  divergence_note: null
-  support_boundary: 'Read-only over tickets/** and agent-monitoring/*.jsonl; never
-    touches AuthoritativeState. Excludes frontend, build/serve tooling (AGENTOPS-BUILD-SERVE),
-    the live phase/agent null-labeling gap (independent sibling ticket), and agent-monitoring
-    retention/rotation (out of scope, unbounded growth accepted).
-
-    '
 - id: INFRA-276
   text: 'Agent Ops Dashboard production serving (TCK-20260716-AGENTOPS-BUILD-SERVE):
     a sibling module src/api/agent_ops_dashboard/serve.py builds a *separate* FastAPI()
@@ -5412,7 +5464,28 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_status_drift_check.py::test_clean_corpus_passes, tests/tools/test_status_drift_check.py::test_stale_ticket_status_flagged,
+  test_path: tests/tools/test_status_drift_check.py
+  divergence_note: null
+  support_boundary: 'Ticket/run data-hygiene tooling only -- no simulation behavior
+    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for gate-check
+    tooling entries). Does not cover or claim anything about dashboard-frontend''s
+    own rendering correctness (INFRA-275/276 own that boundary; classifyFinalStatus()
+    is unmodified by any of the three status-drift tickets). Known, intentional limitation,
+    unchanged by this revision: parse_body_section (like the prior regex) requires
+    a newline directly after the `## Status` heading before capturing anything, so
+    same-line colon-suffixed `## Status: X` tickets still resolve to an empty extraction
+    and are silently skipped (6 files corpus-wide as of 2026-07-18, deliberately excluded
+    from both the 71-file fix and this check''s flagged set per plan.md''s "Colon-Suffixed
+    Files Decision" -- a candidate for a future, separately-scoped ticket, not a gap
+    in this entry''s verified claim).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_status_drift_check.py::test_clean_corpus_passes, tests/tools/test_status_drift_check.py::test_stale_ticket_status_flagged,
     tests/tools/test_status_drift_check.py::test_epic_tier_exception_ignored_by_value,
     tests/tools/test_status_drift_check.py::test_bare_scoped_no_longer_exempt_after_tightening,
     tests/tools/test_status_drift_check.py::test_legacy_naming_file_ignored_by_pattern,
@@ -5437,21 +5510,6 @@
     check_status_drift; print([f for f in check_status_drift() if f[''status'']==''FAIL''])"`
     -> 2 FAIL entries (matches v2_evidence; corrects this field''s prior stale `->
     []` claim).
-
-    '
-  divergence_note: null
-  support_boundary: 'Ticket/run data-hygiene tooling only -- no simulation behavior
-    is involved (mirrors INFRA-263/264/265''s support_boundary pattern for gate-check
-    tooling entries). Does not cover or claim anything about dashboard-frontend''s
-    own rendering correctness (INFRA-275/276 own that boundary; classifyFinalStatus()
-    is unmodified by any of the three status-drift tickets). Known, intentional limitation,
-    unchanged by this revision: parse_body_section (like the prior regex) requires
-    a newline directly after the `## Status` heading before capturing anything, so
-    same-line colon-suffixed `## Status: X` tickets still resolve to an empty extraction
-    and are silently skipped (6 files corpus-wide as of 2026-07-18, deliberately excluded
-    from both the 71-file fix and this check''s flagged set per plan.md''s "Colon-Suffixed
-    Files Decision" -- a candidate for a future, separately-scoped ticket, not a gap
-    in this entry''s verified claim).
 
     '
 - id: INFRA-278
@@ -5497,11 +5555,38 @@
 
     '
   proof_type: feature
-  test_path: 'tests/tools/test_ticket_field_values.py (8 tests: canonical-set values,
-    LAYER_VALUES identity -- not equality -- proving no duplication, check_body_field_enum
-    PASS/FAIL/absent-section cases, check_ticket_field_values PASS/bad-priority/bad-tier
-    cases) -- 8/8 passing, re-run and confirmed during this parity update: `python3
-    -m pytest tests/tools/test_ticket_field_values.py -q` -> "8 passed". tests/tools/test_done_checker_static.py::test_run_static_precheck_
+  test_path: tests/tools/test_ticket_field_values.py; tests/tools/test_done_checker_static.py::test_run_static_precheck_blocks_on_bad_priority;
+    tests/tools/test_done_checker_static.py::test_run_static_precheck_passes_valid_priority;
+    tests/tools/test_done_checker_static.py::test_run_static_precheck_all_pass_eligible;
+    tests/tools/test_validate_frontmatter.py; tests/tools/test_status_drift_check.py;
+    tests/tools/test_agent_ops_dashboard_ingest.py; tests/tools/test_agent_ops_dashboard_api.py;
+    tests/tools/test_agent_ops_dashboard_serve.py; tests/tools/test_agent_ops_dashboard_api_boundary.py;
+    tests/tools/test_agent_ops_dashboard_concurrency.py; tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+  divergence_note: null
+  support_boundary: 'Ticket/agent-tooling data-hygiene infrastructure only -- no simulation
+    behavior is involved (mirrors INFRA-263/264/265/277''s support_boundary pattern
+    for gate-check tooling entries). Does not cover or claim anything about the actual
+    corpus drift cleanup (deliberately deferred to a dependent sibling ticket, TCK-20260718-TIER-PRIORITY-CORPUS-CLEANUP,
+    which must re-run the real check function fresh rather than trust any preliminary
+    count from this ticket) or the Agent Ops Dashboard''s Tier/Layer/Priority filter
+    facets becoming canonical (deliberately deferred to TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL,
+    which depends on this entry''s TIER_VALUES/PRIORITY_VALUES/LAYER_VALUES existing
+    but does not touch them here). Known, intentional scope boundary: this entry''s
+    check_ticket_field_values() does not validate `## Status` (status_drift_check.py''s
+    own job, unwired, per that module''s documented precedent) or `layer:` (already
+    enforced by validate_frontmatter.py/check_frontmatter_valid, unchanged).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_ticket_field_values.py (8 tests: canonical-set values, LAYER_VALUES
+    identity -- not equality -- proving no duplication, check_body_field_enum PASS/FAIL/absent-section
+    cases, check_ticket_field_values PASS/bad-priority/bad-tier cases) -- 8/8 passing,
+    re-run and confirmed during this parity update: `python3 -m pytest tests/tools/test_ticket_field_values.py
+    -q` -> "8 passed". tests/tools/test_done_checker_static.py::test_run_static_precheck_
     blocks_on_bad_priority and ::test_run_static_precheck_passes_valid_priority (new),
     plus ::test_run_static_precheck_all_pass_eligible (updated: asserts 6 conditions,
     was 5) -- genuine-catch proof performed: `git stash push -- tools/gate_checks/done_checker_static.py`
@@ -5517,21 +5602,6 @@
     tests/tools/test_agent_ops_dashboard_frontend_api_surface.py -q` -> "22 passed";
     direct import sanity check confirms `src.api.agent_ops_dashboard.main.app` still
     imports cleanly after the ingest.py change.
-
-    '
-  divergence_note: null
-  support_boundary: 'Ticket/agent-tooling data-hygiene infrastructure only -- no simulation
-    behavior is involved (mirrors INFRA-263/264/265/277''s support_boundary pattern
-    for gate-check tooling entries). Does not cover or claim anything about the actual
-    corpus drift cleanup (deliberately deferred to a dependent sibling ticket, TCK-20260718-TIER-PRIORITY-CORPUS-CLEANUP,
-    which must re-run the real check function fresh rather than trust any preliminary
-    count from this ticket) or the Agent Ops Dashboard''s Tier/Layer/Priority filter
-    facets becoming canonical (deliberately deferred to TCK-20260718-DASHBOARD-FACETS-FULLY-CANONICAL,
-    which depends on this entry''s TIER_VALUES/PRIORITY_VALUES/LAYER_VALUES existing
-    but does not touch them here). Known, intentional scope boundary: this entry''s
-    check_ticket_field_values() does not validate `## Status` (status_drift_check.py''s
-    own job, unwired, per that module''s documented precedent) or `layer:` (already
-    enforced by validate_frontmatter.py/check_frontmatter_valid, unchanged).
 
     '
 - id: INFRA-279
@@ -5567,8 +5637,29 @@
 
     '
   proof_type: feature
-  test_path: 'tests/tools/test_glossary_registry.py (18 tests: registry I/O, add_term
-    validation, real-seeded-registry coverage checks) and tests/tools/test_agent_ops_dashboard_glossary.py
+  test_path: tests/tools/test_glossary_registry.py; tests/tools/test_agent_ops_dashboard_glossary.py;
+    tests/tools/test_agent_ops_dashboard_api_boundary.py; tests/tools/test_agent_ops_dashboard_stats.py;
+    tests/tools/test_agent_ops_dashboard_ingest.py; tests/tools/test_agent_ops_dashboard_api.py;
+    tests/tools/test_agent_ops_dashboard_serve.py; tests/tools/test_agent_ops_dashboard_concurrency.py;
+    tests/tools/test_agent_ops_dashboard_frontend_api_surface.py
+  divergence_note: null
+  support_boundary: 'Dashboard tooling only -- no simulation behavior is involved
+    (mirrors INFRA-263/264/265/ 277/278''s support_boundary pattern). Does not cover
+    or claim anything about the frontend actually rendering tooltips from this data
+    (deliberately deferred to the dependent sibling ticket TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND,
+    which fetches this endpoint but is not covered by this entry). Known, intentional
+    scope boundary: this endpoint is read-only -- no in-app editing UI for glossary
+    descriptions exists or is planned; new terms are added via tools/glossary_registry.py''s
+    CLI, same as Tag/Layer.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_glossary_registry.py (18 tests: registry I/O, add_term validation,
+    real-seeded-registry coverage checks) and tests/tools/test_agent_ops_dashboard_glossary.py
     (7 tests: merge happy path, layer-note-reuse proven live via an edit-and-reread
     check, empty-note-layer skipped, empty-registries no-crash, route-level 200 +
     typed shape, route signature check, real-registry end-to-end) -- both re-run and
@@ -5582,17 +5673,6 @@
     port 8420 free, rebuilt via `make dashboard-serve`, `curl -s http://localhost:8420/api/glossary`
     returned 54 real terms (35 glossary_registry + 19 non-empty-note layers), DONE/economy
     entries spot-checked with correct category/description.
-
-    '
-  divergence_note: null
-  support_boundary: 'Dashboard tooling only -- no simulation behavior is involved
-    (mirrors INFRA-263/264/265/ 277/278''s support_boundary pattern). Does not cover
-    or claim anything about the frontend actually rendering tooltips from this data
-    (deliberately deferred to the dependent sibling ticket TCK-20260718-GLOSSARY-TOOLTIPS-FRONTEND,
-    which fetches this endpoint but is not covered by this entry). Known, intentional
-    scope boundary: this endpoint is read-only -- no in-app editing UI for glossary
-    descriptions exists or is planned; new terms are added via tools/glossary_registry.py''s
-    CLI, same as Tag/Layer.
 
     '
 - id: INFRA-280
@@ -5708,14 +5788,8 @@
     \ only the sidecar's field set widened further, following the same argv-based\
     \ idiom.\n"
   proof_type: contract
-  test_path: 'tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present
-    (confirms a sidecar containing phase/agent produces a tools.jsonl record carrying
-    both fields); tests/tools/test_current_run_sidecar_orchestrator.py:: test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded
-    (confirms the orchestrator''s writeSidecar call sites pass tid/seq/phase/agent
-    as individually-quoted argv elements rather than JSON-embedding them in the python3
-    -c string). Both re-run and confirmed passing (2/2) as part of this parity update.
-
-    '
+  test_path: tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present;
+    tests/tools/test_current_run_sidecar_orchestrator.py::test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded
   divergence_note: null
   support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior is involved (mirrors INFRA-274''s support_boundary pattern for orchestrator-side
@@ -5726,6 +5800,19 @@
     widening and the sidecar write-path that feeds it. Known, intentional scope boundary:
     dashboard frontend consumption of the new phase/agent fields (an in-progress-run
     indicator UI) is not part of this ticket''s scope and is not claimed here.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present
+    (confirms a sidecar containing phase/agent produces a tools.jsonl record carrying
+    both fields); tests/tools/test_current_run_sidecar_orchestrator.py:: test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded
+    (confirms the orchestrator''s writeSidecar call sites pass tid/seq/phase/agent
+    as individually-quoted argv elements rather than JSON-embedding them in the python3
+    -c string). Both re-run and confirmed passing (2/2) as part of this parity update.
 
     '
 - id: INFRA-282
@@ -5775,7 +5862,24 @@
     This equality-check gate was since widened to a membership check by TCK-20260904-COST-PROXY-EPIC-TICKETS
     -- see INFRA-407 for the current record_events.py:34-76 shape.'
   proof_type: contract
-  test_path: 'tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough
+  test_path: tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough;
+    tests/tools/test_record_events.py::test_cost_proxy_score_absent_when_no_tools_jsonl_exists
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-281 immediately above, and INFRA-263/264/265/277/278/279/280
+    more generally). Does not change what cost_proxy_score/tool_call_count mean or
+    how they are formulated (cost_proxy.py''s weights/formula untouched) -- only where
+    and how reliably they are computed. The simq-audit gap noted in this entry''s
+    original text remains unfixed and out of scope for both this ticket and its 2026-09-04
+    successor.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough
     (a deliberately wrong caller-supplied value of 999999 is overridden by the real
     hand-computed value from a tools.jsonl fixture); ::test_cost_proxy_score_absent_when_no_tools_jsonl_exists
     (no crash, zero-fallback when tools.jsonl is absent). NOTE: this entry originally
@@ -5784,14 +5888,6 @@
     of the implement-epic/create-tickets exclusion; both were renamed and rewritten
     by TCK-20260904-COST-PROXY-EPIC-TICKETS to assert the opposite (non-null values)
     -- see INFRA-407 for their current names and current-state coverage.'
-  divergence_note: null
-  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-281 immediately above, and INFRA-263/264/265/277/278/279/280
-    more generally). Does not change what cost_proxy_score/tool_call_count mean or
-    how they are formulated (cost_proxy.py's weights/formula untouched) -- only where
-    and how reliably they are computed. The simq-audit gap noted in this entry's original
-    text remains unfixed and out of scope for both this ticket and its 2026-09-04
-    successor.
 - id: INFRA-283
   text: 'Phase/agent vocabulary casing normalization in the agent-monitoring retro
     report (TCK-20260719-PHASE-AGENT-CASE-FOLD): direct measurement against live agent-monitoring/
@@ -5833,20 +5929,14 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate
-    (41 failed/184 ok split across 3 casing variants merges to the real 18.2% rate,
-    with an explicit naive-single-variant comparison at 16.7% proving the fragmentation
-    was real and material); ::test_phase_status_distribution_rendered_in_report; ::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
-    ::test_spend_proxy_by_phase_merges_casing_variants; ::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
-    ::test_create_tickets_prefix_family_agent_not_merged_into_a_literal. All 6 new
-    plus the 1 updated (test_compute_retro_metrics_returns_all_documented_keys) re-run
-    and confirmed passing as part of this parity update (26/26 in test_generate_retro.py),
-    alongside test_validate_agent_monitoring.py (13/13, zero source diff to validate.py
-    confirmed via `git diff --stat`) and test_agent_ops_dashboard_stats.py (8/8, confirms
-    the new phase_status_distribution key doesn''t break the dashboard''s typed API-boundary
-    mapping).
-
-    '
+  test_path: tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate;
+    tests/tools/test_generate_retro.py::test_phase_status_distribution_rendered_in_report;
+    tests/tools/test_generate_retro.py::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
+    tests/tools/test_generate_retro.py::test_spend_proxy_by_phase_merges_casing_variants;
+    tests/tools/test_generate_retro.py::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
+    tests/tools/test_generate_retro.py::test_create_tickets_prefix_family_agent_not_merged_into_a_literal;
+    tests/tools/test_generate_retro.py::test_compute_retro_metrics_returns_all_documented_keys;
+    tests/tools/test_validate_agent_monitoring.py; tests/tools/test_agent_ops_dashboard_stats.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior is involved (same category as INFRA-281/INFRA-282 immediately above).
@@ -5859,6 +5949,25 @@
     (confirmed still status:active/phase:open, unimplemented) -- normalization proceeds
     directly in generate_retro.py per that sibling ticket''s own carried-forward sequencing
     note, to be revisited only once/if the index actually lands.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate
+    (41 failed/184 ok split across 3 casing variants merges to the real 18.2% rate,
+    with an explicit naive-single-variant comparison at 16.7% proving the fragmentation
+    was real and material); ::test_phase_status_distribution_rendered_in_report; ::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
+    ::test_spend_proxy_by_phase_merges_casing_variants; ::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
+    ::test_create_tickets_prefix_family_agent_not_merged_into_a_literal. All 6 new
+    plus the 1 updated (test_compute_retro_metrics_returns_all_documented_keys) re-run
+    and confirmed passing as part of this parity update (26/26 in test_generate_retro.py),
+    alongside test_validate_agent_monitoring.py (13/13, zero source diff to validate.py
+    confirmed via `git diff --stat`) and test_agent_ops_dashboard_stats.py (8/8, confirms
+    the new phase_status_distribution key doesn''t break the dashboard''s typed API-boundary
+    mapping).
 
     '
   cross_reference: 'TCK-20260713-MONITORING-SQLITE-INDEX has since shipped, and TCK-20260713-MONITORING-RETRO-
@@ -5918,7 +6027,34 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global
+  test_path: tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global;
+    tests/tools/test_generate_retro.py::test_duration_outlier_excludes_null_from_flagging_and_median;
+    tests/tools/test_generate_retro.py::test_duration_outlier_skips_group_below_minimum_size;
+    tests/tools/test_generate_retro.py::test_cost_proxy_outlier_flagged_relative_to_normalized_phase_median;
+    tests/tools/test_generate_retro.py::test_cost_proxy_outlier_excludes_events_with_no_score;
+    tests/tools/test_generate_retro.py::test_outliers_section_omitted_when_none_flagged;
+    tests/tools/test_generate_retro.py::test_outliers_section_rendered_when_flagged;
+    tests/tools/test_generate_retro.py::test_compute_retro_metrics_returns_all_documented_keys;
+    tests/tools/test_agent_ops_dashboard_stats.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-281/282/283 immediately above). Pure
+    read-time computation change: no on-disk schema change to events.jsonl/runs.jsonl,
+    no src/ file touched. Deliberately does not modify src/api/agent_ops_dashboard/models.py
+    or ingest.py -- dashboard exposure is an explicit, separate, deliberate future
+    follow-up, not assumed free (see text above). Deliberately does not fix an unrelated,
+    pre-existing bug found during verification: `generate_retro.py --days N` crashes
+    on a runs.jsonl record with a non-string start_ts -- confirmed pre-existing via
+    `git stash` (crashes identically with this ticket''s changes removed), noted for
+    a future ticket, not fixed here.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global
     (proves tier-scoped, not global, median -- a standard-tier outlier is flagged
     while an epic-tier run with the same absolute duration is not, since epic''s own
     group is below the minimum size); ::test_duration_outlier_excludes_null_from_flagging_and_median;
@@ -5933,19 +6069,6 @@
     the full live corpus (`python3 tools/agent-monitoring/generate_retro.py --all`,
     677 runs / 3435 events, 26 duration outliers + 82 cost-proxy-score outliers found,
     including D25''s own originally-cited finding).
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-281/282/283 immediately above). Pure
-    read-time computation change: no on-disk schema change to events.jsonl/runs.jsonl,
-    no src/ file touched. Deliberately does not modify src/api/agent_ops_dashboard/models.py
-    or ingest.py -- dashboard exposure is an explicit, separate, deliberate future
-    follow-up, not assumed free (see text above). Deliberately does not fix an unrelated,
-    pre-existing bug found during verification: `generate_retro.py --days N` crashes
-    on a runs.jsonl record with a non-string start_ts -- confirmed pre-existing via
-    `git stash` (crashes identically with this ticket''s changes removed), noted for
-    a future ticket, not fixed here.
 
     '
 - id: INFRA-285
@@ -5997,7 +6120,36 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula,
+  test_path: tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula;
+    tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_empty_group_is_zero;
+    tests/tools/test_weight_sensitivity_check.py::test_shipped_weights_reads_real_cost_proxy_constants_not_a_second_copy;
+    tests/tools/test_weight_sensitivity_check.py::test_spearman_identical_rankings_is_one;
+    tests/tools/test_weight_sensitivity_check.py::test_spearman_fully_reversed_rankings_is_negative_one;
+    tests/tools/test_weight_sensitivity_check.py::test_spearman_undefined_for_fewer_than_two_keys;
+    tests/tools/test_weight_sensitivity_check.py::test_compute_weight_sensitivity_report_basic_grouping_and_ranking;
+    tests/tools/test_weight_sensitivity_check.py::test_compute_weight_sensitivity_report_group_with_no_matching_event_is_skipped;
+    tests/tools/test_weight_sensitivity_check.py::test_compute_weight_sensitivity_report_empty_input_does_not_crash;
+    tests/tools/test_weight_sensitivity_check.py::test_rank_delta_reflects_material_reordering_between_weight_sets;
+    tests/tools/test_cost_proxy.py; tests/tools/test_validate_agent_monitoring.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-281/282/283/284 immediately above,
+    closing out this 5-ticket batch). No src/ file touched, no on-disk schema change.
+    Does not endorse or ship Fit C weights or any other candidate weight set -- both
+    weight sets remain purely CLI-supplied comparands, per this ticket''s own explicit
+    scope guard. No change to cost_proxy.py''s shipped W_BASH/W_AGENT/W_EDIT constants
+    or compute_cost_proxy_score()''s formula (confirmed via zero diff to that file
+    from this ticket specifically -- the 6-line diff `git diff --stat` shows on cost_proxy.py
+    belongs to the sibling TCK-20260719-COST-PROXY-CALIBRATION-NOTE ticket, not this
+    one).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula,
     ::test_score_with_weights_empty_group_is_zero, ::test_shipped_weights_reads_real_cost_proxy_constants_not_a_second_copy
     (guards against silent drift from cost_proxy.py), ::test_spearman_identical_rankings_is_one,
     ::test_spearman_fully_reversed_rankings_is_negative_one, ::test_spearman_undefined_for_fewer_than_two_keys,
@@ -6012,19 +6164,6 @@
     --candidate-weights -> argparse exit 2; invalid JSON -> clear ERROR + exit 1;
     missing required keys -> clear ERROR + exit 1), plus `make agent-monitoring-weight-check`
     end to end through the new Makefile target.
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-281/282/283/284 immediately above,
-    closing out this 5-ticket batch). No src/ file touched, no on-disk schema change.
-    Does not endorse or ship Fit C weights or any other candidate weight set -- both
-    weight sets remain purely CLI-supplied comparands, per this ticket''s own explicit
-    scope guard. No change to cost_proxy.py''s shipped W_BASH/W_AGENT/W_EDIT constants
-    or compute_cost_proxy_score()''s formula (confirmed via zero diff to that file
-    from this ticket specifically -- the 6-line diff `git diff --stat` shows on cost_proxy.py
-    belongs to the sibling TCK-20260719-COST-PROXY-CALIBRATION-NOTE ticket, not this
-    one).
 
     '
 - id: INFRA-286
@@ -6068,7 +6207,26 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution,
+  test_path: tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution;
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_outliers_duration_and_cost_proxy;
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_outliers_seq_field_tolerates_none;
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_zero_outliers_returns_empty_lists_not_missing_keys
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-283/284 immediately above). No change
+    to `compute_retro_metrics()`/`generate()` in generate_retro.py -- CLI retro report''s
+    Markdown output stays byte-identical (guarded by `test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented`,
+    re-run unmodified). No on-disk schema change to events.jsonl/runs.jsonl. Dashboard-exposure
+    and rendering only -- INFRA-283''s and INFRA-284''s own entry text is unchanged,
+    this entry is a forward-reference to both, not a rewrite.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution,
     ::test_stats_endpoint_includes_outliers_duration_and_cost_proxy, ::test_stats_endpoint_outliers_seq_field_tolerates_none,
     ::test_stats_endpoint_zero_outliers_returns_empty_lists_not_missing_keys (4 new,
     plus the existing 8/8 unaffected). dashboard-frontend/src/test/StatsView.test.tsx:
@@ -6078,16 +6236,6 @@
     a broken table'', ''wraps tier and agent values in outlier tables with GlossaryTooltip...''
     (4 new, plus the existing 11/11 unaffected -- 15/15 total in that file). Full
     dashboard-frontend suite: 94/94 passing.
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-283/284 immediately above). No change
-    to `compute_retro_metrics()`/`generate()` in generate_retro.py -- CLI retro report''s
-    Markdown output stays byte-identical (guarded by `test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented`,
-    re-run unmodified). No on-disk schema change to events.jsonl/runs.jsonl. Dashboard-exposure
-    and rendering only -- INFRA-283''s and INFRA-284''s own entry text is unchanged,
-    this entry is a forward-reference to both, not a rewrite.
 
     '
 - id: INFRA-287
@@ -6137,8 +6285,31 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category
-    (proves the `add_term()` CLI mechanism accepts and persists the new `phase` category),
+  test_path: tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category;
+    tests/tools/test_glossary_registry.py::test_real_seeded_registry_covers_every_workflow_phase;
+    tests/tools/test_agent_ops_dashboard_glossary.py::test_glossary_route_includes_phase_terms;
+    tests/tools/test_agent_ops_dashboard_glossary.py::test_glossary_against_real_seeded_registries
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior, Mechanics Bible chapter, or engine contract governs glossary content
+    or dashboard tooltip rendering (same category as INFRA-281, its direct sibling/precedent,
+    and INFRA-283/284/286 immediately above). No change to `WORKFLOW_PHASES`/`WORKFLOW_AGENTS`
+    themselves in `tools/agent-monitoring/vocabulary.py` -- this ticket only documents
+    existing phase literals, never adds/removes one (explicitly out of scope per the
+    ticket). No change to `GET /api/glossary`''s route handler or `load_glossary_registry()`''s
+    merge logic -- the category-agnostic merge already covered this without modification.
+    Dashboard views other than StatsView.tsx''s Phase Status Distribution table and
+    ReplayTimelineView.tsx''s button strip/detail header were investigated but not
+    touched unless a real, analogous plain-text phase/agent gap was found.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category (proves
+    the `add_term()` CLI mechanism accepts and persists the new `phase` category),
     ::test_real_seeded_registry_covers_every_workflow_phase (against the real, unmocked
     repo registry -- imports `WORKFLOW_PHASES` directly from `tools/agent-monitoring/vocabulary.py`
     rather than re-deriving it, and asserts every distinct phase string is present,
@@ -6159,20 +6330,6 @@
     when the glossary has no matching entries'' (4 new). All new and pre-existing
     backend and frontend tests, typecheck, and the production build reported passing
     cleanly per the implementation summary.
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior, Mechanics Bible chapter, or engine contract governs glossary content
-    or dashboard tooltip rendering (same category as INFRA-281, its direct sibling/precedent,
-    and INFRA-283/284/286 immediately above). No change to `WORKFLOW_PHASES`/`WORKFLOW_AGENTS`
-    themselves in `tools/agent-monitoring/vocabulary.py` -- this ticket only documents
-    existing phase literals, never adds/removes one (explicitly out of scope per the
-    ticket). No change to `GET /api/glossary`''s route handler or `load_glossary_registry()`''s
-    merge logic -- the category-agnostic merge already covered this without modification.
-    Dashboard views other than StatsView.tsx''s Phase Status Distribution table and
-    ReplayTimelineView.tsx''s button strip/detail header were investigated but not
-    touched unless a real, analogous plain-text phase/agent gap was found.
 
     '
 - id: INFRA-288
@@ -6227,17 +6384,13 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq,
-    ::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history, ::test_compute_seq_offset_ignores_other_run_ids,
-    ::test_compute_seq_offset_is_read_only (4/4 passing). tests/tools/test_validate_agent_monitoring.py::
-    test_multi_invocation_collision_report_detects_duplicate_scope_seq1, ::test_multi_invocation_collision_report_is_read_only
-    (new, both passing alongside the existing suite). tests/tools/test_current_run_sidecar_orchestrator.py
-    and tests/tools/test_step0_ts_orchestrator.py (updated for the `seqOffset`-widened
-    call sites, still passing) and tests/tools/test_agent_monitoring_manifest.py (updated,
-    still passing). All 5 test files re-run together and confirmed passing (44/44)
-    as part of this parity update.
-
-    '
+  test_path: tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq;
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history;
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_ignores_other_run_ids;
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_is_read_only; tests/tools/test_validate_agent_monitoring.py::test_multi_invocation_collision_report_detects_duplicate_scope_seq1;
+    tests/tools/test_validate_agent_monitoring.py::test_multi_invocation_collision_report_is_read_only;
+    tests/tools/test_current_run_sidecar_orchestrator.py; tests/tools/test_step0_ts_orchestrator.py;
+    tests/tools/test_agent_monitoring_manifest.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior, Mechanics Bible chapter, or engine contract governs `seq` numbering
@@ -6249,6 +6402,22 @@
     not backfilled (prevention-only, per ticket''s Out of Scope and matching TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION''s
     precedent). Does not address `implement-epic`''s per-child dispatch (flagged as
     an open question in the linked idea doc, not investigated here).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq,
+    ::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history, ::test_compute_seq_offset_ignores_other_run_ids,
+    ::test_compute_seq_offset_is_read_only (4/4 passing). tests/tools/test_validate_agent_monitoring.py::
+    test_multi_invocation_collision_report_detects_duplicate_scope_seq1, ::test_multi_invocation_collision_report_is_read_only
+    (new, both passing alongside the existing suite). tests/tools/test_current_run_sidecar_orchestrator.py
+    and tests/tools/test_step0_ts_orchestrator.py (updated for the `seqOffset`-widened
+    call sites, still passing) and tests/tools/test_agent_monitoring_manifest.py (updated,
+    still passing). All 5 test files re-run together and confirmed passing (44/44)
+    as part of this parity update.
 
     '
   cross_reference: 'TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE (INFRA-290) also
@@ -6290,19 +6459,8 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_query.py -- 21 tests: TestEventFilters (6, one per
-    event filter flag), TestRunsFilters (2, including combined --runs --status --days),
-    TestCombinedEventFilters (2), TestMissingIndex (4, including corrupt-db-does-not-print-missing-index-message),
-    TestRegressionParity (4, field-for-field comparison of migrated filter_events/filter_runs
-    against a frozen pre-migration reference implementation over tests/fixtures/agent_monitoring/
-    shape files, explicitly excluding --runs --status from strict comparison per the
-    documented divergence), TestArchitectureGuards (3, source-text absence of RUNS_FILE/EVENTS_FILE/load_jsonl
-    plus index-order-matches-insertion-order). All 21 passing, plus 161 regression
-    tests unaffected (tests/tools/test_build_index.py, test_validate_agent_monitoring.py,
-    test_generate_retro.py, and the write-path/adjacent-consumer suite) -- 182/182
-    total confirmed passing as part of this migration.
-
-    '
+  test_path: tests/tools/test_query.py; tests/tools/test_build_index.py; tests/tools/test_validate_agent_monitoring.py;
+    tests/tools/test_generate_retro.py
   divergence_note: 'One intentional behavioral difference from the pre-migration in-memory
     scan: `--runs --status` now compares against `_resolved_status` (query.py:44,
     sourced from the SQL `resolved_status` column, itself a `final_status`-or-legacy-bare-`status`
@@ -6333,6 +6491,24 @@
     bug (confirmed identical on pre-migration `query.py` via `git show HEAD:tools/agent-monitoring/query.py`,
     left as-is per byte-for-byte parity requirement, documented in the ticket''s own
     plan.md Deviations section for a future ticket).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_query.py -- 21 tests: TestEventFilters (6, one per event filter
+    flag), TestRunsFilters (2, including combined --runs --status --days), TestCombinedEventFilters
+    (2), TestMissingIndex (4, including corrupt-db-does-not-print-missing-index-message),
+    TestRegressionParity (4, field-for-field comparison of migrated filter_events/filter_runs
+    against a frozen pre-migration reference implementation over tests/fixtures/agent_monitoring/
+    shape files, explicitly excluding --runs --status from strict comparison per the
+    documented divergence), TestArchitectureGuards (3, source-text absence of RUNS_FILE/EVENTS_FILE/load_jsonl
+    plus index-order-matches-insertion-order). All 21 passing, plus 161 regression
+    tests unaffected (tests/tools/test_build_index.py, test_validate_agent_monitoring.py,
+    test_generate_retro.py, and the write-path/adjacent-consumer suite) -- 182/182
+    total confirmed passing as part of this migration.
 
     '
 - id: INFRA-290
@@ -6374,18 +6550,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_validate_agent_monitoring.py -- 27 tests (15 pre-existing
-    + 12 new): TestMainUsesIndex (3, one per runs/events/tools load path), TestArchitectureGuards
-    (2, source- text absence of RUNS_FILE/EVENTS_FILE/TOOLS_FILE plus legacy-allowlist
-    re-importability), TestRegressionParity (4, byte-identical output comparison of
-    compute_drift_report/compute_tool_count_drift_report/compute_multi_invocation_collision_report
-    over direct-JSONL-fixture input vs. index-loaded input, plus ::test_tools_row_missing_tool_field_is_a_known_bounded_divergence
-    pinning the one documented divergence below), TestMissingIndex (3, actionable
-    error text, nonzero exit code from open_index, and from main() end-to-end). Plus
-    167 tests across the full regression/consumer surface unaffected. 194/194 total
-    confirmed passing as part of this migration.
-
-    '
+  test_path: tests/tools/test_validate_agent_monitoring.py
   divergence_note: 'Two behavioral differences from the pre-migration direct-JSONL-read
     path. (a) A new hard precondition: validate.py now requires `make agent-monitoring-index`
     to have already been run -- open_index() exits 1 with an actionable error ("No
@@ -6420,6 +6585,23 @@
     query.py''s read path (TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE / INFRA-289,
     a separate sibling ticket) or generate_retro.py''s legacy-shape helpers (TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE,
     likewise separate).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_validate_agent_monitoring.py -- 27 tests (15 pre-existing + 12
+    new): TestMainUsesIndex (3, one per runs/events/tools load path), TestArchitectureGuards
+    (2, source- text absence of RUNS_FILE/EVENTS_FILE/TOOLS_FILE plus legacy-allowlist
+    re-importability), TestRegressionParity (4, byte-identical output comparison of
+    compute_drift_report/compute_tool_count_drift_report/compute_multi_invocation_collision_report
+    over direct-JSONL-fixture input vs. index-loaded input, plus ::test_tools_row_missing_tool_field_is_a_known_bounded_divergence
+    pinning the one documented divergence below), TestMissingIndex (3, actionable
+    error text, nonzero exit code from open_index, and from main() end-to-end). Plus
+    167 tests across the full regression/consumer surface unaffected. 194/194 total
+    confirmed passing as part of this migration.
 
     '
 - id: INFRA-291
@@ -6469,32 +6651,16 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_generate_retro.py -- ::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
-    (frozen, hand-copied pre-migration report string compared byte-for-byte against
-    `generate()`''s live output over a fixed 3-run/2-event corpus spanning a DONE
-    run, a gate-fail run, and a legacy-shaped status-only run -- proves the migration
-    is output-preserving, not just source-identical); ::test_normalize_phase_agent_and_flag_outliers_untouched
-    (SHA-256 source-hash guard pinning `_resolve_status`, `_is_legacy_event`, `_is_gate_fail`,
-    `_normalize_phase`, `_normalize_agent`, `_canonicalize`, `_flag_outliers` against
-    pre-migration-captured hashes -- fails loudly if any of the 3 legacy-shape helpers
-    this ticket targets, or the adjacent normalization quartet this ticket must not
-    touch, changes by even one character); ::test_main_loads_via_index_not_direct_jsonl_scan
-    and ::test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope
-    (source-text architecture guards confirming `main()`/`_update_index()` no longer
-    call `load_jsonl(RUNS_FILE)`/ `load_jsonl(EVENTS_FILE)` directly and route through
-    `_load_runs_and_events()` instead); ::test_generate_retro_builds_index_on_demand_when_missing,
-    ::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails,
-    ::test_no_sys_exit_1_on_missing_index_in_generate_retro (proves the deliberate
-    build-on-demand-then-fallback chain never hard-exits, unlike query.py/validate.py''s
-    `open_index()`); ::test_generate_retro_never_writes_to_agent_monitoring_index_db
-    (confirms the only legitimate write path to `monitoring.db` is the delegated `build_index.build()`
-    call, no bespoke SQL writes). 54/54 tests passing in `test_generate_retro.py`
-    (19 new, 35 pre-existing unmodified), plus `tests/tools/test_build_index.py` (17/17,
-    including `TestNormalizationParity::test_resolved_status_matches_generate_retro_resolve_status`)
-    and `tests/tools/test_validate_agent_monitoring.py`/`test_query.py` (48/48, sibling
-    index consumers unaffected) confirmed passing as part of this migration.
-
-    '
+  test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus;
+    tests/tools/test_generate_retro.py::test_normalize_phase_agent_and_flag_outliers_untouched;
+    tests/tools/test_generate_retro.py::test_main_loads_via_index_not_direct_jsonl_scan;
+    tests/tools/test_generate_retro.py::test_update_index_signature_change_is_deliberate_and_documented;
+    tests/tools/test_generate_retro.py::test_generate_retro_builds_index_on_demand_when_missing;
+    tests/tools/test_generate_retro.py::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails;
+    tests/tools/test_generate_retro.py::test_no_sys_exit_1_on_missing_index_in_generate_retro;
+    tests/tools/test_generate_retro.py::test_generate_retro_never_writes_to_agent_monitoring_index_db;
+    tests/tools/test_build_index.py; tests/tools/test_validate_agent_monitoring.py;
+    tests/tools/test_query.py
   divergence_note: 'One real, currently-inert edge-case divergence, flagged in investigation.md
     Risk #4 and confirmed by Architecture-Verify: `generate_retro.py`''s own `load_jsonl()`
     (line 47) has no malformed-line tolerance -- a bad JSONL line raises `json.JSONDecodeError`
@@ -6594,7 +6760,37 @@
     \ shard) to the unified agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl\n\
     layout this entry already documents at the code level. No further generate_retro.py\
     \ source-resolution\nchange beyond what the CONSUMERS-CORE addendum already landed.\n\
-    \n"
+    \nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a\
+    \ plain multi-citation (all citations confirmed to exist via grep before writing).\
+    \ Full original test_path preserved verbatim below for disclosure:\n\ntests/tools/test_generate_retro.py\
+    \ -- ::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus\
+    \ (frozen, hand-copied pre-migration report string compared byte-for-byte against\
+    \ `generate()`'s live output over a fixed 3-run/2-event corpus spanning a DONE\
+    \ run, a gate-fail run, and a legacy-shaped status-only run -- proves the migration\
+    \ is output-preserving, not just source-identical); ::test_normalize_phase_agent_and_flag_outliers_untouched\
+    \ (SHA-256 source-hash guard pinning `_resolve_status`, `_is_legacy_event`, `_is_gate_fail`,\
+    \ `_normalize_phase`, `_normalize_agent`, `_canonicalize`, `_flag_outliers` against\
+    \ pre-migration-captured hashes -- fails loudly if any of the 3 legacy-shape helpers\
+    \ this ticket targets, or the adjacent normalization quartet this ticket must\
+    \ not touch, changes by even one character); ::test_main_loads_via_index_not_direct_jsonl_scan\
+    \ and ::test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope\
+    \ (source-text architecture guards confirming `main()`/`_update_index()` no longer\
+    \ call `load_jsonl(RUNS_FILE)`/ `load_jsonl(EVENTS_FILE)` directly and route through\
+    \ `_load_runs_and_events()` instead); ::test_generate_retro_builds_index_on_demand_when_missing,\
+    \ ::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails,\
+    \ ::test_no_sys_exit_1_on_missing_index_in_generate_retro (proves the deliberate\
+    \ build-on-demand-then-fallback chain never hard-exits, unlike query.py/validate.py's\
+    \ `open_index()`); ::test_generate_retro_never_writes_to_agent_monitoring_index_db\
+    \ (confirms the only legitimate write path to `monitoring.db` is the delegated\
+    \ `build_index.build()` call, no bespoke SQL writes). 54/54 tests passing in `test_generate_retro.py`\
+    \ (19 new, 35 pre-existing unmodified), plus `tests/tools/test_build_index.py`\
+    \ (17/17, including `TestNormalizationParity::test_resolved_status_matches_generate_retro_resolve_status`)\
+    \ and `tests/tools/test_validate_agent_monitoring.py`/`test_query.py` (48/48,\
+    \ sibling index consumers unaffected) confirmed passing as part of this migration.\n\
+    \n\nRename disclosed: the originally-cited method test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope\
+    \ no longer exists -- confirmed via grep it was replaced by test_update_index_signature_change_is_deliberate_and_documented\
+    \ (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING), whose own docstring states\
+    \ it explicitly replaces the old name. Cited the real, current name."
 - id: INFRA-292
   text: 'New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl
     (context-tokens, follow-up-search-count, phase-duration, gate-outcome, review-rework)
@@ -7507,17 +7703,11 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_codex_posttool_adapter/test_input_model.py, tests/agent_codex_posttool_adapter/
-    test_redaction.py, tests/agent_codex_posttool_adapter/test_identity_validation.py,
-    tests/agent_codex_posttool_adapter/test_live_gate.py, tests/agent_codex_posttool_adapter/
-    test_uses_shared_writer.py, tests/agent_codex_posttool_adapter/test_no_write_on_failure.py,
-    tests/agent_codex_posttool_adapter/test_failure_injection.py, tests/agent_codex_posttool_adapter/test_config_guard.py,
-    tests/agent_codex_posttool_adapter/ test_activation_fragment.py, tests/agent_codex_posttool_adapter/
-    test_no_subprocess_and_no_live_wiring.py (41 tests total, all passing per this
-    ticket''s Test Summary: `python3 -m pytest tests/agent_codex_posttool_adapter/
-    -q` -> "41 passed").
-
-    '
+  test_path: tests/agent_codex_posttool_adapter/test_input_model.py; tests/agent_codex_posttool_adapter/test_redaction.py;
+    tests/agent_codex_posttool_adapter/test_identity_validation.py; tests/agent_codex_posttool_adapter/test_live_gate.py;
+    tests/agent_codex_posttool_adapter/test_uses_shared_writer.py; tests/agent_codex_posttool_adapter/test_no_write_on_failure.py;
+    tests/agent_codex_posttool_adapter/test_failure_injection.py; tests/agent_codex_posttool_adapter/test_config_guard.py;
+    tests/agent_codex_posttool_adapter/test_activation_fragment.py; tests/agent_codex_posttool_adapter/test_no_subprocess_and_no_live_wiring.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/developer-tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
@@ -7537,6 +7727,22 @@
     sequence, count cap, and transport timestamp window); existing exact suffix proof
     behavior for all static rows remains unchanged. No hook config is activated by
     this capability.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_codex_posttool_adapter/test_input_model.py, tests/agent_codex_posttool_adapter/
+    test_redaction.py, tests/agent_codex_posttool_adapter/test_identity_validation.py,
+    tests/agent_codex_posttool_adapter/test_live_gate.py, tests/agent_codex_posttool_adapter/
+    test_uses_shared_writer.py, tests/agent_codex_posttool_adapter/test_no_write_on_failure.py,
+    tests/agent_codex_posttool_adapter/test_failure_injection.py, tests/agent_codex_posttool_adapter/test_config_guard.py,
+    tests/agent_codex_posttool_adapter/ test_activation_fragment.py, tests/agent_codex_posttool_adapter/
+    test_no_subprocess_and_no_live_wiring.py (41 tests total, all passing per this
+    ticket''s Test Summary: `python3 -m pytest tests/agent_codex_posttool_adapter/
+    -q` -> "41 passed").
 
     '
 - id: INFRA-307
@@ -7602,16 +7808,10 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py, tests/agent_codex_runtime_shadow/
-    test_phase_order_validation.py, tests/agent_codex_runtime_shadow/test_gate_validation.py,
-    tests/agent_codex_runtime_shadow/test_required_artifact_validation.py, tests/agent_codex_runtime_shadow/test_shadow_comparison.py,
-    tests/agent_codex_runtime_shadow/ test_no_subprocess.py, tests/agent_codex_runtime_shadow/test_containment.py,
-    tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py (38 tests
-    total, all passing per this ticket''s Test Summary: `.venv/bin/python3 -m pytest
-    tests/agent_codex_runtime_shadow/ -v` -> "38 passed"; independently re-run during
-    parity update -> "38 passed in 0.47s").
-
-    '
+  test_path: tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py; tests/agent_codex_runtime_shadow/test_phase_order_validation.py;
+    tests/agent_codex_runtime_shadow/test_gate_validation.py; tests/agent_codex_runtime_shadow/test_required_artifact_validation.py;
+    tests/agent_codex_runtime_shadow/test_shadow_comparison.py; tests/agent_codex_runtime_shadow/test_no_subprocess.py;
+    tests/agent_codex_runtime_shadow/test_containment.py; tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/developer-tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
@@ -7631,6 +7831,21 @@
     missing parity-ledger entry (a separate, prior gap explicitly out of this ticket''s
     scope, per this ticket''s own investigation.md). No P0 entries are touched by
     this ticket.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py, tests/agent_codex_runtime_shadow/
+    test_phase_order_validation.py, tests/agent_codex_runtime_shadow/test_gate_validation.py,
+    tests/agent_codex_runtime_shadow/test_required_artifact_validation.py, tests/agent_codex_runtime_shadow/test_shadow_comparison.py,
+    tests/agent_codex_runtime_shadow/ test_no_subprocess.py, tests/agent_codex_runtime_shadow/test_containment.py,
+    tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py (38 tests
+    total, all passing per this ticket''s Test Summary: `.venv/bin/python3 -m pytest
+    tests/agent_codex_runtime_shadow/ -v` -> "38 passed"; independently re-run during
+    parity update -> "38 passed in 0.47s").
 
     '
 - id: INFRA-308
@@ -7676,15 +7891,22 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_orchestration/test_contract_structure.py, tests/agent_orchestration/test_validator_errors.py,
-    tests/agent_orchestration/test_validator_no_network_calls.py, tests/agent_orchestration_codex_adapter/test_generator_traceability.py.
-
-    '
+  test_path: tests/agent_orchestration/test_contract_structure.py; tests/agent_orchestration/test_validator_errors.py;
+    tests/agent_orchestration/test_validator_no_network_calls.py; tests/agent_orchestration_codex_adapter/test_generator_traceability.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/developer-tooling only. The policy is validated
     rendered guidance, not a runtime enforcement mechanism; no simulation behavior
     or Mechanics Bible contract is affected. Claude workflow JS remains unchanged
     by this ticket, and live Codex activation remains subject to separate human authority.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_orchestration/test_contract_structure.py, tests/agent_orchestration/test_validator_errors.py,
+    tests/agent_orchestration/test_validator_no_network_calls.py, tests/agent_orchestration_codex_adapter/test_generator_traceability.py.
 
     '
 - id: INFRA-310
@@ -7811,14 +8033,21 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_codex_posttool_adapter/test_hook_entry.py, tests/agent_codex_live_transport/test_hook_environment.py,
-    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py.
-
-    '
+  test_path: tests/agent_codex_posttool_adapter/test_hook_entry.py; tests/agent_codex_live_transport/test_hook_environment.py;
+    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py
   divergence_note: null
   support_boundary: 'Agent tooling only. The capability remains unactivated: no config
     change, hook registration, live invocation, candidate edit, blocked-parent edit,
     or production monitoring write occurs.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_codex_posttool_adapter/test_hook_entry.py, tests/agent_codex_live_transport/test_hook_environment.py,
+    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py.
 
     '
 - id: INFRA-315
@@ -8188,15 +8417,10 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose,
-    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses,
-    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes,
+  test_path: tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose;
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses;
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes;
     tests/tools/test_done_checker_static.py::test_docs_coverage_none_prefix_but_real_bullet_still_required
-    (4/4 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
-    -k "none" -v` -> "8 passed", including the 4 new tests alongside the 4 pre-existing
-    none-phrase tests they sit beside, all unmodified).
-
-    '
   divergence_note: null
   support_boundary: 'Ticket-closing gate-check tooling only -- no simulation behavior
     is involved (mirrors INFRA-263/264/265/277/278/279/280/281/282/315/321''s support_boundary
@@ -8215,6 +8439,20 @@
     separate, already-known `:line`-suffix-inside-backticks bug (`TCK-20260804-EXPANSION-RATE-WIRING`)
     remains live and unfixed -- explicitly out of this entry''s scope, not claimed
     as covered here.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose,
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses,
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes,
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_prefix_but_real_bullet_still_required
+    (4/4 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
+    -k "none" -v` -> "8 passed", including the 4 new tests alongside the 4 pre-existing
+    none-phrase tests they sit beside, all unmodified).
 
     '
 - id: INFRA-323
@@ -8266,20 +8504,16 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit,
-    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage,
-    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage,
-    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat,
-    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold,
-    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage,
-    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker,
-    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill,
-    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat,
+  test_path: tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit;
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage;
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage;
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat;
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold;
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage;
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker;
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill;
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat;
     tests/unit/observability/test_event_extractor_world.py::test_hazard_drain_not_emitted_for_normal_combat
-    (759 of 759 non-skipped tests in tests/unit/observability/ pass; 6 pre-existing,
-    unrelated skips unchanged).
-
-    '
   divergence_note: null
   support_boundary: 'Fixes causal-attribution correctness for the 3 combat-classification
     branches and the despawn-lifecycle demographic_mortality check only. Does not
@@ -8296,6 +8530,25 @@
     fix. Related, larger architecture question (push-based emission at the mutation
     point instead of post-tick diffing, which would prevent this entire class of read-side
     misattribution bug structurally) is tracked separately: TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat,
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold,
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker,
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill,
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat,
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_drain_not_emitted_for_normal_combat
+    (759 of 759 non-skipped tests in tests/unit/observability/ pass; 6 pre-existing,
+    unrelated skips unchanged).
 
     '
 - id: INFRA-324
@@ -8387,17 +8640,8 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers.py (15 tests post-fix: registry
-    mechanism, all 6 migrated COMBAT events, hazard/biological-damage exclusion, entity-not-in-prior-state/no-
-    combat-field edge cases, SHADOW-mode queue-inertness, hazard-death entity_killed
-    exclusion, volumization-rule suppression/override across LIGHT/NORMAL modes and
-    the default-mode check), tests/unit/config/test_phase10_feature_flags.py (12/12
-    pass), tests/unit/kernel/ (53/53 pass), tests/unit/observability/ full directory
-    (798 passed, 6 skipped -- up from 793 immediately pre-reopen [INFRA-325''s own
-    count, itself up from 779 pre-INFRA-324], +5 new tests from this reopen''s fix
-    cycle).
-
-    '
+  test_path: tests/unit/observability/test_event_shapers.py; tests/unit/config/test_phase10_feature_flags.py;
+    tests/unit/kernel/; tests/unit/observability/
   divergence_note: null
   support_boundary: 'SHADOW-mode only -- no live behavior change, no event delivered
     to any consumer, confirmed by a dedicated test asserting the module never imports
@@ -8417,6 +8661,22 @@
     decay at different thresholds -- is flagged in this ticket''s own investigation.md
     as a possible pre-existing redundant-damage bug, explicitly NOT fixed or further
     investigated here; out of scope, noted only for traceability.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers.py (15 tests post-fix: registry mechanism,
+    all 6 migrated COMBAT events, hazard/biological-damage exclusion, entity-not-in-prior-state/no-
+    combat-field edge cases, SHADOW-mode queue-inertness, hazard-death entity_killed
+    exclusion, volumization-rule suppression/override across LIGHT/NORMAL modes and
+    the default-mode check), tests/unit/config/test_phase10_feature_flags.py (12/12
+    pass), tests/unit/kernel/ (53/53 pass), tests/unit/observability/ full directory
+    (798 passed, 6 skipped -- up from 793 immediately pre-reopen [INFRA-325''s own
+    count, itself up from 779 pre-INFRA-324], +5 new tests from this reopen''s fix
+    cycle).
 
     '
 - id: INFRA-325
@@ -8467,14 +8727,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers_economy_faction.py (20 tests:
-    registry extension, all 7 EconomyShaper events including the rejected-intent no-op
-    and both paid_info_changed_goal cases, all 8 FactionShaper events including diplomatic-pair
-    dedup and both alliance_proposed prior-state cases and the positive-tension-delta
-    resource_seized gate), tests/unit/observability/ full directory (793 passed, 6
-    skipped -- up from 779 pre-ticket).
-
-    '
+  test_path: tests/unit/observability/test_event_shapers_economy_faction.py; tests/unit/observability/
   divergence_note: null
   support_boundary: 'SHADOW-mode only, same as INFRA-324 -- no live behavior change.
     `event_extractor.py`, `apply.py`, `apply_plan.py`, `kernel.py` all unmodified
@@ -8482,6 +8735,19 @@
     any of the 6 deferred events named above in any form, not even partially. Does
     not implement `ON` mode (live delivery) -- reserved for `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`,
     gated on `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF`''s go verdict.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests: registry
+    extension, all 7 EconomyShaper events including the rejected-intent no-op and
+    both paid_info_changed_goal cases, all 8 FactionShaper events including diplomatic-pair
+    dedup and both alliance_proposed prior-state cases and the positive-tension-delta
+    resource_seized gate), tests/unit/observability/ full directory (793 passed, 6
+    skipped -- up from 779 pre-ticket).
 
     '
 - id: INFRA-326
@@ -8528,14 +8794,8 @@
     \ rollback, hero_guild_routing world: event_extractor=911 (old path correctly\
     \ restored).\n"
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events,
-    ::test_run_shadow_shapers_explicit_off_excludes_phase2_events (both added/renamed
-    this ticket to cover the fixed default and the rollback path respectively; unit
-    tests alone did not catch this bug originally since MagicMock-based test fixtures
-    never exercise the real default-value fallback path the way a real kernel run
-    with an unset flags dict does).
-
-    '
+  test_path: tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events;
+    tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_explicit_off_excludes_phase2_events
   divergence_note: null
   support_boundary: 'This entry documents the bug and its fix, not a new observability
     capability -- see STRAT-247, PROG-117, WORLD-115, SOC-239/SOC-240, TOWN-190, and
@@ -8545,6 +8805,19 @@
     going forward (no enforced invariant, comments only) -- worth checking explicitly,
     not assuming fixed by precedent, on any future Phase 3+ cutover that introduces
     another independently-gated flag.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events,
+    ::test_run_shadow_shapers_explicit_off_excludes_phase2_events (both added/renamed
+    this ticket to cover the fixed default and the rollback path respectively; unit
+    tests alone did not catch this bug originally since MagicMock-based test fixtures
+    never exercise the real default-value fallback path the way a real kernel run
+    with an unset flags dict does).
 
     '
 - id: INFRA-327
@@ -8646,8 +8919,21 @@
     \ own established precedent. Per-attack tactical-modifier detail (CombatUpdate.trace)\
     \ remains deliberately deferred/out of scope, per the user's own direction."
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers.py (12 new tests covering
-    all 6 real trigger conditions -- 2 for combat_engagement_started, 4 for combat_engagement_ended
+  test_path: tests/unit/observability/test_event_shapers.py
+  divergence_note: null
+  support_boundary: 'Purely additive observability-layer read of already-real prior_state/update
+    fields -- no change to combat resolution, tactical decision-making, or movement
+    resolution logic itself (the one exception, movement.py''s new additive property_updates
+    tag, is tracked separately under combat_movement.yaml COMB-302).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers.py (12 new tests covering all 6 real
+    trigger conditions -- 2 for combat_engagement_started, 4 for combat_engagement_ended
     -- plus the snapshot helper); real 2000-tick Kernel.tick_once() corpus re-verification
     against dungeon_crawl_seed42/urban_political_seed42 confirmed PURSUIT_ABANDONED/ESCAPED
     fire at real, non-zero volume under corpus-default feature flags (see this ticket''s
@@ -8657,11 +8943,6 @@
     events they ride alongside, not a gap this ticket introduced).
 
     '
-  divergence_note: null
-  support_boundary: Purely additive observability-layer read of already-real prior_state/update
-    fields -- no change to combat resolution, tactical decision-making, or movement
-    resolution logic itself (the one exception, movement.py's new additive property_updates
-    tag, is tracked separately under combat_movement.yaml COMB-302).
 - id: INFRA-330
   text: 'TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `tools/calibrate_simq.py`''s
     own `_load_world_state()` compiled every calibration run''s world state via `WorldCompiler.compile(spec,
@@ -8681,17 +8962,23 @@
 
     '
   proof_type: regression
-  test_path: 'tests/simulation_quality/test_calibrate_simq.py -- 6 passed, no regressions
-    (this fix changes WHICH catalog-correct role/faction values entities get, not
-    calibrate_simq.py''s own control flow, so its existing test suite is unaffected).
-    See SUB-384''s own test_path for the real, direct fix verification.
-
-    '
+  test_path: tests/simulation_quality/test_calibrate_simq.py
   divergence_note: null
   support_boundary: 'This entry documents specifically the calibration-tooling half
     of the fix. See SUB-384 for the full 4-call-site fix, the real, measured anchor-drift
     disclosure (dungeon_crawl/ urban_political), and the disclosed-but-not-actioned
     recalibration follow-up.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/simulation_quality/test_calibrate_simq.py -- 6 passed, no regressions (this
+    fix changes WHICH catalog-correct role/faction values entities get, not calibrate_simq.py''s
+    own control flow, so its existing test suite is unaffected). See SUB-384''s own
+    test_path for the real, direct fix verification.
 
     '
 - id: INFRA-331
@@ -8725,13 +9012,9 @@
     `write_entry()` via the validating writer, then issues a separate visible `python3
     tools/parity_index.py build` Bash call).
   proof_type: regression
-  test_path: tests/tools/test_parity_ledger_writer.py (13 tests covering all four
-    validation rules plus successful-write/index-rebuild behavior), tests/tools/test_parity_ledger_schema.py
-    (schema restructure + new P0 conditional), tests/tools/test_parity_ledger_scan.py::test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash,
-    tests/tools/test_gate_a_readpath_review.py (Gate A harness still passes with the
-    labeled-error path) -- 18 passed via `pytest tests/tools/test_parity_ledger_writer.py
-    tests/tools/test_parity_ledger_scan.py tests/tools/test_parity_ledger_schema.py
-    -q`.
+  test_path: tests/tools/test_parity_ledger_writer.py; tests/tools/test_parity_ledger_schema.py;
+    tests/tools/test_parity_ledger_scan.py::test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash;
+    tests/tools/test_gate_a_readpath_review.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/parity-ledger-tooling infrastructure only
     -- no simulation behavior is involved, and no src/ file was touched (confirmed:
@@ -8747,7 +9030,21 @@
     parity_write_safety is unchanged by this ticket; only the parity-updater agent''s
     future call pattern (write_entry + explicit build) changes what future metric
     runs will observe, not the metric''s own definition or current ledger-recorded
-    behavior.'
+    behavior.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_parity_ledger_writer.py (13 tests covering all four validation
+    rules plus successful-write/index-rebuild behavior), tests/tools/test_parity_ledger_schema.py
+    (schema restructure + new P0 conditional), tests/tools/test_parity_ledger_scan.py::test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash,
+    tests/tools/test_gate_a_readpath_review.py (Gate A harness still passes with the
+    labeled-error path) -- 18 passed via `pytest tests/tools/test_parity_ledger_writer.py
+    tests/tools/test_parity_ledger_scan.py tests/tools/test_parity_ledger_schema.py
+    -q`.'
 - id: INFRA-332
   text: TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING (plan.md Step 5) -- generate_retro.py
     gains compute_parity_index_readpath_call_count(tools), a new pure function that
@@ -11342,10 +11639,22 @@
     + src/cli/entry.py (serve subcommand's --world flag, _run_serve threading --seed/--entities/--world
     through)
   proof_type: null
-  test_path: tests/unit/api/test_engine_manager.py,tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape,frontend/e2e/live_map.spec.ts::live
-    map renders real terrain and live ticking data through make dev
+  test_path: tests/unit/api/test_engine_manager.py; tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/api/test_engine_manager.py,tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape,frontend/e2e/live_map.spec.ts::live
+    map renders real terrain and live ticking data through make dev
+
+
+    The third original citation (frontend/e2e/live_map.spec.ts) was deliberately NOT
+    added to test_path -- it is a real, confirmed-existing Playwright e2e test, not
+    Python/pytest, same reasoning as the INFRA-280/302/303/304 frontend-test cases
+    documented elsewhere in this shard. Unlike those entries, this one still has 2
+    genuine .py citations to keep.'
 - id: INFRA-394
   text: 'tools/agent-monitoring/duration_utils.py::compute_active_idle_split() computes
     a read-time-only active_duration_s/idle_gap_s split per run from its own events.jsonl
@@ -11724,7 +12033,21 @@
     skips under hotfix, reverse half now always runs afterward, tier-agnostically,
     scoped to docs/ paths, reusing the single existing _git_touched_paths() call result
     for both halves.'
-  test_path: 'tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs,
+  test_path: tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_only;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_directory_collapse_tolerance;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_ITEM_INSTANCE_HISTORY_style_non_docs_path_is_out_of_scope;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_hotfix_tier_behavior;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident
+  divergence_note: null
+  proof_type: regression
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs,
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed,
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_only,
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_directory_collapse_tolerance,
@@ -11733,8 +12056,6 @@
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident
     (7/7 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
     -k reverse_docs_coverage -q` -> ''7 passed'').'
-  divergence_note: null
-  proof_type: regression
 - id: INFRA-405
   text: 'SubagentStop deterministic background-hang guard (TCK-20260904-TEST-SCOPER-HANG-GUARD):
     a prose-only Hard Rule ("never end your turn while your own run_in_background
@@ -11766,18 +12087,23 @@
     (new SubagentStop hook key, matcher "*", command not suffixed with || true); agent-orchestration/hook-events.yaml
     (new SubagentStop entry); agent-orchestration/hook-surface-policy.yaml (providers.claude.enabled_events
     now includes SubagentStop; new providers.claude.available_events).
-  test_path: 'tests/tools/test_subagent_stop_background_guard.py (5/5 passing: fires
-    on still-running background task, allows completed task, allows no-background-task
-    common case with zero side-effect files, fails open on malformed/empty/non-JSON
-    stdin and malformed background_tasks shapes, respects stop_hook_active loop-prevention);
-    tests/tools/test_settings_json_hooks_wiring.py (4/4 passing: new key proven genuinely
-    new, command not suffixed with swallowing || true, script path exists and is referenced,
-    existing PreToolUse/PostToolUse/permissions.allow content untouched); PYTHONPATH=tools:.
-    pytest tests/agent_orchestration/test_contract_structure.py (20/20 passing, including
-    test_policy_represents_claude_three_enabled_events, test_hook_events_yaml_normalized_vocabulary_includes_subagent_stop,
-    and new test_policy_represents_claude_four_available_events).'
+  test_path: tests/tools/test_subagent_stop_background_guard.py; tests/tools/test_settings_json_hooks_wiring.py;
+    tests/agent_orchestration/test_contract_structure.py
   divergence_note: null
   proof_type: contract
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    cited the same 3 real files but with inline pass-count/PYTHONPATH-prefix prose
+    that broke clean parsing (confirmed all 3 files exist). Normalized to a plain
+    file-level multi-citation; the original per-file pass counts and coverage detail:
+    test_subagent_stop_background_guard.py (5/5 passing: fires on still-running background
+    task, allows completed task, allows no-background-task common case with zero side-effect
+    files, fails open on malformed/empty/non-JSON stdin and malformed background_tasks
+    shapes, respects stop_hook_active loop-prevention); test_settings_json_hooks_wiring.py
+    (4/4 passing: new key proven genuinely new, command not suffixed with swallowing
+    || true, script path exists and is referenced, existing PreToolUse/PostToolUse/permissions.allow
+    content untouched); test_contract_structure.py requires PYTHONPATH=tools:. to
+    run (20/20 passing, including test_policy_represents_claude_three_enabled_events,
+    test_hook_events_yaml_normalized_vocabulary_includes_subagent_stop, and new test_policy_represents_claude_four_available_events).'
 - id: INFRA-406
   text: 'Wave 1 agent-tools frontmatter rollout (TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE):
     10 of 16 .claude/agents/*.md role files (investigator, ticket-scoper, done-checker,
@@ -11808,12 +12134,21 @@
   test_path: tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_agent_files_declare_tools_field,
     tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_candidate_scope_excludes_known_denied_tools,
     tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave1_agents_do_not_declare_disallowed_tools_field,
-    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave2_wave3_agents_do_not_gain_tools_field,
+    tests/tools/test_wave1_agent_tools_frontmatter.py::test_wave3_agents_do_not_gain_tools_field,
     tests/tools/test_wave1_agent_tools_frontmatter.py::test_concern_investigator_tools_field_unchanged_byte_identical
-    (55/55 passing per ticket Test Summary, run together with test_concern_investigator_agent_definition.py
-    and test_doc_updater_agent_file.py)
   divergence_note: null
   proof_type: contract
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: the original
+    test_path cited a function (test_wave2_wave3_agents_do_not_gain_tools_field) that
+    was never real -- only test_wave3_agents_do_not_gain_tools_field exists (confirmed
+    via grep of the real test file), corrected above. Separately (found while fixing
+    the citation, not re-investigated beyond this): tests/tools/test_wave1_agent_tools_frontmatter.py
+    now also has real Wave 2 tests (test_wave2_agent_files_declare_tools_field etc.,
+    from the later TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2 ticket, all currently
+    passing) -- meaning this entry''s own text ("Wave 2 ... explicitly deferred")
+    is now stale relative to current reality. Disclosed, not corrected here: re-verifying/updating
+    this entry''s status or text for that drift is out of this ticket''s own stated
+    scope ("Re-verifying the behavior behind any entry").'
 - id: INFRA-407
   text: 'Reverses TCK-20260719-COST-PROXY-WRITE-PATH''s deliberate ''implement-ticket
     only'' exclusion (TCK-20260904-COST-PROXY-EPIC-TICKETS, see INFRA-282 for the
@@ -11850,7 +12185,30 @@
     :75 membership check `infer_workflow(r.get("run_id", "")) in {"implement-ticket",
     "implement-epic", "create-tickets"}` replacing the old single-value equality check).'
   proof_type: contract
-  test_path: 'tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl,
+  test_path: tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl;
+    tests/tools/test_record_events.py::test_zero_tool_call_no_sidecar_paths_compute_zero_not_null;
+    tests/tools/test_record_events.py::test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets;
+    tests/tools/test_record_events.py::test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate;
+    tests/tools/test_epic_create_tickets_sidecar_orchestrator.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same support_boundary category as INFRA-263/264/265/277
+    through INFRA-282/305/306/402-406). Does not change what cost_proxy_score/tool_call_count
+    mean or how they are formulated (cost_proxy.py''s weights/formula untouched) --
+    only which workflows'' records get computed. simq-audit.js''s own separate inline
+    TOOL_STATS-style compute step (noted as unfixed in INFRA-282) remains unfixed
+    and out of scope here too. Real-run acceptance verification (a genuine implement-epic/create-tickets
+    run producing non-null values in live events.jsonl, per this ticket''s own plan.md
+    Step 7) was flagged as outstanding at Implement-phase close -- confirm at this
+    ticket''s own Finalize/close or the next real invocation of either workflow.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl,
     ::test_zero_tool_call_no_sidecar_paths_compute_zero_not_null, ::test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets,
     ::test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate;
     tests/tools/test_epic_create_tickets_sidecar_orchestrator.py (adjacency for all
@@ -11861,17 +12219,6 @@
     `pytest tests/tools/test_record_events.py tests/tools/test_cost_proxy.py tests/tools/test_current_run_sidecar_orchestrator.py
     tests/tools/test_validate_agent_monitoring.py tests/tools/test_epic_create_tickets_sidecar_orchestrator.py
     -q`.'
-  divergence_note: null
-  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same support_boundary category as INFRA-263/264/265/277
-    through INFRA-282/305/306/402-406). Does not change what cost_proxy_score/tool_call_count
-    mean or how they are formulated (cost_proxy.py's weights/formula untouched) --
-    only which workflows' records get computed. simq-audit.js's own separate inline
-    TOOL_STATS-style compute step (noted as unfixed in INFRA-282) remains unfixed
-    and out of scope here too. Real-run acceptance verification (a genuine implement-epic/create-tickets
-    run producing non-null values in live events.jsonl, per this ticket's own plan.md
-    Step 7) was flagged as outstanding at Implement-phase close -- confirm at this
-    ticket's own Finalize/close or the next real invocation of either workflow.
 - id: INFRA-408
   text: 'gate_policy and artifact_requirements conformance: .claude/ provider translation
     of implement-ticket''s per-phase gate mechanism and per-tier staging-artifact

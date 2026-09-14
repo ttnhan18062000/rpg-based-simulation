@@ -304,17 +304,23 @@
     \ data/worlds/urban_political/world.yaml (faction_tension_overrides: {bandit_company:\
     \ 0.5, town_council: 0.5})\n"
   proof_type: parity
-  test_path: 'tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_defaults_to_zero,
-    test_faction_spec_initial_tension_level_round_trips, test_faction_spec_initial_tension_level_out_of_range_rejected;
-    tests/unit/worldbuilding/test_world_compiler.py::test_compiler_seeds_faction_tension_from_spec,
-    test_compiler_seeds_full_faction_roster_at_zero_tension_by_default, test_compiler_no_factions_declared_yields_empty_factions_dict;
-    tests/unit/worldassembly/test_assembly.py::test_faction_tension_overrides_applied_after_merge,
-    test_no_faction_tension_overrides_matches_current_behavior, test_faction_tension_overrides_unknown_faction_raises,
-    test_faction_tension_overrides_out_of_range_raises; tests/unit/domains/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
-
-    '
+  test_path: tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_defaults_to_zero;
+    tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_round_trips;
+    tests/unit/worldbuilding/test_worldspec_schema.py::test_faction_spec_initial_tension_level_out_of_range_rejected;
+    tests/unit/worldbuilding/test_world_compiler.py::test_compiler_seeds_faction_tension_from_spec;
+    tests/unit/worldbuilding/test_world_compiler.py::test_compiler_seeds_full_faction_roster_at_zero_tension_by_default;
+    tests/unit/worldbuilding/test_world_compiler.py::test_compiler_no_factions_declared_yields_empty_factions_dict;
+    tests/unit/worldassembly/test_assembly.py::test_faction_tension_overrides_applied_after_merge;
+    tests/unit/worldassembly/test_assembly.py::test_no_faction_tension_overrides_matches_current_behavior;
+    tests/unit/worldassembly/test_assembly.py::test_faction_tension_overrides_unknown_faction_raises;
+    tests/unit/worldassembly/test_assembly.py::test_faction_tension_overrides_out_of_range_raises;
+    tests/unit/domains/faction/test_diplomacy.py::test_urban_political_seeded_tension_fires_tense_transition
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    used a `file.py::method1, method2, method3` bare-comma shorthand within each of
+    its 4 file groups (all 11 methods confirmed to exist via grep, each expanded to
+    its full file-qualified node-id here). Normalized to a plain semicolon-delimited
+    multi-citation.'
 - id: FAC-013
   text: 'TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION -- cuts FACTION observability
     event emission (diplomatic_transition, alliance_proposed, alliance_accepted, territory_ownership_changed,
@@ -348,9 +354,7 @@
     \ in this entry \u2014 no reason to expect a change since the guard is structurally\
     \ scoped to exclude them).\n"
   proof_type: regression
-  test_path: "tests/unit/observability/test_event_shapers_economy_faction.py (20 tests,\
-    \ unchanged by this cutover \u2014 FactionShaper's own logic was not modified,\
-    \ only its delivery path).\n"
+  test_path: tests/unit/observability/test_event_shapers_economy_faction.py
   divergence_note: null
   support_boundary: "FACTION domain only \u2014 see COMB-295 (combat) and TOWN-190\
     \ (economy) for the sibling cutover entries. `faction_extinct` remains entirely\
@@ -385,7 +389,11 @@
     \ behind the new _push_shapers_phase2_active; the dead HP-check bug noted above\
     \ was deliberately NOT fixed (still out of scope). See STRAT-247's update note\
     \ and infrastructure.yaml INFRA-326 for the run_shadow_shapers() default-lockstep\
-    \ bug found and fixed during this cutover, verified fixed via real 5-world runs.\n"
+    \ bug found and fixed during this cutover, verified fixed via real 5-world runs.\n\
+    \nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path wrapped\
+    \ this same real file citation in \"(20 tests, unchanged by this cutover -- FactionShaper's\
+    \ own logic was not modified, only its delivery path)\" prose. Normalized to a\
+    \ bare file citation; the disclosure is preserved here."
 - id: FAC-014
   text: "TCK-20260806-SIMQ-FACTION-LIFECYCLE-TRAJECTORY -- adds a new FACTION scoring\
     \ rule per quality_scoring_contract.md's own \xA77.6 audit, mirroring WORLD's\

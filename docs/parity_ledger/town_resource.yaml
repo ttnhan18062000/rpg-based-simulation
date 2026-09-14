@@ -151,9 +151,12 @@
   v2_evidence: '`src/core/state.py` (`InventoryComponent`), `src/engine/apply.py`
     (updates `current_slots_used` and `current_weight`)'
   proof_type: parity
-  test_path: '`tests/unit/resource/test_inventory_hardening.py::test_inventory_stack_size_enforcement,test_inventory_weight_preservation_delta`'
+  test_path: tests/unit/resource/test_inventory_hardening.py::test_inventory_stack_size_enforcement;
+    tests/unit/resource/test_inventory_hardening.py::test_inventory_weight_preservation_delta
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    used a `file.py::method1,method2` bare-comma shorthand (both methods confirmed
+    real via grep, expanded to full file-qualified node-ids).'
 - id: TOWN-014
   text: Ground items, node yields, and inventory additions/removals are authoritative
     side effects.
@@ -163,9 +166,13 @@
   v2_evidence: '`src/engine/apply.py` (`_apply_entity_update` handles `InventoryUpdate`),
     `src/engine/interaction.py` (emits updates)'
   proof_type: parity
-  test_path: '`tests/unit/resource/test_resource_conservation_regression.py::test_harvest_conservation_full_inventory,test_loot_conservation_full_inventory,test_corpse_conservation_full_inventory`'
+  test_path: tests/unit/resource/test_resource_conservation_regression.py::test_harvest_conservation_full_inventory;
+    tests/unit/resource/test_resource_conservation_regression.py::test_loot_conservation_full_inventory;
+    tests/unit/resource/test_resource_conservation_regression.py::test_corpse_conservation_full_inventory
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    used a `file.py::method1,method2,method3` bare-comma shorthand (all 3 methods
+    confirmed real via grep, expanded to full file-qualified node-ids).'
 - id: TOWN-015
   text: Town return is a real gameplay state, not a cosmetic teleport.
   status: verified
@@ -220,11 +227,16 @@
   v2_evidence: '`src/engine/town_resolution.py` (checks `building_type in ("inn",
     "home")` and `action == "REST"`)'
   proof_type: parity
-  test_path: '`tests/unit/world/test_building_interaction_contract.py::test_building_interaction_inn_rest_recovery`
-    (inn); `tests/unit/world/test_recovery_class_hall.py::test_class_hall_inn_rest_recovery,test_home_upgrade_blocker`
-    (class-hall, home)'
+  test_path: tests/unit/world/test_building_interaction_contract.py::test_building_interaction_inn_rest_recovery;
+    tests/unit/world/test_recovery_class_hall.py::test_class_hall_inn_rest_recovery;
+    tests/unit/world/test_recovery_class_hall.py::test_home_upgrade_blocker
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    used 2 semicolon-joined backtick-wrapped citations, each with a trailing `(inn)`
+    / `(class-hall, home)` parenthetical annotation breaking the full-string backtick
+    match, and the second citation used a bare-comma shorthand for its 2 methods (both
+    confirmed real via grep). Normalized to a plain multi-citation; the inn/class-hall/home
+    category labels are preserved in this entry''s own text field above.'
 - id: TOWN-020
   text: Building interactions are explicit gameplay slices, not generic proximity
     triggers.
@@ -234,12 +246,16 @@
   v2_evidence: '`src/engine/town_resolution.py`, `src/engine/shop.py`, `src/engine/blacksmith.py`
     (all use `building_tiles` and `building.kind`)'
   proof_type: parity
-  test_path: '`tests/unit/world/test_building_interaction_contract.py::test_building_interaction_inn_rest_recovery`;
-    `tests/unit/world/test_town_services.py::test_guild_service_routes_via_interaction_kind,test_unrelated_interaction_kind_not_routed`
-    (confirms routing requires an explicit matching interaction kind, not generic
-    proximity)'
+  test_path: tests/unit/world/test_building_interaction_contract.py::test_building_interaction_inn_rest_recovery;
+    tests/unit/world/test_town_services.py::test_guild_service_routes_via_interaction_kind;
+    tests/unit/world/test_town_services.py::test_unrelated_interaction_kind_not_routed
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    used 2 semicolon-joined backtick-wrapped citations (the second with a bare-comma
+    shorthand for its 2 methods, both confirmed real via grep) plus a trailing "(confirms
+    routing requires an explicit matching interaction kind, not generic proximity)"
+    annotation. Normalized to a plain multi-citation; the disclosure is preserved
+    here.'
 - id: TOWN-021
   text: "`test_near_death_hardening`: Near death hardening \u2014 Verify that surviving\
     \ at low HP increases Max HP.."
@@ -2219,9 +2235,7 @@
 
     '
   proof_type: regression
-  test_path: "tests/unit/observability/test_event_shapers_economy_faction.py (20 tests,\
-    \ unchanged by this cutover \u2014 EconomyShaper's own logic was not modified,\
-    \ only its delivery path).\n"
+  test_path: tests/unit/observability/test_event_shapers_economy_faction.py
   divergence_note: null
   support_boundary: "ECONOMY domain only \u2014 see COMB-295 (combat) and FAC-013\
     \ (faction) for the sibling cutover entries. Deferred events (gold_transferred,\
@@ -2251,7 +2265,11 @@
     \ remains the one genuinely still-deferred ECONOMY event (no typed record exists),\
     \ confirmed still out of scope. See STRAT-247's update note and infrastructure.yaml\
     \ INFRA-326 for the run_shadow_shapers() default-lockstep bug found and fixed\
-    \ during this cutover, verified fixed via real 5-world runs.\n"
+    \ during this cutover, verified fixed via real 5-world runs.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
+    \ original test_path wrapped this same real file citation in \"(20 tests, unchanged\
+    \ by this cutover -- EconomyShaper's own logic was not modified, only its delivery\
+    \ path)\" prose (same shape as the sibling FAC-013 entry). Normalized to a bare\
+    \ file citation; the disclosure is preserved here."
 - id: TOWN-191
   text: 'herb_patch resource nodes placed in river_ford (by river_crossing.yaml, composed
     by highland_traverse and quest_dense_frontier) now correctly yield gather_resource
