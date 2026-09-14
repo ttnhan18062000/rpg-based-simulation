@@ -6,7 +6,9 @@ Phase 5 — ObservationBeliefBridge unit tests.
 
 import pytest
 from src.core.builder import V2EntityBuilder
-from src.core.state import CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState
+from src.core.state import (
+    CombatComponent, BiologicalComponent, PersonalityComponent, AuthoritativeState, RegionState,
+)
 from src.core.strategic import LeadState, LeadCertainty, StrategicComponent
 from src.domains.information.bridge import ObservationBeliefBridge
 
@@ -20,9 +22,9 @@ def _entity(e_id):
     return b.build()
 
 
-def _state(entities) -> AuthoritativeState:
+def _state(entities, **kwargs) -> AuthoritativeState:
     ent_map = {e.id: e for e in entities}
-    return AuthoritativeState(
+    defaults = dict(
         tick=1, seed=1, world_time=100, entities=ent_map,
         groups={}, regions={}, resource_nodes={}, buildings={},
         chests={}, ground_items={}, corpses={}, camps={},
@@ -32,6 +34,8 @@ def _state(entities) -> AuthoritativeState:
         movement_count=0, maturity=0, last_calamity_tick=0,
         blocked_tiles=(), town_entity_ids=(),
     )
+    defaults.update(kwargs)
+    return AuthoritativeState(**defaults)
 
 
 def test_observed_resource_creates_precise_fact():
@@ -92,13 +96,20 @@ def test_claim_failed_search_routes_through_belief_contradiction_service():
 
 
 def test_region_danger_seen_routes_through_belief_contradiction_service():
-    """Step 5 fix: region_danger_seen now calls BeliefContradictionService.detect()."""
+    """Step 5 fix: region_danger_seen now calls BeliefContradictionService.detect().
+
+    `lead.detail` follows the declared "x,y" coordinate contract
+    (docs/mechanics/04_strategic_cognition.md), resolved to a region id via
+    resolve_location_lead_region_id() -- not a region id string directly, since
+    no real producer ever emits one (TCK-20260913-LEADSTATE-DETAIL-UNTYPED-
+    POLYMORPHIC-STRING)."""
     lead = LeadState(
-        id="lead_2", kind="location", subject="safe_road", detail="bandit_road",
+        id="lead_2", kind="location", subject="safe_road", detail="50,50",
         certainty=LeadCertainty.VAGUE,
     )
     actor = _entity_with_lead(1, lead)
-    state = _state([actor])
+    region = RegionState(id="bandit_road", name="Bandit Road", bounds=(0, 0, 100, 100))
+    state = _state([actor], regions={"bandit_road": region})
 
     event = {
         "kind": "region_danger_seen",

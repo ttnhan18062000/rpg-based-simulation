@@ -1487,3 +1487,415 @@ write.
 `MotivationModel.named_intention`) (TCK-20260904-LINEAGE-DEATH-DISPATCH, ideas 55+58, M5,
 2026-09-04)
 
+---
+
+## 13. Perceived Power Assessment (Completing and Enabling Combat Engagement)
+
+**Status: declared, not yet implemented.** This section specifies the law before the remaining code
+that implements it exists — the Authoritative Mechanics Rule's own precedence order, applied in
+the direction it names: the Bible first, code second. See `TCK-20260913-NO-MECHANISM-RECORDS-PER-
+ENEMY-KIND-DANGER` for the finding that started this: no mechanism anywhere let an entity learn
+that one kind of creature is more dangerous than another, so every combat capability estimate fell
+back to the same hardcoded per-kind table (§6.12's own `_ENEMY_DANGER`) regardless of what that
+specific entity had actually seen or fought.
+
+**This is not a new mechanism. Most of it already exists, unreachable.** `src/domains/
+combat_engagement/` (`docs/simulation/domains/combat_engagement_contract.md`) already implements
+a subjective pre-combat assessment pipeline — `OpponentPerceptionService` builds a power estimate
+from observable signals, `CombatLearning` refines it from real combat outcomes,
+`EngagementRiskEvaluator` weighs that estimate against the observer's own bravery/personality
+before committing to a `CombatPosture`. It is gated behind `ENABLE_COMBAT_ENGAGEMENT`, default
+`OFF`, and has never run in a real corpus profile — the same shape as `ENABLE_GUILD_QUEST_
+GENERATION` before this batch. The design specified below was worked out independently, in detail,
+before this domain was found — and the separation it specifies (an entity's *estimate* of a threat
+vs. how much it *heeds* that estimate) turned out to already exist in `EngagementRiskEvaluator`'s
+own `bravery`-driven `personality_bias`/`risk_score`, written before either was described. **The
+design was not invented here — it was rediscovered. It looked absent only because nothing has ever
+run it.** This section declares the law for the completed, corrected version of that domain; it
+does not authorize a second, parallel implementation.
+
+### 13.1 The mechanism is perception, not combat
+
+An entity forms an impression of another entity's power simply by **seeing** it within its own
+perception radius (§5, 10.0 units, `SimulationDomainLogic.get_neighbor_view()`) — not by fighting
+it. This is deliberate: perception happens passively and often, so the mechanism is reachable by
+construction rather than gated behind combat occurring, which this arc has repeatedly found is the
+harder property to guarantee. `OpponentPerceptionService.estimate()` (`src/domains/
+combat_engagement/perception.py`) already does this — the passive tier exists; §13.3 corrects its
+formula. Combat is a second, better information source (§13.4); witnessing combat is a third
+(§13.7) — observation is not the only tier, but it is the default, always-on one.
+
+### 13.2 True power, apparent power, and the estimate
+
+The pipeline has three distinct stages, kept distinct on purpose:
+
+```
+true power  →  apparent power  →  observation error (power-gap driven)  →  observer's estimate
+```
+
+- **True power**: an entity's own real, static combat strength —
+
+  ```
+  true_power(entity) = entity.combat.atk + entity.combat.def_stat * 0.5
+                        + entity.combat.max_hp * 0.1
+  ```
+
+  computed identically for both sides of a comparison. **Evidence, not preference, decided this
+  shape**: `OpponentPerceptionService.estimate()`'s current target-power term
+  (`target_lvl * 20.0`, from `evolution_level`) was checked against a real sample of 214 entities
+  compiled across 5 corpus worlds (`frontier_marches`, `frontier_living_world`,
+  `frontier_extended`, `crowded_frontier`, `quest_dense_frontier`; seed 42) — **every entity in
+  every world compiles at `evolution_level == 1`.** Levelling happens during simulation via XP, not
+  at world authoring, so a level-only term does not discriminate poorly — for a freshly compiled
+  world it does not discriminate *at all*: `gap` (§13.3) would be exactly zero for every pair, in
+  every world, at the moment this mechanism could first matter. §13.3's core promise — high
+  uncertainty exactly at even matches — would instead report maximum uncertainty for every
+  observation unconditionally, which is not the mechanism failing loudly, it is the mechanism
+  never actually running at all while every test asserting "similar power reads as uncertain"
+  passes regardless.
+  - **`evolution_level` is deliberately excluded, not merely unweighted.** Levelling grants
+    Attribute Points (`docs/mechanics/01_entity_anatomy.md` § "Level Up Rewards", +5/level), and
+    those points feed the same `Attack`/`Defense`/`Max_HP` derived-stat formulas this term already
+    reads (§`01_entity_anatomy.md` § "Derived Combat Stats": `Attack = base_atk + int(strength *
+    0.5) + gear_atk`, similarly for `Defense`/`Max_HP`). A leveled-up entity's greater strength is
+    therefore already fully present in `atk`/`def_stat`/`max_hp` — adding `evolution_level` again
+    would credit the same progression twice. This is a correctness exclusion, not a tuning choice.
+  - **`atk + def_stat * 0.5` reuses `CapabilityEstimateService`'s own existing sub-expression**
+    (§6.12's `base_power` numerator) rather than inventing a new stat term — the same 214-entity
+    sample shows this alone already spans 4.5–28.0, a real 6.22x range at identical (level-1)
+    entities, confirming it discriminates where level does not.
+  - **`max_hp` is a real, separate strength axis this term would otherwise drop.** The same sample
+    shows `max_hp` spanning 35–150 (4.3x) independent of the `atk`/`def_stat` spread — an entity
+    that takes four times as long to kill is not equally dangerous at equal attack/defense. This is
+    distinct from apparent power's own `hp_ratio` condition adjustment (§13.2, below): that
+    captures *how hurt an entity is right now*; `max_hp` here captures *how much killing a healthy
+    version of it takes*. Both are real and belong. Scaled by `0.1` here so its raw 35–150 range
+    does not swamp the 4.5–28 stat term — a first-pass coefficient, not a tuned one; see the
+    deferred-tuning register entry below.
+  - `CapabilityEstimateService`'s own `base_power` (§6.12) itself remains a different, non-
+    symmetric *ratio* against a specific enemy's danger/level, not a standalone power value — it is
+    not reusable wholesale for a symmetric gap, only its `atk + defense * 0.5` sub-term is.
+  - **The relative weights above (`0.5`, `0.1`) are a first pass, evidence-backed on which axes
+    matter and awaiting real-run calibration on how much — recorded in
+    `docs/plans/deferred_tuning_decisions_register.md` (D-11) rather than left as undiscoverable
+    magic constants.**
+- **Apparent power**: `apparent_power(entity) = true_power(entity)` adjusted for the entity's
+  *current condition* — `OpponentPerceptionService.estimate()` already folds in `hp_ratio` (a
+  wounded target reads as weaker: `base_power *= 0.6` below 0.3 HP) and equipment signals; this
+  section names that adjusted value *apparent power* explicitly, as its own concept, separate from
+  the static true-power number. A badly wounded entity genuinely looks weaker, and genuinely is
+  weaker right now — apparent power reflects that live condition, not just base stats.
+  **Deception is a declared future extension of this same seam, not built here.** Today,
+  `apparent_power()` is condition-adjusted true power, evaluated on the live path every
+  observation makes — not a dormant branch behind a flag, no unused parameter, no strategy
+  interface. A future mechanism (an entity presenting as weaker or stronger than its condition-
+  adjusted stats would suggest) changes only what `apparent_power()` returns; nothing downstream
+  of it moves. Traits/personality are the likely future driver of who deceives, per this arc's own
+  precedent for entity-specific behavioral variance — named here as a pointer, not wired.
+- **The observer's estimate** is `apparent_power(observed)` distorted by observation error (§13.3),
+  never `true_power(observed)` read directly. This is the one invariant that makes the future
+  deception hook possible at all — if any consumer ever reads `true_power` directly instead of
+  going through this pipeline, that consumer is a second, incompatible path the day deception
+  ships.
+- **An entity's own strength enters the gap (§13.3) as `true_power`, never as an estimate.** This
+  is a stated law, not an accident of which term the formula happened to reach for: an entity
+  knows its own strength exactly, and only judges *others* poorly. This is defensible on its own
+  terms (an entity has far better information about itself than about a stranger) and it is a
+  structural requirement, not just a simplification — if the observer's own side of the gap were
+  also noisy, error would compound on both sides of the comparison and the estimate would carry no
+  reliable signal at all. **Fallible self-assessment — an entity over- or under-estimating its own
+  strength — is a real, declared future extension, not built here.**
+  `SelfCombatEstimateService` (`src/domains/combat_engagement/self_estimate.py`) is its natural
+  home when it is: overconfidence (an entity overestimating itself) is one of the most realistic
+  failure modes there is, and this seam is what would let it exist without touching the gap
+  formula itself — the gap would simply read a self-estimate instead of `true_power` on that side,
+  the same substitution `apparent_power` already makes for the observed side.
+
+### 13.3 Observation error is driven by the power *gap*, not the observer alone
+
+An entity can reliably tell that something is far stronger or far weaker than itself. It genuinely
+cannot tell with a comparable opponent — that uncertainty is real and must show up as uncertainty
+in the data, not as a slightly-off number. Error is therefore a function of the *gap*:
+
+```
+gap = |true_power(observer) - apparent_power(observed)|
+```
+
+**This replaces `OpponentPerceptionService.estimate()`'s current flat threshold**
+(`if perception < 4: uncertainty += 0.15`), which cannot express "confident about extremes,
+doubtful about equals" — a fixed threshold produces the same uncertainty bump regardless of how
+mismatched the pair actually is. A large gap must produce a confident, roughly accurate estimate; a
+small gap must produce high uncertainty — the estimate itself becomes unreliable, and the
+observer's own `Perception (PER)` attribute (`docs/mechanics/01_entity_anatomy.md` §1,
+`AttributeComponent.perception`, an existing core attribute, scale 1–99 — "critical hit chance and
+world discovery"; extended here, not duplicated — already read by `OpponentPerceptionService`
+today, just not gap-weighted) modulates how quickly that uncertainty resolves as the gap widens: a
+higher-`PER` observer needs a smaller gap before its estimate sharpens.
+
+**This is the point of the design, not a side effect to smooth away: uncertainty is highest exactly
+where the decision matters most.** Judging a rat or a dragon is easy and low-stakes — the gap is
+huge either way. Judging an even match is hard, and an even match is precisely the situation where
+being wrong costs the most. The mechanism must not flatten that relationship in the name of making
+estimates more useful; a uniformly-confident estimate would be a worse, less honest mechanism than
+one that is loudly unsure exactly when it should be.
+
+**Fix in the same change, not separately**: `OpponentPerceptionService.estimate()` already reads
+`attrs.intelligence` into a local `intel` variable that is never subsequently used anywhere in the
+function — a dead value sitting inside the exact mechanism this section completes. This is a real,
+disclosed defect to fix as part of this work (see §13.8), not tidied away silently.
+
+### 13.4 Estimation and consideration are separate — this already exists
+
+**Knowing a threat and heeding it are different things, and conflating them models behavior
+wrongly.** A wolf is not bad at sensing that a human is dangerous — it may sense this exactly as
+well as a cautious human does. It charges anyway. That is low *consideration*, not poor
+*estimation*. Folding the two into one number produces the wrong conclusion ("wolves have bad
+eyesight") and the wrong behavior everywhere the estimate is read.
+
+**`EngagementRiskEvaluator` (`src/domains/combat_engagement/risk_evaluator.py`) already keeps these
+separate, in real code, today:** `caution = 1.0 - bravery`, `personality_bias = (bravery * 0.3) -
+(caution * 0.3) + (greed * 0.1)`, `risk_score = death_risk + uncertainty_penalty - (bravery * 0.2)`.
+The estimate's own accuracy (§13.3) is untouched by bravery — a brave wolf and a cautious wolf form
+the *same* estimate of a threat's power; bravery only changes `risk_score`, which changes whether
+the resulting `CombatPosture` is `ENGAGE` or `AVOID`. This is the wolf-vs-human distinction,
+already implemented, before either was named. This section does not add a new consideration
+mechanism — it declares that the existing one is correct and names why, so nobody builds a second.
+
+**Intelligence (`docs/core/attributes_and_classes.md`'s `INT`) is the declared future driver of how
+strongly consideration is weighed** — a lower-`INT` entity (or one from a species/archetype
+disposed to disregard risk, matching the wolf example) should weigh a given `risk_score` less
+heavily before committing than a higher-`INT` one. `INT` is an existing attribute (today: XP gain,
+magic attack, cooldown reduction) — extending its role rather than adding a new stat. This is named
+as the mechanism's own future refinement point, not built in this pass; `bravery`'s existing
+weighting stands as the real, live consideration signal until it is.
+
+### 13.5 Two information tiers: observation and combat — already exists
+
+Passive observation (§13.1–13.3) is the default, always-on tier. **Engaging in combat with an
+entity is a second, better — not perfect — information source, and `CombatLearning.learn()`
+(`src/domains/combat_engagement/learning.py`) already implements exactly this**: a real outcome
+(`WON_EASY`/`LOST`/`NEAR_DEATH`) narrows `uncertainty` and corrects `estimated_power` toward
+reality, further than observation alone does. This section declares that formula the accuracy
+tier this feature relies on — no new refinement mechanism is introduced here.
+
+**This settles what does *not* improve an estimate.** Looking harder does not sharpen it — repeated
+passive observation of the same entity is not a refinement mechanism, and `CombatLearning` does not
+implement one (it is keyed to combat outcomes only). A future ticket that adds observation-count-
+based confidence growth would be building a mechanism this section explicitly does not specify.
+
+**Design rationale worth recording even though the deception half of it is unbuilt**: this two-tier
+structure produces a real, coherent counter to the future deception seam (§13.2), falling out of
+rules already specified here rather than added for that purpose. If combat yields a better estimate
+than observation, then engaging something is the natural way to see through a bluff — a strong
+entity can pass as weak right up until someone actually fights it. Whoever eventually builds
+deception should know this counter already exists by construction, not invent a separate one.
+
+**§13.5a — What each real combat outcome teaches, and about whom (TCK-20260914-COMBAT-ENGAGEMENT-
+PERCEIVED-POWER).** `CombatLearning.learn()`'s own vocabulary (`WON_EASY`/`LOST`/`NEAR_DEATH`/
+`FLED`) answers "what did I learn about that opponent's strength" — a different question from
+`CombatUpdate.outcome_kind`'s own real values (`SURVIVE`/`KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH`/
+`REJECTED`, `src/engine/combat.py`), which only answer "what happened to this entity." The mapping
+between them is a real semantic decision, declared here as law before being built, not left
+implicit in the resolver:
+
+- **The classification is per-participant, keyed off *that participant's own* post-exchange HP
+  ratio and role — never a single shared outcome for both sides.** The user's own worked scenario
+  (§13.6) is decisive: an entity engages, is nearly killed, *survives*, and remembers the target as
+  far stronger than it estimated — a costly win, not a loss. If a `KILL` always mapped to
+  `WON_EASY` for the winner regardless of the winner's own cost, this scenario could never occur,
+  and the feature would have no way to produce the exact behavior it exists for.
+  - **`KILL`/`DEFEAT` where this participant is the survivor**: `own_hp_ratio_after >=
+    NEAR_DEATH_HP_RATIO` → `"WON_EASY"` (the opponent was weaker than estimated; correct downward).
+    `own_hp_ratio_after < NEAR_DEATH_HP_RATIO` → `"NEAR_DEATH"` (the opponent was far stronger than
+    estimated; correct upward, hard). `NEAR_DEATH_HP_RATIO` (`src/core/combat_constants.py`) reuses
+    the same `0.2` threshold this repo already uses elsewhere for near-death classification
+    (`src/observability/event_extractor.py`/`event_shapers.py`, both re-exporting the same shared
+    constant now, rather than each independently defining/re-deriving it) — recorded as D-12 in
+    `docs/plans/deferred_tuning_decisions_register.md` alongside D-11.
+  - **`KILL`/`DEFEAT`/`PERMADEATH` where this participant is the one who died**: `"LOST"` (the
+    opponent was stronger than expected) — regardless of `REBIRTH`/`PERMADEATH`'s own downstream
+    lifecycle branching, which is orthogonal to what was *learned*. A dead entity still writing this
+    memory is harmless (nothing reads it again) and, under `REBIRTH` specifically, is real signal
+    worth having: an entity remembering what killed it in a prior life is exactly the behavior this
+    feature should produce, not a case to special-case away.
+  - **`SURVIVE`**: inconclusive for both participants — neither side's estimate should move.
+    Manufacturing confidence from a fight that resolved nothing yet (both still standing, still
+    fighting) would corrupt the estimate with a non-event.
+  - **`REJECTED`**: no learning for either participant — nothing happened.
+  - **`FLED`** (a real disengagement, not a `CombatUpdate.outcome_kind` value — its own real
+    producer is `src/engine/movement.py`'s `combat_escape="EVASIVE_SUCCESS"` property update, a
+    separate real call site from `src/engine/combat.py`'s resolver): a weak signal, a small
+    correction only. Disengaging tells an observer something (the target chose to leave rather than
+    finish the fight) but far less than a resolved outcome does. **Signed deliberately: magnitude
+    (`estimated_power`) is left untouched; only `confidence` rises and `uncertainty` falls, both by
+    a small, fixed amount.** An entity flees because its *existing* estimate already reads the
+    target as dangerous — if `FLED` pushed the estimate further up, the correction would confirm
+    the very belief that caused the flight (high estimate → flee → estimate rises → flee more
+    readily → estimate rises again), letting an entity become progressively more afraid of
+    something it has never actually fought, purely from its own avoidance. Holding magnitude fixed
+    while only firming up confidence captures "I got a closer look and survived" without that
+    self-confirming loop — the combat-resolution branches above remain the only thing that moves
+    magnitude meaningfully. **Wired one-sided, deliberately**:
+    the fleeing entity learns a `"FLED"` correction about each real hostile it evaded
+    (`apply_fled_learning()` in `src/domains/combat_engagement/learning_outcome.py`), but the
+    reciprocal (each evaded hostile learning about the fleeing entity) is not written. Unlike the
+    attacker/defender case below, an evaded opportunity attack produces no `CombatUpdate` at all
+    (`skip_oa` is true precisely because it never resolved) — there is no real outcome for a
+    hostile's own post-exchange HP ratio to classify, so a hostile-side write here would have no
+    real signal backing it.
+- **Both participants learn from the same real exchange — never survivor-only, never attacker-only —
+  for every outcome that has a real, resolved `CombatUpdate` backing both sides (`FLED`'s own
+  one-sided exception above is the one case with no such event to read from).** Combat is mutual
+  observation: both sides just received the highest-quality information tier available about each
+  other (§13.5's own "combat is a second, better source" law), so both update. This is also required
+  by the same worked scenario: the entity that flees a fight it is losing is precisely the one that
+  must remember why it fled.
+- **Both writes must be deterministic and order-independent.** Evaluating "attacker learns about
+  defender" before or after "defender learns about attacker" must produce identical results either
+  way — each participant's own `CombatLearning.learn()` call reads only that participant's own
+  existing `OpponentModel` and the real, already-resolved `CombatUpdate` fields; neither call reads
+  the other's in-progress result.
+- **The mapping lives in one place**, tested directly, with the translation explicit — scattering
+  this logic across the resolver call sites is how a second, divergent mapping appears later.
+  Implemented as `src/domains/combat_engagement/learning_outcome.py`. **Wired at
+  `src/engine/domain/combat_actions.py`'s `CombatActions.execute_attack()`, not
+  `src/engine/combat.py` itself**: that module's own `CombatResolutionSystem.resolve_attack()`
+  returns a single `CombatUpdate` for the defender only and never has both real `EntityState`
+  objects in scope together, so it structurally cannot write both sides' `OpponentModel` at once;
+  `combat_actions.py` is the real action-handler call site that already builds both
+  `attacker_up`/`defender_up` `EntityUpdate`s from that same `CombatUpdate`.
+- **Gated on `ENABLE_COMBAT_ENGAGEMENT`, same as the passive-observation writes in
+  `CombatEngagementPhase.apply()`** — deliberate, not an oversight: the flag stays the single real
+  on/off switch for the whole feature. Without this gate, opponent memory would start accumulating
+  on every real attack in every corpus profile the moment this mapping merges, before the flag
+  itself ever flips — durable state growth (bounded, but nonzero) for a mechanism nothing reads
+  yet, and it would mean the feature is already partially live in production on merge rather than
+  at the deliberate flag-flip point this arc's own discipline calls for.
+
+### 13.6 Memory: a third declared type, its own home, and a load-bearing eviction policy
+
+**`OpponentModel` (`src/domains/combat_engagement/schema.py`) is the durable record — "this thing
+is strong" — and it is neither Memory-domain state nor a `KnowledgeFact`.**
+`docs/simulation/domains/memory_contract.md`'s own disambiguation table routes "what does this
+entity know about facts" to the cognition-layer knowledge model, and causal memory is scoped
+specifically to lessons from failure events (`CausalMemoryEntry`, a narrow, categorical
+vocabulary) — a continuously-graded power estimate learned from passive observation fits neither.
+`OpponentModel` already exists as its own third, purpose-built type for exactly this — forcing it
+into either existing layer to satisfy a doc's taxonomy would misattribute where this state lives
+worse than declaring it a third kind. This is the answer, recorded with its reasoning so the next
+reader sees why, not just what.
+
+**The critical architectural point, from the mechanism's own worked scenario: store the estimate,
+never the decision.** A human observes an average-looking monster, fights it, discovers it is far
+stronger, remembers *that* — never "avoid this thing." The engage/withdraw choice (§13.4) is
+recomputed every time against the entity's *current* power. This is what makes "…until they're
+strong enough" fall out for free: the entity stops avoiding the monster not because a memory
+expired, but because the gap (§13.3) closed as it grew. Storing a decision instead of an estimate
+would freeze behavior at the moment it was frightened and need a second mechanism to un-freeze it.
+This also makes the scenario a clean acceptance test: same entity, same monster, three phases —
+engage, withdraw, engage again — with nothing changing but the observer's own power.
+
+**No durable storage field for `OpponentModel` exists anywhere on `EntityState` today.**
+`OpponentPerceptionService`/`CombatLearning` both take `memory: Optional[OpponentModel]` as a
+plain function parameter; nothing persists it between ticks. Enabling `ENABLE_COMBAT_ENGAGEMENT`
+alone would not produce memory — every tick would pass `memory=None` again. A bounded,
+per-observer collection keyed by `subject_key` must be added to `EntityState`'s cognition state as
+part of this work; this is new, not a gap in an otherwise-complete mechanism.
+
+**Keyed per individual, not per kind, for now.** `subject_key` already supports both forms
+(`"entity.42"` or `"enemy_type.wolf"`) — the schema does not need to change either way. The entity
+uses the per-individual form (`entity.<id>`) today; generalizing an individual's estimate to its
+whole kind is a declared future refinement, not built in this pass, and requires no rework of the
+schema when it lands — only a new write rule for which `subject_key` a given observation updates.
+
+**Eviction must be by salience, not age — copying causal memory's own policy here would be wrong
+and would break the mechanism's own acceptance scenario.** `MemoryUpdatePhase` (`src/domains/
+memory/phase.py`) evicts causal memory oldest-first (`entries.pop(0)`). Under that policy, and
+especially per-individual, an observer that meets a dozen other creatures after its one
+frightening encounter would forget the frightening one before it ever grew strong enough to
+matter — the three-phase acceptance scenario above would fail, not because the estimation logic is
+wrong, but because the memory holding it was gone. **Salience must instead rise with the magnitude
+of surprise** (how wrong the prior estimate turned out to be, once corrected — already computed at
+the moment an estimate updates, so this is a stored score, not a new calculation) **and with the
+severity of the outcome** (a near-death encounter is more salient than a routine win). A bounded
+collection evicting the *lowest-salience* entry when full is the forgetting mechanism this feature
+needs — and it is load-bearing for the feature's own acceptance criteria, not a performance detail,
+which is why it is stated here rather than left to be "optimized" into a ring buffer later. The
+bound itself is also the answer to the real cost concern: an unbounded per-individual-per-observer
+collection is `O(n²)` durable state and does not scale; a small bound with salience eviction is both
+the realistic behavior (an entity remembers a handful of things it has met recently or been hurt
+by, and genuinely forgets the rest) and the reason the feature is affordable at all.
+
+**A real, disclosed limitation, not fixed here**: per-individual memory requires the observed
+entity's own id to remain stable across the span the memory covers. Within a single run this
+holds. Across campaign episodes, survivor carry-forward (`docs/simulation/domains/
+campaigns_contract.md` / `EntityCarryForward`) preserves a *hero's* progression across episodes,
+but monsters are regenerated fresh at each episode's own world compilation with a fresh id
+sequence — a rebuilt monster is a stranger to an entity that fled from it in a prior episode. This
+is a real gap in per-individual memory's own reach, not addressed by this section, and worth
+knowing before anyone is surprised that cross-episode dread doesn't carry over.
+
+### 13.7 A third tier: witnessing combat
+
+**Seeing a wolf kill an armored guard teaches an observer the wolf is dangerous without the
+observer ever fighting it.** This is a real, buildable third tier, better than passive observation
+and worse than personal combat, and it does not require a new event field: combat-resolution
+`SimulationEvent`s already carry participant `entity_id`/`target_id` and a `tick`; a witness is any
+other entity within perception radius (§13.1) of a participant's own `state.entities[...].
+navigation.position` at that tick — the same neighbor-view scan §13.1 already uses, applied to
+combat events instead of to the observer's own idle scanning. No speculative field is added; the
+positions and the participant ids already exist on the state the phase processing these events
+already has.
+
+### 13.8 Declared future seams — named, not built
+
+- **Hearsay**: entities telling each other what is dangerous, now that the guild-lead/information
+  layer is genuinely reachable (`TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-
+  LEADS`, done this arc). Named as a future source in the same accuracy hierarchy — hearsay <
+  observation < witnessed combat < personal combat — so the tiering has an obvious slot when it is
+  built. No code.
+- **Group power**: judging a pack rather than a single entity. Nothing in this section's model
+  should assume a target is always one entity, but group assessment is not designed or built here
+  — an open extension, named so a future design doesn't have to discover the gap first.
+- **Fallible self-assessment** (§13.2): an entity's own strength enters the gap exactly today, not
+  through an estimate. `SelfCombatEstimateService` is the declared future home for over- or
+  under-confident self-judgment, alongside deception and hearsay in the same "named seam, not
+  built" category.
+
+### 13.9 Determinism
+
+Observation error **must** be a pure function of stable inputs — same world seed, same tick, same
+observer, same observed entity → same estimate, always, matching this repo's existing determinism
+law. No unseeded RNG call is permitted anywhere in this pipeline — none exists in
+`OpponentPerceptionService.estimate()` today (it is pure arithmetic on already-stable inputs), and
+the power-gap-driven noise this section adds must stay that way. The precedent is
+`_hash_point_in_bounds()` (`src/worldassembly/resolver.py:947`): a deterministic point derived from
+`hashlib.sha256(key.encode()).digest()`, no RNG object involved at all. This mechanism's own error
+term should be derived the same way — a stable key built from `(seed, tick, observer_id,
+observed_id)` hashed and mapped into the error range, never a call to `DeterministicRNG` or any
+other seeded-but-stateful generator.
+
+### 13.10 What this does not yet do
+
+No deception mechanism exists — `apparent_power()` is condition-adjusted true power today, per
+§13.2, and stays an identity-with-respect-to-deception until a future ticket names a real driver.
+No observation-count-based refinement exists, per §13.5 — only combat improves an estimate beyond
+observation. No hearsay or group-power tier exists, per §13.8. No durable storage for `OpponentModel`
+exists yet at all (§13.6) — this section specifies the law the new storage, its write rules, and
+its eviction policy must follow once built, and requires `ENABLE_COMBAT_ENGAGEMENT` to actually
+reach `ON` in a real run before any of it is observable — expect this to surface real bugs the
+moment it becomes reachable for the first time, the same way `ENABLE_GUILD_QUEST_GENERATION` did.
+
+**Source (specification only — remaining implementation not yet built):**
+`src/domains/combat_engagement/` (`perception.py` — `OpponentPerceptionService.estimate()`,
+`learning.py` — `CombatLearning.learn()`, `risk_evaluator.py` — `EngagementRiskEvaluator`,
+`schema.py` — `OpponentModel`/`PerceivedOpponentEstimate`/`CombatPosture`, `self_estimate.py` —
+`SelfCombatEstimateService`, the declared future home for fallible self-assessment),
+`docs/simulation/domains/combat_engagement_contract.md` (the existing technical contract for this
+domain), `src/domains/memory/phase.py` (causal memory's own oldest-first eviction, the precedent
+this section deliberately does not copy), `src/worldassembly/resolver.py:947`
+(`_hash_point_in_bounds()`, the deterministic-hash precedent), `docs/mechanics/01_entity_anatomy.md`
+§1 (`Perception (PER)`), `docs/core/attributes_and_classes.md` (`INT`, the declared future
+consideration-weighting driver) (`TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`,
+2026-09-13)
+

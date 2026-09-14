@@ -36,7 +36,7 @@ class CombatEngagementDecisionService:
         """
         # Fear avoidance: entity that has been defeated by this target >= 3 times avoids engagement.
         if actor.social.combat_loss_counts.get(target.id, 0) >= 3:
-            opponent_est = OpponentPerceptionService.estimate(actor, target, memory)
+            opponent_est = OpponentPerceptionService.estimate(actor, target, memory, state=state)
             self_est = SelfCombatEstimateService.estimate(actor)
             from src.domains.combat_engagement.schema import CombatPosture, EngagementRiskEvaluation
             risk_eval = EngagementRiskEvaluation(

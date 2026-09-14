@@ -37,6 +37,14 @@ T01/T02 govern structure. T03–T07 govern measurement. T03 can begin after M2 i
 while T04 waits for stable phase IDs. Catalog-driven execution stays disabled unless a future
 decision explicitly approves it after parity evidence.
 
+**Worked example for T04, 2026-09-14** (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER): enabling
+a previously-dormant phase (`combat_engagement`) for the first time required a manual A/B
+comparison of `kernel._phase_costs` totals across 20 ticks, flag OFF vs ON, plus an
+`_event_listeners` hook to count real combat-event volume, to determine which of several phases
+absorbed the resulting cost increase. That is exactly the per-phase timing/cardinality
+instrumentation T04 is meant to make routine rather than one-off — see the "Confirmed field
+evidence" note in `performance_m4_baseline_gate_a_epic.md` for the actual numbers this produced.
+
 ## Feature/phase growth contract
 
 When a new RPG feature proposes a phase or refinement unit, its eventual ticket must declare:
