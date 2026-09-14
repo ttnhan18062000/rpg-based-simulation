@@ -227,6 +227,17 @@ entries). `tools/parity_corpus_check.py` now reports `class2_malformed_test_path
 for this ticket's own scope, a real architectural question (frontend-test citation support) for a
 future ticket to decide, not something this one should decide unilaterally.
 
+**These 4 are not merely unresolved today — they are structurally unresolvable while the parser
+stays pytest-only and `write_entry()` requires a parseable `test_path` on every write** (confirmed,
+agent-working-design review): `mechanics_auditor_static.py::check_test_path()` runs
+`[sys.executable, "-m", "pytest", citation, "-x", "-q"]` on every citation the parser accepts,
+guarded only by a legacy-path check and a file-existence check — neither would reject a real,
+on-disk `.tsx` file, so accepting the shape would make that consumer invoke pytest on a Vitest file
+and record a spurious FAIL. This is a standing constraint someone will rediscover the next time a
+frontend-only entry needs a citation. If it's worth fixing at all, it is a separate ticket about
+the parser's consumer contract (teaching `check_test_path()` to route a `.tsx`/`.ts` citation to a
+JS/Vitest runner instead of pytest, or an equivalent), not a re-litigation of these 4 entries.
+
 No src/ or simulation-mechanics code touched. All writes through `write_entry()` except one
 disclosed, narrow exception (removing a stale duplicate `SOC-ABAND-TYPE-01` this session's own
 rename write created, since `write_entry()` has no delete API — matches this repo's established
