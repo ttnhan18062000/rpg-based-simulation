@@ -15,7 +15,7 @@ tags: [ai, process-improvement]
 Default venv name points at the non-CI Python version — rename so `.venv` is the CI-matching environment
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -97,13 +97,56 @@ the fact.)
   but it is a larger question than this ticket.
 
 ## Implementation Notes
-_(to be filled during implementation)_
+Investigation and plan complete; the actual rename is deliberately **not executed** in this pass.
+It mutates shared filesystem state (`.venv`/`.venv313`) used by every concurrent session on this
+machine, not just this one — the kind of action this session's own risk-handling convention (and
+independently, the peer reviewing this batch) says to surface for confirmation rather than execute
+opportunistically.
+
+Two hazards found and fully scoped:
+1. **`tools/start_search_mcp.sh`'s hardcoded absolute path** — already named in the ticket's own
+   Scope, re-confirmed: after a naive rename this would resolve to an *existing* interpreter that
+   lacks `torch`, a louder failure (ImportError) than the ticket's own "silent fallthrough to bare
+   python3" framing, but still a real breakage.
+2. **`Makefile`'s `knowledge-index`/`knowledge-index-update`/`eval-search` targets** — NOT named in
+   the ticket's own Scope, found by grepping per AC #3 rather than assuming the Scope list was
+   complete. These resolve via `$(PYTHON3)`, whose first candidate is the relative `.venv/bin/
+   python3` — post-rename this becomes the 3.13 env, which lacks the knowledge-search deps these
+   three targets need. Every OTHER `$(PYTHON3)`-using target is unaffected (becomes more correct,
+   not broken, once `.venv` is the CI-matching env).
+
+**Self-caught correction while writing plan.md**: an earlier draft called the file edits (script,
+Makefile, doc) "safe to do anytime" and considered committing them ahead of the actual rename.
+That's wrong for a shared-worktree environment — `tools/start_search_mcp.sh` is a per-worktree
+tracked file the peer's own concurrent worktree has checked out on this same branch; committing an
+edit that points at a not-yet-existing `.venv-knowledge` before the rename actually happens would
+break `search_docs` for anyone who pulls it in the interim, which is exactly the failure class this
+ticket exists to prevent, self-inflicted by landing the steps out of order. Corrected: the file
+edits and the rename must land together, atomically, not staged ahead of time. Full exact diffs are
+specified in `plan.md` Step 1, ready to apply verbatim once timing is confirmed.
+
+**This ticket is not implementing the rename or asking the user to approve a vague "when it's
+safe" — it's surfacing a concrete plan (exact file diffs, exact `mv` commands, exact verification
+checklist) and one open naming decision (`.venv-knowledge` as a working name, user's call per the
+ticket's own "suggested shape, not mandated") for a go/no-go decision on timing.**
 
 ## Test Summary
-_(to be filled during implementation)_
+No code changed — investigation and planning only. See `test_plan.md` for the verification
+checklist that runs once the rename itself executes (a future step, not part of this pass).
 
 ## Files Changed
-_(to be filled during implementation)_
+- `staging_artifacts/TCK-20260914-VENV-NAMING-CI-PARITY-SWAP/` (investigation.md, plan.md,
+  test_plan.md — new).
+- This ticket file (Implementation Notes/Test Summary/Files Changed/Completion Summary; `## Status`
+  set to `BLOCKED`).
+- No `src/`, `tools/`, `Makefile`, or `docs/` files touched — those edits are fully specified in
+  `plan.md` but deliberately not yet written to the tracked files, per the ordering hazard above.
 
 ## Completion Summary
-_(to be filled during implementation)_
+Investigation and plan complete, not yet implemented. Confirmed the ticket's own named hazard
+(`tools/start_search_mcp.sh`) and found a second, unnamed one (`Makefile`'s knowledge-stack targets)
+by grepping rather than trusting the Scope list was exhaustive. Self-caught and corrected an
+ordering mistake in the plan itself (file edits must land atomically with the rename, not ahead of
+it) before it could have caused the exact class of breakage this ticket exists to prevent. Left
+`BLOCKED`, not `DONE` — the actual rename requires a user go/no-go on timing (concurrent-session
+safety) and the final target name, neither of which this session can decide alone.
