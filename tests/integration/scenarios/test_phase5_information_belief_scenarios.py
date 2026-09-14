@@ -225,6 +225,63 @@ def test_compiled_urban_political_state_fires_belief_assimilated():
     assert fact.certainty == 0.8
 
 
+def test_campaign_built_state_fires_belief_assimilated_for_the_correct_entity():
+    """TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH: the ticket's own
+    explicit Scope bullet -- confirm InformationBeliefPhase.apply() actually assimilates the fact
+    into the CORRECT entity in a real Campaign episode run, not just that the resolved dict shape
+    matches what WorldCompiler.compile() already produces. Uses frontier_living_world (the
+    ticket's own worked example: a trade_road_bandit_activity/danger_rating fact intended for
+    frontier_village_population_frontier_guard) built via the real CampaignOrchestrator, not a
+    direct WorldCompiler.compile() call -- the whole point is proving the Campaign-mode path,
+    which resolves against a DIFFERENT entity space than compile()'s own."""
+    from dataclasses import replace as dataclass_replace
+    from unittest.mock import MagicMock
+    from src.domains.campaigns.orchestrator import CampaignManifest, CampaignOrchestrator, CarryForwardRules
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+    from src.core.updates import StateUpdate
+    from src.domains.optimization.feature_flags import FeatureMode
+    from src.observability.event_extractor import EventExtractor
+    from src.observability.config import ObservabilityMode
+    from src.observability.event_shapers import run_shadow_shapers
+
+    spec = MagicMock()
+    spec.id = "phase5_campaign_frontier_probe"
+    spec.world_composition = "frontier_living_world"
+    spec.perspective = "hero_guild_perspective"
+    spec.initial_conditions = {}
+    manifest = CampaignManifest(id="phase5_campaign_manifest", episodes=[spec], carry_forward_rules=CarryForwardRules())
+    orch = CampaignOrchestrator(manifest)
+    campaign_state = orch._build_initial_state(42, spec)
+    campaign_state = dataclass_replace(
+        campaign_state, feature_flags={"ENABLE_BELIEF_ASSIMILATION": FeatureMode.ON}
+    )
+
+    assert len(campaign_state.pending_information_responses) == 1
+    actor_id = campaign_state.pending_information_responses[0]["actor_id"]
+    assert campaign_state.entities[actor_id].properties.get("population_id") == (
+        "frontier_village_population_frontier_guard"
+    ), "must resolve to the intended entity, not merely a non-empty actor_id"
+
+    refined = AuthoritativeApplyPipeline.refine(campaign_state, StateUpdate())
+
+    events = EventExtractor.extract(campaign_state, campaign_state, refined, ObservabilityMode.NORMAL)
+    events += run_shadow_shapers(campaign_state, refined, campaign_state.tick, ObservabilityMode.NORMAL)
+    belief_events = [
+        e for e in events if e.event_type == "belief_assimilated" and e.entity_id == actor_id
+    ]
+    assert len(belief_events) == 1, (
+        "the intended entity must receive exactly one belief_assimilated event from the "
+        "Campaign-built state -- this is the real-run proof the ticket's own Scope calls for"
+    )
+    assert belief_events[0].payload["subject"] == "trade_road_bandit_activity"
+
+    new_self_model = refined.entity_updates[actor_id].self_model_bundle_set
+    assert new_self_model is not None
+    fact = new_self_model.knowledge.facts["trade_road_bandit_activity"]
+    assert fact.details == {"danger_level": "elevated", "region": "bandit_road"}
+    assert fact.certainty == 0.8
+
+
 def test_pending_information_response_fires_exactly_once_not_carried_forward():
     """The compile-time-seeded pending_information_responses entry is processed by
     InformationBeliefPhase exactly once, at the initial compiled state (tick 0).

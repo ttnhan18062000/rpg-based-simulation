@@ -234,6 +234,93 @@ class WorldCompiler:
     """
 
     @staticmethod
+    def resolve_pending_information(
+        entities: Dict[int, EntityState],
+        pending_information_response_specs: List[Any],
+        pending_self_model_information_event_specs: List[Any],
+    ) -> "tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]":
+        """
+        Resolve `target_population_id` -> `actor_id` for both pending-information spec lists,
+        against the given `entities` dict (matching on `entity.properties["population_id"]`,
+        the same convention `entity_spawner.py`/`archetype_factory.py` use).
+
+        TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH: this resolution is
+        deliberately parameterized on `entities` rather than hardcoded to `WorldCompiler.compile()`'s
+        own compiled dict, specifically so Campaign mode's own catalog-spawned roster (a
+        DIFFERENT, independently-ordered entity space -- `WorldEntitySpawner`, not this compiler's
+        own classic spawn loop) can call this same resolution logic against ITS OWN entities,
+        rather than reusing `actor_id` numbers resolved against a different entity space. Verified
+        empirically (2026-09-14, real `frontier_living_world` content) that reusing this compile's
+        own resolved `actor_id` values against Campaign's roster happens to produce correct results
+        for that one world's population ordering, but that alignment is not a documented or
+        structurally-guaranteed invariant between the two independently-implemented spawn
+        pipelines -- resolving against the caller's own `entities` dict is correct regardless of
+        whether the two pipelines' numbering coincides.
+
+        Returns `(pending_information_responses, pending_self_model_information_events, warnings)`
+        -- the same 3 outputs `compile()` itself used to compute inline before this extraction.
+        """
+        pending_information_responses: List[Dict[str, Any]] = []
+        warnings: List[str] = []
+        for r in pending_information_response_specs:
+            actor_id = next(
+                (eid for eid, e in entities.items()
+                 if e.properties.get("population_id") == r.target_population_id),
+                None,
+            )
+            if actor_id is None:
+                warnings.append(
+                    f"pending_information_responses target_population_id "
+                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
+                )
+                continue
+            pending_information_responses.append({
+                "actor_id": actor_id,
+                "subject": r.subject,
+                "query_kind": r.query_kind,
+                "source_id": r.source_id,
+                "raw_response": {
+                    "answer_kind": r.answer_kind,
+                    "certainty": r.certainty,
+                    "details": dict(r.details),
+                    "reason": r.reason,
+                },
+                "cost_paid": r.cost_paid,
+            })
+
+        # Resolve pending_self_model_information_events: target_population_id -> actor_id,
+        # construct real InformationResponse objects (Step 1's consumer needs attribute access, not
+        # dict-item access — a different construction shape from pending_information_responses above).
+        pending_self_model_information_events: List[Dict[str, Any]] = []
+        for r in pending_self_model_information_event_specs:
+            actor_id = next(
+                (eid for eid, e in entities.items()
+                 if e.properties.get("population_id") == r.target_population_id),
+                None,
+            )
+            if actor_id is None:
+                warnings.append(
+                    f"pending_self_model_information_events target_population_id "
+                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
+                )
+                continue
+            event = _ProviderInformationResponse(
+                answer_kind=r.answer_kind,
+                facts=tuple(
+                    _ProviderKnowledgeFact(subject=f.subject, fact_type=f.fact_type, details=dict(f.details))
+                    for f in r.facts
+                ),
+                unknowns=tuple(r.unknowns),
+                suggested_leads=(),
+                certainty=r.certainty,
+                source_id=r.source_id,
+                cost_gold=r.cost_gold,
+            )
+            pending_self_model_information_events.append({"actor_id": actor_id, "event": event})
+
+        return pending_information_responses, pending_self_model_information_events, warnings
+
+    @staticmethod
     def compile(
         spec: WorldSpec,
         seed: int,
@@ -654,63 +741,18 @@ class WorldCompiler:
             for p in spec.information_source_profiles
         ]
 
-        # 6b. Resolve pending_information_responses: target_population_id -> compiled actor_id
-        pending_information_responses: List[Dict[str, Any]] = []
-        for r in spec.pending_information_responses:
-            actor_id = next(
-                (eid for eid, e in entities.items()
-                 if e.properties.get("population_id") == r.target_population_id),
-                None,
+        # 6b/6c. Resolve pending_information_responses/pending_self_model_information_events:
+        # target_population_id -> compiled actor_id, against THIS compile's own `entities` dict.
+        # Extracted to a shared staticmethod (TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-
+        # ACTOR-ID-MISMATCH) so Campaign mode's own catalog-spawned roster can reuse the identical
+        # resolution logic against ITS OWN entities dict, rather than reusing this compile's
+        # actor_id numbers (a different, independently-ordered entity space).
+        pending_information_responses, pending_self_model_information_events, pending_info_warnings = (
+            WorldCompiler.resolve_pending_information(
+                entities, spec.pending_information_responses, spec.pending_self_model_information_events,
             )
-            if actor_id is None:
-                warnings.append(
-                    f"pending_information_responses target_population_id "
-                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
-                )
-                continue
-            pending_information_responses.append({
-                "actor_id": actor_id,
-                "subject": r.subject,
-                "query_kind": r.query_kind,
-                "source_id": r.source_id,
-                "raw_response": {
-                    "answer_kind": r.answer_kind,
-                    "certainty": r.certainty,
-                    "details": dict(r.details),
-                    "reason": r.reason,
-                },
-                "cost_paid": r.cost_paid,
-            })
-
-        # 6c. Resolve pending_self_model_information_events: target_population_id -> compiled actor_id,
-        # construct real InformationResponse objects (Step 1's consumer needs attribute access, not
-        # dict-item access — a different construction shape from 6b above).
-        pending_self_model_information_events: List[Dict[str, Any]] = []
-        for r in spec.pending_self_model_information_events:
-            actor_id = next(
-                (eid for eid, e in entities.items()
-                 if e.properties.get("population_id") == r.target_population_id),
-                None,
-            )
-            if actor_id is None:
-                warnings.append(
-                    f"pending_self_model_information_events target_population_id "
-                    f"'{r.target_population_id}' matched no compiled entity; entry skipped"
-                )
-                continue
-            event = _ProviderInformationResponse(
-                answer_kind=r.answer_kind,
-                facts=tuple(
-                    _ProviderKnowledgeFact(subject=f.subject, fact_type=f.fact_type, details=dict(f.details))
-                    for f in r.facts
-                ),
-                unknowns=tuple(r.unknowns),
-                suggested_leads=(),
-                certainty=r.certainty,
-                source_id=r.source_id,
-                cost_gold=r.cost_gold,
-            )
-            pending_self_model_information_events.append({"actor_id": actor_id, "event": event})
+        )
+        warnings.extend(pending_info_warnings)
 
         # Assemble final AuthoritativeState
         state = AuthoritativeState(
