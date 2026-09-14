@@ -4708,25 +4708,27 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/domains/optimization/test_movement_candidate_selector.py
-    (4 new tests, including test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved,
-    all confirmed via git-stash bisection to genuinely fail pre-fix). Full scoped
-    re-run: tests/unit/domains/optimization/, tests/unit/movement/, tests/unit/combat/,
-    tests/unit/tactical/, tests/unit/kernel/, tests/unit/core/, tests/unit/engine/,
-    tests/unit/actions/, tests/unit/strategic/, tests/unit/observability/, tests/unit/entities/,
-    tests/integration/combat/, tests/integration/pipeline/ -- 2047 passed, only the
-    1 pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa).
-    tests/integration/kernel/test_determinism_suite.py, test_seed_stability.py, test_authoritative_outcome_truth.py
-    -- 9 passed, no determinism regressions.
-
-    '
+  test_path: tests/unit/domains/optimization/test_movement_candidate_selector.py;
+    tests/unit/domains/optimization/; tests/unit/movement/; tests/unit/combat/; tests/unit/tactical/;
+    tests/unit/kernel/; tests/unit/core/; tests/unit/engine/; tests/unit/actions/;
+    tests/unit/strategic/; tests/unit/observability/; tests/unit/entities/; tests/integration/combat/;
+    tests/integration/pipeline/; tests/integration/kernel/test_determinism_suite.py;
+    tests/integration/kernel/test_seed_stability.py; tests/integration/kernel/test_authoritative_outcome_truth.py
   divergence_note: null
   support_boundary: 'See COMB-310 (docs/parity_ledger/combat_movement.yaml) for the
     full fix (all 4 real call sites) and root-cause chain. This entry documents specifically
     the substrate/executor-layer half of the fix (the sequential dispatch path), matching
     this file''s own existing SUB-034 citation of executor.py.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: same 16 real citations as COMB-310''s
+    own test_path (same fix, substrate/executor-layer half -- this entry''s own support_boundary
+    already says so), wrapped in "(4 new tests, including test_movement_selector_includes_pursuer_arrived_at_stale_snapshot_but_target_moved,
+    all confirmed via git-stash bisection to genuinely fail pre-fix)" / "Full scoped
+    re-run: ... -- 2047 passed, only the 1 pre-existing, already-confirmed-unrelated
+    failure" / "... -- 9 passed, no determinism regressions" prose. Normalized to
+    a plain multi-citation; the disclosure, including the specific named new test
+    within test_movement_candidate_selector.py, is preserved here.'
 - id: SUB-384
   text: 'TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `WorldCompiler.compile()`
     (`src/worldbuilding/compiler.py`) has no `catalog_repo` parameter of its own;
@@ -4777,19 +4779,10 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/worldbuilding/test_world_repository.py (4 new tests: non-composition
-    returns None context; composition with real compile_context.json returns the correct
-    EntityRole mapping; composition missing compile_context.json degrades gracefully
-    to None; unresolved composition still raises -- all 4 confirmed via git-stash
-    bisection to genuinely fail pre-fix). Full scoped re-run: tests/unit/worldbuilding/,
-    tests/simulation_quality/, tests/unit/content_semantics/, tests/unit/core/, tests/unit/entities/,
-    tests/unit/world/, tests/unit/tactical/, tests/unit/combat/, tests/unit/engine/,
-    tests/unit/kernel/, tests/integration/worldassembly/, tests/integration/kernel/test_determinism_suite.py
-    -- 1479 passed, 84 skipped, only the 1 pre-existing, already-confirmed-unrelated
-    failure (test_grade_anchor_file_exists_and_valid, missing local calibration-report
-    fixture, confirmed via bisection identical on pristine pre-fix code).
-
-    '
+  test_path: tests/unit/worldbuilding/test_world_repository.py; tests/unit/worldbuilding/;
+    tests/simulation_quality/; tests/unit/content_semantics/; tests/unit/core/; tests/unit/entities/;
+    tests/unit/world/; tests/unit/tactical/; tests/unit/combat/; tests/unit/engine/;
+    tests/unit/kernel/; tests/integration/worldassembly/; tests/integration/kernel/test_determinism_suite.py
   divergence_note: null
   support_boundary: "Real, disclosed, material anchor drift confirmed and NOT silently\
     \ absorbed: `dungeon_crawl_seed42_2000t` COMBAT norm moved from -0.0096 (post-COMB-310\
@@ -4851,7 +4844,11 @@
     \ INFORMATION confirmed unchanged, left untouched. See `docs/simulation_quality/eval_matrix_results.md`'s\
     \ new `lifecycle_full_coverage_world` section for the full before/after table.\
     \ This UPDATE does not change `status`/`priority` -- a calibration-data update,\
-    \ not a new finding about SUB-384's own root cause or fix.\n"
+    \ not a new finding about SUB-384's own root cause or fix.\n\nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL:\
+    \ original test_path wrapped these 13 real citations in \"(4 new tests: ...)\"\
+    \ / \"Full scoped re-run: ... -- 1479 passed, 84 skipped, only the 1 pre-existing,\
+    \ already-confirmed-unrelated failure\" prose. Normalized to a plain multi-citation;\
+    \ the disclosure is preserved here."
 - id: SUB-385
   text: 'RegionRecipeSpec (src/worldbuilding/recipe.py) and RegionSpec (src/worldbuilding/schema.py)
     both accept an optional terrain_variants field (Optional[List[TerrainVariantSpec]],
