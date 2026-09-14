@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL
-phase: open
+phase: done
 date: 2026-09-13
 tags: [testing, registry, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [testing, registry, data-quality]
 69 parity ledger entries left unfixed by TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS — enumerated, not silenced
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -100,22 +100,34 @@ guaranteed still accurate. Re-run that tool first.
   involved.
 
 ## Acceptance Criteria
-- [ ] All counts re-measured fresh via `tools/parity_corpus_check.py` before any fix work begins;
+- [x] All counts re-measured fresh via `tools/parity_corpus_check.py` before any fix work begins;
       any drift from this ticket's own recorded IDs/counts is noted, not silently assumed unchanged.
-- [ ] Every fixable prose-run-summary entry investigated individually (not batch-guessed) and
+      Re-measured 3 times total (start, after PR #191 merged into main, after PR #182 merged) —
+      zero drift from the ticket's own enumerated IDs every time.
+- [x] Every fixable prose-run-summary entry investigated individually (not batch-guessed) and
       either fixed with a real, verified citation or explicitly recorded as "no single real
-      citation identifiable" with reasoning.
-- [ ] `INFRA-221`/`INFRA-405`/`STRAT-236` resolved (either the parser's delimiter set is safely
-      extended with test coverage proving `|` never appears inside a real single citation, or these
-      are normalized another way).
-- [ ] `INFRA-406` resolved with a verified, not guessed, determination of the real intended test(s).
-- [ ] `INFRA-TYPE-001` resolved or explicitly deferred with a stated reason (e.g. "needs a schema
-      change out of proportion for one entry — tracked separately").
-- [ ] `SOC-ABAND-TYPE-01` renamed to a valid 3-digit id, after confirming no other file references
-      the old id.
-- [ ] `tools/parity_corpus_check.py` reports `class2_malformed_test_path: 0` and
-      `class4_bad_id_pattern: 0`, or any remaining count is itself explicitly justified (not silent).
-- [ ] All writes through `tools/parity_ledger_writer.py::write_entry()`; no raw YAML edit.
+      citation identifiable" with reasoning. 59 of 63 fixed; 4 explicitly recorded as unresolvable
+      (INFRA-280/302/303/304 — see Completion Summary).
+- [x] `INFRA-221`/`INFRA-405`/`STRAT-236` resolved — the parser's delimiter set was safely extended
+      (` | ` with required surrounding whitespace) with test coverage proving a doubled `||` (the
+      one other real `|` occurrence in the whole corpus, inside INFRA-405) is never mis-split.
+      INFRA-405 itself needed separate normalization (unrelated trailing-comma-annotation issue).
+- [x] `INFRA-406` resolved with a verified, not guessed, determination of the real intended test.
+- [x] `INFRA-TYPE-001` resolved (new small static test file,
+      `tests/static/test_typecheck_gate_configured.py`, confirmed via corpus-wide grep this shape
+      is a genuine one-off, not warranting a schema change).
+- [x] `SOC-ABAND-TYPE-01` renamed to `SOC-ABAND-TYPE-001`, after confirming via full-repo grep no
+      live file references the old id.
+- [x] `tools/parity_corpus_check.py` reports `class4_bad_id_pattern: 0`.
+      `class2_malformed_test_path: 4` (not 0) — explicitly justified in the Completion Summary: all
+      4 remaining entries cite only frontend Vitest/Playwright tests, for which no real Python/
+      pytest citation exists; extending the parser to accept them was considered and rejected
+      (would silently break `mechanics_auditor_static.py::check_test_path()`'s pytest-invocation
+      assumption for a different real consumer of the same shared parser).
+- [x] All writes through `tools/parity_ledger_writer.py::write_entry()`; one disclosed, narrow
+      exception (removing a stale duplicate `SOC-ABAND-TYPE-01` entry this same session's own
+      rename write created — `write_entry()` upserts by id and has no delete API — matching this
+      repo's established precedent for that exact situation).
 
 ## Related Tickets
 - `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (done) — parent ticket; fixed Class 3 in full,
@@ -148,8 +160,74 @@ guaranteed still accurate. Re-run that tool first.
 
 ## Implementation Notes
 
+See `stored_artifacts/TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL/investigation.md` for the
+full per-defect-shape breakdown and `plan.md` for the shard-by-shard sequencing. Summary: fixed the
+delimiter parser (one safe extension: ` | ` with required whitespace), then worked through all 68
+Class 2 + 1 Class 4 entries shard by shard (combat_movement → faction → substrate → town_resource →
+social_narrative/strategic_cognition → infrastructure), extracting and verifying every real
+citation named in each entry's own text before normalizing `test_path`. Found and fixed several
+defect shapes beyond the ticket's own three named categories (bare-comma shorthand, trailing
+parentheticals/periods, line-wrap spaces, raw shell invocations, `-k`-filtered invocations,
+stale/renamed citations) — all disclosed in investigation.md §2. 4 entries (INFRA-280/302/303/304)
+were found genuinely unresolvable — pure frontend Vitest/Playwright evidence with no real
+Python/pytest citation possible — and left untouched rather than fabricated, per investigation.md
+§4's full reasoning (including why extending the shared parser to accept `.tsx`/`.ts` was
+considered and rejected).
+
 ## Test Summary
+
+New tests: `tests/tools/test_parity_test_path.py` (+2: pipe-delimiter positive case, doubled-pipe
+non-match safety case) and `tests/static/test_typecheck_gate_configured.py` (+3, new file, backing
+INFRA-TYPE-001). Full relevant regression suite re-run after every shard's fix batch:
+`tests/tools/test_parity_ledger_writer.py`, `test_parity_test_path.py`, `test_parity_index_baseline.py`
+(66 passed), then the broader `tests/tools/` + `tests/static/` + `tests/integrity/` suite at the
+end (2630 passed, 26 skipped, 2 xfailed pre-existing/unrelated, 0 failed). Every citation added
+was independently verified to exist (grep for the real file/function/class) before being written —
+never inferred from field-name similarity alone.
 
 ## Files Changed
 
+- `tools/parity_test_path.py` — extended `_DELIM_SPLIT_RE` to accept ` | ` (whitespace-required
+  pipe delimiter), verified safe against the real corpus first
+- `tests/tools/test_parity_test_path.py` — 2 new regression tests for the delimiter extension
+- `tests/static/test_typecheck_gate_configured.py` (new) — real citation for INFRA-TYPE-001
+- `docs/parity_ledger/combat_movement.yaml` — 11 entries fixed (COMB-295, 301-310)
+- `docs/parity_ledger/faction.yaml` — 2 entries fixed (FAC-012, FAC-013)
+- `docs/parity_ledger/substrate.yaml` — 2 entries fixed (SUB-383, SUB-384)
+- `docs/parity_ledger/town_resource.yaml` — 5 entries fixed (TOWN-013, 014, 019, 020, 190)
+- `docs/parity_ledger/social_narrative.yaml` — SOC-CROSS-EP-002, SOC-241 fixed; SOC-ABAND-TYPE-01
+  renamed to SOC-ABAND-TYPE-001
+- `docs/parity_ledger/strategic_cognition.yaml` — STRAT-248 fixed
+- `docs/parity_ledger/infrastructure.yaml` — 34 entries fixed (INFRA-221/405/406/TYPE-001 special
+  cases plus 30 prose entries); INFRA-280/302/303/304 left untouched (disclosed unresolvable)
+
 ## Completion Summary
+
+Resolved 59 of the 68 Class 2 entries and the 1 Class 4 entry this ticket's parent
+(`TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`) reported but did not fix, following its own
+"enumerated, not silenced" precedent — every entry was individually investigated and either fixed
+with a real, verified citation or explicitly recorded as unresolvable, never batch-guessed or
+force-fixed to hit a round number.
+
+**The remaining 4 (INFRA-280, INFRA-302, INFRA-303, INFRA-304) are honestly left unresolved, not
+silently dropped.** All 4 cite only frontend Vitest/Playwright tests (`.ts`/`.tsx`/`.spec.ts`) —
+there is no real Python/pytest citation these entries' own claims could ever satisfy. Extending
+`tools/parity_test_path.py`'s shared parser to accept these file types was seriously considered
+(4 real instances confirms this is not a one-off shape) and explicitly rejected: the parser's other
+real consumer, `mechanics_auditor_static.py::check_test_path()`, unconditionally invokes
+`pytest <citation>` on anything the parser accepts, and pytest cannot execute a `.tsx`/`.ts` file —
+accepting the shape here would silently break real verification for a different, existing
+consumer. `write_entry()`'s own validator requires `test_path` to parse on every write, so there
+was no way to even persist a disclosure-only `support_boundary` update to these 4 entries without
+either fabricating a fake `.py` citation (forbidden by this ticket's own hard constraint) or
+bypassing `write_entry()` with a raw YAML edit to an existing historical entry (a real
+corruption-risk pattern reserved for narrow, disclosed exceptions — not warranted for 4 low-urgency
+entries). `tools/parity_corpus_check.py` now reports `class2_malformed_test_path: 4` (down from
+68) and `class4_bad_id_pattern: 0` (down from 1) — the remaining 4 are the honest, justified floor
+for this ticket's own scope, a real architectural question (frontend-test citation support) for a
+future ticket to decide, not something this one should decide unilaterally.
+
+No src/ or simulation-mechanics code touched. All writes through `write_entry()` except one
+disclosed, narrow exception (removing a stale duplicate `SOC-ABAND-TYPE-01` this session's own
+rename write created, since `write_entry()` has no delete API — matches this repo's established
+precedent).
