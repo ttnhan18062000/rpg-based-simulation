@@ -15,7 +15,7 @@ tags: [faction, grand-strategy]
 Sieges, territory transfer, and `EXPAND_TERRITORY` all require a formal `DiplomaticState.WAR` between factions that no observed run has ever produced — the user has reversed the prior "accepted long-horizon divergence" disposition; find whether any real design declares when war should happen before building anything
 
 ## Status
-BLOCKED
+INPROGRESS
 
 ## Tier
 standard
@@ -249,14 +249,132 @@ Amended the spec accordingly:
 Per explicit instruction: spec amendments first, bring the revision to peer, then code. Sent for
 review; no implementation started.
 
+**2026-09-15, build phase.** Peer approved the spec; built in the stated order:
+- `FactionSentiment` (new, `src/core/state.py`), mirroring `SocialBond` per spec §3.2.1, added to
+  `FactionState.faction_sentiments`.
+- `FactionUpdate.faction_sentiment_delta`/`faction_familiarity_delta`/`faction_sentiment_decay_set`
+  (`src/core/updates.py`), applied through a new authoritative-apply block in `src/engine/apply.py`
+  (clamped [-1,1]/[0,1], mirroring `RelationshipService.process_update()`'s own clamping).
+- `FactionSentimentService` (new, `src/domains/faction/sentiment.py`): `derive_from_bond_updates()`
+  scans the tick's already-produced `SocialBondUpdate`s (the single real choke point per spec
+  §3.2.2 — zero changes to combat/contracts/appraisal), emits scaled, symmetric cross-faction
+  sentiment; `decay_stale_sentiments()` decays toward neutral on `SEASONAL_PROPAGATION_INTERVAL`-style
+  cadence for stale pairs. Wired into `src/engine/pipeline.py` as a new `faction_sentiment` phase,
+  right after `capacity_enforcement`.
+- 6 unit tests (`tests/unit/domains/faction/test_faction_sentiment.py`), all passing; no regressions
+  in ~660 tests run across the affected domains.
+
+**Acceptance-bar proof, real run, no fixture.** 5000 ticks, unmodified `frontier_living_world`,
+seed=42. `bandit_company` <-> `wild_beast_pack` sentiment diverged from real cross-faction combat
+(confirmed via direct instrumentation: 239 real `SocialBondUpdate`s between these two factions'
+entities, out of 499 total nonzero updates, 261 of them cross-faction) and clamped to the full
+-1.0 boundary. Their `diplomatic_relations` genuinely transitioned NEUTRAL -> TENSE -> HOSTILE
+(HOSTILE reached at tick 89 in that run) through the pre-existing, untouched threshold logic in
+`DiplomaticStateMachine.compute_transitions()` — the exact bar peer set: *"a real run in an
+unmodified corpus world showing two factions' sentiment genuinely diverging from ordinary
+interaction, and at least one pair reaching TENSE or HOSTILE as a result. Not a fixture, and not
+unit tests alone."*
+
+**Downstream defect found and fixed — matches peer's explicit warning "expect something
+downstream of DiplomaticStateMachine to have a defect nobody has seen."** The tenth instance of
+this arc's "silence as failure mode" pattern, a new shape: **a scalar standing in for a
+relation.** `compute_transitions()`'s `pair_tension = max(fa.tension_level, fb.tension_level)`
+read `FactionState.tension_level` — a genuinely *ambient*, per-faction scalar (world-compile seed
+via `FactionSpec.initial_tension_level`, `RESOURCE_DEPLETED` stress, `faction_decision.py`'s
+`DEFEND_BORDER`/`TRADE_ROUTE`/`COMMISSION_QUEST` goal-priority reads) — as a stand-in for
+*pairwise* tension between two specific factions. Confirmed live: the moment `bandit_company`'s
+tension with its one real rival crossed 0.7, that same aggregate number applied identically to all
+14 of its other relationships (`bandit_company` went HOSTILE with every faction in the world in
+one tick), which then made `compute_common_enemy_pairs()` form alliances across all 105 remaining
+pairs in the same tick — confirmed by calling both functions directly against a captured tick-89
+state snapshot outside the pipeline, not inferred from the symptom. Root cause was traced to
+`sentiment.py`'s own `tension_delta=tension_bump` — a genuinely pair-specific value routed through
+the ambient scalar field, because no per-pair field existed yet.
+
+**Fix (peer directive: "make `tension_level` per-pair... that isn't a gameplay design choice, it's
+correcting a modelling error"), scoped minimally per peer's explicit instruction not to also merge
+sentiment and tension into one concept:**
+- Added `FactionState.pairwise_tension: Dict[str, float]` (directed, target-keyed) — additive, NOT
+  a rename of `tension_level`, because `tension_level` has four other genuine, unrelated ambient
+  consumers (`faction_decision.py`'s three goal-priority reads, world-compile seeding) that peer's
+  "nothing else moves" scope did not ask me to touch or redesign.
+- Added `FactionUpdate.pairwise_tension_delta: Dict[str, float]` for the pair-specific producers:
+  `diplomatic_actions.py`'s treaty/trade/betrayal handlers (already know the exact counterpart) and
+  `sentiment.py`'s `tension_bump`.
+  `RESOURCE_DEPLETED` (`faction_decision.py`, genuinely ambient — no specific rival) is untouched,
+  still feeds the untouched `tension_delta`/`tension_level` path.
+- `compute_transitions()` now reads `fa.pairwise_tension.get(fid_b, 0.0)` /
+  `fb.pairwise_tension.get(fid_a, 0.0)` — a real per-pair value, not an aggregate proxy.
+- Left the sentiment/tension consolidation question **explicitly unresolved, as its own open
+  question**, per peer: sentiment is directed (how A feels about B), tension is naturally symmetric
+  (how strained the relationship is) — collapsing them asserts they're the same quantity, a real
+  design decision that should not be settled inside this fix.
+
+**Re-verification after the fix.** Same 5000-tick `frontier_living_world` run (and a follow-up
+9000-tick run): zero cascade — across the entire run, only ONE faction pair (`bandit_company` <->
+`wild_beast_pack`, the real rival) ever shows a nonzero `pairwise_tension` or a non-NEUTRAL
+`diplomatic_relations` entry; total non-neutral `diplomatic_relations` entries across all 16-17
+factions = 2 (both directions of that one real pair). That pair reached `TENSE`
+(`pairwise_tension` plateaued at 0.418, below the 0.7 `HOSTILE` threshold) in this run — real
+combat between the two factions was a bounded burst around tick 177, not sustained escalation;
+this is expected and correct now that tension for this pair reflects only their own interaction,
+not contamination from elsewhere. (Run-to-run tick-level details vary slightly due to a pre-existing,
+unrelated non-determinism source in this environment — real-time-based mid-tick throttling
+[`Mid-tick emergency throttle triggered`] that drops items under CPU load — not something this
+ticket's changes introduced or need to fix.) Added 2 new regression tests
+(`test_apply_path_scopes_pairwise_tension_to_named_rival_only`,
+`test_compute_transitions_does_not_cascade_hostility_to_uninvolved_factions`) plus updated the 4
+existing `test_diplomacy.py` tests whose assertions encoded the old scalar-as-pairwise-proxy
+semantics. Full faction-domain suite: 175 passed. Wider re-check (`tests/unit/engine/`,
+`tests/unit/core/`, worldbuilding/observability/quality-hub tests touching `tension_delta`/
+`tension_level`): 674 passed, 1 skipped, no regressions.
+
 ## Test Summary
-_(none — investigation only; findings verified via direct probes against a real, instrumented
-3000-tick simulation and direct code/grep evidence, not committed as test files, since no fix has
-been chosen yet)_
+`tests/unit/domains/faction/test_faction_sentiment.py` — 8 tests (6 original + 2 apply-path/cascade
+regression tests added during the tension-level fix), all passing.
+`tests/unit/domains/faction/test_diplomacy.py` — 27 tests, including 2 new cascade-prevention tests
+(`test_compute_transitions_does_not_cascade_hostility_to_uninvolved_factions` and the apply-path
+scoping test above), all passing; 4 pre-existing tests updated to assert `pairwise_tension_delta`/
+`pairwise_tension` instead of the old ambient `tension_delta`/`tension_level` semantics.
+Full `tests/unit/domains/faction/`: 175 passed.
+Wider regression check: `tests/unit/engine/`, `tests/unit/core/`, `tests/unit/worldbuilding/test_world_compiler.py`,
+`tests/unit/domains/campaigns/test_narrative_ledger.py`, `tests/unit/observability/test_event_extractor_social_faction.py`,
+`tests/unit/observability/test_event_shapers_economy_faction.py`, `tests/unit/observability/test_event_extractor_faction_economy.py`,
+`tests/simulation_quality/test_quality_hub_event_translation.py`: 674 passed, 1 skipped.
+Real 5000-tick and 9000-tick end-to-end proof runs against unmodified `frontier_living_world`
+(seed=42) — see Implementation Notes above for the acceptance-bar evidence and the post-fix
+re-verification.
 
 ## Files Changed
-_(none — investigation only, per this ticket's own explicit instruction)_
+- `src/core/state.py` — new `FactionSentiment` dataclass; `FactionState.faction_sentiments`,
+  `FactionState.pairwise_tension` fields + serialization.
+- `src/core/updates.py` — `FactionUpdate.faction_sentiment_delta`, `faction_familiarity_delta`,
+  `faction_sentiment_decay_set`, `pairwise_tension_delta` fields + `is_noop()`.
+- `src/engine/apply.py` — authoritative apply-path handling for all four new `FactionUpdate` fields.
+- `src/engine/pipeline.py` — new `faction_sentiment` phase, wired after `capacity_enforcement`.
+- `src/domains/faction/sentiment.py` (new) — `FactionSentimentService`.
+- `src/domains/faction/diplomatic_state_machine.py` — `compute_transitions()` now reads
+  `pairwise_tension` instead of `tension_level`; docstring updated with the root-cause explanation.
+- `src/domains/faction/diplomatic_actions.py` — treaty/trade/betrayal handlers emit
+  `pairwise_tension_delta` instead of the ambient `tension_delta`.
+- `tests/unit/domains/faction/test_faction_sentiment.py` (new).
+- `tests/unit/domains/faction/test_diplomacy.py` — 4 tests updated, 2 new tests added.
+- `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (prior commit — relocation out of
+  `docs/mechanics/`).
+- `tickets/todos/TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE.md` (prior commit — scoping-only
+  filing).
 
 ## Completion Summary
-_(not complete — investigation delivered a real, evidence-backed answer per the ticket's own
-acceptance criteria; awaiting peer/user review before any implementation proceeds)_
+Central question answered with a real, evidence-backed build: `DiplomaticStateMachine` is a real
+design, was unreachable for a documented, now-partly-resolved set of reasons, and faction sentiment
+is now a real, live, continuously-operating pre-war tension driver, proven end-to-end in an
+unmodified corpus world — genuine sentiment divergence from ordinary play, and a genuine
+`TENSE`/`HOSTILE` transition through the pre-existing threshold machine, not a fixture. A real,
+pre-existing defect in that same threshold machine (tension modeled as a per-faction scalar instead
+of a per-pair relation) was found only because this work was the first thing to ever push it hard
+enough to fire, and was fixed to the scope peer specified — `tension_level` untouched for its other,
+genuine ambient uses; a new `pairwise_tension` field added for the pairwise case; the
+sentiment/tension consolidation question deliberately left open rather than folded in silently.
+Loop #1 (`military_strength`) remains explicitly out of scope, deferred to
+`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` per the user's own decision.
+Sent to peer for review before this ticket is moved to `tickets/done/`.

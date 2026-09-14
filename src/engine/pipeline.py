@@ -426,7 +426,24 @@ class AuthoritativeApplyPipeline:
         
         update = run_phase("capacity_enforcement", update, lambda u: CapacityEnforcementPhase.enforce(state, u))
         t7 = time.perf_counter_ns()
-        
+
+        # --- TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION: Faction Sentiment ---
+        # Runs last among the real per-tick phases so it sees every SocialBondUpdate produced
+        # this tick (combat, cooperation, appraisal all run earlier). Its own FactionUpdates
+        # apply this tick; DiplomaticStateMachine reads the result next tick (state.factions is
+        # frozen at tick entry) -- same one-tick-lag convention already established for
+        # faction_awareness above.
+        t_start = time.perf_counter_ns()
+        from src.domains.faction.sentiment import FactionSentimentService
+        from src.core.updates import StateUpdate as _SU_fs
+        _sentiment_updates = FactionSentimentService.derive_from_bond_updates(state, update)
+        _sentiment_updates += FactionSentimentService.decay_stale_sentiments(state)
+        update = run_phase(
+            "faction_sentiment", update,
+            lambda u: u.merge(_SU_fs(faction_updates=_sentiment_updates)),
+        )
+        costs["faction_sentiment"] = (time.perf_counter_ns() - t_start) / 1e6
+
         # Final dirty set for result application
         dirty_builder.mark_from_update(state, update)
         update = update.replace(dirty_set=dirty_builder.build())

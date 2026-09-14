@@ -212,7 +212,7 @@ def test_diplomatic_action_betrayal_valid():
     victim_upd = next(u for u in updates if u.faction_id == "victim")
     assert traitor_upd.diplomatic_relations_set["victim"] == DiplomaticState.HOSTILE
     assert victim_upd.diplomatic_relations_set["traitor"] == DiplomaticState.HOSTILE
-    assert victim_upd.tension_delta == pytest.approx(0.3)
+    assert victim_upd.pairwise_tension_delta == {"traitor": pytest.approx(0.3)}
 
 
 def test_diplomatic_action_betrayal_invalid_not_allied():
@@ -236,7 +236,7 @@ def test_diplomatic_action_betrayal_invalid_not_allied():
 
 
 def test_diplomatic_action_trade_agreement():
-    """TradeAgreement → both factions NEUTRAL and tension_delta -0.15."""
+    """TradeAgreement → both factions NEUTRAL and pairwise_tension_delta -0.15 toward each other."""
     from src.engine.faction_decision import TradeAgreement
     from src.domains.faction.diplomatic_actions import handle
     from src.core.enums import DiplomaticState
@@ -254,9 +254,10 @@ def test_diplomatic_action_trade_agreement():
     updates = handle(action, factions)
 
     assert len(updates) == 2
-    for upd in updates:
-        assert upd.tension_delta == pytest.approx(-0.15)
     a_upd = next(u for u in updates if u.faction_id == "merchant_a")
+    b_upd = next(u for u in updates if u.faction_id == "merchant_b")
+    assert a_upd.pairwise_tension_delta == {"merchant_b": pytest.approx(-0.15)}
+    assert b_upd.pairwise_tension_delta == {"merchant_a": pytest.approx(-0.15)}
     assert a_upd.diplomatic_relations_set["merchant_b"] == DiplomaticState.NEUTRAL
 
 
@@ -302,14 +303,14 @@ def test_diplomatic_action_non_aggression_pact():
 
 # ── E53Bc: Diplomatic State Machine Tests ─────────────────────────────────────
 
-def _make_faction(fid, tension=0.0, military_strength=1.0, territory=(), relations=None):
+def _make_faction(fid, military_strength=1.0, territory=(), relations=None, pairwise_tension=None):
     from src.core.state import FactionState
     return FactionState(
         faction_id=fid,
-        tension_level=tension,
         military_strength=military_strength,
         territory=territory,
         diplomatic_relations=relations or {},
+        pairwise_tension=pairwise_tension or {},
     )
 
 
@@ -320,8 +321,8 @@ def test_diplomatic_state_transitions_valid():
 
     # Case 1: NEUTRAL → TENSE when pair_tension > 0.4
     factions = {
-        "fa": _make_faction("fa", tension=0.5),
-        "fb": _make_faction("fb", tension=0.0),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.5}),
+        "fb": _make_faction("fb"),
     }
     updates = compute_transitions(factions)
     assert any(u.diplomatic_relations_set.get("fb") == DiplomaticState.TENSE for u in updates if u.faction_id == "fa")
@@ -329,16 +330,16 @@ def test_diplomatic_state_transitions_valid():
     # Case 2: TENSE → HOSTILE when pair_tension > 0.7
     from src.core.enums import DiplomaticState as DS
     factions2 = {
-        "fa": _make_faction("fa", tension=0.8, relations={"fb": DS.TENSE}),
-        "fb": _make_faction("fb", tension=0.0, relations={"fa": DS.TENSE}),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.8}, relations={"fb": DS.TENSE}),
+        "fb": _make_faction("fb", relations={"fa": DS.TENSE}),
     }
     updates2 = compute_transitions(factions2)
     assert any(u.diplomatic_relations_set.get("fb") == DS.HOSTILE for u in updates2 if u.faction_id == "fa")
 
     # Case 3: NEUTRAL at tension=0.9 → only TENSE (single-step, not HOSTILE in one call)
     factions3 = {
-        "fa": _make_faction("fa", tension=0.9),
-        "fb": _make_faction("fb", tension=0.0),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.9}),
+        "fb": _make_faction("fb"),
     }
     updates3 = compute_transitions(factions3)
     assert any(u.diplomatic_relations_set.get("fb") == DS.TENSE for u in updates3 if u.faction_id == "fa")
@@ -368,8 +369,8 @@ def test_alliance_reduces_shared_territory_threat():
 
     # Two ALLIED factions sharing territory — should NOT trigger TENSE→HOSTILE
     factions = {
-        "fa": _make_faction("fa", tension=0.5, territory=("region_01",), relations={"fb": DS.ALLIED}),
-        "fb": _make_faction("fb", tension=0.5, territory=("region_01",), relations={"fa": DS.ALLIED}),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.5}, territory=("region_01",), relations={"fb": DS.ALLIED}),
+        "fb": _make_faction("fb", pairwise_tension={"fa": 0.5}, territory=("region_01",), relations={"fa": DS.ALLIED}),
     }
     updates = compute_transitions(factions)
     assert updates == [], f"Expected no updates for ALLIED pair, got: {updates}"
@@ -380,8 +381,8 @@ def test_no_transitions_when_below_thresholds():
     from src.domains.faction.diplomatic_state_machine import compute_transitions
 
     factions = {
-        "fa": _make_faction("fa", tension=0.2),
-        "fb": _make_faction("fb", tension=0.1),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.2}),
+        "fb": _make_faction("fb", pairwise_tension={"fa": 0.1}),
     }
     updates = compute_transitions(factions)
     assert updates == []
@@ -393,8 +394,8 @@ def test_tense_to_hostile_from_shared_territory():
     from src.core.enums import DiplomaticState as DS
 
     factions = {
-        "fa": _make_faction("fa", tension=0.5, territory=("region_01",), relations={"fb": DS.TENSE}),
-        "fb": _make_faction("fb", tension=0.0, territory=("region_01",), relations={"fa": DS.TENSE}),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.5}, territory=("region_01",), relations={"fb": DS.TENSE}),
+        "fb": _make_faction("fb", territory=("region_01",), relations={"fa": DS.TENSE}),
     }
     updates = compute_transitions(factions)
     assert any(u.diplomatic_relations_set.get("fb") == DS.HOSTILE for u in updates if u.faction_id == "fa")
@@ -415,15 +416,17 @@ def test_war_to_neutral_exhaustion():
 
 
 def test_urban_political_seeded_tension_fires_tense_transition():
-    """bandit_company/town_council seeded at tension_level=0.5 (urban_political world content)
-    produce a NEUTRAL->TENSE transition via compute_transitions() (TCK-20260702-SIMQ-UPLIFT2-FACTION)."""
+    """bandit_company/town_council seeded at pairwise_tension=0.5 toward each other (urban_political
+    world content) produce a NEUTRAL->TENSE transition via compute_transitions()
+    (TCK-20260702-SIMQ-UPLIFT2-FACTION; re-scoped to pairwise_tension by
+    TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION, see diplomatic_state_machine.py docstring)."""
     from src.core.state import FactionState
     from src.domains.faction.diplomatic_state_machine import compute_transitions
     from src.core.enums import DiplomaticState
 
     factions = {
-        "bandit_company": FactionState(faction_id="bandit_company", tension_level=0.5),
-        "town_council": FactionState(faction_id="town_council", tension_level=0.5),
+        "bandit_company": FactionState(faction_id="bandit_company", pairwise_tension={"town_council": 0.5}),
+        "town_council": FactionState(faction_id="town_council", pairwise_tension={"bandit_company": 0.5}),
     }
     updates = compute_transitions(factions)
 
@@ -443,8 +446,8 @@ def test_vassal_suppresses_transitions():
     from src.core.enums import DiplomaticState as DS
 
     factions = {
-        "fa": _make_faction("fa", tension=0.9, military_strength=5.0, relations={"fb": DS.VASSAL}),
-        "fb": _make_faction("fb", tension=0.9, military_strength=0.1, relations={"fa": DS.VASSAL}),
+        "fa": _make_faction("fa", pairwise_tension={"fb": 0.9}, military_strength=5.0, relations={"fb": DS.VASSAL}),
+        "fb": _make_faction("fb", pairwise_tension={"fa": 0.9}, military_strength=0.1, relations={"fa": DS.VASSAL}),
     }
     updates = compute_transitions(factions)
     assert updates == [], f"Expected no updates for VASSAL pair, got: {updates}"
