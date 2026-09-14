@@ -1,7 +1,8 @@
 import pytest
 from src.core.state import AuthoritativeState, ResourceNodeState, RegionState
 from src.core.builder import V2EntityBuilder
-from src.town.guild import GuildAction
+from src.core.registries import ResourceRegistry
+from src.town.guild import GuildAction, GUILD_LEAD_RESOURCE_KIND
 from src.engine.apply import ApplyPath
 
 @pytest.mark.v2_contract
@@ -35,6 +36,39 @@ def test_guild_visit_leads():
     # 3. Apply
     state = ApplyPath.apply_generation(state, upd)
     assert len(state.entities[99].strategic.leads) > 0
+
+
+def test_guild_lead_resource_kind_exists_in_the_real_content_catalog():
+    """TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE: the exact check that would have caught
+    the original "iron" vs. "iron_vein" mismatch before it shipped -- fails loudly if
+    GUILD_LEAD_RESOURCE_KIND ever stops matching a real entry in the content catalog (a rename, a
+    removed resource), instead of silently producing zero leads forever."""
+    assert ResourceRegistry.contains(GUILD_LEAD_RESOURCE_KIND), (
+        f"GuildAction.visit()'s own GUILD_LEAD_RESOURCE_KIND ({GUILD_LEAD_RESOURCE_KIND!r}) no "
+        "longer matches any resource in the real content catalog (data/content/world/resources.yaml) "
+        "-- lead-generation is now silently producing zero leads again. Update the constant in "
+        "src/town/guild.py to match the real content id."
+    )
+
+
+def test_guild_lead_subject_derives_from_the_catalog_not_a_second_hardcode():
+    """The second hardcode this ticket's own investigation found (`subject="iron_ore"` alongside
+    `node.kind == "iron_vein"`) is now derived from ResourceRegistry, not an independent literal --
+    proven by asserting it matches the real catalog's own yield_item for GUILD_LEAD_RESOURCE_KIND,
+    not a value copied into the test."""
+    node = ResourceNodeState(
+        id=1, kind=GUILD_LEAD_RESOURCE_KIND, position=(10, 10),
+        yields_item="irrelevant_to_this_test", remaining_charges=10, max_charges=10, required_ticks=10,
+    )
+    entity = V2EntityBuilder(50).kind("hero").location(0, 0).strategic().build()
+    state = AuthoritativeState(tick=1, seed=42, entities={50: entity}, resource_nodes={1: node})
+
+    upd = GuildAction.visit(entity, state)
+
+    assert upd is not None
+    lead = upd.entity_updates[50].strategic.leads_add_or_update[0]
+    assert lead.subject == ResourceRegistry.get(GUILD_LEAD_RESOURCE_KIND).yield_item
+
 
 @pytest.mark.v2_contract
 def test_guild_visit_quests():

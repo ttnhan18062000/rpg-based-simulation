@@ -104,6 +104,40 @@ plus raw Gate-A-shaped evidence worth preserving here rather than only in that t
   above, verbatim), `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`,
   `TCK-20260914-DECISION-TRACE-WRITE-COST-OBSERVED`.
 
+### Second confirmed instance, 2026-09-14 (TCK-20260914-HOTFIX-PERF-METROPOLIS-LONGEVITY-RETIER)
+
+The same flag produced a second real CI failure, discovered when `main` failed `Perf / cert / arena`
+on six consecutive merges. `test_perf_metropolis_stress` (1000 entities) was re-tiered when the flag
+went live (above); its sibling `test_perf_metropolis_longevity` (500 entities, 105 real ticks) was
+not, because it only produced a soft warning locally at the time — CI's weaker 2-core runner pushed
+the same real cost past the test harness's own 60s wall-clock budget, tripping a hard `TimeoutError`.
+
+**A/B, same box, back to back, 500-entity scenario, 60 ticks, flag ON vs OFF**:
+
+| | ON (default) | OFF | Δ | % of total Δ |
+|---|---|---|---|---|
+| tick_ms mean | 469.84 | 164.60 | −305.24 | 100% |
+| `advancement` | 237.80 | 59.94 | −177.86 | 58% |
+| `resolution_overhead` | 128.64 | 43.96 | −84.68 | 28% |
+| `combat_engagement` | 63.07 | 0.02 | −63.05 | **21%** |
+| `cooperation` | 63.64 | 41.93 | −21.71 | 7% |
+| `final_integrity` | 51.47 | 17.81 | −33.66 | 11% |
+| `locomotion` | 23.77 | 15.63 | −8.15 | 3% |
+
+**`combat_engagement`'s own phase is only ~21% of the total delta.** This independently reproduces
+the ~82%/~18% downstream split found at 1000-entity scale above — two separate measurements, two
+different scenarios, agreeing on where the cost actually lives. **If this cost is ever reduced
+rather than accommodated, the savings have to come from `advancement`, `resolution_overhead`, and
+`cooperation` — not from `combat_engagement` itself**, which was never the dominant contributor at
+either scale tested so far. That is the single most useful fact for whoever picks up cost-reduction
+work here: it says where the work isn't.
+
+Re-tiered the same way as the stress test (`extra_slow` + `resource_budget_large`, no assertion or
+threshold touched) with the same explicit caveat: a pass means the wall clock fits, not that
+performance is acceptable. **This is the second test re-tiered for the identical underlying cause.**
+A third instance of the same pattern should be read as a signal that the cost needs reducing, not
+as another candidate for the same accommodation.
+
 ## Assurance coverage matrix
 
 | Layer | Detects | Fast signal | Controlled confirmation |

@@ -669,6 +669,89 @@ def test_build_initial_state_survivor_branch_also_carries_compiled_regions_and_p
     assert state.seed == 11
 
 
+# ---------------------------------------------------------------------------
+# TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH — pending_information_
+# responses/pending_self_model_information_events must resolve target_population_id against
+# CAMPAIGN's own catalog-spawned/reconstructed roster, not WorldCompiler.compile()'s separately-
+# ordered entity space. Per the ticket's own acceptance bar: prove the resolved entity IS the
+# intended one, not merely that the field is non-empty -- each test below reads the resolved
+# entity's own population_id/kind, not just checks the list length.
+# ---------------------------------------------------------------------------
+
+def test_pending_information_responses_resolves_to_the_intended_campaign_entity():
+    """Real frontier_living_world content, the ticket's own worked example: a
+    trade_road_bandit_activity/danger_rating fact targets
+    frontier_village_population_frontier_guard. Before this fix, threading this naively would
+    have resolved against WorldCompiler.compile()'s own entity space (actor_id=9 there too, but a
+    DIFFERENT, unrelated entity space) -- this proves it resolves against Campaign's own roster
+    and lands on an entity that actually carries the intended population_id, not merely a
+    non-empty actor_id."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+    state = orch._build_initial_state(42, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert state.pending_information_responses, (
+        "frontier_living_world seeds a real pending_information_responses entry -- an empty "
+        "list here means threading regressed, not that this world has none"
+    )
+    entry = state.pending_information_responses[0]
+    assert entry["subject"] == "trade_road_bandit_activity"
+    assert entry["query_kind"] == "danger_rating"
+
+    resolved_entity = state.entities.get(entry["actor_id"])
+    assert resolved_entity is not None, "resolved actor_id must be a real entity in THIS roster"
+    assert resolved_entity.properties.get("population_id") == "frontier_village_population_frontier_guard", (
+        "the resolved entity must actually carry the target population_id -- a non-empty "
+        "actor_id that resolves to an unrelated entity (e.g. a goblin raider) is exactly the "
+        "false-positive class this ticket exists to prevent"
+    )
+
+
+def test_pending_self_model_information_events_resolves_to_the_intended_campaign_entity():
+    """unit_selfmodel_pilot seeds one real pending_self_model_information_events entry
+    targeting pop_1 -- same resolution path, same acceptance bar, the ticket's other named field."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
+    state = orch._build_initial_state(503, _real_episode_spec(world_id="unit_selfmodel_pilot"))
+
+    assert state.pending_self_model_information_events, (
+        "unit_selfmodel_pilot seeds a real pending_self_model_information_events entry"
+    )
+    entry = state.pending_self_model_information_events[0]
+    resolved_entity = state.entities.get(entry["actor_id"])
+    assert resolved_entity is not None
+    assert resolved_entity.properties.get("population_id") == "pop_1", (
+        "the resolved entity must actually carry the target population_id 'pop_1'"
+    )
+    assert entry["event"].unknowns == ("material.wood.source",)
+
+
+def test_pending_information_responses_resolves_against_survivor_roster_in_later_episodes():
+    """Episode N>0 (survivor reconstruction): resolution must run against the reconstructed
+    survivor roster, not the fresh episode-0 catalog roster -- a population with no surviving
+    member this episode must resolve to no match (skipped), not misdeliver to whichever entity
+    happens to occupy that actor_id number in a stale or unrelated entity space."""
+    orch = CampaignOrchestrator(_make_manifest(n_episodes=2))
+    # A real survivor whose own carried-forward properties include the target population_id --
+    # EntityCarryForward.properties mirrors entity.identity.properties at capture time, so
+    # population_id (set at spawn) survives the carry-forward round-trip.
+    orch.state.persistent_entities[99] = EntityCarryForward(
+        entity_id=99, level=2, xp=100, equipment={}, reputation=0.5, alive=True,
+        kind="human", properties={"population_id": "frontier_village_population_frontier_guard"},
+    )
+
+    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
+
+    assert 99 in state.entities, "precondition: the survivor was actually reconstructed"
+    assert state.pending_information_responses, (
+        "the survivor branch must also thread pending_information_responses, matching the "
+        "already-shipped information_source_profiles precedent (threaded into both branches)"
+    )
+    entry = state.pending_information_responses[0]
+    assert entry["actor_id"] == 99, (
+        "must resolve to the real surviving entity that carries the target population_id, not "
+        "to any leftover numeric coincidence from a different entity space"
+    )
+
+
 def test_town_resolution_no_longer_early_exits_once_campaign_regions_are_populated():
     """Deliberate verification of the ticket's own second Scope bullet.
 
@@ -737,24 +820,20 @@ def test_build_initial_state_survivor_branch_also_carries_information_source_pro
     )
 
 
-def test_build_initial_state_does_not_thread_pending_information_responses_yet():
-    """Deliberate negative assertion, not an oversight: pending_information_responses is
-    NOT threaded (TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH --
-    doing so naively would resolve target_population_id against a completely different,
-    unused entity-numbering scheme and silently misdeliver seeded facts to the wrong
-    entity). frontier_living_world genuinely declares a non-empty
-    pending_information_responses too, so this asserts the field is still empty on the
-    real returned state despite real source content existing -- the correct, deliberate
-    behavior until the follow-up ticket lands a real fix."""
-    orch = CampaignOrchestrator(_make_manifest(n_episodes=1))
-
-    state = orch._build_initial_state(7, _real_episode_spec(world_id="frontier_living_world"))
-
-    assert state.pending_information_responses == [], (
-        "pending_information_responses must stay empty until "
-        "TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH lands a real "
-        "actor-id resolution fix -- threading it naively would misdeliver to the wrong entity"
-    )
+# TCK-20260911-PENDING-INFORMATION-RESPONSES-CATALOG-ACTOR-ID-MISMATCH: this file used to carry
+# a deliberate NEGATIVE assertion here (pending_information_responses staying empty on purpose,
+# to block a naive/unsafe threading). That ticket's own premise ("population_id is never set
+# anywhere in Campaign's spawn pipeline") went stale once
+# TCK-20260911-REGION-DECLARED-POPULATION-SPAWNED-ENTITY-DIVERGENCE added exactly that tagging;
+# re-verified empirically (2026-09-14, real frontier_living_world content) before implementing,
+# per that ticket's own explicit instruction not to assume the fix was still needed as originally
+# scoped. The real fix now threads both pending_information_responses AND
+# pending_self_model_information_events into both _build_initial_state() branches, resolving
+# target_population_id against EACH branch's own entities dict (not WorldCompiler.compile()'s
+# separately-ordered one) via the shared WorldCompiler.resolve_pending_information() helper — see
+# test_pending_information_responses_resolves_to_the_intended_campaign_entity,
+# test_pending_self_model_information_events_resolves_to_the_intended_campaign_entity, and
+# test_pending_information_responses_resolves_against_survivor_roster_in_later_episodes above.
 
 
 def test_threaded_information_source_profiles_are_actually_consumable_by_the_real_router():

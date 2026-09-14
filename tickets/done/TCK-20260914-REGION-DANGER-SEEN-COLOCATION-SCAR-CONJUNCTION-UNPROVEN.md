@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN
-phase: open
+phase: done
 date: 2026-09-14
 tags: [cognition, investigation]
 ---
@@ -15,7 +15,7 @@ tags: [cognition, investigation]
 Does `region_danger_seen`'s full synthesis (actor co-located with an active scar in the same region a location lead resolves to) ever complete under realistic conditions? Not yet known.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -88,13 +88,18 @@ Nobody knows which of these is true yet. This ticket is the investigation, not a
   ticket's own narrower conjunction question.
 
 ## Acceptance Criteria
-- [ ] A real, evidence-backed answer to which of the three explanations (rare-but-real,
+- [x] A real, evidence-backed answer to which of the three explanations (rare-but-real,
       budget-too-short, effectively-unreachable) actually holds, or a more precise fourth
-      explanation if the real evidence doesn't fit any of the three.
-- [ ] The answer is backed by real measurement or real code-path analysis, not restated assumption.
-- [ ] If the answer is "effectively unreachable," a follow-up ticket is filed (not built here).
+      explanation if the real evidence doesn't fit any of the three. **Answer: effectively
+      unreachable (explanation 3), for two independent, fully structural reasons — see
+      Completion Summary.**
+- [x] The answer is backed by real measurement or real code-path analysis, not restated assumption.
+      Backed by BOTH: exhaustive grep-based code-path analysis (zero real callers for the two
+      required preconditions) AND a real 2000-tick empirical measurement confirming it.
+- [x] If the answer is "effectively unreachable," a follow-up ticket is filed (not built here).
+      Filed: `TCK-20260914-REGION-DANGER-SEEN-TWO-DEAD-PRECONDITIONS`.
 - [ ] If the answer is "rare but real" or "budget too short," that's recorded as the resolution —
-      no code change required in either case.
+      no code change required in either case. **N/A — neither of these was the answer.**
 
 ## Related Tickets
 - `TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING` (done — the fix that made this
@@ -107,7 +112,11 @@ Nobody knows which of these is true yet. This ticket is the investigation, not a
   `lead_contradiction`/`region_danger_seen` mechanism this ticket investigates)
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+`staging_artifacts/TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN/investigation.md`
+— full findings: `state.local_scars` is permanently empty (its own 2 construction methods have zero
+real callers); no real production blocker ever carries a material-name subject a location lead
+could match (the only real `subject="iron_ore"` material blocker anywhere is a perf-test fixture);
+a real 2000-tick empirical run confirming both findings exactly.
 
 ## Related Code Areas
 - `src/domains/information/phase.py` (`InformationBeliefPhase.apply()`'s `region_danger_seen`
@@ -123,13 +132,39 @@ None yet — standard tier, staging artifacts created when picked up.
   correct should be carried into the investigation.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**2026-09-14: investigation complete, closed — no code changed.** Started with the cheaper
+code-path analysis peer suggested weighing before committing to a longer simulation run, and found
+it was independently conclusive: grepped every real construction site and caller of
+`LocalScarState`/`RegionalConsequenceService.create_battlefield_scar()`/`.create_raid_scar()` —
+zero real callers anywhere. Then traced the OTHER required precondition (actor co-located with the
+lead's own region) down to its own real driver, `ResolveBlockerScorer`'s material-blocker-matching
+branch, and grepped every real `BlockerState(...)` construction site — no real production blocker
+producer ever sets `subject` to an actual material name; the only such construction anywhere is a
+perf-test fixture (`src/perf/scenarios.py:248`).
+
+Ran the empirical confirmation anyway (peer's own suggested "cheapest discriminator"), 4x longer
+than the prior ticket's own measurement (2000 ticks vs. 500, same world/seed) — zero scars, zero
+matching material blockers, exactly matching both code-level findings. Filed the required follow-up
+ticket per this ticket's own acceptance criteria; did not build any fix, per this ticket's own
+explicit Out of Scope.
 
 ## Test Summary
-_(pending)_
+_(none — investigation-only ticket, per its own Out of Scope)_
 
 ## Files Changed
-_(pending)_
+_(none — investigation only; a new follow-up ticket was filed, no source/test files changed)_
 
 ## Completion Summary
-_(pending)_
+**Answer: explanation 3 — effectively unreachable, for two independent, fully structural reasons,
+not "rare" and not "budget too short."** (1) `state.local_scars` can never be populated in a real
+run — its own 2 construction methods (`create_battlefield_scar()`/`create_raid_scar()`) have zero
+real callers anywhere in the codebase. (2) No real production blocker ever carries a material-name
+subject a location lead's own subject could match — the only real `subject="iron_ore"`
+`material`-kind blocker construction anywhere is a synthetic performance-test fixture, not a real
+producer. Either defect alone is sufficient to make the conjunction permanently unreachable; both
+are true simultaneously today. A real 2000-tick empirical run (4x the prior ticket's own
+measurement) confirmed both findings directly: zero scars and zero matching material blockers ever
+appeared across the entire run. Filed the required follow-up ticket
+(`TCK-20260914-REGION-DANGER-SEEN-TWO-DEAD-PRECONDITIONS`) naming both defects for a future design
+decision on whether/how to fix them — not decided or built here, per this ticket's own explicit
+Out of Scope.
