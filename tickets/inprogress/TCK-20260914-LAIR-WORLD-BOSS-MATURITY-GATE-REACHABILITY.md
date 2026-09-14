@@ -15,7 +15,7 @@ tags: [world]
 `state.maturity >= 50` gates both Lair-occupant spawning and world-boss spawning behind a ~50,000-tick requirement, against a corpus whose runs are 200-5,000 ticks — the user has reversed the prior "accepted long-horizon divergence" disposition and wants this treated as a reachability defect
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -27,6 +27,15 @@ repair
 P1
 
 ## Request Summary
+**Ordering conclusion, recorded here so a future reader cannot open the gate without hitting the
+prerequisite: the maturity/trauma gate is not the first thing to fix here — it's the last.** A
+real, previously-undiscovered defect was found waiting behind it (`difficulty_tier=5` silently
+produces tier-1 stats for both world bosses and Lair occupants — see investigation.md's own Defect
+1), and opening the gate before fixing that defect would make a rare, hard-won encounter into a
+trivial one-shot kill — actively worse than the mechanism staying dormant. **Real sequencing: fix
+the tier-5 stat defect first, verify a spawned boss/occupant is actually formidable, and only then
+make the gate itself reachable.**
+
 `docs/plans/deferred_tuning_decisions_register.md`'s own D-05 entry: `state.maturity` increments
 +1 per 1000 ticks (`src/world/calamity.py::MATURITY_INTERVAL`), and both Lair-occupant spawning and
 `BossService.check_for_boss_spawn()` (`src/world/boss.py::BOSS_SPAWN_THRESHOLD = 50.0`) require
@@ -103,13 +112,36 @@ None yet — standard tier, staging artifacts created when picked up.
   revisited, is the central open question — not assumed either way here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**2026-09-14: investigation in progress, no code changed — peer has asked for the complete
+picture before any fix, ticket stays BLOCKED pending further review, not yet ready to close.**
+Full detail in staging_artifacts/investigation.md. Summary:
+- **Ordering conclusion**: fix the tier-5 stat defect first, verify formidability, only then open
+  the gate — opening the gate first would ship a broken, anticlimactic encounter.
+- **Defect 1**: `difficulty_tier=5` (used by both world-boss and Lair-occupant spawning) silently
+  falls back to tier-1 stats — `DIFFICULTY_TIERS` only defines tiers 1-4. Verified empirically: a
+  "world boss" spawns with `hp=50/atk=10/level=3`, weaker than an ordinary tier-4 monster
+  (`hp=200/atk=30/level=11`). Named explicitly as the 4th instance this week of the same
+  silence-as-failure-mode family (dead `spatial_grid` optimization, a bare-except lead-parse
+  swallow, a trace recorder logging SUCCESS for a no-op).
+- **Defect 2**: the world boss's own signature loot (`item_id="ancient_core"`) is unregistered
+  anywhere in the real content catalog — a credible crash risk once anything inspects the
+  inventory, found but not fully chased to a reproduced crash (time-boxed).
+- **Defect 3**: both halves of the gate's own AND conjunction are independently unreached in a
+  real 2000-tick run — `state.maturity` reached `1` (need `≥50`), `trauma_score` peaked at `9.92`
+  (need `≥20.0`). Not "one large number."
+- **Finding 4**: a second, maturity-independent `world_boss` spawn path exists
+  (`CalamityService`), correctly tiered, but itself only reachable at `tick=5000` (the extreme top
+  edge of the corpus's own run range) and never spawns Lair occupants. Also found: an unused
+  `CALAMITY_RANDOM_CHANCE` constant, and a real drift between two parallel `_BOSS_KINDS`
+  observability constants.
 
 ## Test Summary
-_(pending)_
+_(none — investigation only; findings verified via direct probes against constructed real states,
+not committed as test files, since no fix has been chosen yet)_
 
 ## Files Changed
-_(pending)_
+_(none — investigation only, per this ticket's own explicit instruction)_
 
 ## Completion Summary
-_(pending)_
+_(not complete — investigation ongoing per peer's own explicit "keep investigating, don't build
+yet" instruction; staging_artifacts/investigation.md has the full picture gathered so far)_
