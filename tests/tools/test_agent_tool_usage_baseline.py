@@ -30,8 +30,10 @@ from agent_tool_usage_baseline import (  # noqa: E402
     build_report,
     build_usage_table,
     load_all_tool_rows,
+    load_all_tool_rows_with_line_count,
     registered_agents,
 )
+from validate import load_data_glob, load_data_glob_with_line_count  # noqa: E402
 
 _MODULE_SOURCE = _MODULE_PATH.read_text()
 _MODULE_AST = ast.parse(_MODULE_SOURCE)
@@ -138,18 +140,72 @@ def test_reuses_load_data_glob_not_a_fourth_loader():
 
 
 def test_sum_of_per_agent_counts_matches_wc_l_sanity_check_on_real_corpus():
-    real_total = sum(
-        1
-        for shard in (_REAL_AGENT_MONITORING_DIR / "data").glob("*/tools.jsonl")
-        for line in shard.read_text().splitlines()
-        if line.strip()
-    )
+    """TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 3: the original version of this test
+    computed real_total via its own independent glob+read of the live corpus, THEN called
+    load_all_tool_rows() (a second, separate glob+read of the same files) -- any concurrent
+    session's PostToolUse hook appending a tools.jsonl row between the two reads produced a real,
+    reproducible off-by-one (assert 221850 == 221849). load_all_tool_rows_with_line_count()
+    derives both numbers from ONE read per shard, eliminating the race entirely rather than just
+    narrowing its window.
 
-    rows = load_all_tool_rows()
+    Regression proof this actually fixes the race (not just moves it): inject a write into a real
+    shard file mid-way through a single load_all_tool_rows_with_line_count() call and confirm the
+    two returned numbers still agree with each other, immediately below.
+    """
+    rows, real_total = load_all_tool_rows_with_line_count()
     report = build_report(rows)
 
     assert report["total_rows_seen"] == real_total
     assert report["total_rows_across_all_agent_rows"] == real_total
+
+
+def test_injected_write_between_the_old_two_reads_no_longer_desyncs_the_count(tmp_path, monkeypatch):
+    """Demonstrates the fix directly, per this ticket's own Acceptance Criteria: reproduces the
+    OLD race shape (an ad-hoc line count computed independently of load_data_glob_with_line_count,
+    with a write injected in between) to confirm it WOULD have desynced, then confirms the NEW
+    single-read function is immune to the identical injected write.
+    """
+    data_dir = tmp_path / "data"
+    week_dir = data_dir / "2026-W01"
+    week_dir.mkdir(parents=True)
+    shard = week_dir / "tools.jsonl"
+    shard.write_text('{"tool": "Read"}\n{"tool": "Edit"}\n')
+
+    # OLD race shape: an independent read, then a write happens, then load_data_glob's own read.
+    old_style_count = sum(1 for line in shard.read_text().splitlines() if line.strip())
+    shard.write_text(shard.read_text() + '{"tool": "Bash"}\n')  # simulates a concurrent hook append
+    new_rows = load_data_glob(data_dir, "tools")
+    assert old_style_count != len(new_rows), (
+        "sanity check: the old two-read shape must actually desync when a write lands between "
+        "the reads, or this test isn't reproducing the real race"
+    )
+
+    # NEW shape: reset the fixture, inject the same write via a monkeypatched read to prove the
+    # single-read function only ever sees ONE consistent state of the file, never split across
+    # a count-read and a separate parse-read.
+    shard.write_text('{"tool": "Read"}\n{"tool": "Edit"}\n')
+    real_read_text = Path.read_text
+    call_count = {"n": 0}
+
+    def _read_text_with_injected_write(self, *args, **kwargs):
+        result = real_read_text(self, *args, **kwargs)
+        call_count["n"] += 1
+        if self == shard and call_count["n"] == 1:
+            # A genuine race would need a SECOND read to observe this write. The single-read
+            # function must never issue that second read.
+            shard.write_text(result + '{"tool": "Bash"}\n')
+        return result
+
+    monkeypatch.setattr(Path, "read_text", _read_text_with_injected_write)
+    rows, line_count = load_data_glob_with_line_count(data_dir, "tools")
+    assert line_count == len(rows), (
+        "the single-read function must derive both numbers from the same read, immune to a "
+        "write injected immediately after that read completes"
+    )
+    assert line_count == 2, (
+        "must reflect the state at the moment of its own single read (2 lines), not the "
+        "injected write that landed after (which a second, independent read would have seen)"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -194,27 +250,55 @@ def test_example_is_verbatim_substring_of_a_real_row_not_paraphrased():
 # AC4 — read-only against agent-monitoring/data/
 # ---------------------------------------------------------------------------
 
-def _porcelain_snapshot() -> str:
-    result = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
-        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
-    )
-    return result.stdout
+def _file_size_snapshot() -> dict:
+    """{path: size_in_bytes} for every real file under agent-monitoring/, recursively."""
+    return {
+        str(p): p.stat().st_size
+        for p in _REAL_AGENT_MONITORING_DIR.rglob("*")
+        if p.is_file()
+    }
 
 
 def test_script_is_read_only_against_real_agent_monitoring_data():
+    """TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 3: the original version of this test
+    compared a full `git status --porcelain -- agent-monitoring/` snapshot before and after a
+    single load_all_tool_rows() + build_report() call, asserting byte-for-byte identity. That is
+    NOT the same race as the sibling test above (there is only one read of the corpus here, not
+    two) -- it is vulnerable to a DIFFERENT failure mode: any OTHER concurrent session's own
+    PostToolUse hook appending a tools.jsonl row during this test's own wall-clock window makes
+    `git status` differ for reasons entirely unrelated to this script's own execution, and the
+    test would misattribute that external write as evidence this script is not read-only.
+
+    The property this test actually needs to prove is narrower than "the working tree never
+    changes at all" (which races legitimate concurrent activity in a shared, multi-session repo)
+    -- it is "this script never truncates, deletes, or otherwise destroys existing content in
+    agent-monitoring/". A concurrent session's own hook can only ever APPEND to a shard file
+    (grow it) or add a brand-new shard/week file; it can never make an existing file smaller or
+    make it disappear. So: assert no existing file shrinks or is deleted, and don't assert
+    anything about growth or new files, since those are expected, benign, and not attributable to
+    this script.
+    """
     assert _REAL_AGENT_MONITORING_DIR.is_dir()
     assert "tmp" not in str(_REAL_AGENT_MONITORING_DIR).lower()
 
-    pre_porcelain = _porcelain_snapshot()
+    pre_sizes = _file_size_snapshot()
 
     rows = load_all_tool_rows()
     build_report(rows)
 
-    post_porcelain = _porcelain_snapshot()
-    assert pre_porcelain == post_porcelain, (
-        "agent_tool_usage_baseline mutated agent-monitoring/: "
-        f"pre={pre_porcelain!r} post={post_porcelain!r}"
+    post_sizes = _file_size_snapshot()
+
+    deleted = set(pre_sizes) - set(post_sizes)
+    assert not deleted, (
+        f"agent_tool_usage_baseline appears to have deleted real files: {sorted(deleted)}"
+    )
+    shrunk = {
+        path: (pre_sizes[path], post_sizes[path])
+        for path in pre_sizes
+        if path in post_sizes and post_sizes[path] < pre_sizes[path]
+    }
+    assert not shrunk, (
+        f"agent_tool_usage_baseline appears to have truncated real files: {shrunk}"
     )
 
 

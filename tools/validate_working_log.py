@@ -38,19 +38,21 @@ def run_validation(log_path: Path, done_dir: Path) -> dict:
     kept_rows = [r for r in parse_result.rows if r.record is not None]
     rows = [r.record for r in kept_rows]
 
-    # 1. Duplicate ticket IDs. Exclude rows the tolerant parser already flagged
+    # 1. Duplicate ticket IDs. Previously excluded rows the tolerant parser flagged
     # is_duplicate=True (an exact-duplicate physical line, e.g. from a squash-merge
     # whole-block duplication -- see TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP)
-    # -- those are a known, tracked defect class, not a genuine reopened/duplicate ticket.
-    # Checks 2 and 3 below deliberately keep using the unfiltered `ids`/`kept_rows` — this
-    # exclusion applies to the duplicate-ticket-ID scan only.
+    # BEFORE this scan, on the reasoning that they're "a known, tracked defect class, not a
+    # genuine reopened/duplicate ticket". That reasoning inverted the actual goal
+    # (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 2): those rows are PRECISELY the
+    # ones the merge=union CRLF defect produces, and excluding them meant this check could
+    # never see the exact defect class it exists to catch -- when a duplicate ticket_id's ONLY
+    # occurrences beyond the first were both is_duplicate=True, the check saw zero remaining
+    # rows for that ID and silently missed it entirely. No longer excluded; every kept row
+    # (physical-duplicate or not) participates in this scan.
     ids = [r.get("ticket_id", "").strip() for r in rows]
-    non_duplicate_ids = [
-        r.record.get("ticket_id", "").strip() for r in kept_rows if not r.is_duplicate
-    ]
     seen = set()
     dupes = set()
-    for id_ in non_duplicate_ids:
+    for id_ in ids:
         if id_ in seen:
             dupes.add(id_)
         seen.add(id_)
@@ -82,6 +84,11 @@ def run_validation(log_path: Path, done_dir: Path) -> dict:
         "done_count": len(done_tickets),
         "ambiguous_row_count": parse_result.ambiguous_row_count,
         "duplicate_row_count": parse_result.duplicate_row_count,
+        # Structured field (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 1), alongside
+        # the human-readable `errors` strings above -- lets a ratchet-based gate check
+        # (tools/gate_checks/working_log_duplicate_check.py) consume the exact duplicate-ID set
+        # without parsing formatted error text.
+        "duplicate_ticket_ids": sorted(dupes),
     }
 
 
