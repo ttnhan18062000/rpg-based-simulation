@@ -3255,15 +3255,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/ full suite (798 passed, 6 skipped, unchanged
-    from pre-cutover -- existing MagicMock-based tests are unaffected by the new default
-    because MagicMock''s auto-attribute-creation on an unconfigured `feature_flags`
-    mock evaluates falsy against the string "ON" comparison, coincidentally matching
-    each test''s own pre-cutover expectation; real default-ON behavior was verified
-    separately via non-mocked kernel integration runs, disclosed explicitly in this
-    entry''s text rather than trusted from unit-test pass counts alone).
-
-    '
+  test_path: tests/unit/observability/
   divergence_note: null
   support_boundary: 'COMBAT domain only -- see TOWN-190 (economy) and FAC-013 (faction)
     for the other 2 migrated domains'' cutover entries. Does not touch `demographic_mortality`
@@ -3271,7 +3263,14 @@
     code, disclosed not migrated). Does not implement Phase 2 (quest/demographic/XP
     domains) -- unscoped future work.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path cited this
+    same real directory but with inline pass-count prose (798 passed, 6 skipped) breaking
+    clean parsing. Normalized to a bare directory citation; the original disclosure
+    about MagicMock coincidentally matching pre-cutover expectations, and that real
+    default-ON behavior was verified separately via non-mocked kernel runs (not trusted
+    from this unit-test pass count alone), is preserved in this entry''s own text
+    field above.'
 - id: COMB-296
   text: 'TCK-20260808-ENTITY-VITALS-OBSERVABILITY-GAP -- wound infliction, wound healing,
     and scar gain (EntityUpdate.wound_update / WoundState, ScarState) were durable
@@ -3525,17 +3524,18 @@
 
     '
   proof_type: regression
-  test_path: 'Full scoped pytest re-run (tests/unit/tactical/, tests/unit/combat/,
-    tests/unit/movement/, tests/unit/strategic/, tests/unit/core/, tests/unit/kernel/)
-    -- no new test needed since no prior coverage referenced the removed block''s
-    behavior (confirmed via grep before removal).
-
-    '
+  test_path: tests/unit/tactical/; tests/unit/combat/; tests/unit/movement/; tests/unit/strategic/;
+    tests/unit/core/; tests/unit/kernel/
   divergence_note: null
   support_boundary: 'style/ActionStyle remain real, used imports/locals in tactical.py
     -- the real kiting-distance consumer (line ~555) is untouched by this removal.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path wrapped
+    these same 6 real directories in "Full scoped pytest re-run (...)" prose, breaking
+    clean parsing. Normalized to a plain multi-citation; the original disclosure (no
+    new test needed since no prior coverage referenced the removed block, confirmed
+    via grep before removal) is preserved in this entry''s own text field above.'
 - id: COMB-302
   text: 'TCK-20260809-COMBAT-LIFECYCLE-OBSERVABILITY -- movement.py''s real, successful-disengagement
     case (MovementMode.RETREAT + ActionStyle.EVASIVE -> skip_oa=True, with engaged_hostiles
@@ -3563,17 +3563,18 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/movement/ (41 passed, 1 pre-existing unrelated failure --
-    test_normal_move_triggers_oa, confirmed via bisection to predate this ticket)
-    and tests/unit/observability/test_event_shapers.py::test_combat_engagement_ended_escaped_reads_movement_escape_tag.
-
-    '
+  test_path: tests/unit/movement/; tests/unit/observability/test_event_shapers.py::test_combat_engagement_ended_escaped_reads_movement_escape_tag
   divergence_note: null
   support_boundary: 'Purely additive read-side tag -- does not change skip_oa''s own
     real condition, the opportunity-attack resolution path, or any other movement
     outcome.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path joined these
+    2 real citations with prose "and" (not a supported delimiter) plus an inline pass-count
+    parenthetical (41 passed, 1 pre-existing unrelated failure -- test_normal_move_triggers_oa,
+    confirmed via bisection to predate this ticket) on the first. Normalized to a
+    semicolon-delimited multi-citation; the pass-count disclosure is preserved here.'
 - id: COMB-303
   text: 'TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE -- EntityIdentityResolver.resolve()''s
     Path 1 (clean_metadata) required both faction_id and role_id in identity.properties
@@ -3612,13 +3613,10 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral,
-    ::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role (2 new
-    tests, plus the file''s existing 8, all passing -- regression-covered). Full scoped
-    re-run: tests/unit/entities/, tests/unit/tactical/, tests/unit/combat/, tests/unit/strategic/,
-    tests/unit/core/ -- 551 passed, zero regressions.
-
-    '
+  test_path: tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_resolves_clean_not_collapsed_to_neutral;
+    tests/unit/entities/test_entity_identity_resolver.py::test_faction_id_alone_with_unmappable_legacy_role_gets_unresolved_role;
+    tests/unit/entities/; tests/unit/tactical/; tests/unit/combat/; tests/unit/strategic/;
+    tests/unit/core/
   divergence_note: 'Correction (TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE): the v2_evidence
     claim "combat_damage/entity_killed remain zero" above was incomplete -- based
     on a filtered sample, not a full event-count check. A full re-check on the identical
@@ -3633,7 +3631,14 @@
     real combat-resolution logic -- this fix is entirely in target identity resolution,
     upstream of legality/damage.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path used a `file.py::method1,
+    ::method2` shorthand for the 2 new node-ids (the second `::method` fragment is
+    not independently parseable -- expanded to the full file-qualified form here,
+    both confirmed to exist via grep) plus 5 real directories, wrapped in "plus the
+    file''s existing 8, all passing" / "Full scoped re-run: ... -- 551 passed, zero
+    regressions" prose. Normalized to a plain multi-citation; the pass-count disclosure
+    is preserved here.'
 - id: COMB-304
   text: 'TCK-20260809-COMBAT-PURSUIT-PER-TICK-TRACE -- src/engine/pipeline_phases/movement.py''s
     MovementPhase.route_movement_intent() used a static, persisted entity.navigation.target
@@ -3671,20 +3676,19 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/movement/test_pursuit_target_refresh.py (4 new tests: live-refresh
-    works, fixed-point errands unaffected, dead/missing target_id falls back safely).
-    Full scoped re-run: tests/unit/movement/, tests/unit/tactical/, tests/unit/combat/,
-    tests/unit/kernel/, tests/unit/strategic/ -- 398 passed, 1 pre-existing unrelated
-    failure (test_normal_move_triggers_oa).
-
-    '
+  test_path: tests/unit/movement/test_pursuit_target_refresh.py; tests/unit/movement/;
+    tests/unit/tactical/; tests/unit/combat/; tests/unit/kernel/; tests/unit/strategic/
   divergence_note: null
   support_boundary: 'scheduler.py''s own cadence gate and find_intercept_position()''s
     own prediction math are both untouched -- this fix is entirely in movement-routing''s
     target-position lookup, not in when tactical decisions get made or how an intercept
     point is computed at decision time.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path wrapped
+    these 6 real citations in "(4 new tests: ...)" / "Full scoped re-run: ... -- 398
+    passed, 1 pre-existing unrelated failure (test_normal_move_triggers_oa)" prose.
+    Normalized to a plain multi-citation; the disclosure is preserved here.'
 - id: COMB-305
   text: "TCK-20260809-COMBAT-RESOLVED-SCORER-GAP-FIX -- combat_resolved (CombatScorer.EVENT_TYPES,\
     \ +3, the largest positive weight in the whole COMBAT pillar) has had a real,\
@@ -3712,20 +3716,24 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers.py::test_combat_resolved_fires_alongside_kill,
-    ::test_combat_resolved_fires_alongside_escaped, ::test_combat_resolved_not_emitted_for_caught_fleeing,
-    ::test_combat_resolved_not_emitted_for_pursuit_abandoned (4 new tests). Full scoped
-    re-run: tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py
-    -- 1017 passed, 6 skipped, zero regressions.
-
-    '
+  test_path: tests/unit/observability/test_event_shapers.py::test_combat_resolved_fires_alongside_kill;
+    tests/unit/observability/test_event_shapers.py::test_combat_resolved_fires_alongside_escaped;
+    tests/unit/observability/test_event_shapers.py::test_combat_resolved_not_emitted_for_caught_fleeing;
+    tests/unit/observability/test_event_shapers.py::test_combat_resolved_not_emitted_for_pursuit_abandoned;
+    tests/unit/observability/; tests/simulation_quality/test_combat_scorer.py
   divergence_note: null
   support_boundary: 'CombatScorer.score()''s own scoring logic is untouched -- it
     already had a correct, ready handler; this ticket only adds the missing producer.
     No change to combat_engagement_started/ ended''s own already-implemented behavior,
     or to any combat-resolution logic itself.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path used a `file.py::method1,
+    ::method2, ...` shorthand for the 4 new node-ids (each `::method` fragment expanded
+    to its full file-qualified form here, all 4 confirmed to exist via grep) plus
+    a real directory and a real file, wrapped in "(4 new tests)" / "Full scoped re-run:
+    ... -- 1017 passed, 6 skipped, zero regressions" prose. Normalized to a plain
+    multi-citation; the disclosure is preserved here.'
 - id: COMB-306
   text: "TCK-20260809-COMBAT-TACTICAL-VARIETY-SCORER-GAP-FIX -- the same class of\
     \ gap as COMB-305/ combat_resolved: CombatScorer.score()'s combat_damage handler\
@@ -3758,19 +3766,22 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers.py::test_combat_damage_carries_tactical_modifier_when_active,
-    ::test_combat_damage_tactical_modifier_absent_when_no_trace, ::test_combat_damage_tactical_modifier_picks_mechanics_bible_order_when_multiple_active,
-    ::test_combat_damage_tactical_modifier_excludes_non_modifier_trace_keys (4 new
-    tests). Full scoped re-run: tests/unit/observability/, tests/simulation_quality/test_combat_scorer.py
-    -- 1021 passed, 6 skipped, zero regressions.
-
-    '
+  test_path: tests/unit/observability/test_event_shapers.py::test_combat_damage_carries_tactical_modifier_when_active;
+    tests/unit/observability/test_event_shapers.py::test_combat_damage_tactical_modifier_absent_when_no_trace;
+    tests/unit/observability/test_event_shapers.py::test_combat_damage_tactical_modifier_picks_mechanics_bible_order_when_multiple_active;
+    tests/unit/observability/test_event_shapers.py::test_combat_damage_tactical_modifier_excludes_non_modifier_trace_keys;
+    tests/unit/observability/; tests/simulation_quality/test_combat_scorer.py
   divergence_note: null
   support_boundary: 'calculate_tactical_multipliers()''s own real modifier-computation
     logic is untouched -- this fix reads its already-computed trace output only. CombatScorer.score()''s
     own scoring logic is untouched -- it already had a correct, ready handler.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: same `::method` shorthand-expansion
+    normalization as COMB-305 (all 4 node-ids confirmed to exist via grep) plus a
+    real directory and file, wrapped in "(4 new tests)" / "Full scoped re-run: ...
+    -- 1021 passed, 6 skipped, zero regressions" prose. Normalized to a plain multi-citation;
+    the disclosure is preserved here.'
 - id: COMB-307
   text: 'TCK-20260809-COMBAT-STUCK-ATTACK-TASK-DEAD-TARGET -- an entity''s ATTACK
     task, once emitted with a real target_id, was never cleared on failure (src/engine/pipeline_phases/actions.py''s
@@ -3806,13 +3817,8 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/actions/test_action_routing_task_reset.py (5 new tests: dead-target
-    reset, incapacitated-but-alive-target reset, INSUFFICIENT_READINESS/OUT_OF_RANGE
-    preserved unchanged, missing-action short-circuit unaffected). Full scoped re-run:
-    tests/unit/actions/, tests/unit/combat/, tests/unit/tactical/, tests/unit/movement/,
-    tests/unit/kernel/ -- 206 passed, 1 pre-existing unrelated failure (test_normal_move_triggers_oa).
-
-    '
+  test_path: tests/unit/actions/test_action_routing_task_reset.py; tests/unit/actions/;
+    tests/unit/combat/; tests/unit/tactical/; tests/unit/movement/; tests/unit/kernel/
   divergence_note: null
   support_boundary: 'combat_actions.py''s own real -50.0 illegal-target readiness
     penalty is unchanged -- this fix stops the *repeated* penalty from compounding
@@ -3820,7 +3826,11 @@
     itself for a target that might still become legal. scheduler.py''s own cadence
     mechanism and the 2-pass Collection/action_routing architecture are both untouched.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path wrapped
+    these 6 real citations in "(5 new tests: ...)" / "Full scoped re-run: ... -- 206
+    passed, 1 pre-existing unrelated failure (test_normal_move_triggers_oa)" prose.
+    Normalized to a plain multi-citation; the disclosure is preserved here.'
 - id: COMB-308
   text: 'TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS -- PP-16''s
     own real run_phase("combat_engagement", ...) registration (src/engine/pipeline.py)
@@ -3856,18 +3866,10 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py
-    (2 new tests: prior-phase StateUpdate survives combat_engagement with the flag
-    ON, confirmed to genuinely fail against the pre-fix code via git-stash bisection;
-    regression guard confirming the flag-OFF/corpus-default path was never affected).
-    Full scoped re-run: tests/unit/domains/combat_engagement/, tests/integration/domains/combat_engagement/,
-    tests/unit/combat/, tests/unit/tactical/, tests/unit/kernel/ -- 187 passed, zero
-    regressions. Broader sweep (tests/unit/ -k "pipeline or phase") -- 575 passed.
-    Broader sweep (tests/unit/movement/, tests/unit/strategic/, tests/unit/entities/,
-    tests/unit/actions/, tests/unit/observability/) -- 1286 passed, 1 pre-existing
-    unrelated failure (test_normal_move_triggers_oa).
-
-    '
+  test_path: tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py;
+    tests/unit/domains/combat_engagement/; tests/integration/domains/combat_engagement/;
+    tests/unit/combat/; tests/unit/tactical/; tests/unit/kernel/; tests/unit/movement/;
+    tests/unit/strategic/; tests/unit/entities/; tests/unit/actions/; tests/unit/observability/
   divergence_note: null
   support_boundary: 'CombatEngagementPhase.apply()''s own real posture-evaluation
     logic is untouched -- the bug was entirely in how its own output gets chained,
@@ -3876,7 +3878,18 @@
     condition (persistence phase''s own dominant real cost, ~6% of ticks even at baseline)
     are both documented but not fixed here.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path wrapped
+    these 11 real citations in "(2 new tests: ...)" / "Full scoped re-run: ... --
+    187 passed, zero regressions" / "Broader sweep (...) -- 1286 passed, 1 pre-existing
+    unrelated failure" prose. Normalized to a plain multi-citation. One additional
+    claimed sweep, deliberately NOT added to test_path: "Broader sweep (tests/unit/
+    -k \"pipeline or phase\") -- 575 passed" -- a `-k`-filtered subset of a directory
+    is not the same citable unit as the bare directory itself (running the bare directory
+    would execute a different, larger set of tests than what was actually claimed
+    as passing), so it is disclosed here rather than misrepresented as a directory
+    citation. The pass-count disclosure for the citations that were kept is preserved
+    above.'
 - id: COMB-309
   text: 'TCK-20260809-COMBAT-KILL-LIFECYCLE-CREDIT-GAP-INVESTIGATION -- COMB-295''s
     own real "Kill events" fallback in event_extractor.py fired `CombatKillEvent`
@@ -3924,16 +3937,16 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_world.py::test_combat_kill_not_emitted_for_hazard_caused_death
-    (confirmed via git-stash bisection to genuinely fail against the pre-fix code)
-    and ::test_combat_kill_emitted_for_genuine_combat_death (regression guard -- real
-    combat deaths still fire). Full scoped re-run: tests/unit/observability/, tests/simulation_quality/,
-    tests/observability/ -- 1477 passed, 89 skipped; the only 3 failures (test_grade_anchor_file_exists_and_valid,
-    test_metrics_endpoint_integration, test_ws_events_stream) confirmed pre-existing
-    via git-stash bisection, unrelated to this change (missing local calibration-report
-    fixture and refused localhost connections, respectively).
-
-    '
+  test_path: tests/unit/observability/test_event_extractor_world.py::test_combat_kill_not_emitted_for_hazard_caused_death;
+    tests/unit/observability/test_event_extractor_world.py::test_combat_kill_emitted_for_genuine_combat_death;
+    tests/unit/observability/; tests/simulation_quality/; tests/observability/
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    used a `file.py::method1 (...) and ::method2 (...)` shorthand-plus-prose form
+    for the 2 node-ids (both confirmed to exist via grep, expanded to full file-qualified
+    form) plus 3 real directories, wrapped in "Full scoped re-run: ... -- 1477 passed,
+    89 skipped; the only 3 failures (test_grade_anchor_file_exists_and_valid, test_metrics_endpoint_integration,
+    test_ws_events_stream) confirmed pre-existing" prose. Normalized to a plain multi-citation;
+    the disclosure is preserved here.'
 - id: COMB-311
   text: 'TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX -- `LifecycleSystem.resolve_lifecycle()`''s
     combat-death check (`docs/parity_ledger/combat_movement.yaml` COMB-309''s own
@@ -4044,21 +4057,12 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/domains/optimization/test_movement_candidate_selector.py
-    (4 new tests, all confirmed via git-stash bisection to genuinely fail pre-fix
-    -- 3 with AttributeError since the shared helper doesn''t exist pre-fix, 1 with
-    the exact confirmed candidacy-exclusion bug). Full scoped re-run: tests/unit/domains/optimization/,
-    tests/unit/movement/, tests/unit/combat/, tests/unit/tactical/, tests/unit/kernel/,
-    tests/unit/core/, tests/unit/engine/, tests/unit/actions/, tests/unit/strategic/,
-    tests/unit/observability/, tests/unit/entities/, tests/integration/combat/, tests/integration/pipeline/
-    -- 2047 passed, only the 1 pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa,
-    confirmed via bisection identical on pristine pre-fix code too). tests/integration/kernel/test_determinism_suite.py,
-    test_seed_stability.py, test_authoritative_outcome_truth.py -- 9 passed. test_long_run_determinism.py''s
-    own test_1000_tick_determinism hit a pre-existing, unrelated 60s CI resource-timeout
-    (confirmed identical on pristine pre-fix code), matching the already-disclosed
-    chronic tick-budget-exceeded finding from COMB-308.
-
-    '
+  test_path: tests/unit/domains/optimization/test_movement_candidate_selector.py;
+    tests/unit/domains/optimization/; tests/unit/movement/; tests/unit/combat/; tests/unit/tactical/;
+    tests/unit/kernel/; tests/unit/core/; tests/unit/engine/; tests/unit/actions/;
+    tests/unit/strategic/; tests/unit/observability/; tests/unit/entities/; tests/integration/combat/;
+    tests/integration/pipeline/; tests/integration/kernel/test_determinism_suite.py;
+    tests/integration/kernel/test_seed_stability.py; tests/integration/kernel/test_authoritative_outcome_truth.py
   divergence_note: null
   support_boundary: 'The specific traced pair (entities 25/12) still does not converge
     to melee range post-fix -- they now move but enter a stable mutual-orbit oscillation
@@ -4071,7 +4075,17 @@
     oscillation (confirmed via the non-zero combat_resolved/entity_killed counts above)
     -- not a claim that all pursuit now converges reliably.
 
-    '
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path wrapped
+    these 17 real citations (the 3 final integration test files share tests/integration/kernel/''s
+    directory prefix, confirmed by reading their location -- the original prose only
+    stated it once) in "(4 new tests: ...)" / "Full scoped re-run: ... -- 2047 passed,
+    only the 1 pre-existing, already-confirmed-unrelated failure (test_normal_move_triggers_oa)"
+    / "... -- 9 passed" / a disclosed pre-existing CI resource-timeout on test_long_run_determinism.py''s
+    own test_1000_tick_determinism prose. Normalized to a plain multi-citation (test_long_run_determinism.py
+    deliberately NOT added -- its own claim is that it times out, not that it passes,
+    so citing it as a passing test_path entry would misrepresent the claim); the full
+    disclosure is preserved here.'
 - id: COMB-312
   text: ActionRoutingPhase.route() emits a WorldEvent(category=WorldEventCategory.COMBAT_LOSS)
     whenever an entity's ATTACK action resolves against a defender that survives (combat_upd.alive_set
