@@ -15,7 +15,7 @@ tags: [registry, process-improvement]
 Closing a ticket updates only its own file and the working log — nothing checks whether the fix just invalidated another open ticket's stated premise
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -139,12 +139,13 @@ handoff-visibility mechanism itself belongs to a different track, not here.
 - Re-litigating any of the three cases' own already-closed/already-corrected dispositions.
 
 ## Acceptance Criteria
-- [ ] Real investigation of tooling cost/precision for the back-reference-sweep and registry-
+- [x] Real investigation of tooling cost/precision for the back-reference-sweep and registry-
       cross-matching options, not just the re-verification-convention option (which requires no
       tooling and is easy to recommend by default without checking the others).
-- [ ] A recommendation among the options in Scope, with rationale, brought to peer/user review
+- [x] A recommendation among the options in Scope, with rationale, brought to peer/user review
       before any implementation.
-- [ ] No implementation without that review.
+- [x] No implementation without that review. (No `src/`/`tools/`/`tests/` files touched by this
+      ticket — see Files Changed.)
 
 ## Related Tickets
 - `TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING` (done — case 1)
@@ -170,13 +171,52 @@ None yet — standard tier, staging artifacts created when picked up.
   the central open question this ticket exists to answer — not pre-judged here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Investigation-only, per this ticket's own AC ("No implementation without that review"). Two direct
+measurements against the real corpus, not assumption:
+
+1. `docs/REGISTRY.yaml` does not index `tickets/todos/`/`tickets/inprogress/` at all today
+   (`generate_registry.py`'s ticket-collection walk is `tickets/done/*.md` only, confirmed by
+   reading the code and by querying the live registry: 0 of 1958 indexed ticket entries are open
+   tickets). The "registry cross-matching" option as literally scoped cannot work without first
+   extending that walk.
+2. Even if extended, `## Related Code Areas` is empty on **53.4%** (31/58) of the real open-ticket
+   corpus, measured directly against the files (not the registry, which can't see them). Where
+   populated, citations are accurate (79/80 real paths; the one non-match is a templated glob
+   placeholder, not a stale reference) — the defect is sparsity, not inaccuracy.
+
+**Recommendation** (full detail in `plan.md`): do not build registry cross-matching as scoped —
+it has real, previously-uncounted tooling cost (Measurement 1) and would still miss a majority of
+open tickets even after that cost is paid (Measurement 2). Recommend prototyping a close-time
+full-text keyword/path sweep instead — search the closing ticket's git-touched paths against every
+open ticket's whole body text, not the sparse structured field — sidestepping the sparsity problem
+entirely. This is a refinement of the ticket's own already-scoped "back-reference sweep" option
+(its "keyword overlap" half), not a new mechanism invented outside the investigation.
+
+**This recommendation has not yet been reviewed by peer/user** — per AC, no implementation may
+proceed until that review happens. Status left `BLOCKED` (investigation complete, blocked on
+review) rather than `DONE`, since this ticket has not actually resolved anything yet — only
+produced the evidence the resolution decision needs.
 
 ## Test Summary
-_(pending)_
+No tests added — no code changed. See `test_plan.md` for how the investigation's own three
+measurements were verified (read the real parsing code, ran it against the real corpus, checked
+citations against the real filesystem — all reproducible, not assumed).
 
 ## Files Changed
-_(pending)_
+- `staging_artifacts/TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE/` (new:
+  investigation.md, plan.md, test_plan.md).
+- This ticket file itself (Implementation Notes/Test Summary/Files Changed above; AC checked off;
+  `## Status` set to `BLOCKED`).
+- No `src/`, `tools/`, or `tests/` files touched.
 
 ## Completion Summary
-_(pending)_
+Investigation complete. Measured, rather than assumed, that the registry-cross-match option is not
+viable as scoped (registry doesn't index open tickets; the field it would key off is 53.4% empty
+on the real corpus). Recommend a full-text keyword/path sweep instead of the structured-field
+cross-match, as a refinement of the ticket's own back-reference-sweep option. Recorded corroborating
+context from two independent documents describing the same underlying premise-staleness mechanism
+(reachability findings doc Finding 6; the 2026-08-04 gap audit's 2026-09-14 deferred-check
+addendum, including its own unresolved ±2 Review-count discrepancy, preserved rather than smoothed
+over). This ticket is **not** implementing anything and is **not** being closed as fully resolved —
+left `BLOCKED`, pending the peer/user review its own AC requires before any of the above becomes a
+real ticket.
