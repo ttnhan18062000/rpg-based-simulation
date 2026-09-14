@@ -11775,18 +11775,23 @@
     (new SubagentStop hook key, matcher "*", command not suffixed with || true); agent-orchestration/hook-events.yaml
     (new SubagentStop entry); agent-orchestration/hook-surface-policy.yaml (providers.claude.enabled_events
     now includes SubagentStop; new providers.claude.available_events).
-  test_path: 'tests/tools/test_subagent_stop_background_guard.py (5/5 passing: fires
-    on still-running background task, allows completed task, allows no-background-task
-    common case with zero side-effect files, fails open on malformed/empty/non-JSON
-    stdin and malformed background_tasks shapes, respects stop_hook_active loop-prevention);
-    tests/tools/test_settings_json_hooks_wiring.py (4/4 passing: new key proven genuinely
-    new, command not suffixed with swallowing || true, script path exists and is referenced,
-    existing PreToolUse/PostToolUse/permissions.allow content untouched); PYTHONPATH=tools:.
-    pytest tests/agent_orchestration/test_contract_structure.py (20/20 passing, including
-    test_policy_represents_claude_three_enabled_events, test_hook_events_yaml_normalized_vocabulary_includes_subagent_stop,
-    and new test_policy_represents_claude_four_available_events).'
+  test_path: tests/tools/test_subagent_stop_background_guard.py; tests/tools/test_settings_json_hooks_wiring.py;
+    tests/agent_orchestration/test_contract_structure.py
   divergence_note: null
   proof_type: contract
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    cited the same 3 real files but with inline pass-count/PYTHONPATH-prefix prose
+    that broke clean parsing (confirmed all 3 files exist). Normalized to a plain
+    file-level multi-citation; the original per-file pass counts and coverage detail:
+    test_subagent_stop_background_guard.py (5/5 passing: fires on still-running background
+    task, allows completed task, allows no-background-task common case with zero side-effect
+    files, fails open on malformed/empty/non-JSON stdin and malformed background_tasks
+    shapes, respects stop_hook_active loop-prevention); test_settings_json_hooks_wiring.py
+    (4/4 passing: new key proven genuinely new, command not suffixed with swallowing
+    || true, script path exists and is referenced, existing PreToolUse/PostToolUse/permissions.allow
+    content untouched); test_contract_structure.py requires PYTHONPATH=tools:. to
+    run (20/20 passing, including test_policy_represents_claude_three_enabled_events,
+    test_hook_events_yaml_normalized_vocabulary_includes_subagent_stop, and new test_policy_represents_claude_four_available_events).'
 - id: INFRA-406
   text: 'Wave 1 agent-tools frontmatter rollout (TCK-20260904-AGENT-TOOLS-FRONTMATTER-WAVE):
     10 of 16 .claude/agents/*.md role files (investigator, ticket-scoper, done-checker,
