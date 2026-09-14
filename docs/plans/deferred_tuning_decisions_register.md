@@ -145,6 +145,26 @@ combat deaths at all, so no trauma threshold value alone can open the gate there
 different, region-specific defect (trauma accrual, not the gate's threshold), tracked separately —
 see `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (filed, not built in this batch).
 
+**A found-while-fixing wrinkle worth recording on its own**: `ancient_core` had to be registered in
+*two* places — `data/content/world/items.yaml` (the authoritative catalog) and
+`src/core/items.py`'s own hardcoded default dict. Editing only the hardcoded dict would have been
+silently overwritten at import time (`seed_phase1_content()` →
+`CoreItemRegistry.bootstrap(catalog_repo.items)`, which runs automatically on `src.core.registries`
+import whenever `data/content/` is present — true for every real run in this repo). This is an
+eighth instance of the silence-as-failure-mode family named throughout this week's work, and a
+nastier variant than the others: not a missing definition falling back silently, but a
+**correct-looking edit silently discarded by a second source of truth**. The next person editing an
+item's definition should reach for the catalog YAML first, not the dict.
+
+**Open balance question, not a wiring gap — flagged for the next SimQ corpus comparison, not for
+this ticket to resolve**: lowering `BOSS_SPAWN_THRESHOLD` to `2.0` means `state.maturity` crosses it
+around tick 2000, and `BOSS_SPAWN_TRAUMA_THRESHOLD` at `8.0` sits just under the empirically
+observed `9.92` peak. Together, this gate may now fire *often* — possibly in most runs, in more
+than one region — rather than rarely. Both values are correctly reachability-only and are not being
+adjusted in response to this; noted here so the next SimQ corpus comparison is read with this in
+mind, and so a high boss-spawn frequency is recognized as a tuning-pass question, not treated as a
+new defect. A common boss encounter is a far better problem than one that never occurs.
+
 ### D-06 · Faction war declaration frequency ⚠️ reachability
 **Deferred from:** `TCK-20260908-CAMPAIGN-MODE-ACTIVATED-SUBSYSTEM-BASELINE-DRIFT` (done) and
 `TCK-20260909-GRIEF-NEMESIS-CAMPAIGN-REVERIFICATION` (done)

@@ -1873,7 +1873,23 @@ untouched by §2.57's fix (out of that ticket's scope).
   real run — the one corpus world with a real `LAIR`-kind Place (`generated_frontier_3_42`) has its
   region (`moon_cave`) sitting at exactly `0.0` `trauma_score` for a full 5000-tick run (zero
   recorded combat deaths there), which no threshold value alone can open. Tracked separately:
-  `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (filed, not built in this batch).
+  `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (filed, not built in this batch). Not dead
+  code — a region that never sees combat, so no threshold value could ever open its gate.
+- **A found-while-fixing wrinkle worth recording on its own**: `ancient_core` had to be registered
+  in *two* places — `data/content/world/items.yaml` (the authoritative catalog) and
+  `src/core/items.py`'s own hardcoded default dict. Editing only the hardcoded dict would have been
+  silently overwritten at import time (`seed_phase1_content()` →
+  `CoreItemRegistry.bootstrap(catalog_repo.items)`, which runs automatically on
+  `src.core.registries` import whenever `data/content/` is present — true for every real run in
+  this repo). A fix that passed every unit test touching the dict directly would have done nothing
+  in a real run. Not a missing definition falling back silently, like the other instances in this
+  entry — a *correct-looking edit silently discarded by a second source of truth*.
+- **Open balance question, not a wiring gap**: lowering the two thresholds means the gate may now
+  fire *often* — `state.maturity` crosses `2.0` around tick 2000, and `8.0` sits just under the
+  empirically observed `9.92` trauma peak — possibly in most runs, in more than one region, rather
+  than rarely. Both values are correctly reachability-only and are not being adjusted in response;
+  noted here so the next SimQ corpus comparison is read with this in mind, and so a high spawn
+  frequency is recognized as a tuning-pass question, not treated as a new defect.
 - **Status**: RATIFIED
 
 ---

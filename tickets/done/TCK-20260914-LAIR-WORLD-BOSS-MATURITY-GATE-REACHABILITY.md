@@ -174,7 +174,21 @@ gate. All four steps built; see plan.md for the full detail. Summary:
 - **Known remaining gap**: the Lair-occupant side wasn't proven end-to-end — the one corpus world
   with a real `LAIR`-kind Place has a region with `0.0` `trauma_score` across a full 5000-tick run
   (zero combat deaths there). Filed separately (`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`)
-  rather than silently left unmentioned or force-fit into this ticket's own scope.
+  rather than silently left unmentioned or force-fit into this ticket's own scope. Peer's own
+  framing: not dead code, but a *region that never sees combat*, so no threshold value could ever
+  open that gate — a 9th instance of the silence-as-failure-mode family, in a new shape.
+- **A found-while-fixing wrinkle, peer-flagged as worth keeping explicitly**: `ancient_core` had to
+  be registered in *two* places (the catalog and `src/core/items.py`'s hardcoded default dict) —
+  editing only the dict would have been silently overwritten at import time by
+  `CoreItemRegistry.bootstrap(catalog_repo.items)`, meaning a fix that passed every unit test
+  touching the dict directly would have done nothing in a real run. 8th instance of the
+  silence-as-failure-mode family, and a nastier variant than the others: not a missing definition
+  falling back silently, but a *correct-looking edit silently discarded by a second source of
+  truth*. See D-05 for the full record.
+- **Open balance question, not a wiring gap**: the new thresholds (maturity crosses ~tick 2000,
+  trauma sits just under the observed 9.92 peak) may make this gate fire *often* — possibly in most
+  runs, multiple regions — rather than rarely. Not being tuned in response; flagged in D-05 for the
+  next SimQ corpus comparison to be read with this in mind.
 - `docs/plans/deferred_tuning_decisions_register.md` D-05 and
   `docs/guidelines/intentional_divergences.md` §2.56/§2.57 updated to record the resolution and the
   provisional-values framing.
