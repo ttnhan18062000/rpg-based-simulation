@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER
-phase: open
+phase: done
 date: 2026-09-14
 tags: [combat, cognition, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [combat, cognition, determinism]
 Complete and enable `combat_engagement`: build durable `OpponentModel` storage, correct the power-gap-driven estimate, wire real combat learning, and flip `ENABLE_COMBAT_ENGAGEMENT` last, against the approved `docs/mechanics/04_strategic_cognition.md` §13 law
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -117,19 +117,19 @@ Everything §13.8/§13.10 names as a declared future seam, not built here:
   for a real acceptance scenario; otherwise leave as its own separate dormant-code finding).
 
 ## Acceptance Criteria
-- [ ] `OpponentModel` storage is durable, typed, bounded, and salience-evicted; persists across
+- [x] `OpponentModel` storage is durable, typed, bounded, and salience-evicted; persists across
       ticks in a real corpus run.
-- [ ] `OpponentPerceptionService.estimate()` uses `true_power`/`apparent_power`/power-gap-driven
+- [x] `OpponentPerceptionService.estimate()` uses `true_power`/`apparent_power`/power-gap-driven
       uncertainty exactly as specified in §13.2–13.3; the dead `intel` variable is fixed.
-- [ ] The noise term is proven deterministic (same seed/tick/observer/observed → same estimate,
+- [x] The noise term is proven deterministic (same seed/tick/observer/observed → same estimate,
       always) — a real test, not just code review.
-- [ ] Witnessed-combat third tier is real and reachable from existing event/position data.
-- [ ] `CombatLearning.learn()` is wired into a real combat-resolution call site; both participants'
+- [x] Witnessed-combat third tier is real and reachable from existing event/position data.
+- [x] `CombatLearning.learn()` is wired into a real combat-resolution call site; both participants'
       `OpponentModel`s update from real fight outcomes.
-- [ ] `ENABLE_COMBAT_ENGAGEMENT` is `ON` by default, flipped last, after everything above passes.
-- [ ] Full `tests/integration/` run, paths named in Test Summary, green (or every failure triaged
+- [x] `ENABLE_COMBAT_ENGAGEMENT` is `ON` by default, flipped last, after everything above passes.
+- [x] Full `tests/integration/` run, paths named in Test Summary, green (or every failure triaged
       and disclosed, per CI Failure Triage discipline).
-- [ ] Every real bug `combat_engagement` reveals once reachable (§13.10's own prediction) is either
+- [x] Every real bug `combat_engagement` reveals once reachable (§13.10's own prediction) is either
       fixed in this ticket (if in scope) or filed as its own disclosed follow-up (if a design
       decision, brought to peer first).
 
@@ -174,13 +174,200 @@ Everything §13.8/§13.10 names as a declared future seam, not built here:
   per standing arc discipline.
 
 ## Implementation Notes
-_(pending)_
+
+Built in the scope's own declared order — storage first, flag flip last — across 6 steps, each
+committed and regression-tested independently:
+
+1. **Storage**: `CombatMemory.opponent_stats` retyped `Mapping[str, Any]` → `Mapping[str,
+   OpponentModel]` in `src/core/cognition.py` (confirmed via full-repo grep to be genuinely
+   unclaimed before this ticket). New `src/domains/combat_engagement/memory_store.py`:
+   `MAX_OPPONENT_MODELS_PER_ENTITY = 8`, `compute_salience()` (surprise magnitude × 0.6 + outcome
+   severity × 0.4), `store_opponent_model()` (upsert, evicts lowest-salience on overflow — never
+   oldest-first, per §13.6).
+2. **Wiring**: `CombatEngagementPhase.apply()` reads `actor.cognition.memory.combat.opponent_stats`
+   before evaluating, writes back via `EntityUpdate.cognition_bundle_set`, read-through-then-replace
+   matching `MemoryUpdatePhase.apply()`'s own precedent.
+3. **Perception rewrite**: new `src/domains/combat_engagement/power.py` — `true_power()` (exact D-11
+   formula), `apparent_power()` (extracted from the pre-existing hp_ratio curve), `gap_uncertainty()`
+   (exponential decay, §13.3), `deterministic_observation_noise()` (`hashlib.sha256`-keyed on
+   `seed:tick:observer_id:observed_id`, no RNG object, §13.9). `OpponentPerceptionService.estimate()`
+   rewritten to use these; the dead `intel` variable removed.
+4. **Witnessed-combat**: `CombatEngagementPhase.apply()` now takes a `tick_update` parameter
+   (threaded through `pipeline.py`'s own call site) and extracts real same-tick `CombatUpdate`
+   participant pairs to update nearby witnesses' `OpponentModel`s for both fighters — no new event
+   field, per the spec's own citation.
+5. **Combat-learning wiring**: declared as law first (`docs/mechanics/04_strategic_cognition.md`
+   §13.5a) before being built, per-participant classification keyed on own role + own post-exchange
+   HP ratio (never a shared outcome — the decisive worked scenario: engage → nearly die → survive →
+   remember target as far stronger). New `src/domains/combat_engagement/learning_outcome.py` is the
+   single sanctioned `CombatUpdate.outcome_kind` → `CombatLearning.learn()` mapping. Wired at the
+   *real* call site, `src/engine/domain/combat_actions.py::CombatActions.execute_attack()` — not
+   `src/engine/combat.py` as originally scoped; that module's own resolvers never have both real
+   `EntityState` objects in scope together, confirmed by investigation, disclosed as a scope
+   correction rather than assumed. FLED (movement.py's own `combat_escape="EVASIVE_SUCCESS"`
+   producer) wired as a separate, smaller commit: fixed a real, disclosed pre-existing defect
+   (`CombatLearning.learn()` named `"FLED"` in its own type comment but had no branch — silently
+   zero correction) and signed its direction deliberately (magnitude untouched, only
+   confidence/uncertainty move, to avoid a self-confirming avoidance-escalation loop). Both writes
+   gated on `ENABLE_COMBAT_ENGAGEMENT`, matching the passive-observation gate (a peer review
+   question, not self-caught).
+6. **Flag flip**: `ENABLE_COMBAT_ENGAGEMENT` → `ON` in `src/domains/optimization/feature_flags.py`.
+
+**Real bugs §13.10 predicted and this step surfaced** (all fixed in scope, none deferred as design
+decisions):
+- A genuine cross-phase data-loss bug: `EntityUpdate.merge()`'s `cognition_bundle_set` field is a
+  whole-object replace, not a per-subfield merge — `memory_update` runs before `combat_engagement`
+  in the pipeline, so combat_engagement's own write was silently discarding whatever memory_update
+  had staged for the same entity the same tick, the instant a second live writer existed. Caught by
+  `tests/integration/scenarios/test_causal_memory_route_scoring_e2e.py`, which has no connection to
+  this feature. Fixed via a `_read_through_cognition()` helper at all 3 real write sites in
+  `phase.py` and a targeted patch at `movement.py`'s pipeline call site. The actual root cause (the
+  field's own unsafe merge semantics) is out of this ticket's scope — filed as
+  `TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD`, which also enumerates all 9 real
+  writers of that field and their individual safety verdicts.
+- A real O(n²) performance defect: the main per-actor loop's own "spatial index optimization"
+  checked `getattr(state, "spatial_grid", None)` for an attribute that never existed on
+  `AuthoritativeState` — dead code since 2026-05-30, dormant only because the flag defaulted OFF —
+  causing a full O(n) scan per actor, every tick. Measured directly: ~1.9s per
+  `CombatEngagementPhase.apply()` call at 1000 entities before the fix. Fixed using the same real,
+  populated `SpatialQueryService.nearby_entities()` a sibling phase (`RoleModelSelectionPhase`)
+  already uses. Post-fix: ~65–117µs/entity, roughly linear.
+- Direct A/B profiling of a real 1000-entity metropolis scenario (flag OFF vs ON) attributed the
+  *remaining* cost after the O(n²) fix: real combat volume rose 4.1x once entities could actually
+  engage/avoid, and 82% of the resulting per-tick cost increase is the rest of the engine correctly
+  doing more work (apply/hard-law-check/observability costs in `advancement`, `resolution_overhead`,
+  `cooperation`) — not this feature's own phase (~18% of the delta). This is the price of a dormant
+  subsystem waking up, not a regression. Per user decision: ship the flag ON; re-tier
+  `tests/perf/test_perf_metropolis.py::test_perf_metropolis_stress` to `extra_slow`/
+  `resource_budget_large` (justified independently — it already consumed 23s of a 60s budget with
+  the flag OFF) rather than treat the metropolis-scale cost as a blocking fix. Three specific
+  pre-existing system costs this profiling surfaced (`find_pending_incoming_offer`, `fingerprint()`,
+  decision-trace file I/O) filed as report-only tickets, cross-referenced into the existing
+  performance-optimization epic rather than fixed here.
+- A real, live test-gate defect found in the same investigation: `assert_perf_threshold()` defaults
+  `hard=False`, so a threshold breach only warns — confirmed with a concrete instance
+  (`test_perf_metropolis_stress` was already breaching both its own thresholds with the flag OFF and
+  still reporting green). Filed as its own diagnosed-defect ticket
+  (`TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT`), distinct from the report-only cost tickets.
+
+**A genuine, disclosed scope correction, not silently absorbed**: the ticket's own stated wiring
+target for combat-learning (`src/engine/combat.py`) was structurally wrong once investigated — that
+module's resolvers never have both participants' full `EntityState` objects in scope together. The
+correct site (`combat_actions.py::execute_attack()`) was found and used instead; the deviation was
+disclosed in the commit message and confirmed correct on review before building on it further.
+
+**CI investigation, disclosed rather than glossed over**: enabling the flag surfaced a real,
+sandbox-local hash divergence in `test_1000_tick_determinism` that could not be reproduced in three
+separate clean, isolated reproductions outside the pytest harness — subsequently confirmed
+independent of this branch entirely (`main` itself fails its own `Slow regression` job on an
+unrelated commit). A second CI job (`Perf / cert / arena`) failed on this branch across 3 separate
+runs with 4 hypotheses tested and falsified (Python 3.12 vs CI's 3.13 — ruled out by installing
+3.13 locally and reproducing the identical pass; stale local state; `hard=True` assertion sites —
+none exist in the failing selection; CPU core count — ruled out under `taskset -c 0,1`), then passed
+cleanly on the next run with no causal explanation — recorded as unresolved-but-currently-green, not
+as fixed, to avoid manufacturing a false "verified" the same way this same investigation found and
+corrected elsewhere this week. A third intermittent CI job (`API / tools / logging`, an
+already-diagnosed TOCTOU race, relayed to the agent-process track separately) shares the same shape:
+tests coupled to timing or shared mutable state on a variable-load hosted runner, not deterministic
+bugs in this branch's own code.
+
+Along the way: a real merge-conflict resolution folding two smaller, already-in-flight PRs
+(`TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING`'s own fix and its own investigation
+follow-up) into this same PR per a "fewer, larger PRs" standing preference, and a squash-merge
+phantom-diff artifact caught before merging blind (a stacked branch's own already-squash-merged
+ancestor re-appeared as a spurious diff against `main`; verified content-identical file-by-file
+before trusting `git`'s own `mergeable: MERGEABLE` signal, not just the file count).
 
 ## Test Summary
-_(pending)_
+
+- `tests/unit/domains/combat_engagement/` (memory_store, opponent_model_persistence, power,
+  opponent_perception, witnessed_combat, learning_outcome, phase4_combat_learning) — all passing,
+  new tests added for every new module.
+- `tests/unit/movement/test_movement_spatial_regression.py` — 2 new regression tests for the
+  cross-phase cognition-merge fix (one proving the FLED write merges rather than clobbers an earlier
+  phase's own write this same tick).
+- `tests/unit/engine/test_combat_actions_learning_wiring.py` — 5 tests against the real
+  `LegalityServiceV2`/`CombatResolutionSystem` path (not hand-built `CombatUpdate`s), including the
+  flag-gating test.
+- `tests/unit/tactical/`, `tests/unit/strategic/`, `tests/unit/domains/memory/`,
+  `tests/unit/domains/information/` (unrelated to this feature directly, exercised by the folded-in
+  lead-detail fix) — all passing.
+- `tests/unit/config/test_phase10_feature_flags.py`, `tests/integration/test_scenario_feature_flag_defaults.py`,
+  `tests/certification/test_phase10_enhanced_determinism_parity.py` — all 3 sibling copies of the
+  `_DELIBERATE_ON_DEFAULT_FLAGS` allowlist updated for the deliberate cutover (the third copy found
+  only via its own comment naming the other two, after an initial grep missed it).
+- **Full `tests/integration/` suite, both tiers, paths named**: fast pass (`-m "not slow and not
+  extra_slow"`, matching CI's own invocation) — 962 passed, 0 failed. Slow/extra_slow pass
+  (`--resource-budget large`) — all real, addressable failures resolved (see Implementation Notes);
+  the two genuinely open items (`test_1000_tick_determinism`, `Perf / cert / arena`) are disclosed
+  as independent of this branch, not hidden.
+- Confirmed under both Python 3.12 (this sandbox's default `.venv`) and 3.13 (`.venv313`, matching
+  CI's own declared version) for the perf suite specifically, after the CI-vs-local investigation.
+- Post-merge-with-main regression (582–586 tests across all touched suites, re-run twice after two
+  separate real merge-conflict resolutions) — green both times.
 
 ## Files Changed
-_(pending)_
+
+Core implementation:
+- `src/core/cognition.py` — `CombatMemory.opponent_stats` retyped.
+- `src/core/combat_constants.py` (new) — `NEAR_DEATH_HP_RATIO`, shared domains/observability
+  constant (D-12).
+- `src/domains/combat_engagement/schema.py` — `OpponentModel.salience` field.
+- `src/domains/combat_engagement/memory_store.py` (new) — salience-evicted storage.
+- `src/domains/combat_engagement/power.py` (new) — true_power/apparent_power/gap_uncertainty/
+  deterministic_observation_noise.
+- `src/domains/combat_engagement/perception.py` — `OpponentPerceptionService.estimate()` rewrite.
+- `src/domains/combat_engagement/service.py` — pass `state=state` through to `estimate()`.
+- `src/domains/combat_engagement/phase.py` — storage wiring, witnessed-combat, spatial-index fix,
+  hoisted actor-invariant faction lookup, cross-phase cognition-merge fix.
+- `src/domains/combat_engagement/learning.py` — real `FLED` branch (was named, never implemented).
+- `src/domains/combat_engagement/learning_outcome.py` (new) — the single sanctioned outcome mapping.
+- `src/engine/domain/combat_actions.py` — real combat-learning wiring (the corrected call site).
+- `src/engine/movement.py`, `src/engine/pipeline_phases/movement.py` — FLED wiring, cross-phase
+  cognition-merge fix.
+- `src/engine/pipeline.py` — thread `tick_update` into `CombatEngagementPhase.apply()`.
+- `src/observability/event_extractor.py` — re-export `NEAR_DEATH_HP_RATIO` from its new home.
+- `src/domains/optimization/feature_flags.py` — `ENABLE_COMBAT_ENGAGEMENT` → `ON`.
+
+Folded-in lead-detail fix (`TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING`):
+- `src/domains/information/lead_location.py` (new), `src/domains/information/phase.py`,
+  `src/domains/information/contradiction.py`, `src/town/guild.py`.
+
+Docs:
+- `docs/mechanics/04_strategic_cognition.md` §13.5a (declared as law before being built, amended
+  twice for real corrections found during the build).
+- `docs/parity_ledger/strategic_cognition.yaml` — `STRAT-273` updated.
+- `docs/plans/deferred_tuning_decisions_register.md` — D-11, D-12.
+- `docs/guidelines/agent_working_environment.md` — venv split, network-filter findings (carried from
+  a peer session's own CI-triage investigation into this ticket's discrepancy).
+- `docs/plans/design_enhancement/performance_optimization/performance_m3_phase_observability_foundation_epic.md`,
+  `performance_m4_baseline_gate_a_epic.md` — field evidence from this ticket's own metropolis
+  profiling, routed into the existing epic.
+
+Tests: see Test Summary above for the full list of new/updated test files.
+
+Tickets filed (not fixed here, each its own disclosed follow-up):
+- `TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD`
+- `TCK-20260914-REGION-DANGER-SEEN-COLOCATION-SCAR-CONJUNCTION-UNPROVEN` (from the folded-in fix)
+- `TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT`
+- `TCK-20260914-COOPERATION-FIND-PENDING-OFFER-COST-OBSERVED`
+- `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`
+- `TCK-20260914-DECISION-TRACE-WRITE-COST-OBSERVED`
+- `TCK-20260914-VENV-NAMING-CI-PARITY-SWAP` (from a peer session, carried through this ticket's own
+  CI investigation)
 
 ## Completion Summary
-_(pending)_
+
+`ENABLE_COMBAT_ENGAGEMENT` is live. Every scope item built in the declared order (storage → wiring →
+perception formula → witnessed-combat → combat-learning → flag flip), every acceptance criterion
+met, and — matching §13.10's own explicit prediction — enabling a long-dormant domain surfaced real,
+pre-existing bugs the moment it became reachable: a cross-phase data-loss defect in
+`EntityUpdate.merge()`'s own field semantics, an O(n²) performance defect from dead spatial-index
+code, and a test-gate defect that let both silently pass undetected for months. All three were fixed
+or filed with disclosed, verified evidence rather than assumed; none were quietly worked around. Two
+CI-level questions remain genuinely open (a wall-clock-dependent determinism test failing
+independent of this branch on `main` itself, and one intermittent CI job with 4 falsified hypotheses
+and no causal explanation for its own eventual green run) — both recorded honestly as open rather
+than resolved, per the same disclosure discipline applied throughout. Landed via PR #190
+(`1e075b807`), which also carried the smaller `TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING`
+fix per a "fewer, larger PRs" consolidation.
