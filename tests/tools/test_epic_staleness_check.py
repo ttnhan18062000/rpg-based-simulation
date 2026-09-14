@@ -90,20 +90,19 @@ def test_does_not_flag_never_started_synthetic_folder_epic(tmp_path):
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
     _write_synthetic_never_started_folder_epic(todos_dir)
     # Zero rows for the child ID anywhere — real, zero activity ever.
     working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
-    runs_jsonl_path.write_text("")
 
-    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     assert "TCK-20260701-SYNTH-NEVER-STARTED-EPIC" not in [c.epic_id for c in stale]
 
     report = compute_stale_epics_report(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW
     )
     assert "TCK-20260701-SYNTH-NEVER-STARTED-EPIC" not in report.split("Informational:")[0]
     assert "TCK-20260701-SYNTH-NEVER-STARTED-EPIC" in report.split("Informational:")[1]
@@ -290,17 +289,16 @@ def test_advisory_only_no_file_mutation_synthetic(tmp_path):
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
     folder = _write_synthetic_never_started_folder_epic(todos_dir)
     working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
-    runs_jsonl_path.write_text("")
 
     before = _hash_dir(folder)
-    compute_stale_epics_report(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
-    find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    compute_stale_epics_report(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
+    find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     after = _hash_dir(folder)
 
     assert before == after
@@ -405,7 +403,7 @@ def test_dual_presence_not_double_reported_in_stale_list(tmp_path):
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
     ticket_id = "TCK-20260701-DUAL-PRESENCE-EPIC"
@@ -418,12 +416,11 @@ def test_dual_presence_not_double_reported_in_stale_list(tmp_path):
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-02T00:00:00Z,TCK-20260701-DUAL-PRESENCE-CHILD,t,DONE,s,none\n"
     )
-    runs_jsonl_path.write_text("")
 
-    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     assert [c.epic_id for c in stale].count(ticket_id) == 1
 
-    report = compute_stale_epics_report(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    report = compute_stale_epics_report(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     stale_section = report.split("Informational:")[0]
     matching_lines = [line for line in stale_section.splitlines() if ticket_id in line]
     assert len(matching_lines) == 1
@@ -461,7 +458,7 @@ def test_blocked_epic_with_stale_looking_activity_is_never_in_find_stale_epics(t
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
@@ -480,13 +477,12 @@ def test_blocked_epic_with_stale_looking_activity_is_never_in_find_stale_epics(t
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-02T00:00:00Z,TCK-20260601-BLOCKED-CHILD,t,DONE,s,none\n"
     )
-    runs_jsonl_path.write_text("")
 
-    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     assert "TCK-20260601-BLOCKED-EPIC" not in [c.epic_id for c in stale]
 
     report = compute_stale_epics_report(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW
     )
     stale_section, rest = report.split("Informational: never-started epics")
     assert "TCK-20260601-BLOCKED-EPIC" not in stale_section
@@ -499,7 +495,7 @@ def test_blocked_epic_does_not_land_in_never_started_bucket(tmp_path):
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
@@ -512,10 +508,9 @@ def test_blocked_epic_does_not_land_in_never_started_bucket(tmp_path):
         body_status="BLOCKED",
     )
     working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
-    runs_jsonl_path.write_text("")
 
     report = compute_stale_epics_report(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW
     )
     never_started_section, blocked_section = report.split("Informational: BLOCKED epics")
     assert "TCK-20260601-BLOCKED-NO-ACTIVITY-EPIC" not in never_started_section
@@ -529,7 +524,7 @@ def test_genuinely_stale_non_blocked_epic_still_flagged_regression_guard(tmp_pat
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
@@ -545,9 +540,8 @@ def test_genuinely_stale_non_blocked_epic_still_flagged_regression_guard(tmp_pat
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-02T00:00:00Z,TCK-20260601-STILL-STALE-CHILD,t,DONE,s,none\n"
     )
-    runs_jsonl_path.write_text("")
 
-    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     assert "TCK-20260601-STILL-STALE-EPIC" in [c.epic_id for c in stale]
 
 
@@ -613,7 +607,7 @@ def test_real_codex_runtime_activation_folder_is_status_aware(tmp_path):
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
@@ -631,7 +625,6 @@ def test_real_codex_runtime_activation_folder_is_status_aware(tmp_path):
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-31T00:00:00Z,TCK-20260730-CLAUDE-EXECUTION-IDENTITY,t,DONE,s,none\n"
     )
-    runs_jsonl_path.write_text("")
 
     integration_now = datetime(2026, 8, 19, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -643,12 +636,12 @@ def test_real_codex_runtime_activation_folder_is_status_aware(tmp_path):
     assert is_epic_blocked(folder_candidate) is True
 
     stale = find_stale_epics(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=integration_now
     )
     assert folder_epic_id not in [c.epic_id for c in stale]
 
     report = compute_stale_epics_report(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=integration_now
     )
     stale_section = report.split("Informational:")[0]
     assert folder_epic_id not in stale_section
@@ -704,7 +697,7 @@ def test_folder_mode_genuinely_stale_non_blocked_still_flagged_regression_guard(
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
@@ -729,9 +722,8 @@ def test_folder_mode_genuinely_stale_non_blocked_still_flagged_regression_guard(
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-02T00:00:00Z,TCK-20260601-XREF-OPEN-CHILD,t,DONE,s,none\n"
     )
-    runs_jsonl_path.write_text("")
 
-    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=NOW)
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     assert "FOLDER-tickets-todos-xref-open-folder" in [c.epic_id for c in stale]
 
 
@@ -751,7 +743,7 @@ def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
-    runs_jsonl_path = tmp_path / "runs.jsonl"
+    runs_data_root = tmp_path / "data"
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
@@ -762,7 +754,6 @@ def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
         "timestamp,ticket_id,title,status,summary,artifacts_path\n"
         "2026-07-31T00:00:00Z,TCK-20260730-CLAUDE-EXECUTION-IDENTITY,t,DONE,s,none\n"
     )
-    runs_jsonl_path.write_text("")
 
     # The real ticket is dated 2026-07-30; use a "now" after both that date
     # and the synthetic child activity above, so the idle gap is genuine
@@ -775,12 +766,12 @@ def test_real_codex_runtime_activation_epic_is_status_aware(tmp_path):
     assert is_epic_blocked(epic) is True
 
     stale = find_stale_epics(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=integration_now
     )
     assert "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC" not in [c.epic_id for c in stale]
 
     report = compute_stale_epics_report(
-        inprogress_dir, todos_dir, working_log_path, runs_jsonl_path, now=integration_now
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=integration_now
     )
     blocked_section = report.split("Informational: BLOCKED epics")[1]
     assert "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC" in blocked_section
@@ -873,3 +864,87 @@ def test_two_branches_both_writing_the_state_file_produce_no_merge_conflict(tmp_
     # copy was present -- git's merge machinery never touches it at all, since neither commit
     # contains it.
     assert (repo / "a.txt").exists() and (repo / "b.txt").exists()
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 5 -- the hook must read the sharded
+# agent-monitoring/data/<week>/runs.jsonl layout, not the retired flat agent-monitoring/runs.jsonl
+# path. Established first (not assumed): tickets/working_log.csv alone supplied `most_recent`
+# while the flat path was dead, since a missing file always yielded zero runs records -- these
+# tests prove runs.jsonl activity ALONE (with zero working_log.csv rows) now also supplies it,
+# which the dead-path version could never do.
+# ---------------------------------------------------------------------------
+
+def test_runs_jsonl_shard_activity_alone_prevents_never_started_classification(tmp_path):
+    """An epic whose only child has REAL runs.jsonl activity (e.g. still in progress, not yet
+    closed) but ZERO working_log.csv rows must not be classified never-started -- the exact
+    under-detection gap the dead flat path caused, since working_log.csv only gains a row when a
+    ticket closes."""
+    inprogress_dir = tmp_path / "inprogress"
+    todos_dir = tmp_path / "todos"
+    working_log_path = tmp_path / "working_log.csv"
+    runs_data_root = tmp_path / "data"
+    inprogress_dir.mkdir()
+    todos_dir.mkdir()
+
+    _write_ticket(
+        inprogress_dir / "TCK-20260701-SHARD-ACTIVITY-EPIC.md",
+        "TCK-20260701-SHARD-ACTIVITY-EPIC", "epic", "2026-07-01",
+        related_tickets="- TCK-20260701-SHARD-ACTIVITY-CHILD\n",
+    )
+    # Zero working_log.csv rows -- the child has never closed.
+    working_log_path.write_text("timestamp,ticket_id,title,status,summary,artifacts_path\n")
+
+    # Real, recent runs.jsonl activity in a weekly shard, the child's own in-progress work.
+    week_dir = runs_data_root / "2026-W28"
+    week_dir.mkdir(parents=True)
+    (week_dir / "runs.jsonl").write_text(
+        '{"run_id": "TCK-20260701-SHARD-ACTIVITY-CHILD", '
+        '"start_ts": "2026-07-09T00:00:00Z", "final_status": "IN_PROGRESS"}\n'
+    )
+
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
+    assert "TCK-20260701-SHARD-ACTIVITY-EPIC" not in [c.epic_id for c in stale]
+
+    report = compute_stale_epics_report(
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW
+    )
+    # Real, recent activity -- must NOT land in the never-started informational bucket either.
+    never_started_section = report.split("Informational: never-started")[1].split("Informational: BLOCKED")[0]
+    assert "TCK-20260701-SHARD-ACTIVITY-EPIC" not in never_started_section
+
+
+def test_runs_jsonl_activity_split_across_multiple_weekly_shards_all_contribute(tmp_path):
+    """resolve_child_activity must see activity from every weekly shard, not just one -- proves
+    the glob (via validate.py::load_data_glob) genuinely spans multiple agent-monitoring/data/
+    week folders, matching record_events.py's own write-side sharding."""
+    runs_data_root = tmp_path / "data"
+    week1 = runs_data_root / "2026-W27"
+    week2 = runs_data_root / "2026-W28"
+    week1.mkdir(parents=True)
+    week2.mkdir(parents=True)
+    (week1 / "runs.jsonl").write_text(
+        '{"run_id": "TCK-20260701-MULTI-SHARD-CHILD", "start_ts": "2026-07-01T00:00:00Z"}\n'
+    )
+    (week2 / "runs.jsonl").write_text(
+        '{"run_id": "TCK-20260701-MULTI-SHARD-CHILD", "start_ts": "2026-07-09T00:00:00Z"}\n'
+    )
+
+    from validate import load_data_glob
+
+    runs_records = load_data_glob(runs_data_root, "runs")
+    most_recent = resolve_child_activity(
+        ["TCK-20260701-MULTI-SHARD-CHILD"], [], runs_records
+    )
+    # Picks the LATEST across both shards, not just the first one glob happens to find.
+    assert most_recent == datetime(2026, 7, 9, 0, 0, 0, tzinfo=timezone.utc)
+
+
+def test_dead_flat_runs_jsonl_path_is_no_longer_referenced():
+    """Static guard: the module must not reference the retired flat agent-monitoring/runs.jsonl
+    path anywhere in its source (the exact defect class TCK-20260904-HOTFIX-WORKFLOW-META-
+    CONFORMANCE-SHARD-AWARENESS fixed in a different consumer)."""
+    module_path = _MONITORING_TOOLS_DIR / "epic_staleness_check.py"
+    source = module_path.read_text()
+    assert 'Path("agent-monitoring/runs.jsonl")' not in source
+    assert "agent-monitoring/data" in source
