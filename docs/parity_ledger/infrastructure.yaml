@@ -7703,17 +7703,11 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_codex_posttool_adapter/test_input_model.py, tests/agent_codex_posttool_adapter/
-    test_redaction.py, tests/agent_codex_posttool_adapter/test_identity_validation.py,
-    tests/agent_codex_posttool_adapter/test_live_gate.py, tests/agent_codex_posttool_adapter/
-    test_uses_shared_writer.py, tests/agent_codex_posttool_adapter/test_no_write_on_failure.py,
-    tests/agent_codex_posttool_adapter/test_failure_injection.py, tests/agent_codex_posttool_adapter/test_config_guard.py,
-    tests/agent_codex_posttool_adapter/ test_activation_fragment.py, tests/agent_codex_posttool_adapter/
-    test_no_subprocess_and_no_live_wiring.py (41 tests total, all passing per this
-    ticket''s Test Summary: `python3 -m pytest tests/agent_codex_posttool_adapter/
-    -q` -> "41 passed").
-
-    '
+  test_path: tests/agent_codex_posttool_adapter/test_input_model.py; tests/agent_codex_posttool_adapter/test_redaction.py;
+    tests/agent_codex_posttool_adapter/test_identity_validation.py; tests/agent_codex_posttool_adapter/test_live_gate.py;
+    tests/agent_codex_posttool_adapter/test_uses_shared_writer.py; tests/agent_codex_posttool_adapter/test_no_write_on_failure.py;
+    tests/agent_codex_posttool_adapter/test_failure_injection.py; tests/agent_codex_posttool_adapter/test_config_guard.py;
+    tests/agent_codex_posttool_adapter/test_activation_fragment.py; tests/agent_codex_posttool_adapter/test_no_subprocess_and_no_live_wiring.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/developer-tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
@@ -7733,6 +7727,22 @@
     sequence, count cap, and transport timestamp window); existing exact suffix proof
     behavior for all static rows remains unchanged. No hook config is activated by
     this capability.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_codex_posttool_adapter/test_input_model.py, tests/agent_codex_posttool_adapter/
+    test_redaction.py, tests/agent_codex_posttool_adapter/test_identity_validation.py,
+    tests/agent_codex_posttool_adapter/test_live_gate.py, tests/agent_codex_posttool_adapter/
+    test_uses_shared_writer.py, tests/agent_codex_posttool_adapter/test_no_write_on_failure.py,
+    tests/agent_codex_posttool_adapter/test_failure_injection.py, tests/agent_codex_posttool_adapter/test_config_guard.py,
+    tests/agent_codex_posttool_adapter/ test_activation_fragment.py, tests/agent_codex_posttool_adapter/
+    test_no_subprocess_and_no_live_wiring.py (41 tests total, all passing per this
+    ticket''s Test Summary: `python3 -m pytest tests/agent_codex_posttool_adapter/
+    -q` -> "41 passed").
 
     '
 - id: INFRA-307
@@ -7798,16 +7808,10 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py, tests/agent_codex_runtime_shadow/
-    test_phase_order_validation.py, tests/agent_codex_runtime_shadow/test_gate_validation.py,
-    tests/agent_codex_runtime_shadow/test_required_artifact_validation.py, tests/agent_codex_runtime_shadow/test_shadow_comparison.py,
-    tests/agent_codex_runtime_shadow/ test_no_subprocess.py, tests/agent_codex_runtime_shadow/test_containment.py,
-    tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py (38 tests
-    total, all passing per this ticket''s Test Summary: `.venv/bin/python3 -m pytest
-    tests/agent_codex_runtime_shadow/ -v` -> "38 passed"; independently re-run during
-    parity update -> "38 passed in 0.47s").
-
-    '
+  test_path: tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py; tests/agent_codex_runtime_shadow/test_phase_order_validation.py;
+    tests/agent_codex_runtime_shadow/test_gate_validation.py; tests/agent_codex_runtime_shadow/test_required_artifact_validation.py;
+    tests/agent_codex_runtime_shadow/test_shadow_comparison.py; tests/agent_codex_runtime_shadow/test_no_subprocess.py;
+    tests/agent_codex_runtime_shadow/test_containment.py; tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/developer-tooling only -- no simulation behavior,
     Mechanics Bible chapter, or engine contract governs this module''s semantics (same
@@ -7827,6 +7831,21 @@
     missing parity-ledger entry (a separate, prior gap explicitly out of this ticket''s
     scope, per this ticket''s own investigation.md). No P0 entries are touched by
     this ticket.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_codex_runtime_shadow/test_phase_tier_matrix.py, tests/agent_codex_runtime_shadow/
+    test_phase_order_validation.py, tests/agent_codex_runtime_shadow/test_gate_validation.py,
+    tests/agent_codex_runtime_shadow/test_required_artifact_validation.py, tests/agent_codex_runtime_shadow/test_shadow_comparison.py,
+    tests/agent_codex_runtime_shadow/ test_no_subprocess.py, tests/agent_codex_runtime_shadow/test_containment.py,
+    tests/agent_codex_runtime_shadow/test_no_live_consent_dependency.py (38 tests
+    total, all passing per this ticket''s Test Summary: `.venv/bin/python3 -m pytest
+    tests/agent_codex_runtime_shadow/ -v` -> "38 passed"; independently re-run during
+    parity update -> "38 passed in 0.47s").
 
     '
 - id: INFRA-308
@@ -7872,15 +7891,22 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_orchestration/test_contract_structure.py, tests/agent_orchestration/test_validator_errors.py,
-    tests/agent_orchestration/test_validator_no_network_calls.py, tests/agent_orchestration_codex_adapter/test_generator_traceability.py.
-
-    '
+  test_path: tests/agent_orchestration/test_contract_structure.py; tests/agent_orchestration/test_validator_errors.py;
+    tests/agent_orchestration/test_validator_no_network_calls.py; tests/agent_orchestration_codex_adapter/test_generator_traceability.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/developer-tooling only. The policy is validated
     rendered guidance, not a runtime enforcement mechanism; no simulation behavior
     or Mechanics Bible contract is affected. Claude workflow JS remains unchanged
     by this ticket, and live Codex activation remains subject to separate human authority.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_orchestration/test_contract_structure.py, tests/agent_orchestration/test_validator_errors.py,
+    tests/agent_orchestration/test_validator_no_network_calls.py, tests/agent_orchestration_codex_adapter/test_generator_traceability.py.
 
     '
 - id: INFRA-310
@@ -8007,14 +8033,21 @@
 
     '
   proof_type: contract
-  test_path: 'tests/agent_codex_posttool_adapter/test_hook_entry.py, tests/agent_codex_live_transport/test_hook_environment.py,
-    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py.
-
-    '
+  test_path: tests/agent_codex_posttool_adapter/test_hook_entry.py; tests/agent_codex_live_transport/test_hook_environment.py;
+    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py
   divergence_note: null
   support_boundary: 'Agent tooling only. The capability remains unactivated: no config
     change, hook registration, live invocation, candidate edit, blocked-parent edit,
     or production monitoring write occurs.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/agent_codex_posttool_adapter/test_hook_entry.py, tests/agent_codex_live_transport/test_hook_environment.py,
+    tests/agent_codex_realrepo_pilot_harness/test_bounded_tool_suffix.py.
 
     '
 - id: INFRA-315
@@ -8384,15 +8417,10 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose,
-    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses,
-    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes,
+  test_path: tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose;
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses;
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes;
     tests/tools/test_done_checker_static.py::test_docs_coverage_none_prefix_but_real_bullet_still_required
-    (4/4 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
-    -k "none" -v` -> "8 passed", including the 4 new tests alongside the 4 pre-existing
-    none-phrase tests they sit beside, all unmodified).
-
-    '
   divergence_note: null
   support_boundary: 'Ticket-closing gate-check tooling only -- no simulation behavior
     is involved (mirrors INFRA-263/264/265/277/278/279/280/281/282/315/321''s support_boundary
@@ -8411,6 +8439,20 @@
     separate, already-known `:line`-suffix-inside-backticks bug (`TCK-20260804-EXPANSION-RATE-WIRING`)
     remains live and unfixed -- explicitly out of this entry''s scope, not claimed
     as covered here.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_with_trailing_rationale_prose,
+    tests/tools/test_done_checker_static.py::test_parse_docs_none_prefix_with_later_bullet_still_parses,
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_with_trailing_rationale_passes,
+    tests/tools/test_done_checker_static.py::test_docs_coverage_none_prefix_but_real_bullet_still_required
+    (4/4 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
+    -k "none" -v` -> "8 passed", including the 4 new tests alongside the 4 pre-existing
+    none-phrase tests they sit beside, all unmodified).
 
     '
 - id: INFRA-323
@@ -8462,20 +8504,16 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit,
-    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage,
-    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage,
-    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat,
-    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold,
-    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage,
-    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker,
-    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill,
-    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat,
+  test_path: tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit;
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage;
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage;
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat;
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold;
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage;
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker;
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill;
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat;
     tests/unit/observability/test_event_extractor_world.py::test_hazard_drain_not_emitted_for_normal_combat
-    (759 of 759 non-skipped tests in tests/unit/observability/ pass; 6 pre-existing,
-    unrelated skips unchanged).
-
-    '
   divergence_note: null
   support_boundary: 'Fixes causal-attribution correctness for the 3 combat-classification
     branches and the despawn-lifecycle demographic_mortality check only. Does not
@@ -8492,6 +8530,25 @@
     fix. Related, larger architecture question (push-based emission at the mutation
     point instead of post-tick diffing, which would prevent this entire class of read-side
     misattribution bug structurally) is tracked separately: TCK-20260806-SIMQ-OBSERVABILITY-PUSH-MIGRATION-EPIC.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_emitted_on_first_hit,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_hazard_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_initiated_not_emitted_for_biological_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_combat_damage_attacker_id_populated_for_real_combat,
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_emitted_when_hp_crosses_threshold,
+    tests/unit/observability/test_event_extractor_simq.py::test_near_death_survival_not_emitted_for_hazard_damage,
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_emitted_on_despawn_no_attacker,
+    tests/unit/observability/test_event_extractor_simq.py::test_demographic_mortality_not_emitted_on_combat_kill,
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_damage_not_misclassified_as_combat,
+    tests/unit/observability/test_event_extractor_world.py::test_hazard_drain_not_emitted_for_normal_combat
+    (759 of 759 non-skipped tests in tests/unit/observability/ pass; 6 pre-existing,
+    unrelated skips unchanged).
 
     '
 - id: INFRA-324
@@ -8583,17 +8640,8 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers.py (15 tests post-fix: registry
-    mechanism, all 6 migrated COMBAT events, hazard/biological-damage exclusion, entity-not-in-prior-state/no-
-    combat-field edge cases, SHADOW-mode queue-inertness, hazard-death entity_killed
-    exclusion, volumization-rule suppression/override across LIGHT/NORMAL modes and
-    the default-mode check), tests/unit/config/test_phase10_feature_flags.py (12/12
-    pass), tests/unit/kernel/ (53/53 pass), tests/unit/observability/ full directory
-    (798 passed, 6 skipped -- up from 793 immediately pre-reopen [INFRA-325''s own
-    count, itself up from 779 pre-INFRA-324], +5 new tests from this reopen''s fix
-    cycle).
-
-    '
+  test_path: tests/unit/observability/test_event_shapers.py; tests/unit/config/test_phase10_feature_flags.py;
+    tests/unit/kernel/; tests/unit/observability/
   divergence_note: null
   support_boundary: 'SHADOW-mode only -- no live behavior change, no event delivered
     to any consumer, confirmed by a dedicated test asserting the module never imports
@@ -8613,6 +8661,22 @@
     decay at different thresholds -- is flagged in this ticket''s own investigation.md
     as a possible pre-existing redundant-damage bug, explicitly NOT fixed or further
     investigated here; out of scope, noted only for traceability.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers.py (15 tests post-fix: registry mechanism,
+    all 6 migrated COMBAT events, hazard/biological-damage exclusion, entity-not-in-prior-state/no-
+    combat-field edge cases, SHADOW-mode queue-inertness, hazard-death entity_killed
+    exclusion, volumization-rule suppression/override across LIGHT/NORMAL modes and
+    the default-mode check), tests/unit/config/test_phase10_feature_flags.py (12/12
+    pass), tests/unit/kernel/ (53/53 pass), tests/unit/observability/ full directory
+    (798 passed, 6 skipped -- up from 793 immediately pre-reopen [INFRA-325''s own
+    count, itself up from 779 pre-INFRA-324], +5 new tests from this reopen''s fix
+    cycle).
 
     '
 - id: INFRA-325
@@ -8663,14 +8727,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers_economy_faction.py (20 tests:
-    registry extension, all 7 EconomyShaper events including the rejected-intent no-op
-    and both paid_info_changed_goal cases, all 8 FactionShaper events including diplomatic-pair
-    dedup and both alliance_proposed prior-state cases and the positive-tension-delta
-    resource_seized gate), tests/unit/observability/ full directory (793 passed, 6
-    skipped -- up from 779 pre-ticket).
-
-    '
+  test_path: tests/unit/observability/test_event_shapers_economy_faction.py; tests/unit/observability/
   divergence_note: null
   support_boundary: 'SHADOW-mode only, same as INFRA-324 -- no live behavior change.
     `event_extractor.py`, `apply.py`, `apply_plan.py`, `kernel.py` all unmodified
@@ -8678,6 +8735,19 @@
     any of the 6 deferred events named above in any form, not even partially. Does
     not implement `ON` mode (live delivery) -- reserved for `TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION`,
     gated on `TCK-20260806-PUSH-SHADOW-VALIDATION-PERF`''s go verdict.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers_economy_faction.py (20 tests: registry
+    extension, all 7 EconomyShaper events including the rejected-intent no-op and
+    both paid_info_changed_goal cases, all 8 FactionShaper events including diplomatic-pair
+    dedup and both alliance_proposed prior-state cases and the positive-tension-delta
+    resource_seized gate), tests/unit/observability/ full directory (793 passed, 6
+    skipped -- up from 779 pre-ticket).
 
     '
 - id: INFRA-326
@@ -8724,14 +8794,8 @@
     \ rollback, hero_guild_routing world: event_extractor=911 (old path correctly\
     \ restored).\n"
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events,
-    ::test_run_shadow_shapers_explicit_off_excludes_phase2_events (both added/renamed
-    this ticket to cover the fixed default and the rollback path respectively; unit
-    tests alone did not catch this bug originally since MagicMock-based test fixtures
-    never exercise the real default-value fallback path the way a real kernel run
-    with an unset flags dict does).
-
-    '
+  test_path: tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events;
+    tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_explicit_off_excludes_phase2_events
   divergence_note: null
   support_boundary: 'This entry documents the bug and its fix, not a new observability
     capability -- see STRAT-247, PROG-117, WORLD-115, SOC-239/SOC-240, TOWN-190, and
@@ -8741,6 +8805,19 @@
     going forward (no enforced invariant, comments only) -- worth checking explicitly,
     not assuming fixed by precedent, on any future Phase 3+ cutover that introduces
     another independently-gated flag.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers_strategy.py::test_run_shadow_shapers_default_includes_phase2_events,
+    ::test_run_shadow_shapers_explicit_off_excludes_phase2_events (both added/renamed
+    this ticket to cover the fixed default and the rollback path respectively; unit
+    tests alone did not catch this bug originally since MagicMock-based test fixtures
+    never exercise the real default-value fallback path the way a real kernel run
+    with an unset flags dict does).
 
     '
 - id: INFRA-327
@@ -8842,8 +8919,21 @@
     \ own established precedent. Per-attack tactical-modifier detail (CombatUpdate.trace)\
     \ remains deliberately deferred/out of scope, per the user's own direction."
   proof_type: regression
-  test_path: 'tests/unit/observability/test_event_shapers.py (12 new tests covering
-    all 6 real trigger conditions -- 2 for combat_engagement_started, 4 for combat_engagement_ended
+  test_path: tests/unit/observability/test_event_shapers.py
+  divergence_note: null
+  support_boundary: 'Purely additive observability-layer read of already-real prior_state/update
+    fields -- no change to combat resolution, tactical decision-making, or movement
+    resolution logic itself (the one exception, movement.py''s new additive property_updates
+    tag, is tracked separately under combat_movement.yaml COMB-302).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/observability/test_event_shapers.py (12 new tests covering all 6 real
+    trigger conditions -- 2 for combat_engagement_started, 4 for combat_engagement_ended
     -- plus the snapshot helper); real 2000-tick Kernel.tick_once() corpus re-verification
     against dungeon_crawl_seed42/urban_political_seed42 confirmed PURSUIT_ABANDONED/ESCAPED
     fire at real, non-zero volume under corpus-default feature flags (see this ticket''s
@@ -8853,11 +8943,6 @@
     events they ride alongside, not a gap this ticket introduced).
 
     '
-  divergence_note: null
-  support_boundary: Purely additive observability-layer read of already-real prior_state/update
-    fields -- no change to combat resolution, tactical decision-making, or movement
-    resolution logic itself (the one exception, movement.py's new additive property_updates
-    tag, is tracked separately under combat_movement.yaml COMB-302).
 - id: INFRA-330
   text: 'TCK-20260808-MONSTER-ROLE-MISTAGGING-INVESTIGATION -- `tools/calibrate_simq.py`''s
     own `_load_world_state()` compiled every calibration run''s world state via `WorldCompiler.compile(spec,
@@ -8877,17 +8962,23 @@
 
     '
   proof_type: regression
-  test_path: 'tests/simulation_quality/test_calibrate_simq.py -- 6 passed, no regressions
-    (this fix changes WHICH catalog-correct role/faction values entities get, not
-    calibrate_simq.py''s own control flow, so its existing test suite is unaffected).
-    See SUB-384''s own test_path for the real, direct fix verification.
-
-    '
+  test_path: tests/simulation_quality/test_calibrate_simq.py
   divergence_note: null
   support_boundary: 'This entry documents specifically the calibration-tooling half
     of the fix. See SUB-384 for the full 4-call-site fix, the real, measured anchor-drift
     disclosure (dungeon_crawl/ urban_political), and the disclosed-but-not-actioned
     recalibration follow-up.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/simulation_quality/test_calibrate_simq.py -- 6 passed, no regressions (this
+    fix changes WHICH catalog-correct role/faction values entities get, not calibrate_simq.py''s
+    own control flow, so its existing test suite is unaffected). See SUB-384''s own
+    test_path for the real, direct fix verification.
 
     '
 - id: INFRA-331
@@ -8921,13 +9012,9 @@
     `write_entry()` via the validating writer, then issues a separate visible `python3
     tools/parity_index.py build` Bash call).
   proof_type: regression
-  test_path: tests/tools/test_parity_ledger_writer.py (13 tests covering all four
-    validation rules plus successful-write/index-rebuild behavior), tests/tools/test_parity_ledger_schema.py
-    (schema restructure + new P0 conditional), tests/tools/test_parity_ledger_scan.py::test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash,
-    tests/tools/test_gate_a_readpath_review.py (Gate A harness still passes with the
-    labeled-error path) -- 18 passed via `pytest tests/tools/test_parity_ledger_writer.py
-    tests/tools/test_parity_ledger_scan.py tests/tools/test_parity_ledger_schema.py
-    -q`.
+  test_path: tests/tools/test_parity_ledger_writer.py; tests/tools/test_parity_ledger_schema.py;
+    tests/tools/test_parity_ledger_scan.py::test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash;
+    tests/tools/test_gate_a_readpath_review.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/parity-ledger-tooling infrastructure only
     -- no simulation behavior is involved, and no src/ file was touched (confirmed:
@@ -8943,7 +9030,21 @@
     parity_write_safety is unchanged by this ticket; only the parity-updater agent''s
     future call pattern (write_entry + explicit build) changes what future metric
     runs will observe, not the metric''s own definition or current ledger-recorded
-    behavior.'
+    behavior.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_parity_ledger_writer.py (13 tests covering all four validation
+    rules plus successful-write/index-rebuild behavior), tests/tools/test_parity_ledger_schema.py
+    (schema restructure + new P0 conditional), tests/tools/test_parity_ledger_scan.py::test_find_p0_intersection_malformed_shard_raises_labeled_error_not_crash,
+    tests/tools/test_gate_a_readpath_review.py (Gate A harness still passes with the
+    labeled-error path) -- 18 passed via `pytest tests/tools/test_parity_ledger_writer.py
+    tests/tools/test_parity_ledger_scan.py tests/tools/test_parity_ledger_schema.py
+    -q`.'
 - id: INFRA-332
   text: TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING (plan.md Step 5) -- generate_retro.py
     gains compute_parity_index_readpath_call_count(tools), a new pure function that
@@ -11538,10 +11639,22 @@
     + src/cli/entry.py (serve subcommand's --world flag, _run_serve threading --seed/--entities/--world
     through)
   proof_type: null
-  test_path: tests/unit/api/test_engine_manager.py,tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape,frontend/e2e/live_map.spec.ts::live
-    map renders real terrain and live ticking data through make dev
+  test_path: tests/unit/api/test_engine_manager.py; tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/unit/api/test_engine_manager.py,tests/unit/api/test_map_route.py::test_map_endpoint_returns_200_with_rle_shape,frontend/e2e/live_map.spec.ts::live
+    map renders real terrain and live ticking data through make dev
+
+
+    The third original citation (frontend/e2e/live_map.spec.ts) was deliberately NOT
+    added to test_path -- it is a real, confirmed-existing Playwright e2e test, not
+    Python/pytest, same reasoning as the INFRA-280/302/303/304 frontend-test cases
+    documented elsewhere in this shard. Unlike those entries, this one still has 2
+    genuine .py citations to keep.'
 - id: INFRA-394
   text: 'tools/agent-monitoring/duration_utils.py::compute_active_idle_split() computes
     a read-time-only active_duration_s/idle_gap_s split per run from its own events.jsonl
@@ -11920,7 +12033,21 @@
     skips under hotfix, reverse half now always runs afterward, tier-agnostically,
     scoped to docs/ paths, reusing the single existing _git_touched_paths() call result
     for both halves.'
-  test_path: 'tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs,
+  test_path: tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_only;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_directory_collapse_tolerance;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_ITEM_INSTANCE_HISTORY_style_non_docs_path_is_out_of_scope;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_hotfix_tier_behavior;
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident
+  divergence_note: null
+  proof_type: regression
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path
+    normalized to a plain multi-citation (all citations confirmed to exist via grep
+    before writing). Full original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_fails_when_touched_doc_not_in_files_changed_or_related_docs,
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_files_changed,
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_passes_when_touched_doc_appears_in_related_docs_only,
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_directory_collapse_tolerance,
@@ -11929,8 +12056,6 @@
     tests/tools/test_done_checker_static.py::test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident
     (7/7 re-run and confirmed passing during this parity update: `pytest tests/tools/test_done_checker_static.py
     -k reverse_docs_coverage -q` -> ''7 passed'').'
-  divergence_note: null
-  proof_type: regression
 - id: INFRA-405
   text: 'SubagentStop deterministic background-hang guard (TCK-20260904-TEST-SCOPER-HANG-GUARD):
     a prose-only Hard Rule ("never end your turn while your own run_in_background
@@ -12060,7 +12185,30 @@
     :75 membership check `infer_workflow(r.get("run_id", "")) in {"implement-ticket",
     "implement-epic", "create-tickets"}` replacing the old single-value equality check).'
   proof_type: contract
-  test_path: 'tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl,
+  test_path: tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl;
+    tests/tools/test_record_events.py::test_zero_tool_call_no_sidecar_paths_compute_zero_not_null;
+    tests/tools/test_record_events.py::test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets;
+    tests/tools/test_record_events.py::test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate;
+    tests/tools/test_epic_create_tickets_sidecar_orchestrator.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same support_boundary category as INFRA-263/264/265/277
+    through INFRA-282/305/306/402-406). Does not change what cost_proxy_score/tool_call_count
+    mean or how they are formulated (cost_proxy.py''s weights/formula untouched) --
+    only which workflows'' records get computed. simq-audit.js''s own separate inline
+    TOOL_STATS-style compute step (noted as unfixed in INFRA-282) remains unfixed
+    and out of scope here too. Real-run acceptance verification (a genuine implement-epic/create-tickets
+    run producing non-null values in live events.jsonl, per this ticket''s own plan.md
+    Step 7) was flagged as outstanding at Implement-phase close -- confirm at this
+    ticket''s own Finalize/close or the next real invocation of either workflow.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_record_events.py::test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_jsonl,
     ::test_zero_tool_call_no_sidecar_paths_compute_zero_not_null, ::test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets,
     ::test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross_contaminate;
     tests/tools/test_epic_create_tickets_sidecar_orchestrator.py (adjacency for all
@@ -12071,17 +12219,6 @@
     `pytest tests/tools/test_record_events.py tests/tools/test_cost_proxy.py tests/tools/test_current_run_sidecar_orchestrator.py
     tests/tools/test_validate_agent_monitoring.py tests/tools/test_epic_create_tickets_sidecar_orchestrator.py
     -q`.'
-  divergence_note: null
-  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same support_boundary category as INFRA-263/264/265/277
-    through INFRA-282/305/306/402-406). Does not change what cost_proxy_score/tool_call_count
-    mean or how they are formulated (cost_proxy.py's weights/formula untouched) --
-    only which workflows' records get computed. simq-audit.js's own separate inline
-    TOOL_STATS-style compute step (noted as unfixed in INFRA-282) remains unfixed
-    and out of scope here too. Real-run acceptance verification (a genuine implement-epic/create-tickets
-    run producing non-null values in live events.jsonl, per this ticket's own plan.md
-    Step 7) was flagged as outstanding at Implement-phase close -- confirm at this
-    ticket's own Finalize/close or the next real invocation of either workflow.
 - id: INFRA-408
   text: 'gate_policy and artifact_requirements conformance: .claude/ provider translation
     of implement-ticket''s per-phase gate mechanism and per-tier staging-artifact
