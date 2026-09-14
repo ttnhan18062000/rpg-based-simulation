@@ -179,44 +179,64 @@ measurements against the real corpus, not assumption:
    reading the code and by querying the live registry: 0 of 1958 indexed ticket entries are open
    tickets). The "registry cross-matching" option as literally scoped cannot work without first
    extending that walk.
-2. Even if extended, `## Related Code Areas` is empty on **53.4%** (31/58) of the real open-ticket
-   corpus, measured directly against the files (not the registry, which can't see them). Where
-   populated, citations are accurate (79/80 real paths; the one non-match is a templated glob
-   placeholder, not a stale reference) — the defect is sparsity, not inaccuracy.
+2. **Corrected after initial publication** (peer had independently reproduced and endorsed the
+   original number before this correction landed — see investigation.md's "Correction to
+   Measurement 2" for the full account): the first pass measured `## Related Code Areas` as empty
+   on 53.4% (31/58) of the real open-ticket corpus using the registry's own extraction function
+   (`parse_related_code_areas`). Re-checking the 31 "empty" tickets directly found 29 of them have
+   real, accurate path content — just not backtick-quoted, which is the only thing that function
+   recognizes. **True content population is 96.6% (56/58)**; the field is not sparse. The actual
+   defect is `generate_registry.py`'s extraction regex requiring backtick-quoting that roughly half
+   of authors don't use — a fixable, bounded bug, not an authorship-discipline gap. Where content
+   IS extracted (by any method), it is accurate: ~97% of citations, backtick or not, resolve to
+   real, existing paths.
 
-**Recommendation** (full detail in `plan.md`): do not build registry cross-matching as scoped —
-it has real, previously-uncounted tooling cost (Measurement 1) and would still miss a majority of
-open tickets even after that cost is paid (Measurement 2). Recommend prototyping a close-time
-full-text keyword/path sweep instead — search the closing ticket's git-touched paths against every
-open ticket's whole body text, not the sparse structured field — sidestepping the sparsity problem
-entirely. This is a refinement of the ticket's own already-scoped "back-reference sweep" option
-(its "keyword overlap" half), not a new mechanism invented outside the investigation.
+**Recommendation, revised** (full detail in `plan.md`): the corrected numbers change this from
+"eliminate registry cross-matching" to "two live candidates for review": (1) fix the extraction
+regex + extend the registry's indexing scope — now the *cheaper* option, since it unlocks ~96%
+coverage rather than being blocked on wide-scale authorship change; or (2) a close-time full-text
+keyword/path sweep against every open ticket's whole body text, which needs neither fix but builds
+a second scan path outside the registry. Measurement 1 (registry doesn't index open tickets at all)
+is unaffected by the correction and still rules out registry cross-matching *exactly as originally
+scoped*, but no longer rules out a corrected version of it.
 
 **This recommendation has not yet been reviewed by peer/user** — per AC, no implementation may
 proceed until that review happens. Status left `BLOCKED` (investigation complete, blocked on
 review) rather than `DONE`, since this ticket has not actually resolved anything yet — only
 produced the evidence the resolution decision needs.
 
+**Note on `tickets/working_log.csv`**: the working-log row already appended for this ticket's
+`BLOCKED` status (via `record_hand_orchestrated_closure.py`, append-only, never rewritten) still
+carries the pre-correction "53.4% empty" summary text, since that was accurate as a record of what
+this ticket's Implementation Notes said at that point in time. This ticket file (not the log row)
+is the authoritative, current account — the log row is a historical snapshot, correctly left
+unedited per this repo's append-only convention for that file.
+
 ## Test Summary
-No tests added — no code changed. See `test_plan.md` for how the investigation's own three
-measurements were verified (read the real parsing code, ran it against the real corpus, checked
-citations against the real filesystem — all reproducible, not assumed).
+No tests added — no code changed. See `test_plan.md` for how the investigation's own measurements
+were verified (read the real parsing code, ran it against the real corpus, checked citations against
+the real filesystem — all reproducible, not assumed) and how the Measurement 2 correction was itself
+verified (re-derived cleanly with backtick-stripping fixed, cross-checked against the peer's
+independently-reproduced original number before revising).
 
 ## Files Changed
-- `staging_artifacts/TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE/` (new:
-  investigation.md, plan.md, test_plan.md).
-- This ticket file itself (Implementation Notes/Test Summary/Files Changed above; AC checked off;
-  `## Status` set to `BLOCKED`).
+- `staging_artifacts/TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE/` (investigation.md,
+  plan.md, test_plan.md — investigation.md and plan.md amended post-publication with the Measurement
+  2 correction).
+- This ticket file itself (Implementation Notes/Test Summary/Files Changed/Completion Summary; AC
+  checked off; `## Status` set to `BLOCKED`).
 - No `src/`, `tools/`, or `tests/` files touched.
 
 ## Completion Summary
-Investigation complete. Measured, rather than assumed, that the registry-cross-match option is not
-viable as scoped (registry doesn't index open tickets; the field it would key off is 53.4% empty
-on the real corpus). Recommend a full-text keyword/path sweep instead of the structured-field
-cross-match, as a refinement of the ticket's own back-reference-sweep option. Recorded corroborating
-context from two independent documents describing the same underlying premise-staleness mechanism
-(reachability findings doc Finding 6; the 2026-08-04 gap audit's 2026-09-14 deferred-check
-addendum, including its own unresolved ±2 Review-count discrepancy, preserved rather than smoothed
-over). This ticket is **not** implementing anything and is **not** being closed as fully resolved —
-left `BLOCKED`, pending the peer/user review its own AC requires before any of the above becomes a
-real ticket.
+Investigation complete, corrected once post-publication. Measured, rather than assumed, that the
+registry doesn't index open tickets (Measurement 1, stands unchanged) and that its own field-
+extraction logic — not the underlying data — is why open-ticket coverage looked sparse (Measurement
+2, corrected: true content population is 96.6%, not the original 53.4% empty figure). Revised
+recommendation brings two live candidates to review instead of eliminating one outright: fix the
+extraction regex + extend registry indexing (now the cheaper path), or build an independent
+full-text keyword/path sweep. Recorded corroborating context from two independent documents
+describing the same underlying premise-staleness mechanism this ticket investigates (reachability
+findings doc Finding 6; the 2026-08-04 gap audit's 2026-09-14 deferred-check addendum, including its
+own unresolved ±2 Review-count discrepancy, preserved rather than smoothed over). This ticket is
+**not** implementing anything and is **not** being closed as fully resolved — left `BLOCKED`,
+pending the peer/user review its own AC requires before any of the above becomes a real ticket.

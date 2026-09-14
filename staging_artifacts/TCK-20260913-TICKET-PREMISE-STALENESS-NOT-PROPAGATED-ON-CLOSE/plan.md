@@ -17,29 +17,41 @@ any implementation, and explicitly: "No implementation without that review."** T
 does not describe code changes — it records the recommendation investigation.md's measurements
 support, for that review, and stops there.
 
-## Recommendation
+## Recommendation (revised after correcting Measurement 2 — see investigation.md)
 
-**Do not build "registry cross-matching" as originally scoped.** Measurement 1 (investigation.md)
-found `docs/REGISTRY.yaml` does not index open tickets at all today, and Measurement 2 found that
-even if it did, the `## Related Code Areas` field it would key off is empty on 53.4% of open
-tickets — a majority miss, not a marginal one. The option as described in this ticket's own Scope
-is not "near-zero cost, unmeasured precision"; it is real-cost-to-build with measured-low precision.
+An earlier pass of this investigation measured `## Related Code Areas` as 53.4% empty on the real
+open-ticket corpus and recommended against registry cross-matching on that basis alone. That number
+was re-checked and corrected: it measured "visible to the registry's current backtick-only
+extractor," not "the field is actually empty." True content population is **96.6%** (56/58 open
+tickets have real, accurate Related Code Areas content) — the gap is an extraction regex that
+requires backtick-quoting, not an authorship problem. Full detail and the corrected numbers are in
+`investigation.md`'s "Correction to Measurement 2" section.
 
-**Recommend prototyping a close-time full-text keyword/path sweep instead** — search every open
-ticket's whole body text (not a structured field) for mentions of the closing ticket's own git-
-touched file paths, and flag candidates for human/agent review. This is the "keyword overlap" half
-of the ticket's own already-scoped "back-reference sweep" option, not a new fourth mechanism. It
-sidesteps the sparsity problem entirely (it doesn't depend on any ticket having filled in `Related
-Code Areas`), and Measurement 3 shows that where citations DO exist they are accurate, so a hybrid
-that checks both the structured field (when present) and a full-text fallback would not be strictly
-worse than either alone.
+**This changes the recommendation from "eliminate registry cross-matching" to "two live candidates,
+bring both to review":**
+
+1. **Fix the extractor + extend the registry's indexing scope.** `generate_registry.py::
+   parse_related_code_areas()` would need to also recognize plain `- path` bullets, not only
+   backtick-quoted ones (a small, bounded, mechanical regex change), and `generate_registry.py`'s
+   ticket-collection walk would need to also index `tickets/todos/`/`tickets/inprogress/`, not only
+   `tickets/done/` (Measurement 1's own gap — unaffected by the correction, still real). Together
+   these would make registry-visible coverage ~96% instead of the original scoping's assumed-but-
+   unmeasured "near-zero cost," and instead of the first-pass-corrected 46.6%. This is now the
+   cheaper of the two concrete options, not the more expensive one.
+2. **A close-time full-text keyword/path sweep** — search every open ticket's whole body text (not
+   a structured field) for mentions of the closing ticket's own git-touched file paths. This is the
+   "keyword overlap" half of the ticket's own already-scoped "back-reference sweep" option, not a
+   new fourth mechanism. It needs neither the extractor fix nor the indexing extension, at the cost
+   of building and maintaining a second scan path outside the registry rather than repairing the
+   registry's existing one.
 
 **Do not recommend building anything yet without the peer/user review this ticket's AC requires.**
-This plan stops at "here is the option this data supports" — actual tooling cost (false-positive
-rate on a full-text keyword sweep, whether to gate it as blocking or advisory-only, where it should
-run in the Finalize sequence) is real design work that has not been scoped here, deliberately, per
-Out of Scope ("Building any of the candidate mechanisms above — this ticket files the problem and
-investigates options; it does not implement a fix").
+This plan stops at "here are the two options the corrected data supports, and why neither is
+obviously superior now" — actual tooling cost for either (regex correctness on the extractor;
+false-positive rate on a full-text keyword sweep; where either should run in the Finalize sequence)
+is real design work that has not been scoped here, deliberately, per Out of Scope ("Building any of
+the candidate mechanisms above — this ticket files the problem and investigates options; it does
+not implement a fix").
 
 ## Also worth recording for whoever picks up implementation later (if approved)
 

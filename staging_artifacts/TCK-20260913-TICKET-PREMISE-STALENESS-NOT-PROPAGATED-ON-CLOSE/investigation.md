@@ -69,33 +69,96 @@ actually touch, no matter how the registry-indexing gap above is fixed.
 
 For the 27 non-empty tickets (80 total citation entries), checked whether each backtick-quoted
 citation that looks like a file path (contains `/` or ends `.py`/`.md`) actually exists on disk
-today: **79 of 80 exist; the one "miss" is `agent-monitoring/data/<ISO-week>/{runs,events}.jsonl`**,
-a templated glob-shaped path in the citation itself, not a genuinely stale reference (the `<ISO-
-week>` placeholder is expected, not a typo or rename). **Effectively 0 genuinely stale file-path
-citations among populated tickets.** So the field's defect is sparsity, not inaccuracy-when-present
-— when someone does fill it in, it stays correct.
+today: **78 of 80 exist** (2 misses, both templated/glob placeholders in the citation text itself —
+`agent-monitoring/data/<ISO-week>/{runs,events}.jsonl` and a single bare filename, `Legend.tsx`,
+that resolves against a component dir rather than repo root — neither is a genuine stale/renamed
+reference). **Effectively 0 genuinely stale file-path citations among populated tickets.** So where
+the field IS extracted, it stays correct — but see the correction below: "populated" turns out to
+mean something narrower than "the author wrote real content," and that distinction changes the
+whole recommendation.
+
+## Correction to Measurement 2 (self-caught, after the peer independently reproduced and endorsed
+## the original 53.4% figure)
+
+Re-examined the 31 "empty" tickets from Measurement 2 directly, rather than trusting the aggregate
+count. **29 of the 31 have real, path-shaped bullet content — they are simply not backtick-quoted.**
+Example (`TCK-20260905-CHORE-CARRYFORWARD-DERIVER-CONSOLIDATION.md`, counted "empty" by Measurement
+2): `- src/domains/culture/{model,deriver,exporter}.py` — a genuine, correct, existing path, written
+as a plain bullet with no backticks around it.
+
+`generate_registry.py::parse_related_code_areas()` — the function Measurement 2 deliberately reused
+because it IS the registry's own extraction logic — only recognizes backtick-quoted tokens
+(`_BACKTICK_RE = re.compile(r"`([^`]+)`")`, `generate_registry.py:66`). A bullet line with a real
+path but no backticks around it yields nothing to this function, and is therefore invisible to the
+registry today regardless of how well the author actually filled the field in.
+
+**Re-measured cleanly, separating "backtick-extracted" from "non-backtick bullet content," and
+checking existence on both, correctly stripping backticks/prefixes before the filesystem check
+(the first pass of this correction under-counted "exists" by leaving literal backtick characters
+in the path string — caught and fixed before recording the number below):**
+
+| | Count | Accuracy where checkable |
+|---|---|---|
+| Backtick-extracted (what the registry sees today) | 27/58 tickets (46.6%) | 78/80 entries exist (97.5%) |
+| Non-backtick bullet content (registry's blind spot) | 29/58 tickets (50.0%) additional | 201/209 entries exist (96.2%; remaining "misses" are brace-expansion/glob artifacts in the citation itself, not renames) |
+| Genuinely empty (no bullets, or an explicit "None") | 2/58 tickets (3.4%) | — |
+
+**Corrected true content-population rate: 56 of 58 open tickets (96.6%) have real, accurate
+`## Related Code Areas` content** — not 46.6% as Measurement 2's raw number implied. The field is
+not sparse. **The defect is that the registry's own extraction regex requires backtick-quoting that
+roughly half of ticket authors don't use, and silently drops everything else — an extraction bug in
+`generate_registry.py`, not an authorship-discipline gap.**
+
+This does not reverse Measurement 1 (the registry still doesn't index open tickets at all) or the
+recommendation against building registry cross-matching *exactly as scoped today* — but it changes
+*why*, and it opens a cheaper path the original framing missed: fixing `parse_related_code_areas`
+to also recognize plain `- path` bullets (not requiring backticks) would raise registry-visible
+coverage from 46.6% to ~96% on its own, with no change in author behavior required. Combined with
+extending the registry's ticket walk to include open tickets (Measurement 1's own gap), registry
+cross-matching becomes a two-part, bounded fix rather than "blocked on getting people to fill in a
+field they mostly already fill in." See the revised recommendation in `plan.md`.
+
+**Disclosure**: an earlier draft of this investigation reported 53.4% as the field's sparsity
+without this correction, and the peer session independently reproduced that exact number and (after
+first suspecting the opposite bug in their own competing 9.5% measurement) endorsed 53.4% as "the
+meaningful figure" before this correction was found. The 53.4% figure was not wrong as *"fraction of
+open tickets currently visible to the registry's own extractor"* — that number is still accurate and
+still supports Measurement 1's conclusion. It was incomplete as *"fraction of open tickets that
+genuinely lack Related Code Areas content,"* which is the number that actually matters for choosing
+between "fix the extractor" and "build something else entirely."
 
 ## What this changes about the two most concrete options
 
 The ticket's own Scope frames the tradeoff as "re-verify at pickup (fixed cost, works today) vs.
-registry cross-match (near-zero cost, but unmeasured precision)." The measurements above change
-that framing:
+registry cross-match (near-zero cost, but unmeasured precision)." The measurements above — including
+the Measurement 2 correction — change that framing, and change it differently than the first-pass
+53.4% number alone would have:
 
-- **Registry cross-match, as literally scoped, is not "near-zero cost."** It needs (a) extending
-  `generate_registry.py` to index open tickets (real, first-time tooling work — Measurement 1), and
-  even then (b) its precision is capped at 46.6% coverage by the field's own sparsity
-  (Measurement 2) — not a marginal gap, a majority miss.
-- **A close-time sweep is still worth pursuing, but not gated on `Related Code Areas` population.**
-  A sweep that searches the FULL TEXT of every open ticket body (not just the declared `Related
-  Code Areas` section) for mentions of the closing ticket's own git-touched file paths does not
-  depend on any ticket having filled in a structured field at all — it works against whatever prose
-  already exists in Scope/Request Summary/Related Code Areas/anywhere else in the body. This is a
-  variant of the ticket's own "back-reference sweep" option (its Scope text already allows "shared
-  Related Code Areas file paths **or keyword overlap**" — the keyword-overlap half is the one this
-  measurement recommends leaning on, not the structured-field half).
-- **This full-text variant was not costed or measured by the original ticket text** — it is a
-  refinement surfaced by actually measuring the structured-field option's real precision, not a
-  new fourth mechanism invented independently of the investigation.
+- **Registry cross-match, as literally scoped today, is still not "near-zero cost" and still isn't
+  recommended as-is.** It needs extending `generate_registry.py` to index open tickets at all
+  (Measurement 1 — unaffected by the correction, still a real gap). On its own, extending only the
+  indexing scope would still cap visible coverage at 46.6%, because the extractor it would reuse
+  requires backtick-quoting most authors don't use.
+- **But the corrected Measurement 2/3 numbers mean the "sparse field" framing was wrong, and the
+  cheaper fix is different from what the first-pass number suggested.** The field itself is 96.6%
+  populated with accurate content (Measurement 2 correction). The gap is a narrow extraction regex,
+  not an authorship-discipline problem. `generate_registry.py::parse_related_code_areas()` could be
+  widened to also recognize plain `- path` bullets (not just backtick-quoted ones) — a small,
+  bounded, mechanical fix — and combined with extending the indexing scope (Measurement 1), registry
+  cross-matching would become viable at close to the field's true 96.6% coverage, not 46.6%. This
+  is now a genuine third concrete option, cheaper than it first appeared, not eliminated by the data.
+- **A close-time full-text sweep remains a real, independently-viable alternative** — it searches
+  every open ticket's whole body text for mentions of the closing ticket's git-touched paths, so it
+  needs neither the extractor fix nor the registry's indexing extension. It is the ticket's own
+  "back-reference sweep" option's keyword-overlap half (Scope text: "shared Related Code Areas file
+  paths **or keyword overlap**"). Its main advantage over "fix the extractor + extend indexing" is
+  not needing two separate registry-side changes; its main disadvantage is building a second index
+  path outside the registry rather than fixing the registry's existing one.
+- **Recommendation, revised**: bring both the "fix the extractor + extend indexing" option and the
+  "full-text sweep" option to review as the two live candidates, not "sweep vs. do nothing." The
+  registry-fix option looks cheaper now than the original 53.4% framing suggested (it is a targeted
+  regex fix plus a scope extension, not a fight against widespread non-compliance), so it deserves
+  equal consideration, not elimination.
 
 ## Context requested by peer review (`agent-working-design`, 2026-09-14)
 
