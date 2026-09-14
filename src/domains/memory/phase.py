@@ -39,10 +39,23 @@ class MemoryUpdatePhase:
         """
         from src.core.updates import EntityUpdate
 
-        active_entities = [
-            e for e in state.entities.values()
-            if e.lifecycle.active and e.combat.alive
-        ]
+        # TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD: read-through any
+        # cognition_bundle_set an earlier phase already staged this same tick, before this phase
+        # builds its own updated CognitionModel from entity.cognition -- otherwise this phase's own
+        # write would silently discard that earlier phase's write once EntityUpdate.merge() applies
+        # its own whole-object replace. Matches the same pattern habit_phase.py/role_model_phase.py/
+        # hardening.py/lifecycle.py/quests.py already use. This phase runs first in the real
+        # pipeline today (src/engine/pipeline.py), so nothing currently exercises this path -- it is
+        # a latent-risk fix, not a live bug fix: safe only by ordering coincidence otherwise, and
+        # that safety would break silently the moment any future phase is inserted before this one.
+        active_entities = []
+        for e in state.entities.values():
+            if not (e.lifecycle.active and e.combat.alive):
+                continue
+            existing_update = update.entity_updates.get(e.id)
+            if existing_update is not None and existing_update.cognition_bundle_set is not None:
+                e = replace(e, cognition=existing_update.cognition_bundle_set)
+            active_entities.append(e)
         updated = MemoryUpdatePhase().run(active_entities, tick=state.tick, trigger_events=trigger_events)
 
         new_entity_updates = dict(update.entity_updates)
