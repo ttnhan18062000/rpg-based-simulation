@@ -238,6 +238,101 @@ def test_rebase_and_cherry_pick_silently_take_one_side_no_post_merge_hook(tmp_pa
         _run_git(["rebase", "--abort"], cwd=repo, check=False)
 
 
+def _init_repo_without_gitattributes(tmp_path: Path) -> Path:
+    """Same as `_init_repo()` but omits `.gitattributes` from the base commit entirely --
+    reproduces a branch that forked BEFORE the attribute line existed anywhere in its history,
+    for the cold-start test below. Every other test in this file uses `_init_repo()`, which
+    commits `.gitattributes` on the very first commit, so every branch those tests exercise
+    already has the line before any conflict-testing merge runs -- that is exactly why the
+    cold-start gap was never caught by this ticket's own original scratch-repo testing.
+    """
+    repo = tmp_path / "repo"
+    (repo / "tools").mkdir(parents=True)
+    (repo / "entries").mkdir()
+    _run_git(["init", "-q", "-b", "main"], cwd=repo)
+    _run_git(["config", "user.email", "test@example.com"], cwd=repo)
+    _run_git(["config", "user.name", "Test"], cwd=repo)
+    (repo / "tools" / "generate_registry.py").write_text(_FIXTURE_GENERATOR)
+    (repo / "entries" / "base.txt").write_text("base entry\n")
+    subprocess.run(
+        ["python3", "tools/generate_registry.py"], cwd=str(repo), check=True, capture_output=True,
+    )
+    _run_git(["add", "-A"], cwd=repo)
+    _run_git(["commit", "-q", "-m", "base (no .gitattributes yet)"], cwd=repo)
+    return repo
+
+
+def test_cold_start_first_merge_introducing_gitattributes_falls_back_to_ordinary_conflict(tmp_path):
+    """Disclosed gap, found live during TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS's own
+    merge against post-#181 main (2026-09-13, reported by agent-working-implementer, requested
+    as a test by agent-working-design rather than a doc-only note): a branch that forked BEFORE
+    `.gitattributes` declared `docs/REGISTRY.yaml merge=registry-regen` does not get the
+    driver's benefit on the one merge that pulls that line in for the first time -- even with
+    the driver fully pre-installed in local git config and the post-merge hook already in
+    place beforehand, exactly as it was on the real branch this was found on. git resolves
+    merge-driver attributes from the pre-merge state of the branch being merged into, not a
+    state that includes the `.gitattributes` change the very same merge is introducing.
+
+    This is the one scratch-repo case in this file that does NOT use `_init_repo()`: every
+    other test's branches already carry `.gitattributes` before their conflict-testing merge
+    runs, which is exactly why this gap went undetected until it was hit on a real, pre-#181
+    branch.
+    """
+    repo = _init_repo_without_gitattributes(tmp_path)
+
+    _run_git(["checkout", "-q", "-b", "old-branch"], cwd=repo)
+    _add_entry_and_regenerate(repo, "ticket-old.txt", "old branch closed a ticket\n")
+    _run_git(["add", "-A"], cwd=repo)
+    _run_git(
+        ["commit", "-q", "-m", "old branch closes a ticket (predates .gitattributes)"], cwd=repo,
+    )
+
+    # main now introduces .gitattributes AND its own conflicting registry regeneration in the
+    # same commit -- mirrors #181 landing the merge driver mechanism while a sibling ticket's
+    # own PR also touched the registry from the same fork point.
+    _run_git(["checkout", "-q", "main"], cwd=repo)
+    (repo / ".gitattributes").write_text("docs/REGISTRY.yaml merge=registry-regen\n")
+    _add_entry_and_regenerate(repo, "ticket-main.txt", "main closes a different ticket\n")
+    _run_git(["add", "-A"], cwd=repo)
+    _run_git(["commit", "-q", "-m", "main introduces .gitattributes and closes a ticket"], cwd=repo)
+
+    # Pre-install the driver+hook on old-branch BEFORE merging -- exactly what happened live:
+    # both were already present in local git config/hooks before `git merge` ran.
+    _run_git(["checkout", "-q", "old-branch"], cwd=repo)
+    _install_driver_and_hook(repo)
+
+    merge_result = _run_git(["merge", "main", "--no-edit"], cwd=repo, check=False)
+    registry_content = (repo / "docs" / "REGISTRY.yaml").read_text()
+
+    if merge_result.returncode == 0 and "<<<<<<<" not in registry_content:
+        raise AssertionError(
+            "cold-start gap did not reproduce at the git level: the driver engaged on the "
+            "merge that itself introduces .gitattributes' merge=registry-regen line. This "
+            "contradicts the live diagnosis from TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS "
+            "-- if this assertion starts failing, the cold-start caveat in .gitattributes and "
+            "`make setup-merge-drivers`'s echo output is stale and the actual cause of that "
+            "merge's real conflict markers needs re-investigating."
+        )
+
+    assert merge_result.returncode != 0, (
+        "expected an ordinary merge conflict -- the driver cannot engage for the one merge "
+        "that introduces its own .gitattributes declaration"
+    )
+    assert "CONFLICT" in merge_result.stdout
+    assert "<<<<<<<" in registry_content, (
+        "cold-start gap: real conflict markers expected on docs/REGISTRY.yaml, since the "
+        "driver could not have engaged for this specific merge"
+    )
+    gitattributes_content = (repo / ".gitattributes").read_text()
+    assert "merge=registry-regen" in gitattributes_content, (
+        ".gitattributes itself is a clean two-way add (old-branch had none), so it should "
+        "merge in cleanly even though docs/REGISTRY.yaml -- the path IT declares a driver "
+        "for -- does not benefit from that same merge"
+    )
+
+    _run_git(["merge", "--abort"], cwd=repo, check=False)
+
+
 def test_gitattributes_declares_registry_regen_merge_driver():
     content = (REPO_ROOT / ".gitattributes").read_text()
     assert any(

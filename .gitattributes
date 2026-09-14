@@ -43,4 +43,25 @@ tickets/working_log.csv text eol=lf merge=union
 # this path fails the merge loudly (git's own behavior for an unconfigured `merge=`
 # attribute) rather than silently taking one side -- resolve by taking either side and
 # rerunning `make docs-registry`, same as before.
+# Cold-start caveat (confirmed live + reproduced in
+# tests/integrity/test_registry_merge_driver.py::test_cold_start_first_merge_introducing_gitattributes_falls_back_to_ordinary_conflict):
+# a branch that forked before this line existed does NOT get the driver's benefit on the one
+# merge that pulls this exact line in for the first time, even with the driver/hook already
+# installed beforehand -- git resolves merge-driver attributes from the pre-merge state of the
+# branch being merged into, not one that includes this same merge's own .gitattributes change.
+# Falls back to the ordinary loud-conflict behavior above for that one merge only; every
+# subsequent merge on that branch (which now carries this line) uses the driver normally.
+# Independently hit a second time on PR #182 (branch flag-propagation-batch, which also does not
+# descend from #181's own merge commit) -- confirms this is a real, reproducible class, not a
+# one-off on this ticket's own branches. Also confirmed working correctly on the opposite path:
+# this very PR's own later merge of a further-advanced main (after #182 landed) carried the
+# merge=registry-regen line from its own earlier merge, and docs/REGISTRY.yaml auto-merged with
+# zero conflict markers -- the driver engaging exactly as designed on a genuine subsequent merge,
+# on the same PR that documents the one case where it can't.
+# Separately: activation is per-clone, not versioned -- the driver config and hook copy both live
+# outside version control, so this mechanism is simply off for any clone that never ran
+# `make setup-merge-drivers`, and a conflict from that state is indistinguishable from the
+# cold-start case above (no warning either way). Worktrees of one clone share its .git/config and
+# hooks directory, so a single setup run covers every worktree of that clone -- only separate
+# clones each need their own run.
 docs/REGISTRY.yaml merge=registry-regen
