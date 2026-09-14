@@ -15,7 +15,7 @@ tags: [world]
 `GuildAction.visit()`'s lead-generation hardcodes a resource-content ID string directly in code — the next content rename breaks it silently and identically to how it just broke
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -67,11 +67,14 @@ This ticket is scoped as **the question, not a chosen mechanism**:
   CONTRACT-MISMATCH`), filed separately from the same investigation.
 
 ## Acceptance Criteria
-- [ ] A design decision on where the resource-kind identity should come from, with real options
-      weighed, brought to peer/user review before implementation.
+- [x] A design decision on where the resource-kind identity should come from, with real options
+      weighed, brought to peer/user review before implementation. Done: 3 options weighed
+      (content-declared tag / derive from source_region_tags / named constant + fail-loud test),
+      with a recommendation, sent for review.
 - [ ] A real test that fails loudly if the referenced resource kind(s) stop matching the real
-      content catalog — the specific gap that let the original bug survive silently.
-- [ ] No implementation without the design decision above.
+      content catalog — the specific gap that let the original bug survive silently. **Not yet —
+      blocked on the design decision above.**
+- [x] No implementation without the design decision above. Honored: zero source/test changes.
 
 ## Related Tickets
 - `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (in progress — origin of
@@ -83,7 +86,12 @@ This ticket is scoped as **the question, not a chosen mechanism**:
 None yet.
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+`staging_artifacts/TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE/investigation.md` — found a
+second, related hardcoded literal (`subject="iron_ore"`) alongside the one the ticket names;
+`ResourceDef` confirmed to have no existing `tags`/`metadata` field (unlike a sibling class in the
+same file); `source_region_tags` checked and rejected as a reuse candidate (answers a different
+question). 3 options weighed, Option 3 (named constant + fail-loud catalog test, deriving the
+second hardcode via the registry lookup the function already performs nearby) recommended.
 
 ## Related Code Areas
 - `src/town/guild.py` (`GuildAction.visit()`'s lead-generation block)
@@ -97,13 +105,30 @@ None yet — standard tier, staging artifacts created when picked up.
   the hardcoded ID goes stale" test is the central open question — not assumed either way here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**2026-09-14: investigation complete, blocked on design review — no code changed.** Summary (full
+detail in staging_artifacts/investigation.md):
+- Found a **second** hardcoded literal in the same lead-generation block, not just the one the
+  ticket names: `subject="iron_ore"` alongside `node.kind == "iron_vein"` — both would break
+  identically and silently on a content rename.
+- `ResourceDef` (`src/core/registries.py`) confirmed to have no existing `tags`/`metadata` field —
+  unlike a sibling `ItemDef`-shaped class in the same file, which does. A precedented shape exists
+  to extend from, if Option 1 is ever chosen.
+- Checked and rejected `source_region_tags` as a reuse candidate: it answers "which regions is
+  this resource found in," not "should the guild generate rumor leads about it" — a real semantic
+  mismatch, not a fit.
+- 3 options laid out, **Option 3 (named constant + fail-loud catalog test, deriving the second
+  hardcode via the same `ResourceRegistry` lookup the function already performs a few lines below)
+  recommended**, given this ticket's own Out of Scope explicitly excludes broadening
+  lead-generation coverage — a full content-tagging mechanism (Option 1) would be infrastructure
+  for a need this ticket itself says isn't there. Design question sent to peer/user for review.
 
 ## Test Summary
-_(pending)_
+_(none — no implementation yet; blocked pending design decision)_
 
 ## Files Changed
-_(pending)_
+_(none — investigation only, per this ticket's own "No implementation without the design decision"
+constraint)_
 
 ## Completion Summary
-_(pending)_
+_(not complete — blocked pending peer/user design decision on staging_artifacts/investigation.md's
+3 options and recommendation)_
