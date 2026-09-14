@@ -53,7 +53,11 @@ tickets/working_log.csv text eol=lf merge=union
 # subsequent merge on that branch (which now carries this line) uses the driver normally.
 # Independently hit a second time on PR #182 (branch flag-propagation-batch, which also does not
 # descend from #181's own merge commit) -- confirms this is a real, reproducible class, not a
-# one-off on this ticket's own branches.
+# one-off on this ticket's own branches. Also confirmed working correctly on the opposite path:
+# this very PR's own later merge of a further-advanced main (after #182 landed) carried the
+# merge=registry-regen line from its own earlier merge, and docs/REGISTRY.yaml auto-merged with
+# zero conflict markers -- the driver engaging exactly as designed on a genuine subsequent merge,
+# on the same PR that documents the one case where it can't.
 # Separately: activation is per-clone, not versioned -- the driver config and hook copy both live
 # outside version control, so this mechanism is simply off for any clone that never ran
 # `make setup-merge-drivers`, and a conflict from that state is indistinguishable from the
