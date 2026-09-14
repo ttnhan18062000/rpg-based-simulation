@@ -298,3 +298,89 @@ class TestDetourSelectionAndTrust:
         
         # Contradiction penalty should reduce score significantly (by 25.0 points)
         assert score_contradicted == score_normal - 25.0
+
+
+class TestNonCoordinateLeadDetailIsSkippedNotCrashed:
+    """TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH.
+
+    `fused_strategic_pass`'s belief-confirmation loop assumes `kind="location"` leads carry a
+    parseable "x,y" `detail`. A real producer (the pre-fix `GuildAction.visit()`) emitted free
+    narrative text instead, which threw on every tick, silently, for the life of the lead. The
+    parse failure must now be caught narrowly, logged visibly (not blended into a generic
+    catch-all), and must not stop a sibling coordinate-detail lead on the same entity from being
+    processed normally in the same pass.
+    """
+
+    def test_non_coordinate_detail_lead_is_skipped_not_crashed(self, caplog):
+        import logging
+
+        entity = _make_entity_with_leads(
+            leads={
+                "bad_lead": LeadState(
+                    id="bad_lead",
+                    kind="location",
+                    subject="iron_ore",
+                    detail="Rumors of iron near (48.0, 12.0)",
+                    certainty=LeadCertainty.VAGUE,
+                    discovered_tick=50,
+                )
+            }
+        )
+        state = AuthoritativeState(tick=100, seed=42, entities={1: entity})
+        state_update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1)})
+
+        with caplog.at_level(logging.WARNING, logger="src.systems.strategic_systems.intelligence"):
+            res_update = StrategicIntelligenceSystem.fused_strategic_pass(state, state_update)
+
+        assert not any(r.levelno >= logging.ERROR for r in caplog.records), (
+            "a known-shape detail mismatch must not be logged as an unexpected failure"
+        )
+        assert any("bad_lead" in r.message for r in caplog.records), (
+            "the skipped lead's own id should be named in the warning, not a generic message"
+        )
+        updated_lead_ids = {l.id for l in res_update.entity_updates[1].strategic.leads_add_or_update} \
+            if res_update.entity_updates.get(1) and res_update.entity_updates[1].strategic else set()
+        assert "bad_lead" not in updated_lead_ids, (
+            "a lead whose detail can't be parsed must not be marked tested by this loop"
+        )
+
+    def test_coordinate_detail_lead_still_confirmed_alongside_a_non_coordinate_sibling(self):
+        entity = _make_entity_with_leads(
+            leads={
+                "bad_lead": LeadState(
+                    id="bad_lead", kind="location", subject="iron_ore",
+                    detail="Rumors of iron near (48.0, 12.0)",
+                    certainty=LeadCertainty.VAGUE, discovered_tick=50,
+                ),
+                "good_lead": LeadState(
+                    id="good_lead", kind="location", subject="goblin_camp",
+                    detail="10.0,10.0",
+                    certainty=LeadCertainty.VAGUE, discovered_tick=50,
+                ),
+            },
+            beliefs={
+                "belief_1": BeliefEntry(
+                    id="belief_rumor_goblin_camp_50", subject="goblin_camp", claim="10.0,10.0",
+                    certainty=0.3, source="rumor", created_tick=50,
+                )
+            },
+        )
+        entity = replace(entity, navigation=replace(entity.navigation, position=(10.0, 10.0)))
+        entity = replace(entity, identity=replace(entity.identity, faction=Faction.HERO_GUILD))
+
+        hostile = (V2EntityBuilder(2)
+            .kind("monster")
+            .location(10.0, 10.0)
+            .identity(faction=Faction.MONSTER_HORDE)
+            .build())
+
+        state = AuthoritativeState(tick=100, seed=42, entities={1: entity, 2: hostile})
+        state_update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1)})
+
+        res_update = StrategicIntelligenceSystem.fused_strategic_pass(state, state_update)
+
+        updated_leads = {l.id: l for l in res_update.entity_updates[1].strategic.leads_add_or_update}
+        assert "good_lead" in updated_leads
+        assert updated_leads["good_lead"].tested is True
+        assert updated_leads["good_lead"].test_outcome == "SUCCESS"
+        assert "bad_lead" not in updated_leads
