@@ -273,6 +273,14 @@ setup-merge-drivers: ## Install the local merge driver + post-merge hook that re
 	cp tools/hooks/registry_post_merge_regen.sh "$$(git rev-parse --path-format=absolute --git-path hooks)/post-merge"
 	chmod +x "$$(git rev-parse --path-format=absolute --git-path hooks)/post-merge"
 	@echo "[setup-merge-drivers] docs/REGISTRY.yaml merge driver + post-merge hook installed"
+	@echo "[setup-merge-drivers] note: the first merge on a branch that also introduces the"
+	@echo "  merge=registry-regen line in .gitattributes (i.e. pulling this line in from"
+	@echo "  main for the first time) resolves without this driver -- see .gitattributes'"
+	@echo "  own comment. Every subsequent merge on that branch uses it normally."
+	@echo "[setup-merge-drivers] activation is per-CLONE, not versioned: a clone that never runs"
+	@echo "  this target gets ordinary conflict behaviour with no warning, indistinguishable from"
+	@echo "  the cold-start case above. Worktrees of this clone share .git/config and the hooks"
+	@echo "  directory, so this one run covers all of them -- only a separate clone needs its own."
 
 brainstorm-idea-index: ## Regenerate the per-idea cross-document index (docs/brainstorm/idea_index.json)
 	$(PYTHON3) tools/generate_brainstorm_idea_index.py

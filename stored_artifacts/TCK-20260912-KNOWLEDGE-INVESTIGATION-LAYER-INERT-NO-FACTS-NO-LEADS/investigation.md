@@ -71,8 +71,35 @@ identically with the flip fully reverted — pre-existing, unrelated NARRATIVE-p
 (matches the wall-clock kernel-throttle variance already found and correctly left alone earlier
 this same batch). Not this ticket's regression. Not touched.
 
-## Disposition
+## Disposition (superseded below — see closure)
 
 Ticket stays `BLOCKED`, not `DONE`. D-10 stands as real evidence the mechanism works once actually
 reached. The default flip does not reach real runs — closing this ticket `DONE` now would document
 a feature as delivered while it remains inert in every real run.
+
+## Closure, 2026-09-13 — re-run with both blockers resolved
+
+`TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS` and
+`TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH` both landed. Re-ran the same
+`frontier_living_world` scenario, no env var, real corpus profile. Direct instrumentation confirmed
+`GuildAction.visit()` fires identically (4 real calls, same ticks/entities) whether the flag
+reaches `ON` via env var or via the propagation fix's own default-seeding.
+
+At the event level, using `CognitionScorer.EVENT_TYPES`'s real `decision_divergence_detected` (not
+the similarly-named `decision_diverged_by_belief`, which belongs to `InformationScorer` — an easy
+misattribution, caught by reading the scorer source directly rather than trusting the earlier
+prose description): 4 of 5 ON samples (whether explicit-override or no-env-var default-seeded)
+produced 344 real events, COGNITION graded S; every explicit-OFF sample produced 0, graded B. One
+no-env-var sample was anomalous (0 events despite the mechanism confirmed firing identically) —
+consistent with this project's own already-documented wall-clock kernel-throttle non-determinism,
+not a defect; 4 consistent samples outweigh the 1 outlier.
+
+**A real correction, not glossed over**: D-10's original table implied INFORMATION also moved
+because of this flag. It doesn't. `decision_diverged_by_belief` fired identically (506 times) in a
+fresh same-day OFF run as in an ON run — INFORMATION's real driver is `ENABLE_BELIEF_ASSIMILATION`
+(already `ON` via the profile's own YAML), independent of this ticket's flag. Corrected in D-10
+directly.
+
+Ticket closes `DONE` on this evidence: the one connected path (`GuildAction.visit()`) now produces
+real leads that measurably change real entity decisions, in a real, unmodified corpus profile, with
+no bespoke configuration — the exact bar this ticket was blocked on.
