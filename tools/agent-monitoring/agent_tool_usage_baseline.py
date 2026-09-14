@@ -22,6 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from generate_retro import load_data_glob  # noqa: E402
+from validate import load_data_glob_with_line_count  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 AGENTS_DIR = REPO_ROOT / ".claude" / "agents"
@@ -32,6 +33,13 @@ UNATTRIBUTED = "unattributed"
 
 def registered_agents(agents_dir: Path = AGENTS_DIR) -> list:
     return sorted(p.stem for p in agents_dir.glob("*.md"))
+
+
+def load_all_tool_rows_with_line_count(data_dir: Path = DEFAULT_DATA_DIR) -> "tuple[list, int]":
+    """Race-free variant of load_all_tool_rows(): returns (rows, raw_non_blank_line_count) derived
+    from ONE read per shard, not two independent reads of the same live, concurrently-written
+    file (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 3)."""
+    return load_data_glob_with_line_count(data_dir, "tools")
 
 
 def load_all_tool_rows(data_dir: Path = DEFAULT_DATA_DIR) -> list:
