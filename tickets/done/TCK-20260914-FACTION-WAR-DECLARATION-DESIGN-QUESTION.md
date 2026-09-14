@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION
-phase: open
+phase: done
 date: 2026-09-14
 tags: [faction, grand-strategy]
 ---
@@ -15,7 +15,7 @@ tags: [faction, grand-strategy]
 Sieges, territory transfer, and `EXPAND_TERRITORY` all require a formal `DiplomaticState.WAR` between factions that no observed run has ever produced — the user has reversed the prior "accepted long-horizon divergence" disposition; find whether any real design declares when war should happen before building anything
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -93,6 +93,9 @@ real run is reachability."
 - `TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE` (filed during this ticket's design phase —
   the sentiment design's own importance-weighting requirement, cut from this build and scoped as
   its own separate initiative)
+- `TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY` (filed at build close — post-fix,
+  `HOSTILE` was not shown reachable through ordinary play; same reachability shape as the
+  maturity-gate ticket above)
 
 ## Related Docs
 - `docs/plans/deferred_tuning_decisions_register.md` § D-06 (the entry this ticket investigates)
@@ -321,7 +324,33 @@ this is expected and correct now that tension for this pair reflects only their 
 not contamination from elsewhere. (Run-to-run tick-level details vary slightly due to a pre-existing,
 unrelated non-determinism source in this environment — real-time-based mid-tick throttling
 [`Mid-tick emergency throttle triggered`] that drops items under CPU load — not something this
-ticket's changes introduced or need to fix.) Added 2 new regression tests
+ticket's changes introduced or need to fix.)
+
+**Peer review finding, stated plainly rather than rounded up: `HOSTILE` is unproven post-fix.**
+`0.418` held flat from the first observation through 9000 ticks — a plateau, not "didn't happen to
+reach it yet." Current honest state: **sentiment reliably produces `TENSE`; it has not been shown
+to reach `HOSTILE` organically with the cascade fixed.** The earlier `HOSTILE` observation (pre-fix,
+tick 89) is no longer representative of current behaviour — it depended in part on the same
+aggregate-scalar contamination this fix removed, so it cannot be cited as proof `HOSTILE` is
+reachable today. Both the acceptance bar (`TENSE` *or* `HOSTILE`) and the original proof run are
+still valid as historical evidence that the mechanism *can* drive a real transition through the
+threshold machine — but whether `HOSTILE` specifically is reachable now, absent the cascade, is a
+genuinely open question. Filed as its own investigation:
+`TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY` (same shape as the maturity-gate/D-05
+pattern — a mechanism real play doesn't actually reach). Recorded in the spec's decision banner
+alongside the existing `WAR`-gap note, not buried in §6.
+
+**Also recorded: the diplomatic path from resource competition is now fully severed.**
+`RESOURCE_DEPLETED` (`faction_decision.py::FactionAwarenessService`) still feeds
+`FactionState.tension_level` (goal-priority scoring only — `DEFEND_BORDER`/`TRADE_ROUTE`/
+`COMMISSION_QUEST`), but `DiplomaticStateMachine.compute_transitions()` no longer reads
+`tension_level` at all. This was already effectively dead for diplomacy before this fix (its
+`territory` gate never fired per the original investigation), so nothing real is lost — but it is
+now explicitly, structurally not a route into diplomatic tension, not just an unreachable one.
+Anyone later wanting "resource competition raises war risk" needs to route it through
+`pairwise_tension_delta` with a specific named rival, not the ambient scalar.
+
+Added 2 new regression tests
 (`test_apply_path_scopes_pairwise_tension_to_named_rival_only`,
 `test_compute_transitions_does_not_cascade_hostility_to_uninvolved_factions`) plus updated the 4
 existing `test_diplomacy.py` tests whose assertions encoded the old scalar-as-pairwise-proxy
@@ -359,22 +388,36 @@ re-verification.
   `pairwise_tension_delta` instead of the ambient `tension_delta`.
 - `tests/unit/domains/faction/test_faction_sentiment.py` (new).
 - `tests/unit/domains/faction/test_diplomacy.py` — 4 tests updated, 2 new tests added.
-- `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (prior commit — relocation out of
-  `docs/mechanics/`).
+- `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (relocation out of
+  `docs/mechanics/`, plus a post-build finding banner recording the `HOSTILE`-reachability gap and
+  the `RESOURCE_DEPLETED` severance).
 - `tickets/todos/TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE.md` (prior commit — scoping-only
   filing).
+- `tickets/todos/TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY.md` (new — follow-up filing
+  for the post-fix `HOSTILE`-plateau finding).
 
 ## Completion Summary
 Central question answered with a real, evidence-backed build: `DiplomaticStateMachine` is a real
 design, was unreachable for a documented, now-partly-resolved set of reasons, and faction sentiment
 is now a real, live, continuously-operating pre-war tension driver, proven end-to-end in an
 unmodified corpus world — genuine sentiment divergence from ordinary play, and a genuine
-`TENSE`/`HOSTILE` transition through the pre-existing threshold machine, not a fixture. A real,
-pre-existing defect in that same threshold machine (tension modeled as a per-faction scalar instead
-of a per-pair relation) was found only because this work was the first thing to ever push it hard
-enough to fire, and was fixed to the scope peer specified — `tension_level` untouched for its other,
-genuine ambient uses; a new `pairwise_tension` field added for the pairwise case; the
-sentiment/tension consolidation question deliberately left open rather than folded in silently.
+`TENSE`/`HOSTILE` transition through the pre-existing threshold machine, not a fixture (that
+specific proof run predates the cascade fix; see below). A real, pre-existing defect in that same
+threshold machine (tension modeled as a per-faction scalar instead of a per-pair relation) was
+found only because this work was the first thing to ever push it hard enough to fire, and was
+fixed to the scope peer specified — `tension_level` untouched for its other, genuine ambient uses;
+a new `pairwise_tension` field added for the pairwise case; the sentiment/tension consolidation
+question deliberately left open rather than folded in silently.
+
+**Honest post-fix status, not rounded up**: re-verification after the fix shows `TENSE` reached
+reliably and the cascade genuinely gone (zero contamination to uninvolved factions across a
+9000-tick run), but `HOSTILE` has NOT been shown reachable with the cascade removed — the pair's
+`pairwise_tension` plateaued at `0.418` against the `0.7` threshold. The pre-fix `HOSTILE`
+observation is no longer representative of current behaviour. Filed as its own investigation,
+`TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY`, rather than left ambiguous or silently
+assumed resolved. Also recorded: `RESOURCE_DEPLETED` no longer feeds the diplomatic state machine
+at all (goal-priority scoring only) — already effectively dead there, now structurally so.
+
 Loop #1 (`military_strength`) remains explicitly out of scope, deferred to
-`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` per the user's own decision.
-Sent to peer for review before this ticket is moved to `tickets/done/`.
+`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` per the user's own decision. Peer reviewed and
+approved both the fix and the honest reporting of the `HOSTILE` gap. Ticket closed.

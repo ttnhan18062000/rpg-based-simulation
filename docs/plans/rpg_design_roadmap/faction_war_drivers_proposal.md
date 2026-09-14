@@ -28,6 +28,22 @@ contract for this subsystem) — this file is the review artifact, not the desti
 >   see §3.3/§3.6. Sentiment ships on its own real merits (tension, diplomacy, a trade extension
 >   point), not as a complete war-declaration system. Full detail in §4.
 
+> **Post-build finding (2026-09-15), stated as plainly as the gap above**: shipped sentiment
+> reliably reaches `TENSE`. **`HOSTILE` has NOT been shown to reach organically post-fix** — a real
+> 9000-tick run against unmodified `frontier_living_world` shows `pairwise_tension` for the one
+> real interacting pair plateauing at `0.418` against the `0.7` `HOSTILE` threshold, never
+> approaching it. An earlier pre-fix run did reach `HOSTILE` for this same pair, but that run's
+> mechanism (`tension_level` as an ambient per-faction scalar misread as pairwise tension) was a
+> confirmed defect and has been removed — that observation is **no longer representative of
+> current behaviour** and should not be cited as evidence `HOSTILE` is reachable. Filed as a
+> follow-up: `TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY` — same shape as the D-05/
+> maturity-gate pattern this week (a mechanism gated behind a value real play doesn't approach).
+> Also: `RESOURCE_DEPLETED` (`faction_decision.py`) now feeds only goal-priority scoring, not
+> `DiplomaticStateMachine` — it was already dead there (its territory gate never fired), so nothing
+> real is lost, but it is no longer a route into diplomatic tension at all; anyone later wanting
+> "resource competition raises war risk" needs to route it through `pairwise_tension` with a named
+> rival, not the ambient scalar.
+
 Ticket: `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION`. Full investigation evidence:
 `stored_artifacts/TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION/investigation.md` (once
 moved) / `staging_artifacts/.../investigation.md` (current).
