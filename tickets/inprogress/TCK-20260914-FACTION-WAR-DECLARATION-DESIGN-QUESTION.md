@@ -90,6 +90,9 @@ real run is reachability."
   same user decision — sequenced first, different shape of problem)
 - `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` (filed during this ticket's design phase —
   the proposal's own military-strength driver is blocked on this resolving first)
+- `TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE` (filed during this ticket's design phase —
+  the sentiment design's own importance-weighting requirement, cut from this build and scoped as
+  its own separate initiative)
 
 ## Related Docs
 - `docs/plans/deferred_tuning_decisions_register.md` § D-06 (the entry this ticket investigates)
@@ -224,6 +227,27 @@ the second time in this arc a proposed input turned out uniform across the corpu
 entity level in the perceived-power draft).
 
 Sent to peer for review — no implementation until approved, per explicit instruction.
+
+**2026-09-15, both open questions resolved by the user.** (1) Build a real importance signal — but
+as its own initiative, not folded into sentiment; filed
+`TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE` (scoping only, not built, not blocking). (2)
+Ship sentiment now on its own merits; the military-strength driver is separate, later work.
+Amended the spec accordingly:
+- Added a prominent decision banner at the very top of the document (before §1), so the
+  "reaches `TENSE`/`HOSTILE`, not `WAR`" gap and the "importance weighting is cut, not deferred
+  quietly" fact are the first things a reader hits, not buried in §6.
+- Removed the `IMPORTANCE_WEIGHT` multiplier from §3.2.3's integration entirely — replaced with a
+  single fixed `FACTION_SCALE_FACTOR`, applied uniformly regardless of which entity acted. Rewrote
+  §3.2.4 to state the cut decision plainly rather than leaving a "recommended as placeholder"
+  half-answer.
+- Kept §3.2.6's trade extension point named, unchanged — the clearest near-term payoff of shipping
+  sentiment alone.
+- §4's acceptance bar and §6's summary both updated to match: build against a real, unmodified
+  corpus-world run showing genuine sentiment divergence and at least one pair reaching
+  `TENSE`/`HOSTILE` — not a constructed fixture, matching this week's own standing bar.
+
+Per explicit instruction: spec amendments first, bring the revision to peer, then code. Sent for
+review; no implementation started.
 
 ## Test Summary
 _(none — investigation only; findings verified via direct probes against a real, instrumented

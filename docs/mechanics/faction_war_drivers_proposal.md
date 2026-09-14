@@ -13,6 +13,21 @@ Per explicit instruction: peer review required before any implementation. Once a
 the verified formulas belong in `docs/systems/faction_contract.md` (the living, parity-ledger-backed
 contract for this subsystem) — this file is the review artifact, not the destination.
 
+> **User's decision (2026-09-15), stated here first so it can't be missed**: **ship faction
+> sentiment now, without importance weighting; the military-strength driver comes next, as its own
+> separate piece of work.** Two consequences, both real, both intentional:
+> - **Importance weighting is cut from this build**, not deferred quietly. The only real signal
+>   found (`public_reputation`) has a structural 2× ceiling that does not widen with more play
+>   (measured, §3.2.4) — too weak to express what the design actually wants (a leader's actions
+>   reading as categorically different from an ordinary entity's). Rather than ship a near-invisible
+>   multiplier, it's cut, and a real importance signal (faction leadership/rank/standing — genuine
+>   new design, none exists today) is scoped as its own separate initiative:
+>   `TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE` (scoping only, not built).
+> - **This design reaches `TENSE`/`HOSTILE` reliably. It does not reach `WAR`.** Loop #1
+>   (`military_strength`, frozen at `1.0`) is untouched by sentiment and remains genuinely open —
+>   see §3.3/§3.6. Sentiment ships on its own real merits (tension, diplomacy, a trade extension
+>   point), not as a complete war-declaration system. Full detail in §4.
+
 Ticket: `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION`. Full investigation evidence:
 `stored_artifacts/TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION/investigation.md` (once
 moved) / `staging_artifacts/.../investigation.md` (current).
@@ -139,10 +154,16 @@ tension growth (loop #3) with no separate mechanism.**
 
 **User's design, given after reviewing §3.1's own territory fix**: a continuous faction-to-faction
 sentiment, scaled hostile ← neutral → friendly, serving *all* faction-level interaction — trade and
-diplomacy as much as war — not a war-only mechanism. Three explicit requirements: it builds from
-real entity interaction ("almost like entity-to-entity"), it's weighted by the acting entity's
-importance to their faction, and it must be the real pre-war producer this whole investigation has
-been looking for — one that doesn't itself require war, or even territory, to exist first.
+diplomacy as much as war — not a war-only mechanism. It builds from real entity interaction
+("almost like entity-to-entity"), and it must be the real pre-war producer this whole investigation
+has been looking for — one that doesn't itself require war, or even territory, to exist first.
+
+**Scope note (2026-09-15, after the importance-signal finding below)**: the design's original third
+requirement — weighting by the acting entity's importance to their faction — is **not built in this
+pass**. §3.2.4 found no real signal strong enough to carry it; rather than ship a knob that barely
+turns, it's cut and scoped separately (`TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE`). What
+follows describes the sentiment mechanism as it will actually ship: real, uniform per-event
+magnitude, not yet weighted by who acted.
 
 #### 3.2.1 Reuse check: mirror `SocialBond`, don't invent a new relationship shape
 
@@ -202,16 +223,20 @@ For each `(source_entity_id, bond_update.target_id)` pair where `bond_update.sen
 resolve both entities' real faction via `get_faction_id_str()` (`src/content_semantics/faction.py`
 — the same reuse-friendly helper §2.1 already found and traced). If the two factions differ, emit a
 scaled `FactionUpdate(faction_sentiment_delta={target_faction: bond_update.sentiment_delta *
-IMPORTANCE_WEIGHT, ...})` for both factions (symmetric, like the entity-level bond updates
-themselves are effectively symmetric in `contracts.py`). No existing system needs to know anything
-about factions — combat, cooperation, and appraisal stay exactly as they are; the new phase derives
+FACTION_SCALE_FACTOR, ...})` for both factions (symmetric, like the entity-level bond updates
+themselves are effectively symmetric in `contracts.py`). `FACTION_SCALE_FACTOR` is a single fixed
+constant (not per-entity — importance weighting is explicitly cut, see the scope note above),
+proposed at `< 1.0` purely so one entity-level interaction doesn't swing faction-wide standing as
+hard as it swings the two entities' own bond — a real, if provisional, dampening value still needs
+picking, not a design decision made here. No existing system needs to know anything about
+factions — combat, cooperation, and appraisal stay exactly as they are; the new phase derives
 faction consequences from data they already produce.
 
 This directly answers "what moves it": the same real events that already move entity-level
 sentiment (a hit, a completed or defaulted contract, an appraisal outcome) — scaled down and
 attributed to the acting entities' factions, not invented from scratch.
 
-#### 3.2.4 Importance weighting — the novel piece, and an empirical correction to the candidate list
+#### 3.2.4 Importance weighting — investigated, found unsupported, cut from this build
 
 **Rule applied throughout this section, worth stating on its own**: any field proposed as a
 discriminator must be measured for real spread before a design leans on it — not assumed reasonable
@@ -220,7 +245,7 @@ in this arc (the first: the earlier perceived-power draft assumed entity level w
 and found every one of 214 corpus entities at level 1). Two instances make it a pattern to check
 for by default, not a one-off lesson.
 
-Peer's candidates, checked against real data rather than assumed:
+Every real candidate was checked against real data rather than assumed, and none survived:
 
 - **`public_reputation`** (`SocialComponent.public_reputation: float = 1.0`, range 0.0–2.0) — real,
   live, and *not* pinned at the default (confirmed non-degenerate: measured across a real 3000-tick
@@ -230,39 +255,31 @@ Peer's candidates, checked against real data rather than assumed:
   `max` are pinned at exactly `1.000`/`2.000` — the field's own hard floor/ceiling — at **every**
   checkpoint from tick 500 through tick 4999, with `spread (max−min)` reading exactly `1.000` the
   entire time. Mean actually drifts *down* over the run (1.335 → 1.145) as new low-reputation
-  spawns dilute the average, not because the range narrows or widens. **This is a finding, not
-  reassurance**: the most important entity in the world can count at most 2× a nobody
-  (`2.0 / 1.0`), and that ceiling is structural — it does not loosen given more real play. Against
-  real interaction volume (many small sentiment deltas accumulating per tick), a 2× multiplier will
-  be close to invisible; the weighting the design calls for (a king's betrayal reading as
-  categorically different from a peasant's, not merely double) **cannot be expressed by this signal
-  as it exists today.**
-
-  What a real signal would need: something with genuine range — faction leadership (confirmed
-  absent, §3.2.4 below), an office/rank system, or a widened `public_reputation` formula that
-  currently isn't proposed here. **The honest state of this design is: it wants importance
-  weighting, and the world does not yet have a signal strong enough to carry it.** Whether to build
-  one, accept the weak 2× signal as a real first pass, or omit weighting entirely for now is the
-  user's call, not decided here. **Recommended only as a placeholder, not a resolved answer**:
-  `IMPORTANCE_WEIGHT = public_reputation / 2.0` (normalizes to roughly [0, 1]) — with the explicit
-  caveat above attached, not silently dropped.
+  spawns dilute the average, not because the range narrows or widens. The most important entity in
+  the world can count at most 2× a nobody, and that ceiling is structural — it does not loosen
+  given more real play. Against real interaction volume, a 2× multiplier would be close to
+  invisible.
 - **`veterancy_rank`** (`EntityState.identity.veterancy_rank: int = 0`) — real, live producer exists
   (`VeterancyService.process_points()`, driven by `veterancy_points_delta`), **but confirmed
-  degenerate in the same real run**: every one of the 49 alive entities was at `veterancy_rank = 0`.
-  This is the exact failure shape peer explicitly warned about from the prior perceived-power draft
-  (every entity reading as identical because all 214 corpus entities were level 1) — **not a safe
-  input today**, contra the tentative suggestion. Worth revisiting once/if veterancy accrual itself
-  is confirmed reachable in a real run (not investigated here — out of this ticket's scope), but not
-  proposed as an input now.
+  degenerate in the same real run**: every one of the 49 alive entities was at `veterancy_rank = 0`
+  — the exact failure shape from the earlier perceived-power draft (every entity reading as
+  identical because all 214 corpus entities were level 1).
 - **`EntityRole`** (HERO/SHOPKEEPER/MONSTER/CITIZEN/WORKER/GUARD) and **faction leadership** — no
   real "leader" designation exists for `FactionState` at all. `ClanState.leader_entity_id` exists
   but is schema-only, with zero real producers (a *different*, unrelated concept — Clan, not
-  Faction). `EntityRole` has no `LEADER` tier. A binary "is this entity the leader" check that peer's
-  framing implies ("a leader's betrayal should move faction relations far more than a peasant's")
-  has **no real signal to read today** — `public_reputation` is the closest real, continuous proxy
-  for "how much does this entity matter," and is recommended as the sole weight for a first pass,
-  with the explicit note that a real leadership concept, if the user wants one, is new design, not
-  reuse.
+  Faction). `EntityRole` has no `LEADER` tier.
+
+**Decision (2026-09-15): cut, not accommodated.** The design wants a leader's action to read as
+categorically different from an ordinary entity's — not double it. No signal available today can
+express that, and shipping the weak `public_reputation` knob anyway would be exactly the shape this
+arc has spent all week deleting: a mechanism that exists and does essentially nothing. Sentiment
+ships as a uniform, unweighted signal (§3.2.3's `FACTION_SCALE_FACTOR`, applied the same regardless
+of which entity acted) for this pass. A real importance signal — who holds standing in a faction,
+who speaks for it, how that's acquired — is genuine new design, not reuse, and is scoped as its own
+separate initiative rather than folded in here: `TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE`
+(filed, scoping only, not blocking this build). Once it lands, wiring its output into
+`FactionSentimentDerivationPhase`'s scale factor is a small, later change — sentiment's own design
+doesn't need to be revisited to add it.
 
 #### 3.2.5 Decay — no live precedent found, proposed as new (flagged as such)
 
@@ -427,13 +444,14 @@ dynamic conquest path at all.
    entity-level bonds, decaying toward neutral on staleness (new mechanism, flagged as such). Feeds
    the existing, untouched `tension_delta` → `DiplomaticStateMachine` path. **Closes loop #3
    directly and independently of territory.**
-2. **Importance weighting is a real, unresolved gap, not a solved piece.** `veterancy_rank`
-   confirmed degenerate (everyone at rank 0), not used. `public_reputation` is real and
-   non-degenerate but its spread is structurally narrow (2× ceiling-to-floor) and **confirmed not
-   to widen with more play** (measured flat across ten checkpoints over a real 5000-tick run). The
-   design calls for a king's betrayal to read as categorically different from a peasant's; no
-   signal in the world today can express that. This is a finding for the user, not a flaw quietly
-   patched over — see §3.2.4.
+2. **Importance weighting was investigated, found unsupported by any real signal, and cut from
+   this build — not accommodated with a weak proxy.** `veterancy_rank` confirmed degenerate
+   (everyone at rank 0). `public_reputation` is real and non-degenerate but its 2× spread is
+   structural and **confirmed not to widen with more play** (measured flat across ten checkpoints
+   over a real 5000-tick run). Sentiment ships with a single fixed `FACTION_SCALE_FACTOR` instead,
+   applied uniformly regardless of which entity acted. A real importance signal (faction
+   leadership/rank/standing — genuine new design, none exists today) is scoped separately:
+   `TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE` (filed, scoping only, not blocking).
 3. **§3.1 (carried from the prior draft)**: a parallel `RegionState.owner_faction_id_str` field
    closes the identity-collapse gap (FAC-010, already documented) and derives `FactionState.
    territory` for real. **Closes loop #2**, and offers a second, now-redundant path to loop #3.
@@ -441,8 +459,15 @@ dynamic conquest path at all.
    a separate ticket (`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`) and is, on its own
    terms, not addressed by the sentiment design at all — a relational signal is the wrong shape for
    raw military capability. This is the one loop this proposal cannot currently claim to close.
-5. **Consequence, stated plainly**: this design should reliably get real faction pairs to
-   `TENSE`/`HOSTILE` in a real run. It should **not** be expected to reliably reach `WAR` until
-   loop #1 has its own real answer — a known, named gap, not an assumed success.
-6. No code has been written against this proposal. Peer/user review requested before any
-   implementation, per explicit instruction.
+5. **User's decision (2026-09-15), stated at the top of this document too**: ship sentiment now on
+   its own merits (real tension, real diplomacy, a named trade extension point); the
+   military-strength driver is separate, later work. This design should reliably get real faction
+   pairs to `TENSE`/`HOSTILE` in a real run. It should **not** be expected to reliably reach `WAR`
+   until loop #1 has its own real answer — a known, named gap, not an assumed success.
+6. **Acceptance bar for building this** (§4, unchanged in substance): a real, unmodified
+   corpus-world run showing two factions' `sentiment` genuinely diverging from ordinary entity
+   interaction, and at least one pair reaching `TENSE` or `HOSTILE` as a result — not a constructed
+   fixture. Everything unlocked this week passed its unit tests while doing nothing; this proposal
+   does not get to skip the same bar.
+7. No code has been written against this proposal yet. Peer/user review of this revision requested
+   before implementation begins.
