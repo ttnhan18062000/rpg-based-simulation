@@ -5788,14 +5788,8 @@
     \ only the sidecar's field set widened further, following the same argv-based\
     \ idiom.\n"
   proof_type: contract
-  test_path: 'tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present
-    (confirms a sidecar containing phase/agent produces a tools.jsonl record carrying
-    both fields); tests/tools/test_current_run_sidecar_orchestrator.py:: test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded
-    (confirms the orchestrator''s writeSidecar call sites pass tid/seq/phase/agent
-    as individually-quoted argv elements rather than JSON-embedding them in the python3
-    -c string). Both re-run and confirmed passing (2/2) as part of this parity update.
-
-    '
+  test_path: tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present;
+    tests/tools/test_current_run_sidecar_orchestrator.py::test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded
   divergence_note: null
   support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior is involved (mirrors INFRA-274''s support_boundary pattern for orchestrator-side
@@ -5806,6 +5800,19 @@
     widening and the sidecar write-path that feeds it. Known, intentional scope boundary:
     dashboard frontend consumption of the new phase/agent fields (an in-progress-run
     indicator UI) is not part of this ticket''s scope and is not claimed here.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_post_tool_hook.py::test_phase_and_agent_included_when_sidecar_present
+    (confirms a sidecar containing phase/agent produces a tools.jsonl record carrying
+    both fields); tests/tools/test_current_run_sidecar_orchestrator.py:: test_tid_and_seq_and_phase_and_agent_passed_as_argv_not_json_embedded
+    (confirms the orchestrator''s writeSidecar call sites pass tid/seq/phase/agent
+    as individually-quoted argv elements rather than JSON-embedding them in the python3
+    -c string). Both re-run and confirmed passing (2/2) as part of this parity update.
 
     '
 - id: INFRA-282
@@ -5855,7 +5862,24 @@
     This equality-check gate was since widened to a membership check by TCK-20260904-COST-PROXY-EPIC-TICKETS
     -- see INFRA-407 for the current record_events.py:34-76 shape.'
   proof_type: contract
-  test_path: 'tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough
+  test_path: tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough;
+    tests/tools/test_record_events.py::test_cost_proxy_score_absent_when_no_tools_jsonl_exists
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-281 immediately above, and INFRA-263/264/265/277/278/279/280
+    more generally). Does not change what cost_proxy_score/tool_call_count mean or
+    how they are formulated (cost_proxy.py''s weights/formula untouched) -- only where
+    and how reliably they are computed. The simq-audit gap noted in this entry''s
+    original text remains unfixed and out of scope for both this ticket and its 2026-09-04
+    successor.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_record_events.py::test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not_passthrough
     (a deliberately wrong caller-supplied value of 999999 is overridden by the real
     hand-computed value from a tools.jsonl fixture); ::test_cost_proxy_score_absent_when_no_tools_jsonl_exists
     (no crash, zero-fallback when tools.jsonl is absent). NOTE: this entry originally
@@ -5864,14 +5888,6 @@
     of the implement-epic/create-tickets exclusion; both were renamed and rewritten
     by TCK-20260904-COST-PROXY-EPIC-TICKETS to assert the opposite (non-null values)
     -- see INFRA-407 for their current names and current-state coverage.'
-  divergence_note: null
-  support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-281 immediately above, and INFRA-263/264/265/277/278/279/280
-    more generally). Does not change what cost_proxy_score/tool_call_count mean or
-    how they are formulated (cost_proxy.py's weights/formula untouched) -- only where
-    and how reliably they are computed. The simq-audit gap noted in this entry's original
-    text remains unfixed and out of scope for both this ticket and its 2026-09-04
-    successor.
 - id: INFRA-283
   text: 'Phase/agent vocabulary casing normalization in the agent-monitoring retro
     report (TCK-20260719-PHASE-AGENT-CASE-FOLD): direct measurement against live agent-monitoring/
@@ -5913,20 +5929,14 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate
-    (41 failed/184 ok split across 3 casing variants merges to the real 18.2% rate,
-    with an explicit naive-single-variant comparison at 16.7% proving the fragmentation
-    was real and material); ::test_phase_status_distribution_rendered_in_report; ::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
-    ::test_spend_proxy_by_phase_merges_casing_variants; ::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
-    ::test_create_tickets_prefix_family_agent_not_merged_into_a_literal. All 6 new
-    plus the 1 updated (test_compute_retro_metrics_returns_all_documented_keys) re-run
-    and confirmed passing as part of this parity update (26/26 in test_generate_retro.py),
-    alongside test_validate_agent_monitoring.py (13/13, zero source diff to validate.py
-    confirmed via `git diff --stat`) and test_agent_ops_dashboard_stats.py (8/8, confirms
-    the new phase_status_distribution key doesn''t break the dashboard''s typed API-boundary
-    mapping).
-
-    '
+  test_path: tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate;
+    tests/tools/test_generate_retro.py::test_phase_status_distribution_rendered_in_report;
+    tests/tools/test_generate_retro.py::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
+    tests/tools/test_generate_retro.py::test_spend_proxy_by_phase_merges_casing_variants;
+    tests/tools/test_generate_retro.py::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
+    tests/tools/test_generate_retro.py::test_create_tickets_prefix_family_agent_not_merged_into_a_literal;
+    tests/tools/test_generate_retro.py::test_compute_retro_metrics_returns_all_documented_keys;
+    tests/tools/test_validate_agent_monitoring.py; tests/tools/test_agent_ops_dashboard_stats.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior is involved (same category as INFRA-281/INFRA-282 immediately above).
@@ -5939,6 +5949,25 @@
     (confirmed still status:active/phase:open, unimplemented) -- normalization proceeds
     directly in generate_retro.py per that sibling ticket''s own carried-forward sequencing
     note, to be revisited only once/if the index actually lands.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_generate_retro.py::test_phase_status_distribution_merges_casing_variants_review_failure_rate
+    (41 failed/184 ok split across 3 casing variants merges to the real 18.2% rate,
+    with an explicit naive-single-variant comparison at 16.7% proving the fragmentation
+    was real and material); ::test_phase_status_distribution_rendered_in_report; ::test_agent_status_distribution_still_merges_casing_variants_if_ever_present;
+    ::test_spend_proxy_by_phase_merges_casing_variants; ::test_normalization_leaves_unknown_workflow_and_unrecognized_phase_untouched;
+    ::test_create_tickets_prefix_family_agent_not_merged_into_a_literal. All 6 new
+    plus the 1 updated (test_compute_retro_metrics_returns_all_documented_keys) re-run
+    and confirmed passing as part of this parity update (26/26 in test_generate_retro.py),
+    alongside test_validate_agent_monitoring.py (13/13, zero source diff to validate.py
+    confirmed via `git diff --stat`) and test_agent_ops_dashboard_stats.py (8/8, confirms
+    the new phase_status_distribution key doesn''t break the dashboard''s typed API-boundary
+    mapping).
 
     '
   cross_reference: 'TCK-20260713-MONITORING-SQLITE-INDEX has since shipped, and TCK-20260713-MONITORING-RETRO-
@@ -5998,7 +6027,34 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global
+  test_path: tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global;
+    tests/tools/test_generate_retro.py::test_duration_outlier_excludes_null_from_flagging_and_median;
+    tests/tools/test_generate_retro.py::test_duration_outlier_skips_group_below_minimum_size;
+    tests/tools/test_generate_retro.py::test_cost_proxy_outlier_flagged_relative_to_normalized_phase_median;
+    tests/tools/test_generate_retro.py::test_cost_proxy_outlier_excludes_events_with_no_score;
+    tests/tools/test_generate_retro.py::test_outliers_section_omitted_when_none_flagged;
+    tests/tools/test_generate_retro.py::test_outliers_section_rendered_when_flagged;
+    tests/tools/test_generate_retro.py::test_compute_retro_metrics_returns_all_documented_keys;
+    tests/tools/test_agent_ops_dashboard_stats.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-281/282/283 immediately above). Pure
+    read-time computation change: no on-disk schema change to events.jsonl/runs.jsonl,
+    no src/ file touched. Deliberately does not modify src/api/agent_ops_dashboard/models.py
+    or ingest.py -- dashboard exposure is an explicit, separate, deliberate future
+    follow-up, not assumed free (see text above). Deliberately does not fix an unrelated,
+    pre-existing bug found during verification: `generate_retro.py --days N` crashes
+    on a runs.jsonl record with a non-string start_ts -- confirmed pre-existing via
+    `git stash` (crashes identically with this ticket''s changes removed), noted for
+    a future ticket, not fixed here.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_generate_retro.py::test_duration_outlier_flagged_relative_to_tier_median_not_global
     (proves tier-scoped, not global, median -- a standard-tier outlier is flagged
     while an epic-tier run with the same absolute duration is not, since epic''s own
     group is below the minimum size); ::test_duration_outlier_excludes_null_from_flagging_and_median;
@@ -6013,19 +6069,6 @@
     the full live corpus (`python3 tools/agent-monitoring/generate_retro.py --all`,
     677 runs / 3435 events, 26 duration outliers + 82 cost-proxy-score outliers found,
     including D25''s own originally-cited finding).
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-281/282/283 immediately above). Pure
-    read-time computation change: no on-disk schema change to events.jsonl/runs.jsonl,
-    no src/ file touched. Deliberately does not modify src/api/agent_ops_dashboard/models.py
-    or ingest.py -- dashboard exposure is an explicit, separate, deliberate future
-    follow-up, not assumed free (see text above). Deliberately does not fix an unrelated,
-    pre-existing bug found during verification: `generate_retro.py --days N` crashes
-    on a runs.jsonl record with a non-string start_ts -- confirmed pre-existing via
-    `git stash` (crashes identically with this ticket''s changes removed), noted for
-    a future ticket, not fixed here.
 
     '
 - id: INFRA-285
@@ -6077,7 +6120,36 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula,
+  test_path: tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula;
+    tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_empty_group_is_zero;
+    tests/tools/test_weight_sensitivity_check.py::test_shipped_weights_reads_real_cost_proxy_constants_not_a_second_copy;
+    tests/tools/test_weight_sensitivity_check.py::test_spearman_identical_rankings_is_one;
+    tests/tools/test_weight_sensitivity_check.py::test_spearman_fully_reversed_rankings_is_negative_one;
+    tests/tools/test_weight_sensitivity_check.py::test_spearman_undefined_for_fewer_than_two_keys;
+    tests/tools/test_weight_sensitivity_check.py::test_compute_weight_sensitivity_report_basic_grouping_and_ranking;
+    tests/tools/test_weight_sensitivity_check.py::test_compute_weight_sensitivity_report_group_with_no_matching_event_is_skipped;
+    tests/tools/test_weight_sensitivity_check.py::test_compute_weight_sensitivity_report_empty_input_does_not_crash;
+    tests/tools/test_weight_sensitivity_check.py::test_rank_delta_reflects_material_reordering_between_weight_sets;
+    tests/tools/test_cost_proxy.py; tests/tools/test_validate_agent_monitoring.py
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-281/282/283/284 immediately above,
+    closing out this 5-ticket batch). No src/ file touched, no on-disk schema change.
+    Does not endorse or ship Fit C weights or any other candidate weight set -- both
+    weight sets remain purely CLI-supplied comparands, per this ticket''s own explicit
+    scope guard. No change to cost_proxy.py''s shipped W_BASH/W_AGENT/W_EDIT constants
+    or compute_cost_proxy_score()''s formula (confirmed via zero diff to that file
+    from this ticket specifically -- the 6-line diff `git diff --stat` shows on cost_proxy.py
+    belongs to the sibling TCK-20260719-COST-PROXY-CALIBRATION-NOTE ticket, not this
+    one).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_weight_sensitivity_check.py::test_score_with_weights_matches_hand_computed_formula,
     ::test_score_with_weights_empty_group_is_zero, ::test_shipped_weights_reads_real_cost_proxy_constants_not_a_second_copy
     (guards against silent drift from cost_proxy.py), ::test_spearman_identical_rankings_is_one,
     ::test_spearman_fully_reversed_rankings_is_negative_one, ::test_spearman_undefined_for_fewer_than_two_keys,
@@ -6092,19 +6164,6 @@
     --candidate-weights -> argparse exit 2; invalid JSON -> clear ERROR + exit 1;
     missing required keys -> clear ERROR + exit 1), plus `make agent-monitoring-weight-check`
     end to end through the new Makefile target.
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-281/282/283/284 immediately above,
-    closing out this 5-ticket batch). No src/ file touched, no on-disk schema change.
-    Does not endorse or ship Fit C weights or any other candidate weight set -- both
-    weight sets remain purely CLI-supplied comparands, per this ticket''s own explicit
-    scope guard. No change to cost_proxy.py''s shipped W_BASH/W_AGENT/W_EDIT constants
-    or compute_cost_proxy_score()''s formula (confirmed via zero diff to that file
-    from this ticket specifically -- the 6-line diff `git diff --stat` shows on cost_proxy.py
-    belongs to the sibling TCK-20260719-COST-PROXY-CALIBRATION-NOTE ticket, not this
-    one).
 
     '
 - id: INFRA-286
@@ -6148,7 +6207,26 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution,
+  test_path: tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution;
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_outliers_duration_and_cost_proxy;
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_outliers_seq_field_tolerates_none;
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_zero_outliers_returns_empty_lists_not_missing_keys
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior is involved (same category as INFRA-283/284 immediately above). No change
+    to `compute_retro_metrics()`/`generate()` in generate_retro.py -- CLI retro report''s
+    Markdown output stays byte-identical (guarded by `test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented`,
+    re-run unmodified). No on-disk schema change to events.jsonl/runs.jsonl. Dashboard-exposure
+    and rendering only -- INFRA-283''s and INFRA-284''s own entry text is unchanged,
+    this entry is a forward-reference to both, not a rewrite.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_agent_ops_dashboard_stats.py::test_stats_endpoint_includes_phase_status_distribution,
     ::test_stats_endpoint_includes_outliers_duration_and_cost_proxy, ::test_stats_endpoint_outliers_seq_field_tolerates_none,
     ::test_stats_endpoint_zero_outliers_returns_empty_lists_not_missing_keys (4 new,
     plus the existing 8/8 unaffected). dashboard-frontend/src/test/StatsView.test.tsx:
@@ -6158,16 +6236,6 @@
     a broken table'', ''wraps tier and agent values in outlier tables with GlossaryTooltip...''
     (4 new, plus the existing 11/11 unaffected -- 15/15 total in that file). Full
     dashboard-frontend suite: 94/94 passing.
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior is involved (same category as INFRA-283/284 immediately above). No change
-    to `compute_retro_metrics()`/`generate()` in generate_retro.py -- CLI retro report''s
-    Markdown output stays byte-identical (guarded by `test_stats_endpoint_uses_real_compute_retro_metrics_not_reimplemented`,
-    re-run unmodified). No on-disk schema change to events.jsonl/runs.jsonl. Dashboard-exposure
-    and rendering only -- INFRA-283''s and INFRA-284''s own entry text is unchanged,
-    this entry is a forward-reference to both, not a rewrite.
 
     '
 - id: INFRA-287
@@ -6217,8 +6285,31 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category
-    (proves the `add_term()` CLI mechanism accepts and persists the new `phase` category),
+  test_path: tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category;
+    tests/tools/test_glossary_registry.py::test_real_seeded_registry_covers_every_workflow_phase;
+    tests/tools/test_agent_ops_dashboard_glossary.py::test_glossary_route_includes_phase_terms;
+    tests/tools/test_agent_ops_dashboard_glossary.py::test_glossary_against_real_seeded_registries
+  divergence_note: null
+  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
+    behavior, Mechanics Bible chapter, or engine contract governs glossary content
+    or dashboard tooltip rendering (same category as INFRA-281, its direct sibling/precedent,
+    and INFRA-283/284/286 immediately above). No change to `WORKFLOW_PHASES`/`WORKFLOW_AGENTS`
+    themselves in `tools/agent-monitoring/vocabulary.py` -- this ticket only documents
+    existing phase literals, never adds/removes one (explicitly out of scope per the
+    ticket). No change to `GET /api/glossary`''s route handler or `load_glossary_registry()`''s
+    merge logic -- the category-agnostic merge already covered this without modification.
+    Dashboard views other than StatsView.tsx''s Phase Status Distribution table and
+    ReplayTimelineView.tsx''s button strip/detail header were investigated but not
+    touched unless a real, analogous plain-text phase/agent gap was found.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_glossary_registry.py::test_add_term_accepts_phase_category (proves
+    the `add_term()` CLI mechanism accepts and persists the new `phase` category),
     ::test_real_seeded_registry_covers_every_workflow_phase (against the real, unmocked
     repo registry -- imports `WORKFLOW_PHASES` directly from `tools/agent-monitoring/vocabulary.py`
     rather than re-deriving it, and asserts every distinct phase string is present,
@@ -6239,20 +6330,6 @@
     when the glossary has no matching entries'' (4 new). All new and pre-existing
     backend and frontend tests, typecheck, and the production build reported passing
     cleanly per the implementation summary.
-
-    '
-  divergence_note: null
-  support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
-    behavior, Mechanics Bible chapter, or engine contract governs glossary content
-    or dashboard tooltip rendering (same category as INFRA-281, its direct sibling/precedent,
-    and INFRA-283/284/286 immediately above). No change to `WORKFLOW_PHASES`/`WORKFLOW_AGENTS`
-    themselves in `tools/agent-monitoring/vocabulary.py` -- this ticket only documents
-    existing phase literals, never adds/removes one (explicitly out of scope per the
-    ticket). No change to `GET /api/glossary`''s route handler or `load_glossary_registry()`''s
-    merge logic -- the category-agnostic merge already covered this without modification.
-    Dashboard views other than StatsView.tsx''s Phase Status Distribution table and
-    ReplayTimelineView.tsx''s button strip/detail header were investigated but not
-    touched unless a real, analogous plain-text phase/agent gap was found.
 
     '
 - id: INFRA-288
@@ -6307,17 +6384,13 @@
 
     '
   proof_type: contract
-  test_path: 'tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq,
-    ::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history, ::test_compute_seq_offset_ignores_other_run_ids,
-    ::test_compute_seq_offset_is_read_only (4/4 passing). tests/tools/test_validate_agent_monitoring.py::
-    test_multi_invocation_collision_report_detects_duplicate_scope_seq1, ::test_multi_invocation_collision_report_is_read_only
-    (new, both passing alongside the existing suite). tests/tools/test_current_run_sidecar_orchestrator.py
-    and tests/tools/test_step0_ts_orchestrator.py (updated for the `seqOffset`-widened
-    call sites, still passing) and tests/tools/test_agent_monitoring_manifest.py (updated,
-    still passing). All 5 test files re-run together and confirmed passing (44/44)
-    as part of this parity update.
-
-    '
+  test_path: tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq;
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history;
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_ignores_other_run_ids;
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_is_read_only; tests/tools/test_validate_agent_monitoring.py::test_multi_invocation_collision_report_detects_duplicate_scope_seq1;
+    tests/tools/test_validate_agent_monitoring.py::test_multi_invocation_collision_report_is_read_only;
+    tests/tools/test_current_run_sidecar_orchestrator.py; tests/tools/test_step0_ts_orchestrator.py;
+    tests/tools/test_agent_monitoring_manifest.py
   divergence_note: null
   support_boundary: 'Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior, Mechanics Bible chapter, or engine contract governs `seq` numbering
@@ -6329,6 +6402,22 @@
     not backfilled (prevention-only, per ticket''s Out of Scope and matching TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION''s
     precedent). Does not address `implement-epic`''s per-child dispatch (flagged as
     an open question in the linked idea doc, not investigated here).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_seq_offset.py::test_compute_seq_offset_continues_past_prior_session_max_seq,
+    ::test_compute_seq_offset_returns_zero_for_run_id_with_no_prior_history, ::test_compute_seq_offset_ignores_other_run_ids,
+    ::test_compute_seq_offset_is_read_only (4/4 passing). tests/tools/test_validate_agent_monitoring.py::
+    test_multi_invocation_collision_report_detects_duplicate_scope_seq1, ::test_multi_invocation_collision_report_is_read_only
+    (new, both passing alongside the existing suite). tests/tools/test_current_run_sidecar_orchestrator.py
+    and tests/tools/test_step0_ts_orchestrator.py (updated for the `seqOffset`-widened
+    call sites, still passing) and tests/tools/test_agent_monitoring_manifest.py (updated,
+    still passing). All 5 test files re-run together and confirmed passing (44/44)
+    as part of this parity update.
 
     '
   cross_reference: 'TCK-20260713-MONITORING-VALIDATE-INDEX-MIGRATE (INFRA-290) also
@@ -6370,19 +6459,8 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_query.py -- 21 tests: TestEventFilters (6, one per
-    event filter flag), TestRunsFilters (2, including combined --runs --status --days),
-    TestCombinedEventFilters (2), TestMissingIndex (4, including corrupt-db-does-not-print-missing-index-message),
-    TestRegressionParity (4, field-for-field comparison of migrated filter_events/filter_runs
-    against a frozen pre-migration reference implementation over tests/fixtures/agent_monitoring/
-    shape files, explicitly excluding --runs --status from strict comparison per the
-    documented divergence), TestArchitectureGuards (3, source-text absence of RUNS_FILE/EVENTS_FILE/load_jsonl
-    plus index-order-matches-insertion-order). All 21 passing, plus 161 regression
-    tests unaffected (tests/tools/test_build_index.py, test_validate_agent_monitoring.py,
-    test_generate_retro.py, and the write-path/adjacent-consumer suite) -- 182/182
-    total confirmed passing as part of this migration.
-
-    '
+  test_path: tests/tools/test_query.py; tests/tools/test_build_index.py; tests/tools/test_validate_agent_monitoring.py;
+    tests/tools/test_generate_retro.py
   divergence_note: 'One intentional behavioral difference from the pre-migration in-memory
     scan: `--runs --status` now compares against `_resolved_status` (query.py:44,
     sourced from the SQL `resolved_status` column, itself a `final_status`-or-legacy-bare-`status`
@@ -6413,6 +6491,24 @@
     bug (confirmed identical on pre-migration `query.py` via `git show HEAD:tools/agent-monitoring/query.py`,
     left as-is per byte-for-byte parity requirement, documented in the ticket''s own
     plan.md Deviations section for a future ticket).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_query.py -- 21 tests: TestEventFilters (6, one per event filter
+    flag), TestRunsFilters (2, including combined --runs --status --days), TestCombinedEventFilters
+    (2), TestMissingIndex (4, including corrupt-db-does-not-print-missing-index-message),
+    TestRegressionParity (4, field-for-field comparison of migrated filter_events/filter_runs
+    against a frozen pre-migration reference implementation over tests/fixtures/agent_monitoring/
+    shape files, explicitly excluding --runs --status from strict comparison per the
+    documented divergence), TestArchitectureGuards (3, source-text absence of RUNS_FILE/EVENTS_FILE/load_jsonl
+    plus index-order-matches-insertion-order). All 21 passing, plus 161 regression
+    tests unaffected (tests/tools/test_build_index.py, test_validate_agent_monitoring.py,
+    test_generate_retro.py, and the write-path/adjacent-consumer suite) -- 182/182
+    total confirmed passing as part of this migration.
 
     '
 - id: INFRA-290
@@ -6454,18 +6550,7 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_validate_agent_monitoring.py -- 27 tests (15 pre-existing
-    + 12 new): TestMainUsesIndex (3, one per runs/events/tools load path), TestArchitectureGuards
-    (2, source- text absence of RUNS_FILE/EVENTS_FILE/TOOLS_FILE plus legacy-allowlist
-    re-importability), TestRegressionParity (4, byte-identical output comparison of
-    compute_drift_report/compute_tool_count_drift_report/compute_multi_invocation_collision_report
-    over direct-JSONL-fixture input vs. index-loaded input, plus ::test_tools_row_missing_tool_field_is_a_known_bounded_divergence
-    pinning the one documented divergence below), TestMissingIndex (3, actionable
-    error text, nonzero exit code from open_index, and from main() end-to-end). Plus
-    167 tests across the full regression/consumer surface unaffected. 194/194 total
-    confirmed passing as part of this migration.
-
-    '
+  test_path: tests/tools/test_validate_agent_monitoring.py
   divergence_note: 'Two behavioral differences from the pre-migration direct-JSONL-read
     path. (a) A new hard precondition: validate.py now requires `make agent-monitoring-index`
     to have already been run -- open_index() exits 1 with an actionable error ("No
@@ -6500,6 +6585,23 @@
     query.py''s read path (TCK-20260713-MONITORING-QUERY-INDEX-MIGRATE / INFRA-289,
     a separate sibling ticket) or generate_retro.py''s legacy-shape helpers (TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE,
     likewise separate).
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a plain
+    multi-citation (all citations confirmed to exist via grep before writing). Full
+    original test_path preserved verbatim below for disclosure:
+
+
+    tests/tools/test_validate_agent_monitoring.py -- 27 tests (15 pre-existing + 12
+    new): TestMainUsesIndex (3, one per runs/events/tools load path), TestArchitectureGuards
+    (2, source- text absence of RUNS_FILE/EVENTS_FILE/TOOLS_FILE plus legacy-allowlist
+    re-importability), TestRegressionParity (4, byte-identical output comparison of
+    compute_drift_report/compute_tool_count_drift_report/compute_multi_invocation_collision_report
+    over direct-JSONL-fixture input vs. index-loaded input, plus ::test_tools_row_missing_tool_field_is_a_known_bounded_divergence
+    pinning the one documented divergence below), TestMissingIndex (3, actionable
+    error text, nonzero exit code from open_index, and from main() end-to-end). Plus
+    167 tests across the full regression/consumer surface unaffected. 194/194 total
+    confirmed passing as part of this migration.
 
     '
 - id: INFRA-291
@@ -6549,32 +6651,16 @@
 
     '
   proof_type: regression
-  test_path: 'tests/tools/test_generate_retro.py -- ::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus
-    (frozen, hand-copied pre-migration report string compared byte-for-byte against
-    `generate()`''s live output over a fixed 3-run/2-event corpus spanning a DONE
-    run, a gate-fail run, and a legacy-shaped status-only run -- proves the migration
-    is output-preserving, not just source-identical); ::test_normalize_phase_agent_and_flag_outliers_untouched
-    (SHA-256 source-hash guard pinning `_resolve_status`, `_is_legacy_event`, `_is_gate_fail`,
-    `_normalize_phase`, `_normalize_agent`, `_canonicalize`, `_flag_outliers` against
-    pre-migration-captured hashes -- fails loudly if any of the 3 legacy-shape helpers
-    this ticket targets, or the adjacent normalization quartet this ticket must not
-    touch, changes by even one character); ::test_main_loads_via_index_not_direct_jsonl_scan
-    and ::test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope
-    (source-text architecture guards confirming `main()`/`_update_index()` no longer
-    call `load_jsonl(RUNS_FILE)`/ `load_jsonl(EVENTS_FILE)` directly and route through
-    `_load_runs_and_events()` instead); ::test_generate_retro_builds_index_on_demand_when_missing,
-    ::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails,
-    ::test_no_sys_exit_1_on_missing_index_in_generate_retro (proves the deliberate
-    build-on-demand-then-fallback chain never hard-exits, unlike query.py/validate.py''s
-    `open_index()`); ::test_generate_retro_never_writes_to_agent_monitoring_index_db
-    (confirms the only legitimate write path to `monitoring.db` is the delegated `build_index.build()`
-    call, no bespoke SQL writes). 54/54 tests passing in `test_generate_retro.py`
-    (19 new, 35 pre-existing unmodified), plus `tests/tools/test_build_index.py` (17/17,
-    including `TestNormalizationParity::test_resolved_status_matches_generate_retro_resolve_status`)
-    and `tests/tools/test_validate_agent_monitoring.py`/`test_query.py` (48/48, sibling
-    index consumers unaffected) confirmed passing as part of this migration.
-
-    '
+  test_path: tests/tools/test_generate_retro.py::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus;
+    tests/tools/test_generate_retro.py::test_normalize_phase_agent_and_flag_outliers_untouched;
+    tests/tools/test_generate_retro.py::test_main_loads_via_index_not_direct_jsonl_scan;
+    tests/tools/test_generate_retro.py::test_update_index_signature_change_is_deliberate_and_documented;
+    tests/tools/test_generate_retro.py::test_generate_retro_builds_index_on_demand_when_missing;
+    tests/tools/test_generate_retro.py::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails;
+    tests/tools/test_generate_retro.py::test_no_sys_exit_1_on_missing_index_in_generate_retro;
+    tests/tools/test_generate_retro.py::test_generate_retro_never_writes_to_agent_monitoring_index_db;
+    tests/tools/test_build_index.py; tests/tools/test_validate_agent_monitoring.py;
+    tests/tools/test_query.py
   divergence_note: 'One real, currently-inert edge-case divergence, flagged in investigation.md
     Risk #4 and confirmed by Architecture-Verify: `generate_retro.py`''s own `load_jsonl()`
     (line 47) has no malformed-line tolerance -- a bad JSONL line raises `json.JSONDecodeError`
@@ -6674,7 +6760,37 @@
     \ shard) to the unified agent-monitoring/data/YYYY-Www/{runs,events,tools}.jsonl\n\
     layout this entry already documents at the code level. No further generate_retro.py\
     \ source-resolution\nchange beyond what the CONSUMERS-CORE addendum already landed.\n\
-    \n"
+    \nTCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: test_path normalized to a\
+    \ plain multi-citation (all citations confirmed to exist via grep before writing).\
+    \ Full original test_path preserved verbatim below for disclosure:\n\ntests/tools/test_generate_retro.py\
+    \ -- ::test_compute_retro_metrics_output_unchanged_pre_and_post_migration_on_fixed_corpus\
+    \ (frozen, hand-copied pre-migration report string compared byte-for-byte against\
+    \ `generate()`'s live output over a fixed 3-run/2-event corpus spanning a DONE\
+    \ run, a gate-fail run, and a legacy-shaped status-only run -- proves the migration\
+    \ is output-preserving, not just source-identical); ::test_normalize_phase_agent_and_flag_outliers_untouched\
+    \ (SHA-256 source-hash guard pinning `_resolve_status`, `_is_legacy_event`, `_is_gate_fail`,\
+    \ `_normalize_phase`, `_normalize_agent`, `_canonicalize`, `_flag_outliers` against\
+    \ pre-migration-captured hashes -- fails loudly if any of the 3 legacy-shape helpers\
+    \ this ticket targets, or the adjacent normalization quartet this ticket must\
+    \ not touch, changes by even one character); ::test_main_loads_via_index_not_direct_jsonl_scan\
+    \ and ::test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope\
+    \ (source-text architecture guards confirming `main()`/`_update_index()` no longer\
+    \ call `load_jsonl(RUNS_FILE)`/ `load_jsonl(EVENTS_FILE)` directly and route through\
+    \ `_load_runs_and_events()` instead); ::test_generate_retro_builds_index_on_demand_when_missing,\
+    \ ::test_generate_retro_produces_clear_error_message_if_build_on_demand_disabled_or_fails,\
+    \ ::test_no_sys_exit_1_on_missing_index_in_generate_retro (proves the deliberate\
+    \ build-on-demand-then-fallback chain never hard-exits, unlike query.py/validate.py's\
+    \ `open_index()`); ::test_generate_retro_never_writes_to_agent_monitoring_index_db\
+    \ (confirms the only legitimate write path to `monitoring.db` is the delegated\
+    \ `build_index.build()` call, no bespoke SQL writes). 54/54 tests passing in `test_generate_retro.py`\
+    \ (19 new, 35 pre-existing unmodified), plus `tests/tools/test_build_index.py`\
+    \ (17/17, including `TestNormalizationParity::test_resolved_status_matches_generate_retro_resolve_status`)\
+    \ and `tests/tools/test_validate_agent_monitoring.py`/`test_query.py` (48/48,\
+    \ sibling index consumers unaffected) confirmed passing as part of this migration.\n\
+    \n\nRename disclosed: the originally-cited method test_update_index_call_sites_migrated_or_explicitly_documented_as_out_of_scope\
+    \ no longer exists -- confirmed via grep it was replaced by test_update_index_signature_change_is_deliberate_and_documented\
+    \ (TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING), whose own docstring states\
+    \ it explicitly replaces the old name. Cited the real, current name."
 - id: INFRA-292
   text: 'New read-only baseline-metrics reporting tool over agent-monitoring/*.jsonl
     (context-tokens, follow-up-search-count, phase-duration, gate-outcome, review-rework)
