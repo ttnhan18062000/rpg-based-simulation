@@ -88,6 +88,8 @@ real run is reachability."
 - `TCK-20260909-GRIEF-NEMESIS-CAMPAIGN-REVERIFICATION` (done — the other)
 - `TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY` (filed alongside this one, from the
   same user decision — sequenced first, different shape of problem)
+- `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` (filed during this ticket's design phase —
+  the proposal's own military-strength driver is blocked on this resolving first)
 
 ## Related Docs
 - `docs/plans/deferred_tuning_decisions_register.md` § D-06 (the entry this ticket investigates)
@@ -135,6 +137,38 @@ staging_artifacts/investigation.md. Summary:
   that doesn't itself require war to exist first), not just reachable threshold values — a real
   design decision, flagged explicitly rather than assumed to be the same shape as the sibling
   maturity-gate ticket (D-05).
+
+**2026-09-14, design phase**: user decided to build real pre-war drivers (militaries diverging and
+tension rising from world conditions, not authored seeding). Per explicit instruction, this is
+genuine new game design — specification first, reviewed by peer before any code, same sequencing
+as the perceived-power precedent. Checked reuse-before-invention per peer's three questions before
+proposing anything:
+1. **Region sovereignty already exists and is live** (`RegionState.owner_faction_id`,
+   `docs/mechanics/regional_sovereignty.md`) — but collapses the specific catalog faction id into a
+   legacy 4-value enum (`HERO_GUILD`/`MONSTER_HORDE`/`TOWN_COUNCIL`/`NEUTRAL`), a known,
+   already-documented limitation (FAC-010, `docs/systems/faction_contract.md`). Fixing that
+   collapse (a parallel field, not a type change to the existing one) derives `FactionState.territory`
+   for real, breaking loop #2.
+2. **Fixing territory alone unblocks tension for free** — `FactionAwarenessService.compute_tension_updates()`
+   is already correct, purely starved of the `territory` input loop #2 fixes.
+3. **Vault-gold taxation is real and already growing** (confirmed: `faction_hero_guild_gold`
+   1000→5708 over a real 3000-tick run) but only for statically pre-authored ownership — the
+   *dynamic* (influence-driven) conquest path was not observed to fire for any region in that same
+   run, an open reachability question flagged explicitly rather than assumed resolved.
+
+Full proposal drafted: `docs/mechanics/faction_war_drivers_proposal.md` (explicitly marked draft,
+not certified, no code written against it).
+
+**Decision-changing update found while verifying §3.2's own dependency**: ran the same probe
+across 4 real corpus worlds (12,000 combined ticks) to check whether dynamic (influence-driven)
+region conquest ever fires. It does not — zero ownership changes, in any world, for any region,
+ever, despite confirmed real combat deaths in those same "wild" regions. Only compile-time-authored
+static ownership has ever been observed. This downgrades the proposal's §3.2 (military-strength
+driver) from "provisional formula" to "blocked pending a separate fix" — filed as its own ticket,
+`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`, rather than silently assumed away. §3.1
+(territory/tension derivation) is unaffected.
+
+Sent to peer for review — no implementation until approved, per explicit instruction.
 
 ## Test Summary
 _(none — investigation only; findings verified via direct probes against a real, instrumented
