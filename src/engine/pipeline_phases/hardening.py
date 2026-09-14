@@ -4,6 +4,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from src.core.updates import CombatUpdate
+from src.core.cognition_write import read_through_cognition
 from src.domains.emotion.emotion_service import EmotionUpdateService
 
 if TYPE_CHECKING:
@@ -89,11 +90,7 @@ class NearDeathHardeningPhase:
                 )
             )
 
-            base_cognition = (
-                entity_update.cognition_bundle_set
-                if entity_update.cognition_bundle_set is not None
-                else entity.cognition
-            )
+            base_cognition = read_through_cognition(entity.cognition, entity_update)
             updated_emotion = EmotionUpdateService.update_on_event(
                 base_cognition.subjective.emotion, "near_death"
             )

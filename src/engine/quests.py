@@ -158,6 +158,7 @@ class QuestResolutionSystem:
         Ensures that quest rewards are capacity-aware.
         """
         from src.core.updates import ResourceTransferIntent, EntityUpdate
+        from src.core.cognition_write import read_through_cognition
         from dataclasses import replace
         from src.core.quests import QuestStatus
         from src.quests.service import QuestService
@@ -221,15 +222,8 @@ class QuestResolutionSystem:
                     current_quest_updates.append(replace(qu, status_set=QuestStatus.REWARD_PENDING))
 
                     if is_newly_completed and project.quest_kind == QuestKind.ESCORT:
-                        base_cognition = (
-                            reputation_cognition_update
-                            if reputation_cognition_update is not None
-                            else (
-                                ent_upd.cognition_bundle_set
-                                if ent_upd.cognition_bundle_set is not None
-                                else entity.cognition
-                            )
-                        )
+                        reputation_update = EntityUpdate(entity_id=e_id, cognition_bundle_set=reputation_cognition_update)
+                        base_cognition = read_through_cognition(entity.cognition, reputation_update, ent_upd)
                         new_profile = ReputationUpdateService.process_witnessed_event(
                             base_cognition.relationships.public_reputation, "successful_escort"
                         )

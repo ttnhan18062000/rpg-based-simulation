@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD
-phase: open
+phase: done
 date: 2026-09-14
 tags: [engine, investigation, root-cause, cognition]
 ---
@@ -18,7 +18,7 @@ same tick — real instance found and fixed narrowly; the field's own merge sema
 defect and were never itself fixed.
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -138,14 +138,29 @@ data loss this ticket exists because of. Cheap, safe, and load-bearing independe
 structural question.
 
 ## Acceptance Criteria
-- A decision is recorded (with tradeoffs, not silently picked) among per-subfield merge / typed
+- [x] A decision is recorded (with tradeoffs, not silently picked) among per-subfield merge / typed
   accessor / corpus test — or a documented reason to accept the status quo (mitigation-at-each-
-  call-site) if that's judged sufficient given the small and slow-growing writer count.
-- Whichever option is chosen is implemented and tested against the real `CognitionModel` schema.
-- If a per-subfield merge is chosen, `src/engine/patches.py::CognitionPatch.merge()` is fixed to
-  match (currently dormant, but a second instance of the same unsafe pattern).
-- The enumeration table above is re-verified as part of this ticket's own investigation (writer
-  sites may have changed since 2026-09-14).
+  call-site) if that's judged sufficient given the small and slow-growing writer count. **Decision:
+  Option 2 (typed write helper) + Option 3 (architecture-test guardrail), not Option 1** — see
+  investigation.md's "Recommendation" section, including the empirical verification (peer-directed)
+  that Option 1's one concrete justification (a dict-key-collision case) is already handled
+  correctly by Option 2 given how the pipeline actually threads its accumulator.
+- [x] Whichever option is chosen is implemented and tested against the real `CognitionModel` schema.
+  `src/core/cognition_write.py::read_through_cognition()` built and unit-tested (7 cases); all 8
+  real writer sites migrated to call it (including `src/engine/quests.py`, found during this build,
+  not in the original enumeration); the architecture guardrail
+  (`tests/architecture/test_cognition_bundle_set_read_through_guard.py`) built, verified against a
+  synthetic violation, and passing clean against the real repo.
+- [x] If a per-subfield merge is chosen, `src/engine/patches.py::CognitionPatch.merge()` is fixed to
+  match. **N/A** — Option 1 (per-subfield merge) was not chosen; `CognitionPatch.merge()` stays
+  untouched and dormant per the investigation's own recommendation (confirmed still not a live
+  collision site).
+- [x] The enumeration table above is re-verified as part of this ticket's own investigation (writer
+  sites may have changed since 2026-09-14). Re-verified in investigation.md's own opening section;
+  one additional real writer found during the Option 2 build itself
+  (`src/engine/quests.py::enforce()`'s ESCORT reputation write, using a dict-subscript build-up
+  shape the original grep-based enumeration didn't match) and migrated + folded into the guardrail's
+  own detection logic.
 
 ## Related Tickets
 - `TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER` — where this was found; the two narrow
@@ -181,13 +196,90 @@ moves to `tickets/inprogress/`)_
   at the correct pattern by copying each other's precedent?
 
 ## Implementation Notes
-_(pending)_
+See staging_artifacts (→ stored_artifacts on close) `plan.md`/`investigation.md` for full detail.
+Summary:
+
+1. **Recommended first action** (`memory_update` ordering fix) done first, independent of the
+   larger decision: `src/domains/memory/phase.py::MemoryUpdatePhase.apply()` now reads through any
+   `cognition_bundle_set` an earlier phase already staged this same tick.
+2. **Peer directly challenged one specific claim** in the initial investigation draft — that a
+   dict-key-collision case (`opponent_stats`, two writers touching different keys for the same
+   entity, same tick) was a real gap Option 2 alone couldn't close, requiring Option 1. Verified
+   empirically with a real 3-entity `AuthoritativeApplyPipeline.refine()` run rather than re-arguing
+   from the writer table: the claim was **wrong** — `action_routing` and `combat_engagement` share
+   the pipeline's single, linearly-threaded `update`/`tick_update` accumulator, so both writers'
+   dict keys landed correctly without any additional merge logic. investigation.md corrected;
+   Option 1's "deferred escalation path" framing retired as unnecessary, not just softened.
+3. **Built Option 2**: `src/core/cognition_write.py::read_through_cognition(fallback_cognition,
+   *candidate_updates)` — a single, minimal, accumulator-shape-agnostic helper. Migrated all 8 real
+   writer sites to call it (see Files Changed) instead of hand-rolling the lookup, including
+   `combat_engagement/phase.py`'s own `_read_through_cognition()`, now a thin delegating wrapper
+   preserving that phase's own two-accumulator priority order.
+4. **Found an unenumerated 9th real writer during the migration itself**:
+   `src/engine/quests.py::enforce()`'s ESCORT-completion reputation write, which builds
+   `replace_kwargs["cognition_bundle_set"] = ...` as a dict entry later splatted into `replace()`,
+   not a literal keyword argument — invisible to the original grep-based enumeration (`grep
+   'cognition_bundle_set='`) and, initially, to the Option 3 guardrail's own keyword-only AST check.
+   It was already correctly read-through before this change; migrated to the shared helper for
+   consistency, and the guardrail's detection was broadened to catch this shape too (see below) so a
+   future writer using it doesn't slip past the guardrail the way this one slipped past the
+   original enumeration.
+5. **Built Option 3**: `tests/architecture/test_cognition_bundle_set_read_through_guard.py` — an
+   AST walk flagging any function that stages a `cognition_bundle_set` write (keyword argument OR
+   dict-subscript build-up) while reading `.cognition` raw, without calling
+   `read_through_cognition()` or a function that itself transitively calls it (computed via
+   fixed-point closure over the call graph, not a hardcoded name list). One documented allowlist
+   entry: `MovementSystem.resolve_move()` (`src/engine/movement.py`), safe because its only caller
+   (`pipeline_phases/movement.py::route_movement_intent()`) pre-patches `.cognition` before invoking
+   it. A second test guards that allowlist entry from silently going stale. Detection logic
+   sanity-checked against a synthetic violating snippet before trusting a clean real-repo run as
+   meaningful.
+6. Deliberately left untouched: `src/engine/domain/combat_actions.py` /
+   `src/domains/combat_engagement/learning_outcome.py` (safe via `ActionRoutingPhase`'s sliding-
+   state materialization, a different real mechanism, not a read-through call) and
+   `src/engine/patches.py::CognitionPatch.merge()` (confirmed still dormant, no live collision site,
+   per the investigation's own recommendation).
 
 ## Test Summary
-_(pending)_
+See staging_artifacts (→ stored_artifacts) `test_plan.md` for the full table. Headline numbers, all
+run under `.venv313` (CI parity):
+- New: `test_memory_update_reads_through_an_earlier_same_tick_cognition_write` (1), 
+  `tests/unit/core/test_cognition_write.py` (7), `tests/architecture/
+  test_cognition_bundle_set_read_through_guard.py` (2, including the allowlist-staleness guard).
+- Regression across all 8 migrated call sites: 46 passed (combined bundle) + 104 passed
+  (combat_engagement suite) + 44 passed (lifecycle/lineage) + 35 passed/1 xfailed (quests/reputation).
+- `tests/architecture/` in full: 111 passed.
+- Full fast-tier sweep (`tests/unit tests/integration tests/architecture -m "not slow and not
+  extra_slow"`): 6518 passed, 9 skipped, 95 deselected, 7 failed — all 7 in
+  `tests/unit/domains/progression/` (recipe/material-lookup tests, zero relation to this ticket's
+  diff), confirmed to pass in isolation (18/18) — a pre-existing full-suite cross-test-pollution
+  issue, disclosed, not fixed here (out of scope).
 
 ## Files Changed
-_(pending)_
+- `src/core/cognition_write.py` (new) — the shared `read_through_cognition()` helper.
+- `src/domains/memory/phase.py` — Step 1 fix + migrated to the shared helper.
+- `src/domains/combat_engagement/phase.py` — `_read_through_cognition()` now delegates to the
+  shared helper.
+- `src/domains/emotion/habit_phase.py` — migrated.
+- `src/engine/pipeline_phases/hardening.py` — migrated.
+- `src/systems/lifecycle_systems/lifecycle.py` — migrated.
+- `src/strategy/role_model_phase.py` — migrated.
+- `src/engine/pipeline_phases/movement.py` — migrated.
+- `src/engine/quests.py` — migrated (9th real writer, found during this build).
+- `tests/unit/domains/memory/test_memory_update_phase_apply.py` — new regression test.
+- `tests/unit/core/test_cognition_write.py` (new) — helper unit tests.
+- `tests/architecture/test_cognition_bundle_set_read_through_guard.py` (new) — Option 3 guardrail.
+- `staging_artifacts/TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD/{investigation,plan,test_plan}.md`.
 
 ## Completion Summary
-_(pending)_
+Decided and built Option 2 (mandatory typed write helper) + Option 3 (architecture-test guardrail)
+for the whole-object-replace hazard on `EntityUpdate.cognition_bundle_set`. Option 1 (recursive
+per-subfield merge) was investigated and explicitly rejected: its one concrete justification — a
+same-tick dict-key collision in `opponent_stats` — was verified empirically (per peer's direct
+challenge to the original investigation's claim) to already be handled correctly by Option 2, since
+every real writer shares the pipeline's single linearly-threaded accumulator. All 9 real
+`cognition_bundle_set` writers (one more than the ticket's original enumeration, found during the
+build) now route through one sanctioned, shape-agnostic helper, and a new architecture test makes
+skipping that helper a CI failure rather than a silent future data-loss bug — closing this hazard
+class structurally rather than leaving it as an accumulating pile of individually-patched call
+sites.

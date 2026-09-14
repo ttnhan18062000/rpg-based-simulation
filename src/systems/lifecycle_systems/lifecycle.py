@@ -104,9 +104,9 @@ class LifecycleSystem:
         else:
             text = "honor my memory"
 
-        base_cognition = (
-            heir_upd.cognition_bundle_set if heir_upd.cognition_bundle_set is not None else heir.cognition
-        )
+        from src.core.cognition_write import read_through_cognition
+
+        base_cognition = read_through_cognition(heir.cognition, heir_upd)
         new_intention = NamedIntentionBundle(
             text=text,
             source_entity_id=deceased.id,

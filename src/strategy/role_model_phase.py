@@ -31,6 +31,7 @@ class RoleModelSelectionPhase:
     @staticmethod
     def apply(state: "AuthoritativeState", update: "StateUpdate") -> "StateUpdate":
         from src.core.updates import EntityUpdate
+        from src.core.cognition_write import read_through_cognition
         from src.engine.cadence import should_run, SystemCadence
         from src.engine.spatial_query import SpatialQueryService
         from src.strategy.role_model_imitation import RoleModelImitationService
@@ -42,11 +43,7 @@ class RoleModelSelectionPhase:
                 continue
 
             entity_update = entity_updates.get(entity_id, EntityUpdate(entity_id=entity_id))
-            base_cognition = (
-                entity_update.cognition_bundle_set
-                if entity_update.cognition_bundle_set is not None
-                else entity.cognition
-            )
+            base_cognition = read_through_cognition(entity.cognition, entity_update)
             current = base_cognition.role_model
 
             nearby_ids = SpatialQueryService.nearby_entities(

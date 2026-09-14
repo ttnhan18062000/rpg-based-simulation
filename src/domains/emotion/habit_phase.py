@@ -36,6 +36,7 @@ class HabitBiasUpdatePhase:
         trigger_events: Optional[List[Dict[str, Any]]] = None,
     ) -> StateUpdate:
         from src.core.updates import EntityUpdate
+        from src.core.cognition_write import read_through_cognition
 
         entity_updates = dict(update.entity_updates)
         for trigger in (trigger_events or []):
@@ -45,11 +46,7 @@ class HabitBiasUpdatePhase:
                 continue
 
             entity_update = entity_updates.get(entity_id, EntityUpdate(entity_id=entity_id))
-            base_cognition = (
-                entity_update.cognition_bundle_set
-                if entity_update.cognition_bundle_set is not None
-                else entity.cognition
-            )
+            base_cognition = read_through_cognition(entity.cognition, entity_update)
             new_habit = HabitBiasService.record_outcome(
                 base_cognition.memory.habit, HABIT_PATTERN_COMBAT_ENGAGEMENT, success=False
             )
