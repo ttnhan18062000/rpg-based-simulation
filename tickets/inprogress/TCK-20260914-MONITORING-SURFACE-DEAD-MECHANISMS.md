@@ -77,6 +77,23 @@ Note two sibling tests (`test_output_has_exactly_16_agent_rows_plus_unattributed
 assert set-membership rather than comparing two derived reads, so they do not race. Two tests, not
 four — an earlier report said four.
 
+**Correction (2026-09-14, found during implementation).** The two affected tests do **not** share one
+mechanism, and the "fix it in the shared loading path and both are covered" framing below is wrong:
+
+- `test_sum_of_per_agent_counts_matches_wc_l_sanity_check_on_real_corpus` genuinely reads the corpus
+  **twice** (its own glob+read, then `load_all_tool_rows()`'s separate read). A shared single-read
+  snapshot resolves this one completely.
+- `test_script_is_read_only_against_real_agent_monitoring_data` reads the corpus **once**. Its race is
+  a working-tree porcelain snapshot taken before and after that single read: any *other* session's
+  hook append inside that window makes the snapshot differ, and the test then misattributes that
+  external write to this script. A shared snapshot does not touch that mechanism at all.
+
+The second needs a different fix: assert the property that actually matters — this script never
+truncates or deletes existing content — by comparing per-file sizes before and after, forbidding
+shrinkage or deletion while tolerating growth. A concurrent hook can only append or add a new shard;
+it can never shrink or remove one, so that formulation is immune to legitimate concurrent writes by
+construction rather than merely less likely to collide with them.
+
 **4. A debounce cache is tracked in git.** `.claude/.epic_staleness_state.json` is written only by
 `epic_staleness_check.py`'s `--hook` branch and read only by its `_load_hook_state()` to suppress a
 repeated nag (`{session_id, ts}`). `STATE_FILE` appears in exactly one place in the codebase. A
@@ -120,10 +137,19 @@ content check on the artifact can.
 - Wave 3 agent-tools scoping, the parity ledger residual, or anything outside this subsystem.
 
 ## Acceptance Criteria
-- [ ] Item 3: both racing tests derive from one snapshot; a test demonstrates the fix (e.g. an
-      injected write between the two reads no longer changes the result).
+- [ ] Item 3a (double-read race): the `wc -l` sanity check derives both numbers from one read; an
+      injected write between the reads no longer changes the result.
+- [ ] Item 3b (porcelain-sandwich race): the read-only test asserts no shrinkage/deletion rather than
+      a byte-identical working-tree snapshot, and tolerates concurrent growth.
 - [ ] Item 1: the duplicate detector runs somewhere real (CI job, Makefile target, or gate check),
-      and that wiring is pinned by a test.
+      and that wiring is pinned by a test. **It must ratchet, not assert zero** — the same constraint
+      as item 6, not originally named here: the existing check reports **57** duplicate `ticket_id`s on
+      the real corpus *with* the `is_duplicate` exclusion still active, and **39** of those ids carry
+      more than one distinct title (`TCK-20260401-FINAL-CONVERGENCE` has three unrelated ones).
+      Those are historical ID-reuse collisions, not the dual-writer duplication this wiring would catch
+      going forward. Measured 2026-09-14; mostly disjoint from item 6's 46 pairs. A ratchet freezes
+      them rather than resolving them — whether old ID reuse needs its own cleanup is a question this
+      ticket deliberately does not answer.
 - [ ] Item 2: the `is_duplicate` exclusion is removed or narrowed, with the reason recorded; the
       detector reports the duplicates the union defect produces.
 - [ ] Item 6: **the content check must ratchet, not assert zero.** `main` currently carries **45**

@@ -206,12 +206,13 @@ def test_run_validation_preserves_existing_duplicate_id_and_missing_entry_checks
     assert any("TCK-ORPHAN" in e for e in result["errors"])
 
 
-def test_duplicate_ticket_ids_check_excludes_flagged_duplicate_rows(tmp_path):
-    """TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP: an exact-duplicate physical
-    line (is_duplicate=True, e.g. from a squash-merge whole-block duplication) must not
-    trigger a false "Duplicate ticket IDs" error -- but a genuine same-ticket-ID,
-    different-content second row (an actual reopened ticket / a real double-paste) must
-    still be reported."""
+def test_duplicate_ticket_ids_check_no_longer_excludes_flagged_duplicate_rows(tmp_path):
+    """TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 2: an exact-duplicate physical line
+    (is_duplicate=True, e.g. from a squash-merge whole-block duplication -- the exact symptom of
+    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP) must now be caught by this check, not
+    silently excluded from it -- the prior exclusion meant this check could never see the exact
+    defect class it exists to catch. A genuine same-ticket-ID, different-content second row (an
+    actual reopened ticket / a real double-paste) is still reported too, same as before."""
     tickets_dir = tmp_path / "tickets"
     done_dir = tickets_dir / "done"
     done_dir.mkdir(parents=True)
@@ -221,7 +222,7 @@ def test_duplicate_ticket_ids_check_excludes_flagged_duplicate_rows(tmp_path):
     log.write_text(
         HEADER
         + exact_duplicate_line
-        + exact_duplicate_line  # exact-duplicate physical line -- flagged is_duplicate, not a real dupe
+        + exact_duplicate_line  # exact-duplicate physical line -- flagged is_duplicate, now still caught
         + "2026-07-07T00:00:00Z,TCK-B,B,DONE,y,none\n"
         + "2026-07-08T00:00:00Z,TCK-B,B reopened,DONE,z,none\n",  # genuine same-ticket-ID dupe
         encoding="utf-8",
@@ -231,7 +232,7 @@ def test_duplicate_ticket_ids_check_excludes_flagged_duplicate_rows(tmp_path):
 
     dupe_errors = [e for e in result["errors"] if "Duplicate ticket IDs" in e]
     assert len(dupe_errors) == 1
-    assert "TCK-A" not in dupe_errors[0]
+    assert "TCK-A" in dupe_errors[0]
     assert "TCK-B" in dupe_errors[0]
 
 
