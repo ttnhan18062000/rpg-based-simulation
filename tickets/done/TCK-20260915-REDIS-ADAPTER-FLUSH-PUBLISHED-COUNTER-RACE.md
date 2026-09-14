@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-REDIS-ADAPTER-FLUSH-PUBLISHED-COUNTER-RACE
-phase: open
+phase: done
 date: 2026-09-15
 tags: [observability, testing, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [observability, testing, data-quality]
 `test_redis_adapter_async_non_blocking` failed twice in CI on `published_events == 1` while the event itself published correctly — `flush()` appears not to guarantee the health counter is visible on return
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -78,13 +78,13 @@ bookkeeping, i.e. `flush()`'s completeness contract, rather than at a mock or wi
   Different job, different subsystem, separately tracked.
 
 ## Acceptance Criteria
-- [ ] `flush()`'s guarantee is stated explicitly in its docstring, whichever way the investigation
+- [x] `flush()`'s guarantee is stated explicitly in its docstring, whichever way the investigation
       resolves it.
-- [ ] A test exists that fails against the current implementation if the ordering gap is real
+- [x] A test exists that fails against the current implementation if the ordering gap is real
       (not merely one that passes after a fix).
-- [ ] `test_redis_adapter_async_non_blocking` still asserts `published_events == 1` — the counter
+- [x] `test_redis_adapter_async_non_blocking` still asserts `published_events == 1` — the counter
       remains verified, by whatever mechanism the fix chooses.
-- [ ] The disposition is recorded even if the conclusion is "test over-asserted, contract is
+- [x] The disposition is recorded even if the conclusion is "test over-asserted, contract is
       narrower" — that is a legitimate outcome, but it must be written down rather than silently
       relaxing the test.
 
@@ -143,10 +143,40 @@ bookkeeping, i.e. `flush()`'s completeness contract, rather than at a mock or wi
   and is answerable by reading the adapter's code, independent of any CI run.
 
 ## Test Summary
-_To be completed by the implementer._
+- Found the exact race by reading `RedisStreamAdapter` directly: `_publish_worker()` pops an event
+  (queue empties) and releases `_queue_lock` *before* calling `_send_to_redis()`, which is where
+  `xadd()` and the `published_count`/`dropped_count` updates happen. `flush()`'s old condition
+  (`len(self._queue) == 0`) could be satisfied in that gap.
+- Wrote 2 new deterministic regression tests injecting a real delay into the mocked `xadd()`/
+  `_connect()` so the gap is forced open reliably, not relied on via scheduler luck. **Verified both
+  fail against the pre-fix code** with the exact CI failure shape (`assert 0 == 1` on
+  `published_events` / `dropped_count`) before applying the fix, per this ticket's own AC.
+- Fix: added an `_in_flight` counter, incremented when the worker pops an item, decremented (in a
+  `finally`) only after `_send_to_redis()` returns. `flush()` now waits for both `len(queue) == 0`
+  and `_in_flight == 0`.
+- All 5 tests in `test_redis_stream_adapter.py` pass post-fix, under both `.venv313/bin/python3`
+  (3.13.14, CI-matching) and `.venv/bin/python3` (3.12.3) — verified on both per this batch's own
+  interpreter-parity lesson, not assumed from one.
+- `test_redis_adapter_async_non_blocking` in a 20x repeat loop: 20/20 passed (no flake reintroduced).
+- Full `tests/unit/observability/` directory: 1062 passed, 1 skipped.
+- Full CI lane command (all 17 paths, CI's markers), `.venv313`: 2688 passed, 1 skipped.
 
 ## Files Changed
-_To be completed by the implementer._
+- `src/observability/stream/adapters.py` — `RedisStreamAdapter.__init__` (`_in_flight` field),
+  `_publish_worker()` (increment/decrement around `_send_to_redis()`), `flush()` (wait condition +
+  explicit docstring).
+- `tests/unit/observability/test_redis_stream_adapter.py` — 2 new tests
+  (`test_flush_waits_for_send_to_redis_to_complete_not_just_queue_drain`,
+  `test_flush_also_waits_for_dropped_count_bookkeeping`); existing 3 tests unmodified.
 
 ## Completion Summary
-_To be completed by the implementer._
+Disposition: **the adapter was at fault** — `flush()`'s completeness contract was narrower than
+what both callers (the existing test, and the class's own "non-blocking" framing) reasonably
+expected. Not a test-over-asserting case. Root-caused via direct code reading (no CI log needed for
+the fix itself, only for originally surfacing the symptom), fixed with an `_in_flight` counter
+closing the exact race window between queue-pop and bookkeeping-update, and backed by 2 new
+deterministic regression tests verified to fail against the pre-fix code before the fix landed.
+`published_events` assertion in the original test is untouched and unweakened, exactly as required.
+The second CI failure's test identity remains genuinely unrecoverable (network-filter block on the
+log host, hit independently by two sessions) — left as an honest unresolved fact rather than
+assumed to be this same test, per Assumptions/Open Questions above.
