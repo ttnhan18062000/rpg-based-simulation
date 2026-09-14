@@ -93,6 +93,24 @@ class Kernel:
         except Exception:
             pass
 
+        # TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS: seed
+        # state.feature_flags from FeatureFlagManager's own defaults, once, here -- the single
+        # real entry point every real simulation run passes through (WorldCompiler-driven runs,
+        # calibrate_simq.py, CampaignOrchestrator, tests). state.feature_flags's own existing
+        # entries (profile YAML overrides, env-var overrides applied before Kernel construction,
+        # test-constructed state) always win -- this only fills in flags the caller never set,
+        # so a flag's default now genuinely determines behavior for every consumer that reads
+        # state.feature_flags directly (GuildNeedScorer, GuildVisitPhase's own inner check, and
+        # the other 7 direct-dict-gated flags), not just the ones routed through run_phase()'s
+        # own FeatureFlagManager dispatch. Deliberately NOT wrapped in a swallowing try/except --
+        # feature_flags is a real, always-present AuthoritativeState field; a failure here means
+        # something is genuinely wrong and should surface, not join the "looks live and isn't"
+        # pattern this whole arc has been unpicking.
+        from src.domains.optimization.feature_flags import FeatureFlagManager
+        _manager_defaults = FeatureFlagManager().serialize()
+        _existing_flags = dict(getattr(self._state, "feature_flags", None) or {})
+        object.__setattr__(self._state, "feature_flags", {**_manager_defaults, **_existing_flags})
+
         self._cache_registry = CacheRegistry()
         self._cache_policy = self._opt_profile.cache_budget_policy
         if getattr(self._state, "movement_cache", None) is not None:

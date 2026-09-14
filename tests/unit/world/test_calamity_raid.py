@@ -25,13 +25,21 @@ def test_calamity_raid_spawning():
     state = AuthoritativeState(tick=500, seed=42, maturity=2)
     
     update = RaidService.check_for_raid(state, generator)
-    
+
     # Raid size = Base (3) + Maturity (2) = 5
     assert len(update.entities_add) == 5
     for mob in update.entities_add:
         assert mob.kind == "goblin_raider"
         # Navigation target should be town (0,0)
         assert mob.navigation.target == (0, 0)
+        # TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION: a raid mob's
+        # navigation.target is a raw assignment with no accompanying strategic project, so any
+        # capacity-gated goal scorer (confirmed real: GuildNeedScorer, once its own flag actually
+        # reached a real run) would otherwise freely overwrite it. Zero project capacity is the
+        # real, verified fix -- not a scorer-side faction filter, which broke a different, live,
+        # intended case (non-hero-faction entities elsewhere in the corpus legitimately do run
+        # the generic project/goal system).
+        assert mob.strategic.profile.max_active_projects == 0
 
 
 def test_calamity_raid_spawn_positions_unchanged_by_spawn_raid_extraction():

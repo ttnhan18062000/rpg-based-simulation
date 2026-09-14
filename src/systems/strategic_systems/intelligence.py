@@ -404,14 +404,34 @@ class StrategicIntelligenceSystem:
             from src.core.strategic import LeadCertainty
             for lead in list(entity.strategic.leads.values()):
                 if lead.kind == "location" and lead.certainty != LeadCertainty.EXHAUSTED and not lead.tested:
+                    # TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH: `detail`
+                    # for a `kind="location"` lead is only *usually* a parseable "x,y" coordinate
+                    # -- some real producers (src/domains/information/normalizer.py and others)
+                    # use a different convention for their own `detail`. That's a known, expected
+                    # data-shape mismatch, not a bug in this loop, so it's caught narrowly here
+                    # and logged distinctly (WARNING, names the lead and its raw detail) rather
+                    # than blended into the same generic "Failed to check belief lead outcome"
+                    # line every other failure used to share -- a mechanism that logs the same
+                    # message for an expected shape mismatch and a genuine bug can't be trusted to
+                    # mean either one. Confirmed via a real instrumented run that this fires every
+                    # tick for the life of an affected lead when detail is free narrative text.
                     try:
                         coords = tuple(map(float, lead.detail.split(',')))
+                    except (ValueError, AttributeError) as parse_ex:
+                        logger.warning(
+                            f"[Tick {state.tick}] Lead {lead.id} (subject={lead.subject}) has a "
+                            f"non-coordinate detail ({lead.detail!r}); skipping observation-based "
+                            f"confirmation for it: {parse_ex}"
+                        )
+                        continue
+
+                    try:
                         px, py = entity.navigation.position
                         dist = ((px - coords[0])**2 + (py - coords[1])**2)**0.5
                         if dist < 1.0:
                             raw_neighbors = SimulationDomainLogic.get_neighbor_view(state, entity, radius=10.0)
                             hostiles = [n[1] for n in raw_neighbors if n[1].identity.faction != entity.identity.faction and n[1].combat.alive]
-                            
+
                             if hostiles:
                                 confirm_up = BeliefCycleSystem.process_observation(entity, lead.subject, lead.detail, state.tick)
                                 updated_leads = [replace(l, id=lead.id, tested=True, test_outcome="SUCCESS") for l in confirm_up.leads_add_or_update]
@@ -433,7 +453,15 @@ class StrategicIntelligenceSystem:
                                     f"Contradiction count incremented."
                                 )
                     except Exception as ex:
-                        logger.error(f"Failed to check belief lead outcome: {ex}")
+                        # Everything above this point has already confirmed `detail` parses --
+                        # a failure here is a genuinely unexpected bug, not a known-shape
+                        # mismatch, and stays loud (own log line, own level) rather than being
+                        # indistinguishable from the expected case caught above.
+                        logger.error(
+                            f"[Tick {state.tick}] Unexpected failure processing belief lead "
+                            f"outcome for lead {lead.id}: {ex}",
+                            exc_info=True,
+                        )
 
             # --- Blocker Inference ---
             current_proj_id = strat_up.current_project_id_set if strat_up.current_project_id_set is not None else entity.strategic.current_project_id
