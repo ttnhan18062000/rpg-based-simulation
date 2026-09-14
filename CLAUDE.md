@@ -87,7 +87,12 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - Append to the **bottom** of `tickets/working_log.csv` (never insert after the header) via
   `tools/working_log_writer.py::append_working_log_row()` — never hand-roll this write (two
   independent hand-rolled writers produced the identical CRLF defect; see
-  `TCK-20260912-WORKING-LOG-APPEND-HELPER`).
+  `TCK-20260912-WORKING-LOG-APPEND-HELPER`). **If this is a hand-orchestrated closure**, do not
+  call `append_working_log_row()` yourself for this step — the
+  `record_hand_orchestrated_closure.py` call below already performs this exact append internally;
+  calling both for the same ticket close writes the row twice (see
+  `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, and note the closure
+  tool now refuses the second write with a non-zero exit rather than silently duplicating it).
 - **Standard/epic only:** Move staging artifacts to `stored_artifacts/`.
 - Update related docs.
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
@@ -95,11 +100,11 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
 - `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`. Run `make setup-merge-drivers` once (repo-wide, not per-worktree — see `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`) so a `docs/REGISTRY.yaml` merge conflict between two concurrently-closed tickets regenerates automatically instead of needing the manual "take either side + rerun `make docs-registry`" resolution — that manual path still works and is still the fallback if the driver isn't installed.
 - **Always stage `agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
-- **If this ticket was closed by hand-orchestration (reading the ticket, editing code, running tests, without invoking the `Workflow` tool) rather than the formal multi-agent `implement-ticket.js` pipeline: record its own run + event coverage yourself** — the pipeline's own auto-recording never ran, so nothing else will do this for you (confirmed real, ongoing gap: `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`). Use `tools/agent-monitoring/record_hand_orchestrated_closure.py` (one call, auto-fills the shared `run_id`/`execution_id`/`provider`/`ticket_id`/`seq` fields):
+- **If this ticket was closed by hand-orchestration (reading the ticket, editing code, running tests, without invoking the `Workflow` tool) rather than the formal multi-agent `implement-ticket.js` pipeline: record its own run + event coverage yourself** — the pipeline's own auto-recording never ran, so nothing else will do this for you (confirmed real, ongoing gap: `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`). Use `tools/agent-monitoring/record_hand_orchestrated_closure.py` (one call, auto-fills the shared `run_id`/`execution_id`/`provider`/`ticket_id`/`seq` fields). **This call already appends the `tickets/working_log.csv` row itself** (via `append_working_log_row()` internally) — do not also follow the `append_working_log_row()` bullet above for this same ticket close, or the row is written twice (the tool refuses and exits non-zero if it detects that a row for this exact `(ticket_id, title)` already exists, rather than silently duplicating it — see `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`):
   ```
   python3 tools/agent-monitoring/record_hand_orchestrated_closure.py --ticket-id <TCK-ID> --tier <hotfix|standard|epic> --events '[{"phase":"Scope","status":"ok","summary":"..."},{"phase":"Implement","status":"ok","summary":"..."},{"phase":"Test","status":"ok","summary":"..."},{"phase":"Parity","status":"skipped","summary":"..."},{"phase":"Verify","status":"ok","summary":"..."},{"phase":"Finalize","status":"ok","summary":"..."}]'
   ```
-  (or call `record_run.py`/`record_events.py` directly if you need finer control). Monitoring write failure must never fail the workflow, same as the formal pipeline's own rule.
+  (or call `record_run.py`/`record_events.py` directly if you need finer control — that path does not append the working_log row, so the bullet above still applies). Monitoring write failure must never fail the workflow, same as the formal pipeline's own rule. To run done-checker's static conditions by hand (e.g. after a hand-orchestrated Finalize), `python3 tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` now has a real CLI (`TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`) — it prints a readable PASS/FAIL per condition and exits non-zero on any failure, including `working_log_exactly_one_row`.
 
 ### Commit Convention
 

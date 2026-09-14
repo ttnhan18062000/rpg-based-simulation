@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ticket
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE
-phase: open
+phase: done
 date: 2026-09-14
 tags: [claude-md, process-improvement, workflows, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [claude-md, process-improvement, workflows, data-quality]
 `done_checker_static.py` has no CLI entry point, so the gate guarding hand-orchestrated closures cannot be run by hand — and CLAUDE.md's own "After Work" bullets instruct a double working-log write that the same gate would have caught
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -110,23 +110,23 @@ CLAUDE.md explicitly sanctions.
   Fix `done_checker_static.py` here, because it is the one with a demonstrated real-world miss.
 
 ## Acceptance Criteria
-- [ ] `python3 tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` prints a readable
+- [x] `python3 tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` prints a readable
       per-condition PASS/FAIL result and exits non-zero when any condition fails.
-- [ ] A test asserts the CLI produces output and a non-zero exit for a ticket with a known-failing
+- [x] A test asserts the CLI produces output and a non-zero exit for a ticket with a known-failing
       condition — i.e. the test fails if the entry point ever silently returns nothing again. This
       is the real regression guard; the defect was silence, so the test must assert *presence of
       output*, not merely a correct return value.
-- [ ] The existing function-level consumers still work unchanged; a test pins that the aggregate is
+- [x] The existing function-level consumers still work unchanged; a test pins that the aggregate is
       still importable and callable as plain functions (the `implement-ticket.js` path).
-- [ ] `python3 -W error tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` no longer
+- [x] `python3 -W error tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` no longer
       raises `SyntaxError` from the docstring escape.
-- [ ] Calling `append_working_log_row()` and then `record_hand_orchestrated_closure.py` for the same
+- [x] Calling `append_working_log_row()` and then `record_hand_orchestrated_closure.py` for the same
       ticket produces **one** row, not two — or the second call fails loudly with a message naming
       the existing row. Silent double-write is not an acceptable end state. Covered by a test that
       performs both calls in that order.
-- [ ] CLAUDE.md's two "After Work" bullets cross-reference each other, and neither can be followed
+- [x] CLAUDE.md's two "After Work" bullets cross-reference each other, and neither can be followed
       in isolation to produce the double write.
-- [ ] `TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN` carries a warning
+- [x] `TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN` carries a warning
       naming this ticket and the interaction described under Assumptions.
 
 ## Related Tickets
@@ -207,10 +207,50 @@ CLAUDE.md explicitly sanctions.
   the pattern this whole line of work exists to stop.
 
 ## Test Summary
-_To be completed by the implementer._
+- `tests/tools/test_done_checker_static.py` — 6 new CLI tests appended (readable output +
+  non-zero exit on a known FAIL, PASS path, tier auto-detection, explicit `--tier` override,
+  function-level import path still callable, `-W error` under a fresh `-B` compile). Full existing
+  suite (119 tests) still green.
+- `tests/tools/test_record_hand_orchestrated_closure.py` — 3 new tests for the duplicate-detection
+  guard (refuses + exits non-zero + exactly one row remains; run/event writes still land even when
+  the working-log append is refused; a different-title reopen for the same `ticket_id` is correctly
+  NOT treated as a duplicate). Full existing suite (23 tests) still green.
+- `tests/tools/test_working_log_writer.py` — sole-writer AST guard re-run explicitly; unaffected by
+  the new read-only `parse_working_log()` call (12 tests green).
+- Combined regression run across
+  `test_done_checker_static.py` + `test_record_hand_orchestrated_closure.py` +
+  `test_working_log_writer.py` + `test_working_log_content_duplicate_check.py` +
+  `test_working_log_duplicate_check.py` + `test_validate_working_log.py`: 187 passed.
+- Manual verification: ran the new CLI against this ticket's own real in-progress state before
+  Finalize, confirmed readable multi-condition output and correct FAILs for the not-yet-finalized
+  conditions; ran `python3 -W error -B tools/gate_checks/done_checker_static.py --ticket-id ...`
+  directly, confirmed no `SyntaxError`.
 
 ## Files Changed
-_To be completed by the implementer._
+- `tools/gate_checks/done_checker_static.py` — raw-string docstring fix (line ~385); new
+  `argparse` CLI (`_resolve_tier`, `_render_results`, `main`, `__main__`), purely additive.
+- `tests/tools/test_done_checker_static.py` — 6 new tests.
+- `tools/agent-monitoring/record_hand_orchestrated_closure.py` — new `_existing_row_for()` +
+  wired duplicate-refusal check before the working-log append; docstring updated.
+- `tests/tools/test_record_hand_orchestrated_closure.py` — 3 new tests.
+- `CLAUDE.md` — "After Work" section's two working-log bullets now cross-reference each other;
+  also documents the new CLI.
+- `tickets/todos/TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN.md` —
+  new "Cross-Gate Interaction Warning" subsection.
 
 ## Completion Summary
-_To be completed by the implementer._
+Both defects fixed. Defect B (no CLI): `done_checker_static.py` now has a real `--ticket-id`
+entry point with tier auto-detection, readable per-condition output, and a non-zero exit on any
+FAIL — verified purely additive (all existing `python3 -c` call sites in `implement-ticket.js`
+still import and call the same functions unchanged). The invalid escape sequence is fixed (raw
+docstring); reproduced the original symptom directly (a fresh, uncached compile prints a
+`SyntaxWarning`) before fixing it, and confirmed it is gone under `-W error` afterward. Defect A
+(double write): `record_hand_orchestrated_closure.py` now detects an existing `(ticket_id, title)`
+row via the tolerant parser before appending and refuses with a named, loud, non-zero-exit error
+rather than silently duplicating — chose fail-loudly over silent idempotent-skip per the ticket's
+own stated preference. CLAUDE.md's two "After Work" bullets now cross-reference each other so
+neither can be followed in isolation into the double write. The adjacent
+`TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN` ticket carries a new
+warning naming the "only two remaining gates" risk. Widening the CLI fix to
+`parity_ledger_scan.py`/`registry_query.py`/`ticket_field_values.py` remains an explicit, undecided
+user scope choice, per Out of Scope — not taken silently.
