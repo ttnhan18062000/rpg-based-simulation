@@ -168,6 +168,43 @@ driver) from "provisional formula" to "blocked pending a separate fix" — filed
 `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`, rather than silently assumed away. §3.1
 (territory/tension derivation) is unaffected.
 
+**2026-09-15, design phase continued — user's own faction-sentiment design added as the primary
+tension driver.** User specified a continuous faction-to-faction sentiment (hostile ← neutral →
+friendly), serving all faction-level interaction (trade/diplomacy, not just war), built from real
+entity interaction and weighted by the acting entity's importance to their faction. Proposal
+restructured around this (now §3.2, renumbering the prior military-strength sketch to §3.3):
+- **Mirrors `SocialBond`** (`src/core/models/social.py:14`) exactly — same 4 fields
+  (`familiarity`/`sentiment`/`last_interaction_tick`, target-keyed), reusing the shape rather than
+  inventing an eighth parallel implementation. One deliberate, flagged deviation: no `role` field,
+  since `FactionState.diplomatic_relations` already plays that categorical role at faction scope —
+  a third source of truth was avoided, not silently added.
+- **Real interaction hook found**: `SocialBondUpdate` (`src/core/updates.py`) is the single choke
+  point all three real entity-interaction producers (combat, cooperation/contracts, appraisal)
+  already write through, all flowing into `RelationshipService.process_update()`. A new derivation
+  phase can read the same tick's already-produced updates and attribute cross-faction deltas — zero
+  changes needed to any of the three producer systems.
+- **Importance weighting, empirically checked, not assumed**: `public_reputation` confirmed real and
+  non-degenerate (measured: min=1.0, max=2.0, mean=1.232, 8 distinct values across 49 entities) —
+  recommended as the weight. `veterancy_rank` (peer's own tentative suggestion) confirmed
+  **degenerate** in the same real run (all 49 entities at rank 0) — the exact "everyone is level 1"
+  failure shape from the earlier perceived-power draft — explicitly NOT used, contra the tentative
+  suggestion, with the empirical evidence stated plainly. No real "faction leader" designation
+  exists anywhere (`ClanState.leader_entity_id` is a different, unwired concept) — noted as a real
+  gap rather than papered over with an invented signal.
+- **Decay**: no live precedent found for a similarly-shaped directed value (the one comparable past
+  attempt, `KnowledgeFact.effective_certainty()`, was abandoned and deleted) — proposed as
+  genuinely new work, explicitly flagged as such rather than presented as reuse.
+- **Feeds the existing, untouched `tension_delta` → `DiplomaticStateMachine` path** — no change to
+  the already-tested state machine itself (`FAC-006` parity entry stays exactly as verified).
+- **Honest gap stated in the acceptance bar (§4)**: this design should reliably get real faction
+  pairs to `TENSE`/`HOSTILE`. It does **not** address loop #1 (`military_strength`) at all — that
+  remains genuinely open, blocked on the same `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`
+  ticket as before. Reaching `WAR` itself is named as a stretch goal, not assumed, until loop #1
+  gets its own real driver — stated explicitly rather than implied solved.
+
+Full revised proposal: `docs/mechanics/faction_war_drivers_proposal.md` §3.2/§3.5/§3.6/§4/§6. No
+code written. Sent to peer for review.
+
 Sent to peer for review — no implementation until approved, per explicit instruction.
 
 ## Test Summary
