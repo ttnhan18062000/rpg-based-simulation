@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-RAID-MOB-PERMANENT-PROJECT-CAPACITY-EXCLUSION
-phase: open
+phase: done
 date: 2026-09-13
 tags: [cognition, combat]
 ---
@@ -15,7 +15,7 @@ tags: [cognition, combat]
 `TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION`'s fix sets `max_active_projects=0` permanently on a raid mob — a raider that survives its raid can never take any project again, for the rest of its life, because "mid-raid" was encoded as a permanent property instead of a state
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 standard
@@ -60,10 +60,14 @@ do, even though the reason it was excluded (the raid) is long over.
   consumer — this ticket is scoped to this one confirmed instance.
 
 ## Acceptance Criteria
-- [ ] A real design decision on whether/how a raid mob's project capacity should be restored,
-      brought to peer/user review before implementation.
-- [ ] If restoration is chosen: real test coverage for a surviving mob regaining capacity.
-- [ ] No implementation without that review — filed, not built, per explicit instruction.
+- [x] A real design decision on whether/how a raid mob's project capacity should be restored,
+      brought to peer/user review before implementation. **Decision: close document-only. Left
+      as-is because no declared intent supports changing it — not because permanence was chosen
+      as a design intent.** See Completion Summary for the exact disposition peer required.
+- [ ] If restoration is chosen: real test coverage for a surviving mob regaining capacity. **N/A —
+      restoration was not chosen.**
+- [x] No implementation without that review — filed, not built, per explicit instruction. Honored:
+      zero source/test changes at any point in this ticket's lifecycle.
 
 ## Related Tickets
 - `TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION` (done — the fix whose own
@@ -113,12 +117,42 @@ detail in staging_artifacts/investigation.md):
   proxy signal), no recommendation given between them, per the ticket's own explicit instruction.
   Design question sent to peer/user for review.
 
+**2026-09-14: closed, document-only, per peer/user review of the investigation above.** Peer's
+exact decision, recorded verbatim in substance since the wording itself is load-bearing (an earlier
+draft of peer's own framing said "document as intended" and was explicitly corrected before
+landing here):
+
+- Raid-spawned mobs are permanently excluded from the project system; a survivor never regains
+  eligibility.
+- **Nothing declares this either way.** All 6 Mechanics Bible chapters, the engine contracts
+  (`docs/engine/*.md`), and every `max_active_projects` mention in `docs/` (3 hits, all generic
+  `CognitionProfile` cap discussion in archive/design docs, none mentioning raid mobs) were
+  checked — no statement that raid survivors should or shouldn't regain eligibility. Recorded as a
+  verified absence, with where this looked, so nobody re-derives it.
+- `WORLD-034` ("raid mobs do not return home," verified P0) is real declared intent about the same
+  entities, adjacent rather than governing — it concerns navigation, not project capacity. It is
+  *consistent* with permanence and is not authority for it.
+- The exclusion originates as a side effect of
+  `TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION`, not from a design
+  decision — `max_active_projects=0` was the correct minimal signal for that ticket's own
+  navigation-hijack problem; permanence was never itself decided by anyone.
+- **Left as-is because no declared intent supports changing it, not because permanence was
+  chosen.** If raid survivors should rejoin the goal system, that is a future design decision
+  requiring a "raid concluded" lifecycle signal, which does not exist anywhere today. The 3 options
+  in investigation.md remain the record of what building that fix would involve, so a future
+  pickup doesn't have to redo this investigation.
+
 ## Test Summary
-_(none — no implementation yet; blocked pending design decision)_
+_(none — no implementation; this is a document-only closure)_
 
 ## Files Changed
-_(none — investigation only, per this ticket's own "No implementation without review" constraint)_
+_(none — investigation and disposition only; zero source/test changes across this ticket's entire
+lifecycle, per its own "No implementation without review" constraint, honored through closure)_
 
 ## Completion Summary
-_(not complete — blocked pending peer/user design decision on staging_artifacts/investigation.md's
-3 options)_
+Closed document-only. The permanent `max_active_projects=0` exclusion on surviving raid mobs is
+current, undeclared behavior — an accepted side effect of a P0 hotfix, not a design decision either
+way — and stays as-is because no declared intent (Mechanics Bible, engine contracts, or otherwise)
+supports changing it. Should this ever need revisiting, the 3 options and the full precedent
+survey in investigation.md are the starting point; the central blocker (no "raid concluded" signal
+exists anywhere in the codebase) would need solving first regardless of which option is chosen.
