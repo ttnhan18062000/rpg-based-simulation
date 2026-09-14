@@ -13,6 +13,7 @@ from typing import Dict, Any, Optional
 
 from src.core.state import EntityState, AuthoritativeState
 from src.core.strategic import LeadCertainty
+from src.domains.information.lead_location import resolve_location_lead_region_id
 
 @dataclass(frozen=True, slots=True)
 class BeliefContradictionResult:
@@ -57,7 +58,9 @@ class BeliefContradictionService:
                     )
 
                 # Direct check: safe rumor observed dangerous
-                if obs_kind == "region_danger_seen" and lead.detail == observation.get("region_id"):
+                if obs_kind == "region_danger_seen" and resolve_location_lead_region_id(
+                    lead, state
+                ) == observation.get("region_id"):
                     if lead.certainty in (LeadCertainty.VAGUE, LeadCertainty.APPROXIMATE):
                         return BeliefContradictionResult(
                             contradiction_detected=True,
