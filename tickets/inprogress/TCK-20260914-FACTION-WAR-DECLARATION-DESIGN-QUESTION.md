@@ -15,7 +15,7 @@ tags: [faction, grand-strategy]
 Sieges, territory transfer, and `EXPAND_TERRITORY` all require a formal `DiplomaticState.WAR` between factions that no observed run has ever produced — the user has reversed the prior "accepted long-horizon divergence" disposition; find whether any real design declares when war should happen before building anything
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -108,13 +108,42 @@ None yet — standard tier, staging artifacts created when picked up.
   central open question this ticket exists to answer — not assumed either way here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**2026-09-14: investigation complete, no code changed — bringing findings to peer/user review
+before any implementation, per this ticket's own explicit instruction.** Full detail in
+staging_artifacts/investigation.md. Summary:
+- **Central question answered: a real design exists.** `DiplomaticStateMachine.compute_transitions()`
+  is a real, deliberate, deterministic 4-step state machine (NEUTRAL→TENSE→HOSTILE→WAR→NEUTRAL),
+  genuinely wired into the real tick pipeline (`src/engine/pipeline.py:260`, called every tick).
+  This is not the "no design exists" outcome.
+- **But it's unreachable in practice, via three independent, partly-circular blockers**, confirmed
+  via a real 3000-tick simulation (`urban_political`, seed=42, 16 factions):
+  1. `military_strength` is mathematically frozen at `1.0` for every faction, always — the only
+     real producer (a WAR-exhaustion drain) only applies to factions already at war. The `WAR`
+     transition's own `>20% imbalance` precondition can never be satisfied from real pre-war state.
+  2. `territory` is circularly blocked — no world spec ever seeds it at compile time (confirmed:
+     zero references to `territory` anywhere in `WorldCompiler`), and the only real runtime
+     producer (siege-won territory transfer) itself requires an existing WAR to fire. `shared_territory`
+     can never be the thing that triggers a *first* war.
+  3. `tension_level`'s only real runtime producer is *also* gated on territory (a `RESOURCE_DEPLETED`
+     event must land inside the faction's own territory) — so it's blocked by the same root cause
+     as #2. The only way any faction ever gets nonzero tension is compile-time authoring (2 of 16
+     factions in the real corpus, seeded at 0.5), which clears `NEUTRAL→TENSE` (>0.4) but falls
+     short of `TENSE→HOSTILE` (>0.7) and never moves further — confirmed empirically, every such
+     pair got stuck at TENSE for the full 3000-tick run.
+- **Not "just slow" — not one large number.** Fixing this cleanly likely needs at least one new
+  real mechanism (military-strength divergence before war, and/or a territory/tension producer
+  that doesn't itself require war to exist first), not just reachable threshold values — a real
+  design decision, flagged explicitly rather than assumed to be the same shape as the sibling
+  maturity-gate ticket (D-05).
 
 ## Test Summary
-_(pending)_
+_(none — investigation only; findings verified via direct probes against a real, instrumented
+3000-tick simulation and direct code/grep evidence, not committed as test files, since no fix has
+been chosen yet)_
 
 ## Files Changed
-_(pending)_
+_(none — investigation only, per this ticket's own explicit instruction)_
 
 ## Completion Summary
-_(pending)_
+_(not complete — investigation delivered a real, evidence-backed answer per the ticket's own
+acceptance criteria; awaiting peer/user review before any implementation proceeds)_
