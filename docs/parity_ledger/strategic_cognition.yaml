@@ -3321,16 +3321,22 @@
     generated quest to progress) disclosed as an update to the sibling ticket TCK-20260807-QUEST-EVALUATOR-GATHER-BOUNTY-LIBERATE-GAP,
     not this ticket''s own scope.'
   proof_type: parity
-  test_path: tests/unit/ai/test_guild_need_scorer.py (5 tests), tests/unit/engine/
-    test_guild_visit_phase.py (8 tests), tests/architecture/test_guild_action_dormancy.py
-    (updated, 1 test, still passing)
+  test_path: tests/unit/ai/test_guild_need_scorer.py; tests/unit/engine/test_guild_visit_phase.py;
+    tests/architecture/test_guild_action_dormancy.py
   divergence_note: null
-  support_boundary: Makes GuildAction.visit() live and dispatched -- does not fix
-    the QuestGenerator metadata gap (quests generate but can't progress to completion),
+  support_boundary: 'Makes GuildAction.visit() live and dispatched -- does not fix
+    the QuestGenerator metadata gap (quests generate but can''t progress to completion),
     the region-coverage scarcity gap (filed separately), or the TOWN_RETURN/RECOVER/RESOLVE_BLOCKER
     target-resolution bug (filed separately, sidestepped not fixed here). `grade_anchors.json`
     not recalibrated -- flag defaults OFF, no behavior change in any unmodified/default-flag
     run.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path had a line-wrap
+    space inside the second file path ("tests/unit/engine/ test_guild_visit_phase.py")
+    and trailing parenthetical test counts on all 3 citations ("(5 tests)" / "(8 tests)"
+    / "(updated, 1 test, still passing)"). Normalized to a plain multi-citation (all
+    3 confirmed to exist); the test-count disclosure is preserved here.'
 - id: STRAT-249
   text: TOWN_RETURN/RECOVER/RESOLVE_BLOCKER's reach_location objectives now resolve
     a real navigable position via a target_position fallback in TacticalDecisionSystem._resolve_target_position();

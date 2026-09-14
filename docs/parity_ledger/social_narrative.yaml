@@ -2584,10 +2584,7 @@
 
     '
   proof_type: parity
-  test_path: 'pytest tests/unit/social/test_social_memory.py tests/integration/scenarios/test_social_memory.py
-    -x -v -m "not slow or slow"
-
-    '
+  test_path: tests/unit/social/test_social_memory.py; tests/integration/scenarios/test_social_memory.py
   divergence_note: 'faction_reputation is a single "default" key (public_reputation
     proxy) in E43B. Per-faction detail deferred to a future E43 child ticket. Per
     Mechanics Bible ch03 "E43 adds per-faction detail" note in EntityCarryForward.
@@ -2596,7 +2593,11 @@
     in this cross-episode carry-forward.
 
     '
-  support_boundary: null
+  support_boundary: 'TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path
+    was a raw shell pytest invocation ("pytest tests/unit/social/test_social_memory.py
+    tests/integration/scenarios/test_social_memory.py -x -v -m \"not slow or slow\"").
+    Normalized to a plain multi-citation of the 2 real files, dropping the `pytest`/flag/marker
+    invocation detail (both confirmed to exist).'
 - id: SOC-CROSS-EP-004
   text: 'FactionSocialMemory provides a collective faction-level hostility record
     that persists across episodes regardless of whether individual faction members
@@ -3310,16 +3311,23 @@
     correctly excludes non-quest projects; 0 expected since TCK-20260807-QUEST-GUILDACTION-DEAD-WIRING,
     still open, means no real QuestState quests exist in live gameplay yet).'
   proof_type: parity
-  test_path: tests/unit/observability/test_event_extractor_narrative.py::TestQuestEventConfirmation
-    (rewritten fixtures using MagicMock(spec=QuestState), 6 tests including the mixed-projects
-    and quest_status-independent-of-status cases), tests/unit/observability/ test_event_extractor_agency2.py
-    (2 corrected tests confirming commitment_abandoned remains independent of the
-    QuestState gate)
+  test_path: tests/unit/observability/test_event_extractor_narrative.py::TestQuestEventConfirmation;
+    tests/unit/observability/test_event_extractor_agency2.py
   divergence_note: null
-  support_boundary: Observability bug fix only -- no gameplay mechanic change. NarrativeScorer's
+  support_boundary: 'Observability bug fix only -- no gameplay mechanic change. NarrativeScorer''s
     own scoring logic (quest_started/quest_completed/quest_failed weights) untouched.
-    quest_failed's permanent unreachability (QuestStatus has no FAILED value) is disclosed,
-    not fixed -- would need new quest-system design work, out of this ticket's scope.
+    quest_failed''s permanent unreachability (QuestStatus has no FAILED value) is
+    disclosed, not fixed -- would need new quest-system design work, out of this ticket''s
+    scope.
+
+
+    TCK-20260913-PARITY-LEDGER-CLASS2-CLASS4-RESIDUAL: original test_path had a line-wrap
+    space inside the second file path ("tests/unit/observability/ test_event_extractor_agency2.py")
+    and trailing parenthetical annotations on both citations ("(rewritten fixtures
+    using MagicMock(spec=QuestState), 6 tests including the mixed-projects and quest_status-independent-of-status
+    cases)" / "(2 corrected tests confirming commitment_abandoned remains independent
+    of the QuestState gate)"). Normalized to a plain multi-citation (both confirmed
+    to exist -- the first as a real test class); the disclosure is preserved here.'
   update_2026_08_07: 'TCK-20260807-QUEST-EVENT-PUSH-MIGRATION: this fixed logic is
     now ALSO the live default path via a new NarrativeShaper (src/observability/event_shapers.py)
     -- see SOC-242. The event_extractor.py block this entry documents remains in the
