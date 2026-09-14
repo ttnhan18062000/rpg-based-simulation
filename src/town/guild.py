@@ -9,6 +9,19 @@ from src.core.updates import StateUpdate, EntityUpdate, StrategicUpdate
 from src.core.enums import Domain
 from src.platform.rng import DeterministicRNG
 
+# TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE: the single resource kind GuildAction.visit()
+# generates rumor leads about. A named constant instead of an inline literal so a rename shows up
+# as one clear diff site, and so tests/unit/town/test_guild_lead_resource_kind_matches_catalog.py
+# can assert it still exists in the real content catalog -- the exact check that would have caught
+# the original "iron" vs. "iron_vein" mismatch before it shipped. Deliberately NOT a full
+# content-declared tag mechanism on ResourceDef: this ticket's own Out of Scope forecloses
+# broadening lead-generation beyond this one resource kind, so building that taxonomy now would be
+# infrastructure for a need that isn't there. If lead-generation is ever deliberately expanded to
+# cover more kinds, ResourceDef already has a precedented `tags`-field shape on a sibling class in
+# src/core/registries.py to extend from at that point.
+GUILD_LEAD_RESOURCE_KIND = "iron_vein"
+
+
 class GuildAction:
     """Action to visit the Guild for quests and world intelligence."""
 
@@ -27,19 +40,27 @@ class GuildAction:
         # catalog's resource id is "iron_vein" (data/content/world/resources.yaml), so this never
         # matched a single real resource node in any corpus world. Confirmed via a real 300-tick
         # instrumented run against frontier_living_world (has iron_vein nodes): 0 leads produced
-        # across 7 real GuildAction.visit() calls before this fix. Hardcoding a second literal
-        # string here is itself a real, disclosed shape concern -- see
-        # TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE for where this ID should really come
-        # from; not resolved here, only corrected to match reality.
+        # across 7 real GuildAction.visit() calls before this fix.
+        #
+        # TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE: that fix replaced one hardcoded
+        # literal with another, identically fragile one -- and a SECOND hardcode (`subject=
+        # "iron_ore"` below) had the same exposure. Both now derive from GUILD_LEAD_RESOURCE_KIND
+        # (the kind match) and ResourceRegistry.get(...).yield_item (the subject), reusing the
+        # same registry lookup the scarcity block below already performs, rather than a second
+        # independent literal.
         for node in state.resource_nodes.values():
-            if node.kind == "iron_vein":
+            if node.kind == GUILD_LEAD_RESOURCE_KIND:
                 lead_id = f"iron_lead_{node.id}"
                 if lead_id not in entity.strategic.leads:
+                    lead_subject = (
+                        ResourceRegistry.get(node.kind).yield_item
+                        if ResourceRegistry.contains(node.kind) else node.kind
+                    )
                     potential_leads.append(
                         LeadState(
                             id=lead_id,
                             kind="location",
-                            subject="iron_ore",
+                            subject=lead_subject,
                             # TCK-20260913-LEADSTATE-DETAIL-LOCATION-KIND-CONTRACT-MISMATCH: was
                             # free narrative text ("Rumors of iron near {node.position}"), which
                             # every real `kind="location"` consumer that resolves a material
