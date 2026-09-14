@@ -4,9 +4,15 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from src.core.updates import (
-    EntityUpdate, NavigationUpdate, CombatUpdate, 
+    EntityUpdate, NavigationUpdate, CombatUpdate,
     LifecycleUpdate, SocialUpdate, StaminaUpdate
 )
+# Module-level, not lazy like this file's own src.engine.* imports below (LegalityServiceV2,
+# CombatResolutionSystem): src.domains.combat_engagement.learning_outcome only imports from
+# src.core and src.domains.combat_engagement itself, neither of which imports back from
+# src.engine.domain.combat_actions -- no circular-import risk, confirmed directly, unlike this
+# file's own src.engine.* imports which stay lazy for that real reason.
+from src.domains.combat_engagement.learning_outcome import apply_combat_learning
 
 if TYPE_CHECKING:
     from src.core.state import EntityState
@@ -106,11 +112,32 @@ class CombatActions:
                     is_permadeath_set=combat_up.is_permadeath_set
                 ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
             )
-            
+
             # Stamina drain on attack (Checklist Part 6 Section E)
             stamina_cost = 5.0 # Standard attack cost
             attacker_up = replace(attacker_up, stamina_update=StaminaUpdate(current_delta=-stamina_cost))
-            
+
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER (Sec 13.5a): combat is a real,
+            # second information source, better than passive observation -- both real participants
+            # of this exchange update their own OpponentModel from the real outcome, per the
+            # declared mapping (docs/mechanics/04_strategic_cognition.md Sec 13.5a). Neither read
+            # depends on the other having run first (order-independent by construction).
+            # Gated on ENABLE_COMBAT_ENGAGEMENT, same as the passive-observation writes in
+            # CombatEngagementPhase.apply() -- deliberate, not an oversight: the flag stays the
+            # single real on/off switch for the whole feature. Without this gate, opponent memory
+            # would start accumulating on every real attack in every corpus profile the moment
+            # this ticket merges, before Step 6's own flag flip -- durable state growth (bounded,
+            # but nonzero) for a mechanism nothing reads yet.
+            flags = getattr(context, "feature_flags", None) or {}
+            if flags.get("ENABLE_COMBAT_ENGAGEMENT", "OFF") == "ON":
+                new_attacker_cognition, new_defender_cognition = apply_combat_learning(
+                    entity, target, combat_up.outcome_kind, combat_up.damage_taken, current_tick,
+                )
+                if new_attacker_cognition is not None:
+                    attacker_up = replace(attacker_up, cognition_bundle_set=new_attacker_cognition)
+                if new_defender_cognition is not None:
+                    defender_up = replace(defender_up, cognition_bundle_set=new_defender_cognition)
+
             return {entity.id: attacker_up, target.id: defender_up}
             
         return {entity.id: EntityUpdate(entity_id=entity.id, readiness_delta=0.0)}

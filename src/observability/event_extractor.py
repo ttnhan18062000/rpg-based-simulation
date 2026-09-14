@@ -2,6 +2,7 @@ from __future__ import annotations
 import time
 import logging
 from typing import Any, List, Optional
+from src.core.combat_constants import NEAR_DEATH_HP_RATIO
 from src.core.state import AuthoritativeState
 from src.core.strategic import ProjectStatus
 from src.core.quests import QuestState
@@ -17,7 +18,11 @@ from src.systems.strategic_systems.intelligence import _MAX_CONSECUTIVE_REJECTIO
 
 logger = logging.getLogger(__name__)
 
-_NEAR_DEATH_THRESHOLD = 0.2
+# TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: moved to src/core/combat_constants.py so
+# src/domains/combat_engagement/power.py (Sec 13.5a) can share the same cutoff without pointing
+# gameplay logic at this observability module (the reverse of this repo's own domains->
+# observability import boundary, enforced by tests/architecture/test_phase18_import_boundaries.py).
+_NEAR_DEATH_THRESHOLD = NEAR_DEATH_HP_RATIO
 
 # outcome_kind values that never represent a real entity-vs-entity combat resolution, even when
 # a CombatUpdate carries an attacker_id (defense-in-depth alongside the attacker_id check below).

@@ -326,6 +326,80 @@ evidence — see that ticket's own updated Completion Summary for the full pictu
 
 ---
 
+### D-11 · `true_power()` coefficients for Perceived Power Assessment (§13, `04_strategic_cognition.md`)
+**Deferred from:** `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`
+
+Recorded as an axes-evidence-backed, weights-unpicked first pass — the Bible section's own
+`true_power(entity) = atk + def_stat * 0.5 + max_hp * 0.1` is a real formula with real supporting
+evidence for *which* axes matter; the specific `0.5`/`0.1` coefficients are a reasonable first pass
+awaiting real-run calibration, not a tuned outcome. Naming them here rather than leaving them
+embedded, undiscoverable, in a doc's own prose is the point of this register.
+
+**The evidence that decided the axes** (not the weights): sampled 214 real entities compiled across
+5 corpus worlds (`frontier_marches`, `frontier_living_world`, `frontier_extended`,
+`crowded_frontier`, `quest_dense_frontier`; seed 42). Every entity compiles at `evolution_level ==
+1` — a level-only power term would make the gap this feature depends on exactly zero for every
+pair, in every world, at the point the mechanism could first matter. The same sample shows real,
+substantial spread on other axes at identical level: `atk` 4–24, `def_stat` 0–8, `max_hp` 35–150 —
+an `atk + def_stat * 0.5` proxy alone already spans 4.5–28.0 (6.22x). `evolution_level` itself is
+excluded from the formula entirely, not just left unweighted: Attribute Points from levelling
+already feed the `Attack`/`Defense`/`Max_HP` derived-stat formulas (`docs/mechanics/
+01_entity_anatomy.md` § "Derived Combat Stats") this term reads directly, so adding
+`evolution_level` again would double-count the same progression.
+
+**What is genuinely undecided:** the relative weights `0.5` (on `def_stat`, reused from
+`CapabilityEstimateService`'s own existing sub-expression, §6.12) and `0.1` (on `max_hp`, chosen
+only so its raw 35–150 range doesn't swamp the 4.5–28 `atk`/`def_stat` term) have not been
+calibrated against real gameplay-feel or real-run outcomes. A future balance pass may find these
+need adjusting once the mechanism is actually enabled and observable in real corpus runs.
+
+**A known gap, not a correctness issue — recorded next to the coefficients rather than left for
+whoever calibrates this to rediscover**: active breakthroughs grant permanent ability modifiers
+(`PROG-085`) that may confer real combat strength through a route other than `atk`/`def_stat`/
+`max_hp`. If so, two entities with identical stats on these three axes can differ in real danger
+that `true_power()` cannot see. Not investigated or fixed here — a refinement to weigh against
+real data once the mechanism runs, not a reason to have withheld the axis choice now.
+
+**Accepted outcome:** the formula ships with these coefficients as specified. If real-run
+observation later shows the gap distribution feels wrong (e.g. estimates cluster too confidently
+or too uncertainly across the real population of entities encountered), that is a tuning decision
+to make then, against real data — not a reason to have withheld the axis choice now.
+
+---
+
+### D-12 · `NEAR_DEATH_HP_RATIO` threshold for combat-learning outcome classification (§13.5a, `04_strategic_cognition.md`)
+**Deferred from:** `TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER`
+
+§13.5a classifies a winning participant's own combat-learning outcome as `"WON_EASY"` or
+`"NEAR_DEATH"` based on whether that participant's own post-exchange `hp_ratio` fell below a
+threshold. This reuses the same `0.2` cutoff `src/observability/event_extractor.py`/
+`event_shapers.py` already used privately as `_NEAR_DEATH_THRESHOLD` — but that constant lived in
+an observability module, and importing it into `src/domains/combat_engagement/power.py` (gameplay
+logic) would have pointed a real mechanic at a telemetry module, the reverse of this repo's own
+`domains -> observability` import boundary (`tests/architecture/test_phase18_import_boundaries.py`).
+**Moved to a new neutral home, `src/core/combat_constants.py::NEAR_DEATH_HP_RATIO`** (same
+precedent as `src/core/social_constants.py::ALLY_TRUST_THRESHOLD`, built for exactly this class of
+domains/observability shared-constant problem) — both `event_extractor.py` (now re-exporting its
+own former `_NEAR_DEATH_THRESHOLD` name from the shared constant, so `event_shapers.py`'s existing
+import needed no change) and `power.py` read the same single source of truth. Reusing the *value*
+rather than inventing a second, potentially-divergent near-death cutoff is the same discipline as
+D-11's own `atk + def_stat * 0.5` term; moving its *home* to fix the import direction is this
+ticket's own addition on top of that reuse.
+
+**What is genuinely undecided:** whether `0.2` is the right cutoff *specifically for what counts as
+a costly enough win to trigger a hard upward correction* is not evidence-backed the way D-11's axis
+choice was — it is a defensible reuse of an existing constant, picked to avoid a second number
+rather than derived from real combat-outcome distribution data. A future balance pass, once
+`ENABLE_COMBAT_ENGAGEMENT` is live and real `WON_EASY`/`NEAR_DEATH` classification rates are
+observable, may find this threshold produces too many or too few `NEAR_DEATH` corrections relative
+to real gameplay feel.
+
+**Accepted outcome:** ships with `NEAR_DEATH_HP_RATIO = 0.2` (reusing `_NEAR_DEATH_THRESHOLD`). If
+real-run observation later shows the classification rate feels wrong, that is a tuning decision to
+make then, against real data.
+
+---
+
 ## Related
 
 - `docs/audits/D04_balance_tuning.md` — existing balance audit; this register feeds it.

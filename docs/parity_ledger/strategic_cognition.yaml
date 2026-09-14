@@ -2747,29 +2747,42 @@
     and a lead_contradiction_resolved SimulationEvent is emitted for the resolved
     lead. This check runs every tick as the "lead_contradiction" phase in AuthoritativeApplyPipeline.refine(),
     between strategic_intelligence and near_death_hardening. (E42D; TCK-20260701-SIMQ-EMIT-LEAD-BELIEFS;
-    TCK-20260824-LEAD-CONTRADICTION-WIRING)
+    TCK-20260824-LEAD-CONTRADICTION-WIRING; TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING)
 
     '
   status: verified
   priority: P1
   legacy_evidence: null
   v2_evidence: 'src/engine/pipeline_phases/lead_contradiction.py -- LeadContradictionSystem.enforce();
-    src/core/updates.py -- StateUpdate.information_providers_update field; src/cognition/knowledge_model.py
-    -- effective_certainty() staleness decay utility; src/engine/pipeline.py -- run_phase("lead_contradiction",
-    ...) call in refine(); src/domains/information/phase.py -- InformationBeliefPhase.apply()''s
-    observation-synthesis branch (claim_failed_search/region_danger_seen) that routes
-    untested leads through BeliefContradictionService.detect() via ObservationBeliefBridge.process_observation().
+    src/core/updates.py -- StateUpdate.information_providers_update field; src/engine/pipeline.py
+    -- run_phase("lead_contradiction", ...) call in refine(); src/domains/information/phase.py
+    -- InformationBeliefPhase.apply()''s observation-synthesis branch (claim_failed_search/region_danger_seen)
+    that routes untested leads through BeliefContradictionService.detect() via ObservationBeliefBridge.process_observation().
     NOTE (TCK-20260903-INFORMATION-HUB-ACCUMULATION): this mechanism''s own enforce()
     logic was always correct, but a SEPARATE wiring defect in src/engine/apply.py
     (AuthoritativeState(...) never carried information_providers forward) meant its
     decrement never survived a tick boundary in any real run before that ticket''s
     apply.py fix -- a distinct bug from this entry''s own verified decrement logic,
-    not a correction to it.
+    not a correction to it. NOTE (TCK-20260913-LEADSTATE-DETAIL-UNTYPED-POLYMORPHIC-STRING):
+    the region_danger_seen branch''s lead.detail comparison (in both phase.py and
+    src/domains/information/contradiction.py''s BeliefContradictionService.detect())
+    previously compared a kind="location" lead''s detail directly against a region
+    id string that no real producer ever emitted -- this branch could never fire in
+    any real run. Fixed by resolving detail''s declared "x,y" coordinate contract
+    (docs/mechanics/04_strategic_cognition.md Sec ''Leads (Knowledge)'') to a region
+    id via the new shared helper src/domains/information/lead_location.py -- resolve_location_lead_region_id()
+    (LegalityServiceV2.get_region_for_position()), centralizing the parse so a fourth
+    incompatible detail convention cannot be invented by accident in either consumer.
+    The stale effective_certainty() citation above was removed -- that function was
+    already deleted per TCK-20260909-KNOWLEDGE-FACT-EFFECTIVE-CERTAINTY-DEAD-CODE-DISPOSITION
+    and does not exist in src/cognition/knowledge_model.py today.
 
     '
   proof_type: parity
   test_path: tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_belief_contradiction_fires_on_depleted_lead;
-    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction; tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_pipeline_refine_produces_lead_contradiction_matching_isolated_enforce
+    tests/unit/cognition/test_information_seeking.py::TestLeadContradiction; tests/unit/cognition/test_information_seeking.py::TestLeadContradiction::test_pipeline_refine_produces_lead_contradiction_matching_isolated_enforce;
+    tests/unit/domains/information/test_lead_location.py; tests/unit/domains/information/test_phase5_belief_contradiction.py::test_region_danger_seen_contradicts_lead_via_coordinate_detail;
+    tests/unit/domains/information/test_phase5_information_belief_phase.py::test_region_danger_seen_observation_triggers_belief_contradiction_via_production_path
   divergence_note: null
   support_boundary: null
 - id: STRAT-231
@@ -4297,3 +4310,27 @@
     tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py
   divergence_note: null
   proof_type: parity
+- id: STRAT-273
+  text: An entity forms a subjective power estimate of another entity it perceives,
+    refines that estimate from real combat outcomes, and weighs the estimate against
+    its own personality (not its accuracy) before committing to a CombatPosture --
+    specified in docs/mechanics/04_strategic_cognition.md Section 13, completing and
+    enabling the existing src/domains/combat_engagement/ domain rather than a new
+    mechanism.
+  status: missing
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: null
+  proof_type: null
+  test_path: null
+  divergence_note: 'Declared 2026-09-13 (TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER).
+    Most of the underlying machinery already exists in src/domains/combat_engagement/
+    (OpponentPerceptionService, CombatLearning, EngagementRiskEvaluator, CombatPosture)
+    but is gated behind ENABLE_COMBAT_ENGAGEMENT (default OFF) and has never run in
+    a real corpus profile. `status: missing` here means the LAW as specified in Section
+    13 (power-gap-driven observation error, the apparent-power/condition seam, salience-based
+    OpponentModel eviction, the witnessed-combat tier) is not yet implemented -- not
+    that no related code exists. See Section 13''s own Source citation for the real,
+    dormant code this entry tracks completion of.'
+  support_boundary: null
+  evidence_kind: null

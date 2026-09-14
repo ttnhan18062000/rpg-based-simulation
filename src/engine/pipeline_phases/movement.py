@@ -261,7 +261,26 @@ class MovementPhase:
                 continue
 
             mode = ent_upd.navigation.movement_mode_set if (ent_upd and ent_upd.navigation and ent_upd.navigation.movement_mode_set is not None) else entity.navigation.movement_mode
-            
+
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: `entity` above is `state.entities.get
+            # (e_id)` -- the tick-START snapshot, unlike ActionRoutingPhase's own sliding-state
+            # working copy (src/engine/pipeline_phases/actions.py), which materializes every prior-
+            # this-tick EntityUpdate onto its working entities before dispatching action handlers.
+            # MovementSystem.resolve_move() has no such materialization and no access to `update`
+            # at all, so its own real FLED-learning write (apply_fled_learning() in
+            # src/engine/movement.py, reading/writing `entity.cognition`) would silently discard
+            # whatever an EARLIER same-tick phase (e.g. memory_update, which runs before
+            # movement_routing) already staged in `cognition_bundle_set` for this entity --
+            # `EntityUpdate.merge()`'s own cognition_bundle_set field is a whole-object replace,
+            # not a per-subfield merge (src/core/updates.py), and `existing.merge(u_upd)` below
+            # would apply that replace with the newer, cognition-stale write. Patch only the
+            # `.cognition` field here (not a full ApplyPath._apply_entity_update() merge, which
+            # would prematurely apply movement-specific fields this loop itself still needs to
+            # compute) so resolve_move() builds its own real correction on top of the actual
+            # current-tick cognition rather than the stale snapshot.
+            if ent_upd is not None and ent_upd.cognition_bundle_set is not None:
+                entity = replace(entity, cognition=ent_upd.cognition_bundle_set)
+
             move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
             for u_id, u_upd in move_updates.items():
                 existing = refined_entity_updates.get(u_id)

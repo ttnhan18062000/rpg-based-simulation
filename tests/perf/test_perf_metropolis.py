@@ -4,26 +4,54 @@ from src.perf.scenarios import build_metropolis_state
 from tests.tools.perf_assertions import assert_perf_threshold
 
 @pytest.mark.perf
+@pytest.mark.extra_slow
+@pytest.mark.resource_budget_large
 def test_perf_metropolis_stress(perf_harness, request):
     """
     Stress test: 1000 entities in a complex Metropolis environment.
     Goal: Verify O(N) scaling for governance and spatial lookups.
+
+    Re-tiered to extra_slow/resource_budget_large (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER,
+    2026-09-14): this is a 1000-entity, 55-tick (5 warmup + 50 sample) benchmark that already ran
+    23s under the "medium" 60s budget with ENABLE_COMBAT_ENGAGEMENT OFF -- a slow test that was
+    carrying a medium marker regardless of that flag. Turning the flag ON pushed it over the 60s
+    wall clock (TimeoutError), which is what surfaced the mis-tiering, but the re-tier is justified
+    on its own terms: a benchmark already consuming over a third of its budget before this ticket
+    touched anything was never really a "medium" test. The user reviewed the alternative (reduce
+    this ticket's own ~198ms/tick contribution -- only ~18% of the real delta) and chose this
+    re-tier instead, with the real numbers in hand: enabling the flag makes real combat volume rise
+    4.1x (72->297 combat events over 20 ticks), and 82% of the resulting per-tick cost increase is
+    the REST of the engine doing more work because the world now behaves differently (advancement's
+    apply/hard-law-check/observability costs, cooperation, resolution_overhead) -- not this
+    ticket's own combat_engagement phase. Full attribution table and the confirmed soft-gate
+    instance (both thresholds below already breach with the flag OFF and still report green,
+    since assert_perf_threshold() defaults hard=False) are recorded in
+    docs/plans/design_enhancement/performance_optimization/performance_m4_baseline_gate_a_epic.md's
+    own "Confirmed field evidence, 2026-09-14" note -- an existing perf epic already tracks this
+    gap and this ticket routed real evidence into it rather than opening a rival one.
+
+    IMPORTANT: passing here after the re-tier means the wall clock now fits the extra_slow budget.
+    It does NOT mean performance is acceptable -- both thresholds below already breach and
+    assert_perf_threshold() defaults to a soft (warning-only) gate, so a breach has never failed
+    this test and still doesn't. Read the actual reported numbers, not this test's own green/red.
     """
     harness = perf_harness("PERF_1GB_LOCAL")
     # 1000 entities, 50 regions, 1000 buildings
     state = build_metropolis_state(entity_count=1000, region_count=50, buildings_per_region=20)
-    
+
     results = harness.run_benchmark(
         scenario_id="METROPOLIS_1000",
         initial_state=state,
         warmup_ticks=5,
         sample_ticks=50
     )
-    
+
     # Store for reporter
     request.node.perf_results = results
-    
-    # Assertions
+
+    # Assertions -- left exactly as they were before the re-tier above (not touched, per the
+    # gate-integrity rule: this is a tier change, not a fix, and both already breach today under
+    # real combat volume -- see this test's own docstring).
     # We expect > 3 TPS in this very complex scenario (relaxed due to single-threaded overhead)
     assert_perf_threshold(results["avg_tps"], 3.0, "avg TPS (Metropolis 1000 entities)", op=">")
     # p99 should be under 500ms for this high load

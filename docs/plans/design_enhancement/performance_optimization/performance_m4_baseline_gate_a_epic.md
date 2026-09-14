@@ -62,6 +62,48 @@ once. A noisy permanently-red gate trains maintainers to ignore it. Migration re
 classification, stable thresholds, measured false-positive/false-negative behavior, named owners,
 and an expiry for every temporary exception.
 
+### Confirmed field evidence, 2026-09-14 (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER)
+
+Enabling `ENABLE_COMBAT_ENGAGEMENT` for the first time (a previously-dormant, default-OFF domain
+going live) produced a concrete, real-world confirmation of the `assert_perf_threshold` gap above,
+plus raw Gate-A-shaped evidence worth preserving here rather than only in that ticket:
+
+- **Soft-gate confirmed live, not just theoretical**: `tests/perf/test_perf_metropolis.py::
+  test_perf_metropolis_stress` (1000 entities) already breached both its own thresholds
+  (avg TPS 1.8 vs limit 3.0; p99 tick time 1147ms vs limit 500ms) with the flag OFF and still
+  reported green, because both checks default to `hard=False`. The only reason enabling the flag
+  turned this test red was a wall-clock `TimeoutError` from the test harness's own resource budget
+  (conftest.py), not the perf gate itself — the perf gate never fired in either state. This is the
+  concrete instance the gap-table row above was describing in the abstract. Filed as its own
+  diagnosed defect: `TCK-20260914-PERF-THRESHOLD-SOFT-GATE-DEFECT`.
+- **Re-tier, not a fix**: with user sign-off, that test was re-tiered `extra_slow` +
+  `resource_budget_large` (it already ran 23s under a 60s "medium" budget with the flag OFF — a
+  slow test mistakenly carrying a medium marker, independent of this ticket). Assertions/thresholds
+  were left untouched per this epic's own gate-integrity stance above.
+- **A/B attribution (raw Gate-A contributor evidence)**, same scenario, 1000 entities, 20 ticks
+  post-warmup, flag OFF vs ON — real combat volume rose 4.1x (72->297 combat-related events per 20
+  ticks) once entities could actually engage/avoid. Per-phase cost delta (ms/tick, ON minus OFF):
+  `advancement` +543 (~50% of the total delta — `ApplyPath.apply_generation()` + hard-law checks +
+  observability/decision-trace writing, all scaling with real activity volume), `resolution_overhead`
+  +366 (~33%), `cooperation` +167 (~15%), the new `combat_engagement` phase itself +198 (~18%),
+  `final_integrity` +98, `locomotion` +42, `persistence` +37 (new). Total delta ~1096ms/tick.
+  **The new phase was not the dominant cost** — 82% of the increase was the rest of the engine
+  correctly doing more work because the world now behaves differently, not a regression in the new
+  code. This is exactly the contributor-ranking shape PERF-M4-T12 needs and a worked example of
+  what M3's own instrumentation (PERF-M3-T04) should make routine instead of manual.
+- **Three specific system costs surfaced as already-material at this scale**, candidates for M5
+  Gate-A evidence once ranked: `src/domains/cooperation/services.py::find_pending_incoming_offer`
+  (~1.15s tottime / 2.03s cumulative over 5 ticks at 1000 entities, 4500 calls — a real per-call
+  cost that scales with entity count), `src/core/state.py::fingerprint()` (~2.83s cumulative over
+  3 calls at 1000 entities), and `src/observability/cognition/decision_trace_writer.py::
+  _write_entry_to_file` (~1.30s cumulative over 200 calls — file I/O in the hot path). None of these
+  are `combat_engagement`'s own code; they are pre-existing systems this ticket's own profiling
+  happened to expose as already near the tick budget ceiling at metropolis scale. Each filed as its
+  own report-only ticket (observed, not investigated — no root cause, no proposed fix):
+  `TCK-20260914-COOPERATION-FIND-PENDING-OFFER-COST-OBSERVED` (also carries the full A/B table
+  above, verbatim), `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`,
+  `TCK-20260914-DECISION-TRACE-WRITE-COST-OBSERVED`.
+
 ## Assurance coverage matrix
 
 | Layer | Detects | Fast signal | Controlled confirmation |

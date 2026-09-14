@@ -23,12 +23,13 @@ class FeatureFlagManager:
             # SHADOW-validation history exists.
             "ENABLE_MEMORY_UPDATE": FeatureMode.OFF,
             "ENABLE_ADVENTURE_ROUTING": FeatureMode.OFF,
-            # Keep OFF, deferred (TCK-20260824-ROLLOUT-FLAG-DECISIONS): a real bug
-            # (TCK-20260809-COMBAT-ENGAGEMENT-FLAG-SUPPRESSES-PUSH-SHAPER-EVENTS) was already
-            # found and fixed here via live corpus A/B testing, but that was a one-off
-            # investigation, not a standing production validation -- no corpus profile defaults
-            # this on today. Follow-up: TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION.
-            "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.OFF,
+            # Default ON (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER): the deferred
+            # TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION follow-up is superseded by this
+            # ticket's own build -- OpponentModel storage, true_power/apparent_power/gap-driven
+            # uncertainty, witnessed-combat, and combat-learning (KILL/DEFEAT/PERMADEATH/REBIRTH/
+            # FLED) are now real, tested, and wired (docs/mechanics/04_strategic_cognition.md Sec
+            # 13). Flipped after the full tests/integration/ regression run below.
+            "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.ON,
             # Default ON (TCK-20260824-ROLLOUT-FLAG-DECISIONS): real, live production evidence --
             # already ON in both config/simulation_quality/profiles/sandbox_world.yaml and
             # urban_political.yaml, this project's own real SimQ corpus profiles. Flipped the

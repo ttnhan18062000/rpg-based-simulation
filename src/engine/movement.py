@@ -210,11 +210,19 @@ class MovementSystem:
         # property_updates pattern (see "movement_resolution": "POSITION_SWAP" elsewhere in this
         # module) -- purely additive, no change to the real skip_oa/OA resolution logic itself.
         escape_tag: Dict[str, Any] = {}
+        fled_cognition = None
         if engaged_hostiles and skip_oa:
             escape_tag = {
                 "combat_escape": "EVASIVE_SUCCESS",
                 "combat_escape_evaded_ids": list(engaged_hostiles),
             }
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER (Sec 13.5a): a real, weak FLED
+            # learning signal for each hostile evaded here -- gated on ENABLE_COMBAT_ENGAGEMENT,
+            # same as the passive-observation and combat-learning writes elsewhere in this
+            # feature, so the flag stays the single real on/off switch for the whole mechanism.
+            if flags.get("ENABLE_COMBAT_ENGAGEMENT", "OFF") == "ON":
+                from src.domains.combat_engagement.learning_outcome import apply_fled_learning
+                fled_cognition = apply_fled_learning(entity, tuple(engaged_hostiles), current_tick)
 
         # 5. Opportunity Attack Trigger (Checklist Section 8)
         # Logic ID: COMB-009 (Disengagement, pursuit, target stickiness are explicit rules)
@@ -305,7 +313,8 @@ class MovementSystem:
             moved_this_tick=success,
             navigation=nav_upd,
             stamina_update=stamina_upd,
-            property_updates={**actor_up.property_updates, **escape_tag} if escape_tag else actor_up.property_updates
+            property_updates={**actor_up.property_updates, **escape_tag} if escape_tag else actor_up.property_updates,
+            cognition_bundle_set=fled_cognition if fled_cognition is not None else actor_up.cognition_bundle_set,
         )
 
         

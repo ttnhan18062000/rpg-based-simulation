@@ -9,13 +9,16 @@ nested hierarchy under EntityState.cognition. No services or business logic.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple, TYPE_CHECKING
 
 from src.core.self_model import (
     KnowledgeModelComponent,
     KnowledgeFact,
     UnknownFact
 )
+
+if TYPE_CHECKING:
+    from src.domains.combat_engagement.schema import OpponentModel
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Subjective Model Sub-components
@@ -299,8 +302,16 @@ class HabitMemory:
 
 @dataclass(frozen=True, slots=True)
 class CombatMemory:
-    """Phase 4 Combat memory Shell."""
-    opponent_stats: Mapping[str, Any] = field(default_factory=dict)
+    """
+    Durable per-observer opponent power memory (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER,
+    docs/mechanics/04_strategic_cognition.md Sec 13.6). Was an untyped, unwritten "Phase 4 Combat
+    memory Shell" placeholder (confirmed via full-repo grep to have zero real usages anywhere) --
+    the correct, previously-reserved home for `OpponentModel`, which is neither Memory-domain state
+    (src/domains/memory/) nor a KnowledgeFact. Bounded and evicted by salience (lowest-salience
+    entry evicted when full), never oldest-first -- see `src/domains/combat_engagement/
+    memory_store.py`, the only sanctioned write path into this field.
+    """
+    opponent_stats: Mapping[str, OpponentModel] = field(default_factory=dict)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {"opponents_tracked": len(self.opponent_stats)}
