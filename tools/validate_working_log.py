@@ -84,6 +84,11 @@ def run_validation(log_path: Path, done_dir: Path) -> dict:
         "done_count": len(done_tickets),
         "ambiguous_row_count": parse_result.ambiguous_row_count,
         "duplicate_row_count": parse_result.duplicate_row_count,
+        # Structured field (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 1), alongside
+        # the human-readable `errors` strings above -- lets a ratchet-based gate check
+        # (tools/gate_checks/working_log_duplicate_check.py) consume the exact duplicate-ID set
+        # without parsing formatted error text.
+        "duplicate_ticket_ids": sorted(dupes),
     }
 
 
