@@ -15,7 +15,7 @@ tags: [cognition, social]
 Dissolved groups are removed from state outright — nothing captures whether the recruitment that formed them worked out
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -80,7 +80,12 @@ in the codebase for "an entity/record left the active set but its outcome still 
 None yet.
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+`staging_artifacts/TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED/investigation.md` — full
+precedent survey (Clan/Camp both retain-with-terminal-marker, real and live;
+`WorldEventCategory.CAMP_CLEARED`/`PARTY_ABANDONED` initially looked usable but verified to have no
+real producer anywhere — corrected before it became a recommendation) and 3 options with a
+recommendation (Option 1: retain-with-terminal-marker, mirroring Clan/Camp, directly unblocking
+`find_group_for_contract()`'s own documented gap).
 
 ## Related Code Areas
 - `src/systems/world_systems/groups.py` (`GroupSystem.update_groups()`, where `groups_remove`
@@ -92,13 +97,34 @@ None yet — standard tier, staging artifacts created when picked up.
   to answer — not assumed here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**2026-09-14: investigation complete, blocked on design review — no code changed.** Summary (full
+detail in staging_artifacts/investigation.md):
+- Surveyed 2 real, live durable-state precedents for "record left the active set but its outcome
+  still matters": `ClanState.dissolved_tick` and `CampState.active` — both use the same shape:
+  **stop deleting the record, set an in-place terminal field, keep it forever.**
+- Initially treated `WorldEventCategory.CAMP_CLEARED`/`PARTY_ABANDONED` as an existing, ready-made
+  mechanism (both declared in the schema, `PARTY_ABANDONED` even has an orchestrator weight-table
+  entry) — **verified directly and found neither has a real producer anywhere in `src/`**;
+  `CampService.resolve_camp_clearing()` only sets `active_set=False`, no event emitted. Corrected
+  before it became a recommendation, not after.
+- Found that `GroupSystem.find_group_for_contract()`'s own docstring already names this exact
+  ticket and already assumes the fix looks like "stop removing dissolved groups" — a strong,
+  pre-existing signal for which option fits.
+- `StateUpdate.groups_add_or_update` already supports whole-record replace-in-place — no new
+  schema needed for the recommended option.
+- Disclosed real cost: 11 files read `state.groups` today and would need auditing for a "presence
+  implies alive" assumption, the same class of cost Clan/Camp's own adoptions already paid.
+- 3 options laid out, **Option 1 (retain-with-terminal-marker) recommended**, per this ticket's own
+  acceptance criteria calling for a recommendation (unlike the parallel raid-mob ticket this batch,
+  which explicitly asked for none). Design question sent to peer/user for review.
 
 ## Test Summary
-_(pending)_
+_(none — no implementation yet; blocked pending design decision)_
 
 ## Files Changed
-_(pending)_
+_(none — investigation only, per this ticket's own "No implementation proceeds until that design
+question is answered" constraint)_
 
 ## Completion Summary
-_(pending)_
+_(not complete — blocked pending peer/user design decision on staging_artifacts/investigation.md's
+3 options and recommendation)_
