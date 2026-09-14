@@ -1,9 +1,9 @@
 ---
 status: active
-layer: mechanics
+layer: world
 authority: P1
-audience: developer
-last_verified: 2026-09-15
+audience: agent
+tags: [faction, world]
 ---
 
 # Faction War Drivers — Design Proposal (DRAFT, NOT CERTIFIED)

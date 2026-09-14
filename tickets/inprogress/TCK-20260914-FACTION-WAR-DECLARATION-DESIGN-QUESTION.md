@@ -159,7 +159,7 @@ proposing anything:
    *dynamic* (influence-driven) conquest path was not observed to fire for any region in that same
    run, an open reachability question flagged explicitly rather than assumed resolved.
 
-Full proposal drafted: `docs/mechanics/faction_war_drivers_proposal.md` (explicitly marked draft,
+Full proposal drafted: `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (explicitly marked draft,
 not certified, no code written against it).
 
 **Decision-changing update found while verifying §3.2's own dependency**: ran the same probe
@@ -205,7 +205,7 @@ restructured around this (now §3.2, renumbering the prior military-strength ske
   ticket as before. Reaching `WAR` itself is named as a stretch goal, not assumed, until loop #1
   gets its own real driver — stated explicitly rather than implied solved.
 
-Full revised proposal: `docs/mechanics/faction_war_drivers_proposal.md` §3.2/§3.5/§3.6/§4/§6. No
+Full revised proposal: `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §3.2/§3.5/§3.6/§4/§6. No
 code written. Sent to peer for review.
 
 **2026-09-15, peer review round 1 — `public_reputation` spread checked over a longer run, not just

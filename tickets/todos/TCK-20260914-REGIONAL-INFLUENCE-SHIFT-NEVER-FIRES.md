@@ -58,7 +58,7 @@ or generate taxation revenue.
 ## Scope
 - Find the real root cause of why `process_influence_shift()` doesn't move `influence` for real
   deaths in wild regions, despite a code-level trace (done in the sibling design proposal,
-  `docs/mechanics/faction_war_drivers_proposal.md` §2.1) suggesting the classification path
+  `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §2.1) suggesting the classification path
   (`get_faction_id_str()` → `FactionSemanticsService.is_invader()`/`is_protector()`) should
   correctly resolve a spawned monster's death as an "invader" death. Candidates not yet checked:
   - Does `LegalityServiceV2.get_region_for_position()` correctly resolve the death position to the
@@ -94,7 +94,7 @@ or generate taxation revenue.
 
 ## Related Docs
 - `docs/mechanics/regional_sovereignty.md` (the mechanism this ticket investigates)
-- `docs/mechanics/faction_war_drivers_proposal.md` §2.1, §5 (the investigation that found this)
+- `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §2.1, §5 (the investigation that found this)
 
 ## Related Stored Artifacts
 None yet — standard tier, staging artifacts created when picked up.

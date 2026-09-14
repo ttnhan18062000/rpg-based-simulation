@@ -30,7 +30,7 @@ feature
 P2
 
 ## Request Summary
-The faction-sentiment design (`docs/mechanics/faction_war_drivers_proposal.md` §3.2) wanted a
+The faction-sentiment design (`docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §3.2) wanted a
 leader's action to move faction relations categorically differently from a peasant's — good
 realistic-fantasy politics, and a real, stated part of the user's own design intent. Every real
 candidate signal was checked empirically and found unsupported:
@@ -95,7 +95,7 @@ today.
   gap and ships without it)
 
 ## Related Docs
-- `docs/mechanics/faction_war_drivers_proposal.md` §3.2.4 (the investigation and decision to cut
+- `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` §3.2.4 (the investigation and decision to cut
   importance weighting from the sentiment build)
 
 ## Related Stored Artifacts
