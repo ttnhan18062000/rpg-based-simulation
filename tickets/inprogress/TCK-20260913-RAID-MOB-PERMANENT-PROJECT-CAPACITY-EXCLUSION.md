@@ -15,7 +15,7 @@ tags: [cognition, combat]
 `TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION`'s fix sets `max_active_projects=0` permanently on a raid mob — a raider that survives its raid can never take any project again, for the rest of its life, because "mid-raid" was encoded as a permanent property instead of a state
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -73,7 +73,14 @@ do, even though the reason it was excluded (the raid) is long over.
 None yet.
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+`staging_artifacts/TCK-20260913-RAID-MOB-PERMANENT-PROJECT-CAPACITY-EXCLUSION/investigation.md` —
+full investigation: no "raid concluded" signal exists anywhere in the codebase (mob, camp, or
+world level); `difficulty_tier=4` confirmed NOT a real separate reason for reduced capacity
+(other tier-4 factions run the full project system); the one real, relevant existing design
+commitment is `docs/parity_ledger/world_dynamics.yaml`'s WORLD-034 ("Raid mobs do not return
+home," verified, P0) — evidence worth weighing but not a settled answer, since it's a navigation
+question, not a project-eligibility one. 3 options laid out for peer/user review, no
+recommendation given between them per this ticket's own instruction.
 
 ## Related Code Areas
 - `src/world/raid.py` (`RaidService.spawn_raid()`, where `max_active_projects=0` is set)
@@ -84,13 +91,34 @@ None yet — standard tier, staging artifacts created when picked up.
   specific entity" is the central open question — not resolved here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+**2026-09-14: investigation complete, blocked on design review — no code changed.** Summary (full
+detail in staging_artifacts/investigation.md):
+- No "raid concluded" signal exists anywhere: not on `EntityState`, not a raid-instance id, nothing
+  in `raid.py` or `camp.py` beyond the camp-level `last_raid_tick` cadence field (which tracks the
+  camp's own next-raid-eligibility, not any individual mob's raid status).
+- `difficulty_tier=4` ruled out as a real, separate justification for permanent reduced capacity —
+  checked directly (per this ticket's own instruction): `DIFFICULTY_TIERS` only scales combat/
+  reward stats, and other real tier-4 factions run the full project system with no reduction.
+- The one real, relevant existing design commitment found: `docs/parity_ledger/
+  world_dynamics.yaml`'s WORLD-034 ("Raid mobs do not return home," verified, P0) — a genuine
+  precedent for raid mobs having a permanently-diverged lifecycle, but it answers a navigation
+  question, not this ticket's project-eligibility question; noted as evidence, not treated as
+  settling the decision.
+- Also found, as adjacent context rather than in-scope: `docs/world/raid_boss_camp_contract.md`'s
+  own documented "Raid outcome" mechanic (settlement damage / raid suppression) has **zero**
+  matching implementation anywhere in `src/` — likely legacy-only documentation or an
+  emergent-rather-than-explicit mechanic. Not this ticket's problem to fix, but relevant: it means
+  even a world-level "raid concluded" event doesn't exist today for a mob-level fix to borrow from.
+- 3 options laid out (leave permanent / build a real "raid concluded" signal / use a cruder
+  proxy signal), no recommendation given between them, per the ticket's own explicit instruction.
+  Design question sent to peer/user for review.
 
 ## Test Summary
-_(pending)_
+_(none — no implementation yet; blocked pending design decision)_
 
 ## Files Changed
-_(pending)_
+_(none — investigation only, per this ticket's own "No implementation without review" constraint)_
 
 ## Completion Summary
-_(pending)_
+_(not complete — blocked pending peer/user design decision on staging_artifacts/investigation.md's
+3 options)_
