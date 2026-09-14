@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P2
 audience: agent
 ticket_id: TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE
-phase: open
+phase: done
 date: 2026-09-13
 tags: [world]
 ---
@@ -15,7 +15,7 @@ tags: [world]
 `GuildAction.visit()`'s lead-generation hardcodes a resource-content ID string directly in code — the next content rename breaks it silently and identically to how it just broke
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 standard
@@ -70,11 +70,14 @@ This ticket is scoped as **the question, not a chosen mechanism**:
 - [x] A design decision on where the resource-kind identity should come from, with real options
       weighed, brought to peer/user review before implementation. Done: 3 options weighed
       (content-declared tag / derive from source_region_tags / named constant + fail-loud test),
-      with a recommendation, sent for review.
-- [ ] A real test that fails loudly if the referenced resource kind(s) stop matching the real
-      content catalog — the specific gap that let the original bug survive silently. **Not yet —
-      blocked on the design decision above.**
-- [x] No implementation without the design decision above. Honored: zero source/test changes.
+      with a recommendation. **Peer/user approved Option 3.**
+- [x] A real test that fails loudly if the referenced resource kind(s) stop matching the real
+      content catalog — the specific gap that let the original bug survive silently. Done:
+      `test_guild_lead_resource_kind_exists_in_the_real_content_catalog`, verified it actually
+      detects a violation (checked `ResourceRegistry.contains()` against both a real and a
+      fabricated id directly) before trusting a clean-repo pass as meaningful.
+- [x] No implementation without the design decision above. Honored: implementation began only
+      after peer/user approval.
 
 ## Related Tickets
 - `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (in progress — origin of
@@ -105,8 +108,8 @@ second hardcode via the registry lookup the function already performs nearby) re
   the hardcoded ID goes stale" test is the central open question — not assumed either way here.
 
 ## Implementation Notes
-**2026-09-14: investigation complete, blocked on design review — no code changed.** Summary (full
-detail in staging_artifacts/investigation.md):
+**Phase 1: investigation, blocked on design review — no code changed.** Summary (full detail in
+staging_artifacts/investigation.md):
 - Found a **second** hardcoded literal in the same lead-generation block, not just the one the
   ticket names: `subject="iron_ore"` alongside `node.kind == "iron_vein"` — both would break
   identically and silently on a content rename.
@@ -116,19 +119,35 @@ detail in staging_artifacts/investigation.md):
 - Checked and rejected `source_region_tags` as a reuse candidate: it answers "which regions is
   this resource found in," not "should the guild generate rumor leads about it" — a real semantic
   mismatch, not a fit.
-- 3 options laid out, **Option 3 (named constant + fail-loud catalog test, deriving the second
-  hardcode via the same `ResourceRegistry` lookup the function already performs a few lines below)
-  recommended**, given this ticket's own Out of Scope explicitly excludes broadening
-  lead-generation coverage — a full content-tagging mechanism (Option 1) would be infrastructure
-  for a need this ticket itself says isn't there. Design question sent to peer/user for review.
+- 3 options laid out, Option 3 recommended given this ticket's own Out of Scope explicitly
+  excludes broadening lead-generation coverage — a full content-tagging mechanism (Option 1) would
+  be infrastructure for a need this ticket itself says isn't there.
+
+**Phase 2: Option 3 approved and built.**
+- Added `GUILD_LEAD_RESOURCE_KIND = "iron_vein"` as a named module-level constant in
+  `src/town/guild.py`, replacing the inline literal.
+- Derived the second hardcode (`subject="iron_ore"`) from
+  `ResourceRegistry.get(node.kind).yield_item`, reusing the same registry lookup the scarcity
+  block already performs a few lines below — no new infrastructure.
+- Added the required fail-loud catalog-existence test, and a second test proving the subject is
+  genuinely derived from the catalog rather than a value copied into the test.
 
 ## Test Summary
-_(none — no implementation yet; blocked pending design decision)_
+See staging_artifacts (→ stored_artifacts) `test_plan.md`. 2 new tests in
+`tests/unit/world/test_guild_pipeline.py`; the fail-loud test's own detection verified directly
+(checked `ResourceRegistry.contains()` against a real id and a fabricated one) before trusting a
+clean-repo pass as meaningful. Broader guild/resource/information regression: 51 passed.
 
 ## Files Changed
-_(none — investigation only, per this ticket's own "No implementation without the design decision"
-constraint)_
+- `src/town/guild.py` — `GUILD_LEAD_RESOURCE_KIND` constant, `subject` derived from
+  `ResourceRegistry`.
+- `tests/unit/world/test_guild_pipeline.py` — 2 new tests.
+- `staging_artifacts/TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE/{investigation,plan,test_plan}.md`.
 
 ## Completion Summary
-_(not complete — blocked pending peer/user design decision on staging_artifacts/investigation.md's
-3 options and recommendation)_
+Investigated where `GuildAction.visit()`'s hardcoded resource-kind identity should come from,
+found a second related hardcode the ticket itself didn't name, and — after peer/user approved
+Option 3 — built a named constant plus a fail-loud catalog-existence test, deriving the second
+hardcode via a registry lookup the function already performs nearby rather than adding new
+content-authoring infrastructure the ticket's own Out of Scope forecloses. A future rename now
+fails a real, discoverable test instead of silently zeroing out lead generation again.

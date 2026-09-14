@@ -1,8 +1,10 @@
 # Investigation — TCK-20260913-GUILD-LEAD-RESOURCE-ID-HARDCODE-SHAPE
 
-**Per this ticket's own explicit acceptance criteria: "No implementation without the design
-decision above." This is a design question with real options and a recommendation, not a
-decision. Nothing in `src/` or `tests/` is changed by this investigation.**
+**Peer/user approved Option 3 below. This document originally brought a design question with real
+options and a recommendation, per this ticket's own explicit acceptance criteria ("No
+implementation without the design decision above"), with nothing in `src/`/`tests/` changed. The
+options and reasoning are preserved as the record of that decision — see the ticket's own
+Implementation Notes for the build.**
 
 ## The current hardcode, read directly from `src/town/guild.py`
 
