@@ -27,34 +27,50 @@ This matters directly for evaluating Option 1.
 correct `.merge()` on every dataclass in the file, recursively, because the real collision surface
 goes past the top level. Two concrete cases proven by the real writer set itself:
 
-- `combat_actions.py` (Step 5a) and `combat_engagement/phase.py` (passive observation) can both
-  write to the **same** `memory.combat.opponent_stats` dict for the **same entity** in the **same
-  tick**, for **different `subject_key`s** (an entity resolves a real fight via `execute_attack()`
-  and is *also* the nearest evaluator/witness for a different hostile in `CombatEngagementPhase`'s
-  own per-actor loop). A `memory`-level or even `CombatMemory`-level "replace" would still lose one
-  write; only merging `opponent_stats` at the **dict-key** level is actually correct here.
 - `memory_update` (this ticket's own first-action fix, above) and any future writer could
   legitimately touch two *different* leaves under the same `MemoryModel` (`causal` vs. `combat`) in
   the same tick — a `CognitionModel`-level "replace whichever changed" is too coarse; `MemoryModel`
   itself needs to merge its own 6 sub-fields independently.
 
-So a **correct** Option 1 needs recursive merge logic at every level down to individual dict-key/
-tuple-append granularity for `causal.entries` (append/cap), `combat.opponent_stats` (dict union with
-salience-eviction poking through), `spatial.visited_regions` (dict union), etc. — not a generic
-"prefer the changed field" reflection helper, because "changed" isn't well-defined for a field two
-writers touch with genuinely different intents (e.g., two different dict keys). This is a real,
-ongoing engineering surface (~15+ dataclasses today, each needing its own correct merge semantics
-matching what its own collection type means), and every future field addition needs a matching
-merge case — the exact cost the ticket named as Option 1's price, now sized against the real schema
-rather than estimated.
+**Correction, verified empirically rather than assumed** (peer review caught this before it shipped
+as a claim): an earlier draft of this investigation additionally claimed `combat_actions.py` (Step
+5a) and `combat_engagement/phase.py` (passive observation) writing *different keys* of the same
+`memory.combat.opponent_stats` dict for the same entity in the same tick was a case Option 2
+(read-through alone) could not handle, and that Option 1 would be needed for it. **That claim was
+wrong, and disproven with a real pipeline run**, not just re-reasoned: constructed a real 3-entity
+scenario (`AuthoritativeApplyPipeline.refine()`, a real `ATTACK` task through `action_routing` +
+a real nearest-hostile evaluation through `combat_engagement`'s own main loop, same tick, same
+attacker) and confirmed the attacker's own final `opponent_stats` contains **both** keys
+(`entity.2` from the real combat resolution, `entity.3` from the passive evaluation) —
+`_read_through_cognition()` alone, unmodified, handles this correctly. The reason: `action_routing`
+and `combat_engagement` are not separate accumulators — pipeline.py threads one `update`/`tick_update`
+StateUpdate linearly through every phase in sequence, so `combat_actions.py`'s own write (staged
+during `action_routing`, which runs earlier) is already present in the very `tick_update` that
+`combat_engagement`'s own `_read_through_cognition()` checks. Writer B's read-through sees writer
+A's already-merged dict entry and adds its own key on top; whole-object replace of that *combined*
+result is then correct, because there was only ever one write in flight for that entity at
+`combat_engagement`'s own read point, not two competing ones.
+**This narrows Option 1's justification, not just its estimated cost**: the one concrete
+dict-key-collision case in today's writer set is not a real gap in Option 2 — it was already
+correctly covered by the read-through pattern once traced through the real pipeline rather than
+assumed from the writer table alone. Option 1 would still be needed only for a hypothetically
+different failure shape — two writers staging into *genuinely separate* accumulators that never
+converge before either one's own read-through point (not observed in any real writer today; the
+pipeline's own single-accumulator design makes this hard to construct by accident).
 
-**Verdict: correct, but expensive and slow-changing.** It is the only option that makes a *dict-key-
-level* collision (the `opponent_stats` case above) structurally safe without any writer discipline
-at all. It is also the option most likely to itself contain a bug on day one (getting tuple-append
-vs. tuple-replace semantics right per field, for a schema this deep, is easy to get subtly wrong)
-and the hardest to keep correct as the schema grows — schema growth here is not slow: this file has
-gained 3 new leaf types in the last month alone for combat_engagement, role_model, and lineage
-features.
+So the actual remaining engineering cost of a *correct* Option 1 is: recursive merge logic at every
+level of the tree, needed only to protect against writers that might one day exist outside the
+pipeline's own single-accumulator discipline — a real, ongoing engineering surface (~15+ dataclasses
+today, each needing its own correct merge semantics matching what its own collection type means),
+solving a failure mode that has not been observed and that the pipeline's own architecture already
+makes hard to construct.
+
+**Verdict: correct in principle, but solves a hypothetical failure mode the real pipeline's own
+single-accumulator design already prevents in every writer observed today.** It is also the option
+most likely to itself contain a bug on day one (getting tuple-append vs. tuple-replace semantics
+right per field, for a schema this deep, is easy to get subtly wrong) and the hardest to keep
+correct as the schema grows — schema growth here is not slow: this file has gained 3 new leaf types
+in the last month alone for combat_engagement, role_model, and lineage features.
 
 ## Option 2 — mandatory typed write helper
 
@@ -66,17 +82,16 @@ the identical three-step lookup (this phase's own local `entity_updates`, then t
 accumulated `tick_update`, then the entity snapshot) — 6 of today's 9 writers already hand-wrote
 this exact sequence independently. Centralizing it is a pure extraction, not new design.
 
-This does **not** solve the `opponent_stats` dict-key-collision case above by itself — reading
-through gets a writer the *up-to-date* `CognitionModel` to build its patch from, but two writers in
-the *same* phase call building from the *same* read-through result would still need to merge their
-own dict writes explicitly (as `combat_engagement/phase.py`'s own witnessed-combat code already
-does, manually, via `store_opponent_model()`'s upsert). What it *does* fully solve is the actual
-observed failure mode: an entity's cognition write from **phase N** silently erasing **phase N-1**'s
-own write for the same entity, which is the concrete bug this ticket exists because of.
+Verified directly (see the correction above) that this pattern, applied consistently, **does**
+correctly handle same-tick, same-entity, different-dict-key writes across two different pipeline
+phases — not just the "phase N replaces phase N-1's entire write" failure mode this ticket was
+originally filed for, but the narrower key-level collision too, as a consequence of the pipeline's
+own single-accumulator threading rather than anything the helper itself has to reason about.
 
-**Verdict: cheap, addresses the actual observed failure class, does not touch `merge()`'s own
-semantics (lower blast radius), but relies on adoption** — a future writer that skips the helper and
-reads `entity.cognition` directly is exactly as unsafe as today.
+**Verdict: cheap, addresses the actual observed failure class (and, verified, the dict-key-collision
+class too), does not touch `merge()`'s own semantics (lower blast radius), but relies on adoption**
+— a future writer that skips the helper and reads `entity.cognition` directly is exactly as unsafe
+as today.
 
 ## Option 3 — architecture/corpus test guardrail
 
@@ -103,14 +118,21 @@ delivers the same "a future writer can't discover the unsafe path first" propert
 argument calls for, at a small fraction of Option 1's engineering and ongoing-maintenance cost, and
 without touching `EntityUpdate.merge()`'s existing, already-tested semantics for every *other* field.
 
-Option 1 would still be worth doing **only if** a real, live instance of the dict-key-collision case
-(two writers touching different keys of the same nested dict, e.g. `opponent_stats`, in the same
-tick) is ever observed causing an actual data-loss bug — that specific failure mode is not fixed by
-Option 2 alone. No such instance has been observed; `combat_engagement/phase.py`'s own witnessed-
-combat code already handles its own internal case of this manually and correctly (`_merge_
-observation_into_updates()`'s own upsert-by-key logic). Recommend treating Option 1 as a documented,
-deferred escalation path if that specific failure mode is ever actually observed, not building it
-speculatively now.
+**Revised, per peer's own framing of this exact question**: earlier drafts of this section treated
+Option 1 as a documented, deferred escalation path in case the dict-key-collision case (two writers
+touching different keys of the same nested dict, e.g. `opponent_stats`, in the same tick) was ever
+observed causing real data loss. That framing is now retired, not just softened. The empirical check
+above (a real pipeline run, not reasoning about the writer table) confirmed both writers stage into
+the *same* accumulated `update`/`tick_update` object, so `_read_through_cognition()` already covers
+this case today — there is no gap for Option 1 to stand ready for. Per the peer's own logic: "if
+[Option 2 already covers it], Option 1 isn't a deferred escalation path — it's unnecessary, and the
+ticket should say so rather than leaving a speculative escalation on the books." Recording that here
+rather than carrying forward a speculative escalation path for a failure mode that isn't real given
+how this pipeline is actually built. `combat_engagement/phase.py`'s own witnessed-combat code
+additionally handles its own internal same-phase case of this manually and correctly (`_merge_
+observation_into_updates()`'s own upsert-by-key logic), for what it's worth as a second, independent
+data point — but the pipeline-level architecture is the reason Option 1 is unnecessary, not this one
+call site alone.
 
 `src/engine/patches.py::CognitionPatch.merge()` reproduces the same whole-object-replace pattern but
 remains genuinely dead (confirmed again: still only ever applied to a single already-fully-merged
