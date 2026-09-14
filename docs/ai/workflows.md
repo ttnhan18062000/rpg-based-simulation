@@ -162,7 +162,7 @@ boundary.
 | Phase | What happens |
 |---|---|
 | Discover | Lists tickets in the folder or reads the epic's Related Tickets section; filters out already-done |
-| Implement | Runs `implement-ticket` for each ticket sequentially — stops on first gate failure |
+| Implement | Runs `implement-ticket` for each ticket sequentially — stops on first gate failure. Once all tickets are done: `folder` mode moves the completed `tickets/todos/{folder}/` directory to `tickets/done/`; `epic_id` mode closes the epic ticket itself (frontmatter `phase: done`/`status: historical`, body `## Status: DONE`, moved to `tickets/done/{epic_id}.md`) — TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING |
 | Report | Summarises results: DONE count, gate failures, remaining tickets |
 
 **Args:**
