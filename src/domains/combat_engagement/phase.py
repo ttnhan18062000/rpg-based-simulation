@@ -125,14 +125,11 @@ def _read_through_cognition(
     any other phase that runs before combat_engagement), (3) the tick-start snapshot on the entity
     itself (no prior write this tick at all).
     """
+    from src.core.cognition_write import read_through_cognition
+
     own_update = entity_updates.get(entity_id)
-    if own_update is not None and own_update.cognition_bundle_set is not None:
-        return own_update.cognition_bundle_set
-    if tick_update is not None:
-        prior_update = tick_update.entity_updates.get(entity_id)
-        if prior_update is not None and prior_update.cognition_bundle_set is not None:
-            return prior_update.cognition_bundle_set
-    return fallback_cognition
+    prior_update = tick_update.entity_updates.get(entity_id) if tick_update is not None else None
+    return read_through_cognition(fallback_cognition, own_update, prior_update)
 
 
 def _merge_observation_into_updates(

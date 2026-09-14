@@ -42,8 +42,13 @@ def test_party_leadership_loss_dissolution():
     state_dead_leader = replace(state, entities={1: h1_dead, 2: h2})
     
     update = GroupSystem.update_groups(state_dead_leader)
-    
-    assert 100 in update.groups_remove
+
+    # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now retained via
+    # groups_add_or_update with dissolution_tick set (in place, mirroring ClanState.dissolved_tick/
+    # CampState.active), not deleted via groups_remove.
+    dissolved = next((g for g in update.groups_add_or_update if g.id == 100), None)
+    assert dissolved is not None
+    assert dissolved.dissolution_tick == state_dead_leader.tick
     assert update.entity_updates[1].group_id_set == -1
     assert update.entity_updates[2].group_id_set == -1
 
@@ -91,9 +96,13 @@ def test_party_member_abandonment_on_distance():
     state = AuthoritativeState(tick=1, seed=1, entities={1: h1, 2: h2}, groups={100: group})
     
     update = GroupSystem.update_groups(state)
-    
-    # Since h2 is gone, only h1 remains. 
+
+    # Since h2 is gone, only h1 remains.
     # But a group needs >= 2 members (line 74 in groups.py)
     # So the group dissolves.
-    assert 100 in update.groups_remove
+    # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: retained with dissolution_tick set,
+    # not deleted via groups_remove.
+    dissolved = next((g for g in update.groups_add_or_update if g.id == 100), None)
+    assert dissolved is not None
+    assert dissolved.dissolution_tick == state.tick
     assert update.entity_updates[2].group_id_set == -1

@@ -185,3 +185,36 @@ def test_find_group_for_contract_returns_none_when_no_group_formed():
     found = GroupSystem.find_group_for_contract(state, "contract_never_formed_a_group")
 
     assert found is None
+
+
+def test_find_group_for_contract_answers_the_question_after_dissolution():
+    """TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now retained in
+    state.groups with dissolution_tick set (in place, mirroring ClanState.dissolved_tick/
+    CampState.active), not deleted -- find_group_for_contract() can now answer "did this
+    recruitment ever produce a group, and how did it end" after dissolution, which it could not
+    before (the group used to be removed outright, and this would return None)."""
+    leader = V2EntityBuilder(10).kind("human").location(0, 0).combat(readiness=100.0, alive=True).build()
+    member = V2EntityBuilder(1).kind("human").location(0, 0).combat(readiness=100.0, alive=True).build()
+    group = GroupRecord(id=100, leader_id=10, member_ids={1, 10}, anchor=(0, 0), contract_id="rec_contract_1")
+
+    state = AuthoritativeState(
+        tick=5, seed=1, entities={1: member, 10: leader}, groups={100: group},
+    )
+
+    # Kill the leader this same tick -- the group dissolves.
+    from src.core.updates import CombatUpdate
+    leader_death = EntityUpdate(entity_id=10, combat=CombatUpdate(alive_set=False))
+    dissolution_update = GroupSystem.update_groups(state, StateUpdate(entity_updates={10: leader_death}))
+
+    dissolved_record = next(g for g in dissolution_update.groups_add_or_update if g.id == 100)
+    assert dissolved_record.dissolution_tick == 5
+
+    from src.engine.apply import ApplyPath
+    final_state = ApplyPath.apply_generation(state, dissolution_update)
+
+    found = GroupSystem.find_group_for_contract(final_state, "rec_contract_1")
+
+    # The record is still there -- not None -- and carries the outcome timing.
+    assert found is not None
+    assert found.id == 100
+    assert found.dissolution_tick == 5

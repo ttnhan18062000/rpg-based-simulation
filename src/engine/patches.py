@@ -725,6 +725,14 @@ class SelfModelPatch(ComponentPatch):
 
 @dataclass(frozen=True, slots=True)
 class CognitionPatch(ComponentPatch):
+    # TCK-20260914-COGNITION-BUNDLE-SET-WHOLE-OBJECT-REPLACE-HAZARD: this merge() reproduces the
+    # identical whole-object-replace pattern as EntityUpdate.merge()'s own cognition_bundle_set
+    # field (src/core/updates.py) -- a second instance of the same shape. Not a live collision site
+    # today: extract_patches() is only ever called on a single, already-fully-merged EntityUpdate
+    # (src/engine/apply.py::_apply_entity_update_to_dict), so this merge() is never exercised
+    # against two colliding CognitionPatch objects in the current call graph. Left as-is (see that
+    # ticket's own investigation for why); noted here so a future reader debugging a
+    # CognitionPatch-level issue isn't surprised to find the same shape twice.
     cognition_bundle_set: Optional[Any] = None  # CognitionModel
 
     def is_noop(self) -> bool:

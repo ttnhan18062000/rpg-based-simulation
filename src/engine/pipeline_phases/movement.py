@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from src.core.enums import ReasonCode
 from src.core.movement_modes import MovementMode
 from src.core.strategic import ContractKind, ContractStatus
+from src.core.cognition_write import read_through_cognition
 from src.core.updates import (
     EntityUpdate,
     NavigationUpdate,
@@ -278,8 +279,9 @@ class MovementPhase:
             # would prematurely apply movement-specific fields this loop itself still needs to
             # compute) so resolve_move() builds its own real correction on top of the actual
             # current-tick cognition rather than the stale snapshot.
-            if ent_upd is not None and ent_upd.cognition_bundle_set is not None:
-                entity = replace(entity, cognition=ent_upd.cognition_bundle_set)
+            base_cognition = read_through_cognition(entity.cognition, ent_upd)
+            if base_cognition is not entity.cognition:
+                entity = replace(entity, cognition=base_cognition)
 
             move_updates = MovementSystem.resolve_move(state, entity, nav_target, mode=mode)
             for u_id, u_upd in move_updates.items():

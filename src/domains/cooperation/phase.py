@@ -186,6 +186,13 @@ class CooperationPhase:
         # 6. Evaluate party cohesion for active groups in this tick
         new_groups_add = list(update.groups_add_or_update)
         for g_id, g_rec in state.groups.items():
+            # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now
+            # retained in state.groups with dissolution_tick set, not removed -- without this
+            # check, this loop would re-evaluate cohesion (and re-apply the "LEADER_LOST"/
+            # "MEMBER_ABANDONING" trust/grudge penalty below) against every already-dissolved
+            # group's former members, forever, every tick.
+            if g_rec.dissolution_tick is not None:
+                continue
             rep = PartyCohesionService.evaluate(g_id, state)
             if rep.status in ("MEMBER_ABANDONING", "LEADER_LOST"):
                 # Handle group cohesion collapse: dissolve or signal retreat.

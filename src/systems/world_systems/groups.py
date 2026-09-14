@@ -26,7 +26,6 @@ class GroupSystem:
         from src.core.state import GroupRecord
         
         groups_add_or_update: List[GroupRecord] = []
-        groups_remove: List[int] = []
         entity_updates: Dict[int, EntityUpdate] = {}
 
         def is_alive(e_id: int) -> bool:
@@ -75,7 +74,15 @@ class GroupSystem:
         for g_id in sorted(relevant_groups):
             group = state.groups.get(g_id)
             if not group: continue
-            
+            # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now
+            # retained in state.groups forever (dissolution_tick set in place, mirroring
+            # ClanState.dissolved_tick/CampState.active), not removed -- get_relevant_group_ids()
+            # falls back to ALL of state.groups.keys() on a force_full_scan tick or when no
+            # dirty_set exists, which would otherwise re-run leadership/cohesion/dissolution logic
+            # against every already-dissolved group, forever, on every such tick.
+            if group.dissolution_tick is not None:
+                continue
+
             leader = state.entities.get(group.leader_id)
 
             # Logic ID: SOC-176 (Party dissolves when leader is dead/missing)
@@ -95,7 +102,12 @@ class GroupSystem:
                 or not is_alive(group.leader_id)
                 or not is_active(group.leader_id)
             ):
-                groups_remove.append(g_id)
+                # TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: retain the record with an
+                # in-place terminal marker instead of deleting it, mirroring ClanState.dissolved_tick
+                # / CampState.active -- the only two real, live precedents for this shape in this
+                # codebase. Enables find_group_for_contract() to answer "did this recruitment ever
+                # produce a group, and how did it end" after dissolution, which it could not before.
+                groups_add_or_update.append(replace(group, dissolution_tick=state.tick))
 
                 for m_id in group.member_ids:
                     # Logic ID: SOC-179 (Party dissolution updates member group IDs)
@@ -155,7 +167,7 @@ class GroupSystem:
                 member_positions.append(m_pos)
 
             if len(new_member_ids) < 2:
-                groups_remove.append(g_id)
+                groups_add_or_update.append(replace(group, dissolution_tick=state.tick))
                 for m_id in new_member_ids:
                     entity_updates[m_id] = EntityUpdate(entity_id=m_id, group_id_set=-1)
                 continue
@@ -330,7 +342,6 @@ class GroupSystem:
         return StateUpdate(
             entity_updates=entity_updates,
             groups_add_or_update=groups_add_or_update,
-            groups_remove=groups_remove
         )
 
     @staticmethod
@@ -343,10 +354,14 @@ class GroupSystem:
         Sorted iteration by group id for determinism.
         TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING: the forward direction
         (GroupRecord.contract_id, set at formation in update_groups() above) already
-        existed; this is the missing reverse direction. Only finds groups while they're
-        alive -- dissolved groups are removed from state.groups outright (groups_remove
-        above), so this cannot answer the question after dissolution
-        (TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED).
+        existed; this is the missing reverse direction.
+
+        TCK-20260913-GROUP-DISSOLUTION-OUTCOME-NOT-CAPTURED: dissolved groups are now retained in
+        state.groups with `dissolution_tick` set (in place, never removed), so this DOES answer
+        the question after dissolution too -- callers that need to distinguish "currently active"
+        from "dissolved" must check the returned record's own `.dissolution_tick` (None = still
+        alive). Previously dissolved groups were deleted outright and this could only ever answer
+        "is this contract's recruitment currently a live group."
         """
         for group_id, group in sorted(state.groups.items()):
             if group.contract_id == contract_id:
