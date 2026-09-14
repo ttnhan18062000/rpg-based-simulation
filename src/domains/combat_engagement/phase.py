@@ -286,41 +286,57 @@ class CombatEngagementPhase:
 
         semantics_service = get_faction_semantics_service()
 
-        # To avoid pairwise NxN comparison, we query the spatial grid or fallback to capped Euclidean range
+        # Lazy import matching RoleModelSelectionPhase's own precedent for the identical query
+        # shape (src/strategy/role_model_phase.py) -- avoids a module-level import cycle risk
+        # between src.engine and src.domains.combat_engagement.
+        from src.engine.spatial_query import SpatialQueryService
+
+        # Real spatial index query -- see the TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER
+        # comment below for why this replaced a dead hand-rolled grid check.
         for actor in actors:
             # Hostility-filtered (candidate_entity, dist_sq) pairs -- nearest hostile wins below.
             hostile_candidates: List[Tuple[EntityState, float]] = []
+
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: hoisted out of _consider() -- both
+            # are actor-invariant (same value for every candidate `e` this actor considers) but
+            # were being recomputed on every single call, found via profiling the O(n^2) spatial-
+            # grid fix above (get_faction_id_str/is_hostile_compat were the real hot path, not the
+            # neighbor lookup itself, once that was fixed).
+            actor_faction = get_faction_id_str(actor)
+            rel_context = RelationContext(combat_engaged=True)
 
             def _consider(e: EntityState) -> None:
                 if not (e.combat.alive and e.lifecycle.active):
                     return
                 dist_sq = ((e.navigation.position[0] - actor.navigation.position[0]) ** 2 +
                            (e.navigation.position[1] - actor.navigation.position[1]) ** 2)
-                actor_faction = get_faction_id_str(actor)
                 target_faction = get_faction_id_str(e)
-                rel_context = RelationContext(combat_engaged=True)
                 if semantics_service.is_hostile_compat(actor_faction, target_faction, rel_context):
                     hostile_candidates.append((e, dist_sq))
 
-            # Utilize the spatial query cache to resolve neighbors within range 10
-            # M7/M10 optimization: check if state contains spatial_index or grid
-            grid = getattr(state, "spatial_grid", None)
-            if grid is not None:
-                # Query index with absolute cap
-                nearby_ids = grid.query_radius(actor.navigation.position, 10.0)
-                for nid in nearby_ids:
-                    if nid != actor.id:
-                        e = state.entities.get(nid)
-                        if e is not None:
-                            _consider(e)
-            else:
-                # Fallback range check
-                for e in state.entities.values():
-                    if e.id != actor.id:
-                        dist_sq = ((e.navigation.position[0] - actor.navigation.position[0]) ** 2 +
-                                   (e.navigation.position[1] - actor.navigation.position[1]) ** 2)
-                        if dist_sq <= 100.0:
-                            _consider(e)
+            # TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER: this block previously checked
+            # `getattr(state, "spatial_grid", None)` for a real spatial index before falling back
+            # to an O(n) full-entity scan per actor -- but `spatial_grid` was never a real
+            # AuthoritativeState attribute (confirmed: only an unrelated, likewise-unpopulated
+            # `_spatial_grid_cache` field exists), so `grid` was always `None` and every actor,
+            # every tick, silently took the "fallback" path -- an O(n^2) scan for the whole loop,
+            # present since 2026-05-30 (git blame), dormant only because ENABLE_COMBAT_ENGAGEMENT
+            # defaulted OFF until this ticket's own Step 6. A real, disclosed defect: a construct
+            # whose failure mode is silence -- no error, no warning, an optimization that simply
+            # never engaged. Measured directly: ~1.9s per CombatEngagementPhase.apply() call at
+            # 1000 entities before this fix (flat regardless of real combat-event count, ruling out
+            # witnessed-combat as the cost driver). Fixed by using the same real, populated,
+            # cached spatial index (`SpatialQueryService.nearby_entities()`,
+            # `src/engine/spatial_query.py`, backed by `WorldIndexService.get_indexes()`) that
+            # `RoleModelSelectionPhase` already uses for an identical radius-query shape
+            # (`src/strategy/role_model_phase.py`) -- not a design choice, a working replacement
+            # for a check that was never wired to anything real.
+            nearby_ids = SpatialQueryService.nearby_entities(state, actor.navigation.position, 10.0)
+            for nid in nearby_ids:
+                if nid != actor.id:
+                    e = state.entities.get(nid)
+                    if e is not None:
+                        _consider(e)
 
             if not hostile_candidates:
                 # TCK-20260904-COMBAT-RISK-BELIEF-PRODUCER-DESIGN (correction, 2026-09-08): the
