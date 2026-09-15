@@ -212,7 +212,141 @@ large" and "the feature never runs" are indistinguishable without this measureme
 
 ---
 
-## 7 · Related
+## 7 · Proposed Design (2026-09-15 — resolves the Open Decisions in §5)
+
+This section answers peer review's brief: what's instrumented, how the corpus runs, what the
+output looks like, and what it cannot see — stated as plainly as what it can. **This is a plan,
+not an implementation; nothing below has been built.** Several items below are worked examples
+from this week's own combat-engagement investigation, landing after this doc was first drafted.
+
+### 8.1 What's instrumented
+
+**`src/` and `tools/`, both, full scope — not narrowed to Mechanics-Bible-declared features for
+v1.** This directly resolves Open Decision #5: `tools/audit_unreachable_code.py` defines
+`SRC_ROOTS = [Path("src")]` and scans `TEST_TOOL_ROOTS = [Path("tests"), Path("tools")]` only for
+*occurrences* (confirmed by direct read, `tools/audit_unreachable_code.py:86-87`) — so a
+zero-caller function under `tools/` is invisible to it by construction, and `tools/` simultaneously
+helps decide whether a `src/` identifier counts as used elsewhere. The census must not repeat this
+asymmetry: `tools/` is instrumented as a subject with its own branch-coverage report, not only
+scanned for callers into `src/`. **A verification mechanism that never runs is the highest-leverage
+dead code in the repository** — the census exists to find exactly that class, and excluding its own
+neighborhood would be the same blind spot one layer up.
+
+Full-scope (not feature-scoped) is the pragmatic v1 choice per Open Decision #4's own framing —
+"simpler and catches things nobody thought to list" — and can narrow later once a first real run's
+false-positive rate is known. Narrowing to Mechanics-Bible-declared features first would import an
+assumption about what matters before the tool has produced any evidence about where noise lives.
+
+**Branch coverage, not line coverage — non-negotiable, not a v2 refinement.** This week's own
+combat-engagement work is a clean worked example of exactly the failure mode §2 already names: the
+posture gate this arc built and shipped this week (`TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-
+WIRED-TO-EXECUTION`) lived, in its first version, inside `tactical.py`'s decision function — every
+line of that function executed on every tick, so line coverage would have reported it fully live.
+Only branch-level instrumentation (in that case, manual, not this tool) revealed that 93.7% of real
+attacks never took the branch that would have re-invoked the gated decision at all. The
+`check_for_boss_spawn()`/`GuildAction.visit()` examples already in §1-2 make the same point from a
+different subsystem; this week adds a third, independently found.
+
+### 8.2 How the corpus runs
+
+Ride on `config/simulation_quality/corpus_registry.yaml` exactly as §2 already specifies — no
+second definition of "a representative set of runs." For each registered world/seed/tier, run the
+simulation under `coverage.py` with `branch=True`, producing one coverage-data file per run,
+combined via `coverage combine` into a single corpus-wide branch-coverage report. Diff that report
+against the unit-test suite's own branch-coverage report (`pytest --cov=src --cov=tools
+--cov-branch`) to produce the target set difference: *branch covered by the unit suite, never taken
+anywhere in the corpus.*
+
+**A determinism pre-check gates trust in the census, not the census's own execution.** Per §4, this
+initiative depends on `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`'s deferred
+kernel wall-clock throttle non-determinism. Before the census's first real run is reported as
+fact, run one corpus world/seed twice under identical conditions and diff the two branch-hit sets.
+If they differ, the census's own output must say so explicitly (`STABILITY: UNSTABLE — see
+TCK-20260822-...`) rather than silently presenting a possibly-flaky diff as a finding — a census
+that varies run to run cannot distinguish a dead mechanism from a flaky one, and hiding that
+distinction would recreate exactly the "instrument trusted beyond what it measures" failure this
+whole initiative exists to avoid.
+
+**Where it runs**: attached to the existing SimQ corpus execution as an instrumentation wrapper,
+not a second job with its own world definitions (resolves Open Decision #2's first sub-question).
+**Frequency is a recommendation, not a decision made here**: a full-corpus branch-coverage run is
+not free, so periodic (e.g. before a SimQ-pillar-relevant epic ships) or on-demand is proposed over
+every-PR — this trades cost against staleness and should be confirmed, not assumed, once a first
+run's real wall-clock cost is measured.
+
+### 8.3 What the output looks like
+
+A **report artifact** (JSON for tooling, a rendered markdown/table for humans), never a pass/fail
+exit code in v1 — resolves Open Decision #3 in favor of report-only, per §4's own argument and
+peer review's fourth point: a gate firing on legitimately-rare code teaches people to bypass it,
+and this week gave a fresh instance of that exact dynamic (a decision-point combat gate that
+measured zero effect was nearly reported as "the policy doesn't work," when the real fault was
+gate placement — the same shape as a false-positive detector teaching people the tool is wrong
+rather than that it found something real).
+
+- **Reuses D09's five-status taxonomy plus a sixth** (resolves Open Decision #1): `never-called`,
+  `test-only`, `tick-live`, `tick-live (cond)`, `live-and-effective` (renaming D09's ambiguous
+  categories where needed), and the new status this whole investigation exists to add —
+  **`tick-live, never-effective`**: the exact shape of `check_for_boss_spawn()` and
+  `PaidInformationTransactionSystem`, called every tick, branch never taken.
+- **Enumerates every unreached branch under a mechanism, not the first found** — a hard requirement,
+  not a nice-to-have. `GuildAction.visit()`'s own two independent blockers (a feature flag
+  defaulting OFF, and a `"iron"` vs `"iron_vein"` string mismatch) is the concrete case: reporting
+  only the first would let someone fix the flag, observe no change, and wrongly conclude the flag
+  wasn't the problem. Findings are grouped by mechanism so a multi-blocker case is visibly one
+  mechanism with N unreached branches, not N unrelated rows.
+- **A suppression list with a mandatory stated reason per entry** (`{reason, added_by: ticket_id,
+  date}`), never a blanket ignore — per §4's false-positive concern. Seeded by a first-pass human
+  triage of the first real run before the report is trusted for anything beyond its own review.
+- **A ratchet baseline, never an assert-zero** (resolves the "landing constraint" in §5, now backed
+  by three concrete instances rather than one): the first real run's finding count becomes the
+  accepted baseline; only new findings beyond it are flagged going forward. The precedent is not
+  hypothetical — three separate detectors in this repository already hit exactly this wall: (1)
+  `tests/tools/test_parity_index_baseline.py`'s equality assertion on a known-bad entry count,
+  where correcting the ledger costs a hotfix ticket and leaving it wrong costs nothing; (2)
+  `validate_working_log.py`'s own duplicate-ticket-ID check, which deliberately excludes exact-
+  duplicate physical lines as "a known, tracked defect class" rather than requiring zero; (3) the
+  `tools/`-as-caller-only scan-root gap itself in §8.1 above, which if fixed naively would flag
+  every legitimate zero-caller CLI/Makefile-target function in `tools/` on day one. A detector
+  landing in an already-dirty corpus without a ratchet gets disabled or deleted, not fixed.
+- **The report's own header states the tool's limitation, unsuppressably, every run** — per peer
+  review's explicit instruction that this belongs in the tool's own output, not only this document.
+  Fixed preamble text on every generated report, roughly: *"This census finds code that never
+  executes, or never takes a branch, across the SimQ corpus. It cannot detect a live mechanism
+  producing a wrong outcome — a branch reported as taken here may still be behaving incorrectly.
+  See SimQ pillar scores for outcome quality."* This is not decorative: §3's own table shows a
+  defect (235 unanswered recruitment offers) that this tool would report as **fully healthy** —
+  every line ran, every branch was taken, the code did exactly what it says. A report that doesn't
+  say this out loud, every time, invites exactly the over-trust this initiative exists to prevent.
+
+### 8.4 What it cannot see (stated as plainly as what it can)
+
+1. **A live mechanism producing a bad outcome.** Full coverage, every branch taken, wrong result —
+   the 235-recruitment-offers case in §3. This is SimQ's job, not this tool's; the two are
+   complementary, not overlapping, and neither substitutes for the other.
+2. **Genuinely rare-but-correct branches** (error handlers, defensive checks, low-probability
+   calamity paths) will look identical to dead code on a finite corpus without a stated-reason
+   suppression entry — false positives are expected on the first run, not a sign the tool is
+   broken.
+3. **A flaky/non-deterministic branch**, unless the §8.2 determinism pre-check confirms stability.
+   An unstable census must say so in its own report rather than presenting a possibly-flaky result
+   as settled fact.
+4. **Control flow outside instrumented Python processes** — Makefile targets, `.claude/` workflow
+   scripts, shell orchestration. Only branch coverage inside the corpus run and the unit-test run
+   is measured; a mechanism invoked only from one of those surfaces is out of scope for this tool.
+
+### 8.5 Not decided here
+
+Per §5's own instruction, "none of these should be resolved unilaterally" — this plan resolves the
+five Open Decisions above with a specific proposal each, but the proposal itself (not just the
+underlying facts) is offered for review, not asserted as final. In particular: exact run frequency
+(§8.2), whether/when report-only ever becomes a gate (§8.3, deferred until a real false-positive
+rate exists), and whether D09's taxonomy names should change beyond adding the sixth status, are
+all open for peer/user confirmation before implementation starts.
+
+---
+
+## 8 · Related
 
 - `docs/audits/D09_system_wiring.md` — asks this question manually; its taxonomy is reusable, its
   answers are stale and, in at least two cases, wrong.
@@ -225,3 +359,12 @@ large" and "the feature never runs" are indistinguishable without this measureme
   not evidence a feature runs.
 - `docs/plans/deferred_tuning_decisions_register.md` — §6's forcing function; D-05/D-06 in
   particular.
+- `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION` — worked example for §7.1's
+  branch-vs-line distinction, found independently of this document (a decision-point gate with
+  full line coverage that measured zero effect because the wrong branch shape was never taken).
+- `TCK-20260915-SIMQ-CORPUS-BLIND-TO-SCALE-DEPENDENT-BEHAVIOR` — the same underlying problem from
+  the other side: SimQ measuring outcome quality on a corpus too small to exercise a real
+  population-scale change, exactly mirroring §3's "necessary and not sufficient" boundary.
+- `docs/engine/kernel.md`'s "Sticky-Task Law" section — a structural engine property (a gate at a
+  decision point is bypassed by tasks the scheduler re-executes without re-deciding) that makes the
+  branch-vs-line distinction in §7.1 concrete rather than hypothetical.
