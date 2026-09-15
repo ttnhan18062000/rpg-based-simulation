@@ -28,6 +28,40 @@ Every simulation "Tick" follows a strict 7-phase sequence to ensure determinism 
 
 ---
 
+## ⚠️ The "Sticky-Task" Law (decisions are made once; tasks persist)
+
+> [!IMPORTANT]
+> **A gate, filter, or policy placed at a decision point only sees the tick a decision is first
+> made — not every tick the resulting task executes.** This is a structural property of the
+> Scheduling phase, not specific to any one system, and it will silently defeat any check placed
+> at the wrong point in the pipeline.
+
+`_phase_scheduling()` (`src/engine/kernel.py`) calls `DeterministicScheduler.select_work()`
+(`src/engine/scheduler.py`), which inspects `entity.task.work_kind`: if it is **already**
+`ENTITY_ACT` or `ENTITY_MOVE`, the entity is re-scheduled as that same work kind again —
+**without re-invoking the decision system** (`SimulationDomainLogic.execute_brain()` /
+`TacticalDecisionSystem.evaluate_entity_intent()`). Only an entity with no active task (or one
+whose task has just completed) goes through the decision path (`ENTITY_BRAIN` work kind) this
+tick. `_phase_collection()`'s executor (`src/engine/executor.py`) then dispatches `ENTITY_ACT`
+work straight to `SimulationDomainLogic.execute_action()`, bypassing `execute_brain()` entirely.
+
+**Confirmed by direct measurement** (`TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-
+EXECUTION`): in the reference metropolis scenario, 93.7% of real attacks had no same-tick call to
+the decision function at all — they were repeat executions of a decision made on an earlier tick.
+A gate placed inside the decision function itself measured **zero effect** on real outcomes for
+this reason, even though the policy it implemented was correct.
+
+**Implication for anyone gating a decision-then-task mechanism** (combat, movement, any future
+system with the same shape): a check placed at the decision point only governs the tick a fresh
+decision happens. To actually govern every tick a task executes — including sticky repeats — the
+check must live at the real per-execution dispatch point (e.g. the domain action router,
+`src/engine/domain/action_router.py`'s `execute_action()`), not at the decision point. Measure
+whether the gate's own instrumentation fires on the same tick as the outcome it's meant to gate
+before trusting a "no effect" result — a decision-point gate showing zero effect is exactly what
+this law predicts, not evidence the gate's policy is wrong.
+
+---
+
 ## 🛡️ The "Stability Guard" Law
 
 The Kernel enforces a two-tier isolation model for read-only phases (Scheduling, Collection):

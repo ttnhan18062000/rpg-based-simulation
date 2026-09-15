@@ -44,6 +44,17 @@ contract for this subsystem) — this file is the review artifact, not the desti
 > "resource competition raises war risk" needs to route it through `pairwise_tension` with a named
 > rival, not the ambient scalar.
 
+> **Reachability investigation resolved (2026-09-15)**: `TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY`
+> found the `0.418` plateau is not a formula or decay problem (`pairwise_tension` has no decay
+> producer at all) and, critically, **is not a `FACTION_SCALE_FACTOR` tuning problem either** —
+> sampling `frontier_living_world` across 5 seeds showed cross-faction interaction volume itself
+> ranges from `0.0` to `0.65`, a lottery even within the one world that shows any hostile
+> interaction at all (3 of 4 other sampled worlds show zero, the entire run). **The real blocker
+> is one level down: cross-faction hostile interaction is itself rare and seed-fragile.** Filed as
+> its own prerequisite investigation, `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` —
+> resolving that, not tuning this mechanism's constants, is what `HOSTILE` reachability actually
+> depends on.
+
 Ticket: `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION`. Full investigation evidence:
 `stored_artifacts/TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION/investigation.md` (once
 moved) / `staging_artifacts/.../investigation.md` (current).

@@ -82,7 +82,9 @@ plus raw Gate-A-shaped evidence worth preserving here rather than only in that t
   were left untouched per this epic's own gate-integrity stance above.
 - **A/B attribution (raw Gate-A contributor evidence)**, same scenario, 1000 entities, 20 ticks
   post-warmup, flag OFF vs ON — real combat volume rose 4.1x (72->297 combat-related events per 20
-  ticks) once entities could actually engage/avoid. Per-phase cost delta (ms/tick, ON minus OFF):
+  ticks) once entities could actually engage/avoid **(superseded 2026-09-15, see note below — does
+  not reproduce on current code; retained here as the measurement that was real when taken, not as
+  a current fact)**. Per-phase cost delta (ms/tick, ON minus OFF):
   `advancement` +543 (~50% of the total delta — `ApplyPath.apply_generation()` + hard-law checks +
   observability/decision-trace writing, all scaling with real activity volume), `resolution_overhead`
   +366 (~33%), `cooperation` +167 (~15%), the new `combat_engagement` phase itself +198 (~18%),
@@ -103,6 +105,36 @@ plus raw Gate-A-shaped evidence worth preserving here rather than only in that t
   `TCK-20260914-COOPERATION-FIND-PENDING-OFFER-COST-OBSERVED` (also carries the full A/B table
   above, verbatim), `TCK-20260914-STATE-FINGERPRINT-COST-OBSERVED`,
   `TCK-20260914-DECISION-TRACE-WRITE-COST-OBSERVED`.
+
+**Correction, 2026-09-15 (superseding the 4.1x combat-volume figure above, method and date
+attached rather than the figure silently removed):** re-investigating `combat_engagement`'s actual
+downstream wiring (`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`) found that the
+phase's own posture/intent decision has zero consumers anywhere in `src/` — a real
+`ActionIntent` is built by `PostureIntentResolver.resolve()` and never staged for execution, and
+the `last_combat_posture`/`last_combat_posture_target` properties it also writes have no readers.
+To check whether the 4.1x combat-volume increase above could still hold despite that (e.g. via
+some other gated site), the same 1000-entity metropolis scenario (seed 42, 5 warmup + 25 sample
+ticks) was re-run under four conditions, counting real `CombatActions.execute_attack()` calls
+directly:
+
+| Condition | Real `execute_attack()` calls |
+|---|---|
+| A) flag OFF | 1960 |
+| B) flag ON, unmodified | 1960 |
+| C) flag ON, phase output discarded (phase runs fully, its `StateUpdate` is thrown away) | 1960 |
+| D) flag ON, phase never runs at all (fully stubbed) | 1960 |
+
+All four conditions are identical. **The 4.1x figure above does not reproduce on current code** —
+retained above as the measurement that was genuinely taken and real at the time (2026-09-14), not
+retracted, since deleting a superseded number erases the trail the next person would need. No root
+cause for why it no longer reproduces has been confirmed; plausible, unconfirmed candidates are the
+O(n²) spatial-index fix and the `cognition_bundle_set` whole-object-replace fix landed the same day
+as the original measurement (both described above), or a broader "combat-related events" counting
+methodology in the original measurement that this correction's narrower `execute_attack()` proxy
+doesn't reproduce. Filed as its own investigation rather than assumed: see
+`docs/brainstorm/rpg_feature_atlas.html`'s Combat Engagement card for the corrected
+"entities assess a threat before fighting" claim, and the cross-faction rarity ticket above for the
+full four-condition detail.
 
 ### Second confirmed instance, 2026-09-14 (TCK-20260914-HOTFIX-PERF-METROPOLIS-LONGEVITY-RETIER)
 
