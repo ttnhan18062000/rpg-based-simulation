@@ -1,0 +1,160 @@
+{
+  "entities": {
+    "combat_judgement_pair_goblin_scout": {
+      "legacy_role": 5,
+      "legacy_faction": 1,
+      "hp": 35,
+      "max_hp": 35,
+      "atk": 8,
+      "def": 2,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "goblin_looter_pouch",
+      "cognition_seed": "opportunistic_humanoid",
+      "spawn_position": [
+        1.0,
+        1.0
+      ],
+      "spawn_region": "judgement_arena",
+      "count": 1,
+      "spawn_positions": [
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "archetype_id": "goblin_scout",
+      "species_id": "goblin",
+      "role_id": "scout",
+      "faction_id": "goblin_warband",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "opportunistic",
+        "social_humanoid",
+        "small_body"
+      ],
+      "themes": [
+        "goblin",
+        "frontier"
+      ],
+      "stat_profile_id": "goblin_scout_base",
+      "combat_profile_id": "opportunist_raider",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "opportunistic_raider",
+      "need_profile_id": "goblin_survival",
+      "sense_profile_id": "goblin_alert_senses",
+      "inventory_profile_id": "goblin_looter_pouch",
+      "skill_profile_id": "goblin_raider_skills"
+    },
+    "combat_judgement_pair_orc_warchief": {
+      "legacy_role": 2,
+      "legacy_faction": 1,
+      "hp": 120,
+      "max_hp": 120,
+      "atk": 24,
+      "def": 8,
+      "attack_range": 1,
+      "readiness": 100.0,
+      "inventory_seed": "boss_hoard_token",
+      "cognition_seed": "opportunistic_humanoid",
+      "spawn_position": [
+        2.0,
+        2.0
+      ],
+      "spawn_region": "judgement_arena",
+      "count": 1,
+      "spawn_positions": [
+        [
+          2.0,
+          2.0
+        ]
+      ],
+      "archetype_id": "orc_warchief",
+      "species_id": "orc",
+      "role_id": "leader",
+      "faction_id": "orc_clan",
+      "traits": [
+        "humanoid",
+        "tool_user",
+        "large_body",
+        "leader",
+        "disciplined"
+      ],
+      "themes": [
+        "orc",
+        "frontier"
+      ],
+      "stat_profile_id": "warlord_base",
+      "combat_profile_id": "brute_crush",
+      "cognition_profile_id": "opportunistic_humanoid",
+      "drive_profile_id": "disciplined_protector",
+      "need_profile_id": "humanoid_survival",
+      "sense_profile_id": "normal_humanoid_senses",
+      "inventory_profile_id": "boss_hoard_token",
+      "skill_profile_id": "warrior_skills"
+    }
+  },
+  "buildings": {},
+  "resources": {},
+  "factions": {
+    "hero_guild": {
+      "starting_gold": 1000.0
+    },
+    "town_council": {
+      "starting_gold": 1000.0
+    },
+    "neutral": {
+      "starting_gold": 1000.0
+    },
+    "wild_beast_pack": {
+      "starting_gold": 1000.0
+    },
+    "goblin_warband": {
+      "starting_gold": 1000.0
+    },
+    "merchant_league": {
+      "starting_gold": 1000.0
+    },
+    "bandit_company": {
+      "starting_gold": 1000.0
+    },
+    "forest_wardens": {
+      "starting_gold": 1000.0
+    },
+    "orc_clan": {
+      "starting_gold": 1000.0
+    },
+    "dwarven_mine_clan": {
+      "starting_gold": 1000.0
+    },
+    "moon_cult": {
+      "starting_gold": 1000.0
+    },
+    "undead_remnants": {
+      "starting_gold": 1000.0
+    },
+    "arcane_circle": {
+      "starting_gold": 1000.0
+    },
+    "swamp_tribe": {
+      "starting_gold": 1000.0
+    },
+    "dragon_cult": {
+      "starting_gold": 1000.0
+    },
+    "spirit_court": {
+      "starting_gold": 1000.0
+    }
+  },
+  "region_ownership": {},
+  "legacy_factions": {
+    "goblin_warband": 1,
+    "orc_clan": 1
+  },
+  "legacy_roles": {
+    "scout": 5,
+    "leader": 2
+  },
+  "perspectives": {}
+}

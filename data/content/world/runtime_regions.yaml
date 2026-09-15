@@ -63,6 +63,14 @@
   controlling_faction: "bandit_company"
 
 # STATE: ADDITIONAL
+# TCK-20260915-MECHANIC-VERIFICATION-SCENARIOS
+- id: "judgement_arena"
+  display_name: "Judgement Arena"
+  biome: "judgement_arena"
+  tags: ["wilderness", "mechanic-scenario"]
+  danger_level: 3
+
+# STATE: ADDITIONAL
 - id: "sacred_grove"
   display_name: "Sacred Grove"
   biome: "sacred_grove"

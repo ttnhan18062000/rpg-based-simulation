@@ -62,6 +62,16 @@
   danger_level: 2
 
 # STATE: ADDITIONAL
+# TCK-20260915-MECHANIC-VERIFICATION-SCENARIOS
+- id: "judgement_arena"
+  display_name: "Judgement Arena"
+  themes: ["frontier", "goblin", "orc"]
+  terrain_mix: ["plain"]
+  common_materials: []
+  default_factions: ["goblin_warband", "orc_clan"]
+  danger_level: 3
+
+# STATE: ADDITIONAL
 - id: "haunted_battlefield"
   display_name: "Haunted Battlefield"
   themes: ["undead", "ruin"]

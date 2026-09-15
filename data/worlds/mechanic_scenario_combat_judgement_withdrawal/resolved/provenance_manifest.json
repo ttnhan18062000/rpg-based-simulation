@@ -1,0 +1,276 @@
+{
+  "manifest_id": "prov_b551168c3e8f4bf0",
+  "world_id": "mechanic_scenario_combat_judgement_withdrawal",
+  "source_schema_version": "provenancemanifest.v1",
+  "catalog_fingerprint": "ecc8ccad1b576536f1f6ed32acd81366bb733ca54063de00721f2848081e410a",
+  "module_fingerprints": {
+    "combat_judgement_arena": "0d4f5ef54b7930467913f05203c87f544fbb24067edbf4e54580bb8074c0d8d3"
+  },
+  "composition_fingerprint": "895ee564fb7de7d0fd6e9490034ae4c99d244ebc76f69c6f4a8852d8d4da9de5",
+  "resolver_version": "1.0.0",
+  "content_fingerprint": "b551168c3e8f4bf0f2f0eb0a84cddb214c09b2dbdb1e0a66961bdfe7abba6ce7",
+  "created_at": "2026-09-15T09:23:49.171139Z",
+  "records": {
+    "hero_guild": {
+      "element_id": "hero_guild",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Default chosen faction for hero-centered scenarios."
+      }
+    },
+    "town_council": {
+      "element_id": "town_council",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Settlement authority and civil administration."
+      }
+    },
+    "neutral": {
+      "element_id": "neutral",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Fallback for unaffiliated content."
+      }
+    },
+    "wild_beast_pack": {
+      "element_id": "wild_beast_pack",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "wild"
+      },
+      "details": {
+        "description": "Territorial animal groups. Contextual threat, not enemy-by-race."
+      }
+    },
+    "goblin_warband": {
+      "element_id": "goblin_warband",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Opportunistic raider faction."
+      }
+    },
+    "merchant_league": {
+      "element_id": "merchant_league",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Trade-centered faction that prefers negotiated safety."
+      }
+    },
+    "bandit_company": {
+      "element_id": "bandit_company",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Outlaw faction hostile to settlement safety and trade routes."
+      }
+    },
+    "forest_wardens": {
+      "element_id": "forest_wardens",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Protective faction defending forest balance."
+      }
+    },
+    "orc_clan": {
+      "element_id": "orc_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Honor/strength-driven clan faction, not always hostile."
+      }
+    },
+    "dwarven_mine_clan": {
+      "element_id": "dwarven_mine_clan",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "defender"
+      },
+      "details": {
+        "description": "Mining and crafting faction controlling mountain/mine assets."
+      }
+    },
+    "moon_cult": {
+      "element_id": "moon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Ritual faction tied to moon ruins and arcane materials."
+      }
+    },
+    "undead_remnants": {
+      "element_id": "undead_remnants",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Purpose-bound remnants around battlefields, ruins, and barrows."
+      }
+    },
+    "arcane_circle": {
+      "element_id": "arcane_circle",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Research faction interested in crystals, ruins, and magical anomalies."
+      }
+    },
+    "swamp_tribe": {
+      "element_id": "swamp_tribe",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "rival"
+      },
+      "details": {
+        "description": "Lizardfolk/swamp faction defending wetland territory."
+      }
+    },
+    "dragon_cult": {
+      "element_id": "dragon_cult",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "invader"
+      },
+      "details": {
+        "description": "Cult faction serving dragonkin/fire-aligned power."
+      }
+    },
+    "spirit_court": {
+      "element_id": "spirit_court",
+      "element_type": "faction",
+      "recipe_type": "catalog",
+      "parameters": {},
+      "profiles": {
+        "alignment_bucket": "neutral"
+      },
+      "details": {
+        "description": "Spirit faction protecting sacred or haunted territories."
+      }
+    },
+    "judgement_arena": {
+      "element_id": "judgement_arena",
+      "element_type": "region",
+      "source_module": "combat_judgement_arena",
+      "recipe_type": "region",
+      "parameters": {},
+      "profiles": {
+        "biome": "judgement_arena"
+      },
+      "details": {
+        "bounds": [
+          0,
+          0,
+          3,
+          3
+        ],
+        "terrain": "plain",
+        "hazard_level": 1.0,
+        "ecology_source": []
+      }
+    },
+    "combat_judgement_pair_goblin_scout": {
+      "element_id": "combat_judgement_pair_goblin_scout",
+      "element_type": "population",
+      "source_module": "combat_judgement_arena",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "scout",
+        "faction": "goblin_warband",
+        "stats_profile": "goblin_scout_base",
+        "inventory_profile": "goblin_looter_pouch",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "GUARD",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "judgement_arena",
+        "archetype_source": "goblin_scout",
+        "population_recipe_source": "combat_judgement_pair"
+      }
+    },
+    "combat_judgement_pair_orc_warchief": {
+      "element_id": "combat_judgement_pair_orc_warchief",
+      "element_type": "population",
+      "source_module": "combat_judgement_arena",
+      "recipe_type": "population_recipe",
+      "parameters": {},
+      "profiles": {
+        "role": "leader",
+        "faction": "orc_clan",
+        "stats_profile": "warlord_base",
+        "inventory_profile": "boss_hoard_token",
+        "cognition_profile": "opportunistic_humanoid",
+        "compatibility_projection": {
+          "legacy_engine_role": "MONSTER",
+          "legacy_engine_bucket": "MONSTER_HORDE"
+        }
+      },
+      "details": {
+        "count": 1,
+        "spawn_region": "judgement_arena",
+        "archetype_source": "orc_warchief",
+        "population_recipe_source": "combat_judgement_pair"
+      }
+    }
+  }
+}
