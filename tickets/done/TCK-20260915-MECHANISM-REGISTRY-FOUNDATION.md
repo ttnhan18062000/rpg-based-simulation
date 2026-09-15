@@ -159,6 +159,32 @@ given id phrasing (e.g. `action_pacing_readiness`) rather than falsely claiming 
 never fails the build; wired as informational output appended after the hard-invariant `validate()`
 call in `make mechanism-registry-validate`.
 
+**UPDATE 2026-09-16: `test_make_target_validates_real_registry` (this ticket's own test) found a
+real, pre-existing, broader CI defect on its first real CI run.** `Makefile`'s `PYTHON3 :=` (line
+35) resolved bare `python3` via `[ -x "$$py" ]`, which tests a relative path in the current
+directory, not `$PATH` resolution — verified directly (`[ -x "python3" ]` is false with no
+`./python3` file present; the full fallback loop resolves to an empty string when none of the
+hardcoded dev-machine paths exist, exactly CI's own situation: no `.venv/`, no
+`/home/u24desktop/...`/`/home/vboxuser/...`). `make mechanism-registry-validate` therefore ran with
+no interpreter on CI, while every local run "worked" only because a hardcoded absolute dev-machine
+path happened to exist. `PYTHON` (a separate, correctly-written variable at line 428) already used
+`command -v "$$py"`, the right form — `PYTHON3` did not. This bug is not new and not specific to
+this ticket: every `$(PYTHON3)`-based `make` target (`brainstorm-idea-index` included) has been
+silently broken on CI the whole time; nothing before this ticket's own test ever exercised a `make`
+target from inside a CI job. Fixed in the same commit that introduced the test that found it
+(`PYTHON3`'s definition changed from `[ -x "$$py" ]` to `command -v "$$py" >/dev/null 2>&1`,
+mirroring `PYTHON`'s already-correct form) — fixing the substance the gate correctly flagged, not
+weakening the test. Verified directly before pushing: the broken form resolves to an empty string
+in a simulated CI-like shell (no dev-machine paths on `$PATH`, no `.venv`), the fixed form resolves
+correctly to `python3`; both the relative-path (`.venv/bin/python3`) and absolute-path precedence
+cases were independently re-verified to still work correctly under the fixed form, not just the
+bare-name case. Diagnosed collaboratively: this session pushed a five-step diagnostic (rerun the
+exact same job on the exact same commit to rule out flakiness; check whether `main` had ever failed
+this job; reproduce the job's scope in two separate local venvs, including one built fresh the same
+way CI installs — all passed cleanly, both raw-log-fetch endpoints network-blocked in this
+sandbox); peer read the Makefile directly and found the actual defect from that record, without
+needing log access at all.
+
 ## Test Summary
 `tests/unit/tools/test_mechanism_registry.py` (24 tests) + `test_mechanism_registry_graphify_check.py`
 (6 tests) + regression check `tests/unit/engine/test_capability_registry.py` (9 tests, the imitated
@@ -184,7 +210,8 @@ Scoped pytest command used throughout:
 - `tools/mechanism_registry_graphify_check.py` (new) — report-only cross-check
 - `tests/unit/tools/test_mechanism_registry.py` (new) — 24 tests
 - `tests/unit/tools/test_mechanism_registry_graphify_check.py` (new) — 6 tests
-- `Makefile` — `mechanism-registry-validate` target
+- `Makefile` — `mechanism-registry-validate` target, plus fixing a real pre-existing
+  `PYTHON3 :=` resolution bug this ticket's own CI run found (see UPDATE 2026-09-16 above)
 - `docs/brainstorm/rpg_feature_atlas.html` — two stale badges corrected (Breakthrough Bonuses,
   Race-Keyed Evolution Chains)
 - `docs/brainstorm/rpg_simulation_wiring_map.html` — same two corrections mirrored (BRK node +
