@@ -129,6 +129,9 @@ explicitly flagged as out of scope for the sentiment build and never investigate
 - `TCK-20260915-WORLDBUILDING-DUPLICATE-REGION-ID-ACROSS-MODULES` (found in the same trace — two
   modules composed into `frontier_living_world` both define a region named `"hometown"` with
   different bounds; filed separately)
+- `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (sibling instance of the same pattern —
+  see that ticket's own "Named finding" section for the general statement: mechanics whose
+  preconditions depend on world geometry that nothing validates)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2 — the sentiment mechanism

@@ -154,6 +154,40 @@ finding above. Not traced this session — the static composition check above an
 question peer asked before taking this ticket; the ticket's own full scope (a real, reviewed fix
 proposal) remains open.
 
+**2026-09-15, parked here per explicit direction — not proposing or building a fix.** Both
+candidate directions this investigation surfaced are design decisions, not code defects with an
+obvious single answer, and this cluster has a capped investment budget:
+1. **Content-authoring fix**: compose real hostile presence nearer `moon_cave` (e.g. extend
+   `moon_cult_ruins` itself, or a future world's own module placement) so the region's sole
+   population has an adversary within combat-engagement range.
+2. **Mechanic-design fix**: give Lair-occupant spawning its own trigger condition, separate from
+   the same region-wide `trauma_score` a world-boss gate uses (per this ticket's own original
+   Scope item 3) — since a Lair, by design, may need a fundamentally different kind of "danger has
+   happened here" signal than a world-boss region does.
+
+Left open, not closed — no fix decided or built. See §"Named finding" below for the pattern this
+and the sibling investigation's finding both instantiate.
+
+**Named finding (recorded here per explicit request — a third pattern class for this arc, distinct
+from "dead code" and "systems fed by nothing"): mechanics whose preconditions depend on world
+geometry that nothing validates.** The mechanic is live, the entities are correctly spawned, the
+content references resolve — and the precondition can never be met because composition placed the
+participants where they will never meet. Two confirmed instances so far, same failure expressed
+through different causes:
+- This ticket: `moon_cave`'s sole population has no hostile faction ever composed within range —
+  a real gap in composition, not a reference bug.
+- `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own finding: `merchant_caravan`'s
+  dangling `"trade_road"` reference lands its population in the map's far corner, away from the
+  hostile factions that do exist.
+
+**This predicts where else to look**: any mechanic requiring two things to be spatially
+co-located is exposed to this class, and nothing in the compile path currently checks that a
+world's actual composition satisfies what its own mechanics need to function — only that content
+references resolve syntactically (and per the sibling ticket's own finding, not even always
+that). Worth checking `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` early for a third
+instance, since its own trigger (a hero death in a high-hazard region) has the same shape:
+requires two things (a hero, a high-hazard region) to be co-located for the mechanic to ever fire.
+
 ## Test Summary
 _(not started)_
 
