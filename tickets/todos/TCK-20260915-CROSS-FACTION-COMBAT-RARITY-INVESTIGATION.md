@@ -332,6 +332,55 @@ may be as much about *which worlds get sampled* as about any one mechanism insid
 `build_metropolis_state`'s world generation and the SimQ corpus profiles' own world-building path
 (entity count, faction count, spatial layout, faction assignment logic) that would explain this gap.
 
+**2026-09-15, the one bounded attempt (peer's explicit final scope): static world-spec comparison
+of `merchant_league`'s own composition between the two worlds — no instrumentation, no runs.**
+`merchant_league` is the one faction present as a real, meaningful combatant in both worlds'
+samples, so it's the natural pivot. Traced its composition end to end via the content catalog:
+
+- **`crowded_frontier`'s only source of `merchant_league` entities**: the `merchant_caravan`
+  population (`data/content/entities/populations.yaml`), pulled in via the
+  `bandit_road_trade_pressure` module (present in both worlds). `merchant_caravan`'s own
+  `preferred_regions: ["trade_road", "hometown"]` — but **no module in either world's composition
+  defines a region literally named `"trade_road"`** (`bandit_road_trade_pressure` itself defines
+  `"bandit_road"`, a different id). This reference falls through to `merchant_caravan`'s second
+  preference, `"hometown"` — specifically `frontier_village_core`'s own `"hometown"` region,
+  `grid_bounds: [10, 10, 40, 40]`, the far corner of the map.
+- **`frontier_living_world` has a second, additional source**: the `trading_company_hub` module
+  (present only here, not in `crowded_frontier`'s module list at all), which defines its **own**
+  region also literally named `"hometown"` — but with completely different bounds,
+  `grid_bounds: [45, 10, 80, 45]` — and an explicit `population_recipes` entry spawning 3
+  `merchant_league` entities directly into it (`spawn_region: "hometown"`).
+- **The bounds matter concretely**: `bandit_road_trade_pressure`'s own hostile region
+  (`"bandit_road"`) is `[40, 40, 100, 60]` and `goblin_camp_conflict`'s (`"goblin_camp"`, present
+  in both worlds) is `[95, 20, 125, 55]`. `frontier_village_core`'s `"hometown"` (`[10,10,40,40]`)
+  barely touches `bandit_road`'s edge and sits far from `goblin_camp`. `trading_company_hub`'s own
+  `"hometown"` (`[45,10,80,45]`) **overlaps `bandit_road`'s x-range directly and sits much closer
+  to `goblin_camp`.** If `frontier_living_world`'s merchants spawn into this second, closer
+  `"hometown"` instance — plausible given `trading_company_hub` is the later-composed module and
+  explicitly targets `spawn_region: "hometown"` for its own population — that alone would explain
+  materially more real spatial overlap with hostile territory than `crowded_frontier`'s
+  single-source, far-corner placement.
+- **A genuine remaining ambiguity, not chased further per the explicit scope cap**: two modules
+  in the same world composition both defining a region literally named `"hometown"` with different
+  bounds is itself worth naming — it's unclear from the specs alone whether the compiler keeps
+  both as distinct regions, merges them, or has one silently override the other for entities from
+  *both* modules (which would mean `frontier_village_core`'s own villagers, not just
+  `trading_company_hub`'s merchants, get relocated). Confirming which happens requires either
+  reading the world-compiler's own region-merge logic or one instrumented run — explicitly not
+  done here, per the cap on this investigation's remaining budget.
+
+**This is a real, static, well-evidenced structural difference — a plausible, disclosed mechanism,
+not a confirmed root cause.** It was not verified with a live re-run (deliberately, per peer's
+explicit "static comparison only, then stop" instruction), so it should be read as the strongest
+remaining lead for whoever picks this up next, not as a closed finding.
+
+**Investigation paused here, per peer's explicit scope cap** ("one bounded attempt, then park
+regardless of outcome"). Six candidates traced and falsified with real evidence (catalog hostility
+coverage, spatial separation, posture/targeting write-only-ness, the saliency legacy-enum bug, the
+attack-legality gate, the predator-driven-combat hypothesis), and one plausible structural
+mechanism identified via static comparison but not yet verified live. This narrows the problem
+space substantially for a future pass without claiming a fix or a fully confirmed root cause.
+
 ## Test Summary
 _(none yet)_
 
@@ -339,4 +388,17 @@ _(none yet)_
 _(none yet)_
 
 ## Completion Summary
-_(not started)_
+**Investigation paused (not closed), per explicit scope cap.** Not resolved to a fix — deliberately
+stopped short of one. Real progress: six candidate root causes traced and falsified with direct
+evidence (catalog hostility coverage was correct; spatial separation was not the blocker; the
+posture/targeting break was resolved by identifying `combat_engagement`'s write-only-ness in the
+sibling ticket; a real legacy-Faction-enum bug in `SensoryFilter.filter_saliency` was found and
+filed, measured to have only 0.5% practical impact; the attack-legality gate mostly passes for
+real hostile pairs and its illegal results are correctly-blocked allied friendly-fire, not a bug;
+and a specific "predator-driven, not faction-driven" hypothesis was tested against real data and
+rejected — 81% of real combat in the comparison world is faction-vs-faction). One plausible,
+evidence-backed structural mechanism was identified via a purely static world-spec comparison
+(differing region composition for `merchant_league` between the two worlds, driven by
+`crowded_frontier` lacking the `trading_company_hub` module) but was not verified with a live
+run. Whoever picks this up next starts from a narrow, evidenced position rather than the original
+broad question.
