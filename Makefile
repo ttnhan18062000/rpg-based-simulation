@@ -318,6 +318,12 @@ mechanism-registry-validate: ## Validate docs/brainstorm/mechanisms.yaml against
 mechanism-verification-view: ## Regenerate docs/brainstorm/mechanism_verification_view.md from docs/brainstorm/mechanisms.yaml
 	$(PYTHON3) tools/generate_mechanism_verification_view.py
 
+mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.md (top-N unverified, by rank x transitive dependents)
+	$(PYTHON3) tools/generate_mechanism_priority_view.py
+
+mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
+	$(PYTHON3) tools/mechanism_wiring_map_classdef.py
+
 simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
 	python3 tools/generate_corpus_registry.py
 

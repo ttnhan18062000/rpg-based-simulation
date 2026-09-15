@@ -289,6 +289,32 @@ class DependencyCycleError(ValueError):
     (TCK-20260915-MECHANISM-PRIORITY-DERIVATION Acceptance Criteria #6)."""
 
 
+def transitive_dependencies_of(mechanism_id: str, dep_map: Dict[str, List[str]]) -> Set[str]:
+    """The forward closure: every mechanism mechanism_id transitively depends on (its own
+    ancestors in dependency terms -- "what does X actually need", the ticket's own worked
+    example). The mirror of transitive_dependents() below (backward closure); same cycle-safety."""
+    VISITING, DONE = 1, 2
+    status: Dict[str, int] = {}
+    result: Set[str] = set()
+
+    def _walk(node: str, path: List[str]) -> None:
+        if status.get(node) == DONE:
+            return
+        if status.get(node) == VISITING:
+            cycle = path[path.index(node):] + [node]
+            raise DependencyCycleError(f"dependency cycle detected: {' -> '.join(cycle)}")
+        status[node] = VISITING
+        path.append(node)
+        for dep in dep_map.get(node, []):
+            result.add(dep)
+            _walk(dep, path)
+        path.pop()
+        status[node] = DONE
+
+    _walk(mechanism_id, [])
+    return result
+
+
 def transitive_dependents(mechanism_id: str, dep_map: Dict[str, List[str]]) -> Set[str]:
     """Every mechanism that transitively depends on mechanism_id, via reverse-BFS over dep_map
     (mechanism_id -> its own depends_on list). Raises DependencyCycleError on a cycle rather than
