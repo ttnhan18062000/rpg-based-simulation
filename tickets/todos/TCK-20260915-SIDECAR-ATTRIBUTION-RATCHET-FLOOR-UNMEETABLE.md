@@ -64,10 +64,13 @@ ticket's scope — see `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`).
 
 - [ ] A same-day trend of the real attribution rate (more than two points) is captured — done:
       see the four-point monotonic decline below (74.7% → 73.7% → 73.6% → 73.5%).
-- [ ] The shared-`.claude/current_run`-sidecar concurrency hypothesis below is checked against a
-      quiet day (materially lower concurrent-session activity, no relevant code change): does the
-      rate partially recover? This is the cheapest available discriminator and should run before
-      any other investigation.
+- [ ] The shared-`.claude/current_run`-sidecar concurrency hypothesis below is checked via the
+      primary proposed check: measure attribution directly on records written in the last few
+      hours (ideally split by session), not the 14-day rolling average. Near-zero on recent
+      records while the 14-day average still reads ~73.5% confirms the hypothesis with one query;
+      normal recent-record attribution kills it. Run this before anything else.
+- [ ] Secondary confirmation once available: does the 14-day rate partially recover on a day with
+      markedly less concurrent session activity and no corresponding code change?
 - [ ] Either the floor is re-pinned with real headroom below the current trajectory (not the
       instant-of-pin value), or a genuine regression is found and fixed, with evidence either way.
 - [ ] `test_real_corpus_is_at_or_above_the_ratchet_floor` passes against the live corpus after
@@ -148,10 +151,42 @@ If `run_id` attribution is resolved through that shared sidecar, concurrent sess
 overwrite each other's run context mid-flight and produce exactly this shape: a percentage that
 degrades as same-day concurrency rises, continuously rather than in a step, and invisible to any
 single branch's own diff — because no one branch causes it. This fits every measurement above.
-**Falsifiable prediction, cheap to check without investigating anything**: if concurrency is the
-real driver, this metric should partially recover on a day with markedly less concurrent session
-activity and no corresponding code change. Re-check the rate on such a day before concluding
-either way.
+**Numerator/denominator arithmetic strengthens this beyond the trend line alone.** Comparing the
+first and third readings above:
+
+- Δnumerator (attributed) = 38037 − 38246 = **−209**
+- Δdenominator (total) = 51745 − 51893 = **−148**
+
+The attributed count fell by 61 more than the total count did. In a rolling window, that is only
+possible if the records *entering* the window over that hour are worse-attributed than the records
+*ageing out* of it — it cannot be produced by volume alone, by old data simply expiring, or by any
+mechanism that treats incoming and outgoing records symmetrically. So the decline is not the
+window slowly drifting; it is newly-written records arriving badly attributed and dragging a
+~52k-record rolling average down 0.2 points in about an hour. Moving an average that large that
+fast implies the incoming attribution rate is *well* below 73%, not marginally below it — the
+exact magnitude depends on the window's retention mechanics (not visible from these CI reads), so
+no specific incoming-rate number is asserted here, only the direction.
+
+This is exactly what concurrent sessions overwriting one shared `.claude/current_run` would
+produce: each session's freshly-written tool rows resolve `run_id` against whichever session last
+wrote the sidecar, so most land wrongly-attributed or unattributed at write time — a defect in
+*new* records, not a decay of old ones.
+
+**Primary proposed check (cheap, available now, replaces the quiet-day test as the first thing to
+run):** measure attribution directly on records written in the last few hours — ideally split by
+session — instead of the 14-day rolling average. If that recent-records rate comes back near zero
+while the 14-day average still reads ~73.5%, the hypothesis is confirmed with one query and no
+further investigation. If recent records attribute normally, the hypothesis is dead and the
+decline has some other cause. This distinguishes *which* records are bad, not just that the
+average moved, and doesn't require waiting for a quiet day.
+
+**Secondary confirmation, cheap but slower:** if concurrency is the real driver, the 14-day rolling
+rate should also partially recover on a day with markedly less concurrent session activity and no
+corresponding code change. Useful as a second, independent signal once available, but the recent-
+records check above should run first.
+
+This hypothesis and both checks are flagged for the owning epic to run — not investigated or run
+from this ticket or this branch.
 
 ## Test Summary
 Not yet started — this ticket currently only records the observation per explicit instruction
