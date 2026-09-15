@@ -122,12 +122,11 @@ def _record_is_complete(rec: dict) -> bool:
 RUN_REQUIRED_FIELDS_FOR_DRIFT = ("workflow", "tier", "final_status")
 
 
-def compute_drift_report(runs: list, events: list) -> str:
-    """Read-only vocabulary/null-field drift report, mirroring
-    generate_retro.py's generate(runs, events, label) -> str shape for
-    testability. Never gates anything — validate.py's exit-code contract
-    (errors -> exit 1, else exit 0 regardless of warnings) is unaffected by
-    what this function returns; it is purely additive reporting."""
+def compute_vocabulary_drift_counts(runs: list, events: list) -> dict:
+    """Structured (non-string) core of compute_drift_report -- extracted by
+    TCK-20260915-MONITORING-ANOMALY-VALIDATOR so a ratchet check can consume raw Counters
+    directly instead of parsing this function's own formatted text report. Returns
+    {"null_field_counts", "phase_drift", "agent_drift", "tier_drift"}, each a `Counter`."""
     null_field_counts = Counter()
     for r in runs:
         for field in RUN_REQUIRED_FIELDS_FOR_DRIFT:
@@ -152,6 +151,26 @@ def compute_drift_report(runs: list, events: list) -> str:
         tier = r.get("tier")
         if tier is not None and tier not in CANONICAL_TIERS:
             tier_drift[tier] += 1
+
+    return {
+        "null_field_counts": null_field_counts,
+        "phase_drift": phase_drift,
+        "agent_drift": agent_drift,
+        "tier_drift": tier_drift,
+    }
+
+
+def compute_drift_report(runs: list, events: list) -> str:
+    """Read-only vocabulary/null-field drift report, mirroring
+    generate_retro.py's generate(runs, events, label) -> str shape for
+    testability. Never gates anything — validate.py's exit-code contract
+    (errors -> exit 1, else exit 0 regardless of warnings) is unaffected by
+    what this function returns; it is purely additive reporting."""
+    counts = compute_vocabulary_drift_counts(runs, events)
+    null_field_counts = counts["null_field_counts"]
+    phase_drift = counts["phase_drift"]
+    agent_drift = counts["agent_drift"]
+    tier_drift = counts["tier_drift"]
 
     lines = ["--- Vocabulary / Null-Field Drift Report ---", ""]
     lines.append("Null required fields (runs.jsonl):")
