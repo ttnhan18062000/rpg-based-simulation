@@ -58,12 +58,12 @@ def _handle_treaty_offer(
         FactionUpdate(
             faction_id=action.from_faction,
             diplomatic_relations_set={action.to_faction: DiplomaticState.NEUTRAL},
-            tension_delta=-0.1,
+            pairwise_tension_delta={action.to_faction: -0.1},
         ),
         FactionUpdate(
             faction_id=action.to_faction,
             diplomatic_relations_set={action.from_faction: DiplomaticState.NEUTRAL},
-            tension_delta=-0.1,
+            pairwise_tension_delta={action.from_faction: -0.1},
         ),
     ]
 
@@ -76,12 +76,12 @@ def _handle_trade_agreement(
         FactionUpdate(
             faction_id=action.from_faction,
             diplomatic_relations_set={action.to_faction: DiplomaticState.NEUTRAL},
-            tension_delta=-0.15,
+            pairwise_tension_delta={action.to_faction: -0.15},
         ),
         FactionUpdate(
             faction_id=action.to_faction,
             diplomatic_relations_set={action.from_faction: DiplomaticState.NEUTRAL},
-            tension_delta=-0.15,
+            pairwise_tension_delta={action.from_faction: -0.15},
         ),
     ]
 
@@ -151,6 +151,6 @@ def _handle_betrayal(
         FactionUpdate(
             faction_id=action.to_faction,
             diplomatic_relations_set={action.from_faction: DiplomaticState.HOSTILE},
-            tension_delta=0.3,
+            pairwise_tension_delta={action.from_faction: 0.3},
         ),
     ]

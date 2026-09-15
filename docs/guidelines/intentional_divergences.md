@@ -1747,7 +1747,13 @@ This document is the canonical record of intentional behavior shifts in `src` co
   hook.
 - **Status**: RATIFIED
 
-### 2.56 World Boss, Lair-Occupant, and Stronghold Spawn Gates Are Long-Horizon (~50,000-Tick) Only — Accepted, Not Fixed (TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN)
+### 2.56 World Boss, Lair-Occupant, and Stronghold Spawn Gates Are Long-Horizon (~50,000-Tick) Only — Accepted, Not Fixed (TCK-20260908-WORLD-MATURITY-START-VALUE-DESIGN) — SUPERSEDED for boss/Lair gates by §2.57
+
+**2026-09-14 update**: the user reversed the 2026-09-08 decision recorded below for the
+`check_for_boss_spawn()`/`check_for_lair_spawn()` gate specifically — see §2.57 for the resolution
+(`TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY`). The `spawn_stronghold()` finding in
+this entry's own survey below is **not** superseded — it remains an open, real reachability issue,
+untouched by §2.57's fix (out of that ticket's scope).
 - **Subsystem**: World Evolution / Boss & Lair Spawning
 - **Old Behavior**: `BossService.check_for_boss_spawn()` (region-scoped `world_boss`/
   `ancient_sentinel`) and `BossService.check_for_lair_spawn()` (place-scoped Lair occupants) both
@@ -1807,6 +1813,83 @@ This document is the canonical record of intentional behavior shifts in `src` co
 - **Verification**: No test change — this ticket makes no behavioral change. Confirmed via direct
   `grep` survey (not assumed) that no other `state.maturity` consumer beyond those listed above
   exists in `src/`.
+- **Status**: SUPERSEDED (boss/Lair gates only — see §2.57; the `spawn_stronghold()` finding above
+  remains open and RATIFIED as-is)
+
+---
+
+### 2.57 World Boss / Lair-Occupant Spawn Gate Made Reachable, Plus Two Real Defects Behind It Fixed (TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY)
+- **Subsystem**: World Evolution / Boss & Lair Spawning
+- **Old Behavior**: three compounding defects, all silent, meant a "world boss" or Lair occupant
+  effectively never appeared, correctly, in any real run — see the sibling investigation
+  (`staging_artifacts/TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY/investigation.md`)
+  for the full trace:
+  1. `EntityGenerator.spawn_monster()`'s tier lookup (`DIFFICULTY_TIERS.get(difficulty_tier,
+     DIFFICULTY_TIERS[1])`) silently fell back to **tier 1** for `difficulty_tier=5` (requested by
+     both spawn methods), since `DIFFICULTY_TIERS` only defined tiers 1-4. A "world boss" spawned
+     weaker than an ordinary tier-4 monster.
+  2. The world boss's own signature loot, `ItemStack(item_id="ancient_core", ...)`, referenced an
+     item id registered nowhere in the real content catalog. The real inventory pipeline
+     (`src/core/inventory.py`, using the safe `src.core.items.ItemRegistry`, not the raising
+     `src.core.registries.ItemRegistry`) silently dropped it on add (`if not defn: continue`) —
+     no crash, just zero actual reward for the one item the encounter exists to grant.
+  3. §2.56's own gate (`state.maturity >= 50.0 AND region.trauma_score >= 20.0`) needed ~50,000
+     ticks against a corpus whose real runs are 200-5,000 ticks — confirmed via a real 2000-tick
+     run to reach only `maturity=1` / `trauma_score` peaking at `9.92`, i.e. both halves
+     independently unreachable, not "one large number."
+- **New Behavior**:
+  1. `DIFFICULTY_TIERS[5]` added (`src/world/spawn_config.py`):
+     `hp=6.5x, atk=4.5x, def_stat=3.5x, xp=8.0x, gold=6.5x, level 14-22`, continuing tiers 1-4's own
+     ~1.4-1.6x growth curve. No other real call site anywhere in `src/` requests `difficulty_tier=5`
+     or higher (confirmed via exhaustive grep), so this is scoped exactly to boss/Lair spawning.
+  2. `ancient_core` registered in `data/content/world/items.yaml` (the authoritative catalog) and
+     `src/core/items.py`'s default dict (for any path running without a catalog present).
+  3. `BossService.BOSS_SPAWN_THRESHOLD`: `50.0` → `2.0`. `BossService.BOSS_SPAWN_TRAUMA_THRESHOLD`
+     (new named constant, replacing an inline `20.0` literal duplicated at both call sites):
+     `20.0` → `8.0`.
+- **User's explicit sequencing decision** (the reason this is one combined entry, not three): fix
+  the tier-5 stat defect and the loot-drop defect *first*, verify a spawned boss/Lair-occupant is
+  genuinely formidable and actually drops its loot, and only *then* lower the gate itself — opening
+  a still-broken gate first would have shipped a rare encounter that one-shots for no reward, worse
+  than the mechanism staying dormant. The gate values are treated explicitly as **wiring, not
+  balance**: "make it fire within the corpus's own tick range," not a considered late-game
+  difficulty curve — see `docs/plans/deferred_tuning_decisions_register.md` D-05 for the full
+  resolution record and the provisional-values framing.
+- **Rationale**: **Bug Fix** (tier-5 fallback, `ancient_core` registration — both are real defects
+  with no design intent behind the old behavior) **+ Intentional Gameplay Change** (the gate
+  threshold values themselves — a deliberate, user-directed reversal of §2.56's 2026-09-08
+  decision, not a newly-discovered bug in the threshold numbers per se).
+- **Verification**: `tests/unit/world/test_boss_gate_reachability.py` (7 new tests: tier-5
+  definition and strength, tier-5 spawn no longer falls back to tier-1, `ancient_core` registered,
+  `ancient_core` survives the real `InventoryService.apply_update()` add path, the gate spawns a
+  formidable boss/Lair-occupant at the new thresholds, the gate stays closed just below the new
+  thresholds). Existing `tests/unit/world/test_difficulty_scaling.py` (15 tests) and
+  `tests/unit/world/test_world_dynamics.py` boss/Lair tests confirmed still passing unchanged (their
+  fixtures use `maturity=90`/`trauma_score=30.0`, comfortably above both old and new thresholds).
+  End-to-end: a real, instrumented 3000-tick `Kernel.tick_once()` run against
+  `frontier_living_world` (seed=42) spawned a `world_boss` at tick 2101 with
+  `hp=325/atk=45/def=17/level=19`, carrying `ancient_core` in its own inventory.
+- **Known remaining gap, not fixed here**: the Lair-occupant side was not verified end-to-end in a
+  real run — the one corpus world with a real `LAIR`-kind Place (`generated_frontier_3_42`) has its
+  region (`moon_cave`) sitting at exactly `0.0` `trauma_score` for a full 5000-tick run (zero
+  recorded combat deaths there), which no threshold value alone can open. Tracked separately:
+  `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (filed, not built in this batch). Not dead
+  code — a region that never sees combat, so no threshold value could ever open its gate.
+- **A found-while-fixing wrinkle worth recording on its own**: `ancient_core` had to be registered
+  in *two* places — `data/content/world/items.yaml` (the authoritative catalog) and
+  `src/core/items.py`'s own hardcoded default dict. Editing only the hardcoded dict would have been
+  silently overwritten at import time (`seed_phase1_content()` →
+  `CoreItemRegistry.bootstrap(catalog_repo.items)`, which runs automatically on
+  `src.core.registries` import whenever `data/content/` is present — true for every real run in
+  this repo). A fix that passed every unit test touching the dict directly would have done nothing
+  in a real run. Not a missing definition falling back silently, like the other instances in this
+  entry — a *correct-looking edit silently discarded by a second source of truth*.
+- **Open balance question, not a wiring gap**: lowering the two thresholds means the gate may now
+  fire *often* — `state.maturity` crosses `2.0` around tick 2000, and `8.0` sits just under the
+  empirically observed `9.92` trauma peak — possibly in most runs, in more than one region, rather
+  than rarely. Both values are correctly reachability-only and are not being adjusted in response;
+  noted here so the next SimQ corpus comparison is read with this in mind, and so a high spawn
+  frequency is recognized as a tuning-pass question, not treated as a new defect.
 - **Status**: RATIFIED
 
 ---

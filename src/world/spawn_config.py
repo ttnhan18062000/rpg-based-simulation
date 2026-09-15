@@ -19,6 +19,12 @@ DIFFICULTY_TIERS: dict[int, DifficultyMultipliers] = {
     2: DifficultyMultipliers(hp=1.5, atk=1.3, def_stat=1.2, xp=1.5, gold=1.5, level_min=3, level_max=6),
     3: DifficultyMultipliers(hp=2.5, atk=2.0, def_stat=1.8, xp=3.0, gold=2.5, level_min=5, level_max=10),
     4: DifficultyMultipliers(hp=4.0, atk=3.0, def_stat=2.5, xp=5.0, gold=4.0, level_min=8, level_max=15),
+    # World boss / Lair-occupant tier (TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY).
+    # First-pass numbers, chosen to continue tier 1-4's own ~1.4-1.6x growth curve and
+    # recorded as provisional in docs/plans/deferred_tuning_decisions_register.md D-05 --
+    # not a tuned balance answer, just enough to make a "world boss" meaningfully harder
+    # than an ordinary tier-4 monster instead of silently falling back to tier-1 stats.
+    5: DifficultyMultipliers(hp=6.5, atk=4.5, def_stat=3.5, xp=8.0, gold=6.5, level_min=14, level_max=22),
 }
 
 # Mapping distance from town center to difficulty tier

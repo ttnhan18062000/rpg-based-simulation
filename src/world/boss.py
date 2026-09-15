@@ -16,7 +16,15 @@ class BossService:
     Manages world boss spawning and resolution.
     """
     
-    BOSS_SPAWN_THRESHOLD = 50.0 # Maturity or Threat threshold
+    # TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY: both values below were lowered
+    # from 50.0/20.0 as a reachability fix (wiring, not balance) -- the old values needed
+    # ~50,000 ticks against a corpus whose real runs are 200-5,000 ticks, so the gate never
+    # opened in any observed run. New values are chosen to actually fire within that range
+    # (state.maturity ~= tick/1000; trauma_score measured peaking at 9.92 by tick 2000 in the
+    # most combat-heavy region of a real run) and are recorded as provisional in
+    # docs/plans/deferred_tuning_decisions_register.md D-05, not a tuned balance answer.
+    BOSS_SPAWN_THRESHOLD = 2.0 # Maturity threshold
+    BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0 # Regional trauma threshold
     
     @staticmethod
     def check_for_boss_spawn(
@@ -90,7 +98,7 @@ class BossService:
 
             if not (
                 state.maturity >= BossService.BOSS_SPAWN_THRESHOLD
-                and region.trauma_score >= 20.0
+                and region.trauma_score >= BossService.BOSS_SPAWN_TRAUMA_THRESHOLD
             ):
                 continue
 
@@ -216,7 +224,7 @@ class BossService:
 
             if not (
                 state.maturity >= BossService.BOSS_SPAWN_THRESHOLD
-                and region.trauma_score >= 20.0
+                and region.trauma_score >= BossService.BOSS_SPAWN_TRAUMA_THRESHOLD
             ):
                 continue
 

@@ -32,7 +32,7 @@ from src.core.state import (
     RegionState, ResourceNodeState, BuildingState, CampState, GroupRecord,
     GroundItemState, ChestState, LocalScarState, IntentResult, AttributeComponent,
     IdentityComponent, AptitudeComponent, EquipmentComponent, SocialComponent, ReadOnlyDict,
-    FactionState, ClanState
+    FactionState, ClanState, FactionSentiment
 )
 from src.core.quests import QuestState, QuestStatus
 from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
@@ -374,6 +374,47 @@ class ApplyPath:
                 for k, v in {**existing.diplomatic_relations, **fu.diplomatic_relations_set}.items()
             }
             new_doctrines = fu.active_doctrines_set if fu.active_doctrines_set is not None else existing.active_doctrines
+            # TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION: faction-to-faction sentiment,
+            # a directed record mirroring SocialBond at faction scope. Clamped to [-1,1]/[0,1] the
+            # same way RelationshipService.process_update() clamps entity-level bonds.
+            new_sentiments = dict(existing.faction_sentiments)
+            for target_fid, sent_delta in fu.faction_sentiment_delta.items():
+                prior_sent = new_sentiments.get(target_fid, FactionSentiment(target_faction_id=target_fid))
+                new_sentiments[target_fid] = replace(
+                    prior_sent,
+                    sentiment=max(-1.0, min(1.0, prior_sent.sentiment + sent_delta)),
+                    familiarity=max(0.0, min(1.0, prior_sent.familiarity + fu.faction_familiarity_delta.get(target_fid, 0.0))),
+                    last_interaction_tick=prior_state.tick,
+                )
+            for target_fid, fam_delta in fu.faction_familiarity_delta.items():
+                if target_fid in fu.faction_sentiment_delta:
+                    continue  # already handled above
+                prior_sent = new_sentiments.get(target_fid, FactionSentiment(target_faction_id=target_fid))
+                new_sentiments[target_fid] = replace(
+                    prior_sent,
+                    familiarity=max(0.0, min(1.0, prior_sent.familiarity + fam_delta)),
+                    last_interaction_tick=prior_state.tick,
+                )
+            # Periodic decay toward neutral (FactionSentimentService.decay_stale_sentiments) is
+            # NOT a real interaction -- sets sentiment directly without touching
+            # last_interaction_tick, so the staleness clock isn't reset by decay itself.
+            for target_fid, decayed_value in fu.faction_sentiment_decay_set.items():
+                prior_sent = new_sentiments.get(target_fid, FactionSentiment(target_faction_id=target_fid))
+                new_sentiments[target_fid] = replace(
+                    prior_sent,
+                    sentiment=max(-1.0, min(1.0, decayed_value)),
+                )
+            # TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION: pairwise_tension is scoped to
+            # the specific rival named in pairwise_tension_delta -- unlike tension_level/tension_delta
+            # above, which are an ambient per-faction scalar and must NOT be read by
+            # DiplomaticStateMachine.compute_transitions() as a pairwise proxy (confirmed live: doing
+            # so let one faction's tension with a single rival, or its own ambient stress, cascade
+            # into HOSTILE with every other faction it had never interacted with).
+            new_pairwise_tension = dict(existing.pairwise_tension)
+            for target_fid, pt_delta in fu.pairwise_tension_delta.items():
+                new_pairwise_tension[target_fid] = max(
+                    0.0, min(1.0, new_pairwise_tension.get(target_fid, 0.0) + pt_delta)
+                )
             new_factions[fu.faction_id] = replace(existing,
                 tension_level=max(0.0, min(1.0, new_tension)),
                 military_strength=new_ms,
@@ -381,6 +422,8 @@ class ApplyPath:
                 resources=new_resources,
                 diplomatic_relations=new_relations,
                 active_doctrines=new_doctrines,
+                faction_sentiments=new_sentiments,
+                pairwise_tension=new_pairwise_tension,
             )
 
         # Idea 40/M4: Apply clan updates to durable clans dict
