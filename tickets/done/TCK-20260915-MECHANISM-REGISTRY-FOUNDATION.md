@@ -185,19 +185,60 @@ way CI installs — all passed cleanly, both raw-log-fetch endpoints network-blo
 sandbox); peer read the Makefile directly and found the actual defect from that record, without
 needing log access at all.
 
+**UPDATE 2026-09-16 (second): the Makefile fix alone did not resolve CI — a second real defect
+was under it, in this ticket's own new code, not the Makefile.** After the Makefile fix, CI still
+failed the same job; per-step probing (temporarily splitting the job's combined `pytest` step into
+one step per directory, `if: always()` on each, read via `gh api .../jobs/{id} --jq '.steps[]'`
+without needing log access at all) first localized it to `tests/unit/tools` (every other directory
+in that job passed, including `tests/unit/docs` — ruling out a hypothesis that the new
+`mechanisms.yaml` file tripped a corpus-wide docs inventory test), then a second, file-level split
+localized it further to `test_mechanism_registry.py` AND `test_mechanism_registry_graphify_check.py`
+both failing. Root-caused to one shared cause: `graphify-out/` is gitignored (0 tracked files,
+confirmed via `git ls-files graphify-out/`), so a fresh CI checkout has no `graphify-out/graph.json`
+at all. `tools/mechanism_registry_graphify_check.py`'s `_load_graph()` raised an uncaught
+`FileNotFoundError` on that — directly reproduced locally by moving `graphify-out/` aside
+temporarily (restored immediately after each check) — which crashed both the graphify-check's own
+tests AND, indirectly, `test_mechanism_registry.py`'s `test_make_target_validates_real_registry`,
+since `make mechanism-registry-validate`'s second command (Step 5's own wiring) is that same
+script; `make`'s default sequential-recipe behavior means the second command's crash failed the
+whole target, and therefore the test invoking it, even though that test has nothing to do with
+graphify directly. Fixed in `tools/mechanism_registry_graphify_check.py`: `check()` now catches
+`FileNotFoundError` from a missing graph and returns `{"supported": [], "suspicious": [],
+"no_match": [], "graph_unavailable": True}` instead of raising; `main()` reports a clear "SKIPPED"
+message and still returns 0. This is the substance fix, not a workaround — Scope item 5's own
+contract already says "Report, never fail: graphify's 35k-node graph is advisory here," and a hard
+crash on a missing (locally-optional, CI-absent) graph directly contradicted that contract before
+this fix. Verified directly (not just trusted): moved `graphify-out/` aside again after the fix,
+confirmed `tools/mechanism_registry_graphify_check.py`, `make mechanism-registry-validate`, and the
+full 44-test suite in `tests/unit/tools/` + the capability-registry regression check all pass
+cleanly with the directory genuinely absent, then restored it. New test
+`test_missing_graph_reports_and_never_fails` added (`monkeypatch`-based, never touches the real
+`graphify-out/` directory) to guard this regression going forward. Diagnosed via the same
+step-splitting technique peer proposed (a temporary diagnostic addition to
+`.github/workflows/test.yml`, two rounds, removed again once the cause was found — the workflow
+file is byte-identical to its pre-diagnostic state, confirmed via `git diff`). Peer's own first
+guess at this second root cause (before the second round's step data confirmed it) was
+appropriately labelled a prediction, not a diagnosis, and was directionally correct.
+
 ## Test Summary
 `tests/unit/tools/test_mechanism_registry.py` (24 tests) + `test_mechanism_registry_graphify_check.py`
-(6 tests) + regression check `tests/unit/engine/test_capability_registry.py` (9 tests, the imitated
-pattern, unmodified) — 39/39 passing. Per Acceptance Criteria #4, all four validator invariants
-proven failing on deliberately broken fixtures (unresolved `depends_on`, direct 2-node cycle, a
-longer 3-node cycle so a pairwise-only check can't accidentally pass, undeclared layer, invalid
-state), each fixture isolated to exactly one invariant, plus a parametrized test proving all six
-valid states are individually accepted (the enum boundary is exact on both sides), plus a
-valid-fixture canary using real seeded ids so the invalid-fixture tests are proven to be testing a
-validator that *can* pass. `make mechanism-registry-validate` tested both against the real
-committed file and against a `tmp_path` copy with an injected defect (never mutating the real file
-in place). Regenerated `docs/brainstorm/idea_index.json` after the two atlas badge fixes; verified
-the idea count stayed at 68 with no generator assertion failure.
+(7 tests, including the new `test_missing_graph_reports_and_never_fails`) + regression check
+`tests/unit/engine/test_capability_registry.py` (9 tests, the imitated pattern, unmodified) —
+40/40 passing. Per Acceptance Criteria #4, all four validator invariants proven failing on
+deliberately broken fixtures (unresolved `depends_on`, direct 2-node cycle, a longer 3-node cycle
+so a pairwise-only check can't accidentally pass, undeclared layer, invalid state), each fixture
+isolated to exactly one invariant, plus a parametrized test proving all six valid states are
+individually accepted (the enum boundary is exact on both sides), plus a valid-fixture canary using
+real seeded ids so the invalid-fixture tests are proven to be testing a validator that *can* pass.
+`make mechanism-registry-validate` tested both against the real committed file and against a
+`tmp_path` copy with an injected defect (never mutating the real file in place). Regenerated
+`docs/brainstorm/idea_index.json` after the two atlas badge fixes; verified the idea count stayed
+at 68 with no generator assertion failure.
+
+Whole suite re-verified with `graphify-out/` genuinely absent (moved aside, restored immediately
+after) to match the real CI condition exactly — all 44 tests in `tests/unit/tools/` +
+`tests/unit/engine/test_capability_registry.py` pass under that condition, confirming the
+graph-unavailable fix without relying on trust in a CI-only reproduction.
 
 Scoped pytest command used throughout:
 ```

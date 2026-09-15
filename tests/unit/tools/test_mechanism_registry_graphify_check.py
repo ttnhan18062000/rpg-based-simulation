@@ -13,6 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import tools.mechanism_registry_graphify_check as graphify_check_module
 from tools.mechanism_registry_graphify_check import _REAL_RELATIONS, check, main
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -78,6 +79,22 @@ def test_only_real_relations_count_as_supporting_a_path():
     result = check(registry=_fake_registry(), graph=graph)
     assert ("alpha", "beta") not in result["supported"]
     assert "contains" not in _REAL_RELATIONS
+
+
+def test_missing_graph_reports_and_never_fails(monkeypatch, tmp_path, capsys):
+    # graphify-out/ is gitignored (not committed) -- present locally wherever `graphify update`
+    # has run, absent on a fresh CI checkout. This is the exact condition
+    # TCK-20260915-MECHANISM-REGISTRY-FOUNDATION's own Scope item 5 contract ("Report, never fail")
+    # must survive without crashing. Never mutate the real graphify-out/ directory to test this --
+    # monkeypatch the module's own path constant to a path that genuinely does not exist instead.
+    monkeypatch.setattr(graphify_check_module, "_GRAPH_PATH", tmp_path / "does_not_exist.json")
+    result = check(registry=_fake_registry())
+    assert result["graph_unavailable"] is True
+    assert result["supported"] == [] and result["suspicious"] == [] and result["no_match"] == []
+    assert main() == 0
+    captured = capsys.readouterr()
+    assert "SKIPPED" in captured.out
+    assert "does_not_exist.json" in captured.out
 
 
 def test_never_fails_the_build_even_with_suspicious_and_no_match_findings():

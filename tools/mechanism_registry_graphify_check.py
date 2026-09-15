@@ -111,10 +111,23 @@ def _bfs_reachable(start_ids: List[str], goal_ids: Set[str], adj: Dict[str, Set[
 
 
 def check(registry: Optional[dict] = None, graph: Optional[dict] = None) -> dict:
-    """Returns {"supported": [...], "suspicious": [...], "no_match": [...]} of (from_id, to_id)
-    pairs. Never raises for a business-logic finding -- only a structurally malformed input."""
+    """Returns {"supported": [...], "suspicious": [...], "no_match": [...], "graph_unavailable":
+    bool} of (from_id, to_id) pairs. Never raises for a business-logic finding -- only a
+    structurally malformed input.
+
+    `graphify-out/` is gitignored (not committed) -- it exists locally wherever `graphify update`
+    has been run, but not on a fresh CI checkout. Scope item 5's own contract is "Report, never
+    fail: graphify's 35k-node graph is advisory here" -- a missing graph is exactly the kind of
+    thing this check must survive, not crash on. When the graph file can't be found, this returns
+    empty buckets with `graph_unavailable: True` rather than raising, so `main()` can report the
+    graph was skipped instead of treating a normal, expected local/CI difference as a failure.
+    """
     registry = registry if registry is not None else _load_registry()
-    graph = graph if graph is not None else _load_graph()
+    if graph is None:
+        try:
+            graph = _load_graph()
+        except FileNotFoundError:
+            return {"supported": [], "suspicious": [], "no_match": [], "graph_unavailable": True}
 
     nodes = graph.get("nodes", [])
     adj = _build_adjacency(graph.get("links", []))
@@ -126,7 +139,7 @@ def check(registry: Optional[dict] = None, graph: Optional[dict] = None) -> dict
             node_cache[mech_id] = _match_nodes(mech_id, nodes)
         return node_cache[mech_id]
 
-    result = {"supported": [], "suspicious": [], "no_match": []}
+    result = {"supported": [], "suspicious": [], "no_match": [], "graph_unavailable": False}
     for mechanism in registry.get("mechanisms", []):
         mech_id = mechanism.get("id")
         for dep_id in mechanism.get("depends_on") or []:
@@ -144,7 +157,13 @@ def check(registry: Optional[dict] = None, graph: Optional[dict] = None) -> dict
 
 def main() -> int:
     result = check()
-    total = sum(len(v) for v in result.values())
+    if result.get("graph_unavailable"):
+        print("Graphify cross-check (report-only, never fails): SKIPPED -- "
+              f"{_GRAPH_PATH} not found. graphify-out/ is gitignored, not committed; run "
+              "`graphify update .` locally to populate it. Not present on a fresh CI checkout, "
+              "which is expected, not a failure.")
+        return 0
+    total = len(result["supported"]) + len(result["suspicious"]) + len(result["no_match"])
     print(f"Graphify cross-check (report-only, never fails): {total} depends_on edges checked")
     print(f"  supported:  {len(result['supported'])}")
     print(f"  suspicious: {len(result['suspicious'])}")
