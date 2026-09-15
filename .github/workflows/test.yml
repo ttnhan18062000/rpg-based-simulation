@@ -544,6 +544,7 @@ jobs:
             cd /tmp/base-checkout && pytest tests/perf \
                    tests/certification \
                    tests/arena \
+                   tests/mechanic_scenarios \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary
