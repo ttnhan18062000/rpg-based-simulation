@@ -144,6 +144,18 @@ _(none yet — filed as a finding, not yet investigated)_
 - Not yet known whether `quest_dense_frontier`'s zero-interaction result is even a real instance
   of this problem (it is deliberately population-minimal, likely single-faction-dominant by
   design) or a false positive that shouldn't be weighted the same as `crowded_frontier`'s.
+- **Population/density scale, directly tested and weighed against**: `frontier_living_world`
+  (lower density than `crowded_frontier`) produces 28x more real combat, not less — this doesn't
+  fully rule out scale as *a* factor (the metropolis scenario's own 1000-entity, ~58% cross-faction
+  finding is still real), but it rules out density/population alone as *the* explanation for
+  `crowded_frontier`'s own near-zero rate. The module/species-composition lead (candidate 5, above)
+  is now the stronger open thread.
+- The decisive next step: compare `crowded_frontier`'s and `frontier_living_world`'s specific
+  hostile-module content definitions for a real, disclosed behavioral difference (aggression
+  parameters, patrol/wander AI, species-specific combat propensity) — not yet done.
+- Whether the exact same "real combat is universally rare in this world, any faction" pattern
+  (candidate 5's finding) holds in `quest_dense_frontier` and `urban_political` too, or whether
+  those worlds have their own distinct explanation — not yet checked.
 
 ## Implementation Notes
 **2026-09-15, investigation in progress — two of peer's three candidate hypotheses directly
@@ -227,6 +239,68 @@ hostility bonus almost never changes which entities make the cut. Filed as its o
 finding rather than pursued further here (see Related Tickets) — the search for the real blocker
 continues, now with confirmation that hostile targets DO reach `tactical.py`'s own (correctly-
 resolved) hostiles-loop in the overwhelming majority of real opportunities.
+
+**2026-09-15, candidate 5 (attack legality gate) — traced, and the finding reframes the
+investigation's own question.** Instrumented `LegalityServiceV2.verify_attack_legality()`
+directly (2000 ticks, `crowded_frontier`, seed 42): **212 calls total, 117 legal (55%)**. The 95
+illegal results split `OUT_OF_RANGE` (17) and `FRIENDLY_FIRE_ILLEGAL` (78) — and the
+`FRIENDLY_FIRE_ILLEGAL` cases, cross-checked against `EntityIdentityResolver`-resolved real
+faction identity, are **exclusively between the allied "defender" factions**
+(`hero_guild`/`town_council`/`merchant_league` pairs) — entities of factions that are not supposed
+to fight being correctly blocked, not a bug. None involve the real hostile trio
+(`bandit_company`/`goblin_warband`/`orc_clan`). **Directly falsifies a specific hypothesis raised
+while tracing this**: `verify_attack_legality`'s own `if not has_clean:` fallback path compares the
+same raw legacy `Faction` enum `SensoryFilter` was found to misuse (candidate 4, above) — a
+plausible mechanism for exactly this kind of false block. Checked directly: in all 78
+`FRIENDLY_FIRE_ILLEGAL` results, the legacy-enum comparison was `False` (i.e. never the reason the
+function returned illegal) — that specific fallback path was not what triggered any of these.
+Ruled out with evidence, not assumed.
+
+**The more consequential finding**: separately instrumented real `CombatActions.execute_attack()`
+calls (the actual damage-dealing execution, same function traced throughout this arc's
+combat-engagement work) over the same 2000-tick run. **Only 2 real attacks occurred, total,
+across all factions** — and the 2 that did occur were cross-faction (`merchant_league` vs
+`bandit_company`). Given 117 verify_attack_legality calls found a legal target, but only 2 real
+attacks executed, there is a large gap between "a legal attack decision exists" and "a real attack
+executes" that this session's own tracing did not fully close: an attempt to correlate individual
+`evaluate_entity_intent` calls against their own `verify_attack_legality` sub-calls produced
+wildly inconsistent counts between two otherwise-identical instrumented runs (212 vs 1), most
+likely because `_phase_collection()` runs entity "thought" evaluation **concurrently**
+(`docs/engine/kernel.md`'s own documented pipeline), which makes a shared-mutable-state probe
+(the technique used here) inherently unreliable for this specific correlation — not evidence of a
+real system bug, but a limitation of this investigation's own probe methodology this session,
+disclosed rather than presented as a false conclusion.
+
+**Reframes the investigation's own question**: this data suggests the right framing may not be
+"cross-faction combat is specifically blocked" so much as "**real combat of any kind is
+exceedingly rare in this 38-entity world**" — 2 real attacks in 2000 ticks, full stop, regardless
+of faction pairing.
+
+**The population-scale hypothesis was the natural next thing to test — and a real, direct
+comparison complicates it rather than confirming it.** No existing corpus world offers a clean
+"same composition, 10x population" test (the closest, `simq_scale_stress_seed42`, is 68 entities
+across 13 regions — *lower* density per region than `crowded_frontier`, not a clean scale-up). So
+instead, ran the identical probe (`CombatActions.execute_attack()`, 2000 ticks, seed 42) against
+`frontier_living_world` — the one corpus world already known to show real cross-faction combat —
+for a real, apples-to-apples comparison:
+
+| World | Entities | Regions | Entities/region | Real `execute_attack()` calls / 2000 ticks |
+|---|---|---|---|---|
+| `crowded_frontier` | 38 | 4 | 9.5 | **2** |
+| `frontier_living_world` | 46 | 7 | 6.6 | **57** |
+
+`frontier_living_world` has *fewer* entities per region than `crowded_frontier` (lower density,
+not higher) yet produces **28x more real combat**. **This directly weighs against pure population/
+density as the explanation** — if anything, the lower-density world fights more. The real attacking
+pairs in `frontier_living_world` (`wild_beast_pack` vs `bandit_company`, `merchant_league` vs
+`goblin_warband`) include `wild_beast_pack`, a faction that does not exist at all in
+`crowded_frontier`'s roster — pointing toward **module/composition-specific differences** (which
+hostile content modules are present, and their own AI aggression/patrol parameters) as a stronger
+candidate than raw scale. Not yet traced to a specific mechanism — the next concrete step is
+comparing `crowded_frontier`'s and `frontier_living_world`'s specific hostile-module definitions
+(`data/content/social/` and whatever governs `wild_beast_pack`'s own behavior) for a real,
+disclosed difference, rather than assuming population scale is the answer just because it was the
+most recently proposed lead.
 
 **2026-09-15, new lead from `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`'s
 own measurement — a strong discriminator for this investigation, not yet followed up here.**
