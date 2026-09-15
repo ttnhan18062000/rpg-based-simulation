@@ -309,6 +309,9 @@ setup-merge-drivers: ## Install the local merge driver + post-merge hook that re
 brainstorm-idea-index: ## Regenerate the per-idea cross-document index (docs/brainstorm/idea_index.json)
 	$(PYTHON3) tools/generate_brainstorm_idea_index.py
 
+mechanism-registry-validate: ## Validate docs/brainstorm/mechanisms.yaml against its 4 invariants (depends_on resolution, DAG acyclicity, layer declaration, state enum)
+	$(PYTHON3) tools/mechanism_registry.py
+
 simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
 	python3 tools/generate_corpus_registry.py
 
