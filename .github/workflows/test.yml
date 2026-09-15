@@ -23,7 +23,7 @@ jobs:
   # granularity, found by the coverage check this ticket added.
   unit-core-world:
     name: "Unit · core / world"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -87,7 +87,7 @@ jobs:
   # ── Unit: gameplay systems ────────────────────────────────────────────────
   unit-gameplay:
     name: "Unit · gameplay"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -149,7 +149,7 @@ jobs:
   # ── Unit: infra / observability / domains ─────────────────────────────────
   unit-infra:
     name: "Unit · infra / observability"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -217,7 +217,7 @@ jobs:
   # ── Integration tests (excluding slow) ────────────────────────────────────
   integration:
     name: "Integration"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -253,7 +253,7 @@ jobs:
   # ── API / CLI / tools ─────────────────────────────────────────────────────
   api-tools:
     name: "API / tools / logging"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -303,7 +303,7 @@ jobs:
   # into api-tools) given the volume (83 files).
   agent-orchestration:
     name: "Agent orchestration / codex / replay"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -361,7 +361,7 @@ jobs:
   # ── Simulation quality (SimQ scoring module) ──────────────────────────────
   simulation-quality:
     name: "Simulation quality"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -397,7 +397,7 @@ jobs:
   # ── Architecture / docs / static guards ──────────────────────────────────
   arch-docs:
     name: "Architecture / docs / static"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -446,7 +446,7 @@ jobs:
   # (e.g. a root-level config change).
   frontend:
     name: "Frontend"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     # TCK-20260906-CI-FRONTEND-PATH-FILTER: path-filtered via the changed-files gate below --
     # frontend/ is a fully separate toolchain (no Python import graph), so unlike the 9 explicitly
     # out-of-scope Python jobs, a path-based skip here carries no false-negative risk.
@@ -474,7 +474,7 @@ jobs:
   # run_frontend added by TCK-20260906-CI-FRONTEND-PATH-FILTER, same fail-open shape.
   changed-files:
     name: "Changed files (path-filter gate)"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     outputs:
       run_perf_cert_arena: ${{ steps.diff.outputs.run_perf_cert_arena }}
       run_migration_lanes: ${{ steps.diff.outputs.run_migration_lanes }}
@@ -510,7 +510,7 @@ jobs:
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
     name: "Perf / cert / arena"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     needs: [changed-files]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_perf_cert_arena == 'true') }}
     steps:
@@ -552,7 +552,7 @@ jobs:
   # ── Migration lanes + expansion gate ─────────────────────────────────────
   migration-lanes:
     name: "Migration lanes"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     needs: [changed-files]
     if: ${{ !cancelled() && (needs.changed-files.result != 'success' || needs.changed-files.outputs.run_migration_lanes == 'true') }}
     steps:
@@ -568,7 +568,7 @@ jobs:
   # ── Type check (informational) ────────────────────────────────────────────
   typecheck:
     name: "Type check (informational)"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -584,7 +584,7 @@ jobs:
   # ── SimQ grade-anchor drift (informational) ──────────────────────────────
   simq-grade-drift:
     name: "SimQ grade-anchor drift (informational)"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     # TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS: test_grade_regression.py's own
     # anchor-comparison tests only ever run against data/calibration/ (gitignored,
     # developer-machine-local) and pytest.skip() silently whenever it's absent -- which is
@@ -614,7 +614,7 @@ jobs:
   # ── Slow regression (main + PRs targeting main) ──────────────────────────
   slow:
     name: "Slow regression"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rpg-sim-runner]
     # TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH: no longer runs on every PR push
     # (github.base_ref == 'main') -- the ~45-90min slow suite (9021-deselected-tests-heavy)
     # blocked fast development iteration on every commit. Still runs as a real safety net:
