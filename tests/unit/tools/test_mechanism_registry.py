@@ -17,7 +17,15 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tools.mechanism_registry import MechanismRegistry, VALID_STATES, validate
+from tools.mechanism_registry import (
+    MechanismRegistry,
+    VALID_INSTRUMENTS,
+    VALID_STATES,
+    VALID_VERDICTS,
+    build_verification_view,
+    validate,
+    verification_records_from_registry,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
@@ -269,3 +277,207 @@ def test_makefile_wires_mechanism_registry_validate_target():
     makefile_text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
     assert "mechanism-registry-validate:" in makefile_text
     assert "tools/mechanism_registry.py" in makefile_text
+
+
+# ── TCK-20260915-MECHANISM-VERIFICATION-AXIS ─────────────────────────────────────────────────
+
+
+def _valid_verified_block(instrument="code_trace", verdict="observed"):
+    return {"instrument": instrument, "verdict": verdict, "date": "2026-09-16", "note": "x"}
+
+
+def test_validator_rejects_unknown_instrument():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "verified": _valid_verified_block(instrument="made_up_instrument")},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for an unknown verified.instrument"
+    assert any("foo" in e and "made_up_instrument" in e for e in errors), errors
+
+
+def test_validator_rejects_unknown_verdict():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "verified": _valid_verified_block(verdict="made_up_verdict")},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for an unknown verified.verdict"
+    assert any("foo" in e and "made_up_verdict" in e for e in errors), errors
+
+
+def test_validator_rejects_incomplete_verified_block():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "verified": {"instrument": "code_trace", "verdict": "observed"}},  # missing date/note
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a verified block missing required fields"
+    assert any("foo" in e and "date" in e for e in errors), errors
+
+
+@pytest.mark.parametrize("instrument", sorted(VALID_INSTRUMENTS))
+def test_validator_accepts_all_four_instruments(instrument):
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "verified": _valid_verified_block(instrument=instrument)},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+@pytest.mark.parametrize("verdict", sorted(VALID_VERDICTS))
+def test_validator_accepts_all_three_verdicts(verdict):
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "verified": _valid_verified_block(verdict=verdict)},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_verification_view_includes_every_mechanism_even_unverified():
+    # The load-bearing test per AC #2's own instruction: assert presence, not absence. A test
+    # that only checks the verified row looks right is blind to an omission bug -- this arc's own
+    # recurring failure shape.
+    mechanisms = [
+        {"id": "verified_one", "layer": "entity", "state": "done"},
+        {"id": "unverified_one", "layer": "entity", "state": "gap"},
+    ]
+    records = {"verified_one": [_valid_verified_block()]}
+    view = build_verification_view(records, mechanisms)
+    ids_in_view = {row["id"] for row in view}
+    assert "unverified_one" in ids_in_view, "unverified mechanism was omitted, not rendered"
+    assert "verified_one" in ids_in_view
+    assert len(view) == 2
+
+
+def test_verification_view_unverified_row_shape():
+    mechanisms = [{"id": "unverified_one", "layer": "entity", "state": "gap"}]
+    view = build_verification_view({}, mechanisms)
+    row = view[0]
+    assert row["verified"] is False
+    assert row["verdict"] == "unverified"
+    assert row["instrument"] is None
+
+
+def test_verification_view_collapses_multiple_records_to_latest():
+    mechanisms = [{"id": "foo", "layer": "entity", "state": "done"}]
+    records = {
+        "foo": [
+            {"instrument": "code_trace", "verdict": "observed", "date": "2026-08-01",
+             "note": "older"},
+            {"instrument": "scenario", "verdict": "contradicted", "date": "2026-09-16",
+             "note": "newer"},
+        ]
+    }
+    view = build_verification_view(records, mechanisms)
+    assert len(view) == 1, "multiple records for one mechanism must collapse to a single row"
+    row = view[0]
+    assert row["date"] == "2026-09-16"
+    assert row["verdict"] == "contradicted"
+    assert row["note"] == "newer"
+
+
+def test_verification_view_groups_static_evidence_separately_from_runtime():
+    mechanisms = [
+        {"id": "runtime_one", "layer": "entity", "state": "done"},
+        {"id": "static_one", "layer": "entity", "state": "done"},
+        {"id": "unverified_one", "layer": "entity", "state": "gap"},
+    ]
+    records = {
+        "runtime_one": [_valid_verified_block(instrument="scenario")],
+        "static_one": [_valid_verified_block(instrument="code_trace")],
+    }
+    view = build_verification_view(records, mechanisms)
+    order = [row["id"] for row in view]
+    assert order.index("runtime_one") < order.index("static_one") < order.index("unverified_one")
+
+
+def test_real_registry_verification_view_seeds_non_empty(registry_data):
+    records = verification_records_from_registry(registry_data)
+    view = build_verification_view(records, registry_data["mechanisms"])
+    assert len(view) == len(registry_data["mechanisms"])
+
+    by_id = {row["id"]: row for row in view}
+    expected = {
+        "combat_engagement": "scenario",
+        "succession": "code_trace",
+        "self_model": "code_trace",
+        "information_trust_deception": "code_trace",
+        "opportunity_rumor_seeds": "code_trace",
+        "cross_episode_grief_nemesis": "code_trace",
+    }
+    for mech_id, instrument in expected.items():
+        assert by_id[mech_id]["verified"] is True
+        assert by_id[mech_id]["instrument"] == instrument
+        assert by_id[mech_id]["verdict"] == "observed"
+
+
+def test_reader_get_verification_known_and_unknown(registry):
+    verified = registry.get_verification("combat_engagement")
+    assert verified is not None
+    assert verified["instrument"] == "scenario"
+    assert registry.get_verification("succession")["instrument"] == "code_trace"
+    assert registry.get_verification("action_pacing_readiness") is None  # real, unverified id
+    assert registry.get_verification("nonexistent_mechanism_xyz") is None  # unknown id
+
+
+def test_make_target_generates_verification_view():
+    result = subprocess.run(
+        ["make", "mechanism-verification-view"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, (
+        f"make mechanism-verification-view failed:\nstdout: {result.stdout}\n"
+        f"stderr: {result.stderr}"
+    )
+    # The real committed output must already be in sync with the real registry -- run the
+    # script's own --check mode against the real files, never hand-diff.
+    check = subprocess.run(
+        [sys.executable, "tools/generate_mechanism_verification_view.py", "--check"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert check.returncode == 0, check.stdout + check.stderr
+
+
+def test_generator_check_mode_detects_staleness(tmp_path):
+    # Never mutate the real committed output -- write to a tmp_path output instead, matching
+    # this file's own established discipline for real-file-adjacent subprocess tests.
+    stale_output = tmp_path / "stale_view.md"
+    stale_output.write_text("this is not the real generated content\n", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "tools/generate_mechanism_verification_view.py",
+         "--output", str(stale_output), "--check"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0
+    assert "STALE" in result.stdout
+
+
+def test_makefile_wires_mechanism_verification_view_target():
+    makefile_text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
+    assert "mechanism-verification-view:" in makefile_text
+    assert "tools/generate_mechanism_verification_view.py" in makefile_text

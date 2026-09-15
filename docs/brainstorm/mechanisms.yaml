@@ -33,7 +33,35 @@
 # `state` is one of exactly six classes, matching the atlas's own existing vocabulary (no seventh
 # invented): done | partial | gap | orphan | gated | skeleton.
 #
+# `verified` (nullable — TCK-20260915-MECHANISM-VERIFICATION-AXIS) records whether a mechanism
+# has been *observed working*, not just built. Absent or explicit `null` is the ONLY way to
+# represent "unverified" — when present, all 4 sub-fields are required and `instrument` is never
+# itself null inside a present block:
+#   verified:
+#     instrument: scenario   # census | scenario | corpus_run | code_trace
+#     verdict: observed      # observed | contradicted | inconclusive
+#     date: "2026-09-16"
+#     note: "one line, what was actually seen"
+#
+# STATIC vs RUNTIME evidence, kept explicitly distinct — the single most expensive lesson of this
+# whole arc: combat judgement passed a code trace cleanly (real code, reachable, called — all true,
+# all confirmable statically) and was write-only across four conditions; only a runtime instrument
+# (a real 1960->837 corpus measurement) caught that. `code_trace` proves what the code *says*
+# (this is called, this field is never populated, this has zero callers) — it can NEVER establish
+# that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` are runtime
+# evidence — they prove what the simulation actually *does*. A `code_trace`/`observed` row must
+# never be read as equally strong as a runtime-confirmed one; the verification view groups them
+# separately for exactly this reason, not merged into one undifferentiated list.
+#
+# `verdict` and `state` are separate fields answering different questions and compose rather than
+# collapse: `state` says whether the mechanism is built/reachable; `verified.verdict` says whether
+# the evidence matches that claim. A `code_trace` confirming an already-`orphan` mechanism really
+# doesn't fire is `verdict: observed` (the state's own claim confirmed true), not `contradicted` —
+# `contradicted` is reserved for the historically expensive case: `state: done` with a *runtime*
+# instrument finding the claimed behavior doesn't actually happen.
+#
 # Validate with: make mechanism-registry-validate  (tools/mechanism_registry.py)
+# Render the verification view with: make mechanism-verification-view
 #
 # KNOWN PLACEHOLDER: `race_collective_force` and `settlement_capacity_axis` are assigned
 # `layer: faction` as the nearest organizational tier a real implementation would likely live in —
@@ -64,6 +92,13 @@ mechanisms:
     layer: entity
     depends_on: [action_pacing_readiness]
     state: done
+    verified:
+      instrument: scenario
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Corpus: posture gate moved attacks 1960 -> 837. Scenario: risk-rejected posture -> 0
+        attacks vs no posture -> attack proceeds, all else identical.
   - id: movement
     layer: entity
     depends_on: [action_pacing_readiness]
@@ -123,6 +158,13 @@ mechanisms:
     layer: entity
     depends_on: [aging_death]
     state: orphan
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        heir_entity_id confirmed never populated by any write path (repo-wide search) -- confirms
+        the orphan claim, does not contradict it.
   - id: genetics_aptitude
     layer: entity
     depends_on: []
@@ -165,6 +207,11 @@ mechanisms:
     layer: entity
     depends_on: [perception, trauma]
     state: gated
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
   - id: declared_cognition_schema
     layer: entity
     depends_on: []
@@ -205,6 +252,11 @@ mechanisms:
     layer: entity
     depends_on: []
     state: gated
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
   - id: knowledge_model
     layer: entity
     depends_on: []
@@ -275,6 +327,13 @@ mechanisms:
     layer: faction
     depends_on: []
     state: done
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated
+        betrayal -> party-formation blocker); narrow trigger.
   - id: country_lifecycle
     layer: faction
     depends_on: [betrayal_siege_war]
@@ -305,6 +364,11 @@ mechanisms:
     layer: world
     depends_on: []
     state: gated
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
   - id: cultural_drift
     layer: world
     depends_on: []
