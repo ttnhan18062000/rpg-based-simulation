@@ -220,4 +220,12 @@ _(not started)_
 _(not started)_
 
 ## Completion Summary
-_(not started)_
+**Parked by explicit user decision, not abandoned or unresolved.** The root cause is fully known:
+`moon_cave` is spatially isolated from every other populated region in its world's composition
+(~30-unit gap to the nearest), and its sole population has no hostile faction ever composed within
+combat range — confirmed via a real static comparison of region bounds, not inferred. Two real
+candidate fix directions are recorded above. The user's explicit decision, given the investment
+cap on this cluster, was to record the finding and not build a fix now — "we know exactly why this
+doesn't fire and chose not to fix it now" is the accurate state, distinct from "this doesn't fire
+and we don't know why." See `docs/plans/world_composition_precondition_gap_finding.md` for the
+durable record of this finding alongside its two sibling instances.

@@ -91,6 +91,12 @@ or generate taxation revenue.
 ## Related Tickets
 - `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION` (the design work that surfaced this;
   its own §3.2 military-strength driver is blocked on this ticket resolving)
+- `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (checked against that ticket's own named
+  pattern — this ticket's own root cause does not share it; see that ticket's own notes and
+  `docs/plans/world_composition_precondition_gap_finding.md` for the comparison)
+- `TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS` (same shape as this
+  ticket's own real root cause: two independent readers of one thing — a combat-outcome event
+  here, an item id there — disagreeing about what counts, with no error surfaced either time)
 
 ## Related Docs
 - `docs/mechanics/regional_sovereignty.md` (the mechanism this ticket investigates)
@@ -174,4 +180,19 @@ _(not started)_
 _(not started)_
 
 ## Completion Summary
-_(not started)_
+**Parked by explicit user decision, not abandoned or unresolved — and a real, standalone bug in
+its own right, not merely a counter-example inside someone else's finding.** The root cause is
+fully known and empirically confirmed (20 of 20 real deaths in the sampled run were classified
+`"DEFEAT"`, zero `"KILL"`): two independent readers of the same combat-outcome event disagree
+about what counts as a death — `resolve_lifecycle()` checks `outcome_kind in ("KILL",
+"PERMADEATH")`, `world_dynamics.py`'s own trauma block checks `alive_set is False` directly. This
+is the same shape as `TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS` — two
+readers of one thing, disagreeing about what counts — not the world-composition-precondition
+pattern this ticket was checked against and found not to share (see
+`docs/plans/world_composition_precondition_gap_finding.md` for that comparison). Two real
+candidate fix directions are recorded above (widen `resolve_lifecycle()`'s own filter to include
+`"DEFEAT"`, or route influence-shift off `alive_set is False` directly). The user's explicit
+decision, given the investment cap on this cluster, was to record the finding and not build a fix
+now — this ticket's own root cause is exactly as complete and actionable as the other two in this
+cluster, just a different class of cause (a code-level classification divergence, not a
+composition/geometry gap).

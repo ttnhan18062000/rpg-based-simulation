@@ -173,4 +173,13 @@ _(not started)_
 _(not started)_
 
 ## Completion Summary
-_(not started)_
+**Parked by explicit user decision, not abandoned or unresolved.** The root cause is fully known
+and doubly confirmed: the reference world the original probe used has zero `hero`-kind entities
+composed into it at all, and even a world that does compose heroes hardcodes their spawn region
+to a zero-hazard area. Both facts confirmed by direct inspection of the real compiled entity
+roster and the authored content, not inferred. Two real candidate fix directions are recorded
+above. The user's explicit decision, given the investment cap on this cluster, was to record the
+finding and not build a fix now — "we know exactly why this doesn't fire and chose not to fix it
+now" is the accurate state, distinct from "this doesn't fire and we don't know why." See
+`docs/plans/world_composition_precondition_gap_finding.md` for the durable record of this finding
+alongside its two sibling instances.

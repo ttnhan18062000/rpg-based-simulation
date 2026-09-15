@@ -88,6 +88,17 @@ real candidate and found not to apply is what makes the other three credible —
 document would be at risk of becoming a lens that explains every starved mechanic in the corpus,
 whether or not composition is actually the cause.
 
+**This finding is not merely a foil for the pattern above — it is a real, complete, standalone
+defect in its own right**, and belongs to a different, separately-named shape:
+`TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS` found two independent
+`ItemRegistry` classes disagreeing about what counts as a valid item id (one raises `KeyError`,
+the other silently returns `None`). This ticket's own root cause — two independent readers of the
+same combat-outcome event disagreeing about what counts as a death — is the same shape: **two
+readers of one thing, disagreeing about what counts, with no error surfaced either time.** Both
+are filed and tracked as complete, actionable, standalone bugs, parked by the same investment-cap
+decision as the three composition instances above, not folded into or subordinated by this
+document's own pattern.
+
 ## The implication
 
 Nothing in the world-compile path (`WorldCompiler`, `WorldRepository`) currently validates that a
