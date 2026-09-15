@@ -955,6 +955,10 @@ class FactionUpdate:
     resources_delta: Dict[str, int] = field(default_factory=dict)
     diplomatic_relations_set: Dict[str, DiplomaticState] = field(default_factory=dict)
     active_doctrines_set: Optional[Tuple[str, ...]] = None
+    faction_sentiment_delta: Dict[str, float] = field(default_factory=dict)  # target_faction_id -> sentiment delta, from a real interaction (bumps last_interaction_tick)
+    faction_familiarity_delta: Dict[str, float] = field(default_factory=dict)  # target_faction_id -> familiarity delta, from a real interaction (bumps last_interaction_tick)
+    faction_sentiment_decay_set: Dict[str, float] = field(default_factory=dict)  # target_faction_id -> absolute post-decay sentiment value; does NOT bump last_interaction_tick (not a real interaction)
+    pairwise_tension_delta: Dict[str, float] = field(default_factory=dict)  # target_faction_id -> tension delta scoped to THIS rival only (unlike tension_delta, which is ambient and applies broadly -- see FactionState.pairwise_tension)
 
     def is_noop(self) -> bool:
         return (
@@ -965,6 +969,10 @@ class FactionUpdate:
             and not self.resources_delta
             and not self.diplomatic_relations_set
             and self.active_doctrines_set is None
+            and not self.faction_sentiment_delta
+            and not self.faction_familiarity_delta
+            and not self.faction_sentiment_decay_set
+            and not self.pairwise_tension_delta
         )
 
 

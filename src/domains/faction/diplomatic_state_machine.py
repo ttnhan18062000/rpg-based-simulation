@@ -9,7 +9,15 @@ Transition priority (single-step per pair per call):
   4. NEUTRAL → TENSE    pair_tension > 0.4
 
 ALLIED and VASSAL are terminal — suppressed from threshold transitions.
-Pair tension proxy: max(a.tension_level, b.tension_level).
+
+Pair tension proxy: max(a.pairwise_tension.get(b), b.pairwise_tension.get(a)) -- the DIRECTED,
+per-rival tension each faction tracks toward the other (TCK-20260914-FACTION-WAR-DECLARATION-
+DESIGN-QUESTION). This is deliberately NOT FactionState.tension_level, which is an ambient,
+per-faction scalar (world-compile seed, RESOURCE_DEPLETED stress, goal-priority scoring in
+faction_decision.py) with no pairwise meaning -- reusing it here previously meant one faction's
+overall stress, or its tension with a single real rival, applied identically to every other
+relationship it had, confirmed live to cascade a single HOSTILE pair into blanket HOSTILE (and
+then blanket ALLIED among everyone else) across an entire 15-faction world in one tick.
 """
 from __future__ import annotations
 
@@ -48,7 +56,7 @@ def compute_transitions(factions: Dict[str, FactionState]) -> List[FactionUpdate
             if current_ab in (DiplomaticState.ALLIED, DiplomaticState.VASSAL):
                 continue
 
-            pair_tension = max(fa.tension_level, fb.tension_level)
+            pair_tension = max(fa.pairwise_tension.get(fid_b, 0.0), fb.pairwise_tension.get(fid_a, 0.0))
             shared_territory = bool(set(fa.territory) & set(fb.territory))
 
             if current_ab == DiplomaticState.WAR:

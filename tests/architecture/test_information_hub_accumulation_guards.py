@@ -28,14 +28,28 @@ _EXPECTED_FACTION_STATE_FIELDS = {
     "military_strength",
     "tension_level",
     "_canonical_cache",
+    # Added by TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION (faction-to-faction
+    # sentiment + the pairwise-tension cascade fix), an unrelated, peer-reviewed feature --
+    # not a violation of the guard below, which is scoped specifically to
+    # InformationPropagationService never mutating FactionState as a side effect.
+    "faction_sentiments",
+    "pairwise_tension",
 }
 
 
 def test_no_new_faction_topology_field_added():
+    """Guards that InformationPropagationService (TCK-20260903-INFORMATION-HUB-ACCUMULATION's
+    own mechanism) never mutates FactionState -- it must emit only WorldEvents. This is NOT a
+    blanket freeze on FactionState's schema: other, unrelated tickets may legitimately add
+    fields (see _EXPECTED_FACTION_STATE_FIELDS' own trailing entries) -- update the expected set
+    when that happens, rather than treating every new field as this guard's concern."""
     actual_fields = set(FactionState.__dataclass_fields__.keys())
     assert actual_fields == _EXPECTED_FACTION_STATE_FIELDS, (
-        "FactionState's field set changed -- TCK-20260903-INFORMATION-HUB-ACCUMULATION's "
-        "propagation mechanism must never add new topology fields to FactionState. "
+        "FactionState's field set changed in a way this test doesn't recognize. If the new "
+        "field(s) come from InformationPropagationService, that's the real violation this guard "
+        "exists to catch (TCK-20260903-INFORMATION-HUB-ACCUMULATION: propagation must emit only "
+        "WorldEvents, never a FactionState mutation). If they come from an unrelated, reviewed "
+        "ticket, add them to _EXPECTED_FACTION_STATE_FIELDS with a comment naming that ticket. "
         f"actual={actual_fields}"
     )
 
