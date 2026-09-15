@@ -8,7 +8,7 @@ tickets changed.
 """
 
 import sys
-from datetime import date
+from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 
 import pytest
@@ -453,6 +453,10 @@ def test_compute_retro_metrics_returns_all_documented_keys():
         # always present (computed over an empty list, not omitted) when `tools` is omitted,
         # keeping this function's own additive-only contract.
         "skill_usage",
+        # Added by TCK-20260915-SIDECAR-ATTRIBUTION-GAP — always present alongside
+        # spend_proxy_by_phase/by_agent, discloses what fraction of events those tables actually
+        # cover instead of letting a reader assume they're complete.
+        "spend_proxy_coverage",
     }
 
 
@@ -888,6 +892,102 @@ def test_generate_retro_days_flag_does_not_raise_on_legacy_start_ts(tmp_path, mo
     generate_retro.main()  # must not raise
 
     assert (tmp_path / "RETRO-LAST30D.md").exists()
+
+
+# ---------------------------------------------------------------------------
+# _extract_notes_section / _write_report_preserving_notes / main() --force
+# (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES)
+# ---------------------------------------------------------------------------
+
+_HAND_AUTHORED_NOTES = (
+    "## Notes\n\n### Deep review -- 2026-09-15\n\nSomething a human or agent wrote by hand that "
+    "must survive regeneration.\n"
+)
+
+
+def test_extract_notes_section_returns_notes_onward():
+    existing = "# Report\n\n## Run Summary\n\nstuff\n\n" + _HAND_AUTHORED_NOTES
+    extracted = generate_retro._extract_notes_section(existing)
+    assert extracted == _HAND_AUTHORED_NOTES
+
+
+def test_extract_notes_section_none_when_no_notes_heading():
+    assert generate_retro._extract_notes_section("# Report\n\nNo notes heading here.\n") is None
+
+
+def test_write_report_preserving_notes_writes_fresh_file_when_none_exists(tmp_path):
+    out_path = tmp_path / "RETRO-TEST.md"
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data\n\n## Notes\n\n_placeholder_\n"
+    status = generate_retro._write_report_preserving_notes(fresh_report, out_path, force=False)
+    assert out_path.read_text() == fresh_report
+    assert "Written:" in status
+    assert "preserved" not in status
+
+
+def test_write_report_preserving_notes_preserves_existing_notes_by_default(tmp_path):
+    out_path = tmp_path / "RETRO-TEST.md"
+    out_path.write_text("# Report\n\n## Run Summary\n\nold data\n\n" + _HAND_AUTHORED_NOTES)
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data (regenerated)\n\n## Notes\n\n_placeholder_\n"
+
+    status = generate_retro._write_report_preserving_notes(fresh_report, out_path, force=False)
+    result_text = out_path.read_text()
+
+    # Content above ## Notes reflects the fresh regeneration...
+    assert "new data (regenerated)" in result_text
+    assert "old data" not in result_text
+    # ...but the hand-authored Notes content survived, verbatim, not the fresh placeholder.
+    assert "Something a human or agent wrote by hand that must survive regeneration." in result_text
+    assert "_placeholder_" not in result_text
+    assert "preserved" in status
+    assert "--force" in status
+
+
+def test_write_report_preserving_notes_force_discards_existing_notes(tmp_path):
+    out_path = tmp_path / "RETRO-TEST.md"
+    out_path.write_text("# Report\n\n## Run Summary\n\nold data\n\n" + _HAND_AUTHORED_NOTES)
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data\n\n## Notes\n\n_placeholder_\n"
+
+    status = generate_retro._write_report_preserving_notes(fresh_report, out_path, force=True)
+    result_text = out_path.read_text()
+
+    assert result_text == fresh_report
+    assert "Something a human or agent wrote by hand" not in result_text
+    assert "any prior ## Notes content was replaced" in status
+
+
+def test_write_report_preserving_notes_no_existing_notes_heading_overwrites_cleanly(tmp_path):
+    # An existing file with no ## Notes heading at all (e.g. hand-truncated, or a non-standard
+    # report) has nothing to preserve -- must not raise or corrupt the fresh report.
+    out_path = tmp_path / "RETRO-TEST.md"
+    out_path.write_text("# Report\n\nNo notes heading in this file at all.\n")
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data\n\n## Notes\n\n_placeholder_\n"
+    generate_retro._write_report_preserving_notes(fresh_report, out_path, force=False)
+    assert out_path.read_text() == fresh_report
+
+
+def test_main_regenerating_over_hand_authored_report_preserves_notes_end_to_end(tmp_path, monkeypatch):
+    # End-to-end: a real main() invocation must not destroy hand-authored content, mirroring the
+    # exact 2026-09-15 real-world incident this ticket was filed from (--days 14 destroying 177
+    # lines of RETRO-LAST14D.md's own hand-authored review).
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    runs_file.write_text(
+        '{"run_id":"TCK-A","start_ts":"2026-07-19T00:00:00Z","end_ts":"2026-07-19T01:00:00Z",'
+        '"workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n'
+    )
+    events_file.write_text("")
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["generate_retro.py", "--days", "30"])
+
+    out_path = tmp_path / "RETRO-LAST30D.md"
+    out_path.write_text("# Existing Report\n\n## Run Summary\n\nstale\n\n" + _HAND_AUTHORED_NOTES)
+
+    generate_retro.main()
+
+    result_text = out_path.read_text()
+    assert "Something a human or agent wrote by hand that must survive regeneration." in result_text
 
 
 # --- TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE: build-on-demand / fallback / no-hard-exit ---
@@ -2155,6 +2255,97 @@ def test_index_md_all_tools_default_never_crashes_on_none(tmp_path, monkeypatch)
 
 
 # ---------------------------------------------------------------------------
+# _resolve_report_run_population / index LAST{N}D rows (TCK-20260915-RETRO-INDEX-REPORTS-ZERO)
+#
+# Before this fix, `_update_index` only special-cased "ALL" and otherwise looked the report name
+# up in `runs_by_week` (keyed by ISO week string) -- "LAST7D"/"LAST14D"/"LAST28D" are not ISO
+# weeks, so every --days report indexed as 0 runs regardless of the real report's own content.
+# ---------------------------------------------------------------------------
+
+def _days_ago_ts(days):
+    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+
+def test_index_resolves_last_n_days_name_not_just_iso_weeks(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-LAST7D.md").write_text("placeholder")
+
+    all_runs = [
+        {"run_id": "TCK-RECENT-1", "start_ts": _days_ago_ts(1), "final_status": "DONE"},
+        {"run_id": "TCK-RECENT-2", "start_ts": _days_ago_ts(3), "final_status": "DONE"},
+        # Outside the 7-day window -- must not be counted in the LAST7D row.
+        {"run_id": "TCK-OLD", "start_ts": _days_ago_ts(20), "final_status": "DONE"},
+    ]
+    generate_retro._update_index(all_runs, [])
+
+    index_text = (tmp_path / "index.md").read_text()
+    last7d_line = next(l for l in index_text.splitlines() if "LAST7D" in l)
+    assert last7d_line.split("|")[2].strip() == "2", (
+        f"LAST7D row must count only the 2 runs within 7 days, not 0 (pre-fix) or 3 (window "
+        f"ignored): {last7d_line!r}"
+    )
+
+
+def test_index_last_n_days_row_matches_multiple_window_sizes_independently(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-LAST7D.md").write_text("placeholder")
+    (tmp_path / "RETRO-LAST14D.md").write_text("placeholder")
+    (tmp_path / "RETRO-LAST28D.md").write_text("placeholder")
+
+    all_runs = [
+        {"run_id": "TCK-D1", "start_ts": _days_ago_ts(1), "final_status": "DONE"},
+        {"run_id": "TCK-D10", "start_ts": _days_ago_ts(10), "final_status": "DONE"},
+        {"run_id": "TCK-D20", "start_ts": _days_ago_ts(20), "final_status": "DONE"},
+        {"run_id": "TCK-D40", "start_ts": _days_ago_ts(40), "final_status": "DONE"},
+    ]
+    generate_retro._update_index(all_runs, [])
+
+    index_text = (tmp_path / "index.md").read_text()
+    counts = {
+        name: next(l for l in index_text.splitlines() if name in l).split("|")[2].strip()
+        for name in ("LAST7D", "LAST14D", "LAST28D")
+    }
+    assert counts == {"LAST7D": "1", "LAST14D": "2", "LAST28D": "3"}
+
+
+def test_index_all_row_uses_deduplicated_population_matching_retro_all_body(tmp_path, monkeypatch):
+    # TCK-20260915-DUPLICATE-RUN-RECORDS: RETRO-ALL.md's own body dedupes multi-invocation
+    # gate-checkpoint rows before computing its run count. The index's ALL row must use the same
+    # deduplicated count, not the raw all_runs length (the ticket's own reported mismatch: index
+    # said 1609, RETRO-ALL.md's body said 1149).
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-ALL.md").write_text("placeholder")
+
+    all_runs = [
+        {
+            "run_id": "TCK-DUP", "execution_id": "exec-1", "start_ts": "2026-01-01T00:00:00Z",
+            "final_status": "DOD_BLOCKED",
+        },
+        {
+            "run_id": "TCK-DUP", "execution_id": "exec-1", "start_ts": "2026-01-01T00:00:00Z",
+            "final_status": "DONE",
+        },
+        {"run_id": "TCK-SOLO", "start_ts": "2026-01-02T00:00:00Z", "final_status": "DONE"},
+    ]
+    generate_retro._update_index(all_runs, [])
+
+    index_text = (tmp_path / "index.md").read_text()
+    all_line = next(l for l in index_text.splitlines() if "[ALL]" in l)
+    assert all_line.split("|")[2].strip() == "2", (
+        "ALL row must report the deduplicated execution count (2), not the raw row count (3)"
+    )
+
+
+def test_resolve_report_run_population_unrecognized_name_falls_through_to_empty():
+    # A name that is neither "ALL" nor "LAST{N}D" nor a real ISO week key must resolve to an
+    # empty population rather than raising or silently matching everything.
+    result = generate_retro._resolve_report_run_population(
+        "not-a-real-report-name", [{"run_id": "TCK-A", "start_ts": "2026-01-01T00:00:00Z"}], {}
+    )
+    assert result == []
+
+
+# ---------------------------------------------------------------------------
 # ## Tool Safety Audit — Read-Count Correlation subsection (AC2)
 # ---------------------------------------------------------------------------
 
@@ -2632,3 +2823,97 @@ def test_generate_uses_compute_retro_metrics_skill_usage_not_a_second_call(monke
     tools = [_tool_row(run_id="TCK-FAKE", tool="Skill", input_summary="{'skill': 'graphify'}")]
     generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=tools)
     assert call_count["n"] == 1
+
+
+# --- TCK-20260915-DUPLICATE-RUN-RECORDS: dedup wiring ---
+
+def test_generate_renders_dedup_note_when_raw_and_deduped_counts_differ(tmp_path):
+    report = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path,
+        raw_run_count=3, deduped_run_count=1,
+    )
+    assert "3 raw" in report
+    assert "1 real executions" in report
+    assert "TCK-20260915-DUPLICATE-RUN-RECORDS" in report
+
+
+def test_generate_omits_dedup_note_when_counts_equal_or_not_supplied(tmp_path):
+    report_equal = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path,
+        raw_run_count=1, deduped_run_count=1,
+    )
+    assert "TCK-20260915-DUPLICATE-RUN-RECORDS" not in report_equal
+
+    report_unset = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path)
+    assert "TCK-20260915-DUPLICATE-RUN-RECORDS" not in report_unset
+
+
+def test_main_dedupes_before_computing_run_summary(tmp_path, monkeypatch):
+    """End-to-end: main()'s --days branch must dedupe the window-filtered runs before generate()
+    ever sees them, not just when generate() is called directly with pre-deduped input."""
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+
+    progressive_pair = [
+        {**_BASE_RUN, "execution_id": "exec-dup", "final_status": "NEEDS_CHANGES",
+         "end_ts": "2026-07-06T00:30:00Z", "agent_count": 3},
+        {**_BASE_RUN, "execution_id": "exec-dup", "final_status": "DONE",
+         "end_ts": "2026-07-06T01:00:00Z", "agent_count": 9},
+    ]
+    monkeypatch.setattr(generate_retro, "_load_runs_and_events", lambda: (progressive_pair, []))
+    monkeypatch.setattr(generate_retro, "_load_source", lambda path, source: [])
+    monkeypatch.setattr(generate_retro, "_record_since_cutoff", lambda start_ts, cutoff: True)
+    monkeypatch.setattr(generate_retro, "_update_index", lambda *a, **k: None)
+    monkeypatch.setattr(sys, "argv", ["generate_retro.py", "--days", "14"])
+
+    generate_retro.main()
+
+    report_text = (tmp_path / "RETRO-LAST14D.md").read_text()
+    assert "| Total runs | 1 |" in report_text
+    assert "| Completed (DONE) | 1 (100%) |" in report_text
+    assert "2 raw" in report_text
+    assert "1 real executions" in report_text
+
+
+# --- TCK-20260915-SIDECAR-ATTRIBUTION-GAP: spend-proxy coverage disclosure ---
+
+def test_compute_retro_metrics_spend_proxy_coverage_computed():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Implement", "agent": "implementer",
+         "status": "ok", "summary": "did work", "cost_proxy_score": 4.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Test", "agent": "test-scoper",
+         "status": "ok", "summary": "ran tests", "cost_proxy_score": None},
+    ]
+    metrics = compute_retro_metrics(runs, events)
+    cov = metrics["spend_proxy_coverage"]
+    assert cov["events_scored"] == 1
+    assert cov["events_total"] == 2
+    assert cov["coverage_pct"] == 50.0
+
+
+def test_compute_retro_metrics_spend_proxy_coverage_none_when_no_events():
+    metrics = compute_retro_metrics([_BASE_RUN], [])
+    cov = metrics["spend_proxy_coverage"]
+    assert cov["events_total"] == 0
+    assert cov["coverage_pct"] is None
+
+
+def test_generate_renders_spend_proxy_coverage_note(tmp_path):
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Implement", "agent": "implementer",
+         "status": "ok", "summary": "did work", "cost_proxy_score": 4.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Test", "agent": "test-scoper",
+         "status": "ok", "summary": "ran tests", "cost_proxy_score": None},
+    ]
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+    assert "Computed over 50.0% of this window's events" in report
+    assert "TCK-20260915-SIDECAR-ATTRIBUTION-GAP" in report
+
+
+def test_generate_omits_spend_proxy_coverage_note_when_no_scored_events(tmp_path):
+    """No spend_proxy_by_phase table at all when zero events are scored (existing behavior,
+    unmodified by this ticket) -- the coverage note must not render standalone without its
+    tables."""
+    report = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path)
+    assert "Computed over" not in report

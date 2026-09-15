@@ -49,7 +49,24 @@ def test_bootstrap_phase_agent_vocabulary_matches_vocabulary_py():
     # pseudo-agent identities (an event logged with no delegated subagent), not contract-declared
     # subagent roles -- excluded from this comparison for the same reason, not a re-sync of the
     # contract itself (TCK-20260808-AGENT-MONITORING-CLAUDE-VOCAB-REGISTRATION).
-    expected_agents = vocabulary.WORKFLOW_AGENTS["implement-ticket"] - {"implement-ticket-orchestrator", "claude"}
+    #
+    # TCK-20260915-MONITORING-ANOMALY-VALIDATOR registered 3 more literals in
+    # vocabulary.py's WORKFLOW_AGENTS["implement-ticket"] set, each independently confirmed to be
+    # the same pseudo-agent/advisory category as the two above, not a real subagent role the YAML
+    # is missing (verified against agent-orchestration/workflows/implement-ticket.yaml's own
+    # `agents:` list, which declares none of the three):
+    #   - "orchestrator": the same hand-orchestration pseudo-agent pattern as "claude" above, just
+    #     a different, longer-running, still-growing literal for the identical concept.
+    #   - "context-packet-wrapper": the advisory shadow context-packet call site's own agent
+    #     literal (TCK-20260729-SHADOW-PACKET-CALL-SITE) -- an intentional side-channel mechanism,
+    #     not a contract-declared subagent.
+    #   - "implement-ticket": the workflow's own name used as a self-referential "the orchestrator
+    #     of this workflow did it directly" label -- same underlying concept as "claude"/
+    #     "orchestrator", just spelled after the workflow instead of the role.
+    expected_agents = vocabulary.WORKFLOW_AGENTS["implement-ticket"] - {
+        "implement-ticket-orchestrator", "claude", "orchestrator", "context-packet-wrapper",
+        "implement-ticket",
+    }
     assert contract_agent_ids == expected_agents
 
 

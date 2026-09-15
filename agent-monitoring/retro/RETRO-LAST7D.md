@@ -6,139 +6,153 @@
 
 | Metric | Value |
 |---|---|
-| Total runs | 69 |
-| Completed (DONE) | 44 (63%) |
-| Gate failures | 23 |
-| Avg duration | 91 min |
-| Avg agents per run | 5.7 |
-| Total agent calls | 400 |
+| Total runs | 107 |
+| Completed (DONE) | 98 (91%) |
+| Gate failures | 9 |
+| Avg duration | 258 min |
+| Avg agents per run | 6.4 |
+| Total agent calls | 702 |
+
+_Note: 108 raw `runs.jsonl` rows in this window collapsed to 107 real executions after deduplicating gate-checkpoint rows that share one `(run_id, execution_id, start_ts)` identity (TCK-20260915-DUPLICATE-RUN-RECORDS) — the counts above are the deduplicated figures._
 
 ## Gate Failure Breakdown
 
 | Gate | Count | % of runs |
 |---|---|---|
-| NEEDS_CHANGES | 8 | 11% |
-| DOD_BLOCKED | 6 | 8% |
-| NEEDS_HUMAN_INPUT | 4 | 5% |
-| CONFLICTS_DETECTED | 3 | 4% |
-| TESTS_FAILED | 2 | 2% |
-
-## Reason Codes
-
-| Reason | Count |
-|---|---|
-| dod_condition_failed | 7 |
-| needs_changes | 5 |
-| conflicts_detected | 3 |
-| DOC_STALENESS_BLOCKED | 1 |
+| BLOCKED | 7 | 6% |
+| NEEDS_CHANGES | 2 | 1% |
 
 ## Tag Breakdown — Subsystem/Topic
 
 | Tag | Runs | DONE rate | Gate failures |
 |---|---|---|---|
-| dashboard | 6 | 50% | 2 |
-| observability | 14 | 71% | 4 |
-| simulation-quality | 1 | 100% | 0 |
-| testing | 21 | 52% | 10 |
+| architecture | 26 | 96% | 1 |
+| cognition | 22 | 77% | 5 |
+| combat | 4 | 75% | 1 |
+| content | 8 | 100% | 0 |
+| economy | 1 | 100% | 0 |
+| engine | 2 | 100% | 0 |
+| faction | 1 | 100% | 0 |
+| feature-flags | 1 | 100% | 0 |
+| governance | 5 | 100% | 0 |
+| grand-strategy | 1 | 100% | 0 |
+| information | 4 | 75% | 1 |
+| mcp | 7 | 100% | 0 |
+| observability | 7 | 100% | 0 |
+| rendering | 1 | 100% | 0 |
+| self-model | 6 | 50% | 3 |
+| simulation-quality | 6 | 100% | 0 |
+| social | 6 | 100% | 0 |
+| strategy | 3 | 100% | 0 |
+| testing | 11 | 81% | 2 |
+| world | 16 | 100% | 0 |
 
 ## Tag Breakdown — Process/Skill-signal
 
 | Tag | Runs | Gate Hits |
 |---|---|---|
-| security | 8 | 7 |
+| api-design | 2 | N/A — no gate implemented |
+| performance | 7 | N/A — no gate implemented |
+| security | 1 | 1 |
 
 ## Tier Distribution
 
 | Tier | Count | Scoped | DONE count | DONE rate |
 |---|---|---|---|---|
-| epic | 2 | 1 | 1 | 100% |
-| hotfix | 18 | 0 | 15 | 83% |
-| n/a | 2 | 0 | 2 | 100% |
-| standard | 47 | 0 | 26 | 55% |
+| epic | 1 | 0 | 1 | 100% |
+| hotfix | 28 | 0 | 28 | 100% |
+| n/a | 1 | 0 | 1 | 100% |
+| standard | 77 | 0 | 68 | 88% |
 
 ## Agent Status Distribution
 
 | Agent | Calls | ok | failed | blocked | skipped |
 |---|---|---|---|---|---|
-| architecture-reviewer | 63 | 45 | 11 | 4 | 3 |
-| claude | 8 | 8 | 0 | 0 | 0 |
-| context-packet-wrapper | 2 | 2 | 0 | 0 | 0 |
-| create-tickets | 4 | 4 | 0 | 0 | 0 |
-| doc-updater | 8 | 8 | 0 | 0 | 0 |
-| done-checker | 43 | 35 | 7 | 1 | 0 |
-| finalizer | 33 | 33 | 0 | 0 | 0 |
-| implementer | 35 | 34 | 1 | 0 | 0 |
-| investigate:C1 | 5 | 5 | 0 | 0 | 0 |
-| investigate:C2 | 3 | 3 | 0 | 0 | 0 |
-| investigate:C3 | 3 | 3 | 0 | 0 | 0 |
-| investigate:C4 | 1 | 1 | 0 | 0 | 0 |
-| investigator | 28 | 24 | 0 | 1 | 3 |
-| link-epic | 4 | 4 | 0 | 0 | 0 |
-| orchestrator | 9 | 9 | 0 | 0 | 0 |
-| parity-updater | 31 | 20 | 0 | 0 | 11 |
-| planner | 31 | 23 | 0 | 5 | 3 |
-| security-reviewer | 2 | 2 | 0 | 0 | 0 |
-| structure | 5 | 5 | 0 | 0 | 0 |
-| test-scoper | 34 | 32 | 2 | 0 | 0 |
-| ticket-scoper | 46 | 43 | 3 | 0 | 0 |
-| write-sequence | 2 | 2 | 0 | 0 | 0 |
+| architecture-reviewer | 21 | 15 | 4 | 2 | 0 |
+| claude | 591 | 505 | 0 | 7 | 79 |
+| create-tickets | 1 | 1 | 0 | 0 | 0 |
+| doc-updater | 6 | 6 | 0 | 0 | 0 |
+| done-checker | 10 | 9 | 0 | 1 | 0 |
+| finalizer | 7 | 7 | 0 | 0 | 0 |
+| implementer | 8 | 8 | 0 | 0 | 0 |
+| investigate:C1 | 1 | 1 | 0 | 0 | 0 |
+| investigate:C2 | 1 | 1 | 0 | 0 | 0 |
+| investigator | 8 | 4 | 0 | 0 | 4 |
+| link-epic | 1 | 1 | 0 | 0 | 0 |
+| orchestrator | 18 | 13 | 0 | 0 | 5 |
+| parity-updater | 4 | 4 | 0 | 0 | 0 |
+| planner | 8 | 4 | 0 | 0 | 4 |
+| security-reviewer | 1 | 1 | 0 | 0 | 0 |
+| structure | 1 | 1 | 0 | 0 | 0 |
+| test-scoper | 5 | 5 | 0 | 0 | 0 |
+| ticket-scoper | 10 | 10 | 0 | 0 | 0 |
 
 ## Phase Status Distribution
 
 | Phase | Calls | ok | failed | blocked | skipped |
 |---|---|---|---|---|---|
-| Architecture-Verify | 28 | 23 | 3 | 2 | 0 |
-| Comprehend | 5 | 5 | 0 | 0 | 0 |
-| Document-Update | 8 | 8 | 0 | 0 | 0 |
-| Finalize | 39 | 39 | 0 | 0 | 0 |
-| Implement | 37 | 36 | 1 | 0 | 0 |
-| Investigate | 40 | 36 | 0 | 1 | 3 |
-| Link | 4 | 4 | 0 | 0 | 0 |
-| Parity | 31 | 20 | 0 | 0 | 11 |
-| Plan | 31 | 23 | 0 | 5 | 3 |
-| Retrieval | 2 | 2 | 0 | 0 | 0 |
-| Review | 35 | 22 | 8 | 2 | 3 |
-| Scope | 41 | 38 | 3 | 0 | 0 |
-| Security-Review | 2 | 2 | 0 | 0 | 0 |
-| Structure | 5 | 5 | 0 | 0 | 0 |
-| Test | 38 | 36 | 2 | 0 | 0 |
-| Verify | 43 | 35 | 7 | 1 | 0 |
-| Write | 11 | 11 | 0 | 0 | 0 |
+| Architecture-Verify | 12 | 12 | 0 | 0 | 0 |
+| Comprehend | 1 | 1 | 0 | 0 | 0 |
+| Document-Update | 12 | 11 | 0 | 0 | 1 |
+| Finalize | 103 | 101 | 0 | 2 | 0 |
+| Implement | 100 | 93 | 0 | 1 | 6 |
+| Investigate | 31 | 26 | 0 | 1 | 4 |
+| Link | 1 | 1 | 0 | 0 | 0 |
+| Parity | 91 | 18 | 0 | 0 | 73 |
+| Plan | 17 | 13 | 0 | 0 | 4 |
+| Review | 18 | 12 | 4 | 2 | 0 |
+| Scope | 105 | 105 | 0 | 0 | 0 |
+| Security-Review | 3 | 1 | 0 | 0 | 2 |
+| Structure | 1 | 1 | 0 | 0 | 0 |
+| Test | 100 | 97 | 0 | 1 | 2 |
+| Verify | 105 | 102 | 0 | 3 | 0 |
+| Write | 2 | 2 | 0 | 0 | 0 |
+
+_Computed over 21.7% of this window's events (152 of 702 scored) — see TCK-20260915-SIDECAR-ATTRIBUTION-GAP for why the rest lack a `cost_proxy_score`._
 
 ## Spend Proxy — By Phase
 
 | Phase | Events scored | Total | Avg |
 |---|---|---|---|
-| Architecture-Verify | 28 | 729.9 | 26.1 |
-| Document-Update | 8 | 0.0 | 0.0 |
-| Finalize | 39 | 1531.4 | 39.3 |
-| Implement | 37 | 2146.6 | 58.0 |
-| Investigate | 27 | 998.7 | 37.0 |
-| Parity | 31 | 406.7 | 13.1 |
-| Plan | 31 | 1009.1 | 32.6 |
-| Review | 35 | 781.7 | 22.3 |
-| Scope | 40 | 621.6 | 15.5 |
-| Security-Review | 2 | 0.0 | 0.0 |
-| Test | 38 | 1344.6 | 35.4 |
-| Verify | 43 | 1979.7 | 46.0 |
+| Architecture-Verify | 11 | 2593.0 | 235.7 |
+| Comprehend | 1 | 174.4 | 174.4 |
+| Document-Update | 10 | 799.0 | 79.9 |
+| Finalize | 11 | 642.9 | 58.4 |
+| Implement | 15 | 3207.6 | 213.8 |
+| Investigate | 14 | 694.1 | 49.6 |
+| Link | 1 | 0.0 | 0.0 |
+| Parity | 11 | 778.6 | 70.8 |
+| Plan | 12 | 490.0 | 40.8 |
+| Review | 18 | 1442.8 | 80.2 |
+| Scope | 17 | 1764.0 | 103.8 |
+| Security-Review | 3 | 0.0 | 0.0 |
+| Structure | 1 | 0.0 | 0.0 |
+| Test | 13 | 1662.9 | 127.9 |
+| Verify | 12 | 1635.5 | 136.3 |
+| Write | 2 | 0.0 | 0.0 |
 
 ## Spend Proxy — By Agent
 
 | Agent | Events scored | Total | Avg |
 |---|---|---|---|
-| architecture-reviewer | 63 | 1511.5 | 24.0 |
-| claude | 7 | 0.0 | 0.0 |
-| doc-updater | 8 | 0.0 | 0.0 |
-| done-checker | 43 | 1979.7 | 46.0 |
-| finalizer | 33 | 1531.4 | 46.4 |
-| implementer | 35 | 2146.6 | 61.3 |
-| investigator | 27 | 998.7 | 37.0 |
-| orchestrator | 9 | 0.0 | 0.0 |
-| parity-updater | 31 | 406.7 | 13.1 |
-| planner | 31 | 1009.1 | 32.6 |
-| security-reviewer | 2 | 0.0 | 0.0 |
-| test-scoper | 34 | 1344.6 | 39.5 |
-| ticket-scoper | 36 | 621.6 | 17.3 |
+| architecture-reviewer | 21 | 1590.1 | 75.7 |
+| claude | 41 | 7004.9 | 170.9 |
+| create-tickets | 1 | 174.4 | 174.4 |
+| doc-updater | 6 | 674.5 | 112.4 |
+| done-checker | 10 | 1376.4 | 137.6 |
+| finalizer | 7 | 511.7 | 73.1 |
+| implementer | 8 | 1855.7 | 232.0 |
+| investigate:C1 | 1 | 54.2 | 54.2 |
+| investigate:C2 | 1 | 115.3 | 115.3 |
+| investigator | 8 | 199.7 | 25.0 |
+| link-epic | 1 | 0.0 | 0.0 |
+| orchestrator | 18 | 202.5 | 11.2 |
+| parity-updater | 4 | 486.2 | 121.6 |
+| planner | 8 | 125.9 | 15.7 |
+| security-reviewer | 1 | 0.0 | 0.0 |
+| structure | 1 | 0.0 | 0.0 |
+| test-scoper | 5 | 1344.4 | 268.9 |
+| ticket-scoper | 10 | 169.1 | 16.9 |
 
 ## Summary Quality
 
@@ -146,161 +160,88 @@
 |---|---|
 | Empty summary (current schema) | 0 |
 | Legacy-format records (summary field not applicable) | 0 |
-| Truncated (>200 chars) | 1 |
+| Truncated (>200 chars) | 62 |
 
 ## Slow Runs (> 30 min)
 
-| run_id | duration | final_status |
-|---|---|---|
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 613 min | DONE |
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 610 min | NEEDS_CHANGES |
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 603 min | NEEDS_CHANGES |
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | 592 min | NEEDS_CHANGES |
-| TCK-20260801-CODEX-REALREPO-PILOT-HARNESS | 440 min | DONE |
-| TCK-20260802-STORED-ARTIFACT-KIND | 373 min | DONE |
-| TCK-20260731-CODEX-PILOT-EXECUTOR | 295 min | DONE |
-| TCK-20260804-EXPANSION-RATE-WIRING | 284 min | DONE |
-| TCK-20260702-OBSISO-ISOLATION-PROOF | 106 min | DONE |
-| TCK-20260702-OBSISO-TRACE-ASYNC | 95 min | DONE |
-| TCK-20260702-OBSISO-BROKER-CONFIG | 93 min | DONE |
-| TCK-20260804-RETRIEVAL-RAW-INVESTIGATION-METRIC | 86 min | DONE |
-| TCK-20260803-DOCS-STRUCTURE-AUDIT | 81 min | DONE |
-| TCK-20260803-DOC-UPDATER-CORE-WIRING | 78 min | DONE |
-| TCK-20260801-CODEX-LIVE-TRANSPORT | 78 min | DONE |
-| TCK-20260803-DOCS-STRUCTURE-AUDIT | 76 min | DOD_BLOCKED |
-| TCK-20260803-DOC-UPDATER-CORE-WIRING | 72 min | DOD_BLOCKED |
-| TCK-20260801-CODEX-WORKFLOW-CONTINUATION-POLICY | 66 min | DONE |
-| TCK-20260802-DOC-UPDATE-DISCIPLINE | 65 min | DONE |
-| TCK-20260731-PARITY-READPATH-GATE | 62 min | DONE |
-| TCK-20260731-PARITY-INDEX-IMPORTER | 60 min | DONE |
-| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 51 min | DONE |
-| TCK-20260804-SKILL-JS-PHASE-SYNC | 45 min | DONE |
-| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 44 min | DOD_BLOCKED |
-| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 41 min | DONE |
-| TCK-20260804-OBSISO-WORKER-PARITY-HOTFIX | 40 min | DONE |
-| TCK-20260731-PARITY-IMPACT-PROOF | 39 min | DONE |
-| TCK-20260802-CONTEXT-KIND-PRIORITY | 36 min | DONE |
-| TCK-20260802-EXACT-LOOKUP-CONVENTION | 35 min | DONE |
-| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 33 min | DOD_BLOCKED |
-| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 33 min | TESTS_FAILED |
-| TCK-20260731-PARITY-INDEX-BASELINE | 31 min | DONE |
+| run_id | duration | active | idle | final_status |
+|---|---|---|---|---|
+| TCK-20260912-WORKING-LOG-APPEND-HELPER | 1086 min | 0 min | 1337 min | DONE |
+| TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2 | 828 min | 91 min | 737 min | DONE |
+| TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT | 123 min | 123 min | 0 min | DONE |
+| TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT | 103 min | 103 min | 0 min | DONE |
+| TCK-20260909-ARCHITECTURE-BOUNDARY-LINE-KEYED-PINNING-BRITTLE | 89 min | 37 min | 51 min | DONE |
+| TCK-20260911-WORKING-LOG-LINE-ENDING-UNION-DUPLICATION | 74 min | 35 min | 39 min | DONE |
+
+_4 of the runs above spend at least half their reported duration idle (gaps ≥ 30 min between phase transitions, e.g. waiting on human review) rather than in active work — see `active`/`idle` columns; "slow" here does not mean "took a long time to actively work on."_
 
 ## Outliers
 
 _Flags a value more than 3x its group's median — a relative visibility signal, not an absolute threshold like Slow Runs above, and not a claim about *why* the value is high._
 
-### Duration outliers (by tier)
-
-| run_id | tier | duration_s | tier median | ratio |
-|---|---|---|---|---|
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 36832 | 2581.0 | 14.3x |
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 36615 | 2581.0 | 14.2x |
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 36222 | 2581.0 | 14.0x |
-| TCK-20260801-CODEX-PILOT-ORCHESTRATION | standard | 35563 | 2581.0 | 13.8x |
-| TCK-20260801-CODEX-REALREPO-PILOT-HARNESS | standard | 26413 | 2581.0 | 10.2x |
-| TCK-20260802-STORED-ARTIFACT-KIND | standard | 22385 | 2581.0 | 8.7x |
-| TCK-20260804-SKILL-JS-PHASE-SYNC | hotfix | 2702 | 325.0 | 8.3x |
-| TCK-20260804-OBSISO-WORKER-PARITY-HOTFIX | hotfix | 2457 | 325.0 | 7.6x |
-| TCK-20260731-CODEX-PILOT-EXECUTOR | standard | 17701 | 2581.0 | 6.9x |
-| TCK-20260804-EXPANSION-RATE-WIRING | standard | 17081 | 2581.0 | 6.6x |
-| TCK-20260803-RETRIEVAL-EVENT-TS-OVERRIDE | hotfix | 1764 | 325.0 | 5.4x |
-| TCK-20260730-PROGRESS-TIMELINE-VIEW-HOTFIX | hotfix | 1500 | 325.0 | 4.6x |
-| TCK-20260804-PLANS-EXPERIMENTS-SWEEP | hotfix | 1090 | 325.0 | 3.4x |
-
 ### Cost-proxy-score outliers (by phase)
 
 | run_id | seq | phase | agent | cost_proxy_score | phase median | ratio |
 |---|---|---|---|---|---|---|
-| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 10 | Verify | done-checker | 147.07999999999998 | 3.7 | 39.5x |
-| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 11 | Verify | done-checker | 140.046 | 3.7 | 37.7x |
-| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 10 | Verify | done-checker | 138.61599999999999 | 3.7 | 37.3x |
-| TCK-20260803-DOC-UPDATER-CORE-WIRING | 9 | Verify | done-checker | 125.309 | 3.7 | 33.7x |
-| TCK-20260803-AGENT-MONITORING-INDEX-PHONY-FIX | 9 | Verify | done-checker | 119.905 | 3.7 | 32.2x |
-| TCK-20260731-PARITY-READPATH-GATE | 10 | Verify | done-checker | 115.46600000000001 | 3.7 | 31.0x |
-| TCK-20260803-DOCS-STRUCTURE-AUDIT | 8 | Verify | done-checker | 115.212 | 3.7 | 31.0x |
-| TCK-20260731-PARITY-IMPACT-PROOF | 9 | Verify | done-checker | 112.25999999999999 | 3.7 | 30.2x |
-| TCK-20260731-PARITY-INDEX-BASELINE | 19 | Verify | done-checker | 85.90100000000001 | 3.7 | 23.1x |
-| TCK-20260802-EXACT-LOOKUP-CONVENTION | 10 | Verify | done-checker | 83.506 | 3.7 | 22.5x |
-| TCK-20260803-RETRIEVAL-EVENT-TS-OVERRIDE | 8 | Verify | done-checker | 81.139 | 3.7 | 21.8x |
-| TCK-20260731-PARITY-INDEX-IMPORTER | 10 | Verify | done-checker | 80.375 | 3.7 | 21.6x |
-| TCK-20260803-DOC-UPDATER-DASHBOARD-PALETTE | 11 | Verify | done-checker | 79.461 | 3.7 | 21.4x |
-| TCK-20260803-DOC-UPDATER-VOCAB-REGISTRATION | 11 | Verify | done-checker | 75.504 | 3.7 | 20.3x |
-| TCK-20260803-DOCS-STRUCTURE-AUDIT | 9 | Verify | done-checker | 72.937 | 3.7 | 19.6x |
-| TCK-20260803-RETRO-TOOL-SAFETY-AUDIT | 12 | Verify | done-checker | 71.39 | 3.7 | 19.2x |
-| TCK-20260802-CONTEXT-KIND-PRIORITY | 10 | Verify | done-checker | 70.357 | 3.7 | 18.9x |
-| TCK-20260803-AGENT-MONITORING-INDEX-PHONY-FIX | 10 | Verify | done-checker | 66.045 | 3.7 | 17.8x |
-| TCK-20260803-DOC-UPDATER-CORE-WIRING | 10 | Verify | done-checker | 65.912 | 3.7 | 17.7x |
-| TCK-20260802-STORED-ARTIFACT-KIND | 11 | Verify | done-checker | 65.601 | 3.7 | 17.6x |
-| TCK-20260803-BRAINSTORM-SKILL-STALE-PATH | 8 | Verify | done-checker | 63.993 | 3.7 | 17.2x |
+| TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY | 6 | Architecture-Verify | claude | 1593.737 | 81.6 | 19.5x |
+| TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX | 1 | Scope | claude | 862.641 | 71.4 | 12.1x |
+| TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT | 9 | Test | test-scoper | 703.523 | 68.9 | 10.2x |
+| TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT | 11 | Verify | done-checker | 777.943 | 83.4 | 9.3x |
+| TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL | 5 | Implement | claude | 845.559 | 127.8 | 6.6x |
+| TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT | 10 | Test | test-scoper | 407.92400000000004 | 68.9 | 5.9x |
+| TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2 | 6 | Document-Update | doc-updater | 338.238 | 66.9 | 5.1x |
+| TCK-20260910-RETRIEVAL-CACHE-ACCESS-LOG-CHAIN-REMOVAL | 3 | Plan | claude | 133.71 | 30.1 | 4.4x |
+| TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT | 6 | Implement | implementer | 504.101 | 127.8 | 3.9x |
+| TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS | 3 | Plan | claude | 109.352 | 30.1 | 3.6x |
+| TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT | 7 | Implement | implementer | 428.213 | 127.8 | 3.4x |
+| TCK-20260910-KGMCP-MEASUREMENT-TOOLING-REMOVAL | 4 | Review | claude | 229.423 | 71.5 | 3.2x |
+| TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX | 10 | Verify | claude | 259.081 | 83.4 | 3.1x |
 
-## Retrieval Quality
+## Search & Investigation Effort
 
-_Retrieval-event volume reflects test/manual invocations only; visible under `--all`, not `--days`/`--week`, since these run_ids are deliberately unlinked from any `runs.jsonl` row._
+### Search Calls (Follow-Up Search Tooling)
 
-### Cache Rates by Level
+**Total:** 281
 
-_No cache-level data this period._
+### Raw Investigation (Read) Calls
 
-### Noise Indicators
-
-| Signal | Numerator | Denominator | Ratio |
-|---|---|---|---|
-| Candidate → Selected | 0 | 0 | n/a |
-| Selected → Cited | 0 | 0 | n/a |
-
-### Freshness / Authority Distribution
-
-**Authority**
-
-_No authority data this period._
-
-**Freshness**
-
-_No freshness data this period._
-
-### Expansion Rate
-
-**Expansion rate:** 0.0%
-
-## Shadow vs. Baseline Retrieval Comparison
-
-_Compares shadow-packet-covered (real TCK-... run_id) retrieval events against the synthetic/manual-invocation baseline, using the same cache-rate/noise-ratio/freshness-authority/expansion-rate measurement domain as `## Retrieval Quality` above. Comparison data only._
-
-| Metric | Shadow | Baseline |
-|---|---|---|
-| Retrieval event count | 2 | 0 |
-| Candidate → Selected ratio | n/a | n/a |
-| Selected → Cited ratio | n/a | n/a |
-| Expansion rate | 0.0% | 0.0% |
-
-**Cache Rates by Level — Shadow**
-
-_No cache-level data this period._
-
-**Cache Rates by Level — Baseline**
-
-_No cache-level data this period._
-
-**Freshness / Authority — Shadow**
-
-Authority: _none_
-Freshness: _none_
-
-**Freshness / Authority — Baseline**
-
-Authority: _none_
-Freshness: _none_
+**Total:** 1081
+**Read-to-search ratio:** 3.847
 
 ## Tool Safety Audit
 
 ### Search-Before-Grep Compliance (Investigate Phase)
 
-**Compliance rate:** 85.7% (12/14 Investigate-phase calls)
+_Only the orchestrating run's own direct tools.jsonl rows are visible to this detector — a dispatched sub-agent's (e.g. `investigator`) own search/grep calls are not attributed back to this pair, so a 'non-compliant' pair may reflect an orchestrator-level incidental call rather than the real investigation's own behavior. The true compliance rate for delegated investigation work is unknown and plausibly higher than the rate below._
+
+**Compliance rate:** 0.0% (0/8 Investigate-phase calls)
 
 ### Parity Ledger Write-Safety
 
-**`docs/parity_ledger/*.yaml` write violations:** 14
-**Unsafe `parity_index.py build` invocations (real repo path):** 1
+**`docs/parity_ledger/*.yaml` edits co-occurring with a same-run `parity_index.py build` call:** 0
+**Unsafe `parity_index.py build` invocations (real repo path):** 7
+
+### Read-Count Correlation (Search-Before-Grep Compliance)
+
+| Group | Pairs | Median Read count | Avg Read count |
+|---|---|---|---|
+| Compliant | 0 | n/a | n/a |
+| Non-compliant | 8 | 6.0 | 4.9 |
+
+## Parity Index Read-Path Usage
+
+**`entry`/`impact`/`health` call count:** 0/6419 Bash rows scanned
+
+_Counts tools.jsonl rows where tool == "Bash" and input_summary matches parity_index.py followed immediately by entry, impact, or health (path-anchored, so a filename mention alone — e.g. test_parity_index.py, --help, `git log -- ... parity_index.py`, `sed -n '1,60p' tools/parity_index.py` — never counts). bash_rows_scanned is the total Bash-tool row population this detector ran against (the section's own 'N' denominator). Confirmed 0 real call sites as of TCK-20260731-PARITY-READPATH-GATE's Gate A review (reviewed GO, not yet wired into any real workflow call site) — this is the expected, correct value until a future ticket adds a real entry/impact/health call site, not a bug._
+
+## Skill Usage
+
+### Zero-Invocation Flags (All-Time, 14-Day Grace Period)
+
+**Flagged (confirmed age past grace period):** api-design-principles, architecture, backend-testing, observability, progression-entities, simq-dev, systems-economy
+**Flagged (unknown age, no `date_added`):** debugging-strategies, doc-coauthoring, frontend-design, prompt-builder, python-performance-optimization, python-testing-patterns, test-driven-development
+
+_All-time (never period-scoped) cross-reference of the real .claude/skills/*/SKILL.md catalog against build_skill_usage_section(tools)'s per_skill counts. A skill with any nonzero invocation count is never flagged, regardless of age. Of the remaining zero-invocation skills: `flagged_stale` requires a real, parseable `date_added` older than the 14-day grace period — a confirmed-age signal. `flagged_unknown_age` covers skills with no (or unparseable) `date_added` and zero invocations — an honest, lower-certainty signal, not proof of staleness, since no authorship date can be established. This fail-open policy on missing date_added is deliberate: it is what makes backend-testing's real pre-TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED state (no date_added field at all) correctly flaggable, per TCK-20260810-SKILL-USAGE-RETRO-TRACKING's AC2._
 
 ## Notes
 
