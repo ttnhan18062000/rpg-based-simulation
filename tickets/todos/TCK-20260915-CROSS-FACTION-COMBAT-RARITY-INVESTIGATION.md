@@ -123,6 +123,12 @@ explicitly flagged as out of scope for the sentiment build and never investigate
   original 4.1x combat-volume claim used to justify enabling this feature does not reproduce today)
 - `TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` (candidate 4, found here, filed
   separately — a real bug, measured to be a minor contributor not the primary blocker)
+- `TCK-20260915-WORLDBUILDING-DANGLING-REGION-REFERENCE-SILENT-FALLTHROUGH` (found during the
+  static composition comparison — `merchant_caravan`'s `preferred_regions` references a region no
+  module defines; filed as its own class-level defect)
+- `TCK-20260915-WORLDBUILDING-DUPLICATE-REGION-ID-ACROSS-MODULES` (found in the same trace — two
+  modules composed into `frontier_living_world` both define a region named `"hometown"` with
+  different bounds; filed separately)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2 — the sentiment mechanism
