@@ -116,6 +116,11 @@ explicitly flagged as out of scope for the sentiment build and never investigate
   surfaced both findings)
 - `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (same shape: a system fed by nothing)
 - `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` (same shape: a system fed by nothing)
+- `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION` (filed from this
+  investigation's own candidate-3 findings — `CombatEngagementPhase`'s entire tactical decision has
+  zero downstream consumers)
+- `TCK-20260915-COMBAT-ENGAGEMENT-4X-MEASUREMENT-NO-LONGER-REPRODUCES` (filed alongside it — the
+  original 4.1x combat-volume claim used to justify enabling this feature does not reproduce today)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2 — the sentiment mechanism
