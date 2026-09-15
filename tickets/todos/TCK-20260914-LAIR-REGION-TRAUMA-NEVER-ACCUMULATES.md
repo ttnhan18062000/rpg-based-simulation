@@ -196,6 +196,23 @@ volume, calamity-intensity production) now confirmed to share this one shape —
 speculative case for a compile-time check that validates world composition against what its own
 mechanics structurally require, not just that content references resolve.
 
+**A clean counter-example, checked next, protects the pattern from overclaiming**:
+`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` looked like a strong fourth-instance
+candidate (another "system fed by nothing" symptom) but does **not** share this pattern. Checked
+directly: entities are correctly co-located, deaths genuinely happen where the mechanic needs
+them to, and the death is detected — by one consumer (`world_dynamics.py`'s trauma block, which
+checks `alive_set is False` directly) but not another (`resolve_lifecycle()`'s own filter, which
+checks `outcome_kind in ("KILL", "PERMADEATH")` — missing `"DEFEAT"`, confirmed empirically to be
+100% of real deaths, 20/20, in the sampled run). A real, single-cause classification divergence
+between two independent readers of the same event, not a geometry/composition gap. See that
+ticket's own Implementation Notes for the full trace. This is the intended shape of checking each
+instance rather than assuming — a pattern with one confirmed exception is more credible than one
+presented as universal.
+
+**Full write-up of the pattern, all four instances checked (including this exception), and the
+implication — moved out of this ticket into its own standalone document, since the finding has
+outgrown living inside one ticket's notes**: `docs/plans/world_composition_precondition_gap_finding.md`.
+
 ## Test Summary
 _(not started)_
 
