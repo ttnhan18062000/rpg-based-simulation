@@ -6,19 +6,21 @@
 
 | Metric | Value |
 |---|---|
-| Total runs | 249 |
-| Completed (DONE) | 233 (93%) |
-| Gate failures | 15 |
-| Avg duration | 169 min |
-| Avg agents per run | 7.3 |
-| Total agent calls | 1861 |
+| Total runs | 255 |
+| Completed (DONE) | 240 (94%) |
+| Gate failures | 14 |
+| Avg duration | 167 min |
+| Avg agents per run | 7.2 |
+| Total agent calls | 1909 |
+
+_Note: 257 raw `runs.jsonl` rows in this window collapsed to 255 real executions after deduplicating gate-checkpoint rows that share one `(run_id, execution_id, start_ts)` identity (TCK-20260915-DUPLICATE-RUN-RECORDS) — the counts above are the deduplicated figures._
 
 ## Gate Failure Breakdown
 
 | Gate | Count | % of runs |
 |---|---|---|
 | BLOCKED | 11 | 4% |
-| NEEDS_CHANGES | 3 | 1% |
+| NEEDS_CHANGES | 2 | 0% |
 | NEEDS_HUMAN_INPUT | 1 | 0% |
 
 ## Reason Codes
@@ -47,7 +49,7 @@
 | grand-strategy | 1 | 100% | 0 |
 | hud | 1 | 100% | 0 |
 | information | 5 | 80% | 1 |
-| lifecycle | 14 | 100% | 0 |
+| lifecycle | 13 | 100% | 0 |
 | mcp | 9 | 100% | 0 |
 | observability | 9 | 100% | 0 |
 | progression | 1 | 100% | 0 |
@@ -55,7 +57,7 @@
 | self-model | 6 | 50% | 3 |
 | simulation-quality | 30 | 90% | 3 |
 | social | 21 | 100% | 0 |
-| strategy | 13 | 100% | 0 |
+| strategy | 12 | 100% | 0 |
 | temporal | 1 | 100% | 0 |
 | testing | 31 | 93% | 2 |
 | world | 27 | 92% | 2 |
@@ -74,16 +76,16 @@
 | Tier | Count | Scoped | DONE count | DONE rate |
 |---|---|---|---|---|
 | epic | 9 | 1 | 8 | 100% |
-| hotfix | 54 | 0 | 54 | 100% |
+| hotfix | 56 | 0 | 56 | 100% |
 | n/a | 7 | 0 | 7 | 100% |
-| standard | 179 | 0 | 164 | 91% |
+| standard | 183 | 0 | 169 | 92% |
 
 ## Agent Status Distribution
 
 | Agent | Calls | ok | failed | blocked | skipped |
 |---|---|---|---|---|---|
 | architecture-reviewer | 139 | 105 | 10 | 12 | 12 |
-| claude | 970 | 841 | 1 | 13 | 115 |
+| claude | 1018 | 889 | 1 | 13 | 115 |
 | concern-investigator | 1 | 1 | 0 | 0 | 0 |
 | context-packet-wrapper | 1 | 1 | 0 | 0 | 0 |
 | create-tickets | 6 | 6 | 0 | 0 | 0 |
@@ -128,26 +130,28 @@
 | Comprehend | 7 | 7 | 0 | 0 | 0 |
 | Document-Update | 75 | 74 | 0 | 0 | 1 |
 | Document-Update-Gate | 6 | 6 | 0 | 0 | 0 |
-| Finalize | 232 | 227 | 0 | 3 | 2 |
-| Implement | 220 | 212 | 0 | 1 | 7 |
-| Investigate | 138 | 124 | 1 | 2 | 11 |
+| Finalize | 240 | 235 | 0 | 3 | 2 |
+| Implement | 228 | 220 | 0 | 1 | 7 |
+| Investigate | 144 | 130 | 1 | 2 | 11 |
 | Link | 3 | 3 | 0 | 0 | 0 |
 | Parity | 197 | 86 | 0 | 1 | 110 |
 | Parity-Gate | 4 | 4 | 0 | 0 | 0 |
-| Plan | 99 | 88 | 0 | 1 | 10 |
+| Plan | 101 | 90 | 0 | 1 | 10 |
 | Plan-Fix | 2 | 2 | 0 | 0 | 0 |
 | Retrieval | 1 | 1 | 0 | 0 | 0 |
 | Review | 96 | 68 | 10 | 12 | 6 |
 | Review-Recheck | 3 | 3 | 0 | 0 | 0 |
-| Scope | 205 | 205 | 0 | 0 | 0 |
+| Scope | 213 | 213 | 0 | 0 | 0 |
 | Security-Review | 12 | 2 | 0 | 0 | 10 |
 | Structure | 7 | 7 | 0 | 0 | 0 |
-| Test | 212 | 201 | 5 | 1 | 5 |
+| Test | 220 | 209 | 5 | 1 | 5 |
 | Test-Cleanup-Checkpoint | 6 | 6 | 0 | 0 | 0 |
-| Verify | 237 | 212 | 12 | 13 | 0 |
+| Verify | 245 | 220 | 12 | 13 | 0 |
 | Verify-Recheck | 3 | 2 | 0 | 1 | 0 |
 | Verify-Recheck2 | 1 | 1 | 0 | 0 | 0 |
 | Write | 26 | 26 | 0 | 0 | 0 |
+
+_Computed over 54.2% of this window's events (1035 of 1909 scored) — see TCK-20260915-SIDECAR-ATTRIBUTION-GAP for why the rest lack a `cost_proxy_score`._
 
 ## Spend Proxy — By Phase
 
@@ -207,7 +211,7 @@
 |---|---|
 | Empty summary (current schema) | 0 |
 | Legacy-format records (summary field not applicable) | 0 |
-| Truncated (>200 chars) | 98 |
+| Truncated (>200 chars) | 110 |
 
 ## Slow Runs (> 30 min)
 
@@ -220,7 +224,6 @@
 | TCK-20260904-DOC-COVERAGE-REVERSE-CHECK | 977 min | 0 min | 977 min | DONE |
 | TCK-20260911-AGENT-TOOLS-FRONTMATTER-WAVE-2 | 828 min | 91 min | 737 min | DONE |
 | TCK-20260904-INHERITED-REPUTATION-SEED | 569 min | 1 min | 568 min | DONE |
-| TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE | 462 min | 0 min | 462 min | DONE |
 | TCK-20260902-COMING-OF-AGE-ARCHETYPE-CHOICE | 462 min | 0 min | 462 min | DONE |
 | TCK-20260902-PLACE-MIGRATION-RECALIBRATION | 385 min | 0 min | 385 min | DONE |
 | CREATE-TICKETS-DOCS-PLANS-RPG-DESIGN-ROADMAP-RPG-M4-BEYOND-CITY-EPIC | 204 min | 2 min | 202 min | DONE |
@@ -265,7 +268,7 @@
 | TCK-20260825-METADATA-API-BACKEND-MISSING | 35 min | 0 min | 211 min | DONE |
 | TCK-20260902-HARVEST-LOOT-TEST-COVERAGE | 33 min | 33 min | 0 min | DONE |
 
-_38 of the runs above spend at least half their reported duration idle (gaps ≥ 30 min between phase transitions, e.g. waiting on human review) rather than in active work — see `active`/`idle` columns; "slow" here does not mean "took a long time to actively work on."_
+_37 of the runs above spend at least half their reported duration idle (gaps ≥ 30 min between phase transitions, e.g. waiting on human review) rather than in active work — see `active`/`idle` columns; "slow" here does not mean "took a long time to actively work on."_
 
 ## Outliers
 
@@ -469,12 +472,12 @@ Freshness: _none_
 
 ### Search Calls (Follow-Up Search Tooling)
 
-**Total:** 858
+**Total:** 860
 
 ### Raw Investigation (Read) Calls
 
-**Total:** 4938
-**Read-to-search ratio:** 5.7552
+**Total:** 4973
+**Read-to-search ratio:** 5.7826
 
 ## Tool Safety Audit
 
@@ -498,7 +501,7 @@ _Only the orchestrating run's own direct tools.jsonl rows are visible to this de
 
 ## Parity Index Read-Path Usage
 
-**`entry`/`impact`/`health` call count:** 0/21870 Bash rows scanned
+**`entry`/`impact`/`health` call count:** 0/22282 Bash rows scanned
 
 _Counts tools.jsonl rows where tool == "Bash" and input_summary matches parity_index.py followed immediately by entry, impact, or health (path-anchored, so a filename mention alone — e.g. test_parity_index.py, --help, `git log -- ... parity_index.py`, `sed -n '1,60p' tools/parity_index.py` — never counts). bash_rows_scanned is the total Bash-tool row population this detector ran against (the section's own 'N' denominator). Confirmed 0 real call sites as of TCK-20260731-PARITY-READPATH-GATE's Gate A review (reviewed GO, not yet wired into any real workflow call site) — this is the expected, correct value until a future ticket adds a real entry/impact/health call site, not a bug._
 

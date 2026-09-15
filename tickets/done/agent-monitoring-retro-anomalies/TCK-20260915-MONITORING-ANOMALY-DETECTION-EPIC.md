@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC
-phase: open
+phase: done
 date: 2026-09-15
 tags: [agent-monitoring, data-quality, process-improvement]
 ---
@@ -74,12 +74,20 @@ hypotheses.
   historical baseline.
 
 ## Acceptance Criteria
-- [ ] Each child ticket reaches a recorded disposition — fixed, or explicitly accepted with a
-      reason. "Accepted" is a legitimate outcome; silently dropping one is not.
-- [ ] The duplicate-run-record count is resolved well enough that a retro's run count can be
-      trusted, or the retro states its own uncertainty.
-- [ ] Whatever is learned is written back into `RETRO-LAST14D.md`'s notes or a successor report,
-      not left in ticket bodies.
+- [x] Each child ticket reaches a recorded disposition — fixed, or explicitly accepted with a
+      reason. "Accepted" is a legitimate outcome; silently dropping one is not. All 9 children are
+      DONE, each with a documented disposition in its own Completion Summary (5 fixed outright, 4
+      with a mix of fix + accept-and-ratchet for genuinely historical, unreconstructable debt).
+- [x] The duplicate-run-record count is resolved well enough that a retro's run count can be
+      trusted, or the retro states its own uncertainty. `run_dedup.py`'s
+      `dedupe_to_latest_per_execution()` is now wired into `generate_retro.py`'s own `main()`,
+      collapsing legitimate multi-checkpoint continuations before any run-count/DONE-rate metric is
+      computed; every retro report now discloses the raw-vs-deduped counts inline when they differ.
+- [x] Whatever is learned is written back into `RETRO-LAST14D.md`'s notes or a successor report,
+      not left in ticket bodies. Two additive subsections were appended to that file's own `## Notes`
+      section during this epic's work ("Duplicate run records corrected — 2026-09-15" and the
+      index-defect addendum), and every other child ticket's own findings are cross-referenced from
+      `docs/agent-monitoring/schema.md` and the new gate-check modules' own docstrings.
 
 ## Related Tickets
 Children, in suggested order (see `SEQUENCE.md`):
@@ -133,4 +141,27 @@ _Epic — no direct implementation._
 _Epic — no direct implementation._
 
 ## Completion Summary
-_Open._
+All 9 child tickets are done. Summary by disposition:
+
+- **Fixed outright**: ticket 1 (duplicate run records — dedup wired into reporting), ticket 5
+  (silent summary truncation — visible marker), ticket 6 (retro index zero-reporting — corrected
+  population lookup), ticket 9 (retro CLI overwriting hand-authored notes — preserve-by-default).
+- **Root cause corrected from a stale premise, then fixed/ratcheted**: ticket 2 (sidecar
+  attribution — the stated cause was already fixed weeks earlier; accepted the real, evidence-based
+  gap with a floor ratchet), ticket 3 (tool-call-count mismatch — re-scoped to the actual intended
+  population, August cluster root-caused to an already-documented bug), ticket 4 (event-seq
+  integrity — confirmed shared cause with ticket 1, one sub-case honestly left undetermined).
+- **Mix of fixed + accept-and-ratchet for genuinely historical debt**: ticket 7 (monitoring
+  integrity backlog — 2 of 5 items were fixed outright; the gate's real red-cause was corrected
+  from the ticket's own wrong claim; item 2's scope was corrected from 34 to the true 218 all-time).
+- **Aggregate validator, correcting 3 more stale premises**: ticket 8 (scoped last as instructed;
+  its own 3 named vocabulary-drift examples were all wrong — registered as legitimate rather than
+  ratcheted as false positives).
+
+Every child ticket independently re-derived its own stated baseline before acting on it rather
+than trusting the epic's or its own ticket text — this discipline caught and corrected real
+inaccuracies in tickets 1, 2, 3, 7 (twice), and 8 (three times), consistently converging on "most
+flagged anomalies are legitimate; only the genuine residual gets a ratchet." Findings were written
+back into `RETRO-LAST14D.md`'s own `## Notes` section as required, not left stranded in ticket
+bodies. All work landed on a single shared branch (`agent-monitoring-deep-retro`) per the user's
+explicit instruction; one combined PR for the whole epic follows this ticket's own close.

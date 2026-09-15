@@ -894,6 +894,102 @@ def test_generate_retro_days_flag_does_not_raise_on_legacy_start_ts(tmp_path, mo
     assert (tmp_path / "RETRO-LAST30D.md").exists()
 
 
+# ---------------------------------------------------------------------------
+# _extract_notes_section / _write_report_preserving_notes / main() --force
+# (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES)
+# ---------------------------------------------------------------------------
+
+_HAND_AUTHORED_NOTES = (
+    "## Notes\n\n### Deep review -- 2026-09-15\n\nSomething a human or agent wrote by hand that "
+    "must survive regeneration.\n"
+)
+
+
+def test_extract_notes_section_returns_notes_onward():
+    existing = "# Report\n\n## Run Summary\n\nstuff\n\n" + _HAND_AUTHORED_NOTES
+    extracted = generate_retro._extract_notes_section(existing)
+    assert extracted == _HAND_AUTHORED_NOTES
+
+
+def test_extract_notes_section_none_when_no_notes_heading():
+    assert generate_retro._extract_notes_section("# Report\n\nNo notes heading here.\n") is None
+
+
+def test_write_report_preserving_notes_writes_fresh_file_when_none_exists(tmp_path):
+    out_path = tmp_path / "RETRO-TEST.md"
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data\n\n## Notes\n\n_placeholder_\n"
+    status = generate_retro._write_report_preserving_notes(fresh_report, out_path, force=False)
+    assert out_path.read_text() == fresh_report
+    assert "Written:" in status
+    assert "preserved" not in status
+
+
+def test_write_report_preserving_notes_preserves_existing_notes_by_default(tmp_path):
+    out_path = tmp_path / "RETRO-TEST.md"
+    out_path.write_text("# Report\n\n## Run Summary\n\nold data\n\n" + _HAND_AUTHORED_NOTES)
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data (regenerated)\n\n## Notes\n\n_placeholder_\n"
+
+    status = generate_retro._write_report_preserving_notes(fresh_report, out_path, force=False)
+    result_text = out_path.read_text()
+
+    # Content above ## Notes reflects the fresh regeneration...
+    assert "new data (regenerated)" in result_text
+    assert "old data" not in result_text
+    # ...but the hand-authored Notes content survived, verbatim, not the fresh placeholder.
+    assert "Something a human or agent wrote by hand that must survive regeneration." in result_text
+    assert "_placeholder_" not in result_text
+    assert "preserved" in status
+    assert "--force" in status
+
+
+def test_write_report_preserving_notes_force_discards_existing_notes(tmp_path):
+    out_path = tmp_path / "RETRO-TEST.md"
+    out_path.write_text("# Report\n\n## Run Summary\n\nold data\n\n" + _HAND_AUTHORED_NOTES)
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data\n\n## Notes\n\n_placeholder_\n"
+
+    status = generate_retro._write_report_preserving_notes(fresh_report, out_path, force=True)
+    result_text = out_path.read_text()
+
+    assert result_text == fresh_report
+    assert "Something a human or agent wrote by hand" not in result_text
+    assert "any prior ## Notes content was replaced" in status
+
+
+def test_write_report_preserving_notes_no_existing_notes_heading_overwrites_cleanly(tmp_path):
+    # An existing file with no ## Notes heading at all (e.g. hand-truncated, or a non-standard
+    # report) has nothing to preserve -- must not raise or corrupt the fresh report.
+    out_path = tmp_path / "RETRO-TEST.md"
+    out_path.write_text("# Report\n\nNo notes heading in this file at all.\n")
+    fresh_report = "# Report\n\n## Run Summary\n\nnew data\n\n## Notes\n\n_placeholder_\n"
+    generate_retro._write_report_preserving_notes(fresh_report, out_path, force=False)
+    assert out_path.read_text() == fresh_report
+
+
+def test_main_regenerating_over_hand_authored_report_preserves_notes_end_to_end(tmp_path, monkeypatch):
+    # End-to-end: a real main() invocation must not destroy hand-authored content, mirroring the
+    # exact 2026-09-15 real-world incident this ticket was filed from (--days 14 destroying 177
+    # lines of RETRO-LAST14D.md's own hand-authored review).
+    runs_file = tmp_path / "runs.jsonl"
+    events_file = tmp_path / "events.jsonl"
+    runs_file.write_text(
+        '{"run_id":"TCK-A","start_ts":"2026-07-19T00:00:00Z","end_ts":"2026-07-19T01:00:00Z",'
+        '"workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":1}\n'
+    )
+    events_file.write_text("")
+    monkeypatch.setattr(generate_retro, "RUNS_FILE", runs_file)
+    monkeypatch.setattr(generate_retro, "EVENTS_FILE", events_file)
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["generate_retro.py", "--days", "30"])
+
+    out_path = tmp_path / "RETRO-LAST30D.md"
+    out_path.write_text("# Existing Report\n\n## Run Summary\n\nstale\n\n" + _HAND_AUTHORED_NOTES)
+
+    generate_retro.main()
+
+    result_text = out_path.read_text()
+    assert "Something a human or agent wrote by hand that must survive regeneration." in result_text
+
+
 # --- TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE: build-on-demand / fallback / no-hard-exit ---
 
 def test_generate_retro_builds_index_on_demand_when_missing(tmp_path, monkeypatch):

@@ -1872,11 +1872,66 @@ def generate(
     return "\n".join(lines)
 
 
+def _extract_notes_section(existing_text: str) -> "str | None":
+    """Returns the hand-authored `## Notes` heading through end-of-file from an existing retro
+    report's text, or None if the file has no such heading (nothing to preserve).
+
+    `## Notes` is the exact, sole documented hand-authoring surface
+    (`.claude/skills/agent-monitoring-retro/SKILL.md`: "Fills in the `## Notes` section... Commit
+    the filled-in report. Do not discard the notes"). Everything ABOVE that heading is always
+    freshly regenerated data and is never preserved -- only this one section accumulates
+    hand-written analysis across regenerations, by the skill's own design."""
+    idx = existing_text.find("## Notes")
+    if idx == -1:
+        return None
+    return existing_text[idx:]
+
+
+def _write_report_preserving_notes(report: str, out_path: Path, force: bool) -> str:
+    """Writes `report` to `out_path`, preserving any existing `## Notes` content unless `force` is
+    set (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES: `out_path.write_text(report)`
+    used to run unconditionally, silently destroying hand-authored notes the project's own
+    agent-monitoring-retro skill instructs a session to write and commit -- a real 177-line loss
+    was caught and reverted on 2026-09-15 during this exact ticket's own discovery). Returns a
+    one-line status string for the caller to print -- never silent, per this ticket's own
+    Acceptance Criteria ("a regeneration that would discard content must say so").
+
+    `--force` still allows a deliberate full rewrite (AC #3) -- this function's only job is making
+    the DEFAULT path safe, not removing the escape hatch."""
+    had_existing_file = out_path.exists()
+    if force or not had_existing_file:
+        out_path.write_text(report)
+        if force and had_existing_file:
+            return f"Written: {out_path} (--force: any prior ## Notes content was replaced)"
+        return f"Written: {out_path}"
+
+    existing_text = out_path.read_text()
+    preserved_notes = _extract_notes_section(existing_text)
+    if preserved_notes is None:
+        out_path.write_text(report)
+        return f"Written: {out_path}"
+
+    fresh_notes_idx = report.find("## Notes")
+    if fresh_notes_idx != -1:
+        merged = report[:fresh_notes_idx] + preserved_notes
+    else:
+        merged = report.rstrip("\n") + "\n\n" + preserved_notes
+    out_path.write_text(merged)
+    return (
+        f"Written: {out_path} (preserved {len(preserved_notes)} chars of existing ## Notes "
+        f"content -- pass --force to discard it instead)"
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate agent monitoring retro report")
     parser.add_argument("--days", type=int, help="Include runs from the last N days")
     parser.add_argument("--all", action="store_true", help="Include all runs")
     parser.add_argument("--week", help="Specific ISO week (e.g. 2026-W23); default = current week")
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Discard any existing report's hand-authored ## Notes content instead of preserving it",
+    )
     args = parser.parse_args()
 
     all_runs, all_events = _load_runs_and_events()
@@ -1922,8 +1977,7 @@ def main():
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RETRO_DIR / out_name
-    out_path.write_text(report)
-    print(f"Written: {out_path}")
+    print(_write_report_preserving_notes(report, out_path, args.force))
     print(f"Runs: {len(runs)}, Events: {len(events)}")
 
     # Update index

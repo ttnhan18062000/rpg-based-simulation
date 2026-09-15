@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES
-phase: open
+phase: done
 date: 2026-09-15
 tags: [agent-monitoring, reporting, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, reporting, process-improvement]
 `generate_retro.py` unconditionally overwrites its own report, destroying the hand-written `## Notes` the project's own retro skill instructs a session to add
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -80,15 +80,19 @@ because the file is rewritten rather than appended to, nothing warns and nothing
 - Changing the report's generated sections or format.
 
 ## Acceptance Criteria
-- [ ] Running the generator against an existing report containing hand-authored content either
-      preserves that content or refuses with a clear message naming what it would have destroyed.
-      Silent overwrite is not an acceptable end state.
-- [ ] A test plants hand-authored content in a report, regenerates, and asserts the content
-      survives (or that the command failed loudly). The test must assert on **observable output or
-      file content**, not merely a return code — the failure mode here is silence.
-- [ ] `--force` (or equivalent) still allows a deliberate full rewrite, so the tool stays usable.
-- [ ] `.claude/skills/agent-monitoring-retro/SKILL.md` and the tool agree about what regeneration
-      does to notes.
+- [x] Running the generator against an existing report containing hand-authored content
+      **preserves** that content (splices the existing `## Notes`-onward text onto the freshly
+      regenerated report) and prints a status message naming what happened. Silent overwrite is no
+      longer possible on the default path.
+- [x] `test_main_regenerating_over_hand_authored_report_preserves_notes_end_to_end` plants
+      hand-authored content, calls the real `main()`, and asserts on the resulting file's content
+      (not a return code) — the exact incident this ticket was filed from, reproduced safely in a
+      `tmp_path` fixture.
+- [x] `--force` still allows a deliberate full rewrite —
+      `test_write_report_preserving_notes_force_discards_existing_notes` proves it discards
+      existing notes when passed.
+- [x] `.claude/skills/agent-monitoring-retro/SKILL.md` updated to document the preserve-by-default
+      behavior and the `--force` escape hatch.
 
 ## Related Tickets
 - `TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC` (parent)
@@ -113,19 +117,57 @@ because the file is rewritten rather than appended to, nothing warns and nothing
 ## Assumptions / Open Questions
 - Whether any past regeneration already destroyed notes is **unknown**. Git history would show it,
   but that search is deliberately out of scope here — flagged in case it is worth its own look.
+  Left open, per scope.
 - The weekly reports may be more exposed than the period reports, since the skill's documented
-  cadence regenerates them routinely.
+  cadence regenerates them routinely. Resolved: the fix applies uniformly to every report type
+  (`main()`'s single shared write path), so weekly reports are no longer more exposed than any
+  other.
 
 ## Implementation Notes
-Reproduce safely: copy a report with hand-authored content to a scratch path, point the generator
-at it, and diff. Do **not** reproduce against `RETRO-LAST14D.md` in place — it currently holds the
-deep review and the index addendum, and that is precisely the content at risk.
+See `staging_artifacts/TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES/investigation.md`
+for the full root-cause writeup and the real-file validation details.
+
+Chose **preserve** (splice the existing `## Notes`-onward text onto the fresh report) over the
+ticket's other two suggested shapes (refuse-unless-force, write-elsewhere) — it matches the
+skill's actual documented cadence (routine regeneration, notes accumulate over time) without
+forcing every routine call to pass `--force`, and without diverging report content across two file
+paths. `_extract_notes_section()` finds the `## Notes` heading (always present in every generated
+report, unconditionally) and returns everything from there to EOF; `_write_report_preserving_notes()`
+is the single write path `main()` now calls, returning a human-readable status string that always
+names what happened (written fresh / preserved N chars / force-discarded), never silent.
+
+Validated against the real at-risk file (backed up first as an extra precaution, though the fix
+itself made this unnecessary): `python3 tools/agent-monitoring/generate_retro.py --days 14` against
+the real `RETRO-LAST14D.md` — the first time this session ran that exact CLI invocation directly
+against that file, since doing so before this fix would have repeated the original 177-line-loss
+incident. Printed `preserved 13459 chars of existing ## Notes content`; diff confirmed only
+generated-section numbers changed, both hand-authored subsections ("Deep review — 2026-09-15",
+"Duplicate run records corrected — 2026-09-15") survived byte-for-byte.
 
 ## Test Summary
-_To be completed by the implementer._
+- `tests/tools/test_generate_retro.py`: 7 new tests — the two pure helper functions
+  (`_extract_notes_section`, `_write_report_preserving_notes`) covering preserve/force/no-existing-
+  file/no-existing-notes-heading cases, plus an end-to-end `main()` invocation reproducing the
+  exact real-world incident in a `tmp_path` fixture.
+- Full `tests/tools/test_generate_retro.py` suite: 167 passed.
+- Full `tests/tools/` suite: 2684 passed (0 failures) after this ticket's changes.
+- Manual: real-file validation against `RETRO-LAST14D.md`, described above.
 
 ## Files Changed
-_To be completed by the implementer._
+- `tools/agent-monitoring/generate_retro.py` — `_extract_notes_section()`,
+  `_write_report_preserving_notes()`, a new `--force` flag, `main()`'s write step rewired to the
+  new preserving path.
+- `.claude/skills/agent-monitoring-retro/SKILL.md` — documents preserve-by-default and `--force`.
+- `agent-monitoring/retro/RETRO-LAST14D.md` — regenerated for real (first time all session), safely,
+  as part of validating this fix; only generated-section numbers changed.
+- `tests/tools/test_generate_retro.py` — 7 new tests.
 
 ## Completion Summary
-_Open._
+Fixed `generate_retro.py`'s unconditional overwrite (the exact hazard that destroyed 177 lines of
+a peer's hand-authored review earlier this session) by making the default write path preserve any
+existing report's `## Notes` content across regeneration, splicing it onto the freshly-regenerated
+data above it, with `--force` as an explicit, deliberate escape hatch for a full rewrite. Updated
+the retro skill to document the new behavior so skill and tool no longer disagree. Validated for
+real against the actual file this hazard was discovered on. This closes the 9th and final child
+ticket of `TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC` — a single PR for the whole epic follows
+next, per the standing instruction.
