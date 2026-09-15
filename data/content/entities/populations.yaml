@@ -105,3 +105,16 @@
   members:
     lizardfolk_scout: 4
   preferred_regions: ["swamp_border_territory"]
+
+# STATE: ADDITIONAL
+# TCK-20260915-MECHANIC-VERIFICATION-SCENARIOS: a real, catalog-authored, deliberately mismatched
+# hostile pair for the "combat judgement" mechanic scenario (does an entity assess a losing fight
+# and withdraw). goblin_scout (hp=35, atk=8) vs orc_warchief (hp=120, atk=24) -- the catalog
+# itself authors this exact asymmetry via "weaker_rival_fear" (goblin_warband -> orc_clan,
+# faction_relationships.yaml), not a scenario-invented mismatch.
+- id: "combat_judgement_pair"
+  display_name: "Combat Judgement Test Pair"
+  members:
+    goblin_scout: 1
+    orc_warchief: 1
+  preferred_regions: ["judgement_arena"]

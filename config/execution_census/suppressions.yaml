@@ -1,0 +1,17 @@
+# Execution census suppression list. See docs/plans/simulation_execution_census_initiative.md §7.3.
+#
+# Every entry MUST carry a stated reason — never a blanket ignore. A suppression with no reason,
+# or a placeholder reason, is worse than no suppression at all: it hides a finding without
+# recording why anyone believed it was safe to hide.
+#
+# Key format: "<file>:<line>" (matches the "file:line" a `report` run prints for each finding).
+#
+# Example (not a real entry -- delete once real suppressions exist):
+# suppressions:
+#   "src/example/module.py:42":
+#     reason: "Defensive branch for a malformed catalog entry that validate_content.py already
+#       rejects at compile time; this runtime check is a second line of defense, not dead code."
+#     added_by: "TCK-YYYYMMDD-EXAMPLE"
+#     date: "2026-09-15"
+
+suppressions: {}

@@ -96,6 +96,10 @@ that's a gap in the safety net itself, not a one-off null result.
 ## Related Docs
 - `docs/guides/agent_monitoring.md`
 - `config/simulation_quality/profiles/frontier_living_world.yaml`
+- `docs/plans/simulation_execution_census_initiative.md` — the same underlying problem from the
+  other side: that initiative's own §3 boundary table already names "SimQ sees a marginally duller
+  world, cannot localise the cause" as one of its two motivating failure modes. This ticket is a
+  concrete instance of exactly that gap, found independently while closing the sibling gate ticket.
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260808-SIMQ-LARGE-SCALE-WORLD-VALIDATION/` (check first)
