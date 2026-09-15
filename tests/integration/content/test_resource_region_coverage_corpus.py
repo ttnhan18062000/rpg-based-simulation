@@ -45,6 +45,10 @@ from src.core.registries import CatalogToResourceRegistryAdapter
 # placement (not just an absent source_region_tags entry) before adding a region here.
 _ACCEPTED_ZERO_CONTENT_REGIONS = frozenset({
     "bandit_road", "goblin_camp", "wolf_den", "deep_forest", "survivor_outpost",
+    # TCK-20260915-MECHANIC-VERIFICATION-SCENARIOS: judgement_arena is a deliberately minimal
+    # combat-judgement mechanic-scenario region (combat_judgement_arena.yaml) with no
+    # resource_recipes at all by design -- a two-entity hostile pairing, not a foraging area.
+    "judgement_arena",
 })
 
 

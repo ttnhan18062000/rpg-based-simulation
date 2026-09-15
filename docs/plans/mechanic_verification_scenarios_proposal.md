@@ -75,6 +75,20 @@ construction* approach and its *conformance vocabulary* are both real gaps again
 component needs to be — not because they're badly built, but because they were built to answer a
 narrower, combat-specific, synthetic-fixture question.
 
+**This deserves more weight than a background note: it means `COMBAT_ARENA_*` currently proves
+nothing about the real compile path, and it is a fourth instance of this arc's own week-long
+theme, sitting inside the test suite itself.** `dead code` was one shape (a mechanism nothing
+calls); `systems fed by nothing` was a second (a mechanism that runs and receives no input);
+`mechanics whose preconditions depend on unvalidated world geometry`
+(`docs/plans/world_composition_precondition_gap_finding.md`) was a third. This is a fourth,
+distinct shape: **a verification mechanism whose coverage is narrower than its name implies.**
+`COMBAT_ARENA_*` says "arena" — a reader reasonably assumes it exercises the real game, the way a
+corpus world does. It doesn't; it exercises hand-picked component values through the same kernel
+loop, with no catalog, no compiler, no content resolution in the path at all. This is the
+strongest concrete justification for building this component on the real compiler rather than
+extending what's there — and `quest_dense_frontier` compiling cleanly at 6 real entities is the
+proof that small-and-real is achievable, not a tradeoff to negotiate away.
+
 ## 3 · Proposed shape
 
 ### 3.1 Extend the harness's execution machinery; do not replace it
@@ -95,9 +109,18 @@ already proves a real, compiled, catalog-driven world can be tiny (`quest_dense_
 entities; `crowded_frontier`: 38 entities across 4 regions) while still exercising real content
 resolution, real faction semantics, real spatial placement — the actual system, not a stand-in for
 it. New, minimal, dedicated world-module content would be authored per mechanic family (see §4),
-composed the same way `data/worlds/*/world.yaml` composes existing modules, living in a clearly
-separate location (proposed: `data/mechanic_scenarios/`, not `data/worlds/`, so these are never
-mistaken for SimQ corpus worlds or picked up by corpus-wide tooling by accident).
+composed the same way `data/worlds/*/world.yaml` composes existing modules. **Implementation
+finding, resolving what was an open question here**: the real `resolve` step
+(`python3 -m src.worldbuilding.cli resolve <world_id>`, the only supported way to produce the
+`resolved/` assets `WorldRepository.load_world_with_context` requires) hardcodes its repository
+root to `data/worlds` (`src/worldbuilding/cli.py`) — a separate `data/mechanic_scenarios/` root,
+as originally proposed here, cannot use this tooling without a code change to the CLI itself, not
+just a new directory. Scenario worlds live under `data/worlds/` with an explicit
+`mechanic_scenario_*` world-id prefix and an `observability_tags: ["mechanic-scenario"]` tag on
+their own module(s) instead, to stay distinguishable from real SimQ corpus worlds without needing
+a second, parallel repository root. Whether to later add a real root-path option to the CLI (so
+the originally-proposed separation becomes possible) is a small, separate follow-up, not a
+blocker — the naming/tagging convention is sufficient to keep the two families apart today.
 
 ### 3.3 A declared assertion vocabulary, layered alongside performance conformance, not replacing it
 
@@ -124,6 +147,24 @@ run reports **"faction_sentiment: expected pairwise_tension >= TENSE by tick 300
 `ScenarioExpectations` (performance/stability), not inside it — a scenario can fail on either axis
 independently, and a report should say which.
 
+**A hard requirement, confirmed necessary by the first scenario built against this proposal, not
+a nice-to-have added in hindsight: a scenario that claims to verify mechanism X must produce a
+different outcome when X's own precondition is present versus absent, and the differential itself
+is the assertion — not a single pass/fail against one staged condition.** The first attempt at the
+combat-judgement scenario staged only one condition (a real, correctly-mismatched hostile pair)
+and observed zero attacks from the weak side — which looked like a pass, but the same zero-attack
+outcome would have occurred whether the posture gate was working or entirely absent, because the
+scenario never staged a case where the gate's own precondition (a pending attack decision plus a
+recorded, risk-rejected posture) was actually present. Rerun as two conditions on the same forced
+dispatch — posture recorded and risk-rejected, versus no posture recorded at all (the real,
+documented "absence is not a verdict" case, not a monkeypatch) — and the outcome differed cleanly
+(0 attacks vs. a real attack proceeding), which is what actually proves the mechanism is being
+exercised. A scenario that cannot show this delta has not tested the mechanism, whatever its name
+claims, and must fail — not pass — exactly the failure mode named in §2 as `COMBAT_ARENA_*`'s own
+problem. This is a property the component's own scenario contract should enforce structurally
+(e.g. requiring at least one "mechanism absent" condition per scenario declaration), not a
+discipline left to whoever writes the next scenario to remember.
+
 ### 3.4 A parallel registry, not an extension of `ScenarioRegistry`
 
 `COMBAT_ARENA_*` scenarios are legitimately synthetic and combat/stress-focused (50v50 stress
@@ -140,10 +181,19 @@ real, already-known precondition, not a guess:
    real fact, an entity positioned to query it, enough ticks for the query-response-action cycle.
 2. **Cooperation** — a recruitment offer is accepted and a party forms. Stage: two compatible
    entities, a real recruitment-eligible situation, enough ticks for the offer/accept cycle.
-3. **Combat judgement** — an entity assesses an opponent and withdraws from a losing fight. Stage:
-   a real power-mismatched pair, `ENABLE_COMBAT_ENGAGEMENT` on, checking the posture reaches
-   `AVOID`/`RETREAT`/`PANIC_FLEE` and — per this session's own gate fix — that the real attack
-   dispatch is actually withheld, not just the posture assessment.
+3. **Combat judgement — built, 2026-09-15, known-positive confirmed.**
+   `tests/mechanic_scenarios/test_combat_judgement_withdrawal.py`, against
+   `data/worlds/mechanic_scenario_combat_judgement_withdrawal/` (real, catalog-authored
+   `goblin_scout` vs `orc_warchief`, a genuine `"weaker_rival_fear"`-relationship mismatch, not
+   invented stats). Two differential conditions on the same forced attack dispatch: posture
+   recorded and risk-rejected (`"avoid"`) → 0 real attacks; no posture recorded at all → the
+   attack proceeds. Confirms the posture-veto gate
+   (`TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`) is the sole variable
+   producing the difference — legality, range, and readiness are identical in both conditions.
+   Surfaced its own real finding along the way, filed separately:
+   `TCK-20260915-COMBAT-RISK-EVALUATION-ACCEPTABLE-AT-3X-MISMATCH` (the risk evaluation read this
+   same 3.4x mismatch as acceptable at first contact, a question distinct from the gate's own,
+   already-confirmed correctness).
 4. **Faction sentiment** — hostile interaction accumulates pairwise tension to `TENSE`. Stage: two
    catalog-driven, genuinely hostile factions placed adjacent (using real `faction_id`, not the
    legacy enum), enough ticks for real combat and `pairwise_tension` accrual.
@@ -161,17 +211,30 @@ mega-scenario trying to cover all six.
 
 ## 5 · What this component verifies, and what it does not (stated here, and in its own output)
 
-**A scenario proves a mechanic works under staged conditions. It says nothing about whether real
-worlds produce those conditions.** That second question stays a content/composition question —
-exactly the distinction this arc's own `docs/plans/world_composition_precondition_gap_finding.md`
-had to learn the hard way after treating "never fires in the corpus" and "is broken" as the same
-question for most of this week. This component and that finding document are complementary, not
-redundant: the finding document names mechanics whose real-world preconditions are never staged;
-this component is how a future investigation would find out, cheaply, whether the mechanic itself
-is sound before or instead of chasing composition. This limitation statement belongs in the
-component's own generated report output as well as this document, in the same spirit as the
-census's own unsuppressable `LIMITATION_HEADER` — not decided here whether that's a fixed string
-constant or a per-scenario field, left for the implementation pass.
+**Two limitations, both load-bearing, both already-observed rather than hypothetical:**
+
+1. **A scenario proves a mechanic works under staged conditions. It says nothing about whether
+   real worlds produce those conditions.** That second question stays a content/composition
+   question — exactly the distinction this arc's own
+   `docs/plans/world_composition_precondition_gap_finding.md` had to learn the hard way after
+   treating "never fires in the corpus" and "is broken" as the same question for most of this
+   week. This component and that finding document are complementary, not redundant: the finding
+   document names mechanics whose real-world preconditions are never staged; this component is
+   how a future investigation would find out, cheaply, whether the mechanic itself is sound
+   before or instead of chasing composition.
+2. **A passing scenario proves the mechanic works under the specific conditions *that scenario*
+   stages, not under all conditions.** Staged conditions are chosen, and a mechanic can work
+   correctly in the staging and still fail in a configuration nobody thought to stage — the
+   combat-judgement scenario's own first, naive attempt is a real instance of this: it staged a
+   real hostile pair but not the specific precondition (a pending attack decision, a recorded
+   rejected posture) the gate itself depends on, and the result looked like a pass without
+   actually exercising the mechanism at all (see §3.3's differential-assertion requirement, added
+   directly because of this).
+
+This limitation statement belongs in the component's own generated report output as well as this
+document, in the same spirit as the census's own unsuppressable `LIMITATION_HEADER` — not decided
+here whether that's a fixed string constant or a per-scenario field, left for the implementation
+pass.
 
 ## 6 · Explicitly not decided here
 
