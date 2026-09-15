@@ -12,7 +12,7 @@ tags: [agent-monitoring, data-quality, testing]
 # TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE
 
 ## Title
-`test_real_corpus_is_at_or_above_the_ratchet_floor`'s 74.0% floor is currently unmeetable by the live rolling corpus — three independent below-floor readings on unrelated pushes, monotonically declining, no regression in any of them
+`test_real_corpus_is_at_or_above_the_ratchet_floor`'s 74.0% floor is currently unmeetable by the live rolling corpus — real, declining, hand-orchestration-driven gap; lowering the floor is explicitly blocked by the check's own anti-regression guard test
 
 ## Status
 OPEN
@@ -187,6 +187,50 @@ records check above should run first.
 
 This hypothesis and both checks are flagged for the owning epic to run — not investigated or run
 from this ticket or this branch.
+
+**UPDATE 2026-09-16: the primary proposed check was run (read-only, real corpus, no code
+touched), and it redirects the root-cause explanation.** Prompted by a direct user request to
+resolve the failing CI check on PR #205, I ran the exact diagnostic this ticket proposed —
+attribution rate on records written in the last few hours, split by session, against
+`agent-monitoring/data/*/tools.jsonl` directly (script not committed; read-only, used
+`generate_retro._load_source` the same way the check itself does):
+
+```
+14-day: 72.7% (36548/50293)   [confirmed via the real check's own compute_attribution_rate()]
+24h:    38.6% (858/2225)
+2h:      0.0% (0/11)   — all 11 rows this session's own session_id, all run_id=None
+```
+
+The recent-records rate did come back near zero, confirming the *shape* the shared-sidecar
+hypothesis predicted — but the split-by-session breakdown does NOT support cross-session
+overwriting as the mechanism. All 11 unattributed rows in the last 2 hours belong to a single
+session (this one), not several sessions colliding on one file. That session was doing exactly
+the kind of ad-hoc, hand-orchestrated work (CI triage, filing this very ticket) that never opens
+a tracked pipeline run in the first place — there is no `run_id` to attribute to, not a wrong one
+written by a colliding session. This matches the check's own module docstring precisely: "the
+live gap is dominated by real, in-principle-attributable ticket work... missing sidecar coverage
+for hand-orchestration compliance reasons." **Revised read: the decline is real, but it's driven
+by the volume of hand-orchestrated (non-pipeline-tracked) tool-call activity across the corpus
+growing relative to pipeline-tracked activity, not by concurrent sessions corrupting each other's
+`run_id`s.** The shared-`.claude/current_run` file may still be a contributing factor for
+sessions that *do* have a run_id but get the wrong one — that's not ruled out — but it is not the
+dominant mechanism the single-session 0/11 breakdown shows.
+
+**This also settles what CANNOT be done to close this ticket.**
+`tests/tools/test_sidecar_attribution_coverage_check.py::test_floor_may_only_increase_never_used_to_paper_over_a_regression`
+is a dedicated guard, already in the repo, asserting `ATTRIBUTION_RATE_FLOOR == 74.0` with an
+explicit message: "never lower it to paper over a new regression." Lowering the floor to make CI
+pass would fail this test directly — it is not an available fix, it is the exact maneuver this
+check's own author built a second test specifically to block. Confirmed by running
+`pytest tests/tools/test_sidecar_attribution_coverage_check.py -v`: 7 passed (including the
+guard), 1 failed (the ratchet-floor check itself, real corpus at 72.7%).
+
+**Conclusion for whoever picks this up:** there is no code-level fix available from a PR that
+doesn't touch attribution-writing paths. The real fix is raising actual attribution coverage —
+most plausibly, giving hand-orchestrated/non-pipeline tool calls a way to attribute to *something*
+(even a synthetic "hand-orchestrated" run marker) rather than `None` — which is a substantive,
+cross-cutting change to how/when `run_id` gets written, squarely inside
+`TCK-20260915-SIDECAR-ATTRIBUTION-GAP`'s and the owning epic's territory, not a floor tweak.
 
 ## Test Summary
 Not yet started — this ticket currently only records the observation per explicit instruction
