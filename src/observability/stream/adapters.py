@@ -114,6 +114,10 @@ class RedisStreamAdapter(EventStreamAdapter):
         self._queue = collections.deque()
         self._queue_lock = threading.Lock()
         self._queue_cond = threading.Condition(self._queue_lock)
+        # Count of events popped from _queue but not yet fully processed by
+        # _send_to_redis() (TCK-20260915-REDIS-ADAPTER-FLUSH-PUBLISHED-COUNTER-RACE) --
+        # flush() must wait for this to reach 0 too, not just for _queue to empty.
+        self._in_flight = 0
 
         self._running = True
         self._worker_thread = None
@@ -162,9 +166,16 @@ class RedisStreamAdapter(EventStreamAdapter):
                     break
                 if len(self._queue) > 0:
                     event = self._queue.popleft()
+                    self._in_flight += 1
 
             if event:
-                self._send_to_redis(event)
+                try:
+                    self._send_to_redis(event)
+                finally:
+                    # Always decrement, even if _send_to_redis() somehow raised despite its own
+                    # internal try/except -- flush() must never hang on a stuck counter.
+                    with self._queue_lock:
+                        self._in_flight -= 1
 
     def _send_to_redis(self, event: SimulationEvent) -> None:
         if not self._connected or self.client is None:
@@ -259,10 +270,21 @@ class RedisStreamAdapter(EventStreamAdapter):
         }
 
     def flush(self) -> None:
+        """Block until every event queued before this call has been fully processed: sent to
+        Redis (or dropped, whichever applies) AND its bookkeeping (published_count/dropped_count/
+        health state) updated -- not merely dequeued.
+
+        The worker thread pops an event off the internal queue (making it empty) before it calls
+        _send_to_redis(), which is where the actual xadd() call and counter updates happen. A
+        caller relying on "queue empty" alone would see a window where the event has left the
+        queue but its counters have not yet been updated
+        (TCK-20260915-REDIS-ADAPTER-FLUSH-PUBLISHED-COUNTER-RACE) -- waiting on `_in_flight` too
+        closes that window.
+        """
         start_time = time.perf_counter()
         while time.perf_counter() - start_time < 5.0:  # 5s max wait
             with self._queue_lock:
-                if len(self._queue) == 0:
+                if len(self._queue) == 0 and self._in_flight == 0:
                     break
             time.sleep(0.01)
 
