@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check
 
 # Default
 help: ## Show available commands
@@ -281,6 +281,9 @@ sidecar-attribution-coverage-check: ## Ratcheted floor check for tools.jsonl run
 
 tool-call-count-mismatch-check: ## Ratcheted check for post-fix tool_call_count vs tools.jsonl mismatches
 	python3 tools/gate_checks/tool_call_count_mismatch_check.py
+
+event-seq-integrity-check: ## Ratcheted checks for duplicate/gapped seq values in events.jsonl
+	python3 tools/gate_checks/event_seq_integrity_check.py
 
 setup-merge-drivers: ## Install the local merge driver + post-merge hook that regenerate docs/REGISTRY.yaml on conflict
 	git config merge.registry-regen.driver true
