@@ -59,6 +59,29 @@ check exists to catch (an actual duplicate write from two independent hand-rolle
 shape `TCK-20260912-WORKING-LOG-APPEND-HELPER` fixed). The check cannot currently tell "this ticket
 was reopened, both rows are real" from "this ticket's Finalize ran twice by mistake."
 
+## Cross-Gate Interaction Warning (added by `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`)
+
+**Read this before choosing a fix shape.** That ticket established two things relevant here:
+
+1. `done_checker_static.py` previously had no CLI entry point, so `check_working_log_exactly_one_row`
+   (this ticket's own subject) was unreachable by hand on a hand-orchestrated closure — it now has
+   one (`python3 tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>`).
+2. After that ticket, `check_working_log_exactly_one_row` and the ratchet in
+   `tools/gate_checks/working_log_content_duplicate_check.py` (`TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS`
+   item 6) are the **only two mechanisms** that catch the dual-writer duplicate-row class (the
+   `append_working_log_row()` + `record_hand_orchestrated_closure.py` double-write shape). The
+   sole-writer AST guard (`test_working_log_csv_has_exactly_one_writer`) structurally cannot see
+   this class — both writers involved are sanctioned.
+
+**The risk**: a fix here that drops or weakens the row-count assertion — instead of teaching it to
+distinguish a legitimate reopen (a non-`DONE` prior row) from a real duplicate (two rows for the
+same Finalize run) — would silently remove one of only two remaining gates against that duplicate
+class, while reading as a pure improvement in its own diff. This is exactly Finding 8's shape
+("gate maintenance is diff-indistinguishable from gate weakening") from
+`docs/plans/agent_infrastructure/reachability_verification_findings.md` section 7. Whoever
+implements this ticket should keep the check's discriminating power intact (per this ticket's own
+Scope: distinguish reopen from duplicate), not simply loosen or remove the assertion.
+
 ## Scope
 - Distinguish a legitimate multi-row history (prior rows are non-`DONE` statuses, e.g. `BLOCKED`,
   from an earlier real closure attempt) from a real duplicate write (two rows for the same

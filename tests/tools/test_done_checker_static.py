@@ -1948,3 +1948,98 @@ def test_verify_prompt_mentions_reverse_check_or_updated_condition_language():
     sentence = text[idx:invoke_idx]
     assert "TCK-20260904-DOC-COVERAGE-REVERSE-CHECK" in sentence
     assert "reverse" in sentence.lower()
+
+
+# ─── CLI entry point (TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE) ──────
+#
+# Before this ticket, tools/gate_checks/done_checker_static.py had no __main__/argparse and was
+# consumed exclusively via `python3 -c "..."` by the formal pipeline. Running it "the obvious way"
+# imported the module, printed only an unrelated SyntaxWarning on a fresh compile, and exited 0 --
+# indistinguishable from a clean pass. These tests pin the fix: a real CLI that produces readable
+# output and a non-zero exit on a known-failing condition, without changing any existing
+# function-level import path.
+
+_DONE_CHECKER_PATH = _TOOLS_DIR / "gate_checks" / "done_checker_static.py"
+
+
+def _run_cli(args, cwd):
+    return subprocess.run(
+        [sys.executable, "-B", str(_DONE_CHECKER_PATH), *args],
+        capture_output=True, text=True, cwd=cwd,
+    )
+
+
+def _seed_ticket(tmp_path, ticket_id, tier="hotfix"):
+    ticket_dir = tmp_path / "tickets" / "inprogress"
+    ticket_dir.mkdir(parents=True, exist_ok=True)
+    (ticket_dir / f"{ticket_id}.md").write_text(
+        "---\nstatus: active\nlayer: misc\nauthority: P1\naudience: agent\n"
+        f"ticket_id: {ticket_id}\nphase: open\ndate: 2026-09-14\ntags: []\n---\n\n"
+        f"# {ticket_id}\n\n## Title\nFake\n\n## Status\nOPEN\n\n## Tier\n{tier}\n\n"
+        "## Priority\nP1\n",
+        encoding="utf-8",
+    )
+    return ticket_dir / f"{ticket_id}.md"
+
+
+def test_cli_prints_readable_output_and_exits_nonzero_on_known_failure(tmp_path):
+    ticket_id = "TCK-CLI-FAIL-TEST"
+    _seed_ticket(tmp_path, ticket_id, tier="hotfix")
+    result = _run_cli(["--ticket-id", ticket_id, "--part", "finalize"], tmp_path)
+    assert result.stdout.strip(), "expected non-empty stdout -- silence is exactly the regression"
+    assert result.returncode != 0
+    assert "working_log_exactly_one_row" in result.stdout
+    assert "FAIL" in result.stdout
+    assert "RESULT: FAIL" in result.stdout
+
+
+def test_cli_exits_zero_and_prints_pass_when_all_precheck_conditions_pass(tmp_path):
+    ticket_id = "TCK-CLI-PASS-TEST"
+    _seed_ticket(tmp_path, ticket_id, tier="hotfix")
+    (tmp_path / "tickets" / "working_log.csv").write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n", encoding="utf-8"
+    )
+    result = _run_cli(["--ticket-id", ticket_id, "--part", "precheck"], tmp_path)
+    assert result.stdout.strip()
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "RESULT: PASS" in result.stdout
+
+
+def test_cli_tier_auto_detected_from_ticket_body_when_omitted(tmp_path):
+    ticket_id = "TCK-CLI-TIER-TEST"
+    _seed_ticket(tmp_path, ticket_id, tier="epic")
+    result = _run_cli(["--ticket-id", ticket_id, "--part", "precheck"], tmp_path)
+    assert "tier=epic" in result.stdout
+
+
+def test_cli_explicit_tier_overrides_auto_detection(tmp_path):
+    ticket_id = "TCK-CLI-TIER-OVERRIDE-TEST"
+    _seed_ticket(tmp_path, ticket_id, tier="epic")
+    result = _run_cli(["--ticket-id", ticket_id, "--tier", "hotfix", "--part", "precheck"], tmp_path)
+    assert "tier=hotfix" in result.stdout
+
+
+def test_cli_still_importable_and_callable_as_plain_functions():
+    """Pins the Scope constraint that the formal pipeline's own python3 -c call sites keep
+    working unchanged: run_static_precheck/run_finalize_selfcheck must still be plain,
+    directly-importable functions, not routed through the new CLI."""
+    assert callable(run_static_precheck)
+    assert callable(run_finalize_selfcheck)
+    result = run_finalize_selfcheck("TCK-DOES-NOT-EXIST", "hotfix")
+    assert isinstance(result, list)
+    assert all({"condition", "status", "evidence"} <= set(item) for item in result)
+
+
+def test_no_syntax_warning_under_dash_w_error_on_a_fresh_compile():
+    """The escape-sequence fix: a fresh (-B, no cached .pyc) import under -W error must not raise
+    SyntaxError. This is the exact symptom a hand-orchestrating session hit before this ticket --
+    a SyntaxWarning on first import, silently absorbed by the bytecode cache afterward."""
+    result = subprocess.run(
+        [
+            sys.executable, "-W", "error", "-B", "-c",
+            "import sys; sys.path.insert(0, 'tools/gate_checks'); sys.path.insert(0, 'tools'); "
+            "import done_checker_static",
+        ],
+        capture_output=True, text=True, cwd=str(_TOOLS_DIR.parent),
+    )
+    assert result.returncode == 0, result.stderr
