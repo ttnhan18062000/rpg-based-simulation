@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-CI-TRIAGE-HAS-NO-ABSENT-RUN-BRANCH
-phase: open
+phase: done
 date: 2026-09-15
 tags: [claude-md, process-improvement, workflows]
 ---
@@ -15,7 +15,7 @@ tags: [claude-md, process-improvement, workflows]
 A `CONFLICTING` PR produces zero CI runs, not failing ones — CLAUDE.md's CI triage guidance covers failing jobs thoroughly and absent runs not at all, so an agent following it correctly still ends up guessing
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -90,14 +90,21 @@ no branch whatsoever for a job that never ran. A grep for absent-run guidance re
   guidance, don't chase it here.
 
 ## Acceptance Criteria
-- [ ] CLAUDE.md's CI Failure Triage section contains an absent-run branch covering the
+- [x] CLAUDE.md's CI Failure Triage section contains an absent-run branch covering the
       `mergeable` check, the trigger-block check, and the explicit prohibition on re-trigger
-      commits / force-push / branch recreation as a response to a missing run.
-- [ ] The guidance states the general principle, not only the specific case: an absent signal is
-      diagnosed differently from a failing one.
-- [ ] The `git ls-remote` push-landed check is included, since it is the cheap disambiguator.
-- [ ] **User authorization is obtained before editing CLAUDE.md.** This ticket does not grant it;
-      see Assumptions.
+      commits / force-push / branch recreation as a response to a missing run. Pinned by
+      `test_absent_run_branch_covers_the_mergeable_check`,
+      `test_absent_run_branch_covers_the_trigger_block_check`,
+      `test_absent_run_branch_prohibits_retrigger_force_push_and_branch_recreation`.
+- [x] The guidance states the general principle, not only the specific case: an absent signal is
+      diagnosed differently from a failing one. Pinned by
+      `test_absent_run_branch_states_the_general_principle_not_only_the_specific_case`.
+- [x] The `git ls-remote` push-landed check is included, since it is the cheap disambiguator.
+      Pinned by `test_absent_run_branch_includes_git_ls_remote_disambiguator`.
+- [x] **User authorization is obtained before editing CLAUDE.md.** Obtained directly via
+      `AskUserQuestion`, showing the exact proposed content, before any edit was made — not
+      inferred from the batch-level authorization, which this ticket's own Assumptions explicitly
+      says does not supply it.
 
 ## Related Tickets
 - `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE` (done) — the same
@@ -121,22 +128,63 @@ no branch whatsoever for a job that never ran. A grep for absent-run guidance re
 ## Assumptions / Open Questions
 - **Editing CLAUDE.md requires explicit user authorization.** It has been withheld all batch as a
   standing rule, and a peer's report of a process gap does not supply it. The implementer must have
-  the user confirm directly before touching that file.
+  the user confirm directly before touching that file. Resolved: obtained directly via
+  `AskUserQuestion`, showing the exact proposed content, before any edit.
 - The reporting session notes the repo's own merge drivers resolved #205's conflict cleanly once
   attempted — so the conflict was never hard, only invisible. Worth reflecting in the wording: the
   fix is usually trivial once the cause is known, which is precisely why the diagnostic step is
-  worth documenting.
+  worth documenting. Reflected in the added text ("The fix is usually trivial once the cause is
+  known" framing carried via "nothing else needs investigating" and the emphasis that the fix is
+  simply resolving the conflict, not a complex diagnostic).
 
 ## Implementation Notes
-Reproduce cheaply if needed: an open PR in a `CONFLICTING` state will show `total_count: 0` from
-`gh api repos/.../actions/runs?head_sha=<full sha>` while every visible signal looks like a pending
-queue.
+See `staging_artifacts/TCK-20260915-CI-TRIAGE-HAS-NO-ABSENT-RUN-BRANCH/investigation.md` for the
+full verification of the core technical claim.
+
+Independently verified before touching anything: read `.github/workflows/test.yml`'s own trigger
+block directly, confirming exactly what the ticket states — `pull_request:` has no branch filter,
+but `push:` is restricted to `branches: [main]`, so a feature branch's own commits get CI only via
+`pull_request`, evaluated against `refs/pull/N/merge` — a ref GitHub cannot compute while
+`CONFLICTING`. This is standard GitHub Actions platform behavior, not something specific to this
+repo needing its own empirical reproduction.
+
+Added a new item 1 to CLAUDE.md's "CI Failure Triage" numbered list (renumbering the existing 4
+items to 2-5, a mechanical shift, not a rewrite — verified no other file asserts on this section's
+exact numbering before renumbering), covering exactly the 3 required pieces plus the general
+principle: the `mergeable`/trigger-block check, the explicit prohibition on
+re-trigger/force-push/branch-recreation (each explained as actively destroying the evidence that
+would show the real cause, not just an unhelpful response), and the `git ls-remote` vs
+`headRefOid` push-landed disambiguator. Kept proportionate per the ticket's own instruction — a
+short branch added to existing guidance, not a rewrite (diff: 8 insertions, 4 deletions, all from
+the mechanical renumbering).
+
+Added a new test file rather than relying on manual review, pinning each Acceptance Criterion as a
+real, reproducible content check against CLAUDE.md itself.
 
 ## Test Summary
-_To be completed by the implementer._
+- `tests/docs/test_ci_triage_absent_run_branch.py` (new, 8 tests): section presence; the
+  `mergeable`/trigger-block content; the re-trigger/force-push/branch-recreation prohibition; the
+  `git ls-remote`/`headRefOid` disambiguator; the general principle stated (not only the specific
+  case); the absent-run branch appears before the failing-job branch (you cannot triage logs for a
+  run that never existed); the numbered list stays consistently 1-5 after insertion.
+- Full `tests/docs/` suite re-run: 67 passed, 1 skipped, 1 xfailed (both pre-existing, unaffected).
+- The 5 `tests/tools/` files that reference "CLAUDE.md" in prose/docstrings (found via grep before
+  editing, to rule out any exact-numbering dependency) re-run clean: 176 passed.
 
 ## Files Changed
-_To be completed by the implementer._
+- `CLAUDE.md` — new absent-run branch added to "CI Failure Triage" (item 1; existing items 1-4
+  renumbered to 2-5).
+- `tests/docs/test_ci_triage_absent_run_branch.py` (new) — 8 tests pinning the AC content.
 
 ## Completion Summary
-_Open._
+Verified the core technical claim independently (read `.github/workflows/test.yml`'s own trigger
+block) before scoping anything, confirming a `CONFLICTING` PR with a `pull_request:`-only trigger
+produces zero CI runs, not failing or pending ones — standard GitHub Actions platform behavior.
+Obtained direct user authorization for the CLAUDE.md edit via `AskUserQuestion`, showing the exact
+proposed content, before making any change — the batch-level "yes" that authorized picking up this
+ticket did not itself supply this authorization, per the ticket's own explicit Assumptions note.
+Added a short, proportionate absent-run branch to CLAUDE.md's existing CI Failure Triage section
+covering all 3 required pieces (mergeable/trigger-block check, the prohibition on
+re-trigger/force-push/branch-recreation, the `git ls-remote` disambiguator) plus the general
+principle the AC also requires. Pinned every AC item with a real content test rather than trusting
+the prose was written as intended.
