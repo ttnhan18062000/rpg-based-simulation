@@ -92,6 +92,10 @@ Children, in suggested order (see `SEQUENCE.md`):
 6. `TCK-20260915-RETRO-INDEX-REPORTS-ZERO`
 7. `TCK-20260915-MONITORING-INTEGRITY-BACKLOG`
 8. `TCK-20260915-MONITORING-ANOMALY-VALIDATOR`
+9. `TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES` — added 2026-09-15, not from the
+   original sweep: found by the implementer when regenerating a report to verify ticket 1's fix
+   destroyed 177 lines of hand-authored analysis. Same "two correct instructions combine into a
+   defect" shape as `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`.
 
 Related prior work:
 - `TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS` (done) — the six-defect bundle this extends

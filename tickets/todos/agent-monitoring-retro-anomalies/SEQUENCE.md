@@ -15,6 +15,7 @@ another, with one exception noted below. The order here is by leverage, not by d
 | 6 | `TCK-20260915-RETRO-INDEX-REPORTS-ZERO` | `index.md` shows 0 runs for reports containing 69/249/300. Cheap fix, high visibility: it is the first file a reader opens. |
 | 7 | `TCK-20260915-MONITORING-INTEGRITY-BACKLOG` | The known-historical debt: 19 DONE runs with no working_log row (`agent-monitoring-validate` is red today), 34 September closures with no run record, 9 malformed working_log rows, 55 events / 66 runs with unusable `ts`, and the `unknown-week` shard. |
 | 8 | `TCK-20260915-MONITORING-ANOMALY-VALIDATOR` | **Scope this last.** Its checks should be written against the causes the other seven confirm, not against this epic's hypotheses. |
+| 9 | `TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES` | Added 2026-09-15, after the hazard was hit during ticket 1's verification: regenerating a report destroys its hand-written `## Notes`, which the retro skill explicitly instructs a session to add and commit. Independent of the other eight — pick up whenever. |
 
 ## Ratchet discipline
 
