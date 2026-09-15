@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
 from duration_utils import compute_active_idle_split  # noqa: E402
 from validate import load_data_glob  # noqa: E402
+from run_dedup import dedupe_to_latest_per_execution  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -1239,6 +1240,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
+    raw_run_count=None, deduped_run_count=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1255,6 +1257,13 @@ def generate(
     substitute `tools` (or any other implicit default) for a missing `all_tools` here: doing so
     was a confirmed architecture-review violation (2026-08-15) that silently coupled 121+
     pre-existing tests' synthetic fixtures to the real, unmocked skills catalog.
+
+    `raw_run_count`/`deduped_run_count` (TCK-20260915-DUPLICATE-RUN-RECORDS): optional, caller-
+    supplied counts from before/after `main()`'s own `dedupe_to_latest_per_execution()` call.
+    `runs` passed in here is already the deduplicated list -- these two are for the report to
+    disclose the correction inline, not to recompute anything. Both `None` (a direct `generate()`
+    call outside `main()`, e.g. from a test) silently omits the note rather than rendering a
+    misleading "0 duplicates" claim it never actually checked.
     """
     metrics = compute_retro_metrics(
         runs, events, tickets_root, tools=tools, all_tools=all_tools,
@@ -1299,6 +1308,14 @@ def generate(
     lines.append(f"| Avg agents per run | {rs['avg_agents']} |")
     lines.append(f"| Total agent calls | {rs['total_agent_calls']} |")
     lines.append("")
+    if raw_run_count is not None and deduped_run_count is not None and raw_run_count != deduped_run_count:
+        lines.append(
+            f"_Note: {raw_run_count} raw `runs.jsonl` rows in this window collapsed to "
+            f"{deduped_run_count} real executions after deduplicating gate-checkpoint rows that "
+            f"share one `(run_id, execution_id, start_ts)` identity "
+            f"(TCK-20260915-DUPLICATE-RUN-RECORDS) — the counts above are the deduplicated figures._"
+        )
+        lines.append("")
 
     # Gate failures
     lines.append("## Gate Failure Breakdown")
@@ -1868,8 +1885,17 @@ def main():
         label = week_str
         out_name = f"RETRO-{week_str}.md"
 
+    # TCK-20260915-DUPLICATE-RUN-RECORDS: collapse each real execution's multiple gate-checkpoint
+    # rows (writeMonitoring() fires at every gate exit within one continuous execution, correctly
+    # sharing one run_id/execution_id/start_ts) down to its final, most-complete record before
+    # computing any run-count/DONE-rate metric. Never mutates runs.jsonl itself -- read-side only.
+    raw_run_count = len(runs)
+    runs = dedupe_to_latest_per_execution(runs)
+    deduped_run_count = len(runs)
+
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
+        raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

@@ -704,3 +704,49 @@ obvious entry point) sees "LAST14D: 0 runs" and would reasonably conclude the fo
 Not fixed here — this review is read-only with respect to the tooling. Worth a ticket, and worth
 noting that it makes **13** distinct mechanisms found in this arc that exist, have tests or an
 official-looking surface, and do not report what they appear to.
+
+### Duplicate run records corrected — 2026-09-15 (`agent-working-implementer`,
+### `TCK-20260915-DUPLICATE-RUN-RECORDS`)
+
+This report's own headline (**249 runs, 233 DONE, 93%**) was measured against raw, undeduplicated
+`runs.jsonl` rows. Investigated and found: `writeMonitoring()` fires at every gate exit point
+within one continuous execution, correctly keeping one stable `(run_id, execution_id, start_ts)`
+identity across every call — a session that continues past a gate failure (fixes it, keeps going)
+legitimately produces multiple `runs.jsonl` rows for that one real execution (`NEEDS_CHANGES` →
+`DOD_BLOCKED` → `DONE`, each a real checkpoint, confirmed by correlating a sample group's shared
+`execution_id` against its own `events.jsonl` timeline). This is **not** noise; it is accurate
+audit-trail data that a naive `len(runs)` count was never designed to collapse.
+
+All-time corpus: 66 duplicate-key groups, of which 63 (95%) are this legitimate shape, 2 are
+ambiguous-but-plausible epic-batch continuations, and exactly **1** is a confirmed genuine
+accidental duplicate (a hand-typed `record_run.py --data` invocation, identifiable by its
+non-standard `-final`-suffixed `execution_id`, most likely run twice with the same copy-pasted
+argument). Fixed with a dedupe-on-read utility
+(`tools/agent-monitoring/run_dedup.py::dedupe_to_latest_per_execution`), now wired into
+`generate_retro.py`'s report generation for every window (`--days`, `--all`, weekly), and a
+narrow ratchet check (`make duplicate-run-record-check`, ceiling 1) watching only the genuinely-
+ambiguous bucket, not the healthy-continuation majority.
+
+**This period's own corrected figures**: only 2 of the 66 all-time duplicate groups fall inside
+this 14-day window (1 legitimate continuation, 1 the confirmed accidental duplicate) — the
+correction is real but small:
+
+| | Raw (as reported above) | Deduplicated |
+|---|---|---|
+| Total runs | 249 | **247** |
+| DONE | 233 | **232** |
+| Gate failures | 15 | **14** |
+| DONE rate | 93.6% | **93.9%** |
+
+Future report generations (`generate_retro.py`'s CLI, not the raw import path used to compute this
+correction without regenerating the file — see below) will render these deduplicated figures
+directly, with an inline note when raw and deduplicated counts differ.
+
+**A hazard hit while producing this very note, recorded so it does not recur**: running
+`generate_retro.py --days 14` to check the fix would have unconditionally overwritten this file,
+destroying every hand-authored section above (including this one and the "Deep review" section) —
+confirmed the hard way with a real `git diff` showing 177 deleted lines before reverting it. Every
+number in this section was instead computed by importing `_load_runs_and_events()`/
+`compute_retro_metrics()`/`generate()` directly and calling them without touching
+`RETRO_DIR`/writing a file. Anyone verifying this correction later should do the same, not re-run
+the CLI against this path.

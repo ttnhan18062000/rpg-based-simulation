@@ -2632,3 +2632,52 @@ def test_generate_uses_compute_retro_metrics_skill_usage_not_a_second_call(monke
     tools = [_tool_row(run_id="TCK-FAKE", tool="Skill", input_summary="{'skill': 'graphify'}")]
     generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path, tools=tools)
     assert call_count["n"] == 1
+
+
+# --- TCK-20260915-DUPLICATE-RUN-RECORDS: dedup wiring ---
+
+def test_generate_renders_dedup_note_when_raw_and_deduped_counts_differ(tmp_path):
+    report = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path,
+        raw_run_count=3, deduped_run_count=1,
+    )
+    assert "3 raw" in report
+    assert "1 real executions" in report
+    assert "TCK-20260915-DUPLICATE-RUN-RECORDS" in report
+
+
+def test_generate_omits_dedup_note_when_counts_equal_or_not_supplied(tmp_path):
+    report_equal = generate(
+        [_BASE_RUN], [], "test-label", tickets_root=tmp_path,
+        raw_run_count=1, deduped_run_count=1,
+    )
+    assert "TCK-20260915-DUPLICATE-RUN-RECORDS" not in report_equal
+
+    report_unset = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path)
+    assert "TCK-20260915-DUPLICATE-RUN-RECORDS" not in report_unset
+
+
+def test_main_dedupes_before_computing_run_summary(tmp_path, monkeypatch):
+    """End-to-end: main()'s --days branch must dedupe the window-filtered runs before generate()
+    ever sees them, not just when generate() is called directly with pre-deduped input."""
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+
+    progressive_pair = [
+        {**_BASE_RUN, "execution_id": "exec-dup", "final_status": "NEEDS_CHANGES",
+         "end_ts": "2026-07-06T00:30:00Z", "agent_count": 3},
+        {**_BASE_RUN, "execution_id": "exec-dup", "final_status": "DONE",
+         "end_ts": "2026-07-06T01:00:00Z", "agent_count": 9},
+    ]
+    monkeypatch.setattr(generate_retro, "_load_runs_and_events", lambda: (progressive_pair, []))
+    monkeypatch.setattr(generate_retro, "_load_source", lambda path, source: [])
+    monkeypatch.setattr(generate_retro, "_record_since_cutoff", lambda start_ts, cutoff: True)
+    monkeypatch.setattr(generate_retro, "_update_index", lambda *a, **k: None)
+    monkeypatch.setattr(sys, "argv", ["generate_retro.py", "--days", "14"])
+
+    generate_retro.main()
+
+    report_text = (tmp_path / "RETRO-LAST14D.md").read_text()
+    assert "| Total runs | 1 |" in report_text
+    assert "| Completed (DONE) | 1 (100%) |" in report_text
+    assert "2 raw" in report_text
+    assert "1 real executions" in report_text
