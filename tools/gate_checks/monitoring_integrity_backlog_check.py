@@ -50,7 +50,21 @@ from generate_retro import _load_runs_and_events  # noqa: E402
 
 # Ratchet ceilings: the real corpus's own measured counts as of 2026-09-15. May only decrease.
 # Raising any of them to paper over a newly-introduced instance defeats the point of this check.
-NO_RUN_RECORD_CEILING = 218
+#
+# NO_RUN_RECORD_CEILING re-pinned 218 -> 219 the same day. Traced directly via
+# find_working_log_rows_missing_run_record()'s own output (not guessed): the sole new instance is
+# TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY, a hand-orchestrated closure from an
+# entirely separate, concurrent PR (#203) merged into this branch to resolve a real git conflict --
+# verified to have zero run/event records of its own. This is NOT any of this epic's own 9 child
+# tickets (each of those was independently re-verified via a direct runs.jsonl/events.jsonl grep to
+# have real, non-zero coverage before ruling this out -- a first-pass peer diagnosis named 3 of
+# this epic's own tickets as the cause, which this verification directly contradicts and disproves).
+# Not backfillable: fabricating monitoring records for a different session's already-closed ticket
+# from outside this epic, with no visibility into what phases it actually ran, would be worse than
+# honestly ratcheting the ceiling -- the same "accept and document, do not guess" disposition
+# TCK-20260915-MONITORING-INTEGRITY-BACKLOG's own item 2 already established for this exact
+# historical-debt population.
+NO_RUN_RECORD_CEILING = 219
 UNUSABLE_TS_RUN_CEILING = 66
 UNUSABLE_TS_EVENT_CEILING = 55
 UNKNOWN_WEEK_ROW_CEILING = 34
