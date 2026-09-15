@@ -661,3 +661,46 @@ and `TCK-20260904-RECIPE-CATALOG-NAMESPACE-BRIDGE` (16.9h).
 _No finding here was taken from an agent report without re-deriving it. Two of this session's own
 intermediate figures were wrong and are corrected above: a ticket count derived from file mtimes
 (meaningless after branch switching) and a closure/run gap of ~100 that was really 34._
+
+#### Addendum — `index.md` reports numbers that disagree with the reports it links to
+
+Found while writing this review, and it is the same shape as everything else catalogued above, so
+it belongs here rather than in a session transcript.
+
+`agent-monitoring/retro/index.md` currently shows:
+
+| Row | Index claims | The linked report itself says |
+|---|---|---|
+| `LAST14D` | 0 runs, 0 DONE, 0 failures | **249 runs, 233 DONE** |
+| `ALL` | 1609 runs, 1383 DONE | **1149 runs, 962 DONE (83%)** |
+
+Cause is in `generate_retro.py::_update_index` (:1885-1925). Every row's numbers are computed from
+the **live corpus at generation time**, never from the report the row links to:
+
+```python
+week_runs = all_runs if name == "ALL" else runs_by_week.get(name, [])
+```
+
+- `runs_by_week` is keyed by **ISO week string**. `"LAST14D"` is not an ISO week, so the lookup
+  misses and the row is filled with zeros. There is an explicit special case for `"ALL"` and none
+  for any other non-week scope, so **every `--days N` report indexes as 0**.
+
+  This is not new and was not first exposed by this file. All three period reports in the repo
+  today index as zero while their own bodies report real work, and two of them have been committed
+  since 2026-09-06 — nine days of an index stating there is nothing there:
+
+  | Report | Index row | Report body |
+  |---|---|---|
+  | `RETRO-LAST7D.md` (tracked, 2026-09-06) | 0 runs | **69 runs** |
+  | `RETRO-LAST14D.md` (this file) | 0 runs | **249 runs** |
+  | `RETRO-LAST28D.md` (tracked, 2026-09-06) | 0 runs | **300 runs** |
+- The `ALL` row uses the unfiltered `all_runs` (1609), while `RETRO-ALL.md`'s own body reports 1149
+  after `main()`'s filtering. Same label, two populations.
+
+Because the index never parses the reports, it cannot notice the disagreement — it silently prints
+a different number next to the document that contradicts it. A reader opening `index.md` first (the
+obvious entry point) sees "LAST14D: 0 runs" and would reasonably conclude the fortnight was empty.
+
+Not fixed here — this review is read-only with respect to the tooling. Worth a ticket, and worth
+noting that it makes **13** distinct mechanisms found in this arc that exist, have tests or an
+official-looking surface, and do not report what they appear to.
