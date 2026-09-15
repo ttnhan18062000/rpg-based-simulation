@@ -458,18 +458,22 @@ recorded here, not silently resolved:
    (functional dependency), and conflating the two is exactly how the sparse count above could get
    "fixed" incorrectly by a future editor under time pressure.
 
-   **Known consequence for T3 (priority derivation), recorded now rather than discovered late:**
-   only 26 of 75 mechanisms are ever named as someone else's dependency — **49 of 75 have zero
-   dependents**, even though a majority of mechanisms (42/75) themselves declare an outgoing
-   dependency; the graph is a small set of hub prerequisites with most of the breadth as leaves. If
-   T3's priority rule is `rank × dependents` (or similar), the dependents term collapses to zero for
-   most rows, and **layer `rank` alone will do nearly all of the ordering work in this first cut**
-   — not because rank is the intended dominant signal, but because the dependency graph's breadth is
-   still thin even though its hub nodes are real and load-bearing. This is not a defect in this
-   ticket's seed data (inventing edges to make the graph artificially denser would be worse, per the
-   reasoning above) — it is a known, load-bearing property of a from-scratch hand-authored graph
-   that T3 should plan around (e.g. treating near-zero-dependent rows as expected rather than a sign
-   something is missing), not rediscover under pressure once chart generation is underway.
+   **Known consequence for T3 (priority derivation), recorded now rather than discovered late —
+   reframed 2026-09-16 per peer review, replacing an earlier "limitation" framing based on a
+   since-corrected number:** only 26 of 75 mechanisms are ever named as someone else's dependency —
+   49 of 75 have zero dependents — even though a majority of mechanisms (42/75) themselves declare
+   an outgoing dependency. **This is not a thin or deficient graph; it is the expected shape of a
+   real dependency structure**, and it is concentrated exactly where priority decisions get made: a
+   small set of hub prerequisites (`action_pacing_readiness`, `regional_trauma_hazards_sovereignty`,
+   `combat_resolution`, `belief_cycle`, `betrayal_siege_war`, and others) that many other mechanisms
+   genuinely require, surrounded by leaves with small real blast radius. If T3's priority rule is
+   `rank × dependents` (or similar), **the dependency signal is informative exactly where it
+   matters (the 26 hubs) and appropriately flat where it doesn't (the 49 leaves)** — ranking a leaf
+   by layer cadence alone is the correct outcome for a mechanism nothing else depends on, not a
+   degradation of the intended signal. This matches the project's own stated priority rule
+   (dependency-by-other-count as a real driver, not a decoration) rather than working against it.
+   Recorded now so T3 starts from this shape as expected, not as something to explain away under
+   pressure once chart generation is underway.
 5. **File location.** `docs/brainstorm/mechanisms.yaml` is the right location, confirmed by
    contrasting the two existing conventions directly rather than assuming the ticket's own leaning:
    `registries/*.jsonl` (`tag_registry.jsonl`, `layer_registry.jsonl`) is documented in
@@ -527,6 +531,28 @@ that exclusion list is itself feasible — `graphify-out/GRAPH_REPORT.md`'s own 
 output (1,368 communities) or a simple degree-count over `links` would surface the hub nodes
 directly. This is real, non-trivial script design work, appropriately left to whichever ticket
 actually builds the checker, not fully specified here.
+
+## This Document's Own Drift (evidence, not self-criticism)
+
+This single investigation.md drifted from a wrong number three separate times across roughly a
+day, each caught only by checking the real source directly rather than trusting the previous
+pass's prose: the mechanism count (73, an arithmetic error re-deriving from a mis-cited atlas
+card index, corrected to 75), the two stale atlas badges (Breakthrough Bonuses badged as a stub
+that stopped being one; Race-Keyed Evolution Chains citing a file already deleted by a prior
+ticket), and the `depends_on` density claim ("~25 of 75", an unverified figure carried forward
+from an earlier draft of this same section, corrected to the real 42/75 by counting the finished
+YAML directly).
+
+**This is not a claim that anyone was careless.** Every number above was plausible, internally
+consistent with the surrounding prose, and written by someone actively trying to get it right. It
+drifted anyway — the same failure this whole registry exists to prevent, demonstrated inside the
+registry's own founding investigation, in real time, by its own author. That is the strongest
+available evidence that the problem this epic targets is structural (a claim, once written, is
+trusted by the next reader more than it's re-derived) rather than a matter of individual care —
+and it is also exactly why Acceptance Criteria #4 insists the validator be proven against
+deliberately broken fixtures rather than a clean pass on good data: the same principle applies one
+level up here — trust the check that was run just now, not the claim about what a prior check
+found.
 
 ## Anti-Drift Hazards
 
