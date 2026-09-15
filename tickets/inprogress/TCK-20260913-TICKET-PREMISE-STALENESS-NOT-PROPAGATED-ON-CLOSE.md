@@ -15,7 +15,7 @@ tags: [registry, process-improvement]
 Closing a ticket updates only its own file and the working log — nothing checks whether the fix just invalidated another open ticket's stated premise
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -119,7 +119,7 @@ This is one of at least three instances of the same underlying gap, seen from di
    beyond the session that wrote it, so the handoff reaches one reader and looks complete from both
    ends. Not hypothetical: this very PR's own `rpg_knowledge_investigation_closure_plan.md` cited
    `docs/plans/agent_infrastructure/reachability_verification_findings.md`, a doc written on
-   another branch, never pushed, cited across sessions as shared context that nobody but its author
+   another branch, at the time never pushed, cited across sessions as shared context that nobody but its author
    could actually read. It took both a sender who didn't confirm delivery and a receiver who didn't
    publish — "whose fault" is the wrong question; "neither end has a visibility check" is the right
    one.
@@ -139,12 +139,13 @@ handoff-visibility mechanism itself belongs to a different track, not here.
 - Re-litigating any of the three cases' own already-closed/already-corrected dispositions.
 
 ## Acceptance Criteria
-- [ ] Real investigation of tooling cost/precision for the back-reference-sweep and registry-
+- [x] Real investigation of tooling cost/precision for the back-reference-sweep and registry-
       cross-matching options, not just the re-verification-convention option (which requires no
       tooling and is easy to recommend by default without checking the others).
-- [ ] A recommendation among the options in Scope, with rationale, brought to peer/user review
+- [x] A recommendation among the options in Scope, with rationale, brought to peer/user review
       before any implementation.
-- [ ] No implementation without that review.
+- [x] No implementation without that review. (No `src/`/`tools/`/`tests/` files touched by this
+      ticket — see Files Changed.)
 
 ## Related Tickets
 - `TCK-20260913-RECRUITMENT-CONTRACT-GROUP-LINKAGE-MISSING` (done — case 1)
@@ -170,13 +171,72 @@ None yet — standard tier, staging artifacts created when picked up.
   the central open question this ticket exists to answer — not pre-judged here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Investigation-only, per this ticket's own AC ("No implementation without that review"). Two direct
+measurements against the real corpus, not assumption:
+
+1. `docs/REGISTRY.yaml` does not index `tickets/todos/`/`tickets/inprogress/` at all today
+   (`generate_registry.py`'s ticket-collection walk is `tickets/done/*.md` only, confirmed by
+   reading the code and by querying the live registry: 0 of 1958 indexed ticket entries are open
+   tickets). The "registry cross-matching" option as literally scoped cannot work without first
+   extending that walk.
+2. **Corrected after initial publication** (peer had independently reproduced and endorsed the
+   original number before this correction landed — see investigation.md's "Correction to
+   Measurement 2" for the full account): the first pass measured `## Related Code Areas` as empty
+   on 53.4% (31/58) of the real open-ticket corpus using the registry's own extraction function
+   (`parse_related_code_areas`). Re-checking the 31 "empty" tickets directly found 29 of them have
+   real, accurate path content — just not backtick-quoted, which is the only thing that function
+   recognizes. **True content population is 96.6% (56/58)**; the field is not sparse. The actual
+   defect is `generate_registry.py`'s extraction regex requiring backtick-quoting that roughly half
+   of authors don't use — a fixable, bounded bug, not an authorship-discipline gap. Where content
+   IS extracted (by any method), it is accurate: ~97% of citations, backtick or not, resolve to
+   real, existing paths.
+
+**Recommendation, revised** (full detail in `plan.md`): the corrected numbers change this from
+"eliminate registry cross-matching" to "two live candidates for review": (1) fix the extraction
+regex + extend the registry's indexing scope — now the *cheaper* option, since it unlocks ~96%
+coverage rather than being blocked on wide-scale authorship change; or (2) a close-time full-text
+keyword/path sweep against every open ticket's whole body text, which needs neither fix but builds
+a second scan path outside the registry. Measurement 1 (registry doesn't index open tickets at all)
+is unaffected by the correction and still rules out registry cross-matching *exactly as originally
+scoped*, but no longer rules out a corrected version of it.
+
+**This recommendation has not yet been reviewed by peer/user** — per AC, no implementation may
+proceed until that review happens. Status left `BLOCKED` (investigation complete, blocked on
+review) rather than `DONE`, since this ticket has not actually resolved anything yet — only
+produced the evidence the resolution decision needs.
+
+**Note on `tickets/working_log.csv`**: the working-log row already appended for this ticket's
+`BLOCKED` status (via `record_hand_orchestrated_closure.py`, append-only, never rewritten) still
+carries the pre-correction "53.4% empty" summary text, since that was accurate as a record of what
+this ticket's Implementation Notes said at that point in time. This ticket file (not the log row)
+is the authoritative, current account — the log row is a historical snapshot, correctly left
+unedited per this repo's append-only convention for that file.
 
 ## Test Summary
-_(pending)_
+No tests added — no code changed. See `test_plan.md` for how the investigation's own measurements
+were verified (read the real parsing code, ran it against the real corpus, checked citations against
+the real filesystem — all reproducible, not assumed) and how the Measurement 2 correction was itself
+verified (re-derived cleanly with backtick-stripping fixed, cross-checked against the peer's
+independently-reproduced original number before revising).
 
 ## Files Changed
-_(pending)_
+- `staging_artifacts/TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE/` (investigation.md,
+  plan.md, test_plan.md — investigation.md and plan.md amended post-publication with the Measurement
+  2 correction).
+- This ticket file itself (Implementation Notes/Test Summary/Files Changed/Completion Summary; AC
+  checked off; `## Status` set to `BLOCKED`).
+- No `src/`, `tools/`, or `tests/` files touched.
 
 ## Completion Summary
-_(pending)_
+Investigation complete, corrected once post-publication. Measured, rather than assumed, that the
+registry doesn't index open tickets (Measurement 1, stands unchanged) and that its own field-
+extraction logic — not the underlying data — is why open-ticket coverage looked sparse (Measurement
+2, corrected: true content population is 96.6%, not the original 53.4% empty figure). Revised
+recommendation brings two live candidates to review instead of eliminating one outright: fix the
+extraction regex + extend registry indexing (now the cheaper path), or build an independent
+full-text keyword/path sweep. Recorded corroborating context from two independent documents
+describing the same underlying premise-staleness mechanism this ticket investigates (reachability
+findings doc Finding 6; the 2026-08-04 gap audit's 2026-09-14 deferred-check addendum, including its
+own unresolved ±2 Review-count discrepancy, preserved rather than smoothed over). This ticket is
+**not** implementing anything and is **not** being closed as fully resolved — left `BLOCKED`,
+pending the peer/user review its own AC requires before any of the above becomes a real ticket.

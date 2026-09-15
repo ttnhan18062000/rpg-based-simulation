@@ -167,5 +167,81 @@ def test_redis_adapter_degraded_fallback():
         adapter.publish(make_mock_event())
         adapter.flush()
         assert adapter.dropped_count == 1
-        
+
+        adapter.close()
+
+
+def test_flush_waits_for_send_to_redis_to_complete_not_just_queue_drain():
+    """TCK-20260915-REDIS-ADAPTER-FLUSH-PUBLISHED-COUNTER-RACE: flush()'s old contract was only
+    "the queue is empty", not "every dequeued event has finished processing". The worker thread
+    pops an event (queue empties) and releases the lock *before* calling _send_to_redis(), which is
+    where the xadd() call and published_count update happen -- so flush() could return in the gap
+    between those two steps. Reproduced this on CI (mock_client.xadd.call_count == 1 passed while
+    health()["published_events"] == 1 failed as 0), which never reproduced locally because the gap
+    is normally sub-millisecond. This test forces the gap open deterministically via a real delay
+    inside the mocked xadd(), rather than relying on scheduler timing luck to catch the race."""
+    mock_client = MagicMock()
+    mock_client.ping.return_value = True
+
+    def slow_xadd(*args, **kwargs):
+        time.sleep(0.05)
+
+    mock_client.xadd.side_effect = slow_xadd
+
+    mock_redis = MagicMock()
+    mock_redis.from_url.return_value = mock_client
+
+    with patch.dict("sys.modules", {"redis": mock_redis}):
+        adapter = RedisStreamAdapter(
+            redis_url="redis://localhost:6379/0",
+            stream_name="test:events",
+            max_queue_size=10
+        )
+
+        adapter.publish(make_mock_event(severity="INFO", message="Slow publish"))
+        adapter.flush()
+
+        # Pre-fix, flush() could return before the 50ms slow_xadd() call (and the
+        # published_count increment right after it) had run -- this assertion is the exact
+        # shape of the CI failure, forced open deterministically rather than by luck.
+        health = adapter.health()
+        assert health["published_events"] == 1
+        assert mock_client.xadd.call_count == 1
+
+        adapter.close()
+
+
+def test_flush_also_waits_for_dropped_count_bookkeeping():
+    """Same race, the disconnected-client/dropped path: _send_to_redis() increments
+    dropped_count (not published_count) in that branch, at the identical point outside the lock,
+    so it is exposed to the same flush()-races-ahead-of-bookkeeping window."""
+    mock_client = MagicMock()
+    mock_client.ping.side_effect = Exception("Redis unreachable")
+
+    mock_redis = MagicMock()
+    mock_redis.from_url.return_value = mock_client
+
+    with patch.dict("sys.modules", {"redis": mock_redis}):
+        adapter = RedisStreamAdapter(
+            redis_url="redis://invalid-host:6379/0",
+            stream_name="test:events",
+            max_queue_size=5
+        )
+
+        # Slow down the reconnect-check path (_send_to_redis calls _connect() again when not
+        # connected) so the drop's bookkeeping update is delayed the same way slow_xadd delays
+        # the published-path update above.
+        original_connect = adapter._connect
+
+        def slow_connect():
+            time.sleep(0.05)
+            original_connect()
+
+        adapter._connect = slow_connect
+
+        adapter.publish(make_mock_event())
+        adapter.flush()
+
+        assert adapter.dropped_count == 1
+
         adapter.close()
