@@ -184,9 +184,17 @@ through different causes:
 co-located is exposed to this class, and nothing in the compile path currently checks that a
 world's actual composition satisfies what its own mechanics need to function — only that content
 references resolve syntactically (and per the sibling ticket's own finding, not even always
-that). Worth checking `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` early for a third
-instance, since its own trigger (a hero death in a high-hazard region) has the same shape:
-requires two things (a hero, a high-hazard region) to be co-located for the mechanic to ever fire.
+that).
+
+**Confirmed as a third instance**: `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` was
+checked next and confirmed to share this pattern, doubly so — the reference world its own original
+probe used has zero `hero`-kind entities composed into it at all (the entity kind its producer
+requires simply doesn't exist there), and even in a world that does compose heroes, their own
+module hardcodes their spawn region to the safe village, never any hazardous region the mechanic
+needs them to visit. Three real, distinct mechanics (Lair-occupant spawning, cross-faction combat
+volume, calamity-intensity production) now confirmed to share this one shape — a real, non-
+speculative case for a compile-time check that validates world composition against what its own
+mechanics structurally require, not just that content references resolve.
 
 ## Test Summary
 _(not started)_
