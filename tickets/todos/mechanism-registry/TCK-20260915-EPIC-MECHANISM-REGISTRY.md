@@ -30,12 +30,21 @@ P1
 ## Request Summary
 The RPG brainstorm corpus records findings well and cannot answer aggregate questions — *what is
 wrong, what should we harden, what is the priority, how do we know* — because no mechanism's state is
-written down once. Five artifacts each maintain their own state vocabulary by hand
-(`rpg_feature_atlas.html`, `simulation_design_taxonomy.html`, `simulation_capabilities.html`,
-`rpg_simulation_wiring_map.html`, `design_merit_scorecard.html`), and they already disagree: the
-atlas carries `orphan` (12 cards) and `gated` (7) — the built-but-never-runs distinction this arc
-established — while the taxonomy has no vocabulary for it at all, so all 50 of its rows read as at
-least partly working.
+written down once. Three artifacts each maintain their own mechanism-state vocabulary by hand
+(`rpg_feature_atlas.html`, `simulation_capabilities.html`, `rpg_simulation_wiring_map.html`), and
+they already disagree: the atlas carries `orphan` (12 cards) and `gated` (7) — the
+built-but-never-runs distinction this arc established — while the wiring map and capabilities page
+each derive their own colouring/tier by hand, independently.
+
+**Corrected 2026-09-16 by `TCK-20260915-ARTIFACT-STATE-CONVERGENCE`**: an earlier version of this
+paragraph claimed *five* artifacts record mechanism state, including
+`simulation_design_taxonomy.html` and `design_merit_scorecard.html`. That was wrong — those two
+track genuinely different, independently-correct axes (a simulation-engine architecture-pattern
+catalogue and design-idea merit scoring, respectively, neither keyed by mechanism id), found by
+checking rather than assuming, after the original claim was itself reached by grepping the taxonomy
+for a couple of guessed vocabulary words rather than reading what it actually tracks. See
+`docs/plans/mechanism_registry_initiative.md` Finding 1 for the full correction and its own
+methodology note.
 
 Four gaps were raised together. One dissolves into another, so this epic delivers **one registry and
 four child tickets**, not four parallel features. Full investigation, measurements, and rejected
@@ -65,15 +74,17 @@ Four child tickets, in `SEQUENCE.md` order:
    than being omitted.
 3. **`TCK-20260915-MECHANISM-PRIORITY-DERIVATION`** — derived priority (layer rank × computed
    dependent-count) and per-view mermaid generation, replacing the wiring map's hand-authored charts.
-4. **`TCK-20260915-ARTIFACT-STATE-CONVERGENCE`** — the five artifacts read `state` and `verified`
-   from the registry; their hand-maintained duplicates are removed.
+4. **`TCK-20260915-ARTIFACT-STATE-CONVERGENCE`** — the three mechanism-domain artifacts (atlas,
+   capabilities, wiring map) read `state` and `verified` from the registry, their hand-maintained
+   duplicates removed; the two other artifacts (taxonomy, scorecard) are assessed and confirmed to
+   track a genuinely different axis, recorded rather than converged.
 
 ## Out of Scope
 - **Gap 2 (state-is-prose) as its own ticket.** It dissolves into child 2: the overloaded badge texts
   (`"Built correctly, OFF by default"`, `"Proven mechanic, narrow trigger"`) are verification
   statements in a build-status field, and migrate once the field exists.
 - **New badge classes.** Six is enough. Expanding a status vocabulary to carry meaning belonging in
-  another field is how the taxonomy reached 50 uniformly-healthy-looking rows.
+  another field is the same failure mode the atlas's own 147 overloaded badge texts already show.
 - **Merging artifact prose.** Only `state` and `verified` converge; each page keeps its own writing.
 - **A citation/link checker** — measured as unnecessary.
 - **Auto-derived dependency edges** — graphify is a validator, not a generator, at 35k nodes.
@@ -106,7 +117,8 @@ Four child tickets, in `SEQUENCE.md` order:
 
 ## Related Code Areas
 - `tools/generate_brainstorm_idea_index.py` — the pattern to mirror
-- `docs/brainstorm/*.html` — the five consuming artifacts
+- `docs/brainstorm/*.html` — the three mechanism-domain consuming artifacts (atlas, capabilities,
+  wiring map); taxonomy and scorecard read for assessment only, not converged
 - `Makefile` — target registration alongside `brainstorm-idea-index`
 
 ## Assumptions / Open Questions

@@ -24,22 +24,46 @@ The RPG brainstorm corpus is unusually good at recording *findings*. It is struc
 answer *aggregate* questions, for one reason: **there is no place where a mechanism's state is
 written once.**
 
-### Finding 1 — five artifacts independently record mechanism state
+### Finding 1 — three artifacts independently record mechanism state; two record something else
 
-Measured against `origin/main`, 2026-09-15:
+**Corrected 2026-09-16 by `TCK-20260915-ARTIFACT-STATE-CONVERGENCE`** — the original version of this
+finding claimed all five artifacts below record mechanism state and disagree about it. That claim
+was wrong for two of the five, and wrong in a specific, instructive way: it was reached by grepping
+`simulation_design_taxonomy.html` for a handful of *guessed* vocabulary words (`Implemented`,
+`Partial`) and reporting the absence of those guesses as absence of vocabulary, without ever
+checking what the file's dominant value actually was or what its 108 cards' titles named. A direct
+re-count found 108 cards across **six** values (`na` 47 — the largest, never checked for —
+`implemented` 35, `partial` 15, `unconfirmed` 6, `candidate` 4, `planned` 1), and the titles
+(*Deterministic Simulation*, *Lamport Clocks*, *CRDT-Based State Convergence*, *Discrete-Event
+Simulation*) are generic simulation-engine architecture patterns, not gameplay mechanisms — a
+zero-overlap check against every mechanism id currently `orphan`/`gated` in the registry confirmed
+none of them appear anywhere in the taxonomy's text. This is the same methodology error as
+Foundation's own original mechanism seeding (reading a card's badge/title and missing a caveat
+sitting in its description) — a structural pattern across this epic's own scoping and seeding work,
+not a one-off. See `TCK-20260915-ARTIFACT-STATE-CONVERGENCE`'s investigation.md for the full
+re-derivation.
+
+Measured against `origin/main`, 2026-09-15 (mechanism-domain artifacts only — see below for why
+taxonomy and scorecard are excluded):
 
 | Artifact | State vocabulary | Volume |
 |---|---|---|
 | `rpg_feature_atlas.html` | badge `cls` — `gap` 58, `done` 43, `partial` 25, `orphan` 12, `gated` 7, `skeleton` 2 | 139 cards |
-| `simulation_design_taxonomy.html` | `Implemented` 35, `Partial` 15 — **nothing else** | 50 rows |
 | `simulation_capabilities.html` | 3-tier plain language | 77 cards |
 | `rpg_simulation_wiring_map.html` | mermaid `classDef live` / `classDef bug` | 3 flowcharts, 28 edges |
-| `design_merit_scorecard.html` | Groundedness / Efficiency / **Leverage** | ideas 1–65 |
 
-Five hand-maintained state surfaces, no shared source. They already disagree: the atlas carries
-`orphan` and `gated` — the built-but-never-runs distinction this arc spent weeks establishing — and
-the taxonomy has no vocabulary for it at all, so all 50 of its rows read as at least partly working.
-Consulting the taxonomy returns the pre-arc picture, confidently.
+Three hand-maintained mechanism-state surfaces, no shared source. They already disagree: the atlas
+carries `orphan` and `gated` — the built-but-never-runs distinction this arc spent weeks
+establishing — while the wiring map and capabilities page each derive their own colouring/tier by
+hand, independently.
+
+Two further artifacts carry their own, genuinely different, independently-correct axes and are
+**not** part of this convergence:
+
+| Artifact | What it actually tracks | Volume |
+|---|---|---|
+| `simulation_design_taxonomy.html` | which known simulation-engine architecture patterns are implemented (a software-architecture catalogue, not a mechanism catalogue) | 108 cards, 6 values |
+| `design_merit_scorecard.html` | design-idea merit (Groundedness / Efficiency / Leverage, etc.), keyed by idea number 1–65, not mechanism id | ideas 1–65 |
 
 ### Finding 2 — the corpus is keyed by *idea*, and this needs to be keyed by *mechanism*
 
@@ -118,8 +142,11 @@ because the overloaded prose migrates into `(state, verified)` pairs. What remai
 per-card colour, which should stay prose.
 
 **Explicitly rejected:** adding more badge classes. Six is enough. Expanding a status vocabulary to
-carry meaning belonging in a different field is how the taxonomy reached 50 rows that all read as
-working.
+carry meaning belonging in a different field is exactly the failure mode the 147 overloaded badge
+texts above already show inside this domain — no need to reach for the taxonomy as an example of it,
+and doing so was itself Finding 1's own correction: the taxonomy's vocabulary problem, on inspection,
+turned out to belong to a different domain (engine architecture patterns) entirely, not evidence of
+mechanism-status vocabulary creep.
 
 ### Gap 3 — the artifacts disagree
 
