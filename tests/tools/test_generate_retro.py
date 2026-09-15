@@ -8,7 +8,7 @@ tickets changed.
 """
 
 import sys
-from datetime import date
+from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 
 import pytest
@@ -2156,6 +2156,97 @@ def test_index_md_all_tools_default_never_crashes_on_none(tmp_path, monkeypatch)
     generate_retro._update_index([{"run_id": "TCK-A", "start_ts": "2026-01-01T00:00:00Z"}])  # all_tools omitted
     index_text = (tmp_path / "index.md").read_text()
     assert "| [ALL]" in index_text
+
+
+# ---------------------------------------------------------------------------
+# _resolve_report_run_population / index LAST{N}D rows (TCK-20260915-RETRO-INDEX-REPORTS-ZERO)
+#
+# Before this fix, `_update_index` only special-cased "ALL" and otherwise looked the report name
+# up in `runs_by_week` (keyed by ISO week string) -- "LAST7D"/"LAST14D"/"LAST28D" are not ISO
+# weeks, so every --days report indexed as 0 runs regardless of the real report's own content.
+# ---------------------------------------------------------------------------
+
+def _days_ago_ts(days):
+    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+
+def test_index_resolves_last_n_days_name_not_just_iso_weeks(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-LAST7D.md").write_text("placeholder")
+
+    all_runs = [
+        {"run_id": "TCK-RECENT-1", "start_ts": _days_ago_ts(1), "final_status": "DONE"},
+        {"run_id": "TCK-RECENT-2", "start_ts": _days_ago_ts(3), "final_status": "DONE"},
+        # Outside the 7-day window -- must not be counted in the LAST7D row.
+        {"run_id": "TCK-OLD", "start_ts": _days_ago_ts(20), "final_status": "DONE"},
+    ]
+    generate_retro._update_index(all_runs, [])
+
+    index_text = (tmp_path / "index.md").read_text()
+    last7d_line = next(l for l in index_text.splitlines() if "LAST7D" in l)
+    assert last7d_line.split("|")[2].strip() == "2", (
+        f"LAST7D row must count only the 2 runs within 7 days, not 0 (pre-fix) or 3 (window "
+        f"ignored): {last7d_line!r}"
+    )
+
+
+def test_index_last_n_days_row_matches_multiple_window_sizes_independently(tmp_path, monkeypatch):
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-LAST7D.md").write_text("placeholder")
+    (tmp_path / "RETRO-LAST14D.md").write_text("placeholder")
+    (tmp_path / "RETRO-LAST28D.md").write_text("placeholder")
+
+    all_runs = [
+        {"run_id": "TCK-D1", "start_ts": _days_ago_ts(1), "final_status": "DONE"},
+        {"run_id": "TCK-D10", "start_ts": _days_ago_ts(10), "final_status": "DONE"},
+        {"run_id": "TCK-D20", "start_ts": _days_ago_ts(20), "final_status": "DONE"},
+        {"run_id": "TCK-D40", "start_ts": _days_ago_ts(40), "final_status": "DONE"},
+    ]
+    generate_retro._update_index(all_runs, [])
+
+    index_text = (tmp_path / "index.md").read_text()
+    counts = {
+        name: next(l for l in index_text.splitlines() if name in l).split("|")[2].strip()
+        for name in ("LAST7D", "LAST14D", "LAST28D")
+    }
+    assert counts == {"LAST7D": "1", "LAST14D": "2", "LAST28D": "3"}
+
+
+def test_index_all_row_uses_deduplicated_population_matching_retro_all_body(tmp_path, monkeypatch):
+    # TCK-20260915-DUPLICATE-RUN-RECORDS: RETRO-ALL.md's own body dedupes multi-invocation
+    # gate-checkpoint rows before computing its run count. The index's ALL row must use the same
+    # deduplicated count, not the raw all_runs length (the ticket's own reported mismatch: index
+    # said 1609, RETRO-ALL.md's body said 1149).
+    monkeypatch.setattr(generate_retro, "RETRO_DIR", tmp_path)
+    (tmp_path / "RETRO-ALL.md").write_text("placeholder")
+
+    all_runs = [
+        {
+            "run_id": "TCK-DUP", "execution_id": "exec-1", "start_ts": "2026-01-01T00:00:00Z",
+            "final_status": "DOD_BLOCKED",
+        },
+        {
+            "run_id": "TCK-DUP", "execution_id": "exec-1", "start_ts": "2026-01-01T00:00:00Z",
+            "final_status": "DONE",
+        },
+        {"run_id": "TCK-SOLO", "start_ts": "2026-01-02T00:00:00Z", "final_status": "DONE"},
+    ]
+    generate_retro._update_index(all_runs, [])
+
+    index_text = (tmp_path / "index.md").read_text()
+    all_line = next(l for l in index_text.splitlines() if "[ALL]" in l)
+    assert all_line.split("|")[2].strip() == "2", (
+        "ALL row must report the deduplicated execution count (2), not the raw row count (3)"
+    )
+
+
+def test_resolve_report_run_population_unrecognized_name_falls_through_to_empty():
+    # A name that is neither "ALL" nor "LAST{N}D" nor a real ISO week key must resolve to an
+    # empty population rather than raising or silently matching everything.
+    result = generate_retro._resolve_report_run_population(
+        "not-a-real-report-name", [{"run_id": "TCK-A", "start_ts": "2026-01-01T00:00:00Z"}], {}
+    )
+    assert result == []
 
 
 # ---------------------------------------------------------------------------

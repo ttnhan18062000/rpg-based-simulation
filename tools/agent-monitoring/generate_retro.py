@@ -1930,6 +1930,37 @@ def main():
     _update_index(all_runs, all_tools)
 
 
+_LAST_N_DAYS_RE = re.compile(r"^LAST(\d+)D$")
+
+
+def _resolve_report_run_population(name, all_runs, runs_by_week):
+    """Reconstruct the run population a report named `name` (an index row's file-stem suffix,
+    e.g. "ALL", "LAST14D", or an ISO week like "2026-W23") was built from -- mirrors main()'s own
+    three branches (`--all` / `--days N` / `--week`) exactly, including the same
+    dedupe_to_latest_per_execution() collapse main() applies unconditionally after them
+    (TCK-20260915-RETRO-INDEX-REPORTS-ZERO).
+
+    Before this fix, `_update_index` only special-cased "ALL" and otherwise looked `name` up in
+    `runs_by_week` (keyed by ISO week string) -- "LAST7D"/"LAST14D"/"LAST28D" are not ISO weeks, so
+    that lookup always missed and every --days report indexed as 0 runs, despite the linked report
+    itself containing real data. The "ALL" special case also used the raw, non-deduplicated
+    `all_runs`, mismatching RETRO-ALL.md's own (deduplicated) body count.
+    """
+    if name == "ALL":
+        pop = all_runs
+    else:
+        m = _LAST_N_DAYS_RE.match(name)
+        if m:
+            days = int(m.group(1))
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+            pop = [r for r in all_runs if _record_since_cutoff(r.get("start_ts"), cutoff)]
+        else:
+            # Anything else is treated as an ISO week label (e.g. "2026-W23") -- runs_by_week's
+            # own key shape. An unrecognized name correctly falls through to an empty population.
+            pop = runs_by_week.get(name, [])
+    return dedupe_to_latest_per_execution(pop)
+
+
 def _update_index(all_runs, all_tools=None):
     all_tools = all_tools or []
 
@@ -1946,16 +1977,16 @@ def _update_index(all_runs, all_tools=None):
 
     for f in retro_files:
         name = f.stem.replace("RETRO-", "")
-        # "ALL" is never a real ISO week (RETRO-ALL.md is the all-time snapshot,
-        # not a dated weekly report) — the runs_by_week lookup would always miss.
-        week_runs = all_runs if name == "ALL" else runs_by_week.get(name, [])
+        week_runs = _resolve_report_run_population(name, all_runs, runs_by_week)
         n = len(week_runs)
         done = sum(1 for r in week_runs if _resolve_status(r) == "DONE")
         fails = sum(1 for r in week_runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"))
 
         # Mirrors main()'s own per-period run_id filter of all_tools (:1536/:1545) — reused here,
-        # not a new mechanism, threaded through the same run-id-to-week association runs_by_week
-        # already computed above.
+        # not a new mechanism, threaded through the same corrected population above. "ALL" still
+        # uses the full, unfiltered all_tools directly (matches main()'s own "All Time" branch,
+        # which never filters tools by run_id either) rather than round-tripping through a
+        # run_id-set membership test that would be a no-op for the full corpus anyway.
         if name == "ALL":
             week_tools = all_tools
         else:
