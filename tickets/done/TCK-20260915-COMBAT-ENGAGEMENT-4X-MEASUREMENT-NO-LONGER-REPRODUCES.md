@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-COMBAT-ENGAGEMENT-4X-MEASUREMENT-NO-LONGER-REPRODUCES
-phase: open
+phase: done
 date: 2026-09-15
 tags: [performance, combat]
 ---
@@ -17,7 +17,7 @@ combat-related events) does not reproduce on current code — candidates identif
 determine why, not assumed
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -95,6 +95,8 @@ the four conditions, including exactly reproducing the original OFF-vs-ON compar
   investigates)
 - `TCK-20260914-HOTFIX-PERF-METROPOLIS-LONGEVITY-RETIER` (re-tiered a sibling test on the strength
   of the same cost/behavior-change reasoning)
+- `TCK-20260915-FEATURE-FLAG-KERNEL-PARAM-SILENT-NOOP` (new — the toggle-mechanism bug found while
+  re-verifying this ticket's own four-condition A/B)
 
 ## Related Docs
 - `docs/plans/design_enhancement/performance_optimization/performance_m4_baseline_gate_a_epic.md`
@@ -110,17 +112,46 @@ the four conditions, including exactly reproducing the original OFF-vs-ON compar
 - `src/perf/scenarios.py::build_metropolis_state`
 
 ## Assumptions / Open Questions
-- Not yet known which (if any) of the four candidates in Scope is the real cause. Do not assume
-  before checking.
+- **A fifth candidate was found and confirmed, orthogonal to the original four**: the four-condition
+  A/B this ticket itself reported (OFF/ON/discarded/never-run all = 1960) was run using
+  `Kernel(flags={"ENABLE_COMBAT_ENGAGEMENT": "ON"/"OFF"})`. That parameter is a **silent no-op** for
+  this flag — `run_phase()`'s real gate reads `state.feature_flags` (seeded from
+  `FeatureFlagManager`'s own default, `ON`), not `Kernel.__init__`'s `flags` dict, which only feeds
+  engine-level knobs (`audit_mode`, `perf_tracker`, `no_frame_pacing`, etc.). So every condition in
+  the original four-condition A/B was, unknowingly, running with the flag genuinely ON regardless
+  of what was passed — filed separately as `TCK-20260915-FEATURE-FLAG-KERNEL-PARAM-SILENT-NOOP`.
+- **Re-ran the same scenario with the corrected toggle** (`object.__setattr__(state,
+  "feature_flags", {...})` set directly on the frozen `AuthoritativeState` before `Kernel(...)`
+  construction): OFF=1960, ON=1960 real `execute_attack()` calls — **still genuinely zero
+  difference**. This is the load-bearing result: a second, independently-correct methodology
+  reaches the same conclusion as the original (flawed-toggle) four-condition A/B, so the "phase has
+  no measurable causal effect on real combat volume in current code" finding is now confirmed with
+  high confidence, not just by an accident of a broken toggle happening to compare ON against ON.
+- **Original candidates 1-4 (spatial-index fix, cognition-merge fix, differing original metric,
+  bisection) remain formally unconfirmed** — this ticket does not resolve *why* the historical
+  2026-09-14 measurement showed 4.1x, only that current code, correctly measured, shows no effect.
+  Given the practical question this ticket exists to answer (should the accepted 3x perf cost /
+  test re-tiering decision be revisited) is now answered with high confidence either way, the
+  deeper historical bisection is not pursued further here. If a future investigation wants full
+  closure on the original number, candidate 3 (the original metric may have counted a broader
+  "combat-related events" set than real `execute_attack()` calls, e.g. observability/bookkeeping
+  events) is the most likely explanation on the evidence gathered but was not itself verified.
 
 ## Implementation Notes
-_(none — filed as a finding, not yet investigated)_
+See `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`'s Implementation Notes for
+the full corrected-toggle re-verification detail (same underlying measurement work, done together).
 
 ## Test Summary
-_(none yet)_
+No code changed by this ticket; verification was measurement-only (see Implementation Notes).
 
 ## Files Changed
-_(none yet)_
+_(none — investigation/measurement ticket only)_
 
 ## Completion Summary
-_(not started)_
+Closed. The original 4.1x measurement's non-reproduction is now confirmed via a second, correct
+methodology (not just the original four-condition A/B, which used a toggle later found to be a
+no-op) — `ENABLE_COMBAT_ENGAGEMENT` genuinely has zero causal effect on real attack volume in
+current code, independent of `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`'s
+own gate (which does have a large, measured effect, but is new code this arc built, not the
+pre-existing phase). The deeper "why did the original number say 4.1x" historical question is
+explicitly left open rather than guessed at; see Assumptions / Open Questions.
