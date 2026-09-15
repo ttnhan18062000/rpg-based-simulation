@@ -134,16 +134,22 @@ used only to (a) supply explicit dependency arrows where they exist, (b) resolve
 for macro-scale mechanisms, and (c) as a cross-check on state where its four-class vocabulary
 disagreed with the atlas's six-class one (flagged, never silently overridden).
 
-**Real count: 73 candidate mechanisms**, not 30–50. Reported plainly per the task briefing: 71 raw
+**Real count: 75 candidate mechanisms**, not 30–50. Reported plainly per the task briefing: 71 raw
 non-design-idea atlas cards, plus 2 net splits (see Judgment Calls) where one atlas card bundles two
-genuinely distinct mechanisms whose badges already disagree with each other. This exceeds the
-ticket's own estimate by a wide margin — flagged as a real, not-force-fit finding.
+genuinely distinct mechanisms whose badges already disagree with each other, plus 2 further
+mechanisms (`nest`, `lair`) sourced from the wiring map's own hand-authored table rather than the
+atlas JSON — see the "Region layer — City / Beyond-City" table below for the full, ground-truth-
+verified accounting (71 + 2 splits + 2 wiring-map-only = 75; an earlier pass in this same document
+mis-cited two rows and computed 73, corrected 2026-09-16 after a direct check against the real
+atlas JSON). This exceeds the ticket's own estimate by a wide margin — flagged as a real,
+not-force-fit finding.
 
-**Decision (peer review, 2026-09-16): seed all 73, do not curate.** The 30–50 figure was an
-estimate with no method behind it; 73 carries a citation per row. Curating toward the estimate
-would mean dropping real, cited mechanisms against no stated exclusion criterion — and a mechanism
-missing from the registry is invisible, the precise failure this epic exists to end. A wrong
-estimate loses to a real count. The two net splits (aging_death/succession,
+**Decision (peer review, 2026-09-16, made against the then-reported count of 73; substance
+unaffected by the later 73→75 correction): seed all 75, do not curate.** The 30–50 figure was an
+estimate with no method behind it; every seeded mechanism carries a real citation. Curating toward
+the estimate would mean dropping real, cited mechanisms against no stated exclusion criterion —
+and a mechanism missing from the registry is invisible, the precise failure this epic exists to
+end. A wrong estimate loses to a real count. The two net splits (aging_death/succession,
 xp_leveling/breakthrough_bonuses) are recorded above with their provenance so the number is
 traceable, not asserted.
 
@@ -265,15 +271,38 @@ one of the 5 (reasoning under Judgment Calls).
 | `buildings_town_services` | `city` | done | atlas `worldobject-layer#3`; wiring-map WOB==>CTY "located in" |
 | `building_sabotage` | `buildings_town_services` | done | atlas `worldobject-layer#4` |
 
-### Region layer — City / Beyond-City (5 atlas cards, folded from 3 atlas sections)
+### Region layer — City / Beyond-City (5 mechanisms: 4 atlas cards + 1 wiring-map-only addition)
+
+**CORRECTED 2026-09-16, re-verified directly against the real atlas JSON before finalizing the
+YAML** (`python3 -c "...data['beyond-city']..."` — see Anti-Drift Hazards for why this check was
+necessary). The original pass below had wrong card indices for this row group; the citations here
+are ground-truth-checked, not re-derived from memory.
+
+The atlas JSON's `beyond-city` section has exactly **3** cards, not citation-matched the way the
+first pass assumed:
+- `beyond-city#0` = "Camp: real, dormant scaffolding for a lesser settlement"
+- `beyond-city#1` = "Ruins, mines & battlefields: real, but flattened into ordinary Region tags"
+- `beyond-city#2` = "The content already implies a settlement-capacity axis, separate from intelligence"
+
+`camp` and `ruins_mines_battlefields` are real atlas cards (`#0` and `#1` respectively —
+**not** the same card, and **not** `#2`); `settlement_capacity_axis` is the genuine third card
+(`#2`). None of the three double-cite each other. `nest` and `lair` are **not** atlas JSON cards
+at all — they exist only in the wiring map's own separate, hand-authored "Beyond the City" HTML
+table (`rpg_simulation_wiring_map.html` lines ~377-388), which itself has 4 rows (Camp, Nest,
+Lair, Ruins/mines/battlefields) despite its own header text saying "3 cards" (that header counts
+the atlas's 3 real JSON cards; Nest and Lair are additions layered on top in the wiring map's own
+prose, both explicitly labelled "Proposed" / not yet built). Deriving them is legitimate per the
+ticket's own instruction to use both the atlas AND the wiring map as sources — they are real,
+cited, non-invented mechanisms, just sourced from a different document than the other three rows
+in this group.
 
 | id | depends_on | state | citation |
 |---|---|---|---|
 | `city` | `regional_trauma_hazards_sovereignty` | partial | atlas `city-layer#0`; wiring-map REG==>CTY |
 | `camp` | `regional_trauma_hazards_sovereignty` | done | atlas `beyond-city#0` |
-| `nest` | `camp` | skeleton | atlas `beyond-city#1` ("target reuses Camp's real shape almost verbatim") |
-| `lair` | — | skeleton | atlas `beyond-city#2` ("real precedent is Boss's anchor pattern, not Camp's shape") |
-| `ruins_mines_battlefields` | `regional_trauma_hazards_sovereignty` | partial | atlas `beyond-city#2` numbered separately in the JSON as its own card — real in content, flattened into Region tags |
+| `nest` | `camp` | skeleton | wiring-map only, no atlas JSON card ("target reuses Camp's real shape almost verbatim") |
+| `lair` | — | skeleton | wiring-map only, no atlas JSON card ("real precedent is Boss's anchor pattern, not Camp's shape") |
+| `ruins_mines_battlefields` | `regional_trauma_hazards_sovereignty` | partial | atlas `beyond-city#1` — real in content, flattened into Region tags |
 
 ### Faction layer — Clan / Race (2)
 
@@ -282,19 +311,21 @@ one of the 5 (reasoning under Judgment Calls).
 | `clan` | `betrayal_siege_war` | gap | atlas `clan-layer#0`; wiring-map "ordinary Factions underneath" — layer choice flagged, see Risks |
 | `race_collective_force` | — | gap | atlas `race-layer#0` — **layer choice is an open question, not resolved cleanly, see Risks** |
 
-### Entity layer — settlement-capacity axis (1, from `beyond-city` section's 3rd card)
+### Entity layer — settlement-capacity axis (1, from `beyond-city`'s real 3rd card)
 
 | id | depends_on | state | citation |
 |---|---|---|---|
 | `settlement_capacity_axis` | `race_archetype` | gap | atlas `beyond-city#2` ("implies a settlement-capacity axis, separate from intelligence") |
 
-Total: 9 + 14 + 2 + 18 + 2 + 8 + 2 + 7 + 5 + 5 + 2 + 1 = **75** — arithmetic note: two of the ids
-above (`ruins_mines_battlefields` and `settlement_capacity_axis`) are both sourced from the same
-3-card `beyond-city` atlas section already counted once under "City / Beyond-City"; the true distinct
-total is **73** as stated above (75 minus the 2 rows that double-list `beyond-city#2`'s two
-sub-clauses — kept as two separate table rows above for citation clarity, since the card's own `desc`
-text genuinely names two distinct absent mechanisms, but they should collapse to one registry id or
-two cleanly-split ids at authoring time, not be miscounted as belonging to two different sections).
+**Total: 9 + 14 + 2 + 18 + 2 + 8 + 2 + 7 + 5 + 5 + 2 + 1 = 75.** No double-counting exists — the
+first pass's "collapse to 73" note was itself a citation error (it believed
+`ruins_mines_battlefields` and `settlement_capacity_axis` cited the same `beyond-city#2` card; the
+direct JSON check above shows they are `#1` and `#2`, two genuinely distinct real cards). **The real,
+ground-truth-verified count is 75 mechanisms, not 73.** Reported to peer as a correction to the
+earlier 73 figure — the substance of the "seed all, don't curate" decision is unaffected (75 is
+still well under the "near 100" threshold that would have changed T3's planning), but the exact
+number has provenance and should be recorded accurately, not left at a number one more direct check
+disproved.
 
 ## Judgment Calls (atlas badge → six-class mapping ambiguities)
 
@@ -356,13 +387,12 @@ recorded here, not silently resolved:
 
 ## Risks and Open Questions
 
-1. **Real count (73) far exceeds the 30–50 estimate.** Reported plainly, not force-fit. Every id has
-   a real atlas citation — none invented — so the excess is a genuine finding about corpus size, not
-   investigation scope creep. Whoever authors the actual YAML must decide: seed all 73, or curate,
-   and if curating, state the exclusion criterion explicitly (this investigation does not recommend
-   curating — every card is a real, cited mechanism).
+1. **Real count (75) far exceeds the 30–50 estimate.** Reported plainly, not force-fit. Every id has
+   a real citation (atlas or wiring map) — none invented — so the excess is a genuine finding about
+   corpus size, not investigation scope creep. **Resolved (peer decision, 2026-09-16): seed all 75,
+   do not curate.**
 2. **`race_collective_force` / `settlement_capacity_axis` have no clean layer.** Blocks a fully
-   confident seed for exactly 2 of 73 rows (see Judgment Call 8). Does not block the rest of the
+   confident seed for exactly 2 of 75 rows (see Judgment Call 8). Does not block the rest of the
    registry; flagged for the implementer to make a final call on (assign to `faction` as I did, add
    a 6th layer, or leave unseeded pending a design decision) rather than assumed answered here.
 3. **`emotion`'s state may itself be stale.** `tickets/done/TCK-20260824-WIRE-ORPHANED-MECHANISMS.md`
@@ -373,7 +403,7 @@ recorded here, not silently resolved:
    resolve this — it is out of this investigation's scope to re-audit every mechanism beyond the two
    staleness findings already confirmed and flagged in Docs Requiring Update. Left as `orphan` per
    the atlas (the ticket's primary source), flagged as possibly wrong.
-4. **`depends_on` edges are deliberately sparse (~24 of 73 rows have a non-empty value).** The wiring
+4. **`depends_on` edges are deliberately sparse (~25 of 75 rows have a non-empty value).** The wiring
    map's mermaid arrows mostly encode **tick execution order** ("Perceive happens before Self-Model
    this tick"), not necessarily a hard functional "requires this to exist" dependency. Converting
    every sequence arrow into `depends_on` would produce a technically-populated but semantically
@@ -400,7 +430,7 @@ recorded here, not silently resolved:
    "fixed" incorrectly by a future editor under time pressure.
 
    **Known consequence for T3 (priority derivation), recorded now rather than discovered late:**
-   with only ~24 of 73 mechanisms carrying a non-empty `depends_on`, roughly 49 mechanisms have zero
+   with only ~25 of 75 mechanisms carrying a non-empty `depends_on`, roughly 50 mechanisms have zero
    dependents. If T3's priority rule is `rank × dependents` (or similar), the dependents term
    collapses to zero for most rows, and **layer `rank` alone will do nearly all of the ordering work
    in this first cut** — not because rank is the intended dominant signal, but because the dependency
@@ -474,7 +504,7 @@ actually builds the checker, not fully specified here.
   close — the atlas's own text says so directly). The registry's job is to record `state: gap`
   accurately, not to imply every `gap`/`orphan` row is a to-do list for this or the next child
   ticket.
-- **Do not silently curate the 73 down to "a rounder-looking 30–50."** If the eventual seed count
+- **Do not silently curate the 75 down to "a rounder-looking 30–50."** If the eventual seed count
   differs from what's listed above, the reason must be recorded (e.g., in the ticket's Assumptions
   section or a follow-up investigation note) — not quietly dropped rows.
 - **Do not let the `depends_on` sparsity get "fixed" by mechanically converting every wiring-map

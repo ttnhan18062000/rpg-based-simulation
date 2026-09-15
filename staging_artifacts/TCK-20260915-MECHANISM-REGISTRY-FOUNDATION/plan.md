@@ -12,11 +12,11 @@ tags: [architecture, documentation, schema]
 
 ## Summary
 
-Build `docs/brainstorm/mechanisms.yaml` (layers block + 73 hand-authored mechanisms, per
+Build `docs/brainstorm/mechanisms.yaml` (layers block + 75 hand-authored mechanisms, per
 investigation.md's Real Mechanism Candidate List), a validator enforcing the four invariants, a
 `make` target, and a report-only graphify cross-check. Fix two stale atlas/wiring-map badges found
 during investigation before seeding (seeding known-wrong data would propagate the error into every
-future consumer at once). Seed all 73 — decided by peer review 2026-09-16, not curated toward the
+future consumer at once). Seed all 75 (corrected from an earlier 73 after a ground-truth citation check) — decided by peer review 2026-09-16, not curated toward the
 ticket's own 30–50 estimate.
 
 ## Step 1 — Fix the two stale source badges (done, ahead of this plan)
@@ -54,10 +54,10 @@ mechanisms:
     layer: entity
     depends_on: [tactical_decision, combat_engagement]
     state: done
-  # ... 72 more, transcribed directly from investigation.md's Real Mechanism Candidate List tables
+  # ... 74 more, transcribed directly from investigation.md's Real Mechanism Candidate List tables
 ```
 
-All 73 rows transcribed verbatim from investigation.md's tables (ids, layers, depends_on, states
+All 75 rows transcribed verbatim from investigation.md's tables (ids, layers, depends_on, states
 already finalized there, including every judgment call already made and recorded — no new
 judgment calls introduced at authoring time). `race_collective_force` and `settlement_capacity_axis`
 get `layer: faction` per Judgment Call 8, with a YAML comment marking both as a placeholder

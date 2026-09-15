@@ -60,7 +60,7 @@ have, verified by the same reader-based checks that prove the other invariants).
 3. **`test_registry_seed_meets_expected_scale`**
    - Category: unit
    - Verifies: `len(mechanisms) >= 30` as a sanity floor (not a hard count match to the ticket's own
-     30–50 estimate, since investigation found the real corpus-backed count is ~73 — see
+     30–50 estimate, since investigation found the real corpus-backed count is 75 — see
      investigation.md). Guards against an accidentally near-empty seed, not against exceeding the
      original estimate.
    - Location: same file.
@@ -174,7 +174,7 @@ explicitly:
 ## Anti-Drift Test Guards
 
 - **`test_registry_seed_meets_expected_scale`'s floor (`>= 30`) must not be tightened into an exact
-  count match.** The real seed is ~73 per investigation.md, not 30–50 — a test asserting an exact
+  count match.** The real seed is 75 per investigation.md, not 30–50 — a test asserting an exact
   count would immediately start failing the moment anyone adds or corrects a mechanism, which is
   expected, healthy churn for a hand-authored file, not a regression to guard against.
 - **The six invalid-fixture tests (4–7) must each use a fixture that is invalid for exactly one
