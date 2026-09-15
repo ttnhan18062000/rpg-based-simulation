@@ -201,3 +201,13 @@ distinction that keeps a `code_trace` verdict from ever reading as equally stron
 runtime-confirmed one — directly protecting against a repeat of this arc's own most expensive
 mistake (combat judgement's write-only near-miss). Out-of-scope items (badge classes, per-test
 feeds, automated ingestion, verification history) correctly left untouched.
+
+**This ticket's own seed produced the epic's first real finding (per peer review, 2026-09-16), not
+just infrastructure — worth stating as the artifact's first output, not a footnote: 69 of 75
+mechanisms (92%) have never been verified by any instrument, and of the 6 that have, only 1 —
+`combat_engagement`, by `scenario` — has *runtime* verification. The other 5 are static code
+traces. So the project currently has exactly one mechanism with real evidence it does anything at
+runtime.** This number could not have been stated before this ticket — no prior artifact had a
+verification axis to count against. Directly motivates T3
+(`TCK-20260915-MECHANISM-PRIORITY-DERIVATION`), reframed around *which unverified mechanism to
+verify next*, not an abstract priority ranking over all 75.
