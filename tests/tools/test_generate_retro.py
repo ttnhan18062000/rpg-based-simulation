@@ -453,6 +453,10 @@ def test_compute_retro_metrics_returns_all_documented_keys():
         # always present (computed over an empty list, not omitted) when `tools` is omitted,
         # keeping this function's own additive-only contract.
         "skill_usage",
+        # Added by TCK-20260915-SIDECAR-ATTRIBUTION-GAP — always present alongside
+        # spend_proxy_by_phase/by_agent, discloses what fraction of events those tables actually
+        # cover instead of letting a reader assume they're complete.
+        "spend_proxy_coverage",
     }
 
 
@@ -2681,3 +2685,48 @@ def test_main_dedupes_before_computing_run_summary(tmp_path, monkeypatch):
     assert "| Completed (DONE) | 1 (100%) |" in report_text
     assert "2 raw" in report_text
     assert "1 real executions" in report_text
+
+
+# --- TCK-20260915-SIDECAR-ATTRIBUTION-GAP: spend-proxy coverage disclosure ---
+
+def test_compute_retro_metrics_spend_proxy_coverage_computed():
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Implement", "agent": "implementer",
+         "status": "ok", "summary": "did work", "cost_proxy_score": 4.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Test", "agent": "test-scoper",
+         "status": "ok", "summary": "ran tests", "cost_proxy_score": None},
+    ]
+    metrics = compute_retro_metrics(runs, events)
+    cov = metrics["spend_proxy_coverage"]
+    assert cov["events_scored"] == 1
+    assert cov["events_total"] == 2
+    assert cov["coverage_pct"] == 50.0
+
+
+def test_compute_retro_metrics_spend_proxy_coverage_none_when_no_events():
+    metrics = compute_retro_metrics([_BASE_RUN], [])
+    cov = metrics["spend_proxy_coverage"]
+    assert cov["events_total"] == 0
+    assert cov["coverage_pct"] is None
+
+
+def test_generate_renders_spend_proxy_coverage_note(tmp_path):
+    runs = [_BASE_RUN]
+    events = [
+        {"run_id": "TCK-FAKE", "seq": 1, "phase": "Implement", "agent": "implementer",
+         "status": "ok", "summary": "did work", "cost_proxy_score": 4.0},
+        {"run_id": "TCK-FAKE", "seq": 2, "phase": "Test", "agent": "test-scoper",
+         "status": "ok", "summary": "ran tests", "cost_proxy_score": None},
+    ]
+    report = generate(runs, events, "test-label", tickets_root=tmp_path)
+    assert "Computed over 50.0% of this window's events" in report
+    assert "TCK-20260915-SIDECAR-ATTRIBUTION-GAP" in report
+
+
+def test_generate_omits_spend_proxy_coverage_note_when_no_scored_events(tmp_path):
+    """No spend_proxy_by_phase table at all when zero events are scored (existing behavior,
+    unmodified by this ticket) -- the coverage note must not render standalone without its
+    tables."""
+    report = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path)
+    assert "Computed over" not in report

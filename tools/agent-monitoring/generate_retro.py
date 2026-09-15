@@ -842,6 +842,17 @@ def compute_retro_metrics(
         }
         for agent, scores in agent_scores.items()
     }
+    # TCK-20260915-SIDECAR-ATTRIBUTION-GAP: the spend-proxy tables above only ever cover events
+    # with a real cost_proxy_score, silently -- a reader could easily mistake the totals for
+    # complete spend rather than a partial sample. Surface the coverage explicitly instead of
+    # presenting an unqualified total.
+    spend_proxy_coverage = {
+        "events_scored": len(scored_events),
+        "events_total": len(events),
+        "coverage_pct": (
+            round(100 * len(scored_events) / len(events), 1) if events else None
+        ),
+    }
 
     # Summary quality
     legacy_events = [e for e in events if _is_legacy_event(e)]
@@ -955,6 +966,7 @@ def compute_retro_metrics(
         "phase_status_distribution": phase_status_distribution,
         "spend_proxy_by_phase": spend_proxy_by_phase,
         "spend_proxy_by_agent": spend_proxy_by_agent,
+        "spend_proxy_coverage": spend_proxy_coverage,
         "summary_quality": {
             "empty_summaries_current": empty_summaries_current,
             "legacy_event_count": legacy_event_count,
@@ -1414,6 +1426,16 @@ def generate(
 
     # Spend proxy — by phase and by agent.
     if metrics["spend_proxy_by_phase"]:
+        cov = metrics["spend_proxy_coverage"]
+        if cov["coverage_pct"] is not None:
+            lines.append(
+                f"_Computed over {cov['coverage_pct']}% of this window's events "
+                f"({cov['events_scored']} of {cov['events_total']} scored) — see "
+                f"TCK-20260915-SIDECAR-ATTRIBUTION-GAP for why the rest lack a "
+                f"`cost_proxy_score`._"
+            )
+            lines.append("")
+
         lines.append("## Spend Proxy — By Phase")
         lines.append("")
         lines.append("| Phase | Events scored | Total | Avg |")
