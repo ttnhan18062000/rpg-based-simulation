@@ -219,7 +219,7 @@ output looks like, and what it cannot see — stated as plainly as what it can. 
 not an implementation; nothing below has been built.** Several items below are worked examples
 from this week's own combat-engagement investigation, landing after this doc was first drafted.
 
-### 8.1 What's instrumented
+### 7.1 What's instrumented
 
 **`src/` and `tools/`, both, full scope — not narrowed to Mechanics-Bible-declared features for
 v1.** This directly resolves Open Decision #5: `tools/audit_unreachable_code.py` defines
@@ -247,7 +247,7 @@ attacks never took the branch that would have re-invoked the gated decision at a
 `check_for_boss_spawn()`/`GuildAction.visit()` examples already in §1-2 make the same point from a
 different subsystem; this week adds a third, independently found.
 
-### 8.2 How the corpus runs
+### 7.2 How the corpus runs
 
 Ride on `config/simulation_quality/corpus_registry.yaml` exactly as §2 already specifies — no
 second definition of "a representative set of runs." For each registered world/seed/tier, run the
@@ -269,12 +269,16 @@ whole initiative exists to avoid.
 
 **Where it runs**: attached to the existing SimQ corpus execution as an instrumentation wrapper,
 not a second job with its own world definitions (resolves Open Decision #2's first sub-question).
-**Frequency is a recommendation, not a decision made here**: a full-corpus branch-coverage run is
-not free, so periodic (e.g. before a SimQ-pillar-relevant epic ships) or on-demand is proposed over
-every-PR — this trades cost against staleness and should be confirmed, not assumed, once a first
-run's real wall-clock cost is measured.
 
-### 8.3 What the output looks like
+**Frequency: on-demand only, decided (not a recommendation).** No schedule, no cadence, no
+periodic job. Reasoning, recorded here so it reads as deliberate rather than unfinished: this is a
+diagnostic tool, not a monitor — the instrumented corpus run is expensive, and there is no evidence
+yet for how often its findings actually change between runs. A weekly (or any fixed-cadence) run
+producing an identical report to the last one is cost without information. A cadence gets added
+once someone can point to a real interval the results justify — e.g. "findings drift meaningfully
+every N epics" — not assumed up front because periodic sounds more thorough than on-demand.
+
+### 7.3 What the output looks like
 
 A **report artifact** (JSON for tooling, a rendered markdown/table for humans), never a pass/fail
 exit code in v1 — resolves Open Decision #3 in favor of report-only, per §4's own argument and
@@ -284,11 +288,31 @@ measured zero effect was nearly reported as "the policy doesn't work," when the 
 gate placement — the same shape as a false-positive detector teaching people the tool is wrong
 rather than that it found something real).
 
-- **Reuses D09's five-status taxonomy plus a sixth** (resolves Open Decision #1): `never-called`,
-  `test-only`, `tick-live`, `tick-live (cond)`, `live-and-effective` (renaming D09's ambiguous
-  categories where needed), and the new status this whole investigation exists to add —
-  **`tick-live, never-effective`**: the exact shape of `check_for_boss_spawn()` and
-  `PaidInformationTransactionSystem`, called every tick, branch never taken.
+**Gating: never, until a specific, stated condition is met — not an open-ended deferral.** Report-
+only is not "for now" left implicit; it becomes gate-eligible only once a real run shows (a) the
+suppression list has stabilized (stopped growing run-over-run for reasons other than new real
+code) and (b) the false-positive rate is actually known, not guessed. Until both are true, this
+tool does not fail a build or block a merge under any configuration. Writing the condition down
+here, not just the deferral, is deliberate — "report-only for now" with no exit criterion quietly
+becomes someone's unstated TODO to promote it before the evidence exists.
+
+- **Reachability and effectiveness are two separate axes, not one taxonomy with a sixth value**
+  (resolves Open Decision #1 — and revises this plan's own earlier draft, which had proposed
+  folding a sixth status into D09's list). D09's five reachability statuses answer *is this
+  called?* (`never-called`, `test-only`, `tick-live`, `tick-live (cond)`, and its top status for
+  code that's both called and doing something) — keep them as-is, unmodified. Add a second,
+  orthogonal **effectiveness** axis reported against every reachability status:
+  `effective` / `inert` / `not-applicable` (the last for statuses like `never-called` where
+  effectiveness doesn't mean anything). **This is not a naming preference — collapsing the two
+  axes is exactly the mechanism that made D09 wrong.** D09 measured reachability, reported
+  `tick-live`, and stopped there; `check_for_boss_spawn()` and `PaidInformationTransactionSystem`
+  were both genuinely `tick-live` by D09's own correct definition, and both conclusions were false
+  anyway, because `tick-live` was silently read as "and therefore doing something." A census that
+  reports `tick-live / inert` for `check_for_boss_spawn()` and `tick-live / effective` for a real
+  working mechanism makes the two facts equally visible instead of one implying the other. This
+  week's own combat-engagement gate is the same shape at execution-router scale: `tick-live` (the
+  phase ran every tick) and `inert` (700 real attacks a tick, zero of them gated) were both true
+  and needed to be seen as two separate facts, not folded into one status value.
 - **Enumerates every unreached branch under a mechanism, not the first found** — a hard requirement,
   not a nice-to-have. `GuildAction.visit()`'s own two independent blockers (a feature flag
   defaulting OFF, and a `"iron"` vs `"iron_vein"` string mismatch) is the concrete case: reporting
@@ -306,7 +330,7 @@ rather than that it found something real).
   where correcting the ledger costs a hotfix ticket and leaving it wrong costs nothing; (2)
   `validate_working_log.py`'s own duplicate-ticket-ID check, which deliberately excludes exact-
   duplicate physical lines as "a known, tracked defect class" rather than requiring zero; (3) the
-  `tools/`-as-caller-only scan-root gap itself in §8.1 above, which if fixed naively would flag
+  `tools/`-as-caller-only scan-root gap itself in §7.1 above, which if fixed naively would flag
   every legitimate zero-caller CLI/Makefile-target function in `tools/` on day one. A detector
   landing in an already-dirty corpus without a ratchet gets disabled or deleted, not fixed.
 - **The report's own header states the tool's limitation, unsuppressably, every run** — per peer
@@ -319,7 +343,7 @@ rather than that it found something real).
   every line ran, every branch was taken, the code did exactly what it says. A report that doesn't
   say this out loud, every time, invites exactly the over-trust this initiative exists to prevent.
 
-### 8.4 What it cannot see (stated as plainly as what it can)
+### 7.4 What it cannot see (stated as plainly as what it can)
 
 1. **A live mechanism producing a bad outcome.** Full coverage, every branch taken, wrong result —
    the 235-recruitment-offers case in §3. This is SimQ's job, not this tool's; the two are
@@ -328,21 +352,35 @@ rather than that it found something real).
    calamity paths) will look identical to dead code on a finite corpus without a stated-reason
    suppression entry — false positives are expected on the first run, not a sign the tool is
    broken.
-3. **A flaky/non-deterministic branch**, unless the §8.2 determinism pre-check confirms stability.
+3. **A flaky/non-deterministic branch**, unless the §7.2 determinism pre-check confirms stability.
    An unstable census must say so in its own report rather than presenting a possibly-flaky result
    as settled fact.
 4. **Control flow outside instrumented Python processes** — Makefile targets, `.claude/` workflow
    scripts, shell orchestration. Only branch coverage inside the corpus run and the unit-test run
    is measured; a mechanism invoked only from one of those surfaces is out of scope for this tool.
 
-### 8.5 Not decided here
+### 7.5 Decided (2026-09-15, peer review)
 
-Per §5's own instruction, "none of these should be resolved unilaterally" — this plan resolves the
-five Open Decisions above with a specific proposal each, but the proposal itself (not just the
-underlying facts) is offered for review, not asserted as final. In particular: exact run frequency
-(§8.2), whether/when report-only ever becomes a gate (§8.3, deferred until a real false-positive
-rate exists), and whether D09's taxonomy names should change beyond adding the sixth status, are
-all open for peer/user confirmation before implementation starts.
+Per §5's own instruction, "none of these should be resolved unilaterally" — the following were
+reviewed and confirmed, not asserted unilaterally by this plan:
+
+- **Run frequency: on-demand only** (§7.2). No schedule. Revisit only once a real interval the
+  results justify can be named, not before.
+- **Gating: never, until both (a) the suppression list has stabilized and (b) the false-positive
+  rate is known from a real run** (§7.3). Report-only is not an implicit "for now" — it is the
+  state until that named condition is met, with no other exit path.
+- **Taxonomy: two orthogonal axes, not a sixth status** (§7.3). D09's five reachability statuses
+  are reused unmodified; effectiveness (`effective` / `inert` / `not-applicable`) is reported
+  separately against each. This was a substantive correction to this plan's own first draft, not
+  a naming choice — folding effectiveness into a single reachability value is the exact ambiguity
+  that made D09's `tick-live` classification of `check_for_boss_spawn()` and
+  `PaidInformationTransactionSystem` read as "and therefore working" when neither was.
+
+### 7.6 Still open
+
+Whether D09's five reachability *names* themselves need any wording change (independent of the new
+effectiveness axis above), and the exact mechanics of the suppression-list stabilization check in
+§7.3's gating condition, remain open for whoever scopes the implementation ticket.
 
 ---
 
