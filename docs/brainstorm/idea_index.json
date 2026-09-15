@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Per-idea cross-document index across the RPG brainstorm corpus. atlas_anchor is always present (count derived live from the atlas itself); schema_anchor is present only for ideas with a durable-state schema section; scorecard_anchor is present for ideas 1-65 only (66/67/68 were all added after the original scoring pass and are deliberately left unscored); wiring_map_mentions is a raw text-mention count, not a clickable anchor, since that document has no reliable 1:1 per-idea anchor structure (see TCK-20260831-BRAINSTORM-IDEA-CROSS-INDEX's investigation.md).",
     "regenerate_with": "make brainstorm-idea-index",
-    "generated": "2026-09-02T07:42:10Z"
+    "generated": "2026-09-15T18:00:08Z"
   },
   "ideas": [
     {
@@ -26,7 +26,7 @@
       "atlas_anchor": "rpg_feature_atlas.html#idea-3",
       "schema_anchor": null,
       "scorecard_anchor": "design_merit_scorecard.html#score-3",
-      "wiring_map_mentions": 2,
+      "wiring_map_mentions": 1,
       "milestone": "M1"
     },
     {
@@ -490,7 +490,7 @@
       "atlas_anchor": "rpg_feature_atlas.html#idea-61",
       "schema_anchor": null,
       "scorecard_anchor": "design_merit_scorecard.html#score-61",
-      "wiring_map_mentions": 0,
+      "wiring_map_mentions": 4,
       "milestone": "M4"
     },
     {

@@ -137,10 +137,15 @@ disagreed with the atlas's six-class one (flagged, never silently overridden).
 **Real count: 73 candidate mechanisms**, not 30–50. Reported plainly per the task briefing: 71 raw
 non-design-idea atlas cards, plus 2 net splits (see Judgment Calls) where one atlas card bundles two
 genuinely distinct mechanisms whose badges already disagree with each other. This exceeds the
-ticket's own estimate by a wide margin — flagged as a real, not-force-fit finding for whoever plans
-the actual seeding step to weigh: seed all 73 (my recommendation — every one has a real atlas
-citation, none invented), or have the planner curate a subset and explicitly document the exclusion
-criterion.
+ticket's own estimate by a wide margin — flagged as a real, not-force-fit finding.
+
+**Decision (peer review, 2026-09-16): seed all 73, do not curate.** The 30–50 figure was an
+estimate with no method behind it; 73 carries a citation per row. Curating toward the estimate
+would mean dropping real, cited mechanisms against no stated exclusion criterion — and a mechanism
+missing from the registry is invisible, the precise failure this epic exists to end. A wrong
+estimate loses to a real count. The two net splits (aging_death/succession,
+xp_leveling/breakthrough_bonuses) are recorded above with their provenance so the number is
+traceable, not asserted.
 
 Layer key used below: **entity** (rank 1, per_tick) · **group** (rank 2, per_tick) · **faction**
 (rank 3, daily) · **region** (rank 4, slow) · **world** (rank 5, rare) — matching the design doc's
@@ -379,6 +384,31 @@ recorded here, not silently resolved:
    speculatively. This is not a defect to fix before seeding — it is the expected state for a
    from-scratch hand-authored file — but whoever authors the YAML should not read the sparse count as
    "incomplete," only as "conservatively sourced."
+
+   **This is a third axis, distinct from the two the wiring map already keeps apart.** The Layer
+   Model diagram's own containment lanes (Individual/Organization/Geography/World, `ENT ==> GRP`
+   etc.) are **containment** — a Faction *contains* Entities. The mermaid sequence arrows inside the
+   Entity Operating Loop (`PER --> SELF --> BEL`) are **execution order** — what happens before what,
+   within one tick. `depends_on` in the registry is neither: it is **functional dependency** — "this
+   mechanism cannot produce a meaningful result without that one already existing/having run,"
+   independent of both containment and tick sequencing. The design doc's own Finding 3 already
+   distinguishes containment from dependency ("Containment is not dependency: a Faction *contains*
+   Entities, whereas war *depends on* combat"); this investigation adds the third term explicitly
+   because the wiring map's own arrows are the most natural, and wrong, source to reach for when
+   populating `depends_on` — most of them encode the second axis (execution order), not the third
+   (functional dependency), and conflating the two is exactly how the sparse count above could get
+   "fixed" incorrectly by a future editor under time pressure.
+
+   **Known consequence for T3 (priority derivation), recorded now rather than discovered late:**
+   with only ~24 of 73 mechanisms carrying a non-empty `depends_on`, roughly 49 mechanisms have zero
+   dependents. If T3's priority rule is `rank × dependents` (or similar), the dependents term
+   collapses to zero for most rows, and **layer `rank` alone will do nearly all of the ordering work
+   in this first cut** — not because rank is the intended dominant signal, but because the dependency
+   graph is still thin. This is not a defect in this ticket's seed data (inventing edges to make the
+   graph denser would be worse, per the reasoning above) — it is a known, load-bearing property of a
+   from-scratch hand-authored graph that T3 should plan around (e.g. treating near-zero-dependent
+   rows as expected rather than a sign something is missing), not rediscover under pressure once
+   chart generation is underway.
 5. **File location.** `docs/brainstorm/mechanisms.yaml` is the right location, confirmed by
    contrasting the two existing conventions directly rather than assuming the ticket's own leaning:
    `registries/*.jsonl` (`tag_registry.jsonl`, `layer_registry.jsonl`) is documented in

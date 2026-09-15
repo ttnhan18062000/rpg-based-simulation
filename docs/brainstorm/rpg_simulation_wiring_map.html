@@ -488,7 +488,7 @@ flowchart TD
     subgraph BUILDUP["BUILDUP — accumulates over many ticks"]
       direction TB
       XP["XP → Level → Attribute Points"]
-      BRK["Breakthrough Bonuses<br/>apply_bonuses() is a literal stub"]:::bug
+      BRK["Breakthrough Bonuses<br/>real, applied on every stat recalc (rpg_depth.py:367)"]
       REL["Relationships<br/>SocialBond sentiment + familiarity"]
       REP["Reputation<br/>witnessed-event → labels"]
       EMO["Emotion<br/>fear/confidence/frustration — write path ORPHANED"]:::bug
@@ -509,7 +509,7 @@ flowchart TD
     REP ==>|labels, next tick| GOAL
     CAPT ==>|fatigue cuts bandwidth, next tick| PER
 
-    class PER,SELF,BEL,GOAL,MOT,CAPT,DEC,RDY,TAC,CMB,MOV,ITX,CNV,XP,REL,REP,TRM live
+    class PER,SELF,BEL,GOAL,MOT,CAPT,DEC,RDY,TAC,CMB,MOV,ITX,CNV,XP,REL,REP,TRM,BRK live
 </pre>
   </div>
   <p class="section-sub" style="margin-top:14px;">Dotted arrows are one-shot consequences of a single action; bold arrows are the feedback that actually shapes the <em>next</em> tick's thinking. Several of BUILDUP's feedback arrows are real in principle but starved in practice &mdash; Emotion's write path is orphaned, so the EMO&rarr;SELF feedback rarely fires even though the code for both ends exists.</p>
@@ -570,7 +570,7 @@ flowchart TD
     <thead><tr><th>Node</th><th>Mechanism</th><th>Status</th><th>Expected / next</th><th>Evidence</th></tr></thead>
     <tbody>
       <tr><td>XP &rarr; Level</td><td>XP curve, level cap 99, 4 base classes &mdash; entry point into evolution and breakthroughs</td><td><span class="badge live">Live</span></td><td>Idea 11 (build diversity) and idea 29 (injury changes attribute growth)</td><td class="evidence">Flat +5 attribute points every level regardless of what the entity did</td></tr>
-      <tr><td>Breakthrough Bonuses</td><td>3 real breakthroughs with real attribute bonuses sit in the registry, earned but never applied</td><td><span class="badge bug">Stub</span></td><td>Idea 3 &mdash; finish <code>apply_bonuses()</code>, the specific named fix</td><td class="evidence">A literal <code>pass</code></td></tr>
+      <tr><td>Breakthrough Bonuses</td><td>3 real breakthroughs with real attribute bonuses sit in the registry; <code>apply_bonuses()</code> is a real, non-stub implementation called on every stat recalculation from the production path (not the literal <code>pass</code> this row previously described &mdash; corrected TCK-20260915-MECHANISM-REGISTRY-FOUNDATION)</td><td><span class="badge live">Live</span></td><td>Complete as built; whether anything in production ever grants an entity a breakthrough id (populates <code>active_breakthroughs</code>) is separately unverified, not covered by this correction</td><td class="evidence"><code>progression/breakthroughs.py:36-58</code>, called from <code>rpg_depth.py:367</code></td></tr>
       <tr><td>Relationships</td><td>Directed <code>SocialBond</code>: sentiment + familiarity, moved by combat/team-up/trading</td><td><span class="badge live">Live</span></td><td>Idea 22 &mdash; Relationship Roles beyond a bare score</td><td class="evidence">Feeds Motivation's scoring bias next tick</td></tr>
       <tr><td>Reputation</td><td>Witnessed-event &rarr; reputation labels, authoritatively via <code>RelationshipService.process_update()</code></td><td><span class="badge live">Live</span></td><td>Complete as built; a duplicate write path is one of idea 1's orphans</td><td class="evidence"><code>public_reputation</code>/<code>heroism_score</code>/<code>notoriety_score</code></td></tr>
       <tr><td>Trauma</td><td>Wound: flat 5.0 penalty to attack/defense (live), now confirmed permanent by design &mdash; no code path heals a wound. Scar: the 30%-chance residual formula lived only in <code>heal_wound()</code>, which had zero production callers and was deleted as dead code</td><td><span class="badge proposed">Wound live/permanent, Scar deferred</span></td><td>Idea 17 superseded &mdash; <code>DEV-005</code> decided wounds are permanent by design, not merely unwired; <code>heal_wound()</code> and <code>get_diagnosis_quality()</code> are deleted, not wired in. Scar formation, if built, is a separate future mechanic (<code>TCK-20260824-TACTICAL-WOUND-SCAR-WIRING</code>), not a revival of this function</td><td class="evidence">See Lifecycle arc T6/T7 below; see <code>docs/guidelines/intentional_divergences.md</code> DEV-005</td></tr>
