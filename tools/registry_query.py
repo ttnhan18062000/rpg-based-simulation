@@ -11,6 +11,10 @@ As of TCK-20260720-TAG-TOUCHPOINT-CLEANUP, the seed vocabulary is read live from
 registering a new `subsystem-topic` tag via the CLI makes it queryable here with zero code change.
 """
 
+import argparse
+import sys
+from pathlib import Path
+
 from tag_registry import load_registry
 
 
@@ -46,3 +50,63 @@ def filter_registry(entries, layers=None, candidate_tags=None):
         return layer_match or tag_match
 
     return [e for e in entries if _matches(e)]
+
+
+def main(argv=None) -> int:
+    """CLI entry point (TCK-20260915-GATE-MODULES-NO-CLI-ENTRY-POINT). Before this existed,
+    running this module directly imported it, did nothing, and exited 0. This module has two
+    real functions with no single obvious entry point (unlike parity_ledger_scan.py/
+    ticket_field_values.py's own single primary function) — exposed as two mutually exclusive
+    modes, since neither is a PASS/FAIL "check" the way the other two fixed modules are:
+
+    --text: runs candidate_tags_from_text, printing the live subsystem-topic tags found in the
+    given free text.
+    --layers/--tags: runs filter_registry against the real docs/REGISTRY.yaml, printing each
+    matching entry's own path.
+
+    Exit 0 = query ran (regardless of how many results); exit 1 = no mode selected, or a real
+    runtime error (e.g. docs/REGISTRY.yaml missing) -- there is no PASS/FAIL "check" outcome
+    here, so those are the only two meaningful exit states for a pure query tool.
+    """
+    parser = argparse.ArgumentParser(
+        description="Query docs/REGISTRY.yaml's live tag/layer vocabulary. Exactly one of "
+        "--text or --layers/--tags must be given."
+    )
+    parser.add_argument(
+        "--text", nargs="+", default=None,
+        help="Free text to match against the live subsystem-topic tag vocabulary "
+        "(candidate_tags_from_text).",
+    )
+    parser.add_argument("--layers", nargs="+", default=None, help="Layer values to filter on.")
+    parser.add_argument("--tags", nargs="+", default=None, help="Tag values to filter on.")
+    parser.add_argument(
+        "--registry", default="docs/REGISTRY.yaml",
+        help="Path to the registry YAML (default: docs/REGISTRY.yaml) — used by --layers/--tags.",
+    )
+    args = parser.parse_args(argv)
+
+    if args.text is not None:
+        tags = candidate_tags_from_text(*args.text)
+        print(f"Matched tags: {sorted(tags)}")
+        return 0
+
+    if args.layers is not None or args.tags is not None:
+        import yaml
+
+        registry_path = Path(args.registry)
+        if not registry_path.exists():
+            print(f"ERROR: {registry_path} does not exist", file=sys.stderr)
+            return 1
+        entries = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or []
+        matches = filter_registry(entries, layers=args.layers, candidate_tags=args.tags)
+        print(f"Matched {len(matches)} entr{'y' if len(matches) == 1 else 'ies'}:")
+        for e in matches:
+            print(f"  {e.get('path')}")
+        return 0
+
+    parser.error("one of --text or --layers/--tags is required")
+    return 1  # unreachable — parser.error() calls sys.exit(2) itself
+
+
+if __name__ == "__main__":
+    sys.exit(main())

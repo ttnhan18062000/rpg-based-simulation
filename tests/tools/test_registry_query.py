@@ -118,3 +118,68 @@ def test_faction_tag_query_surfaces_entries_layer_search_would_miss():
     tag_augmented_result = filter_registry(entries, layers=["ai"], candidate_tags={"faction"})
     assert ai_faction in tag_augmented_result
     assert social_faction in tag_augmented_result
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point (TCK-20260915-GATE-MODULES-NO-CLI-ENTRY-POINT)
+# ---------------------------------------------------------------------------
+
+import subprocess
+
+_MODULE_PATH = _TOOLS_DIR / "registry_query.py"
+
+
+def test_cli_text_mode_prints_readable_output_and_exits_zero(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--text", "combat and adventure routing"],
+        capture_output=True, text=True, cwd=str(_TOOLS_DIR.parent),
+    )
+    assert result.stdout.strip(), "expected non-empty stdout -- silence is exactly the regression"
+    assert result.returncode == 0
+    assert "combat" in result.stdout
+    assert "adventure" in result.stdout
+
+
+def test_cli_layers_mode_prints_readable_output_and_exits_zero():
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--layers", "observability"],
+        capture_output=True, text=True, cwd=str(_TOOLS_DIR.parent),
+    )
+    assert result.stdout.strip()
+    assert result.returncode == 0
+    assert "Matched" in result.stdout
+
+
+def test_cli_no_mode_selected_exits_nonzero_not_silently():
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH)], capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert result.stderr.strip(), "argparse error must be visible, not silent"
+
+
+def test_cli_help_produces_usage_text_not_silence():
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--help"], capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+    assert "usage:" in result.stdout.lower()
+
+
+def test_cli_missing_registry_file_exits_nonzero(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--layers", "ai", "--registry", str(tmp_path / "nope.yaml")],
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert result.stderr.strip()
+
+
+def test_cli_still_importable_and_callable_as_plain_functions():
+    """Pins the Scope constraint: existing python3 -c call sites
+    (candidate_tags_from_text/filter_registry) must keep working unchanged, not routed through
+    the new CLI."""
+    assert callable(candidate_tags_from_text)
+    assert callable(filter_registry)
+    result = filter_registry([{"type": "ticket", "path": "x", "layer": "ai", "tags": []}], layers=["ai"])
+    assert isinstance(result, list)
