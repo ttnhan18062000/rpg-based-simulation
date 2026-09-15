@@ -3,7 +3,7 @@
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 69 of 75 mechanisms are currently
+**Which mechanism to verify next.** 68 of 75 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer rank × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -27,7 +27,6 @@ more depends on it. Ranked below, top 25.
 | `interaction_channeling` | entity | done | 6 | 6 |
 | `affection_relationship_bonds` | entity | done | 5 | 5 |
 | `buildings_town_services` | world | done | 5 | 1 |
-| `camp` | region | done | 4 | 1 |
 | `goal_hierarchy` | entity | done | 3 | 3 |
 | `race_archetype` | entity | done | 3 | 3 |
 | `social_memory` | faction | skeleton | 3 | 1 |
@@ -38,6 +37,7 @@ more depends on it. Ranked below, top 25.
 | `motivation_doctrine` | entity | partial | 1 | 1 |
 | `xp_leveling` | entity | done | 1 | 1 |
 | `adventure_routing` | entity | done | 0 | 0 |
+| `breakthrough_bonuses` | entity | done | 0 | 0 |
 
 ## Chart form
 
@@ -57,8 +57,8 @@ flowchart BT
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
+    breakthrough_bonuses["breakthrough bonuses"]:::done
     buildings_town_services["buildings town services"]:::done
-    camp["camp"]:::done
     city["city"]:::partial
     class_assignment["class assignment"]:::partial
     cognition_capacity_fatigue["cognition capacity fatigue"]:::done
@@ -79,8 +79,8 @@ flowchart BT
     motivation_doctrine --> adventure_routing
     cognition_capacity_fatigue --> adventure_routing
     interaction_channeling --> affection_relationship_bonds
+    xp_leveling --> breakthrough_bonuses
     city --> buildings_town_services
-    regional_trauma_hazards_sovereignty --> camp
     regional_trauma_hazards_sovereignty --> city
     race_archetype --> class_assignment
     tactical_decision --> combat_resolution

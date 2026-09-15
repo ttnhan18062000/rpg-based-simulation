@@ -2,13 +2,14 @@
 
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
 
-6 of 75 mechanisms have a recorded verdict. The remaining 69 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
+7 of 75 mechanisms have a recorded verdict. The remaining 68 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
 
 **Static vs runtime evidence, grouped separately below**: `code_trace` proves what the code *says* (reachable, called, a field never written) and can never establish that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` prove what the simulation actually *does*. A `code_trace` row is not equivalent evidence to a runtime-confirmed row.
 
 | Mechanism | Layer | State | Evidence | Instrument | Verdict | Date | Note |
 |---|---|---|---|---|---|---|---|
 | `combat_engagement` | entity | done | runtime | scenario | observed | 2026-09-16 | Corpus: posture gate moved attacks 1960 -> 837. Scenario: risk-rejected posture -> 0 attacks vs no posture -> attack proceeds, all else identical. |
+| `camp` | region | done | static | code_trace | contradicted | 2026-09-16 | CampState is real (spawns monsters, triggers raids, a real clearing-reward loop) but no compiled or procedurally-generated world seeds state.camps -- a permanent no-op in every world today. state stays done (the code is correct and wired, not defective) -- the missing thing is world data, not the mechanism itself. See docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma and calamity-intensity cases. |
 | `cross_episode_grief_nemesis` | faction | done | static | code_trace | observed | 2026-09-16 | Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated betrayal -> party-formation blocker); narrow trigger. |
 | `information_trust_deception` | entity | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
 | `opportunity_rumor_seeds` | world | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
@@ -26,7 +27,6 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `building_sabotage` | world | done | unverified | — | unverified | — | — |
 | `buildings_town_services` | world | done | unverified | — | unverified | — | — |
 | `calamities_boss_spawns` | world | done | unverified | — | unverified | — | — |
-| `camp` | region | done | unverified | — | unverified | — | — |
 | `campaigns` | world | done | unverified | — | unverified | — | — |
 | `causal_spatial_memory` | entity | orphan | unverified | — | unverified | — | — |
 | `chronicle` | world | done | unverified | — | unverified | — | — |

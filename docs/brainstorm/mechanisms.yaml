@@ -419,6 +419,17 @@ mechanisms:
     layer: region
     depends_on: [regional_trauma_hazards_sovereignty]
     state: done
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-16"
+      note: >-
+        CampState is real (spawns monsters, triggers raids, a real clearing-reward loop) but no
+        compiled or procedurally-generated world seeds state.camps -- a permanent no-op in every
+        world today. state stays done (the code is correct and wired, not defective) -- the
+        missing thing is world data, not the mechanism itself. See
+        docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma
+        and calamity-intensity cases.
   - id: nest
     layer: region
     depends_on: [camp]
