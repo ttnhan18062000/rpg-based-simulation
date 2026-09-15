@@ -83,6 +83,11 @@ into for combat — but this is not confirmed, only hypothesized.
 ## Related Tickets
 - `TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY` (fixed the shared gate's threshold
   values and the tier-5/loot defects; this ticket covers the remaining region-specific gap)
+- `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (sibling shape — "spawn placement and
+  region geography not lining up"; checked directly, this ticket's own cause is spatial isolation,
+  not that investigation's dangling-reference bug, but the pattern family is shared)
+- `TCK-20260915-WORLDBUILDING-DANGLING-REGION-REFERENCE-SILENT-FALLTHROUGH` (the specific bug
+  checked and ruled out for this ticket's own region)
 
 ## Related Docs
 - `docs/plans/deferred_tuning_decisions_register.md` D-05 (records this as a known remaining gap)
@@ -101,7 +106,53 @@ None yet — standard tier, staging artifacts created when picked up.
   there) or a routing/pathing defect (entities never go there) is the central open question.
 
 ## Implementation Notes
-_(not started)_
+**2026-09-15, checked against `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own
+region-composition finding (peer's explicit request before picking this up) — same general shape,
+different specific mechanism.**
+
+**Ruled out: this is NOT the same dangling-region-reference bug** found in that investigation
+(`TCK-20260915-WORLDBUILDING-DANGLING-REGION-REFERENCE-SILENT-FALLTHROUGH`). Checked directly:
+`moon_cult_ruins.yaml`'s sole population, `moon_cult_apprentice_circle`
+(`data/content/entities/populations.yaml`), declares `preferred_regions: ["moon_cave"]` — and
+`moon_cult_ruins.yaml` itself defines a region with exactly that id, `"moon_cave"`. The reference
+is correct; entities from this population should spawn exactly where intended, unlike
+`merchant_caravan`'s dangling `"trade_road"` reference.
+
+**The real mechanism is spatial isolation, confirmed via a static comparison of region bounds
+across `generated_frontier_3_42`'s full module composition** (`frontier_village_core`,
+`old_mine_resource_loop`, `bandit_road_trade_pressure`, `goblin_camp_conflict`, `moon_cult_ruins`,
+`orc_clan_territory`):
+
+| Region | Module | `grid_bounds` |
+|---|---|---|
+| `moon_cave` | `moon_cult_ruins` | `[100, 70, 130, 110]` |
+| `orc_clan_territory`'s own region | `orc_clan_territory` | `[160, 60, 200, 100]` |
+| `old_mine` (old_mine_resource_loop's own region) | `old_mine_resource_loop` | `[20, 60, 60, 105]` |
+
+**No other module's region in this composition overlaps or comes close to `moon_cave`'s own
+bounds** — the nearest, `orc_clan_territory`, has a ~30-unit x-axis gap; `old_mine_resource_loop`
+has a ~40-unit gap. `moon_cave` sits spatially isolated from every other populated region in this
+world. `moon_cult_ruins` itself places only one population there (`moon_cult_apprentice_circle`,
+4 `apprentice_mage`, faction `arcane_circle`) with **no opposing hostile faction ever placed in or
+adjacent to that region** — so even correctly-spawned entities have no adversary in combat-
+engagement range (this arc's combat_engagement radius is 10.0 units elsewhere; a 30+ unit gap is
+far outside that regardless of the exact figure used by whatever detection radius applies here).
+
+**Same general shape as the sibling investigation's finding** ("spawn placement and region
+geography not lining up with what a mechanic needs to fire"), but a **different specific root
+cause**: not a reference to a nonexistent region resolving to the wrong place, but a real region
+correctly populated with its own intended entities, isolated from any faction that could ever
+fight them there. The two findings do not collapse into one — they're siblings in pattern, not the
+same underlying bug — but they may share the same eventual fix category (content-authoring:
+composing hostile presence nearer to isolated Lair-kind regions) rather than a code fix.
+
+**Not yet checked (remaining scope of this ticket)**: whether ANY entity ever paths into
+`moon_cave` at all for non-combat reasons (the module's own quest content —
+`mcult_investigate_ritual_site`, `mcult_defend_arcane_circle` — could route heroes there without
+necessarily producing combat), and whether that's a separate, real gap from the spatial-isolation
+finding above. Not traced this session — the static composition check above answers the specific
+question peer asked before taking this ticket; the ticket's own full scope (a real, reviewed fix
+proposal) remains open.
 
 ## Test Summary
 _(not started)_
