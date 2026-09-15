@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate
 
 # Default
 help: ## Show available commands
@@ -272,6 +272,24 @@ working-log-duplicate-check: ## Ratcheted check for duplicate ticket_ids in tick
 
 working-log-content-duplicate-check: ## Ratcheted check for duplicate (ticket_id, title) rows in tickets/working_log.csv
 	python3 tools/gate_checks/working_log_content_duplicate_check.py
+
+duplicate-run-record-check: ## Ratcheted check for genuinely-accidental duplicate agent-monitoring/data/*/runs.jsonl records
+	python3 tools/gate_checks/duplicate_run_record_check.py
+
+sidecar-attribution-coverage-check: ## Ratcheted floor check for tools.jsonl run_id attribution coverage
+	python3 tools/gate_checks/sidecar_attribution_coverage_check.py
+
+tool-call-count-mismatch-check: ## Ratcheted check for post-fix tool_call_count vs tools.jsonl mismatches
+	python3 tools/gate_checks/tool_call_count_mismatch_check.py
+
+event-seq-integrity-check: ## Ratcheted checks for duplicate/gapped seq values in events.jsonl
+	python3 tools/gate_checks/event_seq_integrity_check.py
+
+monitoring-integrity-backlog-check: ## Ratcheted checks for working_log/run-record gaps, unusable ts, and unknown-week rows
+	python3 tools/gate_checks/monitoring_integrity_backlog_check.py
+
+monitoring-anomaly-validate: ## Aggregate coherence validator (duplicate runs, seq integrity, tool_call_count, ts shape, vocabulary)
+	python3 tools/gate_checks/monitoring_anomaly_validator.py
 
 setup-merge-drivers: ## Install the local merge driver + post-merge hook that regenerate docs/REGISTRY.yaml on conflict
 	git config merge.registry-regen.driver true

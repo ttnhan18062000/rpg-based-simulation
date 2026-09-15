@@ -3,9 +3,15 @@
 Cross-check agent-monitoring integrity against tickets/working_log.csv.
 
 Checks:
-  1. Every DONE entry in working_log (on or after MONITORING_START) has a run record.
-  2. Every run record has at least one event record.
-  3. Incomplete runs (start_ts present, end_ts absent/null) are flagged as CRASHED.
+  1. Every run record has at least one event record (ERROR -- gates the exit code).
+  2. Every DONE entry in working_log (on or after MONITORING_START) has a run record (WARNING --
+     informational only, never affects the exit code).
+  3. Incomplete runs (start_ts present, end_ts absent/null) are flagged as CRASHED (WARNING).
+
+Only ERRORS (check 1) cause a non-zero exit; WARNINGS (checks 2-3) are printed but never gate this
+script's own exit code -- TCK-20260915-MONITORING-INTEGRITY-BACKLOG corrected a prior
+investigation's mistaken belief that this gate's persistent redness was caused by warning-class
+working_log gaps; the real, sole cause was check 1's ERROR class (see EVENTS_REQUIRED_START below).
 
 Only tickets with timestamps >= MONITORING_START are checked against runs.jsonl.
 Historical tickets (before monitoring was introduced) are skipped silently.
@@ -27,7 +33,38 @@ LOG_FILE = Path("tickets/working_log.csv")
 # Only validate working_log entries on or after this date (ISO prefix match)
 MONITORING_START = "2026-06-07"
 
+# TCK-20260915-MONITORING-INTEGRITY-BACKLOG: "Run with no events" is an ERROR (causes exit 1,
+# unlike the WARNING-only checks below) -- and it was the actual, undocumented reason this gate
+# stayed permanently red, not the working_log-cross-check warnings a prior investigation mistakenly
+# named as the cause (warnings never affect the exit code; see the `if errors: sys.exit(1)` check
+# below, which never inspects `warnings`). All 6 real instances found in the corpus as of
+# 2026-09-15 are legacy batch (FOLDER-*/EPIC-*) or early individual-ticket runs written before
+# events.jsonl tracking was consistently wired for every workflow shape -- there is no way to
+# retroactively reconstruct per-phase event data for work already completed, so backfilling is not
+# an option. All 6 predate 2026-07-08 (latest: 2026-07-07). Excluding runs starting before this
+# date, mirroring MONITORING_START's own established pattern, keeps a genuinely NEW no-events
+# defect (a real regression, not a schema-era gap) from being silently masked -- it only ever
+# suppresses runs starting before the fix for a problem that stopped recurring, and any run whose
+# own start timestamp can't be determined is NOT excluded (conservative default: surface it rather
+# than assume it's historical).
+EVENTS_REQUIRED_START = "2026-07-08"
+
+# Legacy start-timestamp field name variants actually observed across runs.jsonl's several schema
+# generations (mirrors LEGACY_COMPLETION_FIELDS's own multi-field-name pattern below) -- checked in
+# this order since `start_ts` is the current, canonical field name.
+LEGACY_START_TS_FIELDS = ("start_ts", "ts", "started_at")
+
 DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
+
+
+def _run_effective_start_ts(run: dict):
+    """The run's own start timestamp under whichever legacy field name it was written with, or
+    None if none of them hold a non-empty string."""
+    for field in LEGACY_START_TS_FIELDS:
+        value = run.get(field)
+        if isinstance(value, str) and value:
+            return value
+    return None
 
 
 def open_index(db_path: Path) -> sqlite3.Connection:
@@ -85,12 +122,11 @@ def _record_is_complete(rec: dict) -> bool:
 RUN_REQUIRED_FIELDS_FOR_DRIFT = ("workflow", "tier", "final_status")
 
 
-def compute_drift_report(runs: list, events: list) -> str:
-    """Read-only vocabulary/null-field drift report, mirroring
-    generate_retro.py's generate(runs, events, label) -> str shape for
-    testability. Never gates anything — validate.py's exit-code contract
-    (errors -> exit 1, else exit 0 regardless of warnings) is unaffected by
-    what this function returns; it is purely additive reporting."""
+def compute_vocabulary_drift_counts(runs: list, events: list) -> dict:
+    """Structured (non-string) core of compute_drift_report -- extracted by
+    TCK-20260915-MONITORING-ANOMALY-VALIDATOR so a ratchet check can consume raw Counters
+    directly instead of parsing this function's own formatted text report. Returns
+    {"null_field_counts", "phase_drift", "agent_drift", "tier_drift"}, each a `Counter`."""
     null_field_counts = Counter()
     for r in runs:
         for field in RUN_REQUIRED_FIELDS_FOR_DRIFT:
@@ -115,6 +151,26 @@ def compute_drift_report(runs: list, events: list) -> str:
         tier = r.get("tier")
         if tier is not None and tier not in CANONICAL_TIERS:
             tier_drift[tier] += 1
+
+    return {
+        "null_field_counts": null_field_counts,
+        "phase_drift": phase_drift,
+        "agent_drift": agent_drift,
+        "tier_drift": tier_drift,
+    }
+
+
+def compute_drift_report(runs: list, events: list) -> str:
+    """Read-only vocabulary/null-field drift report, mirroring
+    generate_retro.py's generate(runs, events, label) -> str shape for
+    testability. Never gates anything — validate.py's exit-code contract
+    (errors -> exit 1, else exit 0 regardless of warnings) is unaffected by
+    what this function returns; it is purely additive reporting."""
+    counts = compute_vocabulary_drift_counts(runs, events)
+    null_field_counts = counts["null_field_counts"]
+    phase_drift = counts["phase_drift"]
+    agent_drift = counts["agent_drift"]
+    tier_drift = counts["tier_drift"]
 
     lines = ["--- Vocabulary / Null-Field Drift Report ---", ""]
     lines.append("Null required fields (runs.jsonl):")
@@ -306,10 +362,14 @@ def main(argv=None):
         if not any(_record_is_complete(r) for r in group):
             warnings.append(f"Incomplete run (no end_ts — CRASHED?): {run_id}")
 
-    # 2. Runs with no events
-    for run_id in runs_by_id:
-        if not events_by_run[run_id]:
-            errors.append(f"Run with no events: {run_id}")
+    # 2. Runs with no events (see EVENTS_REQUIRED_START above for the legacy exclusion)
+    for run_id, run in runs_by_id.items():
+        if events_by_run[run_id]:
+            continue
+        start_ts = _run_effective_start_ts(run)
+        if start_ts is not None and start_ts < EVENTS_REQUIRED_START:
+            continue
+        errors.append(f"Run with no events: {run_id}")
 
     # 3. Cross-check: every run record marked DONE should have a working_log entry.
     # (Forward direction only — historical tickets predating monitoring are not expected to

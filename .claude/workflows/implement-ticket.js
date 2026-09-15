@@ -251,13 +251,25 @@ const events = []
 // (CONFLICTS_DETECTED, NEEDS_HUMAN_INPUT, NEEDS_CHANGES/BLOCKED, TESTS_FAILED, SECURITY_BLOCKED),
 // which already disambiguate 1:1 via phase/final_status alone — see
 // docs/agent-monitoring/schema.md.
+// TCK-20260915-EVENT-SUMMARY-TRUNCATION: visible truncation marker instead of a silent cut. The
+// 200-char convention is deliberate (every agent prompt in this file already instructs "one
+// sentence, <=200 chars") -- this is the backstop for when an agent (or a hand-built string)
+// exceeds it anyway. There is no schema-level length limit (confirmed: real summaries up to
+// 1,055 chars are already stored), so this caps at 200 total by design, not by necessity, and
+// makes a real cut visible rather than silent. Used at every summary-truncation call site in
+// this file, not only inside pushEvent, so a pre-sliced caller's own text still gets marked.
+const truncateSummary = (s) => {
+  const str = (s || '').toString()
+  return str.length > 200 ? str.slice(0, 196) + ' […]' : str
+}
+
 const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode) => {
   events.push({
     seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
     agent: agentName,
     status,
-    summary: (summary || '').toString().slice(0, 200),
+    summary: truncateSummary(summary),
     ts: ts || null,
     tool_call_count: toolCallCount != null ? toolCallCount : null,
     reason_code: reasonCode || null,
@@ -571,7 +583,7 @@ Write both files. Then return: docs_to_update (array of the exact docs/ paths fr
   )
 
   investigationText = investigation.findings_summary
-  pushEvent('Investigate', 'investigator', 'ok', investigationText.slice(0, 200), investigationTs)
+  pushEvent('Investigate', 'investigator', 'ok', investigationText, investigationTs)
 
   // Shadow context-packet call site (TCK-20260729-SHADOW-PACKET-CALL-SITE): advisory-only,
   // opt-in instrumentation of assemble_context_packet() via wrap_context_packet_assembly().
@@ -701,7 +713,7 @@ print('UNRESOLVED_CHECK_JSON:' + json.dumps(plan_has_unresolved_questions_headin
     }
   }
 
-  pushEvent('Plan', 'planner', 'ok', planText.slice(0, 200), planTs)
+  pushEvent('Plan', 'planner', 'ok', planText, planTs)
 
   // ─── Phase 4: Review ──────────────────────────────────────────────────────────
 
@@ -945,7 +957,7 @@ if (missingFromFilesChanged.length > 0) {
 const implementBaseSummary = implementation.summary || implementation.implementation_summary || 'Implementation complete'
 const implementEventSummary = docStalenessFailure
   ? docStalenessFailure.evidence
-  : (docStalenessAdvisory ? `${implementBaseSummary} | advisory: ${docStalenessAdvisory.evidence}`.slice(0, 200) : implementBaseSummary)
+  : (docStalenessAdvisory ? `${implementBaseSummary} | advisory: ${docStalenessAdvisory.evidence}` : implementBaseSummary)
 pushEvent(
   'Implement', 'implementer',
   docStalenessFailure ? 'failed' : 'ok',
@@ -1084,7 +1096,7 @@ verified_by (list which findings came from the static script vs. independent jud
         seq: archShadowSeq,
         phase: 'Architecture-Verify',
         agent: 'architecture-reviewer-shadow',
-        summary: (archVerifyShadow.summary || '').toString().slice(0, 200),
+        summary: truncateSummary(archVerifyShadow.summary),
         candidate_model: 'claude-fable-5-1',
         candidate_verdict: archVerifyShadow.verdict,
         candidate_violations_count: archVerifyShadow.violations.length,
@@ -1269,7 +1281,7 @@ const cleanupStatus = cleanupSepIdx === -1 ? cleanupOutput.trim() : cleanupOutpu
 const cleanupEvidence = cleanupSepIdx === -1 ? '' : cleanupOutput.slice(cleanupSepIdx + 1).trim()
 
 if (cleanupStatus === 'FAIL') {
-  pushEvent('Test', 'implement-ticket-orchestrator', 'failed', `Post-Test data/runs cleanup failed: ${cleanupEvidence.slice(0, 200)}`, testTs)
+  pushEvent('Test', 'implement-ticket-orchestrator', 'failed', `Post-Test data/runs cleanup failed: ${cleanupEvidence}`, testTs)
   log(`Post-Test data/runs cleanup FAILED: ${cleanupEvidence}`)
   await writeMonitoring('DATA_RUNS_CLEAN_FAILED')
   return {
@@ -1426,7 +1438,7 @@ print('PARITY_CHECK_JSON:' + json.dumps(results))
   // FAIL (a src/ file mapped to a ledger subsystem with no matching ledger touch) hard-blocks; an
   // unparseable cross-ref result (parityCrossRef === null) stays non-blocking, unchanged from today.
   if (parityCrossRefFailures.length > 0) {
-    const evidence = parityCrossRefFailures.map(f => f.file + ': ' + f.evidence).join('; ').slice(0, 200)
+    const evidence = parityCrossRefFailures.map(f => f.file + ': ' + f.evidence).join('; ')
     pushEvent('Parity', 'parity-updater', 'failed', evidence, parityTs)
     await writeMonitoring('PARITY_INCOMPLETE')
     return {
@@ -1524,7 +1536,7 @@ violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤
         seq: securityShadowSeq,
         phase: 'Security-Review',
         agent: 'security-reviewer-shadow',
-        summary: (securityReviewShadow.summary || '').toString().slice(0, 200),
+        summary: truncateSummary(securityReviewShadow.summary),
         candidate_model: 'claude-fable-5-1',
         candidate_verdict: securityReviewShadow.verdict,
         candidate_violations_count: securityReviewShadow.violations.length,
@@ -1759,7 +1771,7 @@ if (finalizeResults === null) {
 
 const finalizeFailures = finalizeResults.filter(r => r.status === 'FAIL')
 if (finalizeFailures.length > 0) {
-  pushEvent('Finalize', 'finalizer', 'failed', finalizeFailures.map(f => f.condition + ': ' + f.evidence).join(' | ').slice(0, 200))
+  pushEvent('Finalize', 'finalizer', 'failed', finalizeFailures.map(f => f.condition + ': ' + f.evidence).join(' | '))
   await writeMonitoring('FINALIZE_INCOMPLETE')
   return {
     status: 'FINALIZE_INCOMPLETE',
@@ -1819,7 +1831,7 @@ if (monitoringMarkerIndex !== -1) {
 let monitoringWarning = null
 if (monitoringCheck === null || monitoringCheck.status === 'FAIL') {
   monitoringWarning = monitoringCheck === null ? 'monitoring-write self-check output unparseable' : monitoringCheck.evidence
-  pushEvent('Finalize', 'finalizer', 'failed', ('monitoring_write_recorded: ' + monitoringWarning).slice(0, 200))
+  pushEvent('Finalize', 'finalizer', 'failed', 'monitoring_write_recorded: ' + monitoringWarning)
   log(`WARNING: agent-monitoring write for ${tid} could not be verified — ${monitoringWarning}`)
 }
 
@@ -1844,7 +1856,7 @@ if (tagDriftMarkerIndex !== -1) {
   } catch (e) { tagDriftCheck = null }
 }
 if (tagDriftCheck !== null && tagDriftCheck.status === 'FLAGGED') {
-  pushEvent('Finalize', 'finalizer', 'failed', ('tag_drift: ' + tagDriftCheck.evidence).slice(0, 200))
+  pushEvent('Finalize', 'finalizer', 'failed', 'tag_drift: ' + tagDriftCheck.evidence)
   log(`WARNING: possible tag drift for ${tid} — ${tagDriftCheck.evidence}`)
 }
 
@@ -1876,7 +1888,7 @@ if (phaseMetaMarkerIndex !== -1) {
   } catch (e) { phaseMetaCheck = null }
 }
 if (phaseMetaCheck !== null && phaseMetaCheck.status === 'FAIL') {
-  pushEvent('Finalize', 'finalizer', 'failed', ('phase_meta_conformance: ' + phaseMetaCheck.evidence).slice(0, 200))
+  pushEvent('Finalize', 'finalizer', 'failed', 'phase_meta_conformance: ' + phaseMetaCheck.evidence)
   log(`WARNING: possible phase-meta drift for ${tid} — ${phaseMetaCheck.evidence}`)
 }
 

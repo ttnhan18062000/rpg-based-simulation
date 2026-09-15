@@ -32,6 +32,11 @@ walks through the retrospective process so the findings actually get acted on.
 3. Fills in the `## Notes` section of the report with concrete findings and one
    proposed action per issue found, then leaves the report ready to commit.
 
+**Regenerating an existing report preserves its `## Notes` content by default** (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES): re-running the generator against a report that
+already has hand-authored notes splices that exact `## Notes` section back onto the freshly
+regenerated data above it, rather than discarding it. Pass `--force` only when a deliberate full
+rewrite — including discarding existing notes — is actually intended.
+
 ## Quick Start
 
 ```bash

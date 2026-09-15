@@ -322,6 +322,27 @@ def _seed(tmp_path: Path) -> Path:
     return log_path
 
 
+def test_comma_bearing_title_round_trips(tmp_path):
+    # TCK-20260915-MONITORING-INTEGRITY-BACKLOG: 9 of 2,013 real working_log.csv rows had an
+    # unescaped comma in the title field (e.g. "Clan lifecycle -- joining, leaving, and
+    # succession-on-death"), shifting every later column -- all 9 predate this helper's own
+    # introduction (TCK-20260912-WORKING-LOG-APPEND-HELPER), written by an earlier, now-removed
+    # ad-hoc writer. csv.writer's QUOTE_MINIMAL (used below) already quotes any field containing
+    # the delimiter, so this proves the CURRENT writer cannot reproduce that defect.
+    log_path = _seed(tmp_path)
+    tricky_title = "Clan lifecycle -- joining, leaving, and succession-on-death (M4 idea 40)"
+    append_working_log_row(
+        "2026-09-15T00:00:00Z", "TCK-COMMA-TITLE", tricky_title, "DONE", "A summary.", "none",
+        path=log_path,
+    )
+    result = parse_working_log(log_path)
+    assert len(result.rows) == 1
+    row = result.rows[0]
+    assert row.classification == "clean"
+    assert row.record["title"] == tricky_title
+    assert row.record["status"] == "DONE"
+
+
 def test_tricky_field_round_trips_through_the_parser(tmp_path):
     log_path = _seed(tmp_path)
     append_working_log_row(

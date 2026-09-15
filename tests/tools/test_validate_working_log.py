@@ -271,29 +271,40 @@ def test_round_trip_parses_full_file_without_exception():
     assert len(result.rows) == expected_count
 
 
-def test_all_9_confirmed_live_mismatch_rows_are_flagged():
-    """Was test_all_11_confirmed_live_mismatch_rows_are_flagged before
-    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit. Of the
-    original 11 physical lines, 2 (3104, 3174) were themselves the exact-duplicate copies
-    of 2 others in this same set (1511, 3104 = 1511+1593; 1581, 3174 = 1581+1593) --
-    reproduced by PR #90's squash-merge whole-block duplication and removed by that
-    cleanup commit, which deleted physical lines 1594-3180 inclusive. The remaining 9
-    lines are the same real rows as before, at their post-cleanup physical positions
-    (unaffected if < 1594, shifted down by exactly 1587 if originally > 3180). No
-    classification logic changed -- verified directly: 1511 and 1581 keep their original
-    line numbers (below the deleted range); 3245/3253/3284/3287/3289/3294/3307 shift to
-    1658/1666/1697/1700/1702/1707/1720 (each original line number minus 1587)."""
+def test_all_9_formerly_mismatched_rows_are_now_clean_and_repaired_correctly():
+    """Was test_all_9_confirmed_live_mismatch_rows_are_flagged before
+    TCK-20260915-MONITORING-INTEGRITY-BACKLOG repaired all 9 of these physical lines in place
+    (a surgical, 9-line-only diff -- see that ticket's investigation.md for the exact
+    field-boundary reconstruction of each). These 9 lines are no longer malformed: the writer
+    that produced them (a since-removed ad-hoc pre-TCK-20260912-WORKING-LOG-APPEND-HELPER
+    writer) is gone, and the historical unescaped-comma content has been rejoined and
+    re-quoted correctly, so they now parse as ordinary clean rows -- proving the repair
+    actually fixed the data, not just silenced the check."""
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
     expected_lines = {1511, 1581, 1658, 1666, 1697, 1700, 1702, 1707, 1720}
     for line_no in expected_lines:
-        assert by_line[line_no].classification == "field_count_mismatch", line_no
+        assert by_line[line_no].classification == "clean", line_no
 
-    irreducible = {1511}
+    # Spot-check reconstructed content survived the repair losslessly (exact text preserved,
+    # only the quoting/field-boundary shape changed).
+    assert by_line[1658].record["title"] == (
+        'Add an Explicit "Always the Bare Directory, Never Cherry-Picked Files" Rule to test-scoper'
+    )
+    assert by_line[1697].record["title"] == (
+        "Magical/demonic-being reproduction path -- reuse Calamity substrate, full-adult spawn "
+        "(no childhood)"
+    )
+    assert by_line[1700].record["title"] == (
+        "Human/humanoid reproduction cadence sub-phase -- new WD-16 cycle, per-parent cooldown, "
+        "NOT marriage-gated"
+    )
+    assert by_line[1720].record["title"] == (
+        "Clan lifecycle -- joining, leaving, and succession-on-death (M4 idea 40)"
+    )
     for line_no in expected_lines:
-        expected_recoverable = line_no not in irreducible
-        assert by_line[line_no].recoverable is expected_recoverable, line_no
+        assert by_line[line_no].record["status"] == "DONE", line_no
 
 
 def test_trailing_field_comma_split_rows_reconstruct_correct_artifacts_path():
@@ -310,14 +321,16 @@ def test_trailing_field_comma_split_rows_reconstruct_correct_artifacts_path():
         assert not row.record["summary"].endswith(",none (epic")
 
 
-def test_ambiguous_row_count_matches_26_for_real_file():
-    """Was test_ambiguous_row_count_matches_45_for_real_file before
-    TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit removed
-    the ~1586-row duplicate block (physical lines 1594-3180). 45 = 11 mismatch + 34
-    quote-desync rows counted every duplicate copy as a separate ambiguous row; 26 = 9 + 17
-    counts each real row exactly once now that the duplicate copies are gone."""
+def test_ambiguous_row_count_matches_17_for_real_file():
+    """Was test_ambiguous_row_count_matches_26_for_real_file before
+    TCK-20260915-MONITORING-INTEGRITY-BACKLOG repaired all 9 field_count_mismatch rows in place
+    (see test_all_9_formerly_mismatched_rows_are_now_clean_and_repaired_correctly above). 26 = 9
+    mismatch + 17 quote-desync rows; 17 = 0 + 17 now that the 9 mismatch rows are clean. The 17
+    quote-desync rows are untouched by that repair (different rows, a different -- irreducibly
+    ambiguous by design -- classification; see test_all_17_confirmed_live_quote_desync_lines_are_flagged
+    below)."""
     result = parse_working_log(REAL_LOG_PATH)
-    assert result.ambiguous_row_count == 26
+    assert result.ambiguous_row_count == 17
 
 
 def test_all_17_confirmed_live_quote_desync_lines_are_flagged():

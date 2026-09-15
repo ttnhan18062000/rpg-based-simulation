@@ -504,3 +504,80 @@ class TestMissingIndex:
         with pytest.raises(SystemExit) as exc_info:
             validate.main(["--db-path", str(missing_db)])
         assert exc_info.value.code != 0
+
+
+# ---------------------------------------------------------------------------
+# EVENTS_REQUIRED_START legacy no-events exclusion (TCK-20260915-MONITORING-INTEGRITY-BACKLOG)
+#
+# "Run with no events" is an ERROR (gates the exit code) -- this was the real, previously
+# undocumented cause of the gate's persistent redness (a prior investigation had mistakenly
+# blamed the WARNING-only working_log cross-check, which never affects the exit code). All 6
+# real instances in the corpus as of 2026-09-15 are legacy batch/early-ticket runs predating
+# 2026-07-08 that will never get events.jsonl rows -- excluded by start date so a genuinely NEW
+# no-events defect still surfaces.
+# ---------------------------------------------------------------------------
+
+from validate import EVENTS_REQUIRED_START, _run_effective_start_ts  # noqa: E402
+
+
+def test_run_effective_start_ts_prefers_start_ts_field():
+    assert _run_effective_start_ts({"start_ts": "2026-07-01T00:00:00Z", "ts": "ignored"}) == (
+        "2026-07-01T00:00:00Z"
+    )
+
+
+def test_run_effective_start_ts_falls_back_to_legacy_field_names():
+    assert _run_effective_start_ts({"ts": "2026-06-10T13:36:00Z"}) == "2026-06-10T13:36:00Z"
+    assert _run_effective_start_ts({"started_at": "2026-06-13T10:27:02Z"}) == "2026-06-13T10:27:02Z"
+
+
+def test_run_effective_start_ts_none_when_no_field_present():
+    assert _run_effective_start_ts({"run_id": "TCK-X"}) is None
+    assert _run_effective_start_ts({"start_ts": None}) is None
+    assert _run_effective_start_ts({"start_ts": 12345}) is None  # numeric epoch, not a string
+
+
+class TestNoEventsLegacyExclusion:
+    def test_no_events_before_cutoff_excluded_gate_passes(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.chdir(tmp_path)
+        run = dict(_BASE_RUN, run_id="FOLDER-legacy-batch", start_ts="2026-06-10T13:36:00Z")
+        db_path = _build_db(tmp_path, runs=[run], events=[])
+
+        validate.main(["--db-path", str(db_path)])  # must not raise SystemExit
+        out = capsys.readouterr().out
+        assert "Run with no events" not in out
+        assert "OK: 1 runs, 0 events" in out
+
+    def test_no_events_at_or_after_cutoff_still_errors(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.chdir(tmp_path)
+        run = dict(_BASE_RUN, run_id="TCK-FRESH-NO-EVENTS", start_ts=EVENTS_REQUIRED_START + "T00:00:00Z")
+        db_path = _build_db(tmp_path, runs=[run], events=[])
+
+        with pytest.raises(SystemExit) as exc_info:
+            validate.main(["--db-path", str(db_path)])
+        assert exc_info.value.code != 0
+        err = capsys.readouterr().err
+        assert "Run with no events: TCK-FRESH-NO-EVENTS" in err
+
+    def test_no_events_unknown_start_ts_not_excluded(self, tmp_path, monkeypatch, capsys):
+        # Conservative default: a run whose own start timestamp can't be determined must not be
+        # silently assumed historical.
+        monkeypatch.chdir(tmp_path)
+        run = {"run_id": "TCK-NO-TS-NO-EVENTS", "final_status": "DONE"}
+        db_path = _build_db(tmp_path, runs=[run], events=[])
+
+        with pytest.raises(SystemExit) as exc_info:
+            validate.main(["--db-path", str(db_path)])
+        assert exc_info.value.code != 0
+        err = capsys.readouterr().err
+        assert "Run with no events: TCK-NO-TS-NO-EVENTS" in err
+
+    def test_no_events_legacy_ts_field_before_cutoff_also_excluded(self, tmp_path, monkeypatch, capsys):
+        # Mirrors the real FOLDER-* legacy shape, which uses "ts" rather than "start_ts".
+        monkeypatch.chdir(tmp_path)
+        run = {"run_id": "FOLDER-legacy-ts-field", "ts": "2026-06-10T13:36:00Z", "status": "DONE"}
+        db_path = _build_db(tmp_path, runs=[run], events=[])
+
+        validate.main(["--db-path", str(db_path)])  # must not raise
+        out = capsys.readouterr().out
+        assert "Run with no events" not in out

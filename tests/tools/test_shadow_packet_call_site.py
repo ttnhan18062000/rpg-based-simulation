@@ -69,7 +69,7 @@ def test_call_site_does_not_break_writesidecar_agent_adjacency():
 
     push_event_call = (
         "pushEvent('Investigate', 'investigator', 'ok', "
-        "investigationText.slice(0, 200), investigationTs)"
+        "investigationText, investigationTs)"
     )
     push_event_index = source.index(push_event_call)
     shadow_call_index = source.index("SHADOW_CONTEXT_PACKET_ENABLED")

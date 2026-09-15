@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa: E402
 from duration_utils import compute_active_idle_split  # noqa: E402
 from validate import load_data_glob  # noqa: E402
+from run_dedup import dedupe_to_latest_per_execution  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -841,6 +842,17 @@ def compute_retro_metrics(
         }
         for agent, scores in agent_scores.items()
     }
+    # TCK-20260915-SIDECAR-ATTRIBUTION-GAP: the spend-proxy tables above only ever cover events
+    # with a real cost_proxy_score, silently -- a reader could easily mistake the totals for
+    # complete spend rather than a partial sample. Surface the coverage explicitly instead of
+    # presenting an unqualified total.
+    spend_proxy_coverage = {
+        "events_scored": len(scored_events),
+        "events_total": len(events),
+        "coverage_pct": (
+            round(100 * len(scored_events) / len(events), 1) if events else None
+        ),
+    }
 
     # Summary quality
     legacy_events = [e for e in events if _is_legacy_event(e)]
@@ -954,6 +966,7 @@ def compute_retro_metrics(
         "phase_status_distribution": phase_status_distribution,
         "spend_proxy_by_phase": spend_proxy_by_phase,
         "spend_proxy_by_agent": spend_proxy_by_agent,
+        "spend_proxy_coverage": spend_proxy_coverage,
         "summary_quality": {
             "empty_summaries_current": empty_summaries_current,
             "legacy_event_count": legacy_event_count,
@@ -1239,6 +1252,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
+    raw_run_count=None, deduped_run_count=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1255,6 +1269,13 @@ def generate(
     substitute `tools` (or any other implicit default) for a missing `all_tools` here: doing so
     was a confirmed architecture-review violation (2026-08-15) that silently coupled 121+
     pre-existing tests' synthetic fixtures to the real, unmocked skills catalog.
+
+    `raw_run_count`/`deduped_run_count` (TCK-20260915-DUPLICATE-RUN-RECORDS): optional, caller-
+    supplied counts from before/after `main()`'s own `dedupe_to_latest_per_execution()` call.
+    `runs` passed in here is already the deduplicated list -- these two are for the report to
+    disclose the correction inline, not to recompute anything. Both `None` (a direct `generate()`
+    call outside `main()`, e.g. from a test) silently omits the note rather than rendering a
+    misleading "0 duplicates" claim it never actually checked.
     """
     metrics = compute_retro_metrics(
         runs, events, tickets_root, tools=tools, all_tools=all_tools,
@@ -1299,6 +1320,14 @@ def generate(
     lines.append(f"| Avg agents per run | {rs['avg_agents']} |")
     lines.append(f"| Total agent calls | {rs['total_agent_calls']} |")
     lines.append("")
+    if raw_run_count is not None and deduped_run_count is not None and raw_run_count != deduped_run_count:
+        lines.append(
+            f"_Note: {raw_run_count} raw `runs.jsonl` rows in this window collapsed to "
+            f"{deduped_run_count} real executions after deduplicating gate-checkpoint rows that "
+            f"share one `(run_id, execution_id, start_ts)` identity "
+            f"(TCK-20260915-DUPLICATE-RUN-RECORDS) — the counts above are the deduplicated figures._"
+        )
+        lines.append("")
 
     # Gate failures
     lines.append("## Gate Failure Breakdown")
@@ -1397,6 +1426,16 @@ def generate(
 
     # Spend proxy — by phase and by agent.
     if metrics["spend_proxy_by_phase"]:
+        cov = metrics["spend_proxy_coverage"]
+        if cov["coverage_pct"] is not None:
+            lines.append(
+                f"_Computed over {cov['coverage_pct']}% of this window's events "
+                f"({cov['events_scored']} of {cov['events_total']} scored) — see "
+                f"TCK-20260915-SIDECAR-ATTRIBUTION-GAP for why the rest lack a "
+                f"`cost_proxy_score`._"
+            )
+            lines.append("")
+
         lines.append("## Spend Proxy — By Phase")
         lines.append("")
         lines.append("| Phase | Events scored | Total | Avg |")
@@ -1833,11 +1872,66 @@ def generate(
     return "\n".join(lines)
 
 
+def _extract_notes_section(existing_text: str) -> "str | None":
+    """Returns the hand-authored `## Notes` heading through end-of-file from an existing retro
+    report's text, or None if the file has no such heading (nothing to preserve).
+
+    `## Notes` is the exact, sole documented hand-authoring surface
+    (`.claude/skills/agent-monitoring-retro/SKILL.md`: "Fills in the `## Notes` section... Commit
+    the filled-in report. Do not discard the notes"). Everything ABOVE that heading is always
+    freshly regenerated data and is never preserved -- only this one section accumulates
+    hand-written analysis across regenerations, by the skill's own design."""
+    idx = existing_text.find("## Notes")
+    if idx == -1:
+        return None
+    return existing_text[idx:]
+
+
+def _write_report_preserving_notes(report: str, out_path: Path, force: bool) -> str:
+    """Writes `report` to `out_path`, preserving any existing `## Notes` content unless `force` is
+    set (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES: `out_path.write_text(report)`
+    used to run unconditionally, silently destroying hand-authored notes the project's own
+    agent-monitoring-retro skill instructs a session to write and commit -- a real 177-line loss
+    was caught and reverted on 2026-09-15 during this exact ticket's own discovery). Returns a
+    one-line status string for the caller to print -- never silent, per this ticket's own
+    Acceptance Criteria ("a regeneration that would discard content must say so").
+
+    `--force` still allows a deliberate full rewrite (AC #3) -- this function's only job is making
+    the DEFAULT path safe, not removing the escape hatch."""
+    had_existing_file = out_path.exists()
+    if force or not had_existing_file:
+        out_path.write_text(report)
+        if force and had_existing_file:
+            return f"Written: {out_path} (--force: any prior ## Notes content was replaced)"
+        return f"Written: {out_path}"
+
+    existing_text = out_path.read_text()
+    preserved_notes = _extract_notes_section(existing_text)
+    if preserved_notes is None:
+        out_path.write_text(report)
+        return f"Written: {out_path}"
+
+    fresh_notes_idx = report.find("## Notes")
+    if fresh_notes_idx != -1:
+        merged = report[:fresh_notes_idx] + preserved_notes
+    else:
+        merged = report.rstrip("\n") + "\n\n" + preserved_notes
+    out_path.write_text(merged)
+    return (
+        f"Written: {out_path} (preserved {len(preserved_notes)} chars of existing ## Notes "
+        f"content -- pass --force to discard it instead)"
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate agent monitoring retro report")
     parser.add_argument("--days", type=int, help="Include runs from the last N days")
     parser.add_argument("--all", action="store_true", help="Include all runs")
     parser.add_argument("--week", help="Specific ISO week (e.g. 2026-W23); default = current week")
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Discard any existing report's hand-authored ## Notes content instead of preserving it",
+    )
     args = parser.parse_args()
 
     all_runs, all_events = _load_runs_and_events()
@@ -1868,18 +1962,57 @@ def main():
         label = week_str
         out_name = f"RETRO-{week_str}.md"
 
+    # TCK-20260915-DUPLICATE-RUN-RECORDS: collapse each real execution's multiple gate-checkpoint
+    # rows (writeMonitoring() fires at every gate exit within one continuous execution, correctly
+    # sharing one run_id/execution_id/start_ts) down to its final, most-complete record before
+    # computing any run-count/DONE-rate metric. Never mutates runs.jsonl itself -- read-side only.
+    raw_run_count = len(runs)
+    runs = dedupe_to_latest_per_execution(runs)
+    deduped_run_count = len(runs)
+
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
+        raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RETRO_DIR / out_name
-    out_path.write_text(report)
-    print(f"Written: {out_path}")
+    print(_write_report_preserving_notes(report, out_path, args.force))
     print(f"Runs: {len(runs)}, Events: {len(events)}")
 
     # Update index
     _update_index(all_runs, all_tools)
+
+
+_LAST_N_DAYS_RE = re.compile(r"^LAST(\d+)D$")
+
+
+def _resolve_report_run_population(name, all_runs, runs_by_week):
+    """Reconstruct the run population a report named `name` (an index row's file-stem suffix,
+    e.g. "ALL", "LAST14D", or an ISO week like "2026-W23") was built from -- mirrors main()'s own
+    three branches (`--all` / `--days N` / `--week`) exactly, including the same
+    dedupe_to_latest_per_execution() collapse main() applies unconditionally after them
+    (TCK-20260915-RETRO-INDEX-REPORTS-ZERO).
+
+    Before this fix, `_update_index` only special-cased "ALL" and otherwise looked `name` up in
+    `runs_by_week` (keyed by ISO week string) -- "LAST7D"/"LAST14D"/"LAST28D" are not ISO weeks, so
+    that lookup always missed and every --days report indexed as 0 runs, despite the linked report
+    itself containing real data. The "ALL" special case also used the raw, non-deduplicated
+    `all_runs`, mismatching RETRO-ALL.md's own (deduplicated) body count.
+    """
+    if name == "ALL":
+        pop = all_runs
+    else:
+        m = _LAST_N_DAYS_RE.match(name)
+        if m:
+            days = int(m.group(1))
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+            pop = [r for r in all_runs if _record_since_cutoff(r.get("start_ts"), cutoff)]
+        else:
+            # Anything else is treated as an ISO week label (e.g. "2026-W23") -- runs_by_week's
+            # own key shape. An unrecognized name correctly falls through to an empty population.
+            pop = runs_by_week.get(name, [])
+    return dedupe_to_latest_per_execution(pop)
 
 
 def _update_index(all_runs, all_tools=None):
@@ -1898,16 +2031,16 @@ def _update_index(all_runs, all_tools=None):
 
     for f in retro_files:
         name = f.stem.replace("RETRO-", "")
-        # "ALL" is never a real ISO week (RETRO-ALL.md is the all-time snapshot,
-        # not a dated weekly report) — the runs_by_week lookup would always miss.
-        week_runs = all_runs if name == "ALL" else runs_by_week.get(name, [])
+        week_runs = _resolve_report_run_population(name, all_runs, runs_by_week)
         n = len(week_runs)
         done = sum(1 for r in week_runs if _resolve_status(r) == "DONE")
         fails = sum(1 for r in week_runs if _resolve_status(r) not in ("DONE", "EPIC_SCOPED", "IN_PROGRESS"))
 
         # Mirrors main()'s own per-period run_id filter of all_tools (:1536/:1545) — reused here,
-        # not a new mechanism, threaded through the same run-id-to-week association runs_by_week
-        # already computed above.
+        # not a new mechanism, threaded through the same corrected population above. "ALL" still
+        # uses the full, unfiltered all_tools directly (matches main()'s own "All Time" branch,
+        # which never filters tools by run_id either) rather than round-tripping through a
+        # run_id-set membership test that would be a no-op for the full corpus anyway.
         if name == "ALL":
             week_tools = all_tools
         else:

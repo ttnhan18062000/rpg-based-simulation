@@ -48,9 +48,60 @@ WORKFLOW_AGENTS = {
         # "implement-ticket-orchestrator" pseudo-agent above: a real orchestrator identity
         # logging its own event, not drift (TCK-20260808-AGENT-MONITORING-CLAUDE-VOCAB-REGISTRATION).
         "claude",
+        # "orchestrator": TCK-20260915-MONITORING-ANOMALY-VALIDATOR found this flagged as "drift"
+        # at 401 occurrences spanning 2026-06 through 2026-09 (still actively used) -- an even
+        # larger, longer-running instance of the exact same "claude" pattern above: a
+        # hand-orchestrating session's own natural label for a phase it performed directly, not a
+        # delegated subagent. Not grep-confirmed from a workflow .js file (impossible -- it is by
+        # definition never emitted by the automated pipeline), verified instead by direct
+        # corpus-usage-pattern investigation, the same evidentiary standard this epic used
+        # throughout. Registering it here (rather than ratcheting it as an anomaly) is the correct
+        # fix: a 4-month-old, still-growing, self-describing convention is a registry gap, not a
+        # defect.
+        "orchestrator",
+        # "context-packet-wrapper": the advisory shadow context-packet call site's own agent
+        # literal (TCK-20260729-SHADOW-PACKET-CALL-SITE), grep-confirmed at
+        # .claude/workflows/implement-ticket.js:632 (`e.get('agent') == 'context-packet-wrapper'`)
+        # -- a real, intentional, already-documented mechanism (see docs/agent-monitoring/schema.md's
+        # seq field row), not drift.
+        "context-packet-wrapper",
+        # "implement-ticket": 138 events under a TCK-* (implement-ticket) run_id record their own
+        # agent literally as "implement-ticket" -- the workflow's own name used as a
+        # self-referential "the orchestrator of this workflow did it directly" label, semantically
+        # the same concept as "orchestrator"/"claude" above, just spelled after the workflow
+        # instead of describing the role generically. Registered for the same reason.
+        "implement-ticket",
     },
-    "create-tickets": {"create-tickets", "structure", "ticket-scoper", "link-epic"},
-    "implement-epic": {"implement-ticket"},
+    "create-tickets": {
+        "create-tickets", "structure", "ticket-scoper", "link-epic",
+        # "concern-investigator": TCK-20260915-MONITORING-ANOMALY-VALIDATOR found this flagged as
+        # drift under create-tickets.js's own CREATE-TICKETS-* run_ids -- the real, documented
+        # subagent for that workflow's Structure phase (see .claude/agents/concern-investigator.md's
+        # own description: "returns structured JSON findings for create-tickets.js's Structure
+        # phase"), simply missing from this registry until now. One further occurrence under a
+        # single historical TCK-prefixed run (TCK-20260709-CONCERN-INVESTIGATOR-AGENT, a
+        # one-off ticket about building this very agent) is left as accepted residual drift, not
+        # registered under implement-ticket -- it was never a repeating pattern there.
+        "concern-investigator",
+        # "orchestrator": same hand-orchestration pseudo-agent convention registered under
+        # implement-ticket above, also found under CREATE-TICKETS-* run_ids (3 occurrences) --
+        # same mechanism, different workflow.
+        "orchestrator",
+        # "write-sequence": create-tickets.js's Write phase's own writeSidecar()/pushEvent label,
+        # grep-confirmed at .claude/workflows/create-tickets.js:844
+        # (`await writeSidecar(events.length + 1, 'Write', 'write-sequence')`) and :856
+        # (`{ label: 'write-sequence', phase: 'Write' }`) -- one of the 4 real, documented
+        # writeSidecar call sites named in docs/agent-monitoring/schema.md (comprehend, structure,
+        # write-sequence, link-epic). A real, intentional label, not drift.
+        "write-sequence",
+    },
+    "implement-epic": {
+        "implement-ticket",
+        # "implement-epic": 16 events under a FOLDER-*/EPIC-* run_id record their own agent as
+        # "implement-epic" -- the same self-referential workflow-name-as-agent-label pattern
+        # registered for "implement-ticket" above, just for this workflow's own batch/epic runs.
+        "implement-epic",
+    },
     "simq-audit": {
         "workflow", "drift-classifier", "anchor-updater", "doc-syncer",
         "parity-updater", "done-checker", "ticket-scoper",
