@@ -117,6 +117,8 @@ withdraw decision it should produce does not execute.
   fixed while verifying this ticket's real reduction)
 - `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` (new — the downstream
   fuel-starvation risk this gate's real ~58% combat reduction creates, filed separately)
+- `TCK-20260915-SIMQ-CORPUS-BLIND-TO-SCALE-DEPENDENT-BEHAVIOR` (new — the SimQ corpus check this
+  ticket ran found the corpus structurally cannot see this class of change at all)
 
 ## Related Docs
 - `docs/brainstorm/rpg_feature_atlas.html` (Combat Engagement card, corrected 2026-09-15)

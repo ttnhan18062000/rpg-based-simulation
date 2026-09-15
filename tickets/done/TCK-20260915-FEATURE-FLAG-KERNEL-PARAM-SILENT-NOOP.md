@@ -75,17 +75,14 @@ a confidently wrong answer via this exact same broken-toggle pattern.
 - Document the correct way to toggle a `run_phase()`-gated feature flag for a real A/B: set it
   directly on the (frozen) `AuthoritativeState.feature_flags` dict via `object.__setattr__` before
   constructing the `Kernel`, not via `Kernel(flags=...)`.
-- Audit other probe scripts / investigation tickets in this repo's history that used
-  `Kernel(flags={"ENABLE_...": ...})` to control a feature flag for a real measurement, and flag any
-  whose conclusion should be re-checked. Not done as part of this ticket (out of scope, see below)
-  — flagged here so it's discoverable rather than silently left as a landmine.
+- ~~Audit other probe scripts / investigation tickets in this repo's history that used
+  `Kernel(flags={"ENABLE_...": ...})`~~ — **done, see Implementation Notes below** (peer flagged
+  this as the first task before closing rather than leaving it as a named-but-unchecked risk).
 - Consider (not decided here) whether `Kernel.__init__`'s `flags` parameter should reject or warn
   on an unrecognized `ENABLE_*`-shaped key, to make this failure mode loud instead of silent — this
   is a design decision for whoever picks this up, not assumed here.
 
 ## Out of Scope
-- Auditing every historical A/B in the repo for this pattern — flagged as a risk, not exhaustively
-  chased down, given the scope of this ticket is the specific instance that surfaced it.
 - Any code change to `Kernel.__init__` itself (e.g. adding a warning/rejection for unrecognized
   flag-shaped keys) — a real design decision left to a future ticket if picked up.
 
@@ -135,6 +132,41 @@ object.__setattr__(state, "feature_flags", existing)
 kernel = Kernel(profile=..., state=state, rng=..., flags={"no_frame_pacing": True})
 ```
 
+**Audit of historical usage (per peer's explicit request, done before closing rather than left as
+a named-but-unchecked risk).** Searched `stored_artifacts/`, `tickets/`, `tests/`, and every real
+`Kernel(...)` construction site in `src/` and `tools/` for the broken pattern
+(`Kernel(flags={"ENABLE_...": ...})`). **Result: no other instance found.**
+- Every real production/tooling `Kernel(...)` call site (`src/certification/harness.py`,
+  `src/perf/bench_harness.py`, `src/perf/long_run_harness.py`, `src/domains/campaigns/runner.py`,
+  `src/engine/scenario_runtime.py`, `tools/calibrate_simq.py`, `tools/personality_audit.py`, etc.)
+  passes only genuine engine-level knobs through `flags=` (`audit_mode`, `no_replay`,
+  `no_frame_pacing`, `force_full_scan`, `perf_tracker`) — never an `ENABLE_*` key.
+  `src/perf/bench_harness.py`/`long_run_harness.py`'s own `flags` parameter (forwarded from their
+  own `run(...)` callers into `Kernel(flags=effective_flags)`) was checked specifically, since
+  peer named the perf A/Bs as at-risk — no caller in `tests/perf/` or elsewhere passes an
+  `ENABLE_*` key through that path either; every perf test that touches a feature flag does so via
+  `state.feature_flags=` directly, the correct mechanism.
+- Every test fixture and stored-artifact plan that sets a feature flag (dozens of call sites
+  across `tests/unit/`, `tests/integration/`, `tests/simulation_quality/`) uses
+  `feature_flags={...}` on the state object directly — including the one helper with a
+  confusingly-named `flags` parameter (`tests/unit/ai/test_guild_need_scorer.py::
+  _state_with_town_hall`), which correctly forwards it to `AuthoritativeState(feature_flags=flags)`
+  rather than to `Kernel`.
+- **The original 2026-09-14 measurement this whole investigation traces back to
+  (`TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER`) used a third, also-correct methodology**:
+  flipping the literal registered default in `src/domains/optimization/feature_flags.py` itself
+  (`"ENABLE_COMBAT_ENGAGEMENT": FeatureMode.OFF -> ON`) and measuring before/after that source
+  change, per its own `plan.md`/`test_plan.md`. This is not affected by the `Kernel(flags=...)`
+  bug either, since it never goes through that parameter at all — **this rules out "the original
+  4.1x measurement itself used the broken toggle" as an explanation for why it doesn't reproduce**,
+  narrowing `TCK-20260915-COMBAT-ENGAGEMENT-4X-MEASUREMENT-NO-LONGER-REPRODUCES`'s own still-open
+  historical question toward its other candidates (a differing original metric, or a real
+  behavior change from the spatial-index/cognition-merge fixes that landed the same day).
+- **Conclusion: the broken pattern appears to be contained to this investigation's own throwaway
+  probe scripts** (never committed to the repo), not to any historical, committed measurement.
+  The residual risk named in the original version of this ticket is now closed out rather than
+  left open-ended.
+
 ## Test Summary
 No test changes — this is a probe-methodology finding, not a behavior change.
 
@@ -144,5 +176,8 @@ _(none)_
 ## Completion Summary
 Closed as a documented, standalone finding. Root cause confirmed via direct code read; the specific
 investigation it was found in was re-verified with the corrected toggle and its conclusions held.
-A full audit of other historical A/Bs using the broken pattern is explicitly left undone and named
-as a residual risk rather than silently assumed clean.
+The historical audit peer requested was completed (not left as a named-but-unchecked risk): no
+other instance of the broken pattern was found in any real production `Kernel(...)` call site, test
+fixture, or stored-artifact plan, and the original 2026-09-14 measurement this investigation traces
+back to used a third, unaffected methodology (flipping the literal registered default). The broken
+pattern appears contained to this investigation's own throwaway probes.

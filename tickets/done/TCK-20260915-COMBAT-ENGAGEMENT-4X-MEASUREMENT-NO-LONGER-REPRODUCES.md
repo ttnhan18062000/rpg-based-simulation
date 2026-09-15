@@ -132,10 +132,15 @@ the four conditions, including exactly reproducing the original OFF-vs-ON compar
   2026-09-14 measurement showed 4.1x, only that current code, correctly measured, shows no effect.
   Given the practical question this ticket exists to answer (should the accepted 3x perf cost /
   test re-tiering decision be revisited) is now answered with high confidence either way, the
-  deeper historical bisection is not pursued further here. If a future investigation wants full
-  closure on the original number, candidate 3 (the original metric may have counted a broader
-  "combat-related events" set than real `execute_attack()` calls, e.g. observability/bookkeeping
-  events) is the most likely explanation on the evidence gathered but was not itself verified.
+  deeper historical bisection is not pursued further here.
+- **One candidate is now ruled out, not just deprioritized**: `TCK-20260915-FEATURE-FLAG-KERNEL-
+  PARAM-SILENT-NOOP`'s own audit confirmed the original 2026-09-14 measurement toggled the flag by
+  flipping its literal registered default in `src/domains/optimization/feature_flags.py`, not via
+  `Kernel(flags=...)` — so the original measurement itself did not use the broken toggle. "The
+  original number is an artifact of its own broken toggle" is no longer a live candidate. This
+  narrows the remaining field to: a differing original metric (candidate 3, still the most likely
+  on current evidence but unverified), or a real behavior change from the spatial-index/cognition-
+  merge fixes that landed the same day (candidates 1-2).
 
 ## Implementation Notes
 See `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`'s Implementation Notes for

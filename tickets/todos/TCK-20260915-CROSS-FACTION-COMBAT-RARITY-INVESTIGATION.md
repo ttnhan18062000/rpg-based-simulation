@@ -201,6 +201,23 @@ same-faction in the earlier sample) — still open, may or may not share a root 
 range) both explicitly *exclude* same-faction pairs by construction, so that anomaly needs its own
 trace through target-selection order, not just hostility classification.
 
+**2026-09-15, new lead from `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`'s
+own measurement — a strong discriminator for this investigation, not yet followed up here.**
+That ticket's reference scenario (`build_metropolis_state`, 1000 entities, seed 42) found **100%
+of real attacks are cross-faction, zero same-faction**, both before and after its gate — a sharp
+contrast with this ticket's own `crowded_frontier`/`quest_dense_frontier` corpus-world samples,
+where cross-faction `pairwise_tension` was flat zero despite hostile pairs being spatially present.
+**This means cross-faction combat is not universally rare — it's world-specific**: something about
+`build_metropolis_state`'s own generation (likely its faction/entity distribution, spatial density,
+or how many distinct factions it seeds relative to population) produces a world where essentially
+all real combat is cross-faction, while the SimQ corpus worlds this ticket has been sampling
+produce close to none. This is a genuine third axis, distinct from the three candidates traced
+above (catalog hostility coverage, spatial separation, posture/targeting) — it suggests the answer
+may be as much about *which worlds get sampled* as about any one mechanism inside
+`combat_engagement`. Not yet investigated: what specifically differs between
+`build_metropolis_state`'s world generation and the SimQ corpus profiles' own world-building path
+(entity count, faction count, spatial layout, faction assignment logic) that would explain this gap.
+
 ## Test Summary
 _(none yet)_
 
