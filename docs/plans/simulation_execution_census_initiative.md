@@ -14,17 +14,20 @@ been finding these defects one at a time. `tools/execution_census.py` implements
 (reachability axis only — see §7.3's own effectiveness-axis scoping note). On-demand only; never
 gates.
 
-**A real finding from the first build, not anticipated at scoping time**: the very first
-`stability-check` run (`crowded_frontier`, 300 ticks, seed 42, run twice) reported **UNSTABLE** —
-382 files showed differing branch-arc coverage between two identical runs, with the kernel's own
-wall-clock watchdog tripping mid-run in both (`Tick N exceeded budget`). This is real, first-hand
-confirmation of §4's own concern ("if [the throttle non-determinism] stays deferred, this
-initiative needs to know whether the census is stable"), not just a documented risk — coverage.py's
-own instrumentation overhead appears sufficient to trip the throttle more/differently across runs
-of the same world/seed. **Census results are not yet trustworthy until
-`TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2` is resolved or worked around**; every
-real corpus-run report should be preceded by a `stability-check` on at least one representative
-world, and a report generated while unstable should be treated as directional at best.
+> [!IMPORTANT]
+> **PRECONDITION — census output is provisional until determinism holds.** The tool's own first
+> real `stability-check` run (`crowded_frontier`, 300 ticks, seed 42, run twice) reported
+> **UNSTABLE**: 382 files showed differing branch-arc coverage between two identical runs, with the
+> kernel's own wall-clock watchdog tripping mid-run in both (`Tick N exceeded budget`). This is
+> measured, first-hand confirmation — not a hedge or a documented-but-unconfirmed risk — that
+> `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2` gates whether any census report can be
+> trusted at all: coverage.py's own instrumentation overhead appears sufficient to trip the kernel's
+> throttle more/differently across identical runs. **A `stability-check` must return STABLE for the
+> world(s) in scope before any `report` output from this tool is treated as fact rather than a
+> directional lead.** This is the load-bearing reason the earlier plan's §4 flagged this dependency
+> at all, now confirmed rather than merely anticipated — the deferred ticket was set aside as CI
+> noise; it now gates a diagnostic this arc has since built and invested in, which changes the
+> basis that deferral was made on.
 
 **The problem in one sentence:** a mechanism can be unit-tested, parity-verified, registered in the
 pipeline, and executed every tick, while never once changing anything — and we currently have no

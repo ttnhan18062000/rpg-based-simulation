@@ -142,3 +142,8 @@ def test_limitation_header_names_its_own_boundary():
     # thing peer review asked to be unsuppressable in the tool's own output, not just the docs.
     assert "cannot detect a live mechanism producing a wrong outcome" in LIMITATION_HEADER
     assert "not automated" in LIMITATION_HEADER
+    # The determinism precondition (found via this tool's own first real stability-check run)
+    # must be stated where a report reader will see it, not only in the plan doc -- peer review's
+    # explicit correction: a precondition, not a caveat buried in a limitations section.
+    assert "PRECONDITION" in LIMITATION_HEADER
+    assert "STABLE" in LIMITATION_HEADER

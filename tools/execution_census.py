@@ -50,6 +50,11 @@ SUPPRESSIONS_FILE = REPO_ROOT / "config" / "execution_census" / "suppressions.ya
 BASELINE_FILE = REPO_ROOT / "config" / "execution_census" / "baseline.json"
 
 LIMITATION_HEADER = (
+    "PRECONDITION: this report is provisional until a 'stability-check' run for the world(s) in "
+    "scope returns STABLE. The first real stability-check (crowded_frontier, 300 ticks) reported "
+    "UNSTABLE -- 382 files with differing branch-arc coverage across two identical runs, tied to "
+    "the kernel's wall-clock watchdog (TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2). "
+    "Treat findings below as directional, not fact, until stability is confirmed for this run. "
     "This census finds code that never executes, or never takes a branch, across the SimQ "
     "corpus. It cannot detect a live mechanism producing a wrong outcome -- a branch reported as "
     "taken here may still be behaving incorrectly. See SimQ pillar scores for outcome quality. "
