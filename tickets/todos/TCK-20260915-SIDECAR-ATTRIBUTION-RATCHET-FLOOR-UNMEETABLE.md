@@ -81,6 +81,12 @@ ticket's scope — see `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`).
   disposition; this ticket does not reopen that disposition, only the floor's real-world
   durability.
 - `TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC` — parent epic.
+- `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE` — the already-filed gap
+  this ticket's 2026-09-16 diagnostic is a confirmed, freshly-measured recurrence of (0/11 recent
+  rows unattributed, all from one hand-orchestrated session); strengthens the case for
+  prioritizing that ticket's remediation over treating this as a new problem.
+- `TCK-20260915-CI-TRIAGE-HAS-NO-ABSENT-RUN-BRANCH` (owned by `agent-working-design`) — filed
+  today in the same territory; peer session routed this ticket's finding there directly.
 
 ## Related Docs
 - None yet — no doc currently describes floor re-pinning cadence for this check.
@@ -215,6 +221,23 @@ growing relative to pipeline-tracked activity, not by concurrent sessions corrup
 `run_id`s.** The shared-`.claude/current_run` file may still be a contributing factor for
 sessions that *do* have a run_id but get the wrong one — that's not ruled out — but it is not the
 dominant mechanism the single-session 0/11 breakdown shows.
+
+**This is a confirmed recurrence of an already-filed gap, not a new discovery.**
+`TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE` already covers
+hand-orchestrated ticket closures missing monitoring coverage — this ticket's finding is that same
+gap, now observed with fresh, quantified measurement (0/11 recent rows, five monotonic
+below-floor readings) rather than a qualitative description. That strengthens the case for
+prioritizing TCK-20260903's own remediation over treating this as a standalone new problem.
+
+**The defect is self-referential, and that is the cleanest explanation of the whole trend.** Every
+hand-orchestrated investigation — including the one that produced this ticket's own findings —
+adds more unattributed rows to the corpus. 2026-09-15 saw heavy hand-orchestration across at least
+three concurrent sessions (this one included). So the metric degrades *because* work is happening
+this way, will keep declining for as long as this arc continues to rely on hand-orchestration, and
+cannot recover through more hand-orchestrated investigation of itself — each further diagnostic
+pass (this one included) makes the measured rate slightly worse, not better. This is the simplest
+account of the five monotonic below-floor readings recorded above (74.7% → 73.7% → 73.6% → 73.5%
+→ 73.4%, now 72.7% a day later).
 
 **This also settles what CANNOT be done to close this ticket.**
 `tests/tools/test_sidecar_attribution_coverage_check.py::test_floor_may_only_increase_never_used_to_paper_over_a_regression`
