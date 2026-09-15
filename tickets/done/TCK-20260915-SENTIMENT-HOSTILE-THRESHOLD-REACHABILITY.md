@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY
-phase: open
+phase: done
 date: 2026-09-15
 tags: [world, faction]
 ---
@@ -17,7 +17,7 @@ organically — a real 9000-tick run plateaus well short of the threshold; same 
 as the maturity-gate and D-05 findings this week
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -99,6 +99,9 @@ documented as working, but that real play does not actually reach.
 - `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` (sibling reachability gap in the same faction
   subsystem, still open)
 - `TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE` (separate, scoping-only)
+- `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (filed at close — this ticket's own
+  investigation found the real blocker is one level down: cross-faction hostile interaction is
+  itself rare and seed-fragile, not a tunable threshold/decay problem)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2, §4 — the sentiment spec
@@ -120,13 +123,90 @@ investigated)_
   threshold) or a genuine second reachability gate. Do not assume either before measuring.
 
 ## Implementation Notes
-_(none — filed as a finding, not yet investigated)_
+**2026-09-15, investigation complete.** Three checks run, all real evidence, no code changes (per
+Scope's own "do not assume" instruction, and confirmed no fix is safe to apply yet — see
+Conclusion below).
+
+**1. `shared_territory` is not a second path to `HOSTILE` — it is completely dead across the
+entire corpus.** Checked `FactionState.territory` at world-compile time in all 14 real,
+non-unit-test corpus worlds (`frontier_living_world`, `frontier_extended`, `frontier_marches`,
+`crowded_frontier`, `urban_political`, `sandbox_world`, `wilderness_survival`,
+`highland_traverse`, `quest_dense_frontier`, `resource_dense_basin`, `swamp_border_world`,
+`dungeon_crawl`, `hero_guild_routing`, `generated_frontier_3_42`): **0 of 14 have any faction with
+nonempty territory; 0 faction pairs ever share territory.** `territory_add`'s only real producer
+is siege-won transfer (`src/engine/military_conflict.py`), itself gated on an existing `WAR` —
+same circularity the parent ticket's original investigation found for loop #2. This means
+`pair_tension > 0.7` via sentiment is the *only* route to `HOSTILE` anywhere in the real corpus
+today, confirmed rather than assumed.
+
+**2. The `0.418` plateau is not a decay-vs-escalation race.** Grepped every producer of
+`pairwise_tension`/`pairwise_tension_delta` in `src/` — the only writers are
+`FactionSentimentService.derive_from_bond_updates()` (real combat) and
+`diplomatic_actions.py`'s treaty/trade/betrayal handlers (deliberate peace-making, negative
+deltas only on an accepted treaty/trade). **There is no decay producer for `pairwise_tension` at
+all** (decay only touches `faction_sentiments`, a different field). So `pairwise_tension` is
+purely additive and monotonic outside deliberate diplomacy — a plateau means the contributing
+interaction stopped, not that something eroded it. Confirmed check #3 from Scope: decay is not
+fighting escalation, because decay doesn't apply to this field.
+
+**3. Multi-world AND multi-seed sampling — this is the decisive finding, and it overturns an
+early, wrong hypothesis.** Sampled 3 more real worlds (`crowded_frontier`, `quest_dense_frontier`,
+`urban_political`) at 4000 ticks each: **`pairwise_tension` stayed at exactly `0.0` for every
+faction pair, the entire run, in all three.** Only `frontier_living_world` showed any nonzero
+tension among the 4 worlds sampled. This alone looked like a "one world is fine, three aren't"
+story, and the natural next question was whether `frontier_living_world`'s real interaction
+volume (~42 hostile hits, back-of-envelope from `0.418 / ~0.01 per hit`) was simply short of
+crossing `0.7`, tunable by raising `FACTION_SCALE_FACTOR`.
+
+**Ran `frontier_living_world` itself across 5 seeds (42, 7, 123, 999, 2026) at 6000 ticks each to
+check whether that volume is typical before leaning on it for a tuning fix — the exact "measure
+spread before leaning on a field" rule this arc has now needed twice before.** Result:
+```
+seed=42:   max_pairwise_tension=0.4180
+seed=7:    max_pairwise_tension=0.4180
+seed=123:  max_pairwise_tension=0.6500
+seed=999:  max_pairwise_tension=0.0000
+seed=2026: max_pairwise_tension=0.0100
+```
+**The interaction volume is not typical or stable — it is a lottery, even within the single world
+that "works."** Two of five seeds produce essentially nothing (`0.0`, `0.01`); the other three
+range from `0.418` to `0.65`, none crossing `0.7`. A scale-factor bump calibrated to seed 42's
+`0.418` would do nothing useful for seed 999 (there is no interaction to scale up) and might
+overshoot for seed 123. **This is not a formula/threshold tuning problem — it is the same
+underlying problem as finding #3 above, just visible within one world instead of only across
+worlds**: cross-faction hostile interaction itself is fragile and inconsistent, and no single
+`FACTION_SCALE_FACTOR` value reliably converts "whatever interaction happens to occur" into a
+real `HOSTILE` crossing across the corpus.
+
+## Conclusion (Acceptance Criteria's third option, taken honestly)
+**`HOSTILE` is not reachable through ordinary play today, and the reason is not the sentiment
+mechanism itself — sentiment correctly reflects real interaction whenever real interaction
+happens. The actual blocker is one level down: cross-faction hostile interaction is itself rare
+and seed-fragile, in `frontier_living_world` and near-absent in the other 3 worlds sampled.**
+`FACTION_SCALE_FACTOR` tuning was the tempting fix and is explicitly **not** proposed here,
+because the multi-seed check shows it would not reliably work — this is the "measure before you
+lean on it" discipline paying for itself with a negative result instead of a shipped-but-fragile
+tuning value.
+
+Filed the real root-cause question as its own ticket, not folded into a tuning change here:
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`. It is now a **prerequisite** for both
+(a) any further `HOSTILE`-reachability work on this ticket's own scope, and (b) the
+military-strength/`WAR` driver work the user asked for next — building `WAR` reachability on top
+of a `HOSTILE` gate that mostly isn't reached would repeat this week's own core pattern with full
+knowledge of the risk.
 
 ## Test Summary
-_(none yet)_
+No code changed; no new tests. Evidence gathered via direct instrumentation probes (multi-world
+territory-overlap check, multi-world tension sampling, multi-seed tension sampling against
+`frontier_living_world`), consistent with this ticket's own investigation-first scope.
 
 ## Files Changed
-_(none yet)_
+_(none — investigation only, per this ticket's own scope)_
 
 ## Completion Summary
-_(not started)_
+Investigation complete. `HOSTILE` reachability is confirmed blocked, and the blocker is
+root-caused to cross-faction hostile interaction itself being rare and seed-fragile — not a
+tunable threshold/decay problem, and not something this ticket should patch with a scale-factor
+change the evidence shows wouldn't reliably work. Real root cause filed as
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`, explicitly sequenced as a prerequisite
+before the military-strength driver. No implementation in this ticket; none was safe to make.

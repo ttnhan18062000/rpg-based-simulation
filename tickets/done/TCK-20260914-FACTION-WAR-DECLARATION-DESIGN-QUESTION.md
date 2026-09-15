@@ -393,8 +393,10 @@ re-verification.
   the `RESOURCE_DEPLETED` severance).
 - `tickets/todos/TCK-20260915-FACTION-IMPORTANCE-SIGNAL-INITIATIVE.md` (prior commit — scoping-only
   filing).
-- `tickets/todos/TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY.md` (new — follow-up filing
-  for the post-fix `HOSTILE`-plateau finding).
+- `tickets/done/TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY.md` (follow-up filing for
+  the post-fix `HOSTILE`-plateau finding; itself now closed — investigated and root-caused to
+  cross-faction hostile interaction being rare/seed-fragile, not a tunable threshold, further
+  filed as `tickets/todos/TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION.md`).
 
 ## Completion Summary
 Central question answered with a real, evidence-backed build: `DiplomaticStateMachine` is a real
