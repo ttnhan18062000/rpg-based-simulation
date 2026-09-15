@@ -944,19 +944,29 @@ def check_registry_entry_regenerated(
         regen_note = f"generate_registry() raised: {exc}"
 
     entries = yaml.safe_load(output_path.read_text(encoding="utf-8")) or []
+    # TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE (Option A) extended
+    # generate_registry.py::collect_tickets() to also index tickets/todos/ and
+    # tickets/inprogress/, not only tickets/done/ -- so a ticket_id match alone no longer proves
+    # the Finalize move-to-done step happened; the SAME ticket_id can now legitimately appear in
+    # the registry while still sitting in tickets/inprogress/. This check's own purpose (confirm
+    # the move-to-done actually occurred) requires the matching entry's own `path` to specifically
+    # start with "tickets/done/", not merely that some entry with this ticket_id exists anywhere.
     found = any(
-        isinstance(entry, dict) and entry.get("ticket_id") == ticket_id for entry in entries
+        isinstance(entry, dict)
+        and entry.get("ticket_id") == ticket_id
+        and entry.get("path", "").startswith("tickets/done/")
+        for entry in entries
     )
 
     if found:
         return (
             "PASS",
-            f"{output_path} contains an entry for {ticket_id}"
+            f"{output_path} contains a tickets/done/ entry for {ticket_id}"
             + (f" (note: regen exited nonzero: {regen_note})" if regen_note else ""),
         )
     return (
         "FAIL",
-        f"{output_path} has no entry for {ticket_id} after regeneration"
+        f"{output_path} has no tickets/done/ entry for {ticket_id} after regeneration"
         + (f" (regen also exited nonzero: {regen_note})" if regen_note else ""),
     )
 

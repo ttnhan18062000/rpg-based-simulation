@@ -65,6 +65,22 @@ _AUTHORITY_SORT = {"P0": 0, "P1": 1, "P2": 2}
 # Regex to extract backtick-quoted tokens from a line.
 _BACKTICK_RE = re.compile(r"`([^`]+)`")
 
+# TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE (Option A): a plain, non-backtick-
+# quoted bullet line is only treated as a path-shaped citation if it looks like one -- contains a
+# "/" or ends in a common file extension. Mirrors the exact heuristic that ticket's own
+# investigation.md Measurement 3 used to judge backtick-extracted citations ("checked whether each
+# backtick-quoted citation that looks like a file path (contains / or ends .py/.md) actually
+# exists"), extended with a few more extensions actually seen in this corpus's own citations
+# (yaml/yml/json/js/ts/tsx/html/csv) so the same judgment applies uniformly to both extraction
+# paths, not a narrower one for the new path.
+_PATH_LIKE_EXTENSIONS = (
+    ".py", ".md", ".yaml", ".yml", ".json", ".js", ".ts", ".tsx", ".html", ".css", ".csv", ".txt",
+)
+
+
+def _looks_like_path(token: str) -> bool:
+    return "/" in token or token.endswith(_PATH_LIKE_EXTENSIONS)
+
 # ---------------------------------------------------------------------------
 # Body section parsing
 # ---------------------------------------------------------------------------
@@ -86,7 +102,18 @@ def parse_body_section(body: str, section: str) -> str:
 
 
 def parse_related_code_areas(section_text: str) -> list:
-    """Extract backtick-quoted tokens from each list item line in section_text."""
+    """Extract path citations from each list item line in section_text.
+
+    Two sources, in order (TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option
+    A): a backtick-quoted token first (the original, sole behavior), falling back to the line's own
+    stripped bullet text when it looks path-shaped (`_looks_like_path`) but carries no backticks at
+    all. This was found to be roughly half of real citations across the open-ticket corpus --
+    genuine, accurate paths that were simply never backtick-quoted, previously invisible to this
+    function entirely. A backtick-quoted token always wins when present, even on a line that also
+    has other path-shaped text around it (e.g. "See `src/foo.py` for details") -- only the
+    no-backticks-at-all fallback treats the whole stripped line as the citation, and only when it
+    looks like a path; a bare prose bullet with no slash or extension is still correctly ignored.
+    """
     areas = []
     for line in section_text.splitlines():
         line = line.strip()
@@ -95,6 +122,12 @@ def parse_related_code_areas(section_text: str) -> list:
         m = _BACKTICK_RE.search(line)
         if m:
             areas.append(m.group(1))
+            continue
+        # No backticks on this line at all -- fall back to the bullet's own stripped text if it
+        # looks like a path. Strip a leading "- "/"* " list marker first.
+        bullet_text = re.sub(r"^[-*]\s+", "", line).strip()
+        if bullet_text and _looks_like_path(bullet_text):
+            areas.append(bullet_text)
     return areas
 
 
@@ -262,70 +295,102 @@ def collect_docs(root: Path) -> tuple:
 # ---------------------------------------------------------------------------
 
 
+def _build_ticket_entry(root: Path, md_file: Path) -> dict:
+    """Build one ticket entry dict from a single ticket markdown file. Missing frontmatter →
+    warning to stderr, entry still emitted with defaults (backward compat) — same behavior for
+    every ticket location, not just tickets/done/."""
+    text = md_file.read_text(encoding="utf-8")
+    try:
+        fm = extract_frontmatter(text)
+    except ValueError as exc:
+        print(
+            f"WARNING: {md_file.relative_to(root)}: frontmatter parse error: {exc}",
+            file=sys.stderr,
+        )
+        fm = None
+
+    if fm is None:
+        print(
+            f"WARNING: {md_file.relative_to(root)}: missing frontmatter — emitting with defaults",
+            file=sys.stderr,
+        )
+        fm = {}
+
+    body = _strip_frontmatter(text)
+
+    # Derive ticket_id from frontmatter or filename stem.
+    ticket_id = fm.get("ticket_id") or md_file.stem
+
+    # Parse body sections.
+    title = parse_body_section(body, "Title")
+    tier = parse_body_section(body, "Tier")
+    ticket_type = parse_body_section(body, "Type")
+    priority = parse_body_section(body, "Priority")
+    rca_section = parse_body_section(body, "Related Code Areas")
+    related_code_areas = parse_related_code_areas(rca_section)
+
+    # Normalise tags.
+    raw_tags = fm.get("tags", [])
+    tags = raw_tags if isinstance(raw_tags, list) else []
+
+    date_val = fm.get("date", "")
+
+    artifact_files = join_artifact_files(root, ticket_id)
+
+    return {
+        "type": "ticket",
+        "path": str(md_file.relative_to(root)),
+        "ticket_id": ticket_id,
+        "title": title,
+        "tier": tier,
+        "ticket_type": ticket_type,
+        "date": date_val,
+        "related_code_areas": related_code_areas,
+        "artifact_files": artifact_files,
+        "tags": tags,
+    }
+
+
 def collect_tickets(root: Path) -> list:
-    """Walk root/tickets/done/*.md (flat).
+    """Walk every ticket location: root/tickets/done/*.md (flat, unchanged), plus
+    root/tickets/inprogress/*.md (flat) and root/tickets/todos/**/*.md (recursive, since todos/
+    holds both bare tickets and nested epic folders) -- TCK-20260913-TICKET-PREMISE-STALENESS-NOT-
+    PROPAGATED-ON-CLOSE, Option A. `SEQUENCE.md` files (epic-folder metadata, not tickets
+    themselves) are excluded from the todos/ walk.
 
-    Returns list of ticket entry dicts. Missing frontmatter → warning to
-    stderr, entry still emitted with defaults (backward compat).
+    Purely additive relative to the prior done/-only behavior: every previously-emitted entry
+    (path, fields, ordering via sort_entries) is unchanged; this only adds entries for ticket
+    files at locations the registry never indexed before.
+
+    Note: this does NOT extend tickets/done/ itself to walk its own nested epic-folder
+    subdirectories (e.g. tickets/done/some-epic/TCK-*.md) -- that flat-only gap is real (confirmed
+    directly: ~80 such subdirectories exist today) but is a distinct defect from this ticket's own
+    decided scope ("index tickets/todos/ and tickets/inprogress/, not only tickets/done/"), and
+    irrelevant to this ticket's own consumption mechanism specifically, which only needs OPEN
+    ticket coverage (a done ticket has no open premise left to go stale). Recorded here rather than
+    silently fixed or silently dropped; not addressed by this ticket.
+
+    Returns list of ticket entry dicts. Missing frontmatter → warning to stderr, entry still
+    emitted with defaults (backward compat).
     """
-    done_dir = root / "tickets" / "done"
-    if not done_dir.is_dir():
-        return []
-
     entries = []
 
-    for md_file in sorted(done_dir.glob("*.md")):
-        text = md_file.read_text(encoding="utf-8")
-        try:
-            fm = extract_frontmatter(text)
-        except ValueError as exc:
-            print(
-                f"WARNING: {md_file.relative_to(root)}: frontmatter parse error: {exc}",
-                file=sys.stderr,
-            )
-            fm = None
+    done_dir = root / "tickets" / "done"
+    if done_dir.is_dir():
+        for md_file in sorted(done_dir.glob("*.md")):
+            entries.append(_build_ticket_entry(root, md_file))
 
-        if fm is None:
-            print(
-                f"WARNING: {md_file.relative_to(root)}: missing frontmatter — emitting with defaults",
-                file=sys.stderr,
-            )
-            fm = {}
+    inprogress_dir = root / "tickets" / "inprogress"
+    if inprogress_dir.is_dir():
+        for md_file in sorted(inprogress_dir.glob("*.md")):
+            entries.append(_build_ticket_entry(root, md_file))
 
-        body = _strip_frontmatter(text)
-
-        # Derive ticket_id from frontmatter or filename stem.
-        ticket_id = fm.get("ticket_id") or md_file.stem
-
-        # Parse body sections.
-        title = parse_body_section(body, "Title")
-        tier = parse_body_section(body, "Tier")
-        ticket_type = parse_body_section(body, "Type")
-        priority = parse_body_section(body, "Priority")
-        rca_section = parse_body_section(body, "Related Code Areas")
-        related_code_areas = parse_related_code_areas(rca_section)
-
-        # Normalise tags.
-        raw_tags = fm.get("tags", [])
-        tags = raw_tags if isinstance(raw_tags, list) else []
-
-        date_val = fm.get("date", "")
-
-        artifact_files = join_artifact_files(root, ticket_id)
-
-        entry = {
-            "type": "ticket",
-            "path": str(md_file.relative_to(root)),
-            "ticket_id": ticket_id,
-            "title": title,
-            "tier": tier,
-            "ticket_type": ticket_type,
-            "date": date_val,
-            "related_code_areas": related_code_areas,
-            "artifact_files": artifact_files,
-            "tags": tags,
-        }
-        entries.append(entry)
+    todos_dir = root / "tickets" / "todos"
+    if todos_dir.is_dir():
+        for md_file in sorted(todos_dir.rglob("*.md")):
+            if md_file.name == "SEQUENCE.md":
+                continue
+            entries.append(_build_ticket_entry(root, md_file))
 
     return entries
 
