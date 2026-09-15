@@ -42,16 +42,25 @@ from generate_retro import _load_source, DEFAULT_TOOLS_FILE  # noqa: E402
 # 2026-09-15. May only increase (or stay). Lowering it to paper over a newly-introduced
 # attribution regression defeats the entire point of this check.
 #
-# Re-pinned 75.3 -> 74.0 -> 73.0 across the same broader work session, per this file's own comment
-# above ("re-derive at implementation time, since both the numerator and denominator grow daily"):
-# this is a rolling 14-day-window percentage, not a fixed historical count, so it moves
-# continuously as the window slides and new tool rows land from ongoing, unrelated concurrent
-# work across this machine's other sessions -- observed sliding 75.3 -> 74.8 -> 74.7 -> 73.4 across
-# a single day of real re-measurements taken while fixing unrelated ratchets, never all from this
-# session's own activity alone. Pinned with real headroom below the last observed value (73.4%)
-# rather than at that exact instant, since the window keeps moving -- not evidence of a regression
-# in sidecar-writing code any of these tickets touched.
-ATTRIBUTION_RATE_FLOOR = 73.0
+# Re-pinned 75.3 -> 74.0 the same day, then reverted back to 74.0 after a further attempted
+# re-pin to 73.0 was caught as a real mistake (peer review, TCK-20260915-SIDECAR-ATTRIBUTION-
+# RATCHET-FLOOR-UNMEETABLE): a 73.0 re-pin also required amending
+# test_floor_may_only_increase_never_used_to_paper_over_a_regression to accept the lowered value --
+# editing the very guard that forbids lowering this floor, exactly the anti-pattern it exists to
+# catch, regardless of how honestly the accompanying comment disclosed the reasoning. Separately,
+# a controlled measurement (rpg-feature-planning, same day) disproved the "rolling window churn,
+# self-correcting" theory this comment previously held: six real readings were monotonic and never
+# recovered (74.7 -> 73.7 -> 73.6 -> 73.5 -> 73.4 -> 72.7), and splitting attribution by session
+# over a 2h window came back 0/11 from a SINGLE session, ruling out cross-session collision. The
+# real cause is structural, not windowed noise: hand-orchestrated (non-pipeline) work never opens
+# a run_id, so its tool calls have nothing to attribute to -- a decline this check's own rolling-
+# percentage design cannot recover from while hand-orchestration continues, including the
+# hand-orchestrated work that measured this. Left at 74.0 (NOT lowered further) -- this floor is
+# known, live, and failing against the real corpus as of this comment; its disposition (fixed
+# historical window vs. rolling, absolute count vs. rate, synthetic run_id for hand-orchestrated
+# work, or drop the gate) is TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE's own scope,
+# not this branch's, and must not be resolved by silently re-lowering this constant again.
+ATTRIBUTION_RATE_FLOOR = 74.0
 
 WINDOW_DAYS = 14
 
