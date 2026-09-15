@@ -275,3 +275,26 @@ correctly deferred to child tickets 2–4. `tests/unit/tools/` is already wired 
 "Unit · infra / observability" CI fast lane (verified directly against `.github/workflows/test.yml`
 before considering this ticket closeable — no new CI-wiring gap, unlike an earlier ticket this same
 session that added a brand-new top-level test directory).
+
+**This ticket's own CI run surfaced two real, undeclared local-state dependencies — the same
+pattern this registry exists to make visible, just one layer down in the tooling that builds it,
+not in the simulation itself:** (1) `Makefile`'s `PYTHON3 :=` resolved a bare `python3` fallback
+via `[ -x "$$py" ]`, which only works because a hardcoded absolute dev-machine path happens to
+exist on every machine this was run from locally — broken on CI, where none of the hardcoded paths
+exist and the bare-name fallback needed `$PATH` resolution (`command -v`) instead. (2)
+`tools/mechanism_registry_graphify_check.py` read `graphify-out/graph.json` unconditionally, which
+only works because that gitignored, uncommitted directory happens to exist locally wherever
+`graphify update` has been run — absent on a fresh CI checkout, where the script crashed instead
+of honoring its own documented "report, never fail" contract. Both were real, silent, and
+non-obvious until something ran in an environment without the ambient local state — exactly the
+"depends on something nobody declared" shape. Neither was hypothetical: both were reproduced
+directly (a simulated no-dev-paths shell for the first, physically moving `graphify-out/` aside
+and back for the second) before being called findings, not just suspected.
+
+**One root cause, two failure sites, worth stating explicitly so a future reader doesn't go looking
+for two separate causes:** `test_mechanism_registry.py`'s `test_make_target_validates_real_registry`
+has nothing to do with graphify and still failed alongside
+`test_mechanism_registry_graphify_check.py`'s own tests, because `make mechanism-registry-validate`
+(Step 5's own wiring) runs the graphify-check script as its second command — that script's crash
+failed the whole `make` target, and therefore every test that invokes it, regardless of what that
+test itself is about.
