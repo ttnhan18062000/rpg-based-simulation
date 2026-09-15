@@ -121,6 +121,8 @@ explicitly flagged as out of scope for the sentiment build and never investigate
   zero downstream consumers)
 - `TCK-20260915-COMBAT-ENGAGEMENT-4X-MEASUREMENT-NO-LONGER-REPRODUCES` (filed alongside it — the
   original 4.1x combat-volume claim used to justify enabling this feature does not reproduce today)
+- `TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` (candidate 4, found here, filed
+  separately — a real bug, measured to be a minor contributor not the primary blocker)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2 — the sentiment mechanism
@@ -200,6 +202,31 @@ same-faction in the earlier sample) — still open, may or may not share a root 
 `crowded_frontier` finding above; the mechanisms investigated here (`is_hostile_compat`, spatial
 range) both explicitly *exclude* same-faction pairs by construction, so that anomaly needs its own
 trace through target-selection order, not just hostility classification.
+
+**2026-09-15, candidate 4 (`SensoryFilter.filter_saliency`'s legacy-enum hostility scoring) —
+found via code read, then directly measured and falsified as the primary blocker.**
+`SensoryFilter.filter_saliency` (`src/engine/cognition.py:44`) scores hostility via
+`ent.identity.faction != subject.identity.faction` — the raw, 4-value legacy `Faction` enum field,
+not `EntityIdentityResolver`'s resolved `faction_id`. Confirmed by direct probe against real
+`crowded_frontier` entities: the legacy enum collapses `bandit_company`, `goblin_warband`, and
+`orc_clan` (3 genuinely distinct, mutually-hostile real factions, confirmed hostile by candidate 1's
+own catalog check) into a single `Faction.MONSTER_HORDE` bucket, so the `!=` check — and the +200/
++500-nemesis/+grudge saliency bonus that depends on it — never fires between them. This traces to
+the same root `EntityIdentityResolver.resolve()` was built to work around
+(`TCK-20260809-COMBAT-HOSTILE-PAIRS-NEVER-ENGAGE`'s own fix never touched this consumer, since
+`filter_saliency` reads the raw field directly rather than going through the resolver).
+
+**Directly measured whether this actually drops real hostile targets from the saliency cut in
+practice** (2000-tick instrumented run, `crowded_frontier`, comparing the raw pre-saliency neighbor
+set against the post-`max_targets=5` result every tick a real hostile target was present): of 617
+ticks where a real hostile target existed in range, it survived the saliency cut **614 times
+(99.5%)** and was dropped only **3 times (0.5%)**. **This candidate is a real, independently
+disclosable correctness bug, but not the operative blocker for this investigation** — worlds this
+small rarely have more than `max_targets=5` real neighbors in range at once, so the missing
+hostility bonus almost never changes which entities make the cut. Filed as its own small, scoped
+finding rather than pursued further here (see Related Tickets) — the search for the real blocker
+continues, now with confirmation that hostile targets DO reach `tactical.py`'s own (correctly-
+resolved) hostiles-loop in the overwhelming majority of real opportunities.
 
 **2026-09-15, new lead from `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`'s
 own measurement — a strong discriminator for this investigation, not yet followed up here.**

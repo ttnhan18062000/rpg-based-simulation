@@ -8,9 +8,23 @@ tags: [simulation-quality, audit, architecture]
 
 # Plan — Simulation Execution Census
 
-**Status, scoped 2026-09-13.** Proposes an automated measurement of *which simulation code actually
-has an effect in a real run*, to replace the manual auditing that has been finding these defects
-one at a time. Scoped as an initiative, not a ticket. Nothing here is implemented.
+**Status, scoped 2026-09-13, built 2026-09-15.** Proposes an automated measurement of *which
+simulation code actually has an effect in a real run*, to replace the manual auditing that has
+been finding these defects one at a time. `tools/execution_census.py` implements §7's design
+(reachability axis only — see §7.3's own effectiveness-axis scoping note). On-demand only; never
+gates.
+
+**A real finding from the first build, not anticipated at scoping time**: the very first
+`stability-check` run (`crowded_frontier`, 300 ticks, seed 42, run twice) reported **UNSTABLE** —
+382 files showed differing branch-arc coverage between two identical runs, with the kernel's own
+wall-clock watchdog tripping mid-run in both (`Tick N exceeded budget`). This is real, first-hand
+confirmation of §4's own concern ("if [the throttle non-determinism] stays deferred, this
+initiative needs to know whether the census is stable"), not just a documented risk — coverage.py's
+own instrumentation overhead appears sufficient to trip the throttle more/differently across runs
+of the same world/seed. **Census results are not yet trustworthy until
+`TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2` is resolved or worked around**; every
+real corpus-run report should be preceded by a `stability-check` on at least one representative
+world, and a report generated while unstable should be treated as directional at best.
 
 **The problem in one sentence:** a mechanism can be unit-tested, parity-verified, registered in the
 pipeline, and executed every tick, while never once changing anything — and we currently have no
