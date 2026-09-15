@@ -15,7 +15,7 @@ tags: [registry, process-improvement]
 Closing a ticket updates only its own file and the working log — nothing checks whether the fix just invalidated another open ticket's stated premise
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard
@@ -240,3 +240,55 @@ findings doc Finding 6; the 2026-08-04 gap audit's 2026-09-14 deferred-check add
 own unresolved ±2 Review-count discrepancy, preserved rather than smoothed over). This ticket is
 **not** implementing anything and is **not** being closed as fully resolved — left `BLOCKED`,
 pending the peer/user review its own AC requires before any of the above becomes a real ticket.
+
+## Decision — 2026-09-15 (user, via `agent-working-design`)
+
+**This ticket's AC required a peer/user review before any implementation. That review has now
+happened, and the decision is Option A: fix the extraction regex and extend registry indexing.**
+Status moved `BLOCKED` → `OPEN`. It is ready to implement.
+
+### What was chosen
+
+Repair the registry so it can answer the question, rather than building a second scanner beside it:
+
+1. **Widen `generate_registry.py::parse_related_code_areas()`** to recognise plain `- path` bullets,
+   not only backtick-quoted tokens. Today it matches solely via
+   `_BACKTICK_RE = re.compile(r"`([^`]+)`")` (`generate_registry.py:66`), so a bullet carrying a
+   real, correct path without backticks yields nothing.
+2. **Extend the registry's ticket walk** to index `tickets/todos/` and `tickets/inprogress/`, not
+   only `tickets/done/` (Measurement 1's gap, unaffected by the Measurement 2 correction).
+
+### Why Option A over Option B (close-time full-text sweep)
+
+- **The sparsity that argued against it was an artefact, not a fact.** Measurement 2's original
+  53.4%-empty figure measured what the *current extractor* could see, not what the corpus contains.
+  True content population is **96.6%** (56 of 58 open tickets), independently reproduced from a
+  different angle (57 of 59 by a path-shaped test ignoring backticks entirely, with only 28 of 59
+  visible to the backtick-only parser). The field is well-populated; the reader is too strict.
+- **The fix is bounded.** `parse_related_code_areas` has exactly **one** production caller
+  (`generate_registry.py:306`) plus three test call sites. This is a regex widening, not a refactor.
+- **Accuracy where populated is already excellent** — 79 of 80 backtick-extracted citations resolve
+  to real files; the single miss is a templated glob placeholder, not a stale reference. So the
+  index will be trustworthy once it can see the data.
+- **Option B builds and maintains a second scan path** outside the registry to work around a defect
+  inside it. Cheaper today, more surface forever.
+
+### What this does NOT decide
+
+- **The mechanism that consumes the index is still open.** This decision makes
+  `Related Code Areas` queryable at ~96% coverage; it does not itself specify what runs at
+  close time. Whether that is a back-reference sweep, an advisory report, or a gate is the
+  implementer's design call, informed by what the repaired index can actually do.
+- **Option C (documented convention only) was not chosen**, but nothing here prevents adding the
+  convention alongside — the three cases this ticket documents were all caught by re-verification,
+  and that practice should be encouraged regardless.
+
+### Constraint carried from this batch
+
+Whatever detector emerges **must ratchet from a measured baseline, never assert zero**. The
+open-ticket corpus contains real, unfixable historical drift, and a zero-assertion is unlandable —
+the constraint established repeatedly across `TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS` and
+the `TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC` children.
+
+Re-derive every number above at implementation time rather than trusting it; the corpus grows, and
+two of the figures in this ticket's own history were wrong when first written.
