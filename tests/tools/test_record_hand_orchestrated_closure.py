@@ -319,3 +319,91 @@ class TestWorkingLogCsvAppended:
         assert "working_log.csv" in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
         assert (tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl").exists()
+
+
+class TestDuplicateWorkingLogRowRefused:
+    """TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE Defect A: calling
+    append_working_log_row() directly and then this script for the same ticket close previously
+    wrote two rows. This script now refuses the second write instead."""
+
+    def _run(self, args, tmp_path):
+        return subprocess.run(
+            [sys.executable, str(_RECORD_PATH), *args],
+            capture_output=True, text=True, cwd=tmp_path,
+        )
+
+    def _seed_working_log(self, tmp_path):
+        log_path = tmp_path / "tickets" / "working_log.csv"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text(_WORKING_LOG_HEADER)
+        return log_path
+
+    def test_calling_append_then_closure_tool_for_same_ticket_refuses_duplicate_and_exits_nonzero(
+        self, tmp_path
+    ):
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
+        from working_log_writer import append_working_log_row  # noqa: E402
+
+        log_path = self._seed_working_log(tmp_path)
+        append_working_log_row(
+            "2026-09-14T00:00:00Z", "TCK-DUP-TEST", "Same title", "DONE", "First write.",
+            "stored_artifacts/TCK-DUP-TEST", path=log_path,
+        )
+
+        result = self._run(
+            ["--ticket-id", "TCK-DUP-TEST", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             "--title", "Same title", "--log-summary", "Second write via the closure tool."],
+            tmp_path,
+        )
+
+        assert result.returncode != 0
+        assert "TCK-DUP-TEST" in result.stderr
+        assert "already has a row" in result.stderr
+
+        rows = list(csv.reader(log_path.read_text().splitlines()))
+        assert len(rows) == 2, f"expected exactly 1 data row (no duplicate written), got: {rows}"
+
+    def test_run_and_event_records_still_written_even_when_working_log_append_is_refused(
+        self, tmp_path
+    ):
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
+        from working_log_writer import append_working_log_row  # noqa: E402
+
+        log_path = self._seed_working_log(tmp_path)
+        append_working_log_row(
+            "2026-09-14T00:00:00Z", "TCK-DUP-MONITORING", "Same title", "DONE", "First write.",
+            "stored_artifacts/TCK-DUP-MONITORING", path=log_path,
+        )
+
+        result = self._run(
+            ["--ticket-id", "TCK-DUP-MONITORING", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             "--title", "Same title", "--log-summary", "Second write via the closure tool."],
+            tmp_path,
+        )
+
+        assert result.returncode != 0
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        assert (tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl").exists()
+
+    def test_different_title_same_ticket_id_is_not_treated_as_a_duplicate(self, tmp_path):
+        """A different-title reopen for the same ticket_id is a different defect class
+        (TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN's own concern),
+        not this ticket's dual-writer duplicate -- must not trip this guard."""
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
+        from working_log_writer import append_working_log_row  # noqa: E402
+
+        log_path = self._seed_working_log(tmp_path)
+        append_working_log_row(
+            "2026-09-14T00:00:00Z", "TCK-REOPEN-TEST", "Original title", "BLOCKED", "First write.",
+            "stored_artifacts/TCK-REOPEN-TEST", path=log_path,
+        )
+
+        result = self._run(
+            ["--ticket-id", "TCK-REOPEN-TEST", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
+             "--title", "Different title on reopen", "--log-summary", "Reopened and closed again."],
+            tmp_path,
+        )
+
+        assert result.returncode == 0, result.stderr
+        rows = list(csv.reader(log_path.read_text().splitlines()))
+        assert len(rows) == 3

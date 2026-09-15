@@ -160,3 +160,80 @@ one-time monthly percentages:
      ticket did not address.
 3. **A same-day or single-week re-check is not a valid deferred-check result** for item 2 above —
    report "not enough data yet," not a false negative or false positive.
+
+---
+
+## Deferred check result — 2026-09-14 (`agent-working-design`)
+
+This document's own "Deferred check" (item 2 of the 2026-08-05 update) asked a future session to
+re-run the Review/Verify failure query after several weeks of real runs and compare against the
+pre-fix baseline window of **2026-07-20 → 2026-08-05 (15 Review, 25 Verify failures)**. Six weeks
+elapsed and nobody had run it. Run now, using the same method: `phase IN ('Review','Verify')`,
+`status='failed'`, read directly from the sharded `agent-monitoring/data/*/events.jsonl` corpus.
+
+**Method validation first, because the numbers only mean something if the method reproduces.**
+Re-counting this document's own baseline window returns **Verify 25 — an exact match** — and
+**Review 17, against the 17 published here as 15**. That two-failure discrepancy is unexplained;
+it most likely reflects a window-boundary or status-vocabulary difference between this query and
+the original `monitoring.db` one. It is recorded rather than smoothed over, and it means every
+Review figure below carries roughly ±2 uncertainty. Verify figures do not.
+
+`monitoring.db` was deliberately **not** used: it was last built 2026-09-13 and this document's own
+method notes it was 1.3% stale when first queried. The JSONL shards are the source of truth.
+
+### Headline rates (context only — this document explicitly rejects a coarse "any failure" metric)
+
+| Month | Review | Verify |
+|---|---|---|
+| 2026-06 | 3/110 = 2.7% | 0/117 = 0.0% |
+| 2026-07 | 50/257 = 19.5% | 61/278 = 21.9% |
+| 2026-08 | 71/344 = 20.6% | 78/467 = 16.7% |
+| 2026-09 | 10/97 = 10.3% | 12/229 = 5.2% |
+
+The 2026-06 and 2026-07 rows reproduce this document's original Part 1 tables exactly.
+
+### The comparison this document actually asked for
+
+Equivalent-length window, **2026-08-29 → 2026-09-14 (17 days)** vs the 17-day baseline:
+
+| Phase | Baseline (2026-07-20→08-05) | Now (2026-08-29→09-14) |
+|---|---|---|
+| Review | 15 published / 17 reproduced | **13** |
+| Verify | 25 | **18** |
+
+### Sub-pattern classification (done by reading `summary` text, per this document's own instruction)
+
+**Review — the root cause is NOT closed.** At least 5 of 13 are still the exact pattern
+`planner.md`'s fix targeted: a factual claim about existing code asserted without verification —
+"plan falsely claimed `test_docs_coverage_hotfix_is_na` stays unmodified"; "Step 5 rests on a
+disproven claim (the instruction already exists since 2026-06-12)"; "investigation.md undercounts
+the dict as 10 entries"; "Step 6 misattributes INFRA-278"; "taxonomy described as 4 categories but
+only 3 listed". The volume fell; the mechanism did not.
+
+**Verify — the targeted sub-patterns closed, and the failure mode moved.** AC-checkbox-miss (was
+6), stale-Status (was 5) and Completion-Summary-gap (was 4) are now close to absent. But **13 of
+18** failures in the new window are **`Files Changed` / sibling-path disclosure omissions** — a
+pattern `implementer.md`'s fix never addressed. Several are self-caught pre-dispatch by the static
+`docs_to_update_coverage` check, which is the gate working; the underlying disclosure gap is not.
+
+### Verdict
+
+A real but partial improvement. Verify's three named sub-patterns are genuinely closed — that half
+of the 2026-08-05 fix worked. Review's root cause (unverified factual claims in `plan.md`) is
+still live at materially the same shape, and Verify's failures have relocated to a class nobody
+has tried to fix yet. Reporting this as "rates roughly halved" would be true and misleading.
+
+**This is the same defect described in
+`docs/plans/agent_infrastructure/reachability_verification_findings.md` (Finding 6) and scoped in
+`TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE`.** Three independent documents now
+describe one mechanism: claims asserted without running the command that would settle them. The
+session writing this addendum produced seven such claims itself during the 2026-09-11→14 batch,
+every one caught by another party re-deriving rather than by any gate.
+
+### Data-quality caveats found while running this
+
+- **55 event rows carry a `None` timestamp** and are invisible to any time-windowed query,
+  including this one. Mostly June-era `TCK-20260618/19` audit runs.
+- **`agent-monitoring/data/unknown-week/` holds 34 rows** — that shard is where records with no
+  derivable `ts` land (29 of them `None`). Any consumer assuming one `ts` shape drops them
+  silently. Not fixed here; recorded so the next query does not rediscover it.

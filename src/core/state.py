@@ -717,6 +717,38 @@ class GroupRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class FactionSentiment:
+    """A first-class directed faction-to-faction relationship record (E53-sentiment).
+
+    Mirrors SocialBond (src/core/models/social.py) exactly in shape -- same field set,
+    same [-1,1]/[0,1] ranges -- deliberately omitting SocialBond's own `role` field:
+    FactionState.diplomatic_relations[target] already plays that categorical role at
+    faction scope (docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md §3.2.1).
+    """
+    target_faction_id: str
+    familiarity: float = 0.0  # Interaction depth (0.0 to 1.0)
+    sentiment: float = 0.0    # Bias/liking, hostile<-neutral->friendly (-1.0 to 1.0)
+    last_interaction_tick: int = 0
+
+    def to_canonical_dict(self) -> Dict[str, Any]:
+        return {
+            "target_faction_id": self.target_faction_id,
+            "familiarity": self.familiarity,
+            "sentiment": self.sentiment,
+            "last_interaction_tick": self.last_interaction_tick,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "FactionSentiment":
+        return cls(
+            target_faction_id=d["target_faction_id"],
+            familiarity=float(d.get("familiarity", 0.0)),
+            sentiment=float(d.get("sentiment", 0.0)),
+            last_interaction_tick=int(d.get("last_interaction_tick", 0)),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class FactionState:
     """Authoritative durable state for a named faction (E53 family)."""
     faction_id: str
@@ -726,6 +758,17 @@ class FactionState:
     active_doctrines: Tuple[str, ...] = ()
     military_strength: float = 1.0
     tension_level: float = 0.0
+    faction_sentiments: Dict[str, FactionSentiment] = field(default_factory=dict)  # target_faction_id -> FactionSentiment
+    # Directed, per-rival tension (target_faction_id -> [0.0, 1.0]), distinct from `tension_level`
+    # above: `tension_level` is a genuinely ambient, per-faction scalar (world-compile seed via
+    # FactionSpec.initial_tension_level, RESOURCE_DEPLETED stress, faction_decision.py's
+    # DEFEND_BORDER/TRADE_ROUTE/COMMISSION_QUEST goal-priority reads) with no natural pairwise
+    # meaning. `pairwise_tension` is what DiplomaticStateMachine.compute_transitions() reads for
+    # its pair_tension proxy -- it previously reused `tension_level` for this, which meant one
+    # faction's ambient stress or its tension with a single real rival applied identically to
+    # every one of its other relationships (TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION:
+    # confirmed live -- one HOSTILE pair cascaded into blanket HOSTILE with all other factions).
+    pairwise_tension: Dict[str, float] = field(default_factory=dict)
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -739,6 +782,8 @@ class FactionState:
             "active_doctrines": list(self.active_doctrines),
             "military_strength": self.military_strength,
             "tension_level": self.tension_level,
+            "faction_sentiments": {k: v.to_canonical_dict() for k, v in sorted(self.faction_sentiments.items())},
+            "pairwise_tension": dict(sorted(self.pairwise_tension.items())),
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
@@ -753,6 +798,10 @@ class FactionState:
             active_doctrines=tuple(d.get("active_doctrines", [])),
             military_strength=float(d.get("military_strength", 1.0)),
             tension_level=float(d.get("tension_level", 0.0)),
+            faction_sentiments={
+                k: FactionSentiment.from_dict(v) for k, v in d.get("faction_sentiments", {}).items()
+            },
+            pairwise_tension={k: float(v) for k, v in d.get("pairwise_tension", {}).items()},
         )
 
 

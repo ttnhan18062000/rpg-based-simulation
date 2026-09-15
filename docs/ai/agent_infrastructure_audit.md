@@ -84,3 +84,31 @@ Ordered by leverage — cheapest fix with the most trust gained comes first.
 | Mechanics Bible chapters | 6 | `docs/mechanics/` |
 | Doc registry entries | 912 | `docs/REGISTRY.yaml` |
 | CI workflows | 2 | `.github/workflows/` |
+
+---
+
+## Open-recommendation re-check — 2026-09-14 (`agent-working-design`)
+
+Both recommendations this audit left open were re-verified against the working tree today rather
+than relayed from the audit's own text. **Both are still open**, ten weeks after the audit.
+
+**Recommendation 1 — "Log hook near-misses, not just hook fires."** Still open, unchanged.
+`.claude/settings.json` contains **4** `additionalContext` emissions and **0** deny/block
+mechanisms (no `permissionDecision`, no `"deny"`). The hooks still nudge; nothing gates. This
+matches the 2026-07-20 correction already recorded above, which reversed an earlier
+mistaken "closed" reading — that correction still holds.
+
+**Recommendation 4 — "Prune or scope the skill catalog."** Still partially open, and the catalog
+has grown rather than shrunk: **22 skills** now, against the 14 this audit counted and the 16 noted
+in July. The two skills this audit named specifically, `frontend-design` and `prompt-builder`, are
+both still present and were never re-evaluated after `TCK-20260705-SIX-SKILLS-INVESTIGATION`
+excluded them from its scope.
+
+The other recommendations' closures recorded above were not re-verified in this pass — absence of a
+note here means "not checked", not "still closed".
+
+Related: this audit's sibling, `agent_definition_gap_audit_2026-08-04.md`, carried a deferred check
+that was six weeks overdue. It has now been run; see that document's own 2026-09-14 addendum. Its
+finding bears on this audit's "determinism of judged gates" score (6.5, the lowest category here):
+the Review gate's root cause — planners asserting unverified facts about existing code — is
+measurably still live.

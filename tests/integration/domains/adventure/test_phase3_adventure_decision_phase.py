@@ -284,9 +284,12 @@ def test_adventure_decision_does_not_discard_earlier_phase_updates():
 
     # Two factions with tension high enough that diplomatic_state_machine.compute_transitions()
     # produces a real NEUTRAL -> TENSE FactionUpdate for this pair (threshold: pair_tension > 0.4).
+    # pairwise_tension (directed, per-rival), not tension_level (an ambient per-faction scalar
+    # compute_transitions() no longer reads -- TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION
+    # fixed a real cascade defect where the ambient scalar was misread as pairwise tension).
     factions = {
-        "alpha": FactionState(faction_id="alpha", tension_level=0.5),
-        "beta": FactionState(faction_id="beta", tension_level=0.5),
+        "alpha": FactionState(faction_id="alpha", pairwise_tension={"beta": 0.5}),
+        "beta": FactionState(faction_id="beta", pairwise_tension={"alpha": 0.5}),
     }
     hero = EntityGenerator(seed=1).spawn_hero((10.0, 10.0))
 

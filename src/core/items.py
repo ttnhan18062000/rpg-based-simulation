@@ -80,6 +80,13 @@ class ItemRegistry:
         ),
         "stone": ItemDefinition(
             id="stone", name="Stone", kind=ItemKind.MATERIAL, weight=1.0
+        ),
+        # World boss's own signature loot (src/world/boss.py). Kept in sync with the
+        # authoritative catalog entry in data/content/world/items.yaml so this default
+        # dict stays correct for any code path that runs without a catalog present
+        # (TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY).
+        "ancient_core": ItemDefinition(
+            id="ancient_core", name="Ancient Core", kind=ItemKind.MATERIAL, weight=1.0, value=500
         )
     }
 

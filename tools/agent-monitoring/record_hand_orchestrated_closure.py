@@ -39,6 +39,15 @@ This call also appends one row to `tickets/working_log.csv` (`--title`/`--log-su
 `--artifacts-path`, which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
 "none (hotfix — no staging artifacts)" for hotfix) -- do not append that row by hand separately
 when using this wrapper, or the ticket will get a duplicate working_log entry.
+
+As of `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`, that warning is also
+enforced, not just documented: before appending, this script checks whether
+`tickets/working_log.csv` already has a row for this exact `(ticket_id, title)` pair (via the
+tolerant parser, `working_log_parser.parse_working_log`) and refuses -- prints an `ERROR:` to
+stderr naming the existing row and exits non-zero -- rather than silently writing a duplicate. The
+run/event monitoring writes above still happen either way; only the working-log append is
+guarded. This is a deliberate "fail loudly" choice over a silent idempotent skip -- see that
+ticket's Implementation Notes for the reasoning.
 """
 from __future__ import annotations
 
@@ -56,6 +65,32 @@ from vocabulary import CANONICAL_TIERS  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
+from working_log_parser import parse_working_log  # noqa: E402
+
+
+def _existing_row_for(csv_path: Path, ticket_id: str, title: str) -> dict | None:
+    """Read-only lookup: the first kept (non-ambiguous) row matching (ticket_id, title) in
+    csv_path, else None. Uses the tolerant parser (working_log_parser.parse_working_log), not a
+    raw csv.reader -- a naive reader can misclassify known-malformed historical rows, and this
+    lookup must never produce a false negative (missing a real duplicate) or a false positive (an
+    ambiguous/malformed row wrongly read as a match) because of that.
+
+    Does not open csv_path in a write/append mode, so it is invisible to
+    tests/tools/test_working_log_writer.py's sole-writer AST guard -- that guard scans for
+    write-mode opens against tickets/working_log.csv, and this function only reads.
+    """
+    if not csv_path.exists():
+        return None
+    result = parse_working_log(csv_path)
+    for parsed in result.rows:
+        if parsed.record is None:
+            continue
+        if (
+            parsed.record.get("ticket_id", "").strip() == ticket_id
+            and parsed.record.get("title", "").strip() == title
+        ):
+            return parsed.record
+    return None
 
 
 def build_records(
@@ -202,6 +237,22 @@ def main() -> None:
             if args.tier == "hotfix"
             else f"stored_artifacts/{args.ticket_id}"
         )
+
+    working_log_path = Path("tickets/working_log.csv")
+    existing = _existing_row_for(working_log_path, args.ticket_id, args.title)
+    if existing is not None:
+        print(
+            f"ERROR: {working_log_path} already has a row for (ticket_id={args.ticket_id!r}, "
+            f"title={args.title!r}) at timestamp {existing.get('timestamp')!r} -- refusing to "
+            "append a duplicate. This is the double-write shape append_working_log_row() and "
+            "this script produce when both are called for the same ticket close "
+            "(TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE): if you "
+            "already called append_working_log_row() directly for this ticket, do not also run "
+            "this script for the working-log append -- it already performs that append "
+            "internally. The run/event monitoring records above were still written.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     try:
         append_working_log_row(

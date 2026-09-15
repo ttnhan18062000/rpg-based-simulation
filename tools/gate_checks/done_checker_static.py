@@ -24,6 +24,7 @@ Mirrors `tools/parity_ledger_scan.py` / `tools/registry_query.py`'s shape: plain
 tuple returns, no argparse/CLI — consumed exclusively via `python3 -c "..."`.
 """
 
+import argparse
 import csv
 import json
 import re
@@ -44,8 +45,8 @@ from validate_frontmatter import (  # noqa: E402
     extract_frontmatter,
     check_ticket_location_consistency,
 )
-from generate_registry import generate_registry  # noqa: E402
-from ticket_field_values import check_ticket_field_values  # noqa: E402
+from generate_registry import generate_registry, parse_body_section, _strip_frontmatter  # noqa: E402
+from ticket_field_values import check_ticket_field_values, TIER_VALUES  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
 
@@ -382,7 +383,7 @@ def _bullet_blocks(section_text: str) -> list[tuple[str, str]]:
 
 
 def _is_none_section(section_text: str) -> bool:
-    """True if section_text should be treated as "no docs/ paths flagged."
+    r"""True if section_text should be treated as "no docs/ paths flagged."
 
     Two cases both count:
     1. An exact recognized none-phrase (`_DOCS_NONE_PHRASES`, case-insensitive,
@@ -972,3 +973,85 @@ def run_finalize_selfcheck(ticket_id: str, tier: str) -> list[dict]:
         {"condition": name, "status": status, "evidence": evidence}
         for name, (status, evidence) in checks
     ]
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point (TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE)
+#
+# Purely additive. Every existing consumer (implement-ticket.js's `python3 -c` one-liners,
+# tests/tools/test_done_checker_static.py) imports and calls the functions above directly and
+# never touches this block or `__name__`. This exists so a hand-orchestrating session -- which has
+# no `python3 -c` one-liner handed to it the way the formal pipeline does -- can actually run these
+# checks instead of hitting silence (see this ticket's investigation.md for the reproduced symptom
+# and why silence read as a clean pass).
+# ---------------------------------------------------------------------------
+
+
+def _resolve_tier(ticket_id: str, tier_override: str | None) -> str:
+    """Auto-detect `## Tier` from the ticket file (tickets/inprogress/, else tickets/done/) unless
+    `tier_override` is given. Falls back to "standard" if the file can't be found or the field
+    can't be parsed -- tier resolution alone must never crash the CLI."""
+    if tier_override:
+        return tier_override
+    for candidate in (
+        Path(f"tickets/inprogress/{ticket_id}.md"),
+        Path(f"tickets/done/{ticket_id}.md"),
+    ):
+        if candidate.exists():
+            body = _strip_frontmatter(candidate.read_text(encoding="utf-8"))
+            value = parse_body_section(body, "Tier")
+            if value in TIER_VALUES:
+                return value
+    return "standard"
+
+
+def _render_results(label: str, results: list[dict]) -> bool:
+    """Print one readable line per condition; return True if any of them FAILed."""
+    any_fail = False
+    for r in results:
+        if r["status"] == "FAIL":
+            any_fail = True
+        print(f"[{label}] {r['condition']}: {r['status']} — {r['evidence']}")
+    return any_fail
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Run done-checker's deterministic static pre-checks by hand for a given "
+        "ticket. Prints one readable PASS/FAIL/NA line per condition and exits non-zero if any "
+        "condition FAILed."
+    )
+    parser.add_argument("--ticket-id", required=True)
+    parser.add_argument(
+        "--tier", choices=sorted(TIER_VALUES), default=None,
+        help="Auto-detected from the ticket's own '## Tier' body field if omitted.",
+    )
+    parser.add_argument(
+        "--part", choices=["precheck", "finalize", "both"], default="both",
+        help="precheck = Part A (pre-Finalize, Verify-phase conditions); "
+        "finalize = Part B (post-Finalize migration self-check, includes "
+        "working_log_exactly_one_row); both = run both aggregates (default).",
+    )
+    parser.add_argument(
+        "--start-ts", default=None,
+        help="Only used by --part precheck/both, for the data_runs_clean condition.",
+    )
+    args = parser.parse_args(argv)
+
+    tier = _resolve_tier(args.ticket_id, args.tier)
+    any_fail = False
+    if args.part in ("precheck", "both"):
+        any_fail = _render_results(
+            "precheck", run_static_precheck(args.ticket_id, tier, args.start_ts)
+        ) or any_fail
+    if args.part in ("finalize", "both"):
+        any_fail = _render_results(
+            "finalize", run_finalize_selfcheck(args.ticket_id, tier)
+        ) or any_fail
+
+    print(f"RESULT: {'FAIL' if any_fail else 'PASS'} for {args.ticket_id} (tier={tier})")
+    return 1 if any_fail else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
