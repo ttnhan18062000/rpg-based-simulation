@@ -452,7 +452,7 @@ flowchart TD
     subgraph THINK["THINK — every tick"]
       direction TB
       PER["Perceive<br/>budget = 10 signals, flat for everyone"]
-      SELF["Self-Model<br/>needs, confidence, stress from HP/gear gaps"]
+      SELF["Self-Model<br/>needs, confidence, stress from HP/gear gaps — built correctly, GATED OFF by default"]:::gated
       BEL["Belief Cycle<br/>rumors vs. observations, contradiction decay"]
       MEM["Causal & Spatial Memory<br/>why an action failed — ORPHANED, 0 callers"]:::bug
       GOAL["Goal Hierarchy<br/>Directive → Project → Objective → Action"]
@@ -469,12 +469,12 @@ flowchart TD
     subgraph ACT["ACT — once readiness = 100"]
       direction TB
       RDY["Readiness Gate — ATB<br/>flat 10.0/tick for every entity, ignores AGI"]
-      ENG["Pre-Combat Engagement<br/>GATED OFF by default"]:::gated
+      ENG["Pre-Combat Engagement<br/>live by default since 2026-09-14; verified at both corpus and scenario scale"]
       TAC["Tactical Decision<br/>focus-fire, positioning, anti-stalemate"]
       CMB["Combat Resolution<br/>damage formula, wound threshold"]
       MOV["Movement<br/>weight/AGI-scaled terrain cost"]
       ITX["Interaction Channeling<br/>harvest / loot / chest"]
-      CNV["Conversation<br/>paid info only — narrow scope"]
+      CNV["Conversation<br/>paid info only — real fragments exist, the full concept does not"]:::bug
       TRD["Entity-to-Entity Trade<br/>NO SCHEMA KIND EXISTS — impossible today"]:::bug
       TUP["Team-Up Invite/Accept<br/>DOESN'T EXIST — AI silently composes groups"]:::bug
       RDY --> ENG --> TAC --> CMB
@@ -493,7 +493,7 @@ flowchart TD
       REP["Reputation<br/>witnessed-event → labels"]
       EMO["Emotion<br/>fear/confidence/frustration — write path ORPHANED"]:::bug
       TRM["Trauma<br/>Wound → Scar"]
-      COM["Commitment Pressure<br/>urgency ramp — gates Cooperation, GATED OFF"]:::gated
+      COM["Commitment Pressure<br/>urgency ramp; live via unflagged route-scoring — its documented Cooperation gating call site is inactive, but the mechanism itself runs"]
       XP --> BRK
     end
 
@@ -509,7 +509,7 @@ flowchart TD
     REP ==>|labels, next tick| GOAL
     CAPT ==>|fatigue cuts bandwidth, next tick| PER
 
-    class PER,SELF,BEL,GOAL,MOT,CAPT,DEC,RDY,TAC,CMB,MOV,ITX,CNV,XP,REL,REP,TRM,BRK live
+    class PER,BEL,GOAL,MOT,CAPT,DEC,RDY,ENG,TAC,CMB,MOV,ITX,XP,REL,REP,TRM,BRK,COM live
 </pre>
   </div>
   <p class="section-sub" style="margin-top:14px;">Dotted arrows are one-shot consequences of a single action; bold arrows are the feedback that actually shapes the <em>next</em> tick's thinking. Several of BUILDUP's feedback arrows are real in principle but starved in practice &mdash; Emotion's write path is orphaned, so the EMO&rarr;SELF feedback rarely fires even though the code for both ends exists.</p>
