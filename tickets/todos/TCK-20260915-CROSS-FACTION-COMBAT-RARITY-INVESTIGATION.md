@@ -153,6 +153,19 @@ _(none yet — filed as a finding, not yet investigated)_
 - The decisive next step: compare `crowded_frontier`'s and `frontier_living_world`'s specific
   hostile-module content definitions for a real, disclosed behavioral difference (aggression
   parameters, patrol/wander AI, species-specific combat propensity) — not yet done.
+- **Tested directly (2026-09-15) whether real combat is predator/wildlife-driven rather than
+  faction-political**: of `frontier_living_world`'s 57 real attacks, checked each pairing's real
+  `alignment_bucket` (`data/content/social/factions.yaml`). `wild_beast_pack` is explicitly
+  catalogued `alignment_bucket: "wild"` ("Territorial animal groups. Contextual threat, not
+  enemy-by-race"); `merchant_league` is `"neutral"` ("economic_actor"); `goblin_warband` is
+  `"invader"` ("challenger"). Of the 57: **11 (19%) are `wild_beast_pack` vs `bandit_company`
+  (wildlife-driven) — but 46 (81%) are `merchant_league` vs `goblin_warband`, two organized,
+  non-wild factions.** The hypothesis as stated ("beasts attack things; factions don't attack
+  each other") **does not hold** — the large majority of real attacks in this world's own sample
+  are between organized factions, not wildlife. `crowded_frontier`'s own (much smaller) sample —
+  `merchant_league` vs `bandit_company`, both organized, `bandit_company`'s own roster has no
+  wildlife at all — is consistent with this: where real combat does occur, in both worlds sampled
+  so far, it's predominantly faction-vs-faction, with wildlife as a real but minority contributor.
 - Whether the exact same "real combat is universally rare in this world, any faction" pattern
   (candidate 5's finding) holds in `quest_dense_frontier` and `urban_political` too, or whether
   those worlds have their own distinct explanation — not yet checked.
