@@ -1,0 +1,95 @@
+schema_version: worldspec.v1
+world_id: mechanic_scenario_combat_judgement_withdrawal
+name: Combat Judgement Withdrawal
+description: 'Minimal known-positive scenario for the combat-judgement mechanic: a
+  goblin_scout (weak) and an orc_warchief (strong), real catalog-authored hostile
+  pair, adjacent in a small region.'
+topology:
+  width: 100
+  height: 100
+  coordinate_system: grid
+regions:
+- id: judgement_arena
+  type: wilderness
+  bounds:
+  - 0
+  - 0
+  - 3
+  - 3
+  terrain: plain
+  hazard_level: 1.0
+  hazard_kind: NATURAL_TERRAIN
+  tags:
+  - wilderness
+  places: []
+factions:
+- id: hero_guild
+  type: defender
+  initial_tension_level: 0.0
+- id: town_council
+  type: defender
+  initial_tension_level: 0.0
+- id: neutral
+  type: neutral
+  initial_tension_level: 0.0
+- id: wild_beast_pack
+  type: wild
+  initial_tension_level: 0.0
+- id: goblin_warband
+  type: invader
+  initial_tension_level: 0.0
+- id: merchant_league
+  type: neutral
+  initial_tension_level: 0.0
+- id: bandit_company
+  type: invader
+  initial_tension_level: 0.0
+- id: forest_wardens
+  type: defender
+  initial_tension_level: 0.0
+- id: orc_clan
+  type: rival
+  initial_tension_level: 0.0
+- id: dwarven_mine_clan
+  type: defender
+  initial_tension_level: 0.0
+- id: moon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: undead_remnants
+  type: invader
+  initial_tension_level: 0.0
+- id: arcane_circle
+  type: neutral
+  initial_tension_level: 0.0
+- id: swamp_tribe
+  type: rival
+  initial_tension_level: 0.0
+- id: dragon_cult
+  type: invader
+  initial_tension_level: 0.0
+- id: spirit_court
+  type: neutral
+  initial_tension_level: 0.0
+information_source_profiles: []
+pending_information_responses: []
+pending_self_model_information_events: []
+entities:
+- id: combat_judgement_pair_goblin_scout
+  count: 1
+  role: scout
+  faction: goblin_warband
+  spawn_region: judgement_arena
+  archetype_id: goblin_scout
+- id: combat_judgement_pair_orc_warchief
+  count: 1
+  role: leader
+  faction: orc_clan
+  spawn_region: judgement_arena
+  archetype_id: orc_warchief
+resources: []
+buildings: []
+quest_definitions: []
+validation:
+  expected_min_entities: 1
+  allow_overlapping_regions: false

@@ -1,0 +1,11 @@
+# TCK-20260915-MECHANIC-VERIFICATION-SCENARIOS: the "combat judgement" known-positive scenario.
+# Real, compiled, catalog-driven content -- not a V2EntityBuilder synthetic fixture. Deliberately
+# minimal: one module, one real hostile pair, no unrelated population to interfere.
+schema_version: "worldcomposition.v1"
+world_id: "mechanic_scenario_combat_judgement_withdrawal"
+name: "Combat Judgement Withdrawal"
+description: "Minimal known-positive scenario for the combat-judgement mechanic: a goblin_scout (weak) and an orc_warchief (strong), real catalog-authored hostile pair, adjacent in a small region."
+modules:
+  - "combat_judgement_arena"
+default_perspectives: []
+generation_seed: 42

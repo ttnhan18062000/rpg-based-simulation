@@ -1,0 +1,22 @@
+# STATE: ADDITIONAL
+# TCK-20260915-MECHANIC-VERIFICATION-SCENARIOS: minimal, self-contained module for the
+# "combat judgement" mechanic scenario -- a single real hostile pair, deliberately power-
+# mismatched via authored catalog content (see populations.yaml's own combat_judgement_pair
+# comment), not scenario-invented stats. Small grid_bounds keeps both entities well inside
+# combat_engagement's own detection radius regardless of exact within-region spawn scatter.
+module_id: "combat_judgement_arena"
+module_type: "conflict"
+display_name: "Combat Judgement Arena"
+biomes: ["judgement_arena"]
+regions:
+  - id: "judgement_arena"
+    type: "wilderness"
+    grid_bounds: [0, 0, 3, 3]
+    terrain: "plain"
+    hazard_level: 1.0
+    hazard_kind: "NATURAL_TERRAIN"
+    tags: [wilderness]
+factions: ["goblin_warband", "orc_clan"]
+populations:
+  - "combat_judgement_pair"
+observability_tags: ["conflict", "mechanic-scenario"]
