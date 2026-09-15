@@ -155,59 +155,24 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
-      # TEMPORARY diagnostic split (TCK-20260915-MECHANISM-REGISTRY-FOUNDATION) -- localizes an
-      # unexplained CI-only failure in the combined "Run" step below via the steps API, since raw
-      # log fetching is network-blocked in the diagnosing session's sandbox. Each step's own
-      # pass/fail is visible via `gh api .../jobs/{id} --jq '.steps[]'` without needing logs.
-      # Remove this whole block once the failing directory is identified.
-      - name: DIAGNOSTIC unit/domains
+      # TEMPORARY diagnostic split (TCK-20260915-MECHANISM-REGISTRY-FOUNDATION) -- round 1 (now
+      # removed) localized the CI-only failure in the combined "Run" step below to tests/unit/tools
+      # specifically (every other directory in that job's scope passed). This round splits that one
+      # directory by file to localize further, since raw log fetching for this specific job is
+      # network-blocked in the diagnosing session's sandbox. Each step's own pass/fail is visible
+      # via `gh api .../jobs/{id} --jq '.steps[]'` without needing logs. --tb=long here (not
+      # --tb=short like round 1) in case the failing assertion's own log line is retrievable this
+      # time and a longer traceback helps. Remove this whole block once the failing test is
+      # identified.
+      - name: DIAGNOSTIC unit/tools/test_simq_audit_gaps.py
         if: always()
-        run: pytest tests/unit/domains -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/observability
+        run: pytest tests/unit/tools/test_simq_audit_gaps.py -m "not slow and not extra_slow" --tb=long -q
+      - name: DIAGNOSTIC unit/tools/test_mechanism_registry.py
         if: always()
-        run: pytest tests/unit/observability -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/rendering
+        run: pytest tests/unit/tools/test_mechanism_registry.py -m "not slow and not extra_slow" --tb=long -q
+      - name: DIAGNOSTIC unit/tools/test_mechanism_registry_graphify_check.py
         if: always()
-        run: pytest tests/unit/rendering -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/lab
-        if: always()
-        run: pytest tests/unit/lab -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/lab_agent
-        if: always()
-        run: pytest tests/unit/lab_agent -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/api
-        if: always()
-        run: pytest tests/unit/api -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/cli
-        if: always()
-        run: pytest tests/unit/cli -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/views
-        if: always()
-        run: pytest tests/unit/views -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/perf
-        if: always()
-        run: pytest tests/unit/perf -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/entity
-        if: always()
-        run: pytest tests/unit/entity -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/entities
-        if: always()
-        run: pytest tests/unit/entities -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/cognition
-        if: always()
-        run: pytest tests/unit/cognition -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/docs
-        if: always()
-        run: pytest tests/unit/docs -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/certification
-        if: always()
-        run: pytest tests/unit/certification -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/tools
-        if: always()
-        run: pytest tests/unit/tools -m "not slow and not extra_slow" --tb=short -q
-      - name: DIAGNOSTIC unit/test_memory_probe.py + test_queue_worker_singleton.py
-        if: always()
-        run: pytest tests/unit/test_memory_probe.py tests/unit/test_queue_worker_singleton.py -m "not slow and not extra_slow" --tb=short -q
+        run: pytest tests/unit/tools/test_mechanism_registry_graphify_check.py -m "not slow and not extra_slow" --tb=long -q
       # END TEMPORARY diagnostic split
       - name: Run
         run: |
