@@ -12,7 +12,7 @@ tags: [agent-monitoring, data-quality, testing]
 # TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE
 
 ## Title
-`test_real_corpus_is_at_or_above_the_ratchet_floor`'s 74.0% floor is currently unmeetable by the live rolling corpus — two independent below-floor readings on unrelated pushes, no regression in either push
+`test_real_corpus_is_at_or_above_the_ratchet_floor`'s 74.0% floor is currently unmeetable by the live rolling corpus — three independent below-floor readings on unrelated pushes, monotonically declining, no regression in any of them
 
 ## Status
 OPEN
@@ -62,9 +62,12 @@ ticket's scope — see `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`).
 
 ## Acceptance Criteria
 
-- [ ] A same-day trend of the real attribution rate (more than two points) is captured, not just
-      the two readings below, to distinguish "still declining" from "already stabilized below the
-      pinned floor."
+- [ ] A same-day trend of the real attribution rate (more than two points) is captured — done:
+      see the four-point monotonic decline below (74.7% → 73.7% → 73.6% → 73.5%).
+- [ ] The shared-`.claude/current_run`-sidecar concurrency hypothesis below is checked against a
+      quiet day (materially lower concurrent-session activity, no relevant code change): does the
+      rate partially recover? This is the cheapest available discriminator and should run before
+      any other investigation.
 - [ ] Either the floor is re-pinned with real headroom below the current trajectory (not the
       instant-of-pin value), or a genuine regression is found and fixed, with evidence either way.
 - [ ] `test_real_corpus_is_at_or_above_the_ratchet_floor` passes against the live corpus after
@@ -103,6 +106,12 @@ instrumentation code touched):**
 |---|---|---|---|---|---|---|
 | `34957214623` | API / tools / logging | 2026-09-15, ~1st run after `d20e42aa3`/`4cdef718e` push | 73.7% | 38246/51893 | 74.0% | FAIL |
 | `34957624316` | API / tools / logging (job `104343457040`) | 2026-09-15T10:28:30Z | 73.6% | 38121/51811 | 74.0% | FAIL |
+| `34958449595` | API / tools / logging (job `104346046401`) | 2026-09-15T10:38:28Z | 73.5% | 38037/51745 | 74.0% | FAIL |
+
+On this third run, `test_live_health_api_suite[asyncio]` (the environment-dependent live-server
+flake noted below) did NOT recur — only the ratchet-floor check failed, consistent with that
+other failure being genuinely transient/environment noise as classified, not a second real issue
+riding along.
 
 **`main`'s own most recent run of the same job, for comparison:**
 
@@ -121,11 +130,28 @@ docs/tickets — nothing that writes to `agent-monitoring/data/*/tools.jsonl` or
 window over the *entire* repo's cross-session tool-call corpus, not anything scoped to this PR's
 own commits.
 
-**Reading the trend**: 74.7% (pin time, per the check's own file header) → 73.7% (first PR #205
-run) → 73.6% (second PR #205 run, ~1hr later) is three points all trending down, with `main`
-itself passing at 09:44Z sitting between the pin and the two failures chronologically — consistent
-with either continued decline of the rolling window, or the floor simply not having held
-sufficient headroom from the start. Not enough points yet to tell which; see Acceptance Criteria.
+**Reading the trend**: 74.7% (pin time, per the check's own file header) → 73.7% → 73.6% → 73.5%
+is four points, monotonically declining across roughly an hour, with `main` itself passing at
+09:44Z sitting between the pin and the first failure chronologically. A monotonic decline across
+four points inside one session is stronger evidence of active degradation than a single breach
+sitting flat just under the line — the floor was re-pinned with no real headroom against a metric
+that was still moving, not one that had already settled.
+
+**Candidate cause (hypothesis, not investigated — flagged for the owning epic, per peer
+session review; do not chase this from this ticket or this branch):** `.claude/current_run` is a
+single shared sidecar file across concurrent Claude sessions — a confirmed live defect (see
+`project_sidecar_cross_session_contamination` in this repo's own agent-monitoring history, and the
+2026-08-24 confirmed case of `tools.jsonl` continuing to log to an already-closed ticket 2 days
+after closure). 2026-09-15 has had at least three sessions running concurrently and heavily
+(`rpg-implementer`, `rpg-feature-planning`, and `agent-working-design` plus its own implementer).
+If `run_id` attribution is resolved through that shared sidecar, concurrent sessions would
+overwrite each other's run context mid-flight and produce exactly this shape: a percentage that
+degrades as same-day concurrency rises, continuously rather than in a step, and invisible to any
+single branch's own diff — because no one branch causes it. This fits every measurement above.
+**Falsifiable prediction, cheap to check without investigating anything**: if concurrency is the
+real driver, this metric should partially recover on a day with markedly less concurrent session
+activity and no corresponding code change. Re-check the rate on such a day before concluding
+either way.
 
 ## Test Summary
 Not yet started — this ticket currently only records the observation per explicit instruction
