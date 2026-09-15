@@ -84,6 +84,16 @@ class MechanismRegistry:
             if mechanism_id in (m.get("depends_on") or [])
         ]
 
+    def transitive_dependents_of(self, mechanism_id: str) -> List[str]:
+        """Every mechanism that transitively depends on mechanism_id (a dependent-of-a-dependent
+        chain, not just direct). Computed by traversal every call -- never stored, same rule as
+        dependents_of() (TCK-20260915-MECHANISM-PRIORITY-DERIVATION Acceptance Criteria #1).
+        Safe on a DAG (the real registry's own acyclicity is enforced by validate()); a cycle in
+        unvalidated input raises rather than looping forever -- see the module-level
+        transitive_dependents() docstring for the real reasoning."""
+        dep_map = {mid: m.get("depends_on") or [] for mid, m in self._mechanisms.items()}
+        return sorted(transitive_dependents(mechanism_id, dep_map))
+
     def get_verification(self, mechanism_id: str) -> Optional[dict]:
         """Return the `verified` block for mechanism_id, or None if unverified (absent, explicit
         `null`, or an unknown id -- an unknown id is not itself an error here, mirroring
@@ -258,6 +268,89 @@ def verification_records_from_registry(data: dict) -> Dict[str, List[dict]]:
         verified = m.get("verified")
         result[m["id"]] = [verified] if verified else []
     return result
+
+
+# ── TCK-20260915-MECHANISM-PRIORITY-DERIVATION ─────────────────────────────────────────────────
+#
+# Priority is derived, never hand-ranked, so disagreements are about *edges* (a real, checkable
+# claim) rather than about rankings (an opinion). rank * transitive-dependent-count, decided
+# transitive over direct against real data: the real 75-mechanism graph has the same 26 hubs
+# either way, but the RANKING differs meaningfully -- e.g. combat_engagement (1 direct dependent /
+# 13 transitive) would rank the project's single most-verified, most-central mechanism near the
+# bottom under direct-count alone. See staging_artifacts/TCK-20260915-MECHANISM-PRIORITY-
+# DERIVATION/investigation.md for the full real-data comparison.
+
+
+class DependencyCycleError(ValueError):
+    """Raised by transitive_dependents() when the input graph contains a cycle. The real
+    registry's own acyclicity is already enforced by validate() (a different code path, at the
+    schema-validation layer) -- this is an independent guard for this module's own traversal
+    functions, proven against a deliberately invalid fixture rather than assumed inherited
+    (TCK-20260915-MECHANISM-PRIORITY-DERIVATION Acceptance Criteria #6)."""
+
+
+def transitive_dependents(mechanism_id: str, dep_map: Dict[str, List[str]]) -> Set[str]:
+    """Every mechanism that transitively depends on mechanism_id, via reverse-BFS over dep_map
+    (mechanism_id -> its own depends_on list). Raises DependencyCycleError on a cycle rather than
+    looping forever -- explicit cycle detection here, not assumed safe from validate() having
+    already run on this exact input."""
+    # A node is "visiting" while its own DFS branch is still open; a repeat visit while still
+    # open is a real cycle. Fully "done" nodes are cached and never re-walked.
+    VISITING, DONE = 1, 2
+    status: Dict[str, int] = {}
+    result: Set[str] = set()
+
+    def _walk(node: str, path: List[str]) -> None:
+        if status.get(node) == DONE:
+            return
+        if status.get(node) == VISITING:
+            cycle = path[path.index(node):] + [node]
+            raise DependencyCycleError(f"dependency cycle detected: {' -> '.join(cycle)}")
+        status[node] = VISITING
+        path.append(node)
+        for candidate, deps in dep_map.items():
+            if node in deps:
+                result.add(candidate)
+                _walk(candidate, path)
+        path.pop()
+        status[node] = DONE
+
+    _walk(mechanism_id, [])
+    return result
+
+
+def priority(mechanism_id: str, dep_map: Dict[str, List[str]], layer: str, layers: Dict[str, dict]) -> int:
+    """rank * transitive-dependent-count. A multiply, not a two-key sort -- lets a heavily-
+    depended-on higher-layer mechanism outrank a low-dependent leaf in a lower layer, per this
+    ticket's own explicit design intent (checked against real data in investigation.md, not
+    assumed correct)."""
+    rank = (layers.get(layer) or {}).get("rank", 0)
+    return rank * len(transitive_dependents(mechanism_id, dep_map))
+
+
+def unverified_priority_ranking(data: dict) -> List[dict]:
+    """The primary generated view (reframed per peer review, following T2's own seed finding: 69
+    of 75 mechanisms are unverified -- 'which one to verify next' is the real question, not an
+    abstract ranking over all 75). Returns unverified mechanisms only, ordered by priority
+    descending, each row {id, layer, state, priority, transitive_dependent_count}."""
+    mechanisms = data.get("mechanisms", []) or []
+    layers = data.get("layers", {}) or {}
+    dep_map = {m["id"]: m.get("depends_on") or [] for m in mechanisms}
+
+    rows = []
+    for m in mechanisms:
+        if m.get("verified"):
+            continue
+        mid = m["id"]
+        dependents = transitive_dependents(mid, dep_map)
+        rows.append({
+            "id": mid,
+            "layer": m.get("layer"),
+            "state": m.get("state"),
+            "priority": priority(mid, dep_map, m.get("layer"), layers),
+            "transitive_dependent_count": len(dependents),
+        })
+    return sorted(rows, key=lambda r: (-r["priority"], r["id"]))
 
 
 def main(argv: Optional[List[str]] = None) -> int:

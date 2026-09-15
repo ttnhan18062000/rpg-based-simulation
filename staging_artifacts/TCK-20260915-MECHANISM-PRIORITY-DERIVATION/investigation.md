@@ -178,6 +178,32 @@ containment/execution-order/lifecycle into dependency just because one file happ
 four kinds of information. Each axis answers a genuinely different question and none of the other
 three is expressible in terms of `depends_on`.
 
+## Step 3's own measured result: the epic's second measured finding, not just infrastructure
+
+Systematically compared every one of the 24 mechanism-mapped nodes in the Entity Operating Loop
+diagram against the real registry `state` before touching anything (see Step 3 in plan.md for the
+full per-node table). **4 of 24 (17%) were wrong.** Combined with Foundation's own two stale atlas
+badges, this is the second time this epic has *measured* the disagreement problem it exists to
+solve in a real artifact, rather than asserting it in the abstract. `combat_engagement` is the
+sharpest instance: the diagram still read "GATED OFF by default" the day after Foundation's own
+work in this same session had already confirmed it went live-by-default (2026-09-14) — stale text,
+not just a stale color, fixed as both.
+
+**Real cost worth recording, per peer review, not just the fix's own benefit.** Until this fix,
+five artifacts disagreed — and the disagreement, however unreliable, was itself a signal:
+`commitment_betrayal`'s own cross-document disagreement (Foundation's Judgment Call 6) was findable
+*because* two documents said different things about it. Resolving it in the registry's favor here
+removes that accidental signal. **Consolidation concentrates risk**, not just noise: if the
+registry is right, five-way disagreement was pure overhead eliminated cleanly; if the registry is
+ever wrong on some mechanism, everything downstream of it (this diagram included, after this fix)
+is now uniformly wrong with no disagreement left to surface it. This is not an argument against
+consolidating — the old disagreement signal was accidental and nobody was actually monitoring it —
+but it is the reason the verification axis (T2) matters *more* after this fix, not less: it is the
+deliberate replacement for the accidental safety this ticket's own consolidation just removed. The
+69-unverified figure (T2's own finding) is the honest statement of how much of the registry is
+currently unchecked against reality — worth keeping visible precisely because five-source
+disagreement no longer is.
+
 ## Prior Work
 
 - `staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/`,
