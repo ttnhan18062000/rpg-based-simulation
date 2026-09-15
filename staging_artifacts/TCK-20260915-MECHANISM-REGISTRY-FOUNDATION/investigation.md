@@ -296,12 +296,33 @@ ticket's own instruction to use both the atlas AND the wiring map as sources —
 cited, non-invented mechanisms, just sourced from a different document than the other three rows
 in this group.
 
+**A header making a claim that doesn't match its own contents is how this discrepancy was
+found** (peer observation, 2026-09-16) — the wiring map table's own "3 cards" label is a small
+instance of the same class of defect this whole arc has spent weeks cataloguing: stated metadata
+disagreeing with the real thing it describes. Worth naming explicitly, not just fixing quietly.
+
+**Decision on `nest`/`lair` (peer review, 2026-09-16): include both, state `gap`, provenance noted
+inline via YAML comment, no new schema field.** They sit on the boundary the design doc draws
+between *mechanisms* (things that exist and may or may not work) and *ideas* (things we might
+build) — both are explicitly "Proposed" in their own source text, showing that boundary isn't as
+crisp as first drawn. Included anyway because the atlas itself already badges "Beyond the City" as
+`gap`/"Mostly aspirational" (so `gap` legitimately covers not-yet-built content), and the design
+doc's own worked example already seeds `war` at `gap` — the registry was always going to hold
+not-yet-built entries, so excluding these two specifically would be inconsistent. `nest`/`lair` are
+the only two rows in the whole 75-mechanism seed whose citation points at a hand-authored
+wiring-map table rather than an atlas card; both carry an inline YAML comment saying so, since a
+future reader shouldn't have to rediscover that provenance difference. **Relevant for T4 (artifact
+state convergence):** that ticket already plans a rule for cards that are design ideas rather than
+built mechanisms (kept at their own state, marked idea-level) — `nest`/`lair` are the first
+concrete instance of that boundary in the actual seed data, a real test case for the rule rather
+than a hypothetical one.
+
 | id | depends_on | state | citation |
 |---|---|---|---|
 | `city` | `regional_trauma_hazards_sovereignty` | partial | atlas `city-layer#0`; wiring-map REG==>CTY |
 | `camp` | `regional_trauma_hazards_sovereignty` | done | atlas `beyond-city#0` |
-| `nest` | `camp` | skeleton | wiring-map only, no atlas JSON card ("target reuses Camp's real shape almost verbatim") |
-| `lair` | — | skeleton | wiring-map only, no atlas JSON card ("real precedent is Boss's anchor pattern, not Camp's shape") |
+| `nest` | `camp` | gap | wiring-map only, no atlas JSON card ("target reuses Camp's real shape almost verbatim") |
+| `lair` | — | gap | wiring-map only, no atlas JSON card ("real precedent is Boss's anchor pattern, not Camp's shape") |
 | `ruins_mines_battlefields` | `regional_trauma_hazards_sovereignty` | partial | atlas `beyond-city#1` — real in content, flattened into Region tags |
 
 ### Faction layer — Clan / Race (2)
@@ -403,17 +424,25 @@ recorded here, not silently resolved:
    resolve this — it is out of this investigation's scope to re-audit every mechanism beyond the two
    staleness findings already confirmed and flagged in Docs Requiring Update. Left as `orphan` per
    the atlas (the ticket's primary source), flagged as possibly wrong.
-4. **`depends_on` edges are deliberately sparse (~25 of 75 rows have a non-empty value).** The wiring
-   map's mermaid arrows mostly encode **tick execution order** ("Perceive happens before Self-Model
-   this tick"), not necessarily a hard functional "requires this to exist" dependency. Converting
-   every sequence arrow into `depends_on` would produce a technically-populated but semantically
-   misleading DAG. I included only edges with a defensible "consumes this mechanism's output/state"
-   reading (readiness gating the whole Act phase; combat feeding trauma/XP/commitment; feedback
-   loops named explicitly as "next tick"). The remaining ~49 rows are left with `depends_on: []` per
-   the design doc's own rule ("hand-author only real edges... do not guess") rather than populated
-   speculatively. This is not a defect to fix before seeding — it is the expected state for a
-   from-scratch hand-authored file — but whoever authors the YAML should not read the sparse count as
-   "incomplete," only as "conservatively sourced."
+4. **`depends_on` edges are concentrated on a small set of hub mechanisms, not evenly spread.**
+   Corrected count, computed directly from the final YAML rather than carried over unverified
+   (`python3 -c "... yaml.safe_load ..."`, see Anti-Drift Hazards): **42 of 75 mechanisms declare at
+   least one outgoing `depends_on`** — a higher fraction than an earlier draft of this section
+   claimed (that draft said "~25 of 75", an unverified figure inherited without an independent
+   count; corrected here rather than left standing). What actually is sparse is the *dependents*
+   side: only **26 distinct mechanisms are ever named as someone else's dependency** — **49 of 75
+   have zero dependents**, because the 42 outgoing edges concentrate heavily onto a small set of
+   hub ids (`action_pacing_readiness`, `combat_resolution`, `belief_cycle`, etc. are each pointed to
+   by several other mechanisms; most of the graph's breadth is leaf nodes with no dependents at
+   all). The wiring map's mermaid arrows mostly encode **tick execution order** ("Perceive happens
+   before Self-Model this tick"), not necessarily a hard functional "requires this to exist"
+   dependency; converting every sequence arrow into `depends_on` would produce a technically-denser
+   but semantically misleading DAG. I included only edges with a defensible "consumes this
+   mechanism's output/state" reading (readiness gating the whole Act phase; combat feeding
+   trauma/XP/commitment; feedback loops named explicitly as "next tick"). This is not a defect to
+   fix before seeding — it is the expected shape for a from-scratch hand-authored file, where a
+   handful of foundational mechanisms are real prerequisites for many others while most of the
+   graph's own breadth has nothing yet depending on it.
 
    **This is a third axis, distinct from the two the wiring map already keeps apart.** The Layer
    Model diagram's own containment lanes (Individual/Organization/Geography/World, `ENT ==> GRP`
@@ -430,15 +459,17 @@ recorded here, not silently resolved:
    "fixed" incorrectly by a future editor under time pressure.
 
    **Known consequence for T3 (priority derivation), recorded now rather than discovered late:**
-   with only ~25 of 75 mechanisms carrying a non-empty `depends_on`, roughly 50 mechanisms have zero
-   dependents. If T3's priority rule is `rank × dependents` (or similar), the dependents term
-   collapses to zero for most rows, and **layer `rank` alone will do nearly all of the ordering work
-   in this first cut** — not because rank is the intended dominant signal, but because the dependency
-   graph is still thin. This is not a defect in this ticket's seed data (inventing edges to make the
-   graph denser would be worse, per the reasoning above) — it is a known, load-bearing property of a
-   from-scratch hand-authored graph that T3 should plan around (e.g. treating near-zero-dependent
-   rows as expected rather than a sign something is missing), not rediscover under pressure once
-   chart generation is underway.
+   only 26 of 75 mechanisms are ever named as someone else's dependency — **49 of 75 have zero
+   dependents**, even though a majority of mechanisms (42/75) themselves declare an outgoing
+   dependency; the graph is a small set of hub prerequisites with most of the breadth as leaves. If
+   T3's priority rule is `rank × dependents` (or similar), the dependents term collapses to zero for
+   most rows, and **layer `rank` alone will do nearly all of the ordering work in this first cut**
+   — not because rank is the intended dominant signal, but because the dependency graph's breadth is
+   still thin even though its hub nodes are real and load-bearing. This is not a defect in this
+   ticket's seed data (inventing edges to make the graph artificially denser would be worse, per the
+   reasoning above) — it is a known, load-bearing property of a from-scratch hand-authored graph
+   that T3 should plan around (e.g. treating near-zero-dependent rows as expected rather than a sign
+   something is missing), not rediscover under pressure once chart generation is underway.
 5. **File location.** `docs/brainstorm/mechanisms.yaml` is the right location, confirmed by
    contrasting the two existing conventions directly rather than assuming the ticket's own leaning:
    `registries/*.jsonl` (`tag_registry.jsonl`, `layer_registry.jsonl`) is documented in
