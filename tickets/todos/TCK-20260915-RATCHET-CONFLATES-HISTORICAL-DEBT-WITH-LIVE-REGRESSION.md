@@ -82,9 +82,52 @@ uninterpretably.
   `TCK-20260915-MONITORING-INTEGRITY-BACKLOG`.
 - Fixing the three uncovered epic closures — that is immediate remediation happening now, not this
   ticket's work. This ticket assumes they are already recorded and the count is back at ~216.
-- The other ratchets introduced by the anomaly epic (duplicate runs, seq integrity, tool-call
+- ~~The other ratchets introduced by the anomaly epic (duplicate runs, seq integrity, tool-call
   mismatch, vocabulary drift). If any shares this conflation shape, note it here rather than
-  widening scope.
+  widening scope.~~ **Superseded 2026-09-16 — see "Scope widened" below. Two of them demonstrably
+  share the shape, so treating them as out of scope would fix one instance of a five-instance
+  pattern.**
+
+## Scope widened — 2026-09-16 (user decision)
+
+The original Out-of-Scope line above assumed the other ratchets probably did not share this
+conflation. **One day of real operation disproved that.** Five checks now demonstrably move on
+*legitimate activity* rather than on regression:
+
+| Check | What moved it | Cost |
+|---|---|---|
+| `no-run-record` (item 2) | historical debt + live misses in one integer | the original finding |
+| `working_log_duplicate` (84→85) | a legitimate `BLOCKED`→`DONE` reopen | re-pin |
+| `event_seq_integrity` (71→72) | the same reopen | re-pin |
+| `ATTRIBUTION_RATE_FLOOR` | hand-orchestrated work (a sanctioned mode) | **gate deleted** |
+| `CITATION_RESOLUTION_FLOOR` | closing one ordinary ticket (pop. 83→82) | **broke `main`'s CI** |
+
+The generalisation, in the user's words (2026-09-16): *"we don't need to make the test too strictly
+for agent working, since it's just the side effect, not the core simulation feature."* And the
+sharper diagnostic framing, from `rpg-feature-planning`: **a check that fails on legitimate activity
+is not a weak signal, it is an inverted one — it fires *because* work is happening.**
+
+**What this adds to this ticket's scope:**
+
+- Treat `working_log_duplicate` and `event_seq_integrity` as in scope. A legitimate two-phase
+  closure must not consume ratchet headroom in any of them; today it consumed headroom in two.
+- Apply the same test to every remaining ratchet in `tools/gate_checks/`: **does its value move
+  when nothing is wrong?** If yes, it is inverted and the disposition is to stop gating, not to
+  tune the threshold.
+- Prefer **removing the gate and keeping the reported number** over splitting the metric, where the
+  measurement is genuinely useful. That is what the attribution floor's deletion established as
+  precedent, and it is cheaper and more honest than a two-condition split that still needs pinning.
+- The split-the-metric design in this ticket's original Scope remains valid *only* where a check
+  genuinely mixes frozen historical debt with live regressions (`no-run-record` is the clear case).
+  Do not apply it mechanically to the inverted ones.
+
+**Two checks that are NOT in scope and should stay ratcheted**, so this does not become a general
+deratcheting exercise: `tool_call_count_mismatch` and `vocabulary_drift` both count corpus debt that
+grows only through a real mistake, and neither moved on any legitimate activity during this period.
+Ratchets remain the right tool for that shape.
+
+`TCK-20260916-CITATION-RESOLUTION-FLOOR-DEMOTE` handles the citation floor separately and is already
+scoped; do not duplicate it here.
 
 ## Acceptance Criteria
 - [ ] Item 2 reports at least two distinct conditions: frozen historical debt (ratcheted) and
