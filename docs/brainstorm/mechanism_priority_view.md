@@ -3,7 +3,7 @@
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 66 of 75 mechanisms are currently
+**Which mechanism to verify next.** 77 of 86 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -37,7 +37,7 @@ more depends on it. Ranked below, top 25.
 | `class_assignment` | entity | partial | 5 | 1 |
 | `derived_stats` | entity | done | 5 | 1 |
 | `xp_leveling` | entity | done | 5 | 1 |
-| `city` | region | partial | 4 | 2 |
+| `campaigns` | world | done | 4 | 4 |
 
 ## Chart form
 
@@ -55,7 +55,7 @@ flowchart BT
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
-    city["city"]:::partial
+    campaigns["campaigns"]:::done
     class_assignment["class assignment"]:::partial
     cognition_capacity_fatigue["cognition capacity fatigue"]:::done
     combat_resolution["combat resolution"]:::done
@@ -77,7 +77,6 @@ flowchart BT
     xp_leveling["xp leveling"]:::done
 
     interaction_channeling --> affection_relationship_bonds
-    regional_trauma_hazards_sovereignty --> city
     race_archetype --> class_assignment
     tactical_decision --> combat_resolution
     movement --> combat_resolution

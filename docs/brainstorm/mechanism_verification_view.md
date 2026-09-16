@@ -2,7 +2,7 @@
 
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
 
-9 of 75 mechanisms have a recorded verdict. The remaining 66 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
+9 of 86 mechanisms have a recorded verdict. The remaining 77 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
 
 **Static vs runtime evidence, grouped separately below**: `code_trace` proves what the code *says* (reachable, called, a field never written) and can never establish that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` prove what the simulation actually *does*. A `code_trace` row is not equivalent evidence to a runtime-confirmed row.
 
@@ -22,6 +22,7 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `aging_death` | entity | done | unverified | — | unverified | — | — |
 | `attributes_biology` | entity | done | unverified | — | unverified | — | — |
 | `belief_cycle` | entity | done | unverified | — | unverified | — | — |
+| `belief_institution` | world | partial | unverified | — | unverified | — | — |
 | `betrayal_siege_war` | faction | done | unverified | — | unverified | — | — |
 | `breakthrough_bonuses` | entity | done | unverified | — | unverified | — | — |
 | `build_diversity` | entity | gap | unverified | — | unverified | — | — |
@@ -38,7 +39,9 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `combat_resolution` | entity | done | unverified | — | unverified | — | — |
 | `commitment_betrayal` | entity | done | unverified | — | unverified | — | — |
 | `committed_intentions` | entity | orphan | unverified | — | unverified | — | — |
+| `concern_intake` | entity | done | unverified | — | unverified | — | — |
 | `conversation` | entity | gap | unverified | — | unverified | — | — |
+| `cooperation` | entity | done | unverified | — | unverified | — | — |
 | `country_lifecycle` | faction | partial | unverified | — | unverified | — | — |
 | `crafting` | world | partial | unverified | — | unverified | — | — |
 | `cross_episode_social_consequences` | faction | orphan | unverified | — | unverified | — | — |
@@ -51,7 +54,10 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `entity_role` | entity | done | unverified | — | unverified | — | — |
 | `entity_trade` | entity | gap | unverified | — | unverified | — | — |
 | `equipment_scoring` | world | done | unverified | — | unverified | — | — |
+| `event_interpretation` | region | done | unverified | — | unverified | — | — |
 | `evolution` | entity | done | unverified | — | unverified | — | — |
+| `fame` | world | done | unverified | — | unverified | — | — |
+| `fidelity_drift` | world | done | unverified | — | unverified | — | — |
 | `genetics_aptitude` | entity | orphan | unverified | — | unverified | — | — |
 | `goal_hierarchy` | entity | done | unverified | — | unverified | — | — |
 | `gods_pantheon_blessings` | world | gap | unverified | — | unverified | — | — |
@@ -61,15 +67,18 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `knowledge_model` | entity | gated | unverified | — | unverified | — | — |
 | `lair` | region | gap | unverified | — | unverified | — | — |
 | `movement` | entity | done | unverified | — | unverified | — | — |
+| `narrative_memory` | world | orphan | unverified | — | unverified | — | — |
 | `nest` | region | gap | unverified | — | unverified | — | — |
 | `party_formation` | group | done | unverified | — | unverified | — | — |
 | `perception` | entity | done | unverified | — | unverified | — | — |
 | `personality` | entity | done | unverified | — | unverified | — | — |
+| `progression_conversion` | entity | gated | unverified | — | unverified | — | — |
 | `quest_generation_sourcing` | entity | gated | unverified | — | unverified | — | — |
 | `race_archetype` | entity | done | unverified | — | unverified | — | — |
 | `race_collective_force` | faction | gap | unverified | — | unverified | — | — |
 | `regional_trauma_hazards_sovereignty` | region | done | unverified | — | unverified | — | — |
 | `reputation` | faction | done | unverified | — | unverified | — | — |
+| `resource_harvesting` | world | orphan | unverified | — | unverified | — | — |
 | `ruins_mines_battlefields` | region | partial | unverified | — | unverified | — | — |
 | `settlement_capacity_axis` | faction | gap | unverified | — | unverified | — | — |
 | `skill_unlocks` | entity | partial | unverified | — | unverified | — | — |
@@ -77,6 +86,8 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `social_memory` | faction | skeleton | unverified | — | unverified | — | — |
 | `status_effects` | entity | partial | unverified | — | unverified | — | — |
 | `strategic_intelligence_core` | entity | done | unverified | — | unverified | — | — |
+| `strategic_learning_bias` | entity | done | unverified | — | unverified | — | — |
+| `strategic_redirection` | entity | orphan | unverified | — | unverified | — | — |
 | `tactical_decision` | entity | done | unverified | — | unverified | — | — |
 | `team_up` | entity | gap | unverified | — | unverified | — | — |
 | `temporal_pressure` | entity | skeleton | unverified | — | unverified | — | — |
