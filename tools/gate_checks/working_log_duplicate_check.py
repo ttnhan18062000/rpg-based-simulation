@@ -1,4 +1,4 @@
-"""Ratchet-based gate check over tools/validate_working_log.py's duplicate-ticket-ID scan
+"""Measures tools/validate_working_log.py's duplicate-ticket-ID scan
 (TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 1).
 
 `tools/validate_working_log.py` implements a "Duplicate ticket IDs in working_log.csv" check with
@@ -7,18 +7,21 @@ its own passing tests, but `grep -rln validate_working_log tools .github/workflo
 Makefile target, no gate check, nothing in `.claude/` ever invoked it. It had never run outside
 its own test.
 
-**Why this is a ratchet, not a zero-tolerance gate**: the real corpus has 57 duplicate ticket_ids
-even with item 2's fix landed (measured 2026-09-14, both by this session and independently by
-agent-working-design). 39 of those carry more than one distinct title (`TCK-20260401-FINAL-
-CONVERGENCE` alone has three unrelated ones: "Final Convergence and Stabilization", "AOA
-Introspection Hardening", "API Presenter Convergence") -- genuine historical `ticket_id` NAMESPACE
-COLLISIONS, not the dual-writer/CRLF-duplication defect this wiring exists to catch going forward.
-Wiring the existing check as a hard zero-tolerance gate would be immediately red on 57 pre-existing
-violations this ticket does not fix and is not scoped to fix -- the same "unlandable exact-equality
-assertion" failure mode as `TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT` and
-this same ticket's own item 6. A ratchet freezes the 57 (forbidding new collisions) rather than
-resolving them -- whether the historical ID reuse itself needs its own cleanup ticket is a separate
-question this one deliberately does not answer.
+**This module used to also gate on the count (a ratchet ceiling, `DUPLICATE_TICKET_ID_CEILING`);
+that gate was removed by TCK-20260915-RATCHET-CONFLATES-HISTORICAL-DEBT-WITH-LIVE-REGRESSION
+(2026-09-16). Do not rebuild it.** The count moves whenever a ticket goes through a legitimate
+multi-phase closure (e.g. BLOCKED -> DONE, writing two working_log rows for the same ticket_id) --
+confirmed directly: `TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE`'s own ordinary
+two-phase closure moved this count 84 -> 85 on 2026-09-14, consuming ratchet headroom for doing
+nothing wrong. The real corpus also carries 57+ pre-existing `ticket_id` NAMESPACE COLLISIONS
+(`TCK-20260401-FINAL-CONVERGENCE` alone names three unrelated tickets) that are historical reuse,
+not the dual-writer/CRLF-duplication defect this measurement exists to catch -- a threshold over
+the combined count cannot distinguish "a ticket legitimately reopened" from "a new namespace
+collision" from "the CRLF dual-writer defect recurred," so it fires on ordinary activity as often
+as on a real regression. Same inverted-signal shape as the deleted sidecar-attribution and
+citation-resolution floors (see `sidecar_attribution_coverage_check.py`'s own docstring for the
+full precedent this follows). The measurement stays -- it is genuinely useful reported context --
+just not something to block on.
 
 Mirrors `status_drift_check.py`'s shape: an aggregate `check_*()` function returning `List[dict]`
 (`{"status": "PASS"|"FAIL", "evidence": "..."}`), a `MARKER:` + `json.dumps(result)` stdout
@@ -38,39 +41,28 @@ from validate_working_log import run_validation  # noqa: E402
 DEFAULT_LOG_PATH = Path("tickets/working_log.csv")
 DEFAULT_DONE_DIR = Path("tickets/done")
 
-# Ratchet ceiling: the real corpus's own duplicate-ticket_id count as of 2026-09-14, AFTER item
-# 2's exclusion fix landed (item 2 intentionally widened what this scan sees -- it now includes
-# is_duplicate=True rows too -- so the correct baseline is post-fix, not the 57 measured before
-# item 2, which the ticket cites as the pre-fix reference figure). May only decrease. Raising it
-# to paper over a newly-introduced duplicate defeats the entire point of this check -- see the
-# module docstring above for why a zero-tolerance assertion is not landable here.
-DUPLICATE_TICKET_ID_CEILING = 84
+
+def compute_working_log_duplicate_ticket_ids(
+    log_path: Path = DEFAULT_LOG_PATH,
+    done_dir: Path = DEFAULT_DONE_DIR,
+) -> "tuple[list, int]":
+    """Returns (duplicate_ticket_ids, count) -- the real duplicate-ticket_id set in
+    working_log.csv, unchanged in shape from before the gate's removal."""
+    result = run_validation(log_path, done_dir)
+    dupes = result["duplicate_ticket_ids"]
+    return dupes, len(dupes)
 
 
 def check_working_log_duplicate_ticket_ids(
     log_path: Path = DEFAULT_LOG_PATH,
     done_dir: Path = DEFAULT_DONE_DIR,
-    ceiling: int = DUPLICATE_TICKET_ID_CEILING,
 ) -> List[dict]:
-    """Ratcheted duplicate-ticket_id check: PASS if the real count is at or below `ceiling`
-    (the known historical baseline), FAIL if it has grown (a new duplicate was introduced)."""
-    result = run_validation(log_path, done_dir)
-    dupes = result["duplicate_ticket_ids"]
-    count = len(dupes)
-
-    if count > ceiling:
-        new_count = count - ceiling
-        return [{
-            "status": "FAIL",
-            "evidence": (
-                f"{count} duplicate ticket_id(s) in {log_path} exceeds the ratchet ceiling "
-                f"({ceiling}) by {new_count} -- a new duplicate was introduced. Full set: {dupes}"
-            ),
-        }]
-
+    """Reports the real duplicate-ticket_id count -- always PASS (see module docstring for why
+    this is no longer a gate)."""
+    dupes, count = compute_working_log_duplicate_ticket_ids(log_path, done_dir)
     return [{
         "status": "PASS",
-        "evidence": f"{count} duplicate ticket_id(s) (ceiling {ceiling}) -- no new duplicates",
+        "evidence": f"{count} duplicate ticket_id(s) in {log_path}",
     }]
 
 

@@ -105,10 +105,24 @@ def _jobs() -> dict:
     return _workflow()["jobs"]
 
 
+def _pytest_steps(job: dict) -> list[dict]:
+    """A job's own pytest-invocation step(s): either exactly one named 'Run' (the common shape,
+    8 of 9 fastlane jobs), or several named 'Run: <path>' (TCK-20260916-CI-PER-DIRECTORY-STEPS-
+    FOR-BLOCKED-LOGS split unit-infra's single combined step into one per test directory, each
+    if: always(), so a failure names its own directory via step conclusions alone). Every check
+    below that used to assume a single 'Run' step now aggregates across whichever shape a job
+    actually has -- the invariants (junit-xml coverage, step ordering, head/base path parity)
+    still apply in full, just computed over N steps where N can be greater than 1."""
+    steps = [s for s in job["steps"] if s.get("name") == "Run" or (s.get("name") or "").startswith("Run: ")]
+    assert steps, "expected a step named 'Run' (or one or more 'Run: <path>' steps) containing the pytest invocation"
+    return steps
+
+
 def _pytest_step(job: dict) -> dict:
-    step = next((s for s in job["steps"] if s.get("name") == "Run"), None)
-    assert step is not None, "expected a step named 'Run' containing the pytest invocation"
-    return step
+    """Back-compat single-step accessor for jobs guaranteed to have exactly one pytest step."""
+    steps = _pytest_steps(job)
+    assert len(steps) == 1, "expected exactly one pytest step; use _pytest_steps() for a split job"
+    return steps[0]
 
 
 def _summary_step_index(job: dict) -> int:
@@ -118,33 +132,68 @@ def _summary_step_index(job: dict) -> int:
     )
 
 
+def _junit_xml_path(run_text: str) -> str:
+    marker = "--junit-xml="
+    idx = run_text.index(marker)
+    rest = run_text[idx + len(marker):]
+    return rest.split()[0].strip()
+
+
+def _assert_job_has_junit_xml_flag(job_name: str, job: dict) -> None:
+    for step in _pytest_steps(job):
+        run_text = step.get("run") or ""
+        assert "--junit-xml=" in run_text, (
+            f"job {job_name!r} step {step.get('name')!r} pytest invocation is missing "
+            "--junit-xml="
+        )
+
+
 def test_all_fastlane_jobs_have_junit_xml_flag() -> None:
     jobs = _jobs()
     for job_name in _FASTLANE_JOBS:
-        run_text = _pytest_step(jobs[job_name]).get("run") or ""
-        assert "--junit-xml=" in run_text, (
-            f"job {job_name!r} pytest invocation is missing --junit-xml="
-        )
+        _assert_job_has_junit_xml_flag(job_name, jobs[job_name])
+
+
+def test_aggregated_junit_xml_flag_check_still_fails_on_a_split_job_missing_the_flag() -> None:
+    # Hard requirement: an aggregating helper is exactly the shape that can silently accept
+    # anything. Plant a synthetic unit-infra-shaped job (multiple "Run: <path>" steps) where one
+    # step is missing --junit-xml, and confirm the check still fails -- proving the
+    # generalization didn't turn this into a no-op for split jobs.
+    synthetic_job = {
+        "steps": [
+            {"name": "Run: tests/unit/domains", "run": "pytest tests/unit/domains --junit-xml=reports/junit/x-domains.xml"},
+            {"name": "Run: tests/unit/observability", "run": "pytest tests/unit/observability"},  # missing the flag
+        ]
+    }
+    try:
+        _assert_job_has_junit_xml_flag("synthetic-unit-infra", synthetic_job)
+    except AssertionError:
+        return
+    raise AssertionError(
+        "expected _assert_job_has_junit_xml_flag to fail on a split job with one step missing "
+        "--junit-xml=, but it passed silently"
+    )
 
 
 def test_junit_xml_path_is_job_local_and_not_under_tests_dir() -> None:
     jobs = _jobs()
-    paths_by_job: dict[str, str] = {}
+    all_paths: list[tuple[str, str, str]] = []  # (job_name, step_name, path)
     for job_name in _FASTLANE_JOBS:
-        run_text = _pytest_step(jobs[job_name]).get("run") or ""
-        marker = "--junit-xml="
-        idx = run_text.index(marker)
-        rest = run_text[idx + len(marker):]
-        path = rest.split()[0].strip()
-        assert not path.startswith("tests/"), (
-            f"job {job_name!r}'s --junit-xml= path {path!r} starts with 'tests/' -- this would "
-            "silently corrupt tools/gate_checks/ci_workflow_test_coverage.py's "
-            "_extract_pytest_paths() directory-coverage tokenizer"
-        )
-        paths_by_job[job_name] = path
+        for step in _pytest_steps(jobs[job_name]):
+            run_text = step.get("run") or ""
+            path = _junit_xml_path(run_text)
+            assert not path.startswith("tests/"), (
+                f"job {job_name!r} step {step.get('name')!r}'s --junit-xml= path {path!r} "
+                "starts with 'tests/' -- this would silently corrupt "
+                "tools/gate_checks/ci_workflow_test_coverage.py's _extract_pytest_paths() "
+                "directory-coverage tokenizer"
+            )
+            all_paths.append((job_name, step.get("name"), path))
 
-    assert len(set(paths_by_job.values())) == len(paths_by_job), (
-        f"expected a unique --junit-xml= path per job, got {paths_by_job}"
+    seen_paths = [p for (_, _, p) in all_paths]
+    assert len(set(seen_paths)) == len(seen_paths), (
+        f"expected a unique --junit-xml= path per pytest step across all fastlane jobs, "
+        f"got {all_paths}"
     )
 
 
@@ -153,7 +202,8 @@ def test_all_fastlane_jobs_have_always_run_summary_step() -> None:
     for job_name in _FASTLANE_JOBS:
         job = jobs[job_name]
         steps = job["steps"]
-        pytest_index = next(i for i, s in enumerate(steps) if s.get("name") == "Run")
+        pytest_indices = [i for i, s in enumerate(steps) if s in _pytest_steps(job)]
+        pytest_index = max(pytest_indices)
         summary_index = _summary_step_index(job)
         assert summary_index != -1, f"job {job_name!r} has no 'Job summary' step"
         assert summary_index > pytest_index, (
@@ -243,7 +293,8 @@ def test_all_fastlane_jobs_have_base_branch_collect_only_step() -> None:
     for job_name in _FASTLANE_JOBS:
         job = jobs[job_name]
         steps = job["steps"]
-        pytest_index = next(i for i, s in enumerate(steps) if s.get("name") == "Run")
+        pytest_step_objs = _pytest_steps(job)
+        pytest_index = max(i for i, s in enumerate(steps) if s in pytest_step_objs)
         fetch_index = next(
             i
             for i, s in enumerate(steps)
@@ -280,19 +331,44 @@ def test_all_fastlane_jobs_have_base_branch_collect_only_step() -> None:
         assert "-m \"not slow and not extra_slow\"" in run_text
         assert "/tmp/base-collect.txt" in run_text
 
-        head_path_list = _pytest_step(job).get("run") or ""
-        head_paths = {
-            token.rstrip("\\")
-            for token in head_path_list.split()
-            if token.startswith("tests/")
-        }
-        base_paths = {
-            token.rstrip("\\") for token in run_text.split() if token.startswith("tests/")
-        }
-        assert base_paths == head_paths, (
-            f"job {job_name!r}'s base-branch collect-only path list {base_paths} must match "
-            f"its head 'Run' step's path list {head_paths} for the two ID sets to be comparable"
-        )
+        _assert_head_base_path_parity(job_name, pytest_step_objs, run_text)
+
+
+def _tests_tokens(text: str) -> set[str]:
+    return {token.rstrip("\\") for token in text.split() if token.startswith("tests/")}
+
+
+def _assert_head_base_path_parity(job_name: str, pytest_step_objs: list[dict], base_run_text: str) -> None:
+    head_paths = {
+        token
+        for step in pytest_step_objs
+        for token in _tests_tokens(step.get("run") or "")
+    }
+    base_paths = _tests_tokens(base_run_text)
+    assert base_paths == head_paths, (
+        f"job {job_name!r}'s base-branch collect-only path list {base_paths} must match "
+        f"its head 'Run' step(s) path list {head_paths} for the two ID sets to be comparable"
+    )
+
+
+def test_aggregated_head_base_path_parity_check_still_fails_on_a_mismatched_split_job() -> None:
+    # Hard requirement (same rationale as the junit-xml adversarial test above): plant a
+    # synthetic split job whose aggregated head tests/ tokens differ from the base-branch
+    # collect-only step's own token set, and confirm the parity check still fails.
+    pytest_step_objs = [
+        {"name": "Run: tests/unit/domains", "run": "pytest tests/unit/domains --junit-xml=x.xml"},
+        {"name": "Run: tests/unit/observability", "run": "pytest tests/unit/observability --junit-xml=y.xml"},
+    ]
+    # Base side is missing tests/unit/observability -- a real drift the check must catch.
+    base_run_text = "cd /tmp/base-checkout && pytest tests/unit/domains --collect-only -q"
+    try:
+        _assert_head_base_path_parity("synthetic-unit-infra", pytest_step_objs, base_run_text)
+    except AssertionError:
+        return
+    raise AssertionError(
+        "expected _assert_head_base_path_parity to fail when the aggregated head token set "
+        "differs from the base-branch collect-only token set, but it passed silently"
+    )
 
 
 def test_base_branch_collect_only_step_run_text_not_tokenized_by_pytest_path_guard() -> None:

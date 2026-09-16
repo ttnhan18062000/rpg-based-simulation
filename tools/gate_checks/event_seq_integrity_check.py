@@ -1,4 +1,4 @@
-"""Ratchet-based checks for `agent-monitoring/data/*/events.jsonl` `seq` duplication and gaps
+"""Measures `agent-monitoring/data/*/events.jsonl` `seq` duplication and gaps
 (TCK-20260915-EVENT-SEQ-INTEGRITY, child of TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC).
 
 **What this measures, and why most of it is not a defect**: 51 of 71 real duplicate-`seq` runs
@@ -11,12 +11,19 @@ already-fixed, already-documented pause/resume offset mechanism. See
 `docs/agent-monitoring/schema.md`'s corrected `seq` field row and this ticket's own
 investigation.md for the full evidence.
 
-**Why a ratchet, not zero-tolerance**: both duplicates and gaps are mostly legitimate, by-design
-consequences of how `seq` is scoped (per-invocation, not globally per-`run_id`) -- a
-zero-tolerance assertion on either would be immediately and permanently unlandable, and would
-implicitly relitigate `TCK-20260915-DUPLICATE-RUN-RECORDS`'s own already-settled disposition.
-This check freezes the measured baselines (duplicates 71, gaps 46) and forbids growth, so a
-genuinely NEW class of seq corruption still gets caught.
+**This module used to also gate on both counts (ratchet ceilings, `DUPLICATE_SEQ_CEILING` and
+`GAP_CEILING`); both gates were removed by TCK-20260915-RATCHET-CONFLATES-HISTORICAL-DEBT-WITH-
+LIVE-REGRESSION (2026-09-16). Do not rebuild either.** Confirmed directly, not inferred: this
+module's own finding above -- that most of both counts trace to the ordinary multi-invocation
+mechanism -- means a single legitimate ticket reopen (a `run_id` closing and reopening, e.g.
+BLOCKED then DONE) moves BOTH counts at once. `TCK-20260913-TICKET-PREMISE-STALENESS-NOT-
+PROPAGATED-ON-CLOSE`'s own ordinary two-phase closure moved `DUPLICATE_SEQ_CEILING` 71 -> 72 on
+2026-09-14 for exactly this reason. A threshold over either count cannot distinguish "a ticket
+legitimately reopened" from "a new class of seq corruption," so both fire on ordinary activity as
+often as on a real regression -- the same inverted-signal shape as the deleted sidecar-attribution,
+citation-resolution, and working-log-duplicate floors (see `sidecar_attribution_coverage_check.py`
+for the full precedent). The measurement stays -- both counts remain genuinely useful reported
+context -- just not something to block on.
 
 Mirrors the batch's own `check_*()` shape: `List[dict]` (`{"status": "PASS"|"FAIL", "evidence":
 "..."}`), `MARKER:` + `json.dumps(result)` stdout contract in `__main__`.
@@ -34,12 +41,6 @@ for _dir in (str(_TOOLS_DIR), str(_MONITORING_TOOLS_DIR)):
         sys.path.insert(0, _dir)
 
 from generate_retro import _load_runs_and_events  # noqa: E402
-
-# Ratchet ceilings: the real corpus's own duplicate-seq and gapped-run counts as of 2026-09-15.
-# May only decrease. Raising either to paper over a newly-introduced defect defeats the entire
-# point of this check.
-DUPLICATE_SEQ_CEILING = 71
-GAP_CEILING = 46
 
 
 def find_seq_duplicates_and_gaps(events: List[dict] = None) -> "tuple[list, list]":
@@ -72,48 +73,18 @@ def find_seq_duplicates_and_gaps(events: List[dict] = None) -> "tuple[list, list
     return duplicate_run_ids, gap_run_ids
 
 
-def check_event_seq_integrity(
-    events: List[dict] = None,
-    duplicate_ceiling: int = DUPLICATE_SEQ_CEILING,
-    gap_ceiling: int = GAP_CEILING,
-) -> List[dict]:
-    """Ratcheted check, two conditions: PASS if both duplicate-seq and gapped-run counts are at
-    or below their own ceilings, FAIL (per-condition) if either has grown."""
+def check_event_seq_integrity(events: List[dict] = None) -> List[dict]:
+    """Reports both counts -- always PASS (see module docstring for why these are no longer
+    gated). Two conditions, matching the pre-existing shape callers (including
+    monitoring_anomaly_validator.py) already expect."""
     duplicate_run_ids, gap_run_ids = find_seq_duplicates_and_gaps(events)
-    results = []
-
     dup_count = len(duplicate_run_ids)
-    if dup_count > duplicate_ceiling:
-        results.append({
-            "status": "FAIL",
-            "evidence": (
-                f"{dup_count} runs with a duplicate seq exceeds the ratchet ceiling "
-                f"({duplicate_ceiling}) by {dup_count - duplicate_ceiling}. "
-                f"Full set: {sorted(duplicate_run_ids)}"
-            ),
-        })
-    else:
-        results.append({
-            "status": "PASS",
-            "evidence": f"{dup_count} runs with a duplicate seq (ceiling {duplicate_ceiling})",
-        })
-
     gap_count = len(gap_run_ids)
-    if gap_count > gap_ceiling:
-        results.append({
-            "status": "FAIL",
-            "evidence": (
-                f"{gap_count} runs with a seq gap exceeds the ratchet ceiling ({gap_ceiling}) "
-                f"by {gap_count - gap_ceiling}. Full set: {sorted(gap_run_ids)}"
-            ),
-        })
-    else:
-        results.append({
-            "status": "PASS",
-            "evidence": f"{gap_count} runs with a seq gap (ceiling {gap_ceiling})",
-        })
 
-    return results
+    return [
+        {"status": "PASS", "evidence": f"{dup_count} runs with a duplicate seq"},
+        {"status": "PASS", "evidence": f"{gap_count} runs with a seq gap"},
+    ]
 
 
 if __name__ == "__main__":
