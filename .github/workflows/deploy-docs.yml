@@ -1,15 +1,15 @@
+# Temporarily disabled (TCK-20260916-DISABLE-DOCS-PAGES-DEPLOY-WORKFLOW, 2026-09-16): GitHub
+# Pages is not enabled for this repository (gh api repos/:owner/:repo/pages returns 404), so
+# `Configure Pages` can never succeed regardless of what `Build` produces -- this workflow has
+# failed on every push to main for days as a result. The push trigger is narrowed to
+# workflow_dispatch only so the build config, its history, and manual runs all survive; only the
+# automatic push-triggered failures stop. Re-enabling (restoring the push trigger once Pages is
+# enabled and the docs site is ready to publish a first version) is tracked by
+# TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING -- do not restore the push trigger without that
+# ticket's own conditions being met.
 name: Deploy Docs to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docs/**'
-      - 'tickets/done/**'
-      - 'stored_artifacts/**'
-      - 'website/**'
-      - '!website/node_modules/**'
-
   workflow_dispatch:
 
 permissions:

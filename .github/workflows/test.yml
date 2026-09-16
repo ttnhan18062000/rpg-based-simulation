@@ -155,27 +155,116 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
-      - name: Run
+      # Split into one step per test directory, each with if: always(), so a failure names its
+      # own directory via step conclusions alone -- readable even when raw logs are unreachable
+      # (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS). Verified against the prior
+      # single-step form: identical pass/fail/skip/deselect totals. Each step writes its own
+      # junit-xml; "Merge JUnit XML" below recombines them into the same reports/junit/unit-
+      # infra.xml path the existing "Job summary" step already reads, so nothing downstream
+      # changes.
+      - name: "Run: tests/unit/domains"
+        if: always()
         run: |
-          pytest tests/unit/domains \
-                 tests/unit/observability \
-                 tests/unit/rendering \
-                 tests/unit/lab \
-                 tests/unit/lab_agent \
-                 tests/unit/api \
-                 tests/unit/cli \
-                 tests/unit/views \
-                 tests/unit/perf \
-                 tests/unit/entity \
-                 tests/unit/entities \
-                 tests/unit/cognition \
-                 tests/unit/docs \
-                 tests/unit/certification \
-                 tests/unit/tools \
-                 tests/unit/test_memory_probe.py \
-                 tests/unit/test_queue_worker_singleton.py \
-                 -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/unit-infra.xml
+          pytest tests/unit/domains -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-domains.xml
+      - name: "Run: tests/unit/observability"
+        if: always()
+        run: |
+          pytest tests/unit/observability -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-observability.xml
+      - name: "Run: tests/unit/rendering"
+        if: always()
+        run: |
+          pytest tests/unit/rendering -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-rendering.xml
+      - name: "Run: tests/unit/lab"
+        if: always()
+        run: |
+          pytest tests/unit/lab -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-lab.xml
+      - name: "Run: tests/unit/lab_agent"
+        if: always()
+        run: |
+          pytest tests/unit/lab_agent -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-lab_agent.xml
+      - name: "Run: tests/unit/api"
+        if: always()
+        run: |
+          pytest tests/unit/api -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-api.xml
+      - name: "Run: tests/unit/cli"
+        if: always()
+        run: |
+          pytest tests/unit/cli -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-cli.xml
+      - name: "Run: tests/unit/views"
+        if: always()
+        run: |
+          pytest tests/unit/views -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-views.xml
+      - name: "Run: tests/unit/perf"
+        if: always()
+        run: |
+          pytest tests/unit/perf -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-perf.xml
+      - name: "Run: tests/unit/entity"
+        if: always()
+        run: |
+          pytest tests/unit/entity -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-entity.xml
+      - name: "Run: tests/unit/entities"
+        if: always()
+        run: |
+          pytest tests/unit/entities -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-entities.xml
+      - name: "Run: tests/unit/cognition"
+        if: always()
+        run: |
+          pytest tests/unit/cognition -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-cognition.xml
+      - name: "Run: tests/unit/docs"
+        if: always()
+        run: |
+          pytest tests/unit/docs -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-docs.xml
+      - name: "Run: tests/unit/certification"
+        if: always()
+        run: |
+          pytest tests/unit/certification -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-certification.xml
+      - name: "Run: tests/unit/tools"
+        if: always()
+        run: |
+          pytest tests/unit/tools -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-tools.xml
+      - name: "Run: tests/unit/test_memory_probe.py"
+        if: always()
+        run: |
+          pytest tests/unit/test_memory_probe.py -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-test_memory_probe.xml
+      - name: "Run: tests/unit/test_queue_worker_singleton.py"
+        if: always()
+        run: |
+          pytest tests/unit/test_queue_worker_singleton.py -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/unit-infra-test_queue_worker_singleton.xml
+      - name: Merge JUnit XML
+        if: always()
+        run: |
+          python3 -c "
+          import glob
+          import xml.etree.ElementTree as ET
+          root = ET.Element('testsuites')
+          for f in sorted(glob.glob('reports/junit/unit-infra-*.xml')):
+              try:
+                  parsed = ET.parse(f).getroot()
+              except (ET.ParseError, OSError):
+                  continue
+              if parsed.tag == 'testsuites':
+                  root.extend(parsed.findall('testsuite'))
+              elif parsed.tag == 'testsuite':
+                  root.append(parsed)
+          ET.ElementTree(root).write('reports/junit/unit-infra.xml')
+          "
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
         run: |

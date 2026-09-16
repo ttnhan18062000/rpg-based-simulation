@@ -12,7 +12,9 @@ for _dir in (str(_TOOLS_DIR), str(_GATE_CHECKS_DIR)):
         sys.path.insert(0, _dir)
 
 from monitoring_integrity_backlog_check import (  # noqa: E402
-    NO_RUN_RECORD_CEILING,
+    FREEZE_DATE,
+    NO_RUN_RECORD_HISTORICAL_CEILING,
+    NO_RUN_RECORD_LIVE_CEILING,
     UNKNOWN_WEEK_ROW_CEILING,
     UNUSABLE_TS_EVENT_CEILING,
     UNUSABLE_TS_RUN_CEILING,
@@ -24,7 +26,7 @@ from monitoring_integrity_backlog_check import (  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
-# find_working_log_rows_missing_run_record (item 2)
+# find_working_log_rows_missing_run_record (item 2, split historical/live)
 # ---------------------------------------------------------------------------
 
 def _write_working_log(tmp_path, rows):
@@ -35,22 +37,39 @@ def _write_working_log(tmp_path, rows):
     return path
 
 
-def test_missing_run_record_detected_for_done_ticket_after_monitoring_start():
+def test_missing_run_record_before_freeze_is_historical():
     tmp_rows = ["2026-07-01T00:00:00Z,TCK-MISSING,Title,DONE,Summary,none"]
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         path = _write_working_log(Path(d), tmp_rows)
-        missing = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
-    assert missing == ["TCK-MISSING"]
+        historical, live = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
+    assert historical == ["TCK-MISSING"]
+    assert live == []
 
 
-def test_present_run_record_not_flagged():
-    tmp_rows = ["2026-07-01T00:00:00Z,TCK-PRESENT,Title,DONE,Summary,none"]
+def test_missing_run_record_on_or_after_freeze_is_live():
+    tmp_rows = [f"{FREEZE_DATE}T00:00:00Z,TCK-TODAY,Title,DONE,Summary,none"]
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         path = _write_working_log(Path(d), tmp_rows)
-        missing = find_working_log_rows_missing_run_record(run_ids={"TCK-PRESENT"}, working_log_path=path)
-    assert missing == []
+        historical, live = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
+    assert historical == []
+    assert live == ["TCK-TODAY"]
+
+
+def test_present_run_record_not_flagged_either_condition():
+    tmp_rows = [
+        "2026-07-01T00:00:00Z,TCK-PRESENT,Title,DONE,Summary,none",
+        f"{FREEZE_DATE}T00:00:00Z,TCK-PRESENT-TODAY,Title,DONE,Summary,none",
+    ]
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        path = _write_working_log(Path(d), tmp_rows)
+        historical, live = find_working_log_rows_missing_run_record(
+            run_ids={"TCK-PRESENT", "TCK-PRESENT-TODAY"}, working_log_path=path,
+        )
+    assert historical == []
+    assert live == []
 
 
 def test_pre_monitoring_start_ticket_not_flagged():
@@ -58,8 +77,9 @@ def test_pre_monitoring_start_ticket_not_flagged():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         path = _write_working_log(Path(d), tmp_rows)
-        missing = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
-    assert missing == []
+        historical, live = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
+    assert historical == []
+    assert live == []
 
 
 def test_non_done_status_not_flagged():
@@ -67,8 +87,9 @@ def test_non_done_status_not_flagged():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         path = _write_working_log(Path(d), tmp_rows)
-        missing = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
-    assert missing == []
+        historical, live = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
+    assert historical == []
+    assert live == []
 
 
 def test_malformed_row_skipped_not_misread():
@@ -76,8 +97,9 @@ def test_malformed_row_skipped_not_misread():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         path = _write_working_log(Path(d), tmp_rows)
-        missing = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
-    assert missing == []
+        historical, live = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
+    assert historical == []
+    assert live == []
 
 
 def test_non_tck_prefixed_id_not_flagged():
@@ -85,8 +107,9 @@ def test_non_tck_prefixed_id_not_flagged():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         path = _write_working_log(Path(d), tmp_rows)
-        missing = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
-    assert missing == []
+        historical, live = find_working_log_rows_missing_run_record(run_ids=set(), working_log_path=path)
+    assert historical == []
+    assert live == []
 
 
 # ---------------------------------------------------------------------------
@@ -140,24 +163,47 @@ def test_unknown_week_blank_lines_not_counted(tmp_path):
 # check_monitoring_integrity_backlog aggregate ratchet
 # ---------------------------------------------------------------------------
 
-def test_all_four_conditions_pass_when_within_ceiling(tmp_path):
+def test_all_five_conditions_pass_when_within_ceiling(tmp_path):
     working_log_path = _write_working_log(tmp_path, [])
     results = check_monitoring_integrity_backlog(
         run_ids=set(), runs=[], events=[], working_log_path=working_log_path, data_dir=tmp_path,
     )
-    assert len(results) == 4
+    assert len(results) == 5
     assert all(r["status"] == "PASS" for r in results)
 
 
-def test_item2_condition_fails_when_missing_count_exceeds_ceiling(tmp_path):
-    rows = [f"2026-07-01T00:00:00Z,TCK-{i},Title,DONE,Summary,none" for i in range(3)]
+def test_item2_historical_condition_fails_when_missing_count_exceeds_ceiling(tmp_path):
+    rows = [f"2026-07-0{i}T00:00:00Z,TCK-{i},Title,DONE,Summary,none" for i in range(1, 4)]
     working_log_path = _write_working_log(tmp_path, rows)
     results = check_monitoring_integrity_backlog(
         run_ids=set(), runs=[], events=[], working_log_path=working_log_path, data_dir=tmp_path,
-        no_run_record_ceiling=2,
+        no_run_record_historical_ceiling=2,
     )
     assert results[0]["status"] == "FAIL"
-    assert "item 2" in results[0]["evidence"]
+    assert "item 2, historical" in results[0]["evidence"]
+
+
+def test_item2_live_condition_fails_on_any_planted_post_freeze_miss_and_names_the_ticket(tmp_path):
+    rows = [f"{FREEZE_DATE}T00:00:00Z,TCK-JUST-CLOSED,Title,DONE,Summary,none"]
+    working_log_path = _write_working_log(tmp_path, rows)
+    results = check_monitoring_integrity_backlog(
+        run_ids=set(), runs=[], events=[], working_log_path=working_log_path, data_dir=tmp_path,
+    )
+    assert results[1]["status"] == "FAIL"
+    assert "item 2, live" in results[1]["evidence"]
+    assert "TCK-JUST-CLOSED" in results[1]["evidence"]
+    # The historical condition is unaffected by a live-only miss.
+    assert results[0]["status"] == "PASS"
+
+
+def test_item2_live_condition_unaffected_by_a_pre_freeze_row(tmp_path):
+    rows = ["2026-07-01T00:00:00Z,TCK-OLD-MISS,Title,DONE,Summary,none"]
+    working_log_path = _write_working_log(tmp_path, rows)
+    results = check_monitoring_integrity_backlog(
+        run_ids=set(), runs=[], events=[], working_log_path=working_log_path, data_dir=tmp_path,
+        no_run_record_historical_ceiling=5,
+    )
+    assert results[1]["status"] == "PASS"
 
 
 def test_item4_conditions_fail_independently_when_exceeded(tmp_path):
@@ -169,9 +215,9 @@ def test_item4_conditions_fail_independently_when_exceeded(tmp_path):
         working_log_path=working_log_path, data_dir=tmp_path,
         unusable_ts_run_ceiling=1, unusable_ts_event_ceiling=0,
     )
-    assert results[1]["status"] == "FAIL"
-    assert "item 4" in results[1]["evidence"]
     assert results[2]["status"] == "FAIL"
+    assert "item 4" in results[2]["evidence"]
+    assert results[3]["status"] == "FAIL"
 
 
 def test_item5_condition_fails_when_unknown_week_grows(tmp_path):
@@ -183,21 +229,26 @@ def test_item5_condition_fails_when_unknown_week_grows(tmp_path):
         run_ids=set(), runs=[], events=[], working_log_path=working_log_path, data_dir=tmp_path,
         unknown_week_ceiling=1,
     )
-    assert results[3]["status"] == "FAIL"
-    assert "item 5" in results[3]["evidence"]
+    assert results[4]["status"] == "FAIL"
+    assert "item 5" in results[4]["evidence"]
 
 
 def test_ceilings_may_only_decrease_never_used_to_paper_over_a_regression():
-    assert NO_RUN_RECORD_CEILING == 219, (
-        "NO_RUN_RECORD_CEILING changed -- if this is because working_log/run-record coverage "
-        "genuinely improved, lower this value to match (never raise it to paper over a regression)"
+    assert NO_RUN_RECORD_HISTORICAL_CEILING == 219, (
+        "NO_RUN_RECORD_HISTORICAL_CEILING changed -- if this is because working_log/run-record "
+        "coverage genuinely improved, lower this value to match (never raise it to paper over a "
+        "regression)"
+    )
+    assert NO_RUN_RECORD_LIVE_CEILING == 0, (
+        "NO_RUN_RECORD_LIVE_CEILING changed from 0 -- this must never happen; it is zero-tolerance "
+        "by design, not a ratchet (see module docstring)"
     )
     assert UNUSABLE_TS_RUN_CEILING == 66
     assert UNUSABLE_TS_EVENT_CEILING == 55
     assert UNKNOWN_WEEK_ROW_CEILING == 34
 
 
-def test_real_corpus_is_at_or_below_all_four_ratchet_ceilings():
+def test_real_corpus_is_at_or_below_all_five_conditions():
     results = check_monitoring_integrity_backlog()
     for r in results:
         assert r["status"] == "PASS", f"real corpus exceeded a ratchet ceiling: {r['evidence']}"

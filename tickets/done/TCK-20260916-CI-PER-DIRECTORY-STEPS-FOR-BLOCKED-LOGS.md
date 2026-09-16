@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS
-phase: open
+phase: done
 date: 2026-09-16
 tags: [testing, process-improvement, claude-md]
 ---
@@ -15,7 +15,7 @@ tags: [testing, process-improvement, claude-md]
 Combined CI jobs are undiagnosable when raw logs are network-blocked — split them into per-directory steps with `if: always()` so the failing directory names itself
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -114,10 +114,39 @@ The originating session's implementer already built and then reverted a diagnost
 `.github/workflows/test.yml` is byte-identical to its pre-diagnostic state — nothing is half-applied.
 
 ## Test Summary
-_To be completed by the implementer._
+- Chose one step per listed test path (17 steps, not a 4-6 group), matching the ticket's own
+  title/AC wording ("unit-infra's steps name their own directories") for maximum diagnostic
+  specificity; cost is negligible since steps already share checkout/pip-install.
+- Before/after verification, run locally rather than assumed: captured the combined single-step
+  baseline (`pytest <all 17 paths> -m "not slow and not extra_slow"`) → 2696 passed, 1 skipped, 0
+  failed. Then ran each of the 17 paths separately with the identical marker filter and summed:
+  2696 passed, 1 skipped, 0 failed — exact match, confirming the split does not change pytest
+  collection semantics.
+- `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/test.yml'))"` — valid YAML
+  after the edit; confirmed 24 steps in the `unit-infra` job (checkout/setup/pip-install, 17 `Run:`
+  steps, `Merge JUnit XML`, then the pre-existing base-branch-diff and summary steps unchanged).
+- `if: always()` verified present on all 17 new `Run:` steps plus the merge step by reading the
+  edited YAML directly, not assumed.
+- CLAUDE.md doc addition: added `tests/docs/test_ci_per_directory_steps_documented.py` (3 tests,
+  pinning the step-conclusion technique, the owning ticket ID, and the partial-fetch caveat as real
+  content checks against CLAUDE.md's own text) — all pass, alongside the pre-existing
+  `test_ci_triage_absent_run_branch.py` (11 total, no collision).
 
 ## Files Changed
-_To be completed by the implementer._
+- `.github/workflows/test.yml` — `unit-infra` job: replaced the single combined 17-path `Run` step
+  with 17 per-directory `Run: <path>` steps (each `if: always()`, each writing its own
+  `reports/junit/unit-infra-<name>.xml`), plus a new `Merge JUnit XML` step (`if: always()`) that
+  recombines them into the same `reports/junit/unit-infra.xml` the existing "Job summary" step
+  already reads — no change needed downstream of the merge.
+- `CLAUDE.md` — "CI Failure Triage" section: added the step-level-conclusions diagnostic (readable
+  even when raw logs are TLS-blocked) and the partial-log-fetch caveat, under item 2's existing
+  TLS-block sub-bullets. **Edited only after direct `AskUserQuestion` authorization**, matching the
+  precedent set for `TCK-20260915-CI-TRIAGE-HAS-NO-ABSENT-RUN-BRANCH`.
+- `tests/docs/test_ci_per_directory_steps_documented.py` (new) — pins the CLAUDE.md addition.
 
 ## Completion Summary
-_Open._
+Split only the `unit-infra` job (the trial), per the ticket's own "verify on ONE job first"
+constraint — the wider rollout to other combined jobs is left for a follow-up once this trial has
+run in real CI, not applied speculatively here. The technique itself was independently useful
+during this same session: used to localize a real, unrelated `deploy` job failure
+(`Configure Pages`) to one step with zero log access, before this ticket's own code was written.

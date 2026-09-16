@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-CITATION-RESOLUTION-FLOOR-DEMOTE
-phase: open
+phase: done
 date: 2026-09-16
 tags: [agent-monitoring, data-quality, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, process-improvement]
 `CITATION_RESOLUTION_FLOOR` broke `main`'s CI by closing one ordinary ticket — stop gating on it, keep the number
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,10 +108,31 @@ The precedent to follow is the attribution-gate deletion: remove the gate, keep 
 document why, and do not lower a threshold as an alternative.
 
 ## Test Summary
-_To be completed by the implementer._
+- `pytest tests/tools/test_premise_staleness_check.py -v` (`.venv313`): 23 passed, including a new
+  `test_closing_a_ticket_moves_the_rate_but_cannot_fail_ci` that simulates the exact real-world
+  event that broke `main` (a ticket leaving the open population) via a synthetic before/after
+  population and confirms the CLI always exits 0 regardless.
+- `python3 tools/gate_checks/premise_staleness_check.py` run standalone: reports the rate as an
+  informational PASS marker.
+- Verified before editing: `grep -rln "CITATION_RESOLUTION_FLOOR\|check_related_code_areas_health"`
+  found no consumer outside this module and its own test.
+- Full `pytest tests/tools/ -m "not slow and not extra_slow"`: 2735 passed, 0 failed (run together
+  with this batch's other three tickets' changes).
 
 ## Files Changed
-_To be completed by the implementer._
+- `tools/gate_checks/premise_staleness_check.py` — removed `CITATION_RESOLUTION_FLOOR` and
+  `check_related_code_areas_health()` (the blocking floor path); kept
+  `compute_open_ticket_citation_resolution_rate()` unchanged; `find_potentially_stale_open_tickets()`
+  untouched, as scoped; rewrote the module docstring to record why this must not be rebuilt as a
+  threshold; `main()` now reports the rate as an always-PASS marker.
+- `tests/tools/test_premise_staleness_check.py` — removed the four tests tied to the deleted
+  floor/guard; added a population-change test proving the check can no longer fail CI.
+- `Makefile` — reworded the `premise-staleness-check` target's help text to "Report ...
+  non-blocking".
 
 ## Completion Summary
-_Open._
+Removed the same class of gate the sidecar-attribution floor's deletion established precedent for:
+a threshold over "currently open tickets" moves on ordinary ticket closures, not on citation
+quality regressions — closing one ticket (`TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-
+UNMEETABLE`) broke `main`'s CI on 2026-09-16 for exactly this reason. The measurement survives
+unchanged for anyone who wants the number; only the gate is gone.

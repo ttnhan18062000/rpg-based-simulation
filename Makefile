@@ -267,7 +267,7 @@ docs-registry: ## Regenerate docs/REGISTRY.yaml from frontmatter
 docs-registry-check: ## Report whether docs/REGISTRY.yaml is stale relative to a fresh regeneration
 	python3 tools/generate_registry.py --check
 
-working-log-duplicate-check: ## Ratcheted check for duplicate ticket_ids in tickets/working_log.csv
+working-log-duplicate-check: ## Report duplicate ticket_ids in tickets/working_log.csv, non-blocking
 	python3 tools/gate_checks/working_log_duplicate_check.py
 
 working-log-content-duplicate-check: ## Ratcheted check for duplicate (ticket_id, title) rows in tickets/working_log.csv
@@ -282,7 +282,7 @@ sidecar-attribution-coverage-check: ## Report tools.jsonl run_id attribution cov
 tool-call-count-mismatch-check: ## Ratcheted check for post-fix tool_call_count vs tools.jsonl mismatches
 	python3 tools/gate_checks/tool_call_count_mismatch_check.py
 
-event-seq-integrity-check: ## Ratcheted checks for duplicate/gapped seq values in events.jsonl
+event-seq-integrity-check: ## Report duplicate/gapped seq values in events.jsonl, non-blocking
 	python3 tools/gate_checks/event_seq_integrity_check.py
 
 monitoring-integrity-backlog-check: ## Ratcheted checks for working_log/run-record gaps, unusable ts, and unknown-week rows
@@ -291,7 +291,7 @@ monitoring-integrity-backlog-check: ## Ratcheted checks for working_log/run-reco
 monitoring-anomaly-validate: ## Aggregate coherence validator (duplicate runs, seq integrity, tool_call_count, ts shape, vocabulary)
 	python3 tools/gate_checks/monitoring_anomaly_validator.py
 
-premise-staleness-check: ## Ratcheted Related Code Areas citation health check (pass --touched-paths for the close-time sweep)
+premise-staleness-check: ## Report Related Code Areas citation resolution rate, non-blocking (pass --touched-paths for the close-time sweep)
 	python3 tools/gate_checks/premise_staleness_check.py
 
 setup-merge-drivers: ## Install the local merge driver + post-merge hook that regenerate docs/REGISTRY.yaml on conflict

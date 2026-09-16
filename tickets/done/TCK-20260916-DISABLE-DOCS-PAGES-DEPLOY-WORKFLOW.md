@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-DISABLE-DOCS-PAGES-DEPLOY-WORKFLOW
-phase: open
+phase: done
 date: 2026-09-16
 tags: [documentation, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [documentation, process-improvement]
 `deploy-docs.yml` fails on every push to `main` because GitHub Pages is not enabled — disable it temporarily rather than leaving a permanently-red lane nobody can fix
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -107,10 +107,24 @@ return 404, and the failing job's step list should show `Build: success` followe
 `gh api repos/:owner/:repo/actions/jobs/<id>` even when raw logs are TLS-blocked.
 
 ## Test Summary
-_To be completed by the implementer._
+- Verified the cause independently before editing: `gh api repos/:owner/:repo/pages` returns 404;
+  `gh api repos/:owner/:repo/actions/runs/35065949142/jobs --jq '.jobs[].steps[]'` on the most
+  recent `deploy-docs` run confirmed `Build: success` followed by `Configure Pages: failure`,
+  `Upload Pages artifact`/`Deploy to GitHub Pages` both `skipped` — matches the ticket exactly.
+- `grep -rn "ttnhan18062000.github.io"` across `*.md`/`*.html`/`*.json` found only historical
+  ticket mentions (`TCK-20260821-*`), no live README badge or cross-link assuming a published
+  site — nothing else to reconcile per the ticket's own Assumptions note.
+- `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/deploy-docs.yml'))"` — valid
+  YAML after the edit.
 
 ## Files Changed
-_To be completed by the implementer._
+- `.github/workflows/deploy-docs.yml` — narrowed trigger to `workflow_dispatch:` only (dropped
+  `push: branches: [main]` and its `paths:` filter); added an in-file comment recording the 404
+  cause and naming `TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING`.
 
 ## Completion Summary
-_Open._
+Disabled the docs-deploy workflow's automatic push-to-main trigger rather than deleting the file,
+per the user's own explicit preference — the build config, its history, and manual
+`workflow_dispatch` runs all survive. `TCK-20260916-REENABLE-DOCS-PAGES-PUBLISHING` tracks the
+re-enable and stays BLOCKED on the user's own judgement that the docs are ready to publish; not
+picked up here.
