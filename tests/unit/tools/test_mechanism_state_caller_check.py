@@ -131,16 +131,17 @@ def test_makefile_wires_mechanism_state_caller_check_target():
 
 def test_real_registry_findings_pinned():
     """[Load-bearing] Pins today's known finding set against the real, committed registry so any
-    drift is visible in CI. Both current findings are understood, not silently accepted as real
-    defects -- see stored_artifacts/TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION/
-    investigation.md for the full disposition of each. Update this test only alongside a real
-    investigation of what changed, same discipline as every other pinned-count test in this repo."""
+    drift is visible in CI. Empty is the correct, current state: `demographic_cohort_cycle` (the
+    fifth real state error this detector's own first run surfaced) was corrected to `done` +
+    `verified: {code_trace, contradicted}` -- the same disposition as `camp` -- and
+    `skeleton_not_stub` (the check that produced `temporal_pressure`'s own finding) was deleted
+    entirely after being confirmed unreliable on its first real test, not merely downgraded. See
+    stored_artifacts/TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION/investigation.md for
+    the full disposition. Update this test only alongside a real investigation of what changed,
+    same discipline as every other pinned-count test in this repo."""
     import yaml
     with open(REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml", encoding="utf-8") as f:
         data = yaml.safe_load(f)
     report = build_report(data)
     finding_keys = {(f.mechanism_id, f.check) for f in report.findings}
-    assert finding_keys == {
-        ("temporal_pressure", "skeleton_not_stub"),
-        ("demographic_cohort_cycle", "orphan_with_callers"),
-    }
+    assert finding_keys == set()

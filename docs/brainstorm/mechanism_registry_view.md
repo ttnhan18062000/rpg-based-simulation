@@ -6,7 +6,7 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**2 runtime-verified, 8 static (`code_trace`)-verified, 79 unverified** — of 89 total.
+**2 runtime-verified, 9 static (`code_trace`)-verified, 78 unverified** — of 89 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -66,7 +66,7 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `cross_episode_social_consequences` | faction | orphan | unverified | unverified | 0 | 0 |
 | `cultural_drift` | world | done | unverified | unverified | 0 | 0 |
 | `declared_cognition_schema` | entity | orphan | unverified | unverified | 0 | 0 |
-| `demographic_cohort_cycle` | region | orphan | unverified | unverified | 0 | 0 |
+| `demographic_cohort_cycle` | region | done | static | contradicted | 0 | 0 |
 | `emotion` | entity | orphan | unverified | unverified | 0 | 0 |
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
 | `equipment_scoring` | world | done | unverified | unverified | 0 | 0 |

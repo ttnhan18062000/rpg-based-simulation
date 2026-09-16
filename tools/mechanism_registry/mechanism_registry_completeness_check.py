@@ -60,6 +60,8 @@ from typing import Dict, List, Optional
 
 import yaml
 
+from tools.mechanism_registry.registry import parse_implemented_by_entry
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DOMAINS_DIR = _REPO_ROOT / "src" / "domains"
 _SYSTEMS_DIR = _REPO_ROOT / "src" / "systems"
@@ -133,10 +135,14 @@ def enumerate_targets() -> List[Target]:
 
 
 def _implemented_by_paths(mechanisms: List[dict]) -> Dict[str, List[Path]]:
-    """mechanism id -> list of resolved, absolute implemented_by paths."""
+    """mechanism id -> list of resolved, absolute implemented_by paths. Node-set completeness is
+    a file-level question ("is this file covered by some mechanism") -- an entry's optional
+    "::Symbol" suffix (TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING) is dropped
+    here; the symbol distinction matters for the caller-count checker, not for this one."""
     result = {}
     for m in mechanisms:
-        paths = m.get("implemented_by") or []
+        entries = m.get("implemented_by") or []
+        paths = [parse_implemented_by_entry(e)[0] for e in entries]
         result[m["id"]] = [(_REPO_ROOT / p).resolve() for p in paths]
     return result
 

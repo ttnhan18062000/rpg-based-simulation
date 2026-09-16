@@ -292,7 +292,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: skeleton
-    implemented_by: [src/domains/time/service.py]
+    implemented_by: [src/domains/time/service.py::TemporalPressureService]
     # src/domains/time/service.py: TemporalPressureService -- found while resolving
     # implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from
     # src/domains/memory/phase.py:90. File matches Foundation's own original citation exactly
@@ -322,7 +322,7 @@ mechanisms:
     layer: entity
     depends_on: [belief_cycle]
     state: gated
-    implemented_by: [src/domains/memory/phase.py]
+    implemented_by: [src/domains/memory/phase.py::MemoryUpdatePhase]
     verified:
       instrument: code_trace
       verdict: observed
@@ -337,7 +337,7 @@ mechanisms:
     layer: entity
     depends_on: [motivation_doctrine, cognition_capacity_fatigue, entity_role, personality, diplomacy]
     state: done
-    implemented_by: [src/domains/adventure/service.py]
+    implemented_by: [src/domains/adventure/service.py::AdventureDecisionService]
     # src/domains/adventure/service.py: AdventureDecisionService -- found while resolving
     # implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from
     # src/ai/goals/adventure_scorer.py:110,136,165, strategic_systems/intelligence.py:88,1580,
@@ -377,7 +377,7 @@ mechanisms:
     layer: faction
     depends_on: []
     state: done
-    implemented_by: [src/domains/faction/diplomatic_state_machine.py]
+    implemented_by: [src/domains/faction/diplomatic_state_machine.py::compute_transitions]
     # src/domains/faction/diplomatic_state_machine.py: DiplomaticStateMachine.compute_transitions()
     # -- found while resolving implemented_by bindings
     # (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from engine/military_conflict.py:170,
@@ -428,13 +428,22 @@ mechanisms:
   - id: demographic_cohort_cycle
     layer: region
     depends_on: [regional_trauma_hazards_sovereignty]
-    state: orphan
-    implemented_by: [src/domains/demographics/cohort.py]
-    # src/domains/demographics/cohort.py: PopulationCohort, DemographicCycleService -- found while
-    # resolving implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING).
-    # DemographicCycleService.process_demographics called from engine/world_dynamics.py:178-179,
-    # guarded by `if not region.population_cohorts` (worldbuilding/compiler.py:203) -- matches the
-    # already-registered `orphan` state's own citation ("wired... input never seeded") exactly.
+    state: done
+    implemented_by: [src/domains/demographics/cohort.py::DemographicCycleService]
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-16"
+      note: >-
+        Was mis-registered `orphan`; DemographicCycleService.process_demographics has a real
+        caller (engine/world_dynamics.py:178-179), so `orphan` (zero callers) was factually
+        wrong. Same family as `camp`: correct, wired code defeated by absent data -- the caller
+        is guarded by `if not region.population_cohorts` (worldbuilding/compiler.py:203), and no
+        compiled or procedurally-generated world seeds population_cohorts, so the call is a
+        permanent no-op in every world today. state stays `done` (the code is correct and wired,
+        not defective) -- the missing thing is world data, not the mechanism itself. Found by
+        TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION's own first real run, corrected
+        per peer review rather than left as an open taxonomy question.
 
   # ── World layer (7, atlas `world-layer`) ────────────────────────────────────────────────────
 
@@ -459,7 +468,7 @@ mechanisms:
     layer: world
     depends_on: []
     state: done
-    implemented_by: [src/domains/culture/deriver.py]
+    implemented_by: [src/domains/culture/deriver.py::CultureDeriver]
     # src/domains/culture/deriver.py: CultureDeriver -- found while resolving implemented_by
     # bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). culture/exporter.py's
     # CultureDriftExporter/Importer follow the campaigns-orchestrator export-at-episode-boundary
@@ -563,7 +572,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
-    implemented_by: [src/domains/cooperation/phase.py]
+    implemented_by: [src/domains/cooperation/phase.py::CooperationPhase]
     # src/domains/cooperation/phase.py: CooperationPhase, engine pipeline "Phase 7" -- called from
     # engine/pipeline.py:216-217, run_phase("cooperation", ..., "ENABLE_SOCIAL_COOPERATION"),
     # flag default ON (feature_flags.py). Real cohesion/regroup-distance check already cited as a
@@ -573,7 +582,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: gated
-    implemented_by: [src/domains/progression/phase.py]
+    implemented_by: [src/domains/progression/phase.py::ProgressionConversionPhase]
     # src/domains/progression/phase.py: ProgressionConversionPhase, engine "Phase 6" -- called from
     # engine/pipeline.py:386-387, run_phase("progression_conversion", ...,
     # "ENABLE_PROGRESSION_EVOLUTION"), flag default OFF (feature_flags.py). A real, substantial,
@@ -585,7 +594,7 @@ mechanisms:
     layer: world
     depends_on: [inventory_trade_conservation]
     state: orphan
-    implemented_by: [src/systems/world_systems/harvesting.py]
+    implemented_by: [src/systems/world_systems/harvesting.py::HarvestSystem]
     # src/systems/world_systems/harvesting.py: HarvestSystem ("Processes harvesting progress,
     # yields, and node depletion", Compliance ID TOWN-073) -- checked directly, zero real callers
     # found anywhere in src/ outside its own defining file and the src/systems/harvest_system.py
@@ -627,7 +636,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
-    implemented_by: [src/systems/strategic_systems/learning.py]
+    implemented_by: [src/systems/strategic_systems/learning.py::StrategicLearningService]
     # src/systems/strategic_systems/learning.py: StrategicLearningService.get_goal_biases() --
     # called unconditionally from strategic_intelligence_core's own decision pipeline
     # (strategic_systems/intelligence.py:984-991, "Strategic Memory (Learning) Biasing") and from
@@ -638,7 +647,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: orphan
-    implemented_by: [src/systems/strategic_systems/redirection.py]
+    implemented_by: [src/systems/strategic_systems/redirection.py::StrategicRedirectionSystem]
     # src/systems/strategic_systems/redirection.py: StrategicRedirectionSystem -- checked directly,
     # zero real callers of the class itself; the only reference anywhere in src/ is a comment in
     # intelligence.py:611 ("Hoisted logic from StrategicRedirectionSystem"), confirming its own
@@ -647,7 +656,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
-    implemented_by: [src/systems/world_systems/intake.py]
+    implemented_by: [src/systems/world_systems/intake.py::ConcernIntakeSystem]
     # src/systems/world_systems/intake.py: ConcernIntakeSystem.evaluate_salience() -- called
     # unconditionally from strategic_intelligence_core's own pipeline (intelligence.py:576,890).
     # Not covered by strategic_intelligence_core's own narrow citation. No flag check found.
@@ -655,7 +664,7 @@ mechanisms:
     layer: region
     depends_on: []
     state: done
-    implemented_by: [src/systems/world_systems/events.py]
+    implemented_by: [src/systems/world_systems/events.py::EventInterpreter]
     # src/systems/world_systems/events.py: EventInterpreter.compute_danger_urgency() (Compliance
     # ID STRAT-067). Called from src/ai/goals/region_stabilization_scorer.py, whose
     # RegionStabilizationGoalScorer is unconditionally registered in the standard GoalRegistry
@@ -664,7 +673,7 @@ mechanisms:
     layer: world
     depends_on: []
     state: orphan
-    implemented_by: [src/systems/world_systems/narrative.py]
+    implemented_by: [src/systems/world_systems/narrative.py::NarrativeMemorySystem]
     # src/systems/world_systems/narrative.py: NarrativeMemorySystem ("Persists turning points and
     # biases future behavior") -- checked directly, zero real callers anywhere in src/ outside its
     # own file and the src/systems/narrative.py backward-compat re-export shim.
@@ -677,7 +686,7 @@ mechanisms:
     layer: group
     depends_on: []
     state: orphan
-    implemented_by: [src/systems/social_systems/group_service.py]
+    implemented_by: [src/systems/social_systems/group_service.py::GroupService]
     # src/systems/social_systems/group_service.py: GroupService.calculate_cohesion() -- checked
     # directly, zero real callers anywhere in src/. Distinct from world_systems/groups.py's
     # GroupSystem (a different class, mapped to cooperation) -- a same-concept-different-file trap.
@@ -685,7 +694,7 @@ mechanisms:
     layer: group
     depends_on: []
     state: orphan
-    implemented_by: [src/systems/social_systems/reward_distribution.py]
+    implemented_by: [src/systems/social_systems/reward_distribution.py::compute_fair_share]
     # src/systems/social_systems/reward_distribution.py: FairShareProtocol (Compliance ID SOC-229,
     # TCK-20260619-E41C-REWARD-DIST) -- proportional quest-reward distribution across party
     # members via ResourceTransferIntent. Checked directly, zero real callers anywhere in src/.

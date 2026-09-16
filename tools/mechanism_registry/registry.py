@@ -32,14 +32,43 @@ Usage:
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+
+# TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING. An `implemented_by` entry is either
+# a bare repo-relative path (file-level -- the whole file is the binding) or "<path>::<Symbol>"
+# (symbol-level -- one specific class or module-level function within the file is the binding).
+# Symbol-level exists because file-level granularity produces a misleading signal when one file
+# defines multiple loosely-related symbols: demographic_cohort_cycle's own cohort.py defines both
+# `PopulationCohort` (a data class used widely and unrelated to this mechanism's own claim) and
+# `DemographicCycleService` (the actual entry point) -- a caller-count check aggregating across
+# both cannot tell "the data class is used elsewhere" from "the service is actually invoked."
+_TOP_LEVEL_SYMBOL_RE_TEMPLATE = r"^(?:class|def)\s+{}\b"
+
+
+def parse_implemented_by_entry(entry: str) -> Tuple[str, Optional[str]]:
+    """Splits one `implemented_by` string into (path, symbol_or_None)."""
+    if "::" in entry:
+        path, symbol = entry.split("::", 1)
+        return path, symbol
+    return entry, None
+
+
+def symbol_defined_in_file(path: Path, symbol: str) -> bool:
+    """True if `symbol` is a top-level class or module-level function in the real file at path."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    pattern = re.compile(_TOP_LEVEL_SYMBOL_RE_TEMPLATE.format(re.escape(symbol)), re.MULTILINE)
+    return bool(pattern.search(text))
 
 VALID_STATES = frozenset({"done", "partial", "gap", "orphan", "gated", "skeleton"})
 
@@ -203,12 +232,14 @@ def validate(data: dict) -> List[str]:
                 f"{sorted(VALID_VERDICTS)}"
             )
 
-    # Invariant 7: a present `implemented_by` is a list of real, existing repo-relative paths.
-    # TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING. The original 75 mechanisms cite atlas cards,
-    # never source -- this is the real code binding, and the existence check is the whole point: a
-    # deleted implementing module fails validation the day it's deleted, instead of the registry
-    # (and every artifact rendered from it) silently reading "confirmed live" for eight days, the
-    # way `motivation_doctrine` did before this field existed.
+    # Invariant 7: a present `implemented_by` is a list of real, existing repo-relative paths,
+    # optionally with a "::Symbol" suffix that must itself be a real top-level class or function
+    # in that file. TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING / -SYMBOL-LEVEL-BINDING. The
+    # original 75 mechanisms cite atlas cards, never source -- this is the real code binding, and
+    # the existence check is the whole point: a deleted implementing module (or a renamed/deleted
+    # symbol, for a symbol-level entry) fails validation the day it happens, instead of the
+    # registry silently reading "confirmed live" for eight days, the way `motivation_doctrine` did
+    # before this field existed.
     for m in mechanisms:
         mid = m.get("id", "<missing id>")
         implemented_by = m.get("implemented_by")
@@ -221,10 +252,18 @@ def validate(data: dict) -> List[str]:
                 f"mechanism '{mid}' implemented_by must be a list of strings, got {implemented_by!r}"
             )
             continue
-        for rel_path in implemented_by:
-            if not (_REPO_ROOT / rel_path).is_file():
+        for entry in implemented_by:
+            rel_path, symbol = parse_implemented_by_entry(entry)
+            real_path = _REPO_ROOT / rel_path
+            if not real_path.is_file():
                 errors.append(
                     f"mechanism '{mid}' implemented_by path does not exist: '{rel_path}'"
+                )
+                continue
+            if symbol is not None and not symbol_defined_in_file(real_path, symbol):
+                errors.append(
+                    f"mechanism '{mid}' implemented_by symbol '{symbol}' not found as a "
+                    f"top-level class/function in '{rel_path}'"
                 )
 
     return errors
