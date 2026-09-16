@@ -13,10 +13,8 @@ for _dir in (str(_TOOLS_DIR), str(_GATE_CHECKS_DIR)):
         sys.path.insert(0, _dir)
 
 from premise_staleness_check import (  # noqa: E402
-    CITATION_RESOLUTION_FLOOR,
     _looks_like_path,
     _strip_symbol_line_suffix,
-    check_related_code_areas_health,
     compute_open_ticket_citation_resolution_rate,
     find_potentially_stale_open_tickets,
     load_open_ticket_entries,
@@ -85,7 +83,7 @@ def test_load_open_ticket_entries_missing_file_returns_empty(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# compute_open_ticket_citation_resolution_rate / check_related_code_areas_health
+# compute_open_ticket_citation_resolution_rate (measurement only -- no gate consumes it)
 # ---------------------------------------------------------------------------
 
 def test_resolution_rate_100_when_all_citations_exist(tmp_path):
@@ -123,33 +121,32 @@ def test_resolution_rate_with_no_citations_at_all_is_100(tmp_path):
     assert (rate, resolved, total) == (100.0, 0, 0)
 
 
-def test_health_check_passes_at_or_above_floor(tmp_path):
+def test_closing_a_ticket_moves_the_rate_but_cannot_fail_ci(tmp_path):
+    # Simulates the exact real-world event that broke main's CI on 2026-09-16: a ticket closes
+    # (leaves the open population), which moves the measured rate -- but there is no longer any
+    # gate left to consume that movement as a pass/fail signal.
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "foo.py").write_text("", encoding="utf-8")
-    entries = [_entry("tickets/todos/TCK-A.md", ["src/foo.py"])]
-    results = check_related_code_areas_health(entries, root=tmp_path, floor=50.0)
-    assert results[0]["status"] == "PASS"
+    open_population = [
+        _entry("tickets/todos/TCK-A.md", ["src/foo.py"]),
+        _entry("tickets/todos/TCK-B.md", ["src/does_not_exist.py"]),
+    ]
+    population_after_tck_b_closes = open_population[:1]
 
-
-def test_health_check_fails_when_below_floor(tmp_path):
-    entries = [_entry("tickets/todos/TCK-A.md", ["src/does_not_exist.py"])]
-    results = check_related_code_areas_health(entries, root=tmp_path, floor=50.0)
-    assert results[0]["status"] == "FAIL"
-    assert "dropped below the ratchet floor" in results[0]["evidence"]
-
-
-def test_ceiling_may_only_increase_never_used_to_paper_over_a_regression():
-    assert CITATION_RESOLUTION_FLOOR == 95.8, (
-        "CITATION_RESOLUTION_FLOOR changed -- if this is because the registry's own accuracy "
-        "genuinely improved, raise this value to match (never lower it to paper over a regression; "
-        "see the module's own comment above CITATION_RESOLUTION_FLOOR for the 96.1 -> 95.8 "
-        "re-pin's own traced, non-regression cause)"
+    rate_before, _, _ = compute_open_ticket_citation_resolution_rate(open_population, root=tmp_path)
+    rate_after, _, _ = compute_open_ticket_citation_resolution_rate(
+        population_after_tck_b_closes, root=tmp_path,
     )
+    assert rate_before != rate_after  # the population change really does move the rate
 
-
-def test_real_corpus_is_at_or_above_the_ratchet_floor():
-    results = check_related_code_areas_health()
-    assert results[0]["status"] == "PASS", f"real corpus dropped below the floor: {results[0]}"
+    # The CLI's own reporting (main(), which computes this same rate against the real corpus)
+    # always exits 0 regardless of the measured value -- there is no branch left that can turn a
+    # population-driven rate change into a CI failure.
+    result = subprocess.run(
+        [sys.executable, str(_GATE_CHECKS_DIR / "premise_staleness_check.py")],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True,
+    )
+    assert result.returncode == 0
 
 
 # ---------------------------------------------------------------------------

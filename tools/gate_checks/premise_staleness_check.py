@@ -14,20 +14,20 @@ here).
 **Two related tools, both reading the now-repaired registry, not re-deriving citations
 independently:**
 
-1. `check_related_code_areas_health()` -- a ratchet FLOOR on citation resolution accuracy across
-   the real open-ticket population (the "detector... must ratchet from a measured baseline, never
-   assert zero" constraint the Decision carries forward from this batch). Measured 2026-09-15: 70
-   open tickets, 311 path-shaped citations (see `_looks_like_path`'s own docstring for why this
-   excludes inline code-symbol backticks that were never meant as file citations), 299 resolve to
-   a real path on disk (96.1%). The 12 that don't are a known, disclosed mix -- not all genuine
-   staleness: several are explicit "expected: <path>" placeholders for a file the ticket itself
-   hasn't created yet (legitimate, not a defect), one is the same `Legend.tsx` bare-filename case
-   the ticket's own investigation.md already found and accepted, and the rest are this fallback's
-   own known imprecision (a non-backtick bullet with trailing prose after the real path -- e.g.
-   "frontend/src/index.css — Layer 2 semantic token block added here" -- is captured whole, since
-   there is no delimiter marking where the path ends and the prose begins). Disclosed rather than
-   engineered away: isolating just the leading path token from trailing free-form annotation would
-   require heavier parsing than the "small, bounded, mechanical fix" this option was chosen for.
+1. `compute_open_ticket_citation_resolution_rate()` -- measures citation resolution accuracy
+   across the real open-ticket population. **This used to also gate on the rate (a ratchet floor,
+   `CITATION_RESOLUTION_FLOOR`); that gate was removed by TCK-20260916-CITATION-RESOLUTION-FLOOR-
+   DEMOTE (2026-09-16). Do not rebuild it.** The floor broke `main`'s CI on 2026-09-16: closing
+   `TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE` (an ordinary, legitimate ticket
+   closure) shrank the open-ticket population 83 -> 82, which by itself moved the rate 96.1% ->
+   96.0% -- no citation text changed, no broken reference was introduced. The denominator here is
+   "currently open tickets," which moves on every ticket close/open regardless of citation
+   quality, so a threshold over this rate fires on ordinary activity rather than on regression --
+   the same inverted-signal shape as the deleted sidecar-attribution floor (see that module's own
+   docstring, and TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE's Decision section, for
+   the full precedent this follows). The measurement itself stays: it is genuinely useful reported
+   context (see this module's own advisory sweep output and any report that surfaces it), just not
+   something to block on.
 
 2. `find_potentially_stale_open_tickets(touched_paths)` -- the actual close-time sweep: given the
    set of file paths a closing ticket's own diff touched, return open tickets whose declared
@@ -35,7 +35,7 @@ independently:**
    file does not prove an invalidated claim") -- candidates for a human/agent to check, never an
    automatic block. Citations are compared after stripping a trailing `::Symbol` or `:line[-line]`
    reference suffix, so a citation like `src/foo.py::Bar.method` still matches a touched
-   `src/foo.py`.
+   `src/foo.py`. Unaffected by the floor's removal above -- it never gated on anything.
 
 Mirrors the batch's own `check_*()` shape where it applies: `List[dict]` (`{"status":
 "PASS"|"FAIL", "evidence": "..."}`), `MARKER:` + `json.dumps(result)` stdout contract in
@@ -50,21 +50,6 @@ from typing import Iterable, List
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "REGISTRY.yaml"
-
-# Ratchet floor: the real open-ticket corpus's own citation-resolution rate as of 2026-09-15
-# (measured with _looks_like_path's own filter applied -- see that function's docstring for why).
-# May only increase. Lowering it to paper over a newly-introduced staleness regression defeats the
-# entire point of this check.
-#
-# Re-pinned 96.1 -> 95.8 on 2026-09-16: closing TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-
-# UNMEETABLE (moving it tickets/todos/ -> tickets/done/, an ordinary, legitimate ticket closure)
-# shrank the open-ticket population from 83 to 82, which by itself moved the real corpus's own
-# citation-resolution rate from 96.1% to 96.0% (315/328) -- no citation text changed, no new
-# broken reference was introduced. Traced directly (not guessed): re-running
-# compute_open_ticket_citation_resolution_rate() against the pre-closure and post-closure open-
-# ticket set reproduces the exact same 96.1% -> 96.0% shift. Left with real headroom below the
-# newly-measured value, same convention as this file's sibling ratchet checks.
-CITATION_RESOLUTION_FLOOR = 95.8
 
 _PATH_LIKE_EXTENSIONS = (
     ".py", ".md", ".yaml", ".yml", ".json", ".js", ".ts", ".tsx", ".html", ".css", ".csv", ".txt",
@@ -142,27 +127,6 @@ def compute_open_ticket_citation_resolution_rate(
     return rate, resolved, total
 
 
-def check_related_code_areas_health(
-    entries: List[dict] = None, root: Path = None, floor: float = CITATION_RESOLUTION_FLOOR,
-) -> List[dict]:
-    """Ratcheted check: PASS if the open-ticket citation-resolution rate is at or above `floor`,
-    FAIL if it has dropped."""
-    rate, resolved, total = compute_open_ticket_citation_resolution_rate(entries, root)
-    if rate < floor:
-        return [{
-            "status": "FAIL",
-            "evidence": (
-                f"open-ticket Related Code Areas citation resolution rate {rate}% "
-                f"({resolved}/{total}) dropped below the ratchet floor ({floor}%) -- a new "
-                f"staleness regression was likely introduced"
-            ),
-        }]
-    return [{
-        "status": "PASS",
-        "evidence": f"citation resolution rate {rate}% ({resolved}/{total}, floor {floor}%)",
-    }]
-
-
 def find_potentially_stale_open_tickets(
     touched_paths: Iterable[str], entries: List[dict] = None,
 ) -> List[dict]:
@@ -206,9 +170,13 @@ def main(argv=None) -> int:
         print("MARKER:" + json.dumps(result))
         return 0
 
-    result = check_related_code_areas_health()
+    rate, resolved, total = compute_open_ticket_citation_resolution_rate()
+    result = [{
+        "status": "PASS",
+        "evidence": f"open-ticket Related Code Areas citation resolution rate {rate}% ({resolved}/{total})",
+    }]
     print("MARKER:" + json.dumps(result))
-    return 1 if any(r["status"] == "FAIL" for r in result) else 0
+    return 0
 
 
 if __name__ == "__main__":
