@@ -18,6 +18,8 @@ implement-ticket.js today) — a path written with a different form (absolute, b
 be matched by this substring check.
 """
 
+import argparse
+import sys
 import yaml
 from pathlib import Path
 
@@ -69,3 +71,36 @@ def find_p0_intersection(files_changed, ledger_dir="docs/parity_ledger"):
                 if changed_path and changed_path in evidence:
                     hits.append((filename, entry.get("id"), changed_path))
     return hits
+
+
+def main(argv=None) -> int:
+    """CLI entry point (TCK-20260915-GATE-MODULES-NO-CLI-ENTRY-POINT). Before this existed,
+    running this module directly imported it, did nothing, and exited 0 — indistinguishable from
+    "no P0 entry depends on any changed file." Mirrors
+    `tools/gate_checks/done_checker_static.py`'s own CLI shape.
+
+    Exit 0 = no P0 ledger entry's v2_evidence cites any of the given files (safe to skip the
+    Parity agent call). Exit 1 = at least one hit found (NOT safe to skip)."""
+    parser = argparse.ArgumentParser(
+        description="Scan P0 parity-ledger entries' v2_evidence for a substring match against "
+        "a changed-files list. Prints each hit and exits non-zero if any P0 entry depends on a "
+        "changed file (not safe to skip the Parity agent call)."
+    )
+    parser.add_argument("files_changed", nargs="+", help="Repo-relative changed file paths.")
+    parser.add_argument(
+        "--ledger-dir", default="docs/parity_ledger",
+        help="Directory holding the canonical parity-ledger YAML shards (default: docs/parity_ledger).",
+    )
+    args = parser.parse_args(argv)
+
+    hits = find_p0_intersection(args.files_changed, ledger_dir=args.ledger_dir)
+    if not hits:
+        print(f"PASS — no P0 entry's v2_evidence cites any of {list(args.files_changed)}")
+        return 0
+    for filename, entry_id, changed_path in hits:
+        print(f"FAIL — {filename}: P0 entry {entry_id!r} cites changed path {changed_path!r}")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
