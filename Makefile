@@ -276,7 +276,7 @@ working-log-content-duplicate-check: ## Ratcheted check for duplicate (ticket_id
 duplicate-run-record-check: ## Ratcheted check for genuinely-accidental duplicate agent-monitoring/data/*/runs.jsonl records
 	python3 tools/gate_checks/duplicate_run_record_check.py
 
-sidecar-attribution-coverage-check: ## Ratcheted floor check for tools.jsonl run_id attribution coverage
+sidecar-attribution-coverage-check: ## Report tools.jsonl run_id attribution coverage (non-blocking; see module docstring)
 	python3 tools/gate_checks/sidecar_attribution_coverage_check.py
 
 tool-call-count-mismatch-check: ## Ratcheted check for post-fix tool_call_count vs tools.jsonl mismatches
