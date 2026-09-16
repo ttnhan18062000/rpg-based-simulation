@@ -86,3 +86,54 @@ def test_check_ticket_field_values_flags_bad_tier(tmp_path):
     assert len(results) == 1
     assert results[0]["status"] == "FAIL"
     assert "urgent" in results[0]["evidence"]
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point (TCK-20260915-GATE-MODULES-NO-CLI-ENTRY-POINT)
+# ---------------------------------------------------------------------------
+
+import subprocess
+
+_MODULE_PATH = _TOOLS_DIR / "ticket_field_values.py"
+
+
+def test_cli_prints_readable_output_and_exits_zero_on_pass(tmp_path):
+    _write_ticket(tmp_path, "TCK-CLI-PASS.md", tier="standard", priority="P1")
+    ticket_path = tmp_path / "TCK-CLI-PASS.md"
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), str(ticket_path)], capture_output=True, text=True,
+    )
+    assert result.stdout.strip(), "expected non-empty stdout -- silence is exactly the regression"
+    assert result.returncode == 0
+    assert "PASS" in result.stdout
+
+
+def test_cli_prints_readable_output_and_exits_nonzero_on_fail(tmp_path):
+    _write_ticket(tmp_path, "TCK-CLI-FAIL.md", tier="urgent", priority="P1")
+    ticket_path = tmp_path / "TCK-CLI-FAIL.md"
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), str(ticket_path)], capture_output=True, text=True,
+    )
+    assert result.stdout.strip()
+    assert result.returncode != 0
+    assert "FAIL" in result.stdout
+    assert "urgent" in result.stdout
+
+
+def test_cli_help_produces_usage_text_not_silence():
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--help"], capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+    assert "usage:" in result.stdout.lower()
+
+
+def test_cli_still_importable_and_callable_as_plain_function(tmp_path):
+    """Pins the Scope constraint: existing python3 -c call sites (check_ticket_field_values(path))
+    must keep working unchanged, not routed through the new CLI."""
+    assert callable(check_ticket_field_values)
+    _write_ticket(tmp_path, "TCK-IMPORT-TEST.md", tier="standard", priority="P1")
+    ticket_path = tmp_path / "TCK-IMPORT-TEST.md"
+    result = check_ticket_field_values(ticket_path)
+    assert isinstance(result, list)
+    assert result[0]["status"] == "PASS"

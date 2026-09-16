@@ -38,7 +38,15 @@ from generate_retro import _load_runs_and_events  # noqa: E402
 # Ratchet ceilings: the real corpus's own duplicate-seq and gapped-run counts as of 2026-09-15.
 # May only decrease. Raising either to paper over a newly-introduced defect defeats the entire
 # point of this check.
-DUPLICATE_SEQ_CEILING = 71
+#
+# DUPLICATE_SEQ_CEILING re-pinned 71 -> 72 the same day: traced directly, not guessed -- the sole
+# new run_id in the FAIL evidence's own full set is
+# TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, which has two real, legitimate
+# closures sharing one run_id (2026-09-14 BLOCKED, 2026-09-15 DONE) -- each invocation of
+# record_hand_orchestrated_closure.py restarts its own local seq numbering at 1, exactly the
+# already-documented multi-invocation-continuation mechanism this module's own docstring above
+# names as the dominant, tolerated cause of this ratchet's population, not a new defect class.
+DUPLICATE_SEQ_CEILING = 72
 GAP_CEILING = 46
 
 

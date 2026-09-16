@@ -30,6 +30,7 @@ documented precedent), and does NOT touch `layer:` — already enforced by
 cannot reach `READY_TO_CLOSE` with a non-canonical `## Tier` or `## Priority` going forward.
 """
 
+import argparse
 import sys
 from pathlib import Path
 from typing import FrozenSet, List, Tuple
@@ -84,3 +85,29 @@ def check_ticket_field_values(ticket_path: Path) -> List[dict]:
         "status": combined_status,
         "evidence": f"{tier_evidence}; {priority_evidence}",
     }]
+
+
+def main(argv=None) -> int:
+    """CLI entry point (TCK-20260915-GATE-MODULES-NO-CLI-ENTRY-POINT). Before this existed,
+    `python3 tools/ticket_field_values.py <path>` imported the module, did nothing, and exited 0 —
+    indistinguishable from a real pass. This module is named by CLAUDE.md as the authority for
+    `## Tier`/`## Priority`; a silent no-op here is the sharpest instance of that defect class.
+    Mirrors `tools/gate_checks/done_checker_static.py`'s own CLI shape."""
+    parser = argparse.ArgumentParser(
+        description="Validate a ticket file's '## Tier' and '## Priority' body fields against "
+        "the canonical enums. Prints one readable PASS/FAIL line and exits non-zero on FAIL."
+    )
+    parser.add_argument("ticket_path", type=Path, help="Path to the ticket markdown file.")
+    args = parser.parse_args(argv)
+
+    results = check_ticket_field_values(args.ticket_path)
+    any_fail = False
+    for r in results:
+        if r["status"] == "FAIL":
+            any_fail = True
+        print(f"[{args.ticket_path}] {r['status']} — {r['evidence']}")
+    return 1 if any_fail else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

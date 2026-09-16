@@ -49,6 +49,16 @@ def _make_ticket(tmp_path: Path, name: str, frontmatter: str, body: str = "") ->
     return p
 
 
+def _make_ticket_at(tmp_path: Path, rel: str, frontmatter: str, body: str = "") -> Path:
+    """Create a ticket file at tmp_path/<rel> (any location, not just tickets/done/) with given
+    frontmatter and body -- for testing the todos/inprogress walk extension
+    (TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option A)."""
+    p = tmp_path / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(f"---\n{frontmatter}\n---\n\n{body}", encoding="utf-8")
+    return p
+
+
 # ---------------------------------------------------------------------------
 # Group 1: Doc entry generation
 # ---------------------------------------------------------------------------
@@ -336,6 +346,127 @@ class TestRelatedCodeAreas:
                      "## Title\nBar\n")
         entries = collect_tickets(tmp_path)
         assert entries[0]["related_code_areas"] == []
+
+
+# ---------------------------------------------------------------------------
+# Group 6b: non-backtick path-bullet fallback
+# (TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option A)
+# ---------------------------------------------------------------------------
+
+
+class TestNonBacktickPathFallback:
+    def test_plain_bullet_with_path_shape_is_extracted(self):
+        section = "- src/core/foo.py\n- tools/gate_checks/bar.py\n"
+        areas = parse_related_code_areas(section)
+        assert areas == ["src/core/foo.py", "tools/gate_checks/bar.py"]
+
+    def test_plain_bullet_without_path_shape_is_still_skipped(self):
+        # Mirrors the pre-existing test_skips_lines_without_backticks case, but proves the new
+        # fallback doesn't turn every bare bullet into a false-positive citation -- only ones that
+        # look like a path (contain "/" or end in a known extension).
+        section = "- plain text line with no slash or extension\n- `src/core/foo.py`\n"
+        areas = parse_related_code_areas(section)
+        assert areas == ["src/core/foo.py"]
+
+    def test_mixed_backtick_and_plain_path_bullets(self):
+        section = "- `src/core/foo.py` (new)\n- tools/gate_checks/bar.py\n- prose, no path here\n"
+        areas = parse_related_code_areas(section)
+        assert areas == ["src/core/foo.py", "tools/gate_checks/bar.py"]
+
+    def test_bullet_ending_in_known_extension_without_slash(self):
+        # A bare filename with a recognized extension (no directory component) still counts --
+        # matches Measurement 3's own "contains / or ends .py/.md" criterion literally.
+        section = "- Legend.tsx\n"
+        areas = parse_related_code_areas(section)
+        assert areas == ["Legend.tsx"]
+
+    def test_backtick_token_wins_even_with_surrounding_prose(self):
+        section = "- See `src/core/foo.py` for the real change, described informally here\n"
+        areas = parse_related_code_areas(section)
+        assert areas == ["src/core/foo.py"]
+
+    def test_star_bullet_marker_also_stripped(self):
+        section = "* src/core/foo.py\n"
+        areas = parse_related_code_areas(section)
+        assert areas == ["src/core/foo.py"]
+
+    def test_explicit_none_bullet_not_treated_as_path(self):
+        section = "None yet — no code investigation performed.\n"
+        areas = parse_related_code_areas(section)
+        assert areas == []
+
+
+# ---------------------------------------------------------------------------
+# Group 6c: ticket walk covers tickets/todos/ and tickets/inprogress/, not just tickets/done/
+# (TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option A)
+# ---------------------------------------------------------------------------
+
+
+class TestOpenTicketWalk:
+    _FM = (
+        "status: active\nlayer: engine\nauthority: P1\naudience: agent\n"
+        "ticket_id: {tid}\nphase: open\ndate: 2026-09-15\ntags: []"
+    )
+
+    def test_inprogress_ticket_is_indexed(self, tmp_path):
+        _make_ticket_at(
+            tmp_path, "tickets/inprogress/TCK-20260915-INPROG.md",
+            self._FM.format(tid="TCK-20260915-INPROG"),
+            "## Title\nIn progress\n",
+        )
+        entries = collect_tickets(tmp_path)
+        assert [e["path"] for e in entries] == ["tickets/inprogress/TCK-20260915-INPROG.md"]
+
+    def test_flat_todos_ticket_is_indexed(self, tmp_path):
+        _make_ticket_at(
+            tmp_path, "tickets/todos/TCK-20260915-FLAT-TODO.md",
+            self._FM.format(tid="TCK-20260915-FLAT-TODO"),
+            "## Title\nFlat todo\n",
+        )
+        entries = collect_tickets(tmp_path)
+        assert [e["path"] for e in entries] == ["tickets/todos/TCK-20260915-FLAT-TODO.md"]
+
+    def test_nested_epic_folder_todos_ticket_is_indexed(self, tmp_path):
+        _make_ticket_at(
+            tmp_path, "tickets/todos/some-epic/TCK-20260915-NESTED.md",
+            self._FM.format(tid="TCK-20260915-NESTED"),
+            "## Title\nNested\n",
+        )
+        entries = collect_tickets(tmp_path)
+        assert [e["path"] for e in entries] == ["tickets/todos/some-epic/TCK-20260915-NESTED.md"]
+
+    def test_sequence_md_excluded_from_todos_walk(self, tmp_path):
+        (tmp_path / "tickets" / "todos" / "some-epic").mkdir(parents=True)
+        (tmp_path / "tickets" / "todos" / "some-epic" / "SEQUENCE.md").write_text(
+            "# Sequence\n\nNot a ticket.\n", encoding="utf-8",
+        )
+        entries = collect_tickets(tmp_path)
+        assert entries == []
+
+    def test_done_todos_and_inprogress_all_combine(self, tmp_path):
+        _make_ticket(tmp_path, "TCK-20260601-DONE.md",
+                     self._FM.format(tid="TCK-20260601-DONE").replace("phase: open", "phase: done"),
+                     "## Title\nDone\n")
+        _make_ticket_at(
+            tmp_path, "tickets/todos/TCK-20260915-TODO.md",
+            self._FM.format(tid="TCK-20260915-TODO"), "## Title\nTodo\n",
+        )
+        _make_ticket_at(
+            tmp_path, "tickets/inprogress/TCK-20260915-INPROG.md",
+            self._FM.format(tid="TCK-20260915-INPROG"), "## Title\nInprog\n",
+        )
+        entries = collect_tickets(tmp_path)
+        paths = {e["path"] for e in entries}
+        assert paths == {
+            "tickets/done/TCK-20260601-DONE.md",
+            "tickets/todos/TCK-20260915-TODO.md",
+            "tickets/inprogress/TCK-20260915-INPROG.md",
+        }
+
+    def test_missing_todos_or_inprogress_dir_does_not_raise(self, tmp_path):
+        # Neither directory exists in this tmp_path at all -- must return cleanly, not crash.
+        entries = collect_tickets(tmp_path)
+        assert entries == []
 
 
 # ---------------------------------------------------------------------------

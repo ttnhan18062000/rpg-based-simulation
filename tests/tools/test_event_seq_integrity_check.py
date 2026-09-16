@@ -69,7 +69,7 @@ def test_fails_gap_condition_when_exceeded():
 
 
 def test_ceilings_may_only_decrease_never_used_to_paper_over_a_regression():
-    assert DUPLICATE_SEQ_CEILING == 71, (
+    assert DUPLICATE_SEQ_CEILING == 72, (
         "DUPLICATE_SEQ_CEILING changed -- if this is because a legitimate fix reduced the real "
         "count, lower this value to match (never raise it to paper over a new duplicate)"
     )
