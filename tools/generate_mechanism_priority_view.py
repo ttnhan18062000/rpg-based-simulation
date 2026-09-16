@@ -39,7 +39,7 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
 
 **Which mechanism to verify next.** {total_unverified} of {total} mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
-hand-ranked: `layer rank × transitive dependent-count`, computed from the registry's own
+hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
 more depends on it. Ranked below, top {n}.
 

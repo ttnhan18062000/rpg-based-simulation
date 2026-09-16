@@ -273,12 +273,14 @@ def verification_records_from_registry(data: dict) -> Dict[str, List[dict]]:
 # ── TCK-20260915-MECHANISM-PRIORITY-DERIVATION ─────────────────────────────────────────────────
 #
 # Priority is derived, never hand-ranked, so disagreements are about *edges* (a real, checkable
-# claim) rather than about rankings (an opinion). rank * transitive-dependent-count, decided
+# claim) rather than about rankings (an opinion). weight * transitive-dependent-count, decided
 # transitive over direct against real data: the real 75-mechanism graph has the same 26 hubs
 # either way, but the RANKING differs meaningfully -- e.g. combat_engagement (1 direct dependent /
 # 13 transitive) would rank the project's single most-verified, most-central mechanism near the
 # bottom under direct-count alone. See staging_artifacts/TCK-20260915-MECHANISM-PRIORITY-
-# DERIVATION/investigation.md for the full real-data comparison.
+# DERIVATION/investigation.md for the full real-data comparison. (`weight`, not `rank`, per
+# TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED -- `rank * dependents` was a shipped
+# defect that rewarded the rarest layers.)
 
 
 class DependencyCycleError(ValueError):
@@ -346,12 +348,19 @@ def transitive_dependents(mechanism_id: str, dep_map: Dict[str, List[str]]) -> S
 
 
 def priority(mechanism_id: str, dep_map: Dict[str, List[str]], layer: str, layers: Dict[str, dict]) -> int:
-    """rank * transitive-dependent-count. A multiply, not a two-key sort -- lets a heavily-
-    depended-on higher-layer mechanism outrank a low-dependent leaf in a lower layer, per this
-    ticket's own explicit design intent (checked against real data in investigation.md, not
-    assumed correct)."""
-    rank = (layers.get(layer) or {}).get("rank", 0)
-    return rank * len(transitive_dependents(mechanism_id, dep_map))
+    """weight * transitive-dependent-count. A multiply, not a two-key sort -- lets a heavily-
+    depended-on mechanism in a frequent layer outrank a low-dependent leaf in a rare one.
+
+    Uses `weight`, NEVER `rank` (TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED): `rank` is
+    an ordinal (position from the bottom, low=frequent), not a priority multiplier. Multiplying by
+    `rank` rewards the rarest layers and was a real, shipped defect -- confirmed on real data
+    (`betrayal_siege_war`, a deliberately deprioritized faction-war mechanism, ranked #1 unverified
+    ahead of `action_pacing_readiness`, a per-tick entity mechanism with double its dependents).
+    `weight` is the explicit, independently-settable field stating "how often this runs," so the
+    direction can never again be silently re-derived wrong from an ordinal that means something
+    else."""
+    weight = (layers.get(layer) or {}).get("weight", 0)
+    return weight * len(transitive_dependents(mechanism_id, dep_map))
 
 
 def unverified_priority_ranking(data: dict) -> List[dict]:

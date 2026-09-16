@@ -80,15 +80,31 @@ def test_transitive_dependencies_of_raises_on_cycle():
         transitive_dependencies_of("a", dep_map)
 
 
-def test_priority_is_rank_times_transitive_dependents():
+def test_priority_is_weight_times_transitive_dependents():
     dep_map = {"hub": [], "leaf1": ["hub"], "leaf2": ["hub"]}
-    layers = {"faction": {"cadence": "daily", "rank": 3}}
-    assert priority("hub", dep_map, "faction", layers) == 3 * 2  # rank 3 * 2 dependents
+    layers = {"faction": {"cadence": "daily", "rank": 3, "weight": 3}}
+    assert priority("hub", dep_map, "faction", layers) == 3 * 2  # weight 3 * 2 dependents
+
+
+def test_priority_uses_weight_not_rank():
+    """TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED regression: a layer with a HIGH rank
+    (rare) but LOW weight must NOT out-prioritize a layer with a LOW rank (frequent) but HIGH
+    weight -- proves the function reads `weight`, not `rank`, by giving them opposite orderings."""
+    dep_map = {"hub": [], "leaf1": ["hub"], "leaf2": ["hub"], "leaf3": ["hub"]}
+    layers = {
+        "rare_but_light": {"cadence": "rare", "rank": 5, "weight": 1},
+        "frequent_and_heavy": {"cadence": "per_tick", "rank": 1, "weight": 5},
+    }
+    rare_priority = priority("hub", dep_map, "rare_but_light", layers)
+    frequent_priority = priority("hub", dep_map, "frequent_and_heavy", layers)
+    assert frequent_priority > rare_priority
+    assert rare_priority == 1 * 3
+    assert frequent_priority == 5 * 3
 
 
 def test_unverified_priority_ranking_excludes_verified_mechanisms():
     data = {
-        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1, "weight": 5}},
         "mechanisms": [
             {"id": "verified_one", "layer": "entity", "state": "done", "depends_on": [],
              "verified": {"instrument": "code_trace", "verdict": "observed", "date": "2026-09-16", "note": "x"}},
@@ -103,7 +119,10 @@ def test_unverified_priority_ranking_excludes_verified_mechanisms():
 
 def test_unverified_priority_ranking_orders_by_priority_descending():
     data = {
-        "layers": {"entity": {"cadence": "per_tick", "rank": 1}, "faction": {"cadence": "daily", "rank": 3}},
+        "layers": {
+            "entity": {"cadence": "per_tick", "rank": 1, "weight": 5},
+            "faction": {"cadence": "daily", "rank": 3, "weight": 3},
+        },
         "mechanisms": [
             {"id": "hub", "layer": "faction", "state": "done", "depends_on": []},
             {"id": "leaf1", "layer": "entity", "state": "done", "depends_on": ["hub"]},
@@ -111,19 +130,23 @@ def test_unverified_priority_ranking_orders_by_priority_descending():
         ],
     }
     ranking = unverified_priority_ranking(data)
-    assert ranking[0]["id"] == "hub"  # rank 3 * 2 dependents = 6, beats the two leaves' 0 each
+    assert ranking[0]["id"] == "hub"  # weight 3 * 2 dependents = 6, beats the two leaves' 0 each
 
 
-def test_real_registry_top_row_matches_expected_shape(registry_data):
-    # betrayal_siege_war (faction rank 3 x 11 transitive dependents = 33) should outrank
-    # action_pacing_readiness (entity rank 1 x 23 = 23) -- the multiply-lets-higher-layer-outrank-
-    # a-leaf behavior this ticket's own design intent describes, confirmed on real data.
+def test_real_registry_top_row_favors_frequent_layer_over_rare_layer(registry_data):
+    """TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED regression, on real data: the
+    corrected formula must favor a per-tick entity mechanism with more dependents over a rare-layer
+    one with fewer, and must NOT put a deliberately deprioritized faction-war mechanism at the top."""
     ranking = unverified_priority_ranking(registry_data)
-    top_ids = [r["id"] for r in ranking[:3]]
-    assert "betrayal_siege_war" in top_ids
     betrayal_row = next(r for r in ranking if r["id"] == "betrayal_siege_war")
     apr_row = next(r for r in ranking if r["id"] == "action_pacing_readiness")
-    assert betrayal_row["priority"] > apr_row["priority"]
+    assert apr_row["priority"] > betrayal_row["priority"]
+
+    top_ids = [r["id"] for r in ranking[:3]]
+    assert "betrayal_siege_war" not in top_ids, (
+        "betrayal_siege_war (deliberately deprioritized faction war) must not rank in the top 3 "
+        "unverified mechanisms -- if it does, the layer weight direction has regressed"
+    )
 
 
 # ── Chart generation ──────────────────────────────────────────────────────────────────────────

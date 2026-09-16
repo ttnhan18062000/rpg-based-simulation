@@ -14,8 +14,8 @@ mermaid stops being readable near 40 nodes):
      43 mechanisms, is a real, immediately-hit case -- not hypothetical).
   2. Ancestors-of(mechanism_id) -- "what does X actually need" (the ticket's own worked example).
   3. Top-N unverified-priority (the flagship view, per peer review's reframing following T2's own
-     seed finding: which of the 69 unverified mechanisms to verify next, ordered by
-     rank * transitive-dependent-count).
+     seed finding: which of the unverified mechanisms to verify next, ordered by
+     layer weight * transitive-dependent-count).
 
 Readability is enforced, not documented: any view whose node count would exceed
 _MAX_CHART_NODES either paginates or truncates with an explicit note -- never silently emits an
@@ -137,7 +137,7 @@ def render_ancestors_chart(data: dict, mechanism_id: str, direction: str = "BT")
 
 def render_top_n_chart(data: dict, n: int = 25, direction: str = "BT") -> str:
     """The flagship view (reframed per peer review): the top-N currently-unverified mechanisms by
-    priority (rank * transitive-dependent-count) -- 'which one to verify next.' Truncates to
+    priority (layer weight * transitive-dependent-count) -- 'which one to verify next.' Truncates to
     _MAX_CHART_NODES with an explicit note if n itself is set above the threshold, rather than
     silently emitting an oversized diagram."""
     mechanisms = data.get("mechanisms", []) or []

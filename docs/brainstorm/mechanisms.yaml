@@ -30,6 +30,15 @@
 #
 # Frequency lives ONLY on layers, never on a mechanism.
 #
+# `rank` is an ORDINAL (position from the bottom, 1=lowest/most-frequent layer, 5=highest/rarest) --
+# it does NOT mean "priority multiplier." `weight` is the explicit, independently-settable field for
+# that (TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED): priority() multiplies by `weight`,
+# never by `rank`. These two fields deliberately mirror each other across the 5 current layers
+# (weight = 6 - rank) but are NOT defined in terms of one another in code -- a future layer addition
+# must set both explicitly, so the direction can never again be silently re-derived wrong the way it
+# was the first time (priority = rank * dependents rewarded the rarest layers, the exact opposite of
+# "lower layers first... more frequency is more priority").
+#
 # `state` is one of exactly six classes, matching the atlas's own existing vocabulary (no seventh
 # invented): done | partial | gap | orphan | gated | skeleton.
 #
@@ -70,11 +79,11 @@
 # silently decided.
 
 layers:
-  entity:  { cadence: per_tick, rank: 1 }
-  group:   { cadence: per_tick, rank: 2 }
-  faction: { cadence: daily,    rank: 3 }
-  region:  { cadence: slow,     rank: 4 }
-  world:   { cadence: rare,     rank: 5 }
+  entity:  { cadence: per_tick, rank: 1, weight: 5 }
+  group:   { cadence: per_tick, rank: 2, weight: 4 }
+  faction: { cadence: daily,    rank: 3, weight: 3 }
+  region:  { cadence: slow,     rank: 4, weight: 2 }
+  world:   { cadence: rare,     rank: 5, weight: 1 }
 
 mechanisms:
 
