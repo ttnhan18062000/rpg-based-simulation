@@ -327,6 +327,9 @@ mechanism-registry-view: ## Regenerate docs/brainstorm/mechanism_registry_view.m
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 
+mechanism-state-caller-check: ## Report-only: flag mechanisms whose declared state disagrees with a real caller-count check (claims-as-tests phase 1)
+	$(PYTHON3) tools/mechanism_registry/mechanism_state_caller_check.py
+
 mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
 	$(PYTHON3) tools/mechanism_registry/mechanism_wiring_map_classdef.py
 
