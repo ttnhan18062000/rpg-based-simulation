@@ -1,3 +1,13 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+ticket_id: TCK-20260915-ARTIFACT-STATE-CONVERGENCE
+artifact_type: plan
+tags: [architecture, documentation, schema]
+---
+
 # Plan — TCK-20260915-ARTIFACT-STATE-CONVERGENCE
 
 Per investigation.md: 3 of 5 artifacts actually converge (atlas, capabilities, wiring-map — wiring

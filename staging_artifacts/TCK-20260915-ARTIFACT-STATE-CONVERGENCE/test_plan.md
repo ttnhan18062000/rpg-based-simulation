@@ -1,3 +1,13 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+ticket_id: TCK-20260915-ARTIFACT-STATE-CONVERGENCE
+artifact_type: test_plan
+tags: [architecture, documentation, schema]
+---
+
 # Test Plan — TCK-20260915-ARTIFACT-STATE-CONVERGENCE
 
 New file: `tests/unit/tools/test_mechanism_artifact_convergence.py`, mirroring the structure and

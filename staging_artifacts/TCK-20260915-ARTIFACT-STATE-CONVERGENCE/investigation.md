@@ -1,3 +1,13 @@
+---
+status: active
+layer: architecture
+authority: P2
+audience: agent
+ticket_id: TCK-20260915-ARTIFACT-STATE-CONVERGENCE
+artifact_type: investigation
+tags: [architecture, documentation, schema]
+---
+
 # Investigation — TCK-20260915-ARTIFACT-STATE-CONVERGENCE
 
 ## Starting point
