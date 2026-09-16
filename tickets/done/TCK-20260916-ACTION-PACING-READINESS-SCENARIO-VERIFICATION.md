@@ -220,3 +220,23 @@ This sets the pattern for the other 67: investigate the real claim first (not th
 alone), build a genuinely differential scenario reusing existing compile-path infrastructure where
 possible, record the honest verdict, and treat "is the state still accurate" as part of the
 investigation rather than an assumption to carry through unchecked.
+
+## Addendum — 2026-09-16, per peer review, before this session moved to the next target
+
+**"Nothing to file" above was a conclusion this ticket had not actually measured.** Peer's own
+question — how soon does a typical entity get its first `stats_dirty` recalculation event — was
+answered with reasoning ("the formula self-corrects after the first event"), not a real number.
+Measured directly, not assumed: instrumented `SkillScalingService.get_effective_stats` with a call
+counter (validated against a positive control first) and ran three real corpus worlds
+(`crowded_frontier`, `quest_dense_frontier`, `hero_guild_routing`) for 1000 ticks each, seed 42.
+**Zero of 75 tested entities, across all three worlds, ever triggered the recalculation path**, and
+separately, zero showed any change to `evolution_level`/`attributes`/`equipment`/`learned_skills`
+at all in that window — broader than the already-recorded `COMB-318` finding (which only measured
+combat-damage timing, not whether any entity's derived stats were ever recalculated).
+
+Filed `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (not fixed here) and
+corrected `action_pacing_readiness`'s own `verified.note` in `mechanisms.yaml` to stop asserting
+"not a new defect" — that claim was exactly what turned out to be unmeasured. `state`/`verdict`
+themselves are unaffected: the readiness GATE this ticket verified is still genuinely `observed`
+working; only the trailing explanatory note about the separate agility-scaling claim needed
+correcting once the deeper measurement was actually taken.

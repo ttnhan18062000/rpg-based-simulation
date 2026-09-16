@@ -125,9 +125,12 @@ mechanisms:
         readiness=50.0 withholds a staged attack (INSUFFICIENT_READINESS), readiness=100.0 lets it
         proceed, through a real Kernel tick against a real compiled world. The gate itself -- what
         all 23 transitive dependents actually need -- genuinely works. state stays partial: the
-        separate agility-scaling half (readiness_speed) has a real formula (TCK-20260831) but it
-        only applies after an entity's first stat-recalculation event, never at spawn -- checked
-        directly (WorldCompiler never calls it), not assumed. Not a stale badge, not a new defect.
+        separate agility-scaling half (readiness_speed) has a real formula (TCK-20260831) but only
+        applies via engine/apply.py's stats_dirty recalculation, never at spawn. Follow-up direct
+        measurement (instrumented call-counting, 3 real corpus worlds, 1000 ticks each) found this
+        path was never observed firing for any of 75 tested entities -- broader than the
+        already-known COMB-318 gap. See TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-
+        IN-CORPUS (filed, not yet root-caused as content-gap vs wiring-gap).
   - id: interaction_channeling
     layer: entity
     depends_on: [action_pacing_readiness]
