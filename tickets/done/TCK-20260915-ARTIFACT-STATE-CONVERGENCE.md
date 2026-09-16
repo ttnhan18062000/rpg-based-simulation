@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-ARTIFACT-STATE-CONVERGENCE
-phase: open
+phase: done
 date: 2026-09-15
 tags: [architecture, documentation, schema]
 ---
@@ -196,6 +196,7 @@ discipline every ticket this epic):
   `test_mechanism_artifact_convergence.py` (all new)
 - `tickets/todos/TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT.md` (new, filed not fixed)
 - `staging_artifacts/TCK-20260915-ARTIFACT-STATE-CONVERGENCE/` — investigation.md, plan.md, test_plan.md
+- `docs/REGISTRY.yaml` — regenerated (Finalize's own post-migration self-check)
 
 ## Completion Summary
 DONE. 3 of the 5 artifacts converge on the registry (atlas, capabilities: new surgical regenerators;

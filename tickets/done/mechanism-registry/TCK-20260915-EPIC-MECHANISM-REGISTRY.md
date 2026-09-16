@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-EPIC-MECHANISM-REGISTRY
-phase: open
+phase: done
 date: 2026-09-15
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Mechanism Registry — one generated source for mechanism state, dependency, and
 brainstorm artifacts render from data instead of five hand-maintained surfaces
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -133,10 +133,62 @@ Four child tickets, in `SEQUENCE.md` order:
 Epic tier — scope only, no direct implementation. Children carry their own plans.
 
 ## Test Summary
-Per child ticket.
+Per child ticket. Combined suite across all four children: 135 tests in
+`tests/unit/tools/ tests/unit/engine/test_capability_registry.py`, all passing, re-verified with
+`graphify-out/` genuinely moved aside and restored at every child's own closure.
 
 ## Files Changed
-None (epic).
+None directly (epic) — see each child ticket's own Files Changed.
 
 ## Completion Summary
-Open.
+DONE. All four children closed: Foundation, Verification-Axis, Priority-Derivation,
+Artifact-State-Convergence. The registry is the single generated source for mechanism `state`,
+`layer`, `depends_on`, and `verified`; three real artifacts (atlas, capabilities, wiring map) render
+from it; two (taxonomy, scorecard) are confirmed independent axes, not converged.
+
+**What the registry measured about the artifacts it replaced** — real, quantified drift, not
+hypothetical justification for building it:
+- 2 stale atlas badges (a `gap` badge on real, tested code; a citation to a path `TCK-20260824`
+  had already deleted).
+- 4 of 24 mapped wiring-map nodes wrong — **17% drift** in one hand-maintained diagram, including
+  `combat_engagement` still reading "GATED OFF by default" a day after it went live by default.
+- 1 registry seeding error (`camp`) — found by this epic's own systematic cross-check, now the
+  project's first real `contradicted` verdict (`state: done`, code correct and wired, but never
+  observed working in any world).
+- 1 wrong claim in the epic's own scoping document (`mechanism_registry_initiative.md`'s Finding 1)
+  — "five artifacts record mechanism state" was really three; taxonomy and scorecard track
+  genuinely different axes. Found the same way as the others: checking instead of assuming.
+
+**What it established about the simulation itself:**
+- 75 mechanisms seeded, corrected to 75 after catching an investigator subagent's own miscount
+  (73) early in Foundation.
+- 26 mechanisms are hubs (transitive dependents > 0); 49 are leaves (nothing depends on them,
+  transitively).
+- 7 of 75 have a recorded verification verdict as of this epic's close (up from 6 when the
+  verification axis itself was built, +1 for `camp`'s own `contradicted` verdict found in this
+  last child); **68 of 75 remain unverified**, rendered explicitly as such rather than omitted.
+  Exactly **1 mechanism has runtime verification** (`combat_engagement`, via a real scenario run) —
+  every other verified entry is `code_trace` (static, proves structure, not effect).
+
+**The conclusion worth stating plainly**: every layer of this work produced a real, measured drift
+error — the artifacts the registry was built to replace, the registry's own initial seed, and the
+scoping document that justified building it in the first place. Each was authored carefully, by
+people (and agents) actively checking their own work, and each was still wrong until an
+independent, later check caught it. That is the strongest available evidence the underlying
+problem — five (now three) independently hand-maintained surfaces drifting apart — is structural,
+not a matter of anyone's individual care. It is the argument for this registry existing at all, not
+just a retrospective justification.
+
+**The cost, recorded honestly alongside the benefit, per peer review**: consolidating five surfaces
+into one removes disagreement as an accidental safety signal. `commitment_betrayal`'s own
+cross-doc disagreement (wiring map vs. atlas) was findable specifically *because* two independent
+documents disagreed about it — that accidental safety is gone once there is only one source. The
+verification axis (the 68-unverified, 1-runtime-verified figures above) is this epic's own
+deliberate replacement for that accidental safety, not an incidental side effect — it is what now
+has to carry the weight that document disagreement used to carry for free.
+
+One follow-up filed, not folded in: `TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT` —
+re-read all 73 mechanism-mapped atlas cards' full descriptions (not just badges) for the same class
+of caveat that produced `camp`'s own `contradicted` verdict, since `camp`'s own seeding read the
+badge/title and missed a caveat sitting in the description. Explicitly the natural first real
+producer for the verification axis at scale.
