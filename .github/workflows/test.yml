@@ -249,22 +249,7 @@ jobs:
                  --junit-xml=reports/junit/unit-infra-test_queue_worker_singleton.xml
       - name: Merge JUnit XML
         if: always()
-        run: |
-          python3 -c "
-          import glob
-          import xml.etree.ElementTree as ET
-          root = ET.Element('testsuites')
-          for f in sorted(glob.glob('reports/junit/unit-infra-*.xml')):
-              try:
-                  parsed = ET.parse(f).getroot()
-              except (ET.ParseError, OSError):
-                  continue
-              if parsed.tag == 'testsuites':
-                  root.extend(parsed.findall('testsuite'))
-              elif parsed.tag == 'testsuite':
-                  root.append(parsed)
-          ET.ElementTree(root).write('reports/junit/unit-infra.xml')
-          "
+        run: python3 tools/ci_junit_merge.py
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
         run: |
