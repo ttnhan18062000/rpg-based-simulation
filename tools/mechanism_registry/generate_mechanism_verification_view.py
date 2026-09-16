@@ -6,7 +6,7 @@ TCK-20260915-MECHANISM-VERIFICATION-AXIS (child of TCK-20260915-EPIC-MECHANISM-R
 on TCK-20260915-MECHANISM-REGISTRY-FOUNDATION). Scope item 3: "A verification view — rendered
 section listing every mechanism with instrument, verdict, date." One row per mechanism, including
 unverified ones rendered explicitly (Acceptance Criteria #1/#2) — see
-tools/mechanism_registry.py::build_verification_view() for the actual row-building logic; this
+tools/mechanism_registry/registry.py::build_verification_view() for the actual row-building logic; this
 script only loads the real registry and writes the rendering.
 
 Markdown, not HTML, matches this repo's lowest-maintenance generated-doc convention (see
@@ -17,9 +17,9 @@ into the atlas/capabilities pages themselves, is TCK-20260915-ARTIFACT-STATE-CON
 not this ticket's).
 
 Usage:
-  python3 tools/generate_mechanism_verification_view.py               # writes the real output
-  python3 tools/generate_mechanism_verification_view.py --check       # exit 1 if output is stale
-  python3 tools/generate_mechanism_verification_view.py --output PATH # write elsewhere (tests)
+  python3 tools/mechanism_registry/generate_mechanism_verification_view.py               # writes the real output
+  python3 tools/mechanism_registry/generate_mechanism_verification_view.py --check       # exit 1 if output is stale
+  python3 tools/mechanism_registry/generate_mechanism_verification_view.py --output PATH # write elsewhere (tests)
 """
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ from pathlib import Path
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_verification_view.md"
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
-from mechanism_registry import build_verification_view, verification_records_from_registry  # noqa: E402
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
+from registry import build_verification_view, verification_records_from_registry  # noqa: E402
 
 
 def render(data: dict) -> str:

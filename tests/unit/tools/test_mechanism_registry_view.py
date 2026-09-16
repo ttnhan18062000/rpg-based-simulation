@@ -1,5 +1,5 @@
-"""Tests for tools/mechanism_registry.py::all_mechanisms_combined_view and
-tools/generate_mechanism_registry_view.py.
+"""Tests for tools/mechanism_registry/registry.py::all_mechanisms_combined_view and
+tools/mechanism_registry/generate_mechanism_registry_view.py.
 
 TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW. A third generated view (every mechanism, priority +
 verification together) alongside the existing verification-only and priority-unverified-only
@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from tools.mechanism_registry import all_mechanisms_combined_view
-from tools.generate_mechanism_registry_view import render
+from tools.mechanism_registry.generate_mechanism_registry_view import render
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
@@ -99,7 +99,7 @@ def test_generator_check_mode_detects_staleness(tmp_path):
     stale_output = tmp_path / "mechanism_registry_view.md"
     stale_output.write_text("stale content that will never match", encoding="utf-8")
     result = subprocess.run(
-        [sys.executable, "tools/generate_mechanism_registry_view.py", "--check",
+        [sys.executable, "tools/mechanism_registry/generate_mechanism_registry_view.py", "--check",
          "--output", str(stale_output)],
         cwd=REPO_ROOT,
         capture_output=True,

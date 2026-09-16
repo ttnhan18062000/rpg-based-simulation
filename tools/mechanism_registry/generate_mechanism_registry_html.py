@@ -37,10 +37,10 @@ under `:root[data-theme="dark"]` so an explicit toggle wins in both directions. 
 CSS classes keyed by state/evidence value, not inline `style=` colors, so they can vary by theme.
 
 Usage:
-  python3 tools/generate_mechanism_registry_html.py                    # writes the real output
-  python3 tools/generate_mechanism_registry_html.py --check             # exit 1 if output is stale
-  python3 tools/generate_mechanism_registry_html.py --target artifact   # publish-ready variant
-  python3 tools/generate_mechanism_registry_html.py --output PATH       # write elsewhere (tests)
+  python3 tools/mechanism_registry/generate_mechanism_registry_html.py                    # writes the real output
+  python3 tools/mechanism_registry/generate_mechanism_registry_html.py --check             # exit 1 if output is stale
+  python3 tools/mechanism_registry/generate_mechanism_registry_html.py --target artifact   # publish-ready variant
+  python3 tools/mechanism_registry/generate_mechanism_registry_html.py --output PATH       # write elsewhere (tests)
 """
 from __future__ import annotations
 
@@ -52,14 +52,14 @@ from pathlib import Path
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry.html"
 _EPIC_TICKET_ID = "TCK-20260915-EPIC-MECHANISM-REGISTRY"
 _EPIC_TICKET_RELATIVE_LINK = f"../../tickets/done/mechanism-registry/{_EPIC_TICKET_ID}.md"
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
-from mechanism_registry import all_mechanisms_combined_view  # noqa: E402
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
+from registry import all_mechanisms_combined_view  # noqa: E402
 
 _VALID_TARGETS = ("repo", "artifact")
 

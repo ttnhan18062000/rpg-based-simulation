@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_atlas_card_mapping.py and tools/mechanism_atlas_regenerate.py.
+"""Tests for tools/mechanism_registry/mechanism_atlas_card_mapping.py and tools/mechanism_registry/mechanism_atlas_regenerate.py.
 
 TCK-20260915-ARTIFACT-STATE-CONVERGENCE scope item 1. The load-bearing tests are the prose
 preservation ones (test_regeneration_never_touches_card_prose*): a regenerator that emitted whole
@@ -15,13 +15,13 @@ from pathlib import Path
 
 import pytest
 
-from tools.mechanism_atlas_card_mapping import (
+from tools.mechanism_registry.mechanism_atlas_card_mapping import (
     CARD_TO_MECHANISM_ID,
     PARTIAL_COVERAGE_CARDS,
     SPLIT_CARD_MECHANISMS,
     all_mechanism_card_badge_positions,
 )
-from tools.mechanism_atlas_regenerate import (
+from tools.mechanism_registry.mechanism_atlas_regenerate import (
     apply_diffs,
     compute_diffs,
     extract_json_block,
@@ -108,7 +108,7 @@ def _fixture_atlas():
 
 def _patch_mapping(monkeypatch, positions):
     monkeypatch.setattr(
-        "tools.mechanism_atlas_regenerate.all_mechanism_card_badge_positions",
+        "tools.mechanism_registry.mechanism_atlas_regenerate.all_mechanism_card_badge_positions",
         lambda: positions,
     )
 
@@ -202,7 +202,7 @@ def test_real_atlas_has_no_drift_against_the_real_registry():
     diffs = compute_diffs(atlas_data, states)
     assert diffs == [], (
         f"Atlas badge cls has drifted from the registry: {diffs}. "
-        f"Run `python3 tools/mechanism_atlas_regenerate.py` to fix."
+        f"Run `python3 tools/mechanism_registry/mechanism_atlas_regenerate.py` to fix."
     )
 
 

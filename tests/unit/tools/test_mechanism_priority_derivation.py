@@ -19,7 +19,7 @@ from tools.mechanism_registry import (
     transitive_dependents,
     unverified_priority_ranking,
 )
-from tools.generate_mechanism_charts import (
+from tools.mechanism_registry.generate_mechanism_charts import (
     _MAX_CHART_NODES,
     render_ancestors_chart,
     render_layer_chart,
@@ -237,7 +237,7 @@ def test_top_n_table_matches_ranking(registry_data):
 
 def test_wiring_map_classdef_check_script_passes_on_real_files():
     result = subprocess.run(
-        [sys.executable, "tools/mechanism_wiring_map_classdef.py"],
+        [sys.executable, "tools/mechanism_registry/mechanism_wiring_map_classdef.py"],
         cwd=REPO_ROOT, capture_output=True, text=True, timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -249,7 +249,7 @@ def test_make_target_generates_priority_view():
     )
     assert result.returncode == 0, result.stdout + result.stderr
     check = subprocess.run(
-        [sys.executable, "tools/generate_mechanism_priority_view.py", "--check"],
+        [sys.executable, "tools/mechanism_registry/generate_mechanism_priority_view.py", "--check"],
         cwd=REPO_ROOT, capture_output=True, text=True, timeout=30,
     )
     assert check.returncode == 0, check.stdout + check.stderr
@@ -259,7 +259,7 @@ def test_generator_check_mode_detects_staleness(tmp_path):
     stale_output = tmp_path / "stale_priority_view.md"
     stale_output.write_text("not the real generated content\n", encoding="utf-8")
     result = subprocess.run(
-        [sys.executable, "tools/generate_mechanism_priority_view.py",
+        [sys.executable, "tools/mechanism_registry/generate_mechanism_priority_view.py",
          "--output", str(stale_output), "--check"],
         cwd=REPO_ROOT, capture_output=True, text=True, timeout=30,
     )

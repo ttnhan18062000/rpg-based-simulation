@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_registry.py and docs/brainstorm/mechanisms.yaml.
+"""Tests for tools/mechanism_registry/registry.py and docs/brainstorm/mechanisms.yaml.
 
 TCK-20260915-MECHANISM-REGISTRY-FOUNDATION (child of TCK-20260915-EPIC-MECHANISM-REGISTRY).
 
@@ -263,7 +263,7 @@ def test_make_target_fails_on_injected_defect(tmp_path):
         "    state: done\n"
     )
     result = subprocess.run(
-        [sys.executable, "tools/mechanism_registry.py", str(broken)],
+        [sys.executable, "tools/mechanism_registry/registry.py", str(broken)],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -276,7 +276,7 @@ def test_make_target_fails_on_injected_defect(tmp_path):
 def test_makefile_wires_mechanism_registry_validate_target():
     makefile_text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
     assert "mechanism-registry-validate:" in makefile_text
-    assert "tools/mechanism_registry.py" in makefile_text
+    assert "tools/mechanism_registry/registry.py" in makefile_text
 
 
 # ── TCK-20260915-MECHANISM-VERIFICATION-AXIS ─────────────────────────────────────────────────
@@ -330,7 +330,7 @@ def test_validator_rejects_implemented_by_not_a_list():
         "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
         "mechanisms": [
             {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
-             "implemented_by": "tools/mechanism_registry.py"},
+             "implemented_by": "tools/mechanism_registry/registry.py"},
         ],
     }
     errors = validate(fixture)
@@ -358,7 +358,7 @@ def test_validator_accepts_implemented_by_real_existing_path():
         "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
         "mechanisms": [
             {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
-             "implemented_by": ["tools/mechanism_registry.py"]},
+             "implemented_by": ["tools/mechanism_registry/registry.py"]},
         ],
     }
     assert validate(fixture) == []
@@ -502,7 +502,7 @@ def test_make_target_generates_verification_view():
     # The real committed output must already be in sync with the real registry -- run the
     # script's own --check mode against the real files, never hand-diff.
     check = subprocess.run(
-        [sys.executable, "tools/generate_mechanism_verification_view.py", "--check"],
+        [sys.executable, "tools/mechanism_registry/generate_mechanism_verification_view.py", "--check"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -517,7 +517,7 @@ def test_generator_check_mode_detects_staleness(tmp_path):
     stale_output = tmp_path / "stale_view.md"
     stale_output.write_text("this is not the real generated content\n", encoding="utf-8")
     result = subprocess.run(
-        [sys.executable, "tools/generate_mechanism_verification_view.py",
+        [sys.executable, "tools/mechanism_registry/generate_mechanism_verification_view.py",
          "--output", str(stale_output), "--check"],
         cwd=REPO_ROOT,
         capture_output=True,
@@ -531,4 +531,4 @@ def test_generator_check_mode_detects_staleness(tmp_path):
 def test_makefile_wires_mechanism_verification_view_target():
     makefile_text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
     assert "mechanism-verification-view:" in makefile_text
-    assert "tools/generate_mechanism_verification_view.py" in makefile_text
+    assert "tools/mechanism_registry/generate_mechanism_verification_view.py" in makefile_text

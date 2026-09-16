@@ -310,37 +310,37 @@ brainstorm-idea-index: ## Regenerate the per-idea cross-document index (docs/bra
 	$(PYTHON3) tools/generate_brainstorm_idea_index.py
 
 mechanism-registry-validate: ## Validate docs/brainstorm/mechanisms.yaml against its 6 invariants (depends_on resolution, DAG acyclicity, layer declaration, state enum, verified.instrument enum, verified.verdict enum)
-	$(PYTHON3) tools/mechanism_registry.py
+	$(PYTHON3) tools/mechanism_registry/registry.py
 	@echo ""
 	@echo "--- Graphify cross-check (report-only, informational -- never affects this target's exit code) ---"
-	@$(PYTHON3) tools/mechanism_registry_graphify_check.py
+	@$(PYTHON3) tools/mechanism_registry/mechanism_registry_graphify_check.py
 
 mechanism-verification-view: ## Regenerate docs/brainstorm/mechanism_verification_view.md from docs/brainstorm/mechanisms.yaml
-	$(PYTHON3) tools/generate_mechanism_verification_view.py
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_verification_view.py
 
 mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.md (top-N unverified, by rank x transitive dependents)
-	$(PYTHON3) tools/generate_mechanism_priority_view.py
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_priority_view.py
 
 mechanism-registry-view: ## Regenerate docs/brainstorm/mechanism_registry_view.md (all mechanisms, priority + verification together, not truncated)
-	$(PYTHON3) tools/generate_mechanism_registry_view.py
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_view.py
 
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
-	$(PYTHON3) tools/generate_mechanism_registry_html.py
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 
 mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
-	$(PYTHON3) tools/mechanism_wiring_map_classdef.py
+	$(PYTHON3) tools/mechanism_registry/mechanism_wiring_map_classdef.py
 
 mechanism-atlas-check: ## Check the atlas's mapped card badge cls values against the real registry state (--check, writes nothing)
-	$(PYTHON3) tools/mechanism_atlas_regenerate.py --check
+	$(PYTHON3) tools/mechanism_registry/mechanism_atlas_regenerate.py --check
 
 mechanism-atlas-regenerate: ## Fix the atlas's mapped card badge cls values to match the real registry state (surgical: cls only, never touches prose)
-	$(PYTHON3) tools/mechanism_atlas_regenerate.py
+	$(PYTHON3) tools/mechanism_registry/mechanism_atlas_regenerate.py
 
 mechanism-capabilities-check: ## Check the capabilities page's mapped card tier values against the real registry state (--check, writes nothing)
-	$(PYTHON3) tools/mechanism_capabilities_regenerate.py --check
+	$(PYTHON3) tools/mechanism_registry/mechanism_capabilities_regenerate.py --check
 
 mechanism-capabilities-regenerate: ## Fix the capabilities page's mapped card tier/tierLabel values to match the real registry state (surgical: never touches title/desc)
-	$(PYTHON3) tools/mechanism_capabilities_regenerate.py
+	$(PYTHON3) tools/mechanism_registry/mechanism_capabilities_regenerate.py
 
 simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
 	python3 tools/generate_corpus_registry.py

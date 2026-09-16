@@ -21,13 +21,13 @@ from pathlib import Path
 
 import yaml
 
-from tools.mechanism_atlas_regenerate import compute_diffs as atlas_compute_diffs
-from tools.mechanism_atlas_regenerate import extract_json_block as atlas_extract_json_block
-from tools.mechanism_capabilities_regenerate import compute_diffs as capabilities_compute_diffs
-from tools.mechanism_capabilities_regenerate import (
+from tools.mechanism_registry.mechanism_atlas_regenerate import compute_diffs as atlas_compute_diffs
+from tools.mechanism_registry.mechanism_atlas_regenerate import extract_json_block as atlas_extract_json_block
+from tools.mechanism_registry.mechanism_capabilities_regenerate import compute_diffs as capabilities_compute_diffs
+from tools.mechanism_registry.mechanism_capabilities_regenerate import (
     extract_json_block as capabilities_extract_json_block,
 )
-from tools.mechanism_wiring_map_classdef import compute_expected_classdef
+from tools.mechanism_registry.mechanism_wiring_map_classdef import compute_expected_classdef
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"

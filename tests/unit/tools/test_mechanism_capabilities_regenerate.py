@@ -1,5 +1,5 @@
-"""Tests for tools/mechanism_capabilities_card_mapping.py and
-tools/mechanism_capabilities_regenerate.py.
+"""Tests for tools/mechanism_registry/mechanism_capabilities_card_mapping.py and
+tools/mechanism_registry/mechanism_capabilities_regenerate.py.
 
 TCK-20260915-ARTIFACT-STATE-CONVERGENCE scope item 3. Mirrors
 test_mechanism_atlas_regenerate.py's own discipline: the load-bearing tests are the body
@@ -15,13 +15,13 @@ from pathlib import Path
 
 import pytest
 
-from tools.mechanism_capabilities_card_mapping import (
+from tools.mechanism_registry.mechanism_capabilities_card_mapping import (
     CARD_TO_MECHANISM_ID,
     PARTIAL_COVERAGE_CARDS,
     SPLIT_CARD_MECHANISMS,
     all_mechanism_card_badge_positions,
 )
-from tools.mechanism_capabilities_regenerate import (
+from tools.mechanism_registry.mechanism_capabilities_regenerate import (
     TIER_LABEL_OVERRIDES,
     _sections_by_id,
     apply_diffs,
@@ -95,7 +95,7 @@ def _fixture_data():
 
 def _patch_mapping(monkeypatch, positions):
     monkeypatch.setattr(
-        "tools.mechanism_capabilities_regenerate.all_mechanism_card_badge_positions",
+        "tools.mechanism_registry.mechanism_capabilities_regenerate.all_mechanism_card_badge_positions",
         lambda: positions,
     )
 
@@ -174,7 +174,7 @@ def test_real_capabilities_has_no_drift_against_the_real_registry():
     diffs = compute_diffs(data, states, verified)
     assert diffs == [], (
         f"Capabilities tier has drifted from the registry: {diffs}. "
-        f"Run `python3 tools/mechanism_capabilities_regenerate.py` to fix."
+        f"Run `python3 tools/mechanism_registry/mechanism_capabilities_regenerate.py` to fix."
     )
 
 

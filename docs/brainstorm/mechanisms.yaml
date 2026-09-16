@@ -36,7 +36,7 @@
 # for 8 days after its own code was deleted) went uncaught. `mechanism_registry.py::validate()`
 # checks every `implemented_by` path exists on disk, so a deleted implementing module fails
 # validation the day it's deleted. NOT backfilled for all mechanisms at once -- it grows organically
-# as tickets touch each mechanism, per `tools/mechanism_registry_completeness_check.py`'s own
+# as tickets touch each mechanism, per `tools/mechanism_registry/mechanism_registry_completeness_check.py`'s own
 # "N of 86 have no implemented_by" gap report.
 #
 # Frequency lives ONLY on layers, never on a mechanism.
@@ -80,7 +80,7 @@
 # `contradicted` is reserved for the historically expensive case: `state: done` with a *runtime*
 # instrument finding the claimed behavior doesn't actually happen.
 #
-# Validate with: make mechanism-registry-validate  (tools/mechanism_registry.py)
+# Validate with: make mechanism-registry-validate  (tools/mechanism_registry/registry.py)
 # Render the verification view with: make mechanism-verification-view
 #
 # KNOWN PLACEHOLDER: `race_collective_force` and `settlement_capacity_axis` are assigned

@@ -26,9 +26,9 @@ reversing it later is a config change, not a code edit (this session cannot visu
 TB subgraph-lane rendering itself; see investigation.md).
 
 Usage:
-  python3 tools/generate_mechanism_charts.py layer entity
-  python3 tools/generate_mechanism_charts.py ancestors combat_resolution
-  python3 tools/generate_mechanism_charts.py top-n --n 25
+  python3 tools/mechanism_registry/generate_mechanism_charts.py layer entity
+  python3 tools/mechanism_registry/generate_mechanism_charts.py ancestors combat_resolution
+  python3 tools/mechanism_registry/generate_mechanism_charts.py top-n --n 25
 """
 from __future__ import annotations
 
@@ -39,11 +39,11 @@ from typing import Dict, List, Optional
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
-from mechanism_registry import (  # noqa: E402
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
+from registry import (  # noqa: E402
     DependencyCycleError,
     transitive_dependencies_of,
     transitive_dependents,
@@ -57,7 +57,7 @@ _MAX_CHART_NODES = 40
 
 # Registry state -> a classDef name for these NEW charts. Uses the registry's own six-class
 # vocabulary directly as classDef names (unlike the wiring map's four-class classDef, which this
-# tool does not touch -- see tools/mechanism_wiring_map_classdef.py for that, separate, derivation).
+# tool does not touch -- see tools/mechanism_registry/mechanism_wiring_map_classdef.py for that, separate, derivation).
 _CLASSDEF_STYLES = {
     "done": "fill:#e4efe6,stroke:#3f7d5c,stroke-width:2px,color:#232019",
     "partial": "fill:#fdf3d8,stroke:#b8860b,stroke-width:2px,color:#232019",

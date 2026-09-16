@@ -2,7 +2,7 @@
 """
 The capabilities-page card <-> mechanism id mapping (TCK-20260915-ARTIFACT-STATE-CONVERGENCE).
 
-Unlike tools/mechanism_atlas_card_mapping.py, there is NO pre-existing citation table to reuse here
+Unlike tools/mechanism_registry/mechanism_atlas_card_mapping.py, there is NO pre-existing citation table to reuse here
 -- TCK-20260915-MECHANISM-REGISTRY-FOUNDATION's investigation.md only cited atlas cards. This
 mapping was built fresh by reading every one of the 99 capabilities cards' full `desc` text against
 the 75 registered mechanisms' real atlas-card descriptions (cross-referenced, not guessed from

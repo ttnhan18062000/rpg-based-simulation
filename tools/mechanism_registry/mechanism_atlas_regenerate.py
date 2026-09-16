@@ -19,10 +19,10 @@ Idea-level cards (not present in mechanism_atlas_card_mapping.all_mechanism_card
 are never visited at all, let alone touched.
 
 Usage:
-  python3 tools/mechanism_atlas_regenerate.py               # writes the real file
-  python3 tools/mechanism_atlas_regenerate.py --check        # exit 1 if drift exists, writes nothing
-  python3 tools/mechanism_atlas_regenerate.py --path PATH    # target a different atlas file (tests)
-  python3 tools/mechanism_atlas_regenerate.py --registry PATH  # target a different registry (tests)
+  python3 tools/mechanism_registry/mechanism_atlas_regenerate.py               # writes the real file
+  python3 tools/mechanism_registry/mechanism_atlas_regenerate.py --check        # exit 1 if drift exists, writes nothing
+  python3 tools/mechanism_registry/mechanism_atlas_regenerate.py --path PATH    # target a different atlas file (tests)
+  python3 tools/mechanism_registry/mechanism_atlas_regenerate.py --registry PATH  # target a different registry (tests)
 """
 from __future__ import annotations
 
@@ -36,11 +36,11 @@ from typing import Dict, List, Tuple
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_ATLAS_PATH = _REPO_ROOT / "docs" / "brainstorm" / "rpg_feature_atlas.html"
 _DEFAULT_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from mechanism_atlas_card_mapping import all_mechanism_card_badge_positions  # noqa: E402
 
 _BLOCK_RE = re.compile(

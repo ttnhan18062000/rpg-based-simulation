@@ -27,8 +27,8 @@ raising/returning a bool, so a caller can report every violation in one run inst
 the first -- "build the failure loud" (this ticket's own Implementation Notes).
 
 Usage:
-  python3 tools/mechanism_registry.py               # validate the real committed file
-  python3 tools/mechanism_registry.py <path>         # validate an arbitrary file (used by tests)
+  python3 tools/mechanism_registry/registry.py               # validate the real committed file
+  python3 tools/mechanism_registry/registry.py <path>         # validate an arbitrary file (used by tests)
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 
 VALID_STATES = frozenset({"done", "partial", "gap", "orphan", "gated", "skeleton"})

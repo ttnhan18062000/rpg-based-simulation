@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_capabilities_tier.py -- the single (state, verified) -> tier mapping.
+"""Tests for tools/mechanism_registry/mechanism_capabilities_tier.py -- the single (state, verified) -> tier mapping.
 
 TCK-20260915-ARTIFACT-STATE-CONVERGENCE scope item 3, AC #4. Explicitly asserts the camp case
 (done + contradicted -> built) as its own row, not inferred from the done+no-verdict case, since
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from tools.mechanism_capabilities_tier import (
+from tools.mechanism_registry.mechanism_capabilities_tier import (
     PARTIAL_TIER_OVERRIDES,
     compute_tier,
     resolve_tier,

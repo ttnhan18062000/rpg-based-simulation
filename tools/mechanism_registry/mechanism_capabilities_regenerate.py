@@ -5,7 +5,7 @@ it's hand-written to match, `tierLabel`) to mechanisms.yaml's own (state, verifi
 else.
 
 TCK-20260915-ARTIFACT-STATE-CONVERGENCE (scope item 3). Same discipline as
-tools/mechanism_atlas_regenerate.py, tightened by peer review specifically for this file: the
+tools/mechanism_registry/mechanism_atlas_regenerate.py, tightened by peer review specifically for this file: the
 capabilities page exists precisely because its prose is written for a non-dev reader, and no
 mapping can generate that -- so `title`/`desc` are NEVER touched, only `tier`, and `tierLabel` only
 when this ticket deliberately hand-writes a real replacement label (never templated from the tier
@@ -14,10 +14,10 @@ value). Proven safe by the same round-trip check used for the atlas
 unmodified) and by a dedicated body-preservation test.
 
 Usage:
-  python3 tools/mechanism_capabilities_regenerate.py               # writes the real file
-  python3 tools/mechanism_capabilities_regenerate.py --check        # exit 1 if drift exists
-  python3 tools/mechanism_capabilities_regenerate.py --path PATH    # target a different file (tests)
-  python3 tools/mechanism_capabilities_regenerate.py --registry PATH  # target a different registry
+  python3 tools/mechanism_registry/mechanism_capabilities_regenerate.py               # writes the real file
+  python3 tools/mechanism_registry/mechanism_capabilities_regenerate.py --check        # exit 1 if drift exists
+  python3 tools/mechanism_registry/mechanism_capabilities_regenerate.py --path PATH    # target a different file (tests)
+  python3 tools/mechanism_registry/mechanism_capabilities_regenerate.py --registry PATH  # target a different registry
 """
 from __future__ import annotations
 
@@ -31,11 +31,11 @@ from typing import Dict, List, Optional, Tuple
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_PATH = _REPO_ROOT / "docs" / "brainstorm" / "simulation_capabilities.html"
 _DEFAULT_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from mechanism_capabilities_card_mapping import all_mechanism_card_badge_positions  # noqa: E402
 from mechanism_capabilities_tier import resolve_tier  # noqa: E402
 

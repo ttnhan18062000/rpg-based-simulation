@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_registry_completeness_check.py.
+"""Tests for tools/mechanism_registry/mechanism_registry_completeness_check.py.
 
 TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING. This tool is the recurring, standing version of
 the manual completeness pass (TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS) that found 11
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.mechanism_registry_completeness_check import (
+from tools.mechanism_registry.mechanism_registry_completeness_check import (
     EXCLUSIONS,
     build_report,
     enumerate_targets,

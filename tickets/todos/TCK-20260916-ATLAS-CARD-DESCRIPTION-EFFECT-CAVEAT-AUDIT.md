@@ -99,7 +99,7 @@ describes an architecture the codebase has since moved past.
 
 - Design-idea cards (68 of them) — this ticket only re-reads the 73 mechanism-mapped cards.
 - Re-deriving the card-to-mechanism mapping itself (already built and verified in
-  `tools/mechanism_atlas_card_mapping.py` by `TCK-20260915-ARTIFACT-STATE-CONVERGENCE`).
+  `tools/mechanism_registry/mechanism_atlas_card_mapping.py` by `TCK-20260915-ARTIFACT-STATE-CONVERGENCE`).
 - Auto-ingesting any of this from an automated instrument. Every verdict here is a `code_trace`
   finding, written deliberately after a real re-read, matching `TCK-20260915-MECHANISM-
   VERIFICATION-AXIS`'s own explicit scope limit (no automated ingestion).
@@ -138,7 +138,7 @@ describes an architecture the codebase has since moved past.
 ## Related Code Areas
 - `docs/brainstorm/rpg_feature_atlas.html`
 - `docs/brainstorm/mechanisms.yaml`
-- `tools/mechanism_atlas_card_mapping.py`
+- `tools/mechanism_registry/mechanism_atlas_card_mapping.py`
 
 ## Assumptions / Open Questions
 - Whether the real instance count beyond `camp` is 0, a handful, or many — genuinely unknown until
@@ -148,6 +148,22 @@ describes an architecture the codebase has since moved past.
 This is also the natural first real producer for the verification axis at scale — a better outcome
 than `TCK-20260915-ARTIFACT-STATE-CONVERGENCE` quietly absorbing this work as scope creep on the
 epic's last child ticket.
+
+**The motivating measurement for the prose-duplication question, parked but recorded here per peer
+review (2026-09-16), not acted on in this batch**: fixing `motivation_doctrine` required a manual
+prose correction in *three* separate documents (the atlas card, the capabilities card, and the
+wiring map's own node label) — none of which is a field T4's own convergence made derivable.
+`state` correctly derives from the registry now; the *description text* explaining what a state
+means does not, and is still hand-authored once per artifact. One retirement
+(`TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT`) went uncaught for eight days specifically
+because all three descriptions kept saying "confirmed live"/"currently real" independently, and a
+correct `state` token sitting next to a wrong paragraph doesn't help a reader who reads the
+paragraph, not the token. **This is sharper, concrete evidence for the same duplication principle
+the user has already stated as absolute** (one document owns a piece of information; a generated
+rendering is fine, a second hand-authored copy is not) — the standing atlas↔capabilities
+mirroring rule is the corpus's largest surviving instance of exactly this. Not this ticket's own
+scope to resolve; recorded so it is a decision to make deliberately later, not something
+rediscovered from scratch.
 
 ## Test Summary
 Not yet started.

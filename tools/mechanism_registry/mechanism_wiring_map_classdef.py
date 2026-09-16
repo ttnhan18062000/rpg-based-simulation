@@ -18,7 +18,7 @@ itself a separately seeded mechanism) -- excluded from the mapping and left with
 hand-assigned class, not derived, since there is nothing in the registry to derive it from.
 
 Usage:
-  python3 tools/mechanism_wiring_map_classdef.py         # report drift, exit 1 if any found
+  python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py         # report drift, exit 1 if any found
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from typing import Dict
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 _WIRING_MAP_PATH = _REPO_ROOT / "docs" / "brainstorm" / "rpg_simulation_wiring_map.html"
 

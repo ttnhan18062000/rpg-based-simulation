@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_registry_graphify_check.py — the report-only graphify cross-check
+"""Tests for tools/mechanism_registry/mechanism_registry_graphify_check.py — the report-only graphify cross-check
 for docs/brainstorm/mechanisms.yaml's `depends_on` edges.
 
 TCK-20260915-MECHANISM-REGISTRY-FOUNDATION Scope item 5. The load-bearing contract under test is
@@ -13,8 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-import tools.mechanism_registry_graphify_check as graphify_check_module
-from tools.mechanism_registry_graphify_check import _REAL_RELATIONS, check, main
+import tools.mechanism_registry.mechanism_registry_graphify_check as graphify_check_module
+from tools.mechanism_registry.mechanism_registry_graphify_check import _REAL_RELATIONS, check, main
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -109,7 +109,7 @@ def test_never_fails_the_build_even_with_suspicious_and_no_match_findings():
 
 def test_subprocess_invocation_always_exits_zero():
     result = subprocess.run(
-        [sys.executable, "tools/mechanism_registry_graphify_check.py"],
+        [sys.executable, "tools/mechanism_registry/mechanism_registry_graphify_check.py"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,

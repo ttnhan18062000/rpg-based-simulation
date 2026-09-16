@@ -1,4 +1,4 @@
-"""Tests for tools/generate_mechanism_registry_html.py.
+"""Tests for tools/mechanism_registry/generate_mechanism_registry_html.py.
 
 TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW, Scope item 2. A generated HTML page replacing the
 hand-authored artifact peer caught and reverted -- every row must come from
@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tools.generate_mechanism_registry_html import render
+from tools.mechanism_registry.generate_mechanism_registry_html import render
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
@@ -124,7 +124,7 @@ def test_generator_check_mode_detects_staleness(tmp_path):
     stale_output = tmp_path / "mechanism_registry.html"
     stale_output.write_text("stale content that will never match", encoding="utf-8")
     result = subprocess.run(
-        [sys.executable, "tools/generate_mechanism_registry_html.py", "--check",
+        [sys.executable, "tools/mechanism_registry/generate_mechanism_registry_html.py", "--check",
          "--output", str(stale_output)],
         cwd=REPO_ROOT,
         capture_output=True,

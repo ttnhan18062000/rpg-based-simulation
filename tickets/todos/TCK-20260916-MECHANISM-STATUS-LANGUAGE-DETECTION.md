@@ -97,7 +97,10 @@ None yet.
 - `docs/brainstorm/rpg_feature_atlas.html`
 - `docs/brainstorm/simulation_capabilities.html`
 - `docs/brainstorm/rpg_simulation_wiring_map.html`
-- New: `tools/mechanism_status_language_check.py` (proposed)
+- New: `tools/mechanism_registry/mechanism_status_language_check.py` (proposed) — the 14 existing
+  mechanism-registry tools were moved into `tools/mechanism_registry/` by
+  `TCK-20260916-MECHANISM-REGISTRY-TOOLS-PACKAGE`; a 15th tool belongs there too, not back in the
+  flat `tools/` directory.
 
 ## Assumptions / Open Questions
 The exact status-vocabulary word list needs deriving from a real corpus scan during

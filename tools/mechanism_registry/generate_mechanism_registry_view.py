@@ -7,7 +7,7 @@ TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW. Answers "what matters most, and d
 works" in one read -- neither existing view does both: mechanism_verification_view.md has every
 mechanism but no priority; mechanism_priority_view.md has priority but only the unverified subset,
 truncated at 25. This is a third view, not a replacement for either -- both stay, each still the
-right answer to its own narrower question (see tools/mechanism_registry.py::all_mechanisms_combined_view's own
+right answer to its own narrower question (see tools/mechanism_registry/registry.py::all_mechanisms_combined_view's own
 docstring).
 
 This view is the first to run against a node set TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS
@@ -22,9 +22,9 @@ view would hide foundational mechanisms again, for a new reason, after
 TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-POPULATION just fixed exactly that failure mode once.
 
 Usage:
-  python3 tools/generate_mechanism_registry_view.py               # writes the real output
-  python3 tools/generate_mechanism_registry_view.py --check        # exit 1 if output is stale
-  python3 tools/generate_mechanism_registry_view.py --output PATH  # write elsewhere (tests)
+  python3 tools/mechanism_registry/generate_mechanism_registry_view.py               # writes the real output
+  python3 tools/mechanism_registry/generate_mechanism_registry_view.py --check        # exit 1 if output is stale
+  python3 tools/mechanism_registry/generate_mechanism_registry_view.py --output PATH  # write elsewhere (tests)
 """
 from __future__ import annotations
 
@@ -34,12 +34,12 @@ from pathlib import Path
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry_view.md"
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
-from mechanism_registry import all_mechanisms_combined_view  # noqa: E402
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
+from registry import all_mechanisms_combined_view  # noqa: E402
 
 
 def render(data: dict) -> str:

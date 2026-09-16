@@ -29,7 +29,7 @@ shipping the report-only check Scope item 5 asks for; a noisy `suspicious` bucke
 the signal that refinement is worth building next, not a reason to withhold this first pass.
 
 Usage:
-  python3 tools/mechanism_registry_graphify_check.py
+  python3 tools/mechanism_registry/mechanism_registry_graphify_check.py
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ from typing import Dict, List, Optional, Set
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 _GRAPH_PATH = _REPO_ROOT / "graphify-out" / "graph.json"
 

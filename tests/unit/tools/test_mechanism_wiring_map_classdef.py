@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_wiring_map_classdef.py -- derives the wiring map's Entity Operating
+"""Tests for tools/mechanism_registry/mechanism_wiring_map_classdef.py -- derives the wiring map's Entity Operating
 Loop diagram's classDef state colouring from the real mechanism registry.
 
 TCK-20260915-MECHANISM-PRIORITY-DERIVATION Scope item 3 (the real part, per peer review: only the
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tools.mechanism_wiring_map_classdef import (
+from tools.mechanism_registry.mechanism_wiring_map_classdef import (
     OPERATING_LOOP_NODE_TO_MECHANISM_ID,
     STATE_TO_CLASSDEF,
     compute_expected_classdef,
@@ -77,7 +77,7 @@ def test_real_wiring_map_has_no_drift_against_the_real_registry():
     drift = find_drift(registry, text)
     assert drift == {}, (
         f"Entity Operating Loop diagram has drifted from the registry: {drift}. "
-        f"Run `python3 tools/mechanism_wiring_map_classdef.py` for a readable report."
+        f"Run `python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py` for a readable report."
     )
 
 

@@ -3,7 +3,7 @@
 Renders the flagship top-N unverified-priority view (TCK-20260915-MECHANISM-PRIORITY-DERIVATION)
 to docs/brainstorm/mechanism_priority_view.md -- the text table plus the mermaid chart, "two
 outputs from one registry" per the ticket's own Request Summary. Mirrors
-tools/generate_mechanism_verification_view.py's own committed-markdown, --check-mode pattern.
+tools/mechanism_registry/generate_mechanism_verification_view.py's own committed-markdown, --check-mode pattern.
 
 Top-25 truncation revisited and kept (TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW AC #5) now
 that a genuinely complete, non-truncated view exists (mechanism_registry_view.md): this view's own
@@ -12,8 +12,8 @@ anything the way it did before that third view existed, since nothing here is an
 way to see the full registry anymore.
 
 Usage:
-  python3 tools/generate_mechanism_priority_view.py
-  python3 tools/generate_mechanism_priority_view.py --check
+  python3 tools/mechanism_registry/generate_mechanism_priority_view.py
+  python3 tools/mechanism_registry/generate_mechanism_priority_view.py --check
 """
 from __future__ import annotations
 
@@ -23,14 +23,14 @@ from pathlib import Path
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_priority_view.md"
 _DEFAULT_N = 25
 
-sys.path.insert(0, str(_REPO_ROOT / "tools"))
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from generate_mechanism_charts import render_top_n_chart, render_top_n_table  # noqa: E402
-from mechanism_registry import unverified_priority_ranking  # noqa: E402
+from registry import unverified_priority_ranking  # noqa: E402
 
 
 def render(data: dict, n: int = _DEFAULT_N) -> str:

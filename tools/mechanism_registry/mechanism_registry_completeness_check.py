@@ -39,15 +39,15 @@ conclusion:
    (EXCLUSIONS, a real recorded decision with a reason) and from "confirmed bound."
 
 **Report-only, same rule as every other detector in this corpus** (see
-`tools/mechanism_registry_graphify_check.py`'s own docstring for the precedent): this script never
+`tools/mechanism_registry/mechanism_registry_graphify_check.py`'s own docstring for the precedent): this script never
 fails the build by itself. Drift enforcement is a separate, explicit regression test
 (`tests/unit/tools/test_mechanism_registry_completeness_check.py`) that pins today's known
 enumeration/binding/exclusion counts -- if a new module appears, that test fails, forcing a human
 decision (bind it, exclude it with a reason, or register a new mechanism) rather than a silent skip.
 
 Usage:
-  python3 tools/mechanism_registry_completeness_check.py           # human-readable report
-  python3 tools/mechanism_registry_completeness_check.py --json     # machine-readable report
+  python3 tools/mechanism_registry/mechanism_registry_completeness_check.py           # human-readable report
+  python3 tools/mechanism_registry/mechanism_registry_completeness_check.py --json     # machine-readable report
 """
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DOMAINS_DIR = _REPO_ROOT / "src" / "domains"
 _SYSTEMS_DIR = _REPO_ROOT / "src" / "systems"
 _REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
