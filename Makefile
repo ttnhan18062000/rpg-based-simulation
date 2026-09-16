@@ -324,6 +324,18 @@ mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.m
 mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
 	$(PYTHON3) tools/mechanism_wiring_map_classdef.py
 
+mechanism-atlas-check: ## Check the atlas's mapped card badge cls values against the real registry state (--check, writes nothing)
+	$(PYTHON3) tools/mechanism_atlas_regenerate.py --check
+
+mechanism-atlas-regenerate: ## Fix the atlas's mapped card badge cls values to match the real registry state (surgical: cls only, never touches prose)
+	$(PYTHON3) tools/mechanism_atlas_regenerate.py
+
+mechanism-capabilities-check: ## Check the capabilities page's mapped card tier values against the real registry state (--check, writes nothing)
+	$(PYTHON3) tools/mechanism_capabilities_regenerate.py --check
+
+mechanism-capabilities-regenerate: ## Fix the capabilities page's mapped card tier/tierLabel values to match the real registry state (surgical: never touches title/desc)
+	$(PYTHON3) tools/mechanism_capabilities_regenerate.py
+
 simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
 	python3 tools/generate_corpus_registry.py
 
