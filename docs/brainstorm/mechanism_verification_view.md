@@ -2,12 +2,13 @@
 
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
 
-7 of 75 mechanisms have a recorded verdict. The remaining 68 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
+8 of 75 mechanisms have a recorded verdict. The remaining 67 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
 
 **Static vs runtime evidence, grouped separately below**: `code_trace` proves what the code *says* (reachable, called, a field never written) and can never establish that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` prove what the simulation actually *does*. A `code_trace` row is not equivalent evidence to a runtime-confirmed row.
 
 | Mechanism | Layer | State | Evidence | Instrument | Verdict | Date | Note |
 |---|---|---|---|---|---|---|---|
+| `action_pacing_readiness` | entity | partial | runtime | scenario | observed | 2026-09-16 | Differential scenario (tests/mechanic_scenarios/test_action_pacing_readiness_gate.py): readiness=50.0 withholds a staged attack (INSUFFICIENT_READINESS), readiness=100.0 lets it proceed, through a real Kernel tick against a real compiled world. The gate itself -- what all 23 transitive dependents actually need -- genuinely works. state stays partial: the separate agility-scaling half (readiness_speed) has a real formula (TCK-20260831) but it only applies after an entity's first stat-recalculation event, never at spawn -- checked directly (WorldCompiler never calls it), not assumed. Not a stale badge, not a new defect. |
 | `combat_engagement` | entity | done | runtime | scenario | observed | 2026-09-16 | Corpus: posture gate moved attacks 1960 -> 837. Scenario: risk-rejected posture -> 0 attacks vs no posture -> attack proceeds, all else identical. |
 | `camp` | region | done | static | code_trace | contradicted | 2026-09-16 | CampState is real (spawns monsters, triggers raids, a real clearing-reward loop) but no compiled or procedurally-generated world seeds state.camps -- a permanent no-op in every world today. state stays done (the code is correct and wired, not defective) -- the missing thing is world data, not the mechanism itself. See docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma and calamity-intensity cases. |
 | `cross_episode_grief_nemesis` | faction | done | static | code_trace | observed | 2026-09-16 | Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated betrayal -> party-formation blocker); narrow trigger. |
@@ -15,7 +16,6 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `opportunity_rumor_seeds` | world | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
 | `self_model` | entity | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
 | `succession` | entity | orphan | static | code_trace | observed | 2026-09-16 | heir_entity_id confirmed never populated by any write path (repo-wide search) -- confirms the orphan claim, does not contradict it. |
-| `action_pacing_readiness` | entity | partial | unverified | — | unverified | — | — |
 | `adventure_routing` | entity | done | unverified | — | unverified | — | — |
 | `affection_relationship_bonds` | entity | done | unverified | — | unverified | — | — |
 | `aging_death` | entity | done | unverified | — | unverified | — | — |

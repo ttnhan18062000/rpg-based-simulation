@@ -3,7 +3,7 @@
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 68 of 75 mechanisms are currently
+**Which mechanism to verify next.** 67 of 75 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -13,7 +13,6 @@ more depends on it. Ranked below, top 25.
 
 | Mechanism | Layer | State | Priority | Transitive Dependents |
 |---|---|---|---|---|
-| `action_pacing_readiness` | entity | partial | 115 | 23 |
 | `tactical_decision` | entity | done | 70 | 14 |
 | `combat_resolution` | entity | done | 60 | 12 |
 | `cognition_capacity_fatigue` | entity | done | 45 | 9 |
@@ -38,6 +37,7 @@ more depends on it. Ranked below, top 25.
 | `buildings_town_services` | world | done | 1 | 1 |
 | `adventure_routing` | entity | done | 0 | 0 |
 | `breakthrough_bonuses` | entity | done | 0 | 0 |
+| `build_diversity` | entity | gap | 0 | 0 |
 
 ## Chart form
 
@@ -50,7 +50,6 @@ flowchart BT
     classDef gated fill:#f7ecd2,stroke:#9a6b0c,stroke-width:2px,stroke-dasharray: 3 3,color:#232019
     classDef skeleton fill:#eee,stroke:#888,stroke-width:1px,stroke-dasharray: 1 3,color:#232019
 
-    action_pacing_readiness["action pacing readiness"]:::partial
     adventure_routing["adventure routing"]:::done
     affection_relationship_bonds["affection relationship bonds"]:::done
     aging_death["aging death"]:::done
@@ -58,6 +57,7 @@ flowchart BT
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
     breakthrough_bonuses["breakthrough bonuses"]:::done
+    build_diversity["build diversity"]:::gap
     buildings_town_services["buildings town services"]:::done
     city["city"]:::partial
     class_assignment["class assignment"]:::partial
@@ -80,6 +80,7 @@ flowchart BT
     cognition_capacity_fatigue --> adventure_routing
     interaction_channeling --> affection_relationship_bonds
     xp_leveling --> breakthrough_bonuses
+    class_assignment --> build_diversity
     city --> buildings_town_services
     regional_trauma_hazards_sovereignty --> city
     race_archetype --> class_assignment
@@ -87,13 +88,11 @@ flowchart BT
     attributes_biology --> derived_stats
     belief_cycle --> goal_hierarchy
     reputation --> goal_hierarchy
-    action_pacing_readiness --> interaction_channeling
     goal_hierarchy --> motivation_doctrine
     affection_relationship_bonds --> motivation_doctrine
     cognition_capacity_fatigue --> perception
     betrayal_siege_war --> regional_trauma_hazards_sovereignty
     affection_relationship_bonds --> reputation
-    action_pacing_readiness --> tactical_decision
     combat_resolution --> trauma
     combat_resolution --> xp_leveling
 ```

@@ -133,15 +133,33 @@ def test_unverified_priority_ranking_orders_by_priority_descending():
     assert ranking[0]["id"] == "hub"  # weight 3 * 2 dependents = 6, beats the two leaves' 0 each
 
 
-def test_real_registry_top_row_favors_frequent_layer_over_rare_layer(registry_data):
-    """TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED regression, on real data: the
-    corrected formula must favor a per-tick entity mechanism with more dependents over a rare-layer
-    one with fewer, and must NOT put a deliberately deprioritized faction-war mechanism at the top."""
-    ranking = unverified_priority_ranking(registry_data)
-    betrayal_row = next(r for r in ranking if r["id"] == "betrayal_siege_war")
-    apr_row = next(r for r in ranking if r["id"] == "action_pacing_readiness")
-    assert apr_row["priority"] > betrayal_row["priority"]
+def test_real_registry_favors_frequent_layer_over_rare_layer(registry_data):
+    """TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED regression, on real data. Computed via
+    priority() directly (not unverified_priority_ranking()) so this test stays valid regardless of
+    which mechanisms later get a verified block -- it must keep holding on the registry's raw
+    state/layer/dependents shape, not on any two mechanisms' current verified status."""
+    layers = registry_data["layers"]
+    dep_map = {m["id"]: m.get("depends_on") or [] for m in registry_data["mechanisms"]}
+    by_id = {m["id"]: m for m in registry_data["mechanisms"]}
 
+    entity_mech = by_id["action_pacing_readiness"]  # entity layer, 23 transitive dependents
+    faction_mech = by_id["betrayal_siege_war"]  # faction layer, 11 transitive dependents
+
+    entity_priority = priority(entity_mech["id"], dep_map, entity_mech["layer"], layers)
+    faction_priority = priority(faction_mech["id"], dep_map, faction_mech["layer"], layers)
+
+    assert entity_priority > faction_priority, (
+        "action_pacing_readiness (entity, per-tick, more dependents) must outrank "
+        "betrayal_siege_war (faction, rare, fewer dependents) -- if it doesn't, the layer weight "
+        "direction has regressed back to rewarding rare layers"
+    )
+
+
+def test_real_registry_top_unverified_row_is_not_faction_war(registry_data):
+    """Companion regression check: whichever mechanism currently ranks #1 unverified, it must not
+    be the deliberately deprioritized betrayal_siege_war -- checked by name explicitly, since a
+    silent regression back to rank-based weighting would put it there again."""
+    ranking = unverified_priority_ranking(registry_data)
     top_ids = [r["id"] for r in ranking[:3]]
     assert "betrayal_siege_war" not in top_ids, (
         "betrayal_siege_war (deliberately deprioritized faction war) must not rank in the top 3 "

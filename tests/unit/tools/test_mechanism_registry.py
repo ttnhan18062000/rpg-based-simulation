@@ -432,7 +432,7 @@ def test_reader_get_verification_known_and_unknown(registry):
     assert verified is not None
     assert verified["instrument"] == "scenario"
     assert registry.get_verification("succession")["instrument"] == "code_trace"
-    assert registry.get_verification("action_pacing_readiness") is None  # real, unverified id
+    assert registry.get_verification("tactical_decision") is None  # real, unverified id
     assert registry.get_verification("nonexistent_mechanism_xyz") is None  # unknown id
 
 
