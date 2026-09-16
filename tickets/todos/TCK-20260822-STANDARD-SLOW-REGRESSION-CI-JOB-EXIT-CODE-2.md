@@ -15,7 +15,7 @@ tags: [testing]
 "Slow regression" CI job (push-to-main only) has failed with exit code 2 on 4 of the last 7 runs
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 standard
@@ -24,7 +24,38 @@ standard
 bug
 
 ## Priority
-P2
+P3
+
+## Deferral — 2026-09-16 (user decision)
+
+**Deliberately deprioritised and parked: P2 → P3, OPEN → BLOCKED. Do not fix this now.**
+
+The user's reasoning: the engine re-architecture is already planned and not yet finished, and this
+job re-runs the engine for real. Fixing the slow suite against an architecture that is about to
+change would be wasted work — and worse, a fix tuned to current behaviour could quietly encode
+assumptions the re-architecture then invalidates.
+
+**What this means for anyone reading a red `Slow regression` on `main`:** it is *expected state*,
+not an open question. Confirmed still failing on 2026-09-16 (run against `a13873f1e`, failing at
+step 5, "Slow tests — corpus diversity (isolated per-test)", with the 5k behavioural regression and
+legacy regression steps never reached). That is consistent with this ticket's original finding and
+adds no new information. **Do not re-investigate it, do not open a duplicate ticket, and do not
+treat it as a blocker for merging unrelated work.**
+
+Two context notes worth having, both established 2026-09-16:
+
+- **This lane is invisible to PRs by design.** Its `if:` is
+  `github.ref == 'refs/heads/main' || schedule || workflow_dispatch`
+  (`TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH` took it off the PR path deliberately, since
+  the 45-90min suite blocked iteration). So it can only ever fail after a merge, which is why it
+  goes unnoticed for long stretches.
+- **It also `needs:` eleven upstream jobs**, so it is *skipped* whenever any of them fails. It had
+  been skipped on the preceding pushes to `main` for that reason and only ran again once the rest
+  of the suite went green — the failure was present the whole time, merely unobservable.
+
+Unblock condition: the planned engine re-architecture lands. At that point re-derive whether this
+still reproduces before doing any work on it — the exit-code-2 cause was never confirmed by a local
+reproduction (see below), so it may not survive the re-architecture at all.
 
 ## Request Summary
 `.github/workflows/test.yml`'s `slow` job ("Slow regression", `if: github.ref ==
