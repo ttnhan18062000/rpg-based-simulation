@@ -491,7 +491,7 @@ flowchart TD
       BRK["Breakthrough Bonuses<br/>real, applied on every stat recalc (rpg_depth.py:367)"]
       REL["Relationships<br/>SocialBond sentiment + familiarity"]
       REP["Reputation<br/>witnessed-event → labels"]
-      EMO["Emotion<br/>fear/confidence/frustration — write path ORPHANED"]:::bug
+      EMO["Emotion<br/>fear/confidence/frustration — live via near-death hardening"]
       TRM["Trauma<br/>Wound → Scar"]
       COM["Commitment Pressure<br/>urgency ramp; live via unflagged route-scoring — its documented Cooperation gating call site is inactive, but the mechanism itself runs"]
       XP --> BRK
@@ -509,7 +509,7 @@ flowchart TD
     REP ==>|labels, next tick| GOAL
     CAPT ==>|fatigue cuts bandwidth, next tick| PER
 
-    class PER,BEL,GOAL,CAPT,DEC,RDY,ENG,TAC,CMB,MOV,ITX,XP,REL,REP,TRM,BRK,COM live
+    class PER,BEL,GOAL,CAPT,DEC,RDY,ENG,TAC,CMB,MOV,ITX,XP,REL,REP,TRM,BRK,COM,EMO live
 </pre>
   </div>
   <p class="section-sub" style="margin-top:14px;">Dotted arrows are one-shot consequences of a single action; bold arrows are the feedback that actually shapes the <em>next</em> tick's thinking. Several of BUILDUP's feedback arrows are real in principle but starved in practice &mdash; Emotion's write path is orphaned, so the EMO&rarr;SELF feedback rarely fires even though the code for both ends exists.</p>

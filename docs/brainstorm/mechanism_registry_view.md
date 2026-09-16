@@ -6,7 +6,7 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**2 runtime-verified, 9 static (`code_trace`)-verified, 78 unverified** — of 89 total.
+**2 runtime-verified, 12 static (`code_trace`)-verified, 75 unverified** — of 89 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -63,18 +63,18 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `country_lifecycle` | faction | partial | unverified | unverified | 0 | 0 |
 | `crafting` | world | partial | unverified | unverified | 0 | 0 |
 | `cross_episode_grief_nemesis` | faction | done | static | observed | 0 | 0 |
-| `cross_episode_social_consequences` | faction | orphan | unverified | unverified | 0 | 0 |
+| `cross_episode_social_consequences` | faction | done | static | observed | 0 | 0 |
 | `cultural_drift` | world | done | unverified | unverified | 0 | 0 |
 | `declared_cognition_schema` | entity | orphan | unverified | unverified | 0 | 0 |
 | `demographic_cohort_cycle` | region | done | static | contradicted | 0 | 0 |
-| `emotion` | entity | orphan | unverified | unverified | 0 | 0 |
+| `emotion` | entity | done | static | observed | 0 | 0 |
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
 | `equipment_scoring` | world | done | unverified | unverified | 0 | 0 |
 | `event_interpretation` | region | done | unverified | unverified | 0 | 0 |
 | `evolution` | entity | done | unverified | unverified | 0 | 0 |
 | `fame` | world | done | unverified | unverified | 0 | 0 |
 | `fidelity_drift` | world | done | unverified | unverified | 0 | 0 |
-| `genetics_aptitude` | entity | orphan | unverified | unverified | 0 | 0 |
+| `genetics_aptitude` | entity | gated | static | observed | 0 | 0 |
 | `gods_pantheon_blessings` | world | gap | unverified | unverified | 0 | 0 |
 | `group_coordination` | group | orphan | unverified | unverified | 0 | 0 |
 | `guilds` | group | partial | unverified | unverified | 0 | 0 |

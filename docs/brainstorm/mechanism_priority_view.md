@@ -3,7 +3,7 @@
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 78 of 89 mechanisms are currently
+**Which mechanism to verify next.** 75 of 89 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since

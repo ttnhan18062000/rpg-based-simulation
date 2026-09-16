@@ -203,7 +203,18 @@ mechanisms:
   - id: genetics_aptitude
     layer: entity
     depends_on: []
-    state: orphan
+    state: gated
+    implemented_by: [src/systems/lifecycle_systems/genetics.py::GeneticsSystem]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Was mis-registered `orphan`; GeneticsSystem.generate_profile_from_seed()/combine_profiles()
+        have a real caller (src/world/reproduction_humanoid.py, real genetic-profile combination
+        for offspring), so `orphan` (zero callers) was factually wrong. That caller is itself
+        gated behind ENABLE_REPRODUCTION_HUMANOID_PATH (default OFF, feature_flags.py), which is
+        what `gated` means. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
   - id: evolution
     layer: entity
     depends_on: [derived_stats]
@@ -251,6 +262,16 @@ mechanisms:
     layer: entity
     depends_on: []
     state: orphan
+    implemented_by: [src/core/cognition.py::RiskModel]
+    # RiskModel is one representative symbol of core/cognition.py's own second, larger,
+    # never-wired subjective-model hierarchy (RiskModel, RecoveryState, RelationshipModel,
+    # MotivationModel, TemporalModel) -- confirmed via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-
+    # VERIFICATION: zero real constructor calls anywhere for any of the five, outside the file
+    # itself. Bound to a specific orphaned symbol rather than the whole file deliberately --
+    # core/cognition.py also defines PerceptionModel, which IS written (domains/perception/
+    # phase.py, the separately-registered `perception` mechanism); a file-level binding here would
+    # aggregate a live symbol into this mechanism's own claim, the exact
+    # demographic_cohort_cycle-shaped mistake this pass exists to avoid repeating.
   - id: perception
     layer: entity
     depends_on: [cognition_capacity_fatigue]
@@ -258,7 +279,21 @@ mechanisms:
   - id: emotion
     layer: entity
     depends_on: [tactical_decision]
-    state: orphan
+    state: done
+    implemented_by: [src/domains/emotion/emotion_service.py::EmotionUpdateService]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Was mis-registered `orphan`; EmotionUpdateService.update_on_event() is called
+        unconditionally (no feature-flag check) from engine/pipeline_phases/hardening.py's own
+        NearDeathHardeningPhase, itself invoked via a plain run_phase("near_death_hardening", ...)
+        call with no flag argument -- a real, live, unflagged caller, so `orphan` (zero callers)
+        was factually wrong. Foundation's own investigation.md had already flagged this exact risk
+        ("possibly stale, TCK-20260824 wired a near_death call site") without resolving it; this
+        confirms the flag was correct. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-
+        VERIFICATION.
   - id: affection_relationship_bonds
     layer: entity
     depends_on: [interaction_channeling]
@@ -355,6 +390,13 @@ mechanisms:
     layer: entity
     depends_on: [goal_hierarchy]
     state: orphan
+    implemented_by: [src/core/cognition.py::CommitmentModel]
+    # Confirmed via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION: CommitmentModel,
+    # CommitmentEntry, and AbandonedCommitmentEntry (core/cognition.py) have zero real
+    # constructors/callers anywhere -- the one hit (domains/commitment/pressure.py's own
+    # CommitmentPressureService, a type-hint reference only) is itself already-confirmed orphan
+    # (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING's own commitment_pressure_consequences
+    # finding). Matches the wiring-map's own INT node citation ("no write path exists") exactly.
   - id: cognition_capacity_fatigue
     layer: entity
     depends_on: []
@@ -402,7 +444,17 @@ mechanisms:
   - id: cross_episode_social_consequences
     layer: faction
     depends_on: [social_memory]
-    state: orphan
+    state: done
+    implemented_by: [src/systems/social_systems/consequence_events.py::evaluate_social_consequence]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Was mis-registered `orphan`; evaluate_social_consequence() is called unconditionally (no
+        feature-flag check, gated only on the scenario-recorder infra being present) from
+        domains/campaigns/orchestrator.py at episode-entity-spawn time, so `orphan` (zero callers)
+        was factually wrong. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
   - id: cross_episode_grief_nemesis
     layer: faction
     depends_on: [campaigns]
