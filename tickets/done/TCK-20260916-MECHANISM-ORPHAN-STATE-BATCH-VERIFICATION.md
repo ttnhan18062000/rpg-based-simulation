@@ -155,3 +155,46 @@ unreliable answer.
 A second, unplanned correction surfaced along the way: `genetics_aptitude`'s own atlas card
 (Revision 10) claimed no individual parent-child reproduction exists in the simulation at all —
 also wrong, corrected in the same pass.
+
+## Addendum — 2026-09-16, per peer review
+
+Peer independently re-verified `succession`'s own evidence trail (the exact citations above:
+`lifecycle.py:223`, `227`, `engine/patches.py:86`) and confirmed the write path is real and
+complete — `heir_entity_id` genuinely gets populated via the codebase's own `_set` patch-field
+convention. `succession` corrected `orphan` → `done`, propagated to its own `implemented_by`
+binding (`lifecycle_systems/lifecycle.py::LifecycleSystem`), its atlas card (`entity-profile#6`,
+badge + the specific "nothing ever assigns heir_entity_id" prose sentence), and its capabilities
+card (`identity#6` "Inheritance," tier + tierLabel + desc). No flag gates
+`LifecycleSystem.resolve_lifecycle()` or the succession branch specifically — confirmed directly
+(`run_phase("lifecycle", ...)` takes no flag argument).
+
+**A new, more serious error class, per peer's own framing**: every other correction in this batch
+was a wrong `state`. This one was a wrong `verified` **verdict** — the entry recorded `code_trace`/
+`observed`, asserting a repo-wide search had confirmed `heir_entity_id` is never populated, when it
+had not. That is more serious than a bad state, since the verification axis exists specifically to
+catch bad states — a false verdict there is the instrument itself lying, not a state ambiguity. The
+new `verified.note` records this explicitly (`"CORRECTED -- this entry's own prior verdict was
+itself the epic's first false verification verdict..."`), including the exact search pattern that
+missed it, per peer's own instruction that `code_trace` verdicts resting on "search found nothing"
+should always say which pattern was searched.
+
+**The third instance of the same naming-trap shape this epic has now found three times**:
+`progression_conversion` vs. `src/progression/` (same name, unrelated code), `FairShareProtocol`
+(a docstring concept name, not a real Python symbol), and now `heir_entity_id` vs.
+`heir_entity_id_set` (a real write invisible to the obvious search pattern). Grep-shaped evidence
+fails in a consistent direction — it under-reports, and a search that finds nothing is
+indistinguishable from a thing that genuinely isn't there. This strengthens the registry's own
+existing runtime-over-static distinction: a scenario instrument would have observed a real heir
+being set; a grep observed silence, and that silence was believed.
+
+**Updated headline, incorporating this correction**: 4 of 6 newly-checked orphans were wrong
+(67%), not 3 — `succession` moves from "open dispute" to "confirmed wrong." Combined with the 2
+errors already known before this batch, that is up to 6 of 11 `orphan` mechanisms found or
+suspected wrong when actually checked. The same non-generalization caveat stated in this ticket's
+own original Completion Summary still applies in full: targeted sample, chosen because `orphan`
+was suspected weakest, does not estimate the other 58 mechanisms' own accuracy.
+
+181/181 tests passing (pinned counts in
+`test_mechanism_registry_completeness_check.py`/`test_mechanism_state_caller_check.py` updated:
+bound 23→24, unbound 38→37), both with `graphify-out/` present and with it genuinely moved aside
+and restored. Commit: (recorded in the git log for this addendum's own commit).

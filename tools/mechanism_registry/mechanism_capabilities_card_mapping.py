@@ -111,9 +111,11 @@ JUDGMENT CALLS:
    Differently Depending on Where You Are" both describe real, built extensions ("now genuinely
    recorded", "real and tracked correctly behind the scenes") of `succession`/`reputation`
    respectively, but with narrower "not yet visible/read back" caveats the parent mechanism's own
-   registry entry doesn't carry (`succession` is fully `orphan`, contradicting "now genuinely
-   recorded onto the heir's own motivations"; `reputation` is plain `done` with no verified block
-   capturing this specific "not visible in play yet" nuance). Mapping either risks the regenerator
+   registry entry doesn't carry (`reputation` is plain `done` with no verified block capturing
+   this specific "not visible in play yet" nuance -- `succession` was `orphan` when this note was
+   first written, later corrected to `done` by TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-
+   VERIFICATION, which removes that half of the original contradiction but not the underlying
+   "mapping would erase real nuance" concern below). Mapping either risks the regenerator
    erasing real, accurate nuance the tier system can't otherwise represent. Left unmapped, flagged
    for a possible future registry refinement rather than forced through here.
 

@@ -100,6 +100,6 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 64
-    assert len(report.bound) == 23
+    assert len(report.bound) == 24
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 38
+    assert len(report.unbound) == 37

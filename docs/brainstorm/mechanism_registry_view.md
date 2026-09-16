@@ -96,6 +96,6 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `strategic_intelligence_core` | entity | done | unverified | unverified | 0 | 0 |
 | `strategic_learning_bias` | entity | done | unverified | unverified | 0 | 0 |
 | `strategic_redirection` | entity | orphan | unverified | unverified | 0 | 0 |
-| `succession` | entity | orphan | static | observed | 0 | 0 |
+| `succession` | entity | done | static | observed | 0 | 0 |
 | `team_up` | entity | gap | unverified | unverified | 0 | 0 |
 | `temporal_pressure` | entity | skeleton | unverified | unverified | 0 | 0 |

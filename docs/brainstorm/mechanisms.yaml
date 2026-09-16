@@ -192,14 +192,30 @@ mechanisms:
   - id: succession
     layer: entity
     depends_on: [aging_death]
-    state: orphan
+    state: done
+    implemented_by: [src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem]
     verified:
       instrument: code_trace
       verdict: observed
       date: "2026-09-16"
       note: >-
-        heir_entity_id confirmed never populated by any write path (repo-wide search) -- confirms
-        the orphan claim, does not contradict it.
+        CORRECTED -- this entry's own prior verdict was itself the epic's first false
+        verification verdict, not a wrong `state`: it recorded `observed`, asserting a
+        repo-wide search had confirmed heir_entity_id is never populated, when it had not.
+        LifecycleSystem.resolve_lifecycle() (lifecycle_systems/lifecycle.py:223-227) calls
+        _select_default_heir() unconditionally when heir_entity_id is None -- a real,
+        bond-strength-scored fallback -- and writes the result via
+        `heir_entity_id_set=heir_id`, this codebase's own "_set" suffix convention for
+        StateUpdate patch fields (same shape as death_reason_set/is_permadeath_set in the same
+        function). engine/patches.py:86 merges heir_entity_id_set onto the real heir_entity_id
+        state field on apply. Lines 229-265 then do real downstream work (heirloom/inventory
+        transfer, feud/dying-wish handling) once a heir resolves. The original search pattern
+        (`heir_entity_id=`) could not match `heir_entity_id_set=` -- the third instance in this
+        epic of grep-shaped evidence under-reporting a real write path via a naming convention
+        (progression_conversion/src/progression/, FairShareProtocol's docstring-only name, now
+        this). No flag gates resolve_lifecycle() or this branch -- run_phase("lifecycle", ...)
+        is called with no flag argument. Corrected via
+        TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION's own addendum.
   - id: genetics_aptitude
     layer: entity
     depends_on: []
