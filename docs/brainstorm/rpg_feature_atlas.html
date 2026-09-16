@@ -1317,7 +1317,7 @@ flowchart TB
           "text": "Aging/death live"
         },
         {
-          "cls": "partial",
+          "cls": "orphan",
           "text": "Succession never triggers"
         }
       ],
@@ -1343,14 +1343,10 @@ flowchart TB
         {
           "cls": "done",
           "text": "Live path done"
-        },
-        {
-          "cls": "orphan",
-          "text": "Duplicate path orphaned"
         }
       ],
       "fromNote": "New in revision 5 as \"Monster Evolution,\" retitled in revision 8 &mdash; your point exactly: this was mis-scoped",
-      "desc": "<strong>Corrected framing:</strong> this isn't a monster-specific mechanic, it's a general kind-transformation system keyed by whatever race/kind an entity was built with &mdash; <code class=\"inline\">entity.kind</code> derives directly from <code class=\"inline\">race_id</code> at construction (see Race &amp; Archetype above), so evolution chains are really per-race progression paths. Confirmed live and unflagged: <code class=\"inline\">engine/evolution.py: EvolutionSystem.evaluate()</code> checks species-evolution thresholds (10/25/50) on every level-up and covers <strong>Hero as a race too</strong> &mdash; <code class=\"inline\">HERO&rarr;LEGEND_HERO</code> sits in the exact same mapping as <code class=\"inline\">GOBLIN&rarr;GOBLIN_WARRIOR&rarr;ORC_SCOUT</code> and <code class=\"inline\">WOLF&rarr;DIRE_WOLF</code>, plus a numeric-suffix fallback for anything else. A second, independently-built implementation of the same idea (<code class=\"inline\">progression/evolution.py: EvolutionService</code>, a narrower goblin-only 2-stage chain) has zero callers &mdash; redundant with the live one, not a missing piece.",
+      "desc": "<strong>Corrected framing:</strong> this isn't a monster-specific mechanic, it's a general kind-transformation system keyed by whatever race/kind an entity was built with &mdash; <code class=\"inline\">entity.kind</code> derives directly from <code class=\"inline\">race_id</code> at construction (see Race &amp; Archetype above), so evolution chains are really per-race progression paths. Confirmed live and unflagged: <code class=\"inline\">engine/evolution.py: EvolutionSystem.evaluate()</code> checks species-evolution thresholds (10/25/50) on every level-up and covers <strong>Hero as a race too</strong> &mdash; <code class=\"inline\">HERO&rarr;LEGEND_HERO</code> sits in the exact same mapping as <code class=\"inline\">GOBLIN&rarr;GOBLIN_WARRIOR&rarr;ORC_SCOUT</code> and <code class=\"inline\">WOLF&rarr;DIRE_WOLF</code>, plus a numeric-suffix fallback for anything else. <strong>Correction, TCK-20260915-MECHANISM-REGISTRY-FOUNDATION:</strong> the second, duplicate implementation this card previously described (<code class=\"inline\">progression/evolution.py: EvolutionService</code>, a narrower goblin-only 2-stage chain) was deleted in full by <code class=\"inline\">TCK-20260824-WIRE-ORPHANED-MECHANISMS</code> (Step 2, confirmed dead duplicate: zero callers, zero tests, a conflicting second-stage threshold vs. the live system) after this card's original investigation. There is now only one implementation, not two &mdash; the orphan badge above described a file that no longer exists, so this mechanism is cleanly <code class=\"inline\">done</code>, no duplicate caveat.",
       "src": "<code class=\"inline\">engine/evolution.py: EvolutionSystem</code> (live, all races/kinds including Hero)<code class=\"inline\">progression/evolution.py: EvolutionService</code> (orphaned, goblin-only, redundant)"
     },
     {
@@ -1373,12 +1369,12 @@ flowchart TB
           "text": "XP/Classes done"
         },
         {
-          "cls": "gap",
-          "text": "Breakthrough is a no-op"
+          "cls": "done",
+          "text": "Breakthrough bonuses real, applied every stat recalc"
         }
       ],
       "fromNote": "From: \"Stats - Attributes, Gods - Classes - Mastery/Practice, Breakthrough\"",
-      "desc": "<strong>Checked in revision 3 against the vision's training-through-action goal, not just presence.</strong> XP curve (<code class=\"inline\">int(100*level**1.5)</code>), level cap 99, and 4 base classes are all real and work as documented. But the resolution is far more flattened than sketched: attribute points are a flat <strong>+5 every level</strong> regardless of what the entity did, the attribute cap is a flat 99 from level 1, skill unlocks are 3 fixed level gates, and <code class=\"inline\">BreakthroughService.apply_bonuses()</code> is a literal <code class=\"inline\">pass</code> &mdash; its own comment calls it \"placeholder for complex synergy logic.\" The closest thing to practice-based mastery is <code class=\"inline\">VeterancyService</code>, a narrow combat-rank multiplier. <strong>Revision 4:</strong> spending the AP you do get is itself half-built &mdash; <code class=\"inline\">execute_allocate_ap</code> is wired into the live action router, but its attribute-name branch only implements <code class=\"inline\">strength</code> and <code class=\"inline\">vitality</code> &mdash; the other 7 attributes silently no-op. <strong>Revision 7 correction:</strong> \"AI-proposable at 0.85\" needs walking back &mdash; <code class=\"inline\">domains/progression/generator.py</code> does score <code class=\"inline\">ALLOCATE_AP</code> that high, but the phase that runs it, <code class=\"inline\">ProgressionConversionPhase</code>, is gated behind <code class=\"inline\">run_phase(\"progression_conversion\", ..., \"ENABLE_PROGRESSION_EVOLUTION\")</code> &mdash; OFF by default, same rollout-gate pattern as Self-Model. So today, nothing actually proposes ALLOCATE_AP to an entity; <code class=\"inline\">execute_allocate_ap</code> would work correctly if invoked, but the AI-side proposal path that would invoke it doesn't run. Separately, <code class=\"inline\">execute_train</code> is a real, unflagged Class-Hall action (gold cost, resolves a capability blocker, \"learns\" a skill) closer to your teach/scroll idea &mdash; but nothing currently generates it as an AI-chosen option either.",
+      "desc": "<strong>Checked in revision 3 against the vision's training-through-action goal, not just presence.</strong> XP curve (<code class=\"inline\">int(100*level**1.5)</code>), level cap 99, and 4 base classes are all real and work as documented. But the resolution is far more flattened than sketched: attribute points are a flat <strong>+5 every level</strong> regardless of what the entity did, the attribute cap is a flat 99 from level 1, skill unlocks are 3 fixed level gates. The closest thing to practice-based mastery is <code class=\"inline\">VeterancyService</code>, a narrow combat-rank multiplier. <strong>Revision 4:</strong> spending the AP you do get is itself half-built &mdash; <code class=\"inline\">execute_allocate_ap</code> is wired into the live action router, but its attribute-name branch only implements <code class=\"inline\">strength</code> and <code class=\"inline\">vitality</code> &mdash; the other 7 attributes silently no-op. <strong>Revision 7 correction:</strong> \"AI-proposable at 0.85\" needs walking back &mdash; <code class=\"inline\">domains/progression/generator.py</code> does score <code class=\"inline\">ALLOCATE_AP</code> that high, but the phase that runs it, <code class=\"inline\">ProgressionConversionPhase</code>, is gated behind <code class=\"inline\">run_phase(\"progression_conversion\", ..., \"ENABLE_PROGRESSION_EVOLUTION\")</code> &mdash; OFF by default, same rollout-gate pattern as Self-Model. So today, nothing actually proposes ALLOCATE_AP to an entity; <code class=\"inline\">execute_allocate_ap</code> would work correctly if invoked, but the AI-side proposal path that would invoke it doesn't run. Separately, <code class=\"inline\">execute_train</code> is a real, unflagged Class-Hall action (gold cost, resolves a capability blocker, \"learns\" a skill) closer to your teach/scroll idea &mdash; but nothing currently generates it as an AI-chosen option either. <strong>Correction, TCK-20260915-MECHANISM-REGISTRY-FOUNDATION:</strong> the \"literal <code class=\"inline\">pass</code>\" claim about <code class=\"inline\">BreakthroughService.apply_bonuses()</code> was stale &mdash; it is a real, non-stub implementation (<code class=\"inline\">progression/breakthroughs.py:36-58</code>) that sums each active breakthrough's attribute bonuses and is called on every stat recalculation from the production path, <code class=\"inline\">rpg_depth.py:367</code> (reached from <code class=\"inline\">engine/apply.py:616</code> and <code class=\"inline\">domains/campaigns/orchestrator.py:902</code>), covered by <code class=\"inline\">tests/unit/progression/test_breakthroughs.py</code> and <code class=\"inline\">tests/unit/core/test_rpg_depth.py:514</code>. What remains unverified &mdash; not covered by this correction &mdash; is whether anything in production ever grants an entity a breakthrough id in the first place (populates <code class=\"inline\">active_breakthroughs</code> with a real value); this card corrects the build-status claim only, not an exercised-in-practice claim, which belongs to a future verification pass.",
       "src": "<code class=\"inline\">docs/mechanics/attribute_progression_contract.md</code><code class=\"inline\">progression/{leveling,skills,breakthroughs,veterancy}.py</code><code class=\"inline\">engine/domain/core_actions.py: execute_allocate_ap, execute_train</code><code class=\"inline\">engine/pipeline.py:322</code> (flag-gated)"
     },
     {
@@ -1629,7 +1625,7 @@ flowchart TB
       "title": "Committed Intentions",
       "badges": [
         {
-          "cls": "partial",
+          "cls": "orphan",
           "text": "Partial, consume-only"
         }
       ],
@@ -2821,7 +2817,7 @@ flowchart TB
       "title": "Camp: real, dormant scaffolding for a lesser settlement",
       "badges": [
         {
-          "cls": "orphan",
+          "cls": "done",
           "text": "Wired into the tick pipeline — never seeded, never fires"
         }
       ],

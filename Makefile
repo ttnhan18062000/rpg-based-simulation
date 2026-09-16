@@ -32,7 +32,7 @@ build: ## Build frontend for production
 # bare python3 lacks pydantic there, so `serve`/`dev` would silently crash at backend startup
 # with no indication other than every API call refusing to connect (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
 # own Playwright e2e webServer hit exactly this while starting `make dev` as a subprocess).
-PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done)
+PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."
@@ -308,6 +308,33 @@ setup-merge-drivers: ## Install the local merge driver + post-merge hook that re
 
 brainstorm-idea-index: ## Regenerate the per-idea cross-document index (docs/brainstorm/idea_index.json)
 	$(PYTHON3) tools/generate_brainstorm_idea_index.py
+
+mechanism-registry-validate: ## Validate docs/brainstorm/mechanisms.yaml against its 6 invariants (depends_on resolution, DAG acyclicity, layer declaration, state enum, verified.instrument enum, verified.verdict enum)
+	$(PYTHON3) tools/mechanism_registry.py
+	@echo ""
+	@echo "--- Graphify cross-check (report-only, informational -- never affects this target's exit code) ---"
+	@$(PYTHON3) tools/mechanism_registry_graphify_check.py
+
+mechanism-verification-view: ## Regenerate docs/brainstorm/mechanism_verification_view.md from docs/brainstorm/mechanisms.yaml
+	$(PYTHON3) tools/generate_mechanism_verification_view.py
+
+mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.md (top-N unverified, by rank x transitive dependents)
+	$(PYTHON3) tools/generate_mechanism_priority_view.py
+
+mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
+	$(PYTHON3) tools/mechanism_wiring_map_classdef.py
+
+mechanism-atlas-check: ## Check the atlas's mapped card badge cls values against the real registry state (--check, writes nothing)
+	$(PYTHON3) tools/mechanism_atlas_regenerate.py --check
+
+mechanism-atlas-regenerate: ## Fix the atlas's mapped card badge cls values to match the real registry state (surgical: cls only, never touches prose)
+	$(PYTHON3) tools/mechanism_atlas_regenerate.py
+
+mechanism-capabilities-check: ## Check the capabilities page's mapped card tier values against the real registry state (--check, writes nothing)
+	$(PYTHON3) tools/mechanism_capabilities_regenerate.py --check
+
+mechanism-capabilities-regenerate: ## Fix the capabilities page's mapped card tier/tierLabel values to match the real registry state (surgical: never touches title/desc)
+	$(PYTHON3) tools/mechanism_capabilities_regenerate.py
 
 simq-corpus-registry: ## Regenerate config/simulation_quality/corpus_registry.yaml from real world/profile/anchor data
 	python3 tools/generate_corpus_registry.py

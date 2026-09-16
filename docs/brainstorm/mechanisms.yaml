@@ -1,0 +1,471 @@
+# Mechanism Registry — the single hand-authored source for what simulation mechanisms exist,
+# which layer each belongs to, and what each depends on.
+#
+# TCK-20260915-MECHANISM-REGISTRY-FOUNDATION (child of TCK-20260915-EPIC-MECHANISM-REGISTRY).
+# See docs/plans/mechanism_registry_initiative.md for the full design rationale and
+# staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md for the full
+# per-mechanism citation/provenance trail (source doc, atlas/wiring-map card index, every judgment
+# call made while deriving this list).
+#
+# Source corpus, as of 2026-09-16: docs/brainstorm/rpg_feature_atlas.html (primary — 71 of this
+# file's 75 mechanisms cite an atlas JSON card, `id="card-sections-data"`) and
+# docs/brainstorm/rpg_simulation_wiring_map.html (secondary — supplies `nest`/`lair`, which have no
+# atlas JSON card, plus dependency-arrow evidence and layer-assignment cross-checks for others).
+#
+# THREE AXES, kept deliberately distinct — do not conflate when hand-editing `depends_on`:
+#   1. CONTAINMENT (the wiring map's own Layer Model lanes, e.g. "Faction contains Entities") —
+#      not represented in this file at all; containment is not dependency.
+#   2. EXECUTION ORDER (the wiring map's own mermaid sequence arrows within one tick, e.g.
+#      "Perceive --> Self-Model") — also not `depends_on`. Most wiring-map arrows encode this axis,
+#      not the third one below, which is why `depends_on` below is deliberately sparse (~25 of 75
+#      rows) rather than populated from every visible arrow.
+#   3. FUNCTIONAL DEPENDENCY (`depends_on` below) — "this mechanism cannot produce a meaningful
+#      result without that one already existing/having run." Hand-author only real edges backed by
+#      a defensible "consumes this mechanism's output/state" reading. Do not guess, and do not
+#      convert a wiring-map sequence arrow into `depends_on` just because one exists.
+#
+# `depends_on` is the ONLY hand-authored edge — dependent-count is computed by traversal, never
+# stored here (a stored count and a hand-authored edge list disagree within a month; the stored one
+# is the one people read).
+#
+# Frequency lives ONLY on layers, never on a mechanism.
+#
+# `rank` is an ORDINAL (position from the bottom, 1=lowest/most-frequent layer, 5=highest/rarest) --
+# it does NOT mean "priority multiplier." `weight` is the explicit, independently-settable field for
+# that (TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED): priority() multiplies by `weight`,
+# never by `rank`. These two fields deliberately mirror each other across the 5 current layers
+# (weight = 6 - rank) but are NOT defined in terms of one another in code -- a future layer addition
+# must set both explicitly, so the direction can never again be silently re-derived wrong the way it
+# was the first time (priority = rank * dependents rewarded the rarest layers, the exact opposite of
+# "lower layers first... more frequency is more priority").
+#
+# `state` is one of exactly six classes, matching the atlas's own existing vocabulary (no seventh
+# invented): done | partial | gap | orphan | gated | skeleton.
+#
+# `verified` (nullable — TCK-20260915-MECHANISM-VERIFICATION-AXIS) records whether a mechanism
+# has been *observed working*, not just built. Absent or explicit `null` is the ONLY way to
+# represent "unverified" — when present, all 4 sub-fields are required and `instrument` is never
+# itself null inside a present block:
+#   verified:
+#     instrument: scenario   # census | scenario | corpus_run | code_trace
+#     verdict: observed      # observed | contradicted | inconclusive
+#     date: "2026-09-16"
+#     note: "one line, what was actually seen"
+#
+# STATIC vs RUNTIME evidence, kept explicitly distinct — the single most expensive lesson of this
+# whole arc: combat judgement passed a code trace cleanly (real code, reachable, called — all true,
+# all confirmable statically) and was write-only across four conditions; only a runtime instrument
+# (a real 1960->837 corpus measurement) caught that. `code_trace` proves what the code *says*
+# (this is called, this field is never populated, this has zero callers) — it can NEVER establish
+# that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` are runtime
+# evidence — they prove what the simulation actually *does*. A `code_trace`/`observed` row must
+# never be read as equally strong as a runtime-confirmed one; the verification view groups them
+# separately for exactly this reason, not merged into one undifferentiated list.
+#
+# `verdict` and `state` are separate fields answering different questions and compose rather than
+# collapse: `state` says whether the mechanism is built/reachable; `verified.verdict` says whether
+# the evidence matches that claim. A `code_trace` confirming an already-`orphan` mechanism really
+# doesn't fire is `verdict: observed` (the state's own claim confirmed true), not `contradicted` —
+# `contradicted` is reserved for the historically expensive case: `state: done` with a *runtime*
+# instrument finding the claimed behavior doesn't actually happen.
+#
+# Validate with: make mechanism-registry-validate  (tools/mechanism_registry.py)
+# Render the verification view with: make mechanism-verification-view
+#
+# KNOWN PLACEHOLDER: `race_collective_force` and `settlement_capacity_axis` are assigned
+# `layer: faction` as the nearest organizational tier a real implementation would likely live in —
+# this is a guess, not a citation-backed placement (see investigation.md Judgment Call 8 / Risk 2).
+# A future layer-design ticket should be able to find this flagged here, not discover it was
+# silently decided.
+
+layers:
+  entity:  { cadence: per_tick, rank: 1, weight: 5 }
+  group:   { cadence: per_tick, rank: 2, weight: 4 }
+  faction: { cadence: daily,    rank: 3, weight: 3 }
+  region:  { cadence: slow,     rank: 4, weight: 2 }
+  world:   { cadence: rare,     rank: 5, weight: 1 }
+
+mechanisms:
+
+  # ── Entity layer — Action (9, atlas `entity-action`) ──────────────────────────────────────
+
+  - id: combat_resolution
+    layer: entity
+    depends_on: [tactical_decision, combat_engagement]
+    state: done
+  - id: tactical_decision
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: done
+  - id: combat_engagement
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: done
+    verified:
+      instrument: scenario
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Corpus: posture gate moved attacks 1960 -> 837. Scenario: risk-rejected posture -> 0
+        attacks vs no posture -> attack proceeds, all else identical.
+  - id: movement
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: done
+  - id: action_pacing_readiness
+    layer: entity
+    depends_on: []
+    state: partial
+  - id: interaction_channeling
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: done
+  - id: conversation
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: gap
+  - id: entity_trade
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: gap
+  - id: team_up
+    layer: entity
+    depends_on: [action_pacing_readiness]
+    state: gap
+
+  # ── Entity layer — Profile (12 atlas cards -> 14 mechanisms, 2 splits) ─────────────────────
+
+  - id: attributes_biology
+    layer: entity
+    depends_on: []
+    state: done
+  - id: derived_stats
+    layer: entity
+    depends_on: [attributes_biology]
+    state: done
+  - id: race_archetype
+    layer: entity
+    depends_on: []
+    state: done
+  - id: class_assignment
+    layer: entity
+    depends_on: [race_archetype]
+    state: partial
+  - id: personality
+    layer: entity
+    depends_on: []
+    state: done
+  - id: build_diversity
+    layer: entity
+    depends_on: [class_assignment]
+    state: gap
+  - id: aging_death
+    layer: entity
+    depends_on: []
+    state: done
+  - id: succession
+    layer: entity
+    depends_on: [aging_death]
+    state: orphan
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        heir_entity_id confirmed never populated by any write path (repo-wide search) -- confirms
+        the orphan claim, does not contradict it.
+  - id: genetics_aptitude
+    layer: entity
+    depends_on: []
+    state: orphan
+  - id: evolution
+    layer: entity
+    depends_on: [derived_stats]
+    state: done
+  - id: skill_unlocks
+    layer: entity
+    depends_on: []
+    state: partial
+  - id: xp_leveling
+    layer: entity
+    depends_on: [combat_resolution]
+    state: done
+  - id: breakthrough_bonuses
+    layer: entity
+    depends_on: [xp_leveling]
+    state: done
+  - id: entity_role
+    layer: entity
+    depends_on: []
+    state: done
+
+  # ── Entity layer — Modification (2, atlas `entity-modification`) ───────────────────────────
+
+  - id: trauma
+    layer: entity
+    depends_on: [combat_resolution]
+    state: done
+  - id: status_effects
+    layer: entity
+    depends_on: []
+    state: partial
+
+  # ── Entity layer — Cognition (18, atlas `entity-cognition`) ─────────────────────────────────
+
+  - id: self_model
+    layer: entity
+    depends_on: [perception, trauma]
+    state: gated
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
+  - id: declared_cognition_schema
+    layer: entity
+    depends_on: []
+    state: orphan
+  - id: perception
+    layer: entity
+    depends_on: [cognition_capacity_fatigue]
+    state: done
+  - id: emotion
+    layer: entity
+    depends_on: [tactical_decision]
+    state: orphan
+  - id: affection_relationship_bonds
+    layer: entity
+    depends_on: [interaction_channeling]
+    state: done
+  - id: motivation_doctrine
+    layer: entity
+    depends_on: [goal_hierarchy, affection_relationship_bonds]
+    state: partial
+  - id: commitment_betrayal
+    layer: entity
+    depends_on: [combat_resolution]
+    state: done
+  - id: temporal_pressure
+    layer: entity
+    depends_on: []
+    state: skeleton
+  - id: goal_hierarchy
+    layer: entity
+    depends_on: [belief_cycle, reputation]
+    state: done
+  - id: belief_cycle
+    layer: entity
+    depends_on: [self_model]
+    state: done
+  - id: information_trust_deception
+    layer: entity
+    depends_on: []
+    state: gated
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
+  - id: knowledge_model
+    layer: entity
+    depends_on: []
+    state: gated
+  - id: causal_spatial_memory
+    layer: entity
+    depends_on: [belief_cycle]
+    state: orphan
+  - id: adventure_routing
+    layer: entity
+    depends_on: [motivation_doctrine, cognition_capacity_fatigue]
+    state: done
+  - id: quest_generation_sourcing
+    layer: entity
+    depends_on: []
+    state: gated
+  - id: strategic_intelligence_core
+    layer: entity
+    depends_on: [belief_cycle]
+    state: done
+  - id: committed_intentions
+    layer: entity
+    depends_on: [goal_hierarchy]
+    state: orphan
+  - id: cognition_capacity_fatigue
+    layer: entity
+    depends_on: []
+    state: done
+
+  # ── Group layer (2, atlas `group-layer`) ────────────────────────────────────────────────────
+
+  - id: party_formation
+    layer: group
+    depends_on: []
+    state: done
+  - id: guilds
+    layer: group
+    depends_on: []
+    state: partial
+
+  # ── Faction layer (8, atlas `faction-layer`) ────────────────────────────────────────────────
+
+  - id: diplomacy
+    layer: faction
+    depends_on: []
+    state: done
+  - id: betrayal_siege_war
+    layer: faction
+    depends_on: []
+    state: done
+  - id: social_contracts
+    layer: faction
+    depends_on: []
+    state: done
+  - id: reputation
+    layer: faction
+    depends_on: [affection_relationship_bonds]
+    state: done
+  - id: social_memory
+    layer: faction
+    depends_on: []
+    state: skeleton
+  - id: cross_episode_social_consequences
+    layer: faction
+    depends_on: [social_memory]
+    state: orphan
+  - id: cross_episode_grief_nemesis
+    layer: faction
+    depends_on: []
+    state: done
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated
+        betrayal -> party-formation blocker); narrow trigger.
+  - id: country_lifecycle
+    layer: faction
+    depends_on: [betrayal_siege_war]
+    state: partial
+
+  # ── Region layer (2, atlas `region-layer`) ──────────────────────────────────────────────────
+
+  - id: regional_trauma_hazards_sovereignty
+    layer: region
+    depends_on: [betrayal_siege_war]
+    state: done
+  - id: demographic_cohort_cycle
+    layer: region
+    depends_on: [regional_trauma_hazards_sovereignty]
+    state: orphan
+
+  # ── World layer (7, atlas `world-layer`) ────────────────────────────────────────────────────
+
+  - id: campaigns
+    layer: world
+    depends_on: []
+    state: done
+  - id: chronicle
+    layer: world
+    depends_on: []
+    state: done
+  - id: opportunity_rumor_seeds
+    layer: world
+    depends_on: []
+    state: gated
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
+  - id: cultural_drift
+    layer: world
+    depends_on: []
+    state: done
+  - id: calamities_boss_spawns
+    layer: world
+    depends_on: [regional_trauma_hazards_sovereignty]
+    state: done
+  - id: world_generation
+    layer: world
+    depends_on: []
+    state: done
+  - id: gods_pantheon_blessings
+    layer: world
+    depends_on: []
+    state: gap  # intentionally excluded per design idea 63 -- not a gap to close, see atlas card
+
+  # ── World layer — World Objects (5, atlas `worldobject-layer`) ─────────────────────────────
+
+  - id: equipment_scoring
+    layer: world
+    depends_on: []
+    state: done
+  - id: inventory_trade_conservation
+    layer: world
+    depends_on: []
+    state: done
+  - id: crafting
+    layer: world
+    depends_on: []
+    state: partial
+  - id: buildings_town_services
+    layer: world
+    depends_on: [city]
+    state: done
+  - id: building_sabotage
+    layer: world
+    depends_on: [buildings_town_services]
+    state: done
+
+  # ── Region layer — City / Beyond-City (5: 4 atlas cards + 1 wiring-map-only) ───────────────
+
+  - id: city
+    layer: region
+    depends_on: [regional_trauma_hazards_sovereignty]
+    state: partial
+  - id: camp
+    layer: region
+    depends_on: [regional_trauma_hazards_sovereignty]
+    state: done
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-16"
+      note: >-
+        CampState is real (spawns monsters, triggers raids, a real clearing-reward loop) but no
+        compiled or procedurally-generated world seeds state.camps -- a permanent no-op in every
+        world today. state stays done (the code is correct and wired, not defective) -- the
+        missing thing is world data, not the mechanism itself. See
+        docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma
+        and calamity-intensity cases.
+  - id: nest
+    layer: region
+    depends_on: [camp]
+    state: gap  # not yet built ("Proposed"); wiring-map only, no atlas JSON card -- see investigation.md
+  - id: lair
+    layer: region
+    depends_on: []
+    state: gap  # not yet built ("Proposed"); wiring-map only, no atlas JSON card -- see investigation.md
+  - id: ruins_mines_battlefields
+    layer: region
+    depends_on: [regional_trauma_hazards_sovereignty]
+    state: partial
+
+  # ── Faction layer — Clan / Race (2) ─────────────────────────────────────────────────────────
+
+  - id: clan
+    layer: faction
+    depends_on: [betrayal_siege_war]
+    state: gap
+  - id: race_collective_force
+    layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
+    depends_on: []
+    state: gap
+
+  # ── settlement-capacity axis (1, from atlas `beyond-city#2`) ────────────────────────────────
+
+  - id: settlement_capacity_axis
+    layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
+    depends_on: [race_archetype]
+    state: gap
