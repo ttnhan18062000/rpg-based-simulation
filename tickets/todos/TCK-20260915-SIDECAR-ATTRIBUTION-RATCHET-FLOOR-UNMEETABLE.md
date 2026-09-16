@@ -245,3 +245,83 @@ Not complete. Filed per explicit instruction to record the finding and hold, not
 fix in the same session — the batch owning `ATTRIBUTION_RATE_FLOOR` and its re-pin cadence
 (`TCK-20260915-SIDECAR-ATTRIBUTION-GAP`'s epic) should decide the right response with the full
 trend, not a two-point read from an unrelated PR's CI.
+
+## Decision — 2026-09-16 (user, via `agent-working-design`)
+
+**Remove the gate. Do not lower the floor, do not re-pin it, do not convert it to an absolute
+count.** The Scope section above frames this as "which value or window should the floor use" — that
+framing is superseded: no threshold works, because the metric does not measure what the check
+claims.
+
+### The governing principle (user, 2026-09-16)
+
+> "we don't need to make the test too strictly for agent working, since it's just the side effect,
+> not the core simulation feature"
+
+Agent-monitoring telemetry records *how work happened*. It is not a simulation behaviour, and it
+does not warrant a blocking gate. Core simulation properties (mechanics, parity, determinism) are
+what deserve hard gating.
+
+### The evidence that settles it
+
+Daily attribution rate, measured directly from the shards 2026-09-16:
+
+| Date | Total rows | Unattributed | Rate |
+|---|---|---|---|
+| 2026-09-08 | 2,002 | 40 | 98.0% |
+| 2026-09-09 | 756 | 6 | 99.2% |
+| 2026-09-10 | 1,581 | 0 | **100.0%** |
+| 2026-09-11 | 3,302 | 1,492 | **54.8%** |
+| 2026-09-12 | 2,947 | 2,044 | 30.6% |
+| 2026-09-13 | 5,139 | 3,183 | 38.1% |
+| 2026-09-14 | 2,589 | 1,808 | 30.2% |
+| 2026-09-15 | 1,528 | 595 | 61.1% |
+
+**Nothing regressed on 2026-09-11.** That is the day a hand-orchestrated batch began. The check did
+not detect a defect; it detected a change in working style that `CLAUDE.md` explicitly sanctions.
+A check that fires because legitimate work is happening is an *inverted* signal, not a weak one.
+
+Supporting facts, each verified rather than assumed:
+
+- **It has never caught a regression.** Created 2026-09-15 by
+  `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`; every subsequent movement was ambient corpus drift, and
+  every response was re-pinning: 75.3 → 74.0 → (73.0, reverted).
+- **The 73.0 attempt required editing its own guard test**
+  (`test_floor_may_only_increase_never_used_to_paper_over_a_regression`) to accept the lowered
+  value — the exact anti-pattern that test exists to prevent. Caught in peer review and reverted.
+- **Re-pinning cannot converge.** Six readings, monotonic, never recovering:
+  74.7 → 73.7 → 73.6 → 73.5 → 73.4 → 72.7 → 72.6. Each pin was breached faster than the last.
+- **The rolling 14-day window guarantees further decline** regardless of any change: the 98-100%
+  days above are still aging out of the denominator.
+- **The absolute-count variant fails identically** — and this was checked specifically because it
+  had been recommended twice before being tested. The raw unattributed count swings
+  0 → 1,492 → 2,044 → 595 day to day, tracking working style exactly as the rate does.
+- **`main` is red on this too**, for its last three runs, and has been all day. This is not a
+  property of any branch.
+- **Cross-session sidecar collision was disproved** by controlled measurement
+  (`rpg-feature-planning`): attribution split by session over a 2h window returned 0/11 from a
+  *single* session. The cause is that hand-orchestrated work never opens a `run_id` at all.
+
+### What to do
+
+1. **Delete the blocking gate**: `tools/gate_checks/sidecar_attribution_coverage_check.py`'s
+   floor-failure path and `test_real_corpus_is_at_or_above_the_ratchet_floor`. Remove
+   `ATTRIBUTION_RATE_FLOOR` and its guard test with it — a constant nothing gates on is dead weight.
+2. **Keep the measurement as a reported number.** The rate is genuinely informative in
+   `RETRO-*.md` (it is already surfaced there); losing the number is not the goal, losing the
+   *gate* is.
+3. **Record why in the module**, briefly, so the next person does not rebuild it: the metric moves
+   with working style, so no threshold over it can distinguish regression from legitimate activity.
+
+### If a real detector is wanted later (not this ticket)
+
+Scope it to a population where attribution is *expected to hold*: pipeline runs that opened a
+`run_id` whose own tool rows lack one. That should be zero and stay zero, so any nonzero is a true
+defect. That is a different, narrower check than a corpus-wide rate diluted by sanctioned
+hand-orchestration — and it belongs in its own ticket, with a measured baseline, not here.
+
+### Consequence
+
+Removing the gate turns `main` and PR #208 green honestly, without lowering any threshold or
+weakening any guard. `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`'s underlying accept-and-document
+disposition for the ~25% unattributed rows is unchanged; only the blocking check is removed.
