@@ -43,6 +43,51 @@ def test_render_links_to_epic_ticket_rather_than_restating_findings(registry_dat
         assert forbidden not in content
 
 
+def test_render_defines_dark_theme_tokens():
+    """[Load-bearing] Published Artifacts render in the viewer's theme -- a hardcoded light
+    palette is unreadable on a dark host. Tokens must be redefined under both the
+    prefers-color-scheme media query (guarded so an explicit light choice wins) and the explicit
+    dark data-theme override, per the standard artifact theming contract."""
+    content = render({"layers": {}, "mechanisms": []})
+    assert '@media (prefers-color-scheme: dark)' in content
+    assert ':root:not([data-theme="light"])' in content
+    assert ':root[data-theme="dark"]' in content
+
+
+def test_render_badges_use_css_classes_not_inline_color_styles(registry_data):
+    """Inline per-cell style= colors can't vary by theme -- badges must be theme-token-driven CSS
+    classes instead."""
+    content = render(registry_data)
+    assert "style=" not in content
+    assert 'class="badge state-' in content
+    assert 'class="badge evidence-' in content
+
+
+def test_render_repo_target_keeps_working_relative_links(registry_data):
+    content = render(registry_data, target="repo")
+    assert '<a href="mechanism_priority_view.md">' in content
+    assert '<a href="mechanism_verification_view.md">' in content
+    assert '<a href="../../tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md">' in content
+
+
+def test_render_artifact_target_drops_unresolvable_links(registry_data):
+    """[Load-bearing] A published artifact can't resolve repo-relative links -- artifact mode must
+    not emit a dead <a href> for them. The mechanism ids/facts should still be mentioned as plain
+    text, just never as a link that would 404."""
+    content = render(registry_data, target="artifact")
+    assert "mechanism_priority_view.md" in content
+    assert "mechanism_verification_view.md" in content
+    assert "TCK-20260915-EPIC-MECHANISM-REGISTRY" in content
+    assert '<a href="mechanism_priority_view.md">' not in content
+    assert '<a href="mechanism_verification_view.md">' not in content
+    assert "../../tickets/done" not in content
+
+
+def test_render_rejects_unknown_target(registry_data):
+    with pytest.raises(ValueError):
+        render(registry_data, target="nonexistent")
+
+
 def test_render_escapes_mechanism_data():
     """A defensive check, not a real current risk (mechanism ids/states are a closed enum from
     mechanisms.yaml) -- confirms html.escape is actually wired in, not just imported."""
