@@ -321,6 +321,12 @@ mechanism-verification-view: ## Regenerate docs/brainstorm/mechanism_verificatio
 mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.md (top-N unverified, by rank x transitive dependents)
 	$(PYTHON3) tools/generate_mechanism_priority_view.py
 
+mechanism-registry-view: ## Regenerate docs/brainstorm/mechanism_registry_view.md (all mechanisms, priority + verification together, not truncated)
+	$(PYTHON3) tools/generate_mechanism_registry_view.py
+
+mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
+	$(PYTHON3) tools/generate_mechanism_registry_html.py
+
 mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
 	$(PYTHON3) tools/mechanism_wiring_map_classdef.py
 

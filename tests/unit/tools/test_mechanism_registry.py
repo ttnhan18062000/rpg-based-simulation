@@ -325,6 +325,57 @@ def test_validator_rejects_incomplete_verified_block():
     assert any("foo" in e and "date" in e for e in errors), errors
 
 
+def test_validator_rejects_implemented_by_not_a_list():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": "tools/mechanism_registry.py"},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a non-list implemented_by"
+    assert any("foo" in e and "implemented_by" in e for e in errors), errors
+
+
+def test_validator_rejects_implemented_by_nonexistent_path():
+    """[Load-bearing] TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING's whole point: a deleted
+    implementing module must fail validation immediately, not silently keep a stale citation."""
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": ["src/this/path/does/not/exist.py"]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a nonexistent implemented_by path"
+    assert any("foo" in e and "exist.py" in e for e in errors), errors
+
+
+def test_validator_accepts_implemented_by_real_existing_path():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": ["tools/mechanism_registry.py"]},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_accepts_absent_implemented_by():
+    """implemented_by is optional -- a mechanism with none is still valid (the field grows
+    organically, per peer review, not backfilled all at once)."""
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done"},
+        ],
+    }
+    assert validate(fixture) == []
+
+
 @pytest.mark.parametrize("instrument", sorted(VALID_INSTRUMENTS))
 def test_validator_accepts_all_four_instruments(instrument):
     fixture = {

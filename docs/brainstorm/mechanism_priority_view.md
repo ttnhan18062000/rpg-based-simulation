@@ -3,7 +3,7 @@
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 77 of 86 mechanisms are currently
+**Which mechanism to verify next.** 79 of 89 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -13,13 +13,13 @@ more depends on it. Ranked below, top 25.
 
 | Mechanism | Layer | State | Priority | Transitive Dependents |
 |---|---|---|---|---|
-| `movement` | entity | done | 70 | 14 |
-| `personality` | entity | done | 70 | 14 |
-| `tactical_decision` | entity | done | 70 | 14 |
-| `entity_role` | entity | done | 65 | 13 |
-| `skill_unlocks` | entity | partial | 65 | 13 |
-| `status_effects` | entity | partial | 65 | 13 |
-| `combat_resolution` | entity | done | 60 | 12 |
+| `movement` | entity | done | 75 | 15 |
+| `personality` | entity | done | 75 | 15 |
+| `tactical_decision` | entity | done | 75 | 15 |
+| `entity_role` | entity | done | 70 | 14 |
+| `skill_unlocks` | entity | partial | 70 | 14 |
+| `status_effects` | entity | partial | 70 | 14 |
+| `combat_resolution` | entity | done | 65 | 13 |
 | `cognition_capacity_fatigue` | entity | done | 45 | 9 |
 | `perception` | entity | done | 40 | 8 |
 | `trauma` | entity | done | 40 | 8 |
@@ -35,9 +35,9 @@ more depends on it. Ranked below, top 25.
 | `world_generation` | world | done | 9 | 9 |
 | `aging_death` | entity | done | 5 | 1 |
 | `class_assignment` | entity | partial | 5 | 1 |
+| `commitment_betrayal` | entity | done | 5 | 1 |
 | `derived_stats` | entity | done | 5 | 1 |
 | `xp_leveling` | entity | done | 5 | 1 |
-| `campaigns` | world | done | 4 | 4 |
 
 ## Chart form
 
@@ -55,10 +55,10 @@ flowchart BT
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
-    campaigns["campaigns"]:::done
     class_assignment["class assignment"]:::partial
     cognition_capacity_fatigue["cognition capacity fatigue"]:::done
     combat_resolution["combat resolution"]:::done
+    commitment_betrayal["commitment betrayal"]:::done
     derived_stats["derived stats"]:::done
     entity_role["entity role"]:::done
     goal_hierarchy["goal hierarchy"]:::done
@@ -83,6 +83,7 @@ flowchart BT
     status_effects --> combat_resolution
     entity_role --> combat_resolution
     skill_unlocks --> combat_resolution
+    combat_resolution --> commitment_betrayal
     attributes_biology --> derived_stats
     belief_cycle --> goal_hierarchy
     reputation --> goal_hierarchy

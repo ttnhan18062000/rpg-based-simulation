@@ -8,7 +8,7 @@ Pattern imitated from src/engine/capability.py (a working hand-authored-YAML-reg
 validator precedent for a different subject), adapted for this registry's extra invariants
 (depends_on resolution, DAG acyclicity) that capability.py's simpler flat list did not need.
 
-Six invariants enforced by validate():
+Seven invariants enforced by validate():
   1. every `depends_on` id resolves to a declared mechanism
   2. the dependency graph is acyclic
   3. every mechanism's `layer` is declared in the `layers` block
@@ -17,6 +17,10 @@ Six invariants enforced by validate():
      VERIFICATION-AXIS)
   6. every present `verified.verdict` is one of the three known values, and all four `verified`
      sub-fields (instrument/verdict/date/note) are present when the block itself is present
+  7. every present `implemented_by` is a list of strings, each an existing repo-relative path
+     (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING) -- a real code binding, checked against disk
+     so a deleted implementing module fails validation immediately rather than the registry
+     silently keeping a stale claim
 
 `validate()` returns a list of human-readable error strings (empty if valid) rather than
 raising/returning a bool, so a caller can report every violation in one run instead of stopping at
@@ -199,6 +203,30 @@ def validate(data: dict) -> List[str]:
                 f"{sorted(VALID_VERDICTS)}"
             )
 
+    # Invariant 7: a present `implemented_by` is a list of real, existing repo-relative paths.
+    # TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING. The original 75 mechanisms cite atlas cards,
+    # never source -- this is the real code binding, and the existence check is the whole point: a
+    # deleted implementing module fails validation the day it's deleted, instead of the registry
+    # (and every artifact rendered from it) silently reading "confirmed live" for eight days, the
+    # way `motivation_doctrine` did before this field existed.
+    for m in mechanisms:
+        mid = m.get("id", "<missing id>")
+        implemented_by = m.get("implemented_by")
+        if implemented_by is None:
+            continue
+        if not isinstance(implemented_by, list) or not all(
+            isinstance(p, str) for p in implemented_by
+        ):
+            errors.append(
+                f"mechanism '{mid}' implemented_by must be a list of strings, got {implemented_by!r}"
+            )
+            continue
+        for rel_path in implemented_by:
+            if not (_REPO_ROOT / rel_path).is_file():
+                errors.append(
+                    f"mechanism '{mid}' implemented_by path does not exist: '{rel_path}'"
+                )
+
     return errors
 
 
@@ -361,6 +389,45 @@ def priority(mechanism_id: str, dep_map: Dict[str, List[str]], layer: str, layer
     else."""
     weight = (layers.get(layer) or {}).get("weight", 0)
     return weight * len(transitive_dependents(mechanism_id, dep_map))
+
+
+def all_mechanisms_combined_view(data: dict) -> List[dict]:
+    """TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW. Every mechanism in the registry, one row
+    each, both axes together -- unlike unverified_priority_ranking() (priority only, unverified
+    only, top-25) and build_verification_view() (verification only, no priority), this answers
+    "what matters most, and do we know it works" in a single read. Reuses both existing builders rather than
+    reimplementing either axis. Sorted by priority descending, id as tiebreak -- a verified
+    mechanism still gets its real priority number, so it isn't silently dropped from the ranking
+    the way it is in the unverified-only view."""
+    mechanisms = data.get("mechanisms", []) or []
+    layers = data.get("layers", {}) or {}
+    dep_map = {m["id"]: m.get("depends_on") or [] for m in mechanisms}
+
+    verification_rows = {
+        r["id"]: r
+        for r in build_verification_view(verification_records_from_registry(data), mechanisms)
+    }
+
+    rows = []
+    for m in mechanisms:
+        mid = m["id"]
+        v = verification_rows[mid]
+        evidence = "unverified" if not v["verified"] else (
+            "runtime" if v["instrument"] in RUNTIME_INSTRUMENTS else "static"
+        )
+        rows.append({
+            "id": mid,
+            "layer": m.get("layer"),
+            "state": m.get("state"),
+            "evidence": evidence,
+            "instrument": v["instrument"],
+            "verdict": v["verdict"],
+            "date": v["date"],
+            "note": v["note"],
+            "priority": priority(mid, dep_map, m.get("layer"), layers),
+            "transitive_dependent_count": len(transitive_dependents(mid, dep_map)),
+        })
+    return sorted(rows, key=lambda r: (-r["priority"], r["id"]))
 
 
 def unverified_priority_ranking(data: dict) -> List[dict]:

@@ -75,11 +75,12 @@ def test_mapping_table_has_no_duplicate_card_badge_positions():
 
 def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
     """73 remains the number of REGISTERED mechanisms with a real atlas card -- unchanged by
-    TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS, which added 6 more mechanisms found by
-    enumerating src/domains/ and src/systems/ directly, none of which have an atlas card at all
-    (no card was ever written for them, since Foundation's original seed only read the atlas).
-    That's expected, not a defect -- distinct from nest/lair, which are real mechanisms the
-    wiring map documents but the atlas simply never carded either."""
+    TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS and TCK-20260916-MECHANISM-IMPLEMENTED-BY-
+    BINDING, both of which added mechanisms found by enumerating src/domains/ and src/systems/
+    directly, none of which have an atlas card at all (no card was ever written for them, since
+    Foundation's original seed only read the atlas). That's expected, not a defect -- distinct
+    from nest/lair, which are real mechanisms the wiring map documents but the atlas simply never
+    carded either."""
     real_ids = set(_real_registry_states().keys())
     positions = all_mechanism_card_badge_positions()
     mapped = set(positions.keys())
@@ -88,7 +89,8 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
         "nest", "lair", "cooperation", "progression_conversion", "resource_harvesting",
         "fame", "fidelity_drift", "belief_institution", "strategic_learning_bias",
         "strategic_redirection", "concern_intake", "event_interpretation", "narrative_memory",
-    }, f"expected exactly these 13 to be unmapped (no atlas card), got {unmapped}"
+        "group_coordination", "quest_reward_distribution", "commitment_pressure_consequences",
+    }, f"expected exactly these 16 to be unmapped (no atlas card), got {unmapped}"
     assert len(mapped) == 73
 
 

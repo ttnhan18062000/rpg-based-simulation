@@ -28,6 +28,17 @@
 # stored here (a stored count and a hand-authored edge list disagree within a month; the stored one
 # is the one people read).
 #
+# `implemented_by` (optional, list of repo-relative paths) is the real code binding
+# (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING) -- the RimWorld-Def-style pattern where every
+# Def corresponds to a real class. The original 75 mechanisms below cite atlas cards / wiring-map
+# node names only, never source; that citation gap is why the atlas's own drift (17% wiring-map
+# error, 2 stale badges, the `camp` seeding error, `motivation_doctrine` reading "confirmed live"
+# for 8 days after its own code was deleted) went uncaught. `mechanism_registry.py::validate()`
+# checks every `implemented_by` path exists on disk, so a deleted implementing module fails
+# validation the day it's deleted. NOT backfilled for all mechanisms at once -- it grows organically
+# as tickets touch each mechanism, per `tools/mechanism_registry_completeness_check.py`'s own
+# "N of 86 have no implemented_by" gap report.
+#
 # Frequency lives ONLY on layers, never on a mechanism.
 #
 # `rank` is an ORDINAL (position from the bottom, 1=lowest/most-frequent layer, 5=highest/rarest) --
@@ -281,6 +292,11 @@ mechanisms:
     layer: entity
     depends_on: []
     state: skeleton
+    implemented_by: [src/domains/time/service.py]
+    # src/domains/time/service.py: TemporalPressureService -- found while resolving
+    # implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from
+    # src/domains/memory/phase.py:90. File matches Foundation's own original citation exactly
+    # ("46 LoC total").
   - id: goal_hierarchy
     layer: entity
     depends_on: [belief_cycle, reputation]
@@ -305,11 +321,28 @@ mechanisms:
   - id: causal_spatial_memory
     layer: entity
     depends_on: [belief_cycle]
-    state: orphan
+    state: gated
+    implemented_by: [src/domains/memory/phase.py]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: "Was mis-registered `orphan`; MemoryUpdatePhase.apply() is called live from
+        engine/pipeline.py:154-157 via run_phase('memory_update', ..., 'ENABLE_MEMORY_UPDATE') --
+        a real caller exists, so `orphan` (zero callers) was factually wrong. The flag defaults
+        OFF (feature_flags.py, TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: 'wires MemoryUpdatePhase
+        into refine() for the first time'), which is what `gated` means. Found while resolving
+        implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING)."
   - id: adventure_routing
     layer: entity
     depends_on: [motivation_doctrine, cognition_capacity_fatigue, entity_role, personality, diplomacy]
     state: done
+    implemented_by: [src/domains/adventure/service.py]
+    # src/domains/adventure/service.py: AdventureDecisionService -- found while resolving
+    # implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from
+    # src/ai/goals/adventure_scorer.py:110,136,165, strategic_systems/intelligence.py:88,1580,
+    # engine/tactical.py:345,348. domains/adventure/ also holds generator.py/mapper.py/
+    # resolver.py/scoring.py, part of the same route-decision concept.
   - id: quest_generation_sourcing
     layer: entity
     depends_on: []
@@ -344,6 +377,12 @@ mechanisms:
     layer: faction
     depends_on: []
     state: done
+    implemented_by: [src/domains/faction/diplomatic_state_machine.py]
+    # src/domains/faction/diplomatic_state_machine.py: DiplomaticStateMachine.compute_transitions()
+    # -- found while resolving implemented_by bindings
+    # (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from engine/military_conflict.py:170,
+    # engine/apply.py:410. domains/faction/ also holds sentiment.py (FactionSentimentService,
+    # called unconditionally from engine/pipeline.py:437-440) and diplomatic_actions.py.
   - id: betrayal_siege_war
     layer: faction
     depends_on: []
@@ -390,6 +429,12 @@ mechanisms:
     layer: region
     depends_on: [regional_trauma_hazards_sovereignty]
     state: orphan
+    implemented_by: [src/domains/demographics/cohort.py]
+    # src/domains/demographics/cohort.py: PopulationCohort, DemographicCycleService -- found while
+    # resolving implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING).
+    # DemographicCycleService.process_demographics called from engine/world_dynamics.py:178-179,
+    # guarded by `if not region.population_cohorts` (worldbuilding/compiler.py:203) -- matches the
+    # already-registered `orphan` state's own citation ("wired... input never seeded") exactly.
 
   # ── World layer (7, atlas `world-layer`) ────────────────────────────────────────────────────
 
@@ -414,6 +459,13 @@ mechanisms:
     layer: world
     depends_on: []
     state: done
+    implemented_by: [src/domains/culture/deriver.py]
+    # src/domains/culture/deriver.py: CultureDeriver -- found while resolving implemented_by
+    # bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). culture/exporter.py's
+    # CultureDriftExporter/Importer follow the campaigns-orchestrator export-at-episode-boundary
+    # shape already established for fame/fidelity_drift; culture/applicator.py's
+    # CulturalBiasApplicator feeds domains/adventure/scoring.py's route scorer via
+    # domains/campaigns/orchestrator.py:1045.
   - id: calamities_boss_spawns
     layer: world
     depends_on: [regional_trauma_hazards_sovereignty]
@@ -511,6 +563,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
+    implemented_by: [src/domains/cooperation/phase.py]
     # src/domains/cooperation/phase.py: CooperationPhase, engine pipeline "Phase 7" -- called from
     # engine/pipeline.py:216-217, run_phase("cooperation", ..., "ENABLE_SOCIAL_COOPERATION"),
     # flag default ON (feature_flags.py). Real cohesion/regroup-distance check already cited as a
@@ -520,6 +573,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: gated
+    implemented_by: [src/domains/progression/phase.py]
     # src/domains/progression/phase.py: ProgressionConversionPhase, engine "Phase 6" -- called from
     # engine/pipeline.py:386-387, run_phase("progression_conversion", ...,
     # "ENABLE_PROGRESSION_EVOLUTION"), flag default OFF (feature_flags.py). A real, substantial,
@@ -531,6 +585,7 @@ mechanisms:
     layer: world
     depends_on: [inventory_trade_conservation]
     state: orphan
+    implemented_by: [src/systems/world_systems/harvesting.py]
     # src/systems/world_systems/harvesting.py: HarvestSystem ("Processes harvesting progress,
     # yields, and node depletion", Compliance ID TOWN-073) -- checked directly, zero real callers
     # found anywhere in src/ outside its own defining file and the src/systems/harvest_system.py
@@ -540,6 +595,7 @@ mechanisms:
     layer: world
     depends_on: [campaigns]
     state: done
+    implemented_by: [src/domains/fame/model.py, src/domains/fame/deriver.py, src/domains/fame/exporter.py, src/domains/fame/legend.py]
     # src/domains/fame/{model,deriver,exporter,legend}.py -- idea 57 "The Living Legend Feedback
     # Loop". FameExporter/LegendFactService called from domains/campaigns/orchestrator.py at
     # episode-boundary export, same cross-episode-persistence shape as the already-registered
@@ -549,6 +605,7 @@ mechanisms:
     layer: world
     depends_on: [campaigns]
     state: done
+    implemented_by: [src/domains/fidelity/model.py, src/domains/fidelity/deriver.py, src/domains/fidelity/exporter.py]
     # src/domains/fidelity/{model,deriver,exporter}.py -- idea 62 "Generations Misremember" (Epic
     # 6.2/E62), chronicle-fidelity drift over generations. FidelityExporter called from
     # domains/campaigns/orchestrator.py at episode-boundary export, same shape as fame/
@@ -557,6 +614,7 @@ mechanisms:
     layer: world
     depends_on: [campaigns]
     state: partial
+    implemented_by: [src/domains/belief_institution/model.py, src/domains/belief_institution/deriver.py, src/domains/belief_institution/exporter.py]
     # src/domains/belief_institution/{model,deriver,exporter}.py -- idea 62/63 Belief Institution
     # branch (intentional_divergences.md #2.55). BeliefInstitutionExporter called from
     # domains/campaigns/orchestrator.py; also referenced from engine/apply.py, engine/checkpoint.py.
@@ -569,6 +627,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
+    implemented_by: [src/systems/strategic_systems/learning.py]
     # src/systems/strategic_systems/learning.py: StrategicLearningService.get_goal_biases() --
     # called unconditionally from strategic_intelligence_core's own decision pipeline
     # (strategic_systems/intelligence.py:984-991, "Strategic Memory (Learning) Biasing") and from
@@ -579,6 +638,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: orphan
+    implemented_by: [src/systems/strategic_systems/redirection.py]
     # src/systems/strategic_systems/redirection.py: StrategicRedirectionSystem -- checked directly,
     # zero real callers of the class itself; the only reference anywhere in src/ is a comment in
     # intelligence.py:611 ("Hoisted logic from StrategicRedirectionSystem"), confirming its own
@@ -587,6 +647,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
+    implemented_by: [src/systems/world_systems/intake.py]
     # src/systems/world_systems/intake.py: ConcernIntakeSystem.evaluate_salience() -- called
     # unconditionally from strategic_intelligence_core's own pipeline (intelligence.py:576,890).
     # Not covered by strategic_intelligence_core's own narrow citation. No flag check found.
@@ -594,6 +655,7 @@ mechanisms:
     layer: region
     depends_on: []
     state: done
+    implemented_by: [src/systems/world_systems/events.py]
     # src/systems/world_systems/events.py: EventInterpreter.compute_danger_urgency() (Compliance
     # ID STRAT-067). Called from src/ai/goals/region_stabilization_scorer.py, whose
     # RegionStabilizationGoalScorer is unconditionally registered in the standard GoalRegistry
@@ -602,6 +664,43 @@ mechanisms:
     layer: world
     depends_on: []
     state: orphan
+    implemented_by: [src/systems/world_systems/narrative.py]
     # src/systems/world_systems/narrative.py: NarrativeMemorySystem ("Persists turning points and
     # biases future behavior") -- checked directly, zero real callers anywhere in src/ outside its
     # own file and the src/systems/narrative.py backward-compat re-export shim.
+
+  # ── TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING (3, found while resolving implemented_by
+  # bindings for domains/commitment and social_systems -- neither had an atlas card nor a citation
+  # anywhere; found by direct caller-check, same discipline as the completeness pass. ────────────
+
+  - id: group_coordination
+    layer: group
+    depends_on: []
+    state: orphan
+    implemented_by: [src/systems/social_systems/group_service.py]
+    # src/systems/social_systems/group_service.py: GroupService.calculate_cohesion() -- checked
+    # directly, zero real callers anywhere in src/. Distinct from world_systems/groups.py's
+    # GroupSystem (a different class, mapped to cooperation) -- a same-concept-different-file trap.
+  - id: quest_reward_distribution
+    layer: group
+    depends_on: []
+    state: orphan
+    implemented_by: [src/systems/social_systems/reward_distribution.py]
+    # src/systems/social_systems/reward_distribution.py: FairShareProtocol (Compliance ID SOC-229,
+    # TCK-20260619-E41C-REWARD-DIST) -- proportional quest-reward distribution across party
+    # members via ResourceTransferIntent. Checked directly, zero real callers anywhere in src/.
+  - id: commitment_pressure_consequences
+    layer: entity
+    depends_on: [commitment_betrayal]
+    state: partial
+    implemented_by: [src/domains/commitment/pressure.py, src/domains/commitment/impact.py, src/domains/commitment/reputation.py, src/domains/commitment/abandonment.py]
+    # src/domains/commitment/{pressure,impact,reputation,abandonment}.py -- NOT the real
+    # implementation of commitment_betrayal (that is Betrayal(FactionDirective) in
+    # engine/faction_decision.py and BetrayalRecord in core/models/social.py; a real
+    # namespace-adjacent trap, not the same thing). Mixed disposition within this one module, same
+    # "partial" shape as belief_institution: pressure.py (CommitmentPressureService) and impact.py
+    # (CommitmentReputationRouteImpact) have zero real callers anywhere in src/ -- orphan-within.
+    # reputation.py (ReputationUpdateService.process_witnessed_event) is called live from
+    # engine/quests.py:227. abandonment.py (AbandonmentEvaluator.evaluate_abandonment) is called
+    # live from observability/event_extractor.py, default-ON via ENABLE_PUSH_EVENT_SHAPERS_AGENCY.
+    # Real, live pieces alongside genuinely dead ones in the same domain -- partial, not done.

@@ -60,9 +60,13 @@ def test_transitive_dependents_matches_real_data(registry_data):
     # regenerate this if the registry's own edges genuinely change. 23 -> 24 after
     # TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-POPULATION added party_formation -> movement (cited:
     # cooperation/services.py's real regroup-distance check) -- movement itself already depended on
-    # action_pacing_readiness, so party_formation became a new transitive dependent.
+    # action_pacing_readiness, so party_formation became a new transitive dependent. 24 -> 25 after
+    # TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING registered commitment_pressure_consequences,
+    # depends_on [commitment_betrayal] -- commitment_betrayal already depended (transitively) on
+    # action_pacing_readiness via combat_resolution -> combat_engagement -> action_pacing_readiness,
+    # so the new mechanism became a new transitive dependent of it too.
     dep_map = {m["id"]: m.get("depends_on") or [] for m in registry_data["mechanisms"]}
-    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 24
+    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 25
 
 
 def test_transitive_dependents_raises_on_cycle():

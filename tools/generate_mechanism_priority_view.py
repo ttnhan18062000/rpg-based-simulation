@@ -5,6 +5,12 @@ to docs/brainstorm/mechanism_priority_view.md -- the text table plus the mermaid
 outputs from one registry" per the ticket's own Request Summary. Mirrors
 tools/generate_mechanism_verification_view.py's own committed-markdown, --check-mode pattern.
 
+Top-25 truncation revisited and kept (TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW AC #5) now
+that a genuinely complete, non-truncated view exists (mechanism_registry_view.md): this view's own
+purpose is a short, actionable "verify next" list, not completeness -- truncating it doesn't hide
+anything the way it did before that third view existed, since nothing here is any reader's only
+way to see the full registry anymore.
+
 Usage:
   python3 tools/generate_mechanism_priority_view.py
   python3 tools/generate_mechanism_priority_view.py --check
