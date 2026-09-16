@@ -418,6 +418,49 @@ def test_working_log_exactly_one_row_passes(tmp_path):
     assert status == "PASS"
 
 
+def test_working_log_exactly_one_row_legitimate_reopen_passes(tmp_path):
+    # TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN: a ticket
+    # legitimately closed BLOCKED, then later reopened and closed DONE, has two real rows with
+    # two DIFFERENT statuses -- this must PASS, not read as a duplicate Finalize run.
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "investigation complete, pending review", "none"],
+        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "reopened and resolved", "stored_artifacts/TCK-FAKE"],
+    ])
+
+    status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
+    assert status == "PASS"
+    assert "legitimate reopen" in evidence
+
+
+def test_working_log_exactly_one_row_two_blocked_rows_still_fails(tmp_path):
+    # A real duplicate isn't only two DONE rows -- two rows at the SAME non-DONE status (e.g.
+    # BLOCKED written twice by an accidental double-run) must still fail as a duplicate.
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "x", "none"],
+        ["2026-07-02T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "y", "none"],
+    ])
+
+    status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
+    assert status == "FAIL"
+    assert "duplicate Finalize run" in evidence
+
+
+def test_working_log_exactly_one_row_three_statuses_no_duplicate_passes(tmp_path):
+    # A ticket reopened twice (BLOCKED -> INPROGRESS -> DONE, three genuinely distinct statuses)
+    # must still pass -- the check keys on (ticket_id, status), not a hardcoded two-row shape.
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "x", "none"],
+        ["2026-07-03T00:00:00Z", "TCK-FAKE", "Fake", "INPROGRESS", "y", "none"],
+        ["2026-07-05T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "z", "stored_artifacts/TCK-FAKE"],
+    ])
+
+    status, _ = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
+    assert status == "PASS"
+
+
 # ---------------------------------------------------------------------------
 # check_frontmatter_valid
 # ---------------------------------------------------------------------------
