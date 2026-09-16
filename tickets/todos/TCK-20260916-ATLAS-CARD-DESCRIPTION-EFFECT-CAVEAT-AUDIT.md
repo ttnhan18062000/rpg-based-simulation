@@ -50,16 +50,49 @@ FOUNDATION`), not a one-off slip specific to `camp` — any other card whose bad
 while its own prose records a "never fires / never seeded / no world contains this" caveat would
 have been seeded the same, incomplete way.
 
+**A second, differently-shaped confirmed instance (found 2026-09-16, while tracing dependency
+edges for `TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-POPULATION` — not this ticket's own scan, and
+not `camp`'s own precondition-gap shape)**: `motivation_doctrine`'s atlas card (`entity-cognition#5`)
+described a class-based doctrine-resolution system as "confirmed live via the always-on Adventure
+route scoring path." The described code (`DoctrineResolver`, `MotivationBiasService`) was real once
+but has since been **deleted outright** (`TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT`,
+confirmed dead in production before removal, see `docs/guidelines/intentional_divergences.md`
+§2.53), superseded by `adventure_routing`'s own live `personality_bias` mechanism. Foundation's own
+seeding cited a card describing pre-retirement architecture without cross-checking it against the
+already-existing divergence record. Corrected: `state: gap` (not `orphan` — the implementing code
+is gone, not merely present-with-zero-callers, and `orphan` would be a literally false claim once
+claims-as-tests makes it executable) + `verified: {instrument: code_trace, verdict: observed}`.
+Atlas card and capabilities card (`mind#7`) both corrected to match, including their own stale
+description text, not just their badges/tiers.
+
+**Two confirmed instances now, from different directions** — `camp` found by reading a
+description for a precondition gap, `motivation_doctrine` found by tracing a dependency edge into
+a card whose framing turned out to be a stale, pre-retirement account. Per peer review, this
+broadens what this audit's own re-read should check: not just "does the description contain a
+never-fires caveat the badge misses" (`camp`'s shape), but also "does the description's own
+framing still match `docs/guidelines/intentional_divergences.md`'s record for that subsystem" —
+a card can be wrong not because of a caveat buried in its own prose, but because the prose itself
+describes an architecture the codebase has since moved past.
+
 ## Scope
 
 - Re-read all 73 mechanism-mapped atlas cards' own full `desc` text (not just badge/title) for a
   real, effect-level "never observed working in practice" caveat the current `state` doesn't
-  already carry.
-- For each real instance found (matching `camp`'s own shape — correct, wired code with a real,
-  confirmed precondition gap), record a `verified: {instrument: code_trace, verdict: contradicted}`
-  block, mirroring `camp`'s own disposition exactly (`state` unchanged, `verdict: contradicted`,
-  not `orphan`).
-- Cross-reference every instance found against
+  already carry (`camp`'s own shape).
+- **Also check each card's own description against `docs/guidelines/intentional_divergences.md`**
+  for the subsystem it describes — not just for a hidden caveat, but for whether the description
+  itself still matches the current architecture, or describes something since retired/superseded
+  (`motivation_doctrine`'s own shape, found 2026-09-16).
+- For each real precondition-gap instance found (matching `camp`), record a
+  `verified: {instrument: code_trace, verdict: contradicted}` block (`state` unchanged, not
+  `orphan`).
+- For each real stale-architecture instance found (matching `motivation_doctrine`), correct
+  `state` to whatever the current code actually supports (`gap` if the implementing code no longer
+  exists, per the claims-as-tests-survives-execution reasoning recorded on that mechanism's own
+  `verified` note — never `orphan` for code that isn't merely uncalled but is gone outright) and
+  record `verified: {instrument: code_trace, verdict: observed}`, plus correct the card's own
+  description text (not just its badge), citing the specific divergence-record entry.
+- Cross-reference every precondition-gap instance found against
   `docs/plans/world_composition_precondition_gap_finding.md`'s existing pattern.
 
 ## Out of Scope
@@ -88,9 +121,15 @@ have been seeded the same, incomplete way.
 - `TCK-20260915-MECHANISM-REGISTRY-FOUNDATION` — the original seeding pass this ticket audits.
 - `TCK-20260915-MECHANISM-VERIFICATION-AXIS` — owns the `verified` schema this ticket populates
   more of.
+- `TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT` — the retirement `motivation_doctrine`'s own
+  card missed.
+- `TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-POPULATION` — where `motivation_doctrine`'s own instance
+  was found, incidentally, while tracing an unrelated edge.
 
 ## Related Docs
 - `docs/plans/world_composition_precondition_gap_finding.md` — the pattern `camp` belongs to.
+- `docs/guidelines/intentional_divergences.md` §2.53 — the retirement record `motivation_doctrine`'s
+  own stale card should have been checked against.
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md` — the original

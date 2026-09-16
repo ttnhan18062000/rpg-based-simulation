@@ -457,7 +457,7 @@ flowchart TD
       MEM["Causal & Spatial Memory<br/>why an action failed — ORPHANED, 0 callers"]:::bug
       GOAL["Goal Hierarchy<br/>Directive → Project → Objective → Action"]
       INT["Committed Intentions<br/>read-side plan queue — no write path exists"]:::bug
-      MOT["Motivation & Doctrine<br/>class-biased route scoring"]
+      MOT["Motivation & Doctrine<br/>doctrine chain deleted 2026-09-08, superseded by Adventure Route personality_bias"]:::bug
       CAPT["Capacity Gate<br/>INT/WIS/PER bandwidth; fatigue cuts 50%/20%"]
       DEC["Decide Route<br/>15 RouteFamily values"]
       PER --> SELF --> BEL
@@ -509,7 +509,7 @@ flowchart TD
     REP ==>|labels, next tick| GOAL
     CAPT ==>|fatigue cuts bandwidth, next tick| PER
 
-    class PER,BEL,GOAL,MOT,CAPT,DEC,RDY,ENG,TAC,CMB,MOV,ITX,XP,REL,REP,TRM,BRK,COM live
+    class PER,BEL,GOAL,CAPT,DEC,RDY,ENG,TAC,CMB,MOV,ITX,XP,REL,REP,TRM,BRK,COM live
 </pre>
   </div>
   <p class="section-sub" style="margin-top:14px;">Dotted arrows are one-shot consequences of a single action; bold arrows are the feedback that actually shapes the <em>next</em> tick's thinking. Several of BUILDUP's feedback arrows are real in principle but starved in practice &mdash; Emotion's write path is orphaned, so the EMO&rarr;SELF feedback rarely fires even though the code for both ends exists.</p>

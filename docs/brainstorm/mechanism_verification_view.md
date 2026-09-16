@@ -2,7 +2,7 @@
 
 Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
 
-8 of 75 mechanisms have a recorded verdict. The remaining 67 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
+9 of 75 mechanisms have a recorded verdict. The remaining 66 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
 
 **Static vs runtime evidence, grouped separately below**: `code_trace` proves what the code *says* (reachable, called, a field never written) and can never establish that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` prove what the simulation actually *does*. A `code_trace` row is not equivalent evidence to a runtime-confirmed row.
 
@@ -13,6 +13,7 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `camp` | region | done | static | code_trace | contradicted | 2026-09-16 | CampState is real (spawns monsters, triggers raids, a real clearing-reward loop) but no compiled or procedurally-generated world seeds state.camps -- a permanent no-op in every world today. state stays done (the code is correct and wired, not defective) -- the missing thing is world data, not the mechanism itself. See docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma and calamity-intensity cases. |
 | `cross_episode_grief_nemesis` | faction | done | static | code_trace | observed | 2026-09-16 | Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated betrayal -> party-formation blocker); narrow trigger. |
 | `information_trust_deception` | entity | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
+| `motivation_doctrine` | entity | gap | static | code_trace | observed | 2026-09-16 | Found while tracing dependency edges for TCK-20260916-MECHANISM-DEPENDENCY-GRAPH- POPULATION, not this ticket's own target. src/domains/motivation/__init__.py's own docstring: DoctrineResolver and MotivationBiasService were DELETED (TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT, 2026-09-08) -- resolver.py/service.py no longer exist, confirmed dead in production before removal (see docs/guidelines/intentional_divergences.md #2.53), superseded by adventure_routing's own live personality_bias mechanism. gap, not orphan: orphan means dead code still physically present with zero callers (this registry's own established usage, e.g. target_race); here the implementing code itself is gone, so "zero production callers" would be a false claim about code that doesn't exist -- gap is the value that survives becoming an executable assertion (claims-as-tests phase 2). Only evaluator.py (RoleFitEvaluator, an unrelated gear/skill/role-fit scorer) remains in the module. |
 | `opportunity_rumor_seeds` | world | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
 | `self_model` | entity | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
 | `succession` | entity | orphan | static | code_trace | observed | 2026-09-16 | heir_entity_id confirmed never populated by any write path (repo-wide search) -- confirms the orphan claim, does not contradict it. |
@@ -59,7 +60,6 @@ Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mecha
 | `inventory_trade_conservation` | world | done | unverified | — | unverified | — | — |
 | `knowledge_model` | entity | gated | unverified | — | unverified | — | — |
 | `lair` | region | gap | unverified | — | unverified | — | — |
-| `motivation_doctrine` | entity | partial | unverified | — | unverified | — | — |
 | `movement` | entity | done | unverified | — | unverified | — | — |
 | `nest` | region | gap | unverified | — | unverified | — | — |
 | `party_formation` | group | done | unverified | — | unverified | — | — |

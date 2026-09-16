@@ -255,7 +255,24 @@ mechanisms:
   - id: motivation_doctrine
     layer: entity
     depends_on: [goal_hierarchy, affection_relationship_bonds]
-    state: partial
+    state: gap
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-16"
+      note: >-
+        Found while tracing dependency edges for TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-
+        POPULATION, not this ticket's own target. src/domains/motivation/__init__.py's own
+        docstring: DoctrineResolver and MotivationBiasService were DELETED
+        (TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT, 2026-09-08) -- resolver.py/service.py
+        no longer exist, confirmed dead in production before removal (see
+        docs/guidelines/intentional_divergences.md #2.53), superseded by adventure_routing's own
+        live personality_bias mechanism. gap, not orphan: orphan means dead code still physically
+        present with zero callers (this registry's own established usage, e.g. target_race); here
+        the implementing code itself is gone, so "zero production callers" would be a false claim
+        about code that doesn't exist -- gap is the value that survives becoming an executable
+        assertion (claims-as-tests phase 2). Only evaluator.py (RoleFitEvaluator, an unrelated
+        gear/skill/role-fit scorer) remains in the module.
   - id: commitment_betrayal
     layer: entity
     depends_on: [combat_resolution]
