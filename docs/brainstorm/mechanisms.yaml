@@ -91,7 +91,7 @@ mechanisms:
 
   - id: combat_resolution
     layer: entity
-    depends_on: [tactical_decision, combat_engagement]
+    depends_on: [tactical_decision, combat_engagement, movement, status_effects, entity_role, skill_unlocks]
     state: done
   - id: tactical_decision
     layer: entity
@@ -99,7 +99,7 @@ mechanisms:
     state: done
   - id: combat_engagement
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: [action_pacing_readiness, personality]
     state: done
     verified:
       instrument: scenario
@@ -291,7 +291,7 @@ mechanisms:
     state: orphan
   - id: adventure_routing
     layer: entity
-    depends_on: [motivation_doctrine, cognition_capacity_fatigue]
+    depends_on: [motivation_doctrine, cognition_capacity_fatigue, entity_role, personality, diplomacy]
     state: done
   - id: quest_generation_sourcing
     layer: entity
@@ -314,7 +314,7 @@ mechanisms:
 
   - id: party_formation
     layer: group
-    depends_on: []
+    depends_on: [movement]
     state: done
   - id: guilds
     layer: group
@@ -349,7 +349,7 @@ mechanisms:
     state: orphan
   - id: cross_episode_grief_nemesis
     layer: faction
-    depends_on: []
+    depends_on: [campaigns]
     state: done
     verified:
       instrument: code_trace
@@ -367,7 +367,7 @@ mechanisms:
 
   - id: regional_trauma_hazards_sovereignty
     layer: region
-    depends_on: [betrayal_siege_war]
+    depends_on: [betrayal_siege_war, world_generation]
     state: done
   - id: demographic_cohort_cycle
     layer: region
@@ -414,7 +414,7 @@ mechanisms:
 
   - id: equipment_scoring
     layer: world
-    depends_on: []
+    depends_on: [inventory_trade_conservation]
     state: done
   - id: inventory_trade_conservation
     layer: world
@@ -422,7 +422,7 @@ mechanisms:
     state: done
   - id: crafting
     layer: world
-    depends_on: []
+    depends_on: [inventory_trade_conservation]
     state: partial
   - id: buildings_town_services
     layer: world

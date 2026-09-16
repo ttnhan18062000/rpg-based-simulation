@@ -13,7 +13,12 @@ more depends on it. Ranked below, top 25.
 
 | Mechanism | Layer | State | Priority | Transitive Dependents |
 |---|---|---|---|---|
+| `movement` | entity | done | 70 | 14 |
+| `personality` | entity | done | 70 | 14 |
 | `tactical_decision` | entity | done | 70 | 14 |
+| `entity_role` | entity | done | 65 | 13 |
+| `skill_unlocks` | entity | partial | 65 | 13 |
+| `status_effects` | entity | partial | 65 | 13 |
 | `combat_resolution` | entity | done | 60 | 12 |
 | `cognition_capacity_fatigue` | entity | done | 45 | 9 |
 | `perception` | entity | done | 40 | 8 |
@@ -27,17 +32,12 @@ more depends on it. Ranked below, top 25.
 | `race_archetype` | entity | done | 15 | 3 |
 | `reputation` | faction | done | 12 | 4 |
 | `attributes_biology` | entity | done | 10 | 2 |
+| `world_generation` | world | done | 9 | 9 |
 | `aging_death` | entity | done | 5 | 1 |
 | `class_assignment` | entity | partial | 5 | 1 |
 | `derived_stats` | entity | done | 5 | 1 |
 | `motivation_doctrine` | entity | partial | 5 | 1 |
 | `xp_leveling` | entity | done | 5 | 1 |
-| `city` | region | partial | 4 | 2 |
-| `social_memory` | faction | skeleton | 3 | 1 |
-| `buildings_town_services` | world | done | 1 | 1 |
-| `adventure_routing` | entity | done | 0 | 0 |
-| `breakthrough_bonuses` | entity | done | 0 | 0 |
-| `build_diversity` | entity | gap | 0 | 0 |
 
 ## Chart form
 
@@ -50,41 +50,39 @@ flowchart BT
     classDef gated fill:#f7ecd2,stroke:#9a6b0c,stroke-width:2px,stroke-dasharray: 3 3,color:#232019
     classDef skeleton fill:#eee,stroke:#888,stroke-width:1px,stroke-dasharray: 1 3,color:#232019
 
-    adventure_routing["adventure routing"]:::done
     affection_relationship_bonds["affection relationship bonds"]:::done
     aging_death["aging death"]:::done
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
-    breakthrough_bonuses["breakthrough bonuses"]:::done
-    build_diversity["build diversity"]:::gap
-    buildings_town_services["buildings town services"]:::done
-    city["city"]:::partial
     class_assignment["class assignment"]:::partial
     cognition_capacity_fatigue["cognition capacity fatigue"]:::done
     combat_resolution["combat resolution"]:::done
     derived_stats["derived stats"]:::done
+    entity_role["entity role"]:::done
     goal_hierarchy["goal hierarchy"]:::done
     interaction_channeling["interaction channeling"]:::done
     motivation_doctrine["motivation doctrine"]:::partial
+    movement["movement"]:::done
     perception["perception"]:::done
+    personality["personality"]:::done
     race_archetype["race archetype"]:::done
     regional_trauma_hazards_sovereignty["regional trauma hazards sovereignty"]:::done
     reputation["reputation"]:::done
-    social_memory["social memory"]:::skeleton
+    skill_unlocks["skill unlocks"]:::partial
+    status_effects["status effects"]:::partial
     tactical_decision["tactical decision"]:::done
     trauma["trauma"]:::done
+    world_generation["world generation"]:::done
     xp_leveling["xp leveling"]:::done
 
-    motivation_doctrine --> adventure_routing
-    cognition_capacity_fatigue --> adventure_routing
     interaction_channeling --> affection_relationship_bonds
-    xp_leveling --> breakthrough_bonuses
-    class_assignment --> build_diversity
-    city --> buildings_town_services
-    regional_trauma_hazards_sovereignty --> city
     race_archetype --> class_assignment
     tactical_decision --> combat_resolution
+    movement --> combat_resolution
+    status_effects --> combat_resolution
+    entity_role --> combat_resolution
+    skill_unlocks --> combat_resolution
     attributes_biology --> derived_stats
     belief_cycle --> goal_hierarchy
     reputation --> goal_hierarchy
@@ -92,6 +90,7 @@ flowchart BT
     affection_relationship_bonds --> motivation_doctrine
     cognition_capacity_fatigue --> perception
     betrayal_siege_war --> regional_trauma_hazards_sovereignty
+    world_generation --> regional_trauma_hazards_sovereignty
     affection_relationship_bonds --> reputation
     combat_resolution --> trauma
     combat_resolution --> xp_leveling
