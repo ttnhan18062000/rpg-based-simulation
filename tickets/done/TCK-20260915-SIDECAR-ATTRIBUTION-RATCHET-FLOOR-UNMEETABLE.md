@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE
-phase: open
+phase: done
 date: 2026-09-15
 tags: [agent-monitoring, data-quality, testing]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality, testing]
 `test_real_corpus_is_at_or_above_the_ratchet_floor`'s 74.0% floor is currently unmeetable by the live rolling corpus — real, declining, hand-orchestration-driven gap; lowering the floor is explicitly blocked by the check's own anti-regression guard test
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -62,19 +62,21 @@ ticket's scope — see `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`).
 
 ## Acceptance Criteria
 
-- [ ] A same-day trend of the real attribution rate (more than two points) is captured — done:
-      see the four-point monotonic decline below (74.7% → 73.7% → 73.6% → 73.5%).
-- [ ] The shared-`.claude/current_run`-sidecar concurrency hypothesis below is checked via the
-      primary proposed check: measure attribution directly on records written in the last few
-      hours (ideally split by session), not the 14-day rolling average. Near-zero on recent
-      records while the 14-day average still reads ~73.5% confirms the hypothesis with one query;
-      normal recent-record attribution kills it. Run this before anything else.
-- [ ] Secondary confirmation once available: does the 14-day rate partially recover on a day with
-      markedly less concurrent session activity and no corresponding code change?
-- [ ] Either the floor is re-pinned with real headroom below the current trajectory (not the
-      instant-of-pin value), or a genuine regression is found and fixed, with evidence either way.
-- [ ] `test_real_corpus_is_at_or_above_the_ratchet_floor` passes against the live corpus after
-      whichever fix is chosen.
+**Superseded 2026-09-16 by the Decision section below** — the original framing assumed the right
+fix was re-pinning the floor or finding a regression. The evidence gathered while pursuing these
+same criteria showed no threshold can work; the resolution is gate removal, not a new floor value.
+
+- [x] A same-day trend of the real attribution rate (more than two points) is captured — see the
+      four-point monotonic decline (74.7% → 73.7% → 73.6% → 73.5%), later extended to the full
+      daily table in the Decision section.
+- [x] The shared-`.claude/current_run`-sidecar concurrency hypothesis was checked via the primary
+      proposed check (attribution split by session over a 2h window) — result: 0/11 unattributed
+      rows all traced to a single session, disproving cross-session collision as the mechanism.
+- [x] Either the floor is re-pinned or a genuine regression is found and fixed, with evidence
+      either way — evidence found neither applies: re-pinning six times never converged, and the
+      absolute-count variant fails identically, so the check itself is the wrong shape.
+- [x] Resolved not by making `test_real_corpus_is_at_or_above_the_ratchet_floor` pass, but by
+      deleting it and its floor along with it, per the user's Decision — see below.
 
 ## Related Tickets
 - `TCK-20260915-SIDECAR-ATTRIBUTION-GAP` — introduced the check and the accept-with-floor
@@ -233,18 +235,51 @@ cross-cutting change to how/when `run_id` gets written, squarely inside
 `TCK-20260915-SIDECAR-ATTRIBUTION-GAP`'s and the owning epic's territory, not a floor tweak.
 
 ## Test Summary
-Not yet started — this ticket currently only records the observation per explicit instruction
-from the peer session directing this work ("if that check fails again, file it with both
-measurements and the main-passes-at-09:44Z data point... Then hold").
+- `pytest tests/tools/test_sidecar_attribution_coverage_check.py -v` (`.venv313`, Python 3.13.14,
+  CI-matching): 4 passed — the two remaining measurement tests
+  (`test_compute_attribution_rate`, `test_rows_outside_the_14_day_window_are_excluded`), a new
+  `test_compute_attribution_rate_on_no_recent_rows_returns_none` (covers the same no-recent-rows
+  path the deleted `check_sidecar_attribution_coverage` used to test, now against
+  `compute_attribution_rate` directly since the wrapping function is gone), and the unchanged
+  `test_makefile_wires_sidecar_attribution_coverage_check`.
+- `python3 tools/gate_checks/sidecar_attribution_coverage_check.py` run standalone: prints
+  `MARKER:[{"status": "PASS", "evidence": "attribution rate 72.1% (35483/49227 tool rows over the
+  last 14 days)"}]` — always PASS now, reporting the rate rather than gating on it.
+- Verified before editing (not assumed): `grep` across `tools/`, `tests/`, `.github/workflows/`,
+  and `Makefile` for `ATTRIBUTION_RATE_FLOOR` / `check_sidecar_attribution_coverage` /
+  `sidecar_attribution_coverage_check` found no consumer outside this module and its own test —
+  `tools/gate_checks/monitoring_anomaly_validator.py` does not import from this module, and
+  `tools/agent-monitoring/generate_retro.py`'s own attribution-adjacent reporting
+  (`spend_proxy_coverage`) is a separately-computed `cost_proxy_score` coverage figure, not a call
+  into this check — so removing the blocking function does not affect retro report rendering.
+- `pytest tests/tools/ -m "not slow and not extra_slow"` (`.venv313`): 2683 passed, 25 skipped,
+  28 deselected, 1 xfailed, 0 failed — no regression from the deletion anywhere else in the suite.
 
 ## Files Changed
-None yet (this ticket file only).
+- `tools/gate_checks/sidecar_attribution_coverage_check.py` — removed `ATTRIBUTION_RATE_FLOOR` and
+  `check_sidecar_attribution_coverage()` (the blocking floor check); kept
+  `compute_attribution_rate()` unchanged for retro reporting; rewrote the module docstring to
+  record why this must not be rebuilt as a threshold; `__main__` now reports the rate as an
+  always-PASS informational marker instead of gating on it.
+- `tests/tools/test_sidecar_attribution_coverage_check.py` — removed the four tests that exercised
+  the deleted floor/guard (`test_passes_on_no_recent_rows`, `test_passes_when_rate_at_or_above_floor`,
+  `test_fails_when_rate_drops_below_floor`, `test_floor_may_only_increase_never_used_to_paper_over_a_regression`)
+  and the corpus-blocking test (`test_real_corpus_is_at_or_above_the_ratchet_floor`); added
+  `test_compute_attribution_rate_on_no_recent_rows_returns_none` to keep that code path covered
+  against the surviving function.
+- `Makefile` — reworded the `sidecar-attribution-coverage-check` target's help text from "Ratcheted
+  floor check" to "Report ... (non-blocking; see module docstring)"; target itself unchanged.
+- This ticket file — moved `tickets/todos/` → `tickets/inprogress/` → `tickets/done/`.
+- `docs/REGISTRY.yaml` — regenerated unconditionally as part of this closure (no manual edits).
 
 ## Completion Summary
-Not complete. Filed per explicit instruction to record the finding and hold, not to implement a
-fix in the same session — the batch owning `ATTRIBUTION_RATE_FLOOR` and its re-pin cadence
-(`TCK-20260915-SIDECAR-ATTRIBUTION-GAP`'s epic) should decide the right response with the full
-trend, not a two-point read from an unrelated PR's CI.
+Per the user's direct 2026-09-16 decision (recorded above, verbatim, from
+`agent-working-design`'s own commit `07b2c2bf3` and independently re-verified against the raw
+`agent-monitoring/data/*/tools.jsonl` shards before acting), the sidecar-attribution-coverage
+blocking gate is deleted rather than re-pinned. The underlying measurement survives for retro
+reporting; only the threshold and its two supporting tests are gone. This closes the ticket that
+originally observed the floor was unmeetable — the resolution is that no floor should have gated
+this metric at all, not a new floor value.
 
 ## Decision — 2026-09-16 (user, via `agent-working-design`)
 
