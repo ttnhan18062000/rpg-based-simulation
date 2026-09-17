@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS
-phase: open
+phase: done
 date: 2026-09-16
 tags: [progression, simulation-quality, testing]
 ---
@@ -16,7 +16,7 @@ tags: [progression, simulation-quality, testing]
 any entity, in any tested real corpus world, across 1000 ticks each
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -187,16 +187,87 @@ to rediscover the right next step.
   `civilian_settlement` and `monster_only_gauntlet` archetypes are registered).
 
 ## Implementation Notes
-Filed, not fixed, per the explicit instruction that motivated this measurement.
+Filed, not fixed, per the explicit instruction that motivated this measurement. See
+`stored_artifacts/TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS/investigation.md`
+for the full trace, including a false wiring-gap lead caught and corrected before being reported.
+
+## Addendum — 2026-09-17, discriminating measurement run and root-caused
+
+**The proposed discriminating measurement was run.** Instrumented
+`CombatRewardClassificationService.classify_defeated_target` across the same three real corpus
+worlds (`crowded_frontier`, `quest_dense_frontier`, `hero_guild_routing`; seed 42; 1000 ticks each)
+through a real `Kernel` tick loop. Result: 0–10 real kills per world, each granting real,
+correctly-computed XP (`defender.identity.evolution_level * 10`), landing correctly in
+`identity.evolution_points` — but never crossing the level-2 threshold of 100 XP anywhere; the
+busiest single entity across all three worlds accumulated 50 XP from 5 kills.
+
+**Verdict: content-composition / pacing gap, not a wiring gap** (Acceptance Criteria #2–3). A real
+Kernel-tick positive control — a goblin pre-staged at `evolution_points=95` who then kills an orc
+worth 10 XP — correctly produces `evolution_level=2, evolution_points=5`, matching
+`docs/mechanics/attribute_progression_contract.md`'s own worked formula exactly. The
+combat-XP-to-level-up chain (`src/engine/combat.py` → `conservation.py`'s COMBAT branch →
+`src/engine/evolution.py::EvolutionSystem.evaluate()`, an unconditional pipeline phase at
+`src/engine/pipeline.py:381` → `LevelingService._execute_level_up()`) is real, correctly wired, and
+fires the moment enough XP exists. Real corpus combat volume just never supplies enough of it
+within a 1000-tick window: this is the same family as `camp`
+(`docs/plans/world_composition_precondition_gap_finding.md`) — correct, wired code defeated by
+real-world data/volume, not a code defect. Likely downstream of the already-ticketed
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (low cross-faction combat volume
+generally); not independently re-investigated here.
+
+A first attempt at the positive control (calling `ApplyPath._apply_entity_update()` directly,
+bypassing the real `evolution` pipeline phase) wrongly suggested a wiring gap. Caught and corrected
+before being reported, per this epic's own standing discipline — see investigation.md's "false
+lead" section for the full trace, including exact line citations for the two disconnected-looking
+XP fields (`IdentityUpdate.evolution_points_delta` vs. `RewardUpdate.xp_gain`) that turned out to
+both be consolidated correctly by `EvolutionSystem.evaluate()`, a phase the first control never
+exercised.
+
+**AC #4 (file the confirmed defect with correct scope)**: this is not a wiring defect requiring a
+broad-scope repair ticket the way AC #4 anticipated. The real, separately-scoped follow-up is a
+tuning/content-composition question, filed as
+`TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` (standard tier, `tickets/todos/`
+root — not part of the `mechanism-verification` epic, which is registry-infrastructure-scoped, not
+RPG-simulation-defect-scoped).
+
+**AC #5 (`true_power()`'s `evolution_level` exclusion, flagged not resolved)**: carried forward
+into the new follow-up ticket's own Related Docs, so it is not lost once this ticket is historical.
+
+**Registry propagation**: `registries/mechanisms.yaml`'s `xp_leveling` moved `done` → `partial`
+with a `verified` block (instrument: scenario, verdict: observed, both the positive-control
+confirmation and the corpus-pacing caveat). `evolution` gained
+`implemented_by: [src/engine/evolution.py::EvolutionSystem]` and its own matching `verified` block.
+`progression_conversion` gained a `verified` note on the downstream AP-scarcity consequence.
+`action_pacing_readiness`'s own note — which named this ticket as "not yet root-caused as
+content-gap vs wiring-gap" — updated to close that thread: pacing, not wiring; its own `partial`
+state and `observed` gate verdict stand unchanged. `docs/brainstorm/rpg_feature_atlas.html`'s
+mapped `xp_leveling` badge regenerated (`done` → `partial` `cls`) via
+`mechanism_atlas_regenerate.py`; its badge label and card prose deliberately left for the
+not-yet-built `TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT`, per that regenerator's own
+documented cls-only contract. `simulation_capabilities.html` re-checked, zero drift.
 
 ## Test Summary
-Not yet started — this ticket is filed for a future investigation, not implemented here.
+Investigation-only; no `src/` code changed. Full scoped mechanism-registry suite re-run after the
+registry edits: `tests/unit/tools/test_mechanism_registry_completeness_check.py`,
+`test_mechanism_registry.py`, `test_mechanism_state_caller_check.py` → 65 passed, no pinned count
+shifted (the new `evolution` binding points outside the completeness checker's own
+`src/domains/`/`src/systems/` scope, same pattern already documented for
+`declared_cognition_schema`/`committed_intentions`). `graphify-out/` not moved aside — no `src/` or
+`tests/` file changed.
 
 ## Files Changed
-None yet (this ticket file only).
+- `registries/mechanisms.yaml` — `xp_leveling`, `evolution`, `progression_conversion`,
+  `action_pacing_readiness` entries updated (see Addendum).
+- `docs/brainstorm/rpg_feature_atlas.html` — `xp_leveling`'s mapped badge `cls` regenerated.
+- `staging_artifacts/TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS/` — this
+  ticket's own investigation.md/plan.md/test_plan.md.
+- `tickets/todos/TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME.md` — new follow-up
+  ticket.
 
 ## Completion Summary
-Open. Filed after direct measurement (instrumented call-counting across 3 real corpus worlds, 1000
-ticks each, validated against a positive control) confirmed a real, previously-unquantified gap
-broader than the already-recorded `COMB-318` finding — rather than concluding "nothing to file"
-from an unmeasured assumption.
+Done. The proposed discriminating measurement was run, root-caused via a real Kernel-tick positive
+control (after catching and correcting a wrong-layer false lead), and recorded plainly: this is a
+content-composition/pacing gap, not a wiring defect. The XP-to-level-up chain itself is directly
+confirmed correct. All five Acceptance Criteria satisfied by this investigation; the real
+follow-up (tuning combat volume/XP values against realistic thresholds) is filed separately per
+this ticket's own explicit "verify, don't repair in the same pass" scope.
