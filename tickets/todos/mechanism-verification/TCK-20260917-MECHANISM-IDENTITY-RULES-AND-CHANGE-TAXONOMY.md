@@ -100,6 +100,24 @@ the reason.
 **A rule that splits all of them is too aggressive; one that splits none is doing no work.** Report
 which it is before acting on the results.
 
+**Second test case, added 2026-09-17, a different shape than `action_pacing_readiness`.**
+`combat_resolution` is reached by two structurally different callers at wildly different real
+volumes: the decision-driven path (`tactical_decision` → `ActionRouter.execute_action()` →
+`CombatResolutionSystem.resolve_attack()`, 0-2 calls per 1000-2000 ticks across three corpus
+worlds) and the incidental opportunity-attack path (`movement`'s own mechanic calling
+`resolve_multi_attack()` directly, 181-2177 calls per 1000 ticks in the same worlds) — see
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own 2026-09-17 addendum. This is **not
+obviously a split** the way `action_pacing_readiness` is: both callers invoke the *same*
+combat-resolution logic, correctly, and there is no `state` divergence between them the way there
+is between the gate and the scaling half of `action_pacing_readiness` — `combat_resolution` itself
+is `done` regardless of which caller reached it. The candidate shape here is closer to "one
+mechanism, two entry points, wildly different real utilization" than "two mechanisms sharing an
+id." The identity rule (§1) needs an explicit answer for this shape: does "smallest unit that can
+independently succeed or fail" apply per-entry-point, or does a mechanism stay one unit as long as
+its own internal logic is single and correct, regardless of how many callers reach it and how
+unevenly? Record the answer, and whether `combat_resolution` splits or not, with the same reasoning
+rigor as `action_pacing_readiness`.
+
 ## Out of Scope
 - **Implementing the declared-versus-actual diff check.** A proposal stating its registry diff, then
   checked against what actually landed, is the natural follow-up — but the rules must survive contact
@@ -119,6 +137,10 @@ which it is before acting on the results.
 4. `action_pacing_readiness` is assessed explicitly against the rule (see Assumptions).
 5. Any split performed propagates to `depends_on`, derived priority, and the affected `verified`
    blocks — a split that leaves one verdict covering two mechanisms reproduces the defect it fixes.
+6. `combat_resolution`'s own multiple-entry-path shape (Scope §3, added 2026-09-17) is assessed
+   explicitly against the rule, with a stated answer for whether "smallest independently
+   succeed-or-fail unit" is per-entry-point or per-implementation — not left as an unaddressed
+   second case alongside `action_pacing_readiness`.
 
 ## Related Tickets
 - `TCK-20260917-EPIC-MECHANISM-VERIFICATION` — sibling concern; this is registry semantics rather
@@ -155,6 +177,23 @@ which it is before acting on the results.
    waits on the rules proving useful.
 4. The taxonomy applies to **gameplay** proposals. Infrastructure work (the registry epic itself)
    introduces no mechanisms and is out of its scope.
+5. **Whether `depends_on` means "requires to exist" or "execution-flow," added 2026-09-17, not
+   resolved here — genuinely open, not a definitional nicety.** The registry's own stated rule for
+   `depends_on` is "requires to exist in order to function," not "invokes" or "runs before." Two
+   already-declared edges on `combat_resolution` test this concretely, not hypothetically:
+   `movement` (measured 2026-09-17: its own opportunity-attack mechanic is what actually triggers
+   181-2177 of `combat_resolution`'s real calls per 1000 ticks in three corpus worlds — a real
+   trigger, but does `combat_resolution` *require* `movement` to exist, or does it just happen to be
+   invoked from there today?) and `tactical_decision` (0-2 real calls in the same worlds — the
+   "requires to exist" claim is even harder to defend for an edge this rarely exercised). Neither
+   edge obviously satisfies the stated rule as written. **This has a real consequence beyond
+   semantics**: derived priority (`tools/mechanism_registry/generate_mechanism_priority_view.py`) is
+   computed from these same `depends_on` edges. If some declared dependencies are actually
+   execution-flow rather than genuine existence-requirements, the derived priority ranking is
+   measuring something other than real blast radius — and "what to fix next" rests on that ranking.
+   Whoever resolves this identity-rules ticket should give `depends_on` a real, checkable definition
+   (or explicitly two edge kinds) rather than leave it looser in practice than the one sentence that
+   currently defines it.
 
 ## Implementation Notes
 These rules were derived from roughly six real cases. That is enough to be worth writing down and

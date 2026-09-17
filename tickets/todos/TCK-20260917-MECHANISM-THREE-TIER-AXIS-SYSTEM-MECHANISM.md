@@ -168,6 +168,24 @@ classification; the registry diff makes the claim checkable after it lands.
    works from one root; `economy` may not.
 4. Whether axes attach to mechanisms or to systems is unresolved. Attaching to systems is fewer
    declarations; attaching to mechanisms is more precise. Decide with a real case.
+5. **A real limitation of derived membership, found 2026-09-17 while resolving
+   `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`.** The `combat` system's own worked
+   example (§1: `root: combat_resolution`, members = transitive ancestors via `depends_on`) derives
+   membership from the *declared* graph — `tactical_decision → combat_resolution` is a real,
+   declared edge. But direct instrumentation found real combat in three corpus worlds runs
+   overwhelmingly through `movement`'s own opportunity-attack mechanic
+   (`CombatResolutionSystem.resolve_multi_attack()`, 181-2177 calls per 1000 ticks), not through
+   `tactical_decision`'s own decision-driven path (0-2 calls) — even though `movement` is also
+   already a declared `depends_on` edge of `combat_resolution`. **A derived system's membership is
+   only as true as its declared edges say, and a declared edge does not say how much real traffic
+   flows through it.** `combat`'s own rollup (AC #2's per-mechanism-state counts) would correctly
+   show `tactical_decision` as unverified/dormant if `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-
+   CHANGE-TAXONOMY`'s own registry updates land first — but the system tier itself has no way to
+   surface *which declared edge dominates in practice*, which is exactly the kind of fact this
+   investigation's own registry updates had to record as prose on `combat_resolution`'s `verified`
+   block, not as anything the graph structure itself exposes. Record this as a stated limitation
+   when this ticket is built, not discovered again later: derived membership answers "is this part
+   of the system," never "is this how the system actually gets used."
 
 ## Implementation Notes
 
