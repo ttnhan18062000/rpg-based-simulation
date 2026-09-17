@@ -45,8 +45,17 @@ recorded verdict, with the tooling quietly left in place, is the failure mode to
   - `final_status` DONE-rate; `failed` / `blocked` rate
   - `reason_code` mix
   - `tool_call_count` per phase — the over-compression detector
+  - **cache-hit degradation** — a compression mode that invalidates prefix caches can *raise* total
+    cost while reducing per-request size, so falling cache reuse is a harm signal in its own right,
+    not a side effect. See the plan's cache-stability constraint.
 - Record a **promote** or **abandon** verdict against the plan's decision criteria, with the
   evidence inline.
+- **If the verdict is abandon specifically because input-side savings are immaterial** — the likely
+  outcome, since code is passthrough by design — record that as a **fork, not a dead end**. The
+  remaining lever is output-side compression, which Headroom structurally cannot do because it only
+  sees what the agent reads. Route to evaluating `juliusbrussee/caveman`'s proxy instead of closing
+  the epic. Do not let "Headroom did not pay" be recorded as "compression does not pay here"; those
+  are different findings.
 - On abandon: execute the revert runbook and confirm state is gone.
 
 ## Out of Scope

@@ -50,8 +50,8 @@ When unblocked:
   `HEADROOM_CONFIG_DIR`, so it cannot share state with concurrent sessions.
 - Point **only** a named data-heavy session class at it — monitoring retro, corpus/JSONL analysis,
   graph work.
-- Choose and record `--mode` (`cache` versus `token`) with the reasoning, and whether `--code-aware`
-  is enabled.
+- Use **`--mode cache`**, not `--mode token`, unless measurement overturns it — see Assumptions for
+  the evidence. Record `--code-aware`'s setting and the reasoning either way.
 - Continue the harm check over the rollout window, comparing against the same baseline.
 - Keep the revert runbook current and re-verify it still works against the proxy configuration.
 
@@ -97,8 +97,14 @@ When unblocked:
 - Whether Claude subscription accounts work through the proxy is unresolved upstream and actively
   discussed. If it requires an API key this repo does not use, Phase 2 may be infeasible regardless
   of Phase 1's result — which is a legitimate outcome, not a problem to engineer around.
-- Whether `--mode cache` (prefix-cache stability) or `--mode token` (maximum visible compression) is
-  the better fit is genuinely undecided and should be measured, not assumed.
+- **`--mode cache` is now the evidence-backed default** (changed 2026-09-17; previously recorded
+  here as undecided). An external review of this account's usage measured ~48.8B cache-read against
+  ~815.6M cache-write — roughly **60:1 reuse**, meaning prefix caching is already working extremely
+  well. `--mode token` explicitly "maximizes visible per-request compression **at the cost of cache
+  stability**", and cache reads bill at a fraction of fresh input, so trading cached tokens for
+  compressed-but-uncached ones can cost *more* than it saves. A compression win measured per-request
+  can still be a net loss. `--mode token` therefore needs positive evidence before use, not merely
+  a better per-request number.
 
 ## Implementation Notes
 Blocked. Do not pick this up without both the promote verdict and the user explicitly saying to

@@ -53,6 +53,43 @@ repo has ever had**, closing a gap our own schema documents as having "no workar
 current platform." That capability is arguably worth more than the cost saving, and it is the
 reason this trial is worth running even if the savings turn out to be modest.
 
+### Alternate candidate — Caveman (added 2026-09-17)
+
+[Caveman](https://github.com/juliusbrussee/caveman) (Go, ~106k stars, created 2026-04-04) overlaps
+Headroom almost exactly on the input side — proxy, MCP server (`caveman_compress` /
+`caveman_retrieve` / `caveman_stats`), lossy structural compression of logs/JSON/diffs, originals
+recoverable from local SQLite. It is **not** adopted here, but it is recorded as the named alternate
+so a Headroom-negative result does not read as a verdict on compression generally.
+
+Where it is genuinely better:
+
+- **It compresses output.** Headroom only touches what the agent *reads*. Output tokens bill at a
+  premium, so an 8–10% output cut can be worth more than a 30% input cut. Headroom has no answer to
+  this at any price, because it is not in that path.
+- **External validation.** A JetBrains lab study over 86 real tasks (8.5% fewer output tokens, ~10%
+  cost, no detectable quality change) and an Adobe Research paper, versus Headroom's self-reported
+  benchmarks.
+- **It publishes its own negative results**, including a benchmark case that came out **+9.9% worse**
+  and an explicit "skip it if your workload is pure code generation."
+
+Where Headroom stays better, and why it is the one being trialled first:
+
+- **Code handling.** Headroom treats code as passthrough by design (*"Compressing function bodies
+  would remove exactly what they need"*). Caveman's structural compression *"keeps signatures,
+  removes bodies"* — the opposite choice, on the content type most dangerous to lose in a 150k-line
+  code repo.
+- **Licensing.** Apache-2.0 throughout, versus dual MIT + BSL-1.1 with `engine/`, `proxy/`, `mcp/`,
+  `rewriter/` under BSL. Our use is permitted — the Additional Use Grant covers *"self-hosted use for
+  your own first-party traffic, including production"*, and the restriction targets only third-party
+  hosted services — but it is a weaker position until BSL converts to Apache-2.0 in June 2030.
+
+**Caveman's output-side skill is out of scope regardless of any trial result.** It rewrites what the
+agent *says*, stripping articles, hedging, and prose. That would degrade exactly the reporting
+precision this repo's agent work depends on — distinguishing "verified" from "unconfirmed", quoting
+an exit code rather than saying "looks fine". The proxy is separable from the skill; only the proxy
+is of interest. Its claimed savings also span 8.5%–75% depending on who measured, which is precisely
+why any evaluation must use paired measurement rather than a published figure.
+
 ## Why this is not a duplicate of context-efficient retrieval
 
 `context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md`
@@ -102,7 +139,8 @@ Target payloads — the JSON/log-shaped content where 60–95% actually applies:
 - `docs/REGISTRY.yaml`, junit XML under `reports/junit/`
 
 **Phase 2 — proxy for one session class,** only if Phase 1's numbers justify it: its own port, its
-own `HEADROOM_WORKSPACE_DIR`/`HEADROOM_CONFIG_DIR`, restricted to data-heavy sessions.
+own `HEADROOM_WORKSPACE_DIR`/`HEADROOM_CONFIG_DIR`, restricted to data-heavy sessions, and
+**`--mode cache` rather than `--mode token`** — see the cache-stability constraint below.
 
 ## Where compression must not go
 
@@ -147,6 +185,31 @@ available (see Problem). It is a *paired* measurement: the same payload, compres
 differences in ticket scale cancel by construction. This matters because **cross-ticket cost
 comparison is invalid** — a hotfix and a 95-file epic differ by orders of magnitude, and that
 variance dwarfs a 20% effect.
+
+### Cache stability is a constraint, not a side effect (added 2026-09-17)
+
+An external review of this account's usage measured roughly **48.8B cache-read against 815.6M
+cache-write — about 60:1 reuse**. Prefix caching is already working extremely well, and that changes
+what "saving tokens" means here.
+
+`headroom proxy --mode token` explicitly *"maximizes visible per-request compression **at the cost
+of cache stability**"*; `--mode cache` freezes prior turns to preserve it. Because cache reads bill
+at a fraction of fresh input, **trading cached tokens for compressed-but-uncached ones can cost more
+than it saves** — a compression win measured per-request can still be a net loss overall.
+
+Two consequences, both binding on this trial:
+
+1. **`--mode cache` is the default.** `--mode token` requires positive evidence before use, not
+   merely a better per-request compression number.
+2. **Cache-hit degradation is a harm signal in its own right**, tracked alongside
+   `tool_call_count`-per-phase inflation. A fall in cache reuse counts against the trial even if
+   per-request sizes improve.
+
+This is the one recommendation from that review adopted directly into the design rather than merely
+noted. Its other headline metrics — uncached input, cache-read, cache-write, output and tool-result
+token counts — are **not executable here**, since `docs/agent-monitoring/schema.md` records no token
+counts and states there is "no workaround within the current platform". That gap is itself part of
+this trial's rationale.
 
 **Harm — agent-monitoring, as a tripwire, not a cost metric.** `cost_proxy_score` is computed from
 tool-call shape, not tokens, so it would stay flat regardless of savings; using it to measure
