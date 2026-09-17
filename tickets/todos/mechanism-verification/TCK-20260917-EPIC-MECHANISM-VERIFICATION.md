@@ -36,27 +36,47 @@ never given a home together: two report-only detectors, a binding-coverage preco
 detectors need, and an atlas re-read audit. This epic exists so they're tracked as one deliberate
 sequence rather than four independent todos someone has to notice are related.
 
+**Added 2026-09-17, sequenced first**: `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`.
+The registry's 89 nodes inherited accidental granularity (71 from atlas cards, 11 from directory
+structure) with no rule for what one mechanism is — some entries bundle two or three concepts
+(`regional_trauma_hazards_sovereignty`, `inventory_trade_conservation`), others split one concept
+across three rows (combat). This surfaced as a real cost, not a hypothetical one: coverage
+extension (item 2 below) is about to bind 63 entries, and the identity-rules ticket can **split**
+some of them — `action_pacing_readiness` (already bound, already verified) is its own worked
+example of an entry that should split into a working gate and a starved scaling half sharing one
+overloaded verdict today. Splitting after binding means redoing that subset's binding; splitting
+first avoids it, which is why this now runs before coverage extension rather than after it (see
+`SEQUENCE.md`'s own updated "Why This Order Matters" for the full reasoning and the correction to
+its prior text).
+
 Scoping document: `docs/plans/mechanism_claims_as_tests_initiative.md`.
 
-**Scope limit, explicit**: this epic holds exactly these four tickets, nothing more. It does not
+**Scope limit, explicit**: this epic holds exactly these five tickets, nothing more. It does not
 absorb the other ~35 tickets already sitting in `tickets/todos/` — most predate this PR and belong
 to a separate, dormant-mechanism arc (calamity producers, lair trauma, worldbuilding, parity gates,
 performance costs). `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` in
-particular stays at `tickets/todos/` root — it is an RPG simulation defect, not registry
-infrastructure, even though it was found by this same epic's own verification work. An epic that
-absorbs unrelated tickets stops meaning anything.
+particular stayed at `tickets/todos/` root when it closed — it was an RPG simulation defect, not
+registry infrastructure, even though it was found by this same epic's own verification work.
+`TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` — a real sibling, blocked on the
+identity-rules ticket above — is filed at `tickets/todos/` root rather than in this epic for the
+same reason: it is P2, and a P1 coverage-extension ticket should not wait on a P2 tier-system
+ticket just because they touch the same registry file. An epic that absorbs unrelated tickets
+stops meaning anything.
 
 ## Scope
-1. `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` — extend `implemented_by` coverage
+1. `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` — state what makes one mechanism one
+   mechanism, and what a design proposal does to the registry (a seven-kind change taxonomy), then
+   test both against the registry's own bundled entries. Runs first; see Request Summary.
+2. `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` — extend `implemented_by` coverage
    beyond its current 26 of 89 mechanisms. Filed by this epic specifically because it was the one
    piece of clearly-necessary follow-up work that existed only in conversation, never as a real
    ticket — the same orphan-knowledge failure shape this whole arc exists to catch.
-2. `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION` — detect status-vocabulary in
+3. `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION` — detect status-vocabulary in
    atlas/capabilities/wiring-map prose; status belongs to the registry, never to hand-written
    descriptions.
-3. `TCK-20260916-MECHANISM-CHANGED-CODE-ENTRY-DRIFT-DETECTION` — flag a PR that changes
+4. `TCK-20260916-MECHANISM-CHANGED-CODE-ENTRY-DRIFT-DETECTION` — flag a PR that changes
    `implemented_by`-cited code without touching the mechanism's own registry entry.
-4. `TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT` — re-read every mechanism card's
+5. `TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT` — re-read every mechanism card's
    description for effect-level caveats the badge doesn't carry (`camp`'s own shape), and against
    `docs/guidelines/intentional_divergences.md` for stale architecture framing
    (`motivation_doctrine`'s own shape).
@@ -69,18 +89,23 @@ the reasoning behind it.
   limit stated above.
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` specifically — an RPG
   simulation defect this arc's own verification work found, not registry infrastructure; stays at
-  `tickets/todos/` root.
-- Direct implementation — this is an epic-tier ticket; it tracks the four children, per the
+  `tickets/todos/` root (closed 2026-09-17, root-caused as content-composition/pacing).
+- `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` — P2, blocked on identity rules, filed
+  at `tickets/todos/` root rather than in this epic so it never gates the P1 items here.
+- Direct implementation — this is an epic-tier ticket; it tracks the five children, per the
   standard epic-tier routing rule (scope only, no direct implementation).
 
 ## Acceptance Criteria
-1. All four children exist under `tickets/todos/mechanism-verification/`, in the order
+1. All five children exist under `tickets/todos/mechanism-verification/`, in the order
    `SEQUENCE.md` specifies.
 2. `SEQUENCE.md` names `docs/plans/mechanism_claims_as_tests_initiative.md` as the epic's own
    `tracking_doc`.
 3. Both known drift items between the initiative document and this epic's own measured findings
    (§4.3's own forward-looking-only framing; phase 1's sample bias) are recorded here, not left to
    silently disagree with the closed tickets that found them.
+4. The identity-rules ticket is sequenced before coverage extension, with `SEQUENCE.md`'s own "Why
+   This Order Matters" text updated to match — not left arguing for the order this epic no longer
+   uses.
 
 ## Related Tickets
 - `TCK-20260915-EPIC-MECHANISM-REGISTRY` — the closed parent epic this one continues from.
@@ -90,6 +115,11 @@ the reasoning behind it.
   once their own ticket files are historical.
 - `TCK-20260917-MECHANISM-REGISTRY-RELOCATION` — moved the registry to `registries/mechanisms.yaml`
   immediately before this epic was filed.
+- `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (closed) and its own
+  successor `TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` — the RPG-defect arc this
+  epic's own verification work fed, kept at `tickets/todos/` root per the scope limit above.
+- `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` — sibling ticket, blocked on this
+  epic's own first child, filed at `tickets/todos/` root (see Out of Scope).
 
 ## Related Docs
 - `docs/plans/mechanism_claims_as_tests_initiative.md` — this epic's own scoping document.
