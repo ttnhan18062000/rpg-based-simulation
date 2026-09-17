@@ -3,7 +3,7 @@
 Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 75 of 89 mechanisms are currently
+**Which mechanism to verify next.** 72 of 89 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -37,7 +37,7 @@ more depends on it. Ranked below, top 25.
 | `class_assignment` | entity | partial | 5 | 1 |
 | `commitment_betrayal` | entity | done | 5 | 1 |
 | `derived_stats` | entity | done | 5 | 1 |
-| `xp_leveling` | entity | done | 5 | 1 |
+| `campaigns` | world | done | 4 | 4 |
 
 ## Chart form
 
@@ -55,6 +55,7 @@ flowchart BT
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
+    campaigns["campaigns"]:::done
     class_assignment["class assignment"]:::partial
     cognition_capacity_fatigue["cognition capacity fatigue"]:::done
     combat_resolution["combat resolution"]:::done
@@ -74,7 +75,6 @@ flowchart BT
     tactical_decision["tactical decision"]:::done
     trauma["trauma"]:::done
     world_generation["world generation"]:::done
-    xp_leveling["xp leveling"]:::done
 
     interaction_channeling --> affection_relationship_bonds
     race_archetype --> class_assignment
@@ -92,5 +92,4 @@ flowchart BT
     world_generation --> regional_trauma_hazards_sovereignty
     affection_relationship_bonds --> reputation
     combat_resolution --> trauma
-    combat_resolution --> xp_leveling
 ```

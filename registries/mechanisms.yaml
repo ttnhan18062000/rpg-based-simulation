@@ -158,7 +158,12 @@ mechanisms:
         measurement (instrumented call-counting, 3 real corpus worlds, 1000 ticks each) found this
         path was never observed firing for any of 75 tested entities -- broader than the
         already-known COMB-318 gap. See TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-
-        IN-CORPUS (filed, not yet root-caused as content-gap vs wiring-gap).
+        IN-CORPUS, now root-caused (2026-09-17): content-composition/pacing, not a wiring gap --
+        the combat-XP-to-level-up chain is directly confirmed correct and reachable (see
+        `xp_leveling`'s own verified block below), it just never accumulates enough real combat
+        volume to cross a single level threshold within any tested 1000-tick corpus window. This
+        verdict does not need revisiting on that basis; the note is updated only to close the
+        open thread the prior note left.
   - id: interaction_channeling
     layer: entity
     depends_on: [action_pacing_readiness]
@@ -252,6 +257,24 @@ mechanisms:
     layer: entity
     depends_on: [derived_stats]
     state: done
+    implemented_by: [src/engine/evolution.py::EvolutionSystem]
+    verified:
+      instrument: scenario
+      verdict: observed
+      date: "2026-09-17"
+      note: >-
+        Real Kernel-tick positive control (docs/plans/mechanic_verification_scenarios_proposal.md
+        pattern): a goblin staged at evolution_points=95 (level 1) forced-attacks and kills an orc
+        in one tick -- EvolutionSystem.evaluate() (src/engine/pipeline.py:381, unconditional,
+        runs after resource_transactions) correctly consolidates the kill's 10 XP, crosses the
+        100-XP level-2 threshold, and produces evolution_level=2, evolution_points=5 (carry-over),
+        exactly matching docs/mechanics/attribute_progression_contract.md's own worked example.
+        A first attempt at this same control called ApplyPath._apply_entity_update() directly and
+        wrongly read "no level-up" as a wiring defect -- it bypassed this exact phase, which only
+        runs inside the real pipeline. Corrected before reporting; see
+        TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS's own addendum for the
+        full trace. This mechanism's own code is confirmed correct; see `xp_leveling` for why it
+        still doesn't fire in real corpus play.
   - id: skill_unlocks
     layer: entity
     depends_on: []
@@ -259,7 +282,29 @@ mechanisms:
   - id: xp_leveling
     layer: entity
     depends_on: [combat_resolution]
-    state: done
+    state: partial
+    verified:
+      instrument: scenario
+      verdict: observed
+      date: "2026-09-17"
+      note: >-
+        Filed while resolving TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS's
+        own discriminating measurement. The threshold-evaluation chain (kill ->
+        ResourceTransferIntent.xp_reward -> conservation.py COMBAT branch ->
+        IdentityUpdate.evolution_points_delta -> EvolutionSystem.evaluate() ->
+        _execute_level_up()) is directly confirmed correct via a real Kernel-tick positive control
+        (see `evolution`'s own verified block) -- state stays out of `gap`/`orphan` territory, the
+        code is not broken. state moves done -> partial because real corpus play never actually
+        crosses a threshold: instrumented across the same 3 real corpus worlds (crowded_frontier,
+        quest_dense_frontier, hero_guild_routing; seed 42; 1000 ticks each), only 0-10 kills occur
+        per world, each granting defender.identity.evolution_level*10 XP (10 XP for the
+        overwhelmingly common level-1 monster kill) against a 100-XP level-2 threshold -- ~10 kills
+        needed, the busiest single entity in any tested world accumulated 5 kills (50 XP). Same
+        family as `camp` (docs/plans/world_composition_precondition_gap_finding.md): correct, wired
+        code, defeated by real-world volume rather than a code defect. Likely downstream of the
+        already-ticketed TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION (low cross-faction
+        combat volume generally), not independently re-investigated here. Follow-up:
+        TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME (filed, not fixed).
   - id: breakthrough_bonuses
     layer: entity
     depends_on: [xp_leveling]
@@ -675,6 +720,17 @@ mechanisms:
     # RewardInterpretationService, ConversionOptionGenerator, ConversionDecisionService,
     # ConversionIntentResolver) -- distinct from src/progression/ (top-level package, already cited
     # under xp_leveling/breakthrough_bonuses); a real namespace collision, not the same thing.
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-17"
+      note: >-
+        Confirmed gate is real and correctly documented (DEV-003/DEV-004,
+        docs/guidelines/intentional_divergences.md) while investigating `xp_leveling`. Noted for
+        whoever flips ENABLE_PROGRESSION_EVOLUTION on: its ALLOCATE_AP conversion branch spends
+        unspent_ap, which combat-driven level-ups grant (+5 per level) -- since `xp_leveling` is
+        itself corpus-pacing-starved (see that entry), unspent_ap from combat will be similarly
+        scarce even once this gate opens, on top of the flag being off today.
   - id: resource_harvesting
     layer: world
     depends_on: [inventory_trade_conservation]
