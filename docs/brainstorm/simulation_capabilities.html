@@ -357,7 +357,7 @@ footer {
       },
       {
         "title": "Sizing Up a Fight Before It Starts",
-        "tier": "built",
+        "tier": "live",
         "tierLabel": "Built, not yet active",
         "desc": "A system exists for a character to weigh up an opponent and themselves — assessing perceived strength, estimating their own chances, and picking a stance — before committing to a fight at all, deciding whether it's a fight worth having in the first place. It's fully built and ready, but currently switched off in the running simulation."
       },
@@ -442,9 +442,9 @@ footer {
       },
       {
         "title": "Inheritance",
-        "tier": "built",
-        "tierLabel": "Built, never triggers",
-        "desc": "A real system exists for a dying character's belongings and treasured items to pass to a chosen heir. But nothing in the simulation currently ever actually chooses an heir for anyone — so this inheritance system, while built correctly, has never once triggered in practice."
+        "tier": "live",
+        "tierLabel": "Live",
+        "desc": "A real system exists for a dying character's belongings and treasured items to pass to a chosen heir. If no heir was already chosen, the game automatically picks one from the deceased's closest bonds, so this inheritance actually happens whenever a character dies who has anyone bonded to them."
       },
       {
         "title": "Elder Frailty (Age-Based Stat Changes)",
@@ -484,9 +484,9 @@ footer {
       },
       {
         "title": "Deeper Mastery & Breakthroughs",
-        "tier": "built",
-        "tierLabel": "Built, but does nothing",
-        "desc": "A deeper \"mastery through practice\" and \"breakthrough\" system — permanent bonuses earned by pushing a stat past a milestone — was designed but was never finished. It exists in the simulation but currently does nothing when checked. Separately, a character can pay gold to formally learn a skill at a class hall — a real, working action, distinct from the unfinished breakthrough system — but nothing currently chooses to use it."
+        "tier": "live",
+        "tierLabel": "Live in the simulation",
+        "desc": "A deeper \"mastery through practice\" and \"breakthrough\" system — permanent bonuses earned by pushing a stat past a milestone — is real and working: whenever a character has earned one, its bonus is applied automatically every time that character's stats are recalculated. Separately, a character can pay gold to formally learn a skill at a class hall — a real, working action, distinct from the breakthrough system — but nothing currently chooses to use it."
       },
       {
         "title": "Occupation & Social Role",
@@ -546,7 +546,7 @@ footer {
       },
       {
         "title": "Emotions",
-        "tier": "built",
+        "tier": "live",
         "tierLabel": "Fully designed, never active",
         "desc": "A well-designed emotional system exists, modeling seven distinct emotional responses — fear, confidence, frustration, curiosity, satisfaction, panic, and boredom — each responding to real events: a near-death moment spikes fear and panic while dropping confidence, an easy win builds confidence and satisfaction, repeated failure builds frustration, and a long stretch of nothing happening builds boredom. It's never actually switched on anywhere, though — characters don't currently feel any of this in a running simulation. (The simpler danger/retreat response described under In-the-Moment Fight Decisions is a different, always-on mechanism, not this one.)"
       },
@@ -564,9 +564,9 @@ footer {
       },
       {
         "title": "What Drives a Character",
-        "tier": "live",
-        "tierLabel": "Live for play-style bias, inert for deeper values",
-        "desc": "Characters have real underlying motivations, tied to their class, that bias the choices they make — three named play-styles exist today (warrior, ranger, and mage doctrines), each with its own preferred and avoided activities and its own bias for or against teaming up, plus a default fallback for anything else. Worth noting: this doesn't map perfectly onto the four actual classes — there's a ranger doctrine with no matching ranger class, while two classes (Novice and Rogue) currently fall back to the default doctrine rather than having one of their own. A further layer of value-driven bias — like valuing safety over curiosity — exists in the simulation but currently has no real data feeding it, so it has no actual effect yet."
+        "tier": "planned",
+        "tierLabel": "Built, then retired",
+        "desc": "A system for class-based motivations — three named play-styles (warrior, ranger, mage), each with its own preferred and avoided activities — was real and live at one point, but has since been deliberately removed: checked directly, and confirmed dead before removal, since every real character in the simulation was already getting the same generic default regardless of class. What actually drives route choice today lives in a different system entirely (see Choosing What to Do Next), which does the same job with real, individual character personality data instead of the removed one-size-fits-class version."
       },
       {
         "title": "Keeping Promises & Recognizing Betrayal",
@@ -760,8 +760,8 @@ footer {
       },
       {
         "title": "Population Ebb & Flow",
-        "tier": "planned",
-        "tierLabel": "Built, but confirmed not working",
+        "tier": "built",
+        "tierLabel": "Built, but never actually triggers",
         "desc": "The design calls for regions to have a real, living population that rises and falls on its own — birth and death rates, and people migrating away from an overcrowded or dangerous area toward somewhere better off. It's built, and its internal math is correct when tested in isolation — but checked directly and confirmed that no real, actually-running world ever gives it a starting population to work with, so in every real game today this never actually happens. Population figures at this larger scale simply never move. Once this is actually working, the plan is for that same population pressure to be what actually drives a crowded nation's ambition to expand (see A Nation's Own Ambition) and what pushes new goblin camps or monster nests to spring up in unclaimed wilderness nearby — turning three separate ideas into one real cycle: population grows, pressure builds, someone responds to it, new places get claimed or founded, and population grows into them in turn."
       }
     ]
@@ -773,8 +773,8 @@ footer {
     "cards": [
       {
         "title": "Goblin & Orc Camps",
-        "tier": "planned",
-        "tierLabel": "Built, but confirmed not working",
+        "tier": "built",
+        "tierLabel": "Built, but never actually triggers",
         "desc": "A real system exists for a goblin or orc camp to grow over time, spawn more of its kind the longer it's left alone, and eventually launch a real raid against the nearest town — with real rewards for an adventurer who clears it out first. Checked directly, and confirmed this never actually happens in any game today: nothing ever creates a starting camp for the system to grow from, so the whole growth-and-raid cycle sits idle every single time, even though the logic behind it is genuinely built and correct."
       },
       {
@@ -976,8 +976,8 @@ footer {
       },
       {
         "title": "A Feud That Outlives Everyone Who Started It",
-        "tier": "built",
-        "tierLabel": "Built, but only active in one game mode",
+        "tier": "live",
+        "tierLabel": "Live, but only active in one game mode",
         "desc": "A grudge can now genuinely survive the death of the person who earned it, passed down to their heir the way a name is — a weakened version of the original hostility, not the full force of it. It plugs into the same mechanism that already keeps two people from forming a party together over an active grudge, so an inherited feud can actually block a heir from teaming up with their parent's old enemy. The catch: this only works in the multi-chapter Campaign mode's cross-chapter memory today, not in an ordinary single-session game, so most play won't ever see it fire."
       },
       {
