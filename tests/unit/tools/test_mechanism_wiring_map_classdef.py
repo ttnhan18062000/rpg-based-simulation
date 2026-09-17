@@ -17,7 +17,7 @@ from tools.mechanism_registry.mechanism_wiring_map_classdef import (
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _WIRING_MAP_PATH = REPO_ROOT / "docs" / "brainstorm" / "rpg_simulation_wiring_map.html"
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 
 
 def _fake_registry(states: dict) -> dict:

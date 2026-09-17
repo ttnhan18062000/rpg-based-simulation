@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Render docs/brainstorm/mechanisms.yaml as a single complete markdown table: every mechanism in the
+Render registries/mechanisms.yaml as a single complete markdown table: every mechanism in the
 registry, priority and verification together.
 
 TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW. Answers "what matters most, and do we know it
@@ -35,7 +35,7 @@ from pathlib import Path
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry_view.md"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
@@ -52,7 +52,7 @@ def render(data: dict) -> str:
     lines = [
         "# Mechanism Registry View — Complete",
         "",
-        "Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with "
+        "Generated from `registries/mechanisms.yaml` — regenerate with "
         "`make mechanism-registry-view`. Do not hand-edit.",
         "",
         f"All {total} mechanisms, one row each, sorted by priority (`layer weight × transitive "

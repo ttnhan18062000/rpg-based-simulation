@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Report-only graphify cross-check for docs/brainstorm/mechanisms.yaml's `depends_on` edges.
+Report-only graphify cross-check for registries/mechanisms.yaml's `depends_on` edges.
 
 TCK-20260915-MECHANISM-REGISTRY-FOUNDATION Scope item 5: "flag any declared depends_on edge with
 no supporting call/import path as suspicious. Report, never fail: graphify's graph is advisory
@@ -42,7 +42,7 @@ from typing import Dict, List, Optional, Set
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _GRAPH_PATH = _REPO_ROOT / "graphify-out" / "graph.json"
 
 # Relations that plausibly represent a real call/import/use relationship. Deliberately excludes

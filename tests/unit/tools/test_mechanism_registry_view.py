@@ -18,7 +18,7 @@ from tools.mechanism_registry import all_mechanisms_combined_view
 from tools.mechanism_registry.generate_mechanism_registry_view import render
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 _OUTPUT_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry_view.md"
 
 

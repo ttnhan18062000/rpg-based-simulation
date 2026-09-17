@@ -27,7 +27,7 @@ from tools.mechanism_registry.mechanism_registry_completeness_check import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 
 
 def _real_registry_data() -> dict:

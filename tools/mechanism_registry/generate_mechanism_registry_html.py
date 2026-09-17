@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Render docs/brainstorm/mechanisms.yaml as a static, self-contained HTML page:
+Render registries/mechanisms.yaml as a static, self-contained HTML page:
 docs/brainstorm/mechanism_registry.html.
 
 TCK-20260916-MECHANISM-COMPLETE-REGISTRY-VIEW, Scope item 2. Replaces a hand-authored artifact
@@ -53,7 +53,7 @@ from pathlib import Path
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry.html"
 _EPIC_TICKET_ID = "TCK-20260915-EPIC-MECHANISM-REGISTRY"
 _EPIC_TICKET_RELATIVE_LINK = f"../../tickets/done/mechanism-registry/{_EPIC_TICKET_ID}.md"
@@ -196,7 +196,7 @@ a {{ color: var(--accent); }}
 </style>
 <div class="wrap">
 <h1>Mechanism Registry</h1>
-<p class="sub">Generated from <code>docs/brainstorm/mechanisms.yaml</code> &mdash;
+<p class="sub">Generated from <code>registries/mechanisms.yaml</code> &mdash;
 regenerate with <code>make mechanism-registry-html</code>. Do not hand-edit. Every row comes
 directly from the registry; nothing on this page is hand-typed.</p>
 <p class="sub">Sorted by priority (layer weight &times; transitive dependent-count) descending.

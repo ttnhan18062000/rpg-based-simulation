@@ -24,7 +24,7 @@ from pathlib import Path
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_priority_view.md"
 _DEFAULT_N = 25
 
@@ -40,7 +40,7 @@ def render(data: dict, n: int = _DEFAULT_N) -> str:
     chart = render_top_n_chart(data, n=n)
     return f"""# Mechanism Priority View — Top {n} Unverified
 
-Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
+Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
 **Which mechanism to verify next.** {total_unverified} of {total} mechanisms are currently

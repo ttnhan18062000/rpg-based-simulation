@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Reader and validator for docs/brainstorm/mechanisms.yaml — the single hand-authored source for
+Reader and validator for registries/mechanisms.yaml — the single hand-authored source for
 what simulation mechanisms exist, which layer each belongs to, and what each depends on.
 
 TCK-20260915-MECHANISM-REGISTRY-FOUNDATION (child of TCK-20260915-EPIC-MECHANISM-REGISTRY).
@@ -40,7 +40,7 @@ from typing import Dict, List, Optional, Tuple
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_DEFAULT_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_DEFAULT_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 
 # TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING. An `implemented_by` entry is either
 # a bare repo-relative path (file-level -- the whole file is the binding) or "<path>::<Symbol>"
@@ -85,7 +85,7 @@ _REQUIRED_VERIFIED_FIELDS = frozenset({"instrument", "verdict", "date", "note"})
 
 
 class MechanismRegistry:
-    """Read-only view of the mechanism registry (docs/brainstorm/mechanisms.yaml)."""
+    """Read-only view of the mechanism registry (registries/mechanisms.yaml)."""
 
     def __init__(self, registry_path: Path = _DEFAULT_PATH) -> None:
         with open(registry_path, "r", encoding="utf-8") as f:

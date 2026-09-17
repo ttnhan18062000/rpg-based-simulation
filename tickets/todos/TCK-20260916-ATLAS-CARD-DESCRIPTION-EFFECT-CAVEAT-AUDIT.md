@@ -137,7 +137,7 @@ describes an architecture the codebase has since moved past.
 
 ## Related Code Areas
 - `docs/brainstorm/rpg_feature_atlas.html`
-- `docs/brainstorm/mechanisms.yaml`
+- `registries/mechanisms.yaml`
 - `tools/mechanism_registry/mechanism_atlas_card_mapping.py`
 
 ## Assumptions / Open Questions

@@ -115,7 +115,7 @@ def test_check_mechanism_skips_mechanisms_without_implemented_by():
 
 def test_build_report_counts_checked_and_unchecked(registry_data=None):
     import yaml
-    with open(REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml", encoding="utf-8") as f:
+    with open(REPO_ROOT / "registries" / "mechanisms.yaml", encoding="utf-8") as f:
         data = yaml.safe_load(f)
     report = build_report(data)
     total = len(data["mechanisms"])
@@ -142,7 +142,7 @@ def test_real_registry_findings_pinned():
     only alongside a real investigation of what changed, same discipline as every other
     pinned-count test in this repo."""
     import yaml
-    with open(REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml", encoding="utf-8") as f:
+    with open(REPO_ROOT / "registries" / "mechanisms.yaml", encoding="utf-8") as f:
         data = yaml.safe_load(f)
     report = build_report(data)
     finding_keys = {(f.mechanism_id, f.check) for f in report.findings}

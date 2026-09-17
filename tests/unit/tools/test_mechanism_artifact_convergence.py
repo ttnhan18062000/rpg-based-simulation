@@ -30,7 +30,7 @@ from tools.mechanism_registry.mechanism_capabilities_regenerate import (
 from tools.mechanism_registry.mechanism_wiring_map_classdef import compute_expected_classdef
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 _ATLAS_PATH = REPO_ROOT / "docs" / "brainstorm" / "rpg_feature_atlas.html"
 _CAPABILITIES_PATH = REPO_ROOT / "docs" / "brainstorm" / "simulation_capabilities.html"
 

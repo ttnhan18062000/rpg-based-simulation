@@ -29,7 +29,7 @@ from typing import Dict
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _WIRING_MAP_PATH = _REPO_ROOT / "docs" / "brainstorm" / "rpg_simulation_wiring_map.html"
 
 # Entity Operating Loop diagram node abbreviation -> real mechanism id. Only nodes with a genuine

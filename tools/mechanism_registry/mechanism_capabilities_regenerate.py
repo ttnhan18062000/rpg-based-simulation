@@ -33,7 +33,7 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_PATH = _REPO_ROOT / "docs" / "brainstorm" / "simulation_capabilities.html"
-_DEFAULT_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_DEFAULT_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from mechanism_capabilities_card_mapping import all_mechanism_card_badge_positions  # noqa: E402

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Render docs/brainstorm/mechanisms.yaml's verification axis as a plain markdown table.
+Render registries/mechanisms.yaml's verification axis as a plain markdown table.
 
 TCK-20260915-MECHANISM-VERIFICATION-AXIS (child of TCK-20260915-EPIC-MECHANISM-REGISTRY, depends
 on TCK-20260915-MECHANISM-REGISTRY-FOUNDATION). Scope item 3: "A verification view — rendered
@@ -30,7 +30,7 @@ from pathlib import Path
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 _DEFAULT_OUTPUT = _REPO_ROOT / "docs" / "brainstorm" / "mechanism_verification_view.md"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
@@ -46,7 +46,7 @@ def render(data: dict) -> str:
     lines = [
         "# Mechanism Verification View",
         "",
-        f"Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with "
+        f"Generated from `registries/mechanisms.yaml` — regenerate with "
         f"`make mechanism-verification-view`. Do not hand-edit.",
         "",
         f"{verified_count} of {len(rows)} mechanisms have a recorded verdict. The remaining "

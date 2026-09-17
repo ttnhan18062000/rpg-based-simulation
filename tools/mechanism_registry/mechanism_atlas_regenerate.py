@@ -38,7 +38,7 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_ATLAS_PATH = _REPO_ROOT / "docs" / "brainstorm" / "rpg_feature_atlas.html"
-_DEFAULT_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_DEFAULT_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from mechanism_atlas_card_mapping import all_mechanism_card_badge_positions  # noqa: E402

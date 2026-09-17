@@ -1,4 +1,4 @@
-"""Tests for tools/mechanism_registry/registry.py and docs/brainstorm/mechanisms.yaml.
+"""Tests for tools/mechanism_registry/registry.py and registries/mechanisms.yaml.
 
 TCK-20260915-MECHANISM-REGISTRY-FOUNDATION (child of TCK-20260915-EPIC-MECHANISM-REGISTRY).
 
@@ -28,7 +28,7 @@ from tools.mechanism_registry import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 
 
 @pytest.fixture(scope="module")
@@ -248,7 +248,7 @@ def test_make_target_validates_real_registry():
 
 
 def test_make_target_fails_on_injected_defect(tmp_path):
-    # Never mutate docs/brainstorm/mechanisms.yaml in place -- copy to a tmp_path first, per
+    # Never mutate registries/mechanisms.yaml in place -- copy to a tmp_path first, per
     # test_plan.md's own Anti-Drift Test Guard (a test that corrupts the real committed file,
     # even transiently, in a repo whose working directory can be shared across concurrent
     # sessions, is a real hazard).

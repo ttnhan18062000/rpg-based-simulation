@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generates mermaid dependency-priority charts from docs/brainstorm/mechanisms.yaml.
+Generates mermaid dependency-priority charts from registries/mechanisms.yaml.
 
 TCK-20260915-MECHANISM-PRIORITY-DERIVATION Scope items 2/4/5. A new, additive artifact type
 (dependency axis) alongside the wiring map's existing containment/execution-order/lifecycle
@@ -40,7 +40,7 @@ from typing import Dict, List, Optional
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from registry import (  # noqa: E402

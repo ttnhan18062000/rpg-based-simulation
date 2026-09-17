@@ -1,6 +1,6 @@
 # Mechanism Verification View
 
-Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
+Generated from `registries/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
 
 14 of 89 mechanisms have a recorded verdict. The remaining 75 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
 

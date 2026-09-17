@@ -1,6 +1,6 @@
 # Mechanism Registry View — Complete
 
-Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with `make mechanism-registry-view`. Do not hand-edit.
+Generated from `registries/mechanisms.yaml` — regenerate with `make mechanism-registry-view`. Do not hand-edit.
 
 All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive dependent-count`) descending. Deliberately not truncated — see `docs/brainstorm/mechanism_priority_view.md` for the focused, unverified-only, top-25 "verify next" ranking, and `docs/brainstorm/mechanism_verification_view.md` for the full verification ledger with notes. This view exists to answer a third, different question: what matters most, and do we know it works, in a single read.
 

@@ -29,7 +29,7 @@ from tools.mechanism_registry.mechanism_atlas_regenerate import (
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _ATLAS_PATH = REPO_ROOT / "docs" / "brainstorm" / "rpg_feature_atlas.html"
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 
 
 def _real_atlas_data() -> dict:

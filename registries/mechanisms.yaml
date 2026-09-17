@@ -1,7 +1,24 @@
 # Mechanism Registry — the single hand-authored source for what simulation mechanisms exist,
 # which layer each belongs to, and what each depends on.
 #
+# UNLIKE THIS DIRECTORY'S OTHER FOUR REGISTRIES (layer_registry.jsonl, tag_registry.jsonl,
+# tag_category_registry.jsonl, capability_envelope_registry.jsonl), this one is NOT append-only.
+# Those four are allowlists cited by id from tickets/docs, so a value can never be renamed or
+# removed once added. This file records mechanism STATE (done/partial/gap/orphan/gated/skeleton),
+# which is a live fact about the codebase, not an allowlist entry -- correcting a wrong state in
+# place (with a `verified` block explaining the correction) is expected, ordinary maintenance, not
+# a violation of anything this directory's own convention implies. It is also the only YAML file
+# here (the other four are JSONL) since its own schema -- nested `depends_on`/`verified` blocks --
+# doesn't fit a flat per-line record.
+#
 # TCK-20260915-MECHANISM-REGISTRY-FOUNDATION (child of TCK-20260915-EPIC-MECHANISM-REGISTRY).
+# Moved from docs/brainstorm/mechanisms.yaml to registries/mechanisms.yaml by
+# TCK-20260917-MECHANISM-REGISTRY-RELOCATION -- `docs/brainstorm/` implies "not officially applied
+# yet," which is exactly backwards for CI-enforced, six-invariant-validated data; rendered views
+# (mechanism_registry_view.md, mechanism_verification_view.md, mechanism_priority_view.md,
+# mechanism_registry.html) stay in docs/brainstorm/ alongside their actual peers (the atlas,
+# capabilities page, wiring map) -- this file is the one thing in that split that is source of
+# truth, not a rendering.
 # See docs/plans/mechanism_registry_initiative.md for the full design rationale and
 # staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md for the full
 # per-mechanism citation/provenance trail (source doc, atlas/wiring-map card index, every judgment

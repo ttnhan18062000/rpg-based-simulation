@@ -1,5 +1,5 @@
 """Tests for tools/mechanism_registry/mechanism_registry_graphify_check.py — the report-only graphify cross-check
-for docs/brainstorm/mechanisms.yaml's `depends_on` edges.
+for registries/mechanisms.yaml's `depends_on` edges.
 
 TCK-20260915-MECHANISM-REGISTRY-FOUNDATION Scope item 5. The load-bearing contract under test is
 "never fails the build" — asserted with a fixture proven to actually trigger each of the three

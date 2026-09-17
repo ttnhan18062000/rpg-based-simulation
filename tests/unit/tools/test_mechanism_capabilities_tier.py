@@ -73,7 +73,7 @@ def test_every_real_partial_override_targets_a_real_partial_mechanism():
     from pathlib import Path
 
     repo_root = Path(__file__).resolve().parents[3]
-    registry = yaml.safe_load((repo_root / "docs" / "brainstorm" / "mechanisms.yaml").read_text())
+    registry = yaml.safe_load((repo_root / "registries" / "mechanisms.yaml").read_text())
     states = {m["id"]: m["state"] for m in registry["mechanisms"]}
     for mech_id in PARTIAL_TIER_OVERRIDES:
         assert mech_id in states, f"override references unknown mechanism {mech_id!r}"

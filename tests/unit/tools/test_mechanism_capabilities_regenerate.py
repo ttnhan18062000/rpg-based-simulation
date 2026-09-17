@@ -31,7 +31,7 @@ from tools.mechanism_registry.mechanism_capabilities_regenerate import (
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _CAPABILITIES_PATH = REPO_ROOT / "docs" / "brainstorm" / "simulation_capabilities.html"
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 
 
 def _real_capabilities_data() -> list:

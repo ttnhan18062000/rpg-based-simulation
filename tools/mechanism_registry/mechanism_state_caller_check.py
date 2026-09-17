@@ -80,7 +80,7 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _SRC_DIR = _REPO_ROOT / "src"
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
 from registry import parse_implemented_by_entry  # noqa: E402

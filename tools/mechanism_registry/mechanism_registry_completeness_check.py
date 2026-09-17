@@ -65,7 +65,7 @@ from tools.mechanism_registry.registry import parse_implemented_by_entry
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DOMAINS_DIR = _REPO_ROOT / "src" / "domains"
 _SYSTEMS_DIR = _REPO_ROOT / "src" / "systems"
-_REGISTRY_PATH = _REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
 
 # Real _systems subpackages that hold the actual implementations behind the top-level
 # backward-compat shims (TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS's own structural

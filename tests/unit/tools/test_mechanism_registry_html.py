@@ -17,7 +17,7 @@ import yaml
 from tools.mechanism_registry.generate_mechanism_registry_html import render
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-_REGISTRY_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanisms.yaml"
+_REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
 _OUTPUT_PATH = REPO_ROOT / "docs" / "brainstorm" / "mechanism_registry.html"
 
 

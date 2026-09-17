@@ -1,5 +1,5 @@
 """First real use of docs/plans/mechanic_verification_scenarios_proposal.md's component to verify
-a mechanism named by docs/brainstorm/mechanisms.yaml -- `action_pacing_readiness`
+a mechanism named by registries/mechanisms.yaml -- `action_pacing_readiness`
 (`TCK-20260916-ACTION-PACING-READINESS-SCENARIO-VERIFICATION`). Does the readiness gate
 (`src/engine/legality.py::LegalityServiceV2.verify_readiness`, dispatched from
 `src/engine/domain/action_router.py`'s "0. Readiness Check") actually withhold a real action when

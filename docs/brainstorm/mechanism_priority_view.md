@@ -1,6 +1,6 @@
 # Mechanism Priority View — Top 25 Unverified
 
-Generated from `docs/brainstorm/mechanisms.yaml` — regenerate with
+Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
 **Which mechanism to verify next.** 75 of 89 mechanisms are currently

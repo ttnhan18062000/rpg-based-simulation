@@ -87,7 +87,7 @@ authorization — it is mechanical, not a new workflow rule.
 None yet.
 
 ## Related Code Areas
-- `docs/brainstorm/mechanisms.yaml`
+- `registries/mechanisms.yaml`
 - New: `tools/mechanism_registry/mechanism_registry_changed_code_check.py` (proposed) — the 14
   existing mechanism-registry tools were moved into `tools/mechanism_registry/` by
   `TCK-20260916-MECHANISM-REGISTRY-TOOLS-PACKAGE`; a 15th tool belongs there too, not back in the
