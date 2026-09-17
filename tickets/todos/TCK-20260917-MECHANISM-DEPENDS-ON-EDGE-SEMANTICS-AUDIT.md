@@ -25,7 +25,7 @@ standard
 repair
 
 ## Priority
-P2
+P1
 
 ## Request Summary
 `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` resolved a specific open question
@@ -111,6 +111,16 @@ rare or could be common; this ticket exists to find out rather than assume eithe
 
 ## Implementation Notes
 Not yet started.
+
+**Priority raised P2 → P1, 2026-09-17.**
+`TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`'s own edge-trust counts (`combat`,
+the best-fitting candidate it tried: 3 of 8 internal edges unaudited; `economy` and the narrow
+`social` candidate: 0 of their edges audited) confirm this audit is a hard precondition for
+anything derived from `depends_on`, not merely related work — see that ticket's own §4. Whether or
+not the `system` tier is ultimately built, the underlying question (how much of the registry's own
+derived priority ranking, and any future graph-derived feature, rests on edges that predate the
+identity-rules ticket's stated `depends_on` definition) is real and current regardless of that
+tier's own disposition.
 
 ## Test Summary
 Not yet started.
