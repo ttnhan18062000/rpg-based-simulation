@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ticket
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-DONE-CHECKER-WORKING-LOG-ROW-COUNT-REJECTS-LEGITIMATE-REOPEN
-phase: open
+phase: done
 date: 2026-09-13
 tags: [data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [data-quality]
 `done_checker_static.check_working_log_exactly_one_row` counts every row for a `ticket_id` across the whole file's history, so a ticket legitimately closed `BLOCKED` then later reopened and closed `DONE` always reports a false "duplicate Finalize run"
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -101,11 +101,11 @@ Scope: distinguish reopen from duplicate), not simply loosen or remove the asser
   are each individually real and correct; nothing needs correcting there.
 
 ## Acceptance Criteria
-- [ ] A real fix that lets `check_working_log_exactly_one_row` (or its replacement) distinguish a
+- [x] A real fix that lets `check_working_log_exactly_one_row` (or its replacement) distinguish a
       legitimate reopen-and-reclose from a real duplicate write.
-- [ ] Real test coverage: a ticket with one prior `BLOCKED` row and one new `DONE` row passes; two
+- [x] Real test coverage: a ticket with one prior `BLOCKED` row and one new `DONE` row passes; two
       `DONE` rows for the same ticket still fails as a real duplicate.
-- [ ] No change to `working_log_writer.py`'s own sole-writer contract.
+- [x] No change to `working_log_writer.py`'s own sole-writer contract.
 
 ## Related Tickets
 - `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (done — the ticket whose own
@@ -129,13 +129,54 @@ None yet — hotfix tier, no staging artifacts required.
   decided here.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+Chose the ticket's own suggested shape: at most one row per *(ticket_id, status)* pair rather
+than at most one row per ticket_id. `_rows_for_ticket()` (new) mirrors `_count_rows_for_ticket()`'s
+own column-shift tolerance (scans every column for the ticket_id, never assumes a fixed column
+index) but returns the matching rows themselves instead of a count. `_status_for_row()` (new)
+extracts each row's own status the same way — scans every column for a canonical
+`WORKFLOW_STATUS_VALUES` literal rather than assuming a fixed column index — and falls back to a
+`"<unparseable>"` sentinel (not `None`) for a row it can't confidently read, so two such rows
+still collide onto one key and read as a possible duplicate rather than silently passing.
+`check_working_log_exactly_one_row()` then groups the ticket's own rows by status: any status
+with more than one row is a real duplicate (FAIL, names the offending status/count); zero real
+duplicates PASSes regardless of how many distinct statuses are present.
+
+Deliberately did NOT apply the "remove the gate, keep the number" precedent from the
+sidecar-attribution/citation-resolution floors (per the peer's explicit instruction and the
+ticket's own Cross-Gate Interaction Warning): this check and
+`working_log_content_duplicate_check.py`'s ratchet are the only two remaining mechanisms that
+catch the dual-writer duplicate-row class after `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-
+ORCHESTRATED-CLOSURE` — a real duplicate write still fails identically to before; only a
+legitimate reopen's false positive is fixed.
 
 ## Test Summary
-_(pending)_
+- `pytest tests/tools/test_done_checker_static.py -k working_log -v`: 9 passed, including the
+  three required cases (legitimate reopen PASSes, real duplicate at the same status still FAILs,
+  zero-row case still FAILs) plus two extra: two `BLOCKED` rows (a non-`DONE` duplicate) still
+  FAILs, and a three-status reopen (`BLOCKED` → `INPROGRESS` → `DONE`) PASSes — proving the fix
+  keys on status, not a hardcoded two-row shape.
+- Full `pytest tests/tools/test_done_checker_static.py`: 122 passed, 0 failed.
+- Verified against the real corpus, not only synthetic fixtures:
+  `check_working_log_exactly_one_row('TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-
+  CLOSE')` (a real ticket with a genuine `BLOCKED` → `DONE` reopen this session) now reports PASS
+  with the new "legitimate reopen" evidence text, where it previously would have reported the
+  false-positive "2 rows found — duplicate Finalize run".
+- Confirmed `tools/working_log_writer.py` and `tests/tools/test_working_log_writer.py` untouched
+  — the sole-writer contract is unaffected, per Out of Scope.
 
 ## Files Changed
-_(pending)_
+- `tools/gate_checks/done_checker_static.py` — added `_rows_for_ticket()` and `_status_for_row()`;
+  rewrote `check_working_log_exactly_one_row()` to group by `(ticket_id, status)` instead of
+  counting all rows for `ticket_id`; added `WORKFLOW_STATUS_VALUES` to the existing
+  `ticket_field_values` import.
+- `tests/tools/test_done_checker_static.py` — added the legitimate-reopen, same-non-DONE-status-
+  duplicate, and three-status-reopen tests; existing zero-row and two-DONE-rows tests unchanged
+  and still pass, confirming no regression to the real-duplicate detection path.
+- `docs/REGISTRY.yaml` — regenerated unconditionally as part of this closure (no manual edits).
 
 ## Completion Summary
-_(pending)_
+Fixed the false positive without weakening the check's own discriminating power, per the explicit
+constraint carried over from this ticket's own Cross-Gate Interaction Warning. A legitimate
+`BLOCKED` → `DONE` reopen (or any N-status reopen sequence) now passes; a real duplicate — two
+rows sharing the same status, most commonly two `DONE` rows from an accidental double Finalize —
+still fails with the same "duplicate Finalize run" evidence text as before.
