@@ -1,0 +1,99 @@
+# Mechanism Verification View
+
+Generated from `registries/mechanisms.yaml` — regenerate with `make mechanism-verification-view`. Do not hand-edit.
+
+14 of 89 mechanisms have a recorded verdict. The remaining 75 are rendered explicitly as `unverified` below, not omitted — a mechanism with no verdict is not the same as a mechanism known to work.
+
+**Static vs runtime evidence, grouped separately below**: `code_trace` proves what the code *says* (reachable, called, a field never written) and can never establish that reachable code has its claimed runtime effect. `census`/`scenario`/`corpus_run` prove what the simulation actually *does*. A `code_trace` row is not equivalent evidence to a runtime-confirmed row.
+
+| Mechanism | Layer | State | Evidence | Instrument | Verdict | Date | Note |
+|---|---|---|---|---|---|---|---|
+| `action_pacing_readiness` | entity | partial | runtime | scenario | observed | 2026-09-16 | Differential scenario (tests/mechanic_scenarios/test_action_pacing_readiness_gate.py): readiness=50.0 withholds a staged attack (INSUFFICIENT_READINESS), readiness=100.0 lets it proceed, through a real Kernel tick against a real compiled world. The gate itself -- what all 23 transitive dependents actually need -- genuinely works. state stays partial: the separate agility-scaling half (readiness_speed) has a real formula (TCK-20260831) but only applies via engine/apply.py's stats_dirty recalculation, never at spawn. Follow-up direct measurement (instrumented call-counting, 3 real corpus worlds, 1000 ticks each) found this path was never observed firing for any of 75 tested entities -- broader than the already-known COMB-318 gap. See TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED- IN-CORPUS (filed, not yet root-caused as content-gap vs wiring-gap). |
+| `combat_engagement` | entity | done | runtime | scenario | observed | 2026-09-16 | Corpus: posture gate moved attacks 1960 -> 837. Scenario: risk-rejected posture -> 0 attacks vs no posture -> attack proceeds, all else identical. |
+| `camp` | region | done | static | code_trace | contradicted | 2026-09-16 | CampState is real (spawns monsters, triggers raids, a real clearing-reward loop) but no compiled or procedurally-generated world seeds state.camps -- a permanent no-op in every world today. state stays done (the code is correct and wired, not defective) -- the missing thing is world data, not the mechanism itself. See docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma and calamity-intensity cases. |
+| `causal_spatial_memory` | entity | gated | static | code_trace | observed | 2026-09-16 | Was mis-registered `orphan`; MemoryUpdatePhase.apply() is called live from engine/pipeline.py:154-157 via run_phase('memory_update', ..., 'ENABLE_MEMORY_UPDATE') -- a real caller exists, so `orphan` (zero callers) was factually wrong. The flag defaults OFF (feature_flags.py, TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: 'wires MemoryUpdatePhase into refine() for the first time'), which is what `gated` means. Found while resolving implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). |
+| `cross_episode_grief_nemesis` | faction | done | static | code_trace | observed | 2026-09-16 | Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated betrayal -> party-formation blocker); narrow trigger. |
+| `cross_episode_social_consequences` | faction | done | static | code_trace | observed | 2026-09-16 | Was mis-registered `orphan`; evaluate_social_consequence() is called unconditionally (no feature-flag check, gated only on the scenario-recorder infra being present) from domains/campaigns/orchestrator.py at episode-entity-spawn time, so `orphan` (zero callers) was factually wrong. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION. |
+| `demographic_cohort_cycle` | region | done | static | code_trace | contradicted | 2026-09-16 | Was mis-registered `orphan`; DemographicCycleService.process_demographics has a real caller (engine/world_dynamics.py:178-179), so `orphan` (zero callers) was factually wrong. Same family as `camp`: correct, wired code defeated by absent data -- the caller is guarded by `if not region.population_cohorts` (worldbuilding/compiler.py:203), and no compiled or procedurally-generated world seeds population_cohorts, so the call is a permanent no-op in every world today. state stays `done` (the code is correct and wired, not defective) -- the missing thing is world data, not the mechanism itself. Found by TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION's own first real run, corrected per peer review rather than left as an open taxonomy question. |
+| `emotion` | entity | done | static | code_trace | observed | 2026-09-16 | Was mis-registered `orphan`; EmotionUpdateService.update_on_event() is called unconditionally (no feature-flag check) from engine/pipeline_phases/hardening.py's own NearDeathHardeningPhase, itself invoked via a plain run_phase("near_death_hardening", ...) call with no flag argument -- a real, live, unflagged caller, so `orphan` (zero callers) was factually wrong. Foundation's own investigation.md had already flagged this exact risk ("possibly stale, TCK-20260824 wired a near_death call site") without resolving it; this confirms the flag was correct. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH- VERIFICATION. |
+| `genetics_aptitude` | entity | gated | static | code_trace | observed | 2026-09-16 | Was mis-registered `orphan`; GeneticsSystem.generate_profile_from_seed()/combine_profiles() have a real caller (src/world/reproduction_humanoid.py, real genetic-profile combination for offspring), so `orphan` (zero callers) was factually wrong. That caller is itself gated behind ENABLE_REPRODUCTION_HUMANOID_PATH (default OFF, feature_flags.py), which is what `gated` means. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION. |
+| `information_trust_deception` | entity | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
+| `motivation_doctrine` | entity | gap | static | code_trace | observed | 2026-09-16 | Found while tracing dependency edges for TCK-20260916-MECHANISM-DEPENDENCY-GRAPH- POPULATION, not this ticket's own target. src/domains/motivation/__init__.py's own docstring: DoctrineResolver and MotivationBiasService were DELETED (TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT, 2026-09-08) -- resolver.py/service.py no longer exist, confirmed dead in production before removal (see docs/guidelines/intentional_divergences.md #2.53), superseded by adventure_routing's own live personality_bias mechanism. gap, not orphan: orphan means dead code still physically present with zero callers (this registry's own established usage, e.g. target_race); here the implementing code itself is gone, so "zero production callers" would be a false claim about code that doesn't exist -- gap is the value that survives becoming an executable assertion (claims-as-tests phase 2). Only evaluator.py (RoleFitEvaluator, an unrelated gear/skill/role-fit scorer) remains in the module. |
+| `opportunity_rumor_seeds` | world | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
+| `self_model` | entity | gated | static | code_trace | observed | 2026-09-16 | Code read confirms the mechanism is correctly built; currently flag-gated off (see state). |
+| `succession` | entity | done | static | code_trace | observed | 2026-09-16 | CORRECTED -- this entry's own prior verdict was itself the epic's first false verification verdict, not a wrong `state`: it recorded `observed`, asserting a repo-wide search had confirmed heir_entity_id is never populated, when it had not. LifecycleSystem.resolve_lifecycle() (lifecycle_systems/lifecycle.py:223-227) calls _select_default_heir() unconditionally when heir_entity_id is None -- a real, bond-strength-scored fallback -- and writes the result via `heir_entity_id_set=heir_id`, this codebase's own "_set" suffix convention for StateUpdate patch fields (same shape as death_reason_set/is_permadeath_set in the same function). engine/patches.py:86 merges heir_entity_id_set onto the real heir_entity_id state field on apply. Lines 229-265 then do real downstream work (heirloom/inventory transfer, feud/dying-wish handling) once a heir resolves. The original search pattern (`heir_entity_id=`) could not match `heir_entity_id_set=` -- the third instance in this epic of grep-shaped evidence under-reporting a real write path via a naming convention (progression_conversion/src/progression/, FairShareProtocol's docstring-only name, now this). No flag gates resolve_lifecycle() or this branch -- run_phase("lifecycle", ...) is called with no flag argument. Corrected via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION's own addendum. |
+| `adventure_routing` | entity | done | unverified | — | unverified | — | — |
+| `affection_relationship_bonds` | entity | done | unverified | — | unverified | — | — |
+| `aging_death` | entity | done | unverified | — | unverified | — | — |
+| `attributes_biology` | entity | done | unverified | — | unverified | — | — |
+| `belief_cycle` | entity | done | unverified | — | unverified | — | — |
+| `belief_institution` | world | partial | unverified | — | unverified | — | — |
+| `betrayal_siege_war` | faction | done | unverified | — | unverified | — | — |
+| `breakthrough_bonuses` | entity | done | unverified | — | unverified | — | — |
+| `build_diversity` | entity | gap | unverified | — | unverified | — | — |
+| `building_sabotage` | world | done | unverified | — | unverified | — | — |
+| `buildings_town_services` | world | done | unverified | — | unverified | — | — |
+| `calamities_boss_spawns` | world | done | unverified | — | unverified | — | — |
+| `campaigns` | world | done | unverified | — | unverified | — | — |
+| `chronicle` | world | done | unverified | — | unverified | — | — |
+| `city` | region | partial | unverified | — | unverified | — | — |
+| `clan` | faction | gap | unverified | — | unverified | — | — |
+| `class_assignment` | entity | partial | unverified | — | unverified | — | — |
+| `cognition_capacity_fatigue` | entity | done | unverified | — | unverified | — | — |
+| `combat_resolution` | entity | done | unverified | — | unverified | — | — |
+| `commitment_betrayal` | entity | done | unverified | — | unverified | — | — |
+| `commitment_pressure_consequences` | entity | partial | unverified | — | unverified | — | — |
+| `committed_intentions` | entity | orphan | unverified | — | unverified | — | — |
+| `concern_intake` | entity | done | unverified | — | unverified | — | — |
+| `conversation` | entity | gap | unverified | — | unverified | — | — |
+| `cooperation` | entity | done | unverified | — | unverified | — | — |
+| `country_lifecycle` | faction | partial | unverified | — | unverified | — | — |
+| `crafting` | world | partial | unverified | — | unverified | — | — |
+| `cultural_drift` | world | done | unverified | — | unverified | — | — |
+| `declared_cognition_schema` | entity | orphan | unverified | — | unverified | — | — |
+| `derived_stats` | entity | done | unverified | — | unverified | — | — |
+| `diplomacy` | faction | done | unverified | — | unverified | — | — |
+| `entity_role` | entity | done | unverified | — | unverified | — | — |
+| `entity_trade` | entity | gap | unverified | — | unverified | — | — |
+| `equipment_scoring` | world | done | unverified | — | unverified | — | — |
+| `event_interpretation` | region | done | unverified | — | unverified | — | — |
+| `evolution` | entity | done | unverified | — | unverified | — | — |
+| `fame` | world | done | unverified | — | unverified | — | — |
+| `fidelity_drift` | world | done | unverified | — | unverified | — | — |
+| `goal_hierarchy` | entity | done | unverified | — | unverified | — | — |
+| `gods_pantheon_blessings` | world | gap | unverified | — | unverified | — | — |
+| `group_coordination` | group | orphan | unverified | — | unverified | — | — |
+| `guilds` | group | partial | unverified | — | unverified | — | — |
+| `interaction_channeling` | entity | done | unverified | — | unverified | — | — |
+| `inventory_trade_conservation` | world | done | unverified | — | unverified | — | — |
+| `knowledge_model` | entity | gated | unverified | — | unverified | — | — |
+| `lair` | region | gap | unverified | — | unverified | — | — |
+| `movement` | entity | done | unverified | — | unverified | — | — |
+| `narrative_memory` | world | orphan | unverified | — | unverified | — | — |
+| `nest` | region | gap | unverified | — | unverified | — | — |
+| `party_formation` | group | done | unverified | — | unverified | — | — |
+| `perception` | entity | done | unverified | — | unverified | — | — |
+| `personality` | entity | done | unverified | — | unverified | — | — |
+| `progression_conversion` | entity | gated | unverified | — | unverified | — | — |
+| `quest_generation_sourcing` | entity | gated | unverified | — | unverified | — | — |
+| `quest_reward_distribution` | group | orphan | unverified | — | unverified | — | — |
+| `race_archetype` | entity | done | unverified | — | unverified | — | — |
+| `race_collective_force` | faction | gap | unverified | — | unverified | — | — |
+| `regional_trauma_hazards_sovereignty` | region | done | unverified | — | unverified | — | — |
+| `reputation` | faction | done | unverified | — | unverified | — | — |
+| `resource_harvesting` | world | orphan | unverified | — | unverified | — | — |
+| `ruins_mines_battlefields` | region | partial | unverified | — | unverified | — | — |
+| `settlement_capacity_axis` | faction | gap | unverified | — | unverified | — | — |
+| `skill_unlocks` | entity | partial | unverified | — | unverified | — | — |
+| `social_contracts` | faction | done | unverified | — | unverified | — | — |
+| `social_memory` | faction | skeleton | unverified | — | unverified | — | — |
+| `status_effects` | entity | partial | unverified | — | unverified | — | — |
+| `strategic_intelligence_core` | entity | done | unverified | — | unverified | — | — |
+| `strategic_learning_bias` | entity | done | unverified | — | unverified | — | — |
+| `strategic_redirection` | entity | orphan | unverified | — | unverified | — | — |
+| `tactical_decision` | entity | done | unverified | — | unverified | — | — |
+| `team_up` | entity | gap | unverified | — | unverified | — | — |
+| `temporal_pressure` | entity | skeleton | unverified | — | unverified | — | — |
+| `trauma` | entity | done | unverified | — | unverified | — | — |
+| `world_generation` | world | done | unverified | — | unverified | — | — |
+| `xp_leveling` | entity | done | unverified | — | unverified | — | — |
