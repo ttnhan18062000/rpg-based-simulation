@@ -6,19 +6,19 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**4 runtime-verified, 13 static (`code_trace`)-verified, 72 unverified** — of 89 total.
+**6 runtime-verified, 13 static (`code_trace`)-verified, 70 unverified** — of 89 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
 | `action_pacing_readiness` | entity | partial | runtime | observed | 125 | 25 |
 | `movement` | entity | done | unverified | unverified | 75 | 15 |
 | `personality` | entity | done | unverified | unverified | 75 | 15 |
-| `tactical_decision` | entity | done | unverified | unverified | 75 | 15 |
+| `tactical_decision` | entity | done | runtime | contradicted | 75 | 15 |
 | `combat_engagement` | entity | done | runtime | observed | 70 | 14 |
 | `entity_role` | entity | done | unverified | unverified | 70 | 14 |
 | `skill_unlocks` | entity | partial | unverified | unverified | 70 | 14 |
 | `status_effects` | entity | partial | unverified | unverified | 70 | 14 |
-| `combat_resolution` | entity | done | unverified | unverified | 65 | 13 |
+| `combat_resolution` | entity | done | runtime | observed | 65 | 13 |
 | `cognition_capacity_fatigue` | entity | done | unverified | unverified | 45 | 9 |
 | `perception` | entity | done | unverified | unverified | 40 | 8 |
 | `trauma` | entity | done | unverified | unverified | 40 | 8 |
