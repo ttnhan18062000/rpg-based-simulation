@@ -132,6 +132,14 @@ explicitly flagged as out of scope for the sentiment build and never investigate
 - `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (sibling instance of the same pattern —
   see that ticket's own "Named finding" section for the general statement: mechanics whose
   preconditions depend on world geometry that nothing validates)
+- `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION` (2026-08, closed — independently found
+  `resolve_attack()`: 0 real calls in 2000-tick runs, for an unrelated reason (rebirth reachability);
+  the 2026-09-17 addendum above is the third independent confirmation of the same fact)
+- `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` (open, P2 — its own Scope
+  item 1 asked for exactly the gate-effect measurement in the 2026-09-17 addendum above; cites this
+  ticket's own measurement rather than duplicating it, per the "one place defines the fact" rule)
+- `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (closed — the progression
+  investigation whose own resumption led back to this ticket)
 
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2 — the sentiment mechanism
@@ -396,18 +404,116 @@ _(none yet)_
 ## Files Changed
 _(none yet)_
 
+## Addendum — 2026-09-17, resumed per user decision (progression-defect thread), a 7th candidate
+## checked and a new, sharper finding
+
+**Context**: resumed after `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS`
+(closed) found progression XP never crosses a level threshold in these same three worlds
+(`crowded_frontier`, `quest_dense_frontier`, `hero_guild_routing`) due to real combat being too
+rare — this ticket's own investigation is the most likely upstream cause. Peer raised a 7th
+candidate not previously checked: `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`
+(closed same day as this investigation was paused) built a real posture-veto gate that cuts real
+attacks 57.3% overall / 58.1% cross-faction on the `metropolis` reference scenario — could this
+epic's own gate be starving the thing it was built to regulate?
+
+**Candidate 7 (the posture-veto gate) — checked directly, falsified, for a stronger reason than
+initially suspected.** Peer's own back-of-envelope math already argued against it: the pre-gate
+baseline on `crowded_frontier` (candidate 5, above) was 2 real attacks in 2000 ticks, so a gate
+that removes at most those 2 cannot be *the* cause of near-zero combat there. Direct measurement
+confirms this and goes further. Ran the same gate ON/OFF A/B the closed gate ticket used
+(`ENABLE_COMBAT_ENGAGEMENT` toggled via `state.feature_flags`, the corrected toggle mechanism —
+not the silently-ignored `Kernel(flags=...)` dict), instrumenting real
+`CombatActions.execute_attack()` calls, on `metropolis` (1000 entities, 30 ticks: 5 warmup + 25
+sample, matching the closed ticket's own convention) alongside `crowded_frontier`,
+`quest_dense_frontier`, `hero_guild_routing` (2000 ticks each) in the same run, reported per-world
+per peer's explicit instruction (never aggregated — metropolis and a 38-entity corpus world tell
+completely different stories):
+
+| World | Entities | Ticks | Gate OFF (total / cross-faction) | Gate ON (total / cross-faction) |
+|---|---|---|---|---|
+| `metropolis` | 1000 | 30 | 2310 / 2310 | 1027 / 1027 |
+| `crowded_frontier` | 38 | 2000 | 0 / 0 | 0 / 0 |
+| `quest_dense_frontier` | 9 | 2000 | 0 / 0 | 0 / 0 |
+| `hero_guild_routing` | 35 | 2000 | 5 / 5 | 0 / 0 |
+
+`metropolis` reproduces the closed gate ticket's own direction (real, large reduction; 100%
+cross-faction matching its own finding). All three corpus worlds show at most 5
+`execute_attack()` calls in 2000 ticks in *either* gate state — the gate genuinely has no
+measurable effect on these worlds, confirming peer's hypothesis.
+
+**But the reconciliation with this investigation's own progression-defect context revealed
+something sharper than "the gate doesn't matter here."** The progression ticket separately found
+10 real kills in `crowded_frontier` over 1000 ticks (instrumented via
+`CombatRewardClassificationService.classify_defeated_target`, not `execute_attack()`) — a real
+discrepancy against this ticket's own 0-`execute_attack()`-calls reading that had to be resolved,
+not glossed over, per this arc's own standing discipline. Direct reconciliation (wrapping
+`CombatResolutionSystem.resolve_attack()`, `resolve_opportunity_attack()`, and
+`resolve_multi_attack()` separately, plus `execute_attack()`, in one run, 1000 ticks each, gate at
+its real default ON):
+
+| World | `execute_attack`/`resolve_attack` calls | `resolve_multi_attack` calls |
+|---|---|---|
+| `crowded_frontier` | 2 | **181** |
+| `quest_dense_frontier` | 0 | 0 |
+| `hero_guild_routing` | 0 | **2177** |
+
+**Almost all real combat resolution in these worlds runs through `resolve_multi_attack()` —
+`movement.py`'s opportunity-attack mechanic, triggered on disengagement/pursuit — not through
+`resolve_attack()`, the decision-driven path reached via `TacticalDecisionSystem` →
+`ActionRouter.execute_action()` → `CombatActions.execute_attack()`.** The posture-veto gate lives
+exclusively in `ActionRouter.execute_action()`'s `ATTACK`/`SKILL` dispatch (see
+`src/engine/domain/action_router.py:76-105`) — `movement.py`'s opportunity-attack call site
+(`src/engine/movement.py:240`, calling `CombatResolutionSystem.resolve_multi_attack()` directly)
+never routes through `ActionRouter` at all, so the gate structurally cannot touch it. This is a
+**stronger** falsification of the gate-starvation hypothesis than the arithmetic alone: it's not
+just that the gate's own effect is small relative to an already-thin baseline — the gate doesn't
+apply to the mechanism producing the overwhelming majority of these worlds' real combat, full
+stop. (Reward construction for a kill is present in `resolve_multi_attack()` too — ported there by
+`TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION` specifically because it observed the
+same "`resolve_attack()`: 0 real calls" fact for a different reason years earlier — so opportunity
+kills do correctly grant XP; this is not a second wiring gap on top of the first.)
+
+**This is a third, independent confirmation of the same underlying fact, now triangulated from
+three unrelated investigations**: `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION`
+(2026-08) found `resolve_attack()` has 0 real calls in 2000-tick runs while investigating rebirth
+reachability; this investigation's own candidate 5 (2026-09-15) independently found only 2 real
+`execute_attack()` calls in 2000 ticks on `crowded_frontier` while investigating combat rarity; and
+this addendum (2026-09-17) confirms it again while investigating the veto gate, and additionally
+identifies `resolve_multi_attack()` as the actual dominant real-combat mechanism filling that gap.
+**The sharpened open question this investigation should hand to whoever picks it up next is no
+longer "why is cross-faction combat rare" in the abstract — it is specifically "why does
+`TacticalDecisionSystem`'s own decision-driven `ATTACK`-intent path essentially never fire in these
+corpus worlds, leaving nearly all real combat to the incidental opportunity-attack mechanic
+instead."** That is a decision/scoring-layer question (`tactical.py` or whatever selects/queues an
+`ATTACK` task), not a hostility-catalog, spatial, or gate question — all three of which this
+investigation's own six earlier candidates, plus this 7th one, have now checked and ruled out or
+narrowed as primary causes.
+
+**Not chased further here, per "measure, trace, report, don't fix in the same pass"** — this
+finding is substantial enough to warrant its own scoped follow-up rather than open-ended
+continuation inside an already-large investigation.
+
 ## Completion Summary
-**Investigation paused (not closed), per explicit scope cap.** Not resolved to a fix — deliberately
-stopped short of one. Real progress: six candidate root causes traced and falsified with direct
-evidence (catalog hostility coverage was correct; spatial separation was not the blocker; the
-posture/targeting break was resolved by identifying `combat_engagement`'s write-only-ness in the
-sibling ticket; a real legacy-Faction-enum bug in `SensoryFilter.filter_saliency` was found and
-filed, measured to have only 0.5% practical impact; the attack-legality gate mostly passes for
-real hostile pairs and its illegal results are correctly-blocked allied friendly-fire, not a bug;
-and a specific "predator-driven, not faction-driven" hypothesis was tested against real data and
-rejected — 81% of real combat in the comparison world is faction-vs-faction). One plausible,
-evidence-backed structural mechanism was identified via a purely static world-spec comparison
-(differing region composition for `merchant_league` between the two worlds, driven by
-`crowded_frontier` lacking the `trading_company_hub` module) but was not verified with a live
-run. Whoever picks this up next starts from a narrow, evidenced position rather than the original
-broad question.
+**Investigation still paused (not closed).** Real progress across two sessions: six candidate root
+causes traced and falsified with direct evidence in the original 2026-09-15 pass (catalog
+hostility coverage was correct; spatial separation was not the blocker; the posture/targeting
+break was resolved by identifying `combat_engagement`'s write-only-ness in the sibling ticket; a
+real legacy-Faction-enum bug in `SensoryFilter.filter_saliency` was found and filed, measured to
+have only 0.5% practical impact; the attack-legality gate mostly passes for real hostile pairs and
+its illegal results are correctly-blocked allied friendly-fire, not a bug; and a specific
+"predator-driven, not faction-driven" hypothesis was tested against real data and rejected). One
+plausible, evidence-backed structural mechanism was identified via a purely static world-spec
+comparison (differing region composition for `merchant_league`) but was not verified live.
+
+A 7th candidate (2026-09-17): whether the newly-built posture-veto gate
+(`TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`) is itself starving real
+combat — **falsified**, and more decisively than expected: the gate only governs the
+decision-driven `ATTACK`-intent path, which these three corpus worlds essentially never use in the
+first place (0-2 calls per 1000-2000 ticks); almost all their real combat runs through the
+ungated, incidental opportunity-attack mechanic (`resolve_multi_attack()`, 181-2177 calls per 1000
+ticks). This reframes the investigation's own open question from "why is combat rare" to the more
+precise "why does the decision-driven `ATTACK` path essentially never fire, leaving real combat to
+an incidental movement-triggered mechanic" — corroborated by a third, independent prior
+investigation (`TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION`) that found the same
+`resolve_attack(): 0 real calls` fact from a different angle in 2026-08. Whoever picks this up next
+starts from an even narrower, triply-evidenced position.

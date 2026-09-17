@@ -3,7 +3,7 @@
 Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 75 of 89 mechanisms are currently
+**Which mechanism to verify next.** 70 of 89 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -15,11 +15,9 @@ more depends on it. Ranked below, top 25.
 |---|---|---|---|---|
 | `movement` | entity | done | 75 | 15 |
 | `personality` | entity | done | 75 | 15 |
-| `tactical_decision` | entity | done | 75 | 15 |
 | `entity_role` | entity | done | 70 | 14 |
 | `skill_unlocks` | entity | partial | 70 | 14 |
 | `status_effects` | entity | partial | 70 | 14 |
-| `combat_resolution` | entity | done | 65 | 13 |
 | `cognition_capacity_fatigue` | entity | done | 45 | 9 |
 | `perception` | entity | done | 40 | 8 |
 | `trauma` | entity | done | 40 | 8 |
@@ -37,7 +35,9 @@ more depends on it. Ranked below, top 25.
 | `class_assignment` | entity | partial | 5 | 1 |
 | `commitment_betrayal` | entity | done | 5 | 1 |
 | `derived_stats` | entity | done | 5 | 1 |
-| `xp_leveling` | entity | done | 5 | 1 |
+| `campaigns` | world | done | 4 | 4 |
+| `city` | region | partial | 4 | 2 |
+| `diplomacy` | faction | done | 3 | 1 |
 
 ## Chart form
 
@@ -55,11 +55,13 @@ flowchart BT
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
     betrayal_siege_war["betrayal siege war"]:::done
+    campaigns["campaigns"]:::done
+    city["city"]:::partial
     class_assignment["class assignment"]:::partial
     cognition_capacity_fatigue["cognition capacity fatigue"]:::done
-    combat_resolution["combat resolution"]:::done
     commitment_betrayal["commitment betrayal"]:::done
     derived_stats["derived stats"]:::done
+    diplomacy["diplomacy"]:::done
     entity_role["entity role"]:::done
     goal_hierarchy["goal hierarchy"]:::done
     interaction_channeling["interaction channeling"]:::done
@@ -71,19 +73,12 @@ flowchart BT
     reputation["reputation"]:::done
     skill_unlocks["skill unlocks"]:::partial
     status_effects["status effects"]:::partial
-    tactical_decision["tactical decision"]:::done
     trauma["trauma"]:::done
     world_generation["world generation"]:::done
-    xp_leveling["xp leveling"]:::done
 
     interaction_channeling --> affection_relationship_bonds
+    regional_trauma_hazards_sovereignty --> city
     race_archetype --> class_assignment
-    tactical_decision --> combat_resolution
-    movement --> combat_resolution
-    status_effects --> combat_resolution
-    entity_role --> combat_resolution
-    skill_unlocks --> combat_resolution
-    combat_resolution --> commitment_betrayal
     attributes_biology --> derived_stats
     belief_cycle --> goal_hierarchy
     reputation --> goal_hierarchy
@@ -91,6 +86,4 @@ flowchart BT
     betrayal_siege_war --> regional_trauma_hazards_sovereignty
     world_generation --> regional_trauma_hazards_sovereignty
     affection_relationship_bonds --> reputation
-    combat_resolution --> trauma
-    combat_resolution --> xp_leveling
 ```

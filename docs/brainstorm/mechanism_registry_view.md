@@ -6,19 +6,19 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**2 runtime-verified, 12 static (`code_trace`)-verified, 75 unverified** — of 89 total.
+**6 runtime-verified, 13 static (`code_trace`)-verified, 70 unverified** — of 89 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
 | `action_pacing_readiness` | entity | partial | runtime | observed | 125 | 25 |
 | `movement` | entity | done | unverified | unverified | 75 | 15 |
 | `personality` | entity | done | unverified | unverified | 75 | 15 |
-| `tactical_decision` | entity | done | unverified | unverified | 75 | 15 |
+| `tactical_decision` | entity | done | runtime | contradicted | 75 | 15 |
 | `combat_engagement` | entity | done | runtime | observed | 70 | 14 |
 | `entity_role` | entity | done | unverified | unverified | 70 | 14 |
 | `skill_unlocks` | entity | partial | unverified | unverified | 70 | 14 |
 | `status_effects` | entity | partial | unverified | unverified | 70 | 14 |
-| `combat_resolution` | entity | done | unverified | unverified | 65 | 13 |
+| `combat_resolution` | entity | done | runtime | observed | 65 | 13 |
 | `cognition_capacity_fatigue` | entity | done | unverified | unverified | 45 | 9 |
 | `perception` | entity | done | unverified | unverified | 40 | 8 |
 | `trauma` | entity | done | unverified | unverified | 40 | 8 |
@@ -38,7 +38,7 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `commitment_betrayal` | entity | done | unverified | unverified | 5 | 1 |
 | `derived_stats` | entity | done | unverified | unverified | 5 | 1 |
 | `motivation_doctrine` | entity | gap | static | observed | 5 | 1 |
-| `xp_leveling` | entity | done | unverified | unverified | 5 | 1 |
+| `xp_leveling` | entity | partial | runtime | observed | 5 | 1 |
 | `campaigns` | world | done | unverified | unverified | 4 | 4 |
 | `city` | region | partial | unverified | unverified | 4 | 2 |
 | `diplomacy` | faction | done | unverified | unverified | 3 | 1 |
@@ -71,7 +71,7 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
 | `equipment_scoring` | world | done | unverified | unverified | 0 | 0 |
 | `event_interpretation` | region | done | unverified | unverified | 0 | 0 |
-| `evolution` | entity | done | unverified | unverified | 0 | 0 |
+| `evolution` | entity | done | runtime | observed | 0 | 0 |
 | `fame` | world | done | unverified | unverified | 0 | 0 |
 | `fidelity_drift` | world | done | unverified | unverified | 0 | 0 |
 | `genetics_aptitude` | entity | gated | static | observed | 0 | 0 |
@@ -85,7 +85,7 @@ All 89 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `nest` | region | gap | unverified | unverified | 0 | 0 |
 | `opportunity_rumor_seeds` | world | gated | static | observed | 0 | 0 |
 | `party_formation` | group | done | unverified | unverified | 0 | 0 |
-| `progression_conversion` | entity | gated | unverified | unverified | 0 | 0 |
+| `progression_conversion` | entity | gated | static | observed | 0 | 0 |
 | `quest_generation_sourcing` | entity | gated | unverified | unverified | 0 | 0 |
 | `quest_reward_distribution` | group | orphan | unverified | unverified | 0 | 0 |
 | `race_collective_force` | faction | gap | unverified | unverified | 0 | 0 |
