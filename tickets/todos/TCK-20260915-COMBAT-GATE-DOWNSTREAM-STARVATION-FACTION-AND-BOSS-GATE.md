@@ -59,13 +59,19 @@ diagnosis is that both systems' own trigger conditions/thresholds were tuned aga
 combat baseline that included attacks the attacker's own risk assessment had already rejected.
 
 ## Scope
-- **Faction chain**: re-run `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own
-  multi-seed volume measurement (or a fresh version of it) with this gate active, to get a real,
-  current number for cross-faction interaction volume post-gate — not assumed from the single
-  reference-scenario measurement in this ticket's Request Summary, which used a fixed seed.
+- **Faction chain — DONE, 2026-09-17, see `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s
+  own 2026-09-17 addendum for the full measurement (not duplicated here — that ticket owns the
+  fact, this one cites it).** Summary: the gate has no measurable effect on cross-faction interaction
+  volume in `crowded_frontier`, `quest_dense_frontier`, or `hero_guild_routing` — not because its
+  effect is small relative to an already-thin baseline, but because these worlds' real combat runs
+  almost entirely through `CombatResolutionSystem.resolve_multi_attack()` (movement.py's incidental
+  opportunity-attack mechanic), which never routes through `ActionRouter.execute_action()` and so is
+  structurally ungated by this policy. The gate only measurably affects worlds like `metropolis`
+  where the decision-driven `ATTACK`-intent path (which it does gate) is actually exercised.
 - **Boss-gate chain**: re-check `TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY`'s own
   real trigger-rate measurement with this gate active, to see whether the gate's already-thin
-  trigger rate drops further into practical unreachability.
+  trigger rate drops further into practical unreachability. Still open — not touched by the
+  faction-chain work above, per this ticket's own scope split.
 - For whichever chain (or both) shows a real, material drop: propose a concrete fix scoped to that
   chain specifically (e.g., re-tuning that system's own threshold/window against the new baseline,
   not reverting this gate) — a design decision, not assumed here.
@@ -82,10 +88,14 @@ combat baseline that included attacks the attacker's own risk assessment had alr
 ## Acceptance Criteria
 - Real, current post-gate measurement for both chains (cross-faction interaction volume;
   boss-gate trigger rate), not assumed from a single fixed-seed number.
+  - Faction chain: DONE — see `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own
+    2026-09-17 addendum. No material drop (there was nothing left to drop — the gate doesn't apply
+    to this world class's real combat mechanism at all).
 - If either chain shows a material further drop: a scoped, evidence-backed proposal for that
   chain's own fix, filed as its own follow-up if it's more than a small tuning change.
 - If neither chain shows a material further drop beyond what was already known: report that
-  honestly and close without a code change.
+  honestly and close without a code change. (Faction chain: reported, per above — no code change
+  warranted for the gate/faction-chain relationship specifically.)
 
 ## Related Tickets
 - `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION` (created the volume reduction
@@ -117,11 +127,12 @@ _(none yet — filed as a finding, not yet investigated)_
   unreachability regardless of this gate's further cut. Measure before concluding either way.
 
 ## Implementation Notes
-_(none — filed as a finding, not yet investigated, per peer's explicit instruction to file this as
-its own work rather than as a caveat on the gate ticket)_
+**2026-09-17, faction chain resolved (half of this ticket).** See
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own 2026-09-17 addendum for the full
+measurement. Boss-gate chain (the other half) not touched — still open.
 
 ## Test Summary
-_(none yet)_
+_(none yet — no code changed for the faction-chain half; boss-gate half not started)_
 
 ## Files Changed
 _(none yet)_
