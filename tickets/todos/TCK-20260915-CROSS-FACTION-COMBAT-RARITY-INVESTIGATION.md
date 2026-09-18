@@ -146,6 +146,10 @@ explicitly flagged as out of scope for the sentiment build and never investigate
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (closed — the progression
   investigation whose own resumption led back to this ticket)
 
+- `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` (filed from this ticket's own
+  2026-09-19 addendum — the dual-mechanism hostility-source divergence, measured here, with its
+  own scoped investigation into fixing it)
+
 ## Related Docs
 - `docs/plans/rpg_design_roadmap/faction_war_drivers_proposal.md` (§3.2 — the sentiment mechanism
   this finding is about)
@@ -620,7 +624,8 @@ subsystem") — `LegalityServiceV2.get_engaged_hostiles_at_pos()` is a shared le
 its own call sites beyond the opportunity-attack trigger (e.g. the `skip_oa`/escape-tag logic in
 the same function, and `get_engaged_hostiles_at_pos` at `movement.py:100` for hypothetical-position
 checks during pathing), so swapping its hostility test for `is_hostile_compat()` needs a scoped
-follow-up, not a same-pass edit. Filed as the concrete next step for whoever picks this up.
+follow-up, not a same-pass edit. **Filed as its own ticket, not left as only a citation here**:
+`TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`.
 
 ## Completion Summary
 **Investigation still paused (not closed).** Real progress across two sessions: six candidate root
