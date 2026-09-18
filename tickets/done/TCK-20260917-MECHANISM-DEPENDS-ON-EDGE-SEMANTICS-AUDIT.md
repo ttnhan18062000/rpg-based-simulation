@@ -260,3 +260,16 @@ instinct outran the registry's own derived data twice.
 
 Full priority before/after detail (including the re-derivation above) is in this ticket's own
 `edge_audit_results.md`.
+
+**The aggregate, stated plainly rather than left for a reader to derive from the per-row counts:**
+of the 38 edges that survive this audit (70 audited, 32 removed), **21 are validated KEEPs and 17
+are still unvalidated UNCLASSIFIABLEs — roughly 45% of the surviving graph.** The new ranking is
+materially better grounded than the one it replaces, and the per-row `unaudited_edge_count` makes
+that 45% visible rather than assumed away — but it is not itself a clean, fully-verified graph.
+`entity_role` and `movement` tying for the new #1 unverified priority is plausible, `movement`
+especially given everything already confirmed about it this epic — but "plausible" is what the
+pre-audit ranking looked like too, before it turned out `tactical_decision` and
+`action_pacing_readiness` were propped up by edges that didn't survive. Resolving the 17
+UNCLASSIFIABLE edges is the natural next step to close that gap, filed as its own follow-on
+(`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION`) rather than reopening this
+ticket, since it is a smaller, more targeted job than auditing all 70 was.
