@@ -8,43 +8,64 @@ tags: [architecture, documentation, schema]
 
 # Plan — Mechanism Tier Model (axis → system → mechanism)
 
-> **Status, updated 2026-09-18 — the `system` tier described below was investigated and rejected;
-> this doc is kept for its surviving findings, not as a live implementation plan.**
+> **Status, updated 2026-09-18 — the `system` tier as originally designed (derived from
+> `depends_on`) was investigated and rejected. It is being revived under a different mechanism:
+> declared tags, not derivation. This doc is a live plan again, not a findings archive — see below
+> for what changed and why the earlier rejection still holds for the design it actually rejected.**
 >
 > `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` opened with an investigation-first child,
 > `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`, that derived candidate systems by
 > hand from the real dependency graph (§2/§3 below) before any schema work began. The result: **do
-> not build the `system` tier as designed, full stop** — not "proceed with changes." A
+> not build the `system` tier as *derived*, full stop** — not "proceed with changes." A
 > proceed-with-changes fallback (multi-root aggregation, letting a system declare several roots) was
 > considered and rejected as declared membership in disguise: hand-picking roots until a derived set
 > looks right is manual curation wearing the word "derived," which reintroduces the exact
 > informally-maintained-truth failure this whole registry effort exists to remove.
 >
-> **Root cause, stated once**: `depends_on` (§3 below) encodes *prerequisite* — this mechanism cannot
-> produce a meaningful result without that one already existing. A `system` encodes *collaboration*
-> — these mechanisms work together toward one recognizable capability. No traversal over the first
-> relation reliably produces the second. This explains all four bad derived-system fits the
-> investigation found (combat missing `tactical_decision`, progression coming out 8-of-9 combat
-> mechanisms, economy bottoming out at 2 members, social swinging 4x between two roots) as one
-> failure rather than four separate disappointments.
+> **Root cause, stated once, and still load-bearing**: `depends_on` (§3 below) encodes
+> *prerequisite* — this mechanism cannot produce a meaningful result without that one already
+> existing. A `system` encodes *collaboration* — these mechanisms work together toward one
+> recognizable capability. No traversal over the first relation reliably produces the second. This
+> explains all four bad derived-system fits the investigation found (combat missing
+> `tactical_decision`, progression coming out 8-of-9 combat mechanisms, economy bottoming out at 2
+> members, social swinging 4x between two roots) as one failure rather than four separate
+> disappointments. **This is exactly why the revived design below never touches `depends_on` at
+> all** — it isn't a fix to the derivation, it's a different mechanism that the root cause doesn't
+> apply to, because membership is declared by intent rather than walked from an edge that was never
+> collaboration in the first place.
 >
-> **What still stands, and why this doc isn't deleted**: the §2 `mechanism` tier (already built,
+> **Revived 2026-09-18 as `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`**, sequenced investigation
+> first (`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`, child 1): a system becomes a
+> **declared tag on a mechanism** — no root, no traversal, `depends_on` not consulted. That removes
+> all three of the original investigation's own blockers at once (bad thematic fits — membership is
+> declared by intent, not derived; unaudited edges — edges are simply unused; non-unique roots — none
+> exist to be non-unique). The new investigation's own question is different in kind from the
+> original: feasibility isn't in doubt (a declared-by-intent set is sensible by construction — that's
+> what "declared" means), the real question is **value against cost**: does a tag layer tell a reader
+> anything the per-mechanism view doesn't, by enough to justify hand-maintaining tags on 93+
+> mechanisms with no mechanical backing to keep them honest. `TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`
+> (child 2, vocabulary seeded from child 1's findings) and a rollups child (named, not yet drafted)
+> follow — see `tickets/todos/mechanism-system-tagging/SEQUENCE.md`.
+>
+> **What still stands from the original rejection**: the §2 `mechanism` tier (already built,
 > unaffected) and the naming evidence for `system` over `cluster`/`circuit` remain valid regardless.
 > The axis-attachment question §2's table leaves open (does an axis attach to mechanisms or to
 > systems?) is answered on independent evidence in
-> `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`: mechanisms, not systems —
-> partly *because* there is no system tier left to attach to, but also because the temporal axis
-> proposal's own concerns already span three different candidate systems the investigation tried,
-> which would have been awkward under system-level attachment even if the tier had shipped.
+> `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`: **mechanisms, not systems**
+> — this holds regardless of the tagging revival, since the temporal axis proposal's own concerns
+> already span three different candidate systems, which stays awkward under system-level attachment
+> whether that tier is derived or tagged.
 >
-> Children 2–4 named in the epic below (the `system` schema, the `axis` tier, and the
-> proposal-decomposition check) are **permanently undrafted, not deferred** — see the epic's own
-> Completion Summary. The `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` precondition named
-> throughout this doc remains real and independently valuable: derived priority
-> (`generate_mechanism_priority_view.py`) runs on the same `depends_on` edges regardless of whether
-> any tier above `mechanism` is ever built.
+> The `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` precondition named throughout this
+> doc's earlier revision is now **moot for the tagging design specifically** (tags don't consult
+> `depends_on` at all) but remains real and independently valuable on its own terms: derived priority
+> (`generate_mechanism_priority_view.py`) still runs on those edges regardless of whether any tag
+> layer exists above `mechanism`.
 
-**Status, scoped 2026-09-17.** The registry records 89 mechanisms. Design proposals arrive as
+**Status, scoped 2026-09-17.** The registry records a growing set of mechanisms (see
+`registries/mechanisms.yaml` for the current count — cited here without a figure, since a precise
+count in a doc that outlives it is exactly the staleness trap this registry effort exists to avoid).
+Design proposals arrive as
 *axes* — "introduce a spatial axis." Nothing connects the two, so a proposal cannot state what it
 will do to the registry, and the registry cannot answer questions asked above the level of a single
 node.
@@ -73,36 +94,58 @@ to check afterwards whether what landed matches what was proposed.
 | Tier | What it is | Membership | Backed by |
 |---|---|---|---|
 | **axis** | a dimension of play — roughly a game sub-genre: spatial, temporal, knowledge-belief | **declared**, overlapping | judgement only |
-| **system** | a functional grouping — combat, progression, trade | **derived** from a declared root | declared `depends_on` edges |
+| **system** | a functional grouping — combat, progression, trade | **declared** as a tag (originally attempted as **derived** from a declared root — rejected, see §3) | judgement only, same as axis |
 | **mechanism** | the existing registry node | already defined | `implemented_by`, validated against disk and symbol |
 
 ### The asymmetry is the design, and must not be forgotten
 
-Each tier rests on weaker evidence than the one below it:
+Each tier rests on weaker evidence than the one below it — **this table's original two-tier
+asymmetry (mechanism binds to code, system derives from edges, axis has nothing) collapsed to one
+tier once the `system` row above stopped deriving; both `system` and `axis` now share the same
+"declared, no mechanical backing" evidence class.** Restated with that in mind:
 
 - a **mechanism** binds to real code, and a deleted module or renamed symbol fails validation
-- a **system** derives from `depends_on`, so it is only as true as edges someone declared
-- an **axis** has **no mechanical backing at all** — nothing in the dependency graph knows that
-  movement and time-of-day belong to the same dimension of play
+- a **system** and an **axis** both have **no mechanical backing at all** — nothing in the
+  dependency graph or the codebase knows that `combat_resolution` belongs to `combat`, or that
+  movement and time-of-day belong to the same dimension of play. Distinct declarations
+  (§3), same evidence weight.
 
 State this wherever axes are defined. It is acceptable when visible and dangerous when forgotten,
 and forgetting it is precisely how the atlas came to be trusted for years.
 
 ---
 
-## 3. Why systems derive and axes do not
+## 3. Why systems are tagged and axes are tagged too
 
-A system is a **rooted subtree**: `combat` is the transitive ancestors of `combat_resolution`. One
-declared line, membership falls out of the graph, and adding an edge updates it for free. Overlap is
-natural rather than a problem — `combat_resolution` belongs to both `combat` and `progression`
-because it feeds `xp_leveling`.
+**Historical record, kept because it was expensive to learn**: the original design (below the line)
+tried to make a system a **rooted subtree** — `combat` as the transitive ancestors of
+`combat_resolution` — reasoning that one declared line, with membership falling out of the graph,
+would avoid a hand-maintained surface. `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`
+tested this against the real graph and found it fails: `depends_on` encodes prerequisite, a system
+encodes collaboration, and no traversal over the first reliably produces the second (see the status
+block above for the full finding). The reasoning below is preserved as the record of *why* this
+looked like a good idea and *how* it failed, not as the current design.
 
-An axis is **not a subgraph**. A spatial axis cuts across movement, perception, combat and region;
-no dependency relation expresses "these share a dimension of play." So it is hand-declared and
-overlapping, with no derivation to lean on.
+> A system is a **rooted subtree**: `combat` is the transitive ancestors of `combat_resolution`. One
+> declared line, membership falls out of the graph, and adding an edge updates it for free. Overlap
+> is natural rather than a problem — `combat_resolution` belongs to both `combat` and `progression`
+> because it feeds `xp_leveling`.
 
-**Declared membership lists for systems are forbidden.** That would be another hand-maintained
-surface, the failure class the registry epic spent eleven tickets removing.
+**Current design, `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`**: both tiers are now **declared**,
+and neither derives. A system is a **tag on a mechanism**, exactly the same shape as an axis always
+was — hand-declared, overlapping, with no mechanical backing and no traversal to lean on. This is
+not "axes were right all along, so make systems axes" — a system and an axis remain conceptually
+distinct (a functional grouping like combat/progression/trade versus a cross-cutting dimension of
+play like spatial/temporal/knowledge-belief), but both are now the same *kind* of declaration: a
+tag, checked against a registry for validity, never derived from `depends_on` or any other edge.
+
+**Declared membership lists were forbidden under the derived design** because a hand-maintained list
+alongside a supposedly-derived one would be redundant, contradictory bookkeeping. That objection
+does not apply here — under the tag design there is no derivation for a declared list to contradict,
+so a declared list *is* the mechanism, not a shadow of one. See
+`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`'s own question (does a maintained tag
+layer earn its keep over the per-mechanism view) for the corresponding new constraint — declared
+does not mean unconstrained. §8 states the specific non-goal this doesn't reopen.
 
 ---
 
@@ -142,38 +185,80 @@ runtime-verified — that abstraction would obscure that rather than expose it.
 
 ## 6. Sequencing
 
-1. **`TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`** — first, and it blocks the rest.
-   Node boundaries are currently accidental, inherited from atlas cards and directory structure. A
-   tier built on accidental boundaries propagates the accident while making it harder to see.
-2. **`TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM`** — P2, blocked on the above.
+**Historical, completed**: `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` landed first
+and is done — node boundaries are no longer accidental. `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM`,
+the derived-tier design it unblocked, is closed as superseded by the feasibility investigation's own
+"do not build" finding.
 
-Deliberately *not* blocking `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` (P1) on the
-tier work. Coverage is useful independently; only the identity rules precede it, because a split
-divides both a binding and a verdict.
+**Current, under `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`** (`tickets/todos/mechanism-system-tagging/SEQUENCE.md`):
+
+1. **`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`** — first, no dependencies. Feasibility
+   isn't the question this time (a declared-by-intent set is sensible by construction); the question
+   is whether the grouping earns its maintenance cost over the per-mechanism view.
+2. **`TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`** — depends on the investigation. Its system
+   vocabulary seeds from child 1's broad pass, and its many-to-many design may simplify if the
+   investigation's multi-membership count comes back low.
+3. **Rollup views** — named, not drafted. Deferred until the mapping and registry exist; the one known
+   constraint (counts, never a badge — §5) is already recorded so the follow-up doesn't rediscover it.
+
+Deliberately *not* blocking `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` (P1) or
+`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT`'s own follow-on
+(`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION`) on this tagging work — tags do
+not consult `depends_on` or `implemented_by` at all, so neither is a precondition here.
 
 ---
 
 ## 7. Known limitations, recorded before they are discovered
 
-**Derived membership reflects declared edges, not real traffic.** Measured 2026-09-17
-(`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`): combat in the corpus worlds is reached
-overwhelmingly through movement's opportunity-attack path — 181–2177 calls per 1000 ticks — while
-the declared `tactical_decision → combat_resolution` route fires 0–2 times. A derived `combat` system
-would describe the declared structure while the dominant real path runs elsewhere.
+**Historical, resolved by abandoning derivation entirely rather than fixing it:**
 
-**`depends_on` semantics are looser in practice than stated.** The rule is *requires to exist in
-order to function*. But `combat_resolution` declares both `movement` and `tactical_decision`, and
-neither is obviously a prerequisite — both look like execution flow. **Derived priority is computed
-from these edges**, so if some are really flow rather than dependency, the "what to fix next"
-ranking measures something other than blast radius. Open in the identity-rules ticket.
+> **Derived membership reflects declared edges, not real traffic.** Measured 2026-09-17
+> (`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`): combat in the corpus worlds is reached
+> overwhelmingly through movement's opportunity-attack path — 181–2177 calls per 1000 ticks — while
+> the declared `tactical_decision → combat_resolution` route fires 0–2 times. A derived `combat`
+> system would describe the declared structure while the dominant real path runs elsewhere.
+>
+> **`depends_on` semantics are looser in practice than stated.** The rule is *requires to exist in
+> order to function*. But `combat_resolution` declared both `movement` and `tactical_decision`, and
+> neither was obviously a prerequisite — both looked like execution flow. **Derived priority is
+> computed from these edges**, so if some are really flow rather than dependency, the "what to fix
+> next" ranking measures something other than blast radius.
 
-**Axes cannot be validated.** See §2. There is no check to write.
+This was not a bug to fix — `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` later confirmed
+it was systemic (32 of 70 audited edges were exactly this shape) and corrected the edges themselves,
+but that correction was for the registry's own priority-ranking accuracy, not a rescue of the
+derived-system design — a system tier still cannot be derived from `depends_on` even with every edge
+correct, because the two relations (prerequisite vs. collaboration) are simply different things. See
+the status block above.
+
+**Current, live for the tag design:**
+
+**A system tag has no mechanical backing — permanent, not a gap to close.** Nothing in the code says
+"this belongs to progression." Accepted deliberately: the code→mechanism mapping is automated and
+validated; the mechanism→system mapping is a much smaller hand-authored decision, and that asymmetry
+is the whole point (§2's own asymmetry table gains a third instance here, not an exception to it).
+
+**Tagging cost scales with mechanism count and with splits.** Every new mechanism needs a tag
+decision at creation time (the tag-on-mechanism design in
+`TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION` forces this rather than letting it lapse), and
+every mechanism split (the identity rule produced 4 splits from 9 tested cases — not rare) needs its
+tag(s) re-decided for each half. `TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`'s own
+cost estimate (§4 of that ticket) is what determines whether this cost is worth paying at all.
+
+**Axes cannot be validated.** See §2. There is no check to write. Unaffected by the tagging revival —
+this was already true and stays true.
 
 ---
 
 ## 8. Non-goals
 
 - **No fourth tier.** Three is what the evidence supports.
+- **No derived system membership, in any form, including multi-root aggregation.** This is the one
+  non-goal added by the tagging revival, and it is the load-bearing one: multi-root aggregation was
+  specifically considered as a "proceed-with-changes" fallback for the derived design and rejected as
+  declared membership in disguise (see the status block above). The tag design is not that fallback
+  reintroduced under a new name — it is declared *instead of* derived, transparently, with no
+  traversal step anywhere for a hand-picked root to hide inside.
 - **No derived axes.** Not possible from the dependency graph; do not fake it with heuristics.
 - **No retrofitting** every mechanism into a system or axis. Unassigned is a visible gap, not an
   error — same rule as `unverified`.
@@ -182,7 +267,8 @@ ranking measures something other than blast radius. Open in the identity-rules t
   statistical clustering in `observability/mining/`) and `circuit` (`short-circuit` in
   `engine/phase_graph.py`), each a *semantic* collision. `system` collides only with the directory
   `src/systems/`, and mechanisms already map across both that and `src/domains/`. Recorded so it is
-  not relitigated.
+  not relitigated — this evidence predates and is unaffected by the derived-to-tagged revival, since
+  it was never about how membership is decided.
 
 ---
 
@@ -191,5 +277,18 @@ ranking measures something other than blast radius. Open in the identity-rules t
 - `docs/plans/mechanism_registry_initiative.md` — the substrate this builds on
 - `docs/plans/mechanism_claims_as_tests_initiative.md` — the checking layer; this is the structural
   one
-- `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`,
-  `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` — implementation detail lives there
+- `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` (done) — supplies the identity rule
+- `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` (closed, superseded) — the original
+  derived-tier design; historical
+- `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` (closed, do-not-build) — the derived-tier investigation
+  arc; see the status block above for its finding and root cause
+- `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS` — the axis tier, resolved
+  independently of the system tier's fate
+- `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` (done) and its own follow-on
+  `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION` — the depends_on edge
+  correction; independently valuable for derived priority, moot for the tag design specifically
+- `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`,
+  `TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`,
+  `TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`
+  (`tickets/todos/mechanism-system-tagging/`) — the current, live implementation detail for the
+  revived tier
