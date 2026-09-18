@@ -153,18 +153,6 @@ alongside the main checkout, each independently on its own branch.
   in one Bash invocation (`git add agent-monitoring/data/ && git commit -m "..." && git checkout -b
   <branch> origin/<default-branch>`) to close the race window, rather than issuing them as separate
   tool calls.
-- **This chained-invocation fix does not generalize to every git operation** — confirmed on
-  2026-09-19 folding a small batch of commits from one branch onto another via `git cherry-pick`:
-  the hook rewrites the shard file between each of `cherry-pick`'s own internal steps (apply →
-  auto-merge → commit), not just between separate tool calls, so a single chained `add && commit &&
-  cherry-pick <sha>` invocation still hits "local changes would be overwritten" mid-sequence, and
-  `git cherry-pick --continue` after resolving can hit it again applying the *next* commit in a
-  multi-commit pick. The reliable pattern for a multi-step operation (cherry-pick, rebase, a
-  multi-commit merge): before each individual git step, discard whatever the hook just wrote with
-  `git checkout HEAD -- agent-monitoring/data/<week>/tools.jsonl` (safe — it's telemetry, not real
-  work, and the hook regenerates it on the next tool call), then immediately run that one step.
-  Chaining still works for a single atomic operation (plain `checkout -b`, a single `commit`); it
-  does not for anything that internally re-touches the working tree more than once.
 
 ---
 
