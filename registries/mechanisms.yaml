@@ -119,7 +119,7 @@ mechanisms:
 
   - id: combat_resolution
     layer: entity
-    depends_on: [combat_engagement, movement, status_effects, entity_role, skill_unlocks]
+    depends_on: [movement, status_effects, entity_role]
     state: done
     verified:
       instrument: corpus_run
@@ -152,7 +152,7 @@ mechanisms:
         not itself a split signal -- see that same doc's §1.
   - id: tactical_decision
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: done
     verified:
       instrument: corpus_run
@@ -173,7 +173,7 @@ mechanisms:
         and `combat_engagement` for the rest of this same finding.
   - id: combat_engagement
     layer: entity
-    depends_on: [action_pacing_readiness, personality]
+    depends_on: [personality]
     state: done
     verified:
       instrument: scenario
@@ -193,7 +193,7 @@ mechanisms:
         explicitly rather than leaving "1960 -> 837" to be read as one.
   - id: movement
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: done
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY, the falsification
   # test for the identity rule -- "if the rule doesn't split this, the rule is wrong"): this entry
@@ -222,7 +222,7 @@ mechanisms:
         deficiency in the gate itself).
   - id: readiness_speed_scaling
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: partial
     verified:
       instrument: scenario
@@ -245,7 +245,7 @@ mechanisms:
         and recalculation code are themselves correct.
   - id: interaction_channeling
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: done
   - id: conversation
     layer: entity
@@ -253,11 +253,11 @@ mechanisms:
     state: gap
   - id: entity_trade
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: gap
   - id: team_up
     layer: entity
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: gap
 
   # ── Entity layer — Profile (12 atlas cards -> 14 mechanisms, 2 splits) ─────────────────────
@@ -334,7 +334,7 @@ mechanisms:
         what `gated` means. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
   - id: evolution
     layer: entity
-    depends_on: [derived_stats]
+    depends_on: []
     state: done
     implemented_by: [src/engine/evolution.py::EvolutionSystem]
     verified:
@@ -360,7 +360,7 @@ mechanisms:
     state: partial
   - id: xp_leveling
     layer: entity
-    depends_on: [combat_resolution]
+    depends_on: []
     state: partial
     verified:
       instrument: scenario
@@ -386,7 +386,7 @@ mechanisms:
         TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME (filed, not fixed).
   - id: breakthrough_bonuses
     layer: entity
-    depends_on: [xp_leveling]
+    depends_on: []
     state: done
   - id: entity_role
     layer: entity
@@ -408,7 +408,7 @@ mechanisms:
 
   - id: self_model
     layer: entity
-    depends_on: [perception, trauma]
+    depends_on: []
     state: gated
     verified:
       instrument: code_trace
@@ -431,11 +431,11 @@ mechanisms:
     # demographic_cohort_cycle-shaped mistake this pass exists to avoid repeating.
   - id: perception
     layer: entity
-    depends_on: [cognition_capacity_fatigue]
+    depends_on: []
     state: done
   - id: emotion
     layer: entity
-    depends_on: [tactical_decision]
+    depends_on: []
     state: done
     implemented_by: [src/domains/emotion/emotion_service.py::EmotionUpdateService]
     verified:
@@ -453,7 +453,7 @@ mechanisms:
         VERIFICATION.
   - id: affection_relationship_bonds
     layer: entity
-    depends_on: [interaction_channeling]
+    depends_on: []
     state: done
   - id: motivation_doctrine
     layer: entity
@@ -495,7 +495,7 @@ mechanisms:
     state: done
   - id: belief_cycle
     layer: entity
-    depends_on: [self_model]
+    depends_on: []
     state: done
   - id: information_trust_deception
     layer: entity
@@ -512,7 +512,7 @@ mechanisms:
     state: gated
   - id: causal_spatial_memory
     layer: entity
-    depends_on: [belief_cycle]
+    depends_on: []
     state: gated
     implemented_by: [src/domains/memory/phase.py::MemoryUpdatePhase]
     verified:
@@ -527,7 +527,7 @@ mechanisms:
         implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING)."
   - id: adventure_routing
     layer: entity
-    depends_on: [motivation_doctrine, cognition_capacity_fatigue, entity_role, personality, diplomacy]
+    depends_on: [entity_role, personality, diplomacy]
     state: done
     implemented_by: [src/domains/adventure/service.py::AdventureDecisionService]
     # src/domains/adventure/service.py: AdventureDecisionService -- found while resolving
@@ -592,7 +592,7 @@ mechanisms:
     state: done
   - id: reputation
     layer: faction
-    depends_on: [affection_relationship_bonds]
+    depends_on: []
     state: done
   - id: social_memory
     layer: faction
@@ -614,7 +614,7 @@ mechanisms:
         was factually wrong. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
   - id: cross_episode_grief_nemesis
     layer: faction
-    depends_on: [campaigns]
+    depends_on: []
     state: done
     verified:
       instrument: code_trace
@@ -645,7 +645,7 @@ mechanisms:
   # into `regional_sovereignty` as declared regional content rather than given its own row.
   - id: regional_trauma
     layer: region
-    depends_on: [betrayal_siege_war]
+    depends_on: []
     state: done
     verified:
       instrument: corpus_run
@@ -662,7 +662,7 @@ mechanisms:
         open).
   - id: regional_sovereignty
     layer: region
-    depends_on: [betrayal_siege_war, world_generation]
+    depends_on: [world_generation]
     state: done
     implemented_by: [src/world/influence.py::FactionInfluenceService]
     verified:
@@ -689,7 +689,7 @@ mechanisms:
         for whoever next touches regional sovereignty.
   - id: demographic_cohort_cycle
     layer: region
-    depends_on: [regional_trauma, regional_sovereignty]
+    depends_on: []
     state: done
     implemented_by: [src/domains/demographics/cohort.py::DemographicCycleService]
     verified:
@@ -752,7 +752,7 @@ mechanisms:
   # with this split.
   - id: calamity_intensity
     layer: world
-    depends_on: [regional_sovereignty]
+    depends_on: []
     state: done
     verified:
       instrument: corpus_run
@@ -813,11 +813,11 @@ mechanisms:
   # docs/plans/mechanism_identity_and_change_taxonomy.md §4.
   - id: buildings
     layer: world
-    depends_on: [city]
+    depends_on: []
     state: done
   - id: town_services
     layer: world
-    depends_on: [city, buildings]
+    depends_on: [buildings]
     state: done
     # Flagged, not further split here: within town_services, CHURCH's own BLESSING/RESURRECTION
     # services are confirmed dead -- data-label strings with zero real code reading them anywhere
@@ -872,7 +872,7 @@ mechanisms:
 
   - id: clan
     layer: faction
-    depends_on: [betrayal_siege_war]
+    depends_on: []
     state: gap
   - id: race_collective_force
     layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
@@ -926,7 +926,7 @@ mechanisms:
         scarce even once this gate opens, on top of the flag being off today.
   - id: resource_harvesting
     layer: world
-    depends_on: [inventory_trade_conservation]
+    depends_on: []
     state: orphan
     implemented_by: [src/systems/world_systems/harvesting.py::HarvestSystem]
     # src/systems/world_systems/harvesting.py: HarvestSystem ("Processes harvesting progress,

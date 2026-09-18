@@ -57,20 +57,22 @@ def _count_mermaid_nodes(diagram: str) -> int:
 
 def test_transitive_dependents_matches_real_data(registry_data):
     # Re-derived from the real committed registry every run, not a hardcoded assumption --
-    # regenerate this if the registry's own edges genuinely change. 23 -> 24 after
-    # TCK-20260916-MECHANISM-DEPENDENCY-GRAPH-POPULATION added party_formation -> movement (cited:
-    # cooperation/services.py's real regroup-distance check) -- movement itself already depended on
-    # action_pacing_readiness, so party_formation became a new transitive dependent. 24 -> 25 after
-    # TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING registered commitment_pressure_consequences,
-    # depends_on [commitment_betrayal] -- commitment_betrayal already depended (transitively) on
-    # action_pacing_readiness via combat_resolution -> combat_engagement -> action_pacing_readiness,
-    # so the new mechanism became a new transitive dependent of it too. 25 -> 26 after
-    # TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY split action_pacing_readiness into
-    # the gate (kept under this id) and readiness_speed_scaling (new, depends_on:
-    # [action_pacing_readiness]) -- the new split-off mechanism is itself a new direct (and
-    # therefore transitive) dependent.
+    # regenerate this if the registry's own edges genuinely change. History up to 26: see git
+    # blame on this line for the 23->24->25->26 chain (party_formation, commitment_pressure_
+    # consequences, the identity-rules split). 26 -> 1 after
+    # TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT (2026-09-18) removed 6 of the 8 direct
+    # "* -> action_pacing_readiness" edges (tactical_decision, combat_engagement, movement,
+    # readiness_speed_scaling, interaction_channeling, entity_trade, team_up -- 7 named, one of
+    # which, combat_engagement, also carried several of the OTHER 25 transitively through it, e.g.
+    # commitment_pressure_consequences via combat_resolution -> combat_engagement): none of those
+    # mechanisms' own real code reads readiness as a data input, only writes readiness_delta as an
+    # output cost, with the actual gate living in the caller (LegalityServiceV2/action_router.py),
+    # not the dependent's own logic. `conversation` is the sole survivor, recorded UNCLASSIFIABLE
+    # (no real "conversation" implementation exists to check, `state: gap`) rather than confirmed.
+    # See that ticket's own stored_artifacts/.../edge_audit_results.md for the full per-edge
+    # evidence behind every removal.
     dep_map = {m["id"]: m.get("depends_on") or [] for m in registry_data["mechanisms"]}
-    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 26
+    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 1
 
 
 def test_transitive_dependents_raises_on_cycle():
@@ -196,12 +198,24 @@ def test_chart_generator_ancestors_of_produces_a_real_subgraph(registry_data):
     # (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY): it was a real *caller* of
     # combat_resolution (execution order), not a functional prerequisite for it -- see that
     # entry's own verified note and docs/plans/mechanism_identity_and_change_taxonomy.md §3.
+    # combat_engagement and skill_unlocks removed from the same depends_on list 2026-09-18
+    # (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT): resolve_attack()/
+    # resolve_skill_usage() never read either mechanism's state -- combat_engagement's own
+    # learning update is fed FROM combat_resolution's output (the reverse direction), and
+    # skill_unlocks' own gate lives entirely in the caller (SkillActions.execute_skill), same
+    # caller-relationship shape as the tactical_decision removal. movement's own depends_on on
+    # action_pacing_readiness was removed in the same audit (movement's resolve_move never reads
+    # readiness; the gate is external), so action_pacing_readiness is no longer a transitive
+    # ancestor of combat_resolution either.
     diagram = render_ancestors_chart(registry_data, "combat_resolution")
     assert "combat_resolution" in diagram
     assert "tactical_decision" not in diagram
-    assert "combat_engagement" in diagram
-    assert "action_pacing_readiness" in diagram
+    assert "combat_engagement" not in diagram
+    assert "skill_unlocks" not in diagram
+    assert "action_pacing_readiness" not in diagram
     assert "movement" in diagram
+    assert "status_effects" in diagram
+    assert "entity_role" in diagram
 
 
 def test_chart_generator_ancestors_of_unknown_mechanism_raises(registry_data):

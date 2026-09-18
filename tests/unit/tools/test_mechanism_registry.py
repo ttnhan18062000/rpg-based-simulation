@@ -222,10 +222,18 @@ def test_reader_all_mechanisms_returns_full_list(registry, registry_data):
 
 
 def test_reader_dependents_of_is_computed_not_stored(registry):
-    # action_pacing_readiness is a real hub -- several mechanisms declare it as a dependency.
+    # TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT (2026-09-18) removed 6 of the 8
+    # "* -> action_pacing_readiness" edges declared here (tactical_decision, combat_engagement,
+    # movement, readiness_speed_scaling, interaction_channeling, entity_trade, team_up): none of
+    # those mechanisms' own real code ever reads readiness as a data input -- they only WRITE
+    # readiness_delta as an output cost, and the actual gate lives entirely in the caller
+    # (LegalityServiceV2/action_router.py), not in the dependent's own logic. See that ticket's own
+    # stored_artifacts/.../edge_audit_results.md for the full per-edge evidence. `conversation` is
+    # the sole surviving edge -- recorded UNCLASSIFIABLE by that audit (no distinguishable
+    # "conversation" implementation exists to check, `state: gap`), not confirmed as a real
+    # dependency, but not disproven either -- kept rather than forced.
     dependents = registry.dependents_of("action_pacing_readiness")
-    assert "tactical_decision" in dependents
-    assert "combat_engagement" in dependents
+    assert dependents == ["conversation"]
     # A leaf with genuinely zero dependents returns an empty list, not an error.
     assert registry.dependents_of("nonexistent_mechanism_xyz") == []
 

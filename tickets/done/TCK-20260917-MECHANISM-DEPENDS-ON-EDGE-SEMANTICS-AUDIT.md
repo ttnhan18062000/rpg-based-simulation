@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT
-phase: inprogress
+phase: done
 date: 2026-09-17
 tags: [architecture, schema]
 ---
@@ -16,8 +16,7 @@ Audit all declared `depends_on` edges against the registry's own stated definiti
 already confirmed wrong, and derived priority is computed from all of them
 
 ## Status
-INPROGRESS — full 70-edge enumeration and grouping done; per-edge code verification dispatched
-2026-09-18, not yet landed (see Implementation Notes)
+DONE
 
 ## Tier
 standard
@@ -98,8 +97,8 @@ produce is measuring something other than real blast radius.
   audit checks edges against.
 
 ## Related Stored Artifacts
-`staging_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/` (investigation.md,
-plan.md, test_plan.md) — created 2026-09-18. Migrates to `stored_artifacts/` on close.
+`stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/` (investigation.md,
+plan.md, test_plan.md, edge_audit_results.md) — migrated from staging on close.
 
 ## Related Code Areas
 - `registries/mechanisms.yaml` — the ~64 edges under audit.
@@ -139,23 +138,75 @@ tier's own disposition. **Update 2026-09-18**: the `system` tier's own dispositi
 unaffected, since derived priority (`generate_mechanism_priority_view.py`) runs on the same edges
 independent of whether any tier above `mechanism` exists.
 
-**Priority raised P2 → P1, 2026-09-17.**
-`TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`'s own edge-trust counts (`combat`,
-the best-fitting candidate it tried: 3 of 8 internal edges unaudited; `economy` and the narrow
-`social` candidate: 0 of their edges audited) confirm this audit is a hard precondition for
-anything derived from `depends_on`, not merely related work — see that ticket's own §4. Whether or
-not the `system` tier is ultimately built, the underlying question (how much of the registry's own
-derived priority ranking, and any future graph-derived feature, rests on edges that predate the
-identity-rules ticket's stated `depends_on` definition) is real and current regardless of that
-tier's own disposition.
+**Completed 2026-09-18.** The dispatched fork returned a bare tally with no per-edge citations on
+its first completion, then, when re-requested with an explicit output-shape specification, falsely
+asserted the full table had "already been delivered" — content that never reached this session
+(the fourth occurrence of this fork-relay failure shape in this session; passed to
+`agent-working-design`'s pending detection ticket with the full trail). Per a pre-decided cutoff,
+the full 70-edge audit was redone by hand: **21 KEEP / 32 REMOVE / 17 UNCLASSIFIABLE**. Every REMOVE
+was applied to `registries/mechanisms.yaml` via a surgical line-level script (not a full
+`yaml.safe_dump` rewrite, which would have destroyed the file's extensive header comments) and
+verified against `tools/mechanism_registry/registry.py::validate()` (zero errors) after the edit.
+Full per-edge evidence: `stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/edge_audit_results.md`.
+
+The priority-ranking shift (AC #3) is large, not negligible: `betrayal_siege_war` dropped from the
+registry's 5th-highest derived priority (42, 14 dependents) to effectively off the ranking (3, 1
+dependent) — it was propped up almost entirely by edges that did not survive this audit. `movement`,
+`personality`, `entity_role`, and `status_effects` each lost 60-85% of their derived priority. Full
+before/after table in `edge_audit_results.md`.
+
+One incidental finding, filed separately rather than buried here per this epic's own established
+practice: `motivation_doctrine`'s registered implementation (`MotivationModel`) is a pure dataclass
+whose own docstring documents that its `doctrine`/`values` fields were already formally retired as
+dead code (`TCK-20260908-DEAD-DOCTRINE-VALUES-CHAIN-RETIREMENT`) — see
+`TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN`.
+
+3 pinned test assertions in `tests/unit/tools/test_mechanism_registry.py` and
+`tests/unit/tools/test_mechanism_priority_derivation.py` hardcoded the exact edge structure this
+audit legitimately changed (transitive-dependents count of `action_pacing_readiness`: 26 → 1;
+`combat_resolution`'s ancestor chart no longer includes `combat_engagement`/`skill_unlocks`/
+`action_pacing_readiness`) — updated with fresh evidence and citations to this ticket, not silently
+adjusted. Full scoped suite (96 tests across the 6 mechanism-registry test modules, plus
+`tests/mechanic_scenarios/`) passes after the updates.
 
 ## Test Summary
-Not yet started.
+`pytest tests/unit/tools/test_mechanism_registry.py tests/unit/tools/test_mechanism_priority_derivation.py
+tests/unit/tools/test_mechanism_registry_completeness_check.py tests/unit/tools/test_mechanism_state_caller_check.py
+tests/unit/tools/test_mechanism_artifact_convergence.py tests/unit/tools/test_mechanism_registry_graphify_check.py`
+— 96 passed (3 pinned assertions updated with fresh evidence to reflect the 32 legitimate edge
+removals; see Implementation Notes). `tests/mechanic_scenarios/` (4 tests) also passed, confirming no
+behavioral regression outside the registry tooling itself.
 
 ## Files Changed
-None yet (this ticket file only).
+- `registries/mechanisms.yaml` — 32 `depends_on` edges removed (surgical line-level edit, header
+  comments preserved), full evidence in `edge_audit_results.md`.
+- `tests/unit/tools/test_mechanism_registry.py` — updated `test_reader_dependents_of_is_computed_not_stored`.
+- `tests/unit/tools/test_mechanism_priority_derivation.py` — updated
+  `test_transitive_dependents_matches_real_data` and
+  `test_chart_generator_ancestors_of_produces_a_real_subgraph`.
+- `stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/` — investigation.md,
+  plan.md, test_plan.md, edge_audit_results.md (migrated from staging on close).
+- `tickets/todos/TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN.md` —
+  new ticket, incidental finding.
 
 ## Completion Summary
-Open. Filed per peer review after `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`
-closed with one confirmed edge correction and an explicit note that the same conflation is
-plausible elsewhere in the ~64 other declared edges, unaudited.
+**Closed. 21 KEEP / 32 REMOVE / 17 UNCLASSIFIABLE across all 70 remaining edges — every one checked,
+none sampled or assumed clean (Acceptance Criteria #1, met).** Every REMOVE carries real code
+citations at the same evidence standard as the original `combat_resolution`/`tactical_decision`
+correction (Acceptance Criteria #2, met). The priority-ranking shift was measured, not assumed
+negligible — `betrayal_siege_war` alone fell from the registry's 5th-highest derived priority to
+effectively off the list (Acceptance Criteria #3, met).
+
+The dominant pattern found: a shared "caller decided whether to invoke me" relationship
+(threshold gates like `action_pacing_readiness`, boolean unlock checks like `skill_unlocks`,
+decision routines like `tactical_decision`) was repeatedly mislabeled as a functional dependency
+across many mechanisms sharing the same dependency target — 6 of 8 `* -> action_pacing_readiness`
+edges alone were this same shape. This generalizes the single `tactical_decision` correction from
+`TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` into a systemic finding: nearly half
+(32 of 70) of the audited edges were the same caller-relationship-mislabeled-as-dependency pattern,
+not scattered one-offs.
+
+17 edges could not be classified after a genuine grep + `graphify query` search failed to locate a
+confident, distinguishable implementation for at least one side — recorded as such rather than
+forced to a verdict, per this ticket's own Acceptance Criteria and the registry's own discipline of
+recording gaps as visible rather than summarizing them away.
