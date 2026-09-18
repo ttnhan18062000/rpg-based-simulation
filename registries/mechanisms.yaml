@@ -1047,3 +1047,39 @@ mechanisms:
     # engine/quests.py:227. abandonment.py (AbandonmentEvaluator.evaluate_abandonment) is called
     # live from observability/event_extractor.py, default-ON via ENABLE_PUSH_EVENT_SHAPERS_AGENCY.
     # Real, live pieces alongside genuinely dead ones in the same domain -- partial, not done.
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# UNAUDITED DEPENDS_ON EDGES (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT, 2026-09-18)
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# The audit above checked all 70 non-`combat_resolution` edges against this file's own stated
+# depends_on test (does the dependent's own real code need the dependency's state/output to
+# already exist, independent of call direction) and reached a real verdict for 53 of them (21
+# KEEP, 32 REMOVE -- removed from depends_on above). For these 17, a genuine grep + graphify
+# search failed to locate a confident, distinguishable implementation for at least one side, so
+# no verdict was possible without guessing. Per this registry's own discipline for `unverified`
+# mechanisms (a real state renders as visible, never as assumed-benign silence), these 17 edges
+# remain declared in depends_on above -- not disproven -- but are listed here so any
+# priority/ranking output can state "N of these edges are unvalidated" instead of silently
+# treating an unaudited edge as equivalent to a confirmed one. Full per-edge evidence (what was
+# searched, why no verdict was reachable) is in
+# stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/edge_audit_results.md.
+# Each entry is [dependent, dependency], matching one line already present in that mechanism's own
+# depends_on list above -- validate() checks both.
+unaudited_depends_on_edges:
+  - [conversation, action_pacing_readiness]
+  - [class_assignment, race_archetype]
+  - [build_diversity, class_assignment]
+  - [trauma, combat_resolution]
+  - [motivation_doctrine, goal_hierarchy]
+  - [motivation_doctrine, affection_relationship_bonds]
+  - [commitment_betrayal, combat_resolution]
+  - [goal_hierarchy, belief_cycle]
+  - [goal_hierarchy, reputation]
+  - [committed_intentions, goal_hierarchy]
+  - [country_lifecycle, betrayal_siege_war]
+  - [city, regional_sovereignty]
+  - [ruins_mines_battlefields, regional_trauma]
+  - [ruins_mines_battlefields, regional_sovereignty]
+  - [nest, camp]
+  - [settlement_capacity_axis, race_archetype]
+  - [commitment_pressure_consequences, commitment_betrayal]

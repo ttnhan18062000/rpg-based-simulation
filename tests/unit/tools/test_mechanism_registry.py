@@ -384,6 +384,72 @@ def test_validator_accepts_absent_implemented_by():
     assert validate(fixture) == []
 
 
+# ── invariant 8: unaudited_depends_on_edges (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT) ──
+
+
+def test_validator_accepts_absent_unaudited_depends_on_edges():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": ["bar"], "state": "done"},
+            {"id": "bar", "layer": "entity", "depends_on": [], "state": "done"},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_accepts_unaudited_edge_matching_a_real_depends_on_pair():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": ["bar"], "state": "done"},
+            {"id": "bar", "layer": "entity", "depends_on": [], "state": "done"},
+        ],
+        "unaudited_depends_on_edges": [["foo", "bar"]],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_rejects_unaudited_edge_that_is_not_a_declared_depends_on():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done"},
+            {"id": "bar", "layer": "entity", "depends_on": [], "state": "done"},
+        ],
+        # foo does not depend_on bar in this fixture -- stale marker.
+        "unaudited_depends_on_edges": [["foo", "bar"]],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for an unaudited edge with no matching depends_on"
+    assert any("foo" in e and "bar" in e and "stale" in e.lower() for e in errors), errors
+
+
+def test_validator_rejects_unaudited_edge_naming_unknown_mechanism():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done"},
+        ],
+        "unaudited_depends_on_edges": [["nonexistent_mechanism", "foo"]],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for an unaudited edge naming an unknown mechanism"
+    assert any("nonexistent_mechanism" in e for e in errors), errors
+
+
+def test_real_registry_unaudited_edges_all_resolve(registry_data):
+    """The real committed registry's own unaudited_depends_on_edges list validates clean -- every
+    entry names a currently-declared depends_on edge, none stale."""
+    assert validate(registry_data) == []
+    unaudited = registry_data.get("unaudited_depends_on_edges") or []
+    assert len(unaudited) == 17, (
+        f"expected 17 unaudited edges from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT, "
+        f"found {len(unaudited)} -- if this genuinely changed, update this pinned count with a "
+        f"citation, don't just adjust the number"
+    )
+
+
 @pytest.mark.parametrize("instrument", sorted(VALID_INSTRUMENTS))
 def test_validator_accepts_all_four_instruments(instrument):
     fixture = {

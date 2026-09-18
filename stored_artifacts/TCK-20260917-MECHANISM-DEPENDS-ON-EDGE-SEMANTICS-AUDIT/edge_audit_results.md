@@ -299,3 +299,48 @@ mechanisms that were previously buried below the view's cutoff now surface
 them lost their unearned priority. This confirms the ticket's own motivating concern: **the "what to
 fix next" ranking this registry exists to produce was measuring something other than real blast
 radius** for a substantial fraction of the registry before this audit.
+
+### `tactical_decision` and `action_pacing_readiness`, the two pre-audit #1s, both checked directly
+
+Both mechanisms were already `verified` before this audit, so neither appears in
+`unverified_priority_ranking()`'s own output (that view is explicitly "which unverified mechanism to
+check next" — a verified mechanism is correctly excluded regardless of its raw priority number).
+Checked directly against `priority()`/`transitive_dependents()` with `verified` status ignored, to
+answer peer review's question plainly:
+
+| Mechanism | Priority before → after | Transitive dependents before → after |
+|---|---|---|
+| `tactical_decision` | ~115–125 (peer's own recollection; not independently re-derived from a saved snapshot) → **0** | 23–25 → **0** |
+| `action_pacing_readiness` | ~115–125 → **5** | 23–25 → **1** |
+
+Recomputed the full all-mechanisms ranking (verified + unverified) after the 32 removals: neither
+mechanism appears in the top 10 of any ranking, verified-inclusive or unverified-only. Top 10
+all-mechanisms, for reference: `entity_role` (25/5), `movement` (25/5), `belief_cycle` (20/4),
+`status_effects` (20/4), `combat_resolution` (15/3, verified), `race_archetype` (15/3),
+`goal_hierarchy` (10/2), `personality` (10/2), `reputation` (9/3), `regional_trauma` (8/4, verified).
+
+`tactical_decision`'s own investigation (`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`,
+dispatched because this mechanism was the #1-priority unverified target at the time) still stands on
+its own real corpus measurement (the ATTACK-path rarity it found is independently true regardless of
+why the mechanism was selected) — but the *selection* itself rested on edges that did not survive
+this audit, and that should be stated plainly rather than discovered later by someone re-deriving
+the ranking and finding it silently changed underneath them.
+
+## Registry-visible marking of the 17 UNCLASSIFIABLE edges (peer-review addendum, same day)
+
+Recording 17 edges as UNCLASSIFIABLE in this artifact, while leaving them declared with no marker in
+`registries/mechanisms.yaml` itself, meant any consumer of the priority ranking (this audit's own
+motivating concern) was computing over 17 edges (24% of the 70 audited) of unconfirmed validity with
+no visible indication of that fact — the same "a real state renders as silence" failure this
+registry's own `verified: null` discipline exists to prevent for mechanisms, one level down at the
+edge level.
+
+Fixed by adding a new top-level `unaudited_depends_on_edges` list to `registries/mechanisms.yaml`
+(the same 17 `[dependent, dependency]` pairs enumerated above), a new validator invariant (#8:
+every entry must name a real, currently-declared `depends_on` pair, so a stale marker cannot
+misrepresent an edge as audited after the edge itself changes), and a new
+`count_unaudited_edges_in_transitive_dependents()` function wired into
+`unverified_priority_ranking()`'s own row shape and `render_top_n_table()`'s own rendered output —
+every row of the priority view now states how many of the edges behind its own transitive-dependent
+count are unaudited, and the table carries a total-count caveat line. See this ticket's own Files
+Changed for the full list of touched files.

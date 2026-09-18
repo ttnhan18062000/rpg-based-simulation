@@ -179,11 +179,29 @@ behavioral regression outside the registry tooling itself.
 
 ## Files Changed
 - `registries/mechanisms.yaml` — 32 `depends_on` edges removed (surgical line-level edit, header
-  comments preserved), full evidence in `edge_audit_results.md`.
-- `tests/unit/tools/test_mechanism_registry.py` — updated `test_reader_dependents_of_is_computed_not_stored`.
+  comments preserved), full evidence in `edge_audit_results.md`. **Addendum, same day**: added a new
+  top-level `unaudited_depends_on_edges` list (the 17 UNCLASSIFIABLE edges), per peer review —
+  leaving them declared with no visible marker meant priority was computed over 24% unvalidated
+  edges with no indication of that in any derived output, the same "silence reads as benign" failure
+  this registry's own `verified: null` convention exists to prevent for mechanisms.
+- `tools/mechanism_registry/registry.py` — added invariant 8 (every `unaudited_depends_on_edges`
+  entry must name a real, currently-declared `depends_on` pair — a stale marker would misrepresent
+  an unchecked edge as audited) and
+  `count_unaudited_edges_in_transitive_dependents()`, wired into `unverified_priority_ranking()`'s
+  own row shape as `unaudited_edge_count`.
+- `tools/mechanism_registry/generate_mechanism_charts.py` — `render_top_n_table()` gained an
+  "Unaudited Edges" column per row plus a total-count caveat line, so any consumer of the priority
+  view sees the unaudited fraction directly rather than needing to cross-reference a separate list.
+- `tools/mechanism_registry/__init__.py` — re-exported `count_unaudited_edges_in_transitive_dependents`.
+- `tests/unit/tools/test_mechanism_registry.py` — updated `test_reader_dependents_of_is_computed_not_stored`;
+  added 5 tests for invariant 8 (accept/reject shapes, plus a pinned count on the real registry).
 - `tests/unit/tools/test_mechanism_priority_derivation.py` — updated
   `test_transitive_dependents_matches_real_data` and
-  `test_chart_generator_ancestors_of_produces_a_real_subgraph`.
+  `test_chart_generator_ancestors_of_produces_a_real_subgraph`; added 5 tests for
+  `count_unaudited_edges_in_transitive_dependents` and the new table column.
+- `docs/brainstorm/mechanism_priority_view.md`, `docs/brainstorm/mechanism_registry_view.md` —
+  regenerated (`make mechanism-priority-view` / `make mechanism-registry-view`), reflecting both the
+  32 edge removals and the new unaudited-edge column.
 - `stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/` — investigation.md,
   plan.md, test_plan.md, edge_audit_results.md (migrated from staging on close).
 - `tickets/todos/TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN.md` —
@@ -210,3 +228,35 @@ not scattered one-offs.
 confident, distinguishable implementation for at least one side — recorded as such rather than
 forced to a verdict, per this ticket's own Acceptance Criteria and the registry's own discipline of
 recording gaps as visible rather than summarizing them away.
+
+**Addendum (peer review, same day): the ranking re-derivation this closure implies was made
+explicit, and the 17 UNCLASSIFIABLE edges were made visible in the registry itself, not just in this
+ticket's own artifact.**
+
+Re-deriving the priority ranking after the 32 removals confirms the practical stakes were real, not
+academic: `tactical_decision` — ranked #1 unverified priority before this audit, which is why
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own ATTACK-path work was dispatched
+against it — now has **priority 0, zero transitive dependents**, and does not appear in the top 10
+of any ranking (unverified-only or all-mechanisms). `action_pacing_readiness`, the other pre-audit
+#1, collapsed from 23–25 transitive dependents to 1. Neither collapse invalidates that
+investigation's own measurement (the real ATTACK-path rarity it found stands on its own corpus
+data) — but the *selection* of that mechanism as the highest-priority target rested on edges that
+did not survive this audit, and that should be stated plainly rather than left to be discovered
+later.
+
+A new `unaudited_depends_on_edges` list was added to `registries/mechanisms.yaml` itself (the 17
+UNCLASSIFIABLE edges, still declared in `depends_on` — not disproven, just unconfirmed), with a new
+validator invariant (#8) keeping it honest against drift, and a new `unaudited_edge_count` per row
+in the priority ranking output so any derived view states how many of the edges behind a given
+mechanism's priority are unvalidated, rather than treating "declared" and "confirmed" as the same
+thing. This is the same principle `verified: null` already applies to mechanisms, extended to edges.
+
+Also worth recording plainly: `betrayal_siege_war`'s collapse (5th-highest derived priority, 14
+dependents, down to 3/1) vindicates the user's own earlier decision to deprioritize the faction-war
+mechanism on two independent counts — first the layer-weight-vs-rank inversion bug
+(`TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED`), now a second, unrelated cause (inflated
+edges) kept surfacing the same mechanism the user had already flagged as lower-priority. Their
+instinct outran the registry's own derived data twice.
+
+Full priority before/after detail (including the re-derivation above) is in this ticket's own
+`edge_audit_results.md`.

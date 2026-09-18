@@ -14,6 +14,7 @@ import yaml
 
 from tools.mechanism_registry import (
     DependencyCycleError,
+    count_unaudited_edges_in_transitive_dependents,
     priority,
     transitive_dependencies_of,
     transitive_dependents,
@@ -256,6 +257,45 @@ def test_top_n_table_matches_ranking(registry_data):
     ranking = unverified_priority_ranking(registry_data)[:3]
     for row in ranking:
         assert row["id"] in table
+
+
+# ── unaudited-edge visibility (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT) ─────────
+
+
+def test_count_unaudited_edges_zero_when_none_declared():
+    dep_map = {"a": ["b"], "b": []}
+    assert count_unaudited_edges_in_transitive_dependents("b", dep_map, set()) == 0
+
+
+def test_count_unaudited_edges_counts_a_direct_edge():
+    dep_map = {"a": ["b"], "b": []}
+    unaudited = {("a", "b")}
+    assert count_unaudited_edges_in_transitive_dependents("b", dep_map, unaudited) == 1
+
+
+def test_count_unaudited_edges_counts_transitively():
+    # c -> b -> a: both edges feed a's own transitive-dependent count.
+    dep_map = {"a": [], "b": ["a"], "c": ["b"]}
+    unaudited = {("b", "a"), ("c", "b")}
+    assert count_unaudited_edges_in_transitive_dependents("a", dep_map, unaudited) == 2
+    # An edge outside a's own transitive-dependent chain does not count.
+    dep_map2 = {"a": [], "b": ["a"], "x": ["y"], "y": []}
+    unaudited2 = {("x", "y")}
+    assert count_unaudited_edges_in_transitive_dependents("a", dep_map2, unaudited2) == 0
+
+
+def test_priority_ranking_rows_include_unaudited_edge_count(registry_data):
+    ranking = unverified_priority_ranking(registry_data)
+    for row in ranking:
+        assert "unaudited_edge_count" in row
+        assert row["unaudited_edge_count"] >= 0
+
+
+def test_top_n_table_surfaces_unaudited_edge_column_and_total(registry_data):
+    table = render_top_n_table(registry_data, n=5)
+    assert "Unaudited Edges" in table
+    total = len(registry_data.get("unaudited_depends_on_edges") or [])
+    assert str(total) in table
 
 
 def test_wiring_map_classdef_check_script_passes_on_real_files():

@@ -11,33 +11,35 @@ more depends on it. Ranked below, top 25.
 
 ## Text form
 
-| Mechanism | Layer | State | Priority | Transitive Dependents |
-|---|---|---|---|---|
-| `entity_role` | entity | done | 25 | 5 |
-| `movement` | entity | done | 25 | 5 |
-| `belief_cycle` | entity | done | 20 | 4 |
-| `status_effects` | entity | partial | 20 | 4 |
-| `race_archetype` | entity | done | 15 | 3 |
-| `goal_hierarchy` | entity | done | 10 | 2 |
-| `personality` | entity | done | 10 | 2 |
-| `reputation` | faction | done | 9 | 3 |
-| `affection_relationship_bonds` | entity | done | 5 | 1 |
-| `aging_death` | entity | done | 5 | 1 |
-| `attributes_biology` | entity | done | 5 | 1 |
-| `class_assignment` | entity | partial | 5 | 1 |
-| `commitment_betrayal` | entity | done | 5 | 1 |
-| `betrayal_siege_war` | faction | done | 3 | 1 |
-| `campaigns` | world | done | 3 | 3 |
-| `diplomacy` | faction | done | 3 | 1 |
-| `social_memory` | faction | skeleton | 3 | 1 |
-| `world_generation` | world | done | 3 | 3 |
-| `buildings` | world | done | 2 | 2 |
-| `inventory_trade_conservation` | world | done | 2 | 2 |
-| `adventure_routing` | entity | done | 0 | 0 |
-| `belief_institution` | world | partial | 0 | 0 |
-| `breakthrough_bonuses` | entity | done | 0 | 0 |
-| `build_diversity` | entity | gap | 0 | 0 |
-| `building_sabotage` | world | done | 0 | 0 |
+_17 of this registry's declared `depends_on` edges are unaudited (see `unaudited_depends_on_edges` in `registries/mechanisms.yaml`) -- the "Unaudited Edges" column below is how many of those fall within each row's own transitive-dependent count, not assumed zero._
+
+| Mechanism | Layer | State | Priority | Transitive Dependents | Unaudited Edges |
+|---|---|---|---|---|---|
+| `entity_role` | entity | done | 25 | 5 | 3 |
+| `movement` | entity | done | 25 | 5 | 3 |
+| `belief_cycle` | entity | done | 20 | 4 | 3 |
+| `status_effects` | entity | partial | 20 | 4 | 3 |
+| `race_archetype` | entity | done | 15 | 3 | 3 |
+| `goal_hierarchy` | entity | done | 10 | 2 | 2 |
+| `personality` | entity | done | 10 | 2 | 0 |
+| `reputation` | faction | done | 9 | 3 | 3 |
+| `affection_relationship_bonds` | entity | done | 5 | 1 | 1 |
+| `aging_death` | entity | done | 5 | 1 | 0 |
+| `attributes_biology` | entity | done | 5 | 1 | 0 |
+| `class_assignment` | entity | partial | 5 | 1 | 1 |
+| `commitment_betrayal` | entity | done | 5 | 1 | 1 |
+| `betrayal_siege_war` | faction | done | 3 | 1 | 1 |
+| `campaigns` | world | done | 3 | 3 | 0 |
+| `diplomacy` | faction | done | 3 | 1 | 0 |
+| `social_memory` | faction | skeleton | 3 | 1 | 0 |
+| `world_generation` | world | done | 3 | 3 | 2 |
+| `buildings` | world | done | 2 | 2 | 0 |
+| `inventory_trade_conservation` | world | done | 2 | 2 | 0 |
+| `adventure_routing` | entity | done | 0 | 0 | 0 |
+| `belief_institution` | world | partial | 0 | 0 | 0 |
+| `breakthrough_bonuses` | entity | done | 0 | 0 | 0 |
+| `build_diversity` | entity | gap | 0 | 0 | 0 |
+| `building_sabotage` | world | done | 0 | 0 | 0 |
 
 ## Chart form
 
