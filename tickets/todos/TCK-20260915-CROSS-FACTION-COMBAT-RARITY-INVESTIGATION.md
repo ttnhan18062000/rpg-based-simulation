@@ -498,6 +498,105 @@ narrowed as primary causes.
 finding is substantial enough to warrant its own scoped follow-up rather than open-ended
 continuation inside an already-large investigation.
 
+## Addendum — 2026-09-19, resumed per user decision relayed by peer, reframed to "why does the
+## decision layer never see the enemies the movement layer is already attacking" — root cause
+## found and measured, not yet fixed
+
+**Context**: resumed directly from
+`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (closed 2026-09-18), which found
+`hostiles` non-empty in **0 of 1130** real `evaluate_entity_intent` calls across
+`crowded_frontier`/`quest_dense_frontier`/`hero_guild_routing`, while the incidental
+opportunity-attack mechanic (`resolve_multi_attack()`, reached via `movement.py`) fires 181-2177
+times per 1000-2000 ticks in the same worlds (per this ticket's own 2026-09-17 addendum). Peer's
+own framing: "the rarity question isn't 'why is combat rare' — it's 'why does the decision layer
+never see the enemies the movement layer is already attacking?'" — with three specific checks.
+
+**Check 1 — what actually populates `hostiles`.** Traced `TacticalDecisionSystem.evaluate_entity_
+intent`'s hostiles-loop (`src/engine/tactical.py:182-226`) directly: for each perception-filtered
+`neighbor`, alive+active, passing `PerceptionGate.can_perceive()`, a neighbor is appended to
+`hostiles` only if `FactionSemanticsService.is_hostile_compat(src_faction_id, tgt_faction_id,
+RelationContext(...))` returns `True`. `is_hostile_compat()` (`src/content_semantics/faction.py:
+159-206`) is fully catalog-driven: it first checks for a real authored `faction_relationships.yaml`
+entry or a `perspectives.yaml` projection between the two real content-faction IDs (not the raw
+legacy 4-value `Faction` enum), classifying via `RelationProjectionService.project_relation()`'s
+`enemy`/`threat`/`intruder` labels; only when neither exists does it fall back to the generic
+`alignment_bucket` rule (`invader` hostile to all non-invaders). This confirms and extends this
+ticket's own 2026-09-15 candidate-1 finding: the decision layer's hostility source is real,
+catalog-authored per-pair data, not a coarse bucket check.
+
+**Check 2 — is that source ever true in these worlds.** Yes, directly confirmed by re-reading
+`data/content/social/factions.yaml`: `goblin_warband` (`alignment_bucket: invader`) and
+`orc_clan` (`alignment_bucket: rival`) are two real, distinct catalog factions — exactly the
+"weaker_rival_fear" pairing peer named — and this ticket's own earlier candidate-1 pass already
+found real authored `hostility: "high"` relationship entries between comparable pairs
+(`bandit_company`/`hero_guild`, `orc_to_goblin`, etc.) in `crowded_frontier`'s own roster. The
+decision layer's hostility source is not empty of real content — it has real hostile pairs to
+find, when a `neighbor` of the right faction is actually in `neighbors` and passes perception.
+
+**Check 3 — does the opportunity-attack path consult the same source, and if not, does that
+account for the gap.** **No — and this is the decisive finding, measured directly, not inferred.**
+`movement.py`'s opportunity-attack trigger (`src/engine/movement.py:232-242`) reads
+`engaged_hostiles` from `LegalityServiceV2.get_engaged_hostiles_at_pos()`
+(`src/engine/legality.py:517-559`), which determines hostility as `my_faction != other.identity.
+faction` — the **raw legacy 4-value `Faction` enum** (`HERO_GUILD`/`MONSTER_HORDE`/
+`TOWN_COUNCIL`/`NEUTRAL`), the same field previously found misused by `SensoryFilter.filter_
+saliency` (this ticket's own candidate 4) — never calling `is_hostile_compat()`, `FactionSemantics
+Service`, or any catalog data at all. Confirmed by direct catalog read that this collapses
+genuinely distinct, catalog-authored-hostile factions into the same bucket:
+`goblin_warband.legacy_engine_bucket = "MONSTER_HORDE"` and `orc_clan.legacy_engine_bucket =
+"MONSTER_HORDE"` — identical — so `get_engaged_hostiles_at_pos()` can **never** flag them as
+engaged against each other, no matter how hostile the real catalog says they are, because the
+raw-enum check only ever distinguishes across the 4 legacy buckets, never within one.
+
+**Measured directly, not just reasoned about**: instrumented
+`LegalityServiceV2.get_engaged_hostiles_at_pos()` to independently re-classify every real adjacent
+occupant pair it evaluates via `is_hostile_compat()` on the side, over real 2000-tick runs
+(`WorldCompiler.compile()`, `LocalSequentialExecutor`, seed 42):
+
+| World | Total pair-checks | Both agree hostile | Both agree not-hostile | **Legacy says hostile, catalog says NOT** (false-positive engagement) | **Catalog says hostile, legacy says NOT** (blocked real rivalry) |
+|---|---|---|---|---|---|
+| `crowded_frontier` | 21366 | 982 | 19787 | **506** | **91** |
+| `hero_guild_routing` | 20254 | 78 | 17556 | **2620** | 0 |
+| `quest_dense_frontier` | 1022 | 0 | 1022 | 0 | 0 |
+
+The two sources disagree on a large share of exactly the pairs that matter (where either source
+says "hostile" at all): in `crowded_frontier`, 506 of 1488 legacy-triggered pairs (34%) are
+between factions the real catalog does **not** consider hostile (`hero_guild`/`merchant_league`,
+`hero_guild`/`town_council`, `goblin_warband`/`merchant_league`, `merchant_league`/`town_council`
+— friendly/neutral factions engaging each other under the raw-enum test alone); in
+`hero_guild_routing` it is far more extreme — **2620 of 2698 legacy-triggered pairs (97%) are
+not real catalog hostility at all.** The reverse direction is real too, if smaller in this sample:
+`crowded_frontier`'s 91 `catalog_only` cases are exclusively `(bandit_company, goblin_warband)` —
+a real, specific authored relationship (both catalogued `alignment_bucket: invader`, so the
+generic bucket-vs-bucket fallback rule alone would not make them hostile either; the real
+authored `faction_relationships.yaml`/perspective entry between them is what `is_hostile_compat()`
+picks up) that the legacy-enum path can never see because both factions share
+`legacy_engine_bucket: "MONSTER_HORDE"`.
+
+**This is the whole answer, exactly as peer's framing predicted, and now with numbers**: the
+opportunity-attack path (`resolve_multi_attack()`, the mechanic actually producing 181-2177 real
+combat resolutions per 1000-2000 ticks in these worlds) is driven almost entirely by a coarse,
+catalog-blind legacy-enum comparison that both over-triggers (friendly/neutral factions fighting
+each other because they happen to sit in different legacy buckets — the dominant effect measured
+here, 506-2620 spurious engagements) and under-triggers (real catalog-authored rivalries within
+the same legacy bucket, like `bandit_company`/`goblin_warband` or the `goblin_warband`/`orc_clan`
+pairing peer named, structurally unable to ever engage via this path). Meanwhile the
+decision-driven `ATTACK` path, which *does* consult the real catalog correctly, essentially never
+fires at all (0-2 per 2000 ticks, per the closed tactical-attack-path investigation) — so almost
+none of the real combat volume in these worlds is governed by the game's own authored hostility
+model. The two findings compose: it is not just that the decision layer rarely runs — when the
+mechanic that *does* run frequently decides who fights, it is consulting a different, much
+cruder, and demonstrably wrong-in-both-directions notion of "hostile" than the one the content
+catalog actually defines.
+
+**Not fixed in this pass, per this ticket's own Scope** ("if a real, scoped fix is found, propose
+it for peer review before building — this affects combat/targeting broadly, not just the faction
+subsystem") — `LegalityServiceV2.get_engaged_hostiles_at_pos()` is a shared legality primitive with
+its own call sites beyond the opportunity-attack trigger (e.g. the `skip_oa`/escape-tag logic in
+the same function, and `get_engaged_hostiles_at_pos` at `movement.py:100` for hypothetical-position
+checks during pathing), so swapping its hostility test for `is_hostile_compat()` needs a scoped
+follow-up, not a same-pass edit. Filed as the concrete next step for whoever picks this up.
+
 ## Completion Summary
 **Investigation still paused (not closed).** Real progress across two sessions: six candidate root
 causes traced and falsified with direct evidence in the original 2026-09-15 pass (catalog
