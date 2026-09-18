@@ -18,8 +18,8 @@ authority come from document frontmatter; brainstorm sources are listed only whe
 references `docs/brainstorm/`.
 
 `docs/plans/archive/` is excluded. Multi-file plan packages are collapsed into one program row, so
-milestone and supporting files are not repeated individually. This snapshot summarizes 96 Markdown
-files as 36 plan records; `plans_tracking.md` excludes itself.
+milestone and supporting files are not repeated individually. This snapshot summarizes 97 Markdown
+files as 37 plan records; `plans_tracking.md` excludes itself.
 
 ### Status key
 
@@ -35,6 +35,7 @@ files as 36 plan records; `plans_tracking.md` excludes itself.
 |---|---|---|---|---|---:|
 | [AI-first engineering hardening program](agent_infrastructure/ai_first_hardening_epics/roadmap.md) | Hardens agent workflows, governance, guardrails, review independence, telemetry, and evaluation. | `active` | `P0 roadmap; P1/P2 children` | [ai_first_architecture_maturity_review.html](../brainstorm/agent-working-design/ai_first_architecture_maturity_review.html)<br>[ai_first_engineering_next_evolution_proposal.html](../brainstorm/agent-working-design/ai_first_engineering_next_evolution_proposal.html) | 9 |
 | [Idea: Context-Efficient Agent Retrieval and Observability](agent_infrastructure/context_efficient_agent_retrieval/idea_context_efficient_agent_retrieval_observability.md) | Explores Context-Efficient Agent Retrieval and Observability. | `active` | `P2` | — | 1 |
+| [Plan: Headroom Context-Compression Bounded Trial](agent_infrastructure/headroom_context_compression_trial.md) | Reversible, opt-in trial of a third-party compression layer; also the repo's first real token telemetry. | `active` | `P2` | — | 1 |
 | [Idea: Distinguish Active Work Time from Idle/Session-Pause Gaps in Agent Monitoring Duration](agent_infrastructure/idea_agent_monitoring_active_duration.md) | Explores Distinguish Active Work Time from Idle/Session-Pause Gaps in Agent Monitoring Duration. | `idea` | `P2` | — | 1 |
 | [Implementation Plan: Provider-Agnostic Agent Orchestration](agent_infrastructure/provider_agnostic_orchestration/implementation_plan.md) | Implementation plan for Provider-Agnostic Agent Orchestration. | `historical` | `P1` | — | 1 |
 | [Aseprite Agent-Controlled Pixel-Art — Draft Milestone Plan Package](aseprite-mcp-pixel-art/README.md) | Draft milestone plan for agent-controlled Aseprite pixel-art drawing (CAP-A/CAP-B), gated behind authority/preflight contracts; execution remains NO-GO pending separate authorization. | `active` | `P1` | [aseprite_mcp_pixel_art_workflow_proposal.md](../brainstorm/render-and-art/aseprite_mcp_pixel_art_workflow_proposal.md) | 8 |

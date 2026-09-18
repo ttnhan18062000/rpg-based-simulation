@@ -46,7 +46,7 @@ from validate_frontmatter import (  # noqa: E402
     check_ticket_location_consistency,
 )
 from generate_registry import generate_registry, parse_body_section, _strip_frontmatter  # noqa: E402
-from ticket_field_values import check_ticket_field_values, TIER_VALUES  # noqa: E402
+from ticket_field_values import check_ticket_field_values, TIER_VALUES, WORKFLOW_STATUS_VALUES  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
 
@@ -144,6 +144,38 @@ def _count_rows_for_ticket(csv_path: Path, ticket_id: str) -> int:
             if ticket_id in row:
                 count += 1
     return count
+
+
+def _rows_for_ticket(csv_path: Path, ticket_id: str) -> list:
+    """Same matching rule and same column-shift tolerance as `_count_rows_for_ticket` (scans
+    every column, never assumes a fixed column index), but returns the matching rows themselves
+    rather than just a count — needed by `check_working_log_exactly_one_row` to distinguish a
+    legitimate reopen from a real duplicate, which requires looking at each row's own status."""
+    if not csv_path.exists():
+        return []
+    rows = []
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        next(reader, None)  # header row
+        for row in reader:
+            if ticket_id in row:
+                rows.append(row)
+    return rows
+
+
+def _status_for_row(row: list) -> str:
+    """Best-effort extraction of a working_log row's own `## Status` value: scans every column
+    for a canonical `WORKFLOW_STATUS_VALUES` literal rather than assuming a fixed column index —
+    the same column-shift tolerance `_count_rows_for_ticket`/`_rows_for_ticket` already apply to
+    matching the ticket_id itself. Returns the sentinel `"<unparseable>"` (not `None`) when no
+    column matches any canonical status, so two such rows for the same ticket still collide onto
+    one dict key in `check_working_log_exactly_one_row` and read as a possible duplicate rather
+    than silently passing — the conservative direction for data the check cannot confidently
+    parse."""
+    for cell in row:
+        if cell in WORKFLOW_STATUS_VALUES:
+            return cell
+    return "<unparseable>"
 
 
 # ---------------------------------------------------------------------------
@@ -825,12 +857,47 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
 def check_working_log_exactly_one_row(
     ticket_id: str, csv_path: Path = Path("tickets/working_log.csv")
 ) -> tuple[str, str]:
-    count = _count_rows_for_ticket(csv_path, ticket_id)
-    if count == 1:
-        return ("PASS", f"Exactly 1 working_log row found for {ticket_id}")
-    if count == 0:
+    """PASS iff there is at most one working_log row per *(ticket_id, status)* pair for this
+    ticket, not at most one row per ticket_id overall (TCK-20260913-DONE-CHECKER-WORKING-LOG-
+    ROW-COUNT-REJECTS-LEGITIMATE-REOPEN). CLAUDE.md's own ticket format lists `BLOCKED` as a
+    valid `## Status`, and a ticket legitimately closed `BLOCKED` and later reopened and closed
+    `DONE` produces two real, correct rows with two different statuses — that must PASS. Two
+    rows with the SAME status (most commonly two `DONE` rows from an accidental double Finalize)
+    is the real defect this check exists to catch, and still FAILs.
+
+    Deliberately keeps full discriminating power rather than being loosened or removed: per the
+    ticket's own Cross-Gate Interaction Warning, this check and
+    `working_log_content_duplicate_check.py`'s own ratchet are the only two remaining mechanisms
+    that catch the dual-writer duplicate-row class after TCK-20260914-DONE-CHECKER-UNREACHABLE-
+    FROM-HAND-ORCHESTRATED-CLOSURE — the sole-writer AST guard structurally cannot see it, since
+    both writers involved are sanctioned. Do not apply the "remove the gate, keep the number"
+    precedent from the sidecar-attribution/citation-resolution floors here; that precedent is for
+    a metric that moves on every ordinary ticket close/open corpus-wide, not for a per-ticket
+    write-count invariant that only ever moves when a real duplicate write happens.
+    """
+    rows = _rows_for_ticket(csv_path, ticket_id)
+    if not rows:
         return ("FAIL", "no working_log row found — Finalize did not append")
-    return ("FAIL", f"{count} rows found — duplicate Finalize run")
+
+    status_counts: dict = {}
+    for row in rows:
+        status = _status_for_row(row)
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+    duplicated = {status: n for status, n in status_counts.items() if n > 1}
+    if duplicated:
+        return (
+            "FAIL",
+            f"{len(rows)} row(s) found for {ticket_id}, with a real duplicate at status(es) "
+            f"{duplicated} — duplicate Finalize run",
+        )
+    if len(rows) == 1:
+        return ("PASS", f"Exactly 1 working_log row found for {ticket_id}")
+    return (
+        "PASS",
+        f"{len(rows)} working_log row(s) found for {ticket_id}, one per distinct status "
+        f"({sorted(status_counts)}) — a legitimate reopen, not a duplicate",
+    )
 
 
 def check_monitoring_write_recorded(
