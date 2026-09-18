@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION
-phase: open
+phase: done
 date: 2026-09-17
 tags: [architecture, documentation, investigation]
 ---
@@ -16,8 +16,7 @@ Derive candidate systems by hand against the real graph and report whether the t
 contact — investigate, build nothing
 
 ## Status
-INPROGRESS — investigation complete, findings reported to peer, held for review before final
-closure per explicit request
+DONE
 
 ## Tier
 standard
@@ -199,12 +198,11 @@ ancestor traversal).** Three separate, independent problems, each sufficient on 
    requires picking the *right* root, with no stated method for choosing between plausible
    candidates, isn't yet a design.
 
-**If this tier is pursued at all, it should be re-scoped as proceed-with-changes, not proceed:**
-multi-root aggregation as the schema's own default (not a special case), sequenced strictly after
-`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` lands (not merely related to it), and with
-a stated, checkable method for choosing/validating roots before any system is declared in the
-registry. Axes should attach to mechanisms, not systems, independent of whichever system design (if
-any) is eventually built.
+**Superseded below, 2026-09-18, before this ticket closed**: the paragraph above originally left a
+"proceed-with-changes" door open via multi-root aggregation. Peer review closed that door — see
+this ticket's own Completion Summary for why multi-root aggregation is declared membership in
+disguise, not a real fix. Final disposition: **do not build, full stop.** The axis-attachment
+conclusion (mechanisms, not systems) stands unchanged and is carried forward in its own ticket.
 
 ## Test Summary
 Investigation only — no code, schema, field, or generator built, per this ticket's own explicit
@@ -216,8 +214,37 @@ scope. The throwaway derivation script and its full output are preserved in
   own investigation.md/plan.md/test_plan.md.
 
 ## Completion Summary
-**Investigation complete, held for peer/user review before final closure** — reported per explicit
-request to read the findings against the design conversation while it's still live context.
-Recommendation: do not build the `system` tier as designed; if pursued, proceed-with-changes
-(multi-root default, edge-audit precondition, a stated root-selection method) rather than proceed
-as-is.
+**Closed. Final disposition: do not build the `system` tier, full stop — not proceed-with-changes.**
+
+This ticket's own original recommendation left a "proceed-with-changes" door open (multi-root
+aggregation as the schema default). Peer review after this ticket's own findings landed closed
+that door: multi-root aggregation is declared membership in disguise — hand-picking roots until a
+derived set looks right is manual curation wearing the word "derived," without the honesty of
+admitting it, and it would reintroduce the exact informally-maintained-truth failure this whole
+registry epic exists to remove. There is no version of "proceed-with-changes" that preserves what
+made derivation worth having in the first place.
+
+**The root cause, stated once so it explains all four bad fits rather than reading as four separate
+disappointments**: `depends_on` encodes *prerequisite* — "this cannot produce a meaningful result
+without that already existing." A system encodes *collaboration* — "these mechanisms work together
+toward one recognizable capability." No traversal over the first relation reliably produces the
+second. `combat`'s own derived set lost `tactical_decision` — the mechanism a knowledgeable reader
+would name first — precisely because that edge was *correctly* removed as a caller rather than a
+prerequisite (`TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`). `progression` came out
+8-of-9 combat mechanisms for the same reason. `economy` bottomed out at 2 members because nothing
+declares a prerequisite relationship to the things a person would call "the economy." `social`
+swung 4x between two roots because prerequisite chains simply don't carve the graph along
+collaboration boundaries — there is no reliable single root to find.
+
+**Two results survive independently of this disposition, carried forward rather than lost with the
+tier:**
+- Axes attach to mechanisms, not systems — spun into its own ticket,
+  `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`, so it isn't buried in a
+  not-proceeding epic.
+- The edge-trust counts (`combat`: 3 of 8 unaudited; `economy`/narrow-`social`: 0 audited) already
+  raised `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` to P1 — that audit's own value is
+  independent of whether any tier is ever built, since derived priority runs on the same edges.
+
+`TCK-20260917-EPIC-MECHANISM-TIER-MODEL` closes alongside this ticket recording the same
+disposition; `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` (the original design ticket
+this investigation tested) closes as superseded, not left pending.

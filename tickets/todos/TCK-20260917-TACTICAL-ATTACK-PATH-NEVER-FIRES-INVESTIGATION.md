@@ -136,6 +136,8 @@ the answer.
 5. The verdict is recorded against `tactical_decision` in the registry, whatever it is.
 
 ## Related Tickets
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — groups this ticket with 4 others measuring the
+  same causal chain; this ticket is sequenced first (P0, sharpest open question)
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` — produced the path-split measurement
 - `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION` — independent August sighting
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` — the downstream chain

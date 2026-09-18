@@ -98,6 +98,8 @@ combat baseline that included attacks the attacker's own risk assessment had alr
   warranted for the gate/faction-chain relationship specifically.)
 
 ## Related Tickets
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — groups this ticket (boss-gate half only, still
+  open) with 4 others measuring the same broader causal chain
 - `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION` (created the volume reduction
   this ticket investigates the downstream effect of)
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (still open — the faction-chain half of

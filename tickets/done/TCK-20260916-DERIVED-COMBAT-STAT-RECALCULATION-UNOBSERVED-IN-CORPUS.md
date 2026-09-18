@@ -154,6 +154,8 @@ to rediscover the right next step.
    `src/domains/combat_engagement/power.py`, even if not revisited in this same ticket.
 
 ## Related Tickets
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — groups this (closed) ticket with 4 others
+  measuring the same broader causal chain; added retroactively, no reopening implied
 - `TCK-20260916-ACTION-PACING-READINESS-SCENARIO-VERIFICATION` — where this was found
 - `TCK-20260831-READINESS-SPEED-FORMULA` — shipped the formula this gap keeps from taking effect
 - `docs/plans/world_composition_precondition_gap_finding.md`'s own cited tickets — the closest

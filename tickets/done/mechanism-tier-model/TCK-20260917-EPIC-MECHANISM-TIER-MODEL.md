@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-EPIC-MECHANISM-TIER-MODEL
-phase: open
+phase: done
 date: 2026-09-17
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Build the tiers above `mechanism` — investigate first, then `system`, then `ax
 proposal-decomposition check
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -45,7 +45,14 @@ from the current graph, check whether membership is sensible, and answer the thr
 with real data.
 
 ### Children 2–4 — scoped *from* child 1's findings, not now
-Named here so the shape is visible, deliberately not drafted:
+
+**Closed 2026-09-18: children 2–4 are permanently undrafted, not deferred.** Child 1's own findings
+(`TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`) answered the three open questions
+this section anticipated and the answer was "do not build the `system` tier, full stop." There is no
+future state in which children 2–4 get drafted from those findings — the findings themselves rule
+out the tier they would have implemented. See Completion Summary.
+
+Named here (as originally scoped) so the shape that was considered is still visible, not drafted:
 
 - **`system` tier** — schema, root declaration, derived membership, validation. Its shape depends on
   whether one root per system suffices.
@@ -124,4 +131,42 @@ Per child.
 None (epic).
 
 ## Completion Summary
-Open.
+**Closed. Disposition: do not build the `system` tier, full stop. Children 2–4 are permanently
+undrafted, not deferred.**
+
+Child 1 (`TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`) ran to completion and
+answered all three open questions with measured data (Acceptance Criteria #1, met). Its own finding,
+independently corroborated by three separate blockers (bad thematic fits, substantial unaudited-edge
+dependence, non-unique roots), was that the `system` tier as designed should not be built. Peer
+review closed the one door the investigation itself had left open (multi-root aggregation as a
+"proceed-with-changes" fallback) as declared membership in disguise — hand-picking roots until a
+derived set looks right is manual curation wearing the word "derived." There is no version of
+"proceed-with-changes" that preserves what made derivation worth having.
+
+**The root cause, stated once so it explains the epic's own outcome rather than reading as an
+unexplained cancellation: `depends_on` encodes prerequisite — this mechanism cannot produce a
+meaningful result without that one already existing. A `system` encodes collaboration — these
+mechanisms work together toward one recognizable capability. No traversal over the first relation
+reliably produces the second.** This is why Acceptance Criteria #2 ("children 2–4 are drafted from
+those findings before any schema work begins") does not get satisfied by drafting — the findings
+themselves are the answer, and the answer is "don't." Children 2–4 are **permanently undrafted, not
+deferred**: there is no future investigation or edge-audit result that would revive the `system`
+tier's original design, because the mismatch is structural (which relation `depends_on` is) rather
+than evidentiary (how clean the current edges are).
+
+**One result survives independently of this disposition and is not lost with the tier**: axes attach
+to mechanisms, not systems — carried forward in its own ticket,
+`TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`, established against the
+temporal axis proposal whose concerns span three candidate systems. This answers this epic's own
+child-2-named `axis` tier open question ("does axis attach to mechanisms or to systems?") on its own
+merits, independent of whether a `system` tier is ever built to attach a systems-variant to.
+
+The edge-semantics precondition named in this epic's own Assumptions #1 and Related Tickets
+(`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT`) remains real and independently valuable —
+its value was never contingent on the `system` tier shipping, since derived priority
+(`generate_mechanism_priority_view.py`) runs on the same `depends_on` edges regardless. That ticket
+proceeds on its own after this epic's closure.
+
+`TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` (the original design ticket this epic's
+child 1 tested) closes alongside this epic as superseded, not left pending — see its own Completion
+Summary.

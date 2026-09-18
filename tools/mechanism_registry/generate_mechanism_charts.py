@@ -157,14 +157,27 @@ def render_top_n_chart(data: dict, n: int = 25, direction: str = "BT") -> str:
 
 
 def render_top_n_table(data: dict, n: int = 25) -> str:
-    """The text form of the same view, for agents -- 'two outputs from one registry.'"""
+    """The text form of the same view, for agents -- 'two outputs from one registry.'
+
+    Includes an "Unaudited Edges" column (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT):
+    how many of the depends_on edges behind THIS row's own transitive-dependent count could not be
+    confirmed either way by that audit. A nonzero count means the row's priority is computed partly
+    from edges no one has verified as real prerequisites -- visible per-row, not a single caveat
+    easy to miss, since a mechanism with zero unaudited edges behind it is a materially stronger
+    priority claim than one resting mostly on unconfirmed edges."""
     ranking = unverified_priority_ranking(data)[:n]
-    lines = ["| Mechanism | Layer | State | Priority | Transitive Dependents |",
-             "|---|---|---|---|---|"]
+    total_unaudited = len(data.get("unaudited_depends_on_edges") or [])
+    lines = [f"_{total_unaudited} of this registry's declared `depends_on` edges are unaudited "
+             f"(see `unaudited_depends_on_edges` in `registries/mechanisms.yaml`) -- the "
+             f"\"Unaudited Edges\" column below is how many of those fall within each row's own "
+             f"transitive-dependent count, not assumed zero._",
+             "",
+             "| Mechanism | Layer | State | Priority | Transitive Dependents | Unaudited Edges |",
+             "|---|---|---|---|---|---|"]
     for row in ranking:
         lines.append(
             f"| `{row['id']}` | {row['layer']} | {row['state']} | {row['priority']} | "
-            f"{row['transitive_dependent_count']} |"
+            f"{row['transitive_dependent_count']} | {row['unaudited_edge_count']} |"
         )
     return "\n".join(lines)
 
