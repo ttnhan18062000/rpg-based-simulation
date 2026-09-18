@@ -141,6 +141,16 @@ the opportunity-attack trigger:
   `get_engaged_hostiles_at_pos`) answering a different question (is this specific attack legal
   right now, not what counts as "engaged/hostile" for opportunity-attack triggering).
 
+**A better explanation than "not a recurrence," stated on its own**: all three prior
+investigations in this area (the two above, plus this ticket's own source ticket's earlier
+2026-09-15/17 candidates) examined the *decision* path's hostility handling —
+`EntityIdentityResolver` feeding `is_hostile_compat()`, and `verify_attack_legality()`'s own gate.
+None of them examined `get_engaged_hostiles_at_pos()`, the *movement* path — the one producing
+essentially all of the real combat (181-2177 calls/2000 ticks vs. 0-2). That is not "nobody
+noticed" — people looked at this area repeatedly and carefully. It is that attention consistently
+followed the half that decides, not the half that acts. That asymmetry, not oversight, is the
+better account of why this survived three separate investigations in the same area.
+
 ## Related Docs
 - `docs/engine/contracts/combat_contract.md` §4 (Opportunity Attacks — `resolve_multi_attack`'s
   own documented scope)
@@ -160,6 +170,11 @@ investigated further)_
   happens for real content factions)
 
 ## Assumptions / Open Questions
+- **Not this ticket's scope, but worth a sentence for whoever picks it up**: if attention in this
+  area has systematically followed the decision path rather than the movement path (see the
+  "asymmetry of attention" note under Related Tickets above), other movement-side primitives may
+  carry the same never-examined status this one did. Not investigated here — a pattern to watch
+  for, not a lead to chase inside this ticket.
 - **Flagged, not asserted, per peer review of the source ticket's addendum**: this arc built
   `FactionSentimentService`/`pairwise_tension` specifically so hostility could accumulate from
   real cross-faction interaction. If the dominant real-combat path never reads catalog/sentiment
