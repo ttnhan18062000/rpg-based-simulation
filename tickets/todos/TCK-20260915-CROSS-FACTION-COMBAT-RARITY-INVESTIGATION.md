@@ -502,6 +502,12 @@ continuation inside an already-large investigation.
 ## decision layer never see the enemies the movement layer is already attacking" — root cause
 ## found and measured, not yet fixed
 
+**Headline finding, stated first**: in `hero_guild_routing`, **2620 of 2698 hostility
+determinations — 97% — are legacy-only false positives.** The combat that dominates these
+worlds is overwhelmingly **not** the game's authored hostility model. Entities fight because a
+legacy 4-value enum happens to put them in different buckets, not because the content catalog
+says they're enemies. Everything below is the trace and the measurement behind that one fact.
+
 **Context**: resumed directly from
 `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (closed 2026-09-18), which found
 `hostiles` non-empty in **0 of 1130** real `evaluate_entity_intent` calls across
@@ -588,6 +594,25 @@ model. The two findings compose: it is not just that the decision layer rarely r
 mechanic that *does* run frequently decides who fights, it is consulting a different, much
 cruder, and demonstrably wrong-in-both-directions notion of "hostile" than the one the content
 catalog actually defines.
+
+**Worth naming as a pattern, not just this one instance**: this is a dual-mechanism defect — two
+independent implementations of "is hostile" with different, unreconciled semantics:
+`is_hostile_compat()` (reads real per-pair catalog/perspective data) and
+`get_engaged_hostiles_at_pos()` (`my_faction != other.faction` on the raw 4-value legacy enum).
+Same shape as the two `ItemRegistry` classes with divergent failure semantics found earlier in
+this arc — except here the divergence is silent and load-bearing: it drives nearly all combat in
+the simulation, not just an edge-case failure path.
+
+**One implication flagged as an open question, not asserted — not checked in this pass**: this
+arc built faction sentiment (`FactionSentimentService`) and `pairwise_tension` specifically so
+hostility could accumulate from real cross-faction interaction (see
+`TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION` and this ticket's own original Request
+Summary). If the dominant real-combat path (`resolve_multi_attack()`, via
+`get_engaged_hostiles_at_pos()`) never reads catalog/sentiment data at all, sentiment accumulation
+may have no effect on who actually fights, even though diplomacy/war decisions built on top of it
+elsewhere might still respond correctly. Not verified — whether anything else reads sentiment into
+engagement decisions was not checked here; flagged for whoever picks up either this ticket or the
+sentiment mechanism next.
 
 **Not fixed in this pass, per this ticket's own Scope** ("if a real, scoped fix is found, propose
 it for peer review before building — this affects combat/targeting broadly, not just the faction
