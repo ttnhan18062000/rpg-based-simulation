@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT
-phase: open
+phase: inprogress
 date: 2026-09-17
 tags: [architecture, schema]
 ---
@@ -16,7 +16,8 @@ Audit all declared `depends_on` edges against the registry's own stated definiti
 already confirmed wrong, and derived priority is computed from all of them
 
 ## Status
-OPEN
+INPROGRESS — full 70-edge enumeration and grouping done; per-edge code verification dispatched
+2026-09-18, not yet landed (see Implementation Notes)
 
 ## Tier
 standard
@@ -97,7 +98,8 @@ produce is measuring something other than real blast radius.
   audit checks edges against.
 
 ## Related Stored Artifacts
-None yet.
+`staging_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/` (investigation.md,
+plan.md, test_plan.md) — created 2026-09-18. Migrates to `stored_artifacts/` on close.
 
 ## Related Code Areas
 - `registries/mechanisms.yaml` — the ~64 edges under audit.
@@ -110,7 +112,32 @@ failure was found while resolving an unrelated open question, not from a systema
 rare or could be common; this ticket exists to find out rather than assume either.
 
 ## Implementation Notes
-Not yet started.
+
+**Started 2026-09-18.** Full enumeration corrected this ticket's own estimate: **70 remaining
+edges, not ~64** (the registry grew from 89 to 93 mechanisms via
+`TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`'s own splits, after this ticket's
+estimate was written). Grouped by evidence availability before dispatching the real code check:
+2 edges with `implemented_by` bound on both dependent and dependency, 21 with exactly one side
+bound, 47 with neither side bound (most `state: done` on both ends — code is expected to exist,
+`implemented_by` just hasn't been backfilled per
+`TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION`'s own known gap, which is not evidence
+of missing code).
+
+Per-edge code verification against all 70 dispatched 2026-09-18; results not yet landed in this
+ticket. See Completion Summary once the verdict table returns.
+
+**Priority raised P2 → P1, 2026-09-17.**
+`TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`'s own edge-trust counts (`combat`,
+the best-fitting candidate it tried: 3 of 8 internal edges unaudited; `economy` and the narrow
+`social` candidate: 0 of their edges audited) confirm this audit is a hard precondition for
+anything derived from `depends_on`, not merely related work — see that ticket's own §4. Whether or
+not the `system` tier is ultimately built, the underlying question (how much of the registry's own
+derived priority ranking, and any future graph-derived feature, rests on edges that predate the
+identity-rules ticket's stated `depends_on` definition) is real and current regardless of that
+tier's own disposition. **Update 2026-09-18**: the `system` tier's own disposition is now settled
+(`TCK-20260917-EPIC-MECHANISM-TIER-MODEL` closed as "do not build") — this audit's value is
+unaffected, since derived priority (`generate_mechanism_priority_view.py`) runs on the same edges
+independent of whether any tier above `mechanism` exists.
 
 **Priority raised P2 → P1, 2026-09-17.**
 `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`'s own edge-trust counts (`combat`,

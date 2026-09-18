@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM
-phase: open
+phase: done
 date: 2026-09-17
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Introduce the tiers above `mechanism` — `system` derived from a declared root,
 cross-cutting tag — so path-level questions become answerable
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -141,7 +141,17 @@ classification; the registry diff makes the claim checkable after it lands.
    rule as `unverified`.
 
 ## Related Tickets
-- `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` — **blocks this.** See Assumptions.
+- `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY` — **done**; the precondition this
+  ticket's own Assumption #1 named.
+- `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` — **done**; superseded this ticket via its investigation
+  child before schema work began. See that epic's own Completion Summary for the full disposition.
+- `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION` — **done**; tested this ticket's own
+  §1 design and found it should not be built.
+- `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS` — carries forward this
+  ticket's own §2/Assumption #4 finding (axes attach to mechanisms, not systems), independent of §1's
+  fate.
+- `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` — independently valuable regardless of
+  this ticket's closure; derived priority runs on the same edges this ticket's §1 would have used.
 - `TCK-20260917-EPIC-MECHANISM-VERIFICATION`
 - `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION`
 
@@ -217,4 +227,38 @@ To be completed during implementation.
 To be completed during implementation.
 
 ## Completion Summary
-Open.
+**Closed as superseded, not implemented.** This ticket's own design (§1 `system` derived from a
+declared root, §2 `axis` as a declared overlapping tag) was never built directly. Instead,
+`TCK-20260917-EPIC-MECHANISM-TIER-MODEL` opened with an investigation-first child,
+`TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`, that tested this ticket's own §1
+design against the real graph before any schema work began — exactly the sequencing this ticket's
+own Assumption #1 called for ("blocked on the identity rules... do not start until
+[identity-rules] has landed").
+
+**The design did not survive contact with real data.** The investigation derived candidate systems
+from declared roots for four domains and found bad thematic fits (combat's derived membership drops
+`tactical_decision`, the mechanism a knowledgeable reader would name first, for the structurally
+correct reason that the edge was a caller mislabeled as a dependency), substantial unaudited-edge
+dependence (0–62.5% of edges in a given candidate set were unaudited against the registry's own
+`depends_on` definition), and non-unique roots (the same intuitive domain produced member sets
+differing by 4x depending on which plausible root was chosen). The root cause, applying directly to
+this ticket's own §1 design: `depends_on` encodes prerequisite, a `system` encodes collaboration, and
+no traversal over the first relation reliably produces the second. This ticket's own Assumption #5
+(found while resolving an unrelated investigation) anticipated a version of this — "a derived
+system's membership is only as true as its declared edges say" — but the investigation found the
+deeper problem: even fully-trusted edges would not produce a collaboration grouping, because
+prerequisite and collaboration are different relations.
+
+This ticket's §2 (`axis` as a declared tag) and its Assumption #4 ("whether axes attach to mechanisms
+or to systems is unresolved... decide with a real case") were resolved on their own merits,
+independent of §1's fate: axes attach to mechanisms, not systems — carried forward in
+`TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS` rather than lost with this
+ticket's closure.
+
+The naming decision recorded in this ticket's own Implementation Notes (`system` over `cluster`/
+`circuit`, with the real-occurrence-count evidence) remains a valid, reusable finding regardless of
+this ticket's own disposition, and is preserved here rather than deleted.
+
+No implementation occurred — no staging artifacts exist because none were created before the
+investigation superseded this ticket's design. See
+`TCK-20260917-EPIC-MECHANISM-TIER-MODEL`'s own Completion Summary for the full disposition.

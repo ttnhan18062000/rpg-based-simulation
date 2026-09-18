@@ -8,6 +8,42 @@ tags: [architecture, documentation, schema]
 
 # Plan — Mechanism Tier Model (axis → system → mechanism)
 
+> **Status, updated 2026-09-18 — the `system` tier described below was investigated and rejected;
+> this doc is kept for its surviving findings, not as a live implementation plan.**
+>
+> `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` opened with an investigation-first child,
+> `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION`, that derived candidate systems by
+> hand from the real dependency graph (§2/§3 below) before any schema work began. The result: **do
+> not build the `system` tier as designed, full stop** — not "proceed with changes." A
+> proceed-with-changes fallback (multi-root aggregation, letting a system declare several roots) was
+> considered and rejected as declared membership in disguise: hand-picking roots until a derived set
+> looks right is manual curation wearing the word "derived," which reintroduces the exact
+> informally-maintained-truth failure this whole registry effort exists to remove.
+>
+> **Root cause, stated once**: `depends_on` (§3 below) encodes *prerequisite* — this mechanism cannot
+> produce a meaningful result without that one already existing. A `system` encodes *collaboration*
+> — these mechanisms work together toward one recognizable capability. No traversal over the first
+> relation reliably produces the second. This explains all four bad derived-system fits the
+> investigation found (combat missing `tactical_decision`, progression coming out 8-of-9 combat
+> mechanisms, economy bottoming out at 2 members, social swinging 4x between two roots) as one
+> failure rather than four separate disappointments.
+>
+> **What still stands, and why this doc isn't deleted**: the §2 `mechanism` tier (already built,
+> unaffected) and the naming evidence for `system` over `cluster`/`circuit` remain valid regardless.
+> The axis-attachment question §2's table leaves open (does an axis attach to mechanisms or to
+> systems?) is answered on independent evidence in
+> `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`: mechanisms, not systems —
+> partly *because* there is no system tier left to attach to, but also because the temporal axis
+> proposal's own concerns already span three different candidate systems the investigation tried,
+> which would have been awkward under system-level attachment even if the tier had shipped.
+>
+> Children 2–4 named in the epic below (the `system` schema, the `axis` tier, and the
+> proposal-decomposition check) are **permanently undrafted, not deferred** — see the epic's own
+> Completion Summary. The `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` precondition named
+> throughout this doc remains real and independently valuable: derived priority
+> (`generate_mechanism_priority_view.py`) runs on the same `depends_on` edges regardless of whether
+> any tier above `mechanism` is ever built.
+
 **Status, scoped 2026-09-17.** The registry records 89 mechanisms. Design proposals arrive as
 *axes* — "introduce a spatial axis." Nothing connects the two, so a proposal cannot state what it
 will do to the registry, and the registry cannot answer questions asked above the level of a single
