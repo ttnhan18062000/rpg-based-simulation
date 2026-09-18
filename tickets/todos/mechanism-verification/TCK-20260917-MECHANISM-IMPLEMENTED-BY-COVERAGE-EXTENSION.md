@@ -64,6 +64,40 @@ completeness checker's own target count, which answers a different, narrower que
    `demographic_cohort_cycle`/`succession`: a real `verified` block, propagated to every consumer
    artifact, not silently absorbed.
 
+### Coverage acceptance targets, per claim-type — added 2026-09-17, previously undeclared anywhere
+
+Discussed but never landed in an artifact until now. **"Enough coverage" is declared per
+claim-type, not as one global percentage** — a global target like "80% bound" invites binding the
+easy mechanisms just to move the number, the same failure shape the claims-as-tests detectors'
+exclusion lists exist to prevent, generalized one level up.
+
+- **`orphan` → 100%, no exceptions.** `orphan` means zero callers — fully, mechanically decidable
+  by a real caller check, nothing left to judgement. The measured error rate on this exact claim
+  was **4 of 6** when the orphan-state batch actually checked it
+  (`TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION`) — a claim this cheap to verify and
+  this often wrong has no honest reason to stay unchecked.
+- **`gated` → 100%.** Same reasoning as `orphan`: a feature flag either exists on the entry path or
+  it doesn't. Mechanically decidable, so fully bind it.
+- **`done` / `partial` → no coverage target.** These are judgements about completeness, not
+  mechanically decidable facts — `implemented_by` binding alone can't settle whether a `done`
+  mechanism actually works; the `verified` axis (below) is what settles that, not binding coverage.
+- **`verified` → no target at all.** 2 of 89 runtime-verified is the honest current state. Setting
+  a target here would produce direct pressure to raise that number, which is exactly the shape of
+  the fabricated/stale verdicts this whole axis exists to catch (`motivation_doctrine`'s own "still
+  confirmed live" claim eight days after its code was deleted is the standing example).
+
+This ticket's own scope (item 1, "a real, meaningful batch") is now sharpened by this: prioritize
+binding every remaining `orphan` and `gated` mechanism toward their 100% targets first, since those
+are the two claim-types where non-100% coverage is itself a stated gap rather than an accepted one.
+`done`/`partial`/`verified` binding remains valuable (item 2's own de-biasing goal still applies)
+but isn't held to a numeric target the way `orphan`/`gated` now are.
+
+**Current state against these targets, checked 2026-09-17**: `orphan` is already at its 100%
+target — all 7 `orphan`-state mechanisms are bound. `gated` is at 3 of 8 (`self_model`,
+`information_trust_deception`, `knowledge_model`, `quest_generation_sourcing`,
+`opportunity_rumor_seeds` remain unbound) — these 5 are this ticket's own concrete, prioritized
+starting list, not an abstract "some gated mechanisms" instruction.
+
 ## Out of Scope
 - Binding all remaining 63 mechanisms in one pass — this is deliberately incremental, ongoing
   work, not a single bounded task with a fixed completion count.
@@ -78,10 +112,15 @@ completeness checker's own target count, which answers a different, narrower que
    slice twice.
 3. Any state correction found is propagated to every consumer artifact (atlas, capabilities,
    wiring map), not just the registry field.
+4. Every remaining `orphan` and `gated` mechanism is either bound (moving that claim-type toward
+   its 100% target) or explicitly recorded as a known gap against that target, with a reason — not
+   silently left unbound with no note that a target exists for it.
 
 ## Related Tickets
-- `TCK-20260917-EPIC-MECHANISM-VERIFICATION` — parent epic; this is the first child, a hard
-  precondition for the other three.
+- `TCK-20260917-EPIC-MECHANISM-VERIFICATION` — parent epic; this ticket is second in
+  `SEQUENCE.md`'s own order, after `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`
+  (resequenced 2026-09-17 — a split from that ticket would otherwise divide a binding already done
+  here, see that ticket's own reasoning).
 - `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION`,
   `TCK-20260916-MECHANISM-CHANGED-CODE-ENTRY-DRIFT-DETECTION` — both sequenced after this ticket.
 

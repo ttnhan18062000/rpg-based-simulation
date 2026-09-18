@@ -64,9 +64,13 @@ def test_transitive_dependents_matches_real_data(registry_data):
     # TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING registered commitment_pressure_consequences,
     # depends_on [commitment_betrayal] -- commitment_betrayal already depended (transitively) on
     # action_pacing_readiness via combat_resolution -> combat_engagement -> action_pacing_readiness,
-    # so the new mechanism became a new transitive dependent of it too.
+    # so the new mechanism became a new transitive dependent of it too. 25 -> 26 after
+    # TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY split action_pacing_readiness into
+    # the gate (kept under this id) and readiness_speed_scaling (new, depends_on:
+    # [action_pacing_readiness]) -- the new split-off mechanism is itself a new direct (and
+    # therefore transitive) dependent.
     dep_map = {m["id"]: m.get("depends_on") or [] for m in registry_data["mechanisms"]}
-    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 25
+    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 26
 
 
 def test_transitive_dependents_raises_on_cycle():
@@ -188,11 +192,16 @@ def test_chart_generator_single_layer_no_pagination_for_small_layer(registry_dat
 
 
 def test_chart_generator_ancestors_of_produces_a_real_subgraph(registry_data):
+    # tactical_decision removed from combat_resolution's own depends_on 2026-09-17
+    # (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY): it was a real *caller* of
+    # combat_resolution (execution order), not a functional prerequisite for it -- see that
+    # entry's own verified note and docs/plans/mechanism_identity_and_change_taxonomy.md §3.
     diagram = render_ancestors_chart(registry_data, "combat_resolution")
     assert "combat_resolution" in diagram
-    assert "tactical_decision" in diagram
+    assert "tactical_decision" not in diagram
     assert "combat_engagement" in diagram
     assert "action_pacing_readiness" in diagram
+    assert "movement" in diagram
 
 
 def test_chart_generator_ancestors_of_unknown_mechanism_raises(registry_data):

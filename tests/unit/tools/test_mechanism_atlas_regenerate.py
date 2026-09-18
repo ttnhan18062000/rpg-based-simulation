@@ -80,7 +80,15 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
     directly, none of which have an atlas card at all (no card was ever written for them, since
     Foundation's original seed only read the atlas). That's expected, not a defect -- distinct
     from nest/lair, which are real mechanisms the wiring map documents but the atlas simply never
-    carded either."""
+    carded either.
+
+    TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY split 4 bundled entries into 8
+    (net +4 mechanisms). Each split card's own single existing badge was repointed at whichever
+    new id its own prose actually describes (regional_sovereignty, world_boss_spawn,
+    town_services; action_pacing_readiness kept its id for the gate) -- the mapped-card count of
+    73 is unchanged, and the other half of each split (regional_trauma, calamity_intensity,
+    buildings, readiness_speed_scaling) joins the unmapped set, same as any other mechanism found
+    by direct code investigation rather than an atlas card."""
     real_ids = set(_real_registry_states().keys())
     positions = all_mechanism_card_badge_positions()
     mapped = set(positions.keys())
@@ -90,7 +98,8 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
         "fame", "fidelity_drift", "belief_institution", "strategic_learning_bias",
         "strategic_redirection", "concern_intake", "event_interpretation", "narrative_memory",
         "group_coordination", "quest_reward_distribution", "commitment_pressure_consequences",
-    }, f"expected exactly these 16 to be unmapped (no atlas card), got {unmapped}"
+        "regional_trauma", "calamity_intensity", "buildings", "readiness_speed_scaling",
+    }, f"expected exactly these 20 to be unmapped (no atlas card), got {unmapped}"
     assert len(mapped) == 73
 
 

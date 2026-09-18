@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY
-phase: open
+phase: done
 date: 2026-09-17
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Define what makes one mechanism one mechanism, and what a design proposal does t
 then test both against the registry's own bundled entries
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -200,11 +200,56 @@ These rules were derived from roughly six real cases. That is enough to be worth
 not enough to be confident — hence §3 testing them against entries that were *not* used to derive
 them, before anything is applied.
 
+**Landed in `docs/plans/mechanism_identity_and_change_taxonomy.md`** (full reasoning there, see
+`stored_artifacts/TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY/investigation.md` for
+the methodology, including a forked sub-agent that returned an unverified "split everything" claim
+that was independently re-checked and partially reversed before being trusted).
+
+**Result: 4 splits, 5 keeps — the rule discriminates (AC #3).**
+- SPLIT: `regional_trauma_hazards_sovereignty` → `regional_trauma`/`regional_sovereignty`;
+  `buildings_town_services` → `buildings`/`town_services`; `calamities_boss_spawns` →
+  `calamity_intensity`/`world_boss_spawn`; `action_pacing_readiness` → itself (gate) +
+  `readiness_speed_scaling` (the falsification test — it does split, AC #4).
+- KEEP: `inventory_trade_conservation`, `cognition_capacity_fatigue`, `information_trust_deception`,
+  `attributes_biology` (an early, unverified fork claim said SPLIT; direct re-check found no real
+  divergence and reversed it), and `combat_resolution` (the multiple-entry-point case — multiple
+  callers at wildly different volumes is not itself a split signal, since both callers invoke
+  identical internal logic with no possible `state` divergence between them).
+- The `depends_on` semantics question resolved by applying the registry's own already-stated
+  definition (not inventing a new one): `combat_resolution`'s `tactical_decision` edge removed
+  (execution-order, not a functional dependency); its `movement` edge kept (a genuine functional
+  dependency, despite the call direction pointing the other way).
+- A real defect caught and fixed along the way: `regional_sovereignty`'s first-guessed
+  `implemented_by` binding (`RegionalSovereigntyService`) has zero real callers; corrected to the
+  actual live implementation (`FactionInfluenceService`) before this ticket closed.
+- 4 pre-existing pinned tests updated for real, explained reasons (see investigation.md) — none
+  routed around.
+
 ## Test Summary
-To be completed during implementation.
+`tests/unit/tools/`, `tests/unit/engine/test_capability_registry.py`, `tests/mechanic_scenarios/` →
+181 passed. `graphify-out/` moved aside and restored as a sanity check (only registry/mapping data
+changed, not `src/`/`tests/` code).
 
 ## Files Changed
-To be completed during implementation.
+- `docs/plans/mechanism_identity_and_change_taxonomy.md` — new, the identity rule + taxonomy.
+- `registries/mechanisms.yaml` — 4 splits performed, `combat_resolution`'s `tactical_decision` edge
+  removed, `regional_sovereignty`'s `implemented_by` corrected.
+- `tools/mechanism_registry/mechanism_atlas_card_mapping.py`,
+  `mechanism_capabilities_card_mapping.py` — 3 stale mapping entries repointed at split successors.
+- `docs/brainstorm/rpg_feature_atlas.html`, `simulation_capabilities.html` — 2 badge/tier fixes
+  from the resulting drift check.
+- `docs/brainstorm/mechanism_verification_view.md`, `mechanism_priority_view.md`,
+  `mechanism_registry_view.md`, `mechanism_registry.html` — all 4 regenerated (93 mechanisms).
+- `tests/unit/tools/test_mechanism_priority_derivation.py`,
+  `test_mechanism_atlas_regenerate.py` — 3 pinned-count/assertion updates.
+- `staging_artifacts/TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY/` — this ticket's
+  own investigation.md/plan.md/test_plan.md.
 
 ## Completion Summary
-Open.
+Done. The identity rule and change taxonomy are recorded in a real doc, tested against all 9 real
+cases (7 bundled entries plus the two special cases), and the rule demonstrably discriminates (4
+splits, 5 keeps) rather than splitting everything or nothing. Every split propagated to
+`depends_on`, dependents, `verified` blocks, and consumer artifacts. A real defect
+(`regional_sovereignty`'s wrong `implemented_by` binding) was caught and fixed as a direct
+consequence of doing this investigation properly rather than trusting an unverified sub-agent
+report. `TCK-20260917-MECHANISM-THREE-TIER-AXIS-SYSTEM-MECHANISM` is now unblocked.
