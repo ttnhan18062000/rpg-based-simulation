@@ -80,7 +80,7 @@ JUDGMENT CALLS:
    ("never applied", "much smaller system"). Left unmapped.
 
 4. `cities#3` "Knowing You're 'Home'" (tier=built, "Confirmed not working correctly") describes a
-   real, specific home-detection bug, but no registered mechanism (`city`, `buildings_town_services`)
+   real, specific home-detection bug, but no registered mechanism (`city`, `town_services`)
    cites this specific failure in its own atlas description. Left unmapped rather than guessed onto
    `city`.
 
@@ -210,10 +210,16 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
     ("parties", 2): "guilds",
     # -- cities (6 cards; #3 Home-detection, #4 City personality, #5 Death economics unmapped)
     ("cities", 0): "city",
-    ("cities", 1): "buildings_town_services",
+    # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY):
+    # buildings_town_services -> town_services (this card's own desc is entirely about services:
+    # "a genuinely built-out town-services system"); buildings has no capabilities-page citation.
+    ("cities", 1): "town_services",
     ("cities", 2): "building_sabotage",
     # -- land (2 cards, both mapped)
-    ("land", 0): "regional_trauma_hazards_sovereignty",
+    # SPLIT 2026-09-17: regional_trauma_hazards_sovereignty -> regional_trauma (this card's own
+    # desc leads with "a real, visible scar of trauma and hazard... stays visibly marked"; the
+    # secondary "control...shift" clause is regional_sovereignty's own concern, uncited here).
+    ("land", 0): "regional_trauma",
     ("land", 1): "demographic_cohort_cycle",  # a THIRD camp-shaped bug -- see module docstring
     # -- monsters (6 cards; #5 Place-type transitions unmapped -- deferred idea, matches the
     # roadmap's own idea 48 deferral)
@@ -241,7 +247,10 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
     ("world", 1): "chronicle",
     ("world", 2): "opportunity_rumor_seeds",
     ("world", 3): "cultural_drift",
-    ("world", 4): "calamities_boss_spawns",
+    # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY):
+    # calamities_boss_spawns -> world_boss_spawn (this card's own desc leads with "spawn a
+    # powerful boss monster"); calamity_intensity has no capabilities-page citation.
+    ("world", 4): "world_boss_spawn",
     ("world", 5): "world_generation",
     # -- legacy (8 cards; #1, #3, #4, #5, #6, #7 unmapped -- see Judgment Call 7 and module
     # docstring; lowest-coverage section, each decision evidence-based)

@@ -81,19 +81,34 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
     ("faction-layer", 5): "cross_episode_social_consequences",
     ("faction-layer", 6): "cross_episode_grief_nemesis",
     ("faction-layer", 7): "country_lifecycle",
-    ("region-layer", 0): "regional_trauma_hazards_sovereignty",
+    # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY):
+    # regional_trauma_hazards_sovereignty split into regional_trauma/regional_sovereignty. This
+    # card's own desc is entirely about ownership/conquest tracking (RegionState.owner_faction_id,
+    # FactionState.territory) -- repointed at regional_sovereignty, the half it actually
+    # describes. regional_trauma has no atlas card citation, same as any other mechanism found via
+    # direct code enumeration rather than an atlas card.
+    ("region-layer", 0): "regional_sovereignty",
     ("region-layer", 1): "demographic_cohort_cycle",
     ("world-layer", 0): "campaigns",
     ("world-layer", 1): "chronicle",
     ("world-layer", 2): "opportunity_rumor_seeds",
     ("world-layer", 3): "cultural_drift",
-    ("world-layer", 4): "calamities_boss_spawns",
+    # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY):
+    # calamities_boss_spawns split into calamity_intensity/world_boss_spawn. This card's own desc
+    # ("boss spawns... in high-hazard regions") centers on the boss-spawn half -- repointed at
+    # world_boss_spawn. calamity_intensity has no atlas card citation.
+    ("world-layer", 4): "world_boss_spawn",
     ("world-layer", 5): "world_generation",
     ("world-layer", 6): "gods_pantheon_blessings",
     ("worldobject-layer", 0): "equipment_scoring",
     ("worldobject-layer", 1): "inventory_trade_conservation",
     ("worldobject-layer", 2): "crafting",
-    ("worldobject-layer", 3): "buildings_town_services",
+    # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY):
+    # buildings_town_services split into buildings/town_services. This card's own desc ("real
+    # town-service registry... inn rest, blacksmith repair... church's BLESSING/RESURRECTION
+    # services") is entirely about the services -- repointed at town_services. buildings (the
+    # physical structures) has no atlas card citation.
+    ("worldobject-layer", 3): "town_services",
     ("worldobject-layer", 4): "building_sabotage",
     ("clan-layer", 0): "clan",
     ("race-layer", 0): "race_collective_force",
