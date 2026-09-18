@@ -3,16 +3,16 @@ status: active
 layer: architecture
 authority: P1
 audience: agent
-ticket_id: TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION
+ticket_id: TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION
 phase: open
 date: 2026-09-18
 tags: [architecture, documentation, investigation]
 ---
 
-# TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION
+# TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION
 
 ## Title
-Do the broad tagging pass as a throwaway exercise and report whether reading a system tells you
+Do the broad membership pass as a throwaway exercise and report whether reading a system tells you
 anything the per-mechanism view does not — build nothing
 
 ## Status
@@ -28,7 +28,7 @@ chore
 P1
 
 ## Request Summary
-Before building a systems registry and tagging 93 mechanisms, find out whether the grouping is worth
+Before building a systems registry and the membership pass 93 mechanisms, find out whether the grouping is worth
 maintaining.
 
 **Feasibility is not the question this time.** The previous investigation tested whether *derived*
@@ -36,7 +36,7 @@ membership produced recognisable sets — it didn't. Declared-by-intent sets wil
 construction, so asking "do these sets make sense" would be asking whether we can type a list.
 
 **The real question is value against cost:** does reading a system tell you something the
-per-mechanism view does not, by enough to justify hand-maintaining tags on 93 mechanisms with no
+per-mechanism view does not, by enough to justify hand-maintaining membership on 93 mechanisms with no
 mechanical backing?
 
 The motivating case, run by hand during scoping, is the benchmark to beat. Entity progression spans
@@ -46,10 +46,10 @@ The motivating case, run by hand during scoping, is the benchmark to beat. Entit
 `attributes_biology → derived_stats` is entirely unverified.
 
 That was genuinely informative — and it was produced by typing 15 ids into a shell command. The
-investigation must establish whether a maintained tagging layer beats that, or merely formalises it.
+investigation must establish whether a maintained membership layer beats that, or merely formalises it.
 
 ## Scope
-**Build nothing.** No registry, no schema field, no validator, no generator. Tag in a throwaway
+**Build nothing.** No registry, no schema field, no validator, no generator. Assign in a throwaway
 scratch file or a local script.
 
 ### 1. Do the broad pass, large to small
@@ -63,7 +63,7 @@ Record the vocabulary you arrive at and how many mechanisms land in each.
 - How many systems did full coverage require?
 - **How many mechanisms genuinely belong to more than one?** If almost none do, the many-to-many
   design is unnecessary complexity and child 2 should be simplified.
-- How many resist tagging entirely — infrastructure-ish mechanisms with no gameplay system? Those
+- How many resist assignment entirely — infrastructure-ish mechanisms with no gameplay system? Those
   become `unassigned`, and the count matters because it sets expectations for the review view.
 
 ### 3. The value test — this is the actual deliverable
@@ -76,13 +76,13 @@ gated-off, one contradicted). Do your three reach that bar? If two of three prod
 wouldn't already see, say so.
 
 ### 4. Cost estimate
-State what maintaining this actually costs: tags on 93 mechanisms now, plus one decision per new
-mechanism, plus re-tagging when a mechanism splits (the identity rule produced 4 splits from 9 cases,
+State what maintaining this actually costs: membership on 93 mechanisms now, plus one decision per new
+mechanism, plus re-assigning when a mechanism splits (the identity rule produced 4 splits from 9 cases,
 so splits are not rare).
 
 ## Out of Scope
 - **Any schema, field, registry or validator.** Investigation only.
-- **Committing the tagging** to `registries/mechanisms.yaml`. The pass is an exercise; child 2 does
+- **Committing the membership** to `registries/mechanisms.yaml`. The pass is an exercise; child 2 does
   the real one.
 - **Rollup views.** Child 3, deferred.
 - **Deciding the final vocabulary.** Child 2 seeds from your findings, but this is not a binding
@@ -100,8 +100,8 @@ so splits are not rare).
    tickets and a schema, and was the most valuable result of that epic.
 
 ## Related Tickets
-- `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING` — parent
-- `TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION` — child 2, seeded by this
+- `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP` — parent
+- `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION` — child 2, seeded by this
 - `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION` — the derived-tier investigation;
   its four failed candidate sets are required reading, since they show what a bad grouping looks like
   and why derivation produced them
@@ -121,7 +121,7 @@ so splits are not rare).
    fallback is the ad-hoc query that produced the progression example, accepted openly as
    unreproducible rather than pretended away.
 2. Whether a mechanism can be judged as belonging to a system without reading its code is unknown.
-   If tagging requires opening the implementation each time, the cost estimate in §4 rises sharply
+   If assignment requires opening the implementation each time, the cost estimate in §4 rises sharply
    and that changes the recommendation.
 3. The 93 count is current as of 2026-09-18 and grew from 89 via the identity-rule splits. Expect it
    to keep moving.

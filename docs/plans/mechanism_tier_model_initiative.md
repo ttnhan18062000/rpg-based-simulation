@@ -10,7 +10,7 @@ tags: [architecture, documentation, schema]
 
 > **Status, updated 2026-09-18 — the `system` tier as originally designed (derived from
 > `depends_on`) was investigated and rejected. It is being revived under a different mechanism:
-> declared tags, not derivation. This doc is a live plan again, not a findings archive — see below
+> declared system membership, not derivation. This doc is a live plan again, not a findings archive — see below
 > for what changed and why the earlier rejection still holds for the design it actually rejected.**
 >
 > `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` opened with an investigation-first child,
@@ -34,32 +34,32 @@ tags: [architecture, documentation, schema]
 > apply to, because membership is declared by intent rather than walked from an edge that was never
 > collaboration in the first place.
 >
-> **Revived 2026-09-18 as `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`**, sequenced investigation
-> first (`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`, child 1): a system becomes a
-> **declared tag on a mechanism** — no root, no traversal, `depends_on` not consulted. That removes
+> **Revived 2026-09-18 as `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`**, sequenced investigation
+> first (`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`, child 1): a system becomes
+> **membership declared on a mechanism** — no root, no traversal, `depends_on` not consulted. That removes
 > all three of the original investigation's own blockers at once (bad thematic fits — membership is
 > declared by intent, not derived; unaudited edges — edges are simply unused; non-unique roots — none
 > exist to be non-unique). The new investigation's own question is different in kind from the
 > original: feasibility isn't in doubt (a declared-by-intent set is sensible by construction — that's
-> what "declared" means), the real question is **value against cost**: does a tag layer tell a reader
-> anything the per-mechanism view doesn't, by enough to justify hand-maintaining tags on 93+
-> mechanisms with no mechanical backing to keep them honest. `TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`
+> what "declared" means), the real question is **value against cost**: does a membership layer tell a reader
+> anything the per-mechanism view doesn't, by enough to justify hand-maintaining membership across 93+
+> mechanisms with no mechanical backing to keep it honest. `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`
 > (child 2, vocabulary seeded from child 1's findings) and a rollups child (named, not yet drafted)
-> follow — see `tickets/todos/mechanism-system-tagging/SEQUENCE.md`.
+> follow — see `tickets/todos/mechanism-system-membership/SEQUENCE.md`.
 >
 > **What still stands from the original rejection**: the §2 `mechanism` tier (already built,
 > unaffected) and the naming evidence for `system` over `cluster`/`circuit` remain valid regardless.
 > The axis-attachment question §2's table leaves open (does an axis attach to mechanisms or to
 > systems?) is answered on independent evidence in
 > `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`: **mechanisms, not systems**
-> — this holds regardless of the tagging revival, since the temporal axis proposal's own concerns
+> — this holds regardless of the membership revival, since the temporal axis proposal's own concerns
 > already span three different candidate systems, which stays awkward under system-level attachment
-> whether that tier is derived or tagged.
+> whether that tier is derived or declared.
 >
 > The `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` precondition named throughout this
-> doc's earlier revision is now **moot for the tagging design specifically** (tags don't consult
+> doc's earlier revision is now **moot for the membership design specifically** (membership doesn't consult
 > `depends_on` at all) but remains real and independently valuable on its own terms: derived priority
-> (`generate_mechanism_priority_view.py`) still runs on those edges regardless of whether any tag
+> (`generate_mechanism_priority_view.py`) still runs on those edges regardless of whether any membership
 > layer exists above `mechanism`.
 
 **Status, scoped 2026-09-17.** The registry records a growing set of mechanisms (see
@@ -94,7 +94,7 @@ to check afterwards whether what landed matches what was proposed.
 | Tier | What it is | Membership | Backed by |
 |---|---|---|---|
 | **axis** | a dimension of play — roughly a game sub-genre: spatial, temporal, knowledge-belief | **declared**, overlapping | judgement only |
-| **system** | a functional grouping — combat, progression, trade | **declared** as a tag (originally attempted as **derived** from a declared root — rejected, see §3) | judgement only, same as axis |
+| **system** | a functional grouping — combat, progression, trade | **declared** as membership (originally attempted as **derived** from a declared root — rejected, see §3) | judgement only, same as axis |
 | **mechanism** | the existing registry node | already defined | `implemented_by`, validated against disk and symbol |
 
 ### The asymmetry is the design, and must not be forgotten
@@ -115,7 +115,7 @@ and forgetting it is precisely how the atlas came to be trusted for years.
 
 ---
 
-## 3. Why systems are tagged and axes are tagged too
+## 3. Why systems are declared and axes are declared too
 
 **Historical record, kept because it was expensive to learn**: the original design (below the line)
 tried to make a system a **rooted subtree** — `combat` as the transitive ancestors of
@@ -131,19 +131,19 @@ looked like a good idea and *how* it failed, not as the current design.
 > is natural rather than a problem — `combat_resolution` belongs to both `combat` and `progression`
 > because it feeds `xp_leveling`.
 
-**Current design, `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`**: both tiers are now **declared**,
-and neither derives. A system is a **tag on a mechanism**, exactly the same shape as an axis always
+**Current design, `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`**: both tiers are now **declared**,
+and neither derives. A system is **membership declared on a mechanism**, exactly the same shape as an axis always
 was — hand-declared, overlapping, with no mechanical backing and no traversal to lean on. This is
 not "axes were right all along, so make systems axes" — a system and an axis remain conceptually
 distinct (a functional grouping like combat/progression/trade versus a cross-cutting dimension of
 play like spatial/temporal/knowledge-belief), but both are now the same *kind* of declaration: a
-tag, checked against a registry for validity, never derived from `depends_on` or any other edge.
+membership relation, checked against a registry for validity, never derived from `depends_on` or any other edge.
 
 **Declared membership lists were forbidden under the derived design** because a hand-maintained list
 alongside a supposedly-derived one would be redundant, contradictory bookkeeping. That objection
-does not apply here — under the tag design there is no derivation for a declared list to contradict,
+does not apply here — under the membership design there is no derivation for a declared list to contradict,
 so a declared list *is* the mechanism, not a shadow of one. See
-`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`'s own question (does a maintained tag
+`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`'s own question (does a maintained membership
 layer earn its keep over the per-mechanism view) for the corresponding new constraint — declared
 does not mean unconstrained. §8 states the specific non-goal this doesn't reopen.
 
@@ -190,12 +190,12 @@ and is done — node boundaries are no longer accidental. `TCK-20260917-MECHANIS
 the derived-tier design it unblocked, is closed as superseded by the feasibility investigation's own
 "do not build" finding.
 
-**Current, under `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`** (`tickets/todos/mechanism-system-tagging/SEQUENCE.md`):
+**Current, under `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`** (`tickets/todos/mechanism-system-membership/SEQUENCE.md`):
 
-1. **`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`** — first, no dependencies. Feasibility
+1. **`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`** — first, no dependencies. Feasibility
    isn't the question this time (a declared-by-intent set is sensible by construction); the question
    is whether the grouping earns its maintenance cost over the per-mechanism view.
-2. **`TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`** — depends on the investigation. Its system
+2. **`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`** — depends on the investigation. Its system
    vocabulary seeds from child 1's broad pass, and its many-to-many design may simplify if the
    investigation's multi-membership count comes back low.
 3. **Rollup views** — named, not drafted. Deferred until the mapping and registry exist; the one known
@@ -203,8 +203,8 @@ the derived-tier design it unblocked, is closed as superseded by the feasibility
 
 Deliberately *not* blocking `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` (P1) or
 `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT`'s own follow-on
-(`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION`) on this tagging work — tags do
-not consult `depends_on` or `implemented_by` at all, so neither is a precondition here.
+(`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION`) on this membership work —
+membership does not consult `depends_on` or `implemented_by` at all, so neither is a precondition here.
 
 ---
 
@@ -231,21 +231,21 @@ derived-system design — a system tier still cannot be derived from `depends_on
 correct, because the two relations (prerequisite vs. collaboration) are simply different things. See
 the status block above.
 
-**Current, live for the tag design:**
+**Current, live for the membership design:**
 
-**A system tag has no mechanical backing — permanent, not a gap to close.** Nothing in the code says
+**System membership has no mechanical backing — permanent, not a gap to close.** Nothing in the code says
 "this belongs to progression." Accepted deliberately: the code→mechanism mapping is automated and
 validated; the mechanism→system mapping is a much smaller hand-authored decision, and that asymmetry
 is the whole point (§2's own asymmetry table gains a third instance here, not an exception to it).
 
-**Tagging cost scales with mechanism count and with splits.** Every new mechanism needs a tag
-decision at creation time (the tag-on-mechanism design in
-`TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION` forces this rather than letting it lapse), and
+**Membership cost scales with mechanism count and with splits.** Every new mechanism needs a membership
+decision at creation time (the membership-on-mechanism design in
+`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION` forces this rather than letting it lapse), and
 every mechanism split (the identity rule produced 4 splits from 9 tested cases — not rare) needs its
-tag(s) re-decided for each half. `TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`'s own
+membership re-decided for each half. `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`'s own
 cost estimate (§4 of that ticket) is what determines whether this cost is worth paying at all.
 
-**Axes cannot be validated.** See §2. There is no check to write. Unaffected by the tagging revival —
+**Axes cannot be validated.** See §2. There is no check to write. Unaffected by the membership revival —
 this was already true and stays true.
 
 ---
@@ -254,9 +254,9 @@ this was already true and stays true.
 
 - **No fourth tier.** Three is what the evidence supports.
 - **No derived system membership, in any form, including multi-root aggregation.** This is the one
-  non-goal added by the tagging revival, and it is the load-bearing one: multi-root aggregation was
+  non-goal added by the membership revival, and it is the load-bearing one: multi-root aggregation was
   specifically considered as a "proceed-with-changes" fallback for the derived design and rejected as
-  declared membership in disguise (see the status block above). The tag design is not that fallback
+  declared membership in disguise (see the status block above). The membership design is not that fallback
   reintroduced under a new name — it is declared *instead of* derived, transparently, with no
   traversal step anywhere for a hand-picked root to hide inside.
 - **No derived axes.** Not possible from the dependency graph; do not fake it with heuristics.
@@ -267,7 +267,7 @@ this was already true and stays true.
   statistical clustering in `observability/mining/`) and `circuit` (`short-circuit` in
   `engine/phase_graph.py`), each a *semantic* collision. `system` collides only with the directory
   `src/systems/`, and mechanisms already map across both that and `src/domains/`. Recorded so it is
-  not relitigated — this evidence predates and is unaffected by the derived-to-tagged revival, since
+  not relitigated — this evidence predates and is unaffected by the derived-to-declared revival, since
   it was never about how membership is decided.
 
 ---
@@ -286,9 +286,9 @@ this was already true and stays true.
   independently of the system tier's fate
 - `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` (done) and its own follow-on
   `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION` — the depends_on edge
-  correction; independently valuable for derived priority, moot for the tag design specifically
-- `TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING`,
-  `TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`,
-  `TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`
-  (`tickets/todos/mechanism-system-tagging/`) — the current, live implementation detail for the
+  correction; independently valuable for derived priority, moot for the membership design specifically
+- `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`,
+  `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`,
+  `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`
+  (`tickets/todos/mechanism-system-membership/`) — the current, live implementation detail for the
   revived tier

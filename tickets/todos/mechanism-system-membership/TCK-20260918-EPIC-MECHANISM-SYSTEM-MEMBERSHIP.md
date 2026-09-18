@@ -3,17 +3,17 @@ status: active
 layer: architecture
 authority: P1
 audience: agent
-ticket_id: TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING
+ticket_id: TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP
 phase: open
 date: 2026-09-18
 tags: [architecture, documentation, schema]
 ---
 
-# TCK-20260918-EPIC-MECHANISM-SYSTEM-TAGGING
+# TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP
 
 ## Title
-The `system` tier as declared tags on mechanisms — investigate the review value first, then build the
-registry and tagging
+The `system` tier as declared system membership on mechanisms — investigate the review value first, then build the
+registry and the membership pass
 
 ## Status
 EPIC_SCOPED
@@ -33,7 +33,7 @@ The `system` tier was rejected **as derived** —
 from a declared root produces sets nobody recognises, because **`depends_on` encodes *prerequisite*
 while a system encodes *collaboration*.**
 
-This epic revives the tier by a **different mechanism**: a system is a **tag declared on the
+This epic revives the tier by a **different mechanism**: a system is a **membership declared on the
 mechanism**. No roots, no traversal, `depends_on` not consulted at all — which removes all three
 blockers the investigation found (bad thematic fits, unaudited edges, non-unique roots).
 
@@ -45,18 +45,18 @@ smallest unit and cannot be made more abstract, so the grouping belongs above it
 previous investigation cost one ticket and saved three plus a schema. The question here is different
 though, and worth stating precisely: **feasibility is not in doubt this time.** Declared-by-intent
 sets will be sensible by construction. What is in doubt is whether the grouping delivers review
-value proportionate to hand-maintaining tags across 93 mechanisms.
+value proportionate to hand-maintaining membership across 93 mechanisms.
 
 ## Scope
 
 ### Child 1 — investigation (drafted, first)
-`TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION`. Do the broad tagging pass as a
+`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`. Do the broad membership pass as a
 throwaway exercise, then judge whether reading a system tells you anything the per-mechanism view
 does not. Build nothing.
 
 ### Child 2 — foundation (drafted, scoped by child 1)
-`TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION`. The systems registry, the `systems: []` field,
-the two invariants, the unassigned rule, and the real tagging pass. **Its seed vocabulary comes from
+`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`. The systems registry, the `systems: []` field,
+the two invariants, the unassigned rule, and the real membership pass. **Its seed vocabulary comes from
 child 1's findings**, so do not start it first.
 
 ### Child 3 — rollup views (named, not drafted)
@@ -65,7 +65,7 @@ and recorded in Assumptions #3, so the follow-up does not have to rediscover it.
 
 ## Out of Scope
 - **Reviving derived membership** in any form, including multi-root aggregation.
-- **Computing anything from system tags** — see Assumptions #2.
+- **Computing anything from system membership** — see Assumptions #2.
 - **The `axis` tier** — carried separately by
   `TCK-20260917-MECHANISM-AXIS-ATTACHMENT-POINT-MECHANISMS-NOT-SYSTEMS`.
 - **A target number of systems.** Large-to-small is the user's explicit direction; see Assumptions #4.
@@ -76,15 +76,15 @@ and recorded in Assumptions #3, so the follow-up does not have to rediscover it.
 2. Child 2's system vocabulary is seeded from child 1's pass, not invented independently.
 3. No tier introduces a summary status at any point.
 4. `docs/plans/mechanism_tier_model_initiative.md` is **updated, never duplicated** — one document
-   covering the model, the rejected derivation, and the adopted tagging.
+   covering the model, the rejected derivation, and the adopted membership model.
 
 ## Related Tickets
-- `TCK-20260918-MECHANISM-SYSTEM-TAGGING-VALUE-INVESTIGATION` — child 1
-- `TCK-20260918-MECHANISM-SYSTEM-TAGGING-FOUNDATION` — child 2
+- `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION` — child 1
+- `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION` — child 2
 - `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION` — rejected the derived design; its
-  four failed candidate sets are required reading before tagging
+  four failed candidate sets are required reading before assigning membership
 - `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` — closed; this reopens the tier by a different route
-- `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` — **no dependency.** Tags do not use edges,
+- `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` — **no dependency.** Membership does not use edges,
   so none of the 32 removed or 17 unclassifiable edges affect this work
 
 ## Related Docs
@@ -102,12 +102,12 @@ and recorded in Assumptions #3, so the follow-up does not have to rediscover it.
 - `tools/mechanism_registry/mechanism_registry_completeness_check.py`
 
 ## Assumptions / Open Questions
-1. **A system tag has no mechanical backing, accepted deliberately.** Nothing in the code says "this
+1. **System membership has no mechanical backing, accepted deliberately.** Nothing in the code says "this
    belongs to progression." The user's cost reasoning is sound: code→mechanism is a far larger mapping
    than mechanism→system, so automate the first and hand-author the second. State the absence of
    backing where systems are defined, so it stays visible rather than being forgotten.
-2. **Tags stay read-only to every computation.** Priority remains derived from `depends_on`;
-   verification remains per mechanism. The moment a ranking or verdict derives from a tag, unbacked
+2. **Membership stays read-only to every computation.** Priority remains derived from `depends_on`;
+   verification remains per mechanism. The moment a ranking or verdict derives from membership, unbacked
    judgement becomes load-bearing.
 3. **The known child-3 constraint:** rollups report **counts, never a single badge** — *progression:
    15 mechanisms, 5 verified, 1 contradicted, 2 gated off, 10 unverified.* A summary status destroys
