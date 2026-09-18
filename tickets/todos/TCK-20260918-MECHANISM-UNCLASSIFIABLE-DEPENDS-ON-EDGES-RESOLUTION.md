@@ -37,6 +37,16 @@ honest, not hidden — but they remain unresolved. Of the 38 edges that survive 
 audited, 32 removed), **17 unvalidated out of 38 is roughly 45% of the surviving graph** — the new
 priority ranking is materially better grounded than the pre-audit one, but not itself clean.
 
+**The 17 are not 17 independent investigations — they collapse into roughly 5-6 real threads**,
+which is the material fact for deciding whether to pick this ticket up: locating `goal_hierarchy`'s
+own implementation resolves 3 of the 17 at once (#8-10 below); locating `race_archetype`'s resolves
+2 more (#2, #16); and 2 more (#5-6, `motivation_doctrine`'s pair) may resolve for free, without any
+fresh investigation, once `TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN`
+lands, since if `motivation_doctrine` itself retires, the edges declared on it retire with it. "17
+edges" and "5-6 threads" are very different scoping decisions — the real remaining work is answering
+two implementation-location questions (`goal_hierarchy`, `race_archetype`) plus a handful of
+genuinely independent one-offs, not 17 separate searches.
+
 ## Scope
 For each of the 17 edges, find or definitively confirm the absence of real implementing code,
 narrower and more targeted than the original 70-edge sweep since each one already has a documented
