@@ -281,8 +281,14 @@ mechanisms:
   - id: conversation
     layer: entity
     systems: [social]
-    depends_on: [action_pacing_readiness]
+    depends_on: []
     state: gap
+    # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION):
+    # `-> action_pacing_readiness` REMOVED. `conversation` itself has zero implementing code
+    # anywhere in src/ (confirmed by grep for "Conversation" class/service names, no atlas or
+    # wiring-map card either) -- this mechanism's own `state: gap` already said as much; a
+    # depends_on edge declared FROM a mechanism with no code at all cannot be verified with real
+    # evidence, so it is removed rather than left unaudited indefinitely.
   - id: entity_trade
     layer: entity
     systems: [social, economy]
@@ -311,11 +317,35 @@ mechanisms:
     systems: [progression]
     depends_on: []
     state: done
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        Found while resolving TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION's
+        #2/#16: the parent edge audit's own grep for "race"/"Race" class names came back empty
+        because `TCK-20260904-EPIC-RACE-TO-SPECIES-TERMINOLOGY` (2026-09-04) renamed
+        `RaceDefinition`/`race_id` -> `SpeciesDefinition`/`species_id` repo-wide, before that audit
+        ran -- a terminology-drift search miss, not an absence of code. Real implementation:
+        `SpeciesDefinition` (`src/content/schema.py:134`), resolved per-entity via
+        `src/content/resolver.py`'s `resolve_living_defaults(species_id)`.
   - id: class_assignment
     layer: entity
     systems: [progression]
     depends_on: [race_archetype]
     state: partial
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        `-> race_archetype` edge CONFIRMED KEEP (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-
+        EDGES-RESOLUTION #2): `src/content/resolver.py:257-258` --
+        `self._social.resolve_role_defaults(role_id) for role_id in species.compatible_roles` --
+        role/class resolution directly iterates the species' own declared `compatible_roles` list.
+        `class_assignment` cannot resolve valid roles without `race_archetype`'s own
+        `SpeciesDefinition.compatible_roles` field already existing, a genuine functional
+        prerequisite, not just execution order.
   - id: personality
     layer: entity
     systems: [progression, cognition]
@@ -324,8 +354,14 @@ mechanisms:
   - id: build_diversity
     layer: entity
     systems: [progression]
-    depends_on: [class_assignment]
+    depends_on: []
     state: gap
+    # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION):
+    # `-> class_assignment` REMOVED, same reasoning as `conversation`'s own edge above --
+    # `build_diversity` has zero implementing code anywhere in src/ (confirmed) or any atlas/
+    # wiring-map card, so nothing exists to verify a depends_on edge FROM it, regardless of
+    # `class_assignment`'s own real status (which was independently resolved KEEP in this same
+    # pass -- see `class_assignment`'s own entry).
   - id: aging_death
     layer: entity
     systems: [progression]
@@ -447,7 +483,32 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: [combat_resolution]
-    state: done
+    state: orphan
+    implemented_by: [src/domains/emotion/recovery_service.py::RecoveryReadinessService]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        state corrected done -> orphan while resolving edge #4 of
+        TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION. The parent edge audit
+        concluded no per-entity trauma implementation exists at all (only `RegionState.trauma_score`
+        and `WoundState`, both confirmed unrelated) -- that conclusion was itself a search miss, not
+        correct: real per-entity trauma tracking exists (`RecoveryState.trauma_tags`,
+        `confidence_loss`, `retry_readiness`, `src/core/cognition.py`), written by
+        `RecoveryReadinessService.register_near_death()` (`src/domains/emotion/
+        recovery_service.py:21-28`). But `register_near_death` has ZERO callers anywhere in `src/`
+        -- real, reachable, correctly-written code with no production producer, the same shape as
+        `status_effects`'s own orphan finding, found independently and for an unrelated reason
+        (this ticket's own edge #4, not a coverage-extension pass). `-> combat_resolution` edge kept
+        as KEEP, not removed: the dependency is structurally real (a near-death trigger is
+        conceptually downstream of combat resolution determining lethal/near-lethal outcomes) even
+        though currently unexercised -- same "correct-but-unexercised" case (a) as
+        `combat_resolution -> status_effects`'s own SHATTER-bonus finding, not case (c)
+        (misclassification). Not independently re-investigated further -- a third confirmed
+        instance of this session's own orphan-mechanism pattern, worth noting for whoever eventually
+        builds the mechanical "orphan mechanism implies dead dependent branches" check flagged on
+        `status_effects`'s own entry.
   - id: status_effects
     layer: entity
     systems: [combat]
@@ -593,8 +654,23 @@ mechanisms:
   - id: commitment_betrayal
     layer: entity
     systems: [social]
-    depends_on: [combat_resolution]
+    depends_on: []
     state: done
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        `-> combat_resolution` edge REMOVED (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-
+        EDGES-RESOLUTION #7): confirmed `commitment_betrayal` has no distinct implementation of its
+        own anywhere in `src/` -- every plausible piece of "betrayer" logic (the reputation label
+        set in `src/domains/commitment/reputation.py:21`) is one of `commitment_pressure_
+        consequences`'s own already-bound files. Recorded as an identity/duplication question
+        (two registry ids for what may be one real mechanism), not a depends_on question -- a
+        depends_on edge cannot be confirmed against code that isn't independently attributable to
+        this id. Flagged for a future identity-rules pass rather than forced into either verdict
+        here; the reciprocal edge (`commitment_pressure_consequences -> commitment_betrayal`, #17
+        of the same ticket) carries the same flag on its own entry.
   - id: temporal_pressure
     layer: entity
     systems: [cognition]
@@ -608,8 +684,31 @@ mechanisms:
   - id: goal_hierarchy
     layer: entity
     systems: [cognition]
-    depends_on: [belief_cycle, reputation]
+    depends_on: [belief_cycle]
     state: done
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        Real implementation LOCATED while resolving TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-
+        ON-EDGES-RESOLUTION's goal_hierarchy cluster (#8-10) -- the parent edge audit's own grep for
+        "goal hierarchy" and `graphify query` both failed because the wiring map's own definition
+        ("Directive -> Project -> Objective -> Action") maps to
+        `StrategicIntelligenceSystem`'s project/objective methods (`evaluate_project_switch`,
+        `resume_project`, `process_project_outcome`, `_resolve_active_objective`,
+        `evaluate_strategic_intent`, `src/systems/strategic_systems/intelligence.py`), never a
+        literally-named "goal hierarchy" symbol. Not bound via `implemented_by` here -- this is one
+        multi-concern 1782-line class also implementing `strategic_intelligence_core` and others
+        via different methods, the same method-level binding gap already recorded on
+        `action_pacing_readiness`/`skill_unlocks` (TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-
+        EXTENSION). `-> reputation` REMOVED (#9): no read of any reputation field
+        (`public_reputation`/`regional_reputation`/`clan_reputation`) or import of
+        `ReputationService` anywhere in the strategic/goal-scoring subsystem
+        (`intelligence.py`, `src/ai/goals/`, `src/domains/adventure/`). `-> belief_cycle` CONFIRMED
+        KEEP (#8): the same strategic pass directly calls `BeliefCycleSystem.process_observation()`/
+        `apply_contradiction()` (`intelligence.py:436,448`) to confirm or contradict leads that feed
+        the same objective-selection pipeline.
   - id: belief_cycle
     layer: entity
     systems: [cognition]
@@ -679,6 +778,14 @@ mechanisms:
     # CommitmentPressureService, a type-hint reference only) is itself already-confirmed orphan
     # (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING's own commitment_pressure_consequences
     # finding). Matches the wiring-map's own INT node citation ("no write path exists") exactly.
+    # `-> goal_hierarchy` edge CONFIRMED KEEP 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-
+    # DEPENDS-ON-EDGES-RESOLUTION #10, now that goal_hierarchy is locatable -- see its own entry):
+    # `strat.committed_intentions[0]` is read directly inside `StrategicIntelligenceSystem`'s own
+    # objective-selection pipeline (`intelligence.py:1510-1511,1734-1735`) -- a real reader, not
+    # just a constructor's-eye-view. The writer side stays confirmed absent (above), so this read
+    # never fires in practice, but the dependency itself is real: IF a committed intention were
+    # ever created, it would flow directly into goal_hierarchy's own decision, not require anything
+    # further. Same correct-but-unexercised shape as `combat_resolution -> status_effects`.
   - id: cognition_capacity_fatigue
     layer: entity
     systems: [cognition]
@@ -761,8 +868,23 @@ mechanisms:
   - id: country_lifecycle
     layer: faction
     systems: [faction]
-    depends_on: [betrayal_siege_war]
+    depends_on: []
     state: partial
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        `-> betrayal_siege_war` REMOVED (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+        RESOLUTION #11). Correction to the parent audit's own claim ("no country_lifecycle
+        implementation found anywhere"): real code exists -- `FactionDecisionPhase`
+        (`src/engine/faction_decision.py`), confirmed real/live in the atlas's own investigation
+        ("Country" and "Faction" are the same underlying class, wiring map's own Country Lifecycle
+        row) -- the original grep for "CountryLifecycle"/"Country" class names missed it for the
+        same reason `city`'s own search missed `RegionState`: conflation with an existing class
+        name, not absence of code. `FactionDecisionPhase` itself never references siege/war/
+        betrayal concepts (grep confirmed empty), so the specific `-> betrayal_siege_war` edge has
+        no real read evidence and is removed, distinct from a blanket "no code at all" claim.
 
   # ── Region layer (2, atlas `region-layer`) ──────────────────────────────────────────────────
 
@@ -991,6 +1113,19 @@ mechanisms:
     systems: [world]
     depends_on: [regional_sovereignty]
     state: partial
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        `-> regional_sovereignty` edge CONFIRMED KEEP (TCK-20260918-MECHANISM-UNCLASSIFIABLE-
+        DEPENDS-ON-EDGES-RESOLUTION #12). Original grep for "class City" found nothing because a
+        City is not its own class -- the wiring map's own explicit finding: "Already real as data,
+        never named or separated as its own class today a City is a Region, not a place inside
+        one." City-state IS `RegionState`, and `RegionState.owner_faction_id` is
+        `regional_sovereignty`'s own core tracked field (`FactionInfluenceService`) -- the two
+        mechanisms share the exact same underlying state object and field, as direct a functional
+        coupling as this registry records anywhere.
   - id: camp
     layer: region
     systems: [world]
@@ -1010,8 +1145,11 @@ mechanisms:
   - id: nest
     layer: region
     systems: [world]
-    depends_on: [camp]
+    depends_on: []
     state: gap  # not yet built ("Proposed"); wiring-map only, no atlas JSON card -- see investigation.md
+    # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION
+    # #15): `-> camp` REMOVED. Wiring map's own explicit row confirms "Not yet built... No current
+    # code" (badge "Proposed") -- genuinely aspirational, not a search miss.
   - id: lair
     layer: region
     systems: [world]
@@ -1020,11 +1158,25 @@ mechanisms:
   - id: ruins_mines_battlefields
     layer: region
     systems: [world]
-    depends_on: [regional_trauma, regional_sovereignty]
+    depends_on: []
     state: partial
     # Conservative: kept pointing at both post-split successors (2026-09-17). No dedicated
     # implementing file found for this composite id to distinguish which half it actually needs;
     # not narrowed without real evidence, per this same ticket's own "do not guess" discipline.
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        Both edges REMOVED (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION
+        #13/#14). The parent audit's own low-confidence candidate, `create_battlefield_scar()`
+        (`src/world/consequences.py:58-77`, `kind="BATTLE_FIELD"`), is confirmed a genuine name
+        match but has ZERO callers anywhere in `src/` -- itself orphan, not a live producer -- and
+        its own body reads neither `trauma_score` nor `owner_faction_id`, so no direct evidence
+        supports either edge even if it were live. Corroborated independently by the wiring map's
+        own verdict for this exact mechanism: "flattened into ordinary Region tags... Gap" -- ruins/
+        mines/battlefields are real in content (`haunted_battlefield`, `old_mine` tags) but not a
+        separately-coded mechanism with its own dependency-worthy logic today.
 
   # ── Faction layer — Clan / Race (2) ─────────────────────────────────────────────────────────
 
@@ -1044,8 +1196,13 @@ mechanisms:
   - id: settlement_capacity_axis
     layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
     systems: [faction]
-    depends_on: [race_archetype]
+    depends_on: []
     state: gap
+    # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION
+    # #16): `-> race_archetype` REMOVED. `settlement_capacity_axis` itself has zero implementing
+    # code anywhere in src/ (confirmed) -- same reasoning as `build_diversity`'s own edge above,
+    # independent of `race_archetype`'s own real status (confirmed KEEP-worthy via
+    # `class_assignment`'s own edge in this same pass).
 
   # ── TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS (6, none cited by Foundation's original
   # atlas-only seed -- found by enumerating src/domains/ and src/systems/ directly, not from an
@@ -1209,9 +1366,14 @@ mechanisms:
   - id: commitment_pressure_consequences
     layer: entity
     systems: [social]
-    depends_on: [commitment_betrayal]
+    depends_on: []
     state: partial
     implemented_by: [src/domains/commitment/pressure.py, src/domains/commitment/impact.py, src/domains/commitment/reputation.py, src/domains/commitment/abandonment.py]
+    # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION
+    # #17): `-> commitment_betrayal` REMOVED, reciprocal to `commitment_betrayal`'s own #7 --
+    # commitment_betrayal has no distinct code of its own (its only plausible logic already lives
+    # in this mechanism's own bound files), so it cannot be a real depends_on target. See
+    # `commitment_betrayal`'s own entry for the full identity/duplication flag.
     # src/domains/commitment/{pressure,impact,reputation,abandonment}.py -- NOT the real
     # implementation of commitment_betrayal (that is Betrayal(FactionDirective) in
     # engine/faction_decision.py and BetrayalRecord in core/models/social.py; a real
@@ -1240,21 +1402,16 @@ mechanisms:
 # stored_artifacts/TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT/edge_audit_results.md.
 # Each entry is [dependent, dependency], matching one line already present in that mechanism's own
 # depends_on list above -- validate() checks both.
+# TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION (2026-09-19): resolved 15 of
+# the original 17. 13 removed outright (no real code, or the dependent mechanism itself has zero
+# implementing code so nothing could be verified from it), 4 confirmed KEEP with real citations
+# (class_assignment->race_archetype, goal_hierarchy->belief_cycle, committed_intentions->
+# goal_hierarchy, city->regional_sovereignty -- see each mechanism's own verified block), 2 flagged
+# as an identity/duplication question rather than forced into either verdict
+# (commitment_betrayal/commitment_pressure_consequences -- see commitment_betrayal's own entry).
+# Only the motivation_doctrine pair remains genuinely unresolved, deferred to
+# TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN per this ticket's
+# own original note (that ticket's own retirement finding may resolve both edges for free).
 unaudited_depends_on_edges:
-  - [conversation, action_pacing_readiness]
-  - [class_assignment, race_archetype]
-  - [build_diversity, class_assignment]
-  - [trauma, combat_resolution]
   - [motivation_doctrine, goal_hierarchy]
   - [motivation_doctrine, affection_relationship_bonds]
-  - [commitment_betrayal, combat_resolution]
-  - [goal_hierarchy, belief_cycle]
-  - [goal_hierarchy, reputation]
-  - [committed_intentions, goal_hierarchy]
-  - [country_lifecycle, betrayal_siege_war]
-  - [city, regional_sovereignty]
-  - [ruins_mines_battlefields, regional_trauma]
-  - [ruins_mines_battlefields, regional_sovereignty]
-  - [nest, camp]
-  - [settlement_capacity_axis, race_archetype]
-  - [commitment_pressure_consequences, commitment_betrayal]
