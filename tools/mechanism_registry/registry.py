@@ -662,6 +662,69 @@ def mechanisms_by_system(data: dict) -> Dict[str, List[str]]:
     return result
 
 
+def _rollup_stats(ids: List[str], by_id: Dict[str, dict]) -> dict:
+    """Shared counting logic for one group of mechanism ids (one system, `"unassigned"`, or the
+    whole-registry baseline) -- COUNTS only, never a derived verdict or badge
+    (TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW AC #1/#5)."""
+    n = len(ids)
+    bound = sum(1 for i in ids if by_id[i].get("implemented_by"))
+    runtime_verified = 0
+    static_verified = 0
+    state_counts: Dict[str, int] = {s: 0 for s in VALID_STATES}
+    for i in ids:
+        m = by_id[i]
+        verified = m.get("verified")
+        if verified:
+            if verified.get("instrument") in RUNTIME_INSTRUMENTS:
+                runtime_verified += 1
+            else:
+                static_verified += 1
+        state = m.get("state")
+        if state in state_counts:
+            state_counts[state] += 1
+    verified_total = runtime_verified + static_verified
+    return {
+        "count": n,
+        "bound": bound,
+        "bound_rate": (bound / n) if n else 0.0,
+        "runtime_verified": runtime_verified,
+        "static_verified": static_verified,
+        "verified": verified_total,
+        "verified_rate": (verified_total / n) if n else 0.0,
+        "unverified": n - verified_total,
+        "state_counts": state_counts,
+    }
+
+
+def build_system_rollup(data: dict) -> dict:
+    """TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW (child 3 of
+    TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP). Per-system COUNTS -- mechanism count,
+    `implemented_by`-bound count/rate, verified count/rate (runtime vs static), and a full state
+    breakdown -- plus a whole-registry `baseline` computed the same way, so every system's rate is
+    read next to the baseline rather than in isolation
+    (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION's own finding: a raw per-system
+    percentage looked informative until checked against baseline and found statistically
+    indistinguishable from it).
+
+    Never renders or computes a single summary status/badge for a system (AC #1) and never derives
+    a ranking or verdict from membership (AC #5, same read-only rule as `mechanisms_by_system()`).
+    Read-only query; consumes `mechanisms_by_system()` unmodified rather than re-deriving groups.
+    """
+    mechanisms = data.get("mechanisms", []) or []
+    by_id = {m["id"]: m for m in mechanisms if m.get("id")}
+    groups = mechanisms_by_system(data)
+
+    baseline = _rollup_stats(list(by_id.keys()), by_id)
+
+    systems: List[dict] = []
+    for system in sorted(k for k in groups if k != "unassigned"):
+        systems.append({"system": system, **_rollup_stats(groups[system], by_id)})
+
+    unassigned = {"system": "unassigned", **_rollup_stats(groups.get("unassigned", []), by_id)}
+
+    return {"baseline": baseline, "systems": systems, "unassigned": unassigned}
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
     path = Path(argv[0]) if argv else _DEFAULT_PATH
