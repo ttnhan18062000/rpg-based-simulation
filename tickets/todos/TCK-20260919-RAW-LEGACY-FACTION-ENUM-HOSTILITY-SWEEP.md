@@ -44,14 +44,38 @@ real impact for its own specific consumer). **At least 7 more real, load-bearing
 identical `entity.identity.faction != other.identity.faction` (or `==`) raw-enum comparison for a
 hostility- or allegiance-adjacent decision, none of them measured or ticketed before this sweep:
 
-1. **`src/ai/goals/scorers.py:108`, `CombatEngageScorer.score()`** — determines whether
-   `GoalKind.COMBAT_ENGAGE` is even considered as a viable goal for an entity, building its own
-   `hostiles` list with the raw enum (reusing `SensoryFilter.filter_saliency`, the already-known
-   candidate). **Potentially the most significant of the new findings**: this arc has spent
-   multiple investigations asking why the decision-driven path rarely selects combat-related
-   goals (`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`) — if the *goal scorer
-   itself* under-detects real hostiles the same way the movement path did, that is a second,
-   independent contributor to the same symptom, not yet measured.
+**A new divergence this arc's own fix created — recorded before merge, per peer review, as a
+predicted consequence rather than something discovered later.** Before
+`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` landed, the movement path
+(`get_engaged_hostiles_at_pos()`) and `CombatEngageScorer.score()` were both wrong about
+hostility, *the same way* — consistently wrong, but coherent with each other. After that fix,
+the movement path reads real catalog semantics and the scorer still reads the raw enum: **they
+now disagree.** Concretely, `CombatEngageScorer` can judge combat viable (score `COMBAT_ENGAGE`
+above zero) against an entity the movement/attack path will now correctly refuse to engage,
+because the scorer's raw-enum-based "hostile" and the attack path's catalog-based "hostile" are
+no longer the same predicate. An entity could pursue a combat goal that cannot execute. This is
+not a new bug independent of the fix — it is the fix correctly changing one of two previously-
+matched consumers and not the other, the exact partial-fix risk this whole arc has been guarding
+against, just at the cross-subsystem scale rather than the intra-function or dual-call-site scale
+the fix itself already handled. Not a reason to have withheld the fix (preserving a coherent
+wrongness to avoid this would have been the wrong trade), but a real, predicted follow-on this
+ticket exists partly to close.
+
+1. **`src/ai/goals/scorers.py:108`, `CombatEngageScorer.score()` — first site to investigate, not
+   because it's largest, but because this arc's own fix just put it out of step with the rest of
+   the system (see the new-divergence note below).** Determines whether `GoalKind.COMBAT_ENGAGE`
+   is even considered as a viable goal for an entity, building its own `hostiles` list with the
+   raw enum (reusing `SensoryFilter.filter_saliency`, the already-known candidate).
+   **The direction of its error is counterintuitive — recorded as an open question, not a
+   hypothesis, per peer review.** The raw enum measurably *over*-detects far more than it
+   under-detects (`TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`'s own numbers:
+   up to 97% false positives vs. 91 missed same-bucket pairs in one world). So
+   `CombatEngageScorer` using the same raw enum should see *more* hostiles than catalog
+   semantics would, not fewer — the opposite of what "the scorer under-detects, that's why no
+   `DEFEAT_ENEMY` objectives get assigned" would need to be true. **Whoever investigates this
+   should not assume under-detection is the mechanism** — either this scorer's own `hostiles`
+   list isn't the binding constraint on objective assignment at all, or something downstream of
+   it is filtering further. Test both before concluding either.
 2. **`src/engine/legality.py:451`, inside a flanking-bonus check (`has_hostile_at`)** — raw enum,
    unconditional, no fallback to catalog at all (unlike the nearby `verify_attack_legality`'s own
    `has_clean` fallback structure at line 265-269, which already prefers `is_hostile_compat()` and
@@ -91,11 +115,15 @@ re-swept from scratch:**
   building), measure real-world impact where feasible (matching the discipline
   `TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` already used — a real
   instrumented measurement, not a guess), and rank by real consequence.
-- **Priority-order recommendation, not binding**: start with
-  `ai/goals/scorers.py:108`'s `CombatEngageScorer` given its direct relevance to this arc's own
-  standing open question about why decision-driven combat goals rarely fire — measure whether
-  fixing it changes real `COMBAT_ENGAGE` goal-selection rates before assuming it's low-impact like
-  the saliency-filter sibling turned out to be.
+- **Priority-order recommendation, not binding**: start with `ai/goals/scorers.py:108`'s
+  `CombatEngageScorer` — not because it's the largest site, but because
+  `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` just put it out of step with the
+  rest of the system (see the new-divergence note above). Measure whether fixing it changes real
+  `COMBAT_ENGAGE` goal-selection rates, but do not assume under-detection is why goals rarely
+  fire today — the raw enum's own measured error direction (heavy over-detection, light
+  under-detection) argues against that specific mechanism; check whether this scorer's own
+  `hostiles` list is even the binding constraint on objective assignment before concluding either
+  way.
 - Determine whether a shared, reusable hostility-check helper (mirroring
   `LegalityServiceV2._is_engagement_hostile()`, the helper this arc's own fix just built) should
   be extracted to a common module and reused across all of these, rather than each subsystem
