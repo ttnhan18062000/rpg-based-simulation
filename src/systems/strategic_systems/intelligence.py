@@ -317,15 +317,21 @@ class StrategicIntelligenceSystem:
 
         has_hostiles_or_dead = getattr(state, "_has_hostiles_or_dead_cache", None)
         if has_hostiles_or_dead is None:
+            # Kept consistent with src/core/state.py's own __post_init__ computation of the same
+            # cache field (TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS): compare
+            # the real content faction_id first, falling back to the raw legacy enum only when
+            # absent, so this recomputation path can't reintroduce the same false-negative
+            # collapse the state.py fix corrected.
             first_fac = None
             has_diff = False
             has_dead = False
             for ent in state.entities.values():
                 if not ent.combat.alive:
                     has_dead = True
+                fac_key = ent.identity.properties.get("faction_id") or ent.identity.faction
                 if first_fac is None:
-                    first_fac = ent.identity.faction
-                elif ent.identity.faction != first_fac:
+                    first_fac = fac_key
+                elif fac_key != first_fac:
                     has_diff = True
                 if has_dead and has_diff:
                     break

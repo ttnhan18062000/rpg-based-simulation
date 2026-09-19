@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS
-phase: open
+phase: done
 date: 2026-09-19
 tags: [combat, faction, root-cause]
 ---
@@ -17,7 +17,7 @@ the raw legacy `Faction` enum — both real call sites together, all three inter
 implementations together, with before/after combat-volume measurement as part of the fix itself
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -121,17 +121,24 @@ the attack trigger's hostility definition or the prediction relationship breaks.
 - `docs/engine/contracts/combat_contract.md` §4 (Opportunity Attacks)
 
 ## Related Stored Artifacts
+- `stored_artifacts/TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS/` — this
+  ticket's own implementation notes, test plan, and full before/after measurement
 - `stored_artifacts/TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION/` — the
   investigation this fix implements
 
 ## Related Code Areas
-- `src/engine/legality.py` (`LegalityServiceV2.get_engaged_hostiles_at_pos`, lines 517-559 — all
-  three internal implementations)
-- `src/engine/movement.py` (lines ~100, ~181 — both real call sites, unchanged themselves but
-  must be re-verified against the new semantics)
+- `src/engine/legality.py` (`LegalityServiceV2.get_engaged_hostiles_at_pos`,
+  `_is_engagement_hostile` — the fix, all three internal implementations unified on one helper)
+- `src/core/state.py` (`AuthoritativeState.__post_init__`'s `_has_hostiles_or_dead_cache`
+  computation — a fourth, upstream place with the same bug, found and fixed during
+  implementation, not anticipated in this ticket's own original scope)
+- `src/systems/strategic_systems/intelligence.py` (the same cache's own duplicate recomputation
+  path, kept consistent with the `state.py` fix)
+- `src/engine/movement.py` (lines ~100, ~181 — both real call sites, unchanged themselves)
 - `src/content_semantics/faction.py` (`FactionSemanticsService.is_hostile_compat` — the reference
   implementation this fix aligns with)
-- `tests/unit/movement/test_movement_spatial_regression.py` — existing fixtures to re-verify
+- `tests/unit/engine/test_legality_engaged_hostiles_catalog_semantics.py` — new, 6 tests
+- `tests/unit/movement/test_movement_spatial_regression.py` — existing fixtures, re-verified green
 
 ## Assumptions / Open Questions
 1. **Predicted in advance, per peer review of the investigation — record this before running the
@@ -155,16 +162,79 @@ the attack trigger's hostility definition or the prediction relationship breaks.
    fix's own actual measured result rather than pre-written here.
 
 ## Implementation Notes
-_(none yet — not yet implemented)_
+**A fourth place with the same bug, found only because the tests exercised a real positive case,
+not just "old behavior preserved."** Extracted `LegalityServiceV2._is_engagement_hostile()` and
+wired all three internal implementations to it — but 2 of the first 6 tests failed, tracing to
+`AuthoritativeState.__post_init__`'s own `_has_hostiles_or_dead_cache` field, computed with the
+identical raw legacy-enum comparison as a separate, upstream early-exit gate. A same-legacy-bucket
+real rivalry (`bandit_company`/`goblin_warband`) short-circuited before the newly-fixed per-pair
+logic ever ran — silently defeating the fix for exactly the flagship case the whole investigation
+was about. Fixed the cache in `src/core/state.py` and its own duplicate recomputation in
+`src/systems/strategic_systems/intelligence.py` (exercised for "sliding" trial states) by
+comparing the real `identity.properties.get("faction_id")` first, falling back to the raw legacy
+enum only when absent — a deliberately conservative, no-new-import fix (the full resolver/catalog
+path can't be used inside `state.py` without a circular import, since `identity_resolver.py`
+itself imports from `state.py`). Full trace in
+`stored_artifacts/TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS/investigation.md`.
+
+**Prediction confirmed, not just asserted**: real combat volume dropped substantially after the
+fix — `crowded_frontier` 874→133 (-84.8%), `hero_guild_routing` 1418→58 (-95.9%),
+`quest_dense_frontier` 0→0 (unchanged). `hero_guild_routing`'s near-total collapse is consistent
+with the 97% legacy-only false-positive rate the original investigation measured. Neither world
+collapsed to exactly zero, so this is not the "essentially all combat was phantom" scenario
+flagged as a stronger, distinct possibility — real, non-phantom combat volume remains in both
+worlds after correction.
+
+**Zero remaining divergence, verified directly**: re-ran the investigation's own divergence probe
+against the fixed code — `legacy_only`/`catalog_only` both exactly `0` across all three worlds
+(previously 34%-97% disagreement), confirming the fix's classification now matches the real
+catalog exactly, not just in the two hand-built unit-test pairs.
+
+`registries/mechanisms.yaml`'s `combat_resolution` `verified` block updated (note extended, not
+overwritten) with the real post-fix volume numbers, per this ticket's own Assumption #3.
+`docs/parity_ledger/combat_movement.yaml`'s two entries citing this code (COMB-004, COMB-297)
+checked directly — neither entry's actual claim is factually invalidated by this fix, so neither
+was rewritten.
 
 ## Test Summary
-_(none yet)_
+- New: `tests/unit/engine/test_legality_engaged_hostiles_catalog_semantics.py` — 6/6 passed,
+  covering both a positive (catches a real same-bucket rivalry) and negative (clears a real
+  different-bucket non-hostile pair) case for each of the three internal implementation paths.
+- Regression: `tests/unit/movement/` (57/57), `tests/unit/combat/` +
+  `tests/integration/pipeline/test_combat_legality_matrix.py` (127/127), `tests/unit/tactical/` +
+  `tests/unit/engine/test_legality_faction_mutation.py` (13/13), `tests/unit/core/` (253/253,
+  covers the `state.py` change), `tests/unit/strategic/test_intelligence_routine_blockers.py` +
+  `tests/unit/resource/test_resource_intelligence_contract.py` (5/5, covers the `intelligence.py`
+  change) — all passed, zero regressions.
+- Real-world verification: divergence probe re-run against fixed code (zero remaining
+  disagreement, 3 worlds); before/after combat-volume measurement (3 worlds + `metropolis` with
+  its own disclosed limitation). Full tables in `stored_artifacts/.../test_plan.md`.
+- Registry: `tools/mechanism_registry/registry.py::validate()` — zero errors after the
+  `combat_resolution` `verified`-block update.
 
 ## Files Changed
-_(none yet)_
+- `src/engine/legality.py` — new `_is_engagement_hostile()` helper; all three internal
+  implementations of `get_engaged_hostiles_at_pos()` unified on it.
+- `src/core/state.py` — `AuthoritativeState.__post_init__`'s `_has_hostiles_or_dead_cache`
+  computation now compares real `faction_id` first, not just the raw legacy enum.
+- `src/systems/strategic_systems/intelligence.py` — the same cache's own duplicate recomputation
+  path kept consistent with the `state.py` fix.
+- `registries/mechanisms.yaml` — `combat_resolution`'s `verified` block note extended with the
+  real post-fix volume numbers.
+- `tests/unit/engine/test_legality_engaged_hostiles_catalog_semantics.py` — new, 6 tests.
+- `stored_artifacts/TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS/{plan,investigation,test_plan}.md` — new.
 
 ## Completion Summary
-_(none yet — filed directly from the closed investigation's own fix-shape recommendation, per
-peer review; gets its own PR, per peer's explicit instruction, since it changes the dominant
-combat path's real behavior and earns isolation plus a before/after measurement rather than
-riding along with the investigation that found it.)_
+**Fixed, tested, and measured.** Unified all three internal implementations of
+`get_engaged_hostiles_at_pos()`'s hostility test on one real, catalog-aware helper, per the
+ticket's own hard scope guard (both real call sites, all three implementations, together).
+Discovered and fixed a fourth, upstream instance of the same bug
+(`AuthoritativeState._has_hostiles_or_dead_cache`) that would have silently neutralized the fix
+for the flagship same-legacy-bucket case — found only because the new tests exercised a real
+positive case in each of the three paths, not just confirmed old behavior was preserved. Measured
+real before/after combat volume per world, confirming the predicted large drop
+(`crowded_frontier` -84.8%, `hero_guild_routing` -95.9%) without either world collapsing to zero —
+the prediction survived contact, as a falsifiable claim should. Verified zero remaining divergence
+between the function's real classification and the content catalog directly, not just via unit
+tests. `registries/mechanisms.yaml`'s `combat_resolution` verified block updated with the real
+numbers. Gets its own PR alongside the investigation that recommended it, per peer review.

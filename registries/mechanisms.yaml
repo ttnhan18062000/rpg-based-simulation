@@ -125,7 +125,7 @@ mechanisms:
     verified:
       instrument: corpus_run
       verdict: observed
-      date: "2026-09-17"
+      date: "2026-09-19"
       note: >-
         Real reachability split by edge, not just a single "is this reached" answer.
         `CombatResolutionSystem.resolve_attack()` (reached via `tactical_decision` ->
@@ -151,6 +151,17 @@ mechanisms:
         docs/plans/mechanism_identity_and_change_taxonomy.md §3 for the full reasoning. Multiple
         entry points into the same internal logic (this entry's own two-caller finding above) is
         not itself a split signal -- see that same doc's §1.
+        **2026-09-19 update (`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS`):**
+        the 181-2177 `resolve_multi_attack()` figure above was measured against the pre-fix
+        `LegalityServiceV2.get_engaged_hostiles_at_pos()`, which determined hostility from the
+        raw legacy `Faction` enum rather than the real content catalog -- substantially phantom
+        combat, per `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`'s own
+        measurement (97% of `hero_guild_routing`'s legacy-triggered engagements were not real
+        catalog hostility). After the fix, real, catalog-correct `resolve_multi_attack()` volume
+        over the same 2000-tick runs: `crowded_frontier` 874 -> 133 (-84.8%), `hero_guild_routing`
+        1418 -> 58 (-95.9%), `quest_dense_frontier` 0 -> 0 (unchanged, already zero). The large
+        drop is the fix working as intended -- combat volume in these worlds was substantially not
+        the game's own authored hostility model -- not a regression.
   - id: tactical_decision
     layer: entity
     depends_on: []
