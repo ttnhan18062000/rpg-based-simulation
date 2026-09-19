@@ -233,13 +233,13 @@ def test_reader_dependents_of_is_computed_not_stored(registry):
     # movement, readiness_speed_scaling, interaction_channeling, entity_trade, team_up): none of
     # those mechanisms' own real code ever reads readiness as a data input -- they only WRITE
     # readiness_delta as an output cost, and the actual gate lives entirely in the caller
-    # (LegalityServiceV2/action_router.py), not in the dependent's own logic. See that ticket's own
-    # stored_artifacts/.../edge_audit_results.md for the full per-edge evidence. `conversation` is
-    # the sole surviving edge -- recorded UNCLASSIFIABLE by that audit (no distinguishable
-    # "conversation" implementation exists to check, `state: gap`), not confirmed as a real
-    # dependency, but not disproven either -- kept rather than forced.
+    # (LegalityServiceV2/action_router.py), not in the dependent's own logic. `conversation` was
+    # the sole surviving edge, recorded UNCLASSIFIABLE by that audit -- then REMOVED
+    # (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION, 2026-09-19): confirmed no
+    # "conversation" implementation exists anywhere (its own `state: gap` already said so), so a
+    # depends_on edge declared from it cannot be verified.
     dependents = registry.dependents_of("action_pacing_readiness")
-    assert dependents == ["conversation"]
+    assert dependents == []
     # A leaf with genuinely zero dependents returns an empty list, not an error.
     assert registry.dependents_of("nonexistent_mechanism_xyz") == []
 
@@ -615,8 +615,11 @@ def test_real_registry_zero_unassigned_mechanisms(registry_data, monkeypatch):
         f"expected zero unassigned mechanisms in the real registry, found: {result['unassigned']}"
     )
     unaudited = registry_data.get("unaudited_depends_on_edges") or []
-    assert len(unaudited) == 17, (
-        f"expected 17 unaudited edges from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT, "
+    assert len(unaudited) == 2, (
+        f"expected 2 unaudited edges (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-"
+        f"RESOLUTION resolved 15 of the original 17 from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-"
+        f"SEMANTICS-AUDIT on 2026-09-19; only the motivation_doctrine pair remains, deferred to "
+        f"TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN), "
         f"found {len(unaudited)} -- if this genuinely changed, update this pinned count with a "
         f"citation, don't just adjust the number"
     )
