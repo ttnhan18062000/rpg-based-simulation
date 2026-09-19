@@ -152,7 +152,18 @@ alongside the main checkout, each independently on its own branch.
   if that file is dirty from the immediately preceding tool call. Chain the commit and the checkout
   in one Bash invocation (`git add agent-monitoring/data/ && git commit -m "..." && git checkout -b
   <branch> origin/<default-branch>`) to close the race window, rather than issuing them as separate
-  tool calls.
+  tool calls. (`TCK-20260919-CLAUDE-MD-CHECKOUT-RACE-GUIDANCE-UNOWNED-AND-INCOMPLETE`)
+  - **The chained fix covers one tool call, not an operation that spans several.** The shard is
+    written only by the PostToolUse hook, which appends one row after each tool call finishes —
+    never partway through a running command. So a git operation that stops and resumes across tool
+    calls (a `cherry-pick`, `rebase`, or `merge` that halts on a conflict and continues with
+    `--continue`) finds the shard dirtied again between those calls and hits "local changes would be
+    overwritten". **Do not discard the shard to clear it** (`git checkout HEAD -- …/tools.jsonl`):
+    the hook appends, so that permanently deletes every monitoring row written since the last commit,
+    including other sessions' rows in the same worktree. Instead, stage it into the operation —
+    include `agent-monitoring/data/` in the same `git add` that precedes `--continue` — so the rows
+    ride into that commit and the tree is clean for the next step. A different session appending to
+    the same worktree's shard mid-command is not covered by this; only a hook-level fix removes that.
 
 ---
 
