@@ -138,6 +138,44 @@ RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_h
 `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` (shape 5's first instance,
 `regional_trauma`).
 
+### 3.2 A different failure class: confident misattribution, not confident absence
+
+§3.1's five shapes are all **search failing to find code**, producing a confident **false
+negative** — "no implementation exists." This one is the inverse: **attribution finding the wrong
+code and believing it**, producing a confident **false positive** — "this code is that mechanism."
+It is not a sixth shape of the same failure; it is a different failure with a different mitigation,
+and belongs in its own section rather than a sixth bullet in §3.1, or the catalogue's single
+mitigation there ("search harder — graphify, multiple patterns, check for renames") would read as
+covering a case it cannot touch. Searching better does not fix this one: the search that produced
+it was not sloppy. It found real, correctly-identified orphan code that was genuinely, honestly
+describable as "trauma" in plain English.
+
+**The instance**: resolving edge #4 of `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+RESOLUTION`, `trauma`'s `state` was corrected `done` → `orphan` and its `implemented_by` bound to
+`RecoveryReadinessService.register_near_death()` (`src/domains/emotion/recovery_service.py`) — real
+code, genuinely orphaned (zero callers), genuinely about near-death psychological state. It was the
+wrong mechanism. `trauma`'s real identity, discovered the same day while building this ticket's own
+status-language detector: the atlas's `entity-modification#0` card, titled "Trauma: A Lasting
+Physical Consequence" — the Wound→Scar physical combat-consequence system, implemented by
+`WoundService` (`src/engine/rpg_depth.py`), live, with real callers in `combat.py` and
+`tactical.py`. Full correction on `trauma`'s own `verified` block.
+
+**The mitigation is a discipline, not a tool: check the entry's existing citation trail before
+replacing it.** `trauma`'s own original citation
+(`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`) named
+`combat_resolution` as the dependency and `entity-modification#0` as the atlas card — both correct,
+both sitting there unread when the replacement was made. **The registry already held the correct
+answer.** The data that would have prevented the error was in the entry being overwritten, not
+missing from the codebase — the strongest available argument for this registry's own citation
+convention: not that citations are tidy record-keeping, but that an entry's existing evidence is
+the first thing to check before replacing it, precisely because a plausible-sounding new candidate
+is most dangerous when it is real code. A `code_trace` that finds real, correct, orphaned code
+proves that code is real and orphaned — it proves nothing about which registry entry it belongs to,
+and that question has its own evidence, already on file, every time an entry already carries one.
+
+Source ticket: `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION` (where the error was found and
+self-corrected the same day).
+
 ---
 
 ## 4. The three wirings
