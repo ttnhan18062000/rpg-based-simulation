@@ -514,11 +514,40 @@ class LegalityServiceV2:
         return LegalityServiceV2.get_engaged_hostiles_at_pos(entity.navigation.position, entity, state)
 
     @staticmethod
+    def _is_engagement_hostile(entity: EntityState, other: EntityState) -> bool:
+        """
+        Real, catalog-driven hostility test for melee-engagement purposes (opportunity-attack
+        triggering, escape-tag observability, and sidestep-avoidance pathing -- the only 3 real
+        consumers of get_engaged_hostiles_at_pos, all of which want the same answer per
+        TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION).
+
+        Replaces the prior raw `entity.identity.faction != other.identity.faction` legacy-enum
+        comparison, which never consulted the content catalog and was measured to disagree with
+        it on 34%-97% of every pair either source flagged as hostile
+        (TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS).
+        """
+        from src.content_semantics.faction import get_faction_semantics_service, get_faction_id_str
+        from src.content_semantics.relation import RelationContext
+        from src.entities.identity_resolver import EntityIdentityResolver, IdentityResolutionError
+
+        id_resolver = EntityIdentityResolver()
+        try:
+            src_faction_id = id_resolver.resolve(entity).faction_id
+        except IdentityResolutionError:
+            src_faction_id = get_faction_id_str(entity)
+        try:
+            tgt_faction_id = id_resolver.resolve(other).faction_id
+        except IdentityResolutionError:
+            tgt_faction_id = get_faction_id_str(other)
+
+        ctx = RelationContext(distance=1.0, combat_engaged=True)
+        return get_faction_semantics_service().is_hostile_compat(src_faction_id, tgt_faction_id, ctx)
+
+    @staticmethod
     def get_engaged_hostiles_at_pos(pos: Tuple[float, float], entity: EntityState, state: Any) -> List[int]:
         """Find hostile entities that would be in melee engagement with this entity at a hypothetical position."""
         if getattr(state, "_has_hostiles_or_dead_cache", None) is False:
             return []
-        my_faction = entity.identity.faction
         px, py = int(pos[0]), int(pos[1])
         engaged = []
 
@@ -527,7 +556,7 @@ class LegalityServiceV2:
                 other_id = state.occupancy_snapshot.occupant_at((px + dx, py + dy))
                 if other_id and other_id != entity.id:
                     other = state.entities.get(other_id)
-                    if other and other.combat.alive and other.lifecycle.active and my_faction != other.identity.faction:
+                    if other and other.combat.alive and other.lifecycle.active and LegalityServiceV2._is_engagement_hostile(entity, other):
                         engaged.append(other_id)
             engaged.sort()
             return engaged
@@ -540,9 +569,9 @@ class LegalityServiceV2:
                 if other_id and other_id != entity.id:
                     other = state.entities.get(other_id)
                     if other and other.combat.alive and other.lifecycle.active:
-                        if my_faction != other.identity.faction:
+                        if LegalityServiceV2._is_engagement_hostile(entity, other):
                             engaged.append(other_id)
-                            
+
             engaged.sort()
             return engaged
         except (AttributeError, TypeError):
@@ -553,7 +582,7 @@ class LegalityServiceV2:
                     if other_id == entity.id or not other.combat.alive or not other.lifecycle.active:
                         continue
                     dist = LegalityServiceV2.get_manhattan_dist(pos, other.navigation.position)
-                    if dist <= 1 and entity.identity.faction != other.identity.faction:
+                    if dist <= 1 and LegalityServiceV2._is_engagement_hostile(entity, other):
                         engaged.append(other_id)
             engaged.sort()
             return engaged

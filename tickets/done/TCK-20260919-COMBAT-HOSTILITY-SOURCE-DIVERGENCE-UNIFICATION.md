@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION
-phase: open
+phase: done
 date: 2026-09-19
 tags: [combat, faction, root-cause]
 ---
@@ -18,7 +18,7 @@ enum, never the real per-pair content catalog `is_hostile_compat()` uses — mea
 34%-97% of every pair either source flags as hostile; investigate the blast radius before fixing
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -117,6 +117,10 @@ the opportunity-attack trigger:
 - A scoped fix proposal, reviewed by peer, before any implementation.
 
 ## Related Tickets
+- `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` (filed from this ticket's own
+  fix-shape recommendation — the actual fix, in its own ticket and its own PR per peer review,
+  with a hard scope guard against a partial fix and a before/after combat-volume measurement
+  requirement)
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (source — where this finding was
   discovered and measured; see its 2026-09-19 addendum for the full trace and numbers this
   ticket's own Request Summary is drawn from)
@@ -156,8 +160,9 @@ better account of why this survived three separate investigations in the same ar
   own documented scope)
 
 ## Related Stored Artifacts
-_(none yet — filed as a measured finding with a proposed investigation scope, not yet
-investigated further)_
+`stored_artifacts/TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION/` — full call-site
+enumeration, volume measurement, existing-test-compatibility trace, and the fix-shape
+recommendation.
 
 ## Related Code Areas
 - `src/engine/legality.py` (`LegalityServiceV2.get_engaged_hostiles`,
@@ -188,15 +193,77 @@ investigated further)_
   evidence, not assumed here.
 
 ## Implementation Notes
-_(none yet — not yet investigated)_
+**Headline correction to this ticket's own initial framing**: there are **2** real call sites, not
+3+. `LegalityServiceV2.get_engaged_hostiles()` is a trivial wrapper around
+`get_engaged_hostiles_at_pos()` (`src/engine/legality.py:512-514`) — so the "opportunity-attack
+trigger" and "skip_oa/escape-tag" consumers named in this ticket's own Scope are not two call
+sites, they are two things done with **one** shared call's result
+(`movement.py:181`). The only structurally independent second call site is the sidestep-loop's
+direct call to `get_engaged_hostiles_at_pos()` at a hypothetical position (`movement.py:100`).
+Confirmed exhaustively via repo-wide grep — no other real callers anywhere in `src/`.
+
+**The pathing check does NOT want different, more permissive semantics** — the opposite of this
+ticket's own stated hypothesis. The sidestep loop's own code comment says "prefer tiles that
+don't trigger OAs," meaning it exists specifically to predict/avoid call site 1's own outcome —
+which only works if it uses the same hostility definition call site 1 uses. Both real call sites
+want the same answer: real, catalog-driven hostility.
+
+**Real call volume, measured**: the sidestep-avoidance call site is not a minor consumer — it is
+comparable to, and in 3 of 4 worlds larger than, the direct engagement call site (20452 vs. 17787
+in `crowded_frontier`; 19244 vs. 14740 in `hero_guild_routing`; 506 vs. 760 in
+`quest_dense_frontier`; 66 vs. 57 in `metropolis`, used with its own spawn-collision limitation
+disclosed, not as a clean control). A fix that only touched the attack/escape path would leave
+roughly half this primitive's real volume on the wrong semantics.
+
+**Existing test compatibility, traced not assumed**: `tests/unit/movement/
+test_movement_spatial_regression.py`'s escape-tag fixtures would still pass under catalog-aware
+semantics — their synthetic `"monster_horde"` faction id has no real catalog entry, so
+`is_hostile_compat()` falls through to the same legacy-bucket-comparison fallback the current code
+already uses.
+
+**Fix shape**: one unified source change in `get_engaged_hostiles_at_pos()`
+(`src/engine/legality.py:517-559`), which has 3 internal implementations of the same hostility
+test (occupancy-snapshot fast path, spatial-query fallback, dict-iteration fallback) that would
+all need updating consistently. `get_engaged_hostiles()` itself needs no separate change — fixing
+the one function fixes both real consumers. `RelationContext` (all fields optional) and
+`EntityIdentityResolver.resolve()` (pure, in-memory, no I/O) are both cheap enough at the measured
+volume (10-19 calls/tick worst case) to not be a performance concern.
+
+**`implemented_by` bound as a side effect of reading this code closely**: `combat_resolution` →
+`src/engine/combat.py::CombatResolutionSystem`, `tactical_decision` →
+`src/engine/tactical.py::TacticalDecisionSystem`, `movement` →
+`src/engine/movement.py::MovementSystem`. The remaining 4 combat mechanisms
+(`action_pacing_readiness`, `status_effects`, `skill_unlocks`, `combat_engagement`) were not read
+closely enough in this investigation to bind with equal confidence — left for
+`TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION`'s own dedicated pass.
 
 ## Test Summary
-_(none yet)_
+- `tools/mechanism_registry/registry.py::validate()` — zero errors after the 3 new
+  `implemented_by` bindings.
+- `pytest tests/unit/tools/test_mechanism_registry.py` — 52/52 passed.
+- `pytest tests/unit/movement/` — 57/57 passed (unrelated to the registry change, run for
+  confidence since this investigation read that module closely).
+- No `src/` code changed — investigation only, per this ticket's own explicit scope.
 
 ## Files Changed
-_(none yet)_
+- `registries/mechanisms.yaml` — 3 `implemented_by` bindings added (`combat_resolution`,
+  `tactical_decision`, `movement`); no other field changed.
+- `stored_artifacts/TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION/{plan,investigation,test_plan}.md` — new.
 
 ## Completion Summary
-_(none yet — filed per peer's explicit direction that this is "the highest-value repair in the
-queue" and needs its own ticket rather than living only as a citation inside the source
-investigation's addendum)_
+**Investigation complete, fix not built (per this ticket's own explicit scope).** The headline
+result reverses this ticket's own initial framing: there are 2 real call sites, not 3+, because
+`get_engaged_hostiles()` is a trivial wrapper around `get_engaged_hostiles_at_pos()`. Both real
+call sites — the shared attack/escape-tag consumer and the sidestep-avoidance pathing check — want
+the *same* catalog-aware hostility semantics, not different ones; the pathing check's own code
+comment ("prefer tiles that don't trigger OAs") confirms its job is to predict the attack
+trigger's own outcome, which requires matching its definition, not diverging from it. Real
+measurement found the sidestep-avoidance call site carries comparable or greater volume than the
+already-measured attack path, so a fix touching only one would leave roughly half the real volume
+uncorrected. Traced the one existing test suite covering this code path and confirmed it would
+still pass under catalog-aware semantics. Fix shape: one unified change to
+`get_engaged_hostiles_at_pos()`'s three internal implementations, cheap enough at measured volume
+to carry no performance concern — smaller and simpler than this ticket's own "may need per-call-
+site treatment" worry anticipated. Bound `implemented_by` for the 3 combat mechanisms whose code
+was read with real confidence during this work, per explicit instruction, as a side effect rather
+than a separate pass.
