@@ -180,3 +180,20 @@ and the value investigation's own finding are satisfied and directly tested: cou
 badge, and every rate shown against a live-computed baseline rather than in isolation. Nothing
 computed here feeds a ranking or verdict (AC #5/#6 lineage from the foundation ticket held). All
 93 mechanisms accounted for across 7 systems plus a real, currently-empty `unassigned` bucket.
+
+**Addendum, 2026-09-19, peer review of the landed view**: two real refinements, same day, same
+ticket. (1) **A "Bound, Unverified" column added** — `_rollup_stats()` now also counts mechanisms
+that have a real `implemented_by` binding but no `verified` block. Peer's finding: `unverified`
+collapses two different-cost problems the per-mechanism view never separates — *bound-but-
+unverified* (the code is already located; cheapest to verify) versus *unbound-and-unverified* (we
+don't even know where to look yet). Real numbers on the actual registry: `social` has 4 of its 4
+bound mechanisms sitting unverified (100% of its bound work is "ready to verify, never checked");
+`economy` has 1 of 1. This is the rollup's own most actionable number, not combat's headline
+separation from baseline. (2) **A reading-caution paragraph added to the rendered view**: `combat`'s
+71.4%/71.4% separation from baseline is largely selection bias (a week of this session's own focused
+work on combat — the hostility investigation, the ATTACK-path root-cause, the coverage-extension
+batch that bound 5 of its 7 mechanisms) rather than a discovery that combat is intrinsically deeper
+than other systems. Left unstated, a cold reader would read "combat is deep" as a fact about the
+simulation rather than a fact about where recent attention went. 2 new tests
+(`test_rollup_distinguishes_bound_unverified_from_unbound_unverified`,
+`test_render_includes_bound_unverified_column`); `tests/unit/tools/` now 218 passed.

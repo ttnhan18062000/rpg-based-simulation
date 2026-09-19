@@ -494,6 +494,23 @@ mechanisms:
         distinguished. Cross-reference for whoever picks this up:
         `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION` (next in this session's
         own program order) is exactly the audit this question belongs to.
+        **Added 2026-09-19, first direct instance checked**: `combat_resolution → status_effects`
+        (the direct dependent, already `KEEP`-verdicted in the parent edge audit,
+        `src/engine/combat.py:84`) is case (a) -- `if any(s.kind == "frozen" for s in
+        defender.combat.status_effects): atk_mult *= 1.5` handles the empty list correctly via
+        `any()`, but the SHATTER attack-bonus branch is dead in production for the same reason
+        `ATTACKER_STATUS_BLOCKED` is: nothing ever creates a `"frozen"` effect to trigger it. **This
+        is now two independently-confirmed dead branches downstream of this one orphan mechanism**
+        (`legality.py`'s block-gate, `combat.py`'s bonus-gate), out of 4 real transitive dependents --
+        a pattern, not two coincidences: **when a mechanism is confirmed orphan, every dependent
+        branch that consumes its output is dead by implication**, individually invisible to anyone
+        reading that branch's own code in isolation (both reads above are correctly written; neither
+        looks wrong on its own). `trauma` and `commitment_betrayal`/`commitment_pressure_
+        consequences` (the other 2 of the 4 transitive dependents) are not yet checked and are worth
+        the same look. Mechanically checkable later without a fresh code read each time: orphan
+        status plus the dependent list this registry already holds is sufficient input, once
+        someone wants to build it -- not attempted here, this ticket's own scope was the coverage
+        batch, not a new detector.
 
   # ── Entity layer — Cognition (18, atlas `entity-cognition`) ─────────────────────────────────
 

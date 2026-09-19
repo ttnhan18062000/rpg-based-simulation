@@ -668,17 +668,26 @@ def _rollup_stats(ids: List[str], by_id: Dict[str, dict]) -> dict:
     (TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW AC #1/#5)."""
     n = len(ids)
     bound = sum(1 for i in ids if by_id[i].get("implemented_by"))
+    bound_unverified = 0
     runtime_verified = 0
     static_verified = 0
     state_counts: Dict[str, int] = {s: 0 for s in VALID_STATES}
     for i in ids:
         m = by_id[i]
         verified = m.get("verified")
+        is_bound = bool(m.get("implemented_by"))
         if verified:
             if verified.get("instrument") in RUNTIME_INSTRUMENTS:
                 runtime_verified += 1
             else:
                 static_verified += 1
+        elif is_bound:
+            # Real code binding, real caller located, never confirmed to do anything --
+            # peer-review finding (TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW): distinct from
+            # "unbound and unverified" (we don't even know where to look) and the CHEAPEST
+            # verification target available, since the expensive part -- locating the
+            # implementation -- is already done.
+            bound_unverified += 1
         state = m.get("state")
         if state in state_counts:
             state_counts[state] += 1
@@ -687,6 +696,7 @@ def _rollup_stats(ids: List[str], by_id: Dict[str, dict]) -> dict:
         "count": n,
         "bound": bound,
         "bound_rate": (bound / n) if n else 0.0,
+        "bound_unverified": bound_unverified,
         "runtime_verified": runtime_verified,
         "static_verified": static_verified,
         "verified": verified_total,
