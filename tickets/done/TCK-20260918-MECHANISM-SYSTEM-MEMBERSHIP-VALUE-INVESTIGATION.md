@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION
-phase: open
+phase: done
 date: 2026-09-18
 tags: [architecture, documentation, investigation]
 ---
@@ -16,7 +16,7 @@ Do the broad membership pass as a throwaway exercise and report whether reading 
 anything the per-mechanism view does not — build nothing
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -110,7 +110,10 @@ so splits are not rare).
 - `docs/plans/mechanism_tier_model_initiative.md`
 
 ## Related Stored Artifacts
-- `stored_artifacts/TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION/`
+- `stored_artifacts/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION/` — this
+  ticket's own findings
+- `stored_artifacts/TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION/` — required
+  reading, the four failed derived candidate sets
 
 ## Related Code Areas
 - `registries/mechanisms.yaml` — read-only for this ticket
@@ -131,11 +134,50 @@ The pattern this follows has now paid off twice — measure the cheapest discrim
 committing to a design. The difference is what is being measured: last time feasibility, this time
 value against cost.
 
+**Full findings in `stored_artifacts/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION/investigation.md`.**
+Summary:
+- All 93 mechanisms assigned to 7 broad systems (`combat`, `progression`, `cognition`, `social`,
+  `faction`, `economy`, `world`), zero unassigned. The independently-derived `progression`
+  assignment matched the ticket's own worked-example count (15) exactly, a real cross-check that
+  this session's judgment tracked the ticket author's.
+- **8 of 93 (8.6%) are genuinely multi-system** — real, not padding (`movement`, `personality`,
+  `adventure_routing`, `entity_trade`, `guilds`, `regional_sovereignty`, `fame`,
+  `quest_generation_sourcing`). Low enough that a single-valued field with a short documented
+  exception list is a real alternative to full many-to-many — not decided here, flagged for
+  child 2.
+- **Value test, 2 of 3 systems cleared the bar** (`combat`, `economy`) once checked against the
+  whole-registry baseline (74% unverified, 30% `implemented_by` overall) rather than reported in
+  isolation. `faction`'s own raw numbers (77% unverified, 23% bound) looked informative until
+  checked against baseline and found statistically indistinguishable from the corpus average —
+  exactly the "two of three" honesty check this ticket's own Scope anticipated, and evidence the
+  design needs a baseline-comparison step to be reliably informative, not evidence it's unsound.
+- `economy` reached the same caliber of finding as the ticket's own `progression` benchmark
+  (100% unverified — 26 points above baseline — with a real, coherent 4-edge internal
+  `depends_on` structure, unlike the prior derived-economy candidate's n=2 failure).
+- Cost: real and recurring, not one-time — the identity-rules ticket's own ~44% split rate (4 of
+  9 cases) means membership needs periodic re-review, not just initial assignment.
+
 ## Test Summary
-To be completed during implementation.
+Not applicable in the usual sense — investigation only, no code/schema/field/generator built.
+Internal-consistency checks on the throwaway assignment script: all 93 real registry ids
+assigned (verified via direct set-difference, `missing` = empty), no typo'd/extra ids, baseline
+rates computed the same way as per-system rates before comparing. See `test_plan.md`.
 
 ## Files Changed
-To be completed during implementation.
+- `stored_artifacts/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION/{plan,investigation,test_plan}.md` — new.
+- No `src/`, `registries/`, or schema files touched — investigation only, per this ticket's own
+  explicit scope (`registries/mechanisms.yaml` was read-only).
 
 ## Completion Summary
-Open.
+**Recommendation: proceed, with one required change to the foundation's own design (not "do not
+build," and not an unconditional "proceed" either).** The value test passed 2 of 3 test systems
+(`combat`, `economy`), including one (`economy`) that matches the caliber of the ticket's own
+progression benchmark — real signal, distinct from the prior derived-membership investigation
+where every candidate failed for a structural design reason. The one failure here (`faction`)
+failed for a measurement reason (a raw percentage that looks informative until compared against
+the whole-registry baseline), which is fixable in how the foundation presents membership: any
+rollup/review view must report per-system rates against baseline, not in isolation, or it will
+mislead readers the way `faction`'s own raw 77% would have. Multi-membership is real but small
+(8.6%) — a genuine simplification candidate (single-valued field + short exception list) for
+child 2 to weigh against full many-to-many, not settled here. Cost is real and recurring given
+the identity-rules ticket's own ~44% mechanism-split rate, not a one-time setup cost.

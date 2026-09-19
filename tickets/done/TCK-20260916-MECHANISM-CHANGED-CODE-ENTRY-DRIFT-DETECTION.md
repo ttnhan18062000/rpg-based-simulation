@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20260916-MECHANISM-CHANGED-CODE-ENTRY-DRIFT-DETECTION
-phase: open
+phase: done
 date: 2026-09-16
 tags: [architecture, schema, simulation-quality]
 ---
@@ -16,7 +16,7 @@ Flag a PR that changes `implemented_by`-cited code without touching the mechanis
 entry
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -98,13 +98,57 @@ Exact PR-diff acquisition mechanism (local `git diff` against a base ref vs. a C
 changed-file list) needs deciding during implementation based on where this actually gets wired in.
 
 ## Implementation Notes
-To be completed during implementation.
+`tools/mechanism_registry/mechanism_registry_changed_code_check.py`, two pure, testable entry
+points plus a git-diff wrapper: `check_drift(old_data, new_data, changed_files)` returns every
+mechanism whose `implemented_by` citation includes a changed file where the mechanism's own entry
+(compared as a whole dict, old vs new) did NOT change; `check_replacements(old_data, new_data)`
+separately reports mechanisms whose `implemented_by` was replaced (already had a citation, now
+points elsewhere) rather than bound for the first time — cheap to compute from the same old/new
+comparison already in hand, offered by peer review and included since it fit cleanly without
+expanding the core drift check's own scope. `check_drift_from_git(base_ref, head_ref)` resolves
+changed files via `git diff --name-only` and loads the registry at both refs via `git show`
+(`"WORKTREE"` as a special `head_ref` reads the real on-disk file for uncommitted changes, rather
+than requiring a commit).
+
+**The replacement signal's own motivating validation**: run manually (not as a committed test, for
+the reason below) against this session's own two real commits spanning the `trauma` misattribution
+and its same-day correction — 0 drift findings, 1 replacement finding, `trauma:
+['.../RecoveryReadinessService'] -> ['.../WoundService']`. The tool would have surfaced exactly the
+incident that motivated adding this signal, confirmed against real history before trusting the
+synthetic tests alone.
+
+**AC #3's own suggested positive control (the `causal_spatial_memory` state-drift fix commit)
+does not exist as a single real commit** — checked directly: no commit in this repo's history
+changes `src/domains/memory/phase.py` and `registries/mechanisms.yaml` together (the registry
+itself didn't exist until 2026-09-15, after that file's own last code change). Used synthetic
+fixtures for both controls instead, which the AC's own "e.g." phrasing allows. The real-history
+validation above was run manually rather than committed as a test, since hardcoding a specific
+commit SHA from this feature branch would break the moment the branch squash-merges (this repo's
+own PR convention, `CLAUDE.md`'s "PR Lifecycle" §7) — those exact commit objects stop being
+reachable from `main` and eventually get garbage-collected. The synthetic tests are timeless; a
+SHA-pinned test would not have been.
+
+**Generalizable takeaway for whoever next builds a control against real history in this repo**: a
+test pinned to a commit on a branch that will squash-merge is a test with a scheduled expiry —
+validate against real history manually when it's available, keep the committed tests synthetic.
 
 ## Test Summary
-To be completed during implementation.
+`tests/unit/tools/test_mechanism_registry_changed_code_check.py` (12 new tests): AC #3's own
+positive control (code + entry changed together, not flagged) and synthetic negative control
+(code changed, entry untouched, flagged) as the two load-bearing tests, plus symbol-suffix
+stripping, multi-file citation handling, the replacement-vs-first-binding distinction (2 tests),
+report-only guarantee (`main()` always exits 0, including on git-resolution failure — "SKIPPED"
+rather than a crash), and the Make target. Full `tests/unit/tools/` suite: 241 passed.
 
 ## Files Changed
-To be completed during implementation.
+- `tools/mechanism_registry/mechanism_registry_changed_code_check.py` — new.
+- `Makefile` — new `mechanism-registry-changed-code-check` target.
+- `tests/unit/tools/test_mechanism_registry_changed_code_check.py` — new, 12 tests.
 
 ## Completion Summary
-Not yet started.
+**Done.** Last of the two remaining detectors named in the mechanism-registry program's own
+pivot order, closing that arc. AC #1/#2 met directly. AC #3 met with synthetic fixtures rather
+than the suggested real historical commit (confirmed not to exist as a single commit — the
+registry postdates the code's own last change), plus a manual (not committed, for durability
+reasons stated above) validation against this session's own real `trauma` misattribution/
+correction commit pair, which the replacement signal caught exactly as designed.

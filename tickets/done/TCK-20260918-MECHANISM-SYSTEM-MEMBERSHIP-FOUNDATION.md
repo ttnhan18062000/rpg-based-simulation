@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION
-phase: open
+phase: done
 date: 2026-09-18
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Revive the `system` tier as declared membership on mechanisms — a managed regi
 missing-system and orphan-system validation
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,6 +108,9 @@ pre-fragment now.
 6. Nothing derives a ranking, verdict or priority from system membership.
 
 ## Related Tickets
+- `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION` — done; found the value/cost case
+  for building this real (2 of 3 test systems cleared the value bar against baseline) and seeded
+  the initial 7-system, 93-mechanism vocabulary this ticket's own §5 pass should start from
 - `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION` — rejected the derived design; this
   supersedes its conclusion **for the declared-membership mechanism only**, not for derivation
 - `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` — closed; this reopens the tier by a different route
@@ -143,6 +146,31 @@ pre-fragment now.
    purpose. Recorded now so the follow-up does not have to rediscover it.
 4. How many systems the broad pass yields is unknown and deliberately not targeted. If it lands very
    high, that is a signal the grouping is not working — report it rather than forcing a number.
+5. **Hard requirement for any rollup/review view, found by
+   `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`: report every per-system rate
+   against the whole-registry baseline, never in isolation.** That investigation's own `faction`
+   test case looked like a real finding (77% unverified, 23% `implemented_by`) until compared
+   against the corpus-wide baseline (74% / 30%) and found statistically indistinguishable from
+   average — a raw rate without a baseline isn't a finding, it's the corpus average wearing a
+   system's name. **This generalizes past this one rollup**: it is the same failure shape as the
+   attribution ratchet reporting a percentage with no comparison and firing on legitimate
+   activity, and SimQ reporting green because it measured at a scale where the real change
+   couldn't appear — a number presented without the context that makes it mean something. Any
+   future report built on top of declared membership must carry this requirement, not just the
+   first rollup view.
+6. **Multi-membership is real but rare (8/93 = 8.6%, per the same investigation), and that is the
+   argument to keep the declared-on-mechanism list field as-is, not to simplify it away.** A
+   single-valued field plus a hand-maintained exception list for the 8 that don't fit would put
+   membership in two places — the field and the exception list — which is exactly the
+   second-source-of-truth pattern this ticket's own §2 rationale already rejects for a
+   registry-side membership list. The list field already handles 0, 1, or many memberships
+   without needing a second mechanism; 8.6% is small enough to keep, not small enough to special-
+   case.
+7. **The investigation's own progression assignment (independently arriving at exactly 15
+   mechanisms before re-reading this ticket's own worked example) is real corroborating evidence,
+   not just a nice coincidence** — it is what makes the investigation's other six system
+   assignments (including the two, `combat` and `economy`, that passed the value test) credible
+   rather than fitted to a known answer.
 
 ## Implementation Notes
 **`docs/plans/mechanism_tier_model_initiative.md` must be updated, not duplicated.** Its current
@@ -156,10 +184,73 @@ that would put one subject in two documents, which is the duplication rule this 
 enforce. The rejected-derivation finding is expensive and must survive the rewrite.
 
 ## Test Summary
-To be completed during implementation.
+- New: `tests/unit/tools/test_system_registry.py` (18 tests, mirrors `test_layer_registry.py`),
+  11 new tests in `tests/unit/tools/test_mechanism_registry.py` (invariants 9/10, both directions
+  each, plus `mechanisms_by_system()`'s own grouping and unassigned-presence tests).
+- New: `tests/unit/tools/conftest.py` — autouse fixture isolating the new orphan-system invariant
+  from every pre-existing fixture-based test (see `staging_artifacts/.../investigation.md` for
+  why this is structurally necessary, not a workaround).
+- Regression: `tests/unit/tools/` filtered to `mechanism or system_registry` — 202/202 passed.
+- `make mechanism-registry-validate` — `OK: ... valid, 93 mechanisms`.
+- Full detail in `staging_artifacts/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION/test_plan.md`.
 
 ## Files Changed
-To be completed during implementation.
+- `registries/system_registry.jsonl` — new, 7 systems registered.
+- `tools/mechanism_registry/system_registry.py` — new, mirrors `tools/layer_registry.py`.
+- `registries/mechanisms.yaml` — `systems: []` added to all 93 mechanisms.
+- `tools/mechanism_registry/registry.py` — invariants 9/10 (missing/orphan system), new
+  `mechanisms_by_system()` query, `_load_system_registry` import, docstring invariant-count fix.
+- `tools/mechanism_registry/__init__.py` — re-export `mechanisms_by_system`.
+- `tests/unit/tools/conftest.py` — new.
+- `tests/unit/tools/test_mechanism_registry.py` — 11 new tests, 2 existing tests updated to
+  restore the real system registry via `monkeypatch`.
+- `tests/unit/tools/test_system_registry.py` — new, 18 tests.
+- `docs/plans/mechanism_tier_model_initiative.md` — status block updated (not duplicated) to
+  record the foundation landing and the value investigation's own "proceed with a required
+  change" verdict.
+- `staging_artifacts/TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION/{plan,investigation,test_plan}.md` — new.
 
 ## Completion Summary
-Open.
+**All 6 acceptance criteria met.** Systems are registered, validated, and addable (AC #1) via
+`registries/system_registry.jsonl` + `system_registry.py`, mirroring the established
+`layer_registry`/`tag_registry` pattern exactly. `systems: []` exists on every mechanism and
+accepts multiple values (AC #2, exercised by 8 real multi-system mechanisms and a dedicated
+test). Both new invariants are proven failing on deliberately invalid fixtures, never merely
+passing on clean data (AC #3). All 93 mechanisms declare a real system — zero unassigned,
+confirmed by a pinned regression test, not just a clean validate() pass (AC #4). A mechanism
+with no system is proven to render under `mechanisms_by_system()`'s own `"unassigned"` key by a
+test asserting its own presence in the output (AC #5). Nothing derives a ranking, verdict, or
+priority from system membership — the two new invariants only check structural consistency, and
+`mechanisms_by_system()` is a pure, read-only query (AC #6).
+
+**The one real, unanticipated finding**: the orphan-system invariant is not fixture-testable the
+same way every prior invariant in this file was, because its subject (a registered system having
+zero real members) is a whole-corpus property — it needs a CLOSED universe (every system it can
+see has a member within that same universe), not necessarily the real, complete mechanism set. A
+small synthetic fixture works fine as long as it's complete and self-contained on its own terms;
+what actually broke was the pre-existing tests' shared 2-3-mechanism fixtures being a PARTIAL slice
+of the real 93-mechanism/7-system registry rather than a closed universe of their own — 18
+pre-existing tests broke as a direct, immediate signal of this before any fix was written, not
+discovered later. Solved with a scoped, autouse test fixture rather than either weakening the
+invariant or forcing every unrelated test to carry full-registry weight.
+
+**Generalizable lesson for the next invariant author**: every invariant in `registry.py::validate()`
+before this one was compositional — a self-contained property of the `data` dict already passed
+in, true or false on any arbitrary valid subset of it. The orphan-system invariant is the first
+whole-corpus invariant added to this function (a property of the full mechanism-x-system universe,
+not of any one mechanism or slice). That distinction, not just "add a fixture," is the reusable
+takeaway — see the comment block directly above invariants 9/10 in `tools/mechanism_registry/registry.py`
+for the full reasoning, and `tests/unit/tools/conftest.py` for the fix shape (autouse empty-registry
+default, explicit opt-in restoration per test). A future whole-corpus-shaped invariant should expect
+the same non-compositionality rather than assuming it will behave like every invariant before it.
+Coverage for invariant 10 is not limited to the two real-registry tests (`test_real_registry_passes_validation`,
+`test_real_registry_systems_all_resolve`) — `test_validator_rejects_registered_system_with_zero_members`
+and its sibling accept-side tests exercise it directly on synthetic data, because each defines its
+own complete, self-contained registered-systems/mechanism-list pair via `_fixture_registry()` --
+a closed universe in its own right, not a partial slice of the real 93-mechanism/7-system one --
+which is exactly what makes a small synthetic fixture usable here despite the property's own
+non-compositionality.
+
+`docs/plans/mechanism_tier_model_initiative.md` updated in place, not duplicated, per this
+ticket's own Implementation Notes instruction — the rejected-derivation history and the revived
+declared-membership design now read as one coherent narrative including this ticket's own landing.
