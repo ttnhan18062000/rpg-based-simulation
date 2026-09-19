@@ -84,6 +84,60 @@ never running.
 The point of the table: **roughly half the state vocabulary is a query somebody typed by hand.**
 `orphan` does not mean "we think this is orphaned" — it means zero callers, which is executable.
 
+### 3.1 Five shapes of search failure, catalogued 2026-09-19
+
+The table above says existence/caller-count is "detected," as if that were a solved query. It
+isn't, in practice — the *search that produces* a caller count can itself be wrong in ways that
+look like a clean negative result. This repo has now hit five genuinely distinct failure shapes
+across several tickets, each one independently discovered, each one producing **confident absence**
+(the searcher concludes "no code exists" and is wrong) rather than an obvious dead end. Catalogued
+here because five instances is a real pattern worth reading before the next search-based
+investigation, not five separate anecdotes:
+
+1. **Same name, different thing.** `progression_conversion` (the mechanism id) vs `src/progression/`
+   (a directory whose contents don't implement it) — a plausible-looking path match that isn't the
+   real one.
+2. **Docstring concept with no symbol.** `FairShareProtocol` exists only as prose in a docstring,
+   never as a class or function grep could find.
+3. **A naming convention hides a write.** `succession`'s own false verification verdict
+   (`registries/mechanisms.yaml`'s own entry): the search pattern `heir_entity_id=` could not match
+   `heir_entity_id_set=`, this codebase's own `_set`-suffix convention for `StateUpdate` patch
+   fields (`death_reason_set`, `is_permadeath_set`, same shape). The real write existed one
+   character-pattern away from what was searched.
+4. **Post-rename terminology drift.** `race_archetype`'s real implementation is `SpeciesDefinition`
+   (`src/content/schema.py`) — `TCK-20260904-EPIC-RACE-TO-SPECIES-TERMINOLOGY` renamed
+   `RaceDefinition`/`race_id` repo-wide on 2026-09-04, *after* the search vocabulary
+   ("race"/"Race") had already been formed by the mechanism's own registered name. Same shape hit
+   `country_lifecycle` (real code is `FactionDecisionPhase`, "Country" and "Faction" are the same
+   underlying class) and `city` (real code is `RegionState`, never split into its own class) —
+   conflation rather than rename, but the same "the search vocabulary and the real vocabulary
+   diverged" root cause.
+5. **A concept name that is never a symbol.** The wiring map's own "Directive → Project → Objective
+   → Action" (the plain-English definition of the `goal_hierarchy` mechanism) appears nowhere in
+   the codebase as a literal string, class, or function — it maps to a cluster of methods
+   (`evaluate_project_switch`, `resume_project`, `process_project_outcome`, others) on
+   `StrategicIntelligenceSystem`, a class whose own name shares no vocabulary with the concept it
+   partly implements. `regional_trauma`'s own real mapping to `TraumaRegionConcernBridge`
+   (`src/domains/world_emergence/services.py`) is the same shape, found only via `graphify query
+   "trauma"`, not grep — the one directly measured case for why CLAUDE.md's graphify-before-grep
+   rule exists, now joined by four more instances of the same underlying failure class.
+
+**Shapes 4 and 5 are the newest and the most dangerous of the five**, because unlike 1-3 (a wrong
+match, a docstring-only symbol, a near-miss pattern — each still findable by trying one more
+variant), 4 and 5 produce a search that returns cleanly empty and looks exhaustive. Nothing in the
+search itself signals "you're searching the wrong vocabulary." The only defenses found so far:
+checking a mechanism's own naming/rename history (terminology-drift epics, atlas investigation
+notes) before concluding absence, and preferring `graphify query` over raw grep for exactly the
+class of query graphify's own AST/fuzzy matching is built for — a preference this doc's own §4.1
+detector plan and CLAUDE.md's own Context Scan mandate already assume, now with five concrete
+instances behind it instead of one.
+
+Source tickets: `TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION` (shapes 1-3, via
+`succession`'s own corrected entry), `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_hierarchy`),
+`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` (shape 5's first instance,
+`regional_trauma`).
+
 ---
 
 ## 4. The three wirings

@@ -76,6 +76,7 @@ each with a predictable, checkable consequence:
 | **Wire** | state change only (`orphan`/`gated` → `done`), no new logic |
 | **Tune** | **no registry change** — values are not in the registry |
 | **Split** | one entry becomes two, because the halves diverged |
+| **Merge** | two entries become one, because they never independently diverge |
 | **Retire** | entry → `gap`, plus a verdict recording why |
 | **Interpose** | an **edge** change: `A → B` becomes `A → C → B` |
 
@@ -91,6 +92,22 @@ removed, two added, when an existing dependency is judged inefficient and a new 
 between the two ends. It is `Introduce` plus a declared edge rewrite, and it needs naming
 separately because `depends_on` — the graph itself — is the thing being restructured, not a single
 node's own fields.
+
+**`Merge` is `Split` read backwards, and until 2026-09-19 it had never been exercised.** §1's
+operational test is symmetric by construction — "if the halves could sit in different `state`
+values, they are two mechanisms" implies its converse, "if two declared ids share one
+implementation and cannot independently succeed or fail, they are one mechanism" — but every real
+case checked against this rule so far (§4, §6) tested the split direction: one bundled name, does
+it need to become two. `commitment_betrayal`/`commitment_pressure_consequences` (found while
+resolving `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION`'s own edges #7/#17)
+is the first candidate for the reverse: `commitment_betrayal` has no implementation distinct from
+`commitment_pressure_consequences`'s own bound files (`src/domains/commitment/*.py`) — checked
+directly, not assumed. Flagged as a candidate here rather than performed: an actual merge changes
+which id every referencing ticket/doc/`depends_on` edge should cite, a bigger blast radius than a
+split's own "add one row" operation, and deserves its own investigation rather than a same-turn
+registry edit. A wrong answer here is exactly as informative as `action_pacing_readiness` splitting
+was for the forward direction — this is the rule's first real test of whether it holds symmetrically
+or only in the direction it was originally validated on.
 
 ---
 
