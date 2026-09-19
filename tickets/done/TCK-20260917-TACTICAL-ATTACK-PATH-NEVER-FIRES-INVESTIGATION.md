@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: strategy
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION
-phase: open
+phase: done
 date: 2026-09-17
 tags: [strategy, combat, investigation]
 ---
@@ -16,7 +16,7 @@ Why the decision-driven ATTACK path fires 0–2 times per 2000 ticks while incid
 movement-triggered combat fires 181–2177 — investigate, do not fix
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -178,11 +178,63 @@ real defect shape (`ActionIntent` built and never translated) that is real elsew
 but does not apply to `tactical_decision`'s own ATTACK branch, which builds the correct
 `TaskUpdate` vocabulary directly with no `ActionIntent` step to fail to translate.
 
+**2026-09-19, real per-world instrumentation run, all four candidates measured.** A probe bug was
+found and corrected before reporting: `TaskUpdate`'s real field is `payload_set`, not `payload`
+(`src/core/updates.py:207-208`) — the first pass's own inspection code silently swallowed an
+`AttributeError` on every call, making every "did this decide ATTACK" check read as "no"
+unconditionally. Caught by cross-checking against the real `execute_attack()` dispatch count
+(non-zero, which is impossible if zero decisions were ever emitted), not by luck — the same
+discipline Acceptance Criteria #3 exists to enforce. Fixed and re-ran.
+
+**Result: two compounding causes, not one, both measured directly:**
+1. **Candidate 4 confirmed**: zero `DEFEAT_ENEMY` objectives sampled across all three corpus
+   worlds, at two sample points each.
+2. **Candidate 2 confirmed as dominant**: `hostiles` was non-empty in **0 of 1130** real
+   `evaluate_entity_intent` calls across the three corpus worlds.
+3. **Candidate 1 confirmed, larger than the cited figure**: the brain itself runs 6-25x less often
+   than the raw `cadence.strategic_intelligence=20` ceiling allows, via a three-layer sticky-task/
+   cadence gate stack (two previously-uncited layers found while tracing the code: the scheduler's
+   own separate cadence check, and `execute_brain`'s own redundant early-exit).
+4. **Candidate 3, reframed, ruled out as a defect**: in the two corpus-world cases where a fresh
+   ATTACK decision did happen, it reliably dispatched — 1 decision → 2 and 29 real
+   `execute_attack()` calls respectively, via the same sticky-task re-execution mechanism. No
+   emission-vs-dispatch divergence exists; the concern that motivated candidate 3 does not hold.
+
+`metropolis`, the intended control, turned out unreliable for this specific question: real spawn
+collisions in `build_metropolis_state()`'s own construction (confirmed via direct hard-law-violation
+logging at world-build time, before any tick runs) make its entities' default task state
+unrepresentative. Disclosed as a limitation on the control, not chased to a separate root cause —
+that would be investigating the perf-scenario builder's own correctness, out of this ticket's scope.
+
+Full per-world evidence table, the probe-bug correction, and the metropolis anomaly's own trace are
+in `investigation.md`. Verdict recorded against `tactical_decision` in `registries/mechanisms.yaml`'s
+own `verified` block (Acceptance Criteria #5), dated 2026-09-19, superseding the prior entry's own
+"flagged as the next open question" note with the actual root cause.
+
 ## Test Summary
-To be completed during implementation.
+Investigation-only; no `src/` code changed. The probe script itself is not committed (staging
+artifact scope only, per this ticket's own Scope: "investigate and report, do not fix"). No test
+suite is affected.
 
 ## Files Changed
-To be completed during implementation.
+- `registries/mechanisms.yaml` — `tactical_decision`'s own `verified` block updated with the
+  root-cause finding (date, note); no other fields changed.
+- `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/` — investigation.md,
+  plan.md, test_plan.md (migrated from staging on close).
 
 ## Completion Summary
-Open.
+**Closed. All four candidates confirmed or ruled out by direct measurement, per world, never
+aggregated (Acceptance Criteria #1-2, met).** Every "never happens" claim states the exact call site
+instrumented (Acceptance Criteria #3, met); the probe bug found mid-investigation is itself evidence
+this discipline was actually applied, not just claimed. All measurement ran through a real
+`Kernel.tick_once()` loop with `LocalSequentialExecutor` forced explicitly to avoid the concurrency
+pitfall a prior investigation in this same arc already found unsafe for this kind of probe
+(Acceptance Criteria #4, met). The verdict is recorded against `tactical_decision` in the registry
+(Acceptance Criteria #5, met).
+
+**The answer**: the decision-driven ATTACK path is rare in the corpus worlds because the strategic
+layer almost never points entities at combat objectives, and even when the tactical brain does run
+(itself heavily throttled by a three-layer sticky-task/cadence stack), it almost never finds a
+hostile target in range and perceived. Once a decision is made, it reliably executes and persists —
+there is no lost-decision defect. Whether this should change is a design question for the user, not
+resolved here.

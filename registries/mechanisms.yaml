@@ -157,7 +157,7 @@ mechanisms:
     verified:
       instrument: corpus_run
       verdict: contradicted
-      date: "2026-09-17"
+      date: "2026-09-19"
       note: >-
         The `ATTACK`-intent branch (the decision this mechanism exists to make) is effectively
         dormant in real corpus play: 0-2 real `CombatResolutionSystem.resolve_attack()` calls per
@@ -165,12 +165,32 @@ mechanisms:
         `hero_guild_routing` -- independently corroborated three separate times, for three
         unrelated reasons, across six weeks (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-
         INVESTIGATION, 2026-08; TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION's own
-        candidate 5, 2026-09-15; this entry's own measurement, 2026-09-17). state stays `done` --
-        no evidence the decision logic itself is wrong, only that it essentially never selects
-        ATTACK in these worlds' real play. Whether that is correct behavior given these worlds'
-        actual threat landscape, or a real decision-layer defect, is not yet determined -- flagged
-        as the investigation's own next open question, not resolved here. See `combat_resolution`
-        and `combat_engagement` for the rest of this same finding.
+        candidate 5, 2026-09-15). state stays `done` -- no evidence the decision logic itself is
+        wrong, only that it essentially never selects ATTACK in these worlds' real play.
+        **Root-caused 2026-09-19** (`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`,
+        real `Kernel.tick_once()` instrumentation, `LocalSequentialExecutor` forced to avoid the
+        real concurrency this arc's own prior addendum found unsafe for a shared-mutable-state
+        probe): two compounding, independently-measured causes, not one. (1) The strategic layer
+        essentially never assigns a `DEFEAT_ENEMY` objective in these worlds' sampled windows (0
+        occurrences across 3 corpus worlds, 2 sample points each) -- entities have nothing telling
+        them to fight regardless of what's nearby. (2) Even when the brain does run -- itself
+        suppressed 6-25x below the raw strategic-intelligence cadence ceiling by a three-layer
+        sticky-task/cadence gate stack in `scheduler.py`/`cognition.py`, larger than the
+        previously-cited 93.7% figure -- `hostiles` was found non-empty **0 of 1130** real calls
+        across the three corpus worlds. On the rare occasion a fresh decision does happen (2 of
+        1130 calls, both worlds), it reliably dispatches -- one decision produced 2 and 29 real
+        `execute_attack()` calls respectively via the same sticky-task re-execution mechanism, so
+        there is no emission-vs-dispatch defect, only rarity of the initial decision.
+        `metropolis`, the intended control, proved unreliable for this specific investigation: its
+        own `build_metropolis_state()` perf-harness has real spawn collisions (confirmed via
+        direct construction-time hard-law-violation logging) that make its entities' default task
+        state unrepresentative of curated world content -- disclosed as a limitation, not chased
+        to a separate root cause (out of this investigation's own scope). Whether the decision path
+        firing more often is desirable is a **design** question for the user, unresolved here per
+        this investigation's own Assumption #2 -- what this closes is the mechanism, not the
+        disposition. See `combat_resolution` and `combat_engagement` for the rest of this same
+        finding, and `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
+        for the full per-world evidence table.
   - id: combat_engagement
     layer: entity
     depends_on: [personality]
