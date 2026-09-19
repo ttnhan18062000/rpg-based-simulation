@@ -121,6 +121,7 @@ mechanisms:
     layer: entity
     depends_on: [movement, status_effects, entity_role]
     state: done
+    implemented_by: [src/engine/combat.py::CombatResolutionSystem]
     verified:
       instrument: corpus_run
       verdict: observed
@@ -154,6 +155,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
+    implemented_by: [src/engine/tactical.py::TacticalDecisionSystem]
     verified:
       instrument: corpus_run
       verdict: contradicted
@@ -215,6 +217,7 @@ mechanisms:
     layer: entity
     depends_on: []
     state: done
+    implemented_by: [src/engine/movement.py::MovementSystem]
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY, the falsification
   # test for the identity rule -- "if the rule doesn't split this, the rule is wrong"): this entry
   # used to be action_pacing_readiness covering both the readiness gate and the agility-scaling
