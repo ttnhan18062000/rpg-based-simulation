@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: guidelines
 authority: P2
 audience: agent
 ticket_id: TCK-20260919-CLAUDE-MD-CHECKOUT-RACE-GUIDANCE-UNOWNED-AND-INCOMPLETE
-phase: open
+phase: done
 date: 2026-09-19
 tags: [process-improvement, root-cause]
 ---
@@ -18,7 +18,7 @@ generalize to multi-step git operations (cherry-pick) — propose the wording fi
 user's own approval, rather than editing the governing file directly
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -121,11 +121,11 @@ The original reporter confirmed both corrections. The proposal below replaces th
   larger effort if the user wants it.
 
 ## Acceptance Criteria
-- [ ] The proposed wording (or the user's edited version of it) is presented for explicit
+- [x] The proposed wording (or the user's edited version of it) is presented for explicit
       approval before any `CLAUDE.md` edit is made.
-- [ ] If approved, `CLAUDE.md` is updated in its own commit, referencing this ticket.
-- [ ] If declined, this ticket records the user's actual decision and closes without the edit.
-- [ ] This ticket itself, once closed, becomes the citable owner of this guidance for future
+- [x] If approved, `CLAUDE.md` is updated in its own commit, referencing this ticket.
+- [x] If declined, this ticket records the user's actual decision and closes without the edit.
+- [x] This ticket itself, once closed, becomes the citable owner of this guidance for future
       sessions (closing the "no ticket, no evidence trail" gap either way).
 
 ## Related Tickets
@@ -160,14 +160,26 @@ direction, as part of splitting the agent-working domain into its own session. P
 carries the held update to `TCK-20260917-FORK-RETURNS-CONTENT-FREE-INDISTINGUISHABLE`, per the
 user's preference for folding work into an already-open PR.
 
-No `CLAUDE.md` edit is made by this ticket. It still awaits the user's decision on the corrected
-wording above.
+**User's decision, 2026-09-19 (direct, via `AskUserQuestion`, showing the literal text of both
+wording options)**: **Full corrected wording** — including the "stage `agent-monitoring/data/`
+into the same `git add` that precedes `--continue`" procedure, not just the diagnostic half. The
+user was shown explicitly, in the question itself, that this procedure is reasoned from the hook
+source but had not yet been reproduced against a live race, and approved it anyway.
 
 ## Test Summary
-_(none — documentation-only change, no code path affected)_
+- `pytest tests/docs/` (`.venv313`): 70 passed, 1 skipped, 1 xfailed, 0 failed — run in full
+  despite the edit landing in "Worktree & Branch Isolation" rather than "CI Failure Triage",
+  since any `CLAUDE.md` change should exercise the doc-content test suite regardless of section.
 
 ## Files Changed
-_(none yet — pending approval)_
+- `CLAUDE.md` — appended the corrected wording (verbatim, as approved) after the existing
+  checkout-race bullet in "Worktree & Branch Isolation", and cited this ticket's ID on that
+  bullet so it has a real owning ticket going forward.
 
 ## Completion Summary
-_(none yet)_
+Closed with the edit applied, per the user's direct approval of the full corrected wording. The
+existing checkout-race guidance now has an owning ticket for the first time, and the new addition
+covers the multi-step-git-operation case (`cherry-pick`/`rebase`/`merge` with `--continue`) the
+original guidance didn't reach — with the "do not discard the shard" correction and the staging
+procedure both included, exactly as approved. The cross-session-mid-command case remains
+explicitly out of scope, per the wording's own final sentence.
