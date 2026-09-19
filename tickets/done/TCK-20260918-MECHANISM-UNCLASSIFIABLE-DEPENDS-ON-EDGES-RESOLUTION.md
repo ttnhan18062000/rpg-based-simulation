@@ -225,3 +225,16 @@ handful of genuinely independent edges, exactly as this ticket's own Request Sum
 One real, unanticipated state correction (`trauma`: done → orphan) surfaced and fully propagated,
 extending this session's own recurring orphan-mechanism-with-dead-dependent-branches pattern to a
 third confirmed instance.
+
+**Addendum, 2026-09-19, peer review — worth stating plainly rather than left implicit in the
+diffs**: `action_pacing_readiness`'s own transitive-dependent count has now moved
+**~115-125 → 23-25 → 1 → 0** across three separate corrections (the initial dependency-graph
+population, the parent edge-semantics audit, and this ticket's own removal of `conversation`'s
+edge to it). `betrayal_siege_war` moved **42 → 14 → 1 → 0** the same way (dependency-graph
+population, parent audit, this ticket's own removal of `country_lifecycle`'s edge to it). The
+mechanism that once topped this registry's derived-priority ranking now has zero real dependents.
+Each individual correction was justified on its own real evidence at the time it was made — this
+is not a claim that any single correction was wrong. But the cumulative movement is the honest
+measure of how wrong the *original* graph was, and it is stated here so the next person reading
+today's priority ranking treats it as the current best evidence, not as settled — the same
+correction shape could in principle still be sitting undiscovered elsewhere in the graph.
