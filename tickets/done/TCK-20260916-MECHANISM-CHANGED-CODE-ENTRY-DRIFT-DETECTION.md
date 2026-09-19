@@ -128,6 +128,10 @@ own PR convention, `CLAUDE.md`'s "PR Lifecycle" §7) — those exact commit obje
 reachable from `main` and eventually get garbage-collected. The synthetic tests are timeless; a
 SHA-pinned test would not have been.
 
+**Generalizable takeaway for whoever next builds a control against real history in this repo**: a
+test pinned to a commit on a branch that will squash-merge is a test with a scheduled expiry —
+validate against real history manually when it's available, keep the committed tests synthetic.
+
 ## Test Summary
 `tests/unit/tools/test_mechanism_registry_changed_code_check.py` (12 new tests): AC #3's own
 positive control (code + entry changed together, not flagged) and synthetic negative control
