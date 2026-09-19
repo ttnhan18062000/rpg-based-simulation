@@ -339,6 +339,9 @@ mechanism-state-caller-check: ## Report-only: flag mechanisms whose declared sta
 mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
 	$(PYTHON3) tools/mechanism_registry/mechanism_wiring_map_classdef.py
 
+mechanism-status-language-check: ## Report-only: scan atlas/capabilities desc fields and wiring-map node labels for status vocabulary that belongs in the registry, not prose
+	$(PYTHON3) tools/mechanism_registry/mechanism_status_language_check.py
+
 mechanism-atlas-check: ## Check the atlas's mapped card badge cls values against the real registry state (--check, writes nothing)
 	$(PYTHON3) tools/mechanism_registry/mechanism_atlas_regenerate.py --check
 

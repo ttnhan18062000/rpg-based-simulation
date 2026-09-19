@@ -12,12 +12,12 @@ Generated from `registries/mechanisms.yaml` + `registries/system_registry.jsonl`
 
 **"Bound, Unverified" is this view's most actionable column.** It splits `unverified` into two problems with different costs that the per-mechanism view doesn't separate: *bound-but-unverified* (a real `implemented_by` binding exists — the expensive part, locating the code, is already done, so this is the cheapest verification target available) versus *unbound-and-unverified* (`unverified` minus this column — we don't even know where to look yet, and investigation has to happen before verification can start).
 
-**Baseline (all 93 mechanisms)**: 34 bound (36.6%), 33 verified (35.5% — 9 runtime, 24 static), 60 unverified (20 of those bound-but-unverified). State breakdown: done 52, partial 11, gap 11, orphan 9, gated 8, skeleton 2.
+**Baseline (all 93 mechanisms)**: 34 bound (36.6%), 33 verified (35.5% — 9 runtime, 24 static), 60 unverified (20 of those bound-but-unverified). State breakdown: done 53, partial 11, gap 11, orphan 8, gated 8, skeleton 2.
 
 | System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Bound, Unverified | done | partial | gap | orphan | gated | skeleton |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `cognition` | 21 | 10/21 (47.6%, +11.1pt vs baseline) | 7/21 (33.3%, -2.2pt vs baseline) [0 runtime, 7 static] | 7 | 10 | 0 | 1 | 4 | 5 | 1 |
-| `combat` | 7 | 5/7 (71.4%, +34.9pt vs baseline) | 5/7 (71.4%, +35.9pt vs baseline) [4 runtime, 1 static] | 1 | 5 | 1 | 0 | 1 | 0 | 0 |
+| `cognition` | 20 | 9/20 (45.0%, +8.4pt vs baseline) | 6/20 (30.0%, -5.5pt vs baseline) [0 runtime, 6 static] | 7 | 10 | 0 | 1 | 3 | 5 | 1 |
+| `combat` | 8 | 6/8 (75.0%, +38.4pt vs baseline) | 6/8 (75.0%, +39.5pt vs baseline) [4 runtime, 2 static] | 1 | 6 | 1 | 0 | 1 | 0 | 0 |
 | `economy` | 8 | 1/8 (12.5%, -24.1pt vs baseline) | 0/8 (0.0%, -35.5pt vs baseline) [0 runtime, 0 static] | 1 | 5 | 1 | 1 | 1 | 0 | 0 |
 | `faction` | 13 | 3/13 (23.1%, -13.5pt vs baseline) | 4/13 (30.8%, -4.7pt vs baseline) [0 runtime, 4 static] | 1 | 7 | 2 | 3 | 0 | 0 | 1 |
 | `progression` | 15 | 4/15 (26.7%, -9.9pt vs baseline) | 8/15 (53.3%, +17.8pt vs baseline) [3 runtime, 5 static] | 0 | 9 | 3 | 1 | 0 | 2 | 0 |

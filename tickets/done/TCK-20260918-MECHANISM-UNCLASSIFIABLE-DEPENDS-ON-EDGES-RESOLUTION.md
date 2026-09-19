@@ -238,3 +238,37 @@ is not a claim that any single correction was wrong. But the cumulative movement
 measure of how wrong the *original* graph was, and it is stated here so the next person reading
 today's priority ranking treats it as the current best evidence, not as settled — the same
 correction shape could in principle still be sitting undiscovered elsewhere in the graph.
+
+**Self-correction, same day, 2026-09-19: this ticket's own `trauma` state correction above (done →
+orphan) was itself wrong, caught and reverted the same day.** While building
+`TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION`'s own status-language scan (immediately after
+this ticket closed), the atlas's `entity-modification#0` card for `trauma` turned out to be titled
+"Trauma: A Lasting Physical Consequence" — the physical Wound→Scar combat-consequence system, not
+the psychological near-death tracking this ticket's own edge #4 investigation had attributed it
+to. Checking `trauma`'s own original citation
+(`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`, never
+consulted before making the correction above) confirmed it: `trauma`'s real implementation is
+`WoundService` (`src/engine/rpg_depth.py`) — `create_wound()` called from
+`CombatResolutionSystem._get_wound_infliction()` at all 4 real attack-resolution call sites
+(`src/engine/combat.py:194,288,504,562`), with `tactical_decision`'s own code reading the resulting
+wound/scar penalties (`src/engine/tactical.py:48,57`). Fully live, confirmed real callers on both
+ends. `state` reverted done → orphan → **done**; `implemented_by` corrected to `WoundService`;
+`systems:` corrected `[cognition]` → `[combat]` (wound/scar is a combat consequence, not a
+cognitive process — the original `[cognition]` placement was itself downstream of the same
+misattribution). `RecoveryReadinessService.register_near_death()` (`src/domains/emotion/
+recovery_service.py`) is still real, orphaned code — it just implements a different,
+currently-unregistered concept, not this mechanism. Full correction recorded on `trauma`'s own
+`verified` block in `registries/mechanisms.yaml`.
+
+**The error itself, stated plainly**: found a real orphan candidate that was *plausibly*
+describable as "trauma" in English, and bound it to this registry entry without first checking the
+entry's own original citation trail — exactly the discipline this registry's own citation
+convention exists to enforce, and exactly the kind of unforced error that convention is supposed
+to prevent. A sixth shape worth adding to this session's own catalogue of search failures
+(`docs/plans/mechanism_claims_as_tests_initiative.md` §3.1): **a real orphan finding, correctly
+attributed to the wrong registry entry**, distinct from all five "confident absence" shapes already
+catalogued there — this one is "confident (mis)attribution," where the search correctly finds real
+code but skips checking whether it's the code the existing entry's own history actually points to.
+Not yet added to §3.1 as a numbered sixth shape — flagged here for whoever next touches that
+catalogue, since a shape only just discovered deserves its own dedicated treatment rather than a
+rushed one-line addition to an already-written section.
