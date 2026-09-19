@@ -395,7 +395,19 @@ The expanded set shows two things the original six didn't:
 | **L15** | **Species drives.** Creature-specific motives and life shapes (hoarding, reanimation, taming instinct), beyond two raider/predator profiles. | P, T, V | Principle 3: different creatures, not reskins. |
 | **L16** | **Crime and order.** A theft action, and enforcement that responds to it. | N, F1 | The counterforce to wealth, and the source of infamy. |
 | **L17** | **Runtime founding.** Camps, hideouts, trading posts and settlements founded during play. | H, O, U | Today every camp and Place is authored at compile time. |
-| **L0** | **Combat actually happening** (the root gate). | A3, A4, A11, E4 | The P0 `progression-starvation-chain` epic. Every combat-driven link waits on it. |
+| **L0** | **The *right* combat actually happening** (the root gate). | A3, A4, A11, E4 | Now root-caused; see §3.1. Every combat-driven link waits on it. |
+
+### 3.1 Update on L0 after merging `main` (2026-09-19)
+
+Two results landed on `main` while this doc was being written. Both sharpen the gate.
+
+1. **Why the decision-driven attack never fires** (`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`, closed, #219): the strategic layer almost never points entities at combat objectives. When the tactical brain does run (throttled by a three-layer sticky-task/cadence stack), it almost never finds a hostile that is in range *and* perceived. Decisions that are made execute and persist; nothing is lost. **Whether this should change is a design question left to the user**, and it is exactly the question this program depends on. The scenarios above need entities that *choose* conflict for reasons (hunting a named threat, avenging, raiding for a hoard). They don't need more incidental collisions.
+2. **Most real combat is decided by the wrong hostility source** (`TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`, P1, open). Opportunity attacks (`resolve_multi_attack()`) produce nearly all combat. They decide hostility from the raw 4-value legacy `Faction` enum, not the authored per-pair catalog (`is_hostile_compat()`) that the decision path uses. Measured disagreement: **34% of legacy-triggered hostile pairs in `crowded_frontier` and 97% in `hero_guild_routing`** are not hostile under the authored model.
+
+**Implications for this program:**
+- **W1.1's combat-derived experience kinds** (`SURVIVED_NEAR_DEATH`, `KILLED_NOTABLE`, `SURVIVED_HUNT`) should wait for hostility unification. Otherwise entities will accumulate lived history, and later epithets and feuds, from fights the authored world says shouldn't happen. That would give Principle 8 a false story to tell.
+- **Non-combat kinds are unaffected:** `DISPLACED`, `LOST_BOND` (from any death), `BETRAYED`, `SUSTAINED_EXPOSURE`. This strengthens §9 decision 7 (start from death, bonds and displacement).
+- **W3.1 (named bounties) and W3.5 (rival-seeking routes) are strategic-layer answers** to finding (1): they give the strategic layer reasons to point entities at a specific combat objective. They could be scoped as part of the design response to #219 rather than after it.
 
 ---
 
@@ -417,7 +429,7 @@ Twenty-three capabilities in five waves (plus Wave 0). Each wave produces a *com
 
 | Item | Why it comes first |
 |---|---|
-| `progression-starvation-chain` (P0, already sequenced) | L0. Without real combat, A3/A4/A11/E4 never fire, however much else is built. |
+| `progression-starvation-chain` (its P0 attack-path investigation is closed, see §3.1) and `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` (P1) | L0. Without the *right* combat, A3/A4/A11/E4 never fire, or fire from the wrong fights, however much else is built. The design answer to #219 ("should the strategic layer point entities at combat more?") is where W3.1/W3.5 can enter. |
 | Evolved-kind audit | Hypothesis, unverified: evolved kinds (`WOLF_EVOLVED`, `DIRE_WOLF`, `ORC_SCOUT`) may fall out of lookups keyed by kind (`NEST_RACE_KINDS`, `TERRITORY_MATURITY_RATES`, catalog/faction resolution). Needs a decision: add a stable `base_kind`, or drop the form change. Wave 1 builds on this mechanism. |
 | Keep-or-delete decisions on the flagged-OFF growth loops (territory, nest spread, three reproduction paths) | A6/A7/E2 depend on them, and flags rot. |
 | `WIRE-REGIONAL-PRESSURE-ECONOMY` (P1, open) | A10. Makes danger reach the economy. |
@@ -746,16 +758,40 @@ The suggestion's §31–32 is right that growth loops need natural resistance ra
 
 ---
 
-## 8. Not adopted from the suggestion
+## 8. What was rejected, deferred or corrected from the suggestion
+
+The suggestion called itself "an external design hypothesis, not an approved specification", and asked to be challenged. Section numbers (§N) refer to the suggestion document.
+
+### 8.1 Rejected or deferred directions
 
 | Suggestion | Decision | Reason |
 |---|---|---|
-| "Progression-Driven World Simulation" as the project identity | Rejected | Principle 1 governs. This program makes *lived history* the substrate, not levels. |
-| Ten forms of power and a general conversion framework | Rejected | Principle 7. W4.1 keeps the one observable core: wealth buys protection and loyalty. |
-| Deliberate world-ending collapse | Deferred | Not in the vision. Counterforces (§5) come first. |
-| Player-centred sections (level scaling, player shares NPC logic) | Not applicable | Observed world. |
-| A universal progression engine for all entity types | Rejected | Principle 3. There's one shared *shape* (experience → notability), with kind-specific meaning. |
-| Caravans as simulated objects | Deferred | W3.2 gets the "routes move" beat from routing and supply instead. |
+| "Progression-Driven World Simulation" / "Evolutionary Systemic RPG" as the project identity (§34) | **Rejected** | Principle 1 ("no one hands down the story") governs, and progression isn't one of the 8 principles. The project's own audit (`docs/audits/D01_rpg_feature_impact.md`) ranks Progression/Rewards Tier 3. This program makes *lived history* the substrate instead of levels. |
+| Ten forms of power (physical, knowledge, economic, social, political, spiritual, informational, territorial, technological, cultural) and a general power-conversion framework (§7–8) | **Rejected as a framework** | Principle 7: "prefer one coarse signal an observer can actually feel over three precise ones nobody will ever see." W4.1 keeps the one observable core (wealth buys protection, patronage and loyalty). Wealth → military is already designed in `faction_war_drivers_proposal.md` §3.3 and deliberately parked ("faction war: foundation only"). |
+| Deliberate runaway collapse ("unchecked progression can ultimately destroy [the world]", §4, §31) | **Deferred** | Not in the vision. Principle 6 already covers ambient growth and decay, and the existing growth loops (territory, nest spread, reproduction) are deliberately flagged off. §5 pairs every loop with a counterforce. Collapse as a goal needs its own decision. |
+| Player-centred sections: Kenshi player trajectory (§19), the player sharing NPC progression logic (§28), no automatic level scaling (§29), bosses as the player's threats (§30) | **Not applicable** | This is an observed world with no player: "a living world you observe rather than control." The one transferable part, a world that evolves unwitnessed, is already the founding premise. |
+| A universal progression abstraction shared by all entity types (§14) | **Rejected** | Principle 3 (different creatures, not reskins). The suggestion's own §25 warns against it too. This program shares one *shape* (experience → notability), with a kind-specific *meaning*. |
+| A RimWorld-style storyteller (§3) | **Deferred** | Calamity minimum/forced intervals already pace the world, and there's no player experience to pace. Kept as a measurement-gated option (W5.4). |
+| Caravans as simulated objects (wolf scenario: "preys on caravans", "trade routes move") | **Deferred** | W3.2 gets the "routes move" beat from avoidance and supply routing, with no new object type. |
+| Artifact history for all items (§23D) | **Narrowed** | Item history (idea 30) is recorded only for items carried by epithet holders (W4.3). You deferred it earlier because it had no consumer, and it's bounded here by the rarity of notables. |
+| "Wars are fought over ownership" of a relic (§23D) | **Out of scope for now** | A late-stage beat at most, after W4.3 has a real consumer and faction war is reachable. |
+| "Everything can become everything" (e.g. a wolf becoming a merchant) | **Out** | The suggestion rules this out itself (§10: "base ontology + world rules + rare exceptions"), and so does Principle 3. |
+| Universal XP-free progression replacing levels (§9) | **Not adopted as a replacement** | Levels stay, as the existing structural precedent (the idea 50 card relies on the 10/25/50 thresholds). Lived history is layered *alongside* them, not instead of them. |
+
+### 8.2 Where the suggestion misjudged what already exists
+
+These aren't rejections. The suggestion treated them as missing, but they're already built or designed, so this program builds on them.
+
+| The suggestion says / implies | Actual state |
+|---|---|
+| World reaction to an entity's history is missing (§13, §27) | **Mostly built** in M5: Living Legend Fame, Belief Institutions, Culture Drift, Chronicle Fidelity Drift. Limit: heroes only, Campaign mode only. W2.1 widens the reach. |
+| Ontological transformation is a new idea (§12) | `EvolutionSystem` already changes `kind` at levels 10/25/50, though nothing reads it yet. |
+| "Wolf eats a corrupted creature → mutation" (§10) | Idea 50 (material-gated evolution), already carded and scheduled for M10. |
+| Territory → resources → military → more territory (§31) | Idea 51 `EXPAND_TERRITORY` is live. Wealth → military is designed and parked. |
+| Distorted, mythologised history (Caves of Qud reference) | Chronicle Fidelity Drift (idea 62) is built. |
+| Individual → institution (Norland reference) | Clans with a full lifecycle exist. What's missing is only the *growth path* from a living individual (W4.2). |
+| Statistical simulation for scale (Songs of Syx reference) | Demographic cohorts are already the aggregate layer. The vision endorses it: "a regional population count is a weather system." |
+| The main bottleneck is the *shape* of progression (§6) | The actual bottleneck is that the right combat barely happens (§3.1). Shape matters less until that is fixed. |
 
 ---
 
@@ -790,3 +826,4 @@ The suggestion's §31–32 is right that growth loops need natural resistance ra
   - `src/world/{displacement,boss,creature_territory,camp}.py`
   - `src/engine/{faction_decision,town_resolution}.py`
 - `tickets/todos/progression-starvation-chain/SEQUENCE.md`
+- `tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md` (#219), `tickets/todos/TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION.md`
