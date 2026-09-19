@@ -139,14 +139,13 @@ def test_real_registry_findings_pinned():
     different layer than the call site. See stored_artifacts/TCK-20260916-MECHANISM-ORPHAN-STATE-
     BATCH-VERIFICATION/investigation.md for the full disposition of every finding in that batch.
 
-    `trauma`'s own `orphan_with_callers` (added 2026-09-19, TCK-20260918-MECHANISM-UNCLASSIFIABLE-
-    DEPENDS-ON-EDGES-RESOLUTION's own state correction to orphan) is the same false-positive shape,
-    confirmed directly: the "1 real caller file" is `src/domains/emotion/__init__.py`'s own package
-    re-export (`from ... import RecoveryReadinessService` + `__all__` listing) -- a real text match
-    for the class name, not a real method call anywhere. Grepping for
-    `RecoveryReadinessService\\.` (an actual call) across all of `src/` outside
-    `recovery_service.py` itself returns zero results, confirming the orphan state, not
-    contradicting it.
+    2026-09-19: `trauma` briefly carried a same-day, same-session `orphan_with_callers` finding
+    after a real misattribution error (this entry was incorrectly bound to
+    `RecoveryReadinessService`, an unrelated orphan class, instead of its own real implementation,
+    `WoundService`, `src/engine/rpg_depth.py` -- see the mechanism's own `verified` block in
+    `registries/mechanisms.yaml` for the full self-correction). Reverted the same day once the
+    error was caught; `trauma` is correctly `done`/bound to `WoundService` again, which has real
+    confirmed callers, so no finding fires for it here.
 
     Update this test only alongside a real investigation of what changed, same discipline as every
     other pinned-count test in this repo."""
@@ -157,5 +156,4 @@ def test_real_registry_findings_pinned():
     finding_keys = {(f.mechanism_id, f.check) for f in report.findings}
     assert finding_keys == {
         ("genetics_aptitude", "gated_without_flag_context"),
-        ("trauma", "orphan_with_callers"),
     }

@@ -481,34 +481,48 @@ mechanisms:
 
   - id: trauma
     layer: entity
-    systems: [cognition]
+    systems: [combat]
     depends_on: [combat_resolution]
-    state: orphan
-    implemented_by: [src/domains/emotion/recovery_service.py::RecoveryReadinessService]
+    state: done
+    implemented_by: [src/engine/rpg_depth.py::WoundService]
     verified:
       instrument: code_trace
       verdict: observed
       date: "2026-09-19"
       note: >-
-        state corrected done -> orphan while resolving edge #4 of
-        TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION. The parent edge audit
-        concluded no per-entity trauma implementation exists at all (only `RegionState.trauma_score`
-        and `WoundState`, both confirmed unrelated) -- that conclusion was itself a search miss, not
-        correct: real per-entity trauma tracking exists (`RecoveryState.trauma_tags`,
-        `confidence_loss`, `retry_readiness`, `src/core/cognition.py`), written by
-        `RecoveryReadinessService.register_near_death()` (`src/domains/emotion/
-        recovery_service.py:21-28`). But `register_near_death` has ZERO callers anywhere in `src/`
-        -- real, reachable, correctly-written code with no production producer, the same shape as
-        `status_effects`'s own orphan finding, found independently and for an unrelated reason
-        (this ticket's own edge #4, not a coverage-extension pass). `-> combat_resolution` edge kept
-        as KEEP, not removed: the dependency is structurally real (a near-death trigger is
-        conceptually downstream of combat resolution determining lethal/near-lethal outcomes) even
-        though currently unexercised -- same "correct-but-unexercised" case (a) as
-        `combat_resolution -> status_effects`'s own SHATTER-bonus finding, not case (c)
-        (misclassification). Not independently re-investigated further -- a third confirmed
-        instance of this session's own orphan-mechanism pattern, worth noting for whoever eventually
-        builds the mechanical "orphan mechanism implies dead dependent branches" check flagged on
-        `status_effects`'s own entry.
+        SELF-CORRECTION, 2026-09-19: a same-day earlier edit to this entry (state done -> orphan,
+        implemented_by -> RecoveryReadinessService, while resolving edge #4 of TCK-20260918-
+        MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION) was a real misattribution, caught and
+        reverted the same day by checking this mechanism's own original Foundation-era citation
+        (`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`:
+        "`trauma` | `combat_resolution` | done | atlas `entity-modification#0`; wiring-map
+        `CMB -.-> TRM`"). `entity-modification#0` is the atlas's "Trauma: A Lasting Physical
+        Consequence" card -- Wound (temporary) and Scar (permanent) as trauma's own two stages,
+        explicitly the PHYSICAL combat-injury system, never the psychological one. The earlier edit
+        found real orphan code (`RecoveryReadinessService.register_near_death()`,
+        `src/domains/emotion/recovery_service.py`, zero callers) that is ALSO plausibly describable
+        as "trauma" in English, and attributed it to this registry entry without checking the
+        entry's own original citation trail first -- exactly the kind of unforced error this
+        registry's own citation discipline exists to prevent. That orphan code is real and still
+        orphaned, but it implements a different, currently-unregistered concept (near-death
+        psychological state), not this mechanism.
+
+        Real implementation: `WoundService` (`src/engine/rpg_depth.py`) -- `create_wound()` is
+        called from `CombatResolutionSystem._get_wound_infliction()` (`src/engine/combat.py:611`,
+        itself called from all 4 real attack-resolution call sites: lines 194, 288, 504, 562) when
+        damage exceeds 25% of the defender's max HP, exactly matching the atlas card's own
+        described formula. `get_wound_stat_penalties()`/`get_scar_stat_penalties()` are read in
+        `tactical_decision`'s own code (`src/engine/tactical.py:48,57`). Fully live, confirmed real
+        callers on both the write and read sides -- not "correct-but-unexercised" the way
+        `combat_resolution -> status_effects` is; this dependency is both structurally real and
+        actively exercised. `systems:` corrected `[cognition]` -> `[combat]` to match: wound/scar
+        is a combat consequence, not a cognitive process, and the prior `[cognition]` assignment
+        was itself downstream of the same misattribution.
+
+        `-> combat_resolution` edge: still KEEP, now on stronger grounds than the reverted entry's
+        own "structurally real, currently unexercised" framing -- wounds are created BY combat
+        resolution as a direct result of its own damage calculation, a textbook functional
+        prerequisite, fully exercised in real play.
   - id: status_effects
     layer: entity
     systems: [combat]

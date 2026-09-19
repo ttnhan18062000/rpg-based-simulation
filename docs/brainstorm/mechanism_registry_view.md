@@ -100,6 +100,6 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `team_up` | entity | gap | unverified | unverified | 0 | 0 |
 | `temporal_pressure` | entity | skeleton | unverified | unverified | 0 | 0 |
 | `town_services` | world | done | unverified | unverified | 0 | 0 |
-| `trauma` | entity | orphan | static | observed | 0 | 0 |
+| `trauma` | entity | done | static | observed | 0 | 0 |
 | `world_boss_spawn` | world | done | static | observed | 0 | 0 |
 | `xp_leveling` | entity | partial | runtime | observed | 0 | 0 |
