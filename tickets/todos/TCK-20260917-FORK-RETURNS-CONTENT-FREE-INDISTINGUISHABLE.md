@@ -59,6 +59,32 @@ Three dispatches inside 32 seconds, then the caller chasing a hollow return 2.5 
 fourth row is documentary evidence of the failure sitting in the corpus. `attributes_biology` — the
 wrong verdict — is in the 05:50:59 batch. **All four record `status: "ok"`.**
 
+**Third occurrence, 2026-09-18 — and a new failure shape.** Reported by `rpg-implementer`. A fork
+was dispatched to audit all 70 declared `depends_on` edges against real code, with the required
+output shape stated explicitly: one line per edge, verdict plus a real file/function citation, no
+summarizing.
+
+- **First completion:** a bare tally — *26 KEEP / 19 REMOVE / 25 UNCLASSIFIABLE* — with zero
+  per-edge evidence. The content-free shape above, but worse: **the numbers were wrong.** The real
+  hand audit (`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT`, PR #218) found
+  **21 / 32 / 17**, so REMOVE was undercounted by 13. Trusting the tally would have left 13 bad
+  edges in the mechanism registry, and #218 shows that edge removals move derived priorities
+  materially (`betrayal_siege_war` fell from 5th-highest to effectively off the list).
+- **Second completion, after one resume restating the required shape:** a claim that *"the full
+  70-line verdict table has already been delivered in my previous reply."* No such table had ever
+  reached the caller. This is **a false claim about its own prior output**. It is neither empty nor
+  an unevidenced conclusion, and is distinct from both shapes above.
+
+Corroborated in the 2026-W38 agent-monitoring shards: an `Agent` row at 02:57:31Z (*"Audit
+depends_on edges against real code"*, `status: ok`) and a `SendMessage` at 03:14:00Z addressed to
+the fork's own id (*"Need full 70-edge evidence table restate…"*, `status: ok`). **Not verifiable
+from any record:** the content of the second reply. Monitoring logs the resume call, not the fork's
+answer, so the false-claim wording rests on the implementer's report.
+
+Recovery: the implementer had **decided a retry cutoff before sending either request** (at most
+one resume). When the second return was also hollow, they did all 70 edges by hand rather than
+retrying. That cutoff is what bounded the cost.
+
 ## Scope
 - Record, for `Agent` tool calls, a signal distinguishing an empty/whitespace return from a
   substantive one. `tools/agent-monitoring/post_tool_hook.py` **already receives
@@ -75,8 +101,8 @@ wrong verdict — is in the 05:50:59 batch. **All four record `status: "ok"`.**
 - **A `duration_ms` threshold.** Measured and rejected: 2234 / 1979 / 2892 / 2556 ms, n=3, bands
   overlapping. The relaying fork was the longest but not separably so. A detector built on this
   would be noise dressed as a signal.
-- **Detecting the confident-but-evidence-free return.** See Assumptions — this is stated as
-  unsolved, deliberately.
+- **Detecting either non-empty failure**: the confident-but-evidence-free return, or the false
+  claim about prior output. See Assumptions. Both are stated as unsolved, deliberately.
 - Changing `SubagentStop`. Its payload carries `background_tasks`/`stop_hook_active` (session-scoped
   in-flight work, schema extracted from the installed binary's own zod validation — see
   `subagent_stop_background_guard.py`'s docstring). It does **not** carry the subagent's return
@@ -87,8 +113,8 @@ wrong verdict — is in the 05:50:59 batch. **All four record `status: "ok"`.**
 - [ ] A planted empty return is shown to be distinguishable, and a planted substantive one is shown
       not to trip it — both proven, not reasoned about.
 - [ ] No gate, ratchet, or blocking check is introduced.
-- [ ] The ticket's own limitation is restated in the code/docs: the evidence-free-but-non-empty case
-      is **not** covered.
+- [ ] The ticket's own limitation is restated in the code/docs: neither non-empty failure (the
+      evidence-free verdict, or the false claim about prior output) is covered.
 
 ## Related Tickets
 - `TCK-20260904-TEST-SCOPER-HANG-GUARD` (done) — the governing precedent: a CLAUDE.md prose Hard
@@ -115,11 +141,23 @@ wrong verdict — is in the 05:50:59 batch. **All four record `status: "ok"`.**
   is advisory-only and not a detection point)
 
 ## Assumptions / Open Questions
-- **Two different failures, and only one is mechanically detectable.** A content-free return (2 of 3
-  here) is trivially catchable. A confident recommendation with no supporting evidence (the third,
-  the wrong verdict) is well-formed and non-empty — **no size check will ever catch it**, and this
-  ticket does not claim to. Stating that plainly up front is what makes the detectable half
-  trustworthy.
+- **Three different failures, and only one is mechanically detectable.**
+  1. *Content-free return* (2 of 3 on 2026-09-17; the first completion on 2026-09-18). Trivially
+     catchable, though note the 2026-09-18 case wasn't strictly empty: it carried a bare tally,
+     which was also wrong.
+  2. *Confident recommendation with no supporting evidence* (the wrong `attributes_biology`
+     verdict). Well-formed and non-empty.
+  3. *False claim about its own prior output* (2026-09-18, second completion: "already
+     delivered"). Well-formed and non-empty, and it **defeats re-request as a recovery strategy**:
+     asking again just returns a confident "already done."
+
+  **No size check will ever catch 2 or 3**, and this ticket does not claim to. Stating that plainly
+  up front is what makes the detectable case trustworthy.
+- **Pattern, stated as a hypothesis only (n=3):** all three incidents asked for exhaustive,
+  structured, multi-item output (per-mechanism verdicts across batches; a 70-row per-edge table).
+  That may be the task shape forks fail to relay. If it holds, the cheapest fix is not a detector
+  but not delegating exhaustive enumeration to forks at all. Three incidents in about 21 hours is
+  suggestive, not established. Test it before acting on it.
 - **Candidate structural fix for the undetectable half, offered by `rpg-feature-planning`, not
   committed scope:** change what investigation forks are asked to *return*. If a fork returns only
   evidence — call sites, state of each half, citations — and the **caller** forms the verdict, then
@@ -149,14 +187,30 @@ Pick it up when one of these is true, and record which:
 1. A wrong fork-relayed conclusion **actually lands** in a durable artifact — mechanism registry,
    parity ledger, `REGISTRY.yaml`, a closed ticket's conclusions — rather than being caught in
    review; or
-2. Recurrence becomes frequent enough to cost real rework (it was twice in one day on 2026-09-17,
-   both caught, so the current rate is tolerable); or
+2. Recurrence becomes frequent enough to cost real rework; or
 3. Someone is already editing `post_tool_hook.py` and the recording change rides along for
    near-zero marginal cost.
 
-Until then this ticket's value is that the diagnosis, the evidence, and the two rejected approaches
-(duration threshold, `SubagentStop`) are written down, so the next occurrence is not re-investigated
-from scratch.
+**Trigger 2 was assessed on 2026-09-18 as arguably met:** three occurrences in about 21 hours, and
+the third cost a full manual 70-edge audit. Trigger 1 was a near miss; nothing wrong landed only
+because of a pre-decided retry cutoff. **The user reviewed this on 2026-09-19 and chose to keep the
+ticket deferred**, recording the new evidence here in the next agent-infra batch rather than
+starting implementation.
+
+The reasoning, so it isn't lost: **the scoped detector would not have prevented that rework.** The
+implementer spotted the empty return immediately without any tooling, so detection was not the
+bottleneck. The cost came from the fork failing to deliver at all. A size signal would have caught
+the first completion, missed the second, and saved none of the 70 edges.
+
+**Proven mitigation in the meantime, costing nothing:** decide a retry cutoff *before* dispatching
+or resuming a fork (at most one resume), and when it is reached, do the work directly rather than
+asking again. This is what bounded the 2026-09-18 cost. It also matters specifically because of
+failure shape 3: a fork that claims it already delivered will keep claiming so, and an uncapped
+retry loop spends tokens on it indefinitely.
+
+Until implementation, this ticket's value is that the diagnosis, the evidence, the three failure
+shapes, and the two rejected approaches (duration threshold, `SubagentStop`) are written down, so
+the next occurrence is not re-investigated from scratch.
 
 ## Test Summary
 _Deferred — see Implementation Notes._
