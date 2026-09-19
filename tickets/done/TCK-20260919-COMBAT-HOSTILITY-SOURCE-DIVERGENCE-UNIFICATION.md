@@ -117,6 +117,10 @@ the opportunity-attack trigger:
 - A scoped fix proposal, reviewed by peer, before any implementation.
 
 ## Related Tickets
+- `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` (filed from this ticket's own
+  fix-shape recommendation — the actual fix, in its own ticket and its own PR per peer review,
+  with a hard scope guard against a partial fix and a before/after combat-volume measurement
+  requirement)
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (source — where this finding was
   discovered and measured; see its 2026-09-19 addendum for the full trace and numbers this
   ticket's own Request Summary is drawn from)
