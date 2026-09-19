@@ -41,7 +41,8 @@ and `git cherry-pick --continue` after resolving hit it again applying the next 
 multi-commit pick. The reliable pattern found by trial: before each individual git step, discard
 whatever the hook just wrote with `git checkout HEAD -- agent-monitoring/data/<week>/tools.jsonl`
 (safe — telemetry, not real work, regenerated on the next tool call), then immediately run that
-one step.
+one step. **Both the mechanism and the "safe" claim in this paragraph were corrected on review — see
+Review findings below. The paragraph is kept as the original report.**
 
 **Checking where this guidance came from to add the refinement in the right place surfaced a
 separate, real gap**: the existing bullet cites no ticket ID at all, and the commit that
@@ -60,6 +61,29 @@ fork-relay fix and a registry-workflow change the same week: policy changes to `
 the user's direct approval, not a peer's agreement or an agent's own judgment, regardless of how
 narrow or well-evidenced the change is. This ticket exists so the fix is proposed properly instead.
 
+### Review findings (2026-09-19, `agent-working-design`, checked against source)
+
+The core findings stand: the existing guidance has no owning ticket, and the chained fix does not
+cover an operation that spans more than one tool call. Two claims in the original proposal did not
+hold up against the hook source, and both would have gone into the governing file:
+
+1. **The mechanism.** Only the PostToolUse hook writes the shard
+   (`tools/agent-monitoring/post_tool_hook.py`). It fires *after* a tool call finishes, never partway
+   through a running command. The PreToolUse hook writes only `.claude/.current_session_id` and
+   `.claude/.tool_start`. So the shard cannot be rewritten "between each of `cherry-pick`'s own
+   internal steps" within a single invocation. What fits the observed symptoms: a `cherry-pick` that
+   stopped on a conflict, so `--continue` ran as a separate tool call with a hook write in between;
+   or another session working in the same worktree appending to the shard mid-command, since the
+   path is cwd-relative (`Path("agent-monitoring/data") / iso_week / "tools.jsonl"`) and shared.
+2. **"Safe — regenerated on the next tool call" is false.** The hook's own docstring: *"appends one
+   tool-call record to agent-monitoring/data/<ISO-week>/tools.jsonl."* Because it appends,
+   `git checkout HEAD -- …/tools.jsonl` **permanently deletes every monitoring row written since the
+   last commit**, including rows from other sessions sharing that worktree. The next call adds one
+   new row and restores nothing. It also contradicts CLAUDE.md's After Work rule to stage
+   `agent-monitoring/` in every commit and never leave it unstaged.
+
+The original reporter confirmed both corrections. The proposal below replaces the original.
+
 ## Scope
 - Give the existing checkout-race guidance (CLAUDE.md, "Worktree & Branch Isolation" section) a
   real owning ticket and evidence trail — this one — rather than leaving it uncited.
@@ -70,21 +94,20 @@ narrow or well-evidenced the change is. This ticket exists so the fix is propose
   ticket closes referencing that. If declined or changed, record the user's actual decision here
   instead of the proposal.
 
-### Proposed addition (to append after the existing checkout-race bullet in "Worktree & Branch
-### Isolation")
+### Proposed addition, corrected on review (to append after the existing checkout-race bullet in
+### "Worktree & Branch Isolation")
 ```
-- **This chained-invocation fix does not generalize to every git operation** — confirmed on
-  2026-09-19 folding a small batch of commits from one branch onto another via `git cherry-pick`:
-  the hook rewrites the shard file between each of `cherry-pick`'s own internal steps (apply →
-  auto-merge → commit), not just between separate tool calls, so a single chained `add && commit &&
-  cherry-pick <sha>` invocation still hits "local changes would be overwritten" mid-sequence, and
-  `git cherry-pick --continue` after resolving can hit it again applying the *next* commit in a
-  multi-commit pick. The reliable pattern for a multi-step operation (cherry-pick, rebase, a
-  multi-commit merge): before each individual git step, discard whatever the hook just wrote with
-  `git checkout HEAD -- agent-monitoring/data/<week>/tools.jsonl` (safe — it's telemetry, not real
-  work, and the hook regenerates it on the next tool call), then immediately run that one step.
-  Chaining still works for a single atomic operation (plain `checkout -b`, a single `commit`); it
-  does not for anything that internally re-touches the working tree more than once.
+- **The chained fix covers one tool call, not an operation that spans several.** The shard is
+  written only by the PostToolUse hook, which appends one row after each tool call finishes —
+  never partway through a running command. So a git operation that stops and resumes across tool
+  calls (a `cherry-pick`, `rebase`, or `merge` that halts on a conflict and continues with
+  `--continue`) finds the shard dirtied again between those calls and hits "local changes would be
+  overwritten". **Do not discard the shard to clear it** (`git checkout HEAD -- …/tools.jsonl`):
+  the hook appends, so that permanently deletes every monitoring row written since the last commit,
+  including other sessions' rows in the same worktree. Instead, stage it into the operation —
+  include `agent-monitoring/data/` in the same `git add` that precedes `--continue` — so the rows
+  ride into that commit and the tree is clean for the next step. A different session appending to
+  the same worktree's shard mid-command is not covered by this; only a hook-level fix removes that.
 ```
 
 ## Out of Scope
@@ -124,9 +147,21 @@ _(none — hotfix tier, self-evident intent per the ticket's own request summary
 ## Assumptions / Open Questions
 - Whether the user wants this wording as-is, edited, or declined entirely — that's the actual
   open question this ticket exists to resolve; not assumed here.
+- **The corrected procedure is reasoned, not yet reproduced.** "Stage the shard before `--continue`
+  instead of discarding it" follows from the hook source (append-only, post-call) and from how git
+  treats staged versus unstaged changes, but nobody has run it against a live race. Two safe
+  options: confirm it on the next real occurrence before approving the wording, or approve only
+  the diagnostic half now (why it happens, and do not discard the shard) and leave the procedure
+  out until it has been tried.
 
 ## Implementation Notes
-_(none yet — awaiting the user's decision on the proposed wording above)_
+Ownership moved from `rpg-implementer` to `agent-working-design` on 2026-09-19, at the user's
+direction, as part of splitting the agent-working domain into its own session. PR #221 now also
+carries the held update to `TCK-20260917-FORK-RETURNS-CONTENT-FREE-INDISTINGUISHABLE`, per the
+user's preference for folding work into an already-open PR.
+
+No `CLAUDE.md` edit is made by this ticket. It still awaits the user's decision on the corrected
+wording above.
 
 ## Test Summary
 _(none — documentation-only change, no code path affected)_
