@@ -327,6 +327,9 @@ mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.m
 mechanism-registry-view: ## Regenerate docs/brainstorm/mechanism_registry_view.md (all mechanisms, priority + verification together, not truncated)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_view.py
 
+mechanism-system-rollup-view: ## Regenerate docs/brainstorm/mechanism_system_rollup_view.md (per-system counts vs whole-registry baseline, never a badge)
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_system_rollup_view.py
+
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 
