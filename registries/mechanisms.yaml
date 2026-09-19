@@ -480,6 +480,20 @@ mechanisms:
         reads. Not independently re-investigated further here -- flagged as a real, corpus-relevant
         finding for a future ticket, same treatment as `camp`/`demographic_cohort_cycle`/
         `succession`.
+        **Added 2026-09-19, peer review**: this mechanism has 4 real transitive dependents
+        (`combat_resolution` direct; `trauma`, `commitment_betrayal`,
+        `commitment_pressure_consequences` transitive through `combat_resolution`/`trauma`) and
+        ranks #4 by priority (20) with 4 transitive dependents of its own in
+        `mechanism_registry_view.md` -- so the top of the "what to verify next" list currently
+        contains a mechanism whose input never exists in production. `ATTACKER_STATUS_BLOCKED` is
+        the one concrete dead-gate instance actually traced so far; whether the other 3 dependents
+        (a) handle status-effect absence correctly (a real, if never-exercised, dependency), (b) are
+        silently degraded (a branch that assumes effects exist and is simply never taken), or (c)
+        don't actually need this as a functional prerequisite at all (edge-semantics
+        misclassification) is NOT checked here -- three genuinely different findings, not yet
+        distinguished. Cross-reference for whoever picks this up:
+        `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION` (next in this session's
+        own program order) is exactly the audit this question belongs to.
 
   # ── Entity layer — Cognition (18, atlas `entity-cognition`) ─────────────────────────────────
 
