@@ -8,7 +8,8 @@ Pattern imitated from src/engine/capability.py (a working hand-authored-YAML-reg
 validator precedent for a different subject), adapted for this registry's extra invariants
 (depends_on resolution, DAG acyclicity) that capability.py's simpler flat list did not need.
 
-Seven invariants enforced by validate():
+Ten invariants enforced by validate() (the header count was already stale at "Seven" before this
+edit -- invariant 8 had already been added without updating it; fixed here rather than repeated):
   1. every `depends_on` id resolves to a declared mechanism
   2. the dependency graph is acyclic
   3. every mechanism's `layer` is declared in the `layers` block
@@ -24,6 +25,12 @@ Seven invariants enforced by validate():
   8. every `unaudited_depends_on_edges` entry names a real, currently-declared depends_on edge
      (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT) -- a stale marker for an edge that
      was since removed or never existed would misrepresent an unchecked edge as audited
+  9. every value in a mechanism's `systems: []` resolves to a system registered in
+     registries/system_registry.jsonl (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION) --
+     "no missing system"
+  10. every system registered in registries/system_registry.jsonl has at least one mechanism
+      declaring it (same ticket) -- "no orphan system": a declared system with zero members is
+      dead vocabulary and should fail rather than accumulate silently
 
 `validate()` returns a list of human-readable error strings (empty if valid) rather than
 raising/returning a bool, so a caller can report every violation in one run instead of stopping at
@@ -44,6 +51,9 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
+
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
+from system_registry import load_registry as _load_system_registry  # noqa: E402
 
 # TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING. An `implemented_by` entry is either
 # a bare repo-relative path (file-level -- the whole file is the binding) or "<path>::<Symbol>"
@@ -295,6 +305,31 @@ def validate(data: dict) -> List[str]:
             errors.append(
                 f"unaudited_depends_on_edges entry [{dependent}, {dependency}] is not a currently "
                 f"declared depends_on edge -- stale marker, remove it or restore the edge"
+            )
+
+    # Invariants 9/10: mechanism `systems: []` membership, checked against
+    # registries/system_registry.jsonl (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION).
+    # Declared membership never touches depends_on -- these two invariants are independent of
+    # every dependency-graph check above.
+    registered_systems = set(_load_system_registry().keys())
+    systems_declared_by: Dict[str, List[str]] = {s: [] for s in registered_systems}
+    for m in mechanisms:
+        mid = m.get("id", "<missing id>")
+        mech_systems = m.get("systems") or []
+        for sys_name in mech_systems:
+            if sys_name not in registered_systems:
+                errors.append(
+                    f"mechanism '{mid}' declares system '{sys_name}', which is not registered in "
+                    f"registries/system_registry.jsonl"
+                )
+                continue
+            systems_declared_by[sys_name].append(mid)
+
+    for sys_name, members in systems_declared_by.items():
+        if not members:
+            errors.append(
+                f"system '{sys_name}' is registered in registries/system_registry.jsonl but no "
+                f"mechanism declares it -- orphan system, dead vocabulary"
             )
 
     return errors
@@ -564,6 +599,43 @@ def unverified_priority_ranking(data: dict) -> List[dict]:
             ),
         })
     return sorted(rows, key=lambda r: (-r["priority"], r["id"]))
+
+
+def mechanisms_by_system(data: dict) -> Dict[str, List[str]]:
+    """TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION. Every registered system mapped to the
+    sorted list of mechanism ids that declare it, PLUS a real `"unassigned"` key holding every
+    mechanism whose own `systems: []` is empty or absent.
+
+    A mechanism with no system is **rendered explicitly under `"unassigned"`, never silently
+    dropped** -- the same rule this registry already applies to `verified: null` (AC #4/#5 of the
+    foundation ticket). `"unassigned"` is a real key in the returned dict even when its own list
+    is empty, so a caller can always find it rather than needing a `.get(..., [])` guess.
+
+    Read-only query, matching `transitive_dependents()`/`all_mechanisms_combined_view()`'s own
+    shape -- computes nothing that feeds priority or verdict (Acceptance Criteria #6: membership
+    stays a review lens, never load-bearing)."""
+    mechanisms = data.get("mechanisms", []) or []
+    registered_systems = set(_load_system_registry().keys())
+
+    result: Dict[str, List[str]] = {s: [] for s in registered_systems}
+    result["unassigned"] = []
+
+    for m in mechanisms:
+        mid = m.get("id")
+        if mid is None:
+            continue
+        mech_systems = m.get("systems") or []
+        if not mech_systems:
+            result["unassigned"].append(mid)
+            continue
+        for sys_name in mech_systems:
+            if sys_name in result:
+                result[sys_name].append(mid)
+
+    for key in result:
+        result[key].sort()
+
+    return result
 
 
 def main(argv: Optional[List[str]] = None) -> int:

@@ -119,6 +119,7 @@ mechanisms:
 
   - id: combat_resolution
     layer: entity
+    systems: [combat]
     depends_on: [movement, status_effects, entity_role]
     state: done
     implemented_by: [src/engine/combat.py::CombatResolutionSystem]
@@ -164,6 +165,7 @@ mechanisms:
         the game's own authored hostility model -- not a regression.
   - id: tactical_decision
     layer: entity
+    systems: [combat]
     depends_on: []
     state: done
     implemented_by: [src/engine/tactical.py::TacticalDecisionSystem]
@@ -206,6 +208,7 @@ mechanisms:
         for the full per-world evidence table.
   - id: combat_engagement
     layer: entity
+    systems: [combat]
     depends_on: [personality]
     state: done
     verified:
@@ -226,6 +229,7 @@ mechanisms:
         explicitly rather than leaving "1960 -> 837" to be read as one.
   - id: movement
     layer: entity
+    systems: [combat, world]
     depends_on: []
     state: done
     implemented_by: [src/engine/movement.py::MovementSystem]
@@ -237,6 +241,7 @@ mechanisms:
   # docs/plans/mechanism_identity_and_change_taxonomy.md §4-5 for the full reasoning.
   - id: action_pacing_readiness
     layer: entity
+    systems: [combat]
     depends_on: []
     state: done
     verified:
@@ -256,6 +261,7 @@ mechanisms:
         deficiency in the gate itself).
   - id: readiness_speed_scaling
     layer: entity
+    systems: [progression]
     depends_on: []
     state: partial
     verified:
@@ -279,18 +285,22 @@ mechanisms:
         and recalculation code are themselves correct.
   - id: interaction_channeling
     layer: entity
+    systems: [social]
     depends_on: []
     state: done
   - id: conversation
     layer: entity
+    systems: [social]
     depends_on: [action_pacing_readiness]
     state: gap
   - id: entity_trade
     layer: entity
+    systems: [social, economy]
     depends_on: []
     state: gap
   - id: team_up
     layer: entity
+    systems: [social]
     depends_on: []
     state: gap
 
@@ -298,34 +308,42 @@ mechanisms:
 
   - id: attributes_biology
     layer: entity
+    systems: [progression]
     depends_on: []
     state: done
   - id: derived_stats
     layer: entity
+    systems: [progression]
     depends_on: [attributes_biology]
     state: done
   - id: race_archetype
     layer: entity
+    systems: [progression]
     depends_on: []
     state: done
   - id: class_assignment
     layer: entity
+    systems: [progression]
     depends_on: [race_archetype]
     state: partial
   - id: personality
     layer: entity
+    systems: [progression, cognition]
     depends_on: []
     state: done
   - id: build_diversity
     layer: entity
+    systems: [progression]
     depends_on: [class_assignment]
     state: gap
   - id: aging_death
     layer: entity
+    systems: [progression]
     depends_on: []
     state: done
   - id: succession
     layer: entity
+    systems: [progression]
     depends_on: [aging_death]
     state: done
     implemented_by: [src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem]
@@ -353,6 +371,7 @@ mechanisms:
         TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION's own addendum.
   - id: genetics_aptitude
     layer: entity
+    systems: [progression]
     depends_on: []
     state: gated
     implemented_by: [src/systems/lifecycle_systems/genetics.py::GeneticsSystem]
@@ -368,6 +387,7 @@ mechanisms:
         what `gated` means. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
   - id: evolution
     layer: entity
+    systems: [progression]
     depends_on: []
     state: done
     implemented_by: [src/engine/evolution.py::EvolutionSystem]
@@ -390,10 +410,12 @@ mechanisms:
         still doesn't fire in real corpus play.
   - id: skill_unlocks
     layer: entity
+    systems: [combat]
     depends_on: []
     state: partial
   - id: xp_leveling
     layer: entity
+    systems: [progression]
     depends_on: []
     state: partial
     verified:
@@ -420,10 +442,12 @@ mechanisms:
         TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME (filed, not fixed).
   - id: breakthrough_bonuses
     layer: entity
+    systems: [progression]
     depends_on: []
     state: done
   - id: entity_role
     layer: entity
+    systems: [progression]
     depends_on: []
     state: done
 
@@ -431,10 +455,12 @@ mechanisms:
 
   - id: trauma
     layer: entity
+    systems: [cognition]
     depends_on: [combat_resolution]
     state: done
   - id: status_effects
     layer: entity
+    systems: [combat]
     depends_on: []
     state: partial
 
@@ -442,6 +468,7 @@ mechanisms:
 
   - id: self_model
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: gated
     verified:
@@ -451,6 +478,7 @@ mechanisms:
       note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
   - id: declared_cognition_schema
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: orphan
     implemented_by: [src/core/cognition.py::RiskModel]
@@ -465,10 +493,12 @@ mechanisms:
     # demographic_cohort_cycle-shaped mistake this pass exists to avoid repeating.
   - id: perception
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: done
   - id: emotion
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: done
     implemented_by: [src/domains/emotion/emotion_service.py::EmotionUpdateService]
@@ -487,10 +517,12 @@ mechanisms:
         VERIFICATION.
   - id: affection_relationship_bonds
     layer: entity
+    systems: [social]
     depends_on: []
     state: done
   - id: motivation_doctrine
     layer: entity
+    systems: [cognition]
     depends_on: [goal_hierarchy, affection_relationship_bonds]
     state: gap
     verified:
@@ -512,10 +544,12 @@ mechanisms:
         gear/skill/role-fit scorer) remains in the module.
   - id: commitment_betrayal
     layer: entity
+    systems: [social]
     depends_on: [combat_resolution]
     state: done
   - id: temporal_pressure
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: skeleton
     implemented_by: [src/domains/time/service.py::TemporalPressureService]
@@ -525,14 +559,17 @@ mechanisms:
     # ("46 LoC total").
   - id: goal_hierarchy
     layer: entity
+    systems: [cognition]
     depends_on: [belief_cycle, reputation]
     state: done
   - id: belief_cycle
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: done
   - id: information_trust_deception
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: gated
     verified:
@@ -542,10 +579,12 @@ mechanisms:
       note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
   - id: knowledge_model
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: gated
   - id: causal_spatial_memory
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: gated
     implemented_by: [src/domains/memory/phase.py::MemoryUpdatePhase]
@@ -561,6 +600,7 @@ mechanisms:
         implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING)."
   - id: adventure_routing
     layer: entity
+    systems: [cognition, world]
     depends_on: [entity_role, personality, diplomacy]
     state: done
     implemented_by: [src/domains/adventure/service.py::AdventureDecisionService]
@@ -571,14 +611,17 @@ mechanisms:
     # resolver.py/scoring.py, part of the same route-decision concept.
   - id: quest_generation_sourcing
     layer: entity
+    systems: [world, cognition]
     depends_on: []
     state: gated
   - id: strategic_intelligence_core
     layer: entity
+    systems: [cognition]
     depends_on: [belief_cycle]
     state: done
   - id: committed_intentions
     layer: entity
+    systems: [cognition]
     depends_on: [goal_hierarchy]
     state: orphan
     implemented_by: [src/core/cognition.py::CommitmentModel]
@@ -590,6 +633,7 @@ mechanisms:
     # finding). Matches the wiring-map's own INT node citation ("no write path exists") exactly.
   - id: cognition_capacity_fatigue
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: done
 
@@ -597,10 +641,12 @@ mechanisms:
 
   - id: party_formation
     layer: group
+    systems: [social]
     depends_on: [movement]
     state: done
   - id: guilds
     layer: group
+    systems: [social, faction]
     depends_on: []
     state: partial
 
@@ -608,6 +654,7 @@ mechanisms:
 
   - id: diplomacy
     layer: faction
+    systems: [faction]
     depends_on: []
     state: done
     implemented_by: [src/domains/faction/diplomatic_state_machine.py::compute_transitions]
@@ -618,22 +665,27 @@ mechanisms:
     # called unconditionally from engine/pipeline.py:437-440) and diplomatic_actions.py.
   - id: betrayal_siege_war
     layer: faction
+    systems: [faction]
     depends_on: []
     state: done
   - id: social_contracts
     layer: faction
+    systems: [faction]
     depends_on: []
     state: done
   - id: reputation
     layer: faction
+    systems: [faction]
     depends_on: []
     state: done
   - id: social_memory
     layer: faction
+    systems: [faction]
     depends_on: []
     state: skeleton
   - id: cross_episode_social_consequences
     layer: faction
+    systems: [faction]
     depends_on: [social_memory]
     state: done
     implemented_by: [src/systems/social_systems/consequence_events.py::evaluate_social_consequence]
@@ -648,6 +700,7 @@ mechanisms:
         was factually wrong. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
   - id: cross_episode_grief_nemesis
     layer: faction
+    systems: [faction]
     depends_on: []
     state: done
     verified:
@@ -659,6 +712,7 @@ mechanisms:
         betrayal -> party-formation blocker); narrow trigger.
   - id: country_lifecycle
     layer: faction
+    systems: [faction]
     depends_on: [betrayal_siege_war]
     state: partial
 
@@ -679,6 +733,7 @@ mechanisms:
   # into `regional_sovereignty` as declared regional content rather than given its own row.
   - id: regional_trauma
     layer: region
+    systems: [world]
     depends_on: []
     state: done
     verified:
@@ -696,6 +751,7 @@ mechanisms:
         open).
   - id: regional_sovereignty
     layer: region
+    systems: [world, faction]
     depends_on: [world_generation]
     state: done
     implemented_by: [src/world/influence.py::FactionInfluenceService]
@@ -723,6 +779,7 @@ mechanisms:
         for whoever next touches regional sovereignty.
   - id: demographic_cohort_cycle
     layer: region
+    systems: [world]
     depends_on: []
     state: done
     implemented_by: [src/domains/demographics/cohort.py::DemographicCycleService]
@@ -745,14 +802,17 @@ mechanisms:
 
   - id: campaigns
     layer: world
+    systems: [world]
     depends_on: []
     state: done
   - id: chronicle
     layer: world
+    systems: [world]
     depends_on: []
     state: done
   - id: opportunity_rumor_seeds
     layer: world
+    systems: [world]
     depends_on: []
     state: gated
     verified:
@@ -762,6 +822,7 @@ mechanisms:
       note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
   - id: cultural_drift
     layer: world
+    systems: [world]
     depends_on: []
     state: done
     implemented_by: [src/domains/culture/deriver.py::CultureDeriver]
@@ -786,6 +847,7 @@ mechanisms:
   # with this split.
   - id: calamity_intensity
     layer: world
+    systems: [world]
     depends_on: []
     state: done
     verified:
@@ -803,6 +865,7 @@ mechanisms:
         (still open -- the code-level finding stands regardless of whether/when a fix lands).
   - id: world_boss_spawn
     layer: world
+    systems: [world]
     depends_on: [regional_trauma]
     state: done
     verified:
@@ -817,10 +880,12 @@ mechanisms:
         threshold values) found and fixed, whole chain proven end to end.
   - id: world_generation
     layer: world
+    systems: [world]
     depends_on: []
     state: done
   - id: gods_pantheon_blessings
     layer: world
+    systems: [world]
     depends_on: []
     state: gap  # intentionally excluded per design idea 63 -- not a gap to close, see atlas card
 
@@ -828,14 +893,17 @@ mechanisms:
 
   - id: equipment_scoring
     layer: world
+    systems: [economy]
     depends_on: [inventory_trade_conservation]
     state: done
   - id: inventory_trade_conservation
     layer: world
+    systems: [economy]
     depends_on: []
     state: done
   - id: crafting
     layer: world
+    systems: [economy]
     depends_on: [inventory_trade_conservation]
     state: partial
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY): `buildings`
@@ -847,10 +915,12 @@ mechanisms:
   # docs/plans/mechanism_identity_and_change_taxonomy.md §4.
   - id: buildings
     layer: world
+    systems: [economy]
     depends_on: []
     state: done
   - id: town_services
     layer: world
+    systems: [economy]
     depends_on: [buildings]
     state: done
     # Flagged, not further split here: within town_services, CHURCH's own BLESSING/RESURRECTION
@@ -862,6 +932,7 @@ mechanisms:
     # serve today. Revisit if that changes.
   - id: building_sabotage
     layer: world
+    systems: [economy]
     depends_on: [buildings]
     state: done
 
@@ -869,10 +940,12 @@ mechanisms:
 
   - id: city
     layer: region
+    systems: [world]
     depends_on: [regional_sovereignty]
     state: partial
   - id: camp
     layer: region
+    systems: [world]
     depends_on: [regional_trauma]
     state: done
     verified:
@@ -888,14 +961,17 @@ mechanisms:
         and calamity-intensity cases.
   - id: nest
     layer: region
+    systems: [world]
     depends_on: [camp]
     state: gap  # not yet built ("Proposed"); wiring-map only, no atlas JSON card -- see investigation.md
   - id: lair
     layer: region
+    systems: [world]
     depends_on: []
     state: gap  # not yet built ("Proposed"); wiring-map only, no atlas JSON card -- see investigation.md
   - id: ruins_mines_battlefields
     layer: region
+    systems: [world]
     depends_on: [regional_trauma, regional_sovereignty]
     state: partial
     # Conservative: kept pointing at both post-split successors (2026-09-17). No dedicated
@@ -906,10 +982,12 @@ mechanisms:
 
   - id: clan
     layer: faction
+    systems: [faction]
     depends_on: []
     state: gap
   - id: race_collective_force
     layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
+    systems: [faction]
     depends_on: []
     state: gap
 
@@ -917,6 +995,7 @@ mechanisms:
 
   - id: settlement_capacity_axis
     layer: faction  # PLACEHOLDER layer assignment, not citation-backed -- see header note
+    systems: [faction]
     depends_on: [race_archetype]
     state: gap
 
@@ -927,6 +1006,7 @@ mechanisms:
 
   - id: cooperation
     layer: entity
+    systems: [social]
     depends_on: []
     state: done
     implemented_by: [src/domains/cooperation/phase.py::CooperationPhase]
@@ -937,6 +1017,7 @@ mechanisms:
     # cooperation/services.py:301-306).
   - id: progression_conversion
     layer: entity
+    systems: [progression]
     depends_on: []
     state: gated
     implemented_by: [src/domains/progression/phase.py::ProgressionConversionPhase]
@@ -960,6 +1041,7 @@ mechanisms:
         scarce even once this gate opens, on top of the flag being off today.
   - id: resource_harvesting
     layer: world
+    systems: [economy]
     depends_on: []
     state: orphan
     implemented_by: [src/systems/world_systems/harvesting.py::HarvestSystem]
@@ -970,6 +1052,7 @@ mechanisms:
     # depends_on inventory_trade_conservation is real even though the system itself never runs.
   - id: fame
     layer: world
+    systems: [world, social]
     depends_on: [campaigns]
     state: done
     implemented_by: [src/domains/fame/model.py, src/domains/fame/deriver.py, src/domains/fame/exporter.py, src/domains/fame/legend.py]
@@ -980,6 +1063,7 @@ mechanisms:
     # #2.53 ("idea 57's Living Legend branch, LegendFact.fame"). Not flag-gated.
   - id: fidelity_drift
     layer: world
+    systems: [world]
     depends_on: [campaigns]
     state: done
     implemented_by: [src/domains/fidelity/model.py, src/domains/fidelity/deriver.py, src/domains/fidelity/exporter.py]
@@ -989,6 +1073,7 @@ mechanisms:
     # cross_episode_grief_nemesis. Not flag-gated.
   - id: belief_institution
     layer: world
+    systems: [world]
     depends_on: [campaigns]
     state: partial
     implemented_by: [src/domains/belief_institution/model.py, src/domains/belief_institution/deriver.py, src/domains/belief_institution/exporter.py]
@@ -1002,6 +1087,7 @@ mechanisms:
     # half is a documented, pre-existing gap, not a new one -- partial.
   - id: strategic_learning_bias
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: done
     implemented_by: [src/systems/strategic_systems/learning.py::StrategicLearningService]
@@ -1013,6 +1099,7 @@ mechanisms:
     # STRAT-044/049/051/052/069/075/076/142/195). No flag check found; live unconditionally.
   - id: strategic_redirection
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: orphan
     implemented_by: [src/systems/strategic_systems/redirection.py::StrategicRedirectionSystem]
@@ -1022,6 +1109,7 @@ mechanisms:
     # logic was inlined/refactored elsewhere, leaving this file's own class dead.
   - id: concern_intake
     layer: entity
+    systems: [cognition]
     depends_on: []
     state: done
     implemented_by: [src/systems/world_systems/intake.py::ConcernIntakeSystem]
@@ -1030,6 +1118,7 @@ mechanisms:
     # Not covered by strategic_intelligence_core's own narrow citation. No flag check found.
   - id: event_interpretation
     layer: region
+    systems: [world]
     depends_on: []
     state: done
     implemented_by: [src/systems/world_systems/events.py::EventInterpreter]
@@ -1039,6 +1128,7 @@ mechanisms:
     # (src/ai/goals/__init__.py:26) -- live, not flag-gated.
   - id: narrative_memory
     layer: world
+    systems: [world]
     depends_on: []
     state: orphan
     implemented_by: [src/systems/world_systems/narrative.py::NarrativeMemorySystem]
@@ -1052,6 +1142,7 @@ mechanisms:
 
   - id: group_coordination
     layer: group
+    systems: [social]
     depends_on: []
     state: orphan
     implemented_by: [src/systems/social_systems/group_service.py::GroupService]
@@ -1060,6 +1151,7 @@ mechanisms:
     # GroupSystem (a different class, mapped to cooperation) -- a same-concept-different-file trap.
   - id: quest_reward_distribution
     layer: group
+    systems: [world]
     depends_on: []
     state: orphan
     implemented_by: [src/systems/social_systems/reward_distribution.py::compute_fair_share]
@@ -1068,6 +1160,7 @@ mechanisms:
     # members via ResourceTransferIntent. Checked directly, zero real callers anywhere in src/.
   - id: commitment_pressure_consequences
     layer: entity
+    systems: [social]
     depends_on: [commitment_betrayal]
     state: partial
     implemented_by: [src/domains/commitment/pressure.py, src/domains/commitment/impact.py, src/domains/commitment/reputation.py, src/domains/commitment/abandonment.py]

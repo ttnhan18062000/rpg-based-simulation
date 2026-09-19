@@ -35,17 +35,32 @@ tags: [architecture, documentation, schema]
 > collaboration in the first place.
 >
 > **Revived 2026-09-18 as `TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`**, sequenced investigation
-> first (`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`, child 1): a system becomes
-> **membership declared on a mechanism** — no root, no traversal, `depends_on` not consulted. That removes
-> all three of the original investigation's own blockers at once (bad thematic fits — membership is
-> declared by intent, not derived; unaudited edges — edges are simply unused; non-unique roots — none
-> exist to be non-unique). The new investigation's own question is different in kind from the
-> original: feasibility isn't in doubt (a declared-by-intent set is sensible by construction — that's
-> what "declared" means), the real question is **value against cost**: does a membership layer tell a reader
-> anything the per-mechanism view doesn't, by enough to justify hand-maintaining membership across 93+
-> mechanisms with no mechanical backing to keep it honest. `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`
-> (child 2, vocabulary seeded from child 1's findings) and a rollups child (named, not yet drafted)
-> follow — see `tickets/todos/mechanism-system-membership/SEQUENCE.md`.
+> first (`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`, child 1, **done**): a
+> system becomes **membership declared on a mechanism** — no root, no traversal, `depends_on` not
+> consulted. That removes all three of the original investigation's own blockers at once (bad
+> thematic fits — membership is declared by intent, not derived; unaudited edges — edges are simply
+> unused; non-unique roots — none exist to be non-unique). Child 1's own question was different in
+> kind from the original: feasibility was never in doubt (a declared-by-intent set is sensible by
+> construction), the real question was **value against cost** — and the answer was **proceed, with
+> one required change**: 2 of 3 test systems (`combat`, `economy`) cleared a real value bar against
+> the whole-registry baseline; `faction`'s own raw numbers looked informative until checked against
+> baseline and found indistinguishable from average — so any rollup built on this membership must
+> report rates against baseline, never in isolation, or it will mislead the way `faction`'s own
+> number would have.
+>
+> **`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION` (child 2) landed 2026-09-19.** A managed,
+> append-only `registries/system_registry.jsonl` (mirroring `layer_registry.jsonl`'s own pattern,
+> `tools/mechanism_registry/system_registry.py` for add/list) holds the 7-system vocabulary child 1
+> seeded (`combat`, `progression`, `cognition`, `social`, `faction`, `economy`, `world`). Every one
+> of the 93 mechanisms now declares a `systems: []` list on itself (declared-on-mechanism, not a
+> registry-side membership list, per this doc's own §4/§5 duplication-avoidance rule), including 8
+> genuinely multi-system mechanisms. `registry.py::validate()` gained two new invariants (missing
+> system, orphan system) proven on deliberately invalid fixtures, not just a clean pass on real
+> data. A new `mechanisms_by_system()` query renders an explicit `"unassigned"` bucket — proven by
+> a test asserting an unassigned mechanism's own *presence* in the output, not by checking the
+> assigned rows look right, per the foundation ticket's own AC #5. Nothing here derives a ranking or
+> verdict from membership (AC #6) — it is a review lens, same as this whole revival's original
+> framing. Rollups (child 3, §5 below) remain undrafted, deferred to their own ticket.
 >
 > **What still stands from the original rejection**: the §2 `mechanism` tier (already built,
 > unaffected) and the naming evidence for `system` over `cluster`/`circuit` remain valid regardless.
