@@ -108,6 +108,9 @@ pre-fragment now.
 6. Nothing derives a ranking, verdict or priority from system membership.
 
 ## Related Tickets
+- `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION` — done; found the value/cost case
+  for building this real (2 of 3 test systems cleared the value bar against baseline) and seeded
+  the initial 7-system, 93-mechanism vocabulary this ticket's own §5 pass should start from
 - `TCK-20260917-MECHANISM-SYSTEM-TIER-FEASIBILITY-INVESTIGATION` — rejected the derived design; this
   supersedes its conclusion **for the declared-membership mechanism only**, not for derivation
 - `TCK-20260917-EPIC-MECHANISM-TIER-MODEL` — closed; this reopens the tier by a different route
@@ -143,6 +146,31 @@ pre-fragment now.
    purpose. Recorded now so the follow-up does not have to rediscover it.
 4. How many systems the broad pass yields is unknown and deliberately not targeted. If it lands very
    high, that is a signal the grouping is not working — report it rather than forcing a number.
+5. **Hard requirement for any rollup/review view, found by
+   `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`: report every per-system rate
+   against the whole-registry baseline, never in isolation.** That investigation's own `faction`
+   test case looked like a real finding (77% unverified, 23% `implemented_by`) until compared
+   against the corpus-wide baseline (74% / 30%) and found statistically indistinguishable from
+   average — a raw rate without a baseline isn't a finding, it's the corpus average wearing a
+   system's name. **This generalizes past this one rollup**: it is the same failure shape as the
+   attribution ratchet reporting a percentage with no comparison and firing on legitimate
+   activity, and SimQ reporting green because it measured at a scale where the real change
+   couldn't appear — a number presented without the context that makes it mean something. Any
+   future report built on top of declared membership must carry this requirement, not just the
+   first rollup view.
+6. **Multi-membership is real but rare (8/93 = 8.6%, per the same investigation), and that is the
+   argument to keep the declared-on-mechanism list field as-is, not to simplify it away.** A
+   single-valued field plus a hand-maintained exception list for the 8 that don't fit would put
+   membership in two places — the field and the exception list — which is exactly the
+   second-source-of-truth pattern this ticket's own §2 rationale already rejects for a
+   registry-side membership list. The list field already handles 0, 1, or many memberships
+   without needing a second mechanism; 8.6% is small enough to keep, not small enough to special-
+   case.
+7. **The investigation's own progression assignment (independently arriving at exactly 15
+   mechanisms before re-reading this ticket's own worked example) is real corroborating evidence,
+   not just a nice coincidence** — it is what makes the investigation's other six system
+   assignments (including the two, `combat` and `economy`, that passed the value test) credible
+   rather than fitted to a known answer.
 
 ## Implementation Notes
 **`docs/plans/mechanism_tier_model_initiative.md` must be updated, not duplicated.** Its current

@@ -98,6 +98,24 @@ target — all 7 `orphan`-state mechanisms are bound. `gated` is at 3 of 8 (`sel
 `opportunity_rumor_seeds` remain unbound) — these 5 are this ticket's own concrete, prioritized
 starting list, not an abstract "some gated mechanisms" instruction.
 
+### Priority within `done`/`partial` binding — added 2026-09-19, from the system-membership value
+### investigation
+
+`done`/`partial` binding has no coverage target (per the reasoning above), but was previously
+unordered beyond "bind more of the remaining 63." It now has one, concrete and usable regardless
+of whether the `system` tier itself ever gets built:
+`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION` found the declared `combat` system
+(`combat_resolution`, `tactical_decision`, `combat_engagement`, `movement`, `skill_unlocks`,
+`status_effects`, `action_pacing_readiness` — 7 mechanisms) is **0/7 (0%) bound**, the only one of
+the three systems that investigation tested at 0% — well below the whole-registry `implemented_by`
+baseline of 30%. This is the busiest real gameplay mechanism family by this arc's own repeated
+measurements (`resolve_multi_attack()`'s opportunity-attack path alone: 181-2177 calls per
+1000-2000 ticks across the corpus), and it includes the registry's one `contradicted` verdict
+(`tactical_decision`) sitting beside two `observed` execution mechanisms
+(`combat_resolution`/`combat_engagement`) with zero code citations anywhere in the group.
+**Bind combat first**, ahead of other `done`/`partial` mechanisms, once the `orphan`/`gated` 100%
+targets above are satisfied or in parallel with them.
+
 ## Out of Scope
 - Binding all remaining 63 mechanisms in one pass — this is deliberately incremental, ongoing
   work, not a single bounded task with a fixed completion count.
@@ -117,6 +135,9 @@ starting list, not an abstract "some gated mechanisms" instruction.
    silently left unbound with no note that a target exists for it.
 
 ## Related Tickets
+- `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION` — done; source of the "bind
+  combat first" priority above (found combat 0/7 bound, the only 0% result among its 3 test
+  systems)
 - `TCK-20260917-EPIC-MECHANISM-VERIFICATION` — parent epic; this ticket is second in
   `SEQUENCE.md`'s own order, after `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY`
   (resequenced 2026-09-17 — a split from that ticket would otherwise divide a binding already done
