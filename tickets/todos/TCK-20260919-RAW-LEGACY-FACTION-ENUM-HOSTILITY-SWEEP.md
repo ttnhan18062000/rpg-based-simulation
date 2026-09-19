@@ -66,6 +66,13 @@ ticket exists partly to close.
    `hostiles` list with the raw enum (reusing `SensoryFilter.filter_saliency`, the already-known
    candidate).
 
+   **The one-line finding, for a cold reader**: a winning `COMBAT_ENGAGE` goal produces a
+   `reach_location` objective; `DEFEAT_ENEMY` is unreachable from the combat goal path entirely.
+   The decision layer does not fail to *choose* combat — it chooses combat and the choice is
+   discarded at dispatch, a dead branch by construction. No amount of work on perception,
+   hostility semantics, posture, or readiness could ever have reached it, because nothing
+   downstream of the goal-competition winner ever asks what `COMBAT_ENGAGE` itself found.
+
    **Investigated (not fixed — see status below): the downstream gate is found, and it is
    structural, not a detection-accuracy problem at all.** Traced where a winning
    `GoalKind.COMBAT_ENGAGE` candidate actually goes after `GoalRegistry.get_all_scores()`
@@ -193,10 +200,22 @@ re-swept from scratch:**
   known instance, same bug shape, `cognition.py:44`, measured at 0.5% impact for its own narrow
   consumer)
 - `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (closed — found the decision-
-  driven `ATTACK` path rarely fires; `ai/goals/scorers.py:108`'s own finding here is a candidate
-  contributor to that same symptom, not yet checked against it)
-- `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` (closed — the original
-  investigation that started this whole thread)
+  driven `ATTACK` path rarely fires; **checked against this ticket's own finding and resolved,
+  not merely a candidate anymore**: that investigation asked why the decision layer never
+  *chooses* to engage; this ticket's own `scorers.py:108` finding answers a deeper, adjacent
+  question — even when `COMBAT_ENGAGE` *is* chosen, the choice is discarded at dispatch, a dead
+  branch by construction. See that ticket's own addendum for the cross-reference.)
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` (open, currently sitting in PR #222's own
+  branch, not yet merged — needs this same cross-reference added once that PR lands; not
+  duplicated here to avoid creating a second, conflicting copy of that file across two open
+  branches)
+- `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` and
+  `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` — **belong in the same
+  conversation as this finding, whenever either is scoped further, per peer review**: that fix
+  already removed 85-96% of phantom combat, the only real combat these worlds had. If this
+  ticket's own `scorers.py`/`AdventureGoalScorer` gate is ever connected, real catalog-driven
+  combat becomes possible in these worlds for the first time — a fix to one makes the other
+  materially more consequential, not independent improvements.
 
 ## Related Docs
 - `docs/engine/contracts/combat_contract.md`
