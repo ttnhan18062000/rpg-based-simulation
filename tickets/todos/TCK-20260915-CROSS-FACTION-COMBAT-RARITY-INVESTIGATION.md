@@ -109,6 +109,11 @@ explicitly flagged as out of scope for the sentiment build and never investigate
 - If a fix is warranted, it is scoped and reviewed before being built.
 
 ## Related Tickets
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — groups this ticket with 4 others that together
+  measured one causal chain (incidental combat → few kills → XP never accumulates → no level-ups →
+  `stats_dirty` never fires); see that epic's own `SEQUENCE.md` for why child 1
+  (`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`) is sequenced to resume this
+  investigation, not the other way around
 - `TCK-20260915-SENTIMENT-HOSTILE-THRESHOLD-REACHABILITY` (sibling — the threshold-tuning half of
   the same underlying investigation; this ticket is the "nothing to run on" half, split out per
   peer's explicit direction not to chase it inside the threshold ticket)

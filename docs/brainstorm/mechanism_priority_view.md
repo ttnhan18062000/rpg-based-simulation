@@ -11,33 +11,35 @@ more depends on it. Ranked below, top 25.
 
 ## Text form
 
-| Mechanism | Layer | State | Priority | Transitive Dependents |
-|---|---|---|---|---|
-| `movement` | entity | done | 75 | 15 |
-| `personality` | entity | done | 75 | 15 |
-| `entity_role` | entity | done | 70 | 14 |
-| `skill_unlocks` | entity | partial | 70 | 14 |
-| `status_effects` | entity | partial | 70 | 14 |
-| `cognition_capacity_fatigue` | entity | done | 45 | 9 |
-| `betrayal_siege_war` | faction | done | 42 | 14 |
-| `perception` | entity | done | 40 | 8 |
-| `trauma` | entity | done | 40 | 8 |
-| `belief_cycle` | entity | done | 30 | 6 |
-| `interaction_channeling` | entity | done | 30 | 6 |
-| `affection_relationship_bonds` | entity | done | 25 | 5 |
-| `goal_hierarchy` | entity | done | 15 | 3 |
-| `race_archetype` | entity | done | 15 | 3 |
-| `reputation` | faction | done | 12 | 4 |
-| `attributes_biology` | entity | done | 10 | 2 |
-| `world_generation` | world | done | 8 | 8 |
-| `city` | region | partial | 6 | 3 |
-| `aging_death` | entity | done | 5 | 1 |
-| `class_assignment` | entity | partial | 5 | 1 |
-| `commitment_betrayal` | entity | done | 5 | 1 |
-| `derived_stats` | entity | done | 5 | 1 |
-| `campaigns` | world | done | 4 | 4 |
-| `diplomacy` | faction | done | 3 | 1 |
-| `inventory_trade_conservation` | world | done | 3 | 3 |
+_17 of this registry's declared `depends_on` edges are unaudited (see `unaudited_depends_on_edges` in `registries/mechanisms.yaml`) -- the "Unaudited Edges" column below is how many of those fall within each row's own transitive-dependent count, not assumed zero._
+
+| Mechanism | Layer | State | Priority | Transitive Dependents | Unaudited Edges |
+|---|---|---|---|---|---|
+| `entity_role` | entity | done | 25 | 5 | 3 |
+| `movement` | entity | done | 25 | 5 | 3 |
+| `belief_cycle` | entity | done | 20 | 4 | 3 |
+| `status_effects` | entity | partial | 20 | 4 | 3 |
+| `race_archetype` | entity | done | 15 | 3 | 3 |
+| `goal_hierarchy` | entity | done | 10 | 2 | 2 |
+| `personality` | entity | done | 10 | 2 | 0 |
+| `reputation` | faction | done | 9 | 3 | 3 |
+| `affection_relationship_bonds` | entity | done | 5 | 1 | 1 |
+| `aging_death` | entity | done | 5 | 1 | 0 |
+| `attributes_biology` | entity | done | 5 | 1 | 0 |
+| `class_assignment` | entity | partial | 5 | 1 | 1 |
+| `commitment_betrayal` | entity | done | 5 | 1 | 1 |
+| `betrayal_siege_war` | faction | done | 3 | 1 | 1 |
+| `campaigns` | world | done | 3 | 3 | 0 |
+| `diplomacy` | faction | done | 3 | 1 | 0 |
+| `social_memory` | faction | skeleton | 3 | 1 | 0 |
+| `world_generation` | world | done | 3 | 3 | 2 |
+| `buildings` | world | done | 2 | 2 | 0 |
+| `inventory_trade_conservation` | world | done | 2 | 2 | 0 |
+| `adventure_routing` | entity | done | 0 | 0 | 0 |
+| `belief_institution` | world | partial | 0 | 0 | 0 |
+| `breakthrough_bonuses` | entity | done | 0 | 0 | 0 |
+| `build_diversity` | entity | gap | 0 | 0 | 0 |
+| `building_sabotage` | world | done | 0 | 0 | 0 |
 
 ## Chart form
 
@@ -50,37 +52,39 @@ flowchart BT
     classDef gated fill:#f7ecd2,stroke:#9a6b0c,stroke-width:2px,stroke-dasharray: 3 3,color:#232019
     classDef skeleton fill:#eee,stroke:#888,stroke-width:1px,stroke-dasharray: 1 3,color:#232019
 
+    adventure_routing["adventure routing"]:::done
     affection_relationship_bonds["affection relationship bonds"]:::done
     aging_death["aging death"]:::done
     attributes_biology["attributes biology"]:::done
     belief_cycle["belief cycle"]:::done
+    belief_institution["belief institution"]:::partial
     betrayal_siege_war["betrayal siege war"]:::done
+    breakthrough_bonuses["breakthrough bonuses"]:::done
+    build_diversity["build diversity"]:::gap
+    building_sabotage["building sabotage"]:::done
+    buildings["buildings"]:::done
     campaigns["campaigns"]:::done
-    city["city"]:::partial
     class_assignment["class assignment"]:::partial
-    cognition_capacity_fatigue["cognition capacity fatigue"]:::done
     commitment_betrayal["commitment betrayal"]:::done
-    derived_stats["derived stats"]:::done
     diplomacy["diplomacy"]:::done
     entity_role["entity role"]:::done
     goal_hierarchy["goal hierarchy"]:::done
-    interaction_channeling["interaction channeling"]:::done
     inventory_trade_conservation["inventory trade conservation"]:::done
     movement["movement"]:::done
-    perception["perception"]:::done
     personality["personality"]:::done
     race_archetype["race archetype"]:::done
     reputation["reputation"]:::done
-    skill_unlocks["skill unlocks"]:::partial
+    social_memory["social memory"]:::skeleton
     status_effects["status effects"]:::partial
-    trauma["trauma"]:::done
     world_generation["world generation"]:::done
 
-    interaction_channeling --> affection_relationship_bonds
+    entity_role --> adventure_routing
+    personality --> adventure_routing
+    diplomacy --> adventure_routing
+    campaigns --> belief_institution
+    class_assignment --> build_diversity
+    buildings --> building_sabotage
     race_archetype --> class_assignment
-    attributes_biology --> derived_stats
     belief_cycle --> goal_hierarchy
     reputation --> goal_hierarchy
-    cognition_capacity_fatigue --> perception
-    affection_relationship_bonds --> reputation
 ```

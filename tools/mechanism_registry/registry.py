@@ -21,6 +21,9 @@ Seven invariants enforced by validate():
      (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING) -- a real code binding, checked against disk
      so a deleted implementing module fails validation immediately rather than the registry
      silently keeping a stale claim
+  8. every `unaudited_depends_on_edges` entry names a real, currently-declared depends_on edge
+     (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT) -- a stale marker for an edge that
+     was since removed or never existed would misrepresent an unchecked edge as audited
 
 `validate()` returns a list of human-readable error strings (empty if valid) rather than
 raising/returning a bool, so a caller can report every violation in one run instead of stopping at
@@ -266,6 +269,34 @@ def validate(data: dict) -> List[str]:
                     f"top-level class/function in '{rel_path}'"
                 )
 
+    # Invariant 8: every `unaudited_depends_on_edges` entry names a real, currently-declared
+    # depends_on edge (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT). This list exists so
+    # a ranking/priority consumer can surface "N of these edges are unvalidated" instead of
+    # treating an edge no one could confirm as equivalent to a confirmed one -- the same
+    # visible-not-silent rule this file already applies to `verified: null`. An entry that no
+    # longer matches a real depends_on pair (the edge was since removed, or never existed) is a
+    # stale marker, not a harmless leftover -- it would make a real edge look audited-but-unproven
+    # when it was never checked at all.
+    unaudited_edges = data.get("unaudited_depends_on_edges") or []
+    dep_map_raw = {m["id"]: m.get("depends_on") or [] for m in mechanisms if "id" in m}
+    for entry in unaudited_edges:
+        if not (isinstance(entry, list) and len(entry) == 2):
+            errors.append(
+                f"unaudited_depends_on_edges entry must be a [dependent, dependency] pair, got {entry!r}"
+            )
+            continue
+        dependent, dependency = entry
+        if dependent not in dep_map_raw:
+            errors.append(
+                f"unaudited_depends_on_edges names unknown dependent mechanism '{dependent}'"
+            )
+            continue
+        if dependency not in dep_map_raw.get(dependent, []):
+            errors.append(
+                f"unaudited_depends_on_edges entry [{dependent}, {dependency}] is not a currently "
+                f"declared depends_on edge -- stale marker, remove it or restore the edge"
+            )
+
     return errors
 
 
@@ -414,6 +445,40 @@ def transitive_dependents(mechanism_id: str, dep_map: Dict[str, List[str]]) -> S
     return result
 
 
+def count_unaudited_edges_in_transitive_dependents(
+    mechanism_id: str, dep_map: Dict[str, List[str]], unaudited_edges: Set[Tuple[str, str]]
+) -> int:
+    """How many edges feeding `transitive_dependents(mechanism_id, dep_map)` are in
+    `unaudited_edges` (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT). Same reverse-BFS
+    shape as `transitive_dependents`, but counts traversed edges `(candidate, node)` -- candidate
+    depends_on node -- against the unaudited set instead of just collecting reachable nodes. This
+    is what lets a priority row say "N of the edges behind this ranking are unvalidated" instead of
+    silently treating an edge no one could confirm as equivalent to a confirmed one."""
+    VISITING, DONE = 1, 2
+    status: Dict[str, int] = {}
+    count = 0
+
+    def _walk(node: str, path: List[str]) -> None:
+        nonlocal count
+        if status.get(node) == DONE:
+            return
+        if status.get(node) == VISITING:
+            cycle = path[path.index(node):] + [node]
+            raise DependencyCycleError(f"dependency cycle detected: {' -> '.join(cycle)}")
+        status[node] = VISITING
+        path.append(node)
+        for candidate, deps in dep_map.items():
+            if node in deps:
+                if (candidate, node) in unaudited_edges:
+                    count += 1
+                _walk(candidate, path)
+        path.pop()
+        status[node] = DONE
+
+    _walk(mechanism_id, [])
+    return count
+
+
 def priority(mechanism_id: str, dep_map: Dict[str, List[str]], layer: str, layers: Dict[str, dict]) -> int:
     """weight * transitive-dependent-count. A multiply, not a two-key sort -- lets a heavily-
     depended-on mechanism in a frequent layer outrank a low-dependent leaf in a rare one.
@@ -477,6 +542,10 @@ def unverified_priority_ranking(data: dict) -> List[dict]:
     mechanisms = data.get("mechanisms", []) or []
     layers = data.get("layers", {}) or {}
     dep_map = {m["id"]: m.get("depends_on") or [] for m in mechanisms}
+    unaudited_edges = {
+        (pair[0], pair[1]) for pair in (data.get("unaudited_depends_on_edges") or [])
+        if isinstance(pair, list) and len(pair) == 2
+    }
 
     rows = []
     for m in mechanisms:
@@ -490,6 +559,9 @@ def unverified_priority_ranking(data: dict) -> List[dict]:
             "state": m.get("state"),
             "priority": priority(mid, dep_map, m.get("layer"), layers),
             "transitive_dependent_count": len(dependents),
+            "unaudited_edge_count": count_unaudited_edges_in_transitive_dependents(
+                mid, dep_map, unaudited_edges
+            ),
         })
     return sorted(rows, key=lambda r: (-r["priority"], r["id"]))
 

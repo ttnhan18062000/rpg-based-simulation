@@ -128,6 +128,9 @@ chain.
    independent.
 
 ## Related Tickets
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` — groups this ticket with 4 others measuring the
+  same causal chain; this ticket is sequenced last per its own Status field, restated at the epic
+  level in that epic's own `SEQUENCE.md`
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` — closed; this ticket's own
   more precise successor, per that ticket's Acceptance Criterion #4.
 - `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` — **blocks this ticket** (see Status and
