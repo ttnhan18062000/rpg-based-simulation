@@ -20,6 +20,22 @@ BLOCKED — on `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (see Sco
 2026-09-17 peer-review note below). Not a soft dependency: retuning the threshold before that
 ticket lands would be masking a starved-system signal, not fixing anything — see the note.
 
+**2026-09-19 update, sharper not resolved**: the rarity investigation landed
+(`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`, closed) and its own root cause was
+fixed (`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS`) — but in the direction that
+makes this ticket's own gap wider, not narrower. The fix corrected `resolve_multi_attack()`'s own
+hostility test from a coarse legacy-enum comparison to the real content catalog, and measured a
+large real-volume drop: `crowded_frontier` 874→133 `resolve_multi_attack()` calls per 2000 ticks
+(-84.8%), `hero_guild_routing` 1418→58 (-95.9%). This ticket's own kill counts above (10 kills
+for `crowded_frontier`, 3 for `hero_guild_routing`, both per 1000 ticks) were measured **before**
+that fix, against inflated, substantially-phantom combat volume — the real, catalog-correct kill
+counts are very likely lower than what's shown above, not confirmed lower here (kills don't
+necessarily scale linearly with `resolve_multi_attack()` call volume, so no specific corrected
+number is asserted). **Re-run this ticket's own discriminating measurement fresh, per this
+ticket's own Scope item 1's own instruction, before touching the threshold** — the instruction
+already anticipated needing a fresh measurement if the rarity ticket changed real kill volume; it
+just anticipated combat becoming less rare, not more.
+
 ## Tier
 standard
 

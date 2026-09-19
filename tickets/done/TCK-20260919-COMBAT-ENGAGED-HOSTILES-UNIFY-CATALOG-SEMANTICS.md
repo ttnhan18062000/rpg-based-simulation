@@ -108,6 +108,8 @@ the attack trigger's hostility definition or the prediction relationship breaks.
    update the `verified` block's own note if the fix changes what those blocks currently claim.
 
 ## Related Tickets
+- `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` — the repo-wide sweep for the same bug
+  shape, done before this PR merged per peer review; found 7+ more real sites, not fixed here
 - `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` (closed — the investigation this
   fix implements; source of the "2 call sites, same semantics" finding, the volume measurements,
   and the existing-test-compatibility trace)
@@ -195,6 +197,38 @@ overwritten) with the real post-fix volume numbers, per this ticket's own Assump
 `docs/parity_ledger/combat_movement.yaml`'s two entries citing this code (COMB-004, COMB-297)
 checked directly — neither entry's actual claim is factually invalidated by this fix, so neither
 was rewritten.
+
+**The precise claim about the non-zero result, stated plainly per peer review**: this is not
+"all combat was phantom" — it's that the real, catalog-authored signal was roughly **5-15% of
+what the uncorrected code implied** (`hero_guild_routing`: 58/1418 = 4.1%; `crowded_frontier`:
+133/874 = 15.2%). Real, catalog-authored combat remains in both worlds; the uncorrected volume
+was substantially, not entirely, phantom.
+
+**The method, stated in the terms peer asked for**: the 4th-site bug was not caught by adding
+more tests — it was caught because the new tests asserted a real *positive* case (a same-bucket
+rivalry that should now register as engaged), not just that a known false positive was cleared. A
+negative-only suite passes cleanly on a fully neutralized fix, because removing false positives
+still reads as "working" even when an upstream gate never lets the corrected logic run at all.
+This is the third time this arc's own work has needed this exact discipline (asserting presence,
+not just absence of a stale signal) to catch a real defect — worth carrying forward as a standing
+test-design rule, not treated as ticket-specific advice.
+
+**Sweep for a fifth instance, done before this PR merged, per peer's explicit request.** Searched
+by *shape* (raw `identity.faction ==`/`!=` comparisons) rather than by the fixed function's own
+name, since the 4th site was a structurally different function computing the same thing
+independently. Found **at least 7 more real, load-bearing sites** using the identical anti-
+pattern across `src/ai/goals/scorers.py` (`CombatEngageScorer`, potentially significant to this
+arc's own standing "why doesn't the decision layer engage" question), `src/engine/legality.py`
+(a flanking-bonus check, separate from the 3 sites already fixed here), `src/engine/combat.py`
+(AOE/splash friendly-fire exclusion), `src/systems/world_systems/intake.py` (danger-concern and
+grief-detection), `src/engine/cognition.py` (panic/morale "outnumbered" computation, a different
+function from the already-known `filter_saliency` candidate), `src/domains/cooperation/
+providers.py` (cooperation-partner exclusion), and `src/systems/strategic_systems/intelligence.py`
+(lead-confirmation logic) — plus several sites judged likely benign (grouping/indexing utilities,
+single-entity checks, display layer) and not counted. **Not fixed here** — filed as its own
+ticket, `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, since fixing 7+ more sites across
+5 subsystems is a different, much larger unit of work than "one function, its own PR." This PR is
+not blocked on that ticket closing.
 
 ## Test Summary
 - New: `tests/unit/engine/test_legality_engaged_hostiles_catalog_semantics.py` — 6/6 passed,
