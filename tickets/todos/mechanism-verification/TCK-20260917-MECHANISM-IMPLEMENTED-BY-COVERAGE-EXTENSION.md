@@ -172,21 +172,30 @@ trustworthy.
   `test_real_wiring_map_has_no_drift_against_the_real_registry` still passes, so `orphan` already
   maps to the same wiring-map classdef `partial` did.
 
-**Not bound, restraint applied (same discipline as the earlier 3-of-7 batch this session)**:
+**Not bound, restraint applied (same discipline as the earlier 3-of-7 batch this session)**.
+**Correction, caught by peer review**: symbol-level binding (`path::Symbol`, validated against a
+real top-level class or function) already exists and is used throughout this registry (e.g. every
+`::ClassName`/`::function_name` entry bound in this same batch). What's actually missing, and what
+both cases below need, is **method-level** binding (`path::Class::method`) — one level finer than
+what's supported today. Stating the real gap rather than "no symbol-level support," which
+overstates it and points at work already done:
 - `action_pacing_readiness` — real implementing code found (`LegalityServiceV2.verify_readiness()`,
   `src/engine/legality.py`), but `legality.py` is a large multi-concern file (attack legality,
   movement legality, readiness, regional suppression, engaged-hostiles resolution all live in the
-  same `LegalityServiceV2` class) and this registry has **no symbol-level (method-level) bindings
-  yet** (`docs/plans/mechanism_claims_as_tests_initiative.md` §6: "File-level `implemented_by`
-  first... sequence [symbol-level] after detection phase 1 is running, not before"). Binding the
-  whole class would misattribute several unrelated mechanisms' logic to this one entry. Left unbound
-  rather than force an imprecise binding.
+  same `LegalityServiceV2` class), so a class-level binding would misattribute several unrelated
+  mechanisms' logic to this one entry — only a method-level binding would be precise, and that
+  granularity doesn't exist yet. Left unbound rather than force an imprecise binding.
 - `skill_unlocks` — real implementing code found (`LevelingService.get_unlocked_skills()` /
   `_execute_level_up()`, `src/progression/leveling.py`), but the same class also implements
   `xp_leveling` (`process_progression()`/`get_xp_required()`) via different methods on the *same*
   class — no class-level boundary separates the two mechanisms the way `core/cognition.py`'s
   `RiskModel`/`CommitmentModel` split does for `declared_cognition_schema`/`committed_intentions`.
-  Same symbol-level gap as above; left unbound.
+  Same method-level gap as above; left unbound.
+
+Whether method-level binding is worth adding for just these two mechanisms is an open question, not
+resolved here — the brittleness argument that already deferred symbol-level once (breaks on every
+rename) applies with more force one level finer. Leaning toward not building it for two mechanisms
+alone, but not deciding that unilaterally in this ticket.
 
 Batch selection rationale (AC #2): this batch prioritized `systems: [combat]` per explicit user
 direction for this pass, not the ticket's own default `orphan`/`gated`-first ordering (Scope's own
