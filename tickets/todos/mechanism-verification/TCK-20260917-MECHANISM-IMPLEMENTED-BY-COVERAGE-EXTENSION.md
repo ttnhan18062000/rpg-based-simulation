@@ -144,13 +144,81 @@ whoever picks this up, informed by how much the false-positive-rate assessment n
 trustworthy.
 
 ## Implementation Notes
-To be completed during implementation.
+**Batch 1 (2026-09-19) — combat-first, per explicit user direction relayed this session.** Bound
+5 of the 7 `systems: [combat]` mechanisms with real, direct code-read verification (all had
+`implemented_by: None` going in):
+- `combat_resolution` -> `src/engine/combat.py::CombatResolutionSystem` (single class, single file).
+- `tactical_decision` -> `src/engine/tactical.py::TacticalDecisionSystem` (single class, single file).
+- `movement` -> `src/engine/movement.py::MovementSystem` (single class, single file).
+- `combat_engagement` -> `src/domains/combat_engagement/service.py::CombatEngagementDecisionService`
+  (the posture-decision class the entry's own existing `verified` note already cites — a second
+  candidate, `CombatEngagementPhase` in `phase.py`, is the per-tick integration wrapper that calls
+  this service, not the decision logic itself, so it was not bound).
+- `status_effects` -> `src/core/updates.py::StatusEffectUpdate` + `src/engine/patches.py::StatusEffectPatch`,
+  **with a real state correction, `partial` -> `orphan`**, found while verifying the binding: a
+  repo-wide check for `status_effect_update`/`StatusEffectUpdate(`/`effects_add=` outside those two
+  files finds zero production callers anywhere in `src/` — the state model, schema, and apply-path
+  all exist and are internally tested, but nothing ever adds a status effect during real play. Full
+  evidence and consequence (the `ATTACKER_STATUS_BLOCKED` legality gate can never fire) recorded in
+  the mechanism's own `verified` block in `registries/mechanisms.yaml`. Propagated to both real
+  consumer artifacts per this ticket's Scope item 3 and AC #3:
+  `tools/mechanism_registry/mechanism_atlas_regenerate.py` and
+  `mechanism_capabilities_regenerate.py` both ran clean and each fixed exactly the one expected
+  badge/tier (atlas `entity-modification#1` cls partial->orphan's mapped value; capabilities
+  `modification#1` tier live->built) — no other mapped card moved, confirmed by
+  `test_mechanism_artifact_convergence.py` passing afterward. The wiring map's own existing
+  `status_effects` row (already badge `bug`/"Fragmented", from an earlier, narrower finding about
+  `Frozen` being stored as an untyped dict key) needed no change —
+  `test_real_wiring_map_has_no_drift_against_the_real_registry` still passes, so `orphan` already
+  maps to the same wiring-map classdef `partial` did.
+
+**Not bound, restraint applied (same discipline as the earlier 3-of-7 batch this session)**:
+- `action_pacing_readiness` — real implementing code found (`LegalityServiceV2.verify_readiness()`,
+  `src/engine/legality.py`), but `legality.py` is a large multi-concern file (attack legality,
+  movement legality, readiness, regional suppression, engaged-hostiles resolution all live in the
+  same `LegalityServiceV2` class) and this registry has **no symbol-level (method-level) bindings
+  yet** (`docs/plans/mechanism_claims_as_tests_initiative.md` §6: "File-level `implemented_by`
+  first... sequence [symbol-level] after detection phase 1 is running, not before"). Binding the
+  whole class would misattribute several unrelated mechanisms' logic to this one entry. Left unbound
+  rather than force an imprecise binding.
+- `skill_unlocks` — real implementing code found (`LevelingService.get_unlocked_skills()` /
+  `_execute_level_up()`, `src/progression/leveling.py`), but the same class also implements
+  `xp_leveling` (`process_progression()`/`get_xp_required()`) via different methods on the *same*
+  class — no class-level boundary separates the two mechanisms the way `core/cognition.py`'s
+  `RiskModel`/`CommitmentModel` split does for `declared_cognition_schema`/`committed_intentions`.
+  Same symbol-level gap as above; left unbound.
+
+Batch selection rationale (AC #2): this batch prioritized `systems: [combat]` per explicit user
+direction for this pass, not the ticket's own default `orphan`/`gated`-first ordering (Scope's own
+"Coverage acceptance targets" section) — `orphan`/`gated` remain the ticket's own next-priority
+targets for a future batch (5 of 8 `gated` mechanisms — `self_model`,
+`information_trust_deception`, `knowledge_model`, `quest_generation_sourcing`,
+`opportunity_rumor_seeds` — are still unbound as of this batch, untouched here).
 
 ## Test Summary
-To be completed during implementation.
+`tests/unit/tools/` (206 tests) run against the real registry after the batch:
+`test_mechanism_registry_completeness_check.py`, `test_mechanism_atlas_regenerate.py`,
+`test_mechanism_capabilities_regenerate.py`, `test_mechanism_artifact_convergence.py`,
+`test_mechanism_wiring_map_classdef.py` all pass. One pinned-baseline test
+(`test_real_registry_enumeration_and_binding_counts_pinned`) updated with real recomputed numbers
+(`bound` 24->25, `unbound` 37->36, `total_targets` unchanged at 64 — 4 of this batch's 5 bindings
+resolve to `src/engine/`/`src/core/` targets, outside that checker's own `src/domains/`/
+`src/systems/` scope, same divergence this ticket's own Request Summary already documents for
+`core/cognition.py`). `registry.py`'s own `validate()` passes clean (93 mechanisms) after every
+edit in this batch.
 
 ## Files Changed
-To be completed during implementation.
+- `registries/mechanisms.yaml` — 5 new `implemented_by` bindings, 1 `state` correction with a new
+  `verified` block (`status_effects`).
+- `docs/brainstorm/rpg_feature_atlas.html`, `docs/brainstorm/simulation_capabilities.html` —
+  regenerated (surgical, tool-written) to reflect `status_effects`'s corrected state.
+- `tests/unit/tools/test_mechanism_registry_completeness_check.py` — pinned baseline counts updated
+  with a real-investigation comment explaining the delta.
 
 ## Completion Summary
-Not yet started.
+**Partial, ongoing** (per this ticket's own explicit "deliberately incremental" out-of-scope note —
+not moved to `tickets/done/`). This batch: 5 of 7 `systems: [combat]` mechanisms now bound
+(`action_pacing_readiness`/`skill_unlocks` left unbound with a stated, symbol-level-boundary
+reason each), plus one real state correction (`status_effects` partial->orphan) surfaced and fully
+propagated per AC #3. `orphan`/`gated` coverage (this ticket's own 100%-target claim-types) is
+unchanged by this batch and remains the next priority for whoever continues it.

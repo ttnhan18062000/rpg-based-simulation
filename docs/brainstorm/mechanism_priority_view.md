@@ -3,7 +3,7 @@
 Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 69 of 93 mechanisms are currently
+**Which mechanism to verify next.** 68 of 93 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -18,7 +18,6 @@ _17 of this registry's declared `depends_on` edges are unaudited (see `unaudited
 | `entity_role` | entity | done | 25 | 5 | 3 |
 | `movement` | entity | done | 25 | 5 | 3 |
 | `belief_cycle` | entity | done | 20 | 4 | 3 |
-| `status_effects` | entity | partial | 20 | 4 | 3 |
 | `race_archetype` | entity | done | 15 | 3 | 3 |
 | `goal_hierarchy` | entity | done | 10 | 2 | 2 |
 | `personality` | entity | done | 10 | 2 | 0 |
@@ -40,6 +39,7 @@ _17 of this registry's declared `depends_on` edges are unaudited (see `unaudited
 | `breakthrough_bonuses` | entity | done | 0 | 0 | 0 |
 | `build_diversity` | entity | gap | 0 | 0 | 0 |
 | `building_sabotage` | world | done | 0 | 0 | 0 |
+| `chronicle` | world | done | 0 | 0 | 0 |
 
 ## Chart form
 
@@ -64,6 +64,7 @@ flowchart BT
     building_sabotage["building sabotage"]:::done
     buildings["buildings"]:::done
     campaigns["campaigns"]:::done
+    chronicle["chronicle"]:::done
     class_assignment["class assignment"]:::partial
     commitment_betrayal["commitment betrayal"]:::done
     diplomacy["diplomacy"]:::done
@@ -75,7 +76,6 @@ flowchart BT
     race_archetype["race archetype"]:::done
     reputation["reputation"]:::done
     social_memory["social memory"]:::skeleton
-    status_effects["status effects"]:::partial
     world_generation["world generation"]:::done
 
     entity_role --> adventure_routing

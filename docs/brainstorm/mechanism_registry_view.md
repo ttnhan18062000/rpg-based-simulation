@@ -6,14 +6,14 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**9 runtime-verified, 15 static (`code_trace`)-verified, 69 unverified** — of 93 total.
+**9 runtime-verified, 16 static (`code_trace`)-verified, 68 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
 | `entity_role` | entity | done | unverified | unverified | 25 | 5 |
 | `movement` | entity | done | unverified | unverified | 25 | 5 |
 | `belief_cycle` | entity | done | unverified | unverified | 20 | 4 |
-| `status_effects` | entity | partial | unverified | unverified | 20 | 4 |
+| `status_effects` | entity | orphan | static | observed | 20 | 4 |
 | `combat_resolution` | entity | done | runtime | observed | 15 | 3 |
 | `race_archetype` | entity | done | unverified | unverified | 15 | 3 |
 | `goal_hierarchy` | entity | done | unverified | unverified | 10 | 2 |

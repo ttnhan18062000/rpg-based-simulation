@@ -225,10 +225,31 @@ priority from system membership — the two new invariants only check structural
 
 **The one real, unanticipated finding**: the orphan-system invariant is not fixture-testable the
 same way every prior invariant in this file was, because its subject (a registered system having
-zero real members) inherently requires the real, complete mechanism set, not a synthetic
-2-3-mechanism fixture — 18 pre-existing tests broke as a direct, immediate signal of this before
-any fix was written, not discovered later. Solved with a scoped, autouse test fixture rather than
-either weakening the invariant or forcing every unrelated test to carry full-registry weight.
+zero real members) is a whole-corpus property — it needs a CLOSED universe (every system it can
+see has a member within that same universe), not necessarily the real, complete mechanism set. A
+small synthetic fixture works fine as long as it's complete and self-contained on its own terms;
+what actually broke was the pre-existing tests' shared 2-3-mechanism fixtures being a PARTIAL slice
+of the real 93-mechanism/7-system registry rather than a closed universe of their own — 18
+pre-existing tests broke as a direct, immediate signal of this before any fix was written, not
+discovered later. Solved with a scoped, autouse test fixture rather than either weakening the
+invariant or forcing every unrelated test to carry full-registry weight.
+
+**Generalizable lesson for the next invariant author**: every invariant in `registry.py::validate()`
+before this one was compositional — a self-contained property of the `data` dict already passed
+in, true or false on any arbitrary valid subset of it. The orphan-system invariant is the first
+whole-corpus invariant added to this function (a property of the full mechanism-x-system universe,
+not of any one mechanism or slice). That distinction, not just "add a fixture," is the reusable
+takeaway — see the comment block directly above invariants 9/10 in `tools/mechanism_registry/registry.py`
+for the full reasoning, and `tests/unit/tools/conftest.py` for the fix shape (autouse empty-registry
+default, explicit opt-in restoration per test). A future whole-corpus-shaped invariant should expect
+the same non-compositionality rather than assuming it will behave like every invariant before it.
+Coverage for invariant 10 is not limited to the two real-registry tests (`test_real_registry_passes_validation`,
+`test_real_registry_systems_all_resolve`) — `test_validator_rejects_registered_system_with_zero_members`
+and its sibling accept-side tests exercise it directly on synthetic data, because each defines its
+own complete, self-contained registered-systems/mechanism-list pair via `_fixture_registry()` --
+a closed universe in its own right, not a partial slice of the real 93-mechanism/7-system one --
+which is exactly what makes a small synthetic fixture usable here despite the property's own
+non-compositionality.
 
 `docs/plans/mechanism_tier_model_initiative.md` updated in place, not duplicated, per this
 ticket's own Implementation Notes instruction — the rejected-derivation history and the revived

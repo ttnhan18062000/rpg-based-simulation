@@ -122,6 +122,7 @@ mechanisms:
     systems: [combat]
     depends_on: [movement, status_effects, entity_role]
     state: done
+    implemented_by: [src/engine/combat.py::CombatResolutionSystem]
     verified:
       instrument: corpus_run
       verdict: observed
@@ -156,6 +157,7 @@ mechanisms:
     systems: [combat]
     depends_on: []
     state: done
+    implemented_by: [src/engine/tactical.py::TacticalDecisionSystem]
     verified:
       instrument: corpus_run
       verdict: contradicted
@@ -198,6 +200,7 @@ mechanisms:
     systems: [combat]
     depends_on: [personality]
     state: done
+    implemented_by: [src/domains/combat_engagement/service.py::CombatEngagementDecisionService]
     verified:
       instrument: scenario
       verdict: observed
@@ -219,6 +222,7 @@ mechanisms:
     systems: [combat, world]
     depends_on: []
     state: done
+    implemented_by: [src/engine/movement.py::MovementSystem]
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY, the falsification
   # test for the identity rule -- "if the rule doesn't split this, the rule is wrong"): this entry
   # used to be action_pacing_readiness covering both the readiness gate and the agility-scaling
@@ -448,7 +452,34 @@ mechanisms:
     layer: entity
     systems: [combat]
     depends_on: []
-    state: partial
+    state: orphan
+    implemented_by: [src/core/updates.py::StatusEffectUpdate, src/engine/patches.py::StatusEffectPatch]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-19"
+      note: >-
+        state corrected partial -> orphan while binding `implemented_by`
+        (TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION). The state model
+        (`EntityState.combat.status_effects: List[StatusEffectState]`), the update schema
+        (`StatusEffectUpdate`, `src/core/updates.py`), and the apply-path patch
+        (`StatusEffectPatch`, `src/engine/patches.py`) all exist and are internally consistent --
+        but a repo-wide grep for `status_effect_update` (the only field that carries a
+        `StatusEffectUpdate` into the apply pipeline) and for `StatusEffectUpdate(` /
+        `effects_add=` finds zero constructions anywhere outside `patches.py`/`updates.py`
+        themselves, and the only test referencing either symbol
+        (`tests/unit/domains/optimization/test_component_patches.py`) exercises the patch/merge
+        logic directly, not through any real game-logic caller. No system in `src/` ever adds a
+        status effect during play. This registry's own established usage (see
+        `motivation_doctrine`'s entry above) is orphan means dead code still physically present
+        with zero callers, distinct from gap (code deleted) -- this is squarely the former: real,
+        reachable, internally-tested code with no production producer. Consequence: the
+        `ATTACKER_STATUS_BLOCKED` frozen/stunned gate read in `src/engine/legality.py` (checked
+        while investigating `action_pacing_readiness`/`combat_resolution` bindings in this same
+        pass) can never actually trigger in real play, since nothing ever populates the list it
+        reads. Not independently re-investigated further here -- flagged as a real, corpus-relevant
+        finding for a future ticket, same treatment as `camp`/`demographic_cohort_cycle`/
+        `succession`.
 
   # ── Entity layer — Cognition (18, atlas `entity-cognition`) ─────────────────────────────────
 
