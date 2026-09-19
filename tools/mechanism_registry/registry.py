@@ -311,6 +311,30 @@ def validate(data: dict) -> List[str]:
     # registries/system_registry.jsonl (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION).
     # Declared membership never touches depends_on -- these two invariants are independent of
     # every dependency-graph check above.
+    #
+    # Invariant 10 (orphan system) is NON-COMPOSITIONAL, unlike every other invariant in this
+    # function. Every other invariant here (layers, unaudited_depends_on_edges) is a
+    # self-contained property of the `data` dict this function already received: it holds or
+    # fails on that dict alone, so it also holds or fails the same way on any valid subset of it.
+    # Invariant 10 does not have that property -- "every registered system has >=1 declaring
+    # mechanism" is a property of the WHOLE corpus (all mechanisms x all registered systems), not
+    # of any individual mechanism or any arbitrary slice of the mechanism list. A synthetic test
+    # fixture with 2-3 mechanisms will make most of the 7 real registered systems look orphaned
+    # (zero members) even when nothing is wrong, because the fixture was never meant to be a
+    # complete corpus in the first place. This is exactly what broke 18 pre-existing, unrelated
+    # tests the moment this invariant was added -- fixed by tests/unit/tools/conftest.py's
+    # autouse fixture, which patches `_load_system_registry` to return {} by default (zero
+    # registered systems => both invariants are vacuously satisfied for any fixture that doesn't
+    # mention `systems` at all). Tests that DO want to exercise invariant 9/10 must define their
+    # own explicit "registered systems + mechanism list" pair via their own monkeypatch (see
+    # `_fixture_registry()` in test_mechanism_registry.py) -- the requirement is a CLOSED universe,
+    # not the real one: a small synthetic fixture works fine as long as it is complete and
+    # self-contained on its own terms (every system it declares has a member within that same
+    # fixture). What breaks the invariant is a PARTIAL slice of a larger universe (e.g. the real
+    # 93-mechanism/7-system registry with only 2-3 mechanisms taken out of it), not synthetic data
+    # itself. The next person adding a new whole-corpus-shaped invariant here should expect the
+    # same non-compositionality and reach for a small closed fixture, not assume it will behave
+    # like every invariant that came before it, and not assume real data is required to test it.
     registered_systems = set(_load_system_registry().keys())
     systems_declared_by: Dict[str, List[str]] = {s: [] for s in registered_systems}
     for m in mechanisms:
