@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-FORK-RETURNS-CONTENT-FREE-INDISTINGUISHABLE
-phase: open
+phase: done
 date: 2026-09-17
 tags: [ai, agent-monitoring, process-improvement, workflows]
 ---
@@ -16,7 +16,7 @@ A dispatched fork that returns nothing records `status: "ok"` exactly like one t
 work — the data to tell them apart already reaches `post_tool_hook.py` and is discarded
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -91,6 +91,14 @@ retrying. That cutoff is what bounded the cost.
   `payload["tool_response"]` (line 51)** and currently uses it only to set `status` from
   `is_error`/`error`. The needed data is in hand at the hook and thrown away; this is a recorded
   field, not new plumbing.
+
+  **Superseded 2026-09-19 — see "Findings" below.** This claim was checked against live payloads,
+  not just the hook source, before any code was written, per this ticket's own instruction to
+  confirm the real shape first. It does not hold: for `tool_name=="Agent"`, `tool_response` at
+  `PostToolUse` is the async-launch confirmation, not the subagent's returned content — the data is
+  not "in hand and thrown away," it never arrives at this hook at all. This was my own claim
+  (`agent-working-design`) and it was wrong; kept here rather than deleted so the record shows both
+  the original reasoning and what replaced it.
 - Surface the signal where a reader sees it (retro, or the advisory sweep).
 
 ## Out of Scope
@@ -109,12 +117,26 @@ retrying. That cutoff is what bounded the cost.
   content, so it is the wrong instrument despite being the intuitive one.
 
 ## Acceptance Criteria
-- [ ] An `Agent` row records enough to distinguish an empty return from a substantive one.
+
+**None checked. Closed 2026-09-19 as infeasible for the failure class this ticket exists to cover
+— see Findings.** Left unchecked deliberately rather than marked N/A, so a reader sees that nothing
+was delivered rather than reading a closed ticket as done.
+
+- [ ] An `Agent` row records enough to distinguish an empty return from a substantive one. —
+      **Infeasible for forks.** Buildable for non-fork `Agent()` dispatches only (via
+      `SubagentHandback`), which is not the failure class any of this ticket's three incidents
+      belong to. Building it anyway would ship a detector that covers zero of the motivating cases.
 - [ ] A planted empty return is shown to be distinguishable, and a planted substantive one is shown
-      not to trip it — both proven, not reasoned about.
-- [ ] No gate, ratchet, or blocking check is introduced.
+      not to trip it — both proven, not reasoned about. — **Not attempted.** No mechanism exists to
+      plant a fork's return at the point a hook could see it, since no hook fires when a fork
+      returns.
+- [ ] No gate, ratchet, or blocking check is introduced. — **N/A, moot.** No code was written.
 - [ ] The ticket's own limitation is restated in the code/docs: neither non-empty failure (the
-      evidence-free verdict, or the false claim about prior output) is covered.
+      evidence-free verdict, or the false claim about prior output) is covered. — **Restated here
+      instead of in code**, since no code exists to carry it: forks (the empty-return case this
+      ticket could have detected) are themselves undetectable at the hook layer, on top of the two
+      non-empty failures already known to be undetectable by any means. All three failure shapes
+      are unaddressed by this ticket's closure.
 
 ## Related Tickets
 - `TCK-20260904-TEST-SCOPER-HANG-GUARD` (done) — the governing precedent: a CLAUDE.md prose Hard
@@ -141,6 +163,17 @@ retrying. That cutoff is what bounded the cost.
   is advisory-only and not a detection point)
 
 ## Assumptions / Open Questions
+- **Observation, not acted on (2026-09-19):** `post_tool_hook.py`'s `_input_summary()` uses
+  `str(tool_input)[:80]` as its generic fallback, which applies to `SubagentHandback` calls (no
+  dedicated case exists for that tool name). Since a `SubagentHandback` call's `tool_input` is
+  `{"message": "<returned text>"}`, the hook already writes the first 80 characters of every
+  non-fork return's actual content into `tools.jsonl` today, with no code change. This sits
+  awkwardly against the "record identifiers, hashes, counts, scores, and reason codes — not full
+  prompts, full retrieved content, or unredacted tool payloads" principle
+  (`TCK-20260916-HEADROOM-CONTEXT-COMPRESSION-EPIC`'s plan doc). Recorded here rather than filed as
+  a new ticket, per the standing rule that a minor finding rides along instead of spawning work —
+  pick it up only if someone is already touching `post_tool_hook.py`'s `_input_summary()` for
+  another reason.
 - **Three different failures, and only one is mechanically detectable.**
   1. *Content-free return* (2 of 3 on 2026-09-17; the first completion on 2026-09-18). Trivially
      catchable, though note the 2026-09-18 case wasn't strictly empty: it carried a bare tally,
@@ -179,8 +212,14 @@ retrying. That cutoff is what bounded the cost.
   unverified — confirm the real shape before writing any check against it.
 
 ## Implementation Notes
-**DO NOT IMPLEMENT YET.** The user's direction, 2026-09-17: *"only fix when they are major effect
-bug."* This is filed as a watch-item, not queued work.
+**Superseded 2026-09-19 — see Findings and Decision below.** The paragraphs immediately following
+this note describe the deferral state as it stood 2026-09-17 through 2026-09-18, kept for the
+record rather than deleted. The user approved implementation on 2026-09-19; what happened next
+(the premise check, and the decision to close with findings instead) is in the Findings/Decision
+sections further down.
+
+Originally: **DO NOT IMPLEMENT YET.** The user's direction, 2026-09-17: *"only fix when they are
+major effect bug."* This is filed as a watch-item, not queued work.
 
 Pick it up when one of these is true, and record which:
 
@@ -212,11 +251,89 @@ Until implementation, this ticket's value is that the diagnosis, the evidence, t
 shapes, and the two rejected approaches (duration threshold, `SubagentStop`) are written down, so
 the next occurrence is not re-investigated from scratch.
 
+### Findings (2026-09-19) — checked against live payloads before writing any code
+
+Trigger 2 was assessed as met on 2026-09-18, and the user approved implementation on 2026-09-19.
+Before writing a check against `tool_response`'s shape — explicitly flagged above as unverified —
+that shape was confirmed against real, live payloads (temporary capture instrumentation in
+`post_tool_hook.py`, reverted before any commit; see `investigation.md` for the full method) rather
+than assumed from the hook source alone. The result overturns the ticket's own premise.
+
+1. **For `tool_name=="Agent"`, `tool_response` at `PostToolUse` is the async-launch confirmation,
+   not the subagent's returned content.** Confirmed twice, identical shape both times:
+   `{"isAsync": true, "status": "async_launched", "agentId": ..., "description": ..., "resolvedModel":
+   ..., "prompt": ..., "outputFile": ..., "canReadOutputFile": true}`. No field in this payload
+   carries the fork's eventual answer.
+   - **Corroborated by data already in this ticket.** Every incident row's `duration_ms` (2234 /
+     1979 / 2892 / 2556 ms) is far too short for real subagent work spanning tens of seconds to
+     minutes — it is the time to launch the fork, not the time the fork spent working. This is also
+     why the rejected `duration_ms` threshold could never have discriminated: it was never measuring
+     the thing it needed to measure.
+2. **A different, real, hook-visible signal exists — but only for non-fork `Agent()` dispatches.**
+   Those hand back their result via a `SubagentHandback` tool call, whose `tool_input` is
+   `{"message": "<actual returned text>"}`. Confirmed against two live corpus rows,
+   `2026-09-18T03:56:11Z` and `2026-09-19T06:59:47Z`.
+3. **Forks — the exact dispatch shape in all three of this ticket's own real incidents — make no
+   `SubagentHandback` call at all.** Two clean fork probes, zero resulting rows (one probe logged
+   `tool_uses: 1` for an unrelated call; the other logged `tool_uses: 0`), and both still delivered
+   their answer text directly in the task-notification's own result field. A fork's return is a
+   natural conversational stop, not a tool call, so **no repo-level hook — `PreToolUse`,
+   `PostToolUse`, or `SubagentStop` — ever fires when a fork finishes.** This is the finding that
+   matters most: it is what stops the next session from spending another round trying to build this
+   at the hook layer.
+
+### Decision (2026-09-19, user, direct)
+
+**Option A: close with findings recorded, no hook code.** Considered against two alternatives:
+
+- **(B) Build the `SubagentHandback`-based signal anyway, scoped to non-fork dispatches.**
+  Rejected: it covers none of this ticket's three real incidents (all forks), it would ship a
+  "fork-return detector" that detects no forks, and it would largely duplicate telemetry the hook
+  already writes today via `input_summary`'s generic fallback (see Assumptions).
+- **(C) An orchestrator-side convention** (e.g. logging emptiness after reading a fork's own
+  task-notification result). Not attempted — a different mechanism shape than "record a signal at
+  the hook," and a larger, un-scoped change this ticket did not authorize.
+
+Recorded per the Gate Integrity principle this whole arc has been enforcing: a closed ticket that
+reads as delivered when nothing was delivered is exactly the silence-as-a-state shape being removed
+elsewhere in this repo. Acceptance criteria are left unchecked, not marked N/A, so that reading holds.
+
+### What actually mitigates this, since the hook route is closed
+
+These three are the ticket's real conclusion, not side notes:
+
+1. **A pre-decided retry cutoff** (at most one resume before doing the work directly) — proven on
+   2026-09-18, the only thing that actually bounded a real incident's cost.
+2. **Ask investigation forks for citations and short findings, not verdicts** — a fabricated
+   citation resolves in seconds and is caught; a fabricated verdict cannot be checked without
+   redoing the investigation. Not committed scope, but the stronger structural candidate if this is
+   revisited.
+3. **The n=3 hypothesis, not yet tested**: exhaustive, structured, multi-item enumeration may be the
+   task shape forks fail to relay at all — if that holds, the fix is not detecting the failure but
+   not delegating that shape of task to a fork in the first place.
+
 ## Test Summary
-_Deferred — see Implementation Notes._
+No tests were written — no code was produced. Verification instead: `git diff origin/main --
+tools/agent-monitoring/post_tool_hook.py` returns empty, confirming the temporary probe
+instrumentation used to derive the Findings above was fully reverted before this closure and the
+hook that runs on every tool call in every session is byte-identical to `main`.
 
 ## Files Changed
-_Deferred — see Implementation Notes._
+- `tickets/todos/TCK-20260917-FORK-RETURNS-CONTENT-FREE-INDISTINGUISHABLE.md` →
+  `tickets/done/TCK-20260917-FORK-RETURNS-CONTENT-FREE-INDISTINGUISHABLE.md` — Findings, Decision,
+  corrected Scope premise, and unchecked-with-reasons Acceptance Criteria added; no other file
+  changed.
+- `stored_artifacts/TCK-20260917-FORK-RETURNS-CONTENT-FREE-INDISTINGUISHABLE/` (new) —
+  `investigation.md` documents the probe method and raw results; `plan.md` and `test_plan.md`
+  record that closing with findings, not implementing, was the plan once the premise was overturned.
 
 ## Completion Summary
-_Open, deliberately deferred._
+Closed 2026-09-19 with no implementation, per the user's direct decision (Option A). The ticket's
+own core premise — that the hook already receives the data needed and only needs to record it —
+does not hold for forks, the dispatch shape in all three of its own real incidents; no repo-level
+hook ever observes a fork's returned content. A real, narrower signal exists for non-fork
+dispatches via `SubagentHandback`, but building it would not address the failure class this ticket
+was filed to cover. The value delivered is the finding itself, so the next session does not spend
+tokens re-discovering that this is a dead end at the hook layer, plus the three real mitigations
+(retry cutoff, citations-over-verdicts, and the untested delegation-shape hypothesis) that remain
+the actual defense until or unless a different mechanism shape is proposed and separately scoped.
