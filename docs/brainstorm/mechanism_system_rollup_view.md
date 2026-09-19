@@ -8,17 +8,21 @@ Generated from `registries/mechanisms.yaml` + `registries/system_registry.jsonl`
 
 **Every rate is shown against the whole-registry baseline, never in isolation** — a raw per-system percentage looked informative in this program's own value investigation until checked against baseline and found statistically indistinguishable from it. The baseline below is computed live from the current registry, not a fixed snapshot.
 
-**Baseline (all 93 mechanisms)**: 33 bound (35.5%), 25 verified (26.9% — 9 runtime, 16 static), 68 unverified. State breakdown: done 53, partial 11, gap 11, orphan 8, gated 8, skeleton 2.
+**Reading caution — a system standing out from baseline may reflect recent attention, not a property of the simulation.** A system this session (or any prior one) spent a week investigating will show a higher bound/verified rate for that reason alone — the view describes where work has concentrated, not an independent discovery that some systems are inherently deeper than others. Read a high rate as "recently worked on," not as "this system is more real."
 
-| System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | done | partial | gap | orphan | gated | skeleton |
-|---|---|---|---|---|---|---|---|---|---|
-| `cognition` | 21 | 9/21 (42.9%, +7.4pt vs baseline) | 5/21 (23.8%, -3.1pt vs baseline) [0 runtime, 5 static] | 11 | 0 | 1 | 3 | 5 | 1 |
-| `combat` | 7 | 5/7 (71.4%, +35.9pt vs baseline) | 5/7 (71.4%, +44.5pt vs baseline) [4 runtime, 1 static] | 5 | 1 | 0 | 1 | 0 | 0 |
-| `economy` | 8 | 1/8 (12.5%, -23.0pt vs baseline) | 0/8 (0.0%, -26.9pt vs baseline) [0 runtime, 0 static] | 5 | 1 | 1 | 1 | 0 | 0 |
-| `faction` | 13 | 3/13 (23.1%, -12.4pt vs baseline) | 3/13 (23.1%, -3.8pt vs baseline) [0 runtime, 3 static] | 7 | 2 | 3 | 0 | 0 | 1 |
-| `progression` | 15 | 4/15 (26.7%, -8.8pt vs baseline) | 6/15 (40.0%, +13.1pt vs baseline) [3 runtime, 3 static] | 9 | 3 | 1 | 0 | 2 | 0 |
-| `social` | 12 | 4/12 (33.3%, -2.2pt vs baseline) | 0/12 (0.0%, -26.9pt vs baseline) [0 runtime, 0 static] | 6 | 2 | 3 | 1 | 0 | 0 |
-| `world` | 25 | 11/25 (44.0%, +8.5pt vs baseline) | 7/25 (28.0%, +1.1pt vs baseline) [2 runtime, 5 static] | 15 | 3 | 3 | 2 | 2 | 0 |
-| `unassigned` | 0 | 0/0 (n/a) | 0/0 (n/a) | 0 | 0 | 0 | 0 | 0 | 0 |
+**"Bound, Unverified" is this view's most actionable column.** It splits `unverified` into two problems with different costs that the per-mechanism view doesn't separate: *bound-but-unverified* (a real `implemented_by` binding exists — the expensive part, locating the code, is already done, so this is the cheapest verification target available) versus *unbound-and-unverified* (`unverified` minus this column — we don't even know where to look yet, and investigation has to happen before verification can start).
+
+**Baseline (all 93 mechanisms)**: 33 bound (35.5%), 25 verified (26.9% — 9 runtime, 16 static), 68 unverified (20 of those bound-but-unverified). State breakdown: done 53, partial 11, gap 11, orphan 8, gated 8, skeleton 2.
+
+| System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Bound, Unverified | done | partial | gap | orphan | gated | skeleton |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `cognition` | 21 | 9/21 (42.9%, +7.4pt vs baseline) | 5/21 (23.8%, -3.1pt vs baseline) [0 runtime, 5 static] | 7 | 11 | 0 | 1 | 3 | 5 | 1 |
+| `combat` | 7 | 5/7 (71.4%, +35.9pt vs baseline) | 5/7 (71.4%, +44.5pt vs baseline) [4 runtime, 1 static] | 1 | 5 | 1 | 0 | 1 | 0 | 0 |
+| `economy` | 8 | 1/8 (12.5%, -23.0pt vs baseline) | 0/8 (0.0%, -26.9pt vs baseline) [0 runtime, 0 static] | 1 | 5 | 1 | 1 | 1 | 0 | 0 |
+| `faction` | 13 | 3/13 (23.1%, -12.4pt vs baseline) | 3/13 (23.1%, -3.8pt vs baseline) [0 runtime, 3 static] | 1 | 7 | 2 | 3 | 0 | 0 | 1 |
+| `progression` | 15 | 4/15 (26.7%, -8.8pt vs baseline) | 6/15 (40.0%, +13.1pt vs baseline) [3 runtime, 3 static] | 0 | 9 | 3 | 1 | 0 | 2 | 0 |
+| `social` | 12 | 4/12 (33.3%, -2.2pt vs baseline) | 0/12 (0.0%, -26.9pt vs baseline) [0 runtime, 0 static] | 4 | 6 | 2 | 3 | 1 | 0 | 0 |
+| `world` | 25 | 11/25 (44.0%, +8.5pt vs baseline) | 7/25 (28.0%, +1.1pt vs baseline) [2 runtime, 5 static] | 9 | 15 | 3 | 3 | 2 | 2 | 0 |
+| `unassigned` | 0 | 0/0 (n/a) | 0/0 (n/a) | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 `unassigned` mechanism count is 0 — a mechanism with no declared system renders here explicitly rather than being silently dropped, same discipline as `mechanisms_by_system()`'s own `"unassigned"` key.

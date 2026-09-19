@@ -114,6 +114,31 @@ def test_rollup_baseline_computed_live_not_hardcoded(monkeypatch):
     assert economy["bound_rate"] < baseline["bound_rate"]
 
 
+def test_rollup_distinguishes_bound_unverified_from_unbound_unverified(monkeypatch):
+    """Peer-review finding: 'unverified' collapses two different-cost problems -- bound-but-
+    unverified (the code is already located, cheapest to verify) vs unbound-and-unverified (we
+    don't even know where to look). This is the view's own most actionable number, so it must be
+    a real, separately-computed count, not something a reader has to infer."""
+    data = _fixture_registry(
+        monkeypatch,
+        systems=["combat"],
+        mechanisms=[
+            {"id": "a", "systems": ["combat"], "state": "done", "implemented_by": ["x.py::A"]},
+            {"id": "b", "systems": ["combat"], "state": "done"},
+            {
+                "id": "c", "systems": ["combat"], "state": "done", "implemented_by": ["x.py::C"],
+                "verified": {"instrument": "code_trace", "verdict": "observed", "date": "2026-09-19"},
+            },
+        ],
+    )
+    rollup = build_system_rollup(data)
+    combat = next(s for s in rollup["systems"] if s["system"] == "combat")
+    # a: bound, unverified -> counts. b: unbound, unverified -> does not count. c: bound AND
+    # verified -> does not count (already verified, not a target).
+    assert combat["bound_unverified"] == 1
+    assert combat["unverified"] == 2  # a and b
+
+
 def test_rollup_unassigned_renders_with_real_count(monkeypatch):
     data = _fixture_registry(
         monkeypatch,
@@ -154,6 +179,11 @@ def test_render_includes_baseline_and_per_system_rates(registry_data):
     content = render(registry_data)
     assert "Baseline (all" in content
     assert "vs baseline" in content
+
+
+def test_render_includes_bound_unverified_column(registry_data):
+    content = render(registry_data)
+    assert "Bound, Unverified" in content
 
 
 def test_render_includes_unassigned_row(registry_data):

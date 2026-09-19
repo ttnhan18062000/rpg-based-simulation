@@ -63,7 +63,10 @@ def _row(label: str, stats: dict, baseline: dict) -> str:
             f"{_pt_delta(stats['verified_rate'], baseline['verified_rate'])} vs baseline) "
             f"[{stats['runtime_verified']} runtime, {stats['static_verified']} static]"
         )
-    return f"| `{label}` | {stats['count']} | {bound_cell} | {verified_cell} | {state_cells} |"
+    return (
+        f"| `{label}` | {stats['count']} | {bound_cell} | {verified_cell} | "
+        f"{stats['bound_unverified']} | {state_cells} |"
+    )
 
 
 def render(data: dict) -> str:
@@ -91,17 +94,33 @@ def render(data: dict) -> str:
         "checked against baseline and found statistically indistinguishable from it. The baseline "
         "below is computed live from the current registry, not a fixed snapshot.",
         "",
+        "**Reading caution — a system standing out from baseline may reflect recent attention, not "
+        "a property of the simulation.** A system this session (or any prior one) spent a week "
+        "investigating will show a higher bound/verified rate for that reason alone — the view "
+        "describes where work has concentrated, not an independent discovery that some systems are "
+        "inherently deeper than others. Read a high rate as \"recently worked on,\" not as \"this "
+        "system is more real.\"",
+        "",
+        "**\"Bound, Unverified\" is this view's most actionable column.** It splits `unverified` "
+        "into two problems with different costs that the per-mechanism view doesn't separate: "
+        "*bound-but-unverified* (a real `implemented_by` binding exists — the expensive part, "
+        "locating the code, is already done, so this is the cheapest verification target "
+        "available) versus *unbound-and-unverified* (`unverified` minus this column — we don't "
+        "even know where to look yet, and investigation has to happen before verification can "
+        "start).",
+        "",
         f"**Baseline (all {baseline['count']} mechanisms)**: "
         f"{baseline['bound']} bound ({_pct(baseline['bound_rate'])}), "
         f"{baseline['verified']} verified ({_pct(baseline['verified_rate'])} — "
         f"{baseline['runtime_verified']} runtime, {baseline['static_verified']} static), "
-        f"{baseline['unverified']} unverified. State breakdown: " + ", ".join(
+        f"{baseline['unverified']} unverified ({baseline['bound_unverified']} of those "
+        "bound-but-unverified). State breakdown: " + ", ".join(
             f"{s} {baseline['state_counts'][s]}" for s in _STATE_ORDER
         ) + ".",
         "",
-        "| System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | done | partial | "
-        "gap | orphan | gated | skeleton |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Bound, Unverified "
+        "| done | partial | gap | orphan | gated | skeleton |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
 
     for row in rollup["systems"]:
