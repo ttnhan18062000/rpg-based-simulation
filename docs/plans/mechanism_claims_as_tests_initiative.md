@@ -250,6 +250,50 @@ need the same two disclosures to be read honestly rather than as unqualified pro
 Source: peer review of `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN`, same session as
 this batch's own landing, PR #229.
 
+### 3.4 A fourth failure class: a catalogue's own coverage claim is only as wide as the method that built it
+
+§3.1-3.3 are all about a single mechanism's own claim being wrong. This one is about the registry's
+claim about *itself* — that it is a catalogue built from the codebase — being stronger than the
+method that built it supports.
+
+**The instance**: `tools/mechanism_registry/mechanism_registry_completeness_check.py` (built by
+`TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` specifically to answer "did we miss any real,
+wired code") enumerates exactly two roots: `src/domains/*` and `src/systems/{economy_systems,
+lifecycle_systems,social_systems,strategic_systems,world_systems}/*.py`. Investigating
+`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`'s own `perception` finding
+surfaced `src/world/perception/gate.py::PerceptionGate` — real, live, wired
+(`src/engine/tactical.py`) — sitting entirely outside that scope: `src/world/` was never scanned,
+and neither were `src/engine/`, `src/cognition/`, `src/strategy/`, `src/ai/`, and roughly a dozen
+more non-infra top-level directories. A manual sizing pass (not yet a repeatable check) found 85
+unbound files with a mechanism-shaped class name across those uncovered directories, 14 with a real
+caller outside their own defining file — the same bar `PerceptionGate` itself clears. `PerceptionGate`
+was not an isolated miss; it was the first thing found in a category nothing had looked at.
+
+**The mechanism of the failure, same shape as §3.3's**: nothing about the registry's own data was
+wrong — 93 real, individually-investigated mechanisms are genuinely there, and the completeness
+checker's own report line is itself honestly scoped ("Enumerated ... under src/domains/ and
+src/systems/"). What overclaimed was language *around* the registry — this initiative's own §3
+framing above, and `docs/plans/mechanism_registry_initiative.md`'s "the registry is complete;
+charts are slices" — read in a context where "complete" could mean "every real mechanism in the
+codebase is represented here," which the completeness checker's own two-directory scope never
+supported. The claim was stronger than the method.
+
+**The mitigation, same two-part shape as §3.3's own, not "scan everything right now"**: (1) state
+the checker's own real scope plainly wherever the registry's coverage is asserted — it covers
+`src/domains/` and `src/systems/`, with other source trees not yet swept, not "the codebase"; (2)
+treat any "N mechanisms" count as bounded by what has been swept, not as a claim about the whole
+system, until the checker's own scope is genuinely widened. `TCK-20260920-MECHANISM-COMPLETENESS-
+CHECK-SCOPE-GAP` tracks widening it; this section exists so the claim stops overstating in the
+meantime. The 14-candidate number is a **floor**, not a firm count — the suffix heuristic used to
+find them (`Service`/`System`/`Gate`/`Phase`/`Evaluator`/`Resolver`/`Manager`) misses other real
+naming conventions (`Classifier`/`Filter`/`Builder`), and "unbound" here carries the same
+established caveat as it does for the domains/systems check itself: not yet checkable is not the
+same claim as confirmed missing, since some of the 14 likely already belong to an existing
+mechanism's own multi-file implementation, just not cited by path yet.
+
+Source: peer review of `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`,
+2026-09-20.
+
 ---
 
 ## 4. The three wirings
