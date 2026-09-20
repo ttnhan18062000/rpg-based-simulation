@@ -11,11 +11,27 @@ tags: [ai, process-improvement]
 
 # TCK-20260914-VENV-NAMING-CI-PARITY-SWAP
 
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> content change since 2026-09-15 (verified via `git log --follow`, not file mtime — mtime in a
+> repo where worktrees are checked out constantly is close to meaningless as a staleness signal),
+> and its presence there (along with several other stale `tickets/inprogress/` entries) was
+> firing this repo's sidecar-check hook on every `Edit`/`Write` in every concurrent session on
+> this machine. **Nothing about the ticket's own substance was investigated, debugged, or
+> re-scoped as part of this move.**
+>
+> **The ticket's own premise is still live, worth recording so it isn't re-derived**: `.venv`
+> (Python 3.12.3) holds the agent tooling; `.venv313` (Python 3.13.14) mirrors CI's own
+> interpreter; and `.venv313` is **not matched by any `.gitignore` pattern** — untracked, but not
+> ignored, in the main checkout. This is a real, current loose end this ticket exists to cover,
+> not something that resolved itself while the ticket sat idle. Not fixed here — recorded so
+> whoever picks this up next doesn't have to re-discover it.
+
 ## Title
 Default venv name points at the non-CI Python version — rename so `.venv` is the CI-matching environment
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard
