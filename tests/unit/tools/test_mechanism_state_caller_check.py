@@ -214,6 +214,21 @@ def test_real_registry_findings_pinned():
       this batch and this batch's rule is not to silently overwrite an already-verified conclusion.
       This mechanism carries no finding here because it has no `implemented_by` to check.
 
+    2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION): `perception`
+    now fires `orphan_with_callers` (high confidence per the tool, expected and NOT a checker false
+    positive here -- this is the exact one-level-deep blind spot the entry's own registry note
+    names). The tool counts `src/domains/perception/phase.py` as a real caller of
+    `PerceptionFilterService` because `phase.py` does contain a real call to `.filter()` -- but
+    `phase.py`'s own `PerceptionUpdatePhase` class is itself never instantiated anywhere else in
+    `src/`, confirmed both by direct grep and by a real differential runtime scenario
+    (`tests/mechanic_scenarios/test_perception_pipeline_wiring.py`: zero real `.filter()` calls and
+    an empty `perceived_entities` across 5 real ticks against a world with an adjacent, perceivable
+    entity, plus a positive control proving the code itself works when called directly). Same
+    "type/class reference counted as a caller without checking reachability" shape as
+    `commitment_betrayal` above, one level removed -- there it was a type reference; here it's a
+    real call inside a dead chain. `orphan` stands, now runtime-confirmed rather than asserted from
+    a static read alone.
+
     Update this test only alongside a real investigation of what changed, same discipline as every
     other pinned-count test in this repo."""
     import yaml
@@ -231,4 +246,5 @@ def test_real_registry_findings_pinned():
         ("chronicle", "orphan_with_callers"),
         ("goal_hierarchy", "state_with_zero_callers"),
         ("commitment_betrayal", "orphan_with_callers"),
+        ("perception", "orphan_with_callers"),
     }

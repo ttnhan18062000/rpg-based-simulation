@@ -6,11 +6,11 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**9 runtime-verified, 73 static (`code_trace`)-verified, 11 unverified** — of 93 total.
+**12 runtime-verified, 70 static (`code_trace`)-verified, 11 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
-| `belief_cycle` | entity | done | static | observed | 15 | 3 |
+| `belief_cycle` | entity | done | runtime | observed | 15 | 3 |
 | `entity_role` | entity | done | static | observed | 15 | 3 |
 | `movement` | entity | done | static | observed | 15 | 3 |
 | `personality` | entity | done | static | observed | 10 | 2 |
@@ -79,9 +79,9 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `nest` | region | gap | unverified | unverified | 0 | 0 |
 | `opportunity_rumor_seeds` | world | gated | static | observed | 0 | 0 |
 | `party_formation` | group | done | static | observed | 0 | 0 |
-| `perception` | entity | done | static | observed | 0 | 0 |
+| `perception` | entity | orphan | runtime | contradicted | 0 | 0 |
 | `progression_conversion` | entity | gated | static | observed | 0 | 0 |
-| `quest_generation_sourcing` | entity | orphan | static | contradicted | 0 | 0 |
+| `quest_generation_sourcing` | entity | orphan | runtime | contradicted | 0 | 0 |
 | `quest_reward_distribution` | group | orphan | static | observed | 0 | 0 |
 | `race_collective_force` | faction | gap | unverified | unverified | 0 | 0 |
 | `readiness_speed_scaling` | entity | partial | runtime | contradicted | 0 | 0 |

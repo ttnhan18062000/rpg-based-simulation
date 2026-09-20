@@ -861,21 +861,36 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: []
-    state: done
+    state: orphan
     implemented_by:
       - src/domains/perception/filter.py::PerceptionFilterService
     verified:
-      instrument: code_trace
-      verdict: observed
+      instrument: scenario
+      verdict: contradicted
       date: "2026-09-20"
       note: >-
-        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION.
-        `PerceptionFilterService.filter()` scores candidate signals via
-        `SignalSalienceEvaluator.evaluate()` (`src/domains/perception/salience.py`) and budget-clamps
-        them into a `PerceptionUpdate` -- called from `src/domains/perception/phase.py:43`, a real,
-        non-test integration into the per-tick pipeline. `filter.py` defines only this one service
-        class plus its own data shapes (`PerceptionBudget`/`PerceptionUpdate`), so class-level
-        binding is precise without misattributing an unrelated concern.
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION. State correction,
+        done -> orphan; verdict correction, observed -> contradicted. This entry's own prior
+        `code_trace` note claimed `PerceptionFilterService.filter()` was "called from
+        `src/domains/perception/phase.py:43`, a real, non-test integration into the per-tick
+        pipeline" -- true only one level deep: line 43 is a real call site, but it lives inside
+        `PerceptionUpdatePhase.run()`, and NOTHING in `src/` outside `phase.py` itself ever
+        constructs a `PerceptionUpdatePhase` or calls `.run()` (confirmed by a full-tree grep).
+        `src/engine/pipeline.py::refine()` never references perception at all. A real differential
+        scenario (`tests/mechanic_scenarios/test_perception_pipeline_wiring.py`) confirms this at
+        runtime, not just by grep: across 5 real ticks against a world with an adjacent, alive,
+        hostile entity (as strong a perceivable candidate as a production-like scenario offers),
+        `PerceptionFilterService.filter` is called zero times and
+        `entity.cognition.subjective.perception.perceived_entities` stays empty on both entities.
+        A positive control (calling `.filter()` directly, bypassing the pipeline) DOES produce a
+        real perceived entity, ruling out "the code itself is broken" as the explanation -- this is
+        specifically an unreached-chain defect, not a logic defect. This is exactly the shape
+        `mechanism_state_caller_check.py`'s one-level-deep caller check cannot catch: it confirmed
+        `PerceptionFilterService` has a real caller (`phase.py`) without checking whether that
+        caller's own caller is itself reachable. Fix not made here, per this program's explicit
+        governing constraint (record the contradiction, do not wire the phase in to make the old
+        claim true) -- filed separately as
+        `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`.
   - id: emotion
     layer: entity
     systems: [cognition]
@@ -1047,20 +1062,23 @@ mechanisms:
     implemented_by:
       - src/systems/strategic_systems/belief.py::BeliefCycleSystem
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
-        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Real, dedicated
-        implementation already cited by `goal_hierarchy`'s own verified note
-        (`BeliefCycleSystem.process_observation()`/`apply_contradiction()`,
-        `intelligence.py:436,448`) -- `BeliefCycleSystem` itself lives in its own single-purpose
-        file (`src/systems/strategic_systems/belief.py`: lead decay, rumor processing, observation
-        confirmation, contradiction), with multiple real, non-test callers:
-        `src/engine/pipeline.py:408` (`run_phase("belief_staleness_decay", ...,
-        BeliefCycleSystem.resolve_lead_staleness(state))`), `src/systems/social_systems/guilds.py`
-        (`process_rumor`), and `intelligence.py`'s own calls above. Class-level binding is precise
-        -- no other mechanism shares this file.
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION. Upgraded from
+        `code_trace` to `scenario` -- a real differential scenario
+        (`tests/mechanic_scenarios/test_belief_cycle_lead_staleness.py`) confirms the LEG-RPG-150
+        staleness decay actually fires through the real, unconditional per-tick pipeline entry
+        point (`src/engine/pipeline.py:408`), not just that the threshold check exists in code. A
+        lead staged `certainty=APPROXIMATE`, `discovered_tick=0` demotes to `VAGUE` through a real
+        `Kernel.tick_once()` once `state.tick=50` clears `stale_threshold`, and stays `APPROXIMATE`
+        unchanged through the same dispatch at `state.tick=10` (below threshold) -- the differential
+        pair required by `docs/plans/mechanic_verification_scenarios_proposal.md` §3.3. Prior
+        `code_trace` note (real, dedicated implementation already cited by `goal_hierarchy`'s own
+        verified note, multiple real non-test callers including
+        `src/systems/social_systems/guilds.py`'s `process_rumor`) remains accurate and is preserved
+        in spirit; this note documents the stronger, runtime-confirmed evidence.
   - id: information_trust_deception
     layer: entity
     systems: [cognition]
@@ -1145,10 +1163,21 @@ mechanisms:
     implemented_by:
       - src/systems/world_systems/quests.py::QuestGenerationSystem
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: contradicted
       date: "2026-09-20"
       note: >-
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION. Upgraded from
+        `code_trace` to `scenario` -- calibration case for the differential runtime-verification
+        harness: a real compiled world's region was forced to `trauma_score=0.9` (clears
+        `generate_from_scar()`'s own `> 0.3` trigger condition) and run for 5 real ticks through
+        the unmodified pipeline with call-counters on all 3 `QuestGenerationSystem` methods
+        (`tests/mechanic_scenarios/test_quest_generation_sourcing_orphan_calibration.py`) -- zero
+        real calls, confirming the harness correctly reports a negative rather than a false
+        positive. Positive control: calling `generate_from_scar()` directly against the same staged
+        region DOES return a real `QuestTemplate`, ruling out "the trigger condition doesn't
+        actually work" as an alternative explanation. verdict/state unchanged; this batch's earlier
+        `code_trace` finding below stands, now runtime-confirmed rather than static-only.
         TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. State correction, gated ->
         orphan. `QuestGenerationSystem` (`src/systems/world_systems/quests.py`,
         `generate_from_scar()`/`generate_from_blockers()`/`quest_to_project()`, real purpose-built
