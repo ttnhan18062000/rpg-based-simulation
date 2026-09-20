@@ -400,6 +400,51 @@ the input is varied, a "no difference" result must do one of:
 Positive results need neither — a detected difference is a detected difference regardless of how
 short the window was. It is specifically the null result that must earn its own label.
 
+**The instrument's own scope boundary — added 2026-09-21, after `progression` batch 1 + waves 2-3
+went 7-for-7 real mechanisms with a 100% pass rate.** A perfect pass rate on this axis is not
+evidence the axis reaches everything; it is evidence of *which mechanisms were selected*, and every
+one selected so far shares a shape: a documented formula (or discrete branch/threshold selection)
+producing a fully-computed, same-tick outcome, with no RNG in the path. That shape is exactly what
+this instrument verifies well. It is a materially narrower claim than "this system's values
+matter," and reporting "N of M mechanisms in a system now carry a value-differential scenario"
+without saying so reads as progress toward covering M, when the honest claim is closer to "N of the
+~N mechanisms this instrument can currently address." This is the coverage-claim error (§3.3's own
+selection-effect framing) recurring on the value axis instead of the reachability axis — the fix is
+the same: state what was actually tested, not what the count implies.
+
+Three mechanism shapes, by how well this instrument reaches them:
+- **Reaches well: a documented formula or discrete branch selection with a same-tick, RNG-free (or
+  RNG-provably-inert) outcome.** Every mechanism this program has verified so far is this shape
+  (`readiness_speed_scaling`, `derived_stats`, `evolution`/`xp_leveling`, `aging_death`,
+  `entity_role`, `succession`). The instrument's calibration (a positive and negative control) is
+  meaningful here because the outcome is a clean function of a clean input.
+- **Reaches poorly, closer to `code_trace` than a real differential: a static catalog/content
+  lookup** (e.g. `class_assignment`'s `resolve_role_defaults(role_id)` — a dict lookup by key, not
+  an ongoing per-tick mechanism). Varying the lookup key and observing a different record comes
+  back is barely distinguishable from reading the resolver's own source; it does not exercise
+  runtime behavior the way a real Kernel-tick differential does. Treat a mechanism of this shape as
+  presumptively out of scope for this instrument, not as a scenario waiting to be written.
+- **Cannot reach at all, without an instrument this program has not built:**
+  - **Decision-scoring inputs that feed a choice among competing options** (e.g. `personality`'s
+    `bravery` feeding combat-vs-flee utility scoring) — varying the input might change a *score*,
+    but whether that changes the *decision* depends on what it's competing against. This is the
+    arbitration shape (`TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`'s third named
+    shape), explicitly out of scope for this instrument, not merely unattempted.
+  - **A compounding/accumulating rate with no real per-entity varying input** — the §5.1 horizon
+    rule above was written to handle a compounding mechanism whose outcome takes many ticks to
+    materialize, but it presupposes a real input worth waiting for. If a mechanism's own rate is
+    flat and uniform (the same for every entity, driven only by a global cadence/profile config,
+    not by anything on the entity itself), there is no entity-level value to differential-test at
+    all — the horizon rule has nothing to apply to. This is a distinct finding from "not yet
+    tested": it means the instrument does not apply to that mechanism as currently implemented,
+    full stop, not that a longer scenario would eventually show a difference.
+
+A close-out or status report against this instrument should state coverage as "N of the mechanisms
+in scope for this instrument," name which mechanisms were excluded and why (one of the three
+shapes above, or one of the program's own stated out-of-scope reasons — no real producer, flag-
+gated, no instrument yet), and never present the excluded count as remaining work for this same
+instrument to eventually pick up.
+
 ## 6 · Explicitly not decided here
 
 - The exact assertion-vocabulary API (a small typed-object DSL as sketched in §3.3, vs. plain

@@ -409,6 +409,22 @@ mechanisms:
         elsewhere) but a second, not-yet-investigated code path touching the same age concept;
         flagged on `aging_death`'s own entry as a possible unintended duplication, out of scope to
         resolve here.
+        **Value-differential investigated and declined 2026-09-21**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT, priority candidate for
+        the §5.1 horizon rule's first real compounding-mechanism test): confirmed by direct code
+        read that this note's own cited formula (`hunger=min(100, bio.hunger + 0.1*cadence...)`,
+        `sleep_debt=min(100, bio.sleep_debt + 0.05*cadence...)`, `apply.py:88-91`) is a FLAT,
+        uniform rate -- the only quantities it reads are `cadence.biological` (a world/profile-
+        level config, not a per-entity field) and the entity's own current hunger/sleep_debt value
+        (for the `min(100, ...)` cap only). No per-entity multiplier (personality/industry trait,
+        species modifier, or anything else) feeds this rate anywhere in the function. There is no
+        real per-entity varying input to build a value-differential against -- the instrument does
+        not apply to this mechanism as currently implemented, not "not yet tested." Declining
+        deliberately rather than forcing a compounding case into existence to exercise the horizon
+        rule for its own sake (explicit peer instruction). The horizon rule itself was already
+        proven able to certify a real positive result on `aging_death` (a threshold, not a
+        compounding-rate, shape) -- it remains written but unexercised on a genuinely compounding
+        mechanism, since none of `progression`'s remaining candidates carry one.
   - id: derived_stats
     layer: entity
     systems: [progression]

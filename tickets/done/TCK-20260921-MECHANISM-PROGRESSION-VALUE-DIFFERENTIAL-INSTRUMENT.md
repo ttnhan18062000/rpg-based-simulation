@@ -305,13 +305,36 @@ progression/`, `tests/unit/tools/test_mechanism_registry.py` — 219 passed, 0 f
 All 5 blocking + the 1 non-blocking mechanism-registry Makefile targets clean; registry valid, 93
 mechanisms. New file: `tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py`.
 
-Progression running total after wave 3: 7 of 15 (`succession` added). Remaining real candidates
-narrowing: `attributes_biology` (tick-based/compounding — a second real horizon-rule test
-candidate, needs its own per-entity input check before staging, not yet confirmed one exists),
-`race_archetype`/`class_assignment` (both static catalog-lookup shaped — weaker candidates, closer
-to code_trace than a real runtime differential, per this ticket's own original investigation.md
-reasoning for why `class_assignment` was excluded from batch 1), `personality` (real, but requires
-staging a full decision-dispatch call site, e.g. combat-vs-flee scoring in `tactical.py` — larger
-scope than the mechanisms done so far, not yet investigated). `breakthrough_bonuses`,
+**Selection caveat, stated explicitly per peer review after wave 3's 7-for-7 pass rate**: 7 of 15
+`progression` mechanisms now carry a value-differential scenario, but that is NOT 47% of the way
+to covering `progression` under this axis — it is (as of this addendum) 7 of the ~7 mechanisms this
+instrument can currently address at all. Every mechanism passed so far shares one shape:
+a documented formula or discrete branch selection producing a fully-computed, same-tick, RNG-free
+outcome. See the new §5.1 "instrument's own scope boundary" statement in
+`docs/plans/mechanic_verification_scenarios_proposal.md` for the full three-shape breakdown (reaches
+well / reaches poorly / cannot reach without a different instrument) — a 100% pass rate on this
+instrument describes the tractable subset it was pointed at, not `progression` as a whole, and
+future coverage claims against this program should say so explicitly rather than imply the
+remaining 8 are pending work for the same instrument.
+
+**`attributes_biology` investigated as the priority horizon-rule candidate, and declined —
+deliberately, not deferred.** Confirmed by direct code read
+(`apply.py:88-91`, `hunger=min(100, bio.hunger + 0.1*cadence.biological)`,
+`sleep_debt=min(100, bio.sleep_debt + 0.05*cadence.biological)`) that this is a FLAT, uniform rate:
+the only quantities it reads are `cadence.biological` (a world/profile config, not a per-entity
+field) and the entity's own current hunger/sleep_debt (for the cap only). No per-entity multiplier
+feeds it anywhere. There is no real per-entity varying input to build a value-differential
+against — the instrument does not apply to this mechanism as implemented, full stop, not "needs a
+longer scenario." Recorded on `attributes_biology`'s own registry entry. The §5.1 horizon rule
+remains written and DID certify a real positive result on `aging_death` (a threshold, not a
+compounding-rate, shape) — it stays unexercised on a genuinely compounding mechanism, since
+`progression` currently has no remaining candidate that carries one. Not forcing one into existence
+to exercise the rule for its own sake, per explicit peer instruction.
+
+Remaining real candidates after this narrowing: `race_archetype`/`class_assignment` (both static
+catalog-lookup shaped — per §5.1's own new scope statement, presumptively out of scope rather than
+pending, though `class_assignment`'s own binding was already flagged this way in batch 1's
+investigation.md), `personality` (real, but needs a decision-dispatch call site staged — the
+arbitration shape, explicitly out of scope for this instrument per §5.1). `breakthrough_bonuses`,
 `build_diversity`, `genetics_aptitude`, `progression_conversion` remain out of scope for the
 reasons already stated.
