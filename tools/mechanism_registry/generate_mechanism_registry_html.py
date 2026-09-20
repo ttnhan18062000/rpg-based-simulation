@@ -122,10 +122,22 @@ def _rollup_row_html(label: str, stats: dict, baseline: dict) -> str:
             f"{_pt_delta(stats['verified_rate'], baseline['verified_rate'])} vs baseline) "
             f"[{stats['runtime_verified']} runtime, {stats['static_verified']} static]"
         )
+    # TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY. Denominator is `verified`, not
+    # `count` -- a property of HOW verification was done, not of coverage.
+    if stats["verified"] == 0:
+        runtime_share_cell = "0/0 (n/a)"
+    else:
+        runtime_share_cell = (
+            f"{stats['runtime_verified']}/{stats['verified']} "
+            f"({_pct(stats['runtime_verified_share'])}, "
+            f"{_pt_delta(stats['runtime_verified_share'], baseline['runtime_verified_share'])} "
+            "vs baseline)"
+        )
     state_cells = "".join(f"<td>{stats['state_counts'][s]}</td>" for s in _STATE_ORDER)
     return (
         f'<tr><td><code>{html.escape(label)}</code></td><td>{stats["count"]}</td>'
         f"<td>{html.escape(bound_cell)}</td><td>{html.escape(verified_cell)}</td>"
+        f"<td>{html.escape(runtime_share_cell)}</td>"
         f"<td>{stats['bound_unverified']}</td>{state_cells}</tr>"
     )
 
@@ -287,7 +299,13 @@ directly from the registry; nothing on this page is hand-typed.</p>
 found &mdash; wiring-map drift, stale atlas badges, seeding errors &mdash; see
 {epic_mention} rather than this page, so those figures are defined in exactly one place.</p>
 <p class="counts">{runtime_count} runtime-verified, {static_count} static (code_trace)-verified,
-{unverified_count} unverified &mdash; of {total} total.</p>
+{unverified_count} unverified &mdash; of {total} total. Runtime share of verified:
+{_pct(rollup_baseline['runtime_verified_share'])} ({rollup_baseline['runtime_verified']} of
+{rollup_baseline['verified']}) &mdash; a property of HOW each mechanism was verified, not of how
+many are; track this number, not just the verified count, since a code_trace-only batch can raise
+verified coverage while lowering this share (see
+<a href="mechanism_system_rollup_view.md">mechanism_system_rollup_view.md</a> for the full
+per-system breakdown).</p>
 
 <h2>System Rollup</h2>
 <p class="sub">Declared system membership (<code>systems: []</code> on each mechanism), never
@@ -301,12 +319,14 @@ own row, with a real count, rather than being silently dropped.</p>
 <p class="sub">Baseline (all {rollup_baseline['count']} mechanisms): {rollup_baseline['bound']}
 bound ({_pct(rollup_baseline['bound_rate'])}), {rollup_baseline['verified']} verified
 ({_pct(rollup_baseline['verified_rate'])} &mdash; {rollup_baseline['runtime_verified']} runtime,
-{rollup_baseline['static_verified']} static), {rollup_baseline['unverified']} unverified
+{rollup_baseline['static_verified']} static, {_pct(rollup_baseline['runtime_verified_share'])} of
+verified is runtime), {rollup_baseline['unverified']} unverified
 ({rollup_baseline['bound_unverified']} of those bound-but-unverified).</p>
 <div class="tablewrap">
 <table>
 <thead><tr><th>System</th><th>Mechanisms</th><th>Bound (vs baseline)</th>
-<th>Verified (vs baseline)</th><th>Bound, Unverified</th><th>done</th><th>partial</th><th>gap</th>
+<th>Verified (vs baseline)</th><th>Runtime Share of Verified (vs baseline)</th>
+<th>Bound, Unverified</th><th>done</th><th>partial</th><th>gap</th>
 <th>orphan</th><th>gated</th><th>skeleton</th></tr></thead>
 <tbody>
 {''.join(rollup_rows)}

@@ -29,7 +29,7 @@ This is distinct from two other silence-as-failure shapes already catalogued thi
   composition, so the precondition is structurally unreachable for reasons invisible to a static
   read of the mechanic's own code.
 
-## Four mechanics checked, three confirmed instances, one clean exception
+## Six mechanics checked, five confirmed instances, one clean exception
 
 ### 1. Lair-occupant spawning — confirmed
 
@@ -98,6 +98,28 @@ readers of one thing, disagreeing about what counts, with no error surfaced eith
 are filed and tracked as complete, actionable, standalone bugs, parked by the same investment-cap
 decision as the three composition instances above, not folded into or subordinated by this
 document's own pattern.
+
+### 5. Camp-object placement — confirmed, added 2026-09-20
+
+`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`. `CampState` (`src/core/state.py`) is
+real and complete — spawns monsters, triggers raids, a real clearing-reward loop — and is correctly
+wired into the apply path. But no compiled or procedurally-generated corpus world today ever
+populates `state.camps` with a single real camp instance, so the mechanic is a structural no-op in
+every real run. Found while resolving the `camp` mechanism registry entry
+(`registries/mechanisms.yaml`'s own `verified` block, dated 2026-09-16) but never given a dedicated
+ticket until this document's own update — same shape as instances 1 and 2 above, a mechanic whose
+precondition (a world actually composing the participant it needs) is never satisfied.
+
+### 6. Demographic cohort cycling — confirmed, added 2026-09-20
+
+`TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED`.
+`DemographicCycleService.process_demographics` has a real, confirmed caller
+(`engine/world_dynamics.py:178-179`) — the mechanism was previously mis-registered `orphan` and
+already corrected. But the caller is guarded by `if not region.population_cohorts`
+(`worldbuilding/compiler.py:203`), and no compiled or procedurally-generated world today seeds any
+region's `population_cohorts`, so the guard never opens. Found by
+`TCK-20260916-MECHANISM-STATE-CALLER-MISMATCH-DETECTION`'s own first real run (2026-09-16) but,
+like instance 5, never given a dedicated ticket until this document's own update.
 
 ## The implication
 
