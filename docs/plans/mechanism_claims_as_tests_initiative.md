@@ -199,6 +199,57 @@ and that question has its own evidence, already on file, every time an entry alr
 Source ticket: `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION` (where the error was found and
 self-corrected the same day).
 
+### 3.3 A third failure class: a confirmation rate measures the selection as much as the system
+
+§3.1 is the search failing to find code. §3.2 is attribution finding the wrong code and believing
+it. This one is neither — the search finds the right code, the attribution is correct, and the
+check still tells you less than its own pass rate implies, because **which candidates got checked
+was never a neutral sample.**
+
+**The instance**: `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN` (batch 3 of the
+unbound-claims program) ran a `code_trace` instrument against 20 mechanisms that already had a real
+`implemented_by` binding and reported all 20 `observed` — a 100% confirmation rate, in a program
+that had just corrected 7 of 47 claims in its own immediately preceding batch, and in an arc whose
+other batches had found three orphans, two dead branches, and a real misattribution (§3.2 itself).
+Challenged directly (peer review, same day): the 20 were not a random or adversarial sample. They
+were selected *because* they already carried a real caller citation from an earlier ticket in this
+epic — the check then re-confirmed that citation still resolved. **The population being checked was
+pre-filtered for exactly the property being tested for.** A 100% pass rate on a population selected
+for its own prior evidence of passing is close to guaranteed before any checking happens; it is not
+independent confirmation, and reporting it in the same prose register as a batch that corrected real
+defects (`equipment_scoring`, `chronicle`, `commitment_betrayal`) implied a rigor the check never
+exercised.
+
+**Compounding this, and only found because someone computed the number by hand under challenge**:
+all 20 were verified with `instrument: code_trace` — none with `scenario` or `corpus_run`. The
+registry's own runtime-verified share (what fraction of `verified` mechanisms were confirmed by the
+simulation actually doing the thing, not the code merely saying it should) moved from 27% to 11% in
+the same batch that raised the raw `verified` count. Neither the PR description nor the ticket's own
+summary said this plainly; the number existed nowhere as a rendered figure until a peer asked "what
+instrument did each of the 20 get?" and it had to be computed live
+(`TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY`, the same review cycle, added
+`runtime_verified_share` as a first-class rollup metric so this stops requiring a challenge to
+surface).
+
+**The mitigation is not "verify more" — the check itself was accurate, and re-running it would not
+change the finding.** It is two things, neither of which is re-verification: (1) **state the
+selection explicitly whenever a batch's own candidates were chosen because they already had
+evidence** — "these 20 were pre-filtered for prior citation, so a high pass rate was expected before
+checking" is one sentence, and its absence is what made the number read as stronger than it was; (2)
+**report the instrument mix alongside the pass rate, not just the pass rate** — `code_trace` and
+`scenario`/`corpus_run` are not interchangeable evidence, and a verification batch that shifts the
+registry's own runtime share needs that shift visible in the same report as its headline count, not
+recoverable only by hand-computing it from raw fields under direct challenge.
+
+**A confirmation rate is not free evidence — it costs exactly as much scrutiny as picking the sample
+did, and a sample selected for its own prior evidence has already spent that scrutiny before the
+check runs.** This generalizes past this one batch: the next verification pass over a
+pre-filtered population will produce a high rate again, for the same structural reason, and will
+need the same two disclosures to be read honestly rather than as unqualified progress.
+
+Source: peer review of `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN`, same session as
+this batch's own landing, PR #229.
+
 ---
 
 ## 4. The three wirings

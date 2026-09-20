@@ -86,7 +86,13 @@ See <a href="mechanism_priority_view.md">mechanism_priority_view.md</a> for the 
 found &mdash; wiring-map drift, stale atlas badges, seeding errors &mdash; see
 <a href="../../tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md">TCK-20260915-EPIC-MECHANISM-REGISTRY's Completion Summary</a> rather than this page, so those figures are defined in exactly one place.</p>
 <p class="counts">9 runtime-verified, 73 static (code_trace)-verified,
-11 unverified &mdash; of 93 total.</p>
+11 unverified &mdash; of 93 total. Runtime share of verified:
+11.0% (9 of
+82) &mdash; a property of HOW each mechanism was verified, not of how
+many are; track this number, not just the verified count, since a code_trace-only batch can raise
+verified coverage while lowering this share (see
+<a href="mechanism_system_rollup_view.md">mechanism_system_rollup_view.md</a> for the full
+per-system breakdown).</p>
 
 <h2>System Rollup</h2>
 <p class="sub">Declared system membership (<code>systems: []</code> on each mechanism), never
@@ -100,15 +106,17 @@ own row, with a real count, rather than being silently dropped.</p>
 <p class="sub">Baseline (all 93 mechanisms): 76
 bound (81.7%), 82 verified
 (88.2% &mdash; 9 runtime,
-73 static), 11 unverified
+73 static, 11.0% of
+verified is runtime), 11 unverified
 (0 of those bound-but-unverified).</p>
 <div class="tablewrap">
 <table>
 <thead><tr><th>System</th><th>Mechanisms</th><th>Bound (vs baseline)</th>
-<th>Verified (vs baseline)</th><th>Bound, Unverified</th><th>done</th><th>partial</th><th>gap</th>
+<th>Verified (vs baseline)</th><th>Runtime Share of Verified (vs baseline)</th>
+<th>Bound, Unverified</th><th>done</th><th>partial</th><th>gap</th>
 <th>orphan</th><th>gated</th><th>skeleton</th></tr></thead>
 <tbody>
-<tr><td><code>cognition</code></td><td>20</td><td>18/20 (90.0%, +8.3pt vs baseline)</td><td>20/20 (100.0%, +11.8pt vs baseline) [0 runtime, 20 static]</td><td>0</td><td>10</td><td>0</td><td>1</td><td>4</td><td>4</td><td>1</td></tr><tr><td><code>combat</code></td><td>8</td><td>8/8 (100.0%, +18.3pt vs baseline)</td><td>8/8 (100.0%, +11.8pt vs baseline) [4 runtime, 4 static]</td><td>0</td><td>6</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr><tr><td><code>economy</code></td><td>8</td><td>7/8 (87.5%, +5.8pt vs baseline)</td><td>7/8 (87.5%, -0.7pt vs baseline) [0 runtime, 7 static]</td><td>0</td><td>4</td><td>1</td><td>1</td><td>2</td><td>0</td><td>0</td></tr><tr><td><code>faction</code></td><td>13</td><td>9/13 (69.2%, -12.5pt vs baseline)</td><td>9/13 (69.2%, -18.9pt vs baseline) [0 runtime, 9 static]</td><td>0</td><td>6</td><td>3</td><td>3</td><td>0</td><td>0</td><td>1</td></tr><tr><td><code>progression</code></td><td>15</td><td>13/15 (86.7%, +4.9pt vs baseline)</td><td>14/15 (93.3%, +5.2pt vs baseline) [3 runtime, 11 static]</td><td>0</td><td>8</td><td>4</td><td>1</td><td>0</td><td>2</td><td>0</td></tr><tr><td><code>social</code></td><td>12</td><td>8/12 (66.7%, -15.1pt vs baseline)</td><td>9/12 (75.0%, -13.2pt vs baseline) [0 runtime, 9 static]</td><td>0</td><td>5</td><td>2</td><td>3</td><td>2</td><td>0</td><td>0</td></tr><tr><td><code>world</code></td><td>25</td><td>20/25 (80.0%, -1.7pt vs baseline)</td><td>22/25 (88.0%, -0.2pt vs baseline) [2 runtime, 20 static]</td><td>0</td><td>14</td><td>2</td><td>4</td><td>4</td><td>1</td><td>0</td></tr><tr><td><code>unassigned</code></td><td>0</td><td>0/0 (n/a)</td><td>0/0 (n/a)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td><code>cognition</code></td><td>20</td><td>18/20 (90.0%, +8.3pt vs baseline)</td><td>20/20 (100.0%, +11.8pt vs baseline) [0 runtime, 20 static]</td><td>0/20 (0.0%, -11.0pt vs baseline)</td><td>0</td><td>10</td><td>0</td><td>1</td><td>4</td><td>4</td><td>1</td></tr><tr><td><code>combat</code></td><td>8</td><td>8/8 (100.0%, +18.3pt vs baseline)</td><td>8/8 (100.0%, +11.8pt vs baseline) [4 runtime, 4 static]</td><td>4/8 (50.0%, +39.0pt vs baseline)</td><td>0</td><td>6</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr><tr><td><code>economy</code></td><td>8</td><td>7/8 (87.5%, +5.8pt vs baseline)</td><td>7/8 (87.5%, -0.7pt vs baseline) [0 runtime, 7 static]</td><td>0/7 (0.0%, -11.0pt vs baseline)</td><td>0</td><td>4</td><td>1</td><td>1</td><td>2</td><td>0</td><td>0</td></tr><tr><td><code>faction</code></td><td>13</td><td>9/13 (69.2%, -12.5pt vs baseline)</td><td>9/13 (69.2%, -18.9pt vs baseline) [0 runtime, 9 static]</td><td>0/9 (0.0%, -11.0pt vs baseline)</td><td>0</td><td>6</td><td>3</td><td>3</td><td>0</td><td>0</td><td>1</td></tr><tr><td><code>progression</code></td><td>15</td><td>13/15 (86.7%, +4.9pt vs baseline)</td><td>14/15 (93.3%, +5.2pt vs baseline) [3 runtime, 11 static]</td><td>3/14 (21.4%, +10.5pt vs baseline)</td><td>0</td><td>8</td><td>4</td><td>1</td><td>0</td><td>2</td><td>0</td></tr><tr><td><code>social</code></td><td>12</td><td>8/12 (66.7%, -15.1pt vs baseline)</td><td>9/12 (75.0%, -13.2pt vs baseline) [0 runtime, 9 static]</td><td>0/9 (0.0%, -11.0pt vs baseline)</td><td>0</td><td>5</td><td>2</td><td>3</td><td>2</td><td>0</td><td>0</td></tr><tr><td><code>world</code></td><td>25</td><td>20/25 (80.0%, -1.7pt vs baseline)</td><td>22/25 (88.0%, -0.2pt vs baseline) [2 runtime, 20 static]</td><td>2/22 (9.1%, -1.9pt vs baseline)</td><td>0</td><td>14</td><td>2</td><td>4</td><td>4</td><td>1</td><td>0</td></tr><tr><td><code>unassigned</code></td><td>0</td><td>0/0 (n/a)</td><td>0/0 (n/a)</td><td>0/0 (n/a)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
 </tbody>
 </table>
 </div>

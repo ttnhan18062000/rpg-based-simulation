@@ -745,6 +745,18 @@ def _rollup_stats(ids: List[str], by_id: Dict[str, dict]) -> dict:
         "static_verified": static_verified,
         "verified": verified_total,
         "verified_rate": (verified_total / n) if n else 0.0,
+        # TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY. What fraction of this
+        # group's own VERIFIED mechanisms were confirmed by a runtime instrument (scenario/
+        # corpus_run -- the simulation actually doing the thing) versus a static one (code_trace --
+        # the code says it should). Denominator is `verified`, not `count`: this is a property of
+        # the verification method used, not of coverage. Added after a real peer-caught gap: a
+        # 20-mechanism code_trace-only verification batch moved the registry's own runtime share
+        # from 27% to 11% while reading, in prose, as unqualified progress -- the raw
+        # runtime_verified/static_verified counts already existed but nothing rendered the RATE, so
+        # the regression was invisible until computed by hand under direct challenge. 0.0 (not
+        # undefined) when `verified` is 0, matching this file's own established zero-count
+        # convention for bound_rate/verified_rate above.
+        "runtime_verified_share": (runtime_verified / verified_total) if verified_total else 0.0,
         "unverified": n - verified_total,
         "state_counts": state_counts,
     }

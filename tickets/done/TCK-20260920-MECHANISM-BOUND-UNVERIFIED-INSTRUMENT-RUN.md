@@ -12,8 +12,10 @@ tags: [architecture, schema, simulation-quality]
 # TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN
 
 ## Title
-Batch 3 of the unbound-claims program: instrument runs against the 20 mechanisms already bound but
-never given a `verified` block
+Batch 3 of the unbound-claims program: static re-confirmation of 20 already-bound mechanisms'
+pre-existing caller citations — `code_trace` only, no differential test, and a real selection
+effect (**re-languaged 2026-09-20, see Completion Summary addendum** — this ticket originally read
+as a broader "instrument run" than what was actually done)
 
 ## Status
 DONE
@@ -81,19 +83,41 @@ None new.
   `movement`, swapped for `clan` since `movement` now has a real verified block)
 
 ## Assumptions / Open Questions
-None. All 20 verdicts came back `observed` — every one of the 20's own pre-existing caller
-evidence (already documented as plain comments from earlier tickets) held up under direct
+**Addendum, 2026-09-20, peer review of this batch after it landed**: the original framing above
+("instrument runs," "100% observed") read as stronger evidence than what was actually done. See
+the Completion Summary addendum for the full correction; the finding itself is not overturned, only
+the language describing it.
+
+None otherwise. All 20 verdicts came back `observed` — every one of the 20's own pre-existing
+caller citations (already documented as plain comments from earlier tickets) held up under direct
 re-confirmation this pass. No `contradicted` verdicts in this batch (that shape showed up in batch
-2's own `calamity_intensity`, not here).
+2's own `calamity_intensity`, not here) — see the addendum below for why a 100% rate here is less
+surprising than it looks.
 
 ## Implementation Notes
-For each of the 20, the real caller evidence already present as a plain YAML comment (from the
+For each of the 20, the real caller citation already present as a plain YAML comment (from the
 original binding ticket) was independently re-confirmed via direct grep this pass, then formalized
 into a `verified: {instrument: code_trace, verdict: observed, date, note}` block. Several bindings
 got a small additional confirmation beyond what the original comment stated (e.g. `diplomacy`'s
 own `compute_transitions()` reconfirmed at a second real call site, `pipeline.py:260`, not just
-the one the original comment cited). No code changes; no state changes; this batch is purely
-formal verification of already-real bindings.
+the one the original comment cited). No code changes; no state changes.
+
+**What this batch actually was, stated plainly (2026-09-20 addendum)**: a **static re-confirmation
+of pre-existing citations**, not a differential test. The check for each mechanism was "does the
+caller this earlier ticket already cited still resolve to a real, non-test call site" — never
+"does toggling this mechanism's own precondition produce a different, observable outcome." All 20
+used `instrument: code_trace`; none used `scenario` or `corpus_run`. This is accurately recorded in
+each entry's own `instrument` field — the field itself was never mislabeled — but this ticket's own
+prose ("instrument run," "100% observed") did not say so plainly enough for a reader to tell the
+difference from a stronger claim.
+
+**The selection effect, named explicitly per peer review**: these 20 were not a random or
+adversarial sample of the registry's own bound-but-unverified mechanisms — they were selected
+*because* they already carried a real caller citation from an earlier ticket in this epic. A 100%
+pass rate on a population pre-filtered for its own prior evidence of passing is close to guaranteed
+before any checking happens. See `docs/plans/mechanism_claims_as_tests_initiative.md` §3.3 for the
+full write-up of this as its own named failure-adjacent shape, distinct from §3.1's search failures
+and §3.2's misattribution.
 
 ## Test Summary
 `tests/unit/tools/test_mechanism_registry.py`: one existing test's hardcoded example id swapped
@@ -110,7 +134,21 @@ clean (no drift, since no `state` value changed this batch).
 
 ## Completion Summary
 **Done.** All 20 bound-but-unverified mechanisms now carry a real `verified` block. Every verdict
-came back `observed` — each binding's own pre-existing caller evidence held up under direct
+came back `observed` — each binding's own pre-existing caller citation held up under direct
 re-confirmation. No code fixed, no states changed, consistent with this batch's own scope as pure
 verification. Batch 4 (`contradicted`-verdict triage, 6 mechanisms) and the `xp_leveling`/
 `evolution` identity investigation remain, landing in the same PR per the user's own call.
+
+**Addendum, 2026-09-20, peer review the same PR cycle**: the finding stands — all 20 pre-existing
+citations independently re-confirmed accurate, `instrument: code_trace` correctly recorded on
+every entry. What was wrong was the *description* of that finding: prose calling it an "instrument
+run" with a "100% observed" rate, in a PR that had just corrected 7 of 47 claims in its own
+preceding batch, read as stronger, more adversarial verification than a static re-check of
+already-cited callers actually is. Re-languaged per direct peer challenge (3 questions: which
+instrument, did any meet a differential test, was there a near-miss) rather than by re-verifying or
+downgrading any of the 20 — the peer's own explicit instruction was "re-language, don't re-run,"
+since the data was never wrong, only the story told about it. Two durable fixes came out of the
+same review, not scoped to this ticket alone: `runtime_verified_share` added as a first-class
+metric to the system rollup view (`TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY`,
+registry-wide and per-system, so this exact gap can't hide in prose again), and the selection effect
+recorded in `docs/plans/mechanism_claims_as_tests_initiative.md` §3.3 as its own named shape.
