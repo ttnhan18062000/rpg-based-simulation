@@ -84,15 +84,15 @@ never running.
 The point of the table: **roughly half the state vocabulary is a query somebody typed by hand.**
 `orphan` does not mean "we think this is orphaned" — it means zero callers, which is executable.
 
-### 3.1 Six shapes of search failure, catalogued 2026-09-19, extended 2026-09-20
+### 3.1 Seven shapes of search failure, catalogued 2026-09-19, extended 2026-09-20
 
 The table above says existence/caller-count is "detected," as if that were a solved query. It
 isn't, in practice — the *search that produces* a caller count can itself be wrong in ways that
-look like a clean negative result. This repo has now hit six genuinely distinct failure shapes
+look like a clean negative result. This repo has now hit seven genuinely distinct failure shapes
 across several tickets, each one independently discovered, each one producing **confident absence**
 (the searcher concludes "no code exists" and is wrong) rather than an obvious dead end. Catalogued
-here because six instances is a real pattern worth reading before the next search-based
-investigation, not six separate anecdotes:
+here because seven instances is a real pattern worth reading before the next search-based
+investigation, not seven separate anecdotes:
 
 1. **Same name, different thing.** `progression_conversion` (the mechanism id) vs `src/progression/`
    (a directory whose contents don't implement it) — a plausible-looking path match that isn't the
@@ -142,6 +142,40 @@ investigation, not six separate anecdotes:
    whether anything justified it being that boundary** — here, nothing did; the boundary was
    inherited from where the *other* mechanism's code happened to live, not from any property of
    the mechanism actually being searched for.
+7. **Verification that stops one level short, added 2026-09-20.** Two independent instances in one
+   batch (`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`): `perception`'s and
+   `temporal_pressure`'s own prior `code_trace` notes each cited a real call site
+   (`PerceptionFilterService.filter()` called from `phase.py:43`; `TemporalPressureService.
+   calculate_urgencies()` called from `memory/phase.py:90`) — both citations were accurate, the
+   grep found the right line. What neither check did was walk one hop further: is *that caller*
+   itself ever reached? `perception`'s call site sits inside `PerceptionUpdatePhase.run()`, a class
+   nothing in `src/` ever instantiates. `temporal_pressure`'s sits inside `MemoryUpdatePhase.run()`,
+   reached only when `ENABLE_MEMORY_UPDATE` is ON — it defaults OFF. A one-hop caller check passes
+   cleanly in both cases and tells you nothing about whether the mechanism actually runs. This is a
+   different shape from 1-6: those are all failures of the query (wrong vocabulary, wrong scope,
+   wrong pattern) that still eventually terminate at a real, reachable target once corrected. This
+   one terminates at a real target that is itself unreachable, and the check simply never asked.
+   **The defense, used directly for the remaining 15
+   `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION` mechanisms after this was
+   named**: before building an expensive scenario, walk the citation transitively — does anything
+   instantiate the phase, is it flag-gated, does the gate default on or off. Cheap and static, it
+   predicts which mechanisms will come back dormant or gated and concentrates scenario-building
+   effort where the answer isn't already visible from the walk. It does not replace the runtime
+   check — a reachable path still has to be observed actually firing, the same differential
+   requirement §5 item 3 already states — it only prevents building an elaborate differential for a
+   call chain that's already provably broken two hops up.
+   **A third instance, in configuration rather than call chain**: the `goal_hierarchy`/
+   `strategic_intelligence_core` scenario's own first version read `src/engine/pipeline.py:53`'s
+   `DefaultCadence(strategic_intelligence=1)` override and concluded the per-entity strategic-intent
+   cadence always fires — correct about what that line does, wrong about whether it applies, since
+   that override only takes effect when `refine()` receives no cadence at all, and a live `Kernel`
+   run under `PROD_SMALL` always supplies a real one (`cadence.strategic_intelligence=20`, confirmed
+   only by direct instrumentation, not visible from the pipeline.py read). Same one-hop-short shape
+   as the other two instances — a real, accurate fact about one line, never checked against whether
+   a different real code path overrides it before it matters. See §5 item 5 in
+   `docs/plans/mechanic_verification_scenarios_proposal.md` for the harness-side consequence this
+   specific instance produced (a vacuous negative-arm risk, not just a mis-scoped claim) and its own
+   defense.
 
 **Shapes 4 and 5 are the newest and most dangerous of the first five**, because unlike 1-3 (a wrong
 match, a docstring-only symbol, a near-miss pattern — each still findable by trying one more
@@ -159,7 +193,9 @@ Source tickets: `TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION` (shapes
 RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_hierarchy`; also the
 original, wrongly-scoped search behind shape 6), `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-
 AUDIT` (shape 5's first instance, `regional_trauma`), `TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-
-CLAIMS-RESOLUTION` (shape 6, found via `commitment_betrayal`'s own re-investigation).
+CLAIMS-RESOLUTION` (shape 6, found via `commitment_betrayal`'s own re-investigation),
+`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION` (shape 7, both instances,
+`perception` and `temporal_pressure`).
 
 ### 3.2 A different failure class: confident misattribution, not confident absence
 
@@ -249,6 +285,50 @@ need the same two disclosures to be read honestly rather than as unqualified pro
 
 Source: peer review of `TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN`, same session as
 this batch's own landing, PR #229.
+
+### 3.4 A fourth failure class: a catalogue's own coverage claim is only as wide as the method that built it
+
+§3.1-3.3 are all about a single mechanism's own claim being wrong. This one is about the registry's
+claim about *itself* — that it is a catalogue built from the codebase — being stronger than the
+method that built it supports.
+
+**The instance**: `tools/mechanism_registry/mechanism_registry_completeness_check.py` (built by
+`TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` specifically to answer "did we miss any real,
+wired code") enumerates exactly two roots: `src/domains/*` and `src/systems/{economy_systems,
+lifecycle_systems,social_systems,strategic_systems,world_systems}/*.py`. Investigating
+`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`'s own `perception` finding
+surfaced `src/world/perception/gate.py::PerceptionGate` — real, live, wired
+(`src/engine/tactical.py`) — sitting entirely outside that scope: `src/world/` was never scanned,
+and neither were `src/engine/`, `src/cognition/`, `src/strategy/`, `src/ai/`, and roughly a dozen
+more non-infra top-level directories. A manual sizing pass (not yet a repeatable check) found 85
+unbound files with a mechanism-shaped class name across those uncovered directories, 14 with a real
+caller outside their own defining file — the same bar `PerceptionGate` itself clears. `PerceptionGate`
+was not an isolated miss; it was the first thing found in a category nothing had looked at.
+
+**The mechanism of the failure, same shape as §3.3's**: nothing about the registry's own data was
+wrong — 93 real, individually-investigated mechanisms are genuinely there, and the completeness
+checker's own report line is itself honestly scoped ("Enumerated ... under src/domains/ and
+src/systems/"). What overclaimed was language *around* the registry — this initiative's own §3
+framing above, and `docs/plans/mechanism_registry_initiative.md`'s "the registry is complete;
+charts are slices" — read in a context where "complete" could mean "every real mechanism in the
+codebase is represented here," which the completeness checker's own two-directory scope never
+supported. The claim was stronger than the method.
+
+**The mitigation, same two-part shape as §3.3's own, not "scan everything right now"**: (1) state
+the checker's own real scope plainly wherever the registry's coverage is asserted — it covers
+`src/domains/` and `src/systems/`, with other source trees not yet swept, not "the codebase"; (2)
+treat any "N mechanisms" count as bounded by what has been swept, not as a claim about the whole
+system, until the checker's own scope is genuinely widened. `TCK-20260920-MECHANISM-COMPLETENESS-
+CHECK-SCOPE-GAP` tracks widening it; this section exists so the claim stops overstating in the
+meantime. The 14-candidate number is a **floor**, not a firm count — the suffix heuristic used to
+find them (`Service`/`System`/`Gate`/`Phase`/`Evaluator`/`Resolver`/`Manager`) misses other real
+naming conventions (`Classifier`/`Filter`/`Builder`), and "unbound" here carries the same
+established caveat as it does for the domains/systems check itself: not yet checkable is not the
+same claim as confirmed missing, since some of the 14 likely already belong to an existing
+mechanism's own multi-file implementation, just not cited by path yet.
+
+Source: peer review of `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`,
+2026-09-20.
 
 ---
 
