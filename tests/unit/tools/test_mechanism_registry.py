@@ -878,7 +878,10 @@ def test_reader_get_verification_known_and_unknown(registry):
     assert verified is not None
     assert verified["instrument"] == "scenario"
     assert registry.get_verification("succession")["instrument"] == "code_trace"
-    assert registry.get_verification("movement") is None  # real, unverified id
+    assert registry.get_verification("clan") is None  # real, unverified id -- `movement` itself
+    # was this example until TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN gave it a
+    # real verified block (batch 3 of the unbound-claims program); swapped to `clan`, still
+    # genuinely unverified as of this edit.
     assert registry.get_verification("nonexistent_mechanism_xyz") is None  # unknown id
 
 
