@@ -6,53 +6,52 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**9 runtime-verified, 15 static (`code_trace`)-verified, 69 unverified** — of 93 total.
+**9 runtime-verified, 24 static (`code_trace`)-verified, 60 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
-| `entity_role` | entity | done | unverified | unverified | 25 | 5 |
-| `movement` | entity | done | unverified | unverified | 25 | 5 |
 | `belief_cycle` | entity | done | unverified | unverified | 20 | 4 |
-| `status_effects` | entity | partial | unverified | unverified | 20 | 4 |
-| `combat_resolution` | entity | done | runtime | observed | 15 | 3 |
-| `race_archetype` | entity | done | unverified | unverified | 15 | 3 |
-| `goal_hierarchy` | entity | done | unverified | unverified | 10 | 2 |
+| `entity_role` | entity | done | unverified | unverified | 15 | 3 |
+| `movement` | entity | done | unverified | unverified | 15 | 3 |
+| `goal_hierarchy` | entity | done | static | observed | 10 | 2 |
 | `personality` | entity | done | unverified | unverified | 10 | 2 |
-| `reputation` | faction | done | unverified | unverified | 9 | 3 |
-| `regional_trauma` | region | done | runtime | contradicted | 8 | 4 |
-| `action_pacing_readiness` | entity | done | runtime | observed | 5 | 1 |
+| `status_effects` | entity | orphan | static | observed | 10 | 2 |
 | `affection_relationship_bonds` | entity | done | unverified | unverified | 5 | 1 |
 | `aging_death` | entity | done | unverified | unverified | 5 | 1 |
 | `attributes_biology` | entity | done | unverified | unverified | 5 | 1 |
-| `class_assignment` | entity | partial | unverified | unverified | 5 | 1 |
-| `commitment_betrayal` | entity | done | unverified | unverified | 5 | 1 |
-| `regional_sovereignty` | region | done | static | observed | 4 | 2 |
-| `betrayal_siege_war` | faction | done | unverified | unverified | 3 | 1 |
+| `combat_resolution` | entity | done | runtime | observed | 5 | 1 |
+| `race_archetype` | entity | done | static | observed | 5 | 1 |
+| `regional_trauma` | region | done | runtime | contradicted | 4 | 2 |
 | `campaigns` | world | done | unverified | unverified | 3 | 3 |
 | `diplomacy` | faction | done | unverified | unverified | 3 | 1 |
 | `social_memory` | faction | skeleton | unverified | unverified | 3 | 1 |
-| `world_generation` | world | done | unverified | unverified | 3 | 3 |
 | `buildings` | world | done | unverified | unverified | 2 | 2 |
-| `camp` | region | done | static | contradicted | 2 | 1 |
 | `inventory_trade_conservation` | world | done | unverified | unverified | 2 | 2 |
+| `regional_sovereignty` | region | done | static | observed | 2 | 1 |
+| `world_generation` | world | done | unverified | unverified | 2 | 2 |
+| `action_pacing_readiness` | entity | done | runtime | observed | 0 | 0 |
 | `adventure_routing` | entity | done | unverified | unverified | 0 | 0 |
 | `belief_institution` | world | partial | unverified | unverified | 0 | 0 |
+| `betrayal_siege_war` | faction | done | unverified | unverified | 0 | 0 |
 | `breakthrough_bonuses` | entity | done | unverified | unverified | 0 | 0 |
 | `build_diversity` | entity | gap | unverified | unverified | 0 | 0 |
 | `building_sabotage` | world | done | unverified | unverified | 0 | 0 |
 | `calamity_intensity` | world | done | runtime | contradicted | 0 | 0 |
+| `camp` | region | done | static | contradicted | 0 | 0 |
 | `causal_spatial_memory` | entity | gated | static | observed | 0 | 0 |
 | `chronicle` | world | done | unverified | unverified | 0 | 0 |
-| `city` | region | partial | unverified | unverified | 0 | 0 |
+| `city` | region | partial | static | observed | 0 | 0 |
 | `clan` | faction | gap | unverified | unverified | 0 | 0 |
+| `class_assignment` | entity | partial | static | observed | 0 | 0 |
 | `cognition_capacity_fatigue` | entity | done | unverified | unverified | 0 | 0 |
 | `combat_engagement` | entity | done | runtime | observed | 0 | 0 |
+| `commitment_betrayal` | entity | done | static | observed | 0 | 0 |
 | `commitment_pressure_consequences` | entity | partial | unverified | unverified | 0 | 0 |
 | `committed_intentions` | entity | orphan | unverified | unverified | 0 | 0 |
 | `concern_intake` | entity | done | unverified | unverified | 0 | 0 |
 | `conversation` | entity | gap | unverified | unverified | 0 | 0 |
 | `cooperation` | entity | done | unverified | unverified | 0 | 0 |
-| `country_lifecycle` | faction | partial | unverified | unverified | 0 | 0 |
+| `country_lifecycle` | faction | partial | static | observed | 0 | 0 |
 | `crafting` | world | partial | unverified | unverified | 0 | 0 |
 | `cross_episode_grief_nemesis` | faction | done | static | observed | 0 | 0 |
 | `cross_episode_social_consequences` | faction | done | static | observed | 0 | 0 |
@@ -86,8 +85,9 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `quest_reward_distribution` | group | orphan | unverified | unverified | 0 | 0 |
 | `race_collective_force` | faction | gap | unverified | unverified | 0 | 0 |
 | `readiness_speed_scaling` | entity | partial | runtime | contradicted | 0 | 0 |
+| `reputation` | faction | done | unverified | unverified | 0 | 0 |
 | `resource_harvesting` | world | orphan | unverified | unverified | 0 | 0 |
-| `ruins_mines_battlefields` | region | partial | unverified | unverified | 0 | 0 |
+| `ruins_mines_battlefields` | region | partial | static | observed | 0 | 0 |
 | `self_model` | entity | gated | static | observed | 0 | 0 |
 | `settlement_capacity_axis` | faction | gap | unverified | unverified | 0 | 0 |
 | `skill_unlocks` | entity | partial | unverified | unverified | 0 | 0 |
@@ -100,6 +100,6 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `team_up` | entity | gap | unverified | unverified | 0 | 0 |
 | `temporal_pressure` | entity | skeleton | unverified | unverified | 0 | 0 |
 | `town_services` | world | done | unverified | unverified | 0 | 0 |
-| `trauma` | entity | done | unverified | unverified | 0 | 0 |
+| `trauma` | entity | done | static | observed | 0 | 0 |
 | `world_boss_spawn` | world | done | static | observed | 0 | 0 |
 | `xp_leveling` | entity | partial | runtime | observed | 0 | 0 |

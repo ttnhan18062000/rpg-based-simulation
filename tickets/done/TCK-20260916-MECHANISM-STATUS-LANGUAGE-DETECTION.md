@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION
-phase: open
+phase: done
 date: 2026-09-16
 tags: [architecture, schema, simulation-quality]
 ---
@@ -16,7 +16,7 @@ Detect status-vocabulary in atlas/capabilities/wiring-map prose — status belon
 never to hand-written descriptions
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -108,13 +108,65 @@ implementation, not guessed in advance — this ticket's own Scope item 1 lists 
 an exhaustive list.
 
 ## Implementation Notes
-To be completed during implementation.
+`tools/mechanism_registry/mechanism_status_language_check.py`: scans the atlas/capabilities'
+`desc` fields (never `badges`/`tier`/`tierLabel`, which already are the registry's own intentional,
+already-checked status surface — scanning those would be redundant, not additive) and the wiring
+map's own Entity Operating Loop node label strings only (never its other two diagrams, matching
+`mechanism_wiring_map_classdef.py`'s own established scoping). Word list derived from a real
+corpus scan (AC's own Assumptions note) rather than guessed: 16 phrases, seeded from this ticket's
+own examples plus what the scan actually surfaced (`zero callers`, `no write path`, `actually
+fires`/`triggers`/`completed`).
+
+**Real corpus result, 2026-09-19: 98 hits (61 atlas, 33 capabilities, 4 more resolved to 0 in the
+wiring map after cleanup below).** The overwhelming majority are accurate, deliberate "currently
+X" status statements — this atlas/capabilities pair already writes about implementation status
+inline with description as a matter of established authoring convention, and every sampled
+instance checked was confirmed accurate at time of writing, not stale duplication of the
+`motivation_doctrine` shape this ticket exists to catch. **Disposition, per AC #3's own "accepted
+as a false positive with a recorded reason" allowance, applied as a documented policy rather than
+98 individual edits**: bulk-stripping accurate status prose to silence a report-only detector would
+itself violate the project's own Gate Integrity rule (editing an artifact to make a check pass
+instead of preserving real substance) and the "no prose consolidation" non-goal this ticket's own
+Request Summary already states — most of this content is exactly the granular, accurate status
+information the user has asked this session to preserve and sync (see `feedback_sync_capabilities_
+with_atlas`). The motivating incident's own specific sentence (`motivation_doctrine`'s "confirmed
+live via the always-on Adventure route scoring path") is confirmed already corrected — the atlas's
+own current text reads "were *originally* live... but the [code deleted]" (entity-cognition#5),
+past tense, not a live false claim. This detector's real ongoing value is as an input to the
+sibling changed-code-drift detector's own review process (a PR touching a mechanism's cited code
+should prompt checking its own flagged prose lines, not a one-time mass rewrite now) — recorded
+here rather than assumed.
+
+**Scope item 3, performed as real, bounded cleanup** (distinct from the above — this was concrete,
+small, and unambiguous): 6 Entity Operating Loop node labels (`SELF`, `MEM`, `INT`, `EMO`, `TRM`,
+`COM`) carried status language redundant with their own `classDef` colouring (`GATED OFF by
+default` next to `:::gated`, `no write path exists` next to `:::bug`, etc.) — removed, keeping only
+the "what it does" description each label's own classdef doesn't already state.
+`mechanism_wiring_map_classdef.py` still passes clean (label text edits don't touch classdef
+assignment).
 
 ## Test Summary
-To be completed during implementation.
+`tests/unit/tools/test_mechanism_status_language_check.py` (11 new tests): per-artifact scan
+correctness (atlas/capabilities `desc`-only, wiring-map node-label-only), the badges/tierLabel
+exclusion proven directly (not just asserted), report-only guarantee (`main()` always exits 0
+regardless of hit count — AC #2), the real wiring-map corpus now asserts zero hits (the Scope item
+3 cleanup, pinned as a regression guard), and a real-corpus smoke test proving the scan runs clean
+against the committed atlas/capabilities/wiring-map files without asserting a hit count (per this
+ticket's own documented policy above — the real number will keep moving as prose is added, and
+that's expected, not a regression). Full `tests/unit/tools/` suite: 229 passed.
 
 ## Files Changed
-To be completed during implementation.
+- `tools/mechanism_registry/mechanism_status_language_check.py` — new.
+- `Makefile` — new `mechanism-status-language-check` target.
+- `tests/unit/tools/test_mechanism_status_language_check.py` — new, 11 tests.
+- `docs/brainstorm/rpg_simulation_wiring_map.html` — 6 node labels stripped of redundant status
+  language (Scope item 3).
 
 ## Completion Summary
-Not yet started.
+**Done.** AC #1/#2 met directly: the tool exists, scans all three artifacts' real prose surfaces,
+and is proven report-only by test. AC #3 met via a documented policy rather than mechanical
+compliance: the one specifically-named known instance (`motivation_doctrine`) is confirmed already
+fixed; the broader 94-hit volume (61 atlas + 33 capabilities) is recorded as accepted, accurate,
+non-stale prose rather than bulk-edited, with the reasoning stated above rather than silently
+assumed; Scope item 3's own concrete cleanup (6 wiring-map node labels) is performed and pinned by
+a regression test.

@@ -84,6 +84,98 @@ never running.
 The point of the table: **roughly half the state vocabulary is a query somebody typed by hand.**
 `orphan` does not mean "we think this is orphaned" — it means zero callers, which is executable.
 
+### 3.1 Five shapes of search failure, catalogued 2026-09-19
+
+The table above says existence/caller-count is "detected," as if that were a solved query. It
+isn't, in practice — the *search that produces* a caller count can itself be wrong in ways that
+look like a clean negative result. This repo has now hit five genuinely distinct failure shapes
+across several tickets, each one independently discovered, each one producing **confident absence**
+(the searcher concludes "no code exists" and is wrong) rather than an obvious dead end. Catalogued
+here because five instances is a real pattern worth reading before the next search-based
+investigation, not five separate anecdotes:
+
+1. **Same name, different thing.** `progression_conversion` (the mechanism id) vs `src/progression/`
+   (a directory whose contents don't implement it) — a plausible-looking path match that isn't the
+   real one.
+2. **Docstring concept with no symbol.** `FairShareProtocol` exists only as prose in a docstring,
+   never as a class or function grep could find.
+3. **A naming convention hides a write.** `succession`'s own false verification verdict
+   (`registries/mechanisms.yaml`'s own entry): the search pattern `heir_entity_id=` could not match
+   `heir_entity_id_set=`, this codebase's own `_set`-suffix convention for `StateUpdate` patch
+   fields (`death_reason_set`, `is_permadeath_set`, same shape). The real write existed one
+   character-pattern away from what was searched.
+4. **Post-rename terminology drift.** `race_archetype`'s real implementation is `SpeciesDefinition`
+   (`src/content/schema.py`) — `TCK-20260904-EPIC-RACE-TO-SPECIES-TERMINOLOGY` renamed
+   `RaceDefinition`/`race_id` repo-wide on 2026-09-04, *after* the search vocabulary
+   ("race"/"Race") had already been formed by the mechanism's own registered name. Same shape hit
+   `country_lifecycle` (real code is `FactionDecisionPhase`, "Country" and "Faction" are the same
+   underlying class) and `city` (real code is `RegionState`, never split into its own class) —
+   conflation rather than rename, but the same "the search vocabulary and the real vocabulary
+   diverged" root cause.
+5. **A concept name that is never a symbol.** The wiring map's own "Directive → Project → Objective
+   → Action" (the plain-English definition of the `goal_hierarchy` mechanism) appears nowhere in
+   the codebase as a literal string, class, or function — it maps to a cluster of methods
+   (`evaluate_project_switch`, `resume_project`, `process_project_outcome`, others) on
+   `StrategicIntelligenceSystem`, a class whose own name shares no vocabulary with the concept it
+   partly implements. `regional_trauma`'s own real mapping to `TraumaRegionConcernBridge`
+   (`src/domains/world_emergence/services.py`) is the same shape, found only via `graphify query
+   "trauma"`, not grep — the one directly measured case for why CLAUDE.md's graphify-before-grep
+   rule exists, now joined by four more instances of the same underlying failure class.
+
+**Shapes 4 and 5 are the newest and the most dangerous of the five**, because unlike 1-3 (a wrong
+match, a docstring-only symbol, a near-miss pattern — each still findable by trying one more
+variant), 4 and 5 produce a search that returns cleanly empty and looks exhaustive. Nothing in the
+search itself signals "you're searching the wrong vocabulary." The only defenses found so far:
+checking a mechanism's own naming/rename history (terminology-drift epics, atlas investigation
+notes) before concluding absence, and preferring `graphify query` over raw grep for exactly the
+class of query graphify's own AST/fuzzy matching is built for — a preference this doc's own §4.1
+detector plan and CLAUDE.md's own Context Scan mandate already assume, now with five concrete
+instances behind it instead of one.
+
+Source tickets: `TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION` (shapes 1-3, via
+`succession`'s own corrected entry), `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_hierarchy`),
+`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` (shape 5's first instance,
+`regional_trauma`).
+
+### 3.2 A different failure class: confident misattribution, not confident absence
+
+§3.1's five shapes are all **search failing to find code**, producing a confident **false
+negative** — "no implementation exists." This one is the inverse: **attribution finding the wrong
+code and believing it**, producing a confident **false positive** — "this code is that mechanism."
+It is not a sixth shape of the same failure; it is a different failure with a different mitigation,
+and belongs in its own section rather than a sixth bullet in §3.1, or the catalogue's single
+mitigation there ("search harder — graphify, multiple patterns, check for renames") would read as
+covering a case it cannot touch. Searching better does not fix this one: the search that produced
+it was not sloppy. It found real, correctly-identified orphan code that was genuinely, honestly
+describable as "trauma" in plain English.
+
+**The instance**: resolving edge #4 of `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+RESOLUTION`, `trauma`'s `state` was corrected `done` → `orphan` and its `implemented_by` bound to
+`RecoveryReadinessService.register_near_death()` (`src/domains/emotion/recovery_service.py`) — real
+code, genuinely orphaned (zero callers), genuinely about near-death psychological state. It was the
+wrong mechanism. `trauma`'s real identity, discovered the same day while building this ticket's own
+status-language detector: the atlas's `entity-modification#0` card, titled "Trauma: A Lasting
+Physical Consequence" — the Wound→Scar physical combat-consequence system, implemented by
+`WoundService` (`src/engine/rpg_depth.py`), live, with real callers in `combat.py` and
+`tactical.py`. Full correction on `trauma`'s own `verified` block.
+
+**The mitigation is a discipline, not a tool: check the entry's existing citation trail before
+replacing it.** `trauma`'s own original citation
+(`stored_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md:199`) named
+`combat_resolution` as the dependency and `entity-modification#0` as the atlas card — both correct,
+both sitting there unread when the replacement was made. **The registry already held the correct
+answer.** The data that would have prevented the error was in the entry being overwritten, not
+missing from the codebase — the strongest available argument for this registry's own citation
+convention: not that citations are tidy record-keeping, but that an entry's existing evidence is
+the first thing to check before replacing it, precisely because a plausible-sounding new candidate
+is most dangerous when it is real code. A `code_trace` that finds real, correct, orphaned code
+proves that code is real and orphaned — it proves nothing about which registry entry it belongs to,
+and that question has its own evidence, already on file, every time an entry already carries one.
+
+Source ticket: `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION` (where the error was found and
+self-corrected the same day).
+
 ---
 
 ## 4. The three wirings

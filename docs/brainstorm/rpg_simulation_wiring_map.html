@@ -452,11 +452,11 @@ flowchart TD
     subgraph THINK["THINK — every tick"]
       direction TB
       PER["Perceive<br/>budget = 10 signals, flat for everyone"]
-      SELF["Self-Model<br/>needs, confidence, stress from HP/gear gaps — built correctly, GATED OFF by default"]:::gated
+      SELF["Self-Model<br/>needs, confidence, stress from HP/gear gaps"]:::gated
       BEL["Belief Cycle<br/>rumors vs. observations, contradiction decay"]
-      MEM["Causal & Spatial Memory<br/>why an action failed — built correctly, GATED OFF by default"]:::gated
+      MEM["Causal & Spatial Memory<br/>why an action failed"]:::gated
       GOAL["Goal Hierarchy<br/>Directive → Project → Objective → Action"]
-      INT["Committed Intentions<br/>read-side plan queue — no write path exists"]:::bug
+      INT["Committed Intentions<br/>read-side plan queue"]:::bug
       MOT["Motivation & Doctrine<br/>doctrine chain deleted 2026-09-08, superseded by Adventure Route personality_bias"]:::bug
       CAPT["Capacity Gate<br/>INT/WIS/PER bandwidth; fatigue cuts 50%/20%"]
       DEC["Decide Route<br/>15 RouteFamily values"]
@@ -491,9 +491,9 @@ flowchart TD
       BRK["Breakthrough Bonuses<br/>real, applied on every stat recalc (rpg_depth.py:367)"]
       REL["Relationships<br/>SocialBond sentiment + familiarity"]
       REP["Reputation<br/>witnessed-event → labels"]
-      EMO["Emotion<br/>fear/confidence/frustration — live via near-death hardening"]
+      EMO["Emotion<br/>fear/confidence/frustration, hardened by near-death"]
       TRM["Trauma<br/>Wound → Scar"]
-      COM["Commitment Pressure<br/>urgency ramp; live via unflagged route-scoring — its documented Cooperation gating call site is inactive, but the mechanism itself runs"]
+      COM["Commitment Pressure<br/>urgency ramp via route-scoring"]
       XP --> BRK
     end
 
