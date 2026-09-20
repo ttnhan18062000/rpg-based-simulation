@@ -500,6 +500,7 @@ jobs:
           make mechanism-atlas-check
           make mechanism-capabilities-check
           make mechanism-wiring-map-classdef-check
+          make mechanism-registry-html-check
       - name: Fetch origin/main for mechanism registry changed-code check
         run: |
           git fetch origin main:refs/remotes/origin/main --depth=1 2>&1 || \

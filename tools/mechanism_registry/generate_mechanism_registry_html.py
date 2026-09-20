@@ -36,6 +36,21 @@ Theme handling follows the standard contract: light tokens on bare :root, dark o
 under `:root[data-theme="dark"]` so an explicit toggle wins in both directions. Badge colors are
 CSS classes keyed by state/evidence value, not inline `style=` colors, so they can vary by theme.
 
+TCK-20260920-MECHANISM-REGISTRY-HTML-SYSTEM-MEMBERSHIP: this page previously rendered no system
+membership at all -- the tier was built (`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION`),
+validated, and given its own markdown rollup (`mechanism_system_rollup_view.md`), and the one
+artifact a person actually opens still showed nothing. Adds a "Systems" column per mechanism row
+(reading each mechanism's own `systems: []` directly -- no new computation) and a system rollup
+table reusing `build_system_rollup()` unmodified, the same function the markdown rollup itself
+calls -- one definition, two renderings, never two independently-computed numbers. Per that
+markdown rollup's own established discipline (`TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP`'s
+own Assumptions #3): every rate is shown against the live-computed whole-registry baseline, never
+a single badge, and `unassigned` renders as its own real row rather than being dropped. A
+`<select>` + vanilla JS filter (no external library, matching this page's own zero-dependency
+convention) lets a reader narrow the main table to one system at a time; the filter is presentation
+only and computes nothing -- membership stays read-only to every computation, same rule the
+registry's own validator enforces.
+
 Usage:
   python3 tools/mechanism_registry/generate_mechanism_registry_html.py                    # writes the real output
   python3 tools/mechanism_registry/generate_mechanism_registry_html.py --check             # exit 1 if output is stale
@@ -59,7 +74,7 @@ _EPIC_TICKET_ID = "TCK-20260915-EPIC-MECHANISM-REGISTRY"
 _EPIC_TICKET_RELATIVE_LINK = f"../../tickets/done/mechanism-registry/{_EPIC_TICKET_ID}.md"
 
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
-from registry import all_mechanisms_combined_view  # noqa: E402
+from registry import all_mechanisms_combined_view, build_system_rollup  # noqa: E402
 
 _VALID_TARGETS = ("repo", "artifact")
 
@@ -80,6 +95,41 @@ def _badge(text: str, kind: str, key: str) -> str:
     return f'<span class="badge {kind}-{css_key}">{html.escape(text)}</span>'
 
 
+def _pct(rate: float) -> str:
+    return f"{rate * 100:.1f}%"
+
+
+def _pt_delta(rate: float, baseline_rate: float) -> str:
+    delta = (rate - baseline_rate) * 100
+    sign = "+" if delta >= 0 else ""
+    return f"{sign}{delta:.1f}pt"
+
+
+_STATE_ORDER = ("done", "partial", "gap", "orphan", "gated", "skeleton")
+
+
+def _rollup_row_html(label: str, stats: dict, baseline: dict) -> str:
+    if stats["count"] == 0:
+        bound_cell = "0/0 (n/a)"
+        verified_cell = "0/0 (n/a)"
+    else:
+        bound_cell = (
+            f"{stats['bound']}/{stats['count']} ({_pct(stats['bound_rate'])}, "
+            f"{_pt_delta(stats['bound_rate'], baseline['bound_rate'])} vs baseline)"
+        )
+        verified_cell = (
+            f"{stats['verified']}/{stats['count']} ({_pct(stats['verified_rate'])}, "
+            f"{_pt_delta(stats['verified_rate'], baseline['verified_rate'])} vs baseline) "
+            f"[{stats['runtime_verified']} runtime, {stats['static_verified']} static]"
+        )
+    state_cells = "".join(f"<td>{stats['state_counts'][s]}</td>" for s in _STATE_ORDER)
+    return (
+        f'<tr><td><code>{html.escape(label)}</code></td><td>{stats["count"]}</td>'
+        f"<td>{html.escape(bound_cell)}</td><td>{html.escape(verified_cell)}</td>"
+        f"<td>{stats['bound_unverified']}</td>{state_cells}</tr>"
+    )
+
+
 def render(data: dict, target: str = "repo") -> str:
     if target not in _VALID_TARGETS:
         raise ValueError(f"target must be one of {_VALID_TARGETS}, got {target!r}")
@@ -90,13 +140,29 @@ def render(data: dict, target: str = "repo") -> str:
     static_count = sum(1 for r in rows if r["evidence"] == "static")
     unverified_count = sum(1 for r in rows if r["evidence"] == "unverified")
 
+    # Read straight off the mechanism's own declared field -- no computation, no second source of
+    # truth. mechanisms_by_system()/build_system_rollup() own the grouping/aggregate math; this is
+    # just a per-row lookup of what's already on each mechanism.
+    mech_systems = {
+        m["id"]: (m.get("systems") or []) for m in data.get("mechanisms", []) or []
+    }
+
     table_rows = []
     for r in rows:
         verdict = r["verdict"] or "unverified"
+        systems = mech_systems.get(r["id"], [])
+        systems_key = ",".join(systems) if systems else "unassigned"
+        if systems:
+            systems_html = " ".join(
+                f'<span class="badge system-pill">{html.escape(s)}</span>' for s in systems
+            )
+        else:
+            systems_html = '<span class="badge system-pill system-unassigned">unassigned</span>'
         table_rows.append(
-            "<tr>"
+            f'<tr data-systems="{html.escape(systems_key)}">'
             f"<td><code>{html.escape(r['id'])}</code></td>"
             f"<td>{html.escape(str(r['layer']))}</td>"
+            f"<td>{systems_html}</td>"
             f"<td>{_badge(str(r['state']), 'state', str(r['state']))}</td>"
             f"<td>{_badge(r['evidence'], 'evidence', r['evidence'])}</td>"
             f"<td>{html.escape(verdict)}</td>"
@@ -104,6 +170,15 @@ def render(data: dict, target: str = "repo") -> str:
             f"<td>{r['transitive_dependent_count']}</td>"
             "</tr>"
         )
+
+    rollup = build_system_rollup(data)
+    rollup_baseline = rollup["baseline"]
+    rollup_rows = [_rollup_row_html(s["system"], s, rollup_baseline) for s in rollup["systems"]]
+    rollup_rows.append(_rollup_row_html("unassigned", rollup["unassigned"], rollup_baseline))
+    all_system_names = sorted(s["system"] for s in rollup["systems"])
+    filter_options = "".join(
+        f'<option value="{html.escape(s)}">{html.escape(s)}</option>' for s in all_system_names
+    ) + '<option value="unassigned">unassigned</option>'
 
     if target == "repo":
         sibling_links = (
@@ -191,8 +266,15 @@ th {{ background: var(--surface-2); position: sticky; top: 0; }}
 .state-gated, .evidence-static {{ color: var(--state-gated-ink); background: var(--state-gated-bg); }}
 .state-unknown, .evidence-unknown {{ color: var(--state-unknown-ink); background: var(--state-unknown-bg); }}
 .evidence-unverified {{ color: var(--evidence-unverified-ink); background: var(--evidence-unverified-bg); }}
+.system-pill {{ background: var(--surface-2); color: var(--ink-soft); margin-right: 2px; }}
+.system-unassigned {{ font-style: italic; }}
 a {{ color: var(--accent); }}
 .tablewrap {{ overflow-x: auto; }}
+.filterbar {{ margin: 12px 0; }}
+.filterbar label {{ font-weight: 600; margin-right: 6px; }}
+.filterbar select {{ font-size: 14px; padding: 3px 6px; }}
+h2 {{ margin-top: 32px; }}
+tr[data-systems].is-hidden {{ display: none; }}
 </style>
 <div class="wrap">
 <h1>Mechanism Registry</h1>
@@ -206,15 +288,66 @@ found &mdash; wiring-map drift, stale atlas badges, seeding errors &mdash; see
 {epic_mention} rather than this page, so those figures are defined in exactly one place.</p>
 <p class="counts">{runtime_count} runtime-verified, {static_count} static (code_trace)-verified,
 {unverified_count} unverified &mdash; of {total} total.</p>
+
+<h2>System Rollup</h2>
+<p class="sub">Declared system membership (<code>systems: []</code> on each mechanism), never
+derived from <code>depends_on</code> or any other edge. Counts only, never a single summary status
+&mdash; a badge here would conceal that most members of a system may be unverified, the same
+failure this registry's own verification axis exists to prevent. Every rate is shown against the
+whole-registry baseline computed live below, never in isolation &mdash; a raw per-system
+percentage looked informative in this program's own value investigation until checked against
+baseline and found statistically indistinguishable from it. <code>unassigned</code> renders as its
+own row, with a real count, rather than being silently dropped.</p>
+<p class="sub">Baseline (all {rollup_baseline['count']} mechanisms): {rollup_baseline['bound']}
+bound ({_pct(rollup_baseline['bound_rate'])}), {rollup_baseline['verified']} verified
+({_pct(rollup_baseline['verified_rate'])} &mdash; {rollup_baseline['runtime_verified']} runtime,
+{rollup_baseline['static_verified']} static), {rollup_baseline['unverified']} unverified
+({rollup_baseline['bound_unverified']} of those bound-but-unverified).</p>
 <div class="tablewrap">
 <table>
-<thead><tr><th>Mechanism</th><th>Layer</th><th>State</th><th>Evidence</th><th>Verdict</th><th>Priority</th><th>Transitive Dependents</th></tr></thead>
+<thead><tr><th>System</th><th>Mechanisms</th><th>Bound (vs baseline)</th>
+<th>Verified (vs baseline)</th><th>Bound, Unverified</th><th>done</th><th>partial</th><th>gap</th>
+<th>orphan</th><th>gated</th><th>skeleton</th></tr></thead>
+<tbody>
+{''.join(rollup_rows)}
+</tbody>
+</table>
+</div>
+
+<h2>All Mechanisms</h2>
+<div class="filterbar">
+<label for="system-filter">Filter by system:</label>
+<select id="system-filter">
+<option value="">All systems</option>
+{filter_options}
+</select>
+</div>
+<div class="tablewrap">
+<table>
+<thead><tr><th>Mechanism</th><th>Layer</th><th>Systems</th><th>State</th><th>Evidence</th>
+<th>Verdict</th><th>Priority</th><th>Transitive Dependents</th></tr></thead>
 <tbody>
 {''.join(table_rows)}
 </tbody>
 </table>
 </div>
 </div>
+<script>
+(function() {{
+  var select = document.getElementById("system-filter");
+  if (!select) return;
+  select.addEventListener("change", function() {{
+    var chosen = select.value;
+    var rows = document.querySelectorAll("tr[data-systems]");
+    for (var i = 0; i < rows.length; i++) {{
+      var row = rows[i];
+      var systems = row.getAttribute("data-systems").split(",");
+      var visible = !chosen || systems.indexOf(chosen) !== -1;
+      row.classList.toggle("is-hidden", !visible);
+    }}
+  }});
+}})();
+</script>
 """
 
 
