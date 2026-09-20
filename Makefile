@@ -312,7 +312,7 @@ setup-merge-drivers: ## Install the local merge driver + post-merge hook that re
 brainstorm-idea-index: ## Regenerate the per-idea cross-document index (docs/brainstorm/idea_index.json)
 	$(PYTHON3) tools/generate_brainstorm_idea_index.py
 
-mechanism-registry-validate: ## Validate registries/mechanisms.yaml against its 6 invariants (depends_on resolution, DAG acyclicity, layer declaration, state enum, verified.instrument enum, verified.verdict enum)
+mechanism-registry-validate: ## Validate registries/mechanisms.yaml against its 10 invariants (depends_on resolution, DAG acyclicity, layer declaration, state enum, verified.instrument enum, verified.verdict enum, implemented_by path existence, unaudited-edge declaration, missing-system, orphan-system)
 	$(PYTHON3) tools/mechanism_registry/registry.py
 	@echo ""
 	@echo "--- Graphify cross-check (report-only, informational -- never affects this target's exit code) ---"

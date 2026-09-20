@@ -486,6 +486,29 @@ jobs:
                  tests/refactor \
                  -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/arch-docs.xml
+      # TCK-20260920-MECHANISM-REGISTRY-CI-WIRING: the mechanism-registry program (14 Makefile
+      # targets, 241 tests under tests/unit/tools/) shipped with nothing invoking it automatically
+      # -- the tests exercise validate()/the drift checks as library calls, but the real CLI
+      # commands a human or CI would actually run were never wired into any job. Blocking here
+      # (deterministic, currently clean, only ever fires on real new drift); report-only checks
+      # further down print to the job log without failing the build -- they surface judgement
+      # calls, not violations, and blocking them would turn advisory signal into a gate people
+      # route around (Gate Integrity).
+      - name: Mechanism registry checks (blocking)
+        run: |
+          make mechanism-registry-validate
+          make mechanism-atlas-check
+          make mechanism-capabilities-check
+          make mechanism-wiring-map-classdef-check
+      - name: Fetch origin/main for mechanism registry changed-code check
+        run: |
+          git fetch origin main:refs/remotes/origin/main --depth=1 2>&1 || \
+            echo "::warning::origin/main fetch failed -- mechanism-registry-changed-code-check will report SKIPPED, not fail"
+      - name: Mechanism registry checks (report-only)
+        run: |
+          make mechanism-state-caller-check || true
+          make mechanism-status-language-check || true
+          make mechanism-registry-changed-code-check || true
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
         run: |
