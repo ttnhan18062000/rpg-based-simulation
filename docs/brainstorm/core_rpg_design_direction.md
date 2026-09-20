@@ -24,6 +24,7 @@ It supersedes nothing in the codebase by itself. What it changes is the **questi
 | [`../archive/the_unwritten_world.html`](../archive/the_unwritten_world.html) | **Deprecated and archived, 2026-09-20.** The original creative-direction page. Its 8 principles are not withdrawn — they are carried in full into §2 below. Kept only for its original wording and examples |
 | [`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) | The local agent's assessment of this direction against the real codebase |
 | [`simulation-rule-taxonomy-evaluation-direction.md`](simulation-rule-taxonomy-evaluation-direction.md) | Companion: how the semantics of this direction's rules/mechanisms should eventually be evaluated — implementation-independent |
+| [`simulation-rule-world-law-design-preparation.md`](simulation-rule-world-law-design-preparation.md) | Companion: the methodology for the next phase — how the actual World Rule Catalog will be designed, not the catalog itself |
 | [`2026-09-19-core-rpg-lived-history-growth-brainstorm.md`](2026-09-19-core-rpg-lived-history-growth-brainstorm.md) | Evidence: 21 scenarios traced link-by-link through real code |
 | `docs/plans/rpg_design_roadmap/` | What has actually been built (M1–M10) |
 
@@ -34,7 +35,7 @@ For anyone picking this up cold — including a reviewer with no repository acce
 | | |
 |---|---|
 | **Settled** | The 8 principles (§2). The five agreed decisions (§6). The definition of realism and the legitimacy of RPG abstractions (§4). Hybrid progression (§5). The structural, rule and entity vocabularies, and the target domain map (§7). Power plurality without a conversion framework (§8). Depth measurement and the counterforce requirement (§9, §11). The runtime status vocabulary (§10). All decisions in §16 |
-| **Still open** | The *soft failure* definition for quality scoring (§6/A2) — deliberately left to sharpen later. How today's scoring pillars are reconciled with "collapse is positive evidence". Everything about sequencing: what gets built, in what order, and when. No milestone, wave or ticket has been agreed, and none should be inferred from this document |
+| **Still open** | The *soft failure* definition for quality scoring (§6/A2) — deliberately left to sharpen later. How today's scoring pillars are reconciled with outcome-neutral scoring (§6/A2). Everything about sequencing: what gets built, in what order, and when. No milestone, wave or ticket has been agreed, and none should be inferred from this document |
 | **Deliberately absent** | Implementation design. This document says what the world is and what rules govern it, never how to build any of it |
 
 **Relationship to the existing repository.** The repo is *evidence*, not a ceiling:
@@ -180,7 +181,25 @@ We are **not** designing around apocalypse. The rule is only:
 > - **Hard failure** — the world doing something impossible: duplicated movement, invalid or erroring actions, conservation breaches, non-determinism.
 > - **Soft failure** — the world reasoning wrongly: decision chains that don't follow their own rules, goals selected against their own preconditions, causal chains that don't hold up. (Definition to be sharpened later.)
 >
-> A country destroyed, an economy broken, a region ruined, a population collapsed — these score as **positive** evidence that the world's causality works, *provided the collapse itself was causally valid* (a real chain of events, not a hard or soft failure). A healthy world is one whose *logic* is sound, not one whose *fortunes* are good. Scoring must never quietly push the simulation back toward comfortable outcomes. This is not "more collapse is better": a collapse caused by broken rules, invalid decisions, a conservation breach or an inconsistent causal chain is exactly the kind of thing hard/soft failure above already scores as a defect. The two readings agree by construction — a collapse that survives scrutiny as causally valid cannot simultaneously be a logic failure.
+> **Corrected, 2026-09-21 — world outcomes have no simulation-quality polarity by themselves. Causal validity does.**
+>
+> ```
+> valid collapse            → not a quality failure
+> valid long-term stability → not a quality failure
+> collapse itself           → not a quality bonus
+> dramatic emergence itself → not a quality bonus
+> valid causal process      → positive correctness evidence
+> broken causal process     → failure evidence
+> ```
+>
+> A country destroyed, an economy broken, a region ruined, a population collapsed — none of these
+> carry any polarity on their own. Whether the world is peaceful or ruined tells you nothing;
+> only whether the process that produced it obeyed its own declared rules does. This is sharper
+> than an earlier phrasing here ("collapse scores as positive evidence, provided it was causally
+> valid") — that still treated collapse as an axis with a preferred value once validity was
+> granted. It has none. A healthy world is one whose *logic* is sound, not one whose *fortunes*
+> are good, in either direction. Scoring must never push the simulation toward *or* away from any
+> particular outcome — only toward causal validity.
 
 ### B2 — All first-class entities are eligible for significance
 
@@ -574,7 +593,8 @@ Owner decision: build the clean taxonomy even where it is far from current imple
 | 2026-09-20 | **Places come first** among structural gaps: a place must be able to be founded, change kind, be abandoned, be colonised and remember its history | The weakest layer today, and largely independent of the combat gate |
 | 2026-09-20 | **Vocabulary amendments adopted** | §15 |
 | 2026-09-20 | **This document is standalone**; the original creative-direction page is deprecated and archived, its 8 principles carried here in full | §2 |
-| 2026-09-20 | **Quality scoring detects logic failure, not misfortune.** Collapse is positive evidence | §6/A2 |
+| 2026-09-20 | **Quality scoring detects logic failure, not misfortune.** Collapse is positive evidence *(superseded 2026-09-21, see next row)* | §6/A2 |
+| 2026-09-21 | **Sharpened: world outcomes have no scoring polarity at all, in either direction.** Only causal validity does — not "collapse scores positive when valid" | §6/A2 |
 | 2026-09-20 | **Optionality: standing practice wins.** Core ships unflagged; flags are for experiments, migration and rollback | §15 |
 | 2026-09-20 | **Magic is its own domain**, required to wire outward into combat, interaction, body, ecology, places, belief and information | §4, §7 |
 | 2026-09-20 | **Build the clean target taxonomy in full**, even far ahead of implementation, so RPG features can be planned against a long roadmap | §7 |

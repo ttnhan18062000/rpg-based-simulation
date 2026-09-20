@@ -46,10 +46,26 @@ How do we establish evidence that the declared semantics hold?
 IMPLEMENTATION (illustrative only, not prescribed)
 SimQ · HardLawMonitor · observability · scenario tests · property tests · replay ·
 registry verification · other instrumentation not yet chosen
+                              ↓
+EVIDENCE
+                              └──── feedback ────→ explicit design review (not silent redefinition)
 ```
 
 > **Validation semantics belong to simulation design. Validation instrumentation belongs to
 > implementation.**
+>
+> **Evaluation Semantics** defines what must hold, what constitutes a violation, and what must
+> eventually be observable *in principle*. **Evaluation Implementation** defines how evidence for
+> that is actually produced, collected, and assessed. Neither this document nor any future
+> evaluator description should make Evaluation Semantics itself responsible for a concrete
+> evidence structure or detector — that responsibility belongs one layer down, always.
+>
+> **The relationship is not strictly one-way.** Implementation and evaluation evidence must never
+> *silently* redefine world semantics — an evaluator cannot quietly change what a rule means just
+> because that's easier to measure. But evidence *may* expose a contradiction, an ambiguity, a
+> missing concept, or an invalid assumption in the semantics above it — and when it does, that
+> triggers an **explicit** Rule/Taxonomy revision through the normal design-authority process, not
+> a silent one. The constitution is stable, but it is not unfalsifiable.
 
 A Rule or Mechanism describes **what must be true**, never **how a particular evaluator will
 detect it**.
