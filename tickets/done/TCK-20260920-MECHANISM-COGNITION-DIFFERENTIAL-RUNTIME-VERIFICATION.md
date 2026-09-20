@@ -242,3 +242,32 @@ Two more peer follow-ups, applied before scaling:
 
 No registry verdicts changed in this addendum either. Cleared to proceed to the remaining 17
 `cognition` mechanisms under the same constraints.
+
+## Addendum 3 — 2026-09-20, batch 2 wave 1: `temporal_pressure`
+Scoping note first: of the remaining 17, 2 (`motivation_doctrine`, `information_trust_deception`)
+are unbound (no `implemented_by`) -- already investigated and deliberately left that way in the
+earlier unbound-claims program, out of scope for runtime verification until/unless a future binding
+investigation gives them one. 15 are bound and testable.
+
+**`temporal_pressure`**: `state` corrected `skeleton` -> `gated`, `instrument` upgraded to
+`scenario`, verdict stays `observed`. The mechanism's own prior `code_trace` note confirmed a real
+caller one level deep (`TemporalPressureService.calculate_urgencies()` at `memory/phase.py:90`) but
+never checked whether that caller's own containing phase (`MemoryUpdatePhase`) was itself reachable
+by default -- it isn't (`ENABLE_MEMORY_UPDATE` defaults OFF, same gate `causal_spatial_memory`
+already correctly documents for the same phase). A real differential scenario
+(`tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py`) confirms both halves: flag ON
+produces a real, correctly-scaled urgency value for a near-expiry deadline through a real
+`Kernel.tick_once()`; flag OFF (the real shipped default) produces nothing. Unlike `perception`,
+this is a state-classification correction, not a contradiction -- the mechanism genuinely works once
+its precondition is met.
+
+**Found and fixed along the way (trivial, not a mechanism-claim fix)**: staging a real
+`DeadlineEntry` broke `Kernel.shutdown()`'s canonical-state hashing --
+`TemporalModel.to_canonical_dict()` (`src/core/cognition.py`) never converted `deadlines`/
+`cooldowns`/`stale_facts` map entries to plain dicts, a defect invisible until now because nothing
+had ever populated those fields in a real run. Fixed directly, matching this file's own established
+curated-field pattern (e.g. `PerceptionModel.to_canonical_dict()`).
+
+276/276 tests passing (`tests/unit/tools/ tests/mechanic_scenarios/`), all consumer-artifact checks
+clean, `registry.py::validate()` clean. Continuing with the remaining 14 bound mechanisms in further
+waves.

@@ -160,9 +160,18 @@ class TemporalModel:
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         return {
-            "deadlines": dict(sorted(self.deadlines.items())),
-            "cooldowns": dict(sorted(self.cooldowns.items())),
-            "stale_facts": dict(sorted(self.stale_facts.items())),
+            "deadlines": {
+                k: {"target_id": v.target_id, "expiry_tick": v.expiry_tick}
+                for k, v in sorted(self.deadlines.items())
+            },
+            "cooldowns": {
+                k: {"target_id": v.target_id, "ready_tick": v.ready_tick}
+                for k, v in sorted(self.cooldowns.items())
+            },
+            "stale_facts": {
+                k: {"fact_id": v.fact_id, "last_verified_tick": v.last_verified_tick}
+                for k, v in sorted(self.stale_facts.items())
+            },
             "urgency": {k: round(v, 4) for k, v in sorted(self.urgency.items())}
         }
 

@@ -229,6 +229,16 @@ def test_real_registry_findings_pinned():
     real call inside a dead chain. `orphan` stands, now runtime-confirmed rather than asserted from
     a static read alone.
 
+    2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2):
+    `temporal_pressure` now fires `gated_without_flag_context` (low confidence per the tool) after
+    its own `state` correction `skeleton` -> `gated` -- same shape as `genetics_aptitude`/
+    `knowledge_model`/`opportunity_rumor_seeds` below: the real `ENABLE_MEMORY_UPDATE` flag check is
+    several frames away from `TemporalPressureService.calculate_urgencies()`'s own direct reference
+    (it gates `MemoryUpdatePhase.apply()`, the containing phase, not `calculate_urgencies()`
+    itself). A real differential scenario
+    (`tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py`) independently confirms the
+    gating is real: flag ON computes urgency, flag OFF (the real default) does not.
+
     Update this test only alongside a real investigation of what changed, same discipline as every
     other pinned-count test in this repo."""
     import yaml
@@ -240,6 +250,7 @@ def test_real_registry_findings_pinned():
         ("genetics_aptitude", "gated_without_flag_context"),
         ("knowledge_model", "gated_without_flag_context"),
         ("opportunity_rumor_seeds", "gated_without_flag_context"),
+        ("temporal_pressure", "gated_without_flag_context"),
         ("attributes_biology", "state_with_zero_callers"),
         ("class_assignment", "state_with_zero_callers"),
         ("campaigns", "state_with_zero_callers"),

@@ -1041,21 +1041,40 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: []
-    state: skeleton
+    state: gated
     implemented_by: [src/domains/time/service.py::TemporalPressureService]
     # src/domains/time/service.py: TemporalPressureService -- found while resolving
     # implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from
     # src/domains/memory/phase.py:90. File matches Foundation's own original citation exactly
     # ("46 LoC total").
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
-        TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN (batch 3). Formalizes this entry's
-        own already-documented real caller above, independently re-confirmed this pass
-        (`TemporalPressureService.calculate_urgencies()` at `memory/phase.py:90`). No contradiction
-        from `mechanism_state_caller_check.py`'s own full-registry run.
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION (batch 2, remaining 17).
+        State correction, `skeleton` -> `gated`. The prior `code_trace` note (batch 3 of the earlier
+        unbound-claims program) confirmed `TemporalPressureService.calculate_urgencies()` is called
+        from `memory/phase.py:90`, but never checked one level further: that call site lives inside
+        `MemoryUpdatePhase.run()`, itself only reached via `MemoryUpdatePhase.apply()`, which
+        `src/engine/pipeline.py` gates behind `ENABLE_MEMORY_UPDATE` (`FeatureMode.OFF` by default).
+        `causal_spatial_memory` (the same phase's own separately-registered mechanism) already
+        correctly carries `state: gated` for this exact reason; this entry never mentioned the gate
+        at all. A real differential scenario
+        (`tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py`) confirms both halves:
+        with `ENABLE_MEMORY_UPDATE=ON`, a real near-expiry deadline produces a real, correctly-scaled
+        urgency value through a real `Kernel.tick_once()`; with the flag at its real shipped default
+        (OFF), the same staged deadline produces no urgency at all -- the phase never runs. Verdict
+        stays `observed` (unlike `perception`, the mechanism genuinely works once its precondition,
+        the flag, is met) -- this is a state-classification correction, not a contradiction.
+        **Found and fixed along the way, not a mechanism-claim fix**: staging a real `DeadlineEntry`
+        broke `Kernel.shutdown()`'s canonical-state hashing --
+        `TemporalModel.to_canonical_dict()` never converted `deadlines`/`cooldowns`/`stale_facts`
+        entries to plain dicts, a dormant defect invisible until now because nothing had ever
+        populated those fields in a real run. Fixed directly (`src/core/cognition.py`, matching this
+        file's own established curated-field pattern, e.g. `PerceptionModel.to_canonical_dict()`) --
+        trivial, unrelated to any mechanism's own claim, explicitly allowed by ticket workflow's
+        "file, not fix, unless trivial."
   - id: goal_hierarchy
     layer: entity
     systems: [cognition]
