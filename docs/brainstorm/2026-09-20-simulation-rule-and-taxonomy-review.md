@@ -178,6 +178,13 @@ The mechanism-level gaps are enumerated as link types L1–L17 in the companion 
 
 The inventory §20 asks for **already exists**: `registries/mechanisms.yaml`, 93 mechanisms, each with `layer` (scale), `depends_on`, `state`, and a `verified` block recording instrument, verdict, date and evidence.
 
+**Update, 2026-09-20 (#224/#225, merged while this review was being written).** The registry gained two of the things this review recommends, independently:
+
+- a **declared system axis**: a `systems: []` list on each mechanism, backed by an append-only `registries/system_registry.jsonl` (combat, progression, cognition, social, faction, economy, …). Membership lives on the mechanism, not in the registry, and a registered system with zero members fails validation. This is the "domain/system" field §28's metadata list asks for — **it now exists**, and the taxonomy discussion should use it rather than propose a parallel one;
+- **CI wiring** for the whole registry program: validation, atlas/capabilities/wiring-map consistency, state-caller and changed-code checks.
+
+What the registry still does **not** carry, and what §28's list is therefore still useful for: rule type, inputs/outputs, consumers, cross-system links, persistence, observability, optionality, counterforce, depth, reach, and validation scenario.
+
 Current distribution *(verified, this session)*:
 
 | `state` | Count |
@@ -341,7 +348,7 @@ Each of these is already real in the repo, not hypothetical:
 
 ### Strong recommendations
 
-1. **Extend the mechanism registry into a link registry rather than creating a new artifact.** Add per-mechanism `produces` / `consumes` / `converts` edges alongside the existing `depends_on`, and add a **dangling-link check** to the existing validator: a mechanism that produces an output nothing consumes is a dormancy defect, detectable mechanically. This directly automates the failure mode that produced most of this project's dormant systems, and it reuses tooling that already exists (validator, completeness check, graphify cross-check, rendered views).
+1. **Extend the mechanism registry into a link registry rather than creating a new artifact.** *(Strengthened 2026-09-20: #224 added the declared `systems` axis and #225 put the registry program in CI, so the pattern this idea depends on — hand-authored axis + validator + CI — is now proven twice over. Links are the next axis, not a new artifact.)* Add per-mechanism `produces` / `consumes` / `converts` edges alongside the existing `depends_on`, and add a **dangling-link check** to the existing validator: a mechanism that produces an output nothing consumes is a dormancy defect, detectable mechanically. This directly automates the failure mode that produced most of this project's dormant systems, and it reuses tooling that already exists (validator, completeness check, graphify cross-check, rendered views).
 2. **Counterforce pairing as a registry invariant.** Any mechanism tagged as growth-producing must name a counterforce mechanism id (or an explicit, reviewed `none` with a reason). This turns A2's "counterforces may fail" into something checkable, while keeping failure legal.
 3. **Promote Place to a mutable first-class entity.** This is the highest-leverage single structural change in the repository: it is the weakest layer (§F/D14), it blocks the vision's own headline example, and it is additive rather than a rewrite. Without it, no scenario involving ruins, founding, abandonment, colonisation or settlement growth is reachable.
 4. **Treat recognition as an explicit cross-cutting layer** (notability + naming + gossip + targeted response), rather than as features inside separate systems. B2 ("all first-class entities are eligible for significance") is not achievable by any single domain: it needs one shared recognition substrate that each domain feeds and reads, with per-domain *meaning* (dread, renown, reverence, infamy).
