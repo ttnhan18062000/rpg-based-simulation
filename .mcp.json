@@ -14,12 +14,6 @@
         "ghcr.io/github/github-mcp-server"
       ],
       "description": "GitHub API — workflow runs, PRs, issues, logs"
-    },
-    "headroom": {
-      "command": "bash",
-      "args": ["tools/start_headroom_mcp.sh"],
-      "env": {},
-      "description": "Headroom context-compression trial (TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT) — explicit-trigger retrieval tools only, nothing enabled; state isolated outside ~/.headroom"
     }
   }
 }
