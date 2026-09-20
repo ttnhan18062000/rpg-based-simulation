@@ -218,5 +218,27 @@ Harness approved with one structural caveat, applied here rather than carried fo
    12/82 verified (14.6%).
 
 No registry verdicts changed in this addendum -- documentation and investigation only, per the
-peer's own framing ("apply the caveat," not "re-verify"). Cleared to proceed to the remaining 17
+peer's own framing ("apply the caveat," not "re-verify").
+
+## Addendum 2 — 2026-09-20, implicit coverage and the completeness claim
+Two more peer follow-ups, applied before scaling:
+
+1. **`PerceptionGate` recorded, not implicit.** Added explicitly into `tactical_decision`'s own
+   `verified.note`, stating its real scope (raw sense-detection gating, upstream of a decision) and
+   why it stays unregistered rather than folded into that binding (a narrower concern than
+   `tactical_decision`'s own; folding it in would misattribute).
+2. **Coverage claim re-languaged, not silently corrected.** The completeness checker only scans
+   `src/domains/`/`src/systems/`; a manual sizing pass of the other ~20 non-infra `src/` top-level
+   directories found 85 unbound mechanism-shaped-class candidates, 14 with a real caller outside
+   their own defining file -- the same bar `PerceptionGate` clears. Not isolated. Added dated
+   addenda wherever the registry's "built from the codebase" framing appeared stronger than the
+   method supports: `docs/plans/mechanism_registry_initiative.md`'s "the registry is complete"
+   line, the completeness checker's own docstring, and a new §3.4 in
+   `docs/plans/mechanism_claims_as_tests_initiative.md` (same shape as §3.3's own finding -- the
+   data was never wrong, the claim about it was). The 14-candidate number is stated as a floor
+   (suffix heuristic misses `Classifier`/`Filter`/`Builder`-named services), with "unbound != gap"
+   reiterated. Sizing only, no fix attempted -- tracked separately,
+   `TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP`.
+
+No registry verdicts changed in this addendum either. Cleared to proceed to the remaining 17
 `cognition` mechanisms under the same constraints.
