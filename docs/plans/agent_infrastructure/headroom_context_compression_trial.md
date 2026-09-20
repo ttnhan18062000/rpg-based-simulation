@@ -240,15 +240,51 @@ Promote to Phase 2 only if all hold:
 Abandon — and revert — if savings are immaterial, any correctness signal degrades, or isolation
 proves unreliable across concurrent sessions.
 
+## Epic-level gate: package installation is currently blocked (added 2026-09-20)
+
+`TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found that `files.pythonhosted.org` (the
+package-download CDN, not the `pypi.org` index — that resolves fine) is unreachable from this
+account's sandbox: every install attempt (`pip install`, `pip install --cert <system CA bundle>`,
+raw `curl --cacert` against the exact wheel URL) fails with `SSL: CERTIFICATE_VERIFY_FAILED`,
+confirmed general (not Headroom-specific) via an unrelated trivial package. This is the same
+host-specific-filter shape as CLAUDE.md's documented `*.blob.core.windows.net` block, just a
+different host. A `git+https://github.com/...` install would not route around it either, since
+Headroom's own dependencies resolve through the same blocked host. This blocks not just that
+child, but **every child that needs a working install** (Phase 1 MCP trial, Phase 2 proxy trial,
+and any comparison against Caveman) — it is an epic-level gate, not a detail of one child ticket.
+`registry.npmjs.org` **is** reachable, which is relevant only to a possible Caveman
+(`@caveman-ai/cli`) candidate-substitution, a decision for the user.
+
 ## Open questions
 
-- Whether `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` exist as documented. These appeared only in
-  third-party search summaries and **could not be confirmed** on any authoritative page; the CCR
-  documentation describes behaviour but no storage paths, TTL, or purge command. Confirm from source
-  or `--help` before relying on either.
-- Whether MCP mode shares `~/.headroom` state with proxy mode, or is independently isolatable.
+- ~~Whether `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` exist as documented~~ — **resolved
+  2026-09-20, from source, not third-party summaries**: both are real.
+  `headroom/cache/backends/__init__.py`'s own docstring: `get_compression_store()` (the proxy
+  path) defaults to SQLite at `workspace_dir()/ccr_store.db`; `HEADROOM_CCR_BACKEND=memory` forces
+  in-memory instead. `CompressionStore()` constructed directly defaults to in-memory unless a
+  backend is passed explicitly.
+- ~~Whether MCP mode shares `~/.headroom` state with proxy mode, or is independently isolatable~~
+  — **resolved 2026-09-20, from source**: shared, not independent. `headroom/ccr/mcp_server.py`
+  calls the identical `get_compression_store()` the proxy path uses, and sets its own
+  `SHARED_STATS_DIR` directly to `paths.workspace_dir()`. The two canonical env vars
+  (`HEADROOM_WORKSPACE_DIR`/`HEADROOM_CONFIG_DIR`) isolate a trial's MCP+proxy activity *together*
+  from other concurrent sessions on the same machine, but do not isolate MCP-mode state from
+  proxy-mode state within one trial — relevant to Phase 1→Phase 2 sequencing, since they'll share
+  CCR/stats state unless a fresh workspace root is deliberately rotated between phases.
 - Whether Claude *subscription* auth works through the proxy — an open, actively-discussed upstream
   integration question, and a hard blocker for Phase 2 if unresolved.
+- **New (2026-09-20): `HEADROOM_STATELESS`.** `headroom/paths.py` has a process-wide
+  `process_is_stateless()` flag (also settable via the `HEADROOM_STATELESS` env var) that forbids
+  all writes to the workspace once set. This is a real, separate mechanism from the "no proxy-level
+  audit/observe-only *compression* mode" limitation described above (that limitation is specifically
+  about `headroom_mode="audit"` being SDK-only/unreachable via `ANTHROPIC_BASE_URL`, and still
+  holds) — worth Phase 2 planning knowing about as a genuine no-workspace-writes safety valve.
+- **New (2026-09-20): `headroom wrap claude` installs a third dependency at user scope.** Per the
+  README: it "installs Serena for semantic code navigation... registered at user scope (for Claude
+  Code, in `~/.claude.json`), so it stays available in your other projects until you run `headroom
+  unwrap`." `~/.claude.json` is machine-wide, shared by every concurrent Claude Code session — the
+  same hazard shape as the confirmed sidecar contamination this plan already cites. Not relevant to
+  Phase 1 (MCP, no `wrap`), but belongs in this epic's risk list before any `wrap`-based phase.
 
 ## Related
 

@@ -16,7 +16,7 @@ Bounded, reversible trial of Headroom context compression — measure real token
 correctness regression, and gain the repo's first real token telemetry
 
 ## Status
-OPEN
+BLOCKED
 
 ## Tier
 epic
@@ -114,16 +114,25 @@ measured, zero-exposure trial — a correctness requirement, not caution.
   `~/.headroom/config` (`HEADROOM_CONFIG_DIR`), plus savings-ledger and TOIN paths are per-user, and
   config "applies globally to the proxy instance or SDK client." With several concurrent sessions
   across worktrees this is structurally the same hazard as the confirmed `.claude/current_run`
-  sidecar contamination — isolation must be explicit.
-- Whether `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` exist as described is **unconfirmed** —
-  found only in third-party search summaries, absent from authoritative pages. Verify from source or
-  `--help` before relying on either.
-- Whether MCP mode shares `~/.headroom` with proxy mode, or is independently isolatable.
+  sidecar contamination — isolation must be explicit. **Source-verified 2026-09-20**: every state
+  path in `headroom/paths.py` derives from these two env-overridable roots — isolation is
+  achievable in principle, from a 2-of-~26-file spot check, not an exhaustive audit.
+- ~~Whether `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` exist as described~~ — **resolved
+  2026-09-20 from source**: both real. See the plan doc's Open Questions section for the exact
+  citation.
+- ~~Whether MCP mode shares `~/.headroom` with proxy mode, or is independently isolatable~~ —
+  **resolved 2026-09-20 from source**: shared, not independent (`mcp_server.py` calls the same
+  `get_compression_store()` the proxy uses). See the plan doc for detail.
 - Whether Claude subscription auth works through the proxy — open upstream, a hard blocker for
   Phase 2 if unresolved.
 - The 20% coding-agent savings figure is **not** expected to apply here: code is passthrough by
   design ("Compressing function bodies would remove exactly what they need"). Expect savings
   concentrated in JSON/JSONL.
+- **New (2026-09-20): `HEADROOM_STATELESS`** — a real, separate no-workspace-writes mechanism found
+  in source, not previously known to this epic. See the plan doc.
+- **New (2026-09-20): `headroom wrap` installs Serena into `~/.claude.json` at user scope** — a
+  real risk for any future `wrap`-based phase, same hazard shape as the sidecar contamination
+  precedent. Not relevant to the current MCP-mode-only Phase 1 scope. See the plan doc.
 
 ## Implementation Notes
 Do not install, enable, or point any session at Headroom before
@@ -133,6 +142,16 @@ first, because Headroom's state is machine-wide and would otherwise affect every
 Verify claims from source or `--help` rather than from documentation or from this ticket; several
 details in the upstream docs are absent or contradicted between pages, and at least two claims here
 are explicitly marked unconfirmed.
+
+**Epic-wide blocker, added 2026-09-20**: `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found
+that `files.pythonhosted.org` (the package-download CDN, not the `pypi.org` index) is unreachable
+from this account's sandbox — confirmed general via an unrelated trivial package, not
+Headroom-specific, and not routable around via a `git+https` install since Headroom's own
+dependencies resolve through the same host. This is not just that child's blocker — **every child
+that needs a working install is blocked** (the Phase 1 MCP trial itself, any Phase 2 proxy work,
+and any Caveman comparison, though `registry.npmjs.org` is reachable if that candidate-substitution
+is ever pursued). The epic cannot progress past isolation/source-verification until this resolves.
+See the plan doc's new "Epic-level gate" section for the full detail.
 
 ## Test Summary
 _Epic tier — no direct implementation. See child tickets._
