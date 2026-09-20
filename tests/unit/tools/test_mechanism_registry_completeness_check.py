@@ -118,10 +118,21 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     Most of this batch's other ~15 new bindings resolve to `src/engine/`/`src/core/`/`src/content/`/
     `src/progression/`/`src/cognition/` targets, outside this checker's own narrower scope, same
     divergence as every prior batch -- `mechanisms_with_binding` (55) moved by more than `bound`
-    did, for the same reason."""
+    did, for the same reason.
+
+    2026-09-20 (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION,
+    23-mechanism world/faction/region/group batch): `bound` 29 -> 33, `unbound` 32 -> 28. New
+    targets: `domains/campaigns` (`campaigns`/`cross_episode_grief_nemesis` share it),
+    `domains/chronicle` (`chronicle`), `domains/world_emergence` (`opportunity_rumor_seeds`),
+    `systems/social_systems/reputation` (`reputation`). `calamity_intensity`'s attempted binding was
+    reverted after this checker's own `state_with_zero_callers` finding held up under direct
+    re-check (a real finding, not a false positive -- see
+    `test_mechanism_state_caller_check.py::test_real_registry_findings_pinned`'s own note), so it
+    contributes no target here. `mechanisms_with_binding` (76) again moved by more than `bound` did,
+    same divergence as every prior batch."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 64
-    assert len(report.bound) == 29
+    assert len(report.bound) == 33
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 32
+    assert len(report.unbound) == 28

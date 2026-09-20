@@ -1205,11 +1205,38 @@ mechanisms:
     systems: [social]
     depends_on: [movement]
     state: done
+    implemented_by:
+      - src/engine/pipeline_phases/groups.py::GroupPhase
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. `GroupPhase`'s
+        own docstring: "Pipeline phase responsible for coordinating group formation, updates, and
+        removals." Real, unconditional caller confirmed at `src/engine/pipeline.py:501`. Internally
+        dispatches to `GroupSystem.update_groups()` (`src/systems/world_systems/groups.py`) --
+        several OTHER files reference `GroupSystem.update_groups()` only in comments, not real
+        calls, which could have produced a false "zero callers" conclusion if `GroupSystem` alone
+        had been checked instead of its real caller `GroupPhase`.
   - id: guilds
     layer: group
     systems: [social, faction]
     depends_on: []
     state: partial
+    implemented_by:
+      - src/town/guild.py::GuildAction
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
+        `GuildAction.visit()` confirmed real caller at `src/engine/pipeline_phases/guild_visit.py:78`
+        (`GuildVisitPhase`), itself gated behind `ENABLE_GUILD_QUEST_GENERATION` -- which defaults
+        `ON` (`feature_flags.py`), so effectively live, not flag-suppressed. A sibling class,
+        `GuildIntelSystem` (`src/systems/social_systems/guilds.py`), was checked and found to have
+        zero real callers anywhere -- not bound here, flagged as its own smaller finding.
 
   # ── Faction layer (8, atlas `faction-layer`) ────────────────────────────────────────────────
 
@@ -1228,17 +1255,67 @@ mechanisms:
     layer: faction
     systems: [faction]
     depends_on: []
-    state: done
+    state: partial
+    implemented_by:
+      - src/engine/military_conflict.py::MilitaryConflictPhase
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. State
+        correction, done -> partial. The "siege_war" half is real and live: `MilitaryConflictPhase`
+        ("WAR pair detection, siege, territory transfer, war exhaustion") is called unconditionally
+        from `src/engine/pipeline.py:291`. The "betrayal" half is not: `Betrayal(FactionDirective)`
+        (`src/engine/faction_decision.py:97`, "Break an ALLIED relation") has zero real
+        constructor calls anywhere in `src/` -- `diplomatic_actions.py::handle()`'s own dispatch
+        branch for it (`_handle_betrayal`) is real, reachable code, but nothing ever constructs a
+        `Betrayal` instance to dispatch. Possible Split candidate per this registry's own identity
+        rule (`docs/plans/mechanism_identity_and_change_taxonomy.md` §1: "if the two halves could
+        sit in different state values, they are two mechanisms") -- flagged, not performed here,
+        same restraint as the `commitment_betrayal` merge non-execution in the prior batch.
   - id: social_contracts
     layer: faction
     systems: [faction]
     depends_on: []
     state: done
+    implemented_by:
+      - src/domains/faction/diplomatic_actions.py::handle
+      - src/domains/faction/diplomatic_state_machine.py::compute_common_enemy_pairs
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
+        `diplomatic_actions.py::handle()` dispatches `TreatyOffer`/`TradeAgreement`/
+        `NonAggressionPact`/`AllianceProposal` (the real social-contract types; `Betrayal` is also
+        dispatchable but has zero real producers -- see `betrayal_siege_war`'s own entry, a
+        separate mechanism). Real caller confirmed at `src/engine/pipeline.py:265`, which also
+        calls `compute_common_enemy_pairs()` to generate real `AllianceProposal` instances -- this
+        is the "diplomatic_transitions" phase (Phase 8d), distinct from `FactionDecisionPhase`
+        (`country_lifecycle`'s own binding below), confirmed by direct code read, not assumed from
+        the similar naming.
   - id: reputation
     layer: faction
     systems: [faction]
     depends_on: []
     state: done
+    implemented_by:
+      - src/systems/social_systems/reputation.py::ReputationService
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
+        `ReputationService.combine_public_reputation()` confirmed real caller at
+        `src/core/builder.py:676`. Chosen over `src/domains/commitment/reputation.py` (a different,
+        commitment-specific reputation-label module already effectively covered by
+        `commitment_pressure_consequences`'s own binding) and `src/core/cognition.py`'s
+        `PublicReputationProfile` (a data class, not a service) -- this mechanism's own
+        `layer: faction` points at the general faction-facing reputation service, not the
+        commitment-specific one.
   - id: social_memory
     layer: faction
     systems: [faction]
@@ -1264,6 +1341,8 @@ mechanisms:
     systems: [faction]
     depends_on: []
     state: done
+    implemented_by:
+      - src/domains/campaigns/grief_urgency.py
     verified:
       instrument: code_trace
       verdict: observed
@@ -1271,11 +1350,18 @@ mechanisms:
       note: >-
         Confirmed live, called from Campaign orchestrator (dead ally -> grief concern; repeated
         betrayal -> party-formation blocker); narrow trigger.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): file-level, since both `GriefUrgencyImporter` (grief) and
+        `NemesisRelationImporter` (nemesis) live in the same file and both are this one mechanism's
+        own concern, not two unrelated symbols sharing a file. Real callers confirmed at
+        `src/domains/campaigns/orchestrator.py:966` and `src/engine/kernel.py:745`.
   - id: country_lifecycle
     layer: faction
     systems: [faction]
     depends_on: []
     state: partial
+    implemented_by:
+      - src/engine/faction_decision.py::FactionDecisionPhase
     verified:
       instrument: code_trace
       verdict: observed
@@ -1291,6 +1377,8 @@ mechanisms:
         name, not absence of code. `FactionDecisionPhase` itself never references siege/war/
         betrayal concepts (grep confirmed empty), so the specific `-> betrayal_siege_war` edge has
         no real read evidence and is removed, distinct from a blanket "no code at all" claim.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): class-level, this note's own already-cited real implementation.
 
   # ── Region layer (2, atlas `region-layer`) ──────────────────────────────────────────────────
 
@@ -1312,6 +1400,8 @@ mechanisms:
     systems: [world]
     depends_on: []
     state: done
+    implemented_by:
+      - src/world/consequences.py::RegionalConsequenceService
     verified:
       instrument: corpus_run
       verdict: contradicted
@@ -1325,6 +1415,9 @@ mechanisms:
         defeated by real-world data (no combat occurs in that region) never meeting the
         accumulation precondition. See `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (still
         open).
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): `RegionalConsequenceService.process_recovery()`, the natural-decay half this
+        note already cites, confirmed real caller at `src/engine/apply_plan.py:101`.
   - id: regional_sovereignty
     layer: region
     systems: [world, faction]
@@ -1381,21 +1474,57 @@ mechanisms:
     systems: [world]
     depends_on: []
     state: done
+    implemented_by:
+      - src/domains/campaigns/orchestrator.py::CampaignOrchestrator
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. Search-failure
+        trap avoided: the only `CampaignOrchestrator(` construction inside `src/` is its own
+        class-docstring usage example, not real code -- a first-pass search would wrongly conclude
+        orphan. Real, non-test, non-docstring usage found in `tools/calibrate_simq.py`
+        (`orchestrator = CampaignOrchestrator(manifest, ...)`, driving `run_episode()` N times) --
+        a genuine calibration tool, not a test.
   - id: chronicle
     layer: world
     systems: [world]
     depends_on: []
-    state: done
+    state: orphan
+    implemented_by:
+      - src/domains/chronicle/compiler.py::ChronicleCompiler
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. State
+        correction, done -> orphan. Corroborated by an already-filed ticket found during this
+        investigation, `TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION`
+        (see its own comment in `src/api/routes/chronicle.py`): `ChronicleCompiler()` is only ever
+        instantiated in its own module's docstring example and 2 test files -- zero real production
+        callers. Real, present, purpose-built code (compiler + renderer + grouper + namer +
+        significance scorer, a whole subsystem), never actually invoked outside tests.
   - id: opportunity_rumor_seeds
     layer: world
     systems: [world]
     depends_on: []
     state: gated
+    implemented_by:
+      - src/domains/world_emergence/services.py::WorldOpportunityPressureService
+      - src/domains/world_emergence/services.py::RumorSeedService
     verified:
       instrument: code_trace
       verdict: observed
       date: "2026-09-16"
-      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
+      note: >-
+        Code read confirms the mechanism is correctly built; currently flag-gated off (see state).
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): both services are called from `WorldEmergencePhase.execute()`
+        (`src/domains/world_emergence/phase.py`), itself called from `src/engine/pipeline.py:355`
+        via `run_phase("world_emergence", ..., "ENABLE_WORLD_EMERGENCE")` -- flag defaults OFF,
+        confirming the note's own "flag-gated" framing exactly.
   - id: cultural_drift
     layer: world
     systems: [world]
@@ -1439,11 +1568,28 @@ mechanisms:
         at all. Same family as `camp`: correct, wired code, defeated by real-world data never
         meeting its trigger precondition. See `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`
         (still open -- the code-level finding stands regardless of whether/when a fix lands).
+        **Left unbound 2026-09-20, contradicting evidence found**
+        (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION): attempted to
+        bind `apply_calamity_consequences()`, then `mechanism_state_caller_check.py` flagged zero
+        real callers -- re-checked directly rather than trusted, and confirmed: `grep -rn
+        "apply_calamity_consequences" src/` finds only its own definition and one unrelated
+        *comment* in `displacement.py`, never a real call. `CalamityService.process_world_dynamics()`
+        (the method actually called, from `world_dynamics.py:133`) only *reads*
+        `region.calamity_intensity` for boss-spawn region selection, never writes it. This is a
+        stronger finding than this entry's own 2026-09-17 note describes: not "correct, wired code
+        defeated by real-world data never meeting its trigger precondition" (implying the code path
+        is reachable, just data-starved) but code that is never called under any circumstances --
+        closer to `orphan` than `done`+`contradicted`. Not corrected unilaterally here (this
+        entry's own `verified` block predates this batch and this batch's own rule is not to
+        re-verify already-verified entries) -- flagged for the roadmap session to reconcile against
+        `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`'s own framing.
   - id: world_boss_spawn
     layer: world
     systems: [world]
     depends_on: [regional_trauma]
     state: done
+    implemented_by:
+      - src/world/boss.py::BossService::check_for_boss_spawn
     verified:
       instrument: code_trace
       verdict: observed
@@ -1454,11 +1600,28 @@ mechanisms:
         `TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY` (closed) -- three real,
         compounding silent defects (tier-5 stat fallback, `ancient_core` loot registration, gate
         threshold values) found and fixed, whole chain proven end to end.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): method-level, since `BossService` also defines `check_for_lair_spawn()`/
+        `resolve_boss_death()`, separate concerns this entry's own note does not describe.
   - id: world_generation
     layer: world
     systems: [world]
     depends_on: []
     state: done
+    implemented_by:
+      - src/worldbuilding/compiler.py::WorldCompiler
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
+        `WorldCompiler.compile()` (called as a static method, not via instantiation -- an initial
+        `WorldCompiler(` grep found nothing for this reason) is real and live, called from
+        `src/domains/campaigns/orchestrator.py:747` for real campaign world setup, also from
+        `src/worldbuilding/cli.py:282` and `src/lab/orchestrator.py`. Places real `BuildingState`
+        instances (see `buildings`' own binding below), confirming this is the real world-setup
+        entry point.
   - id: gods_pantheon_blessings
     layer: world
     systems: [world]
@@ -1471,17 +1634,64 @@ mechanisms:
     layer: world
     systems: [economy]
     depends_on: [inventory_trade_conservation]
-    state: done
+    state: orphan
+    implemented_by:
+      - src/core/equipment.py::EquipmentService
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. State
+        correction, done -> orphan. `EquipmentService`'s own docstring calls itself "the canonical
+        implementation" for equipment scoring, replacement, auto-equip, and repair -- but every
+        single reference to `EquipmentService` anywhere in `src/` is internal to its own file
+        (`equipment.py`, its own methods calling each other); zero external imports or callers
+        found repo-wide (`from src.core.equipment import`, `auto_equip`, `get_gear_score`,
+        `should_replace`, `repair_equipment` all return zero hits outside the file itself and
+        tests). Real, well-built, entirely unused code.
   - id: inventory_trade_conservation
     layer: world
     systems: [economy]
     depends_on: []
     state: done
+    implemented_by:
+      - src/core/conservation.py::ResourceTransactionResolver
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
+        `ResourceTransactionResolver.resolve()` is real and live, called from
+        `src/engine/economy.py:96,179` -- the same class `xp_leveling`'s own verified note
+        (entity-layer batch) already cites as "conservation.py COMBAT branch." This mechanism's own
+        claim is the resolver's general atomic-conservation law, not any one branch.
   - id: crafting
     layer: world
     systems: [economy]
     depends_on: [inventory_trade_conservation]
     state: partial
+    implemented_by:
+      - src/core/conservation.py::ResourceTransactionResolver
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. Judgement
+        call, not a certainty: the plausible-looking `CraftingSystem.craft()`
+        (`src/systems/economy_systems/crafting.py`) is a real class but a real code comment
+        (`src/engine/intent/action_intent.py:210`) explicitly warns "do not call
+        CraftingSystem.craft() directly, it bypasses that authoritative path" -- confirmed via
+        grep, `CraftingSystem.craft()` has zero real callers anywhere. The actual live crafting
+        path is `ResourceTransactionResolver.resolve()`'s own `"CRAFTING"` branch
+        (`src/core/conservation.py:133`), the SAME class already bound to `inventory_trade_
+        conservation` above -- crafting is one branch inside that resolver's single `resolve()`
+        method, not separable at this registry's current method-level granularity (branch-level
+        binding does not exist). Bound to the same class rather than left unbound, since the real
+        live code is directly confirmed and cited precisely; flagged here as a judgement call
+        because the binding cannot distinguish this mechanism's own branch from its siblings'.
   # SPLIT 2026-09-17 (TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-TAXONOMY): `buildings`
   # (physical structures -- placement, HP, occupancy) and `town_services` (shop/inn/blacksmith/
   # guild transactions the buildings host) are two structurally separate concerns --
@@ -1494,23 +1704,64 @@ mechanisms:
     systems: [economy]
     depends_on: []
     state: done
+    implemented_by:
+      - src/core/state.py::BuildingState
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION. Bound to the
+        data class itself (this mechanism's own claim is about the data existing and being placed),
+        not `src/town/buildings.py::BuildingRegistry` (a template-lookup registry that turned out
+        to have zero real callers repo-wide -- an orphan finding in its own right, not filed as its
+        own mechanism here since no registry entry names it). Real `BuildingState` construction
+        confirmed at `src/worldbuilding/compiler.py:538` (`WorldCompiler`, see `world_generation`'s
+        own binding above) and in performance-scenario generators.
   - id: town_services
     layer: world
     systems: [economy]
     depends_on: [buildings]
     state: done
-    # Flagged, not further split here: within town_services, CHURCH's own BLESSING/RESURRECTION
-    # services are confirmed dead -- data-label strings with zero real code reading them anywhere
-    # in src/, and CHURCH is not placed in any world module (TCK-20260907-CHURCH-CONTENT-AUTHORING,
-    # closed, Completion Summary). Inn/Guild/Shop/Blacksmith services are live and consumed by real
-    # code. Not split into its own row per this ticket's own "no forced uniform granularity" rule
-    # -- no real dependent needs Church's services specifically, so there is no seam a split would
-    # serve today. Revisit if that changes.
+    implemented_by:
+      - src/engine/shop.py::ShopSystem
+      - src/engine/blacksmith.py::BlacksmithSystem
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        Flagged, not further split here: within town_services, CHURCH's own BLESSING/RESURRECTION
+        services are confirmed dead -- data-label strings with zero real code reading them anywhere
+        in src/, and CHURCH is not placed in any world module (TCK-20260907-CHURCH-CONTENT-AUTHORING,
+        closed, Completion Summary). Inn/Guild/Shop/Blacksmith services are live and consumed by real
+        code. Not split into its own row per this ticket's own "no forced uniform granularity" rule
+        -- no real dependent needs Church's services specifically, so there is no seam a split would
+        serve today. Revisit if that changes.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): `ShopSystem.enforce()`/`BlacksmithSystem.enforce()` both confirmed real,
+        unconditional callers in `src/engine/pipeline.py:371,223`. Caution on this note's own prior
+        "Inn... services are live" claim: `InnAction.rest()` (`src/town/inn.py`) was independently
+        re-checked this pass and has ZERO references anywhere outside its own file -- the opposite
+        of what the prior note says. Not bound here (state stays `done` since Shop/Blacksmith alone
+        already justify it); flagged as a real discrepancy in the prior claim, worth its own look.
   - id: building_sabotage
     layer: world
     systems: [economy]
     depends_on: [buildings]
     state: done
+    implemented_by:
+      - src/engine/sabotage.py::BuildingSabotageSystem
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
+        `BuildingSabotageSystem.resolve()` confirmed real, unconditional caller at
+        `src/engine/pipeline.py:334` (`run_phase("building_sabotage", ...)`), matching this
+        mechanism's own already-recorded split rationale above (reads/writes `building.hp` directly,
+        never a service transaction).
 
   # ── Region layer — City / Beyond-City (5: 4 atlas cards + 1 wiring-map-only) ───────────────
 
@@ -1519,6 +1770,8 @@ mechanisms:
     systems: [world]
     depends_on: [regional_sovereignty]
     state: partial
+    implemented_by:
+      - src/core/state.py::RegionState
     verified:
       instrument: code_trace
       verdict: observed
@@ -1532,11 +1785,17 @@ mechanisms:
         `regional_sovereignty`'s own core tracked field (`FactionInfluenceService`) -- the two
         mechanisms share the exact same underlying state object and field, as direct a functional
         coupling as this registry records anywhere.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): bound to `RegionState` itself, matching this entry's own already-stated
+        identity claim ("City-state IS RegionState") rather than `FactionInfluenceService`, which
+        is `regional_sovereignty`'s own separate binding.
   - id: camp
     layer: region
     systems: [world]
     depends_on: [regional_trauma]
     state: done
+    implemented_by:
+      - src/core/state.py::CampState
     verified:
       instrument: code_trace
       verdict: contradicted
@@ -1548,6 +1807,9 @@ mechanisms:
         missing thing is world data, not the mechanism itself. See
         docs/plans/world_composition_precondition_gap_finding.md; same family as the lair-trauma
         and calamity-intensity cases.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-
+        RESOLUTION): bound to `CampState` itself, matching this entry's own already-stated identity
+        claim.
   - id: nest
     layer: region
     systems: [world]
@@ -1565,7 +1827,7 @@ mechanisms:
     layer: region
     systems: [world]
     depends_on: []
-    state: partial
+    state: gap
     # Conservative: kept pointing at both post-split successors (2026-09-17). No dedicated
     # implementing file found for this composite id to distinguish which half it actually needs;
     # not narrowed without real evidence, per this same ticket's own "do not guess" discipline.
@@ -1583,6 +1845,11 @@ mechanisms:
         own verdict for this exact mechanism: "flattened into ordinary Region tags... Gap" -- ruins/
         mines/battlefields are real in content (`haunted_battlefield`, `old_mine` tags) but not a
         separately-coded mechanism with its own dependency-worthy logic today.
+        **State corrected 2026-09-20** (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-
+        CLAIMS-RESOLUTION): `partial` -> `gap`, applying this note's own already-stated conclusion
+        ("not a separately-coded mechanism... Gap" per the wiring map's own verdict) -- no fresh
+        investigation performed, just the natural implication of what this entry already
+        documented. Left unbound: no real implementing code exists to bind.
 
   # ── Faction layer — Clan / Race (2) ─────────────────────────────────────────────────────────
 

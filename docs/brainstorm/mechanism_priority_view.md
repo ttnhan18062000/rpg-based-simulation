@@ -3,7 +3,7 @@
 Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 45 of 93 mechanisms are currently
+**Which mechanism to verify next.** 31 of 93 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -16,30 +16,30 @@ _0 of this registry's declared `depends_on` edges are unaudited (see `unaudited_
 | Mechanism | Layer | State | Priority | Transitive Dependents | Unaudited Edges |
 |---|---|---|---|---|---|
 | `movement` | entity | done | 15 | 3 | 0 |
-| `campaigns` | world | done | 3 | 3 | 0 |
 | `diplomacy` | faction | done | 3 | 1 | 0 |
 | `social_memory` | faction | skeleton | 3 | 1 | 0 |
-| `buildings` | world | done | 2 | 2 | 0 |
-| `inventory_trade_conservation` | world | done | 2 | 2 | 0 |
-| `world_generation` | world | done | 2 | 2 | 0 |
 | `adventure_routing` | entity | done | 0 | 0 | 0 |
 | `belief_institution` | world | partial | 0 | 0 | 0 |
-| `betrayal_siege_war` | faction | done | 0 | 0 | 0 |
 | `build_diversity` | entity | gap | 0 | 0 | 0 |
-| `building_sabotage` | world | done | 0 | 0 | 0 |
-| `chronicle` | world | done | 0 | 0 | 0 |
 | `clan` | faction | gap | 0 | 0 | 0 |
 | `commitment_pressure_consequences` | entity | partial | 0 | 0 | 0 |
 | `committed_intentions` | entity | orphan | 0 | 0 | 0 |
 | `concern_intake` | entity | done | 0 | 0 | 0 |
 | `conversation` | entity | gap | 0 | 0 | 0 |
 | `cooperation` | entity | done | 0 | 0 | 0 |
-| `crafting` | world | partial | 0 | 0 | 0 |
 | `cultural_drift` | world | done | 0 | 0 | 0 |
 | `declared_cognition_schema` | entity | orphan | 0 | 0 | 0 |
 | `entity_trade` | entity | gap | 0 | 0 | 0 |
-| `equipment_scoring` | world | done | 0 | 0 | 0 |
 | `event_interpretation` | region | done | 0 | 0 | 0 |
+| `fame` | world | done | 0 | 0 | 0 |
+| `fidelity_drift` | world | done | 0 | 0 | 0 |
+| `gods_pantheon_blessings` | world | gap | 0 | 0 | 0 |
+| `group_coordination` | group | orphan | 0 | 0 | 0 |
+| `lair` | region | gap | 0 | 0 | 0 |
+| `narrative_memory` | world | orphan | 0 | 0 | 0 |
+| `nest` | region | gap | 0 | 0 | 0 |
+| `quest_reward_distribution` | group | orphan | 0 | 0 | 0 |
+| `race_collective_force` | faction | gap | 0 | 0 | 0 |
 
 ## Chart form
 
@@ -54,33 +54,29 @@ flowchart BT
 
     adventure_routing["adventure routing"]:::done
     belief_institution["belief institution"]:::partial
-    betrayal_siege_war["betrayal siege war"]:::done
     build_diversity["build diversity"]:::gap
-    building_sabotage["building sabotage"]:::done
-    buildings["buildings"]:::done
-    campaigns["campaigns"]:::done
-    chronicle["chronicle"]:::done
     clan["clan"]:::gap
     commitment_pressure_consequences["commitment pressure consequences"]:::partial
     committed_intentions["committed intentions"]:::orphan
     concern_intake["concern intake"]:::done
     conversation["conversation"]:::gap
     cooperation["cooperation"]:::done
-    crafting["crafting"]:::partial
     cultural_drift["cultural drift"]:::done
     declared_cognition_schema["declared cognition schema"]:::orphan
     diplomacy["diplomacy"]:::done
     entity_trade["entity trade"]:::gap
-    equipment_scoring["equipment scoring"]:::done
     event_interpretation["event interpretation"]:::done
-    inventory_trade_conservation["inventory trade conservation"]:::done
+    fame["fame"]:::done
+    fidelity_drift["fidelity drift"]:::done
+    gods_pantheon_blessings["gods pantheon blessings"]:::gap
+    group_coordination["group coordination"]:::orphan
+    lair["lair"]:::gap
     movement["movement"]:::done
+    narrative_memory["narrative memory"]:::orphan
+    nest["nest"]:::gap
+    quest_reward_distribution["quest reward distribution"]:::orphan
+    race_collective_force["race collective force"]:::gap
     social_memory["social memory"]:::skeleton
-    world_generation["world generation"]:::done
 
     diplomacy --> adventure_routing
-    campaigns --> belief_institution
-    buildings --> building_sabotage
-    inventory_trade_conservation --> crafting
-    inventory_trade_conservation --> equipment_scoring
 ```
