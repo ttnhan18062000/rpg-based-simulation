@@ -371,3 +371,35 @@ No verdict retracted — the audit found the two flag/gate-shaped scenarios soun
 confirmed the one logic-shaped scenario (`belief_cycle`) empirically rather than trusting the read.
 Both re-audited entries carry their own explicit "re-audited" note. 278/278 tests still passing, all
 consumer-artifact checks clean. `emotion` and `adventure_routing` remain for the next wave.
+
+## Addendum 7 — 2026-09-20, batch 2 wave 3: `emotion`, and `adventure_routing`'s own complexity
+**`emotion`**: upgraded to `instrument: scenario, verdict: observed`. Real forced attack (orc ->
+goblin, damage calibrated empirically at 19 for this world/seed, not guessed) through a real
+`Kernel.tick_once()`. Goblin staged to survive at 2/107 HP (within the real 10% near-death
+threshold) gets `fear=0.4, panic=0.5, confidence=0.2` from compiled defaults, matching
+`EmotionUpdateService.update_on_event(..., "near_death")`'s own exact deltas; the same attack
+against a full-HP goblin (survives well above threshold) leaves emotion untouched. Applied §5 item 5
+from the start this time: instrumentation directly confirms the goblin has a real `CombatUpdate`
+staged before `NearDeathHardeningPhase.apply()` runs in both conditions (genuinely enters the
+per-entity loop, not skipped before being considered) — this phase has no per-entity cadence gate at
+all, so no `goal_hierarchy`-shaped trap applies here.
+
+**`adventure_routing`, investigated, not yet built**: `AdventureDecisionService.decide()` has
+exactly one real call site (`src/ai/goals/adventure_scorer.py:165`, confirmed by direct grep, not
+assumed from the prior note's own citations), reached via `AdventureGoalScorer.score()` ->
+`GoalRegistry.get_all_scores()` -> `intelligence.py:1509` — which sits inside
+`evaluate_strategic_intent()`'s own body, the exact same cadence-20-gated block `goal_hierarchy`'s
+scenario already solved (§5's new configuration-trap instance). Unlike `goal_hierarchy`, the
+observable differential here needs more than reaching the call site: `AdventureGoalScorer` is
+registered as one candidate among many in a tier-5 goal competition
+(`StrategicIntelligenceSystem.evaluate_strategic_intent()`'s own arbitration, not a direct write),
+so confirming it *actually changes a project selection* requires either winning that competition
+against real rivals or accepting a narrower claim (the scorer is called and produces a real,
+non-default `GoalScore` for an eligible entity). Also requires an entity whose cognition profile has
+`supports_adventure_routing=True` — `mechanic_scenario_combat_judgement_withdrawal`'s own
+monster-kind entities almost certainly don't qualify, so this needs a different world (a real hero
+entity) rather than reusing the world every other scenario in this program has used. Left open
+rather than forced or half-built — the cadence-trap half of the investigation is already reusable
+for whoever picks this up next.
+
+280/280 tests passing (2 new), all consumer-artifact checks clean, `registry.py::validate()` clean.

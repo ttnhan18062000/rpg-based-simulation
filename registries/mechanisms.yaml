@@ -938,9 +938,9 @@ mechanisms:
     state: done
     implemented_by: [src/domains/emotion/emotion_service.py::EmotionUpdateService]
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-09-20"
       note: >-
         Was mis-registered `orphan`; EmotionUpdateService.update_on_event() is called
         unconditionally (no feature-flag check) from engine/pipeline_phases/hardening.py's own
@@ -950,6 +950,21 @@ mechanisms:
         ("possibly stale, TCK-20260824 wired a near_death call site") without resolving it; this
         confirms the flag was correct. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-
         VERIFICATION.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket C).
+        A real forced attack (orc -> goblin, `tests/mechanic_scenarios/
+        test_emotion_near_death_hardening.py`, damage calibrated empirically at 19 for this
+        world/seed, not guessed) confirms both halves through a real `Kernel.tick_once()`: goblin
+        staged to survive at 2/107 HP (within the real 10% near-death threshold) gets
+        `fear=0.4, panic=0.5, confidence=0.2` from compiled defaults, matching
+        `update_on_event(..., "near_death")`'s own exact deltas; the same attack against a
+        full-HP goblin (survives at 16/35, well above threshold) leaves emotion at its compiled
+        defaults. Per `mechanic_verification_scenarios_proposal.md` §5 item 5, the negative arm's
+        reach is confirmed directly (not inferred from the outcome alone): instrumentation confirms
+        the goblin has a real `CombatUpdate` staged before `NearDeathHardeningPhase.apply()` runs in
+        both conditions, so it genuinely enters the per-entity loop and is evaluated against the
+        survival/threshold check, not skipped before ever being considered -- this phase has no
+        per-entity cadence gate at all to trip the `goal_hierarchy`-shaped trap.
   - id: affection_relationship_bonds
     layer: entity
     systems: [social]
