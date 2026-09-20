@@ -7,6 +7,7 @@ linked to, never restated.
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -104,8 +105,103 @@ def test_render_escapes_mechanism_data():
 def test_render_is_not_truncated(registry_data):
     content = render(registry_data)
     total = len(registry_data["mechanisms"])
-    # +1 for the single <thead><tr> header row, which also contains the literal substring "<tr>".
-    assert content.count("<tr>") == total + 1
+    # Counts only the main "All Mechanisms" table's own rows (each carries data-systems, which
+    # the rollup table's own rows never do) -- distinguishes it from the rollup table's own rows,
+    # which also use bare <tr>.
+    assert content.count("<tr data-systems=") == total
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260920-MECHANISM-REGISTRY-HTML-SYSTEM-MEMBERSHIP
+# ---------------------------------------------------------------------------
+
+
+def test_render_shows_system_per_mechanism_row(registry_data):
+    """Peer review: the system tier was built, validated, and given a markdown rollup, but the
+    one artifact a person opens rendered no system membership at all. Each mechanism row must
+    carry its own real systems, read straight off the mechanism -- not recomputed."""
+    content = render(registry_data)
+    # combat_resolution is confirmed systems: [combat] on the real registry.
+    assert 'data-systems="combat"' in content or ',combat' in content or 'combat,' in content
+    assert '<span class="badge system-pill">combat</span>' in content
+
+
+def test_render_shows_multi_system_mechanism_with_all_its_systems(registry_data):
+    """8 of 93 real mechanisms are genuinely multi-system (e.g. movement: combat + world) -- a
+    row must show every system it declares, not just the first."""
+    content = render(registry_data)
+    assert 'data-systems="combat,world"' in content
+    assert content.count('<span class="badge system-pill">') >= 2
+
+
+def test_render_unassigned_mechanism_renders_as_its_own_visible_group():
+    """A mechanism with no systems: [] must render as 'unassigned', never silently dropped --
+    the same discipline mechanisms_by_system() itself already enforces one level down."""
+    data = {
+        "layers": {"entity": {"weight": 1}},
+        "mechanisms": [{"id": "no_system_here", "layer": "entity", "state": "done"}],
+    }
+    content = render(data)
+    assert 'data-systems="unassigned"' in content
+    assert "system-unassigned" in content
+
+
+def test_render_rollup_reports_counts_never_a_single_badge(registry_data):
+    """Epic Assumptions #3, non-negotiable: a system's own numbers must be counts, never a single
+    summary status collapsing many mechanisms into one symbol."""
+    content = render(registry_data)
+    assert "System Rollup" in content
+    assert "combat" in content
+    # A real count-with-denominator shape ("N/M (") must appear, not a bare status word.
+    assert re.search(r">\d+/\d+ \(", content), "rollup must render real N/M counts, not a badge"
+
+
+def test_render_rollup_shows_rate_against_live_baseline(registry_data):
+    """A rate without its baseline isn't a finding -- every system row must be shown next to the
+    whole-registry baseline, computed live, not hardcoded."""
+    content = render(registry_data)
+    assert "vs baseline" in content
+    assert "Baseline (all" in content
+
+
+def test_render_rollup_includes_unassigned_row(registry_data):
+    content = render(registry_data)
+    assert "<code>unassigned</code>" in content
+
+
+def test_render_rollup_reuses_build_system_rollup_not_a_second_computation(registry_data):
+    """One definition, one renderer reading it -- the HTML page's own rollup numbers must match
+    build_system_rollup()'s own real output exactly, not an independently recomputed rate.
+
+    Deliberately imports build_system_rollup from generate_mechanism_registry_html's own
+    namespace (not tools.mechanism_registry.registry directly): that module loads `registry` as a
+    bare top-level module via its own sys.path shim, a *different* module object from
+    `tools.mechanism_registry.registry` -- the one this directory's autouse
+    `_empty_system_registry_by_default` fixture monkeypatches. Importing the "same" function via
+    the dotted path would silently pick up the patched, zero-systems version and desync from what
+    render() actually calls.
+    """
+    from tools.mechanism_registry.generate_mechanism_registry_html import build_system_rollup
+
+    content = render(registry_data)
+    rollup = build_system_rollup(registry_data)
+    combat = next(s for s in rollup["systems"] if s["system"] == "combat")
+    assert f"{combat['bound']}/{combat['count']}" in content
+
+
+def test_render_includes_system_filter_control(registry_data):
+    """Scope item 1: it must be possible to see the registry grouped or filtered by system, not
+    only the aggregate rollup."""
+    content = render(registry_data)
+    assert 'id="system-filter"' in content
+    assert '<option value="combat">combat</option>' in content
+    assert '<option value="unassigned">unassigned</option>' in content
+
+
+def test_render_never_hand_edits_never_recomputes_a_second_way(registry_data):
+    """Constraint: generated-only, and the page must say so."""
+    content = render(registry_data)
+    assert "Do not hand-edit" in content
 
 
 def test_make_target_generates_registry_html():

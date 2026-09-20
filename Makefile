@@ -333,6 +333,9 @@ mechanism-system-rollup-view: ## Regenerate docs/brainstorm/mechanism_system_rol
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 
+mechanism-registry-html-check: ## Check docs/brainstorm/mechanism_registry.html against the real registry state (--check, writes nothing)
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py --check
+
 mechanism-state-caller-check: ## Report-only: flag mechanisms whose declared state disagrees with a real caller-count check (claims-as-tests phase 1)
 	$(PYTHON3) tools/mechanism_registry/mechanism_state_caller_check.py
 
