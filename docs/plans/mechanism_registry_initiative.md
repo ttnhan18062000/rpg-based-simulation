@@ -228,6 +228,19 @@ rule becomes the shape of the picture rather than a note beside it. Lanes are th
 by dependents. The registry is complete; charts are slices. A single all-mechanisms diagram would be
 technically correct and unreadable, which is how most architecture diagrams die.
 
+> **Addendum, 2026-09-20** (`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`,
+> per direct peer review): "the registry is complete" above is about chart slicing, not about
+> coverage of the real codebase — worth flagging explicitly since it reads as a stronger claim than
+> that in isolation. The registry's own completeness check
+> (`tools/mechanism_registry/mechanism_registry_completeness_check.py`) covers `src/domains/` and
+> `src/systems/` only; other source trees (`src/world/`, `src/engine/`, `src/cognition/`, and
+> roughly a dozen more) have not yet been swept, and a manual sizing pass found real, wired,
+> unregistered code there (`src/world/perception/gate.py::PerceptionGate` was the first instance,
+> not the only one — see `docs/plans/mechanism_claims_as_tests_initiative.md` §3.4 for the full
+> finding and `TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP` for the tracked follow-up). "93
+> mechanisms" is a real count of what has been catalogued, not yet a claim about everything that
+> exists.
+
 ---
 
 ## 4. Open questions for implementation

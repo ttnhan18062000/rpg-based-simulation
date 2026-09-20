@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Recurring completeness check for the mechanism registry's own node set.
+Recurring completeness check for the mechanism registry's own node set -- against
+`src/domains/` and `src/systems/` ONLY, not the whole codebase (see the scope note below,
+added 2026-09-20).
 
 TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS found the registry's node set incomplete: it
 was seeded from `docs/brainstorm/rpg_feature_atlas.html` alone (75 mechanisms), never from a real
@@ -8,6 +10,19 @@ enumeration of `src/domains/`/`src/systems/`. That enumeration found 11 real, wi
 atlas never carded. This tool makes that enumeration a standing, repeatable check instead of a
 one-off pass whose method lived only in prose -- per peer review, a one-off pass this good is
 worthless the moment the next module lands, since nothing re-runs it.
+
+**Scope note, added 2026-09-20 (`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-
+VERIFICATION`), per direct peer review -- read this before citing this tool's own "N unbound"
+count as evidence the registry is complete.** This tool's enumeration is `src/domains/*` and
+`src/systems/{economy_systems,lifecycle_systems,social_systems,strategic_systems,world_systems}/
+*.py` ONLY. It was never widened past its original 2026-09-16 pass. A real, live, wired mechanism
+(`src/world/perception/gate.py::PerceptionGate`) was found entirely outside this scope while
+investigating an unrelated finding -- a manual sizing pass of the other ~20 non-infra `src/`
+top-level directories found 14 more candidates clearing the same "real caller outside its own
+file" bar. This tool's own clean report ("0 drift findings") is honest about what it checked, not
+a claim that nothing else in `src/` is missing -- see
+`docs/plans/mechanism_claims_as_tests_initiative.md` §3.4 and
+`TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP` (the tracked, not-yet-done widening).
 
 **This checks against `implemented_by`, not prose.** An earlier draft of this tool regex-searched
 `mechanisms.yaml`'s raw text for path-shaped citations. That failed hard on its first real run: the

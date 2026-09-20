@@ -206,6 +206,22 @@ mechanisms:
         disposition. See `combat_resolution` and `combat_engagement` for the rest of this same
         finding, and `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
         for the full per-world evidence table.
+        **Scope note, added 2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-
+        VERIFICATION), made explicit per peer review rather than left as an unrecorded reasoning
+        step**: `TacticalDecisionSystem` (`src/engine/tactical.py`) is the only `implemented_by`
+        binding here, but its real targeting logic also calls a second, real, currently-unregistered
+        component, `src/world/perception/gate.py::PerceptionGate` (`tactical.py:181,199`,
+        `_gate.can_perceive(...)`), which gates raw sense-profile detection (vision/hearing/smell/
+        etc. against a target's emitted signals) before a target is even considered for a decision.
+        This is deliberately NOT added to `implemented_by` above and NOT registered as its own
+        mechanism -- `PerceptionGate` is real, live, and load-bearing, but its own scope (raw
+        detection capability, upstream of any decision) is narrower than `tactical_decision`'s own
+        concept (which decision to make once a target is already knowable), so folding it into this
+        binding would misattribute a distinct concern rather than merely omit a citation. Recorded
+        here explicitly so the reasoning survives -- an un-registered dependency that "everyone
+        knows" is implicitly covered is exactly the kind of knowledge that decays. Not the same
+        finding as `perception`'s own dormancy (a different, unrelated component under a similar
+        directory name) -- see that entry's own note.
   - id: combat_engagement
     layer: entity
     systems: [combat]
@@ -820,9 +836,9 @@ mechanisms:
     implemented_by:
       - src/cognition/self_model_phase.py::SelfModelUpdatePhase
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-09-20"
       note: >-
         Code read confirms the mechanism is correctly built; currently flag-gated off (see state).
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): this
@@ -834,6 +850,22 @@ mechanisms:
         sub-services (`SelfAssessmentService`, `NeedInterpretationService`,
         `CapabilityEstimateService`, `KnowledgeModelService`); `knowledge_model` is bound
         separately below to the one of those four with its own dedicated registry entry.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket B --
+        one shared observation with `knowledge_model`, same discipline as the
+        `strategic_intelligence` phase pairing, not two independent ones). Reused
+        `data/worlds/unit_selfmodel_pilot/` -- a real, purpose-built world already staging a real
+        pending unknown-fact event for a real compiled entity (`tests/mechanic_scenarios/
+        test_self_model_and_knowledge_model_gated_dormancy.py`). Confirmed directly, not assumed:
+        `state.feature_flags` is empty by default even for this world (its own "ON via this world's
+        profile YAML" description is a SimQ-corpus-runner-level override, not something
+        `WorldCompiler.compile()` applies). With the flag manually staged ON, a real
+        `Kernel.tick_once()` at `state.tick=1` updates `self_awareness.last_self_check_tick` to 1
+        (checked at a nonzero tick specifically -- tick 0 would be indistinguishable from "never
+        updated", an ambiguity caught empirically before it became a vacuous assertion); with the
+        flag at its real default (OFF), `self_model` stays fully at its compiled default. Backing:
+        (a) static, same shape as `temporal_pressure`'s own entry -- §5 item 5's reach-proof
+        requirement does not apply to this reachability-claim negative arm.
   - id: declared_cognition_schema
     layer: entity
     systems: [cognition]
@@ -861,21 +893,60 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: []
-    state: done
+    state: orphan
     implemented_by:
       - src/domains/perception/filter.py::PerceptionFilterService
     verified:
-      instrument: code_trace
-      verdict: observed
+      instrument: scenario
+      verdict: contradicted
       date: "2026-09-20"
       note: >-
-        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION.
-        `PerceptionFilterService.filter()` scores candidate signals via
-        `SignalSalienceEvaluator.evaluate()` (`src/domains/perception/salience.py`) and budget-clamps
-        them into a `PerceptionUpdate` -- called from `src/domains/perception/phase.py:43`, a real,
-        non-test integration into the per-tick pipeline. `filter.py` defines only this one service
-        class plus its own data shapes (`PerceptionBudget`/`PerceptionUpdate`), so class-level
-        binding is precise without misattributing an unrelated concern.
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION. State correction,
+        done -> orphan; verdict correction, observed -> contradicted. This entry's own prior
+        `code_trace` note claimed `PerceptionFilterService.filter()` was "called from
+        `src/domains/perception/phase.py:43`, a real, non-test integration into the per-tick
+        pipeline" -- true only one level deep: line 43 is a real call site, but it lives inside
+        `PerceptionUpdatePhase.run()`, and NOTHING in `src/` outside `phase.py` itself ever
+        constructs a `PerceptionUpdatePhase` or calls `.run()` (confirmed by a full-tree grep).
+        `src/engine/pipeline.py::refine()` never references perception at all. A real differential
+        scenario (`tests/mechanic_scenarios/test_perception_pipeline_wiring.py`) confirms this at
+        runtime, not just by grep: across 5 real ticks against a world with an adjacent, alive,
+        hostile entity (as strong a perceivable candidate as a production-like scenario offers),
+        `PerceptionFilterService.filter` is called zero times and
+        `entity.cognition.subjective.perception.perceived_entities` stays empty on both entities.
+        A positive control (calling `.filter()` directly, bypassing the pipeline) DOES produce a
+        real perceived entity, ruling out "the code itself is broken" as the explanation -- this is
+        specifically an unreached-chain defect, not a logic defect. This is exactly the shape
+        `mechanism_state_caller_check.py`'s one-level-deep caller check cannot catch: it confirmed
+        `PerceptionFilterService` has a real caller (`phase.py`) without checking whether that
+        caller's own caller is itself reachable. Fix not made here, per this program's explicit
+        governing constraint (record the contradiction, do not wire the phase in to make the old
+        claim true) -- filed separately as
+        `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`.
+        **Backing: (a) static** -- `PerceptionUpdatePhase` has zero constructors anywhere in `src/`,
+        a fact independent of which scenario world is used; the scenario corroborates this at
+        runtime but the verdict does not depend on the specific world chosen (proposal doc §5 item
+        4). **Dependents question, investigated per direct peer request, not fixed**: `perception`
+        has zero `depends_on` dependents (direct or transitive) in the registry. Checked which
+        explanation holds -- not an under-declared edge: zero real code anywhere in `src/` reads
+        `perceived_entities`/`perceived_threats`/`perceived_resources`/`perceived_services`/
+        `perceived_opportunities` or `entity.cognition.subjective.perception` at all, outside
+        `filter.py`/`phase.py`/the dataclass definition itself (confirmed by grep), so there is no
+        real functional dependency to have under-declared. `goal_hierarchy`'s own verified note
+        already documents strategic cognition sourcing situational awareness through a separate,
+        real path instead (`SpatialQueryService.nearby_entities()`, a direct spatial query,
+        bypassing the `PerceptionModel` abstraction entirely). Conclusion: `perception` genuinely
+        was never load-bearing -- not only does nothing call it, nothing downstream was ever built
+        to consume its output either, so the zero-dependents graph shape is accurate, not a
+        registry gap. Separately (adjacent, not the same finding): `src/world/perception/gate.py::
+        PerceptionGate` is a real, live, unregistered component (`src/engine/tactical.py:181,199`,
+        initialized via `src/content/warmup.py`) -- but it answers a narrower question ("can this
+        entity detect that specific neighbor," gating raw sense-profile detection for
+        `tactical_decision`'s own targeting) than `perception`'s own concept ("what does the entity
+        consciously notice," a ranked, budget-clamped `PerceptionModel` feeding strategic
+        cognition). Not a same-name-different-thing misbinding risk for this entry -- a genuinely
+        distinct, separately-scoped mechanism that happens to share a directory name, already
+        implicitly covered by `tactical_decision`'s own (also `contradicted`) verified block.
   - id: emotion
     layer: entity
     systems: [cognition]
@@ -883,9 +954,9 @@ mechanisms:
     state: done
     implemented_by: [src/domains/emotion/emotion_service.py::EmotionUpdateService]
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-09-20"
       note: >-
         Was mis-registered `orphan`; EmotionUpdateService.update_on_event() is called
         unconditionally (no feature-flag check) from engine/pipeline_phases/hardening.py's own
@@ -895,6 +966,21 @@ mechanisms:
         ("possibly stale, TCK-20260824 wired a near_death call site") without resolving it; this
         confirms the flag was correct. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-
         VERIFICATION.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket C).
+        A real forced attack (orc -> goblin, `tests/mechanic_scenarios/
+        test_emotion_near_death_hardening.py`, damage calibrated empirically at 19 for this
+        world/seed, not guessed) confirms both halves through a real `Kernel.tick_once()`: goblin
+        staged to survive at 2/107 HP (within the real 10% near-death threshold) gets
+        `fear=0.4, panic=0.5, confidence=0.2` from compiled defaults, matching
+        `update_on_event(..., "near_death")`'s own exact deltas; the same attack against a
+        full-HP goblin (survives at 16/35, well above threshold) leaves emotion at its compiled
+        defaults. Per `mechanic_verification_scenarios_proposal.md` §5 item 5, the negative arm's
+        reach is confirmed directly (not inferred from the outcome alone): instrumentation confirms
+        the goblin has a real `CombatUpdate` staged before `NearDeathHardeningPhase.apply()` runs in
+        both conditions, so it genuinely enters the per-entity loop and is evaluated against the
+        survival/threshold check, not skipped before ever being considered -- this phase has no
+        per-entity cadence gate at all to trip the `goal_hierarchy`-shaped trap.
   - id: affection_relationship_bonds
     layer: entity
     systems: [social]
@@ -986,21 +1072,52 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: []
-    state: skeleton
+    state: gated
     implemented_by: [src/domains/time/service.py::TemporalPressureService]
     # src/domains/time/service.py: TemporalPressureService -- found while resolving
     # implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING). Called from
     # src/domains/memory/phase.py:90. File matches Foundation's own original citation exactly
     # ("46 LoC total").
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
-        TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN (batch 3). Formalizes this entry's
-        own already-documented real caller above, independently re-confirmed this pass
-        (`TemporalPressureService.calculate_urgencies()` at `memory/phase.py:90`). No contradiction
-        from `mechanism_state_caller_check.py`'s own full-registry run.
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION (batch 2, remaining 17).
+        State correction, `skeleton` -> `gated`. The prior `code_trace` note (batch 3 of the earlier
+        unbound-claims program) confirmed `TemporalPressureService.calculate_urgencies()` is called
+        from `memory/phase.py:90`, but never checked one level further: that call site lives inside
+        `MemoryUpdatePhase.run()`, itself only reached via `MemoryUpdatePhase.apply()`, which
+        `src/engine/pipeline.py` gates behind `ENABLE_MEMORY_UPDATE` (`FeatureMode.OFF` by default).
+        `causal_spatial_memory` (the same phase's own separately-registered mechanism) already
+        correctly carries `state: gated` for this exact reason; this entry never mentioned the gate
+        at all. A real differential scenario
+        (`tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py`) confirms both halves:
+        with `ENABLE_MEMORY_UPDATE=ON`, a real near-expiry deadline produces a real, correctly-scaled
+        urgency value through a real `Kernel.tick_once()`; with the flag at its real shipped default
+        (OFF), the same staged deadline produces no urgency at all -- the phase never runs. Verdict
+        stays `observed` (unlike `perception`, the mechanism genuinely works once its precondition,
+        the flag, is met) -- this is a state-classification correction, not a contradiction.
+        **Found and fixed along the way, not a mechanism-claim fix**: staging a real `DeadlineEntry`
+        broke `Kernel.shutdown()`'s canonical-state hashing --
+        `TemporalModel.to_canonical_dict()` never converted `deadlines`/`cooldowns`/`stale_facts`
+        entries to plain dicts, a dormant defect invisible until now because nothing had ever
+        populated those fields in a real run. Fixed directly (`src/core/cognition.py`, matching this
+        file's own established curated-field pattern, e.g. `PerceptionModel.to_canonical_dict()`) --
+        trivial, unrelated to any mechanism's own claim, explicitly allowed by ticket workflow's
+        "file, not fix, unless trivial."
+        **Re-audited 2026-09-20** against `mechanic_verification_scenarios_proposal.md` §5 item 5:
+        the flag-off negative arm is sound, not vacuous, though for a different reason than
+        `belief_cycle`'s own -- this scenario's own CLAIM is specifically about the gate itself ("is
+        the phase reachable at all when the flag is off"), not about internal decision logic given a
+        met precondition, so "nothing computed because the phase never ran" is exactly what the
+        claim asserts, the same shape §5 item 4's static/demonstrated backing already covers for
+        `perception`. The separate positive control
+        (`test_calculate_urgencies_itself_works_when_called_directly`) already rules out "the logic
+        itself is broken" as an alternative explanation. §5 item 5 applies to a differential whose
+        claim is about internal logic with an accidentally-unevaluated negative arm (the
+        `goal_hierarchy` cadence case); it does not apply here, since reach-vs-no-reach is the
+        claim, not an accident of staging.
   - id: goal_hierarchy
     layer: entity
     systems: [cognition]
@@ -1013,9 +1130,9 @@ mechanisms:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::_resolve_active_objective
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_strategic_intent
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-19"
+      date: "2026-09-20"
       note: >-
         Real implementation LOCATED while resolving TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-
         ON-EDGES-RESOLUTION's goal_hierarchy cluster (#8-10) -- the parent edge audit's own grep for
@@ -1039,6 +1156,31 @@ mechanisms:
         methods this note already names, bound at method level now that the binding syntax exists
         (`path::Class::method`) -- resolves the gap this note itself recorded rather than leaving it
         open a second batch running.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, shared
+        `strategic_intelligence` phase question). Targets `_resolve_active_objective()`, one of
+        this entry's own 5 bound methods, via its one real branch: a staged `"detour"`-kind
+        project's `reach_location` objective resolves once the entity is within 1.0 distance of the
+        objective's `target_position`
+        (`tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py`). Real
+        differential, both conditions on the same real `Kernel.tick_once()` dispatch: at the target
+        position, the project completes and `current_project_id` clears; far from it, nothing
+        changes. **A real trap surfaced and fixed while building this, worth recording since it
+        would silently invalidate a naively-staged scenario**: the phase's own per-entity re-
+        evaluation cadence is NOT the `DefaultCadence(strategic_intelligence=1)`
+        `src/engine/pipeline.py:53` applies only when no cadence is otherwise supplied -- a live
+        `Kernel` run under `PROD_SMALL` actually uses `cadence.strategic_intelligence=20`
+        (confirmed by direct instrumentation). Staging the precondition at `state.tick=0` and
+        running forward lets the entity's own real combat/movement logic drift it 2+ tiles off the
+        staged target before its first cadence-aligned evaluation (tick 19 for this entity)
+        happens, producing a false negative unrelated to the resolution logic. Fixed by starting at
+        the cadence-aligned tick directly, so the first real dispatch is also the first
+        cadence-aligned one. **Scope, stated per peer review, not overclaimed**: this scenario
+        verifies `_resolve_active_objective()` and confirms `fused_strategic_pass()` itself really
+        dispatches (`strategic_intelligence_core`, verified block below) -- it does NOT exercise
+        `concern_intake`'s or `strategic_learning_bias`'s own separate branches (different
+        preconditions, not triggered by this staging), which remain unverified at `code_trace`
+        pending their own scenarios.
   - id: belief_cycle
     layer: entity
     systems: [cognition]
@@ -1047,20 +1189,34 @@ mechanisms:
     implemented_by:
       - src/systems/strategic_systems/belief.py::BeliefCycleSystem
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
-        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Real, dedicated
-        implementation already cited by `goal_hierarchy`'s own verified note
-        (`BeliefCycleSystem.process_observation()`/`apply_contradiction()`,
-        `intelligence.py:436,448`) -- `BeliefCycleSystem` itself lives in its own single-purpose
-        file (`src/systems/strategic_systems/belief.py`: lead decay, rumor processing, observation
-        confirmation, contradiction), with multiple real, non-test callers:
-        `src/engine/pipeline.py:408` (`run_phase("belief_staleness_decay", ...,
-        BeliefCycleSystem.resolve_lead_staleness(state))`), `src/systems/social_systems/guilds.py`
-        (`process_rumor`), and `intelligence.py`'s own calls above. Class-level binding is precise
-        -- no other mechanism shares this file.
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION. Upgraded from
+        `code_trace` to `scenario` -- a real differential scenario
+        (`tests/mechanic_scenarios/test_belief_cycle_lead_staleness.py`) confirms the LEG-RPG-150
+        staleness decay actually fires through the real, unconditional per-tick pipeline entry
+        point (`src/engine/pipeline.py:408`), not just that the threshold check exists in code. A
+        lead staged `certainty=APPROXIMATE`, `discovered_tick=0` demotes to `VAGUE` through a real
+        `Kernel.tick_once()` once `state.tick=50` clears `stale_threshold`, and stays `APPROXIMATE`
+        unchanged through the same dispatch at `state.tick=10` (below threshold) -- the differential
+        pair required by `docs/plans/mechanic_verification_scenarios_proposal.md` §3.3. Prior
+        `code_trace` note (real, dedicated implementation already cited by `goal_hierarchy`'s own
+        verified note, multiple real non-test callers including
+        `src/systems/social_systems/guilds.py`'s `process_rumor`) remains accurate and is preserved
+        in spirit; this note documents the stronger, runtime-confirmed evidence.
+        **Re-audited 2026-09-20** against `mechanic_verification_scenarios_proposal.md` §5 item 5
+        (added after `goal_hierarchy`'s own scenario surfaced a vacuous-negative-arm risk elsewhere
+        in this same batch): this entry's negative arm (`state.tick=10`) is NOT vacuous, confirmed
+        by direct instrumentation, not re-read from code alone --
+        `BeliefCycleSystem.decay_stale_leads()` was empirically confirmed CALLED for the staged
+        entity at tick 10 (the lead still `APPROXIMATE`, a genuine no-op `StrategicUpdate`
+        returned), because `resolve_lead_staleness()` has no internal per-entity cadence gate at
+        all (unlike `strategic_intelligence`'s own `SystemCadence`-based one) and
+        `"belief_staleness_decay"` is not a phase-level-cadence-gated entry in
+        `PhaseDependencyGraph.PHASES` either. The mechanism was genuinely reached and genuinely
+        declined to act because `10 < stale_threshold(50)`, not merely unevaluated. Verdict stands.
   - id: information_trust_deception
     layer: entity
     systems: [cognition]
@@ -1093,7 +1249,7 @@ mechanisms:
     implemented_by:
       - src/cognition/knowledge_model.py::KnowledgeModelService
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -1101,6 +1257,16 @@ mechanisms:
         (single-purpose class, own file) is one of the 4 services `SelfModelUpdatePhase.apply()`
         orchestrates (see `self_model`'s own verified block) -- gated by the same
         `ENABLE_SELF_MODEL_COGNITION` flag transitively, matching this entry's own `gated` state.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket B).
+        Same real scenario as `self_model`'s own updated note
+        (`tests/mechanic_scenarios/test_self_model_and_knowledge_model_gated_dormancy.py`) -- one
+        shared observation, not a second independent one. With `ENABLE_SELF_MODEL_COGNITION=ON`, a
+        real compiled world's own pre-staged pending unknown-fact event (`unit_selfmodel_pilot`,
+        `actor_id=15`, `material.wood.source`) is genuinely assimilated:
+        `self_model.knowledge.unknowns["material.wood.source"]` becomes a real `UnknownFact`
+        through a real `Kernel.tick_once()`; with the flag off (real default), it stays empty.
+        Positive control confirms `KnowledgeModelService.assimilate()` itself is not broken.
   - id: causal_spatial_memory
     layer: entity
     systems: [cognition]
@@ -1108,15 +1274,31 @@ mechanisms:
     state: gated
     implemented_by: [src/domains/memory/phase.py::MemoryUpdatePhase]
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-16"
-      note: "Was mis-registered `orphan`; MemoryUpdatePhase.apply() is called live from
+      date: "2026-09-20"
+      note: >-
+        Was mis-registered `orphan`; MemoryUpdatePhase.apply() is called live from
         engine/pipeline.py:154-157 via run_phase('memory_update', ..., 'ENABLE_MEMORY_UPDATE') --
         a real caller exists, so `orphan` (zero callers) was factually wrong. The flag defaults
         OFF (feature_flags.py, TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: 'wires MemoryUpdatePhase
         into refine() for the first time'), which is what `gated` means. Found while resolving
-        implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING)."
+        implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING).
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket B).
+        Reused `temporal_pressure`'s own already-audited flag-toggle scaffolding for this identical
+        phase/gate (`tests/mechanic_scenarios/
+        test_causal_spatial_memory_gated_visit_tracking.py`). Targets step 3 of
+        `MemoryUpdatePhase.run()` ("Regular Spatial Visited region updating"), the simplest real
+        effect this phase produces -- no trigger event needed, only a real compiled
+        `navigation.region_id`. With `ENABLE_MEMORY_UPDATE=ON`, the entity's own real region gets
+        recorded as visited (`visit_count=1, familiarity=0.2`) through a real `Kernel.tick_once()`;
+        with the flag at its real shipped default (OFF), `visited_regions` stays empty. Positive
+        control confirms `SpatialMemoryUpdateService.update_region_visit()` itself is not broken.
+        Backing: (a) static, same shape as `temporal_pressure`'s own entry -- the flag-off arm is a
+        reachability claim, not an internal-logic one, so `mechanic_verification_scenarios_
+        proposal.md` §5 item 5's reach-proof requirement does not apply here (already recorded on
+        `temporal_pressure`'s own entry, same reasoning, not repeated in full).
   - id: adventure_routing
     layer: entity
     systems: [cognition, world]
@@ -1145,10 +1327,28 @@ mechanisms:
     implemented_by:
       - src/systems/world_systems/quests.py::QuestGenerationSystem
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: contradicted
       date: "2026-09-20"
       note: >-
+        TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION. Upgraded from
+        `code_trace` to `scenario` -- calibration case for the differential runtime-verification
+        harness: a real compiled world's region was forced to `trauma_score=0.9` (clears
+        `generate_from_scar()`'s own `> 0.3` trigger condition) and run for 5 real ticks through
+        the unmodified pipeline with call-counters on all 3 `QuestGenerationSystem` methods
+        (`tests/mechanic_scenarios/test_quest_generation_sourcing_orphan_calibration.py`) -- zero
+        real calls, confirming the harness correctly reports a negative rather than a false
+        positive. Positive control: calling `generate_from_scar()` directly against the same staged
+        region DOES return a real `QuestTemplate`, ruling out "the trigger condition doesn't
+        actually work" as an alternative explanation. verdict/state unchanged; this batch's earlier
+        `code_trace` finding below stands, now runtime-confirmed rather than static-only.
+        **Backing: both (a) static and (b) demonstrated** (proposal doc §5 item 4) -- (a) zero real
+        callers for any of the 3 methods anywhere in `src/`, independent of world choice, already
+        established by direct grep; (b) this scenario's own world is shown, not assumed, to
+        produce the real trigger condition (`trauma_score > 0.3`), and the positive control above
+        confirms that precondition genuinely does produce a `QuestTemplate` when the function is
+        called directly -- so the zero-call result is not an artifact of the world never staging
+        the precondition.
         TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. State correction, gated ->
         orphan. `QuestGenerationSystem` (`src/systems/world_systems/quests.py`,
         `generate_from_scar()`/`generate_from_blockers()`/`quest_to_project()`, real purpose-built
@@ -1164,10 +1364,11 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: [belief_cycle]
+    state: done
     implemented_by:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -1180,21 +1381,17 @@ mechanisms:
         real trap: `derive_cognition_profile()` on the same class looked like a plausible core-
         entry candidate but is confirmed never called anywhere (see `cognition_capacity_fatigue`'s
         own verified note) -- binding to it would have been a confident-but-wrong pick.
-    state: done
-    implemented_by:
-      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
-    verified:
-      instrument: code_trace
-      verdict: observed
-      date: "2026-09-20"
-      note: >-
-        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. `fused_strategic_pass()` is
-        the pipeline's own literal per-tick strategic-intelligence entry point --
-        `src/engine/pipeline.py:398`: `run_phase("strategic_intelligence", update, lambda u:
-        StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))`, docstring
-        "Fused pass for strategic intelligence (Blockers, Concerns, Intents)" -- matching this
-        mechanism's own "core" naming as the umbrella entry point, distinct from `goal_hierarchy`'s
-        own 5 project/objective methods on the same class.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2). Same real
+        differential scenario as `goal_hierarchy`'s own updated note
+        (`tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py`) -- this is the
+        one real independent observation for the whole shared `strategic_intelligence` phase
+        (`goal_hierarchy`, `strategic_intelligence_core`, `strategic_learning_bias`, `concern_intake`
+        all live in or under it; confirming this phase dispatches does not independently confirm
+        each of their own separate branches, per direct peer review -- `strategic_learning_bias` and
+        `concern_intake` remain `code_trace` pending their own staging). The scenario confirms
+        `fused_strategic_pass()` really dispatches through a real `Kernel.tick_once()`, not just
+        that `pipeline.py` calls it by name.
   - id: committed_intentions
     layer: entity
     systems: [cognition]
@@ -1231,7 +1428,7 @@ mechanisms:
     implemented_by:
       - src/engine/pipeline_phases/capacity_enforcement.py::CapacityEnforcementPhase
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -1251,6 +1448,40 @@ mechanisms:
         consumers confirmed at `src/systems/strategic_systems/detour.py:207`,
         `src/systems/strategic_systems/intelligence.py:1069,1727`, `src/ai/goals/scorers.py:258`,
         `src/town/guild.py:90`.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION) -- closes the one
+        honest gap this program's own close-out surfaced: this mechanism was reachable and
+        unconditional from the start, but its own real staging need (the entity must already have
+        a real `StrategicUpdate` proposed by an EARLIER phase this same tick --
+        `capacity_enforcement.py`'s own `if not ent_upd or not ent_upd.strategic: continue` skips
+        an entity with nothing else proposed for it, even one genuinely over cap in raw state) kept
+        it falling through 4 waves without ever getting a disposition recorded. Resolved by
+        chaining two already-validated real mechanisms rather than forcing a route: a stale lead
+        (`discovered_tick=0`, `state.tick=50`) produces a real, non-empty update via
+        `belief_cycle`'s own already-verified staleness-decay phase
+        (`belief_staleness_decay`, runs before `capacity_enforcement` in the same tick), giving
+        `enforce()` a genuine `ent_upd.strategic` to evaluate
+        (`tests/mechanic_scenarios/test_cognition_capacity_fatigue_lead_trim.py`). 9 real leads
+        (over `max_leads=8`, the compiled default): the lowest-scored survivor (the stale lead,
+        decayed to `VAGUE`) is trimmed by `CapacityService.trim_dict()` through a real
+        `Kernel.tick_once()`, leaving exactly the 8 higher-scored keepers. 8 real leads (at, not
+        over, the cap): nothing is trimmed. Reach confirmed directly for the negative arm (§5 item
+        5): the stale lead's own certainty is checked as `VAGUE` in both conditions, proving
+        `belief_staleness_decay` genuinely ran in the at-cap case too -- "nothing trimmed" is a
+        reached-and-declined result, not the entity being skipped before ever being considered.
+        **The precondition this verdict is conditional on, stated explicitly per peer review --
+        read from the simulation's side, not just the scenario's own staging need**: enforcement
+        only evaluates an entity that ALREADY has a real `StrategicUpdate` proposed by some OTHER
+        phase that same tick (`capacity_enforcement.py`'s own `if not ent_upd or not
+        ent_upd.strategic: continue`). An entity genuinely over its own cognitive cap, with nothing
+        else proposing anything for it that tick, is silently skipped rather than trimmed -- it
+        stays over cap indefinitely, not just for one tick. This verdict is `observed` for "does
+        enforcement correctly trim when it runs," not for "does an over-cap entity always get
+        enforced" -- those are different claims, and only the first is what this scenario (or any
+        scenario built the same way) can show. Whether piggybacking on another phase's own update
+        is the INTENDED design (opportunistic enforcement) or a real gap (should be unconditional)
+        is a design question, not settled here -- see
+        `TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`.
 
   # ── Group layer (2, atlas `group-layer`) ────────────────────────────────────────────────────
 
