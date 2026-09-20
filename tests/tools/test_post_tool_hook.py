@@ -26,7 +26,7 @@ _HOOK_PATH = _MONITORING_TOOLS_DIR / "post_tool_hook.py"
 
 _RECORD_FIELDS = {
     "session_id", "run_id", "seq", "phase", "agent", "ts", "tool",
-    "input_summary", "status", "duration_ms",
+    "input_summary", "read_ranged", "status", "duration_ms",
     "execution_id", "provider", "ticket_id",
 }
 
@@ -105,6 +105,50 @@ def test_single_writer_produces_one_well_formed_line(tmp_path):
     assert record["execution_id"] is None
     assert record["provider"] is None
     assert record["ticket_id"] is None
+    assert record["read_ranged"] is None
+
+
+# ---------------------------------------------------------------------------
+# read_ranged (TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS):
+# input_summary alone (file_path only) cannot distinguish a ranged Read from a
+# whole-file one — verified against the real corpus before adding this field.
+# ---------------------------------------------------------------------------
+
+def _read_payload(**extra_tool_input):
+    return {
+        "session_id": "sess-1",
+        "tool_name": "Read",
+        "tool_input": {"file_path": "/some/file.py", **extra_tool_input},
+        "tool_response": {},
+    }
+
+
+def test_read_ranged_false_for_whole_file_read(tmp_path):
+    result = _run_hook(tmp_path, _read_payload())
+    assert result.returncode == 0
+    record = json.loads(_tools_lines(tmp_path)[0])
+    assert record["read_ranged"] is False
+
+
+def test_read_ranged_true_when_offset_present(tmp_path):
+    result = _run_hook(tmp_path, _read_payload(offset=100))
+    assert result.returncode == 0
+    record = json.loads(_tools_lines(tmp_path)[0])
+    assert record["read_ranged"] is True
+
+
+def test_read_ranged_true_when_limit_present(tmp_path):
+    result = _run_hook(tmp_path, _read_payload(limit=50))
+    assert result.returncode == 0
+    record = json.loads(_tools_lines(tmp_path)[0])
+    assert record["read_ranged"] is True
+
+
+def test_read_ranged_null_for_non_read_tools(tmp_path):
+    result = _run_hook(tmp_path, _payload())  # Bash payload
+    assert result.returncode == 0
+    record = json.loads(_tools_lines(tmp_path)[0])
+    assert record["read_ranged"] is None
 
 
 def test_phase_and_agent_included_when_sidecar_present(tmp_path):

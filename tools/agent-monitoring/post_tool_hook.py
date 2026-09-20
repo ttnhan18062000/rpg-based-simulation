@@ -30,6 +30,18 @@ def _prune_stale_scoped_sidecars() -> None:
         pass
 
 
+def _read_ranged(tool_name: str, tool_input: dict) -> bool | None:
+    """Whether a Read call passed offset/limit (ranged) rather than reading the whole file.
+
+    TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS: input_summary alone
+    (file_path only, see _input_summary below) cannot answer this — verified empirically against
+    the real corpus before adding this field, not assumed. null for every non-Read tool.
+    """
+    if tool_name != "Read":
+        return None
+    return tool_input.get("offset") is not None or tool_input.get("limit") is not None
+
+
 def _input_summary(tool_name: str, tool_input: dict) -> str:
     if tool_name in ("Read", "Edit", "Write", "MultiEdit"):
         return (tool_input.get("file_path") or "")[:120]
@@ -149,6 +161,7 @@ try:
         "ts": now,
         "tool": tool_name,
         "input_summary": _input_summary(tool_name, tool_input),
+        "read_ranged": _read_ranged(tool_name, tool_input),
         "status": status,
         "duration_ms": duration_ms,
         "execution_id": execution_id,
