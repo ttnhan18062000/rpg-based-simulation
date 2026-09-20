@@ -147,6 +147,39 @@ def test_real_registry_findings_pinned():
     error was caught; `trauma` is correctly `done`/bound to `WoundService` again, which has real
     confirmed callers, so no finding fires for it here.
 
+    2026-09-20 (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): a large binding
+    batch (24 entity-layer mechanisms) surfaced 5 new findings, each independently re-checked
+    directly against source rather than trusted from the tool's own report. (`breakthrough_bonuses`
+    briefly also fired `orphan_with_callers` mid-batch when first bound as `orphan`; self-corrected
+    to `partial` within the same batch once this exact tool caught it -- `orphan` specifically means
+    zero real callers, and `BreakthroughService.apply_bonuses()` has one; see that entry's own
+    verified note for the full self-correction. No finding fires for it here.)
+    - `knowledge_model` (`gated_without_flag_context`, low): same shape as `genetics_aptitude`
+      above -- the real `ENABLE_SELF_MODEL_COGNITION` check is at the call site
+      (`engine/pipeline.py:192`), several frames from the direct
+      `KnowledgeModelService.assimilate()` reference inside `self_model_phase.py`.
+    - `attributes_biology`, `class_assignment`, `goal_hierarchy` (`state_with_zero_callers`, high
+      confidence per the tool, false per direct re-check): all three are method-level bindings
+      whose real callers are exclusively *within the same defining file* as the binding itself
+      (`ApplyPath._compute_entity_changes` is invoked via a same-file callback registration
+      consumed by `ApplyPlanBuilder.build_plan()`; `SocialDefaultsResolver.resolve_role_defaults()`
+      is called only from two other sites inside `resolver.py` itself;
+      `StrategicIntelligenceSystem`'s 5 goal_hierarchy methods are all called only from sibling
+      methods on the same class within `intelligence.py` itself). `_real_callers()` deliberately
+      excludes the defining file (to avoid a method counting itself/its own recursion as a caller,
+      the correct general rule) -- a real, understood blind spot for a large multi-method
+      orchestrator class whose own methods call each other internally, not evidence the bindings
+      are wrong. Independently re-verified via direct grep for each case before concluding this.
+    - `commitment_betrayal` (`orphan_with_callers`, high confidence per the tool, expected given
+      this registry's own established `orphan` meaning): `BetrayalRecord` is type-referenced in
+      `core/state.py`/`core/updates.py`/`core/builder.py` (which the tool counts as "callers") but
+      never actually constructed anywhere (`BetrayalRecord(` grepped repo-wide, zero hits) --
+      genuinely `orphan` (dead code, not a live producer), the tool just can't distinguish a type
+      reference from a real instantiation. Same established shape as `status_effects`'s own prior
+      `orphan` finding this same epic: present, referenced code whose actual claimed behavior never
+      fires in real play. The checker's binary "any caller = not orphan" heuristic can't represent
+      this nuance; not a registry error.
+
     Update this test only alongside a real investigation of what changed, same discipline as every
     other pinned-count test in this repo."""
     import yaml
@@ -156,4 +189,9 @@ def test_real_registry_findings_pinned():
     finding_keys = {(f.mechanism_id, f.check) for f in report.findings}
     assert finding_keys == {
         ("genetics_aptitude", "gated_without_flag_context"),
+        ("knowledge_model", "gated_without_flag_context"),
+        ("attributes_biology", "state_with_zero_callers"),
+        ("class_assignment", "state_with_zero_callers"),
+        ("goal_hierarchy", "state_with_zero_callers"),
+        ("commitment_betrayal", "orphan_with_callers"),
     }

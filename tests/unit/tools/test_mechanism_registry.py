@@ -390,6 +390,151 @@ def test_validator_accepts_absent_implemented_by():
     assert validate(fixture) == []
 
 
+# ── implemented_by symbol-level and method-level binding (TCK-20260916-MECHANISM-IMPLEMENTED-BY-
+# SYMBOL-LEVEL-BINDING, TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION) ──
+
+
+def test_parse_implemented_by_entry_splits_path_only():
+    from tools.mechanism_registry.registry import parse_implemented_by_entry
+
+    assert parse_implemented_by_entry("src/engine/registry.py") == ("src/engine/registry.py", None)
+
+
+def test_parse_implemented_by_entry_splits_symbol_level():
+    from tools.mechanism_registry.registry import parse_implemented_by_entry
+
+    assert parse_implemented_by_entry("src/x.py::MyClass") == ("src/x.py", "MyClass")
+
+
+def test_parse_implemented_by_entry_keeps_method_level_symbol_whole():
+    """A third `::` segment (method-level) is not split further here -- it is passed whole to
+    symbol_defined_in_file, the one place that distinction is interpreted."""
+    from tools.mechanism_registry.registry import parse_implemented_by_entry
+
+    assert parse_implemented_by_entry("src/x.py::MyClass::my_method") == (
+        "src/x.py",
+        "MyClass::my_method",
+    )
+
+
+def test_validator_accepts_symbol_level_top_level_class():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": ["tools/mechanism_registry/registry.py::MechanismRegistry"]},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_rejects_symbol_level_nonexistent_class():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": ["tools/mechanism_registry/registry.py::NoSuchClass"]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a nonexistent symbol"
+    assert any("NoSuchClass" in e for e in errors), errors
+
+
+def test_validator_accepts_method_level_real_method_on_real_class():
+    """[Load-bearing] The method-level binding this ticket adds: a real method that only exists
+    inside a specific class's own body, not just anywhere in the file."""
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": [
+                 "tools/mechanism_registry/registry.py::MechanismRegistry::get_state"
+             ]},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_rejects_method_level_wrong_class():
+    """[Load-bearing] A method that's real but lives on a DIFFERENT class must fail -- proves the
+    check is bounded to the named class's own body, not "does this method exist anywhere in the
+    file" (which symbol-level would already accept and method-level must not silently degrade to)."""
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            # get_state is real, but defined on MechanismRegistry, not on `validate`'s own
+            # (non-existent) class form -- MechanismRegistry itself has no `_dfs` method (that's
+            # a nested function inside module-level `validate()`, not a class method at all).
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": [
+                 "tools/mechanism_registry/registry.py::MechanismRegistry::_dfs"
+             ]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a method bound to the wrong class"
+    assert any("_dfs" in e and "method" in e for e in errors), errors
+
+
+def test_validator_rejects_method_level_nonexistent_method():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": [
+                 "tools/mechanism_registry/registry.py::MechanismRegistry::no_such_method"
+             ]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a nonexistent method"
+    assert any("no_such_method" in e for e in errors), errors
+
+
+def test_validator_rejects_method_level_nonexistent_class():
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
+             "implemented_by": [
+                 "tools/mechanism_registry/registry.py::NoSuchClass::some_method"
+             ]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure when the class itself doesn't exist"
+    assert any("NoSuchClass" in e for e in errors), errors
+
+
+def test_symbol_defined_in_file_bounds_method_lookup_to_its_own_class():
+    """Direct unit test of the boundary logic: two classes in one file, same method name on
+    neither/one/the other -- confirms the class-body slice stops at the next top-level class/def,
+    not at end of file."""
+    from tools.mechanism_registry.registry import symbol_defined_in_file
+
+    tmp_text = (
+        "class First:\n"
+        "    def shared_name(self):\n"
+        "        pass\n"
+        "\n"
+        "class Second:\n"
+        "    def other(self):\n"
+        "        pass\n"
+    )
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+        f.write(tmp_text)
+        tmp_path = Path(f.name)
+    try:
+        assert symbol_defined_in_file(tmp_path, "First::shared_name") is True
+        assert symbol_defined_in_file(tmp_path, "Second::shared_name") is False
+        assert symbol_defined_in_file(tmp_path, "Second::other") is True
+        assert symbol_defined_in_file(tmp_path, "First::other") is False
+    finally:
+        tmp_path.unlink()
+
+
 # ── invariant 8: unaudited_depends_on_edges (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT) ──
 
 
@@ -615,11 +760,12 @@ def test_real_registry_zero_unassigned_mechanisms(registry_data, monkeypatch):
         f"expected zero unassigned mechanisms in the real registry, found: {result['unassigned']}"
     )
     unaudited = registry_data.get("unaudited_depends_on_edges") or []
-    assert len(unaudited) == 2, (
-        f"expected 2 unaudited edges (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-"
-        f"RESOLUTION resolved 15 of the original 17 from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-"
-        f"SEMANTICS-AUDIT on 2026-09-19; only the motivation_doctrine pair remains, deferred to "
-        f"TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN), "
+    assert len(unaudited) == 0, (
+        f"expected 0 unaudited edges (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-"
+        f"RESOLUTION resolved the last 2, the motivation_doctrine pair, on 2026-09-20 -- both "
+        f"removed from motivation_doctrine's own depends_on as unauditable against deleted code "
+        f"with no evidence of ever being a genuine functional dependency; all 17 original edges "
+        f"from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT are now resolved), "
         f"found {len(unaudited)} -- if this genuinely changed, update this pinned count with a "
         f"citation, don't just adjust the number"
     )

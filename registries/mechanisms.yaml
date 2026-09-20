@@ -245,6 +245,8 @@ mechanisms:
     systems: [combat]
     depends_on: []
     state: done
+    implemented_by:
+      - src/engine/legality.py::LegalityServiceV2::verify_readiness
     verified:
       instrument: scenario
       verdict: observed
@@ -260,11 +262,20 @@ mechanisms:
         the scaling half confirmed starved) and bundling them under one verdict buried the
         distinction in prose. This entry is now scoped to the gate only, `state: done` (no known
         deficiency in the gate itself).
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION):
+        `LegalityServiceV2.verify_readiness()` is a real, wired caller-confirmed method (called from
+        `src/engine/pipeline_phases/actions.py:146` and `src/engine/domain/action_router.py:39`,
+        both real, non-test call sites), previously left unbound only because `legality.py` is a
+        large multi-concern class and class-level binding would have misattributed unrelated
+        legality logic to this entry -- resolved via the newly-added method-level binding syntax
+        (`path::Class::method`) instead of leaving it permanently unbound.
   - id: readiness_speed_scaling
     layer: entity
     systems: [progression]
     depends_on: []
     state: partial
+    implemented_by:
+      - src/progression/leveling.py::LevelingService::recalculate_combat_stats
     verified:
       instrument: scenario
       verdict: contradicted
@@ -284,11 +295,31 @@ mechanisms:
         1000-tick corpus window. `verdict: contradicted` because the implicit "this scales with
         agility in play" claim does not hold in any tested corpus world, even though the formula
         and recalculation code are themselves correct.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): the
+        real formula this note already describes is `LevelingService.recalculate_combat_stats()`,
+        called from `SkillScalingService.get_effective_stats()` (`src/engine/rpg_depth.py`), itself
+        called from `apply.py`'s own `stats_dirty` block (`src/engine/apply.py:616`) -- confirms
+        the note's own "correct code, rarely exercised" reading rather than changing it.
   - id: interaction_channeling
     layer: entity
     systems: [social]
     depends_on: []
     state: done
+    implemented_by:
+      - src/engine/interaction.py::InteractionSystem
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION.
+        `InteractionComponent`'s own docstring ("State for multi-tick channeling logic") names
+        this mechanism directly. `InteractionSystem.enforce()` (`src/engine/interaction.py`, the
+        file's only class) is called from `src/engine/pipeline.py:333`
+        (`run_phase("interaction_enforcement", ..., InteractionSystem.enforce)`), a real per-tick
+        pipeline phase. Five real progress-advancing call sites confirm active use:
+        `systems/social_systems/guilds.py`, `systems/world_systems/harvesting.py`,
+        `systems/economy_systems/{chests,town_service}.py`, `systems/economy_systems/loot.py`.
   - id: conversation
     layer: entity
     systems: [social]
@@ -318,16 +349,58 @@ mechanisms:
     systems: [progression]
     depends_on: []
     state: done
+    implemented_by:
+      - src/engine/apply.py::ApplyPath::_compute_entity_changes
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. The "biological pressures"
+        half of this entry's claim is real and wired: passive per-tick accumulation
+        (`hunger=min(100, bio.hunger + 0.1*cadence...)`, `sleep_debt=min(100, bio.sleep_debt +
+        0.05*cadence...)`) lives in `ApplyPath._compute_entity_changes` (`src/engine/apply.py`,
+        the cadence-gated `is_bio_due` block), a direct `replace()` rather than the
+        `BiologicalUpdate.hunger_delta` field pattern -- worth noting since grepping only for a
+        positive `hunger_delta=` literal would wrongly conclude no passive accumulation exists.
+        The "attributes" half (raw strength/vitality/agility/etc values) is read live throughout
+        `derived_stats`'s own binding (`SkillScalingService.get_effective_stats`, below). Method-
+        level binding used because `_compute_entity_changes` also computes a second, separate
+        age-related check (`new_age < life.max_age_ticks`, feeding an entity's own `active` flag)
+        in the same method -- this is NOT `aging_death`'s own bound implementation (that entry is
+        bound separately to `LifecycleSystem.resolve_lifecycle()`'s own OLD_AGE death check,
+        elsewhere) but a second, not-yet-investigated code path touching the same age concept;
+        flagged on `aging_death`'s own entry as a possible unintended duplication, out of scope to
+        resolve here.
   - id: derived_stats
     layer: entity
     systems: [progression]
     depends_on: [attributes_biology]
     state: done
+    implemented_by:
+      - src/engine/rpg_depth.py::SkillScalingService::get_effective_stats
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION.
+        `SkillScalingService.get_effective_stats()` orchestrates the full derived-stat pipeline
+        (attribute base via `LevelingService.recalculate_combat_stats()` + breakthrough bonuses +
+        class-tier bonuses + wound/scar penalties), called from `src/engine/apply.py:616` inside
+        the `stats_dirty` block -- a real, authoritative-apply-path caller. Method-level binding
+        used because `SkillScalingService` also defines `calculate_skill_damage()`, an unrelated
+        combat-damage-scaling concern, on the same class. `readiness_speed_scaling`'s own binding
+        (`LevelingService.recalculate_combat_stats`) computes one specific field within this same
+        pipeline; kept as a separate, more specific citation there rather than merged into this
+        entry's own binding.
   - id: race_archetype
     layer: entity
     systems: [progression]
     depends_on: []
     state: done
+    implemented_by:
+      - src/content/schema.py::SpeciesDefinition
     verified:
       instrument: code_trace
       verdict: observed
@@ -340,11 +413,18 @@ mechanisms:
         ran -- a terminology-drift search miss, not an absence of code. Real implementation:
         `SpeciesDefinition` (`src/content/schema.py:134`), resolved per-entity via
         `src/content/resolver.py`'s `resolve_living_defaults(species_id)`.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): bound
+        to `SpeciesDefinition` itself (the data definition this entry's own claim is about), not
+        `resolve_living_defaults` -- that resolver method also performs `class_assignment`'s own
+        role resolution in the same function body, so binding it here would double-attribute one
+        method to two mechanism entries; see `class_assignment`'s own binding below instead.
   - id: class_assignment
     layer: entity
     systems: [progression]
     depends_on: [race_archetype]
     state: partial
+    implemented_by:
+      - src/content/resolver.py::SocialDefaultsResolver::resolve_role_defaults
     verified:
       instrument: code_trace
       verdict: observed
@@ -357,11 +437,32 @@ mechanisms:
         `class_assignment` cannot resolve valid roles without `race_archetype`'s own
         `SpeciesDefinition.compatible_roles` field already existing, a genuine functional
         prerequisite, not just execution order.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): bound
+        to `SocialDefaultsResolver.resolve_role_defaults()` -- the specific method that resolves one
+        role's own definition -- rather than the shared `resolve_living_defaults()` call site cited
+        above, which also does `race_archetype`'s own species-resolution work in the same method
+        body and would misattribute if bound here instead.
   - id: personality
     layer: entity
     systems: [progression, cognition]
     depends_on: []
     state: done
+    implemented_by:
+      - src/core/state.py::PersonalityComponent
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. No single "personality
+        system" -- `PersonalityComponent` (greed/bravery/sociability/industry) is a pure data
+        component read directly by at least 8 real, distinct call sites:
+        `src/engine/tactical.py`, `src/engine/movement.py`, `src/engine/cognition.py` (panic
+        reduction), `src/ai/goals/scorers.py` (combat-vs-flee utility scoring),
+        `src/systems/social_systems/clan_lifecycle.py`,
+        `src/systems/social_systems/party_lifecycle.py`. Symbol-level binding to the data model
+        itself, since consumption is genuinely distributed rather than centralized in one service
+        (`state.py` defines many unrelated components, so file-level would be imprecise).
   - id: build_diversity
     layer: entity
     systems: [progression]
@@ -378,6 +479,30 @@ mechanisms:
     systems: [progression]
     depends_on: []
     state: done
+    implemented_by:
+      - src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem::resolve_lifecycle
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. The real, dedicated old-age
+        check ("Check for natural death (old age)": `if entity.lifecycle.age_ticks >=
+        entity.lifecycle.max_age_ticks: is_dead = True; death_reason = "OLD_AGE"`) lives inside
+        `LifecycleSystem.resolve_lifecycle()`, called from `src/engine/pipeline.py:414` every tick
+        (`run_phase("lifecycle", ..., LifecycleSystem.resolve_lifecycle)`) -- a real, heavily
+        cross-referenced call site (`src/observability/event_extractor.py`,
+        `src/economy/vacancy.py` both cite it directly). Method-level binding used because
+        `resolve_lifecycle()` is one of several methods on `LifecycleSystem` -- `succession`
+        (below) is already class-level-bound to the same class for its own heir/feud-transfer
+        methods (`_transfer_inherited_feud`/`_seed_dying_wish`/`_select_default_heir`); left that
+        existing binding untouched (out of scope for a binding-only pass on already-bound entries),
+        but a future pass could tighten it to method-level too, for the same precision reason.
+        Note: `src/engine/apply.py::ApplyPath._compute_entity_changes` also computes
+        `new_age < life.max_age_ticks` for an entity's own `active` flag -- a second real code path
+        touching the same concept, not investigated further here (out of scope for a binding-only
+        pass); flagging in case it represents unintended duplication rather than intentional
+        redundancy.
   - id: succession
     layer: entity
     systems: [progression]
@@ -450,6 +575,26 @@ mechanisms:
     systems: [combat]
     depends_on: []
     state: partial
+    implemented_by:
+      - src/progression/leveling.py::LevelingService::get_unlocked_skills
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Real, wired implementation:
+        `LevelingService.get_unlocked_skills()` (`src/progression/leveling.py`), called from
+        `EvolutionSystem.evaluate()` (`src/engine/evolution.py:119`,
+        `skills_to_learn.extend(LevelingService.get_unlocked_skills(lvl))`) for HERO-role entities
+        on level-up -- a real, non-test caller in the authoritative apply path, not merely defined.
+        Method-level binding used (not class- or file-level) because `LevelingService` also
+        implements unrelated leveling concerns via other methods (`get_xp_required`,
+        `process_progression`, `recalculate_combat_stats`, already bound to `readiness_speed_scaling`
+        below) -- previously left unbound for exactly this reason
+        (TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION) until method-level binding syntax
+        existed. State stays `partial`, not re-verified upward to `done` here (out of scope for a
+        binding-only pass) -- this confirms the code exists and is wired, not that its real-world
+        outcome is fully verified.
   - id: xp_leveling
     layer: entity
     systems: [progression]
@@ -477,16 +622,63 @@ mechanisms:
         already-ticketed TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION (low cross-faction
         combat volume generally), not independently re-investigated here. Follow-up:
         TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME (filed, not fixed).
+        **Left unbound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION):
+        this entry's own positive-control scenario (the goblin-kills-orc, evolution_points=95 case)
+        is the *identical* scenario already cited in the `evolution` mechanism's own verified block,
+        which is already bound to `src/engine/evolution.py::EvolutionSystem`. Binding `xp_leveling`
+        to the same class would double-attribute one implementation to two registry ids. This looks
+        like a real identity question (are `xp_leveling` and `evolution` the same mechanism under
+        two names, per this registry's own Merge criterion in
+        `docs/plans/mechanism_identity_and_change_taxonomy.md` §2?) rather than a binding gap --
+        genuinely ambiguous, not resolved here, flagged for the roadmap session rather than merged
+        unilaterally in a binding-only pass.
   - id: breakthrough_bonuses
     layer: entity
     systems: [progression]
     depends_on: []
-    state: done
+    state: partial
+    implemented_by:
+      - src/progression/breakthroughs.py::BreakthroughService
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. State correction, done ->
+        orphan -> **partial** (self-corrected same batch, see below). `BreakthroughService.
+        apply_bonuses()` is real and genuinely wired into the live apply path
+        (`SkillScalingService.get_effective_stats()` calls it, itself called from
+        `src/engine/apply.py:616`'s `stats_dirty` block) -- the bonus-*application* side works.
+        But the acquisition side has zero real producers anywhere in `src/`: grepped every
+        `breakthroughs_add=`/`active_breakthroughs=` construction site repo-wide (evolution/level-
+        up code in `src/engine/evolution.py`, spawn/content resolution in `src/core/builder.py`,
+        `src/content/`) and none ever assigns a non-empty value. `apply_bonuses()` is therefore
+        always called with an empty set in real play.
+        **Corrected `orphan` -> `partial`, same batch**: `mechanism_state_caller_check.py`'s own
+        `orphan_with_callers` finding caught this immediately after the first pass -- `orphan`
+        means zero real callers (this registry's own established definition, e.g. `target_race`),
+        but `BreakthroughService.apply_bonuses()` has a real, live, cross-file caller
+        (`rpg_depth.py:367`), so `orphan` was factually wrong, not just imprecise. This is the same
+        shape as `readiness_speed_scaling`'s own state (`partial`, `verdict: contradicted`): real,
+        wired, called code whose real-world outcome never materializes because of a separate gap
+        upstream -- not dead code with zero callers.
   - id: entity_role
     layer: entity
     systems: [progression]
     depends_on: []
     state: done
+    implemented_by:
+      - src/core/enums.py::EntityRole
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. `EntityRole` (IntEnum) is
+        read across roughly 15 real files (`src/world/spawn.py`, `src/engine/legality.py`,
+        `src/engine/military_conflict.py`, `src/engine/evolution.py`, etc.) -- e.g.
+        `EvolutionSystem.evaluate()` gates skill-learning on `entity.identity.role ==
+        EntityRole.HERO`. Symbol-level binding since `enums.py` defines 9 unrelated enums.
 
   # ── Entity layer — Modification (2, atlas `entity-modification`) ───────────────────────────
 
@@ -605,11 +797,23 @@ mechanisms:
     systems: [cognition]
     depends_on: []
     state: gated
+    implemented_by:
+      - src/cognition/self_model_phase.py::SelfModelUpdatePhase
     verified:
       instrument: code_trace
       verdict: observed
       date: "2026-09-16"
-      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
+      note: >-
+        Code read confirms the mechanism is correctly built; currently flag-gated off (see state).
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): this
+        note's own unbound claim resolved to `SelfModelUpdatePhase.apply()`, called from
+        `src/engine/pipeline.py:192` --
+        `run_phase("self_model", update, lambda u: SelfModelUpdatePhase.apply(state, u),
+        "ENABLE_SELF_MODEL_COGNITION")` -- confirming the flag-gated framing exactly
+        (`ENABLE_SELF_MODEL_COGNITION` defaults OFF in `feature_flags.py`). Orchestrates 4
+        sub-services (`SelfAssessmentService`, `NeedInterpretationService`,
+        `CapabilityEstimateService`, `KnowledgeModelService`); `knowledge_model` is bound
+        separately below to the one of those four with its own dedicated registry entry.
   - id: declared_cognition_schema
     layer: entity
     systems: [cognition]
@@ -630,6 +834,20 @@ mechanisms:
     systems: [cognition]
     depends_on: []
     state: done
+    implemented_by:
+      - src/domains/perception/filter.py::PerceptionFilterService
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION.
+        `PerceptionFilterService.filter()` scores candidate signals via
+        `SignalSalienceEvaluator.evaluate()` (`src/domains/perception/salience.py`) and budget-clamps
+        them into a `PerceptionUpdate` -- called from `src/domains/perception/phase.py:43`, a real,
+        non-test integration into the per-tick pipeline. `filter.py` defines only this one service
+        class plus its own data shapes (`PerceptionBudget`/`PerceptionUpdate`), so class-level
+        binding is precise without misattributing an unrelated concern.
   - id: emotion
     layer: entity
     systems: [cognition]
@@ -654,10 +872,26 @@ mechanisms:
     systems: [social]
     depends_on: []
     state: done
+    verified:
+      instrument: code_trace
+      verdict: inconclusive
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Investigated, left unbound
+        -- genuinely ambiguous. Zero literal matches for "affection" anywhere in `src/` (a
+        concept-name-not-a-symbol case). Checked the plausible real candidates: `RelationshipModel`
+        (`src/core/cognition.py`) tracks `private_trust`/`shared_quest_count`, not an affection or
+        bond-strength score; `MarriageState`/`MarriageStatus` (`src/core/strategic.py`, used in
+        `src/engine/domain/core_actions.py:425-444`) is a formal marriage-contract action, plausible
+        but not confident; `FactionSocialMemory` is faction-level, not personal. No stored_artifacts
+        citation trail exists for this id. `motivation_doctrine` is this entry's only registry
+        dependent, and its own code is confirmed deleted (see that entry's own verified block), so
+        it offers no further lead. Left unbound rather than guessed; flagged for the roadmap
+        session.
   - id: motivation_doctrine
     layer: entity
     systems: [cognition]
-    depends_on: [goal_hierarchy, affection_relationship_bonds]
+    depends_on: []
     state: gap
     verified:
       instrument: code_trace
@@ -676,26 +910,50 @@ mechanisms:
         about code that doesn't exist -- gap is the value that survives becoming an executable
         assertion (claims-as-tests phase 2). Only evaluator.py (RoleFitEvaluator, an unrelated
         gear/skill/role-fit scorer) remains in the module.
+        **`depends_on` edges removed 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-
+        CLAIMS-RESOLUTION, resolving the last 2 `unaudited_depends_on_edges`): both
+        `-> goal_hierarchy` and `-> affection_relationship_bonds` were unauditable via code-trace
+        (the implementing code they'd need to be confirmed against is deleted) and, per
+        `docs/guidelines/intentional_divergences.md` #2.53's own description of the deleted chain's
+        real behavior (`compute_bias_multiplier()` read only `class_id`-based
+        `IdentityDoctrine`/`ValuePreferenceProfile` records, never any goal-hierarchy or
+        relationship-model output), neither edge shows evidence of ever having been a genuine
+        functional dependency in the first place -- same conflation shape as the `combat_resolution
+        -> tactical_decision` edge already removed in
+        `docs/plans/mechanism_identity_and_change_taxonomy.md` §3. Removed rather than left
+        unaudited on a `gap`-state mechanism whose own dependency claims can never be verified now
+        that its code is gone.
   - id: commitment_betrayal
     layer: entity
     systems: [social]
     depends_on: []
-    state: done
+    state: orphan
+    implemented_by:
+      - src/core/models/social.py::BetrayalRecord
     verified:
       instrument: code_trace
-      verdict: observed
-      date: "2026-09-19"
+      verdict: contradicted
+      date: "2026-09-20"
       note: >-
         `-> combat_resolution` edge REMOVED (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-
-        EDGES-RESOLUTION #7): confirmed `commitment_betrayal` has no distinct implementation of its
-        own anywhere in `src/` -- every plausible piece of "betrayer" logic (the reputation label
-        set in `src/domains/commitment/reputation.py:21`) is one of `commitment_pressure_
-        consequences`'s own already-bound files. Recorded as an identity/duplication question
-        (two registry ids for what may be one real mechanism), not a depends_on question -- a
-        depends_on edge cannot be confirmed against code that isn't independently attributable to
-        this id. Flagged for a future identity-rules pass rather than forced into either verdict
-        here; the reciprocal edge (`commitment_pressure_consequences -> commitment_betrayal`, #17
-        of the same ticket) carries the same flag on its own entry.
+        EDGES-RESOLUTION #7): originally recorded as a merge candidate with
+        `commitment_pressure_consequences` -- "no distinct implementation of its own anywhere in
+        `src/`" -- but that search only covered `src/domains/commitment/`.
+        **Superseded 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION):
+        a real, distinct, purpose-built implementation exists and was missed --
+        `BetrayalRecord` (`src/core/models/social.py`: `contract_id`/`betrayer_id`/`victim_id`/
+        `severity`/`tick`), an entity-level record for exactly this concept, contract-tied like
+        `commitment_pressure_consequences`'s own `ContractState` model but a genuinely separate
+        type. State corrected `done` -> `orphan`, not merged: grepped every `BetrayalRecord(`
+        construction site repo-wide, found zero -- the type is defined and referenced by nothing,
+        a real, present, purpose-built dataclass that is never actually populated. The
+        merge-candidate premise (`docs/plans/mechanism_identity_and_change_taxonomy.md` §2) was
+        itself based on an incomplete search and is corrected there too. A second, faction-level
+        candidate was also checked and set aside: `Betrayal(FactionDirective)`
+        (`src/engine/faction_decision.py`) breaks an ALLIED relation between factions -- also
+        confirmed never constructed anywhere, but `layer: faction` conceptually, not this
+        entity-level mechanism; not investigated further here as it's out of this batch's scope,
+        flagged in case it is some other faction-layer mechanism's own unbound orphan.
   - id: temporal_pressure
     layer: entity
     systems: [cognition]
@@ -711,6 +969,12 @@ mechanisms:
     systems: [cognition]
     depends_on: [belief_cycle]
     state: done
+    implemented_by:
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_project_switch
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::resume_project
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::process_project_outcome
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::_resolve_active_objective
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_strategic_intent
     verified:
       instrument: code_trace
       verdict: observed
@@ -734,11 +998,32 @@ mechanisms:
         KEEP (#8): the same strategic pass directly calls `BeliefCycleSystem.process_observation()`/
         `apply_contradiction()` (`intelligence.py:436,448`) to confirm or contradict leads that feed
         the same objective-selection pipeline.
+        **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): all 5
+        methods this note already names, bound at method level now that the binding syntax exists
+        (`path::Class::method`) -- resolves the gap this note itself recorded rather than leaving it
+        open a second batch running.
   - id: belief_cycle
     layer: entity
     systems: [cognition]
     depends_on: []
     state: done
+    implemented_by:
+      - src/systems/strategic_systems/belief.py::BeliefCycleSystem
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Real, dedicated
+        implementation already cited by `goal_hierarchy`'s own verified note
+        (`BeliefCycleSystem.process_observation()`/`apply_contradiction()`,
+        `intelligence.py:436,448`) -- `BeliefCycleSystem` itself lives in its own single-purpose
+        file (`src/systems/strategic_systems/belief.py`: lead decay, rumor processing, observation
+        confirmation, contradiction), with multiple real, non-test callers:
+        `src/engine/pipeline.py:408` (`run_phase("belief_staleness_decay", ...,
+        BeliefCycleSystem.resolve_lead_staleness(state))`), `src/systems/social_systems/guilds.py`
+        (`process_rumor`), and `intelligence.py`'s own calls above. Class-level binding is precise
+        -- no other mechanism shares this file.
   - id: information_trust_deception
     layer: entity
     systems: [cognition]
@@ -748,12 +1033,37 @@ mechanisms:
       instrument: code_trace
       verdict: observed
       date: "2026-09-16"
-      note: "Code read confirms the mechanism is correctly built; currently flag-gated off (see state)."
+      note: >-
+        Code read confirms the mechanism is correctly built; currently flag-gated off (see state).
+        **Investigated, left unbound 2026-09-20**
+        (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): the most plausible named
+        candidate, `SourceTrustUpdateService.update()` (`src/domains/information/trust.py`), has
+        ZERO real callers anywhere in `src/` -- not flag-gated-off, simply never invoked, a
+        different shape than this note's own "flag-gated" framing describes.
+        `InformationBeliefPhase.apply()` (`src/domains/information/phase.py`, gated behind
+        `ENABLE_BELIEF_ASSIMILATION`) is a real, wired candidate but its own concern (observation
+        routing/belief assimilation) reads closer to `belief_cycle`'s own scope than to
+        trust/deception specifically, and misattributing it here risks the same error class as the
+        `trauma` incident. Genuinely ambiguous without the original 2026-09-16 investigator's own
+        working notes (not found in `stored_artifacts/`) -- left unbound rather than guessed;
+        flagged for the roadmap session as worth a closer look, since the discrepancy between this
+        note's "flag-gated" framing and the zero-caller candidate found here is itself notable.
   - id: knowledge_model
     layer: entity
     systems: [cognition]
     depends_on: []
     state: gated
+    implemented_by:
+      - src/cognition/knowledge_model.py::KnowledgeModelService
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. `KnowledgeModelService`
+        (single-purpose class, own file) is one of the 4 services `SelfModelUpdatePhase.apply()`
+        orchestrates (see `self_model`'s own verified block) -- gated by the same
+        `ENABLE_SELF_MODEL_COGNITION` flag transitively, matching this entry's own `gated` state.
   - id: causal_spatial_memory
     layer: entity
     systems: [cognition]
@@ -785,12 +1095,60 @@ mechanisms:
     layer: entity
     systems: [world, cognition]
     depends_on: []
-    state: gated
+    state: orphan
+    implemented_by:
+      - src/systems/world_systems/quests.py::QuestGenerationSystem
+    verified:
+      instrument: code_trace
+      verdict: contradicted
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. State correction, gated ->
+        orphan. `QuestGenerationSystem` (`src/systems/world_systems/quests.py`,
+        `generate_from_scar()`/`generate_from_blockers()`/`quest_to_project()`, real purpose-built
+        code with its own compliance IDs STRAT-150..163) has ZERO real callers anywhere in `src/`
+        for any of its 3 methods -- `src/systems/quests.py` merely re-exports the class, it is never
+        actually invoked. This is `orphan` (dead code physically present, zero callers), not
+        `gated` (a feature flag exists and is off) -- no `ENABLE_QUEST_GENERATION`-shaped flag was
+        found guarding it; `ENABLE_GUILD_QUEST_GENERATION` is a real, live, unrelated flag guarding
+        a *different* mechanism (`GuildVisitPhase`, guild-specific quest boards), not this class.
+        A `done`/`gated` claim with nothing calling it is itself the finding this batch exists to
+        surface, per this batch's own explicit instruction.
   - id: strategic_intelligence_core
     layer: entity
     systems: [cognition]
     depends_on: [belief_cycle]
+    implemented_by:
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION.
+        `fused_strategic_pass()` is the top-level orchestrating entry point, called directly from
+        `src/engine/pipeline.py:398` under the pipeline's own `"strategic_intelligence"` phase name
+        (`run_phase("strategic_intelligence", ..., StrategicIntelligenceSystem.fused_strategic_pass)`)
+        -- a direct, unambiguous name match confirming this is the "core" pass, distinct from
+        `goal_hierarchy`'s own 5 specific project/objective methods it calls internally. Avoided a
+        real trap: `derive_cognition_profile()` on the same class looked like a plausible core-
+        entry candidate but is confirmed never called anywhere (see `cognition_capacity_fatigue`'s
+        own verified note) -- binding to it would have been a confident-but-wrong pick.
     state: done
+    implemented_by:
+      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. `fused_strategic_pass()` is
+        the pipeline's own literal per-tick strategic-intelligence entry point --
+        `src/engine/pipeline.py:398`: `run_phase("strategic_intelligence", update, lambda u:
+        StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))`, docstring
+        "Fused pass for strategic intelligence (Blockers, Concerns, Intents)" -- matching this
+        mechanism's own "core" naming as the umbrella entry point, distinct from `goal_hierarchy`'s
+        own 5 project/objective methods on the same class.
   - id: committed_intentions
     layer: entity
     systems: [cognition]
@@ -816,6 +1174,29 @@ mechanisms:
     systems: [cognition]
     depends_on: []
     state: done
+    implemented_by:
+      - src/engine/pipeline_phases/capacity_enforcement.py::CapacityEnforcementPhase
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: >-
+        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Search-failure trap avoided:
+        `docs/strategy/bounded_cognition_feature_spec.md`'s own `CognitionCapacityBuilder`/
+        `CognitionCapacityProfile` names and field names (`planning_budget`, `active_slice_limit`,
+        etc.) do not exist anywhere in `src/` -- a spec describing a design that shipped under
+        different names, not evidence of missing code. Also two different `CapacityService`
+        classes exist (`src/strategy/cognition_capacity.py`, used by `intelligence.py`'s own
+        never-called `derive_cognition_profile()`; `src/strategy/capacity.py`, the real live one)
+        -- a same-name-different-thing trap. The actual live implementation is
+        `CapacityEnforcementPhase.enforce()`, docstring "Authoritative phase to ensure entities do
+        not exceed cognitive bandwidth" (STRAT-185), called unconditionally from
+        `src/engine/pipeline.py:427` and marked `must_run_every_tick=True` in `phase_graph.py` --
+        reads `entity.strategic.profile.max_active_projects`/`.interruption_resistance` (real field
+        `profile`, not the `cognition_profile` name several other candidates use), with real
+        consumers confirmed at `src/systems/strategic_systems/detour.py:207`,
+        `src/systems/strategic_systems/intelligence.py:1069,1727`, `src/ai/goals/scorers.py:258`,
+        `src/town/guild.py:90`.
 
   # ── Group layer (2, atlas `group-layer`) ────────────────────────────────────────────────────
 
@@ -1395,10 +1776,14 @@ mechanisms:
     state: partial
     implemented_by: [src/domains/commitment/pressure.py, src/domains/commitment/impact.py, src/domains/commitment/reputation.py, src/domains/commitment/abandonment.py]
     # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION
-    # #17): `-> commitment_betrayal` REMOVED, reciprocal to `commitment_betrayal`'s own #7 --
-    # commitment_betrayal has no distinct code of its own (its only plausible logic already lives
-    # in this mechanism's own bound files), so it cannot be a real depends_on target. See
-    # `commitment_betrayal`'s own entry for the full identity/duplication flag.
+    # #17): `-> commitment_betrayal` REMOVED, reciprocal to `commitment_betrayal`'s own #7.
+    # CORRECTED 2026-09-20 (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): the
+    # original "no distinct code of its own" premise was itself based on an incomplete search --
+    # `commitment_betrayal` is now bound to its own real (orphaned) `BetrayalRecord`
+    # (`src/core/models/social.py`), a genuinely separate type from anything in this mechanism's
+    # own bound files. The edge removal's real conclusion still holds on different grounds: neither
+    # side's implementation constructs/calls the other, so no real depends_on relationship exists
+    # to verify either way. See `commitment_betrayal`'s own entry for the corrected finding.
     # src/domains/commitment/{pressure,impact,reputation,abandonment}.py -- NOT the real
     # implementation of commitment_betrayal (that is Betrayal(FactionDirective) in
     # engine/faction_decision.py and BetrayalRecord in core/models/social.py; a real
@@ -1434,9 +1819,15 @@ mechanisms:
 # goal_hierarchy, city->regional_sovereignty -- see each mechanism's own verified block), 2 flagged
 # as an identity/duplication question rather than forced into either verdict
 # (commitment_betrayal/commitment_pressure_consequences -- see commitment_betrayal's own entry).
-# Only the motivation_doctrine pair remains genuinely unresolved, deferred to
-# TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN per this ticket's
-# own original note (that ticket's own retirement finding may resolve both edges for free).
-unaudited_depends_on_edges:
-  - [motivation_doctrine, goal_hierarchy]
-  - [motivation_doctrine, affection_relationship_bonds]
+# TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION (2026-09-20): the
+# commitment_betrayal/commitment_pressure_consequences identity/duplication flag from the previous
+# batch is resolved -- NOT a duplicate. `commitment_betrayal` has its own real (orphaned)
+# `BetrayalRecord` implementation, missed by the original search. See commitment_betrayal's own
+# entry for the corrected finding.
+# TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION (2026-09-20): resolved the last 2,
+# the motivation_doctrine pair. Both removed from motivation_doctrine's own depends_on (see that
+# entry's own note) -- unauditable via code-trace since the implementing code they'd need to be
+# checked against is deleted, and no evidence either was ever a genuine functional dependency in
+# the first place. All 17 original edges now resolved; this list is empty until a future audit
+# adds new ones.
+unaudited_depends_on_edges: []

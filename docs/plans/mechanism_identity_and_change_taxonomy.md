@@ -109,6 +109,21 @@ registry edit. A wrong answer here is exactly as informative as `action_pacing_r
 was for the forward direction — this is the rule's first real test of whether it holds symmetrically
 or only in the direction it was originally validated on.
 
+**Resolved 2026-09-20, NOT a merge** (`TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-
+RESOLUTION`): the premise above was itself wrong, not just unconfirmed. The original search that
+produced "no implementation distinct from `commitment_pressure_consequences`" only covered
+`src/domains/commitment/` — it never looked in `src/core/models/social.py`, where a real,
+purpose-built `BetrayalRecord` (`contract_id`/`betrayer_id`/`victim_id`/`severity`/`tick`) exists
+for exactly this concept. It has zero real constructors anywhere (`grep -rn "BetrayalRecord("
+src/` finds none), so it is a real, present, unused type — `commitment_betrayal`'s own state moved
+`done` → `orphan`, bound to this type, not merged into its sibling. This is the rule's first real
+test of the reverse direction turning out negative: the two ids were never actually the same
+mechanism, a search gap made them look that way. The general lesson generalizes past this one
+case: **before concluding "no distinct implementation" for a merge candidate, search beyond the
+directory the sibling's own binding lives in** — a namespace-adjacent-looking module
+(`src/domains/commitment/`) crowded out a real hit sitting in an unrelated one
+(`src/core/models/`).
+
 ---
 
 ## 3. `depends_on`'s own semantics — already defined, found violated once, corrected
@@ -287,6 +302,46 @@ without burying it in prose. **Split, performed below.**
   does not resolve — `lair`'s own gap classification may refer to the Lair place-kind never being
   composed into any world (a different, real, separate blocker) rather than the occupant-spawn code
   itself being unbuilt. Worth its own follow-up investigation.
+
+---
+
+## 7. `implemented_by` binding granularity — method-level, when to reach for it
+
+Symbol-level binding (`path::Class`, `TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING`)
+already separates "this whole file is the binding" from "one specific class/function in this file
+is the binding." It stops being precise enough exactly when **one class implements more than one
+registry mechanism through different methods** — binding at class level then would misattribute
+one mechanism's logic to the other's entry, the same failure shape as §3.2's `trauma` incident, just
+from imprecision rather than a wrong guess.
+
+**Decision (`TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION`), settling the question
+`TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` left open ("leaning toward not building
+it for two mechanisms alone, but not deciding that unilaterally"): build it.** The two-mechanism
+case that ticket declined to act on has since recurred and grown — by this batch, 4 real mechanisms
+across 2 classes needed it (`xp_leveling`/`skill_unlocks` on `LevelingService`;
+`goal_hierarchy`/`strategic_intelligence_core` on `StrategicIntelligenceSystem`) — crossing the bar
+the earlier ticket declined to cross for just two. `implemented_by` now accepts a third
+`::`-delimited segment, `path::Class::method`, validated against the method's real definition
+inside that class's own body (bounded by the next top-level class/def, so a same-named method on a
+different class can't produce a false match — see `registry.py::_method_defined_in_class`). This
+is a validator capability extension, not a schema change: `implemented_by` is still a plain list of
+strings.
+
+**When to reach for each level:**
+- **File-level** (bare path): the file's own symbols are all genuinely one concept (no unrelated
+  logic sharing the file).
+- **Symbol-level** (`path::Class`): the file mixes unrelated top-level symbols, but the one this
+  mechanism needs is a whole class/function to itself.
+- **Method-level** (`path::Class::method`): even the *class* is multi-concern — it implements more
+  than one registry mechanism via different methods (or a mechanism's own concern is genuinely one
+  method's worth of logic within a larger class). A mechanism whose real code lives on a large,
+  multi-concern class but whose own distinct concern spans *several* of that class's methods (not
+  one) can list multiple `path::Class::method` entries — `implemented_by` is already a list; nothing
+  about method-level binding requires exactly one entry per mechanism (`goal_hierarchy`'s own
+  binding uses 5).
+- **Leave unbound, with a note** when a class is multi-concern and it isn't yet clear which
+  specific method(s) belong to which mechanism — guessing here is exactly the `trauma` misattribution
+  risk one level finer; state the ambiguity instead of forcing a pick.
 
 ---
 

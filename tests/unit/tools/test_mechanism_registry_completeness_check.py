@@ -105,10 +105,23 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     status_effects) all resolve to `src/engine/`/`src/core/` targets, outside this checker's own
     `src/domains/`/`src/systems/` scope entirely (same divergence the ticket's own Request Summary
     already documents for `declared_cognition_schema`/`committed_intentions` -> `core/cognition.py`),
-    so they don't move this metric even though they do move `mechanisms_with_binding`."""
+    so they don't move this metric even though they do move `mechanisms_with_binding`.
+
+    2026-09-20 (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION, 24-mechanism entity-
+    layer batch): `bound` 25 -> 29, `unbound` 36 -> 32. New `src/domains/`/`src/systems/` targets
+    entering `bound` from this batch's new class-level bindings: `domains/perception` (`perception`),
+    `systems/lifecycle_systems/lifecycle` (`aging_death`), `systems/strategic_systems/belief`
+    (`belief_cycle`), `systems/strategic_systems/intelligence` (`goal_hierarchy`/
+    `strategic_intelligence_core`, both method-level bindings on the same file),
+    `systems/world_systems/quests` (`quest_generation_sourcing`) -- 5 newly-bound mechanisms' targets
+    map to only 4 new distinct target keys since two mechanisms share the `intelligence` target.
+    Most of this batch's other ~15 new bindings resolve to `src/engine/`/`src/core/`/`src/content/`/
+    `src/progression/`/`src/cognition/` targets, outside this checker's own narrower scope, same
+    divergence as every prior batch -- `mechanisms_with_binding` (55) moved by more than `bound`
+    did, for the same reason."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 64
-    assert len(report.bound) == 25
+    assert len(report.bound) == 29
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 36
+    assert len(report.unbound) == 32
