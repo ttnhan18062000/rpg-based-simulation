@@ -208,3 +208,30 @@ mechanisms, both controls for each, per peer's exact specification). Both named 
 (determinism/seed sensitivity, purpose-built worlds) addressed directly with evidence, not
 assumption. One real, separate defect found incidentally and filed, not fixed. Peer report pending
 (see Related Tickets) before any further scaling is proposed.
+
+**Addendum 2026-09-21, post-report peer review**: instrument approved, scaling authorized, with
+two required actions before proceeding, both done in this same session:
+1. **New §5.1 rule added** to `docs/plans/mechanic_verification_scenarios_proposal.md`: a "no
+   difference" verdict requires proof the difference would have been observable within the
+   scenario's own window (demonstrate the outcome is computed within the window, or state the
+   horizon and weaken the verdict to "no difference observed within N ticks") — the value-axis
+   analogue of §5 item 5's vacuous negative arm, on a different axis (there: prove reached-and-
+   declined; here: prove the outcome was actually computed, not just that none was seen yet).
+   Distinguished explicitly from this axis's own negative control (an input the mechanism
+   *provably never reads at all* — no horizon question applies there, since there is no outcome to
+   wait for).
+   **Self-audit against the new rule, none of this batch's 3 mechanisms needed retraction**: all
+   were immediate/deterministic (the outcome is fully computed in the same tick/call the input is
+   varied — a formula recalculation, a single combat kill's reward), not threshold-crossing or
+   compounding, so the new rule's horizon concern does not apply to any verdict already recorded
+   here.
+2. **`TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` reframed and raised P1 -> P0**:
+   peer identified this as a world-integrity bug (every entity's species differentiation erodes
+   toward generic defaults as soon as it takes any ordinary action) that silently invalidates every
+   prior combat-balance observation ever measured against this simulation, not merely a
+   progression-scoped recalc defect — the ticket's Request Summary now states this plainly for the
+   roadmap session, unchanged in scope (still filed, not fixed, per the original disposition).
+
+Scaling to the remaining progression mechanisms authorized, reporting per wave — tracked as further
+work under this same instrument, not a new ticket per wave (matching Program A's own precedent of
+one ticket spanning multiple waves with dated addenda).

@@ -367,6 +367,39 @@ Arbitration (the third failure-to-matter shape catalogued in
 `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`) is out of scope for this axis — it
 needs its own instrument.
 
+**A "no difference" verdict requires proof the difference would have been observable within the
+scenario's own window — added 2026-09-21, per peer review of batch 1 before approving further
+scaling.** Batch 1's three mechanisms were all immediate and deterministic: the outcome is fully
+computed in the same tick the input is staged (a formula recalculation, a single combat kill's
+reward). Most of `progression` is not shaped that way — skill unlocks fire at thresholds, reward
+scaling compounds over many ticks, advancement curves may only diverge after hundreds of events. On
+those, a short scenario can show no observable difference while the mechanism matters enormously,
+and recording that as "the value doesn't matter" would be a confident false negative of a new kind
+— the value-axis analogue of §5 item 5's vacuous negative arm, arriving on a different axis (there:
+prove the mechanism was reached and declined, not merely that nothing happened; here: prove the
+outcome was actually computed, not merely that no difference was observed by the time the scenario
+stopped watching).
+
+**Distinguish from this axis's own negative control (defined above)**: a negative control varies an
+input the mechanism provably never reads at all (e.g. `evolution_points` for the XP-reward
+formula) — no horizon question applies, because there is no outcome to wait for; the formula
+structurally cannot see that field regardless of how long the scenario runs. This new rule applies
+to a **real, relevant** input whose effect may simply not have manifested yet within the window
+staged — a fundamentally different reason for observing "no difference."
+
+The requirement: for any mechanism whose outcome is not fully computed within the same tick/call
+the input is varied, a "no difference" result must do one of:
+- **(a) demonstrate the outcome is actually computed within the scenario's own window** — e.g. run
+  enough ticks/events inside the scenario itself to cross the threshold, complete the compounding
+  window, or otherwise reach the point where a real difference would show up if one existed, or
+- **(b) state the horizon explicitly and weaken the verdict accordingly** — record it as "no
+  difference observed within N ticks/events," not "the value doesn't matter," and say in the
+  registry note what would need to change (a longer window, a different starting position) to
+  actually test it.
+
+Positive results need neither — a detected difference is a detected difference regardless of how
+short the window was. It is specifically the null result that must earn its own label.
+
 ## 6 · Explicitly not decided here
 
 - The exact assertion-vocabulary API (a small typed-object DSL as sketched in §3.3, vs. plain

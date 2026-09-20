@@ -12,8 +12,9 @@ tags: [simulation-quality, progression]
 # TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS
 
 ## Title
-`stats_dirty` recalculation silently replaces an entity's spawned/species-specific base combat
-stats with `get_effective_stats()`'s generic defaults, every time it fires
+World-integrity bug living in the progression path: `stats_dirty` recalculation silently
+converges every entity's species-specific base combat stats toward generic defaults, and has
+been doing so throughout every prior balance measurement of this simulation
 
 ## Status
 OPEN
@@ -25,10 +26,13 @@ standard
 bug
 
 ## Priority
-P1
+P0
 
 ## Request Summary
-Found incidentally while building the value-differential calibration instrument for
+**Read this as a world-integrity finding, not a progression-subsystem defect that happens to
+live in progression's code path — per explicit peer review before this ticket was filed further:
+this is the most consequential finding of the batch it came from.** Found incidentally while
+building the value-differential calibration instrument for
 `TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT` (not deliberately hunted — a
 zero-delta sanity check against a real compiled entity failed unexpectedly, which is what
 surfaced this).
@@ -49,10 +53,19 @@ trait add/remove, a wound, or `evolution_level` increasing — see `apply.py:595
 endurance*0.5` with `vitality=endurance=5`), silently discarding the entity's own spawned base
 entirely, not just adjusting it by the delta. The same applies to `atk`/`def_stat`/`evasion`.
 
-This means any entity whose content definition set a non-default base HP/ATK/DEF (species,
-role, or other content-driven base) loses that base the first time it takes ANY action that marks
-`stats_dirty` — not a rare edge case; `stats_dirty`'s own trigger list is broad (any attribute or
-equipment change is exactly what's expected to happen routinely in real play).
+**Why this is world-integrity severity, not a progression-scoped defect**: `stats_dirty`'s own
+trigger list is broad and routine — any attribute change, equipment change, learned skill, trait
+add/remove, wound, or evolution-level increase fires it, for every entity, across every species,
+role, and faction in the simulation. This means every entity's species/content-driven combat-stat
+differentiation degrades toward one shared generic baseline (100/10/5/0.05) as soon as it takes
+any of those ordinary actions, and keeps degrading further the more it acts. **This silently
+invalidates every combat-balance observation anyone has ever measured against this simulation
+before today, not just future ones** — any SimQ run, any manual balance pass, any tuning decision
+made by watching real corpus play was watching species differentiation erode over the course of
+that same run without anyone knowing it was happening. It is filed under `progression` because
+the erosion is triggered by progression-adjacent events, but the actual defect and its blast
+radius belong to the simulation's own world-model integrity, not to the progression subsystem's
+own scope.
 
 ## Scope
 For whoever picks this up:
