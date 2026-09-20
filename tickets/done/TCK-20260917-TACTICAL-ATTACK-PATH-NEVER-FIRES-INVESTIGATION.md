@@ -232,6 +232,28 @@ pitfall a prior investigation in this same arc already found unsafe for this kin
 (Acceptance Criteria #4, met). The verdict is recorded against `tactical_decision` in the registry
 (Acceptance Criteria #5, met).
 
+## Addendum — 2026-09-19, a deeper cause found for an adjacent question, via
+## `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`
+
+This investigation asked why the decision layer never *chooses* to engage — candidate 4 found
+the strategic layer almost never assigns a `DEFEAT_ENEMY` objective. A separate, later
+investigation (`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, `src/ai/goals/
+scorers.py:108`'s `CombatEngageScorer`) found a deeper, adjacent cause: **even when
+`GoalKind.COMBAT_ENGAGE` *is* chosen and wins the goal competition, the win is discarded at
+dispatch.** `intelligence.py`'s winner-consumption code has no special case for `COMBAT_ENGAGE`,
+so it falls into the generic branch that hardcodes the resulting objective's kind to
+`"reach_location"`, never derived from the winning goal. `ObjectiveKind.DEFEAT_ENEMY` is created
+exclusively through a different, unrelated scorer (`AdventureGoalScorer`, via
+`RouteFamily.HUNT_WEAK_ENEMY`), gated by its own cognition-profile eligibility system.
+
+**The decision layer does not fail to choose combat — it chooses combat and the choice is
+discarded at dispatch, a dead branch by construction.** No amount of work on perception,
+hostility semantics, posture, or readiness (this investigation's own four candidates) could ever
+have reached it, because nothing downstream of the goal-competition winner ever asks what
+`COMBAT_ENGAGE` itself found. Not fixed in that ticket either — recorded as its own real,
+separate finding, since it needs its own investigation and blast-radius analysis before touching
+`intelligence.py`'s winner-consumption dispatch.
+
 **The answer**: the decision-driven ATTACK path is rare in the corpus worlds because the strategic
 layer almost never points entities at combat objectives, and even when the tactical brain does run
 (itself heavily throttled by a three-layer sticky-task/cadence stack), it almost never finds a

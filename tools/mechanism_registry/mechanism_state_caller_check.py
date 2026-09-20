@@ -227,11 +227,19 @@ def check_mechanism(mechanism: dict, source_files: List[Path]) -> List[Finding]:
         # Symbol-level binding checks only the bound symbol's own real callers; a bare
         # file-level binding falls back to aggregating every top-level symbol in the file (see
         # module docstring for why symbol-level exists and when file-level still applies).
+        # Method-level ("Class::method", TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-
+        # RESOLUTION) searches for the bare method name -- real callers write `Class.method(...)`
+        # or just `method(...)` from inside the class, never the literal "Class::method" string,
+        # so searching for the whole bound_symbol verbatim would find zero callers for every
+        # method-level binding regardless of how wired it actually is. Same caveat as symbol-level
+        # already has: a bare name search can't distinguish this method from an unrelated
+        # same-named one elsewhere, a known, accepted heuristic limit (see module docstring).
         symbols = [bound_symbol] if bound_symbol else _symbol_names(defining_file)
         file_callers: List[Path] = []
         for symbol in symbols:
-            file_callers.extend(_real_callers(symbol, defining_file, source_files))
-            if _flag_context_near_callers(symbol, file_callers):
+            search_name = symbol.rsplit("::", 1)[-1] if symbol and "::" in symbol else symbol
+            file_callers.extend(_real_callers(search_name, defining_file, source_files))
+            if _flag_context_near_callers(search_name, file_callers):
                 any_flag_context = True
         total_callers += len(set(file_callers))
 

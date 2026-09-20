@@ -97,9 +97,11 @@ touched — is the only way to obtain a measured result with zero exposure.
 - `agent-monitoring/data/YYYY-Www/tools.jsonl` (trial attribution via `session_id`)
 
 ## Assumptions / Open Questions
-- Assumed the MCP server can be registered for one session without becoming globally active for
-  every session on this machine. If registration turns out to be global, **stop and report** — that
-  changes the trial's risk profile rather than merely its mechanics.
+- ~~Assumed the MCP server can be registered for one session without becoming globally active for
+  every session on this machine~~ — **resolved by `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-
+  REVERT`**: registration via this repo's own `.mcp.json` is genuinely repo-scoped, demonstrated
+  (not inferred) via `claude mcp list` run from inside this repo versus from a directory with no
+  `.mcp.json`. No longer an open question.
 - The 20% coding-agent figure is not expected to apply: code is passthrough by design
   ("Compressing function bodies would remove exactly what they need"). Savings should concentrate in
   JSON/JSONL, and a low figure on code is the expected, correct result.
@@ -110,11 +112,75 @@ measurement makes ticket scale irrelevant.
 
 Verify upstream behaviour from source or `--help` rather than from docs or from this ticket.
 
+**Reuse, don't rebuild, the first child's setup (2026-09-20).** The registration this ticket needs
+— `.mcp.json`'s `headroom` entry and `tools/start_headroom_mcp.sh` — already exists exactly once,
+in commit `967f1efa4` on the isolation ticket's own branch history (its paired revert,
+`55a55e7cf`, removed both again as that ticket's own proof-of-revert). **Cherry-pick `967f1efa4`
+rather than recreating either file from scratch, and never reach for `headroom mcp install` as a
+shortcut** — that command writes to every detected agent's user-scope config (confirmed from the
+real CLI's own `--help`), the same hazard `headroom wrap` has, and is why the first child
+hand-edited `.mcp.json` directly instead. Two things still need the user, not an agent session, per
+that ticket's own finding: re-running `.venv/bin/python3 -m pip install headroom-ai` in their own
+shell (this sandbox's own `files.pythonhosted.org` block is confirmed, not worked around), and the
+`.mcp.json`/launcher recreation itself is safe for an agent session to redo on its own once the
+package is present.
+
+**Registration was completed early, 2026-09-20 (PR #228), with a real functional smoke test —
+this ticket's own step 1 is done, do not redo it.** After the user's second install attempt
+actually landed `headroom-ai==0.37.0` in `.venv`, `967f1efa4` was cherry-picked onto the batch
+branch and verified with the same real-evidence discipline as the isolation ticket: `claude mcp
+list` connects from inside this repo and shows nothing from a directory with no `.mcp.json`;
+`~/.claude.json` stayed structurally clean (no `mcpServers` key added anywhere); this worktree
+still has no `.venv` of its own, so the launcher's absolute-path resolution is still doing real
+work.
+
+**Beyond registration, a real MCP client (the `mcp` Python SDK's `stdio_client`/`ClientSession`,
+speaking the actual protocol Claude Code would use — not a bypass of it) called all three tools
+against synthetic, non-sensitive payloads. Load-bearing findings for this ticket's own upcoming
+systematic measurement, found here so they don't surprise whoever runs it next:**
+
+- **All three tools work at the protocol level.** `headroom_compress`, `headroom_retrieve`, and
+  `headroom_stats` all returned valid, well-formed responses across 3 calls each — no MCP-level
+  errors. A `headroom_retrieve` round-trip on both a small (2536-byte) and a large (66500-byte)
+  synthetic JSONL payload returned the exact original content, byte-for-byte
+  (`original_content == payload` confirmed via direct Python comparison, not eyeballed).
+- **The base (no-`[ml]`-extra) install measurably degrades compression, not just disables an
+  unrelated feature.** Every compress call printed: `"Native content detection requires ONNX
+  Runtime 1.24+; using pure-Python detection for this process."` A small (~700-token), pure-JSON,
+  anomaly-free payload got `transforms: ["router:noop"]` — 0% savings, no compression attempted at
+  all — plus an explicit second warning: `"Kompress model not ready; requests will not be
+  compressed. Check HuggingFace connectivity or pre-download: headroom-ai[ml] + first-run
+  warmup."` A payload containing one `ERROR`-level line got `"router:protected:error_output"` —
+  also 0%, but that one is *correct*, expected behavior (the plan doc's own "keeps failures, drops
+  passing noise" design). A larger (~19000-token) clean JSONL payload got `"router:mixed:0.93"` —
+  **7.5% savings**, real but far below the claimed 60–95% for JSON specifically, plausibly because
+  the degraded pure-Python content detector isn't confidently classifying repetitive JSONL as
+  `json` (a confident classification would presumably route to `SmartCrusher`, not a generic
+  `mixed` bucket) — **this specific causal chain is a hypothesis, not confirmed**, and is exactly
+  the kind of question this ticket's own systematic measurement should resolve deliberately rather
+  than have surface as a surprise mid-trial.
+- **Practical consequence for this ticket's own Acceptance Criteria**: AC1's "materially below the
+  claimed 60–95%" framing may already be the expected outcome under the current install profile,
+  not a negative trial result — measure it and record it as such, but the possible confound (no
+  `[ml]` extra, degraded content detection) should be named alongside the number, not omitted.
+  Installing `[ml]` is a real, separate, larger decision (pulls `onnxruntime` + `transformers`,
+  the exact memory-pressure risk the base-only install was chosen to avoid) — **do not install it
+  without asking first**, the same discipline the isolation ticket applied to the base install.
+- **State isolation held under real functional use, not just at rest.** All new files this smoke
+  test produced (`ccr_store.db`, `session_stats.jsonl`, `savings_events.jsonl`,
+  `config/install_id`) landed under the isolated `HEADROOM_WORKSPACE_DIR`; `~/.headroom` stayed
+  absent throughout.
+
 ## Test Summary
-_To be completed by the implementer._
+No pytest suite applies — this is agent-tooling/config, verified by real execution against the
+actual installed CLI and a real MCP client, not by unit tests. See the Implementation Notes above
+for the full smoke-test record (3 payloads, 3 tools, 2 confirmed byte-exact round-trips).
 
 ## Files Changed
-_To be completed by the implementer._
+- (via cherry-pick of `967f1efa4`, folded into PR #228, not a new commit on this ticket's own
+  branch) `.mcp.json`, `tools/start_headroom_mcp.sh`, `requirements-knowledge.txt`, `.gitignore`.
+- This ticket file — recorded the early-completed registration step and the smoke-test findings.
 
 ## Completion Summary
-_Open._
+_Still open — registration (this ticket's own step 1) is done; the systematic paired measurement
+across real payload types (the ticket's actual substance) has not started._

@@ -18,3 +18,10 @@ rank-bm25==0.2.2
 # known to reproduce the current graph). Not a Python import dependency of this project's
 # installable package -- invoked only as a standalone CLI, so it stays out of pyproject.toml.
 graphifyy==0.8.39
+
+# Headroom (TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT) -- base package only, no extras
+# ([proxy]/[all] pull onnxruntime + transformers, unneeded for the MCP-mode-only trial this repo
+# is running and a real memory-pressure risk on this machine). Registered as a repository-scoped
+# MCP server in .mcp.json, launched via tools/start_headroom_mcp.sh -- never `headroom wrap`,
+# which would write to user-scope ~/.claude.json and activate Headroom in every repository.
+headroom-ai==0.37.0

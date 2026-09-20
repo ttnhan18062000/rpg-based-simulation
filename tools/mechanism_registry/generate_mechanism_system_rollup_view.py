@@ -63,8 +63,21 @@ def _row(label: str, stats: dict, baseline: dict) -> str:
             f"{_pt_delta(stats['verified_rate'], baseline['verified_rate'])} vs baseline) "
             f"[{stats['runtime_verified']} runtime, {stats['static_verified']} static]"
         )
+    # TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY. Denominator is `verified`
+    # (mechanisms this group actually confirmed something for), not `count` -- this is a property
+    # of HOW verification was done, not of coverage, and the two must not be conflated in one cell.
+    # A 0-verified group gets "n/a" for the same reason a 0-member group does above.
+    if stats["verified"] == 0:
+        runtime_share_cell = "0/0 (n/a)"
+    else:
+        runtime_share_cell = (
+            f"{stats['runtime_verified']}/{stats['verified']} "
+            f"({_pct(stats['runtime_verified_share'])}, "
+            f"{_pt_delta(stats['runtime_verified_share'], baseline['runtime_verified_share'])} "
+            "vs baseline)"
+        )
     return (
-        f"| `{label}` | {stats['count']} | {bound_cell} | {verified_cell} | "
+        f"| `{label}` | {stats['count']} | {bound_cell} | {verified_cell} | {runtime_share_cell} | "
         f"{stats['bound_unverified']} | {state_cells} |"
     )
 
@@ -112,15 +125,27 @@ def render(data: dict) -> str:
         f"**Baseline (all {baseline['count']} mechanisms)**: "
         f"{baseline['bound']} bound ({_pct(baseline['bound_rate'])}), "
         f"{baseline['verified']} verified ({_pct(baseline['verified_rate'])} — "
-        f"{baseline['runtime_verified']} runtime, {baseline['static_verified']} static), "
+        f"{baseline['runtime_verified']} runtime, {baseline['static_verified']} static, "
+        f"{_pct(baseline['runtime_verified_share'])} of verified is runtime), "
         f"{baseline['unverified']} unverified ({baseline['bound_unverified']} of those "
         "bound-but-unverified). State breakdown: " + ", ".join(
             f"{s} {baseline['state_counts'][s]}" for s in _STATE_ORDER
         ) + ".",
         "",
-        "| System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Bound, Unverified "
-        "| done | partial | gap | orphan | gated | skeleton |",
-        "|---|---|---|---|---|---|---|---|---|---|---|",
+        "**Runtime Share is a property of the verification method, not of coverage — track it "
+        "separately.** `Verified` counts mechanisms confirmed by *any* instrument; `code_trace` "
+        "(the code says it should work) and `scenario`/`corpus_run` (the simulation actually did "
+        "it) are not interchangeable evidence, and a batch of code_trace-only re-confirmations can "
+        "raise `Verified` while silently lowering `Runtime Share` — exactly what happened in "
+        "`TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN` (batch 3 of the unbound-claims "
+        "program), whose 20 new `code_trace` verifications moved the registry-wide runtime share "
+        "from 27% to " + _pct(baseline['runtime_verified_share']) + " while `Verified` itself grew. "
+        "Neither number tells the whole story alone.",
+        "",
+        "| System | Mechanisms | Bound (vs baseline) | Verified (vs baseline) | Runtime Share of "
+        "Verified (vs baseline) | Bound, Unverified | done | partial | gap | orphan | gated | "
+        "skeleton |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
 
     for row in rollup["systems"]:

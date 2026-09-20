@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _MCP_JSON_PATH = _REPO_ROOT / ".mcp.json"
 
@@ -17,9 +19,21 @@ def _load_mcp_config() -> dict:
     return json.loads(_MCP_JSON_PATH.read_text())
 
 
+def _assert_no_knowledge_gateway(servers: set) -> None:
+    # TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT added a legitimate third server
+    # (headroom) after this test was written — an exact-set assertion would break on every
+    # future legitimate registration too. The real invariant this guards is narrower: the
+    # archived knowledge-gateway must never reappear, and the two pre-archival servers must
+    # still be present (their own byte-identical shape is checked by the two tests below).
+    # Extracted so the adversarial test below exercises this exact logic, not a copy of it.
+    assert "knowledge-gateway" not in servers
+    assert {"knowledge-search", "github"} <= servers
+
+
 def test_mcp_json_no_longer_registers_knowledge_gateway():
     mcp_config = _load_mcp_config()
-    assert set(mcp_config["mcpServers"].keys()) == {"knowledge-search", "github"}
+    servers = set(mcp_config["mcpServers"].keys())
+    _assert_no_knowledge_gateway(servers)
 
 
 def test_knowledge_search_entry_is_byte_identical_to_its_pre_archival_shape():
@@ -43,3 +57,11 @@ def test_github_entry_is_byte_identical_to_its_pre_archival_shape():
         ],
         "description": "GitHub API — workflow runs, PRs, issues, logs",
     }
+
+
+def test_generalized_check_still_fails_if_knowledge_gateway_reappears():
+    # Exercises _assert_no_knowledge_gateway itself (not a re-implemented copy of its logic), so
+    # this guard genuinely fails if the real production assertion is ever weakened or drifts.
+    servers = {"knowledge-search", "github", "knowledge-gateway"}
+    with pytest.raises(AssertionError):
+        _assert_no_knowledge_gateway(servers)

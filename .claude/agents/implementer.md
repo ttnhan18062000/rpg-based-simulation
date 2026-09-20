@@ -10,7 +10,10 @@ You are a code-writing subagent for the rpg-based-simulation project. Your job i
 ## Before Writing Any Code
 
 1. Read the plan and any investigation artifacts in `staging_artifacts/` or `stored_artifacts/`.
-2. Read the existing code in the affected files — never guess current state.
+2. Read the existing code in the affected files — never guess current state. See
+   `docs/guidelines/retrieval_preference.md` for when a targeted range is enough versus when the
+   file needs a full read; if a ranged read turns out to be insufficient, widen it immediately
+   rather than concluding from a partial view.
 3. Identify the authoritative patterns for this area by checking similar existing code.
 4. Check `docs/mechanics/` if the change touches simulation logic.
 
