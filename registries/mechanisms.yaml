@@ -206,6 +206,22 @@ mechanisms:
         disposition. See `combat_resolution` and `combat_engagement` for the rest of this same
         finding, and `stored_artifacts/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION/`
         for the full per-world evidence table.
+        **Scope note, added 2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-
+        VERIFICATION), made explicit per peer review rather than left as an unrecorded reasoning
+        step**: `TacticalDecisionSystem` (`src/engine/tactical.py`) is the only `implemented_by`
+        binding here, but its real targeting logic also calls a second, real, currently-unregistered
+        component, `src/world/perception/gate.py::PerceptionGate` (`tactical.py:181,199`,
+        `_gate.can_perceive(...)`), which gates raw sense-profile detection (vision/hearing/smell/
+        etc. against a target's emitted signals) before a target is even considered for a decision.
+        This is deliberately NOT added to `implemented_by` above and NOT registered as its own
+        mechanism -- `PerceptionGate` is real, live, and load-bearing, but its own scope (raw
+        detection capability, upstream of any decision) is narrower than `tactical_decision`'s own
+        concept (which decision to make once a target is already knowable), so folding it into this
+        binding would misattribute a distinct concern rather than merely omit a citation. Recorded
+        here explicitly so the reasoning survives -- an un-registered dependency that "everyone
+        knows" is implicitly covered is exactly the kind of knowledge that decays. Not the same
+        finding as `perception`'s own dormancy (a different, unrelated component under a similar
+        directory name) -- see that entry's own note.
   - id: combat_engagement
     layer: entity
     systems: [combat]
