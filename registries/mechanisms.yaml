@@ -836,9 +836,9 @@ mechanisms:
     implemented_by:
       - src/cognition/self_model_phase.py::SelfModelUpdatePhase
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-09-20"
       note: >-
         Code read confirms the mechanism is correctly built; currently flag-gated off (see state).
         **Bound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): this
@@ -850,6 +850,22 @@ mechanisms:
         sub-services (`SelfAssessmentService`, `NeedInterpretationService`,
         `CapabilityEstimateService`, `KnowledgeModelService`); `knowledge_model` is bound
         separately below to the one of those four with its own dedicated registry entry.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket B --
+        one shared observation with `knowledge_model`, same discipline as the
+        `strategic_intelligence` phase pairing, not two independent ones). Reused
+        `data/worlds/unit_selfmodel_pilot/` -- a real, purpose-built world already staging a real
+        pending unknown-fact event for a real compiled entity (`tests/mechanic_scenarios/
+        test_self_model_and_knowledge_model_gated_dormancy.py`). Confirmed directly, not assumed:
+        `state.feature_flags` is empty by default even for this world (its own "ON via this world's
+        profile YAML" description is a SimQ-corpus-runner-level override, not something
+        `WorldCompiler.compile()` applies). With the flag manually staged ON, a real
+        `Kernel.tick_once()` at `state.tick=1` updates `self_awareness.last_self_check_tick` to 1
+        (checked at a nonzero tick specifically -- tick 0 would be indistinguishable from "never
+        updated", an ambiguity caught empirically before it became a vacuous assertion); with the
+        flag at its real default (OFF), `self_model` stays fully at its compiled default. Backing:
+        (a) static, same shape as `temporal_pressure`'s own entry -- §5 item 5's reach-proof
+        requirement does not apply to this reachability-claim negative arm.
   - id: declared_cognition_schema
     layer: entity
     systems: [cognition]
@@ -1233,7 +1249,7 @@ mechanisms:
     implemented_by:
       - src/cognition/knowledge_model.py::KnowledgeModelService
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -1241,6 +1257,16 @@ mechanisms:
         (single-purpose class, own file) is one of the 4 services `SelfModelUpdatePhase.apply()`
         orchestrates (see `self_model`'s own verified block) -- gated by the same
         `ENABLE_SELF_MODEL_COGNITION` flag transitively, matching this entry's own `gated` state.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket B).
+        Same real scenario as `self_model`'s own updated note
+        (`tests/mechanic_scenarios/test_self_model_and_knowledge_model_gated_dormancy.py`) -- one
+        shared observation, not a second independent one. With `ENABLE_SELF_MODEL_COGNITION=ON`, a
+        real compiled world's own pre-staged pending unknown-fact event (`unit_selfmodel_pilot`,
+        `actor_id=15`, `material.wood.source`) is genuinely assimilated:
+        `self_model.knowledge.unknowns["material.wood.source"]` becomes a real `UnknownFact`
+        through a real `Kernel.tick_once()`; with the flag off (real default), it stays empty.
+        Positive control confirms `KnowledgeModelService.assimilate()` itself is not broken.
   - id: causal_spatial_memory
     layer: entity
     systems: [cognition]
@@ -1248,15 +1274,31 @@ mechanisms:
     state: gated
     implemented_by: [src/domains/memory/phase.py::MemoryUpdatePhase]
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-16"
-      note: "Was mis-registered `orphan`; MemoryUpdatePhase.apply() is called live from
+      date: "2026-09-20"
+      note: >-
+        Was mis-registered `orphan`; MemoryUpdatePhase.apply() is called live from
         engine/pipeline.py:154-157 via run_phase('memory_update', ..., 'ENABLE_MEMORY_UPDATE') --
         a real caller exists, so `orphan` (zero callers) was factually wrong. The flag defaults
         OFF (feature_flags.py, TCK-20260824-CAUSAL-MEMORY-ROUTE-SCORING: 'wires MemoryUpdatePhase
         into refine() for the first time'), which is what `gated` means. Found while resolving
-        implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING)."
+        implemented_by bindings (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING).
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, Bucket B).
+        Reused `temporal_pressure`'s own already-audited flag-toggle scaffolding for this identical
+        phase/gate (`tests/mechanic_scenarios/
+        test_causal_spatial_memory_gated_visit_tracking.py`). Targets step 3 of
+        `MemoryUpdatePhase.run()` ("Regular Spatial Visited region updating"), the simplest real
+        effect this phase produces -- no trigger event needed, only a real compiled
+        `navigation.region_id`. With `ENABLE_MEMORY_UPDATE=ON`, the entity's own real region gets
+        recorded as visited (`visit_count=1, familiarity=0.2`) through a real `Kernel.tick_once()`;
+        with the flag at its real shipped default (OFF), `visited_regions` stays empty. Positive
+        control confirms `SpatialMemoryUpdateService.update_region_visit()` itself is not broken.
+        Backing: (a) static, same shape as `temporal_pressure`'s own entry -- the flag-off arm is a
+        reachability claim, not an internal-logic one, so `mechanic_verification_scenarios_
+        proposal.md` §5 item 5's reach-proof requirement does not apply here (already recorded on
+        `temporal_pressure`'s own entry, same reasoning, not repeated in full).
   - id: adventure_routing
     layer: entity
     systems: [cognition, world]
@@ -1322,6 +1364,7 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: [belief_cycle]
+    state: done
     implemented_by:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
     verified:
@@ -1349,21 +1392,6 @@ mechanisms:
         `concern_intake` remain `code_trace` pending their own staging). The scenario confirms
         `fused_strategic_pass()` really dispatches through a real `Kernel.tick_once()`, not just
         that `pipeline.py` calls it by name.
-    state: done
-    implemented_by:
-      - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
-    verified:
-      instrument: code_trace
-      verdict: observed
-      date: "2026-09-20"
-      note: >-
-        TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. `fused_strategic_pass()` is
-        the pipeline's own literal per-tick strategic-intelligence entry point --
-        `src/engine/pipeline.py:398`: `run_phase("strategic_intelligence", update, lambda u:
-        StrategicIntelligenceSystem.fused_strategic_pass(state, u, cadence=cadence))`, docstring
-        "Fused pass for strategic intelligence (Blockers, Concerns, Intents)" -- matching this
-        mechanism's own "core" naming as the umbrella entry point, distinct from `goal_hierarchy`'s
-        own 5 project/objective methods on the same class.
   - id: committed_intentions
     layer: entity
     systems: [cognition]

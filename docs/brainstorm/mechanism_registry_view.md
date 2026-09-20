@@ -6,7 +6,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**15 runtime-verified, 67 static (`code_trace`)-verified, 11 unverified** — of 93 total.
+**19 runtime-verified, 63 static (`code_trace`)-verified, 11 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -38,7 +38,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `building_sabotage` | world | done | static | observed | 0 | 0 |
 | `calamity_intensity` | world | done | runtime | contradicted | 0 | 0 |
 | `camp` | region | done | static | contradicted | 0 | 0 |
-| `causal_spatial_memory` | entity | gated | static | observed | 0 | 0 |
+| `causal_spatial_memory` | entity | gated | runtime | observed | 0 | 0 |
 | `chronicle` | world | orphan | static | contradicted | 0 | 0 |
 | `city` | region | partial | static | observed | 0 | 0 |
 | `clan` | faction | gap | unverified | unverified | 0 | 0 |
@@ -72,7 +72,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `guilds` | group | partial | static | observed | 0 | 0 |
 | `information_trust_deception` | entity | gated | static | observed | 0 | 0 |
 | `interaction_channeling` | entity | done | static | observed | 0 | 0 |
-| `knowledge_model` | entity | gated | static | observed | 0 | 0 |
+| `knowledge_model` | entity | gated | runtime | observed | 0 | 0 |
 | `lair` | region | gap | unverified | unverified | 0 | 0 |
 | `motivation_doctrine` | entity | gap | static | observed | 0 | 0 |
 | `narrative_memory` | world | orphan | static | observed | 0 | 0 |
@@ -88,11 +88,11 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `reputation` | faction | done | static | observed | 0 | 0 |
 | `resource_harvesting` | world | orphan | static | observed | 0 | 0 |
 | `ruins_mines_battlefields` | region | gap | static | observed | 0 | 0 |
-| `self_model` | entity | gated | static | observed | 0 | 0 |
+| `self_model` | entity | gated | runtime | observed | 0 | 0 |
 | `settlement_capacity_axis` | faction | gap | unverified | unverified | 0 | 0 |
 | `skill_unlocks` | entity | partial | static | observed | 0 | 0 |
 | `social_contracts` | faction | done | static | observed | 0 | 0 |
-| `strategic_intelligence_core` | entity | done | static | observed | 0 | 0 |
+| `strategic_intelligence_core` | entity | done | runtime | observed | 0 | 0 |
 | `strategic_learning_bias` | entity | done | static | observed | 0 | 0 |
 | `strategic_redirection` | entity | orphan | static | observed | 0 | 0 |
 | `succession` | entity | done | static | observed | 0 | 0 |

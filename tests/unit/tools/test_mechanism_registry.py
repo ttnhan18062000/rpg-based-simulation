@@ -862,7 +862,7 @@ def test_real_registry_verification_view_seeds_non_empty(registry_data):
     expected = {
         "combat_engagement": "scenario",
         "succession": "code_trace",
-        "self_model": "code_trace",
+        "motivation_doctrine": "code_trace",
         "information_trust_deception": "code_trace",
         "opportunity_rumor_seeds": "code_trace",
         "cross_episode_grief_nemesis": "code_trace",

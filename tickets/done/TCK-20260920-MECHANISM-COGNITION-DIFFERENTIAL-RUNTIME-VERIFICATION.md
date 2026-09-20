@@ -403,3 +403,57 @@ rather than forced or half-built — the cadence-trap half of the investigation 
 for whoever picks this up next.
 
 280/280 tests passing (2 new), all consumer-artifact checks clean, `registry.py::validate()` clean.
+
+## Addendum 8 — 2026-09-20, batch 2 wave 4: Bucket B, and a real registry corruption bug found
+**`causal_spatial_memory`**: upgraded to `instrument: scenario, verdict: observed`. Reused
+`temporal_pressure`'s own already-audited flag-toggle scaffolding for the identical
+`MemoryUpdatePhase`/`ENABLE_MEMORY_UPDATE` gate. Targets the phase's own unconditional "regular
+spatial visited region updating" branch (no trigger event needed): flag ON records the entity's
+real compiled region as visited (`visit_count=1, familiarity=0.2`) through a real
+`Kernel.tick_once()`; flag OFF (real default) leaves `visited_regions` empty. Same backing shape as
+`temporal_pressure` -- a reachability claim, §5 item 5 does not apply.
+
+**`self_model` + `knowledge_model`**: one shared observation, not two, same discipline as the
+`strategic_intelligence` phase pairing -- both share `SelfModelUpdatePhase.apply()`'s own
+`ENABLE_SELF_MODEL_COGNITION` gate, `knowledge_model` being one of its 4 orchestrated sub-services.
+Reused `data/worlds/unit_selfmodel_pilot/`, a real, purpose-built world already staging a real
+pending unknown-fact event for a real compiled entity -- confirmed directly that
+`state.feature_flags` is empty by default even for this world (its own "ON via profile YAML"
+description is a SimQ-corpus-runner-level concept, not something `WorldCompiler.compile()` itself
+applies). Flag ON: the entity's real pending event is genuinely assimilated
+(`knowledge.unknowns["material.wood.source"]` becomes real) and self-awareness re-checked
+(`last_self_check_tick` updates) through a real `Kernel.tick_once()` at `state.tick=1` (not 0 --
+`last_self_check_tick=0` would be indistinguishable from "never updated" at tick 0, an ambiguity
+caught empirically before it became a vacuous assertion). Flag OFF: `self_model` stays fully at its
+compiled default. Both upgraded to `scenario`/`observed`.
+
+**A real registry-corruption bug found and fixed while finalizing this addendum, not a mechanism
+finding**: `strategic_intelligence_core`'s own entry (wave 2) had a leftover, duplicate
+`implemented_by:`/`verified:` block from an earlier imprecise edit -- the same YAML mapping ended up
+with two `implemented_by:` keys and two `verified:` keys, and YAML silently resolves duplicate keys
+to the LAST one, so the entry's own real `instrument:` field was still `code_trace` even though the
+first (correct, edited) block and every prose note claimed `scenario`. Caught only because computing
+this addendum's own final numbers by direct registry read disagreed with hand-arithmetic (9 vs. 10
+expected runtime-verified mechanisms) -- a real instance of the same discipline this whole program
+has been built on: check the actual data, don't trust the narrative. Swept the entire file
+programmatically for the same duplicate-top-level-key shape afterward; no other instance found.
+Fixed by removing the duplicate block; `registry.py::validate()` does not currently catch this shape
+(duplicate keys within one mapping, not duplicate mechanism ids) -- worth a follow-up validator
+check, not filed as its own ticket here since the fix itself is already complete and this addendum
+is that record.
+
+Also swapped `test_mechanism_registry.py`'s own hardcoded `self_model: code_trace` fixture example
+(now `scenario`) for `motivation_doctrine` (confirmed still genuinely `code_trace`, permanently
+unbound, out of this program's scope).
+
+**Final numbers for `cognition`, after the bug fix**: 20/20 verified (100%), 10 runtime / 10 static,
+runtime share 50.0% (was 0.0% at the start of this program). Registry-wide baseline: 19/82 verified
+runtime-backed (23.2%, was 11.0% before batch 1). 286/286 tests passing, all consumer-artifact
+checks clean, `registry.py::validate()` clean.
+
+Bucket B complete. Remaining open in `cognition`: `adventure_routing` (arbitration-shape instrument
+gap, filed), `personality` (value-shape instrument gap, filed), `motivation_doctrine` and
+`information_trust_deception` (unbound, out of scope for runtime verification), `declared_cognition_schema`/`committed_intentions`/`strategic_redirection` (Bucket A, already-settled
+`orphan`/`code_trace`, correctly left as-is), `strategic_learning_bias`/`concern_intake` (share
+`goal_hierarchy`'s own phase reachability but their own specific branches remain unexercised, stated
+explicitly on both entries).
