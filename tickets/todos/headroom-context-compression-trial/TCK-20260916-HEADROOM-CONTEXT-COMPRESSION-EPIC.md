@@ -76,25 +76,36 @@ measured, zero-exposure trial — a correctness requirement, not caution.
 - Any new mandatory workflow gate or monitoring-writer change — the same boundary that plan sets.
 
 ## Acceptance Criteria
-- [ ] All child tickets are closed, or explicitly abandoned with the reason recorded. **3 of 5
-      closed** (isolation-and-revert, harm-check-baseline, MCP-explicit-trigger-trial). Remaining:
-      the verdict ticket (child 4, reads the results below) and the proxy-session-class rollout
-      (child 5, stays `BLOCKED`).
+- [ ] All child tickets are closed, or explicitly abandoned with the reason recorded. **4 of 5
+      closed** (isolation-and-revert, harm-check-baseline, MCP-explicit-trigger-trial, savings-
+      and-harm-verdict). Remaining: `TCK-20260916-HEADROOM-PROXY-SESSION-CLASS-ROLLOUT` (child 5),
+      which **stays `BLOCKED` by design** — its own unblock condition (a "promote" verdict plus
+      the user's explicit approval) was not met, so it is neither closed nor further actioned, per
+      its own already-correct wording.
 - [x] A measured savings figure exists for real repo payloads, from a paired measurement — never a
       cross-ticket cost comparison, which is invalid given ticket-scale variance.
       `TCK-20260916-HEADROOM-MCP-EXPLICIT-TRIGGER-TRIAL`: 4 real payloads, paired on identical
       input — `docs/REGISTRY.yaml` 99.5%, 3 others at 0% (each with a different diagnosed real
       cause, not a repeated failure). Recorded exactly as measured.
-- [ ] A harm check over the trial window shows no degradation in DONE-rate, failure/blocked rate,
-      `reason_code` mix, or `tool_call_count`-per-phase. Baseline captured
-      (`TCK-20260916-HEADROOM-HARM-CHECK-BASELINE`); the actual **post-trial comparison** is the
-      verdict ticket's own job, not yet run.
+- [x] A harm check over the trial window shows no degradation in DONE-rate, failure/blocked rate,
+      `reason_code` mix, or `tool_call_count`-per-phase.
+      `TCK-20260916-HEADROOM-SAVINGS-AND-HARM-VERDICT`: re-ran the baseline's exact command at a
+      later moment (same window start) — no degradation observed, but stated honestly that the
+      comparison had a ceiling effect (baseline was already `done_rate=1.0`/zero failures) and
+      could not test real compressed-traffic harm at all, since the trial was explicit-trigger-
+      only throughout.
 - [x] The revert runbook has been **executed at least once**, not merely written.
       `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`: two paired git commits with exactly
       symmetric diffs, plus a real package uninstall.
-- [ ] A promote/abandon decision is recorded against the plan's decision criteria, with evidence.
-      Not yet — the verdict ticket's own job, informed by the measured savings above (a wide
-      0%–99.5% spread, with the two largest/most central target shapes at 0%).
+- [x] A promote/abandon decision is recorded against the plan's decision criteria, with evidence.
+      **Verdict: abandon Phase 2** (the proxy rollout) — input-side savings are immaterial for
+      this repo's real payload shapes and reading habits (the one payload that compressed is an
+      index this repo's own conventions already push agents to query rather than read whole; both
+      named primary targets measured 0%). Per the ticket's own fork clause, routed to an open
+      follow-up (evaluate Caveman's output-side proxy) rather than a dead end. **The MCP
+      registration itself is a separate question, not decided by this abandon verdict** —
+      recommended to keep (costs nothing dormant, explicit-trigger only, did deliver a real result
+      on one payload shape), but left as the user's own call, not executed here.
 - [x] `CLAUDE.md` is unmodified by this epic unless the user separately and directly authorizes it.
       Confirmed throughout — no child ticket in this epic has touched `CLAUDE.md`.
 
