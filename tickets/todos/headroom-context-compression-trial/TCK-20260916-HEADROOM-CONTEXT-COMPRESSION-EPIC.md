@@ -143,21 +143,33 @@ Verify claims from source or `--help` rather than from documentation or from thi
 details in the upstream docs are absent or contradicted between pages, and at least two claims here
 are explicitly marked unconfirmed.
 
-**Epic-wide blocker (2026-09-20), now resolved via a workaround, not removed**:
+**Epic-wide blocker — resolved (2026-09-20), with two honest caveats, not simply "fixed."**
 `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found that `files.pythonhosted.org` (the
 package-download CDN, not the `pypi.org` index) is unreachable from this account's Claude Code
 sandbox specifically — confirmed general via an unrelated trivial package, not Headroom-specific.
-**The user's own shell is not behind the same block** and ran the install directly
-(`.venv/bin/python3 -m pip install headroom-ai`) once asked to. `TCK-20260916-HEADROOM-TRIAL-
-ISOLATION-AND-REVERT` is now `DONE` — the safety envelope (repo-scoped `.mcp.json` registration,
-worktree-safe launcher, state isolation, a fully executed and git-evidenced revert) is proven.
-**Practical consequence for every remaining child that needs Headroom installed**: since the
-package was uninstalled again as part of proving the revert (this ticket's own acceptance bar),
-any future child that needs Headroom actually present in `.venv` will need to ask the user to
-re-run the same install command in their own shell — an agent session in this sandbox cannot do it
-autonomously. This is a recurring per-session dependency, not a one-time unblock. Registration
-itself (the `.mcp.json` entry, the launcher) is a version-controlled file change and can be
-re-applied by an agent session directly; only the `pip install` step needs the user.
+The user's own shell is not behind the same block and ran the install directly
+(`.venv/bin/python3 -m pip install headroom-ai`) twice: once during that ticket's own work
+(later uninstalled again as part of proving the revert), and again afterward, which is the install
+still present in `.venv` today (`headroom-ai==0.37.0`, confirmed importable and runnable, and
+functionally exercised via a real MCP client smoke test in `TCK-20260916-HEADROOM-MCP-EXPLICIT-
+TRIGGER-TRIAL`).
+
+- **Caveat (a): the second install resolved entirely from pip's local cache** ("Using cached" on
+  every wheel) — it did not re-prove network access to the blocked host. If that cache is ever
+  cleared, the same `files.pythonhosted.org` block would need to be worked around again (i.e., the
+  user's shell again, not this sandbox), not assumed fixed.
+- **Caveat (b): the install is machine-level state, not a repository artifact.** Nothing about
+  it is checked into git or reproducible by cloning this repo elsewhere — any future session on a
+  *different* machine, or this same machine after the venv is rebuilt, depends on that install
+  still being present, exactly like caveat (a).
+
+Not deleting this blocker's own original history — it's the reason
+`TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` closed the way it did (safety envelope proven
+via `git merge-tree`-free source-reading and a hermetic clean-clone repro, not via installing
+anything in this sandbox). **Registration itself** (the `.mcp.json` entry, the launcher) **is a
+version-controlled file change and can be re-applied by an agent session directly** — only the
+`pip install` step needs the user, and only when the cache/machine-state caveats above don't
+already cover it.
 
 ## Test Summary
 _Epic tier — no direct implementation. See child tickets._
