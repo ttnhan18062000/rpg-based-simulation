@@ -114,16 +114,25 @@ measured, zero-exposure trial — a correctness requirement, not caution.
   `~/.headroom/config` (`HEADROOM_CONFIG_DIR`), plus savings-ledger and TOIN paths are per-user, and
   config "applies globally to the proxy instance or SDK client." With several concurrent sessions
   across worktrees this is structurally the same hazard as the confirmed `.claude/current_run`
-  sidecar contamination — isolation must be explicit.
-- Whether `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` exist as described is **unconfirmed** —
-  found only in third-party search summaries, absent from authoritative pages. Verify from source or
-  `--help` before relying on either.
-- Whether MCP mode shares `~/.headroom` with proxy mode, or is independently isolatable.
+  sidecar contamination — isolation must be explicit. **Source-verified 2026-09-20**: every state
+  path in `headroom/paths.py` derives from these two env-overridable roots — isolation is
+  achievable in principle, from a 2-of-~26-file spot check, not an exhaustive audit.
+- ~~Whether `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` exist as described~~ — **resolved
+  2026-09-20 from source**: both real. See the plan doc's Open Questions section for the exact
+  citation.
+- ~~Whether MCP mode shares `~/.headroom` with proxy mode, or is independently isolatable~~ —
+  **resolved 2026-09-20 from source**: shared, not independent (`mcp_server.py` calls the same
+  `get_compression_store()` the proxy uses). See the plan doc for detail.
 - Whether Claude subscription auth works through the proxy — open upstream, a hard blocker for
   Phase 2 if unresolved.
 - The 20% coding-agent savings figure is **not** expected to apply here: code is passthrough by
   design ("Compressing function bodies would remove exactly what they need"). Expect savings
   concentrated in JSON/JSONL.
+- **New (2026-09-20): `HEADROOM_STATELESS`** — a real, separate no-workspace-writes mechanism found
+  in source, not previously known to this epic. See the plan doc.
+- **New (2026-09-20): `headroom wrap` installs Serena into `~/.claude.json` at user scope** — a
+  real risk for any future `wrap`-based phase, same hazard shape as the sidecar contamination
+  precedent. Not relevant to the current MCP-mode-only Phase 1 scope. See the plan doc.
 
 ## Implementation Notes
 Do not install, enable, or point any session at Headroom before
@@ -133,6 +142,22 @@ first, because Headroom's state is machine-wide and would otherwise affect every
 Verify claims from source or `--help` rather than from documentation or from this ticket; several
 details in the upstream docs are absent or contradicted between pages, and at least two claims here
 are explicitly marked unconfirmed.
+
+**Epic-wide blocker (2026-09-20), now resolved via a workaround, not removed**:
+`TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found that `files.pythonhosted.org` (the
+package-download CDN, not the `pypi.org` index) is unreachable from this account's Claude Code
+sandbox specifically — confirmed general via an unrelated trivial package, not Headroom-specific.
+**The user's own shell is not behind the same block** and ran the install directly
+(`.venv/bin/python3 -m pip install headroom-ai`) once asked to. `TCK-20260916-HEADROOM-TRIAL-
+ISOLATION-AND-REVERT` is now `DONE` — the safety envelope (repo-scoped `.mcp.json` registration,
+worktree-safe launcher, state isolation, a fully executed and git-evidenced revert) is proven.
+**Practical consequence for every remaining child that needs Headroom installed**: since the
+package was uninstalled again as part of proving the revert (this ticket's own acceptance bar),
+any future child that needs Headroom actually present in `.venv` will need to ask the user to
+re-run the same install command in their own shell — an agent session in this sandbox cannot do it
+autonomously. This is a recurring per-session dependency, not a one-time unblock. Registration
+itself (the `.mcp.json` entry, the launcher) is a version-controlled file change and can be
+re-applied by an agent session directly; only the `pip install` step needs the user.
 
 ## Test Summary
 _Epic tier — no direct implementation. See child tickets._

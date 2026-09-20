@@ -143,6 +143,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Headroom trial state (TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT) -- shared across
+# worktrees at the main checkout root, sibling to .venv, never ~/.headroom.
+/.headroom-workspace/
+
 # Spyder project settings
 .spyderproject
 .spyproject

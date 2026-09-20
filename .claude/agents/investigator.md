@@ -22,7 +22,9 @@ entirely and went straight to source-level grep).
 
 You receive a ticket ID. Read:
 - `tickets/inprogress/{ticket_id}.md` — scope, acceptance criteria, related code areas
-- Every source file listed in "Related Code Areas" (read the actual code, not just the path)
+- Every source file listed in "Related Code Areas" (read the actual code, not just the path) —
+  see `docs/guidelines/retrieval_preference.md` for when a targeted range is enough versus when
+  the file needs a full read
 - Every doc listed in "Related Docs" — especially the relevant `docs/mechanics/` chapter(s) and any `docs/engine/` contracts
 - `docs/parity_ledger/` — find entries whose `text` overlaps with the ticket scope
 

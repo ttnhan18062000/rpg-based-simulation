@@ -8,6 +8,8 @@ design for the integration test.
 """
 import ast
 import hashlib
+import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -58,16 +60,54 @@ def test_build_manifest_shape_against_real_corpus():
 # Reproducibility test (AC2)
 # ---------------------------------------------------------------------------
 
-def test_manifest_cli_reproducible_byte_identical_across_two_runs():
+def test_manifest_cli_reproducible_byte_identical_across_two_runs(tmp_path):
+    # Frozen snapshot of the real corpus (TCK-20260919-AGENT-MONITORING-MANIFEST-
+    # REPRODUCIBILITY-CI-FAILURE): this test asserts the CLI is deterministic for a
+    # given input, not that the live agent-monitoring/ directory never changes between
+    # two subprocess calls a couple seconds apart — the latter is a race the test was
+    # never meant to depend on. Copying real content into tmp_path here is unlike the
+    # module docstring's "never a tmp_path copy" rule above, which guards the
+    # zero-mutation and streaming-guard tests specifically (they need a real, live path
+    # to prove something wasn't silently swapped out from under them); this test's own
+    # assertion is unaffected by the source being frozen.
+    snapshot_dir = tmp_path / "agent-monitoring"
+    shutil.copytree(_REAL_AGENT_MONITORING_DIR / "data", snapshot_dir / "data")
+
     result_1 = subprocess.run(
-        [sys.executable, str(_MANIFEST_PATH)], cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+        [sys.executable, str(_MANIFEST_PATH), "--dir", str(snapshot_dir)],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     result_2 = subprocess.run(
-        [sys.executable, str(_MANIFEST_PATH)], cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+        [sys.executable, str(_MANIFEST_PATH), "--dir", str(snapshot_dir)],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
 
     assert result_1.stdout == result_2.stdout
     assert result_1.stdout.endswith("\n")
+
+
+def test_manifest_cli_dir_flag_scans_the_given_directory_not_the_real_one(tmp_path):
+    week = tmp_path / "data" / "2026-W01"
+    week.mkdir(parents=True)
+    _write_jsonl(week / "tools.jsonl", ['{"run_id":"TCK-DIR-FLAG","seq":1,"tool":"Read"}'])
+
+    result = subprocess.run(
+        [sys.executable, str(_MANIFEST_PATH), "--dir", str(tmp_path)],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+    )
+    records = json.loads(result.stdout)
+    tools_record = next(r for r in records if r["file"] == "tools.jsonl")
+    assert tools_record["line_count"] == 1
+    assert tools_record["byte_size"] == (week / "tools.jsonl").stat().st_size
+
+
+def test_manifest_cli_no_dir_flag_still_defaults_to_the_real_corpus():
+    result = subprocess.run(
+        [sys.executable, str(_MANIFEST_PATH)], cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+    )
+    records = json.loads(result.stdout)
+    direct = build_manifest(_REAL_AGENT_MONITORING_DIR)
+    assert {r["file"] for r in records} == {r["file"] for r in direct}
 
 
 def test_build_manifest_reproducible_byte_identical_direct_call():

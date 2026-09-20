@@ -443,6 +443,7 @@ unaffected by either change; only where a record physically lands changes.
   "ts": "2026-06-14T10:12:01Z",
   "tool": "Bash",
   "input_summary": "pytest tests/engine/ -x",
+  "read_ranged": null,
   "status": "ok",
   "duration_ms": 4210
 }
@@ -459,7 +460,8 @@ unaffected by either change; only where a record physically lands changes.
 | `agent` | string | Yes | Agent identifier active during this tool call, matching the `agent` literal at the corresponding call site. Same nullability rules as `phase`. |
 | `ts` | ISO 8601 | No | UTC timestamp of the tool call (captured at PostToolUse). |
 | `tool` | string | No | Tool name: `Read`, `Edit`, `Write`, `Bash`, `Agent`, `MultiEdit`, etc. |
-| `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent; for `Skill`, a Python dict-repr string (e.g. `"{'skill': 'graphify', 'args': None}"`), **not JSON** — `json.loads()` on it raises `json.JSONDecodeError`. The skill name is extracted via regex (`r"'skill':\s*'([^']*)'"`) by `build_skill_usage_section` (`generate_retro.py`, relocated from `skill_usage_metric.py` by `TCK-20260810-SKILL-USAGE-RETRO-TRACKING`). Max 120 chars. |
+| `input_summary` | string | No | Extracted key identifier from tool input. Per-tool: file path for Read/Edit/Write/MultiEdit; first 80 chars of command for Bash; description/prompt for Agent; for `Skill`, a Python dict-repr string (e.g. `"{'skill': 'graphify', 'args': None}"`), **not JSON** — `json.loads()` on it raises `json.JSONDecodeError`. The skill name is extracted via regex (`r"'skill':\s*'([^']*)'"`) by `build_skill_usage_section` (`generate_retro.py`, relocated from `skill_usage_metric.py` by `TCK-20260810-SKILL-USAGE-RETRO-TRACKING`). Max 120 chars. **Never includes `offset`/`limit` for a `Read` call — verified empirically, not assumed (`TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS`)**; use `read_ranged` below to distinguish a ranged read from a whole-file one. |
+| `read_ranged` | bool | Yes | `true` if a `Read` call passed `offset` and/or `limit`; `false` if it read the whole file; `null` for every non-`Read` tool. Added `TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS` as the measurement source for `docs/guidelines/retrieval_preference.md`; not backfilled — rows predating this ticket have no field at all (absent, not `null`), so a reader must treat "key missing" and "key present with `null`" as the same "unknown" case for historical rows, and only rows from this ticket onward as real signal. |
 | `status` | string | No | `ok` \| `failed`. Derived from the tool response's error flag. |
 | `duration_ms` | int | Yes | Wall-clock milliseconds from PreToolUse to PostToolUse. `null` if the pre-hook temp file was missing. |
 
