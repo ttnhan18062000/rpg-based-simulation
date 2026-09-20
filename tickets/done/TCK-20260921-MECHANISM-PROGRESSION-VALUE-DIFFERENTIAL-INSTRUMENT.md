@@ -235,3 +235,38 @@ two required actions before proceeding, both done in this same session:
 Scaling to the remaining progression mechanisms authorized, reporting per wave — tracked as further
 work under this same instrument, not a new ticket per wave (matching Program A's own precedent of
 one ticket spanning multiple waves with dated addenda).
+
+**Wave 2, 2026-09-21**: 2 more mechanisms, deliberately including one tick-based/threshold
+mechanism to prove out the new §5.1 rule for real, not just describe it abstractly.
+- **`aging_death`** (`LifecycleSystem.resolve_lifecycle`): the first tick-based mechanism tested on
+  this axis. `age_ticks` staged fixed (1000) in both arms — deliberately NOT relying on the real
+  per-tick increment, which is itself cadence-gated (`apply.py`'s `is_life_due`), to avoid the same
+  cadence trap Program A hit on `goal_hierarchy` — only `max_age_ticks` varied. `resolve_lifecycle`
+  reads both fields directly off `state.entities`, unconditionally, every tick, so the outcome is
+  fully computed within one real Kernel tick: satisfies §5.1(a) directly, no horizon-weakening
+  needed. `max_age_ticks=999` (below fixed age) kills the entity this tick (`death_reason=
+  "OLD_AGE"`); `max_age_ticks=5000` (above) leaves it alive. `instrument` upgraded `code_trace` ->
+  `scenario`.
+- **`entity_role`**: applied to the specific branch this entry's own prior note already names
+  (`EvolutionSystem.evaluate()` gating skill-learning on `role == HERO`). Reused the exact
+  forced-kill/level-up staging from this ticket's own `evolution`/`xp_leveling` work
+  (`evolution_points=95`, one kill crosses the 100-XP threshold), varying only `identity.role`.
+  `role=HERO` takes the AP/skill-tree branch (`unspent_ap>0`); `role=GUARD` takes the other real
+  branch and grants none. Same-tick, immediate — no horizon concern. `instrument` upgraded
+  `code_trace` -> `scenario`.
+
+Both mechanisms passed on the first real run (no staging mistakes this wave). Regression scope
+re-run: `tests/mechanic_scenarios/`, `tests/unit/progression/`, `tests/unit/tools/
+test_mechanism_registry.py` — 217 passed, 0 failed (213 + 4 new). Registry valid, 93 mechanisms,
+duplicate-key invariant clean. New files:
+`tests/mechanic_scenarios/test_aging_death_value_differential.py`,
+`tests/mechanic_scenarios/test_entity_role_level_up_branch_value_differential.py`.
+
+Progression running total after wave 2: 6 of 15 mechanisms carry a value-differential scenario
+(`readiness_speed_scaling`, `derived_stats`, `evolution`/`xp_leveling` as one merged claim,
+`aging_death`, `entity_role`). Remaining candidates for further waves: `attributes_biology`,
+`race_archetype`, `class_assignment`, `personality`, `succession`, `breakthrough_bonuses` (no real
+acquisition producer — likely stays out of scope, same reasoning as before), `build_diversity`
+(state `gap`, no instrument at all yet — needs its own investigation before a differential is even
+possible), `genetics_aptitude`/`progression_conversion` (both flag-gated off by default —
+reachability question, not value, for this axis).

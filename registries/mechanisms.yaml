@@ -555,6 +555,19 @@ mechanisms:
         touching the same concept, not investigated further here (out of scope for a binding-only
         pass); flagging in case it represents unintended duplication rather than intentional
         redundancy.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT wave 2, this axis's first
+        application to a tick-based/threshold mechanism -- the new §5.1 null-result rule's first
+        real test):
+        `tests/mechanic_scenarios/test_aging_death_value_differential.py` stages `age_ticks=1000`
+        fixed in both arms and varies only `max_age_ticks` (the real field
+        `resolve_lifecycle()`'s own check reads) -- staged directly rather than relying on the real
+        per-tick age increment (itself cadence-gated in `apply.py`, `is_life_due =
+        should_run(tick, None, cadence.lifecycle)`, avoiding the same cadence trap Program A hit on
+        `goal_hierarchy`). `max_age_ticks=999` (below the fixed age) produces a real old-age death
+        within a single real Kernel tick (positive control); `max_age_ticks=5000` (above) leaves
+        the entity alive (negative control). Satisfies §5.1(a) directly -- the outcome is fully
+        computed within the one-tick scenario window, no horizon-weakening needed.
   - id: succession
     layer: entity
     systems: [progression]
@@ -758,6 +771,17 @@ mechanisms:
         `src/engine/military_conflict.py`, `src/engine/evolution.py`, etc.) -- e.g.
         `EvolutionSystem.evaluate()` gates skill-learning on `entity.identity.role ==
         EntityRole.HERO`. Symbol-level binding since `enums.py` defines 9 unrelated enums.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT wave 2), applying the new
+        axis specifically to the branch this note already names:
+        `tests/mechanic_scenarios/test_entity_role_level_up_branch_value_differential.py` reuses
+        the real forced-kill staging (attacker evolution_points=95, one level-1 kill crosses the
+        100-XP threshold, `evolution`'s own already-cited positive control) and varies only the
+        attacker's `identity.role`. `role=HERO` genuinely takes the AP/skill-tree branch
+        (`unspent_ap>0`) on the resulting level-up (positive control); `role=GUARD` (this world's
+        own compiled role) takes the other real branch instead and grants no AP (negative control)
+        -- confirms `role`'s own value, not merely that a level-up happened, selects the outcome.
+        Same-tick, immediate (no §5.1 horizon concern).
 
   # ── Entity layer — Modification (2, atlas `entity-modification`) ───────────────────────────
 
