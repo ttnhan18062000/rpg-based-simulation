@@ -187,3 +187,36 @@ checked per calibration/negative case: field-state absence + call-counter; direc
 controls throughout; real compiled worlds and real `Kernel.tick_once()` dispatch, never a synthetic
 fixture) reported to the peer session for review before scaling to the remaining 17 `cognition`
 mechanisms, per explicit instruction.
+
+## Addendum — 2026-09-20, peer review of the harness design before scaling
+Harness approved with one structural caveat, applied here rather than carried forward as debt:
+
+1. **Codified two rules in `docs/plans/mechanic_verification_scenarios_proposal.md` §5** (items 3
+   and 4, not just practiced as habit): every negative/calibration verdict must pair a direct-call
+   positive control with the real-dispatch zero-result (already true of both this batch's
+   contradicted verdicts, now a stated requirement); every `contradicted`/`orphan` verdict grounded
+   in "zero calls observed" must declare which backing it rests on -- (a) a static
+   never-instantiated fact independent of world choice, or (b) a demonstrated precondition (the
+   scenario's own world shown, not assumed, to produce the real trigger).
+2. **Added explicit "Backing:" statements** to `perception` ((a) static -- `PerceptionUpdatePhase`
+   has zero constructors anywhere in `src/`, holds regardless of world) and
+   `quest_generation_sourcing` (both (a) and (b) -- zero real callers independent of world, plus
+   the scenario's own world demonstrated to clear the real trigger threshold).
+3. **Investigated `perception`'s own zero-dependents shape**, per direct request, without editing
+   `depends_on` edges: not an under-declared edge -- zero real code anywhere in `src/` reads any
+   `PerceptionModel` field at all outside the dead chain itself, so there is no real functional
+   dependency to have under-declared. `goal_hierarchy`'s own note already documents strategic
+   cognition sourcing situational awareness through a separate real path instead
+   (`SpatialQueryService.nearby_entities()`). Conclusion: `perception` genuinely was never
+   load-bearing -- nothing downstream was ever built to consume its output either, so the
+   zero-dependents shape is accurate, not a registry gap. Adjacent finding, not the same one: a
+   real, live, unregistered `src/world/perception/gate.py::PerceptionGate` exists
+   (`src/engine/tactical.py`), but answers a narrower question (raw sense-detection gating for
+   `tactical_decision`'s targeting) than `perception`'s own concept -- not a misbinding risk.
+4. **Runtime share before/after**, pulled from the regenerated rollup rather than left uncomputed:
+   `cognition` system 0/20 (0.0%) -> 3/20 (15.0%); registry-wide baseline 9/82 verified (11.0%) ->
+   12/82 verified (14.6%).
+
+No registry verdicts changed in this addendum -- documentation and investigation only, per the
+peer's own framing ("apply the caveat," not "re-verify"). Cleared to proceed to the remaining 17
+`cognition` mechanisms under the same constraints.

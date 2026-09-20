@@ -891,6 +891,30 @@ mechanisms:
         governing constraint (record the contradiction, do not wire the phase in to make the old
         claim true) -- filed separately as
         `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`.
+        **Backing: (a) static** -- `PerceptionUpdatePhase` has zero constructors anywhere in `src/`,
+        a fact independent of which scenario world is used; the scenario corroborates this at
+        runtime but the verdict does not depend on the specific world chosen (proposal doc §5 item
+        4). **Dependents question, investigated per direct peer request, not fixed**: `perception`
+        has zero `depends_on` dependents (direct or transitive) in the registry. Checked which
+        explanation holds -- not an under-declared edge: zero real code anywhere in `src/` reads
+        `perceived_entities`/`perceived_threats`/`perceived_resources`/`perceived_services`/
+        `perceived_opportunities` or `entity.cognition.subjective.perception` at all, outside
+        `filter.py`/`phase.py`/the dataclass definition itself (confirmed by grep), so there is no
+        real functional dependency to have under-declared. `goal_hierarchy`'s own verified note
+        already documents strategic cognition sourcing situational awareness through a separate,
+        real path instead (`SpatialQueryService.nearby_entities()`, a direct spatial query,
+        bypassing the `PerceptionModel` abstraction entirely). Conclusion: `perception` genuinely
+        was never load-bearing -- not only does nothing call it, nothing downstream was ever built
+        to consume its output either, so the zero-dependents graph shape is accurate, not a
+        registry gap. Separately (adjacent, not the same finding): `src/world/perception/gate.py::
+        PerceptionGate` is a real, live, unregistered component (`src/engine/tactical.py:181,199`,
+        initialized via `src/content/warmup.py`) -- but it answers a narrower question ("can this
+        entity detect that specific neighbor," gating raw sense-profile detection for
+        `tactical_decision`'s own targeting) than `perception`'s own concept ("what does the entity
+        consciously notice," a ranked, budget-clamped `PerceptionModel` feeding strategic
+        cognition). Not a same-name-different-thing misbinding risk for this entry -- a genuinely
+        distinct, separately-scoped mechanism that happens to share a directory name, already
+        implicitly covered by `tactical_decision`'s own (also `contradicted`) verified block.
   - id: emotion
     layer: entity
     systems: [cognition]
@@ -1178,6 +1202,13 @@ mechanisms:
         region DOES return a real `QuestTemplate`, ruling out "the trigger condition doesn't
         actually work" as an alternative explanation. verdict/state unchanged; this batch's earlier
         `code_trace` finding below stands, now runtime-confirmed rather than static-only.
+        **Backing: both (a) static and (b) demonstrated** (proposal doc §5 item 4) -- (a) zero real
+        callers for any of the 3 methods anywhere in `src/`, independent of world choice, already
+        established by direct grep; (b) this scenario's own world is shown, not assumed, to
+        produce the real trigger condition (`trauma_score > 0.3`), and the positive control above
+        confirms that precondition genuinely does produce a `QuestTemplate` when the function is
+        called directly -- so the zero-call result is not an artifact of the world never staging
+        the precondition.
         TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. State correction, gated ->
         orphan. `QuestGenerationSystem` (`src/systems/world_systems/quests.py`,
         `generate_from_scar()`/`generate_from_blockers()`/`quest_to_project()`, real purpose-built
