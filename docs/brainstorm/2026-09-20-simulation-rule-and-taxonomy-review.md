@@ -319,6 +319,8 @@ Each of these is already real in the repo, not hypothetical:
 
 ## P. Suggested changes to the framework
 
+> **Outcome, 2026-09-20:** the owner adopted the vocabulary changes (1–7 below) and deferred the domain-map changes (8–13) until the alignment pass has evidence. The adopted items are now folded into [`core_rpg_design_direction.md`](core_rpg_design_direction.md) §7/§10; the deferred ones are tracked in its §15. The list below is kept as the original reasoning.
+
 1. **Rename the scale axis.** The registry's `layer` (entity/group/region/faction/world) is a *scale*; the direction doc's "layer" is a stack level. Pick distinct words.
 2. **Demote SUBSYSTEM** to informal prose grouping.
 3. **Add three axes**: SCALE, PHASE/CADENCE, AUTHORITY (§C2).

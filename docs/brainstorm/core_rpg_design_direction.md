@@ -81,6 +81,8 @@ WORLD SIMULATION → AUTONOMOUS AGENTS → OBSERVATION/AUTHORITY/AUTOMATION
 
 The same world might one day support a single-character RPG, party or guild management, kingdom management, indirect political play, god-like influence, or pure observer/chronicle mode. **We are not building those modes now.** We are only avoiding decisions that make them impossible.
 
+> **Decided 2026-09-20 — there is no player, and none is planned.** The founding pitch stands: *a living world you observe.* The core stays player-agnostic by simply not having a player, and anything player-facing is a lens built over the simulation later. No core design decision should be justified by a hypothetical player's experience.
+
 Consequences we accept:
 
 - gameplay-layer code may later need adapting to protect a cleaner core;
@@ -200,21 +202,48 @@ Depth is valuable when it creates new decisions, interactions, capabilities, his
 ### Structural vocabulary
 
 ```
-DOMAIN → SYSTEM → SUBSYSTEM → MECHANISM → RULE → PARAMETER / CONTENT
+DOMAIN → SYSTEM → MECHANISM → RULE → PARAMETER / CONTENT
 ```
 
-with **LINK** and **LOOP** operating across the whole hierarchy, and treated as equally important.
+`SUBSYSTEM` remains available as informal prose grouping, but carries no metadata meaning — in this repo it variously denotes a pipeline phase, a service or a scale tier.
 
 - **Mechanism** is the practical unit: testable, ownable, replaceable, and the level at which this project already tracks reality.
 - **Parameters are not features.** **Content volume is not system depth.**
 
+**Three axes cut across the hierarchy** (adopted 2026-09-20), because containment alone cannot describe a mechanism:
+
+| Axis | Values | Why |
+|---|---|---|
+| **Scale** | entity · group · region · faction · world | Already carried by the mechanism registry (as its `layer` field). Note the word collision: registry "layer" = this axis, not a stack level |
+| **Cadence / phase** | per-tick · per-cadence · phase-scoped · episode-boundary | When a mechanism can fire. Primary cost control, and the difference between "done" and "done but almost never runs" |
+| **Authority** | proposes · applies · commits | Decision logic reads state and emits typed updates; only the authoritative path commits. A description ignoring this mis-places the mechanism |
+
+### Links and loops
+
+**LINK** and **LOOP** operate across the whole hierarchy and are treated as equally important to the levels themselves. Links come in three kinds, which must not be conflated (the repository learned this the hard way — containment, execution order and functional dependency are three different things):
+
+| Link kind | Meaning |
+|---|---|
+| **Dependency** | "cannot produce a meaningful result without X" |
+| **Flow** | "X's output is Y's input" — where dormancy defects live |
+| **Semantic link** | conversion · recognition · reaction · transformation · provenance · information · authority · constraint · spatial propagation · state feed · trigger · feedback |
+
+> A system with many internal mechanics and almost no external links is complicated, not deep.
+
 ### Rule types
 
-Fundamental world law · domain law · materialized abstraction · systemic convention · derived rule · threshold rule · pressure rule · transformation rule · counterforce rule · content rule · exception rule.
+Fundamental world law · domain law · **invariant (hard law)** · materialized abstraction · systemic convention · derived rule · **reach rule** · **budget/capacity rule** · threshold rule · pressure rule · transformation rule · counterforce rule · content rule · exception rule.
+
+- **Invariant** is distinct from fundamental world law: invariants are *enforced* (atomic conservation, determinism, per-tick hard-law checks) and are exempt from A2's "resistance may fail".
+- **Reach rule** governs how far an effect, an item of information or an authority extends.
+- **Budget/capacity rule** governs bounding: capped lists, pruning, top-K, cadence gating. These decide which stories are possible, so they are design rules, not implementation details.
+- **Derived rule**: derived state is computed at read time and never persisted.
 
 ### Entity and state types
 
-First-class simulated entity · aggregate entity · resource · condition · relationship · event · knowledge claim.
+First-class simulated entity · aggregate entity · resource · condition · relationship · event · knowledge claim · **intent (typed proposed change)** · **affordance/opportunity** · **obligation/directive** · **project**.
+
+The last four were added 2026-09-20 because the repository already treats them as first-class: typed updates and transfer intents; leads, opportunities and world signals; contracts, directives and bounties; multi-step goals with progress.
 
 An aggregate (a population cohort, a regional economy, a culture, an ecosystem) is a legitimate abstraction — a weather system, not a failure. It may be promoted to finer detail when causal value requires it.
 
@@ -301,8 +330,11 @@ Maturity ladder: **primitive → functional → systemic → deep**. A system ne
 "Implemented" is not enough. A mechanism can exist in code with no producer, no consumer, no caller, unreachable thresholds or a disabled flag. The project should always be able to say, per mechanism:
 
 ```
-MISSING · DESIGNED · EXPERIMENTAL · OFF · DORMANT · STARVED · LIVE · DEPRECATED · REPLACED
+MISSING · DESIGNED · EXPERIMENTAL · OFF · DORMANT · STARVED · REACH-LIMITED · LIVE · DEPRECATED · REPLACED
 ```
+
+- **STARVED** — a live path whose conditions almost never occur in real simulation.
+- **REACH-LIMITED** (added 2026-09-20) — live and reached, but only inside a narrow slice of reality: one execution mode, one corpus profile, or only at episode boundaries. Several finished mechanics in this project are in exactly this state, and calling them "live" has repeatedly overstated what the world can actually do.
 
 and, at the system level: how many domains, systems, mechanisms, cross-system links and feedback loops exist.
 
@@ -378,8 +410,43 @@ At that point the roadmap stops being driven by *"what feature sounds interestin
 
 ---
 
-## 15. Open amendments (proposed, not yet agreed)
+## 15. Amendments
 
-The local agent's review of this direction against the real codebase proposes several changes to the vocabulary above — including splitting `LINK` into dependency/flow/semantic edges, adding scale, cadence and authority axes, adding invariant/reach/budget rule types, adding intent/affordance/obligation/project entity kinds, adding a `REACH-LIMITED` status, reclassifying history and systemic-pressure as cross-cutting rather than domains, and adding five domains the map omits (movement, content authoring, law/crime, observation, evaluation).
+The local agent's review of this direction against the real codebase proposed 13 changes to the vocabulary ([`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) §P).
 
-They are **not folded into this document** until the three sides agree. See [`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) §P for the full list and the reasoning, and §O for the conflicts this direction has with current practice.
+### Adopted 2026-09-20 (owner decision: "vocabulary now, domains later")
+
+Folded into §7 and §10 above:
+
+1. `SUBSYSTEM` demoted to informal grouping.
+2. Scale, cadence/phase and authority added as cross-cutting axes; the "layer" word collision called out.
+3. `LINK` split into dependency / flow / semantic link.
+4. Rule types added: invariant (hard law), reach, budget/capacity; derived-state discipline stated.
+5. Entity kinds added: intent, affordance/opportunity, obligation/directive, project.
+6. Runtime status `REACH-LIMITED` added; `STARVED` defined.
+
+### Still open (deferred until the alignment pass has evidence)
+
+- **Domain-map changes**: adding movement/navigation, content authoring & world assembly, law/crime/enforcement, observation & legibility, and evaluation/SimQ as domains.
+- **Reclassifying** history/significance (D17) and systemic pressure/collapse (D18) as cross-cutting concerns rather than domains.
+- **Adopting D01's five rating dimensions** (trigger rate, entity reach, cascade width, emergence ceiling, absence penalty) in place of a new depth-dimension set.
+- **Requiring a named counterforce** on any growth-producing mechanism.
+- **Stating the mapping to the 10 SimQ pillars** wherever a new domain map is used.
+
+### Unresolved conflicts
+
+See the review's §O. The two that need a decision before they cause real friction:
+
+- **Open instability (A2) versus SimQ scoring.** Scoring assumes a functioning world, so a world that legitimately collapses currently reads as a bad run.
+- **Optionality (§10) versus "core mechanisms ship unflagged."** The direction endorses replaceable/optional mechanisms; standing practice restricts flags to experiments and migration because unused branches have repeatedly rotted here.
+
+---
+
+## 16. Decisions log
+
+| Date | Decision | Notes |
+|---|---|---|
+| 2026-09-20 | **No player, and none planned.** The world stays observed | §3 |
+| 2026-09-20 | **Combat: hybrid.** Keep ambient/incidental combat, and give entities a small number of genuine reasons to fight (predation, named threats, defending territory) rather than making all combat decisional | Answers the design question `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` left open. Direction only — no implementation scoping yet |
+| 2026-09-20 | **Places come first** among structural gaps: a place must be able to be founded, change kind, be abandoned, be colonised and remember its history | The weakest layer today, and largely independent of the combat gate |
+| 2026-09-20 | **Vocabulary amendments adopted; domain-map amendments deferred** | §15 |
