@@ -169,6 +169,24 @@ def test_render_rollup_includes_unassigned_row(registry_data):
     assert "<code>unassigned</code>" in content
 
 
+def test_render_rollup_includes_runtime_share_of_verified_column(registry_data):
+    """TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY. Peer-caught gap: the registry
+    already computed runtime_verified/static_verified counts but rendered no RATE, so a batch of
+    code_trace-only re-verifications could raise `verified` while silently lowering this share with
+    nothing on the page to surface it. Must render as its own column, denominated by `verified`."""
+    content = render(registry_data)
+    assert "Runtime Share of Verified" in content
+    # Import from generate_mechanism_registry_html's own namespace, not the dotted
+    # tools.mechanism_registry.registry path -- see test_render_rollup_reuses_build_system_rollup_
+    # not_a_second_computation's own docstring for why the two are different module objects under
+    # this directory's autouse system-registry-patching fixture.
+    from tools.mechanism_registry.generate_mechanism_registry_html import build_system_rollup
+
+    rollup = build_system_rollup(registry_data)
+    combat = next(s for s in rollup["systems"] if s["system"] == "combat")
+    assert f"{combat['runtime_verified']}/{combat['verified']}" in content
+
+
 def test_render_rollup_reuses_build_system_rollup_not_a_second_computation(registry_data):
     """One definition, one renderer reading it -- the HTML page's own rollup numbers must match
     build_system_rollup()'s own real output exactly, not an independently recomputed rate.

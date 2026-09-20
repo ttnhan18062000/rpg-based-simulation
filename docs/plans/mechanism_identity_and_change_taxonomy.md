@@ -109,6 +109,21 @@ registry edit. A wrong answer here is exactly as informative as `action_pacing_r
 was for the forward direction — this is the rule's first real test of whether it holds symmetrically
 or only in the direction it was originally validated on.
 
+**Resolved 2026-09-20, NOT a merge** (`TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-
+RESOLUTION`): the premise above was itself wrong, not just unconfirmed. The original search that
+produced "no implementation distinct from `commitment_pressure_consequences`" only covered
+`src/domains/commitment/` — it never looked in `src/core/models/social.py`, where a real,
+purpose-built `BetrayalRecord` (`contract_id`/`betrayer_id`/`victim_id`/`severity`/`tick`) exists
+for exactly this concept. It has zero real constructors anywhere (`grep -rn "BetrayalRecord("
+src/` finds none), so it is a real, present, unused type — `commitment_betrayal`'s own state moved
+`done` → `orphan`, bound to this type, not merged into its sibling. This is the rule's first real
+test of the reverse direction turning out negative: the two ids were never actually the same
+mechanism, a search gap made them look that way. The general lesson generalizes past this one
+case: **before concluding "no distinct implementation" for a merge candidate, search beyond the
+directory the sibling's own binding lives in** — a namespace-adjacent-looking module
+(`src/domains/commitment/`) crowded out a real hit sitting in an unrelated one
+(`src/core/models/`).
+
 ---
 
 ## 3. `depends_on`'s own semantics — already defined, found violated once, corrected
@@ -287,6 +302,106 @@ without burying it in prose. **Split, performed below.**
   does not resolve — `lair`'s own gap classification may refer to the Lair place-kind never being
   composed into any world (a different, real, separate blocker) rather than the occupant-spawn code
   itself being unbuilt. Worth its own follow-up investigation.
+
+---
+
+## 7. `implemented_by` binding granularity — method-level, when to reach for it
+
+Symbol-level binding (`path::Class`, `TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING`)
+already separates "this whole file is the binding" from "one specific class/function in this file
+is the binding." It stops being precise enough exactly when **one class implements more than one
+registry mechanism through different methods** — binding at class level then would misattribute
+one mechanism's logic to the other's entry, the same failure shape as §3.2's `trauma` incident, just
+from imprecision rather than a wrong guess.
+
+**Decision (`TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION`), settling the question
+`TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` left open ("leaning toward not building
+it for two mechanisms alone, but not deciding that unilaterally"): build it.** The two-mechanism
+case that ticket declined to act on has since recurred and grown — by this batch, 4 real mechanisms
+across 2 classes needed it (`xp_leveling`/`skill_unlocks` on `LevelingService`;
+`goal_hierarchy`/`strategic_intelligence_core` on `StrategicIntelligenceSystem`) — crossing the bar
+the earlier ticket declined to cross for just two. `implemented_by` now accepts a third
+`::`-delimited segment, `path::Class::method`, validated against the method's real definition
+inside that class's own body (bounded by the next top-level class/def, so a same-named method on a
+different class can't produce a false match — see `registry.py::_method_defined_in_class`). This
+is a validator capability extension, not a schema change: `implemented_by` is still a plain list of
+strings.
+
+**When to reach for each level:**
+- **File-level** (bare path): the file's own symbols are all genuinely one concept (no unrelated
+  logic sharing the file).
+- **Symbol-level** (`path::Class`): the file mixes unrelated top-level symbols, but the one this
+  mechanism needs is a whole class/function to itself.
+- **Method-level** (`path::Class::method`): even the *class* is multi-concern — it implements more
+  than one registry mechanism via different methods (or a mechanism's own concern is genuinely one
+  method's worth of logic within a larger class). A mechanism whose real code lives on a large,
+  multi-concern class but whose own distinct concern spans *several* of that class's methods (not
+  one) can list multiple `path::Class::method` entries — `implemented_by` is already a list; nothing
+  about method-level binding requires exactly one entry per mechanism (`goal_hierarchy`'s own
+  binding uses 5).
+- **Leave unbound, with a note** when a class is multi-concern and it isn't yet clear which
+  specific method(s) belong to which mechanism — guessing here is exactly the `trauma` misattribution
+  risk one level finer; state the ambiguity instead of forcing a pick.
+
+---
+
+## 8. `xp_leveling` / `evolution` — the identity rule's first live Merge application
+
+`TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION` (2026-09-20) found `xp_leveling`'s
+own positive-control scenario is the *identical* real test already cited in `evolution`'s own
+`verified` block, and left `xp_leveling` unbound rather than double-attribute one implementation to
+two ids — flagged as an identity question, not decided in that batch. This section is that decision,
+made deliberately, as its own piece of work, applying §1's rule directly rather than in passing.
+
+**The mechanical facts, checked directly.** Both ids are already bound (or would bind) to the same
+single method, `EvolutionSystem.evaluate()` (`src/engine/evolution.py`). Reading that method's own
+body finds it does three things in one undivided pass, not two:
+1. Consolidates XP, evaluates level thresholds, and — on any `levels_gained > 0` — grants stat/AP/
+   skill growth (HERO: unspent AP + unlocked skills; non-HERO: vitality/strength/endurance deltas).
+   This is what `xp_leveling`'s own registry entry claims.
+2. On `levels_gained > 0`, *additionally* checks `old_level < threshold <= new_level` for
+   `threshold in (10, 25, 50)` — only at those specific milestones does it change `entity.kind`
+   (species-stage transformation) and upgrade equipment slots. This is what `evolution`'s own name
+   most naturally suggests it should be testing.
+
+**`evolution`'s own real evidence tests behavior (1), not behavior (2).** Its cited positive control
+(a goblin at `evolution_points=95`, level 1, crossing to level 2) never comes close to threshold 10
+— `evolved` is `False` for that entire scenario. The `verified` block's own claim (`state: done`,
+`verdict: observed`) is real and correctly proven, but for the level-up-and-stat-growth behavior
+`xp_leveling` already claims, not the species-kind-transformation behavior `evolution`'s own name
+implies and that its entry has never actually demonstrated.
+
+**Applying §1's operational test.** The Merge direction of the rule: *"if two declared ids share one
+implementation and cannot independently succeed or fail, they are one mechanism."* Behavior (1) and
+behavior (2) above are structurally nested — (2) cannot fire without (1) having already fired
+multiple times (level must cross 10 before any species transformation is possible) — and in this
+corpus's own real, repeatedly-measured data (`xp_leveling`'s own note: 0-10 kills per world, max 50
+XP accumulated against a 100-XP threshold, busiest entity in any tested world never crossed even one
+threshold), reaching level 10 is not merely unverified but empirically further from real corpus play
+than crossing level 2 already is. **No evidence exists, from either entry, that behavior (1) and
+behavior (2) currently sit in different states** — both are real, correct, wired code; both are
+starved by the same real-world volume shortfall; neither has been shown to succeed independently of
+the other in any tested world.
+
+**Verdict: Merge, `xp_leveling` into `evolution`.** The rule's own test is satisfied in the direction
+that collapses two ids into one, not the direction that would keep or further split them — there is
+no current evidence supporting `xp_leveling` as a mechanism that can succeed while `evolution` fails,
+or vice versa. The species-kind-transformation behavior `evolution`'s own name suggests remains real,
+distinct code (branch 2 above) — but with zero positive-control evidence of its own and a corpus
+volume shortfall that makes it *less* reachable than what's already unverified, there is no case for
+giving it a third id either; it stays inside `evolution`'s own single entry as an unverified
+sub-claim, same as before this section.
+
+**Not executed here.** This section records the deliberate verdict the rule's own first live test
+produced — it does not perform the merge (removing `xp_leveling` as a registry row, redirecting any
+future edges/citations to `evolution`). A merge's own blast radius (which id every future ticket,
+doc, and `depends_on` edge should cite) is a bigger operation than a binding decision, the same
+reasoning `TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION`'s own `commitment_
+betrayal` non-merge already established — that one found the merge premise false and correctly
+declined; this one finds the merge premise true and still declines to execute unilaterally, for the
+same underlying reason: a structural registry change deserves review, regardless of which direction
+the evidence points. `xp_leveling`'s own entry is updated to record this deliberate verdict in place
+of the prior "flagged, unresolved" framing; no registry structure changed.
 
 ---
 

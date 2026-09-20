@@ -147,6 +147,73 @@ def test_real_registry_findings_pinned():
     error was caught; `trauma` is correctly `done`/bound to `WoundService` again, which has real
     confirmed callers, so no finding fires for it here.
 
+    2026-09-20 (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): a large binding
+    batch (24 entity-layer mechanisms) surfaced 5 new findings, each independently re-checked
+    directly against source rather than trusted from the tool's own report. (`breakthrough_bonuses`
+    briefly also fired `orphan_with_callers` mid-batch when first bound as `orphan`; self-corrected
+    to `partial` within the same batch once this exact tool caught it -- `orphan` specifically means
+    zero real callers, and `BreakthroughService.apply_bonuses()` has one; see that entry's own
+    verified note for the full self-correction. No finding fires for it here.)
+    - `knowledge_model` (`gated_without_flag_context`, low): same shape as `genetics_aptitude`
+      above -- the real `ENABLE_SELF_MODEL_COGNITION` check is at the call site
+      (`engine/pipeline.py:192`), several frames from the direct
+      `KnowledgeModelService.assimilate()` reference inside `self_model_phase.py`.
+    - `attributes_biology`, `class_assignment`, `goal_hierarchy` (`state_with_zero_callers`, high
+      confidence per the tool, false per direct re-check): all three are method-level bindings
+      whose real callers are exclusively *within the same defining file* as the binding itself
+      (`ApplyPath._compute_entity_changes` is invoked via a same-file callback registration
+      consumed by `ApplyPlanBuilder.build_plan()`; `SocialDefaultsResolver.resolve_role_defaults()`
+      is called only from two other sites inside `resolver.py` itself;
+      `StrategicIntelligenceSystem`'s 5 goal_hierarchy methods are all called only from sibling
+      methods on the same class within `intelligence.py` itself). `_real_callers()` deliberately
+      excludes the defining file (to avoid a method counting itself/its own recursion as a caller,
+      the correct general rule) -- a real, understood blind spot for a large multi-method
+      orchestrator class whose own methods call each other internally, not evidence the bindings
+      are wrong. Independently re-verified via direct grep for each case before concluding this.
+    - `commitment_betrayal` (`orphan_with_callers`, high confidence per the tool, expected given
+      this registry's own established `orphan` meaning): `BetrayalRecord` is type-referenced in
+      `core/state.py`/`core/updates.py`/`core/builder.py` (which the tool counts as "callers") but
+      never actually constructed anywhere (`BetrayalRecord(` grepped repo-wide, zero hits) --
+      genuinely `orphan` (dead code, not a live producer), the tool just can't distinguish a type
+      reference from a real instantiation. Same established shape as `status_effects`'s own prior
+      `orphan` finding this same epic: present, referenced code whose actual claimed behavior never
+      fires in real play. The checker's binary "any caller = not orphan" heuristic can't represent
+      this nuance; not a registry error.
+
+    2026-09-20 (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION): the
+    23-mechanism world/faction/region/group batch surfaced 4 more findings, 3 understood/false and
+    1 that changed the registry (not a pin-only fix):
+    - `opportunity_rumor_seeds` (`gated_without_flag_context`, low): same shape as
+      `genetics_aptitude`/`knowledge_model` above -- `ENABLE_WORLD_EMERGENCE` is checked at the call
+      site (`engine/pipeline.py:355`), not within 5 lines of the direct service references inside
+      `world_emergence/phase.py`.
+    - `campaigns` (`state_with_zero_callers`, high confidence per the tool, false per direct
+      re-check): `CampaignOrchestrator`'s only real, non-docstring, non-test instantiation is in
+      `tools/calibrate_simq.py` -- outside `_SRC_DIR` (`src/` only), which this checker's own
+      `_real_source_files()` never scans. A real caller, invisible to this checker by design scope,
+      not a registry error.
+    - `chronicle` (`orphan_with_callers`, high confidence per the tool, false per direct re-check):
+      the "real callers" are `src/domains/chronicle/__init__.py`'s own package re-export (11 `from
+      ... import` lines, one per class) plus comments -- `_is_shim_file()`'s own `len(lines) > 4`
+      threshold doesn't recognize a multi-symbol `__init__.py` re-export as a shim the way it
+      recognizes the single-line shims elsewhere in this repo (`systems/quests.py` etc.), even
+      though it is semantically identical (no real logic, only re-exporting). Direct re-check
+      (`grep -rn "ChronicleCompiler(" src/` outside tests) still finds only a class-docstring usage
+      example, corroborated by the already-filed
+      `TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-IN-PRODUCTION`. `orphan` stands.
+    - `calamity_intensity` (no longer bound, not a checker false positive -- a real, registry-
+      changing finding): this one was real. Attempted to bind
+      `CalamityService.apply_calamity_consequences()` on the strength of its own pre-existing
+      (2026-09-17) verified note's confident claim ("the sole real producer of
+      region.calamity_intensity"); this checker immediately flagged zero real callers. Re-checked
+      directly rather than trusted, and confirmed the checker was right: `apply_calamity_
+      consequences()` has no real callers anywhere, not even the one already-called sibling method
+      on its own class (`process_world_dynamics()`, which only *reads* `calamity_intensity`, never
+      writes it). Reverted the binding; left unbound with the contradiction flagged on the entry
+      itself for the roadmap session, since the mechanism's own 2026-09-17 `verified` block predates
+      this batch and this batch's rule is not to silently overwrite an already-verified conclusion.
+      This mechanism carries no finding here because it has no `implemented_by` to check.
+
     Update this test only alongside a real investigation of what changed, same discipline as every
     other pinned-count test in this repo."""
     import yaml
@@ -156,4 +223,12 @@ def test_real_registry_findings_pinned():
     finding_keys = {(f.mechanism_id, f.check) for f in report.findings}
     assert finding_keys == {
         ("genetics_aptitude", "gated_without_flag_context"),
+        ("knowledge_model", "gated_without_flag_context"),
+        ("opportunity_rumor_seeds", "gated_without_flag_context"),
+        ("attributes_biology", "state_with_zero_callers"),
+        ("class_assignment", "state_with_zero_callers"),
+        ("campaigns", "state_with_zero_callers"),
+        ("chronicle", "orphan_with_callers"),
+        ("goal_hierarchy", "state_with_zero_callers"),
+        ("commitment_betrayal", "orphan_with_callers"),
     }

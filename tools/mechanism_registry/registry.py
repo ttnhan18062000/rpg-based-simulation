@@ -18,8 +18,10 @@ edit -- invariant 8 had already been added without updating it; fixed here rathe
      VERIFICATION-AXIS)
   6. every present `verified.verdict` is one of the three known values, and all four `verified`
      sub-fields (instrument/verdict/date/note) are present when the block itself is present
-  7. every present `implemented_by` is a list of strings, each an existing repo-relative path
-     (TCK-20260916-MECHANISM-IMPLEMENTED-BY-BINDING) -- a real code binding, checked against disk
+  7. every present `implemented_by` is a list of strings, each an existing repo-relative path,
+     optionally suffixed `::Symbol` (file-level vs symbol-level, TCK-20260916-MECHANISM-
+     IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING) or `::Class::method` (method-level, TCK-20260920-
+     MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION) -- a real code binding, checked against disk
      so a deleted implementing module fails validation immediately rather than the registry
      silently keeping a stale claim
   8. every `unaudited_depends_on_edges` entry names a real, currently-declared depends_on edge
@@ -63,11 +65,29 @@ from system_registry import load_registry as _load_system_registry  # noqa: E402
 # `PopulationCohort` (a data class used widely and unrelated to this mechanism's own claim) and
 # `DemographicCycleService` (the actual entry point) -- a caller-count check aggregating across
 # both cannot tell "the data class is used elsewhere" from "the service is actually invoked."
+#
+# TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION settles a question left open by
+# `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION`: symbol-level alone is not fine
+# enough when several mechanisms share one multi-concern class (e.g. `LevelingService` implements
+# both `xp_leveling` and `skill_unlocks` via different methods; `StrategicIntelligenceSystem`
+# implements both `goal_hierarchy` and `strategic_intelligence_core` the same way). A class-level
+# binding there would misattribute one mechanism's logic to another's entry -- the same shape of
+# error `docs/plans/mechanism_claims_as_tests_initiative.md` §3.2 already catalogues, just from
+# imprecision rather than a wrong guess. Decision: extend `implemented_by` one level finer,
+# "<path>::<Class>::<method>", rather than leave these permanently unbound -- the recurrence (2
+# classes, 4 mechanisms, found within two consecutive coverage batches) crossed the "worth
+# building for two mechanisms alone" bar the earlier ticket declined to cross. This is a validator
+# capability extension, not a schema change: `implemented_by` is still a list of strings; a third
+# `::`-delimited segment is simply matched against the class's own method definitions instead of
+# the file's top-level symbols.
 _TOP_LEVEL_SYMBOL_RE_TEMPLATE = r"^(?:class|def)\s+{}\b"
+_TOP_LEVEL_BOUNDARY_RE = re.compile(r"^(?:class|def)\s+\w+", re.MULTILINE)
 
 
 def parse_implemented_by_entry(entry: str) -> Tuple[str, Optional[str]]:
-    """Splits one `implemented_by` string into (path, symbol_or_None)."""
+    """Splits one `implemented_by` string into (path, symbol_or_None). `symbol` may itself be
+    "Class::method" for a method-level binding -- callers pass it whole to
+    `symbol_defined_in_file`, which is the one place that distinction is interpreted."""
     if "::" in entry:
         path, symbol = entry.split("::", 1)
         return path, symbol
@@ -75,13 +95,36 @@ def parse_implemented_by_entry(entry: str) -> Tuple[str, Optional[str]]:
 
 
 def symbol_defined_in_file(path: Path, symbol: str) -> bool:
-    """True if `symbol` is a top-level class or module-level function in the real file at path."""
+    """True if `symbol` is a top-level class or module-level function in the real file at path.
+
+    If `symbol` is itself "Class::method", true only if `method` is defined (at any indentation)
+    within that top-level class's own body -- a real method-level binding, not just "the class
+    exists somewhere in this file."
+    """
     try:
         text = path.read_text(encoding="utf-8")
     except OSError:
         return False
+    if "::" in symbol:
+        class_name, method_name = symbol.split("::", 1)
+        return _method_defined_in_class(text, class_name, method_name)
     pattern = re.compile(_TOP_LEVEL_SYMBOL_RE_TEMPLATE.format(re.escape(symbol)), re.MULTILINE)
     return bool(pattern.search(text))
+
+
+def _method_defined_in_class(text: str, class_name: str, method_name: str) -> bool:
+    """True if `method_name` is defined inside the body of a real top-level `class_name` in
+    `text` -- bounded by the next top-level class/def (or end of file), so a same-named method on
+    an unrelated later class can't produce a false match."""
+    class_pattern = re.compile(rf"^class\s+{re.escape(class_name)}\b", re.MULTILINE)
+    class_match = class_pattern.search(text)
+    if not class_match:
+        return False
+    body_start = class_match.end()
+    boundary = _TOP_LEVEL_BOUNDARY_RE.search(text, body_start)
+    body = text[body_start: boundary.start()] if boundary else text[body_start:]
+    method_pattern = re.compile(rf"^\s+def\s+{re.escape(method_name)}\b", re.MULTILINE)
+    return bool(method_pattern.search(body))
 
 VALID_STATES = frozenset({"done", "partial", "gap", "orphan", "gated", "skeleton"})
 
@@ -274,9 +317,10 @@ def validate(data: dict) -> List[str]:
                 )
                 continue
             if symbol is not None and not symbol_defined_in_file(real_path, symbol):
+                kind = "method" if "::" in symbol else "top-level class/function"
                 errors.append(
                     f"mechanism '{mid}' implemented_by symbol '{symbol}' not found as a "
-                    f"top-level class/function in '{rel_path}'"
+                    f"{kind} in '{rel_path}'"
                 )
 
     # Invariant 8: every `unaudited_depends_on_edges` entry names a real, currently-declared
@@ -701,6 +745,18 @@ def _rollup_stats(ids: List[str], by_id: Dict[str, dict]) -> dict:
         "static_verified": static_verified,
         "verified": verified_total,
         "verified_rate": (verified_total / n) if n else 0.0,
+        # TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY. What fraction of this
+        # group's own VERIFIED mechanisms were confirmed by a runtime instrument (scenario/
+        # corpus_run -- the simulation actually doing the thing) versus a static one (code_trace --
+        # the code says it should). Denominator is `verified`, not `count`: this is a property of
+        # the verification method used, not of coverage. Added after a real peer-caught gap: a
+        # 20-mechanism code_trace-only verification batch moved the registry's own runtime share
+        # from 27% to 11% while reading, in prose, as unqualified progress -- the raw
+        # runtime_verified/static_verified counts already existed but nothing rendered the RATE, so
+        # the regression was invisible until computed by hand under direct challenge. 0.0 (not
+        # undefined) when `verified` is 0, matching this file's own established zero-count
+        # convention for bound_rate/verified_rate above.
+        "runtime_verified_share": (runtime_verified / verified_total) if verified_total else 0.0,
         "unverified": n - verified_total,
         "state_counts": state_counts,
     }

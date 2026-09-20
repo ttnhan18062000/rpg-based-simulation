@@ -139,6 +139,52 @@ def test_rollup_distinguishes_bound_unverified_from_unbound_unverified(monkeypat
     assert combat["unverified"] == 2  # a and b
 
 
+def test_rollup_runtime_verified_share_is_a_rate_of_verified_not_of_count(monkeypatch):
+    """TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY. Peer-caught gap: a batch of
+    code_trace-only re-verifications can raise `verified` while the registry's own runtime share
+    silently drops, and nothing rendered that rate until this test's own metric existed. The
+    denominator must be `verified` (mechanisms actually confirmed by some instrument), never
+    `count` (all group members) -- conflating the two would understate the share whenever unbound/
+    unverified mechanisms are present."""
+    data = _fixture_registry(
+        monkeypatch,
+        systems=["combat"],
+        mechanisms=[
+            {
+                "id": "a", "systems": ["combat"], "state": "done", "implemented_by": ["x.py::A"],
+                "verified": {"instrument": "scenario", "verdict": "observed", "date": "2026-09-19"},
+            },
+            {
+                "id": "b", "systems": ["combat"], "state": "done", "implemented_by": ["x.py::B"],
+                "verified": {"instrument": "code_trace", "verdict": "observed", "date": "2026-09-19"},
+            },
+            {
+                "id": "c", "systems": ["combat"], "state": "done", "implemented_by": ["x.py::C"],
+                "verified": {"instrument": "code_trace", "verdict": "observed", "date": "2026-09-19"},
+            },
+            # d is unverified -- must not appear in the denominator.
+            {"id": "d", "systems": ["combat"], "state": "done"},
+        ],
+    )
+    rollup = build_system_rollup(data)
+    combat = next(s for s in rollup["systems"] if s["system"] == "combat")
+    assert combat["verified"] == 3
+    assert combat["runtime_verified"] == 1
+    assert combat["runtime_verified_share"] == pytest.approx(1 / 3)
+
+
+def test_rollup_runtime_verified_share_is_zero_not_undefined_when_nothing_verified(monkeypatch):
+    data = _fixture_registry(
+        monkeypatch,
+        systems=["combat"],
+        mechanisms=[{"id": "a", "systems": ["combat"], "state": "gap"}],
+    )
+    rollup = build_system_rollup(data)
+    combat = next(s for s in rollup["systems"] if s["system"] == "combat")
+    assert combat["verified"] == 0
+    assert combat["runtime_verified_share"] == 0.0
+
+
 def test_rollup_unassigned_renders_with_real_count(monkeypatch):
     data = _fixture_registry(
         monkeypatch,
