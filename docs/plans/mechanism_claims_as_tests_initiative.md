@@ -84,15 +84,15 @@ never running.
 The point of the table: **roughly half the state vocabulary is a query somebody typed by hand.**
 `orphan` does not mean "we think this is orphaned" — it means zero callers, which is executable.
 
-### 3.1 Five shapes of search failure, catalogued 2026-09-19
+### 3.1 Six shapes of search failure, catalogued 2026-09-19, extended 2026-09-20
 
 The table above says existence/caller-count is "detected," as if that were a solved query. It
 isn't, in practice — the *search that produces* a caller count can itself be wrong in ways that
-look like a clean negative result. This repo has now hit five genuinely distinct failure shapes
+look like a clean negative result. This repo has now hit six genuinely distinct failure shapes
 across several tickets, each one independently discovered, each one producing **confident absence**
 (the searcher concludes "no code exists" and is wrong) rather than an obvious dead end. Catalogued
-here because five instances is a real pattern worth reading before the next search-based
-investigation, not five separate anecdotes:
+here because six instances is a real pattern worth reading before the next search-based
+investigation, not six separate anecdotes:
 
 1. **Same name, different thing.** `progression_conversion` (the mechanism id) vs `src/progression/`
    (a directory whose contents don't implement it) — a plausible-looking path match that isn't the
@@ -121,8 +121,29 @@ investigation, not five separate anecdotes:
    (`src/domains/world_emergence/services.py`) is the same shape, found only via `graphify query
    "trauma"`, not grep — the one directly measured case for why CLAUDE.md's graphify-before-grep
    rule exists, now joined by four more instances of the same underlying failure class.
+6. **A search correctly executed inside a scope that was itself wrong, added 2026-09-20.** The
+   `commitment_betrayal`/`commitment_pressure_consequences` merge candidate
+   (`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION`'s own #7/#17) concluded "no
+   distinct implementation of its own anywhere in `src/`" after searching
+   `src/domains/commitment/` — every file in that directory, matched thoroughly, correctly. The
+   search itself had no defect. What was wrong was the boundary: a real, distinct, purpose-built
+   `BetrayalRecord` type lived in `src/core/models/social.py`, a directory nobody thought to check
+   because the sibling mechanism's own binding lived entirely inside `src/domains/commitment/`, and
+   that made the directory look like the whole territory. Found
+   (`TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION`) only because the merge
+   candidate itself was re-investigated rather than executed on the strength of its own prior
+   conclusion. This is a **different shape from all five above**, and a different defense: shapes
+   1-5 are all failures of the *query* — the search covered the right ground and still missed or
+   misread something. Shape 6 is a failure of *scope* — the query would have worked fine if aimed
+   at the right ground, and the boundary that excluded the right ground was invisible in the
+   result (a clean, confident "not found" looks identical whether the scope was right or wrong).
+   The defense is different too: not "try another query variant" or "check for a rename," but
+   **before accepting a merge/absence conclusion, ask what the search's own boundary was and
+   whether anything justified it being that boundary** — here, nothing did; the boundary was
+   inherited from where the *other* mechanism's code happened to live, not from any property of
+   the mechanism actually being searched for.
 
-**Shapes 4 and 5 are the newest and the most dangerous of the five**, because unlike 1-3 (a wrong
+**Shapes 4 and 5 are the newest and most dangerous of the first five**, because unlike 1-3 (a wrong
 match, a docstring-only symbol, a near-miss pattern — each still findable by trying one more
 variant), 4 and 5 produce a search that returns cleanly empty and looks exhaustive. Nothing in the
 search itself signals "you're searching the wrong vocabulary." The only defenses found so far:
@@ -130,13 +151,15 @@ checking a mechanism's own naming/rename history (terminology-drift epics, atlas
 notes) before concluding absence, and preferring `graphify query` over raw grep for exactly the
 class of query graphify's own AST/fuzzy matching is built for — a preference this doc's own §4.1
 detector plan and CLAUDE.md's own Context Scan mandate already assume, now with five concrete
-instances behind it instead of one.
+instances behind it instead of one. Shape 6 needs its own defense, above, since none of these
+five's own mitigations would have caught it — the query was never wrong.
 
 Source tickets: `TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION` (shapes 1-3, via
 `succession`'s own corrected entry), `TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
-RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_hierarchy`),
-`TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` (shape 5's first instance,
-`regional_trauma`).
+RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_hierarchy`; also the
+original, wrongly-scoped search behind shape 6), `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-
+AUDIT` (shape 5's first instance, `regional_trauma`), `TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-
+CLAIMS-RESOLUTION` (shape 6, found via `commitment_betrayal`'s own re-investigation).
 
 ### 3.2 A different failure class: confident misattribution, not confident absence
 
