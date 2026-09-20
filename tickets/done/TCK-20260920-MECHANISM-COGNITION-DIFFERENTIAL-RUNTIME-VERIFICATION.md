@@ -457,3 +457,16 @@ gap, filed), `personality` (value-shape instrument gap, filed), `motivation_doct
 `orphan`/`code_trace`, correctly left as-is), `strategic_learning_bias`/`concern_intake` (share
 `goal_hierarchy`'s own phase reachability but their own specific branches remain unexercised, stated
 explicitly on both entries).
+
+**One honest omission, surfaced now rather than let slide**: `cognition_capacity_fatigue` was one of
+the original 7 Bucket-C mechanisms (reachable, unconditional -- `CapacityEnforcementPhase.enforce()`,
+`run_phase("capacity_enforcement", ...)` with no flag argument, confirmed by direct grep in the same
+pre-screen pass as the other 6). Unlike `adventure_routing`, it was never given an explicit
+disposition (no scenario built, no gap ticket filed, no note recorded) -- it simply didn't get
+picked up in any wave and the gap wasn't noticed until compiling this close-out's own full 20-row
+accounting. Its own real observable effect (trimming `entity.strategic.leads`/`concerns` down to
+`profile.max_leads`/`max_concerns` when a real update would exceed them) needs an entity already at
+or near the cap plus a real same-tick addition crossing it -- staging that organically (not a forced
+route) is more involved than the other Bucket-C cases and was the reason it kept getting deferred in
+practice without ever being formally deferred on paper. Still `code_trace`, unverified by this
+program. Left open for a future wave, named explicitly rather than silently dropped.
