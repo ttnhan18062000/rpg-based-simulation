@@ -6,7 +6,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**13 runtime-verified, 69 static (`code_trace`)-verified, 11 unverified** — of 93 total.
+**14 runtime-verified, 68 static (`code_trace`)-verified, 11 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -18,7 +18,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `aging_death` | entity | done | static | observed | 5 | 1 |
 | `attributes_biology` | entity | done | static | observed | 5 | 1 |
 | `combat_resolution` | entity | done | runtime | observed | 5 | 1 |
-| `goal_hierarchy` | entity | done | static | observed | 5 | 1 |
+| `goal_hierarchy` | entity | done | runtime | observed | 5 | 1 |
 | `race_archetype` | entity | done | static | observed | 5 | 1 |
 | `regional_trauma` | region | done | runtime | contradicted | 4 | 2 |
 | `campaigns` | world | done | static | observed | 3 | 3 |

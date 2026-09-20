@@ -1087,9 +1087,9 @@ mechanisms:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::_resolve_active_objective
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::evaluate_strategic_intent
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
-      date: "2026-09-19"
+      date: "2026-09-20"
       note: >-
         Real implementation LOCATED while resolving TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-
         ON-EDGES-RESOLUTION's goal_hierarchy cluster (#8-10) -- the parent edge audit's own grep for
@@ -1113,6 +1113,31 @@ mechanisms:
         methods this note already names, bound at method level now that the binding syntax exists
         (`path::Class::method`) -- resolves the gap this note itself recorded rather than leaving it
         open a second batch running.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2, shared
+        `strategic_intelligence` phase question). Targets `_resolve_active_objective()`, one of
+        this entry's own 5 bound methods, via its one real branch: a staged `"detour"`-kind
+        project's `reach_location` objective resolves once the entity is within 1.0 distance of the
+        objective's `target_position`
+        (`tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py`). Real
+        differential, both conditions on the same real `Kernel.tick_once()` dispatch: at the target
+        position, the project completes and `current_project_id` clears; far from it, nothing
+        changes. **A real trap surfaced and fixed while building this, worth recording since it
+        would silently invalidate a naively-staged scenario**: the phase's own per-entity re-
+        evaluation cadence is NOT the `DefaultCadence(strategic_intelligence=1)`
+        `src/engine/pipeline.py:53` applies only when no cadence is otherwise supplied -- a live
+        `Kernel` run under `PROD_SMALL` actually uses `cadence.strategic_intelligence=20`
+        (confirmed by direct instrumentation). Staging the precondition at `state.tick=0` and
+        running forward lets the entity's own real combat/movement logic drift it 2+ tiles off the
+        staged target before its first cadence-aligned evaluation (tick 19 for this entity)
+        happens, producing a false negative unrelated to the resolution logic. Fixed by starting at
+        the cadence-aligned tick directly, so the first real dispatch is also the first
+        cadence-aligned one. **Scope, stated per peer review, not overclaimed**: this scenario
+        verifies `_resolve_active_objective()` and confirms `fused_strategic_pass()` itself really
+        dispatches (`strategic_intelligence_core`, verified block below) -- it does NOT exercise
+        `concern_intake`'s or `strategic_learning_bias`'s own separate branches (different
+        preconditions, not triggered by this staging), which remain unverified at `code_trace`
+        pending their own scenarios.
   - id: belief_cycle
     layer: entity
     systems: [cognition]
@@ -1262,7 +1287,7 @@ mechanisms:
     implemented_by:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -1275,6 +1300,17 @@ mechanisms:
         real trap: `derive_cognition_profile()` on the same class looked like a plausible core-
         entry candidate but is confirmed never called anywhere (see `cognition_capacity_fatigue`'s
         own verified note) -- binding to it would have been a confident-but-wrong pick.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2). Same real
+        differential scenario as `goal_hierarchy`'s own updated note
+        (`tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py`) -- this is the
+        one real independent observation for the whole shared `strategic_intelligence` phase
+        (`goal_hierarchy`, `strategic_intelligence_core`, `strategic_learning_bias`, `concern_intake`
+        all live in or under it; confirming this phase dispatches does not independently confirm
+        each of their own separate branches, per direct peer review -- `strategic_learning_bias` and
+        `concern_intake` remain `code_trace` pending their own staging). The scenario confirms
+        `fused_strategic_pass()` really dispatches through a real `Kernel.tick_once()`, not just
+        that `pipeline.py` calls it by name.
     state: done
     implemented_by:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass

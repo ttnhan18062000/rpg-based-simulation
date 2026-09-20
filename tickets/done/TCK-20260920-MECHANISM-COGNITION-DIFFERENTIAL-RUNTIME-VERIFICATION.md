@@ -89,6 +89,8 @@ contradiction and stop. Do not fix the code to make a claim true in this pass.
   peer instruction rather than riding along here as an incidental.
 - `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`,
   `TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP` — filed, not fixed, during batch 1.
+- `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` — filed during batch 2's pre-screen
+  (`personality` doesn't fit the reachability-differential shape at all).
 
 ## Related Docs
 - `docs/plans/mechanic_verification_scenarios_proposal.md`
@@ -295,3 +297,38 @@ the gate default on or off. Cheap and static, it predicts dormant/gated outcomes
 scenario-building effort where the walk doesn't already answer the question. It does not replace the
 runtime check itself (a reachable path still needs to be observed firing) — it only avoids building
 an elaborate differential for a chain already provably broken two hops up.
+
+## Addendum 5 — 2026-09-20, batch 2 wave 2: the shared `strategic_intelligence` phase
+Per peer review of the routing table: the pre-screen routes work, it does not issue verdicts. Bucket
+A (already `orphan`/`code_trace`, static fact) needed nothing further. Bucket C's 4 shared-phase
+mechanisms (`goal_hierarchy`, `strategic_intelligence_core`, `strategic_learning_bias`,
+`concern_intake`) are 3 independent questions, not 4 — one scenario per shared phase, reported as
+such, not as 4 separate "observed" results.
+
+**Built the shared-phase scenario**: `_resolve_active_objective()` (one of `goal_hierarchy`'s own 5
+bound methods) resolves a staged `"detour"`-kind project's `reach_location` objective once the
+entity reaches the objective's `target_position` — a real, clean, already-cited branch. Both
+`goal_hierarchy` and `strategic_intelligence_core` upgraded to `instrument: scenario, verdict:
+observed`. `strategic_learning_bias` and `concern_intake` are NOT claimed as verified by this
+scenario — their own separate branches (turning-point biasing; salience-based concern evaluation
+behind a stricter cadence and a `has_hostiles_or_dead`/hunger precondition) weren't exercised by it,
+and stay `code_trace` pending their own staging, stated explicitly in both updated entries.
+
+**A real trap found and fixed while building this, worth recording on its own**: the phase's
+per-entity re-evaluation cadence is NOT what a plain read of `pipeline.py:53`'s
+`DefaultCadence(strategic_intelligence=1)` override suggests — that override only applies when
+`refine()` receives no cadence at all. A live `Kernel` run under `PROD_SMALL` actually supplies
+`cadence.strategic_intelligence=20` (confirmed by direct instrumentation, not assumed). Staging the
+precondition at `state.tick=0` and running forward let the entity's own real combat/movement logic
+drift it 2+ tiles off the staged target before its first cadence-aligned evaluation (tick 19), which
+would have produced a false negative attributable to drift, not to the resolution logic — and,
+subtly, would have made the "absent" differential condition pass for the wrong reason too (nothing
+changing because the entity was never evaluated, not because the distance check correctly rejected
+it). Fixed by starting at the cadence-aligned tick directly. Recorded in both updated registry
+entries so it isn't lost.
+
+276/276 → 278/278 tests passing (2 new). All consumer-artifact checks clean. `personality` filed as
+its own instrument-gap ticket (`TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`), per
+explicit instruction not to force a presence/absence differential onto a value-differential problem
+— left unverified rather than given a verdict the current instrument can't support. `emotion` and
+`adventure_routing` (the other 2 Bucket-C independent questions) remain for a further wave.
