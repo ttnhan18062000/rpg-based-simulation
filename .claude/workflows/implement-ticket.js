@@ -1892,6 +1892,43 @@ if (phaseMetaCheck !== null && phaseMetaCheck.status === 'FAIL') {
   log(`WARNING: possible phase-meta drift for ${tid} — ${phaseMetaCheck.evidence}`)
 }
 
+// Advisory-only mechanism-registry changed-code check (TCK-20260916-MECHANISM-CHANGED-CODE-ENTRY-
+// DRIFT-DETECTION, wired in at close time by TCK-20260920-MECHANISM-REGISTRY-CHANGED-CODE-
+// ADVISORY-AT-CLOSE) — mirrors the other three Finalize-tail advisories exactly: runs after status
+// is already 'DONE', never gates ticket close, never changes the exit code. Uses
+// check_drift_for_ticket()'s ticket-scoped changed-files definition (this ticket's own commits,
+// matched by commit message, plus any still-uncommitted working tree) rather than a branch-wide
+// diff, since a branch-wide diff would misattribute drift across the other unrelated tickets this
+// repo's real batches routinely bundle onto the same branch — see that function's own docstring.
+const mechDriftCheckOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from dataclasses import asdict
+from mechanism_registry.mechanism_registry_changed_code_check import check_drift_for_ticket
+drift, replacements = check_drift_for_ticket(sys.argv[1])
+print('MECH_DRIFT_CHECK_JSON:' + json.dumps({
+    'drift': [asdict(d) for d in drift],
+    'replacements': [asdict(r) for r in replacements],
+}))
+" "${tid}"`
+)
+let mechDriftCheck = null
+const mechDriftMarkerIndex = mechDriftCheckOutput.indexOf('MECH_DRIFT_CHECK_JSON:')
+if (mechDriftMarkerIndex !== -1) {
+  try {
+    mechDriftCheck = JSON.parse(mechDriftCheckOutput.slice(mechDriftMarkerIndex + 'MECH_DRIFT_CHECK_JSON:'.length).trim())
+  } catch (e) { mechDriftCheck = null }
+}
+if (mechDriftCheck !== null && (mechDriftCheck.drift.length > 0 || mechDriftCheck.replacements.length > 0)) {
+  const names = [
+    ...mechDriftCheck.drift.map(d => d.mechanism_id),
+    ...mechDriftCheck.replacements.map(r => r.mechanism_id),
+  ]
+  pushEvent('Finalize', 'finalizer', 'failed', 'mechanism_registry_changed_code: ' + names.join(', '))
+  log(`ADVISORY: ${tid} changed code cited by mechanism(s) [${names.join(', ')}] without an entry update — worth a look, not a block. See tools/mechanism_registry/mechanism_registry_changed_code_check.py.`)
+}
+
 return {
   status: 'DONE',
   ticket_id: tid,
