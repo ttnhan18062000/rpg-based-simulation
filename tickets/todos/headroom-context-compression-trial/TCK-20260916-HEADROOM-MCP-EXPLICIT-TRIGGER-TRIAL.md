@@ -97,9 +97,11 @@ touched — is the only way to obtain a measured result with zero exposure.
 - `agent-monitoring/data/YYYY-Www/tools.jsonl` (trial attribution via `session_id`)
 
 ## Assumptions / Open Questions
-- Assumed the MCP server can be registered for one session without becoming globally active for
-  every session on this machine. If registration turns out to be global, **stop and report** — that
-  changes the trial's risk profile rather than merely its mechanics.
+- ~~Assumed the MCP server can be registered for one session without becoming globally active for
+  every session on this machine~~ — **resolved by `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-
+  REVERT`**: registration via this repo's own `.mcp.json` is genuinely repo-scoped, demonstrated
+  (not inferred) via `claude mcp list` run from inside this repo versus from a directory with no
+  `.mcp.json`. No longer an open question.
 - The 20% coding-agent figure is not expected to apply: code is passthrough by design
   ("Compressing function bodies would remove exactly what they need"). Savings should concentrate in
   JSON/JSONL, and a low figure on code is the expected, correct result.
@@ -109,6 +111,19 @@ Measure on identical input, always. The whole point of the MCP approach is that 
 measurement makes ticket scale irrelevant.
 
 Verify upstream behaviour from source or `--help` rather than from docs or from this ticket.
+
+**Reuse, don't rebuild, the first child's setup (2026-09-20).** The registration this ticket needs
+— `.mcp.json`'s `headroom` entry and `tools/start_headroom_mcp.sh` — already exists exactly once,
+in commit `967f1efa4` on the isolation ticket's own branch history (its paired revert,
+`55a55e7cf`, removed both again as that ticket's own proof-of-revert). **Cherry-pick `967f1efa4`
+rather than recreating either file from scratch, and never reach for `headroom mcp install` as a
+shortcut** — that command writes to every detected agent's user-scope config (confirmed from the
+real CLI's own `--help`), the same hazard `headroom wrap` has, and is why the first child
+hand-edited `.mcp.json` directly instead. Two things still need the user, not an agent session, per
+that ticket's own finding: re-running `.venv/bin/python3 -m pip install headroom-ai` in their own
+shell (this sandbox's own `files.pythonhosted.org` block is confirmed, not worked around), and the
+`.mcp.json`/launcher recreation itself is safe for an agent session to redo on its own once the
+package is present.
 
 ## Test Summary
 _To be completed by the implementer._
