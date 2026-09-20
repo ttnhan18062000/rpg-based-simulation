@@ -20,6 +20,8 @@ Following that instruction (§39), this document produces **no milestones, waves
 
 **Confidence convention.** Claims below are either verified in this session against code or docs (cited), or marked *(unverified)*.
 
+**Companion, 2026-09-20:** [`simulation-rule-taxonomy-evaluation-direction.md`](simulation-rule-taxonomy-evaluation-direction.md) extends this document's own reach/connectivity/soft-failure discussion (§C2, §Q5) into a full evaluation-semantics model. Where the two disagree — this review's own §Q5 proposed exposing reach status directly and treating pillar correlation as connectivity evidence — the companion document's more precise framing (evaluation supplies evidence, governance owns status classification; correlation is not causal connectivity) supersedes this review's earlier phrasing. Not corrected in place here, per this document's own convention of annotating rather than rewriting history.
+
 ---
 
 ## A. Overall assessment
@@ -397,6 +399,7 @@ The general pattern holds: **endpoints exist, links do not**.
 
 - `rpg-direction.md`, `simulation-rule-taxonomy-ext-ai.md` (the inputs; repo root, untracked)
 - [`the_unwritten_world.html`](../archive/the_unwritten_world.html) — the 8 principles
+- [`simulation-rule-taxonomy-evaluation-direction.md`](simulation-rule-taxonomy-evaluation-direction.md) — the companion evaluation-semantics model (2026-09-20)
 - [`2026-09-19-core-rpg-lived-history-growth-brainstorm.md`](2026-09-19-core-rpg-lived-history-growth-brainstorm.md) — the 21 scenario traces and link types (evidence; its wave structure is superseded by §39's "no roadmap yet")
 - `registries/mechanisms.yaml` — 93 mechanisms, `layer`/`depends_on`/`state`/`verified`
 - `docs/audits/D01_rpg_feature_impact.md` — the five rating dimensions

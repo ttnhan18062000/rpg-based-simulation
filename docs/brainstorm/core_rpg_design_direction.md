@@ -23,6 +23,7 @@ It supersedes nothing in the codebase by itself. What it changes is the **questi
 | **This document** | The direction: what the world is, what rules govern it, what we are aiming at |
 | [`../archive/the_unwritten_world.html`](../archive/the_unwritten_world.html) | **Deprecated and archived, 2026-09-20.** The original creative-direction page. Its 8 principles are not withdrawn — they are carried in full into §2 below. Kept only for its original wording and examples |
 | [`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) | The local agent's assessment of this direction against the real codebase |
+| [`simulation-rule-taxonomy-evaluation-direction.md`](simulation-rule-taxonomy-evaluation-direction.md) | Companion: how the semantics of this direction's rules/mechanisms should eventually be evaluated — implementation-independent |
 | [`2026-09-19-core-rpg-lived-history-growth-brainstorm.md`](2026-09-19-core-rpg-lived-history-growth-brainstorm.md) | Evidence: 21 scenarios traced link-by-link through real code |
 | `docs/plans/rpg_design_roadmap/` | What has actually been built (M1–M10) |
 
