@@ -470,3 +470,42 @@ or near the cap plus a real same-tick addition crossing it -- staging that organ
 route) is more involved than the other Bucket-C cases and was the reason it kept getting deferred in
 practice without ever being formally deferred on paper. Still `code_trace`, unverified by this
 program. Left open for a future wave, named explicitly rather than silently dropped.
+
+## Addendum 9 — 2026-09-20, closing both open items per peer instruction
+**1. A duplicate-key invariant, blocking, not just swept once.** `registry.py` gains
+`check_duplicate_keys(path)` -- a dedicated YAML loader (`_load_yaml_checking_duplicate_keys`)
+overriding `construct_mapping` to raise on any key repeated within one mapping, at ANY nesting
+depth, instead of `yaml.safe_load()`'s own silent last-value-wins behavior. Wired into `main()`
+(and therefore `make mechanism-registry-validate`, an already-blocking CI check) ahead of
+`validate()`'s other ten invariants, since a duplicate key means the `data` dict every other
+invariant inspects is already unreliable. Documented explicitly as invariant 11 in the module's own
+docstring, and named for what it is: a **fifth, mechanical** way this registry can produce a
+confident wrong answer, distinct from the four epistemic shapes (search failure, misattribution,
+selection effect, one-hop-short verification) already catalogued in
+`docs/plans/mechanism_claims_as_tests_initiative.md` -- no judgement went wrong here, the YAML
+parser silently chose for us. Proven against 3 real fixtures (the actual incident shape reproduced
+verbatim, a duplicate inside a nested `verified:` block specifically, and a clean-fixture negative
+control), plus a regression test confirming the real committed file is itself clean. 293/293 tests
+passing.
+
+**2. `cognition_capacity_fatigue`, finished, not just re-flagged.** The real staging obstacle that
+caused it to fall through every wave: `CapacityEnforcementPhase.enforce()` only evaluates an entity
+that already has a real `StrategicUpdate` proposed by an EARLIER phase the same tick -- an entity
+genuinely over cap in raw state with nothing else proposed for it is silently skipped, not trimmed.
+Resolved by chaining two already-validated real mechanisms rather than forcing a route: a stale lead
+gives `belief_cycle`'s own already-verified staleness-decay phase (runs before
+`capacity_enforcement` in the same tick) a real reason to produce a non-empty update, which is
+exactly the real precondition `enforce()` needs. 9 real leads (over `max_leads=8`): the lowest-scored
+survivor (the stale one, decayed to `VAGUE`) is trimmed through a real `Kernel.tick_once()`. 8 real
+leads (at the cap): nothing is trimmed, with the stale lead's own `VAGUE` certainty confirming (per
+§5 item 5) the negative arm was reached and declined, not skipped. Upgraded to `scenario`/`observed`.
+
+**Final numbers, cognition program complete**: 9 independent observations, 11 of 20 `cognition`
+mechanisms scenario-verified (55.0%, was 0.0% at the start of this program). Registry-wide baseline:
+20/82 verified runtime-backed (24.4%, was 11.0% before batch 1). Remaining 9 unverified, every one
+with a stated, deliberate reason: `adventure_routing`/`personality` (instrument gaps, filed),
+`strategic_learning_bias`/`concern_intake` (phase reachable, own branch unexercised),
+`motivation_doctrine`/`information_trust_deception` (unbound), `declared_cognition_schema`/
+`committed_intentions`/`strategic_redirection` (Bucket A, already-settled). No accidental gaps
+remain. 293/293 tests passing, all consumer-artifact checks clean, `registry.py::validate()`
+(now including the duplicate-key invariant) clean.

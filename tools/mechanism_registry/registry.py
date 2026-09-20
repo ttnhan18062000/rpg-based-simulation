@@ -8,8 +8,9 @@ Pattern imitated from src/engine/capability.py (a working hand-authored-YAML-reg
 validator precedent for a different subject), adapted for this registry's extra invariants
 (depends_on resolution, DAG acyclicity) that capability.py's simpler flat list did not need.
 
-Ten invariants enforced by validate() (the header count was already stale at "Seven" before this
-edit -- invariant 8 had already been added without updating it; fixed here rather than repeated):
+Eleven invariants enforced across validate() and check_duplicate_keys() (the header count was
+already stale at "Seven" before a prior edit -- invariant 8 had already been added without
+updating it; fixed then rather than repeated):
   1. every `depends_on` id resolves to a declared mechanism
   2. the dependency graph is acyclic
   3. every mechanism's `layer` is declared in the `layers` block
@@ -33,10 +34,19 @@ edit -- invariant 8 had already been added without updating it; fixed here rathe
   10. every system registered in registries/system_registry.jsonl has at least one mechanism
       declaring it (same ticket) -- "no orphan system": a declared system with zero members is
       dead vocabulary and should fail rather than accumulate silently
+  11. no mapping in the file defines the same key twice (`check_duplicate_keys()`,
+      TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION) -- `yaml.safe_load()`
+      silently keeps only the LAST value for a duplicate key, which let a stale, pre-edit
+      `verified:` block survive undetected through all ten invariants above (they only ever see
+      the dict `yaml.safe_load()` already produced, where the duplicate has no trace left).
+      Checked separately from `validate()`'s own ten, against the real file path rather than an
+      already-parsed dict, since that is the only point where the duplication is still visible.
 
 `validate()` returns a list of human-readable error strings (empty if valid) rather than
 raising/returning a bool, so a caller can report every violation in one run instead of stopping at
-the first -- "build the failure loud" (this ticket's own Implementation Notes).
+the first -- "build the failure loud" (this ticket's own Implementation Notes). `check_duplicate_
+keys()` (invariant 11) follows the same shape but is a separate function, not folded into
+`validate()`'s own body -- see its own docstring for why.
 
 Usage:
   python3 tools/mechanism_registry/registry.py               # validate the real committed file
@@ -191,12 +201,86 @@ class MechanismRegistry:
         return entry.get("verified") if entry else None
 
 
+class DuplicateYamlKeyError(ValueError):
+    """Raised by _load_yaml_checking_duplicate_keys when the same key appears twice in one
+    mapping. Carries the raw message; check_duplicate_keys() turns it into a normal validate()-
+    style error string."""
+
+
+def _load_yaml_checking_duplicate_keys(path: Path):
+    """Loads a YAML file exactly like `yaml.safe_load()`, except it raises
+    `DuplicateYamlKeyError` on ANY duplicate key within the same mapping, instead of silently
+    keeping the last value.
+
+    TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION's own registry-corruption
+    incident: an imprecise edit left `strategic_intelligence_core`'s entry with two
+    `implemented_by:` keys and two `verified:` keys inside the same mechanism mapping.
+    `yaml.safe_load()` silently resolved both duplicates to their LAST value -- the stale,
+    pre-edit one -- so the entry's real `instrument:` field read `code_trace` while every prose
+    note in the (correct, first) block claimed `scenario`. All ten of `validate()`'s own
+    invariants passed, because by the time `validate()` ever sees the data, the duplicate
+    information is already gone -- `data` is just a dict, and a dict cannot represent "this key
+    was written twice." The corruption was found only by chance, because one close-out's own
+    hand arithmetic happened to disagree with the registry's real count by exactly one. This is a
+    fifth way the registry can produce a confident wrong answer, distinct from the four already
+    catalogued in `docs/plans/mechanism_claims_as_tests_initiative.md` -- those are all epistemic
+    (a search or a judgement went wrong); this one is mechanical (the YAML parser silently chose
+    for us, with no judgement involved at all). It cannot be caught downstream of parsing, only
+    at parse time itself -- hence this dedicated loader rather than a new check inside
+    `validate()`'s own body.
+
+    A mapping is checked independently of its nesting depth: this catches a duplicate top-level
+    mechanism field (`implemented_by:` appearing twice) exactly as it would catch a duplicate key
+    inside a `verified:` sub-block, since each `MappingNode` PyYAML visits is scanned on its own.
+    """
+    class _DuplicateKeyCheckingLoader(yaml.SafeLoader):
+        pass
+
+    def _construct_mapping(loader: yaml.SafeLoader, node: yaml.MappingNode, deep: bool = False):
+        mapping: dict = {}
+        for key_node, value_node in node.value:
+            key = loader.construct_object(key_node, deep=deep)
+            if key in mapping:
+                raise DuplicateYamlKeyError(
+                    f"duplicate key {key!r} at {path.name}:{key_node.start_mark.line + 1} "
+                    "(yaml.safe_load() would silently keep only the LAST occurrence's value)"
+                )
+            value = loader.construct_object(value_node, deep=deep)
+            mapping[key] = value
+        return mapping
+
+    _DuplicateKeyCheckingLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping
+    )
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.load(f, Loader=_DuplicateKeyCheckingLoader)
+
+
+def check_duplicate_keys(path: Path) -> List[str]:
+    """Invariant 11: no mapping in the file (a mechanism's own top-level fields, or any nested
+    block like `verified:`) may define the same key twice. Returns a list of error strings
+    (empty if clean) in the same shape `validate()`'s own errors use, so a caller can merge the
+    two lists. Must be run against a real file path -- unlike `validate()`'s other ten
+    invariants, this one is structurally impossible to check from an already-parsed dict, since
+    `yaml.safe_load()` has already discarded the duplicate by the time any dict exists."""
+    try:
+        _load_yaml_checking_duplicate_keys(path)
+    except DuplicateYamlKeyError as e:
+        return [str(e)]
+    return []
+
+
 def validate(data: dict) -> List[str]:
     """Returns a list of human-readable error strings, empty if valid.
 
     Only raises for a structurally malformed file (missing top-level keys entirely); every
     business-logic violation (the four invariants) is returned as a string, never raised, so every
     violation in one file is reported in a single run.
+
+    Does NOT include invariant 11 (no duplicate keys within one mapping) -- that check requires
+    the real file path, not just the already-parsed `data` dict (see `check_duplicate_keys()`'s
+    own docstring for why). Callers with a real path should also call `check_duplicate_keys(path)`
+    and merge its errors; `main()` below does this for the real committed file.
     """
     errors: List[str] = []
     layers = data.get("layers", {}) or {}
@@ -798,7 +882,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
 
-    errors = validate(data)
+    # Invariant 11 first: a duplicate key means `data` above is already unreliable (yaml.safe_load
+    # silently kept only the last value), so every other invariant below would be checking
+    # corrupted input without knowing it.
+    errors = check_duplicate_keys(path)
+    errors += validate(data)
     if errors:
         print(f"FAIL: {len(errors)} violation(s) in {path}")
         for e in errors:

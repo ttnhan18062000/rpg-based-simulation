@@ -1428,7 +1428,7 @@ mechanisms:
     implemented_by:
       - src/engine/pipeline_phases/capacity_enforcement.py::CapacityEnforcementPhase
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -1448,6 +1448,27 @@ mechanisms:
         consumers confirmed at `src/systems/strategic_systems/detour.py:207`,
         `src/systems/strategic_systems/intelligence.py:1069,1727`, `src/ai/goals/scorers.py:258`,
         `src/town/guild.py:90`.
+        **Upgraded to `scenario` 2026-09-20**
+        (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION) -- closes the one
+        honest gap this program's own close-out surfaced: this mechanism was reachable and
+        unconditional from the start, but its own real staging need (the entity must already have
+        a real `StrategicUpdate` proposed by an EARLIER phase this same tick --
+        `capacity_enforcement.py`'s own `if not ent_upd or not ent_upd.strategic: continue` skips
+        an entity with nothing else proposed for it, even one genuinely over cap in raw state) kept
+        it falling through 4 waves without ever getting a disposition recorded. Resolved by
+        chaining two already-validated real mechanisms rather than forcing a route: a stale lead
+        (`discovered_tick=0`, `state.tick=50`) produces a real, non-empty update via
+        `belief_cycle`'s own already-verified staleness-decay phase
+        (`belief_staleness_decay`, runs before `capacity_enforcement` in the same tick), giving
+        `enforce()` a genuine `ent_upd.strategic` to evaluate
+        (`tests/mechanic_scenarios/test_cognition_capacity_fatigue_lead_trim.py`). 9 real leads
+        (over `max_leads=8`, the compiled default): the lowest-scored survivor (the stale lead,
+        decayed to `VAGUE`) is trimmed by `CapacityService.trim_dict()` through a real
+        `Kernel.tick_once()`, leaving exactly the 8 higher-scored keepers. 8 real leads (at, not
+        over, the cap): nothing is trimmed. Reach confirmed directly for the negative arm (§5 item
+        5): the stale lead's own certainty is checked as `VAGUE` in both conditions, proving
+        `belief_staleness_decay` genuinely ran in the at-cap case too -- "nothing trimmed" is a
+        reached-and-declined result, not the entity being skipped before ever being considered.
 
   # ── Group layer (2, atlas `group-layer`) ────────────────────────────────────────────────────
 
