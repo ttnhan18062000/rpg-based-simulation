@@ -214,6 +214,31 @@ def test_real_registry_findings_pinned():
       this batch and this batch's rule is not to silently overwrite an already-verified conclusion.
       This mechanism carries no finding here because it has no `implemented_by` to check.
 
+    2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION): `perception`
+    now fires `orphan_with_callers` (high confidence per the tool, expected and NOT a checker false
+    positive here -- this is the exact one-level-deep blind spot the entry's own registry note
+    names). The tool counts `src/domains/perception/phase.py` as a real caller of
+    `PerceptionFilterService` because `phase.py` does contain a real call to `.filter()` -- but
+    `phase.py`'s own `PerceptionUpdatePhase` class is itself never instantiated anywhere else in
+    `src/`, confirmed both by direct grep and by a real differential runtime scenario
+    (`tests/mechanic_scenarios/test_perception_pipeline_wiring.py`: zero real `.filter()` calls and
+    an empty `perceived_entities` across 5 real ticks against a world with an adjacent, perceivable
+    entity, plus a positive control proving the code itself works when called directly). Same
+    "type/class reference counted as a caller without checking reachability" shape as
+    `commitment_betrayal` above, one level removed -- there it was a type reference; here it's a
+    real call inside a dead chain. `orphan` stands, now runtime-confirmed rather than asserted from
+    a static read alone.
+
+    2026-09-20 (TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION, batch 2):
+    `temporal_pressure` now fires `gated_without_flag_context` (low confidence per the tool) after
+    its own `state` correction `skeleton` -> `gated` -- same shape as `genetics_aptitude`/
+    `knowledge_model`/`opportunity_rumor_seeds` below: the real `ENABLE_MEMORY_UPDATE` flag check is
+    several frames away from `TemporalPressureService.calculate_urgencies()`'s own direct reference
+    (it gates `MemoryUpdatePhase.apply()`, the containing phase, not `calculate_urgencies()`
+    itself). A real differential scenario
+    (`tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py`) independently confirms the
+    gating is real: flag ON computes urgency, flag OFF (the real default) does not.
+
     Update this test only alongside a real investigation of what changed, same discipline as every
     other pinned-count test in this repo."""
     import yaml
@@ -225,10 +250,12 @@ def test_real_registry_findings_pinned():
         ("genetics_aptitude", "gated_without_flag_context"),
         ("knowledge_model", "gated_without_flag_context"),
         ("opportunity_rumor_seeds", "gated_without_flag_context"),
+        ("temporal_pressure", "gated_without_flag_context"),
         ("attributes_biology", "state_with_zero_callers"),
         ("class_assignment", "state_with_zero_callers"),
         ("campaigns", "state_with_zero_callers"),
         ("chronicle", "orphan_with_callers"),
         ("goal_hierarchy", "state_with_zero_callers"),
         ("commitment_betrayal", "orphan_with_callers"),
+        ("perception", "orphan_with_callers"),
     }

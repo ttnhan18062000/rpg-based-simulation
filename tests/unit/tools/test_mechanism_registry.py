@@ -212,6 +212,122 @@ def test_real_registry_passes_validation(registry_data, monkeypatch):
     assert validate(registry_data) == []
 
 
+# ── 2b: invariant 11, duplicate keys within one mapping ──────────────────────────────────────
+#
+# TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION's own registry-corruption
+# incident: an imprecise edit left one mechanism's own mapping with two `implemented_by:` keys
+# and two `verified:` keys. `yaml.safe_load()` silently kept only the LAST value for each --
+# the stale, pre-edit one -- and every one of `validate()`'s other ten invariants passed, because
+# by the time `validate()` receives its `data` argument, the duplication has already been thrown
+# away; a plain dict cannot represent "this key was written twice." This is exactly why
+# `check_duplicate_keys()` is its own function operating on a real file path, not folded into
+# `validate()`'s own dict-based checks -- proven here against a real fixture reproducing the
+# actual incident shape (two full top-level `state`/`implemented_by`/`verified` blocks inside one
+# mechanism mapping), not just a synthetic minimal case.
+
+
+def _write_fixture(tmp_path: Path, text: str) -> Path:
+    p = tmp_path / "fixture.yaml"
+    p.write_text(text, encoding="utf-8")
+    return p
+
+
+def test_check_duplicate_keys_detects_the_real_incident_shape(tmp_path):
+    from tools.mechanism_registry import check_duplicate_keys
+
+    path = _write_fixture(tmp_path, """
+layers:
+  entity: {weight: 1}
+mechanisms:
+  - id: test_mech
+    layer: entity
+    systems: []
+    depends_on: []
+    state: done
+    implemented_by: [src/a.py]
+    verified:
+      instrument: scenario
+      verdict: observed
+      date: "2026-09-20"
+      note: "the correct, edited block"
+    state: done
+    implemented_by: [src/a.py]
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: "the stale, pre-edit block a duplicate key would silently resurrect"
+""")
+
+    errors = check_duplicate_keys(path)
+
+    assert errors != [], "expected the duplicate `state`/`implemented_by`/`verified` keys to be caught"
+    assert "duplicate key" in errors[0]
+
+
+def test_check_duplicate_keys_detects_a_duplicate_inside_a_nested_verified_block(tmp_path):
+    """The check must operate per-mapping regardless of nesting depth -- a duplicate key inside
+    `verified:` itself (not just at the mechanism's own top level) must be caught too, the same
+    way a duplicate `instrument:` inside one `verified:` block would silently pick the last
+    value."""
+    from tools.mechanism_registry import check_duplicate_keys
+
+    path = _write_fixture(tmp_path, """
+layers:
+  entity: {weight: 1}
+mechanisms:
+  - id: test_mech
+    layer: entity
+    systems: []
+    depends_on: []
+    state: done
+    implemented_by: [src/a.py]
+    verified:
+      instrument: scenario
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-20"
+      note: "duplicate instrument key inside verified itself"
+""")
+
+    errors = check_duplicate_keys(path)
+
+    assert errors != []
+    assert "instrument" in errors[0]
+
+
+def test_check_duplicate_keys_is_clean_on_a_well_formed_fixture(tmp_path):
+    from tools.mechanism_registry import check_duplicate_keys
+
+    path = _write_fixture(tmp_path, """
+layers:
+  entity: {weight: 1}
+mechanisms:
+  - id: test_mech
+    layer: entity
+    systems: []
+    depends_on: []
+    state: done
+    implemented_by: [src/a.py]
+    verified:
+      instrument: scenario
+      verdict: observed
+      date: "2026-09-20"
+      note: "no duplication anywhere"
+""")
+
+    assert check_duplicate_keys(path) == []
+
+
+def test_real_registry_has_no_duplicate_keys():
+    # The load-bearing regression check: the real committed file must itself be clean, mirroring
+    # test_real_registry_passes_validation's own "must pass on the real file" discipline for
+    # validate()'s other ten invariants.
+    from tools.mechanism_registry import check_duplicate_keys
+
+    assert check_duplicate_keys(_REGISTRY_PATH) == []
+
+
 # ── 3: reader class accessors ────────────────────────────────────────────────────────────────
 
 
@@ -862,7 +978,7 @@ def test_real_registry_verification_view_seeds_non_empty(registry_data):
     expected = {
         "combat_engagement": "scenario",
         "succession": "code_trace",
-        "self_model": "code_trace",
+        "motivation_doctrine": "code_trace",
         "information_trust_deception": "code_trace",
         "opportunity_rumor_seeds": "code_trace",
         "cross_episode_grief_nemesis": "code_trace",

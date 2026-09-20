@@ -211,7 +211,9 @@ mega-scenario trying to cover all six.
 
 ## 5 · What this component verifies, and what it does not (stated here, and in its own output)
 
-**Two limitations, both load-bearing, both already-observed rather than hypothetical:**
+**Five rules, all load-bearing, all already-observed rather than hypothetical (items 3, 4, and 5
+added 2026-09-20, `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`, per direct peer
+review of the first batch to use this component against `cognition`):**
 
 1. **A scenario proves a mechanic works under staged conditions. It says nothing about whether
    real worlds produce those conditions.** That second question stays a content/composition
@@ -230,6 +232,61 @@ mega-scenario trying to cover all six.
    rejected posture) the gate itself depends on, and the result looked like a pass without
    actually exercising the mechanism at all (see §3.3's differential-assertion requirement, added
    directly because of this).
+3. **A negative or calibration verdict (`contradicted`/confirms a known `orphan`) built on "zero
+   calls observed" is a stated requirement, not a habit: it must be paired with a direct-call
+   positive control on the same code path.** An empty result alone cannot distinguish "never
+   invoked" from "invoked and legitimately produced nothing" — and every dormant-mechanism finding
+   in this arc lives in exactly that gap. The pairing is what makes a zero-result mean something.
+   `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`'s `perception` and
+   `quest_generation_sourcing` scenarios both do this (call the real function directly, outside the
+   Kernel dispatch, and confirm it still produces real output); a scenario asserting only "the
+   Kernel run produced nothing" without a positive control does not meet this component's bar for
+   a negative verdict.
+4. **A single scenario world is not a closed universe, and a `contradicted`/`orphan` verdict must
+   say which of two possible backings it rests on.** Reusing one compiled world across scenarios
+   (§3.2 favors reuse over authoring new worlds where possible) means a "zero calls observed"
+   result could mean either "this mechanism is genuinely dead" or "this particular world never
+   produces this mechanism's precondition" — two very different findings that look identical from
+   inside one scenario. A qualifying verdict needs one of:
+   - **(a) a static backing**: a never-instantiated/never-called fact that holds independently of
+     which world is used (e.g. `perception`'s `PerceptionUpdatePhase` has zero constructors
+     anywhere in `src/`, confirmed by a full-tree grep — no world could change that), or
+   - **(b) a demonstrated backing**: the scenario's own world is shown, not assumed, to produce the
+     mechanism's real trigger condition (e.g. `quest_generation_sourcing`'s scenario forces a real
+     region to clear `generate_from_scar()`'s own `trauma_score > 0.3` threshold and the positive
+     control confirms that precondition really does produce output when the function is called
+     directly).
+   Without either backing, the honest verdict is weaker than `contradicted` — "not observed in
+   world X" is a real result, but not proof of dormancy, and recording it as `contradicted`/`orphan`
+   would manufacture exactly the confident-false-negative shape this arc has already catalogued
+   once (§3.2's misattribution class). Each scenario's own registry note must say which backing
+   applies.
+5. **The negative arm must be evaluated-and-rejecting, not merely unevaluated — added 2026-09-20,
+   `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`.** A differential whose
+   claim is about *internal logic* ("does this mechanism correctly decline when its own precondition
+   isn't met") needs its negative arm to prove the mechanism was *reached and declined to act* — not
+   merely that nothing happened. The instance: `goal_hierarchy`'s own detour-resolution scenario
+   staged its negative arm ("entity far from the target position") at `state.tick=0`, but the phase's
+   real per-entity cadence (`cadence.strategic_intelligence=20` under a live `PROD_SMALL` run, not
+   the `DefaultCadence(strategic_intelligence=1)` a plain read of `pipeline.py:53` implies — that
+   override only fires when no cadence is supplied at all) meant the entity was never actually
+   evaluated at tick 0. The negative arm "passed" — nothing changed — for a reason unrelated to the
+   distance check: the mechanism was never reached, not correctly declined. Caught only because the
+   *positive* arm failed first and forced a closer look; the negative arm's own false pass would
+   never have surfaced on its own. **This is a harness defect, not a search defect, and more
+   dangerous than the shapes §3.1 catalogues**: a vacuous negative arm makes a differential look
+   rigorous precisely when it is empty, and every verdict this component emits rests on the negative
+   arm meaning something. The defense is the same logic as item 3's positive-control pairing, applied
+   to the other side: **prove reach, not just outcome** — instrument the mechanism's own call site (a
+   counter, a direct pre-check, or equivalent) so the negative arm's report can say "reached, declined"
+   rather than only "no change observed." A verdict built on an unproven negative arm should not be
+   recorded as `scenario`/`observed` until this is confirmed.
+   **Distinguish from item 4's static/demonstrated backing, which this does not replace**: a scenario
+   whose own *claim* is reachability itself (`perception`'s "nothing ever calls this phase",
+   `temporal_pressure`'s "the gate blocks this by default") is not vacuous when its negative arm shows
+   zero reach — that IS the claim, proven the same way item 4 already requires (a static fact, or a
+   positive control ruling out the alternative explanation). Item 5 applies specifically when the
+   claim is about the mechanism's own internal decision logic, not about whether it runs at all.
 
 This limitation statement belongs in the component's own generated report output as well as this
 document, in the same spirit as the census's own unsuppressable `LIMITATION_HEADER` — not decided
