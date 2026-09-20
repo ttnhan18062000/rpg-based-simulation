@@ -293,6 +293,80 @@ document, in the same spirit as the census's own unsuppressable `LIMITATION_HEAD
 here whether that's a fixed string constant or a per-scenario field, left for the implementation
 pass.
 
+## 5.1 · A second, distinct axis: the value-differential instrument (added 2026-09-21,
+`TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT`)
+
+Everything in §§2-5 is **reachability-shaped**: the two arms of a differential differ on whether a
+precondition is present or absent, and the question is whether the mechanism fires at all. That
+axis cannot answer a second, equally real question for stat/trait/modifier-shaped mechanisms:
+`readiness_speed_scaling` and `breakthrough_bonuses` are both real, wired, reachable code — the
+open question for them is not "does this run," it's "does its own input value have any purchase
+on the outcome." Per-system runtime-evidence share after Program A (merged `main`, `cognition`
+11/20, `combat` 4/8, `world` 3/25, `progression` 3/15, `faction`/`social`/`economy` 0 each) showed
+sweeping reachability differentials into these systems hits diminishing returns for exactly this
+reason — they don't fail by not running, they fail by not mattering.
+
+**Instrument shape**: both arms run the identical real mechanism dispatch. Only the mechanism's own
+input value differs between arms — the world is otherwise held fixed. The question is whether a
+downstream outcome differs. This is a genuinely different comparison than §3.3's differential
+assertions (present/absent), not a variant of it.
+
+**Calibration is a harder requirement here than for reachability.** Program A's reachability axis
+had a known negative available in `quest_generation_sourcing` (a real precondition provably never
+met). No equivalent "value that provably doesn't matter" exists a priori for this axis, so the
+instrument must supply its own calibration before any real verdict is trustworthy:
+- **Positive control**: an input certain to affect the outcome (a documented, direct formula
+  input) — confirms the instrument can detect a real difference.
+- **Negative control**: an input that provably does NOT feed the mechanism under test — confirms
+  the instrument does not report a difference whenever anything is perturbed. Without this, a
+  "values matter" result is unreadable: an instrument that always reports a difference is worse
+  than none, because it would mark every mechanism as mattering.
+
+Both controls are required in the same batch as the first real mechanism, not deferred.
+
+**Two named traps, both real and hit during the first application (`readiness_speed_scaling`,
+`derived_stats`, `evolution`/`xp_leveling`, `tests/mechanic_scenarios/
+test_readiness_and_derived_stats_value_differential.py` and
+`test_evolution_xp_reward_value_differential.py`):**
+
+1. **Determinism/seed sensitivity — the value-differential analogue of §5 item 5's cadence trap,
+   and subtler.** If varying the input also perturbs RNG draw order (e.g. a different number of
+   combat rounds before a kill resolves), downstream differences can appear that have nothing to
+   do with the mechanism itself. Not hypothetical here: the `evolution`/`xp_leveling` mechanism's
+   own input (`defender.identity.evolution_level`) is read inside a real combat-kill resolution,
+   raising exactly this risk. Resolved by direct code trace **before staging anything**, not by
+   assumption: `CombatResolutionSystem.calculate_damage()` (`src/engine/combat.py:31-46`) reads
+   only `combat.atk`/`combat.def_stat`, no RNG call in the function; `LevelingService.
+   recalculate_combat_stats()` (`src/progression/leveling.py:76-180`) reads only
+   `AttributeComponent` fields, never `identity.evolution_level`; two independent in-code comments
+   (`src/domains/combat_engagement/power.py:49`, `perception.py:51`) state `evolution_level` is
+   "deliberately excluded, not merely unweighted" from combat-power comparisons. The varied field
+   is therefore structurally inert on the fight's own resolution — confirmed by trace, then
+   confirmed again empirically (all three arms of the real test resolve the kill identically). A
+   pure, RNG-free mechanism (`readiness_speed_scaling`/`derived_stats`'s own
+   `recalculate_combat_stats`) is immune to this trap by construction and makes the strongest
+   calibration-mechanism candidate for exactly that reason.
+2. **Purpose-built worlds.** The single-shared-world limitation (§3.2) binds here too: a world with
+   no progression-capable entities can't show XP mattering. Building a small number of focused
+   worlds is legitimate infrastructure for this program — but they must stay production-shaped, no
+   forced routes, no entity configurations the real simulation would never produce. If a mechanism
+   only matters in a world the game never generates, that is itself the finding, not a staging
+   failure to work around. In practice, the first batch needed no new world: both mechanisms reused
+   `data/worlds/mechanic_scenario_combat_judgement_withdrawal/`, already a real catalog-driven,
+   combat-capable pairing.
+
+**Registry recording convention**: a value-differential finding is additive to an existing
+`verified` note (dated, appended), never a silent overwrite of a prior reachability verdict — the
+two axes answer different questions about the same mechanism and both stay recorded. `instrument`
+upgrades from `code_trace` to `scenario` when a real differential lands; `verdict` and `state`
+change only when the new evidence actually changes that specific claim (see
+`readiness_speed_scaling`'s own registry entry: value-differential confirmed positive, corpus-
+reachability verdict unchanged, because they are different claims).
+
+Arbitration (the third failure-to-matter shape catalogued in
+`TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`) is out of scope for this axis — it
+needs its own instrument.
+
 ## 6 · Explicitly not decided here
 
 - The exact assertion-vocabulary API (a small typed-object DSL as sketched in §3.3, vs. plain

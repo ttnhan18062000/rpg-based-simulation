@@ -326,6 +326,17 @@ mechanisms:
         called from `SkillScalingService.get_effective_stats()` (`src/engine/rpg_depth.py`), itself
         called from `apply.py`'s own `stats_dirty` block (`src/engine/apply.py:616`) -- confirms
         the note's own "correct code, rarely exercised" reading rather than changing it.
+        **Value-differential added 2026-09-21** (TCK-20260921-MECHANISM-PROGRESSION-VALUE-
+        DIFFERENTIAL-INSTRUMENT, new axis distinct from the reachability instrumentation above):
+        `tests/mechanic_scenarios/test_readiness_and_derived_stats_value_differential.py` confirms,
+        via a real call into `ApplyPath._apply_entity_update()` (the same authoritative merge code
+        a full Kernel tick runs, not a separate bypassed phase -- `stats_dirty`'s own trigger and
+        recalculation live inside this exact function), that a +10 agility delta moves
+        `readiness_speed` by exactly +10.0 (positive control) while a +10 vitality/strength delta
+        leaves it unchanged (negative control). This is a distinct claim from the corpus-
+        reachability verdict above and does not change it: the formula has real purchase on the
+        outcome WHEN it runs; it still rarely runs in real corpus play. `state` stays `partial` for
+        the reachability reason already recorded.
   - id: interaction_channeling
     layer: entity
     systems: [social]
@@ -406,7 +417,7 @@ mechanisms:
     implemented_by:
       - src/engine/rpg_depth.py::SkillScalingService::get_effective_stats
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -420,6 +431,21 @@ mechanisms:
         (`LevelingService.recalculate_combat_stats`) computes one specific field within this same
         pipeline; kept as a separate, more specific citation there rather than merged into this
         entry's own binding.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT):
+        `tests/mechanic_scenarios/test_readiness_and_derived_stats_value_differential.py` confirms
+        a +10 vitality delta moves `max_hp` by exactly +20 and a +10 strength delta moves `atk` by
+        exactly +5, matching the documented formulas (positive control), while a +10 agility delta
+        moves neither (negative control) -- same real `ApplyPath._apply_entity_update()` dispatch
+        as `readiness_speed_scaling`'s own new value-differential entry. **Separate real finding,
+        not fixed here, filed as `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`**:
+        `apply.py:616-624`'s call site never passes `base_hp`/`base_atk`/`base_def`, so every
+        `stats_dirty` recalculation silently discards an entity's spawned/species-specific base
+        stats and substitutes `get_effective_stats()`'s generic defaults (100/10/5) -- confirmed
+        directly (a goblin_scout spawned at max_hp=35 recalculates to max_hp=112 on any zero-delta
+        stats_dirty trigger). Does not invalidate this entry's own delta-based value-differential
+        above (both arms of every comparison undergo the identical default-base substitution), but
+        is a materially different defect worth its own disposition.
   - id: race_archetype
     layer: entity
     systems: [progression]
@@ -596,6 +622,23 @@ mechanisms:
         TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS's own addendum for the
         full trace. This mechanism's own code is confirmed correct; see `xp_leveling` for why it
         still doesn't fire in real corpus play.
+        **Value-differential added 2026-09-21** (TCK-20260921-MECHANISM-PROGRESSION-VALUE-
+        DIFFERENTIAL-INSTRUMENT, applying the new axis to this mechanism's own `xp_reward=
+        defender.identity.evolution_level*10` formula, `src/engine/combat.py:510`):
+        `tests/mechanic_scenarios/test_evolution_xp_reward_value_differential.py` runs three real
+        Kernel-tick forced-kill arms (goblin one-hits a staged-HP=1 orc) -- positive control:
+        varying only the defender's `evolution_level` (1 -> 5) scales the attacker's XP gain
+        proportionally (10 -> 50); negative control: varying the defender's own `evolution_points`
+        (same identity component, a field the reward formula and combat resolution both provably
+        never read) leaves the XP gain unchanged. Determinism-trap check done by direct code trace
+        before staging (see the test file's own docstring and this ticket's investigation.md):
+        `calculate_damage()` and `recalculate_combat_stats()` never read `identity.evolution_level`
+        or `evolution_points`, so the fight itself (and any RNG it might consume) is byte-identical
+        across all three arms -- only the post-kill reward differs. This confirms `xp_leveling`'s
+        own merged claim (the reward's SIZE has real purchase on the outcome) as a distinct finding
+        from `evolution`'s existing reachability-shaped positive control above (which showed the
+        chain fires correctly for one fixed reward size, not that varying the reward's own input
+        matters).
   - id: skill_unlocks
     layer: entity
     systems: [combat]
