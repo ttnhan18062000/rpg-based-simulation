@@ -332,3 +332,42 @@ its own instrument-gap ticket (`TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INS
 explicit instruction not to force a presence/absence differential onto a value-differential problem
 — left unverified rather than given a verdict the current instrument can't support. `emotion` and
 `adventure_routing` (the other 2 Bucket-C independent questions) remain for a further wave.
+
+## Addendum 6 — 2026-09-20, codifying the vacuous-negative-arm risk and re-auditing prior verdicts
+Per peer review: the cadence trap found while building `goal_hierarchy`'s own scenario (Addendum 5)
+is a harness defect, not just a search defect — a negative arm that "passes" because the mechanism
+was never reached looks identical to one that correctly declined, and every `scenario` verdict this
+program has issued rests on its negative arm meaning something.
+
+**Codified as `mechanic_verification_scenarios_proposal.md` §5 item 5** ("Five rules", not four):
+a differential whose claim is about internal decision logic needs its negative arm to prove the
+mechanism was reached-and-declined, not merely unevaluated — the same positive-control-pairing logic
+as item 3, applied to the other side. Explicitly distinguished from item 4's static/demonstrated
+backing, which covers a *different* claim shape (reachability itself is the claim, e.g.
+`perception`/`temporal_pressure`) and is not vacuous by this rule. Also added as a third instance of
+`mechanism_claims_as_tests_initiative.md`'s shape 7 ("one level short," this time in configuration —
+a real, accurate read of `pipeline.py:53` that never checked whether a different real code path
+overrides it).
+
+**Re-audited every prior `scenario` verdict in this program, per direct instruction, not just the
+newest one**:
+- **`belief_cycle`**: NOT vacuous, confirmed by direct instrumentation (not re-reading code alone)
+  — `BeliefCycleSystem.decay_stale_leads()` was empirically confirmed CALLED at `state.tick=10` for
+  the staged entity, returning a genuine no-op update because `10 < stale_threshold(50)`.
+  `resolve_lead_staleness()` has no internal per-entity cadence gate, and `"belief_staleness_decay"`
+  isn't phase-level-cadence-gated either — reached and declined, not unevaluated. Verdict stands, no
+  change.
+- **`temporal_pressure`**: sound for a different reason, not the same reason as `belief_cycle`. Its
+  own claim is specifically about the gate ("is the phase reachable at all when the flag is off"),
+  the same reachability-claim shape §5 item 4 already covers for `perception` — "nothing computed
+  because the phase never ran" IS the claim being tested, not an accident of staging. The separate
+  positive control already rules out "the logic itself is broken." §5 item 5 doesn't apply to this
+  one; recorded explicitly in the entry so the distinction isn't re-litigated later.
+- **`perception`**, **`quest_generation_sourcing`**: both already reachability-claim shapes (backed
+  by static facts per §5 item 4), same reasoning as `temporal_pressure` — not re-litigated in full
+  here since the logic is identical, but checked, not assumed.
+
+No verdict retracted — the audit found the two flag/gate-shaped scenarios sound by construction and
+confirmed the one logic-shaped scenario (`belief_cycle`) empirically rather than trusting the read.
+Both re-audited entries carry their own explicit "re-audited" note. 278/278 tests still passing, all
+consumer-artifact checks clean. `emotion` and `adventure_routing` remain for the next wave.

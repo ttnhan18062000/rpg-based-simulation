@@ -1075,6 +1075,18 @@ mechanisms:
         file's own established curated-field pattern, e.g. `PerceptionModel.to_canonical_dict()`) --
         trivial, unrelated to any mechanism's own claim, explicitly allowed by ticket workflow's
         "file, not fix, unless trivial."
+        **Re-audited 2026-09-20** against `mechanic_verification_scenarios_proposal.md` §5 item 5:
+        the flag-off negative arm is sound, not vacuous, though for a different reason than
+        `belief_cycle`'s own -- this scenario's own CLAIM is specifically about the gate itself ("is
+        the phase reachable at all when the flag is off"), not about internal decision logic given a
+        met precondition, so "nothing computed because the phase never ran" is exactly what the
+        claim asserts, the same shape §5 item 4's static/demonstrated backing already covers for
+        `perception`. The separate positive control
+        (`test_calculate_urgencies_itself_works_when_called_directly`) already rules out "the logic
+        itself is broken" as an alternative explanation. §5 item 5 applies to a differential whose
+        claim is about internal logic with an accidentally-unevaluated negative arm (the
+        `goal_hierarchy` cadence case); it does not apply here, since reach-vs-no-reach is the
+        claim, not an accident of staging.
   - id: goal_hierarchy
     layer: entity
     systems: [cognition]
@@ -1163,6 +1175,17 @@ mechanisms:
         verified note, multiple real non-test callers including
         `src/systems/social_systems/guilds.py`'s `process_rumor`) remains accurate and is preserved
         in spirit; this note documents the stronger, runtime-confirmed evidence.
+        **Re-audited 2026-09-20** against `mechanic_verification_scenarios_proposal.md` §5 item 5
+        (added after `goal_hierarchy`'s own scenario surfaced a vacuous-negative-arm risk elsewhere
+        in this same batch): this entry's negative arm (`state.tick=10`) is NOT vacuous, confirmed
+        by direct instrumentation, not re-read from code alone --
+        `BeliefCycleSystem.decay_stale_leads()` was empirically confirmed CALLED for the staged
+        entity at tick 10 (the lead still `APPROXIMATE`, a genuine no-op `StrategicUpdate`
+        returned), because `resolve_lead_staleness()` has no internal per-entity cadence gate at
+        all (unlike `strategic_intelligence`'s own `SystemCadence`-based one) and
+        `"belief_staleness_decay"` is not a phase-level-cadence-gated entry in
+        `PhaseDependencyGraph.PHASES` either. The mechanism was genuinely reached and genuinely
+        declined to act because `10 < stale_threshold(50)`, not merely unevaluated. Verdict stands.
   - id: information_trust_deception
     layer: entity
     systems: [cognition]

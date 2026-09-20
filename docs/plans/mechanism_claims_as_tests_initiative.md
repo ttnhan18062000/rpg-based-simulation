@@ -164,6 +164,18 @@ investigation, not seven separate anecdotes:
    check — a reachable path still has to be observed actually firing, the same differential
    requirement §5 item 3 already states — it only prevents building an elaborate differential for a
    call chain that's already provably broken two hops up.
+   **A third instance, in configuration rather than call chain**: the `goal_hierarchy`/
+   `strategic_intelligence_core` scenario's own first version read `src/engine/pipeline.py:53`'s
+   `DefaultCadence(strategic_intelligence=1)` override and concluded the per-entity strategic-intent
+   cadence always fires — correct about what that line does, wrong about whether it applies, since
+   that override only takes effect when `refine()` receives no cadence at all, and a live `Kernel`
+   run under `PROD_SMALL` always supplies a real one (`cadence.strategic_intelligence=20`, confirmed
+   only by direct instrumentation, not visible from the pipeline.py read). Same one-hop-short shape
+   as the other two instances — a real, accurate fact about one line, never checked against whether
+   a different real code path overrides it before it matters. See §5 item 5 in
+   `docs/plans/mechanic_verification_scenarios_proposal.md` for the harness-side consequence this
+   specific instance produced (a vacuous negative-arm risk, not just a mis-scoped claim) and its own
+   defense.
 
 **Shapes 4 and 5 are the newest and most dangerous of the first five**, because unlike 1-3 (a wrong
 match, a docstring-only symbol, a near-miss pattern — each still findable by trying one more
