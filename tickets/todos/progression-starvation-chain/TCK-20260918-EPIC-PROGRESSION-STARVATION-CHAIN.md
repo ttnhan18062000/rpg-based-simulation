@@ -119,7 +119,20 @@ individual tickets but weren't visible from outside them.
 - `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` — child, P2, open
   (boss-gate half only)
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` — child, done
-- `TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` — child, P1, blocked (runs last)
+- `TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` — child, P1, blocked (runs last).
+  **2026-09-19: its own blocker resolved in the wrong direction for its current numbers** —
+  `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` fixed the rarity investigation's
+  root cause and measured a large real-combat-volume drop (`crowded_frontier` -84.8%,
+  `hero_guild_routing` -95.9%), meaning this child's own already-starved kill counts (10 and 3 per
+  1000 ticks) were measured against inflated, substantially-phantom volume — the real numbers are
+  likely lower still, not yet re-measured. See that child ticket's own 2026-09-19 status update.
+- `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` and
+  `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` — **not children, cited for
+  context.** Closed this same week, tracing directly from this epic's own child 1/2 finding
+  (`resolve_multi_attack()`'s dominance over the decision-driven path) to a root cause one level
+  deeper: the dominant path's own hostility test read a raw legacy enum, not the real content
+  catalog. The fix's own measured before/after numbers are the most direct evidence yet that this
+  epic's starvation is worse than any child has measured so far.
 - `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT` — **not a child, cited for context only.**
   Its own re-derivation of `registries/mechanisms.yaml`'s priority ranking dropped `tactical_decision`
   (the mechanism `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` investigates) from
