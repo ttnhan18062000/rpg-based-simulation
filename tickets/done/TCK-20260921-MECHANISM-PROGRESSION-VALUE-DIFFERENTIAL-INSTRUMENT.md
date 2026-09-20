@@ -211,7 +211,13 @@ recorded.
 - `tickets/todos/TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES.md` (new,
   wave 4, filed not fixed)
 - `tests/unit/tools/test_mechanism_registry.py` (2 hardcoded-fixture tests swapped `succession` ->
-  `class_assignment`, surfaced by the wave-4 registry-field bookkeeping fix)
+  `class_assignment`, surfaced by the wave-4 registry-field bookkeeping fix; plus 7 new tests for
+  the prose/field drift checker below)
+- `tools/mechanism_registry/mechanism_prose_field_drift_check.py` (new, report-only — catches the
+  wave-4 bookkeeping-miss symptom mechanically going forward, per peer instruction)
+- `Makefile` (new `mechanism-prose-field-drift-check` target)
+- `.github/workflows/test.yml` (wired the new check into the existing report-only mechanism-
+  registry CI step)
 
 ## Completion Summary
 Value-differential instrument built and proven on `progression` batch 1 (calibration + 3
@@ -441,6 +447,30 @@ OTHER branch actually fires for a non-HERO role on a real level-up.
 4. The registry-field/fixture-test bookkeeping miss (above), caught and fixed before this close-out
    rather than left for a future session to find.
 
+**The registry has now produced a confident wrong answer about itself by three distinct
+mechanisms, each caught by a different accident, not by anything repeatable — until now:**
+1. **Parser**: a duplicate YAML mapping key (`strategic_intelligence_core`, Program A) let
+   `yaml.safe_load()` silently keep the LAST, stale value while every surviving prose sentence
+   claimed the opposite — caught by hand arithmetic disagreeing with the registry's own count.
+2. **Bookkeeping**: three addenda this program (`aging_death`, `succession`, `entity_role`)
+   described an instrument upgrade in prose without the corresponding field edit ever landing —
+   caught by this close-out's own arithmetic cross-check.
+3. **Scope**: a 7-for-7 pass rate read as coverage progress rather than the tractable-subset result
+   it actually was — caught by peer review, not by any mechanical check at all (and arguably still
+   isn't checkable the same way; §5.1's scope statement is the durable fix here, not a scanner).
+
+Mechanisms 1 and 2 share one symptom — narrative and data disagreeing — and now share one fix:
+`check_duplicate_keys()` (Program A, blocking) catches cause 1;
+`mechanism_prose_field_drift_check.py` (this close-out, report-only, new this session) catches
+cause 2 by scanning `verified.note` for this registry's own established "instrument/verdict ... ->
+WORD" transition idiom and flagging any claimed destination that disagrees with the entry's actual
+field — confirmed against the real incident shape (a unit test reproduces the exact three-entry
+bug this program just fixed) and clean on the real committed registry. Wired into CI's own
+report-only mechanism-registry step, `make mechanism-prose-field-drift-check`. Mechanism 3 has no
+equivalent scanner — a coverage-claim framing error is a property of how a number is presented in
+prose, not a structural disagreement between two fields, and does not reduce to the same kind of
+check; §5.1's own scope-boundary statement is the durable answer for that one.
+
 **Not investigated, and why, one more time for the record**: arbitration (the third failure-to-
 matter shape) needs its own instrument — explicitly not started here, per peer instruction, pending
 a roadmap-session decision on priority after this program's own report lands.
@@ -448,5 +478,6 @@ a roadmap-session decision on priority after this program's own report lands.
 This closes out the `progression` batch under the value-differential instrument. The instrument
 itself (§5.1, including its calibration requirement, both named traps, the null-result horizon
 rule, and its own scope-boundary statement) is now a stable, documented, twice-proven-out
-methodology available for a future program on a different system, should the roadmap session
-choose to point it there.
+methodology, and worth naming explicitly here so the next person deciding what to verify does not
+have to rediscover that it exists: available for a future program on a different system, should the
+roadmap session choose to point it there.

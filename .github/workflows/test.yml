@@ -509,6 +509,7 @@ jobs:
         run: |
           make mechanism-state-caller-check || true
           make mechanism-status-language-check || true
+          make mechanism-prose-field-drift-check || true
           make mechanism-registry-changed-code-check || true
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
