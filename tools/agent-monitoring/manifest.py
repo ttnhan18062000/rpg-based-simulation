@@ -141,9 +141,17 @@ def _assert_safe_output_path(path: Path) -> None:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=None, help="optional path to also write the JSON output to")
+    parser.add_argument(
+        "--dir",
+        type=Path,
+        default=None,
+        help="agent-monitoring/ directory to scan (default: the real repo directory); "
+        "exists for test isolation (a frozen snapshot copy), not for normal use",
+    )
     args = parser.parse_args()
 
-    records = build_manifest(_AGENT_MONITORING_DIR)
+    agent_monitoring_dir = args.dir if args.dir is not None else _AGENT_MONITORING_DIR
+    records = build_manifest(agent_monitoring_dir)
     output = json.dumps(records, indent=2, sort_keys=True) + "\n"
 
     if args.output is not None:
