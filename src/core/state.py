@@ -1505,9 +1505,24 @@ class AuthoritativeState:
             int_e_keys = [k for k in self.entities.keys() if isinstance(k, int)]
             if int_e_keys and self.next_entity_id <= max(int_e_keys):
                 object.__setattr__(self, "next_entity_id", max(int_e_keys) + 1)
-            first_fac = next(iter(self.entities.values())).identity.faction
+            # TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS: this cache is a
+            # conservative "is there anything worth an engagement scan" gate, not a hostility
+            # verdict itself -- so it must never produce a false negative that silently skips a
+            # real check downstream. Comparing the raw legacy `identity.faction` enum (only 4
+            # values) let two real, distinct, catalog-hostile factions sharing one legacy bucket
+            # (e.g. bandit_company/goblin_warband, both MONSTER_HORDE) collapse to "no diversity"
+            # and early-exit get_engaged_hostiles_at_pos() before it ever ran its own now-correct
+            # catalog check. Comparing the real content `faction_id` first (falling back to the
+            # legacy enum only when absent) fixes this without requiring EntityIdentityResolver's
+            # full resolution here -- src/entities/identity_resolver.py itself imports from this
+            # module, so importing it back would be circular. A false "diverse" positive here only
+            # costs a wasted scan, never a wrong result; a false negative was the actual bug.
+            def _effective_faction_key(ent):
+                return ent.identity.properties.get("faction_id") or ent.identity.faction
+
+            first_fac = _effective_faction_key(next(iter(self.entities.values())))
             for ent in self.entities.values():
-                if ent.identity.faction != first_fac or not ent.combat.alive:
+                if _effective_faction_key(ent) != first_fac or not ent.combat.alive:
                     has_hostile = True
                 if ent.strategic and ent.strategic.contracts:
                     has_contracts = True
