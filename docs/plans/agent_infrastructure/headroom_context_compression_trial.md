@@ -240,20 +240,26 @@ Promote to Phase 2 only if all hold:
 Abandon — and revert — if savings are immaterial, any correctness signal degrades, or isolation
 proves unreliable across concurrent sessions.
 
-## Epic-level gate: package installation is currently blocked (added 2026-09-20)
+## Epic-level gate: package installation needs the user's own shell (resolved 2026-09-20, not removed)
 
 `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found that `files.pythonhosted.org` (the
 package-download CDN, not the `pypi.org` index — that resolves fine) is unreachable from this
-account's sandbox: every install attempt (`pip install`, `pip install --cert <system CA bundle>`,
-raw `curl --cacert` against the exact wheel URL) fails with `SSL: CERTIFICATE_VERIFY_FAILED`,
-confirmed general (not Headroom-specific) via an unrelated trivial package. This is the same
-host-specific-filter shape as CLAUDE.md's documented `*.blob.core.windows.net` block, just a
-different host. A `git+https://github.com/...` install would not route around it either, since
-Headroom's own dependencies resolve through the same blocked host. This blocks not just that
-child, but **every child that needs a working install** (Phase 1 MCP trial, Phase 2 proxy trial,
-and any comparison against Caveman) — it is an epic-level gate, not a detail of one child ticket.
-`registry.npmjs.org` **is** reachable, which is relevant only to a possible Caveman
-(`@caveman-ai/cli`) candidate-substitution, a decision for the user.
+account's **Claude Code sandbox specifically**: every install attempt from an agent session
+(`pip install`, `pip install --cert <system CA bundle>`, raw `curl --cacert` against the exact
+wheel URL) fails with `SSL: CERTIFICATE_VERIFY_FAILED`, confirmed general (not Headroom-specific)
+via an unrelated trivial package. This is the same host-specific-filter shape as CLAUDE.md's
+documented `*.blob.core.windows.net` block, just a different host. A `git+https://github.com/...`
+install would not route around it either, since Headroom's own dependencies resolve through the
+same blocked host.
+
+**Resolved by asking the user to run the install in their own shell.** The user's shell is not
+behind the same block and installed `headroom-ai` directly into `.venv` without incident. This
+does not remove the gate, only shifts it: **any child ticket that needs Headroom actually present
+in `.venv` (rather than just its `.mcp.json` registration, which an agent session can re-apply on
+its own) needs the user to re-run the install each time** — it is not a one-time unblock, since a
+later revert (or a fresh sandbox) removes the package again and an agent session cannot reinstall
+it itself. `registry.npmjs.org` **is** reachable from the sandbox, which is relevant only to a
+possible Caveman (`@caveman-ai/cli`) candidate-substitution, a decision for the user.
 
 ## Open questions
 
@@ -285,6 +291,13 @@ and any comparison against Caveman) — it is an epic-level gate, not a detail o
   unwrap`." `~/.claude.json` is machine-wide, shared by every concurrent Claude Code session — the
   same hazard shape as the confirmed sidecar contamination this plan already cites. Not relevant to
   Phase 1 (MCP, no `wrap`), but belongs in this epic's risk list before any `wrap`-based phase.
+- **New (2026-09-20, from the real installed CLI's own `--help`, not just the README):
+  `headroom mcp install` has the identical hazard shape as `wrap`.** "Install the Headroom MCP
+  server into every detected coding agent... Claude Code today; Cursor / Codex / Continue / others
+  added in subsequent releases" — a second, separate command that writes to every detected agent's
+  user-scope config, not just `wrap`. Both are now confirmed forbidden for this repo's own use;
+  the repo-scoped `.mcp.json` entry is hand-edited directly instead, achieving the same practical
+  outcome without touching any user-scope file.
 
 ## Related
 

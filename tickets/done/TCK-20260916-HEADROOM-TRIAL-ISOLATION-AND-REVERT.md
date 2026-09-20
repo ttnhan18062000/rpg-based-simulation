@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT
-phase: open
+phase: done
 date: 2026-09-16
 tags: [ai, process-improvement, setup]
 ---
@@ -16,7 +16,7 @@ Scope Headroom to this repository only — project-scoped MCP registration, inst
 agent-tooling venv, never machine-wide — and prove the revert
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -153,22 +153,62 @@ workarounds around a network filter.
       source**, not `--help` (installation itself is what's blocked) — see Implementation Notes for
       the full `paths.py` contract, spot-checked (2 of ~26 files referencing `.headroom`) rather
       than exhaustively audited, stated as such.
-- [ ] Installed into `.venv` only, base package, no extras. `.venv313` and `requirements.txt` are
+- [x] Installed into `.venv` only, base package, no extras. `.venv313` and `requirements.txt` are
       shown unchanged (diff evidence, not assertion), and the dependency is recorded in
-      `requirements-knowledge.txt`.
-- [ ] The MCP server is registered in this repo's `.mcp.json` with a worktree-safe launcher, and is
+      `requirements-knowledge.txt`. **Met**: the user ran `.venv/bin/python3 -m pip install
+      headroom-ai` (base package, confirmed no `[proxy]`/`[all]` extras — `pip show` reported no
+      `fastapi`/`onnxruntime`/`transformers`) in their own shell, since `files.pythonhosted.org`
+      was blocked in this sandbox but not in theirs. `requirements.txt`'s sha256 matched the
+      pre-install baseline exactly, both immediately after install and again after the full
+      revert. `.venv313`'s `pip show headroom-ai` returned "not found" throughout.
+- [x] The MCP server is registered in this repo's `.mcp.json` with a worktree-safe launcher, and is
       demonstrated working from a session started inside a worktree (not only the main checkout).
-- [ ] **Demonstrated NOT active outside this repository** — a session started elsewhere has no
+      **Met**: `tools/start_headroom_mcp.sh`, modeled on `tools/start_search_mcp.sh`'s absolute-
+      shared-path-first pattern. This worktree (`doc-tag-enforcement`) has no `.venv` of its own —
+      `ls` confirms it — so the launcher's absolute-path resolution is the only reason it worked at
+      all: `claude mcp list` run from inside this worktree reported `headroom: bash
+      tools/start_headroom_mcp.sh - ✔ Connected`.
+- [x] **Demonstrated NOT active outside this repository** — a session started elsewhere has no
       Headroom MCP server. This is the user's actual requirement; prove it, don't infer it from the
-      file's location.
-- [ ] `~/.claude.json` is shown unmodified, before and after. `headroom wrap` was never run.
-- [ ] State lands in the configured directory rather than `~/.headroom`, **demonstrated** by observed
+      file's location. **Met, via real Claude Code tooling, not inference**: `claude mcp list` run
+      from a directory with no `.mcp.json` reported only the pre-existing global `claude.ai Claude
+      Docs` server — no `headroom`, no `knowledge-search`, no `github`. Repository scoping via
+      `.mcp.json` works exactly as intended.
+- [x] `~/.claude.json` is shown unmodified, before and after. `headroom wrap` was never run.
+      **Met, with an honest correction to the naive check**: the file's raw byte hash is *not* a
+      valid before/after signal — it changed even with zero Headroom activity, because multiple
+      concurrent Claude Code sessions on this machine write ordinary session/usage metadata to it
+      constantly (confirmed: none of the changed top-level keys relate to MCP servers —
+      `numStartups`, `cachedUsageUtilization`, etc.). The real check is structural: parsed the file
+      directly both before and after — `mcpServers` is absent at the top level and absent from
+      every one of its 5 `projects` entries, throughout. `headroom wrap`/`headroom mcp install`
+      (which the CLI's own `--help` confirmed *also* writes to every detected agent's user-scope
+      config, the same hazard as `wrap`) were never invoked.
+- [x] State lands in the configured directory rather than `~/.headroom`, **demonstrated** by observed
       writes. Source confirms this is achievable (every path derives from the two env-overridable
       roots); an observed write is still required, since source-reading cannot substitute for one.
-- [ ] The revert runbook exists and has been **executed at least once**, with before/after evidence:
+      **Met**: with `HEADROOM_WORKSPACE_DIR` set to an isolated directory, Headroom's own
+      `ensure_workspace_dir()`/`ensure_config_dir()` created real directories there, and a real
+      file (`update_check.json`, an auto-update-check cache — an incidental but genuine write) landed
+      inside it. `~/.headroom` never existed at any point during this ticket's work, confirmed by
+      `ls` before, during, and after.
+- [x] The revert runbook exists and has been **executed at least once**, with before/after evidence:
       the `.mcp.json` entry removed, the package uninstalled from `.venv`, the state directory gone,
-      and the repo returned to a clean tree.
-- [ ] Nothing was enabled: no session points at a proxy, and `headroom learn` was never run.
+      and the repo returned to a clean tree. **Met, and demonstrated at the git level, not just the
+      filesystem level**: the setup and the revert are two separate, real commits
+      (`967f1efa4` then `55a55e7cf`) with symmetric diffs (47 insertions, then 47 deletions across
+      the same 4 files) — the repo's tracked content is byte-for-byte identical before and after.
+      Filesystem evidence: the isolated state directory removed, `headroom-ai` (plus its 5
+      transitive-only dependencies: `ast-grep-cli`, `litellm`, `opentelemetry-api`, `tiktoken`,
+      `tomlkit`) uninstalled from `.venv`, confirmed by `pip show` returning "not found" for the
+      package and its own dependency list; `search_mcp.py` (the pre-existing, unrelated MCP tool
+      sharing the same venv) still imports cleanly afterward, confirming the cleanup didn't
+      collaterally break anything else in the shared venv.
+- [x] Nothing was enabled: no session points at a proxy, and `headroom learn` was never run.
+      **Met**: `headroom proxy` was never started (confirmed by `headroom doctor`'s own health
+      check reporting "not reachable at http://127.0.0.1:8787" throughout), no session's
+      `ANTHROPIC_BASE_URL` was ever set to point at Headroom, and `headroom learn`/`headroom
+      wrap`/`headroom mcp install` were never invoked.
 - [x] The `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` question is resolved either way and the
       finding recorded — currently unconfirmed, appearing only in third-party summaries. **Resolved:
       both are real**, confirmed directly from `headroom/cache/backends/__init__.py`'s own
@@ -190,7 +230,9 @@ workarounds around a network filter.
   reversibility section
 
 ## Related Stored Artifacts
-- None yet.
+- `stored_artifacts/TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT/investigation.md`
+- `stored_artifacts/TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT/plan.md`
+- `stored_artifacts/TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT/test_plan.md`
 
 ## Related Code Areas
 - `.mcp.json` — where the project-scoped MCP registration lands (this is now a real repo change,
@@ -279,37 +321,93 @@ is a host-specific filter on the package-download CDN, the same shape as CLAUDE.
 noted only because it bears on a possible candidate-substitution decision (Caveman, npm-installable
 where Headroom is not), which is the user's call, not something acted on here.
 
+### Install phase (2026-09-20, after the user's own shell succeeded)
+
+The user confirmed `files.pythonhosted.org` is reachable from their own shell (not sandboxed the
+same way this session is) and ran `.venv/bin/python3 -m pip install headroom-ai` directly — base
+package, no extras, confirmed by `pip show` reporting no `fastapi`/`uvicorn`/`onnxruntime`/
+`transformers` in the dependency tree.
+
+**New finding, not caught in the source-only pass: `headroom mcp install` is a second command with
+the same hazard shape as `wrap`.** The real installed CLI's own `--help` (`headroom mcp install
+--help`): "Install the Headroom MCP server into every detected coding agent... Claude Code today;
+Cursor / Codex / Continue / others added in subsequent releases." This writes to every detected
+agent's own user-scope config — the exact machine-wide activation the user asked to prevent, just
+via a different command than the already-forbidden `wrap`. **Never invoked.** The actual
+registration was done by hand-editing this repo's own `.mcp.json` directly, which achieves the
+identical practical outcome (a working, repo-scoped Headroom MCP server) without ever touching any
+user-scope file.
+
+**`headroom mcp serve` (the actual server process the manual `.mcp.json` entry launches) takes a
+`--proxy-url` defaulting to `http://127.0.0.1:8787`.** Since no proxy was ever started, the
+server's own tools would fail if actually invoked (confirmed indirectly: `headroom doctor` itself
+reports "not reachable" for that same URL) — this is the correct, safe state for a registration
+that makes tools *available* without making anything *run*, matching Out of Scope's own framing
+exactly.
+
+**A real, incidental write was observed and is worth recording precisely**: importing
+`headroom.paths` (or running most CLI subcommands) triggers an update-check that writes
+`update_check.json` (`{"last_check": ..., "latest_version": "0.37.0"}`) into the resolved workspace
+directory — harmless, but a concrete example of Headroom writing something during ordinary,
+non-compression-related use, confirming the isolation env var governs more than just the
+explicitly-documented state files.
+
+**The revert was executed as two paired git commits, not just a filesystem cleanup**: `967f1efa4`
+(setup: `.mcp.json` entry, `tools/start_headroom_mcp.sh`, `requirements-knowledge.txt` entry,
+`.gitignore` entry — 47 insertions) then `55a55e7cf` (revert: the same 4 files, 47 deletions).
+Filesystem-level revert alongside: the isolated workspace directory removed; `headroom-ai`
+uninstalled from `.venv`; its 5 dependencies that were pulled in solely for it (`ast-grep-cli`,
+`litellm`, `opentelemetry-api`, `tiktoken`, `tomlkit` — checked individually via `pip list`, none
+plausibly used by the pre-existing knowledge-search tooling) also uninstalled, then confirmed
+`search_mcp.py` (the pre-existing MCP tool sharing the same venv) still imports cleanly.
+
 ## Test Summary
-No tests apply — no repository code was changed. Verification was: (1) `curl`/`pip` reproduction
-of the network blocker against 3 different hosts (`pypi.org`, `files.pythonhosted.org`,
-`registry.npmjs.org`) and 2 different tools; (2) direct reading of real upstream source
-(`headroom/paths.py`, `headroom/cache/backends/__init__.py`, `headroom/ccr/mcp_server.py`,
-`README.md`, `pyproject.toml`) via `gh api`, cross-checked against the ticket's own flagged
-unknowns.
+No pytest suite applies — no engine/API/test-suite code was touched. Verification was entirely
+real-execution evidence: (1) the network-blocker reproduction from the earlier BLOCKED pass
+(`curl`/`pip` against 3 hosts); (2) upstream source reading via `gh api`; (3) once the user's own
+shell succeeded where the sandbox couldn't — real installation, real `claude mcp list` runs from
+two different working directories, real filesystem writes observed under an isolated
+`HEADROOM_WORKSPACE_DIR`, real `pip uninstall` and `pip show` confirmations, and a real two-commit
+git history (`967f1efa4` setup, `55a55e7cf` revert) with symmetric diffs as the strongest possible
+"repo returned to a clean tree" evidence. `sha256sum requirements.txt` matched the pre-install
+baseline exactly at every checkpoint. `search_mcp.py` (the pre-existing, unrelated MCP tool
+sharing `.venv`) still imports cleanly after the full install-then-revert cycle.
 
 ## Files Changed
-- `tickets/todos/headroom-context-compression-trial/TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT.md`
-  — this ticket, marked `BLOCKED` with findings recorded; stays in `tickets/todos/`, not moved to
-  `tickets/done/` (the safety-envelope gate this ticket exists to establish is not cleared).
+- `.mcp.json` — Headroom MCP server registered, then removed by the revert (net: unchanged,
+  confirmed by the two-commit symmetric diff).
+- `tools/start_headroom_mcp.sh` — worktree-safe launcher, added then removed by the revert.
+- `requirements-knowledge.txt` — `headroom-ai==0.37.0` recorded, then removed by the revert (file
+  is byte-identical to its pre-Headroom state).
+- `.gitignore` — `.headroom-workspace/` entry added, then removed by the revert.
+- `requirements.txt`, `.venv313` — untouched throughout, confirmed by hash/`pip show`, not
+  assertion.
 - `docs/plans/agent_infrastructure/headroom_context_compression_trial.md` — two Open Questions
-  answered in place, two new findings added, network blocker recorded as an epic-level gate.
+  answered in place, two new findings added, network blocker recorded as an epic-level gate (from
+  the earlier BLOCKED pass, unchanged by this pass).
 - `tickets/todos/headroom-context-compression-trial/TCK-20260916-HEADROOM-CONTEXT-COMPRESSION-EPIC.md`
-  — noted as environment-blocked at the epic level (children 3-5 all need a working install, not
-  just this child).
-- No repository source code changed. No package was ever successfully installed; the empty scratch
-  venv used for the failed attempt was deleted (`rm -rf`), leaving no trace in the repo or
-  `~/.headroom`.
+  — still records the findings; its own BLOCKED status and epic-level gate note should be revisited
+  by whoever picks up the next child, since this child is now unblocked.
+- No lasting repository or machine state: `.venv` has no `headroom-ai` or its transitive
+  dependencies; `~/.headroom` never existed; `~/.claude.json` has no Headroom-related content.
 
 ## Completion Summary
-Blocked, not abandoned or forced through. The installation step itself is prevented by a
-host-specific network filter on `files.pythonhosted.org` (index host `pypi.org` resolves fine;
-confirmed general via an unrelated trivial package, not Headroom-specific) — genuinely outside
-this ticket's ability to route around, and not attempted to be routed around (no `git+https`
-workaround, since Headroom's own dependencies resolve through the same blocked host anyway).
-Real progress was still made without installing anything: reading Headroom's actual upstream
-source resolved 2 of the ticket's 3 named open questions with direct evidence (`ccr_store.db`'s
-real default path and `HEADROOM_CCR_BACKEND=memory`'s reality; MCP-mode's real sharing of proxy-
-mode's CCR/stats state) and surfaced 2 findings neither this ticket nor the plan doc knew about
-(`HEADROOM_STATELESS`; `headroom wrap`'s `~/.claude.json`/Serena side effect). What remains
-genuinely unmet — a demonstrated isolated write and an executed revert — needs live execution that
+Closed as genuinely DONE, not forced through and not left as a partial/BLOCKED result. The user
+ran the install themselves (`.venv/bin/python3 -m pip install headroom-ai`, base package) in their
+own shell after this session's own sandbox hit a confirmed, host-specific `files.pythonhosted.org`
+block — establishing that the block is sandbox-local, not universal. From there, every remaining
+acceptance criterion was met with real, observed evidence rather than inference: repository-scoped
+MCP registration via `.mcp.json` (the user's actual requirement, demonstrated via `claude mcp list`
+from both inside and outside this repo, not merely asserted from file location), a worktree-safe
+launcher (proven by running from a worktree with no `.venv` of its own), state isolation via
+`HEADROOM_WORKSPACE_DIR` (a real file observed landing there, `~/.headroom` confirmed absent
+throughout), `~/.claude.json` confirmed structurally clean (with an honest correction that raw
+hash equality was never the right check for a file multiple concurrent sessions legitimately
+mutate), and a fully executed revert with symmetric git-commit evidence. Combined with the earlier
+pass's source-verified findings (`ccr_store.db`/`HEADROOM_CCR_BACKEND=memory` confirmed real;
+MCP-mode confirmed sharing state with proxy-mode; `HEADROOM_STATELESS` and `headroom mcp
+install`'s own user-scope write surfaced as new findings for the epic), this ticket's safety
+envelope is now fully established and proven, not assumed. The actual trial
+(`TCK-20260916-HEADROOM-MCP-EXPLICIT-TRIGGER-TRIAL`) starts from a clean repo and can follow this
+same, now-proven runbook to set Headroom up again for real use.
 no amount of source-reading substitutes for, and is recorded as unmet rather than fabricated.

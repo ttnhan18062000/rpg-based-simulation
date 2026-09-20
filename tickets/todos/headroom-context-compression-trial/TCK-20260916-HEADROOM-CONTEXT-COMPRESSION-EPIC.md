@@ -16,7 +16,7 @@ Bounded, reversible trial of Headroom context compression — measure real token
 correctness regression, and gain the repo's first real token telemetry
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 epic
@@ -143,15 +143,21 @@ Verify claims from source or `--help` rather than from documentation or from thi
 details in the upstream docs are absent or contradicted between pages, and at least two claims here
 are explicitly marked unconfirmed.
 
-**Epic-wide blocker, added 2026-09-20**: `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found
-that `files.pythonhosted.org` (the package-download CDN, not the `pypi.org` index) is unreachable
-from this account's sandbox — confirmed general via an unrelated trivial package, not
-Headroom-specific, and not routable around via a `git+https` install since Headroom's own
-dependencies resolve through the same host. This is not just that child's blocker — **every child
-that needs a working install is blocked** (the Phase 1 MCP trial itself, any Phase 2 proxy work,
-and any Caveman comparison, though `registry.npmjs.org` is reachable if that candidate-substitution
-is ever pursued). The epic cannot progress past isolation/source-verification until this resolves.
-See the plan doc's new "Epic-level gate" section for the full detail.
+**Epic-wide blocker (2026-09-20), now resolved via a workaround, not removed**:
+`TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found that `files.pythonhosted.org` (the
+package-download CDN, not the `pypi.org` index) is unreachable from this account's Claude Code
+sandbox specifically — confirmed general via an unrelated trivial package, not Headroom-specific.
+**The user's own shell is not behind the same block** and ran the install directly
+(`.venv/bin/python3 -m pip install headroom-ai`) once asked to. `TCK-20260916-HEADROOM-TRIAL-
+ISOLATION-AND-REVERT` is now `DONE` — the safety envelope (repo-scoped `.mcp.json` registration,
+worktree-safe launcher, state isolation, a fully executed and git-evidenced revert) is proven.
+**Practical consequence for every remaining child that needs Headroom installed**: since the
+package was uninstalled again as part of proving the revert (this ticket's own acceptance bar),
+any future child that needs Headroom actually present in `.venv` will need to ask the user to
+re-run the same install command in their own shell — an agent session in this sandbox cannot do it
+autonomously. This is a recurring per-session dependency, not a one-time unblock. Registration
+itself (the `.mcp.json` entry, the launcher) is a version-controlled file change and can be
+re-applied by an agent session directly; only the `pip install` step needs the user.
 
 ## Test Summary
 _Epic tier — no direct implementation. See child tickets._
