@@ -1469,6 +1469,19 @@ mechanisms:
         5): the stale lead's own certainty is checked as `VAGUE` in both conditions, proving
         `belief_staleness_decay` genuinely ran in the at-cap case too -- "nothing trimmed" is a
         reached-and-declined result, not the entity being skipped before ever being considered.
+        **The precondition this verdict is conditional on, stated explicitly per peer review --
+        read from the simulation's side, not just the scenario's own staging need**: enforcement
+        only evaluates an entity that ALREADY has a real `StrategicUpdate` proposed by some OTHER
+        phase that same tick (`capacity_enforcement.py`'s own `if not ent_upd or not
+        ent_upd.strategic: continue`). An entity genuinely over its own cognitive cap, with nothing
+        else proposing anything for it that tick, is silently skipped rather than trimmed -- it
+        stays over cap indefinitely, not just for one tick. This verdict is `observed` for "does
+        enforcement correctly trim when it runs," not for "does an over-cap entity always get
+        enforced" -- those are different claims, and only the first is what this scenario (or any
+        scenario built the same way) can show. Whether piggybacking on another phase's own update
+        is the INTENDED design (opportunistic enforcement) or a real gap (should be unconditional)
+        is a design question, not settled here -- see
+        `TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`.
 
   # ── Group layer (2, atlas `group-layer`) ────────────────────────────────────────────────────
 

@@ -89,6 +89,10 @@ contradiction and stop. Do not fix the code to make a claim true in this pass.
   peer instruction rather than riding along here as an incidental.
 - `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`,
   `TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP` — filed, not fixed, during batch 1.
+- `TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES` — the behavioral
+  design question `cognition_capacity_fatigue`'s own scenario surfaced (enforcement is
+  opportunistic, conditional on another phase proposing an update that tick), filed for the
+  roadmap session per direct peer instruction.
 - `TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP` — filed during batch 2's pre-screen
   (`personality` doesn't fit the reachability-differential shape at all).
 
@@ -509,3 +513,17 @@ with a stated, deliberate reason: `adventure_routing`/`personality` (instrument 
 `committed_intentions`/`strategic_redirection` (Bucket A, already-settled). No accidental gaps
 remain. 293/293 tests passing, all consumer-artifact checks clean, `registry.py::validate()`
 (now including the duplicate-key invariant) clean.
+
+## Addendum 10 — 2026-09-21, the enforcement precondition was a finding, not just staging detail
+Per direct peer review: describing `cognition_capacity_fatigue`'s own real staging need (an entity
+must already have a `StrategicUpdate` proposed by an earlier phase that tick, or
+`CapacityEnforcementPhase.enforce()` skips it entirely) purely as an obstacle to building the
+scenario undersold what it actually is -- read from the simulation's own side, an entity genuinely
+over its cognitive cap with nothing else proposed for it stays over cap indefinitely, not just for
+one tick. The verdict stands (`observed` is correct for "does enforcement trim correctly when it
+runs," which is what the scenario shows), but the registry entry now states the precondition
+explicitly rather than reading as unconditional "capacity enforcement works." Filed
+`TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES` for the roadmap
+session -- a design question (opportunistic enforcement by intent, or a real gap needing an
+independent check) explicitly not answered or fixed here, same framing as the `perception` design
+ticket.
