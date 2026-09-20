@@ -112,18 +112,15 @@ measurement makes ticket scale irrelevant.
 
 Verify upstream behaviour from source or `--help` rather than from docs or from this ticket.
 
-**Reuse, don't rebuild, the first child's setup (2026-09-20).** The registration this ticket needs
-— `.mcp.json`'s `headroom` entry and `tools/start_headroom_mcp.sh` — already exists exactly once,
-in commit `967f1efa4` on the isolation ticket's own branch history (its paired revert,
-`55a55e7cf`, removed both again as that ticket's own proof-of-revert). **Cherry-pick `967f1efa4`
-rather than recreating either file from scratch, and never reach for `headroom mcp install` as a
-shortcut** — that command writes to every detected agent's user-scope config (confirmed from the
-real CLI's own `--help`), the same hazard `headroom wrap` has, and is why the first child
-hand-edited `.mcp.json` directly instead. Two things still need the user, not an agent session, per
-that ticket's own finding: re-running `.venv/bin/python3 -m pip install headroom-ai` in their own
-shell (this sandbox's own `files.pythonhosted.org` block is confirmed, not worked around), and the
-`.mcp.json`/launcher recreation itself is safe for an agent session to redo on its own once the
-package is present.
+**Registration is already permanent on `main` (2026-09-20) — the earlier "cherry-pick 967f1efa4"
+note is spent and no future session needs it.** `.mcp.json`'s `headroom` entry and
+`tools/start_headroom_mcp.sh` landed on `main` via PR #228 and are there unconditionally now, not
+something any session needs to reapply. The only thing that remains machine-level rather than
+repo-level is the package install itself: if this machine's `.venv` or pip cache is ever cleared,
+`headroom-ai` would need to be reinstalled — that step still needs the user's own shell (this
+sandbox's own `files.pythonhosted.org` block is confirmed, not worked around), never
+`headroom mcp install`/`headroom wrap` as a shortcut (both write to every detected agent's
+user-scope config, confirmed from the real CLI's own `--help`).
 
 **Registration was completed early, 2026-09-20 (PR #228), with a real functional smoke test —
 this ticket's own step 1 is done, do not redo it.** After the user's second install attempt
