@@ -114,7 +114,7 @@ WORLD SIMULATION → AUTONOMOUS AGENTS → OBSERVATION/AUTHORITY/AUTOMATION
 
 The same world might one day support a single-character RPG, party or guild management, kingdom management, indirect political play, god-like influence, or pure observer/chronicle mode. **We are not building those modes now.** We are only avoiding decisions that make them impossible.
 
-> **Decided 2026-09-20 — there is no player, and none is planned.** The founding pitch stands: *a living world you observe.* The core stays player-agnostic by simply not having a player, and anything player-facing is a lens built over the simulation later. No core design decision should be justified by a hypothetical player's experience.
+> **Decided 2026-09-20 — there is no player, and none is planned.** The founding pitch stands: *a living world you observe.* The core stays player-agnostic by simply not having a player, and anything player-facing is a lens built over the simulation later. No core design decision should be justified by a hypothetical player's experience. This is a product decision, not an architectural prohibition: it does not follow that the core must hard-code observer-specific semantics where an equally clean, neutral world model already exists.
 
 Consequences we accept:
 
@@ -179,7 +179,7 @@ We are **not** designing around apocalypse. The rule is only:
 > - **Hard failure** — the world doing something impossible: duplicated movement, invalid or erroring actions, conservation breaches, non-determinism.
 > - **Soft failure** — the world reasoning wrongly: decision chains that don't follow their own rules, goals selected against their own preconditions, causal chains that don't hold up. (Definition to be sharpened later.)
 >
-> A country destroyed, an economy broken, a region ruined, a population collapsed — these score as **positive** evidence that the world's causality works. A healthy world is one whose *logic* is sound, not one whose *fortunes* are good. Scoring must never quietly push the simulation back toward comfortable outcomes.
+> A country destroyed, an economy broken, a region ruined, a population collapsed — these score as **positive** evidence that the world's causality works, *provided the collapse itself was causally valid* (a real chain of events, not a hard or soft failure). A healthy world is one whose *logic* is sound, not one whose *fortunes* are good. Scoring must never quietly push the simulation back toward comfortable outcomes. This is not "more collapse is better": a collapse caused by broken rules, invalid decisions, a conservation breach or an inconsistent causal chain is exactly the kind of thing hard/soft failure above already scores as a defect. The two readings agree by construction — a collapse that survives scrutiny as causally valid cannot simultaneously be a logic failure.
 
 ### B2 — All first-class entities are eligible for significance
 
@@ -276,6 +276,33 @@ First-class simulated entity · aggregate entity · resource · condition · rel
 The last four were added 2026-09-20 because the repository already treats them as first-class: typed updates and transfer intents; leads, opportunities and world signals; contracts, directives and bounties; multi-step goals with progress.
 
 An aggregate (a population cohort, a regional economy, a culture, an ecosystem) is a legitimate abstraction — a weather system, not a failure. It may be promoted to finer detail when causal value requires it.
+
+> **Clarification, 2026-09-20 — "first-class simulated entity/subject" is ontological, not an implementation base class.** This vocabulary can easily be misread as recommending one shared base class or component bag (`Person : Entity`, `Faction : Entity`, `Place : Entity`, …). That is not the intent, and it is not how the repo already works: `EntityState`, `FactionState`, `ClanState`, `RegionState` and `PlaceState` don't share a base class today, and nothing here asks that to change.
+>
+> ```
+> Shared ontology       ≠  shared implementation hierarchy
+> Shared progression grammar ≠  shared progression component
+> ```
+>
+> A useful split, description only, not a prescribed interface:
+> - **Universal conceptual properties** — identity, referenceability, lifecycle, history eligibility.
+> - **Optional shared capabilities** — located, historical, ownable, agentic, knowledge-holder, economic actor, political actor, territorial actor. An entity has only the capabilities it actually needs.
+> - **Domain-specific state** — a wolf's body/hunger/instinct; a faction's treasury/diplomacy/membership; a place's occupancy/history/infrastructure; an artifact's material/durability/provenance.
+>
+> Commonality should normally stop at the first bullet plus whichever capability contracts are genuinely shared — never at a forced universal hierarchy.
+
+### Canonical state ownership
+
+The target taxonomy deliberately contains concepts that touch several domains at once: injury (life/body + combat), death (life/body + combat + lineage), transport (movement + economy), title (social + politics), a relic (objects + religion + magic), a rumour (information + history/recognition).
+
+> **A concept may participate in multiple domains, but durable authoritative state has exactly one canonical owner.** Every other domain consumes it, derives from it, or proposes a change to it through an explicit link or intent — never by keeping a second, parallel authoritative copy.
+
+```
+Combat  → causes Injury
+Life/Body → owns Injury state
+```
+
+not `CombatInjury` / `BodyInjury` / `SocialInjury` as competing truths. This is the world-model statement of a rule the repo already enforces at the code level (authoritative mutation, typed updates, one fact/one home) — restated here because the target taxonomy's multi-domain concepts are exactly where a future design could accidentally violate it.
 
 ### Links are first-class
 
@@ -455,7 +482,7 @@ Before adding significant new state or a new mechanism:
 
 > State with no interaction, no consumer, no behavioural effect and no historical consequence should be treated with suspicion.
 
-**One hard requirement:** any mechanism that produces growth or accumulation must **name its counterforce** — another world process that pushes back — or record an explicit, reviewed reason why none exists. Per A2 the counterforce may lose; what is not allowed is growth with nothing on the other side of it.
+**One hard requirement:** any mechanism that produces growth or accumulation must **name its counterforce** — another world process that pushes back — or record an explicit, reviewed reason why none exists. Per A2 the counterforce may lose; what is not allowed is growth with nothing on the other side of it. A counterforce doesn't have to make the accumulated quantity itself go down: competition, mortality, resource limits, decay, forgetting, diminishing returns, capacity, succession, obsolescence, opportunity cost, risk and social reaction are all legitimate counterforces, and some are limits on *consequence* rather than on the value. Age, historical record, skill mastery and scars can stay naturally monotonic — what must exist is something that limits what the accumulation can *do*, even when the number itself never falls.
 
 ---
 
@@ -523,8 +550,8 @@ Folded into §7 and §10 above:
 
 Owner decision: build the clean taxonomy even where it is far from current implementation.
 
-7. The full **target domain map** (§7), including movement/navigation, law/crime/enforcement, and content authoring & world assembly as domains.
-8. **History/significance, systemic pressure, observation/legibility and evaluation reclassified** as cross-cutting layers rather than domains.
+7. The full **target domain map** (§7), including movement/navigation and law/crime/enforcement as new domains. *(Correction, 2026-09-20: this bullet previously also listed content authoring & world assembly as a domain — that's inconsistent with §7 and with bullet 8, where it's correctly cross-cutting. The map in §7 was always right; only this summary line was wrong.)*
+8. **History/significance, systemic pressure, observation/legibility, content authoring/world assembly and evaluation reclassified** as cross-cutting layers rather than domains — the full set that ended up in §7's "Cross-cutting layers" table.
 9. **Magic kept as its own domain**, required to wire outward (§4).
 10. The project's **five existing rating dimensions** adopted for depth measurement (§9).
 11. A **named counterforce required** for any growth-producing mechanism (§11).

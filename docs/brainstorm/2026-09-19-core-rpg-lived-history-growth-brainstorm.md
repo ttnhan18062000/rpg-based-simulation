@@ -16,7 +16,11 @@ A brainstorm-stage **program proposal** for the core RPG system: entities, progr
 
 It asks one question: **do we already have enough mechanisms for those stories to happen on their own, and if not, what exactly is missing?** Similar systemic games are used as reference points throughout.
 
-The compass is [`the_unwritten_world.html`](../archive/the_unwritten_world.html). Every capability proposed here names the principle it serves. Nothing here is approved. Each capability still needs the normal path: an atlas card, scorecard scores, a spec, and a ticket.
+> **Current role of this document, stated plainly (2026-09-20):** this is now primarily an **evidence and historical brainstorm record**. Its durable value is the scenario tracing in §2, the repository observations threaded through it, and the recurring missing-link analysis in §3. The wave/capability program in §4 was an earlier illustrative proposal, written before the three-way direction agreement existed, and it is **not the current roadmap**. [`core_rpg_design_direction.md`](core_rpg_design_direction.md) is the authoritative design compass; where anything below conflicts with it at the level of design intent, the direction document governs.
+
+Every capability proposed here names the principle it served at the time. Nothing here is approved. Each capability would still need the normal path: an atlas card, scorecard scores, a spec, and a ticket — none of that has happened.
+
+**Primary compass:** [`core_rpg_design_direction.md`](core_rpg_design_direction.md). **Historical predecessor** (the compass this document was originally checked against, now deprecated and archived): [`the_unwritten_world.html`](../archive/the_unwritten_world.html) — its 8 principles are carried forward in full in the direction doc's §2, not lost by the archive.
 
 **Structure:**
 - §1 guardrails
@@ -401,7 +405,7 @@ The expanded set shows two things the original six didn't:
 
 Two results landed on `main` while this doc was being written. Both sharpen the gate.
 
-1. **Why the decision-driven attack never fires** (`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`, closed, #219): the strategic layer almost never points entities at combat objectives. When the tactical brain does run (throttled by a three-layer sticky-task/cadence stack), it almost never finds a hostile that is in range *and* perceived. Decisions that are made execute and persist; nothing is lost. **Whether this should change is a design question left to the user**, and it is exactly the question this program depends on. The scenarios above need entities that *choose* conflict for reasons (hunting a named threat, avenging, raiding for a hoard). They don't need more incidental collisions.
+1. **Why the decision-driven attack never fires** (`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`, closed, #219): the strategic layer almost never points entities at combat objectives. When the tactical brain does run (throttled by a three-layer sticky-task/cadence stack), it almost never finds a hostile that is in range *and* perceived. Decisions that are made execute and persist; nothing is lost. ~~Whether this should change is a design question left to the user, and it is exactly the question this program depends on.~~ **Resolved 2026-09-20:** hybrid combat — keep ambient/incidental combat as it is, and add a small number of genuine systemic reasons to fight (predation, named threats, defending territory) rather than making all combat decisional. See the direction doc's decisions log. The scenarios above need entities that *choose* conflict for reasons (hunting a named threat, avenging, raiding for a hoard). They don't need more incidental collisions.
 2. **Most real combat was decided by the wrong hostility source — now fixed** (`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS`, #222, merged 2026-09-20). Opportunity attacks (`resolve_multi_attack()`) produce nearly all combat, and they decided hostility from the raw 4-value legacy `Faction` enum rather than the authored per-pair catalog the decision path uses. Measured disagreement before the fix: **34% of legacy-triggered hostile pairs in `crowded_frontier`, 97% in `hero_guild_routing`**. All three implementations plus a fourth upstream instance were unified on one catalog-aware helper.
 
    **The measured consequence matters more than the bug:** real combat volume fell **−84.8% in `crowded_frontier` and −95.9% in `hero_guild_routing`**, without either world collapsing to zero. Most combat in the corpus was fights the authored world says should not have happened. A follow-up sweep found **at least 7 more** load-bearing instances of the same anti-pattern across combat, cognition, cooperation and strategic subsystems (`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, P1, open).
@@ -415,6 +419,8 @@ Two results landed on `main` while this doc was being written. Both sharpen the 
 ---
 
 ## 4. The proposed program
+
+> **Historical illustrative program sketch — not an approved roadmap.** Everything from here to §7 is one possible decomposition, written before the direction agreement in `core_rpg_design_direction.md` existed and before its "no roadmap yet" instruction was in force. It is kept because it remains useful evidence of one way the missing link types (§3) *could* connect — no future agent should read any wave, capability, size estimate or milestone letter (M11/M12/M13, §9 item 5) below as sequencing authority. As of 2026-09-20, no implementation roadmap for this program has been agreed.
 
 Twenty-three capabilities in five waves (plus Wave 0). Each wave produces a *complete, observable* chain on its own; nothing waits for the whole program before anyone can see it. Each capability lists:
 
@@ -770,8 +776,8 @@ The suggestion called itself "an external design hypothesis, not an approved spe
 | Suggestion | Decision | Reason |
 |---|---|---|
 | "Progression-Driven World Simulation" / "Evolutionary Systemic RPG" as the project identity (§34) | **Rejected** | Principle 1 ("no one hands down the story") governs, and progression isn't one of the 8 principles. The project's own audit (`docs/audits/D01_rpg_feature_impact.md`) ranks Progression/Rewards Tier 3. This program makes *lived history* the substrate instead of levels. |
-| Ten forms of power (physical, knowledge, economic, social, political, spiritual, informational, territorial, technological, cultural) and a general power-conversion framework (§7–8) | **Rejected as a framework** | Principle 7: "prefer one coarse signal an observer can actually feel over three precise ones nobody will ever see." W4.1 keeps the one observable core (wealth buys protection, patronage and loyalty). Wealth → military is already designed in `faction_war_drivers_proposal.md` §3.3 and deliberately parked ("faction war: foundation only"). |
-| Deliberate runaway collapse ("unchecked progression can ultimately destroy [the world]", §4, §31) | **Deferred** | Not in the vision. Principle 6 already covers ambient growth and decay, and the existing growth loops (territory, nest spread, reproduction) are deliberately flagged off. §5 pairs every loop with a counterforce. Collapse as a goal needs its own decision. |
+| Ten forms of power (physical, knowledge, economic, social, political, spiritual, informational, territorial, technological, cultural) and a general power-conversion framework (§7–8) | **Rejected as a framework, confirmed 2026-09-20** | Final direction, stated plainly: plural forms of power remain useful *design vocabulary* — they are not rejected as a way of talking about the world. What's rejected is a generic ten-stat or universal power-conversion *implementation*. Principle 7 is why: "prefer one coarse signal an observer can actually feel over three precise ones nobody will ever see." Track the actual conversion mechanisms directly instead. W4.1 keeps the one observable core (wealth buys protection, patronage and loyalty). Wealth → military is already designed in `faction_war_drivers_proposal.md` §3.3 and deliberately parked ("faction war: foundation only"). |
+| Deliberate runaway collapse ("unchecked progression can ultimately destroy [the world]", §4, §31) | **Reframed 2026-09-20, not simply deferred** | This was written before A2 (Open Instability) existed as an agreed decision. Current framing: *deliberate apocalypse as a design goal remains rejected* — the world is not built around ending itself. But A2 is now accepted: systemic counterforces may genuinely fail, and regional, institutional or ecological collapse may emerge naturally from real causal chains. §5 still pairs every loop with a counterforce; the difference is that a counterforce is now explicitly allowed to lose, per A2, rather than collapse being an out-of-scope outcome. |
 | Player-centred sections: Kenshi player trajectory (§19), the player sharing NPC progression logic (§28), no automatic level scaling (§29), bosses as the player's threats (§30) | **Not applicable** | This is an observed world with no player: "a living world you observe rather than control." The one transferable part, a world that evolves unwitnessed, is already the founding premise. |
 | A universal progression abstraction shared by all entity types (§14) | **Rejected** | Principle 3 (different creatures, not reskins). The suggestion's own §25 warns against it too. This program shares one *shape* (experience → notability), with a kind-specific *meaning*. |
 | A RimWorld-style storyteller (§3) | **Deferred** | Calamity minimum/forced intervals already pace the world, and there's no player experience to pace. Kept as a measurement-gated option (W5.4). |
@@ -800,14 +806,19 @@ These aren't rejections. The suggestion treated them as missing, but they're alr
 
 ## 9. Open decisions
 
+Genuinely still open — no owner decision has resolved these:
+
 1. **W1.2:** finish idea 8's orphaned motivation/value models, or extend `PersonalityComponent` and prune idea 8?
 2. **W2.1:** should notability's four kinds be separate scalars, or one scalar with a kind tag? The trade-off is Principle 3 (distinctness) against Principle 7 (bookkeeping).
 3. **Numbering:** new atlas ideas (67+) per capability, or scope extensions of ideas 8/30/37/50/57/63/65 where one fits?
 4. **Theft (F1):** card it as its own idea (the counterforce to wealth)? It is also idea 1's orphaned `SabotageAction`.
-5. **Program shape:** schedule as milestones M11 (W1 + W3.3), M12 (W2 + W3), M13 (W4), with W5 unscheduled until measured?
-6. **Pull W5.5 (place succession and runtime founding) forward?** The expanded set shows Places are the weakest layer, and W5.5 unlocks the vision's own headline example (H). Its core (a `PlaceUpdate` path, abandonment, colonisation) depends on camp clearing, which is only partly combat-gated.
-7. **Start from death, not levels?** The expanded set shows lineage and death dispatch (M5) and displacement (idea 65) are the strongest live substrate. A first milestone built around them (G, I, K, R: formative experiences from deaths, bonds and displacement) would be visible before the starvation chain lands, while the level-driven arcs (A3, A4) wait.
-8. **L14 pacing:** compress life stages for named entities, add a long-run "life-arc" corpus tier, or treat Campaign episodes as the generation unit?
+5. **Start from death, not levels?** The expanded set shows lineage and death dispatch (M5) and displacement (idea 65) are the strongest live substrate. A first milestone built around them (G, I, K, R: formative experiences from deaths, bonds and displacement) would be visible before the starvation chain lands, while the level-driven arcs (A3, A4) wait. *Not yet decided — the owner's 2026-09-20 decisions covered combat shape, place priority, magic and the taxonomy, not this sequencing question.*
+6. **L14 pacing:** compress life stages for named entities, add a long-run "life-arc" corpus tier, or treat Campaign episodes as the generation unit?
+
+Resolved since this was written (kept here for the record, not as active questions):
+
+- ~~**Program shape:** schedule as milestones M11 (W1 + W3.3), M12 (W2 + W3), M13 (W4), with W5 unscheduled until measured?~~ **Superseded, 2026-09-20.** No M11/M12/M13 program has been approved, and per `core_rpg_design_direction.md`'s own "no roadmap yet" stance none should be inferred from this document. The whole §4 program is a historical sketch (see its own banner above).
+- ~~**Pull W5.5 (place succession and runtime founding) forward?**~~ **Resolved, 2026-09-20.** The owner made place mutability the first structural gap to close, ahead of and largely independent of the combat gate — which answers this question's substance even though W5.5's exact scope inside a future roadmap is still undecided.
 
 ## References
 
