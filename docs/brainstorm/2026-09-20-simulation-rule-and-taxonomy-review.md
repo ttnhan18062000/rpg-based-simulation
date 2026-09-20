@@ -58,7 +58,7 @@ The proposed world model is **coherent and, in its essentials, correct for this 
 | D2 Bounded ontology change | **Agree** | The repo already has a live example that proves the bound is the easy part and the *meaning* is the hard part: `EvolutionSystem` changes an entity's `kind` at levels 10/25/50, and nothing reads the new kind. |
 | E2 Causal-Value First | **Agree** | Operationalise it with the existing D01 rating dimensions rather than a new metric (§J). |
 | RPG abstractions allowed | **Agree** | Add one requirement: each abstraction should be *labelled* as such in the registry, so nobody later mistakes XP for a simulated quantity. |
-| Hybrid progression | **Agree, blocked** | Not visible until the combat gate is addressed: the decision-driven attack path fires 0–2 times per 1000–2000 ticks, and most combat that does happen uses a legacy hostility source that disagrees with the authored catalog on 34–97% of pairs. |
+| Hybrid progression | **Agree, blocked** | Not visible until the combat gate is addressed: the decision-driven attack path fires 0–2 times per 1000–2000 ticks. The wrong-hostility half was fixed on 2026-09-20 (#222), which *reduced* real combat volume by 84.8%/95.9% in the sampled worlds — so the gate is now sharper, and the open design question is whether the strategic layer should point entities at combat at all. |
 | Bottom-up world design | **Agree with modification** | The order in §8 ("what exists → what can happen → …") is right for a greenfield world. For *this* repo the dominant failure is not a missing rule but a missing link, so the alignment pass should be **link-first**: ask what cannot currently happen and why, before asking what fundamentally exists. |
 
 ---
