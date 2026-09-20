@@ -117,6 +117,8 @@ stays explicitly out of scope for this batch.
   first confirmed `recalculate_combat_stats`'s formula and its real corpus-pacing gap.
 - `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` — real, separate defect found
   incidentally while building the calibration instrument; filed, not fixed here.
+- `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES` — design question found
+  while investigating `attributes_biology` in wave 4; filed, not fixed here.
 
 ## Related Docs
 - `docs/plans/mechanic_verification_scenarios_proposal.md`
@@ -201,6 +203,15 @@ recorded.
 - `docs/REGISTRY.yaml` (auto-regenerated, Finalize's unconditional post-migration self-check)
 - `docs/brainstorm/mechanism_verification_view.md` (auto-regenerated from `registries/
   mechanisms.yaml`)
+- `tests/mechanic_scenarios/test_aging_death_value_differential.py` (new, wave 2)
+- `tests/mechanic_scenarios/test_entity_role_level_up_branch_value_differential.py` (new, wave 2)
+- `tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py` (new, wave 3)
+- `docs/brainstorm/mechanism_registry.html` (regenerated: wave 2's own stale-CI-gate fix, and again
+  after wave 4's registry-field bookkeeping fix)
+- `tickets/todos/TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES.md` (new,
+  wave 4, filed not fixed)
+- `tests/unit/tools/test_mechanism_registry.py` (2 hardcoded-fixture tests swapped `succession` ->
+  `class_assignment`, surfaced by the wave-4 registry-field bookkeeping fix)
 
 ## Completion Summary
 Value-differential instrument built and proven on `progression` batch 1 (calibration + 3
@@ -338,3 +349,104 @@ investigation.md), `personality` (real, but needs a decision-dispatch call site 
 arbitration shape, explicitly out of scope for this instrument per §5.1). `breakthrough_bonuses`,
 `build_diversity`, `genetics_aptitude`, `progression_conversion` remain out of scope for the
 reasons already stated.
+
+**Wave 4, 2026-09-21**: no new mechanism scenario — `attributes_biology` investigated and declined
+(above). One new finding filed: `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-
+ENTITIES` — reframed from a negative instrument result into its own design question per peer
+review: hunger/sleep-debt accumulation is identical for every entity regardless of
+vitality/endurance/species, which is not a bug (the code does what it says) but a real question for
+the roadmap session about whether biological pressure is meant to be attribute-modulated. Filed
+alongside, and explicitly cross-referenced with, `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-
+BASE-STATS` — one shows species differentiation eroding after spawn, the other shows biological
+pressure was never differentiated by entity identity in the first place. Both point at the same
+underlying question (how much does entity identity actually influence this simulation) without
+being merged into one ticket, per peer instruction to present them together rather than as two
+unrelated findings.
+
+**A bookkeeping fix caught before this close-out, not after**: while compiling the numbers below, a
+self-check found that 3 of the 4 wave-2/3 registry addenda (`aging_death`, `succession`,
+`entity_role`) had their prose correctly say "instrument upgraded `code_trace` -> `scenario`" but
+the YAML's own `verified.instrument:` field was never actually changed — an editing miss, not a
+finding about the mechanisms themselves. Fixed directly (all 3 now read `instrument: scenario`),
+which also surfaced two hardcoded-fixture tests
+(`test_real_registry_verification_view_seeds_non_empty`,
+`test_reader_get_verification_known_and_unknown`) that pinned `succession` as a stable
+`code_trace` example — the same shape as this arc's own prior `self_model`/`movement` fixture
+swaps. Swapped to `class_assignment` (still genuinely `code_trace`, and per §5.1's own scope
+statement unlikely to gain a scenario block soon). All numbers below reflect the corrected registry
+state; the earlier wave-2/wave-3 addenda's own prose was accurate, only the YAML field lagged it.
+
+## Close-out
+
+Same honest-accounting shape as Program A's own close-out
+(`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`): what the instrument can
+address versus what exists, what changed versus what was merely confirmed, the selection caveat
+stated rather than implied, and every finding filed with its real disposition — not a victory lap.
+
+**Independent value-differential observations: 6.** `readiness_speed_scaling`, `derived_stats`,
+`evolution`/`xp_leveling` (one merged observation, per that entry's own recorded Merge verdict),
+`aging_death`, `entity_role`, `succession`. Each carries a real positive control and a real
+negative control, run through real dispatch (a direct call into the authoritative apply path for
+the two pure-formula mechanisms, a real Kernel tick for the other four).
+
+**Value-differential vs. reachability verdict — different claims, stated separately, not blurred
+into one number:**
+- `readiness_speed_scaling`, `evolution`, `xp_leveling` already carried `instrument: scenario`
+  before this program, from **reachability**-axis work (2026-09-17, corpus-instrumented call
+  counting). This program added **value**-axis evidence to those same entries as dated addenda —
+  a mechanism can now be reachability-verified, value-verified, both, or neither, and both entries'
+  own notes say which axis backs which claim.
+  `readiness_speed_scaling`'s own reachability verdict stays `contradicted` (rarely fires in real
+  corpus play) even though its value-differential is positive (the formula has real purchase when
+  it does run) — two true, different claims about the same mechanism.
+- `derived_stats`, `aging_death`, `entity_role`, `succession` gained their **first** `scenario`
+  evidence from this program, on the value axis specifically — these four had no reachability
+  differential before or after this program (three of the four are `state: done`/unconditional
+  code with no known reachability question; `derived_stats` shares its reachability story with
+  `readiness_speed_scaling`'s own entry).
+
+**Runtime-evidence share:**
+- Registry-wide: 16/93 (17.2%) → 20/93 (21.5%) mechanisms carrying `instrument: scenario` on
+  either axis.
+- `progression` specifically: 3/15 (20.0%) → 7/15 mechanisms. **Stated per the new §5.1 caveat, not
+  as a raw fraction**: this is not 47% progress toward covering `progression`'s 15 mechanisms — it
+  is 7 of the ~7 mechanisms this instrument can currently address at all under `progression`'s own
+  composition. The other 8 split as: 2 static catalog lookups (presumptively out of scope for this
+  instrument, not pending), 1 decision-scoring/arbitration shape (needs a different, unbuilt
+  instrument), 1 flat/uniform rate with no per-entity input (instrument does not apply, confirmed
+  by investigation), 2 flag-gated-off mechanisms (a reachability question, not this axis's), 1 real
+  but producer-less mechanism (`breakthrough_bonuses`, unrelated to this instrument), 1 with no
+  instrument built yet at all (`build_diversity`, `state: gap`).
+
+**What changed vs. what was merely confirmed**: `readiness_speed_scaling`'s formula-has-purchase
+result and `derived_stats`'s own two formula deltas were genuinely new information (nothing
+previously confirmed whether these attribute inputs mattered, only that the code was reachable).
+`evolution`/`xp_leveling`'s reward-scales-with-level result confirmed what the merged entry's own
+prose already implied but had never been directly tested as a *value* claim (only as a reachability
+one). `aging_death` and `succession` were previously `code_trace`-only — real code, never run
+through a real scenario at all until this program; their value-differential results are this
+program's first runtime evidence of any kind for either mechanism. `entity_role`'s branch-selection
+result is new: the registry already named the `role == HERO` branch, but had never confirmed the
+OTHER branch actually fires for a non-HERO role on a real level-up.
+
+**Findings filed, not fixed, this program (4 total):**
+1. `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` (P0) — world-integrity: every
+   entity's species-specific base combat stats erode toward generic defaults on any `stats_dirty`
+   trigger, invalidating every prior balance observation.
+2. `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES` (P1) — design question:
+   is uniform (non-attribute-modulated) hunger/sleep-debt accumulation intended?
+3. A stale-generated-file CI gate catch (`docs/brainstorm/mechanism_registry.html`), fixed at the
+   root cause during wave 2 — not a filed ticket, resolved in-session, noted here for completeness
+   since it was a real CI failure this program caused and fixed.
+4. The registry-field/fixture-test bookkeeping miss (above), caught and fixed before this close-out
+   rather than left for a future session to find.
+
+**Not investigated, and why, one more time for the record**: arbitration (the third failure-to-
+matter shape) needs its own instrument — explicitly not started here, per peer instruction, pending
+a roadmap-session decision on priority after this program's own report lands.
+
+This closes out the `progression` batch under the value-differential instrument. The instrument
+itself (§5.1, including its calibration requirement, both named traps, the null-result horizon
+rule, and its own scope-boundary statement) is now a stable, documented, twice-proven-out
+methodology available for a future program on a different system, should the roadmap session
+choose to point it there.

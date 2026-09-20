@@ -977,7 +977,7 @@ def test_real_registry_verification_view_seeds_non_empty(registry_data):
     by_id = {row["id"]: row for row in view}
     expected = {
         "combat_engagement": "scenario",
-        "succession": "code_trace",
+        "class_assignment": "code_trace",
         "motivation_doctrine": "code_trace",
         "information_trust_deception": "code_trace",
         "opportunity_rumor_seeds": "code_trace",
@@ -993,7 +993,12 @@ def test_reader_get_verification_known_and_unknown(registry):
     verified = registry.get_verification("combat_engagement")
     assert verified is not None
     assert verified["instrument"] == "scenario"
-    assert registry.get_verification("succession")["instrument"] == "code_trace"
+    assert registry.get_verification("class_assignment")["instrument"] == "code_trace"
+    # `succession` was this example until TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-
+    # INSTRUMENT gave it a real scenario verified block (progression value-differential program,
+    # wave 3); swapped to `class_assignment`, presumptively out of scope for that same instrument
+    # per its own §5.1 scope statement (a static catalog lookup, not an ongoing per-tick mechanism)
+    # -- unlikely to gain a scenario block soon.
     assert registry.get_verification("clan") is None  # real, unverified id -- `movement` itself
     # was this example until TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN gave it a
     # real verified block (batch 3 of the unbound-claims program); swapped to `clan`, still

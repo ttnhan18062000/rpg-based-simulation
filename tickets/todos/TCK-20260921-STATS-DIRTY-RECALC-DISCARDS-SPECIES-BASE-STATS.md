@@ -104,6 +104,11 @@ For whoever picks this up:
 - `TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT` — where this was found
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` — prior investigation into
   the same `stats_dirty`/`recalculate_combat_stats` code path, from the reachability angle
+- `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES` — companion finding from
+  the same program: this ticket shows species differentiation eroding after spawn, that one shows
+  biological pressure was never differentiated by entity identity in the first place. Worth reading
+  together for the roadmap session's own "how much does entity identity influence the simulation"
+  question, per peer instruction — not merged, each stands on its own evidence.
 
 ## Related Docs
 None yet.

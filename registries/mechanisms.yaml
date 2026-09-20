@@ -550,7 +550,7 @@ mechanisms:
     implemented_by:
       - src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem::resolve_lifecycle
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -591,7 +591,7 @@ mechanisms:
     state: done
     implemented_by: [src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem]
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-16"
       note: >-
@@ -789,7 +789,7 @@ mechanisms:
     implemented_by:
       - src/core/enums.py::EntityRole
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
