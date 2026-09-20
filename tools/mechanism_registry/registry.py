@@ -8,7 +8,8 @@ Pattern imitated from src/engine/capability.py (a working hand-authored-YAML-reg
 validator precedent for a different subject), adapted for this registry's extra invariants
 (depends_on resolution, DAG acyclicity) that capability.py's simpler flat list did not need.
 
-Seven invariants enforced by validate():
+Ten invariants enforced by validate() (the header count was already stale at "Seven" before this
+edit -- invariant 8 had already been added without updating it; fixed here rather than repeated):
   1. every `depends_on` id resolves to a declared mechanism
   2. the dependency graph is acyclic
   3. every mechanism's `layer` is declared in the `layers` block
@@ -24,6 +25,12 @@ Seven invariants enforced by validate():
   8. every `unaudited_depends_on_edges` entry names a real, currently-declared depends_on edge
      (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT) -- a stale marker for an edge that
      was since removed or never existed would misrepresent an unchecked edge as audited
+  9. every value in a mechanism's `systems: []` resolves to a system registered in
+     registries/system_registry.jsonl (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION) --
+     "no missing system"
+  10. every system registered in registries/system_registry.jsonl has at least one mechanism
+      declaring it (same ticket) -- "no orphan system": a declared system with zero members is
+      dead vocabulary and should fail rather than accumulate silently
 
 `validate()` returns a list of human-readable error strings (empty if valid) rather than
 raising/returning a bool, so a caller can report every violation in one run instead of stopping at
@@ -44,6 +51,9 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_PATH = _REPO_ROOT / "registries" / "mechanisms.yaml"
+
+sys.path.insert(0, str(_REPO_ROOT / "tools" / "mechanism_registry"))
+from system_registry import load_registry as _load_system_registry  # noqa: E402
 
 # TCK-20260916-MECHANISM-IMPLEMENTED-BY-SYMBOL-LEVEL-BINDING. An `implemented_by` entry is either
 # a bare repo-relative path (file-level -- the whole file is the binding) or "<path>::<Symbol>"
@@ -295,6 +305,55 @@ def validate(data: dict) -> List[str]:
             errors.append(
                 f"unaudited_depends_on_edges entry [{dependent}, {dependency}] is not a currently "
                 f"declared depends_on edge -- stale marker, remove it or restore the edge"
+            )
+
+    # Invariants 9/10: mechanism `systems: []` membership, checked against
+    # registries/system_registry.jsonl (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION).
+    # Declared membership never touches depends_on -- these two invariants are independent of
+    # every dependency-graph check above.
+    #
+    # Invariant 10 (orphan system) is NON-COMPOSITIONAL, unlike every other invariant in this
+    # function. Every other invariant here (layers, unaudited_depends_on_edges) is a
+    # self-contained property of the `data` dict this function already received: it holds or
+    # fails on that dict alone, so it also holds or fails the same way on any valid subset of it.
+    # Invariant 10 does not have that property -- "every registered system has >=1 declaring
+    # mechanism" is a property of the WHOLE corpus (all mechanisms x all registered systems), not
+    # of any individual mechanism or any arbitrary slice of the mechanism list. A synthetic test
+    # fixture with 2-3 mechanisms will make most of the 7 real registered systems look orphaned
+    # (zero members) even when nothing is wrong, because the fixture was never meant to be a
+    # complete corpus in the first place. This is exactly what broke 18 pre-existing, unrelated
+    # tests the moment this invariant was added -- fixed by tests/unit/tools/conftest.py's
+    # autouse fixture, which patches `_load_system_registry` to return {} by default (zero
+    # registered systems => both invariants are vacuously satisfied for any fixture that doesn't
+    # mention `systems` at all). Tests that DO want to exercise invariant 9/10 must define their
+    # own explicit "registered systems + mechanism list" pair via their own monkeypatch (see
+    # `_fixture_registry()` in test_mechanism_registry.py) -- the requirement is a CLOSED universe,
+    # not the real one: a small synthetic fixture works fine as long as it is complete and
+    # self-contained on its own terms (every system it declares has a member within that same
+    # fixture). What breaks the invariant is a PARTIAL slice of a larger universe (e.g. the real
+    # 93-mechanism/7-system registry with only 2-3 mechanisms taken out of it), not synthetic data
+    # itself. The next person adding a new whole-corpus-shaped invariant here should expect the
+    # same non-compositionality and reach for a small closed fixture, not assume it will behave
+    # like every invariant that came before it, and not assume real data is required to test it.
+    registered_systems = set(_load_system_registry().keys())
+    systems_declared_by: Dict[str, List[str]] = {s: [] for s in registered_systems}
+    for m in mechanisms:
+        mid = m.get("id", "<missing id>")
+        mech_systems = m.get("systems") or []
+        for sys_name in mech_systems:
+            if sys_name not in registered_systems:
+                errors.append(
+                    f"mechanism '{mid}' declares system '{sys_name}', which is not registered in "
+                    f"registries/system_registry.jsonl"
+                )
+                continue
+            systems_declared_by[sys_name].append(mid)
+
+    for sys_name, members in systems_declared_by.items():
+        if not members:
+            errors.append(
+                f"system '{sys_name}' is registered in registries/system_registry.jsonl but no "
+                f"mechanism declares it -- orphan system, dead vocabulary"
             )
 
     return errors
@@ -564,6 +623,116 @@ def unverified_priority_ranking(data: dict) -> List[dict]:
             ),
         })
     return sorted(rows, key=lambda r: (-r["priority"], r["id"]))
+
+
+def mechanisms_by_system(data: dict) -> Dict[str, List[str]]:
+    """TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION. Every registered system mapped to the
+    sorted list of mechanism ids that declare it, PLUS a real `"unassigned"` key holding every
+    mechanism whose own `systems: []` is empty or absent.
+
+    A mechanism with no system is **rendered explicitly under `"unassigned"`, never silently
+    dropped** -- the same rule this registry already applies to `verified: null` (AC #4/#5 of the
+    foundation ticket). `"unassigned"` is a real key in the returned dict even when its own list
+    is empty, so a caller can always find it rather than needing a `.get(..., [])` guess.
+
+    Read-only query, matching `transitive_dependents()`/`all_mechanisms_combined_view()`'s own
+    shape -- computes nothing that feeds priority or verdict (Acceptance Criteria #6: membership
+    stays a review lens, never load-bearing)."""
+    mechanisms = data.get("mechanisms", []) or []
+    registered_systems = set(_load_system_registry().keys())
+
+    result: Dict[str, List[str]] = {s: [] for s in registered_systems}
+    result["unassigned"] = []
+
+    for m in mechanisms:
+        mid = m.get("id")
+        if mid is None:
+            continue
+        mech_systems = m.get("systems") or []
+        if not mech_systems:
+            result["unassigned"].append(mid)
+            continue
+        for sys_name in mech_systems:
+            if sys_name in result:
+                result[sys_name].append(mid)
+
+    for key in result:
+        result[key].sort()
+
+    return result
+
+
+def _rollup_stats(ids: List[str], by_id: Dict[str, dict]) -> dict:
+    """Shared counting logic for one group of mechanism ids (one system, `"unassigned"`, or the
+    whole-registry baseline) -- COUNTS only, never a derived verdict or badge
+    (TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW AC #1/#5)."""
+    n = len(ids)
+    bound = sum(1 for i in ids if by_id[i].get("implemented_by"))
+    bound_unverified = 0
+    runtime_verified = 0
+    static_verified = 0
+    state_counts: Dict[str, int] = {s: 0 for s in VALID_STATES}
+    for i in ids:
+        m = by_id[i]
+        verified = m.get("verified")
+        is_bound = bool(m.get("implemented_by"))
+        if verified:
+            if verified.get("instrument") in RUNTIME_INSTRUMENTS:
+                runtime_verified += 1
+            else:
+                static_verified += 1
+        elif is_bound:
+            # Real code binding, real caller located, never confirmed to do anything --
+            # peer-review finding (TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW): distinct from
+            # "unbound and unverified" (we don't even know where to look) and the CHEAPEST
+            # verification target available, since the expensive part -- locating the
+            # implementation -- is already done.
+            bound_unverified += 1
+        state = m.get("state")
+        if state in state_counts:
+            state_counts[state] += 1
+    verified_total = runtime_verified + static_verified
+    return {
+        "count": n,
+        "bound": bound,
+        "bound_rate": (bound / n) if n else 0.0,
+        "bound_unverified": bound_unverified,
+        "runtime_verified": runtime_verified,
+        "static_verified": static_verified,
+        "verified": verified_total,
+        "verified_rate": (verified_total / n) if n else 0.0,
+        "unverified": n - verified_total,
+        "state_counts": state_counts,
+    }
+
+
+def build_system_rollup(data: dict) -> dict:
+    """TCK-20260919-MECHANISM-SYSTEM-ROLLUP-VIEW (child 3 of
+    TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP). Per-system COUNTS -- mechanism count,
+    `implemented_by`-bound count/rate, verified count/rate (runtime vs static), and a full state
+    breakdown -- plus a whole-registry `baseline` computed the same way, so every system's rate is
+    read next to the baseline rather than in isolation
+    (TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION's own finding: a raw per-system
+    percentage looked informative until checked against baseline and found statistically
+    indistinguishable from it).
+
+    Never renders or computes a single summary status/badge for a system (AC #1) and never derives
+    a ranking or verdict from membership (AC #5, same read-only rule as `mechanisms_by_system()`).
+    Read-only query; consumes `mechanisms_by_system()` unmodified rather than re-deriving groups.
+    """
+    mechanisms = data.get("mechanisms", []) or []
+    by_id = {m["id"]: m for m in mechanisms if m.get("id")}
+    groups = mechanisms_by_system(data)
+
+    baseline = _rollup_stats(list(by_id.keys()), by_id)
+
+    systems: List[dict] = []
+    for system in sorted(k for k in groups if k != "unassigned"):
+        systems.append({"system": system, **_rollup_stats(groups[system], by_id)})
+
+    unassigned = {"system": "unassigned", **_rollup_stats(groups.get("unassigned", []), by_id)}
+
+    return {"baseline": baseline, "systems": systems, "unassigned": unassigned}
 
 
 def main(argv: Optional[List[str]] = None) -> int:

@@ -30,16 +30,20 @@ def registry_data():
 
 def test_combined_view_includes_all_mechanisms_not_just_unverified(registry_data):
     """The load-bearing difference from unverified_priority_ranking(): a verified mechanism must
-    still appear, with its real priority number, not be dropped."""
+    still appear, with its real priority number, not be dropped.
+
+    Mechanism pick updated 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+    RESOLUTION): `action_pacing_readiness` legitimately dropped to priority 0 once `conversation`'s
+    own edge to it was removed (confirmed no real code) -- its own zero transitive dependents is
+    now correct, not a bug, so it no longer demonstrates "still present with a real nonzero
+    priority." `combat_resolution` (runtime-verified, 1 real transitive dependent) does."""
     rows = all_mechanisms_combined_view(registry_data)
     ids = {r["id"] for r in rows}
     assert len(rows) == len(registry_data["mechanisms"])
-    # action_pacing_readiness is verified (scenario/observed) -- must still be present with a
-    # real priority, not silently excluded the way the unverified-only ranking excludes it.
-    assert "action_pacing_readiness" in ids
-    apr_row = next(r for r in rows if r["id"] == "action_pacing_readiness")
-    assert apr_row["priority"] > 0
-    assert apr_row["evidence"] == "runtime"
+    assert "combat_resolution" in ids
+    cr_row = next(r for r in rows if r["id"] == "combat_resolution")
+    assert cr_row["priority"] > 0
+    assert cr_row["evidence"] == "runtime"
 
 
 def test_combined_view_sorted_by_priority_descending(registry_data):

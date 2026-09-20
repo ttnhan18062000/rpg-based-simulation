@@ -68,12 +68,14 @@ def test_transitive_dependents_matches_real_data(registry_data):
     # commitment_pressure_consequences via combat_resolution -> combat_engagement): none of those
     # mechanisms' own real code reads readiness as a data input, only writes readiness_delta as an
     # output cost, with the actual gate living in the caller (LegalityServiceV2/action_router.py),
-    # not the dependent's own logic. `conversation` is the sole survivor, recorded UNCLASSIFIABLE
-    # (no real "conversation" implementation exists to check, `state: gap`) rather than confirmed.
-    # See that ticket's own stored_artifacts/.../edge_audit_results.md for the full per-edge
-    # evidence behind every removal.
+    # not the dependent's own logic. 1 -> 0 after
+    # TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION (2026-09-19): `conversation`,
+    # the sole survivor above, was confirmed to have zero implementing code anywhere (its own
+    # `state: gap` already said as much) and its `-> action_pacing_readiness` edge was removed --
+    # a depends_on edge declared FROM a mechanism with no code at all cannot be verified. See that
+    # ticket's own Implementation Notes for the full per-edge evidence behind every removal.
     dep_map = {m["id"]: m.get("depends_on") or [] for m in registry_data["mechanisms"]}
-    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 1
+    assert len(transitive_dependents("action_pacing_readiness", dep_map)) == 0
 
 
 def test_transitive_dependents_raises_on_cycle():
@@ -151,20 +153,28 @@ def test_real_registry_favors_frequent_layer_over_rare_layer(registry_data):
     """TCK-20260916-MECHANISM-PRIORITY-LAYER-WEIGHT-INVERTED regression, on real data. Computed via
     priority() directly (not unverified_priority_ranking()) so this test stays valid regardless of
     which mechanisms later get a verified block -- it must keep holding on the registry's raw
-    state/layer/dependents shape, not on any two mechanisms' current verified status."""
+    state/layer/dependents shape, not on any two mechanisms' current verified status.
+
+    Mechanism picks updated 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+    RESOLUTION): `action_pacing_readiness` dropped to 0 transitive dependents once `conversation`'s
+    own edge to it was removed (confirmed no real code), and `betrayal_siege_war` dropped once
+    `country_lifecycle`'s own edge to it was removed (confirmed no real read evidence) -- neither
+    demonstrates the regression any more. `belief_cycle` (entity, 4 transitive dependents) vs
+    `diplomacy` (faction, 1 transitive dependent) still cleanly demonstrates the same weight
+    direction on real, currently-audited data."""
     layers = registry_data["layers"]
     dep_map = {m["id"]: m.get("depends_on") or [] for m in registry_data["mechanisms"]}
     by_id = {m["id"]: m for m in registry_data["mechanisms"]}
 
-    entity_mech = by_id["action_pacing_readiness"]  # entity layer, 23 transitive dependents
-    faction_mech = by_id["betrayal_siege_war"]  # faction layer, 11 transitive dependents
+    entity_mech = by_id["belief_cycle"]  # entity layer, 4 transitive dependents
+    faction_mech = by_id["diplomacy"]  # faction layer, 1 transitive dependent
 
     entity_priority = priority(entity_mech["id"], dep_map, entity_mech["layer"], layers)
     faction_priority = priority(faction_mech["id"], dep_map, faction_mech["layer"], layers)
 
     assert entity_priority > faction_priority, (
-        "action_pacing_readiness (entity, per-tick, more dependents) must outrank "
-        "betrayal_siege_war (faction, rare, fewer dependents) -- if it doesn't, the layer weight "
+        "belief_cycle (entity, per-tick, more dependents) must outrank "
+        "diplomacy (faction, rare, fewer dependents) -- if it doesn't, the layer weight "
         "direction has regressed back to rewarding rare layers"
     )
 

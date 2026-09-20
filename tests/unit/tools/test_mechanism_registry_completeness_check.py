@@ -96,10 +96,19 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     """[Load-bearing] Pins today's known state so any drift -- a new domain/systems file, a
     removed implemented_by binding -- is visible in CI rather than silently absorbed. Update this
     test's expected numbers only alongside a real investigation of what changed, the same
-    discipline test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms already uses."""
+    discipline test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms already uses.
+
+    2026-09-19 (TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION, combat-first batch):
+    `combat_engagement` bound to `src/domains/combat_engagement/service.py::CombatEngagementDecisionService`,
+    moving `domains/combat_engagement` from unbound to bound (24 -> 25, 37 -> 36). `total_targets`
+    unchanged at 64 -- the batch's other 4 bindings (combat_resolution/tactical_decision/movement/
+    status_effects) all resolve to `src/engine/`/`src/core/` targets, outside this checker's own
+    `src/domains/`/`src/systems/` scope entirely (same divergence the ticket's own Request Summary
+    already documents for `declared_cognition_schema`/`committed_intentions` -> `core/cognition.py`),
+    so they don't move this metric even though they do move `mechanisms_with_binding`."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 64
-    assert len(report.bound) == 24
+    assert len(report.bound) == 25
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 37
+    assert len(report.unbound) == 36

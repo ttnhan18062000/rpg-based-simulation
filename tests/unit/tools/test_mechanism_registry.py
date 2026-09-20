@@ -26,6 +26,7 @@ from tools.mechanism_registry import (
     validate,
     verification_records_from_registry,
 )
+from tools.mechanism_registry import system_registry as _system_registry_module
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 _REGISTRY_PATH = REPO_ROOT / "registries" / "mechanisms.yaml"
@@ -200,9 +201,14 @@ def test_validator_accepts_valid_fixture():
     assert validate(fixture) == []
 
 
-def test_real_registry_passes_validation(registry_data):
+def test_real_registry_passes_validation(registry_data, monkeypatch):
     # The real committed file must itself pass -- otherwise `make mechanism-registry-validate`
-    # would fail on every clean checkout.
+    # would fail on every clean checkout. Restores the real system registry (conftest.py's own
+    # autouse fixture patches it to empty by default for every other test in this file, since
+    # they use minimal synthetic fixtures that never declare `systems: []`) -- this is the one
+    # test that validates the real, complete file and needs the real registered-systems set.
+    import tools.mechanism_registry.registry as _registry_module
+    monkeypatch.setattr(_registry_module, "_load_system_registry", _system_registry_module.load_registry)
     assert validate(registry_data) == []
 
 
@@ -227,13 +233,13 @@ def test_reader_dependents_of_is_computed_not_stored(registry):
     # movement, readiness_speed_scaling, interaction_channeling, entity_trade, team_up): none of
     # those mechanisms' own real code ever reads readiness as a data input -- they only WRITE
     # readiness_delta as an output cost, and the actual gate lives entirely in the caller
-    # (LegalityServiceV2/action_router.py), not in the dependent's own logic. See that ticket's own
-    # stored_artifacts/.../edge_audit_results.md for the full per-edge evidence. `conversation` is
-    # the sole surviving edge -- recorded UNCLASSIFIABLE by that audit (no distinguishable
-    # "conversation" implementation exists to check, `state: gap`), not confirmed as a real
-    # dependency, but not disproven either -- kept rather than forced.
+    # (LegalityServiceV2/action_router.py), not in the dependent's own logic. `conversation` was
+    # the sole surviving edge, recorded UNCLASSIFIABLE by that audit -- then REMOVED
+    # (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION, 2026-09-19): confirmed no
+    # "conversation" implementation exists anywhere (its own `state: gap` already said so), so a
+    # depends_on edge declared from it cannot be verified.
     dependents = registry.dependents_of("action_pacing_readiness")
-    assert dependents == ["conversation"]
+    assert dependents == []
     # A leaf with genuinely zero dependents returns an empty list, not an error.
     assert registry.dependents_of("nonexistent_mechanism_xyz") == []
 
@@ -438,13 +444,182 @@ def test_validator_rejects_unaudited_edge_naming_unknown_mechanism():
     assert any("nonexistent_mechanism" in e for e in errors), errors
 
 
-def test_real_registry_unaudited_edges_all_resolve(registry_data):
+def test_real_registry_unaudited_edges_all_resolve(registry_data, monkeypatch):
     """The real committed registry's own unaudited_depends_on_edges list validates clean -- every
     entry names a currently-declared depends_on edge, none stale."""
+    import tools.mechanism_registry.registry as _registry_module
+    monkeypatch.setattr(_registry_module, "_load_system_registry", _system_registry_module.load_registry)
     assert validate(registry_data) == []
+
+
+# ── invariants 9/10: mechanism `systems: []` membership (TCK-20260918-MECHANISM-SYSTEM-
+# MEMBERSHIP-FOUNDATION) — conftest.py's own autouse fixture patches the registered-systems
+# lookup to empty for every test that doesn't explicitly override it, so these tests set up their
+# own small registry via monkeypatch, deliberately invalid one invariant at a time, per AC #3
+# ("not proven by a clean pass on valid data").
+
+
+def _fixture_registry(monkeypatch, systems: dict):
+    """Patches the system-registry lookup registry.py::validate() reads, to the given
+    {system_name: entry_dict} mapping, for the duration of one test."""
+    import tools.mechanism_registry.registry as _registry_module
+    monkeypatch.setattr(_registry_module, "_load_system_registry", lambda *a, **kw: dict(systems))
+
+
+def test_validator_accepts_mechanism_declaring_a_registered_system(monkeypatch):
+    _fixture_registry(monkeypatch, {"combat": {"system": "combat", "added_date": "2026-09-19"}})
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat"]},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_rejects_mechanism_declaring_unregistered_system(monkeypatch):
+    _fixture_registry(monkeypatch, {"combat": {"system": "combat", "added_date": "2026-09-19"}})
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["not_a_real_system"]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for an unregistered system reference"
+    assert any("foo" in e and "not_a_real_system" in e for e in errors), errors
+
+
+def test_validator_rejects_registered_system_with_zero_members(monkeypatch):
+    _fixture_registry(monkeypatch, {
+        "combat": {"system": "combat", "added_date": "2026-09-19"},
+        "economy": {"system": "economy", "added_date": "2026-09-19"},
+    })
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            # Only "combat" is ever declared -- "economy" is registered but orphan.
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat"]},
+        ],
+    }
+    errors = validate(fixture)
+    assert errors, "expected a validation failure for a registered system with zero members"
+    assert any("economy" in e and "orphan" in e.lower() for e in errors), errors
+    # combat has a real member -- must NOT be reported as orphan alongside economy.
+    assert not any("'combat' is registered" in e for e in errors), errors
+
+
+def test_validator_accepts_multi_system_mechanism(monkeypatch):
+    """AC #2: systems: [] accepts multiple values -- a mechanism with 2 real, registered systems
+    must not trip either invariant."""
+    _fixture_registry(monkeypatch, {
+        "combat": {"system": "combat", "added_date": "2026-09-19"},
+        "world": {"system": "world", "added_date": "2026-09-19"},
+    })
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "movement", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat", "world"]},
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_validator_accepts_mechanism_with_no_systems_field_at_all(monkeypatch):
+    """A mechanism that omits `systems:` entirely (not yet assigned) must not itself trip the
+    missing-system invariant -- absence is handled by mechanisms_by_system()'s own "unassigned"
+    bucket (AC #4/#5), not by validate() rejecting the omission."""
+    _fixture_registry(monkeypatch, {"combat": {"system": "combat", "added_date": "2026-09-19"}})
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat"]},
+            {"id": "bar", "layer": "entity", "depends_on": [], "state": "done"},  # no systems key
+        ],
+    }
+    assert validate(fixture) == []
+
+
+def test_real_registry_systems_all_resolve(registry_data, monkeypatch):
+    """The real committed registry's own systems: [] declarations validate clean against the
+    real registries/system_registry.jsonl -- no missing, no orphan."""
+    import tools.mechanism_registry.registry as _registry_module
+    monkeypatch.setattr(_registry_module, "_load_system_registry", _system_registry_module.load_registry)
+    assert validate(registry_data) == []
+
+
+# ── mechanisms_by_system() — AC #4/#5: a mechanism with no system must be proven to RENDER, not
+# just checked for absence of a validation error.
+
+
+def test_mechanisms_by_system_groups_declared_membership(monkeypatch):
+    from tools.mechanism_registry import mechanisms_by_system
+    _fixture_registry(monkeypatch, {
+        "combat": {"system": "combat", "added_date": "2026-09-19"},
+        "economy": {"system": "economy", "added_date": "2026-09-19"},
+    })
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat"]},
+            {"id": "bar", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat", "economy"]},
+        ],
+    }
+    result = mechanisms_by_system(fixture)
+    assert result["combat"] == ["bar", "foo"]
+    assert result["economy"] == ["bar"]
+
+
+def test_mechanisms_by_system_renders_unassigned_mechanism_by_presence(monkeypatch):
+    """AC #5: proven by asserting the unassigned mechanism's own id is PRESENT in the output --
+    not by checking the assigned rows look right, which an omission bug would not catch."""
+    from tools.mechanism_registry import mechanisms_by_system
+    _fixture_registry(monkeypatch, {"combat": {"system": "combat", "added_date": "2026-09-19"}})
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat"]},
+            {"id": "orphan_mech", "layer": "entity", "depends_on": [], "state": "done"},  # no systems
+        ],
+    }
+    result = mechanisms_by_system(fixture)
+    assert "unassigned" in result, "the unassigned key must always be present, even with zero members"
+    assert "orphan_mech" in result["unassigned"], (
+        "a mechanism with no systems: [] must render under 'unassigned', not be silently dropped"
+    )
+    assert "orphan_mech" not in result["combat"]
+
+
+def test_mechanisms_by_system_unassigned_present_but_empty_when_all_mechanisms_assigned(monkeypatch):
+    from tools.mechanism_registry import mechanisms_by_system
+    _fixture_registry(monkeypatch, {"combat": {"system": "combat", "added_date": "2026-09-19"}})
+    fixture = {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "systems": ["combat"]},
+        ],
+    }
+    result = mechanisms_by_system(fixture)
+    assert result["unassigned"] == []
+
+
+def test_real_registry_zero_unassigned_mechanisms(registry_data, monkeypatch):
+    """The real committed registry has all 93 mechanisms assigned (per the value investigation's
+    own broad pass) -- pinned so a future mechanism landing with no systems: [] is caught here,
+    not silently rendered as 'unassigned' with nobody noticing."""
+    from tools.mechanism_registry import mechanisms_by_system
+    import tools.mechanism_registry.registry as _registry_module
+    monkeypatch.setattr(_registry_module, "_load_system_registry", _system_registry_module.load_registry)
+    result = mechanisms_by_system(registry_data)
+    assert result["unassigned"] == [], (
+        f"expected zero unassigned mechanisms in the real registry, found: {result['unassigned']}"
+    )
     unaudited = registry_data.get("unaudited_depends_on_edges") or []
-    assert len(unaudited) == 17, (
-        f"expected 17 unaudited edges from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT, "
+    assert len(unaudited) == 2, (
+        f"expected 2 unaudited edges (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-"
+        f"RESOLUTION resolved 15 of the original 17 from TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-"
+        f"SEMANTICS-AUDIT on 2026-09-19; only the motivation_doctrine pair remains, deferred to "
+        f"TCK-20260918-MOTIVATION-DOCTRINE-STALE-AGAINST-RETIRED-DOCTRINE-VALUES-CHAIN), "
         f"found {len(unaudited)} -- if this genuinely changed, update this pinned count with a "
         f"citation, don't just adjust the number"
     )

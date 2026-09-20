@@ -327,6 +327,9 @@ mechanism-priority-view: ## Regenerate docs/brainstorm/mechanism_priority_view.m
 mechanism-registry-view: ## Regenerate docs/brainstorm/mechanism_registry_view.md (all mechanisms, priority + verification together, not truncated)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_view.py
 
+mechanism-system-rollup-view: ## Regenerate docs/brainstorm/mechanism_system_rollup_view.md (per-system counts vs whole-registry baseline, never a badge)
+	$(PYTHON3) tools/mechanism_registry/generate_mechanism_system_rollup_view.py
+
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 
@@ -335,6 +338,12 @@ mechanism-state-caller-check: ## Report-only: flag mechanisms whose declared sta
 
 mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating Loop diagram classDef colouring against the real registry state
 	$(PYTHON3) tools/mechanism_registry/mechanism_wiring_map_classdef.py
+
+mechanism-status-language-check: ## Report-only: scan atlas/capabilities desc fields and wiring-map node labels for status vocabulary that belongs in the registry, not prose
+	$(PYTHON3) tools/mechanism_registry/mechanism_status_language_check.py
+
+mechanism-registry-changed-code-check: ## Report-only: flag implemented_by-cited code that changed without its mechanism's own entry changing, plus implemented_by replacements
+	$(PYTHON3) tools/mechanism_registry/mechanism_registry_changed_code_check.py
 
 mechanism-atlas-check: ## Check the atlas's mapped card badge cls values against the real registry state (--check, writes nothing)
 	$(PYTHON3) tools/mechanism_registry/mechanism_atlas_regenerate.py --check

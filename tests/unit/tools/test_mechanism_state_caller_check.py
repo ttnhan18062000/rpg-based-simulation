@@ -131,16 +131,24 @@ def test_makefile_wires_mechanism_state_caller_check_target():
 
 def test_real_registry_findings_pinned():
     """[Load-bearing] Pins today's known finding set against the real, committed registry so any
-    drift is visible in CI. The one remaining finding, `genetics_aptitude`'s own
-    `gated_without_flag_context`, is a known, understood low-confidence false positive: the real
-    `ENABLE_REPRODUCTION_HUMANOID_PATH` flag check happens several call-frames up
-    (`engine/world_dynamics.py`), not within the 5-line text window of the direct
-    `GeneticsSystem` reference in `reproduction_humanoid.py` -- the check's own textual-proximity
-    heuristic has a real, expected blind spot for flag checks made at a different layer than the
-    call site. See stored_artifacts/TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION/
-    investigation.md for the full disposition of every finding in this batch. Update this test
-    only alongside a real investigation of what changed, same discipline as every other
-    pinned-count test in this repo."""
+    drift is visible in CI. `genetics_aptitude`'s own `gated_without_flag_context` is a known,
+    understood low-confidence false positive: the real `ENABLE_REPRODUCTION_HUMANOID_PATH` flag
+    check happens several call-frames up (`engine/world_dynamics.py`), not within the 5-line text
+    window of the direct `GeneticsSystem` reference in `reproduction_humanoid.py` -- the check's
+    own textual-proximity heuristic has a real, expected blind spot for flag checks made at a
+    different layer than the call site. See stored_artifacts/TCK-20260916-MECHANISM-ORPHAN-STATE-
+    BATCH-VERIFICATION/investigation.md for the full disposition of every finding in that batch.
+
+    2026-09-19: `trauma` briefly carried a same-day, same-session `orphan_with_callers` finding
+    after a real misattribution error (this entry was incorrectly bound to
+    `RecoveryReadinessService`, an unrelated orphan class, instead of its own real implementation,
+    `WoundService`, `src/engine/rpg_depth.py` -- see the mechanism's own `verified` block in
+    `registries/mechanisms.yaml` for the full self-correction). Reverted the same day once the
+    error was caught; `trauma` is correctly `done`/bound to `WoundService` again, which has real
+    confirmed callers, so no finding fires for it here.
+
+    Update this test only alongside a real investigation of what changed, same discipline as every
+    other pinned-count test in this repo."""
     import yaml
     with open(REPO_ROOT / "registries" / "mechanisms.yaml", encoding="utf-8") as f:
         data = yaml.safe_load(f)
