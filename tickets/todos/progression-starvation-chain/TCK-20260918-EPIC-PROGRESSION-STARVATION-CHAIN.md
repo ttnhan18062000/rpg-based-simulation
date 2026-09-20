@@ -143,6 +143,15 @@ individual tickets but weren't visible from outside them.
 - `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION` — 2026-08, closed; the third,
   independent, unrelated-reason sighting of the same `resolve_attack(): 0 real calls` fact this
   chain's own investigations converged on from three different directions
+- `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` — **not a child, cited for context.**
+  Paused (sites 2-8 not yet investigated), but its one completed site
+  (`src/ai/goals/scorers.py:108`'s `CombatEngageScorer`) found a second, independent reason this
+  epic's own "combat is incidental, not decisional" symptom holds: a winning `GoalKind.
+  COMBAT_ENGAGE` goal is discarded at dispatch (`intelligence.py`'s winner-consumption code has no
+  special case for it, so it hardcodes a generic `reach_location` objective instead of the
+  combat-relevant one) — a dead branch by construction, independent of this epic's own already-
+  tracked `resolve_multi_attack()`-dominance finding. See that ticket's own addendum on
+  `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` for the full cross-reference.
 
 ## Related Docs
 - `docs/mechanics/04_strategic_cognition.md` — goal hierarchy, interruption resistance, the posture

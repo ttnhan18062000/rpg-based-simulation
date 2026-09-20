@@ -61,21 +61,60 @@ the fix itself already handled. Not a reason to have withheld the fix (preservin
 wrongness to avoid this would have been the wrong trade), but a real, predicted follow-on this
 ticket exists partly to close.
 
-1. **`src/ai/goals/scorers.py:108`, `CombatEngageScorer.score()` — first site to investigate, not
-   because it's largest, but because this arc's own fix just put it out of step with the rest of
-   the system (see the new-divergence note below).** Determines whether `GoalKind.COMBAT_ENGAGE`
-   is even considered as a viable goal for an entity, building its own `hostiles` list with the
-   raw enum (reusing `SensoryFilter.filter_saliency`, the already-known candidate).
-   **The direction of its error is counterintuitive — recorded as an open question, not a
-   hypothesis, per peer review.** The raw enum measurably *over*-detects far more than it
-   under-detects (`TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`'s own numbers:
-   up to 97% false positives vs. 91 missed same-bucket pairs in one world). So
-   `CombatEngageScorer` using the same raw enum should see *more* hostiles than catalog
-   semantics would, not fewer — the opposite of what "the scorer under-detects, that's why no
-   `DEFEAT_ENEMY` objectives get assigned" would need to be true. **Whoever investigates this
-   should not assume under-detection is the mechanism** — either this scorer's own `hostiles`
-   list isn't the binding constraint on objective assignment at all, or something downstream of
-   it is filtering further. Test both before concluding either.
+1. **`src/ai/goals/scorers.py:108`, `CombatEngageScorer.score()`.** Determines whether
+   `GoalKind.COMBAT_ENGAGE` is even considered as a viable goal for an entity, building its own
+   `hostiles` list with the raw enum (reusing `SensoryFilter.filter_saliency`, the already-known
+   candidate).
+
+   **The one-line finding, for a cold reader**: a winning `COMBAT_ENGAGE` goal produces a
+   `reach_location` objective; `DEFEAT_ENEMY` is unreachable from the combat goal path entirely.
+   The decision layer does not fail to *choose* combat — it chooses combat and the choice is
+   discarded at dispatch, a dead branch by construction. No amount of work on perception,
+   hostility semantics, posture, or readiness could ever have reached it, because nothing
+   downstream of the goal-competition winner ever asks what `COMBAT_ENGAGE` itself found.
+
+   **Investigated (not fixed — see status below): the downstream gate is found, and it is
+   structural, not a detection-accuracy problem at all.** Traced where a winning
+   `GoalKind.COMBAT_ENGAGE` candidate actually goes after `GoalRegistry.get_all_scores()`
+   (`src/ai/goals/base.py:46`, its one real caller is
+   `src/systems/strategic_systems/intelligence.py:1503`). The winner-consumption code
+   (`intelligence.py:1558` onward) has **special-cased branches** for specific `GoalKind` values —
+   `ADVENTURE_ROUTE` (line 1570), `SOCIAL_CONTRACT` (1598), `REGION_STABILIZATION` (1635),
+   `OCCUPATION_CHANGE` (1670) — each materializing its own real `ProjectKind`/`ObjectiveKind`.
+   `COMBAT_ENGAGE` has **no special case** and falls through to the generic `else:` branch
+   (line 1701), which **hardcodes `kind="reach_location"`** for the resulting `ObjectiveState`
+   (line 1705) — not derived from `best_candidate.kind` at all.
+
+   **This means `CombatEngageScorer` winning the goal competition can never produce a
+   `DEFEAT_ENEMY` objective, regardless of how accurate or inaccurate its own `hostiles` list
+   is.** `ObjectiveKind.DEFEAT_ENEMY` is created **exclusively** through the `ADVENTURE_ROUTE`
+   branch, specifically when `RouteToProjectMapper.map_to_states()` resolves a
+   `RouteFamily.HUNT_WEAK_ENEMY` family (`src/domains/adventure/mapper.py:37`) — an entirely
+   separate scorer (`AdventureGoalScorer`, `src/ai/goals/adventure_scorer.py`) with its own
+   cognition-profile eligibility gating (`_resolve_cognition_profile_id`,
+   `_supports_adventure_routing`), unrelated to `CombatEngageScorer` or its hostility test.
+
+   **This resolves the counterintuitive-direction tension raised in peer review, decisively, not
+   by picking a side of the original hypothesis.** The raw enum's own error direction (heavy
+   over-detection, per `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`'s numbers)
+   is irrelevant to the zero-`DEFEAT_ENEMY` finding either way — `CombatEngageScorer`'s hostility
+   test was never the binding constraint on objective assignment, under either semantics. **The
+   real gate for the arc's own standing "why does the decision layer never engage" question is
+   `AdventureGoalScorer`'s own eligibility/routing logic and whatever governs `HUNT_WEAK_ENEMY`
+   ever being proposed and winning — not this scorer, and not this ticket's own anti-pattern.**
+   Not chased further here (the eligibility system is its own real, separate mechanism — out of
+   this sweep's scope to fully resolve).
+
+   **Status: the divergence this arc's own fix created here is real but currently inert, per peer
+   review, and this site is deferred, not fixed.** Winning `COMBAT_ENGAGE` produces only a generic
+   `reach_location` objective regardless of which hostility semantics the scorer uses, so
+   correcting its `hostiles` list changes *which* entity a `reach_location` project targets, not
+   whether any `DEFEAT_ENEMY` objective gets created — a real but currently-unobservable-in-
+   practice effect while objective assignment for combat produces zero real `DEFEAT_ENEMY`
+   objectives across the sampled corpus regardless. **It becomes a live, observable defect the
+   moment someone fixes `AdventureGoalScorer`'s own gate** (or any other future path that lets
+   `COMBAT_ENGAGE` matter) — recorded here explicitly so whoever does that work knows this
+   divergence is waiting for them, rather than rediscovering it.
 2. **`src/engine/legality.py:451`, inside a flanking-bonus check (`has_hostile_at`)** — raw enum,
    unconditional, no fallback to catalog at all (unlike the nearby `verify_attack_legality`'s own
    `has_clean` fallback structure at line 265-269, which already prefers `is_hostile_compat()` and
@@ -115,15 +154,15 @@ re-swept from scratch:**
   building), measure real-world impact where feasible (matching the discipline
   `TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` already used — a real
   instrumented measurement, not a guess), and rank by real consequence.
-- **Priority-order recommendation, not binding**: start with `ai/goals/scorers.py:108`'s
-  `CombatEngageScorer` — not because it's the largest site, but because
-  `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` just put it out of step with the
-  rest of the system (see the new-divergence note above). Measure whether fixing it changes real
-  `COMBAT_ENGAGE` goal-selection rates, but do not assume under-detection is why goals rarely
-  fire today — the raw enum's own measured error direction (heavy over-detection, light
-  under-detection) argues against that specific mechanism; check whether this scorer's own
-  `hostiles` list is even the binding constraint on objective assignment before concluding either
-  way.
+- **Priority-order update, 2026-09-19**: `ai/goals/scorers.py:108` was investigated first (see
+  its own numbered entry above for the full finding) and found **inert** — deferred, not fixed,
+  since winning `COMBAT_ENGAGE` cannot produce a `DEFEAT_ENEMY` objective regardless of its own
+  hostility semantics. **Per user direction, this sweep track itself is now paused** in favor of
+  completing the mechanism-registry/system-membership program
+  (`TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION` and its own sequence). The remaining 6
+  sites (2-7 below) are unranked and unstarted — whoever resumes this ticket should re-derive
+  priority order fresh rather than trust a stale recommendation, since the one site actually
+  investigated turned out lower-urgency than assumed going in.
 - Determine whether a shared, reusable hostility-check helper (mirroring
   `LegalityServiceV2._is_engagement_hostile()`, the helper this arc's own fix just built) should
   be extracted to a common module and reused across all of these, rather than each subsystem
@@ -161,10 +200,26 @@ re-swept from scratch:**
   known instance, same bug shape, `cognition.py:44`, measured at 0.5% impact for its own narrow
   consumer)
 - `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (closed — found the decision-
-  driven `ATTACK` path rarely fires; `ai/goals/scorers.py:108`'s own finding here is a candidate
-  contributor to that same symptom, not yet checked against it)
-- `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` (closed — the original
-  investigation that started this whole thread)
+  driven `ATTACK` path rarely fires; **checked against this ticket's own finding and resolved,
+  not merely a candidate anymore**: that investigation asked why the decision layer never
+  *chooses* to engage; this ticket's own `scorers.py:108` finding answers a deeper, adjacent
+  question — even when `COMBAT_ENGAGE` *is* chosen, the choice is discarded at dispatch, a dead
+  branch by construction. See that ticket's own addendum for the cross-reference.)
+- `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` (epic, `EPIC_SCOPED`, open — its own title,
+  "combat is incidental, not decisional," is this ticket's own `scorers.py:108` finding one level
+  down: `COMBAT_ENGAGE` losing to `reach_location` at dispatch is a second, independent reason
+  combat stays incidental in this epic's own chain, alongside the epic's already-tracked
+  `resolve_multi_attack()`-dominance finding. **2026-09-20**: this cross-reference was deferred
+  when first written (2026-09-19) because the epic's own file sat in PR #222's still-open branch;
+  completed now that #222 has merged — cross-reference added to that epic's own Related Tickets in
+  the same pass.)
+- `TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION` and
+  `TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS` — **belong in the same
+  conversation as this finding, whenever either is scoped further, per peer review**: that fix
+  already removed 85-96% of phantom combat, the only real combat these worlds had. If this
+  ticket's own `scorers.py`/`AdventureGoalScorer` gate is ever connected, real catalog-driven
+  combat becomes possible in these worlds for the first time — a fix to one makes the other
+  materially more consequential, not independent improvements.
 
 ## Related Docs
 - `docs/engine/contracts/combat_contract.md`
@@ -192,16 +247,49 @@ _(none yet — filed as a sweep finding, not yet investigated per-site)_
   consumer that misuses them — left open, not asserted as settled.
 
 ## Implementation Notes
-_(none yet — sweep only, no fixes applied in this ticket)_
+**2026-09-19, `ai/goals/scorers.py:108` investigated, paused, sweep track suspended per user
+direction.** No code changed — investigation only, matching this ticket's own explicit scope
+against fixing sites without measurement first.
+
+The decisive trace: `GoalRegistry.get_all_scores()` → `intelligence.py:1503` → winner-consumption
+dispatch (`intelligence.py:1558+`) → generic `else:` branch (`intelligence.py:1701-1719`, the
+branch `GoalKind.COMBAT_ENGAGE` falls into, since it has no special case) → hardcoded
+`kind="reach_location"` at `intelligence.py:1705`. `ObjectiveKind.DEFEAT_ENEMY` only exists via
+`RouteToProjectMapper.map_to_states()` under the `ADVENTURE_ROUTE` special case
+(`intelligence.py:1570-1597`), consuming `RouteFamily.HUNT_WEAK_ENEMY`
+(`src/domains/adventure/mapper.py:37`) — a completely different scorer
+(`src/ai/goals/adventure_scorer.py`) with its own cognition-profile eligibility gate. The two
+systems (`CombatEngageScorer`'s goal-competition entry and `AdventureGoalScorer`'s route-
+eligibility system) do not interact.
+
+This closes the arc's own standing "why does the decision layer never engage" question at the
+`CombatEngageScorer` layer specifically: **it was never the mechanism.** The real remaining
+question — why `AdventureGoalScorer` never proposes or never wins a `HUNT_WEAK_ENEMY` route — is
+a separate, real investigation this ticket does not open.
+
+**Sweep track paused per explicit user direction (relayed 2026-09-19)**: prioritize completing
+the mechanism-registry/system-membership program instead. This ticket stays open with 6 of 8
+numbered sites still unranked and uninvestigated, plus the already-known
+`TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` sibling — resumable later, not
+closed, since real work remains and the finding above is valuable and durable regardless of when
+the rest resumes.
 
 ## Test Summary
-_(none yet)_
+_(none — investigation only, no code changed)_
 
 ## Files Changed
-_(none yet)_
+_(none — investigation only, no code changed)_
 
 ## Completion Summary
-_(none yet — filed as the sweep peer review requested before `TCK-20260919-COMBAT-ENGAGED-
-HOSTILES-UNIFY-CATALOG-SEMANTICS` merged; that ticket's own PR is not blocked on this one closing,
-per peer's own framing: "report what you find even if it's nothing... better now than after
-merge" — reporting here, not gating the merge on fixing all of it.)_
+**Not closed — paused.** One of 8 numbered sites (`ai/goals/scorers.py:108`,
+`CombatEngageScorer`) investigated in full: found and recorded the real downstream gate that
+makes this arc's own "why doesn't the decision layer engage" question independent of this
+scorer's own hostility-detection accuracy — winning `COMBAT_ENGAGE` structurally cannot produce a
+`DEFEAT_ENEMY` objective under the current code, regardless of semantics, because the generic
+goal-winner-consumption branch hardcodes a `reach_location` objective kind rather than deriving
+it from the winning goal. The cross-subsystem divergence this arc's own fix created here is real
+but currently inert as a result — recorded explicitly for whoever eventually fixes
+`AdventureGoalScorer`'s own eligibility gate, since that is the point at which this divergence
+would start to matter. Remaining 7 sites (6 new + the known sibling) not yet investigated; sweep
+track paused per explicit user direction to prioritize the mechanism-registry/system-membership
+program.
