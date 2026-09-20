@@ -26,6 +26,16 @@ It supersedes nothing in the codebase by itself. What it changes is the **questi
 | [`2026-09-19-core-rpg-lived-history-growth-brainstorm.md`](2026-09-19-core-rpg-lived-history-growth-brainstorm.md) | Evidence: 21 scenarios traced link-by-link through real code |
 | `docs/plans/rpg_design_roadmap/` | What has actually been built (M1–M10) |
 
+### What is settled, and what is still open
+
+For anyone picking this up cold — including a reviewer with no repository access:
+
+| | |
+|---|---|
+| **Settled** | The 8 principles (§2). The five agreed decisions (§6). The definition of realism and the legitimacy of RPG abstractions (§4). Hybrid progression (§5). The structural, rule and entity vocabularies, and the target domain map (§7). Power plurality without a conversion framework (§8). Depth measurement and the counterforce requirement (§9, §11). The runtime status vocabulary (§10). All decisions in §16 |
+| **Still open** | The *soft failure* definition for quality scoring (§6/A2) — deliberately left to sharpen later. How today's scoring pillars are reconciled with "collapse is positive evidence". Everything about sequencing: what gets built, in what order, and when. No milestone, wave or ticket has been agreed, and none should be inferred from this document |
+| **Deliberately absent** | Implementation design. This document says what the world is and what rules govern it, never how to build any of it |
+
 **Relationship to the existing repository.** The repo is *evidence*, not a ceiling:
 
 ```
@@ -250,18 +260,6 @@ DOMAIN → SYSTEM → MECHANISM → RULE → PARAMETER / CONTENT
 | **Cadence / phase** | per-tick · per-cadence · phase-scoped · episode-boundary | When a mechanism can fire. Primary cost control, and the difference between "done" and "done but almost never runs" |
 | **Authority** | proposes · applies · commits | Decision logic reads state and emits typed updates; only the authoritative path commits. A description ignoring this mis-places the mechanism |
 
-### Links and loops
-
-**LINK** and **LOOP** operate across the whole hierarchy and are treated as equally important to the levels themselves. Links come in three kinds, which must not be conflated (the repository learned this the hard way — containment, execution order and functional dependency are three different things):
-
-| Link kind | Meaning |
-|---|---|
-| **Dependency** | "cannot produce a meaningful result without X" |
-| **Flow** | "X's output is Y's input" — where dormancy defects live |
-| **Semantic link** | conversion · recognition · reaction · transformation · provenance · information · authority · constraint · spatial propagation · state feed · trigger · feedback |
-
-> A system with many internal mechanics and almost no external links is complicated, not deep.
-
 ### Rule types
 
 Fundamental world law · domain law · **invariant (hard law)** · materialized abstraction · systemic convention · derived rule · **reach rule** · **budget/capacity rule** · threshold rule · pressure rule · transformation rule · counterforce rule · content rule · exception rule.
@@ -281,12 +279,15 @@ An aggregate (a population cohort, a regional economy, a culture, an ecosystem) 
 
 ### Links are first-class
 
-The clearest lesson from this repository: **systems can exist and still produce no histories, because they are not connected.** Link types worth tracking explicitly:
+The clearest lesson from this repository: **systems can exist and still produce no histories, because they are not connected.** `LINK` and `LOOP` operate across the whole hierarchy and matter as much as the levels themselves.
 
-```
-State Feed · Trigger · Conversion · Recognition · Information · Authority
-Constraint · Spatial Propagation · Historical Provenance · Reaction · Transformation · Feedback
-```
+Links come in three kinds, which must never be conflated — containment, execution order and functional dependency are three different things:
+
+| Link kind | Meaning |
+|---|---|
+| **Dependency** | "cannot produce a meaningful result without X" |
+| **Flow** | "X's output is Y's input" — where dormancy defects live |
+| **Semantic link** | The design-level edges: conversion · recognition · reaction · transformation · historical provenance · information · authority · constraint · spatial propagation · state feed · trigger · feedback |
 
 > A system with many internal mechanics and almost no external links is complicated, not deep.
 
@@ -505,9 +506,9 @@ At that point the roadmap stops being driven by *"what feature sounds interestin
 
 ## 15. Amendments
 
-The local agent's review of this direction against the real codebase proposed 13 changes to the vocabulary ([`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) §P).
+The local agent's review of this direction against the real codebase proposed 13 changes ([`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) §P). **All 13 were adopted on 2026-09-20**, in two passes — the vocabulary first, then the taxonomy and measurement changes once the owner decided to build the clean model ahead of implementation.
 
-### Adopted 2026-09-20 (owner decision: "vocabulary now, domains later")
+### Adopted 2026-09-20 — vocabulary
 
 Folded into §7 and §10 above:
 
@@ -518,7 +519,9 @@ Folded into §7 and §10 above:
 5. Entity kinds added: intent, affordance/opportunity, obligation/directive, project.
 6. Runtime status `REACH-LIMITED` added; `STARVED` defined.
 
-### Also adopted 2026-09-20 (owner decision: build the clean taxonomy even where it is far from current implementation)
+### Adopted 2026-09-20 — taxonomy and measurement
+
+Owner decision: build the clean taxonomy even where it is far from current implementation.
 
 7. The full **target domain map** (§7), including movement/navigation, law/crime/enforcement, and content authoring & world assembly as domains.
 8. **History/significance, systemic pressure, observation/legibility and evaluation reclassified** as cross-cutting layers rather than domains.
