@@ -16,11 +16,13 @@ This is the **compass**, not a specification. It is not a milestone plan, not an
 
 It supersedes nothing in the codebase by itself. What it changes is the **question we ask of new work**: not "does this fit the current roadmap?" but "does this move the world toward the model below, and what does the repository already have that serves it?"
 
+**This document is standalone and authoritative.** It is the single statement of the core RPG direction; nothing else needs to be read alongside it to understand what we are building.
+
 | Document | Role |
 |---|---|
-| **This document** | The agreed direction: what the world is, what rules govern it, what we are aiming at |
-| [`the_unwritten_world.html`](the_unwritten_world.html) | The original 8 creative principles. **Still in force** — fully preserved here (§2), never replaced |
-| [`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) | The local agent's assessment of this direction against the real codebase, with proposed amendments |
+| **This document** | The direction: what the world is, what rules govern it, what we are aiming at |
+| [`../archive/the_unwritten_world.html`](../archive/the_unwritten_world.html) | **Deprecated and archived, 2026-09-20.** The original creative-direction page. Its 8 principles are not withdrawn — they are carried in full into §2 below. Kept only for its original wording and examples |
+| [`2026-09-20-simulation-rule-and-taxonomy-review.md`](2026-09-20-simulation-rule-and-taxonomy-review.md) | The local agent's assessment of this direction against the real codebase |
 | [`2026-09-19-core-rpg-lived-history-growth-brainstorm.md`](2026-09-19-core-rpg-lived-history-growth-brainstorm.md) | Evidence: 21 scenarios traced link-by-link through real code |
 | `docs/plans/rpg_design_roadmap/` | What has actually been built (M1–M10) |
 
@@ -51,22 +53,43 @@ This is a **shared conceptual grammar, not a universal implementation**. A wolf,
 
 ---
 
-## 2. The 8 founding principles (unchanged, still governing)
+## 2. The 8 founding principles
 
-Everything below answers to these. They are restated here in one line each; the full text with examples and failure modes stays in [`the_unwritten_world.html`](the_unwritten_world.html).
+The founding creative direction, carried forward intact. Everything else in this document answers to these.
 
-| # | Principle | Where it appears below |
-|---|---|---|
-| 1 | No one hands down the story — it has to be found | §3 causality, §9 quests, §10 authored content |
-| 2 | Individuals carry their own trajectory, distinguishable from the aggregate | §5 hybrid progression, §6 significance |
-| 3 | Different creatures should be different, not reskinned humans | §4 hybrid agency, §6 bounded ontology |
-| 4 | No single loyalty wins by default | §3 agency, §7 power is plural |
-| 5 | Places remember what happened to them | §3 identity/persistence, §8 domains |
-| 6 | Nothing sits still forever | §6 open instability, §7 loops |
-| 7 | A world that feels lived-in without drowning in bookkeeping | §6 causal-value-first, §11 admission test |
-| 8 | The world has to tell on itself — legible from outside | §3 information, §6 world reaction |
+**1 — No one hands down the story; it has to be found.**
+*The governing principle.* If you can point to a line of logic that says "and here is where the story happens", it is staged, not real. A story here is what is left over after independent entities, each acting on reasons that make sense only to them, happen to collide. The right test for a new mechanic is not "does this produce a satisfying story" but **does this create a new intersection other systems can stumble into**. Narrative satisfaction is a result, never a target.
+*Failure looks like:* a mechanic that produces the same shape of consequence regardless of context, or a random event with no thread connecting it to what the world already knows about that entity or place.
 
-**Nothing in this document weakens Principle 7 or Principle 8.** The direction below is broader in scope, which makes those two *more* load-bearing, not less: a bigger target vocabulary increases the risk of building precise, invisible things nobody can see.
+**2 — Individuals carry their own trajectory, distinguishable from the aggregate.**
+*Scale: one entity.* The world tracks populations because it must, but a name, a face and a specific history must never dissolve back into the average. Two entities from an identical template should visibly diverge because of what actually happened to each. The aggregate is not the enemy — a regional population count is a weather system — the failure is confusing the two. Part of owning a trajectory is that things are not merely done *to* you: joining, marrying, swearing allegiance should be something an entity could refuse, given who they are.
+*Failure looks like:* a historied entity behaving exactly as the regional average would predict; or a commitment that simply happens to someone, with no point at which their own reasons could have refused.
+
+**3 — Different creatures should be different, not reskinned humans.**
+*Scale: species and kind.* A goblin camp, a wolf's den and a dwarven city are three different answers to "how does this creature exist", not one settlement shape with three coats of paint. The distinction should reach into how a creature relates to its own life: a magical being manifests at full capability and has no childhood; a dragon's life is not a coming-of-age story with bigger numbers. Psychology should diverge the same way: a wolf pack's loyalty is territorial instinct, a goblin's is opportunistic, a human's can survive their guild losing.
+*Failure looks like:* a bestiary where every entry is a human with different numbers — same drives, same social shape, same emotional register.
+
+**4 — No single loyalty wins by default.**
+*Scale: relationships and politics.* Someone can love a person their country is at war with. A guild can pull a member against their king. The world should let that tension sit unresolved rather than quietly picking a winner. The friction *is* the content. The interesting version is not the dramatic choice but the quiet one: most conflicting loyalties never erupt — they produce hesitation, a slightly worse decision, a private grudge, accumulating over a life. Design each loyalty to push on its own terms and let behaviour land where the pushes add up, even in a messy middle no single loyalty would have chosen.
+*Failure looks like:* one layer of loyalty (usually political) silently overriding all others whenever they conflict.
+
+**5 — Places remember what happened to them.**
+*Scale: geography and history.* A ruin should be legible as a *specific* fallen city, a razed war-camp, a den something moved into after its owner died. Scars on the map are the world's memory of itself. Goblins camp beside an old battlefield, grow, raid a city, are destroyed; years later spiders have settled the abandoned structures and the place is remembered as a spider-infested ruin — today's world becoming tomorrow's archaeology, with no authored quest anywhere in it. Political geography deserves the same memory: a border that moved five times should leave a trace; a city that changed hands three times should feel unsettled generations later. And memory runs both ways — entities should remember places, carrying grief tied to an actual location with a history.
+*Failure looks like:* a place fully described by "type plus a hazard number", indistinguishable from a freshly generated location with the same stats.
+
+**6 — Nothing sits still forever.**
+*Scale: pacing and pressure.* Left alone, a threat should worsen rather than wait to be convenient. A grudge should fester; an ambition should grow. A static world is a dead one. Population pressure in a crowded city should feed a nation's ambition to expand, which founds or contests places, which draws population, which builds pressure elsewhere. No layer's resting state is actually rest. Relationships deserve the same restlessness: an untested trust shouldn't stay perfectly trusted forever; an ally unseen for years isn't owed the same confidence as one seen yesterday.
+*Failure looks like:* a system whose entire state is a number that only ever moves when something directly acts on it.
+
+**7 — A world that feels lived-in without drowning in bookkeeping.**
+*Scale: how much detail earns its keep.* This is the discipline that keeps the other seven from spiralling into simulating everything. Enough weight that a wound, a marriage or a death costs something real — without tracking the biology or logistics beneath it. Depth is chosen for what it produces, not for how realistic it sounds. The honest test: *if this were fully built, would anyone watching ever notice the difference?* A wound changing combat odds is noticed every time; a modelled digestive system never is.
+*Failure looks like:* precise, invisible systems that are load-bearing for nothing — and worse, that create the appearance of richness never actually delivered. **Prefer one coarse signal an observer can feel over three precise ones nobody will ever see.**
+
+**8 — The world has to tell on itself: legible from outside, not just correct underneath.**
+*Cuts across every scale.* Emergence nobody can follow is indistinguishable from noise. A rise, a fall, a rivalry, a betrayal has to be recognisable as it happens, not merely true somewhere in internal state. Reputation and notoriety do this job one level down: they are how one entity's history becomes visible to others, rather than true only in a record the engine alone can read. For anything new, ask specifically: **how would this become visible — to a watching observer, or to another entity inside the world?** A place remembering something only pays off if that memory can surface in its name, its terrain, or a rumour a traveller carries.
+*Failure looks like:* a correctly computed fact with no path to ever becoming visible to anyone, not even to the world's own history.
+
+**Principles 7 and 8 are load-bearing for everything below.** This document sets a deliberately large target vocabulary (§8), which *increases* the risk of building precise, invisible things. Breadth in the map is not permission to build breadth in the world.
 
 ---
 
@@ -105,6 +128,8 @@ necromancy → corpse becomes an active entity → settlement reacts → religio
 → population changes → regional fear changes
 ```
 
+> **Decided 2026-09-20 — magic is its own domain, wired outward.** It owns its own sources, costs, rules and consequences rather than being scattered as modifiers inside other systems. But it is only real to the extent it connects: a spell that changes a damage number and nothing else has failed the principle. Magic must reach combat, interaction, body, ecology, places, belief and information — the same way any other domain earns its keep through links.
+
 **RPG abstractions are legitimate world rules.** HP, XP, levels, skill ranks, mana, morale, reputation, rarity, threat level and status effects are all allowed. XP is a *materialized abstraction* of accumulated experience; HP of continued combat effectiveness. Do not reject a useful convention for being unrealistic.
 
 What matters is knowing which is which: **direct simulation / materialized abstraction / fantasy convention / derived state / content**.
@@ -137,7 +162,14 @@ We are **not** designing around apocalypse. The rule is only:
 
 > The simulation must permit systemic resistance to fail — there is no hidden guarantee that restores the original state.
 
-**Boundary (from the repository):** this applies to *stabilisers*, never to *invariants*. Atomic conservation, determinism and the per-tick hard-law checks must still always hold. "Instability" means the world may change irreversibly, not that its laws may break.
+**Boundary:** this applies to *stabilisers*, never to *invariants*. Atomic conservation, determinism and the per-tick hard-law checks must still always hold. "Instability" means the world may change irreversibly, not that its laws may break.
+
+> **Decided 2026-09-20 — collapse is a success signal, not a quality failure.** Simulation-quality scoring exists to detect **logic failure**, not misfortune:
+>
+> - **Hard failure** — the world doing something impossible: duplicated movement, invalid or erroring actions, conservation breaches, non-determinism.
+> - **Soft failure** — the world reasoning wrongly: decision chains that don't follow their own rules, goals selected against their own preconditions, causal chains that don't hold up. (Definition to be sharpened later.)
+>
+> A country destroyed, an economy broken, a region ruined, a population collapsed — these score as **positive** evidence that the world's causality works. A healthy world is one whose *logic* is sound, not one whose *fortunes* are good. Scoring must never quietly push the simulation back toward comfortable outcomes.
 
 ### B2 — All first-class entities are eligible for significance
 
@@ -266,6 +298,63 @@ The goal is **not** to eliminate positive feedback — it is one of the main sou
 
 ---
 
+### The target domain map
+
+This is the **target taxonomy for the whole simulation**, deliberately drawn complete rather than trimmed to what exists today. Most of it is far from current implementation. That is intentional: a clean map is what lets us plan RPG features against a long roadmap instead of one feature at a time.
+
+**Reading rule:** presence on this map is *not* a commitment to build. Every entry still has to pass the admission test (§11) and Principle 7. The map says where a thing would belong if it existed, not that it should.
+
+**Foundations**
+
+| Domain | Scope |
+|---|---|
+| **Substrate** | Entity identity, state transition, time, scheduling and cadence, spatial topology, event flow, persistence, history storage, deterministic randomness |
+| **Space & environment** | Regions, places, adjacency, routes, terrain, biome, hazards, environmental degradation and recovery, biome transformation |
+| **Movement & navigation** | Pathing, spatial indexing, traversal cost, readiness, pursuit, blocking, transport |
+
+**The living world**
+
+| Domain | Scope |
+|---|---|
+| **Ecology & population** | Species populations, predator/prey, food availability, habitats, migration, reproduction, competition, succession, extinction |
+| **Life, body & survival** | Vitality, needs, injury, impairment, disease, poison, healing, aging, lifecycle, death, remains, physical form |
+| **Perception, knowledge & information** | Perception, awareness, memory, belief, rumour, communication, reports, secrets, last-known state, teaching, research, discovery, distortion, information networks. *Truth ≠ knowledge* |
+| **Agency, motivation & decision** | Needs, drives, personality, disposition, values, goals, intent, risk and opportunity evaluation, fear, morale, planning, task and action selection, habits, obedience, refusal |
+
+**Capability and conflict**
+
+| Domain | Scope |
+|---|---|
+| **Capability & progression** | Attributes, XP, levels, skill mastery, traits, adaptations, abilities, training, learning, capability unlocks, thresholds |
+| **Conflict & combat** | Hostility, threat recognition, engagement, targeting, positioning, attack, defence, damage, armour, resistance, injury, morale, retreat, surrender, death, loot, combat history |
+| **Objects & material culture** | Item identity, inventory, equipment, materials, quality, durability, repair, crafting, maker identity, ownership, provenance, heirlooms, relics |
+| **Resources, production & economy** | Extraction, production, labour, employment, consumption, supply, demand, scarcity, markets, pricing, trade, transport, currency, wealth, property, taxation, tribute |
+
+**Society**
+
+| Domain | Scope |
+|---|---|
+| **Social relations & identity** | Relationships, trust, sentiment, friendship, rivalry, grudges, fear, romance, marriage, kinship, patronage, mentorship, status, reputation, notability, titles, epithets |
+| **Family, lineage & succession** | Parentage, inheritance, heirs, dynasties, inherited property, inherited reputation, inherited conflict, teaching lineage, succession |
+| **Groups, organizations & institutions** | Parties, companies, clans, guilds, religious and military organizations, membership, leadership, roles, hierarchy, treasury, recruitment, founding, growth, succession, schism, dissolution |
+| **Politics, authority & war** | Authority, offices, titles, legitimacy, policy, diplomacy, alliances, faction relations, war, mobilization, conquest, borders, rebellion, secession, polity founding and collapse |
+| **Law, crime & enforcement** | Ownership legality, crime, detection, witnesses, justice, punishment, enforcement bodies, outlawry |
+| **Places, settlements & territory** | Place identity, residence, home, occupancy, control, infrastructure, services, traffic, founding, growth, standing/tiers, abandonment, ruin, colonization, territory, borders, place history and naming |
+| **Culture, belief & religion** | Culture, norms, traditions, cultural drift, belief, faith, worship, conversion, religious authority and institutions, ritual, heresy, schism, sacred places, relics, myths |
+| **Magic & the supernatural** | Magical sources, energy, spells, rituals, enchantments, curses, blessings, exposure, corruption, mutation, summoning, transformation, spirits, undead, divinity, magical artifacts, magical ecology |
+
+**Cross-cutting layers.** These are not domains — they are connective tissue that every domain feeds and reads. Modelling them as domains would hide the fact that their whole value is the connection.
+
+| Layer | Scope |
+|---|---|
+| **History, significance & world reaction** | Events, formative experiences, causal memory, biography, chronicle, historical fact, notability, naming, legend, myth and distortion, rumour, targeted response, bounties, hunts, pilgrimage, commemoration |
+| **Systemic pressure & propagation** | Scarcity propagation, contagion (disease, fire, corruption), migration pressure, economic shock, political instability, ecological imbalance, calamity, recovery, counterforces, regime change, collapse |
+| **Observation & legibility** | Read models, presenters, chronicles, telemetry, inspection surfaces — how Principle 8 is actually delivered |
+| **Content authoring & world assembly** | Catalogs, world modules, compilation, content resolution, registries — where authored identity enters the world |
+| **Evaluation** | Simulation-quality scoring, corpus tiers, baselines — how we know the world still works (§10) |
+
+**Mapping to today's scoring vocabulary.** Simulation-quality scoring currently uses 10 pillars, and corpora and baselines are keyed to them. Any use of the map above should state its mapping rather than silently replacing them: COMBAT → conflict; ECONOMY → resources/economy; SOCIAL → social relations; COGNITION → perception/knowledge; AGENCY & ACTION → agency/decision; PROGRESSION → capability/progression; NARRATIVE → history layer; INFORMATION & BELIEF → perception/knowledge plus culture/belief; FACTION & MILITARY → politics/war; WORLD DYNAMICS → ecology, space/environment and the pressure layer.
+
 ## 8. Power is plural
 
 Do not reduce influence to one generic Power score. Useful **design dimensions**: physical, economic, social, political, informational, knowledge, territorial, technological, institutional, spiritual/magical.
@@ -323,6 +412,8 @@ Hundreds of identical crafting recipes are breadth without depth. `ownership` is
 
 Maturity ladder: **primitive → functional → systemic → deep**. A system need not become deep for completeness; depth should follow causal value.
 
+**How we measure it.** Use the five dimensions the project's own feature audit already applies, rather than inventing a parallel set: **trigger rate** (how often it fires), **entity reach** (how much of the world it touches), **cascade width** (how many other systems consume it — this is connectivity), **emergence ceiling** (local variation versus novel macro-patterns), and **absence penalty** (what breaks without it). Cascade width is the dimension to watch first.
+
 ---
 
 ## 10. Knowing what we actually have
@@ -362,6 +453,8 @@ Before adding significant new state or a new mechanism:
 12. Does it duplicate an existing mechanism under different terminology?
 
 > State with no interaction, no consumer, no behavioural effect and no historical consequence should be treated with suspicion.
+
+**One hard requirement:** any mechanism that produces growth or accumulation must **name its counterforce** — another world process that pushes back — or record an explicit, reviewed reason why none exists. Per A2 the counterforce may lose; what is not allowed is growth with nothing on the other side of it.
 
 ---
 
@@ -425,20 +518,19 @@ Folded into §7 and §10 above:
 5. Entity kinds added: intent, affordance/opportunity, obligation/directive, project.
 6. Runtime status `REACH-LIMITED` added; `STARVED` defined.
 
-### Still open (deferred until the alignment pass has evidence)
+### Also adopted 2026-09-20 (owner decision: build the clean taxonomy even where it is far from current implementation)
 
-- **Domain-map changes**: adding movement/navigation, content authoring & world assembly, law/crime/enforcement, observation & legibility, and evaluation/SimQ as domains.
-- **Reclassifying** history/significance (D17) and systemic pressure/collapse (D18) as cross-cutting concerns rather than domains.
-- **Adopting D01's five rating dimensions** (trigger rate, entity reach, cascade width, emergence ceiling, absence penalty) in place of a new depth-dimension set.
-- **Requiring a named counterforce** on any growth-producing mechanism.
-- **Stating the mapping to the 10 SimQ pillars** wherever a new domain map is used.
+7. The full **target domain map** (§7), including movement/navigation, law/crime/enforcement, and content authoring & world assembly as domains.
+8. **History/significance, systemic pressure, observation/legibility and evaluation reclassified** as cross-cutting layers rather than domains.
+9. **Magic kept as its own domain**, required to wire outward (§4).
+10. The project's **five existing rating dimensions** adopted for depth measurement (§9).
+11. A **named counterforce required** for any growth-producing mechanism (§11).
+12. The **mapping to the 10 scoring pillars** stated wherever the map is used (§7).
 
-### Unresolved conflicts
+### Resolved conflicts
 
-See the review's §O. The two that need a decision before they cause real friction:
-
-- **Open instability (A2) versus SimQ scoring.** Scoring assumes a functioning world, so a world that legitimately collapses currently reads as a bad run.
-- **Optionality (§10) versus "core mechanisms ship unflagged."** The direction endorses replaceable/optional mechanisms; standing practice restricts flags to experiments and migration because unused branches have repeatedly rotted here.
+- **Open instability versus quality scoring — resolved 2026-09-20.** Scoring detects logic failure (hard and soft), not misfortune. Destruction of countries, economies, lands and populations scores as positive evidence. See §6/A2.
+- **Optionality versus "core ships unflagged" — resolved 2026-09-20.** Standing practice wins: flags are for experiments, migration and rollback only. Core mechanisms ship unflagged, and "replaceable" is a design property (a preserved semantic contract), not a runtime switch.
 
 ---
 
@@ -449,4 +541,9 @@ See the review's §O. The two that need a decision before they cause real fricti
 | 2026-09-20 | **No player, and none planned.** The world stays observed | §3 |
 | 2026-09-20 | **Combat: hybrid.** Keep ambient/incidental combat, and give entities a small number of genuine reasons to fight (predation, named threats, defending territory) rather than making all combat decisional | Answers the design question `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` left open. Direction only — no implementation scoping yet |
 | 2026-09-20 | **Places come first** among structural gaps: a place must be able to be founded, change kind, be abandoned, be colonised and remember its history | The weakest layer today, and largely independent of the combat gate |
-| 2026-09-20 | **Vocabulary amendments adopted; domain-map amendments deferred** | §15 |
+| 2026-09-20 | **Vocabulary amendments adopted** | §15 |
+| 2026-09-20 | **This document is standalone**; the original creative-direction page is deprecated and archived, its 8 principles carried here in full | §2 |
+| 2026-09-20 | **Quality scoring detects logic failure, not misfortune.** Collapse is positive evidence | §6/A2 |
+| 2026-09-20 | **Optionality: standing practice wins.** Core ships unflagged; flags are for experiments, migration and rollback | §15 |
+| 2026-09-20 | **Magic is its own domain**, required to wire outward into combat, interaction, body, ecology, places, belief and information | §4, §7 |
+| 2026-09-20 | **Build the clean target taxonomy in full**, even far ahead of implementation, so RPG features can be planned against a long roadmap | §7 |

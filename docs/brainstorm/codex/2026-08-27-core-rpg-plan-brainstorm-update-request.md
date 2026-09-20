@@ -264,7 +264,7 @@ Requested changes:
 
 ### 5. Creative direction and supporting brainstorms
 
-Targets: [`the_unwritten_world.html`](../the_unwritten_world.html), [`entity_capabilities.html`](../entity_capabilities.html), [`simulation_capabilities.html`](../simulation_capabilities.html), and [`simulation_design_taxonomy.html`](../simulation_design_taxonomy.html)
+Targets: [`the_unwritten_world.html`](../../archive/the_unwritten_world.html), [`entity_capabilities.html`](../entity_capabilities.html), [`simulation_capabilities.html`](../simulation_capabilities.html), and [`simulation_design_taxonomy.html`](../simulation_design_taxonomy.html)
 
 No broad rewrite is requested. Add cross-links only where these documents currently claim roadmap completeness or a canonical status that would otherwise hide the updated dependency findings.
 

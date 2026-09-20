@@ -242,7 +242,7 @@ Qualitative map (my assessment, using the doc's four depth levels):
 3. **Per-tick budget.** Candidate budgets, scan policy, dirty-set scoping and per-system cadence already exist. New per-tick mechanisms (notability, gossip) must declare a cadence, not run every tick.
 4. **Concurrency.** Bit-identical parity is officially ratified for sequential execution only. New cross-entity mechanisms (gossip, targeted response) touch multiple entities per step and need care.
 5. **Event volume and observability backpressure.** More world reaction means more events; the recorder has explicit backpressure modes.
-6. **SimQ grade anchors versus Open Instability.** Scoring assumes a functioning world. A world that legitimately collapses (A2) will score badly, and mechanic changes already cause grade-anchor staleness. The framework needs a way to say "unstable by design" without it reading as "broken".
+6. **SimQ grade anchors versus Open Instability — resolved 2026-09-20.** Scoring's job is logic failure (hard and soft), not misfortune; collapse is positive evidence. The open engineering question is narrower: today's pillars and grade anchors reward activity and health, so they will need revisiting to match that definition, and mechanic changes already cause anchor staleness independently.
 7. **Reach split (tick vs episode).** Several finished mechanics only derive at Campaign episode boundaries, and exactly one corpus profile enables Campaign mode. Any design that depends on them inherits that narrow reach.
 8. **Content pipeline staleness.** Compiled world artifacts don't pick up catalog changes until recompiled.
 
@@ -308,8 +308,8 @@ Each of these is already real in the repo, not hypothetical:
 | # | Conflict | Likely reason | Trade-off (not resolved here) |
 |---|---|---|---|
 | 1 | D0–D18 breadth vs Principle 7 ("without drowning in bookkeeping") | Intentional philosophical difference | Breadth gives a target vocabulary; it also invites building state nobody consumes. Needs an admission *budget*, not just a test |
-| 2 | A2 Open Instability vs SimQ grade anchors and health scoring | Previous product assumption | Either SimQ learns to distinguish designed instability from breakage, or collapse scenarios are excluded from scored corpora |
-| 3 | Replaceable/optional mechanisms (§10, §22) vs "core mechanisms ship unflagged" | Temporary roadmap decision, backed by real rot | Optionality helps experiments; flags have repeatedly produced dormant branches here |
+| 2 | ~~A2 Open Instability vs SimQ grade anchors and health scoring~~ | **Resolved 2026-09-20** | Scoring detects **logic failure only** — hard (impossible behaviour: duplicated movement, invalid/erroring actions, conservation or determinism breaches) and soft (reasoning that doesn't follow its own rules). Destroyed countries, broken economies, ruined lands and collapsed populations score as **positive** evidence the world's causality works. Scoring must never push the world back toward comfortable outcomes |
+| 3 | ~~Replaceable/optional mechanisms vs "core mechanisms ship unflagged"~~ | **Resolved 2026-09-20** | Standing practice wins: flags for experiments, migration and rollback only; core ships unflagged; "replaceable" is a design property (preserved semantic contract), not a runtime switch |
 | 4 | "The core is allowed to outgrow current gameplay" vs the in-flight HUD/live-map programs | Scheduling | If the core's state model changes, presenter/HUD work may need rework; sequencing decision, not a philosophical one |
 | 5 | Progression-forward framing vs D01's own ranking of Progression as Tier 3 | Evidence vs ambition | The audit measured current impact; the direction describes intended impact. Both can be true — but the measurement should not be quietly discarded |
 | 6 | Unbounded emergent history vs canonical hashing, save size and corpus baselines | Technical constraint | Every new durable field has a recalibration cost |
@@ -386,7 +386,7 @@ Per the direction doc §29, the natural next artifact is the **repository-to-tar
 ## References
 
 - `rpg-direction.md`, `simulation-rule-taxonomy-ext-ai.md` (the inputs; repo root, untracked)
-- [`the_unwritten_world.html`](the_unwritten_world.html) — the 8 principles
+- [`the_unwritten_world.html`](../archive/the_unwritten_world.html) — the 8 principles
 - [`2026-09-19-core-rpg-lived-history-growth-brainstorm.md`](2026-09-19-core-rpg-lived-history-growth-brainstorm.md) — the 21 scenario traces and link types (evidence; its wave structure is superseded by §39's "no roadmap yet")
 - `registries/mechanisms.yaml` — 93 mechanisms, `layer`/`depends_on`/`state`/`verified`
 - `docs/audits/D01_rpg_feature_impact.md` — the five rating dimensions

@@ -396,7 +396,7 @@ That sequence turns the engine's existing breadth into connected character stori
 
 ## Source map
 
-- [`The Unwritten World`](../the_unwritten_world.html)
+- [`The Unwritten World`](../../archive/the_unwritten_world.html)
 - [`RPG Feature Atlas`](../rpg_feature_atlas.html)
 - [`RPG Schema Registry`](../rpg_expected_schemas.html)
 - [`Simulation Wiring Map`](../rpg_simulation_wiring_map.html)

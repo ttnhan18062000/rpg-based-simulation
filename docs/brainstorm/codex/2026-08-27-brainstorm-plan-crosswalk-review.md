@@ -30,7 +30,7 @@ Updates are nevertheless advisable in the downstream planning layer before imple
 
 ### RPG design branch
 
-1. [`the_unwritten_world.html`](../the_unwritten_world.html) — creative direction and eight governing principles.
+1. [`the_unwritten_world.html`](../../archive/the_unwritten_world.html) — creative direction and eight governing principles.
 2. [`rpg_feature_atlas.html`](../rpg_feature_atlas.html) — implementation-grounded capability audit and ideas 1-66.
 3. [`design_merit_scorecard.html`](../design_merit_scorecard.html) — seven-axis evaluation for ideas 1-65.
 4. [`rpg_expected_schemas.html`](../rpg_expected_schemas.html) — existing and proposed durable-state shapes, configuration choices, and expected events.

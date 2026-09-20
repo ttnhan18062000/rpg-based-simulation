@@ -16,7 +16,7 @@ A brainstorm-stage **program proposal** for the core RPG system: entities, progr
 
 It asks one question: **do we already have enough mechanisms for those stories to happen on their own, and if not, what exactly is missing?** Similar systemic games are used as reference points throughout.
 
-The compass is [`the_unwritten_world.html`](the_unwritten_world.html). Every capability proposed here names the principle it serves. Nothing here is approved. Each capability still needs the normal path: an atlas card, scorecard scores, a spec, and a ticket.
+The compass is [`the_unwritten_world.html`](../archive/the_unwritten_world.html). Every capability proposed here names the principle it serves. Nothing here is approved. Each capability still needs the normal path: an atlas card, scorecard scores, a spec, and a ticket.
 
 **Structure:**
 - §1 guardrails
@@ -811,7 +811,7 @@ These aren't rejections. The suggestion treated them as missing, but they're alr
 
 ## References
 
-- [`the_unwritten_world.html`](the_unwritten_world.html): the 8 principles
+- [`the_unwritten_world.html`](../archive/the_unwritten_world.html): the 8 principles
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` (M1–M10);
 - `rpg_direction_alignment_audit.md` (§E gaps, §G.1 relationship decay);
 - `faction_war_drivers_proposal.md`
