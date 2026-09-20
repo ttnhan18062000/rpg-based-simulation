@@ -642,6 +642,16 @@ mechanisms:
         `docs/plans/mechanism_identity_and_change_taxonomy.md` §2?) rather than a binding gap --
         genuinely ambiguous, not resolved here, flagged for the roadmap session rather than merged
         unilaterally in a binding-only pass.
+        **Deliberate verdict recorded 2026-09-20** (`docs/plans/mechanism_identity_and_change_
+        taxonomy.md` §8, the identity rule's first live Merge application, its own dedicated piece
+        of work): Merge, `xp_leveling` into `evolution` -- `EvolutionSystem.evaluate()`'s own
+        level-up-and-stat-growth behavior (this entry's own claim) and its separate
+        species-kind-transformation behavior at milestone thresholds 10/25/50 (`evolution`'s own
+        name) are structurally nested, share one undivided method, and no evidence from either entry
+        shows them currently able to succeed or fail independently -- `evolution`'s own cited
+        positive control tests the former, never the latter. Verdict recorded, not executed: a
+        merge's own blast radius (which id every future citation should use) needs real review, same
+        restraint as this session's own `commitment_betrayal` non-merge, opposite direction.
   - id: breakthrough_bonuses
     layer: entity
     systems: [progression]

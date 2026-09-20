@@ -166,6 +166,39 @@ proposing or building a fix.** Two candidate directions, both design decisions:
    role existing in a specific place — the mechanic-design-level fix, mirroring the lair ticket's
    own second candidate direction.
 
+**2026-09-20, a stronger finding, correcting this ticket's own prior framing**
+(`TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION`, batch 2 of the
+mechanism-registry unbound-claims program). While attempting to bind `calamity_intensity`'s own
+registry entry to `CalamityService.apply_calamity_consequences()`, `mechanism_state_caller_check.py`
+flagged zero real callers for the method entirely. Re-checked directly: `grep -rn
+"apply_calamity_consequences" src/` finds only its own definition and one unrelated *comment* in
+`displacement.py` — never a real call, anywhere, under any circumstances.
+`CalamityService.process_world_dynamics()` (the method this ticket's own investigation never
+separately checked, and the one actually called from `world_dynamics.py:133`) only *reads*
+`region.calamity_intensity` for boss-spawn region selection — it never calls
+`apply_calamity_consequences()` or otherwise writes the stat.
+
+**This means the real defect is one level more fundamental than this ticket's own 2026-09-15
+conclusion assumed.** The 2026-09-15 investigation correctly found that the producer's own trigger
+condition (hero-kind death in a `hazard_level > 0.5` region) never fires in practice — but that
+finding implicitly assumed the producer is at least *reachable*, i.e. that something calls
+`apply_calamity_consequences()` and lets its own internal condition check run and fail. That is not
+what's happening: nothing calls the method at all, so its internal trigger condition is never even
+evaluated. **This is a wiring gap (dead code, zero callers), not a data/composition gap
+(reachable code, unsatisfiable precondition)** — closer in shape to `resource_harvesting`'s own
+already-registered `orphan` classification than to the "correct code, starved by world data" family
+this ticket was filed under.
+
+**Both findings are real and compound, not contradictory**: even if `apply_calamity_consequences()`
+were wired to a real caller, the 2026-09-15 finding shows its own trigger condition still wouldn't
+fire in the exact worlds tested (no hero-kind entities, or heroes never composed near hazard
+regions). Fixing the wiring gap alone would not be sufficient; the composition gap this ticket
+already found would still need addressing. This ticket's own Scope should be read as now covering
+both: (1) NEW — wire `apply_calamity_consequences()` into a real caller (or confirm deliberately
+retired/superseded), (2) EXISTING — the composition gap already found and parked below. Not
+resolved here; both findings are reported for the roadmap session, per the same investment-cap
+discipline already applied to this cluster.
+
 ## Test Summary
 _(not started)_
 
@@ -183,3 +216,8 @@ finding and not build a fix now — "we know exactly why this doesn't fire and c
 now" is the accurate state, distinct from "this doesn't fire and we don't know why." See
 `docs/plans/world_composition_precondition_gap_finding.md` for the durable record of this finding
 alongside its two sibling instances.
+
+**Status update, 2026-09-20**: a stronger, compounding finding was added above (zero real callers
+for the producer at all, not merely an unreachable trigger condition) — still parked, not fixed,
+but this ticket's own eventual scope needs to cover both the wiring gap and the composition gap
+when picked up, not the composition gap alone.
