@@ -12,11 +12,11 @@ tags: [ai, process-improvement, setup]
 # TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT
 
 ## Title
-Establish per-session isolation and a *proven* revert path for Headroom before anything is enabled —
-its state is machine-wide, so an unisolated trial affects every concurrent session at once
+Scope Headroom to this repository only — project-scoped MCP registration, installed into the
+agent-tooling venv, never machine-wide — and prove the revert
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard
@@ -74,15 +74,62 @@ genuinely blocked needs live execution (installing and running the actual CLI), 
 source-reading substitutes for — Acceptance Criteria 2 and 3 are marked accordingly below, not
 fudged.
 
+### Rescoped 2026-09-20 (user decision) — repository-scoping replaces bespoke state isolation
+
+The user approved installing Headroom normally, with one requirement in their own words: *"we still
+need configure it to be used in this repository, so that other repositories that not yet config will
+not automatically triggered"*, and then asked the sharper question: *"our project use local venv or
+venv313 under this repository?"* Both change this ticket's approach, and for the better — the repo
+already has an established pattern for exactly this, which the original scope did not use.
+
+**Activation is scoped by `.mcp.json`, which is per-repository and committed.** This repo's own
+`.mcp.json` already registers `knowledge-search` and `github` this way, so only sessions started in
+this repo get them. Registering Headroom's MCP server there gives repository scoping directly, and
+makes the activation switch a **version-controlled file change** — reviewable in a PR and revertible
+with git, which is strictly better than the bespoke env-var state isolation this ticket originally
+proposed.
+
+**Installation goes into the agent-tooling venv, not the project's dependency set.**
+`requirements.txt` is core app plus tests and is what CI installs; its own header states that the
+local agent knowledge-search tooling "lives in `requirements-knowledge.txt` instead — those packages
+are not needed by the engine, API, or test suite." Headroom is agent tooling by that same test, so it
+belongs in `requirements-knowledge.txt` and in `.venv` (3.12.3, the venv that actually holds the
+agent tooling — `tools/start_search_mcp.sh` resolves to it by absolute path). `.venv313` (3.13.14)
+mirrors CI's interpreter and is used for CI-matching test runs, so it stays clean.
+
+**The launcher must be worktree-safe.** `tools/start_search_mcp.sh` documents the trap in its own
+comments: the shared venv lives at the main checkout root, but every worktree has its own copy of the
+script, so `$REPO_ROOT/.venv` does not exist in a worktree and a naive launcher silently falls through
+to bare `python3`. Model Headroom's launcher on that script — absolute shared path first, then
+fallbacks.
+
+**`headroom wrap claude` is now explicitly forbidden**, not merely out of scope. It writes to
+`~/.claude.json` — confirmed present on this machine, 78KB, containing its own `mcpServers` section —
+which is *user* scope, machine-wide, and would trigger Headroom in every repository. That is precisely
+what the user asked to prevent. It also installs a third dependency (Serena) at user scope.
+
+**On the network blocker:** the `files.pythonhosted.org` block applies to the agent sandbox. Whether
+the user's own shell is subject to the same filter is **unknown and must be established first** — the
+user can run the install themselves (`! pip install headroom-ai` into `.venv`, no extras). If their
+shell hits the same block, return this ticket to `BLOCKED` with that recorded; do not hunt for
+workarounds around a network filter.
+
 ## Scope
 - Determine and record where Headroom actually stores state, **verified from source or `--help`**,
-  not from documentation. The CCR page documents behaviour but no paths, TTL, or purge command.
-- Establish explicit isolation for any trial session: dedicated `HEADROOM_WORKSPACE_DIR` and
-  `HEADROOM_CONFIG_DIR` outside the default `~/.headroom`, so a trial cannot read or write state
-  shared with concurrent non-trial sessions.
-- Write a revert runbook: exact commands to fully disable Headroom and purge its state.
-- **Execute the revert runbook at least once** and record the result. This is the acceptance bar.
-- Confirm whether MCP mode shares state with proxy mode, or is independently isolatable.
+  not from documentation. (Done from source — see Acceptance Criteria.)
+- **Install into `.venv` only** (the agent-tooling venv at the main checkout root), base package, no
+  extras. Record the dependency in `requirements-knowledge.txt`, never `requirements.txt`.
+- **Register the MCP server in this repo's `.mcp.json`**, via a launcher modeled on
+  `tools/start_search_mcp.sh` so it resolves the shared venv from any worktree.
+- **Demonstrate the repository scoping**: it works in a session started in this repo, and is absent
+  from a session started outside it. This is the user's actual requirement and the primary
+  acceptance bar.
+- Set `HEADROOM_WORKSPACE_DIR`/`HEADROOM_CONFIG_DIR` in the launcher's own env so state does not land
+  in `~/.headroom`, and verify by observed writes. Secondary to the scoping above, not the main
+  mechanism.
+- Write a revert runbook and **execute it at least once**, recording the result.
+- Confirm whether MCP mode shares state with proxy mode, or is independently isolatable. (Done from
+  source — shared.)
 
 ## Out of Scope
 - Installing Headroom into any default or shared configuration, or pointing any existing session at
@@ -91,6 +138,14 @@ fudged.
 - `headroom learn` — off for the entire epic (auto-writes to `CLAUDE.md`).
 - Proxy mode configuration. Phase 2, and separately BLOCKED.
 - Any change to `.claude/settings.json` permissions or `CLAUDE.md`.
+- **`headroom wrap claude` — forbidden, not merely deferred.** It writes user-scope
+  `~/.claude.json`, which would activate Headroom in every repository on this machine, and installs
+  Serena alongside. This is the exact outcome the user asked to prevent.
+- **`requirements.txt` and `.venv313` — do not touch either.** CI installs `requirements.txt` on
+  every job and has no use for a compression tool; `.venv313` mirrors CI's interpreter and is used
+  for CI-matching test runs.
+- Enabling compression, or pointing any session's `ANTHROPIC_BASE_URL` at a proxy. Registration
+  makes the tools *available*; nothing in this ticket makes them *run*.
 
 ## Acceptance Criteria
 - [x] Headroom's real state locations are recorded, each with the source that confirmed it (source
@@ -98,16 +153,22 @@ fudged.
       source**, not `--help` (installation itself is what's blocked) — see Implementation Notes for
       the full `paths.py` contract, spot-checked (2 of ~26 files referencing `.headroom`) rather
       than exhaustively audited, stated as such.
-- [ ] A trial session can run with state confined to a dedicated directory, **demonstrated** by
-      showing writes landing there and `~/.headroom` remaining untouched. **Not met — genuinely
-      blocked, not worked around.** Source confirms isolation is achievable in principle (every
-      state path derives from the two env-overridable roots), but "demonstrated by showing writes
-      landing there" requires actually running the installed CLI, which the `files.pythonhosted.org`
-      network block prevents. Source-reading cannot substitute for an observed write.
-- [ ] The revert runbook exists and has been executed at least once, with before/after evidence that
-      state is gone and no repository file was modified. **Not met, same reason as above** — nothing
-      was ever installed, so there is nothing to revert; the "revert" of this attempt is simply that
-      the isolated venv was `rm -rf`'d with no trace left anywhere in the repo or `~/.headroom`.
+- [ ] Installed into `.venv` only, base package, no extras. `.venv313` and `requirements.txt` are
+      shown unchanged (diff evidence, not assertion), and the dependency is recorded in
+      `requirements-knowledge.txt`.
+- [ ] The MCP server is registered in this repo's `.mcp.json` with a worktree-safe launcher, and is
+      demonstrated working from a session started inside a worktree (not only the main checkout).
+- [ ] **Demonstrated NOT active outside this repository** — a session started elsewhere has no
+      Headroom MCP server. This is the user's actual requirement; prove it, don't infer it from the
+      file's location.
+- [ ] `~/.claude.json` is shown unmodified, before and after. `headroom wrap` was never run.
+- [ ] State lands in the configured directory rather than `~/.headroom`, **demonstrated** by observed
+      writes. Source confirms this is achievable (every path derives from the two env-overridable
+      roots); an observed write is still required, since source-reading cannot substitute for one.
+- [ ] The revert runbook exists and has been **executed at least once**, with before/after evidence:
+      the `.mcp.json` entry removed, the package uninstalled from `.venv`, the state directory gone,
+      and the repo returned to a clean tree.
+- [ ] Nothing was enabled: no session points at a proxy, and `headroom learn` was never run.
 - [x] The `ccr_store.db` / `HEADROOM_CCR_BACKEND=memory` question is resolved either way and the
       finding recorded — currently unconfirmed, appearing only in third-party summaries. **Resolved:
       both are real**, confirmed directly from `headroom/cache/backends/__init__.py`'s own
@@ -132,8 +193,13 @@ fudged.
 - None yet.
 
 ## Related Code Areas
-- `.mcp.json` — where an MCP-mode registration would land
-- No repository source is modified by this ticket; all state is external (`~/.headroom` or an
+- `.mcp.json` — where the project-scoped MCP registration lands (this is now a real repo change,
+  and is what makes the activation revertible with git)
+- `requirements-knowledge.txt` — where the dependency is recorded, never `requirements.txt`
+- `tools/start_search_mcp.sh` — the launcher pattern to copy, including its worktree/shared-venv
+  resolution and the comment explaining why a naive `$REPO_ROOT/.venv` lookup fails
+- Superseded note: this ticket previously stated that no repository source is modified and all state
+  is external (`~/.headroom` or an
   isolated equivalent)
 
 ## Assumptions / Open Questions
