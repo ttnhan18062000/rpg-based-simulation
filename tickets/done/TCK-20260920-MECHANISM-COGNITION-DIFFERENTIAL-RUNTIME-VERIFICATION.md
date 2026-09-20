@@ -84,6 +84,11 @@ contradiction and stop. Do not fix the code to make a claim true in this pass.
   differential scenario component this ticket extends.
 - `TCK-20260920-MECHANISM-VERIFICATION-INSTRUMENT-TRANSPARENCY` — the `runtime_verified_share`
   metric this batch's own verdicts will move (and are not being optimized to move).
+- `TCK-20260920-TEMPORAL-MODEL-CANONICAL-HASH-SERIALIZATION-GAP` — the determinism-hashing fix
+  found while building `temporal_pressure`'s own scenario, filed as its own ticket per explicit
+  peer instruction rather than riding along here as an incidental.
+- `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`,
+  `TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP` — filed, not fixed, during batch 1.
 
 ## Related Docs
 - `docs/plans/mechanic_verification_scenarios_proposal.md`
@@ -271,3 +276,22 @@ curated-field pattern (e.g. `PerceptionModel.to_canonical_dict()`).
 276/276 tests passing (`tests/unit/tools/ tests/mechanic_scenarios/`), all consumer-artifact checks
 clean, `registry.py::validate()` clean. Continuing with the remaining 14 bound mechanisms in further
 waves.
+
+## Addendum 4 — 2026-09-20, naming the pattern and a transitive pre-screen for the rest
+Per peer review of wave 1: `perception` and `temporal_pressure` are two independent instances of the
+same shape — a `code_trace` note citing a real, accurate call site that never checked whether *that
+caller* is itself reached. Two instances in one batch is a pattern, not a coincidence. Catalogued as
+`docs/plans/mechanism_claims_as_tests_initiative.md` §3.1's own 7th shape ("Six shapes" → "Seven
+shapes" throughout that section).
+
+Also: the `to_canonical_dict()` fix from Addendum 3 was moved to its own ticket,
+`TCK-20260920-TEMPORAL-MODEL-CANONICAL-HASH-SERIALIZATION-GAP` (hotfix tier) — it touches
+canonical-state hashing, a hard determinism rule in this repo, and shouldn't ride along inside a
+verification PR as an incidental.
+
+**Pre-screen adopted for the remaining 14, per direct instruction**: before building a scenario for
+each, walk the citation transitively — does anything instantiate the phase, is it flag-gated, does
+the gate default on or off. Cheap and static, it predicts dormant/gated outcomes and concentrates
+scenario-building effort where the walk doesn't already answer the question. It does not replace the
+runtime check itself (a reachable path still needs to be observed firing) — it only avoids building
+an elaborate differential for a chain already provably broken two hops up.

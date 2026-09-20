@@ -84,15 +84,15 @@ never running.
 The point of the table: **roughly half the state vocabulary is a query somebody typed by hand.**
 `orphan` does not mean "we think this is orphaned" — it means zero callers, which is executable.
 
-### 3.1 Six shapes of search failure, catalogued 2026-09-19, extended 2026-09-20
+### 3.1 Seven shapes of search failure, catalogued 2026-09-19, extended 2026-09-20
 
 The table above says existence/caller-count is "detected," as if that were a solved query. It
 isn't, in practice — the *search that produces* a caller count can itself be wrong in ways that
-look like a clean negative result. This repo has now hit six genuinely distinct failure shapes
+look like a clean negative result. This repo has now hit seven genuinely distinct failure shapes
 across several tickets, each one independently discovered, each one producing **confident absence**
 (the searcher concludes "no code exists" and is wrong) rather than an obvious dead end. Catalogued
-here because six instances is a real pattern worth reading before the next search-based
-investigation, not six separate anecdotes:
+here because seven instances is a real pattern worth reading before the next search-based
+investigation, not seven separate anecdotes:
 
 1. **Same name, different thing.** `progression_conversion` (the mechanism id) vs `src/progression/`
    (a directory whose contents don't implement it) — a plausible-looking path match that isn't the
@@ -142,6 +142,28 @@ investigation, not six separate anecdotes:
    whether anything justified it being that boundary** — here, nothing did; the boundary was
    inherited from where the *other* mechanism's code happened to live, not from any property of
    the mechanism actually being searched for.
+7. **Verification that stops one level short, added 2026-09-20.** Two independent instances in one
+   batch (`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`): `perception`'s and
+   `temporal_pressure`'s own prior `code_trace` notes each cited a real call site
+   (`PerceptionFilterService.filter()` called from `phase.py:43`; `TemporalPressureService.
+   calculate_urgencies()` called from `memory/phase.py:90`) — both citations were accurate, the
+   grep found the right line. What neither check did was walk one hop further: is *that caller*
+   itself ever reached? `perception`'s call site sits inside `PerceptionUpdatePhase.run()`, a class
+   nothing in `src/` ever instantiates. `temporal_pressure`'s sits inside `MemoryUpdatePhase.run()`,
+   reached only when `ENABLE_MEMORY_UPDATE` is ON — it defaults OFF. A one-hop caller check passes
+   cleanly in both cases and tells you nothing about whether the mechanism actually runs. This is a
+   different shape from 1-6: those are all failures of the query (wrong vocabulary, wrong scope,
+   wrong pattern) that still eventually terminate at a real, reachable target once corrected. This
+   one terminates at a real target that is itself unreachable, and the check simply never asked.
+   **The defense, used directly for the remaining 15
+   `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION` mechanisms after this was
+   named**: before building an expensive scenario, walk the citation transitively — does anything
+   instantiate the phase, is it flag-gated, does the gate default on or off. Cheap and static, it
+   predicts which mechanisms will come back dormant or gated and concentrates scenario-building
+   effort where the answer isn't already visible from the walk. It does not replace the runtime
+   check — a reachable path still has to be observed actually firing, the same differential
+   requirement §5 item 3 already states — it only prevents building an elaborate differential for a
+   call chain that's already provably broken two hops up.
 
 **Shapes 4 and 5 are the newest and most dangerous of the first five**, because unlike 1-3 (a wrong
 match, a docstring-only symbol, a near-miss pattern — each still findable by trying one more
@@ -159,7 +181,9 @@ Source tickets: `TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION` (shapes
 RESOLUTION` (shapes 4-5, via `race_archetype`/`country_lifecycle`/`city`/`goal_hierarchy`; also the
 original, wrongly-scoped search behind shape 6), `TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-
 AUDIT` (shape 5's first instance, `regional_trauma`), `TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-
-CLAIMS-RESOLUTION` (shape 6, found via `commitment_betrayal`'s own re-investigation).
+CLAIMS-RESOLUTION` (shape 6, found via `commitment_betrayal`'s own re-investigation),
+`TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION` (shape 7, both instances,
+`perception` and `temporal_pressure`).
 
 ### 3.2 A different failure class: confident misattribution, not confident absence
 
