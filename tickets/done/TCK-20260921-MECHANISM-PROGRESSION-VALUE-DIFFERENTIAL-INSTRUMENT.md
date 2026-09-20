@@ -270,3 +270,48 @@ acquisition producer — likely stays out of scope, same reasoning as before), `
 (state `gap`, no instrument at all yet — needs its own investigation before a differential is even
 possible), `genetics_aptitude`/`progression_conversion` (both flag-gated off by default —
 reachability question, not value, for this axis).
+
+**CI note, wave 2's own push**: the push surfaced a real, unrelated CI failure — `docs/brainstorm/
+mechanism_registry.html` was stale relative to this ticket's own `registries/mechanisms.yaml`
+edits (the "Mechanism registry checks (blocking)" job's `mechanism-registry-html-check` target,
+`TCK-20260920-MECHANISM-REGISTRY-CI-WIRING`'s own recently-wired gate — batch 1's push predates
+this gate catching the same staleness, or ran before the gate's own first blocking enforcement
+cycle completed). Fixed at the root cause (`make mechanism-registry-html`, a real regeneration, not
+a routed-around check) rather than touched the gate itself. All 5 blocking mechanism-registry
+Makefile targets now run clean locally before every push in this ticket from wave 2 onward
+(`mechanism-registry-validate`, `mechanism-atlas-check`, `mechanism-capabilities-check`,
+`mechanism-wiring-map-classdef-check`, `mechanism-registry-html-check`) — also added the
+non-blocking `mechanism-verification-view` regen to this same pre-push routine after finding it
+independently stale too (not itself a CI gate, but kept in sync for the same reason).
+
+**Wave 3, 2026-09-21**: 1 mechanism, `succession`
+(`LifecycleSystem._select_default_heir`) — the real bond-strength-scored heir fallback,
+`score = 0.6*familiarity + 0.4*((sentiment+1)/2)`, highest score wins. Pure, deterministic, no RNG;
+immediate, same-tick outcome (reuses `aging_death`'s own guaranteed-death staging) — no §5.1
+horizon concern. Staged on `crowded_frontier` (a real, 38-entity corpus world already used
+elsewhere in this arc's own instrumentation) rather than the smaller combat-judgement world, since
+this mechanism needs 3 real entities (1 deceased, 2 heir candidates) and bonds are dynamic
+(empty at compile time in every world checked, accumulated through play) — only the deceased
+entity's own `social.bonds` and lifecycle fields were staged; the two candidates are untouched,
+real, content-spawned entities.
+- Positive control, run in both directions (A favored, then B favored): heir selection tracks the
+  higher-scored candidate, proving the swap is driven by score, not a fixed candidate or iteration
+  order.
+- Negative control: `last_interaction_tick` (documented tie-break field only, subordinate to score
+  in the sort key) does not override a decisive score gap.
+
+Passed on the first real run. Regression scope re-run: `tests/mechanic_scenarios/`, `tests/unit/
+progression/`, `tests/unit/tools/test_mechanism_registry.py` — 219 passed, 0 failed (217 + 2 new).
+All 5 blocking + the 1 non-blocking mechanism-registry Makefile targets clean; registry valid, 93
+mechanisms. New file: `tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py`.
+
+Progression running total after wave 3: 7 of 15 (`succession` added). Remaining real candidates
+narrowing: `attributes_biology` (tick-based/compounding — a second real horizon-rule test
+candidate, needs its own per-entity input check before staging, not yet confirmed one exists),
+`race_archetype`/`class_assignment` (both static catalog-lookup shaped — weaker candidates, closer
+to code_trace than a real runtime differential, per this ticket's own original investigation.md
+reasoning for why `class_assignment` was excluded from batch 1), `personality` (real, but requires
+staging a full decision-dispatch call site, e.g. combat-vs-flee scoring in `tactical.py` — larger
+scope than the mechanisms done so far, not yet investigated). `breakthrough_bonuses`,
+`build_diversity`, `genetics_aptitude`, `progression_conversion` remain out of scope for the
+reasons already stated.

@@ -596,6 +596,17 @@ mechanisms:
         this). No flag gates resolve_lifecycle() or this branch -- run_phase("lifecycle", ...)
         is called with no flag argument. Corrected via
         TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION's own addendum.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT wave 3):
+        `tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py` stages a
+        real entity's death (reusing `aging_death`'s own guaranteed-death technique) with two real
+        bond candidates on a real corpus world (`crowded_frontier`, 38 real entities). Positive
+        control, run in both directions: the candidate with the higher `0.6*familiarity +
+        0.4*((sentiment+1)/2)` score is selected heir, and the selection swaps when the scores
+        swap -- confirms bond strength's own value, not a fixed candidate or iteration order,
+        decides the outcome. Negative control: `last_interaction_tick` (a tie-break field only,
+        read after score in the sort key) does not override a decisive score gap. Pure,
+        deterministic, no RNG -- immediate, same-tick outcome, no §5.1 horizon concern.
   - id: genetics_aptitude
     layer: entity
     systems: [progression]
