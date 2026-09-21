@@ -351,6 +351,14 @@ edit to these directories rather than assuming this one is still current.
 
 `docs/guidelines/agent_working_environment.md`'s venv table corrected in the same pass: `.venv-
 knowledge` is documented as the full general-purpose venv it actually is (this package
-editable-installed, `requirements.txt`'s core deps, the knowledge stack, and the unpinned
+editable-installed, `requirements.txt`'s core deps, the knowledge stack, and
 `headroom-ai==0.37.0`), not the narrower "knowledge-search tooling only" the original wording
 claimed. `make knowledge-index-update` run clean afterward (docs/ changed).
+
+**Correction, 2026-09-21 (via `TCK-20260921-HEADROOM-AI-PIN-CLAIM-CORRECTION`): the line above
+originally called `headroom-ai==0.37.0` "unpinned" — that was itself false.** It has been pinned in
+`requirements-knowledge.txt` since PR #228 (`TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`),
+verified via `git log -S "headroom-ai==0.37.0"`. The error traced to a stale assumption carried
+forward from earlier in this same session, before that pin had landed, without re-checking the file
+at the moment of writing. Fixed here rather than left standing in an already-closed ticket's own
+summary.

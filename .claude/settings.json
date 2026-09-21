@@ -147,6 +147,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/agent-monitoring/session_start_handover_hook.py 2>/dev/null || true"
+          }
+        ]
+      }
     ]
   }
 }

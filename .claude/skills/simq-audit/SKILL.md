@@ -84,3 +84,4 @@ does not create one.
   they never write to `grade_anchors.json`, `test_grade_regression.py`, or any `docs/parity_ledger/*.yaml`
   file. Only the Update Anchors and Parity Check `agent()` phases make durable edits.
 - See `docs/simulation_quality/audit_workflow.md` for the full usage doc and governance rationale.
+- After the exit path resolves: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`
