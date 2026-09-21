@@ -156,7 +156,7 @@ link does the rule itself define (the relationship those owners' facts stand in,
 > to eliminate, it is what makes the rule cross-domain.**
 
 This is a clarification, not a new blocker, and it doesn't change the entry-criteria checklist in
-§4 — "canonical state ownership principle is accepted" already meant *state* ownership, correctly
+§5 — "canonical state ownership principle is accepted" already meant *state* ownership, correctly
 understood; this section only makes explicit that a rule's own catalog location is a separate
 question from the ownership of the facts it references.
 
@@ -328,7 +328,118 @@ world outcomes carry no quality polarity of their own; only causal validity does
 
 ---
 
-## 4. Entry criteria for beginning the World Rule Catalog
+## 4. Expected Depth Priority — a hypothesis, not a rule
+
+**This is not implementation order, and it does not change the world-rule design order in §3.1.**
+It is a separate lens: where is deep design effort *likely* to be worth it, before any rule or
+scenario has actually tested that assumption?
+
+### 4.1 The priority lens
+
+Two principles govern this map, both already stated elsewhere in the design set and repeated here
+because this map exists specifically to apply them:
+
+> **The simulation's primary narrative subject is the trajectory of individual entities — people,
+> creatures, monsters, animals, and other individually simulated beings — especially their
+> development, capabilities, relationships, interactions, influence, and history.** Supporting
+> domains should generally deepen where they create meaningful pressures, opportunities,
+> constraints, resources, or consequences for those trajectories — not for their own sake.
+
+> **When two representations provide similar systemic value, prefer the one whose causes and
+> consequences are more legible to an observer.** Legible does not mean immediately visible —
+> hidden knowledge, motives, secrets, or relationships are valid if their causal effects can
+> eventually be inferred or discovered.
+
+### 4.2 EXPECTED DEPTH PRIORITY — PRE-RULE / PRE-SCENARIO
+
+All 19 areas from §3.1's design order, assessed on four separate dimensions — deliberately kept
+apart rather than collapsed into one number; no single score would survive the next paragraph's
+own worked example (Agency) without losing the information that makes it useful.
+
+| # | Design area | Expected target depth | Entity-narrative centrality | Interaction/causal centrality | Observer legibility | Foundational criticality |
+|---|---|---|---|---|---|---|
+| 1 | Substrate | Deep | Low | Medium (enables, doesn't itself cause) | Low (indirect only) | Very high |
+| 2 | Space & environment | Systemic | Medium | High | Medium–high | High |
+| 3 | Movement & navigation | Functional | Low–medium | Medium | Medium | High |
+| 4 | Life / body / survival | Deep | Very high | High | High | High |
+| 5 | Ecology & population | Systemic | Low (aggregate by design) | High | Medium | Medium–high |
+| 6 | Perception / knowledge / information | Deep | Very high | High | Medium (legible via inference, not directly) | High |
+| 7 | Agency / decision | Deep | Very high | Very high | Medium | Very high |
+| 8 | Capability & progression | Systemic→Deep | Very high | Medium–high | High | Medium |
+| 9 | Objects & material culture | Systemic | Medium–high | Medium | High | Low–medium |
+| 10 | Resources & economy | Systemic | Medium | High | Medium–high | Medium |
+| 11 | Combat & conflict | Deep | Very high | High | High | Medium–high |
+| 12 | Social relations | Deep | Very high | High | Medium–high | Medium |
+| 13 | Family & lineage | Deep | Very high | High | High | Medium |
+| 14 | Organizations & institutions | Systemic | Medium–high | Medium–high | Medium | Low–medium |
+| 15 | Politics, authority & law | Systemic | Medium | High (aspirational) | Medium | Medium |
+| 16 | Places, settlements & territory | Systemic→Deep (aspirational — currently Primitive) | Medium | High (aspirational — currently low) | High (once built) | Medium–high |
+| 17 | Culture, belief & religion | Deep | High | High | High | Low–medium |
+| 18 | Magic & supernatural | **Undetermined — content-dependent** | Undetermined | Undetermined | Undetermined (must wire outward, per the owner's own domain decision) | Low, until built |
+| 19 | Cross-domain history/significance (layer, not a domain) | Deep | Very high | Very high | Very high | Medium |
+
+### 4.3 Reading the map — three tensions worth naming, not smoothing over
+
+- **Agency (7) is rated Very High on every centrality dimension, and this session's own evidence
+  found it the most starved area in the entire repository** (the decision-driven attack path
+  fires 0–2 times per 1000–2000 ticks). This is exactly the situation the map exists to surface:
+  a domain the product-intent lens says should be a top depth priority, currently reached almost
+  never. The map does not resolve this — it flags it as the single highest-value place for the
+  eventual Rule Catalog and Scenario Bank to test the hypothesis against.
+- **Places (16) is rated a genuine aspiration despite being this session's own confirmed weakest
+  domain** (no runtime mutability at all). Its *expected* priority is high precisely because so
+  many scenarios (a goblin camp becoming a ruin, a refugee's home persisting or not) depend on it
+  — the map's expectation and the current repository reality point in opposite directions here on
+  purpose, which is the map doing its job, not a contradiction to fix.
+- **Magic (18) is left genuinely undetermined**, not guessed. Nothing about its expected depth can
+  be assessed yet because no content decisions exist for it beyond "it is its own domain and must
+  wire outward" — assigning it a confident rating here would be exactly the kind of premature
+  commitment §2's own "would the world still conceptually work if its implementation changed
+  completely" test warns against, one level up.
+
+### 4.4 Reassessment after Rule Catalog and Scenario work matures
+
+This map is not the last word on itself. Once the World Rule Catalog and the Scenario Bank it
+feeds have matured enough to produce real evidence, a second pass belongs alongside this one:
+
+```
+OBSERVED / REVISED DEPTH PRIORITY — POST-RULE / POST-SCENARIO
+```
+
+comparing expected depth against depth actually justified by causal load, real scenario coverage,
+confirmed cross-domain importance, and confirmed observer legibility — recording, for every
+meaningful difference, *why* the expectation changed. Illustrative shapes a revision might take,
+not predictions:
+
+- a domain expected to be merely supporting turns out to carry many critical causal chains →
+  raise its target depth;
+- a domain expected to be deep turns out to mostly supply simple pressures to others → reduce its
+  target depth;
+- a domain with low immediate visibility proves highly important because many visible entity
+  trajectories depend on it → retain or increase its depth despite low legibility, per §4.1's own
+  "eventually inferable" clause.
+
+**This second pass is explicitly not performed in this document.** It has no evidence to draw on
+yet — that's the whole reason it waits.
+
+### 4.5 Relationship to the next phase
+
+```
+Expected Depth Priority (this section, now)
+          ↓
+Scenario Bank ↔ World Rule Catalog (next phase)
+          ↓
+Revised Depth Priority (later, evidence-driven)
+```
+
+The map in §4.2 helps choose where deeper design effort is *likely* worth spending first. It does
+not gate what gets written, does not become an implementation priority list, and is not itself a
+scorecard to satisfy — the Rule Catalog and Scenario Bank exist to generate the evidence that
+confirms or revises it, not the reverse.
+
+---
+
+## 5. Entry criteria for beginning the World Rule Catalog
 
 ```
 [x] Fundamental vs domain vs mechanism-level rule distinction is clear         (§2 above)
@@ -352,7 +463,7 @@ another conceptual cleanup round first.
 
 ---
 
-## 5. What this document does not do
+## 6. What this document does not do
 
 It does not write the Fundamental Law catalog, enumerate any rules, design detailed domain
 mechanics, create implementation classes or interfaces, map every existing mechanism against the
