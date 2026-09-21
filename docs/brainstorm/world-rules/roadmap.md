@@ -19,8 +19,9 @@ not a target this roadmap should resist justified splits to preserve.
 `core_rpg_design_direction.md`'s target domain map and cross-cutting-layer table and
 `simulation-rule-world-law-design-preparation.md`'s world-rule design order and foundational-law
 list. Three gaps found in the original draft are resolved explicitly below (see "Cross-cutting
-layer disposition") rather than left as silent omissions. Batch 01 is complete; no other batch
-has started.
+layer disposition") rather than left as silent omissions. Batch 01 is complete; Batch 02 (Time /
+Authority / Reach) is drafted and ready for high-level external review; no other batch has
+started.
 
 ---
 
@@ -41,6 +42,9 @@ significance-fading substance. See that file and `causality.md`'s forward-refere
 exact boundary between what stays in Causality and what migrates once it's drafted.
 
 ### Batch 02 — Time / Authority / Reach
+
+**Status: drafted, ready for high-level external review.** See
+`review-exports/foundational-batch-02-review.md`.
 
 Focus on:
 
