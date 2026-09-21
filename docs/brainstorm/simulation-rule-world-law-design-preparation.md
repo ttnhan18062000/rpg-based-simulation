@@ -445,8 +445,9 @@ Foundational Criticality: Very High    Foundational Criticality: Medium
 
 ### 4.3 EXPECTED DEPTH PRIORITY — PRE-RULE / PRE-SCENARIO
 
-All 19 areas from §3.1's design order, assessed on four separate dimensions — deliberately kept
-apart rather than collapsed into one number; no single score would survive the next paragraph's
+All 19 areas from §3.1's design order, assessed on Expected Target Depth plus four independent
+priority dimensions — deliberately kept apart rather than collapsed into one number; no single
+score would survive the next paragraph's
 own worked example (Agency) without losing the information that makes it useful.
 
 | # | Design area | Expected target depth | Entity-narrative centrality | Interaction/causal centrality | Observer legibility | Foundational criticality |
@@ -483,7 +484,10 @@ own worked example (Agency) without losing the information that makes it useful.
   doesn't have to inflate to stand in for the other. `Systemic` (participates in multiple causal
   relationships, influences other domains, responds to world state) is the honest fit; the
   `— extremely rigorous` qualifier keeps the correctness/precision/stability expectation visible
-  without borrowing the word `Deep`, which §4.2 now reserves for entity-facing historical richness.
+  without borrowing the word `Deep`, which §4.2 reserves for rich, differentiated, historically
+  consequential systemic behaviour, rather than foundational rigor alone — a bar any design area,
+  entity-facing or not (ecology, places, culture, magic included), could eventually clear if
+  future Rule/Scenario evidence justifies it.
 - **Agency (7) is rated Very High on every centrality dimension, and this session's own evidence
   found it the most starved area in the entire repository** (the decision-driven attack path
   fires 0–2 times per 1000–2000 ticks). This is exactly the situation the map exists to surface:
