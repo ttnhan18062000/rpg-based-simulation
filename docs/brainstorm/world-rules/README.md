@@ -38,6 +38,11 @@ order.
 | Time | Foundational Batch 02 — PASS, frozen | [foundations/time.md](foundations/time.md) |
 | Authority | Foundational Batch 02 — PASS, frozen | [foundations/authority.md](foundations/authority.md) |
 | Reach | Foundational Batch 02 — PASS, frozen | [foundations/reach.md](foundations/reach.md) |
+| Capability | Foundational Batch 03 drafted | [foundations/capability.md](foundations/capability.md) |
+| Cost | Foundational Batch 03 drafted | [foundations/cost.md](foundations/cost.md) |
+| Capacity / Limits | Foundational Batch 03 drafted | [foundations/capacity.md](foundations/capacity.md) |
+| Resource / Conservation Semantics | Foundational Batch 03 drafted | [foundations/resource.md](foundations/resource.md) |
+| Transformation | Foundational Batch 03 drafted | [foundations/transformation.md](foundations/transformation.md) |
 
 ## Rule Catalog progress
 
@@ -55,10 +60,18 @@ order.
   a real internal inconsistency in Reach corrected, 4 scenario probes added), **PASS — ready to
   freeze**. See `tmp/world-rule-foundational-batch-02-report.md` (local, not part of this
   catalog) for the full disposition report.
-- No other batch has been started, and no rules have been drafted for History / Provenance yet.
-  Do not begin Batch 03, any per-domain batch (Space & environment, Movement, Life/Body, etc.),
-  the History / Provenance completion pass, or re-open Batch 01/02, until both drafted batches
-  are explicitly reviewed and accepted.
+- **Foundational Batch 03** (Capability, Cost, Capacity/Limits, Resource/Conservation Semantics,
+  Transformation): drafted, ready for high-level external review. Threshold semantics were
+  investigated and folded into Capacity (LIMIT-04) rather than given their own family;
+  deterministic randomness was investigated and moved out of the Catalog entirely (see
+  `review-exports/foundational-batch-03-review.md`'s explicit call-outs). See
+  `tmp/world-rule-foundational-batch-03-report.md` (local, not part of this catalog) for the
+  full disposition report.
+- No per-domain batch has been started, and no rules have been drafted for History / Provenance
+  yet. Do not begin any per-domain Milestone B batch (Space & environment, Movement, Life/Body,
+  etc.) or the History / Provenance completion pass until all three foundational batches are
+  explicitly reviewed and accepted — per Batch 03's own instruction, History / Provenance is the
+  next planned step once that review happens, not before.
 
 ## Scenario Bank index
 
@@ -66,6 +79,7 @@ order.
 |---|---|---|
 | Foundational Batch 01 | [scenarios/foundational-batch-01.md](scenarios/foundational-batch-01.md) | FND-S01 – FND-S21 |
 | Foundational Batch 02 | [scenarios/foundational-batch-02.md](scenarios/foundational-batch-02.md) | TAR-S01 – TAR-S17 |
+| Foundational Batch 03 | [scenarios/foundational-batch-03.md](scenarios/foundational-batch-03.md) | CTR-S01 – CTR-S16 |
 
 ## Unresolved cross-domain questions
 
@@ -121,6 +135,25 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
   blocked, or lying) — deferred to whichever future batch (most plausibly Perception/knowledge/
   information) first needs it.
 
+**From Foundational Batch 03 (2026-09-21):**
+
+- **Confirmed MISSING, not merely unexplored.** CAP-05's body/form and environment capability
+  gates — deferred to Capability & progression and Space/environment respectively.
+- **Not decided.** CAP-05's relationships/institutional-support capability gate — deferred to
+  Groups/organizations & institutions if that domain ever needs one.
+- **Not yet repository-evidenced as their own category.** COST-01's attention and social/
+  political-consequence cost categories — deferred to Agency/decision and Politics/authority &
+  war respectively.
+- **Not independently re-verified this batch.** Whether crafting gates on a learned-recipe
+  capability check separate from resource sufficiency — deferred to Objects & material culture
+  or Capability & progression, whichever formalizes crafting content first.
+- **RESOLVED — investigated and explicitly folded in, not given a separate family.** Threshold
+  semantics live in Capacity (LIMIT-04), cross-linked from Cost/Resource/Transformation rather
+  than duplicated.
+- **RESOLVED — investigated and moved out entirely.** Deterministic randomness is not a Rule
+  Catalog concern; the world-semantic residue is already covered by Causality (CAUSE-01/
+  CAUSE-03), and reproducibility/replay stays with Evaluation/implementation.
+
 ## Review index
 
 For external review, send the review export first — it's the compact, generated summary; send
@@ -143,7 +176,8 @@ rationale stay canonical.
 |---|---|---|---|---|
 | Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S21) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Ready for high-level external review |
 | Foundational Batch 02 | `foundations/time.md`, `foundations/authority.md`, `foundations/reach.md` | `scenarios/foundational-batch-02.md` (TAR-S01–S17) | [review-exports/foundational-batch-02-review.md](review-exports/foundational-batch-02-review.md) | PASS — ready to freeze |
-| History / Provenance | `foundations/history-provenance.md` (scope only) | none yet | none yet | Scope defined 2026-09-21; not a reviewable batch yet |
+| Foundational Batch 03 | `foundations/capability.md`, `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md` | `scenarios/foundational-batch-03.md` (CTR-S01–S16) | [review-exports/foundational-batch-03-review.md](review-exports/foundational-batch-03-review.md) | Ready for high-level external review |
+| History / Provenance | `foundations/history-provenance.md` (scope only) | none yet | none yet | Scope defined 2026-09-21; not a reviewable batch yet — next planned step once Batch 03 is reviewed |
 
 ## Links to current review batches
 
@@ -156,4 +190,9 @@ rationale stay canonical.
 - Batch 02 scenario file: `scenarios/foundational-batch-02.md`
 - Batch 02 review export: `review-exports/foundational-batch-02-review.md`
 - Batch 02 report (local, gitignored): `tmp/world-rule-foundational-batch-02-report.md`
+- Batch 03 rule files: `foundations/capability.md`, `foundations/cost.md`,
+  `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md`
+- Batch 03 scenario file: `scenarios/foundational-batch-03.md`
+- Batch 03 review export: `review-exports/foundational-batch-03-review.md`
+- Batch 03 report (local, gitignored): `tmp/world-rule-foundational-batch-03-report.md`
 - Scope-only file (not part of any batch's own rule set): `foundations/history-provenance.md`

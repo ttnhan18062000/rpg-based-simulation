@@ -20,8 +20,10 @@ not a target this roadmap should resist justified splits to preserve.
 `simulation-rule-world-law-design-preparation.md`'s world-rule design order and foundational-law
 list. Three gaps found in the original draft are resolved explicitly below (see "Cross-cutting
 layer disposition") rather than left as silent omissions. Batch 01 is complete; Batch 02 (Time /
-Authority / Reach) is drafted, revised once per follow-up review, and **PASS — frozen**; no
-other batch has started.
+Authority / Reach) is drafted, revised once per follow-up review, and **PASS — frozen**; Batch
+03 (Capability / Cost / Capacity / Resource / Transformation) is drafted and ready for
+high-level external review; the Milestone A History/Provenance completion pass is the next
+planned step once all three foundational batches are reviewed — not yet started.
 
 ---
 
@@ -85,6 +87,11 @@ rather than re-deciding it, and should not attempt to write a semantic rule for
 scheduling/cadence/event-flow.
 
 ### Batch 03 — Capability / Cost / Capacity / Resource / Transformation
+
+**Status: drafted, ready for high-level external review.** All five families kept separate (no
+merge found necessary); threshold semantics folded into Capacity rather than given their own
+family; deterministic randomness investigated and moved out of the Catalog entirely. See
+`review-exports/foundational-batch-03-review.md`.
 
 Focus on foundational constraints such as:
 
