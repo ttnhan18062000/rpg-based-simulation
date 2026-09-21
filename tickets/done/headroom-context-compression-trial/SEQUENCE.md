@@ -1,7 +1,13 @@
 # Sequence — Headroom context-compression trial
 
-Epic: `TCK-20260916-HEADROOM-CONTEXT-COMPRESSION-EPIC`
-Plan: `docs/plans/agent_infrastructure/headroom_context_compression_trial.md`
+Epic: `TCK-20260916-HEADROOM-CONTEXT-COMPRESSION-EPIC` — **DONE, closed 2026-09-21.**
+Plan: `docs/plans/agent_infrastructure/headroom_context_compression_trial.md` — concluded, see its
+own status block.
+
+**Outcome: Phase 1 delivered, Phase 2 abandoned on measured evidence.** All 5 children are closed —
+4 delivered evidence, the 5th (`TCK-20260916-HEADROOM-PROXY-SESSION-CLASS-ROLLOUT`, Phase 2) closed
+abandoned-by-decision, its own unblock condition unmeetable under the recorded abandon verdict. The
+MCP registration stays on `main`; see the epic's own Completion Summary for the full outcome.
 
 Unlike the monitoring-anomaly epic, **this sequence is a real dependency chain, not a leverage
 ordering**. Ticket 1 gates everything: Headroom's state is machine-wide (`~/.headroom`), so
