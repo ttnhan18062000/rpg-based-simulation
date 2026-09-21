@@ -20,13 +20,19 @@ Three foundational law families — Identity, State Ownership, Causality — the
 every later per-domain batch (Space, Life/Body, Economy, etc.) will build on. Not a per-domain
 batch; deliberately domain-agnostic. Originally drafted with 12 seed scenarios; expanded once with
 9 adversarial probe scenarios (FND-S13–S21) before being treated as ready for high-level external
-review, per `tmp/world-catalog-expand-scenario-and-review-layer-ext-ai.md`.
+review, per `tmp/world-catalog-expand-scenario-and-review-layer-ext-ai.md`. Most recently, this
+batch's own open semantic questions and owner-attention decisions were explicitly dispositioned
+(deferred / cross-domain-link / implementation-gap / resolved-by-naming-a-family), and a fourth
+foundational family — **History / Provenance** — was introduced at scope level only (not drafted,
+not part of Batch 01's own rule count).
 
 ## Canonical files included
 
 - `foundations/identity.md` (ID-01–09)
 - `foundations/state-ownership.md` (OWN-01–06)
 - `foundations/causality.md` (CAUSE-01–07)
+- `foundations/history-provenance.md` (scope only — no numbered rules yet; not part of Batch 01's
+  own rule set, included here because CAUSE-05/CAUSE-06 now forward-reference it)
 - `scenarios/foundational-batch-01.md` (FND-S01–S21)
 
 ## Rule Inventory
@@ -70,6 +76,12 @@ evidence, and rationale stay in the canonical files linked above.
 | CAUSE-05 | Causal History Traceable Within Declared Reach | History must be reconstructable within whatever reach a system declares. | Accepted |
 | CAUSE-06 | Compression Must Not Fabricate Causal Links | Summarization may drop detail but must not invent a causal relation; a fact's significance may legitimately fade without that being erasure or fabrication. | Accepted, partial-move, refined |
 | CAUSE-07 | World Outcomes Carry No Inherent Polarity | Outcomes aren't inherently good or bad; only the causal validity producing them is evaluated. | Accepted |
+
+### History / Provenance (`foundations/history-provenance.md`) — scope only, not part of Batch 01's rule count
+
+| ID | Short name | One-line semantic purpose | Status |
+|---|---|---|---|
+| — | (none drafted) | Persistence within a declared reach, provenance, compression, and significance-fading semantics — CAUSE-05/CAUSE-06's persistence-specific substance is anticipated to migrate here once drafted. | Scope defined 2026-09-21; no numbered rules yet |
 
 ## Scenario Inventory
 
@@ -163,6 +175,14 @@ distinguishing legitimately fading historical significance from erasure/fabricat
 other rule changed as a result of the expansion. No rule from a prior batch was changed, since
 this is the first batch.
 
+**Most recently (2026-09-21):** a fourth family, **History / Provenance**, was introduced at
+scope level only — no numbered rules, no rule count added to this batch. It is not a new batch
+and implies no change to the world-rule design order (`simulation-rule-world-law-design-
+preparation.md` §3.1's item 19 keeps its position; §3.2's already-anticipated `Persistence` and
+`Provenance` entries are what this family now names explicitly). Identity, State Ownership, and
+Causality's own accepted rules were not reopened by this — CAUSE-05/CAUSE-06 gained
+forward-reference notes pointing to the new family, not semantic changes.
+
 ## Major scenario findings
 
 Of 21 scenarios (12 seed + 9 adversarial expansion), including 8 counter-scenarios: 10 covered
@@ -186,38 +206,53 @@ domain that gates an action on a precondition inherits this gap until it's addre
 
 ## Important cross-domain links
 
-- `impaired capability → economic loss → relationship reaction` (OWN-05, FND-S07): two links in
-  a plausible cross-domain chain are unbuilt; unclear which future domain should own the first one.
+- `impaired capability → economic loss → relationship reaction` (OWN-05, FND-S07): a cross-domain
+  semantic link question, not an ownership problem — resolve once Capability/progression and
+  Economy/resources rules actually exist.
 - Settlement lifecycle (camp → settlement → ruin): surfaced independently by Identity (ID-03) and
   Causality (CAUSE-02), then a third time by Organizations (ID-06, FND-S17's same-shaped gap) —
-  flagged once for future Places and Organizations batches respectively.
-- Organization/clan founding and splitting: no mechanism exists at all (ID-04, ID-06) — flagged
-  for a future Organizations/Politics batch.
+  DEFERRED to future Places and Organizations batches respectively.
+- Organization/clan founding and splitting: no mechanism exists at all (ID-04, ID-06) — DEFERRED
+  to a future Organizations/Politics batch.
 - Reputation scalar vs. reputation labels: two legitimately separate owned fields with an
   undocumented narrative relationship (OWN-03, FND-S05) — flagged for a future Social relations
-  batch.
-- Capability/precondition detector (CAUSE-04): flagged for Agency/decision.
+  batch (unchanged by this disposition pass).
+- Capability/precondition detector (CAUSE-04): treated as an implementation/repository gap, not a
+  world-rule design-order question — does not argue for reordering the design order, only for
+  building the detector once, generally, whenever it's built.
 - Succession property/wealth transfer: role/authority succession is real, but nothing transfers
-  objects or wealth to an heir (OWN-05, FND-S15) — flagged for Family/lineage, Politics, and
-  Objects & material culture jointly.
+  objects or wealth to an heir (OWN-05, FND-S15) — DEFERRED across Family/lineage, Politics, and
+  Objects/Economy jointly; canonical state ownership stays separate across all three.
 - Compression-tier design and significance-fading design for history/chronicle (CAUSE-06):
-  deferred to a future History/Provenance family not yet in the design order at all.
+  RESOLVED by naming the family — see `foundations/history-provenance.md` (scope only, not fully
+  designed).
 
 ## Open semantic questions
 
-1. What, in general (not per-domain), makes a transformation identity-ending? (ID-03) — `human →
-   vampire` and `camp → settlement → ruin` both deliberately left open, deferred to Magic and
-   Places respectively. The adversarial expansion (FND-S14) confirmed this deferral is sound rather
-   than resolving it.
-2. How do split/merge/founding resolve for organizations and settlements? (ID-06) — reconfirmed a
-   third time by FND-S17.
-3. Is a corpse's own identity (as a future Objects-domain subject) related to the deceased
-   entity's identity, or fully independent? (ID-05, deferred to Objects & material culture)
-4. Where does "impaired capability → economic loss" get designed? (OWN-05)
-5. Where does succession's property/wealth-transfer link get designed, and does it belong to
-   Family/lineage, Politics, or Objects? (OWN-05, FND-S15 — new this expansion)
-6. CAUSE-06's compression-tier and significance-fading constraints are both stated; their actual
-   mechanism design is deferred to a family not yet named in the design order.
+All six carry an explicit disposition as of 2026-09-21 — none are bare open questions anymore.
+
+1. **DEFER, no universal test invented.** What, in general (not per-domain), makes a
+   transformation identity-ending? (ID-03) — `human → vampire` and `camp → settlement → ruin`
+   both deliberately stay open, deferred to Magic and Places respectively; ID-03's own
+   default+exception shape is unchanged. The adversarial expansion (FND-S14) confirmed this
+   deferral is sound rather than resolving it, and this disposition closes it as a question for
+   this batch — it should not be reopened without a domain actually needing the answer.
+2. **DEFER to Organizations / Places.** How do split/merge/founding resolve for organizations and
+   settlements? (ID-06) — reconfirmed a third time by FND-S17.
+3. **DEFER to Objects & Material Culture.** Is a corpse's own identity (as a future
+   Objects-domain subject) related to the deceased entity's identity, or fully independent?
+   (ID-05)
+4. **Cross-domain semantic link question, not an ownership problem.** Where does "impaired
+   capability → economic loss" get designed? (OWN-05) — resolve once Capability/progression and
+   Economy/resources rules exist; OWN-05 already establishes that crossing owners is legitimate.
+5. **DEFER across Family/Lineage, Politics, Objects/Economy jointly; ownership stays separate.**
+   Where does succession's property/wealth-transfer link get designed? (OWN-05, FND-S15) —
+   whichever domain batch is reached first should cite this rather than deciding it alone.
+6. **RESOLVED by naming a family.** CAUSE-06's compression-tier and significance-fading
+   constraints are both stated; their actual mechanism design belongs to the now-named History /
+   Provenance family (`foundations/history-provenance.md`) — scope defined, not fully designed,
+   not yet a numbered part of the world-rule design order's build sequence (only its name is now
+   attached to design-preparation §3.1's item 19 and §3.2's already-anticipated entries).
 
 ## Known tensions / contradictions
 
@@ -247,17 +282,23 @@ significance, which is what motivated CAUSE-06's one-sentence refinement (FND-S2
 
 ## Decisions that need owner/external-reviewer attention
 
-- Whether the two open transformation cases (`human → vampire`, `camp → settlement → ruin`)
-  should stay deferred to their future domains, or whether ID-03 should state a general-purpose
-  identity-ending test now instead of per-domain.
-- Whether CAUSE-04's precondition-detector gap should be prioritized ahead of its "natural" place
-  in the world-rule design order, given how many future domains depend on it.
-- Whether a History/Provenance foundational family should be added to the design order now
-  (to give CAUSE-05/CAUSE-06 a home, including the newly-added significance-fading constraint) or
-  left implicit until a domain batch needs it.
-- Whether succession's property/wealth-transfer gap (FND-S15) should be scoped into whichever
-  domain batch (Family/lineage, Politics, or Objects) comes first, rather than waiting for all
-  three to be reached in design order.
+**All four decided 2026-09-21 — none remain open for this batch.**
+
+- **Decided: DEFER, keep ID-03 as-is.** The two open transformation cases (`human → vampire`,
+  `camp → settlement → ruin`) stay deferred to their future domains; no general-purpose
+  identity-ending test was invented.
+- **Decided: implementation/repository gap, no design-order change.** CAUSE-04's
+  precondition-detector gap is not treated as a reason to reorder the world-rule design order —
+  it is a repository-completeness gap to fix once, generally, whenever it's built.
+- **Decided: RESOLVED NOW — History / Provenance added, scope only.** A fourth foundational/
+  cross-cutting Rule family, History / Provenance, is introduced explicitly
+  (`foundations/history-provenance.md`) to give CAUSE-05/CAUSE-06's persistence, provenance,
+  compression, and significance-fading semantics a named home. Its rules are not drafted, and no
+  change to the world-rule design order or implementation sequencing is implied by naming it.
+- **Decided: DEFER across Family/Lineage, Politics, Objects/Economy jointly.** Succession's
+  property/wealth-transfer gap (FND-S15) is not scoped to whichever domain batch happens to come
+  first — each of the three retains its own separate canonical state ownership, and whichever is
+  reached first should cite this open question rather than deciding it alone.
 
 ## Starter-candidate disposition summary
 
@@ -279,14 +320,36 @@ candidates is judged to survive this stronger adversarial coverage.
 Full per-rule disposition, evidence, and rationale: see the canonical files above, or
 `tmp/world-rule-foundational-batch-01-report.md` (local review report, not part of this catalog).
 
+## Open-question disposition pass (2026-09-21)
+
+The six open semantic questions and four owner-attention decisions listed above are no longer
+open — each carries an explicit disposition (DEFER / cross-domain-link-question /
+implementation-gap / RESOLVED-by-naming-a-family), recorded in full in this export's own "Open
+semantic questions" and "Decisions that need owner/external-reviewer attention" sections, and in
+the relevant canonical files (`identity.md`, `state-ownership.md`, `causality.md`, and the new
+`history-provenance.md`). This did not reopen Identity, State Ownership, or Causality's own
+accepted semantics — the one exception (CAUSE-06's forward-reference wording, already made in the
+prior pass) is a citation update, not a new semantic change. Deferred domain questions remain
+exactly as deferred as before; they are simply no longer *ambiguously* deferred.
+
 ---
 
 > **FOUNDATIONAL BATCH 01 READY FOR HIGH-LEVEL EXTERNAL REVIEW.**
 
-All required artifacts exist and reflect the expanded scenario set: three rule-family files (22
-rules total, 1 refined this pass), one scenario file (21 scenarios including 8 counters), this
-review export with both inventories and coverage/deferred-semantics summaries, and the local
-disposition report. No contradiction was found in either pass. Several PARTIAL/MISSING/Finding
-results are real, named gaps carried forward as open questions — that is expected at this stage,
-not a blocker. Do not begin the next foundational batch, or any per-domain batch, until this batch
-is reviewed at this level.
+All required artifacts exist and reflect both the expanded scenario set and the open-question
+disposition pass: four foundational files (three drafted with 22 rules total, one — History /
+Provenance — scope-only), one scenario file (21 scenarios including 8 counters), this review
+export with both inventories, coverage/deferred-semantics summaries, and fully dispositioned open
+questions, and the local disposition report. No contradiction was found across any pass.
+
+```text
+Foundational Batch 01 remains PASS at high level.
+
+Identity / State Ownership / Causality remain accepted.
+Deferred domain questions stay explicit.
+History / Provenance is added as an explicit foundational/cross-cutting Rule family.
+No implementation-order change is implied.
+```
+
+Do not begin the next foundational batch, any per-domain batch, or draft History / Provenance's
+own rules, until this batch is reviewed at this level.

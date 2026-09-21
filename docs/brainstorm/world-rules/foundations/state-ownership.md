@@ -179,15 +179,27 @@ re-propose it without knowing it was already considered.
 ## Cross-domain links recorded here
 
 - OWN-02 → Combat, Life/Body, Family/lineage (the injury/succession worked examples)
-- OWN-05 → Economy, Social relations (the two currently-missing links in the worked chain)
+- OWN-05 → Economy, Social relations (the two currently-missing links in the worked chain);
+  Family/lineage, Politics, Objects (the succession property/wealth-transfer gap, FND-S15)
 - OWN-06 → Perception/knowledge/information, History/significance (belief and chronicle,
   respectively)
 
 ## Open questions carried forward
 
-1. Where does "impaired capability → economic loss" get designed — Economy/resources or
-   Capability/progression? Deferred; either future batch should cite this open question rather than
-   silently deciding it.
+1. **Resolved as a disposition, 2026-09-21.** "Impaired capability → economic loss" is a
+   **cross-domain semantic link question, not an ownership problem** — OWN-05 already establishes
+   that a chain may legitimately cross owners without any of them being wrong to own their own
+   link. This link stays unresolved as a *link*, not as an ownership boundary, and should be
+   resolved once Capability/progression and Economy/resources rules actually exist to define it,
+   whichever comes first — neither is designed here.
 2. OWN-03's reputation example exposed a real *existing* naming collision between two owned
    fields, not a new design gap — flagged for the Social relations batch to formally document
    (not this batch's job to resolve, since neither field is being redesigned here).
+3. **Resolved as a disposition, 2026-09-21.** Succession's property/wealth-transfer gap (FND-S15:
+   role/authority succession is real and correctly owned by Politics; nothing transfers objects or
+   wealth to an heir) is **DEFERRED across Family/Lineage, Politics, and Objects/Economy jointly**
+   — whichever of those three domain batches is reached first should cite this open question
+   rather than silently deciding it alone, and each domain's own canonical state ownership must
+   stay separate (Politics owns the office/role transfer, Objects/Economy would own any property
+   transfer, Family/Lineage owns the succession-eligibility logic itself) — this is the same
+   OWN-05 pattern as the economic-loss link above, not a new kind of question.

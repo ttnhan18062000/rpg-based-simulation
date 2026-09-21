@@ -254,9 +254,17 @@ second family (State Ownership, Causality, or a later batch) needs the *same* li
 
 ## Open questions carried forward
 
-1. What, in general (not per-domain), makes a transformation identity-ending? (ID-03)
-2. How do split/merge/founding resolve for organizations and settlements? (ID-06, deferred to
-   Organizations and Places batches)
-3. Is a corpse's own identity (as an Objects-domain subject) related to the deceased entity's
-   identity, or fully independent? Not resolved in this batch — flagged for the Objects &
-   material culture batch.
+1. **Resolved as a disposition, 2026-09-21: DEFER, no universal test invented.** What, in
+   general (not per-domain), makes a transformation identity-ending? (ID-03) — ID-03's existing
+   default (continuity) plus explicit domain-declared exception stays exactly as written; each
+   relevant domain (Magic for `human → vampire`, Places for `camp → settlement → ruin`) states its
+   own exception when it is designed. This is a closed disposition, not merely a note: no
+   universal identity-ending test is to be invented ahead of that domain work, and this question
+   should not be re-opened without a new domain actually needing to answer it.
+2. **Resolved as a disposition, 2026-09-21: DEFER.** How do split/merge/founding resolve for
+   organizations and settlements? (ID-06) — deferred to the Organizations and Places batches
+   respectively, unchanged from the original finding, now reconfirmed a third time by FND-S17.
+3. **Resolved as a disposition, 2026-09-21: DEFER.** Is a corpse's own identity (as an
+   Objects-domain subject) related to the deceased entity's identity, or fully independent? —
+   deferred to the Objects & Material Culture batch. Not resolved in this batch by design, not by
+   omission.

@@ -30,16 +30,23 @@ order.
 | Identity | Foundational Batch 01 drafted | [foundations/identity.md](foundations/identity.md) |
 | State Ownership | Foundational Batch 01 drafted | [foundations/state-ownership.md](foundations/state-ownership.md) |
 | Causality | Foundational Batch 01 drafted | [foundations/causality.md](foundations/causality.md) |
+| History / Provenance | Scope defined 2026-09-21; rules not yet drafted (future batch) | [foundations/history-provenance.md](foundations/history-provenance.md) |
 
 ## Rule Catalog progress
 
 - **Foundational Batch 01** (Identity, State Ownership, Causality): drafted, adversarially
-  expanded, ready for high-level external review. See
+  expanded, its open questions dispositioned (deferred / cross-domain-link / implementation-gap /
+  resolved-by-naming-a-family — see below), ready for high-level external review. See
   `tmp/world-rule-foundational-batch-01-report.md` (local, not part of this catalog) for the full
   disposition report.
-- No other batch has been started. Do not begin the next foundational batch, or any per-domain
-  batch (Space & environment, Movement, Life/Body, etc.), until Batch 01 is explicitly reviewed
-  and accepted.
+- **History / Provenance** introduced 2026-09-21 as an explicit foundational/cross-cutting Rule
+  family (scope only — see [foundations/history-provenance.md](foundations/history-provenance.md)).
+  This is not a new batch and implies no change to the world-rule design order; its rules are not
+  drafted and drafting them is a future batch's job.
+- No other batch has been started, and no rules have been drafted for History / Provenance yet.
+  Do not begin the next foundational batch, any per-domain batch (Space & environment, Movement,
+  Life/Body, etc.), or draft History / Provenance's own rules, until Batch 01 is explicitly
+  reviewed and accepted.
 
 ## Scenario Bank index
 
@@ -52,23 +59,34 @@ order.
 Recorded in full in each rule file's own "Cross-domain links" / "Open questions carried forward"
 sections. Not yet promoted to `cross-domain/` — per the adopted structure, that directory is
 created only once a link becomes a substantial shared contract, not for every link recorded in a
-rule file. Currently tracked, not yet promoted:
+rule file. Every item below carries an explicit disposition (as of 2026-09-21) rather than sitting
+as a bare open question — "unresolved" here means "not yet designed," not "undecided how to treat":
 
-- `impaired capability → economic loss` (OWN-05, CAUSE-02): which domain designs this link.
-- No capability/precondition detector exists (CAUSE-04): affects every future domain that gates
-  an action on a precondition.
+- **DEFER, no universal test invented.** What makes a transformation identity-ending, in general?
+  (ID-03) — stays deferred per-domain (Magic, Places); ID-03's default+exception shape is
+  unchanged.
+- **DEFER to Organizations / Places.** Organization/settlement split, merge, and founding
+  semantics (ID-04, ID-06, reconfirmed a third time by FND-S17) — no mechanism exists at all;
+  resolved when those domain batches are reached, not before.
+- **DEFER to Objects & Material Culture.** A corpse's own identity relative to the deceased
+  entity's identity (ID-05).
+- **Cross-domain semantic link question, not an ownership problem.** `impaired capability →
+  economic loss` (OWN-05) — resolved when Capability/progression and Economy/resources rules
+  actually exist to define it; OWN-05 already establishes crossing owners is legitimate, so this
+  is a link to design, not a boundary to fix.
+- **DEFER across Family/Lineage, Politics, Objects/Economy jointly; ownership stays separate.**
+  Succession's property/wealth transfer (OWN-05, FND-S15) — role/authority succession is real and
+  correctly owned by Politics; nothing transfers objects or wealth, and whichever domain is
+  reached first should cite this rather than deciding it alone.
+- **Treated as an implementation/repository gap, not a design-order question.** No general
+  capability/precondition detector exists (CAUSE-04) — does not argue for reordering the
+  world-rule design order, only for building the detector once, generally, when it's built.
+- **RESOLVED by naming a family.** History/Provenance compression-tier design and
+  significance-fading design (CAUSE-05, CAUSE-06, FND-S20/S21) are no longer an unnamed deferred
+  item — see [foundations/history-provenance.md](foundations/history-provenance.md) (scope only,
+  rules not yet drafted).
 - Reputation scalar vs. reputation labels narrative relationship (OWN-03, FND-S05): flagged for
-  the Social relations batch.
-- Settlement lifecycle (camp → settlement → ruin) is a shared gap surfaced by both Identity
-  (ID-03) and Causality (CAUSE-02) independently, then a third time by Organizations (ID-06,
-  FND-S17): flagged for future Places and Organizations batches respectively.
-- Organization/clan founding and splitting have no mechanism at all (ID-04, ID-06): flagged for a
-  future Organizations/Politics batch.
-- Succession's property/wealth transfer has no mechanism at all, though role/authority succession
-  does (OWN-05, FND-S15): flagged jointly for Family/lineage, Politics, and Objects.
-- History/Provenance compression-tier design, and now also significance-fading design (CAUSE-06,
-  refined per FND-S21), are both deferred to a future foundational family not yet added to the
-  design order.
+  the Social relations batch — unchanged, not part of this disposition pass.
 
 ## Review index
 
@@ -91,11 +109,13 @@ rationale stay canonical.
 | Batch / Area | Canonical source files | Scenario set | Review export | Status |
 |---|---|---|---|---|
 | Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S21) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Ready for high-level external review |
+| History / Provenance | `foundations/history-provenance.md` (scope only) | none yet | none yet | Scope defined 2026-09-21; not a reviewable batch yet |
 
 ## Links to current review batch
 
 - Rule files: `foundations/identity.md`, `foundations/state-ownership.md`,
   `foundations/causality.md`
+- Scope-only file (not part of Batch 01's own rule set): `foundations/history-provenance.md`
 - Scenario file: `scenarios/foundational-batch-01.md`
 - Review export: `review-exports/foundational-batch-01-review.md`
 - Report (local, gitignored): `tmp/world-rule-foundational-batch-01-report.md`

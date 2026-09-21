@@ -203,6 +203,18 @@ in this list can reasonably reuse a semantic concept a foundational one already 
 (e.g. ownership, before economy needs it), but nothing here says economy must be *built* before
 combat.
 
+**Added 2026-09-21 — item 19 now has an explicit foundational-family home for half of its scope,
+with no change to this order.** Item 19 ("cross-domain history / significance / propagation")
+bundles two distinct cross-cutting layers from `core_rpg_design_direction.md` §7: "History,
+significance & world reaction" and "Systemic pressure & propagation." The first of those now has
+an explicit Rule family — **History / Provenance**
+(`world-rules/foundations/history-provenance.md`) — introduced during Foundational Batch 01's
+open-question cleanup, covering causal-history persistence, provenance, compression, and
+significance-fading semantics. This is a scope clarification, not a reordering: History/
+Provenance's rules are not yet drafted (scope-only for now), item 19 keeps its position, and
+"systemic pressure & propagation" remains ungoverned by any Rule family, foundational or
+otherwise, until its own future work.
+
 Repository evidence mostly confirms this order rather than contradicting it, with one genuine
 tension worth naming rather than smoothing over: the (Places, settlements & territory) domain
 this session's evidence found **weakest** — its runtime immutability blocks the vision's own
@@ -228,6 +240,14 @@ Cost              Information / truth Persistence       Transformation
 Deterministic randomness              Resource / conservation semantics
 Capacity / limits Provenance
 ```
+
+**Added 2026-09-21.** `Persistence` and `Provenance` above are the two entries this list already
+anticipated for what is now drafted (at scope level only) as the explicit **History / Provenance**
+foundational family — see `world-rules/foundations/history-provenance.md`. This is not a new
+family invented outside this list; it is this list's own already-named items being given an actual
+catalog slot, prompted by Foundational Batch 01's Causality work (CAUSE-05/06) and its adversarial
+scenario expansion (FND-S20/S21) showing the underlying semantics are load-bearing enough to need
+one. `Time`, `Reach`, and the other entries in this list remain unclaimed by any drafted family.
 
 ### 3.3 Per-domain investigation order
 

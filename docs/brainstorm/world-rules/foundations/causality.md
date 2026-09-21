@@ -125,6 +125,12 @@ rather than quietly assumed to hold everywhere.
 
 **Scenarios:** [FND-S04](../scenarios/foundational-batch-01.md#fnd-s04).
 
+**Forward-reference, added 2026-09-21:** the declared-reach *mechanism* this rule describes is
+anticipated to migrate to the now-named **History / Provenance** family
+(`history-provenance.md`) once that family is actually drafted; the causal-validity constraint
+stated here stays in Causality regardless. No semantics changed by naming that family — see
+`history-provenance.md`'s own "Relationship to Causality" section for the exact boundary.
+
 ---
 
 ## CAUSE-06 — Compression and summarization must not fabricate causal links
@@ -142,15 +148,17 @@ rather than quietly assumed to hold everywhere.
 stays in this family, at this level of generality, because it is a direct restatement of CAUSE-03
 applied specifically to the compression case. The detailed design of *how* compression tiers
 should work (what gets dropped first, how far back full fidelity is kept, etc.) is explicitly
-deferred to a future History/Provenance foundational family — this batch is not the place to
-design that mechanism, only to assert the constraint it must obey whenever it is designed. The
+deferred to the now-named **History / Provenance** foundational family
+(`history-provenance.md`, scope defined 2026-09-21, rules not yet drafted) — this batch is not
+the place to design that mechanism, only to assert the constraint it must obey whenever it is
+designed. The
 added sentence is a light refinement, not a new idea: FND-S21 (a dead entity's historical
 relevance should be able to legitimately fade) showed that ID-05 ("destruction doesn't erase
 history") and OWN-06 ("historical reference doesn't imply present ownership") could otherwise be
 over-read by a future domain author as requiring every recorded fact to stay at constant
 significance forever. Stating the distinction here — fading weight vs. erasure/fabrication —
 closes that over-broad reading without designing the fading mechanism itself, which still belongs
-to the deferred History/Provenance family.
+to the now-named, not-yet-drafted History/Provenance family (`history-provenance.md`).
 
 **Repository evidence:** not separately evaluated this batch for compression-tier design — no
 such mechanism exists yet to check against, recorded as MISSING by absence rather than by failure.
@@ -192,19 +200,23 @@ scenario, scored on causal validity of the chain that produced it, not on collap
 
 - CAUSE-02 → Ecology/population, World evolution, Places/settlements (the drought chain)
 - CAUSE-04 → Agency/motivation/decision, Capability/progression (precondition-gated actions)
-- CAUSE-05, CAUSE-06 → History/significance (a future foundational family, not yet started)
+- CAUSE-05, CAUSE-06 → History / Provenance (`history-provenance.md` — named 2026-09-21, scope
+  defined, rules not yet drafted)
 - CAUSE-07 → Evaluation (SimQ) — explicitly a shared-standard link, not a redefinition either way
 
 ## Open questions carried forward
 
-1. CAUSE-04's gap (no general capability/precondition detector) is the most load-bearing MISSING
-   finding in this whole batch — it affects every future domain that gates an action on a
-   precondition. Flagged for the design-order's own reassessment method
-   (`simulation-rule-world-law-design-preparation.md` §4.5) rather than solved here.
-2. CAUSE-06 defers real design work to a future History/Provenance foundational family; this batch
-   only asserts the constraint that family must satisfy, and that family does not yet exist in the
-   world-rule design order as a numbered item — noted so it isn't silently forgotten.
+1. **Resolved as a disposition, not a design change, 2026-09-21.** CAUSE-04's gap (no general
+   capability/precondition detector) is treated as an implementation/repository gap, not a
+   world-rule design-order question — it does not argue for reordering the design-order list in
+   `simulation-rule-world-law-design-preparation.md` §3.1, only for whichever future domain
+   eventually builds the detector to build it once, generally, rather than per-domain. Still the
+   most load-bearing MISSING finding in this whole batch.
+2. **Resolved 2026-09-21.** CAUSE-05/CAUSE-06 defer real design work to the now-named History /
+   Provenance foundational family (`history-provenance.md`) — see that file's own scope and its
+   "Relationship to Causality" section for exactly what stays here vs. what migrates once that
+   family is actually drafted (a future batch, not this one).
 3. CAUSE-06's fading-significance sentence (added 2026-09-21) states that fading is legitimate
    but does not design how it would work — mechanism design (what fades first, at what rate, does
-   it differ by domain) stays with the same deferred History/Provenance family as the rest of
-   CAUSE-06, not resolved here.
+   it differ by domain) stays with the same History/Provenance family as the rest of CAUSE-06,
+   not resolved here.
