@@ -65,9 +65,21 @@ rule file. Currently tracked, not yet promoted:
 - History/Provenance compression-tier design (CAUSE-06) is deferred to a future foundational
   family not yet added to the design order.
 
+## Review index
+
+For external review, send the review export first — it's the compact, generated summary; send
+canonical files only when the reviewer flags something needing deeper inspection. A review export
+is never itself authoritative: canonical files → review export → external review → feedback →
+canonical files updated → review export regenerated. Never patch only the export.
+
+| Batch / Area | Canonical source files | Scenario set | Review export | Status |
+|---|---|---|---|---|
+| Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S12) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Drafted, pending external review |
+
 ## Links to current review batch
 
 - Rule files: `foundations/identity.md`, `foundations/state-ownership.md`,
   `foundations/causality.md`
 - Scenario file: `scenarios/foundational-batch-01.md`
+- Review export: `review-exports/foundational-batch-01-review.md`
 - Report (local, gitignored): `tmp/world-rule-foundational-batch-01-report.md`
