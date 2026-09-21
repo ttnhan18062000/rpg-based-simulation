@@ -27,6 +27,68 @@ batch; deliberately domain-agnostic.
 - `foundations/causality.md` (CAUSE-01–07)
 - `scenarios/foundational-batch-01.md` (FND-S01–S12)
 
+## Rule Inventory
+
+One row per Rule — semantic territory only. Full preconditions, ownership analysis, repository
+evidence, and rationale stay in the canonical files linked above.
+
+### Identity (`foundations/identity.md`)
+
+| ID | Short name | One-line semantic purpose | Status |
+|---|---|---|---|
+| ID-01 | Persistent Identity | A first-class subject retains its identity across ordinary state changes. | Accepted |
+| ID-02 | Identity ≠ Classification | Identity is distinct from kind, type, role, faction, or current form. | Accepted |
+| ID-03 | Transformation Preserves Continuity (default) | A transformation preserves identity unless a domain rule explicitly says otherwise. | Accepted, refined |
+| ID-04 | Creation Establishes Identity | A newly created subject begins a distinct identity and may carry provenance. | Accepted |
+| ID-05 | Destruction Doesn't Erase History | Termination ends active state, not historical meaning. | Accepted |
+| ID-06 | Split/Merge/Succession Need Explicit Semantics | Splits, merges, and successions must not silently assume identity behavior. | Accepted (unresolved dependency) |
+| ID-07 | Aggregate Membership ≠ Individual Identity | Participating in an aggregate does not erase individual identity. | Accepted |
+| ID-08 | Identity Applies Uniformly Across Scale | The Identity family applies to any first-class subject at any scale, not only entities. | Accepted (added locally) |
+| ID-09 | Name/Epithet ≠ Identity | A name, title, or epithet may change without changing identity. | Accepted (added locally) |
+
+### State Ownership (`foundations/state-ownership.md`)
+
+| ID | Short name | One-line semantic purpose | Status |
+|---|---|---|---|
+| OWN-01 | One Authoritative Source of Truth | Every durable state concept has exactly one unambiguous canonical owner. | Accepted |
+| OWN-02 | Participation ≠ Ownership | Reading, reacting to, or causing a change doesn't make a domain the owner. | Accepted |
+| OWN-03 | Derived Views ≠ Duplicate Truth | Derived views, classifications, or scores don't become additional owners. | Accepted, refined |
+| OWN-04 | Proposed Change ≠ Committed State | An intent or proposal isn't authoritative world state until accepted. | Accepted |
+| OWN-05 | Cross-Domain Transitions Preserve Ownership | A causal chain may cross owners without collapsing them into one domain. | Accepted |
+| OWN-06 | Historical Reference ≠ Present Ownership | History or belief referencing state doesn't make the reference authoritative. | Accepted |
+
+### Causality (`foundations/causality.md`)
+
+| ID | Short name | One-line semantic purpose | Status |
+|---|---|---|---|
+| CAUSE-01 | Real Causal Path Required | A durable consequence should trace to a real producer, not a narrative label. | Accepted |
+| CAUSE-02 | Cross-Domain Causal Chains | A cause in one domain may produce a consequence in another and continue downstream. | Accepted |
+| CAUSE-03 | Correlation ≠ Causal Connectivity | Statistical or temporal association alone is not a causal claim. | Accepted |
+| CAUSE-04 | Preconditions Must Be Real, Not Narrative | A claimed precondition must be checked against real state. | Accepted (major gap noted) |
+| CAUSE-05 | Causal History Traceable Within Declared Reach | History must be reconstructable within whatever reach a system declares. | Accepted |
+| CAUSE-06 | Compression Must Not Fabricate Causal Links | Summarization may drop detail but must not invent a causal relation. | Accepted, partial-move |
+| CAUSE-07 | World Outcomes Carry No Inherent Polarity | Outcomes aren't inherently good or bad; only the causal validity producing them is evaluated. | Accepted |
+
+## Scenario Inventory
+
+One row per scenario, including all required counter-scenarios (marked **counter**). Full traces
+stay in `scenarios/foundational-batch-01.md`.
+
+| Scenario ID | Short name | What it probes | Current result |
+|---|---|---|---|
+| FND-S01 | The Dead Don't Fight Back | Precondition realism when looting a corpse | Partially covered |
+| FND-S02 | Ingots Become a Sword (counter) | Transformation that should create new identity | Covered |
+| FND-S03 | Camp, Settlement, Ruin | Identity continuity through a place's lifecycle | Blocked |
+| FND-S04 | The Chronicle Remembers What the World Doesn't | Historical reference vs. declared memory reach | Partially covered |
+| FND-S05 | Feared and Hated Are Not the Same Field (counter) | Two similar facts with legitimately different owners | Revealed missing rule |
+| FND-S06 | A Famine Doesn't Rewrite Every Name (counter) | Aggregate change should not affect every individual | Core covered; sub-probes revealed missing rule |
+| FND-S07 | A Wound Becomes a Debt | Full cross-domain causal chain, injury to social reaction | Partially covered |
+| FND-S08 | Two Systems, One Field | Single-ownership guarantee under a hypothetical conflict | Covered |
+| FND-S09 | A Rumor That Never Became True (counter) | State change that should not persist historically | Covered |
+| FND-S10 | Drought to Ruin | Cross-domain causal chain continuation | Partially covered |
+| FND-S11 | Two Omens, No Connection (counter) | Correlated but not causal events | Covered |
+| FND-S12 | A Kingdom Falls, and That's Not the Point | Outcome neutrality of a world-level collapse | Covered |
+
 ## Design intent
 
 Establish, before any per-domain rule is written, what "the same thing across change" means

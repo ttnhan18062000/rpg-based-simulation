@@ -72,6 +72,13 @@ canonical files only when the reviewer flags something needing deeper inspection
 is never itself authoritative: canonical files → review export → external review → feedback →
 canonical files updated → review export regenerated. Never patch only the export.
 
+Every export must include a **Rule Inventory** (one row per Rule: ID, short name, one-line
+semantic purpose, status — grouped by family; no preconditions, ownership analysis, repository
+evidence, or rationale) and a **Scenario Inventory** (one row per scenario, including
+counter-scenarios: ID, short name, what it probes, current result). These let a reviewer see what
+semantic territory and what kinds of world behavior a batch covers without opening the canonical
+files — full traces and rationale stay canonical.
+
 | Batch / Area | Canonical source files | Scenario set | Review export | Status |
 |---|---|---|---|---|
 | Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S12) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Drafted, pending external review |
