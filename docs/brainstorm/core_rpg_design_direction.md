@@ -598,3 +598,4 @@ Owner decision: build the clean taxonomy even where it is far from current imple
 | 2026-09-20 | **Optionality: standing practice wins.** Core ships unflagged; flags are for experiments, migration and rollback | §15 |
 | 2026-09-20 | **Magic is its own domain**, required to wire outward into combat, interaction, body, ecology, places, belief and information | §4, §7 |
 | 2026-09-20 | **Build the clean target taxonomy in full**, even far ahead of implementation, so RPG features can be planned against a long roadmap | §7 |
+| 2026-09-21 | **World Rule Catalog started.** Foundational Batch 01 (Identity, State Ownership, Causality) drafted, pending external review | `docs/brainstorm/world-rules/README.md` |
