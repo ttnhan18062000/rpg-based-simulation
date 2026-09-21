@@ -33,7 +33,7 @@ prose.
 this rule true by construction rather than by convention alone — a durable field can only be
 written through the one apply path its own Patch class owns.
 
-**Scenarios:** [FND-S07](../scenarios/foundational-batch-01.md#fnd-s07), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08).
+**Scenarios:** [FND-S07](../scenarios/foundational-batch-01.md#fnd-s07), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08), [FND-S15](../scenarios/foundational-batch-01.md#fnd-s15), [FND-S16](../scenarios/foundational-batch-01.md#fnd-s16) (adversarial expansion — death→succession chain).
 
 ---
 
@@ -56,7 +56,7 @@ through `LifecycleUpdate`/`LifecyclePatch`, and the *lineage* meaning of that da
 dying wish) is a separate, Family/lineage-owned interpretation layered on top — not a second
 authoritative copy.
 
-**Scenarios:** [FND-S07](../scenarios/foundational-batch-01.md#fnd-s07), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08).
+**Scenarios:** [FND-S07](../scenarios/foundational-batch-01.md#fnd-s07), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08), [FND-S15](../scenarios/foundational-batch-01.md#fnd-s15) (adversarial expansion — death as trigger, not owner, of succession).
 
 ---
 
@@ -112,7 +112,7 @@ specifically to make a proposed change and a committed one two different kinds o
 code level, not merely at the documentation level.
 
 **Scenarios:** [FND-S09](../scenarios/foundational-batch-01.md#fnd-s09) (a false belief is a real
-proposed-cause, never itself committed world truth).
+proposed-cause, never itself committed world truth), [FND-S18](../scenarios/foundational-batch-01.md#fnd-s18), [FND-S19](../scenarios/foundational-batch-01.md#fnd-s19) (adversarial expansion — belief drives real action without ever becoming owned truth).
 
 ---
 
@@ -139,7 +139,9 @@ different support levels.**
 
 **Scenarios:** [FND-S07](../scenarios/foundational-batch-01.md#fnd-s07) (traces exactly this
 chain and stops where repository support stops — the scenario is *partially covered* by design,
-not a failure of the scenario).
+not a failure of the scenario), [FND-S15](../scenarios/foundational-batch-01.md#fnd-s15)
+(adversarial expansion — the death→succession chain, same per-link pattern: two links SUPPORTED,
+one MISSING, no domain found owning a link it shouldn't).
 
 ---
 
@@ -159,7 +161,7 @@ authoritative fact it describes (a chronicle entry recording "A owned the sword"
 change who owns the sword — ownership stays Objects-domain-owned regardless of what history says
 about it).
 
-**Scenarios:** [FND-S04](../scenarios/foundational-batch-01.md#fnd-s04), [FND-S09](../scenarios/foundational-batch-01.md#fnd-s09).
+**Scenarios:** [FND-S04](../scenarios/foundational-batch-01.md#fnd-s04), [FND-S09](../scenarios/foundational-batch-01.md#fnd-s09), [FND-S18](../scenarios/foundational-batch-01.md#fnd-s18), [FND-S20](../scenarios/foundational-batch-01.md#fnd-s20) (adversarial expansion).
 
 ---
 

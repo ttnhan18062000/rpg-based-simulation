@@ -33,9 +33,10 @@ order.
 
 ## Rule Catalog progress
 
-- **Foundational Batch 01** (Identity, State Ownership, Causality): drafted, pending external
-  review. See `tmp/world-rule-foundational-batch-01-report.md` (local, not part of this catalog)
-  for the full disposition report.
+- **Foundational Batch 01** (Identity, State Ownership, Causality): drafted, adversarially
+  expanded, ready for high-level external review. See
+  `tmp/world-rule-foundational-batch-01-report.md` (local, not part of this catalog) for the full
+  disposition report.
 - No other batch has been started. Do not begin the next foundational batch, or any per-domain
   batch (Space & environment, Movement, Life/Body, etc.), until Batch 01 is explicitly reviewed
   and accepted.
@@ -44,7 +45,7 @@ order.
 
 | Batch | File | Scenario IDs |
 |---|---|---|
-| Foundational Batch 01 | [scenarios/foundational-batch-01.md](scenarios/foundational-batch-01.md) | FND-S01 – FND-S12 |
+| Foundational Batch 01 | [scenarios/foundational-batch-01.md](scenarios/foundational-batch-01.md) | FND-S01 – FND-S21 |
 
 ## Unresolved cross-domain questions
 
@@ -59,11 +60,15 @@ rule file. Currently tracked, not yet promoted:
 - Reputation scalar vs. reputation labels narrative relationship (OWN-03, FND-S05): flagged for
   the Social relations batch.
 - Settlement lifecycle (camp → settlement → ruin) is a shared gap surfaced by both Identity
-  (ID-03) and Causality (CAUSE-02) independently: flagged for a future Places batch.
+  (ID-03) and Causality (CAUSE-02) independently, then a third time by Organizations (ID-06,
+  FND-S17): flagged for future Places and Organizations batches respectively.
 - Organization/clan founding and splitting have no mechanism at all (ID-04, ID-06): flagged for a
   future Organizations/Politics batch.
-- History/Provenance compression-tier design (CAUSE-06) is deferred to a future foundational
-  family not yet added to the design order.
+- Succession's property/wealth transfer has no mechanism at all, though role/authority succession
+  does (OWN-05, FND-S15): flagged jointly for Family/lineage, Politics, and Objects.
+- History/Provenance compression-tier design, and now also significance-fading design (CAUSE-06,
+  refined per FND-S21), are both deferred to a future foundational family not yet added to the
+  design order.
 
 ## Review index
 
@@ -75,13 +80,17 @@ canonical files updated → review export regenerated. Never patch only the expo
 Every export must include a **Rule Inventory** (one row per Rule: ID, short name, one-line
 semantic purpose, status — grouped by family; no preconditions, ownership analysis, repository
 evidence, or rationale) and a **Scenario Inventory** (one row per scenario, including
-counter-scenarios: ID, short name, what it probes, current result). These let a reviewer see what
-semantic territory and what kinds of world behavior a batch covers without opening the canonical
-files — full traces and rationale stay canonical.
+counter-scenarios: ID, short name, trajectory, rule families challenged, deferred domain
+dependencies, current result), followed by a **Scenario Coverage Summary** (what kinds of world
+behavior the scenario set stress-tests, grouped by family — coverage shape, not scenario count)
+and a **Deferred Scenario Semantics** section (later-domain questions intentionally left
+unresolved, distinguished from actual gaps). These let a reviewer see what semantic territory and
+what kinds of world behavior a batch covers without opening the canonical files — full traces and
+rationale stay canonical.
 
 | Batch / Area | Canonical source files | Scenario set | Review export | Status |
 |---|---|---|---|---|
-| Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S12) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Drafted, pending external review |
+| Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S21) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Ready for high-level external review |
 
 ## Links to current review batch
 

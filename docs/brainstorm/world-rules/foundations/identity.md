@@ -39,7 +39,7 @@ territory, reputation, or membership changes.
 precondition for durable state existing at all (the key everything else attaches to). See
 `state-ownership.md` for the distinction between identity and the state a subject owns.
 
-**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S11](../scenarios/foundational-batch-01.md#fnd-s11).
+**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S11](../scenarios/foundational-batch-01.md#fnd-s11), [FND-S16](../scenarios/foundational-batch-01.md#fnd-s16) (adversarial expansion — successor never conflated with predecessor).
 
 ---
 
@@ -57,7 +57,7 @@ wearing two names. Confirmed independently earlier this session that nothing cur
 the evolved kind, which is a Reach/Cross-cutting-Layer finding (see `simulation-rule-world-law-
 design-preparation.md` §4), not an Identity-family problem — the identity boundary itself holds.
 
-**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01).
+**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S13](../scenarios/foundational-batch-01.md#fnd-s13) (adversarial expansion — repeated-exposure form change).
 
 ---
 
@@ -89,7 +89,7 @@ every future transformation rule would have to re-derive whether it ends identit
 construction, matching the default exactly. No current mechanism implements an identity-ending
 transformation for any domain.
 
-**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S02](../scenarios/foundational-batch-01.md#fnd-s02) (boundary probe, not resolved), [FND-S05](../scenarios/foundational-batch-01.md#fnd-s05), [FND-S06](../scenarios/foundational-batch-01.md#fnd-s06).
+**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S02](../scenarios/foundational-batch-01.md#fnd-s02) (boundary probe, not resolved), [FND-S05](../scenarios/foundational-batch-01.md#fnd-s05), [FND-S06](../scenarios/foundational-batch-01.md#fnd-s06), [FND-S13](../scenarios/foundational-batch-01.md#fnd-s13), [FND-S14](../scenarios/foundational-batch-01.md#fnd-s14) (adversarial expansion — the default/exception slot confirmed sufficient without designing the exception).
 
 **Open questions:** what makes a transformation identity-ending, in general (not per-domain)? Left
 deliberately unanswered — see "Rules added by the local agent" below for the one general-purpose
@@ -141,7 +141,7 @@ repository fact, now stated as a foundational-law gap rather than a scenario-tra
 batch — this session's earlier work already identified death/lineage as the richest live
 substrate in the repository, and this rule is the Identity-family statement of exactly why.
 
-**Scenarios:** [FND-S03](../scenarios/foundational-batch-01.md#fnd-s03), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08), [FND-S12](../scenarios/foundational-batch-01.md#fnd-s12).
+**Scenarios:** [FND-S03](../scenarios/foundational-batch-01.md#fnd-s03), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08), [FND-S12](../scenarios/foundational-batch-01.md#fnd-s12), [FND-S14](../scenarios/foundational-batch-01.md#fnd-s14), [FND-S20](../scenarios/foundational-batch-01.md#fnd-s20) (adversarial expansion).
 
 ---
 
@@ -165,7 +165,7 @@ say so, not to resolve it.**
   MISSING. No mechanism found for any of these. Confirmed by direct search this session (no
   split/merge method anywhere in the clan or faction lifecycle code).
 
-**Scenarios:** [FND-S06](../scenarios/foundational-batch-01.md#fnd-s06) (organization split — deliberately exposes this gap without resolving it), [FND-S05](../scenarios/foundational-batch-01.md#fnd-s05) (settlement continuity — same treatment).
+**Scenarios:** [FND-S06](../scenarios/foundational-batch-01.md#fnd-s06) (organization split — deliberately exposes this gap without resolving it), [FND-S05](../scenarios/foundational-batch-01.md#fnd-s05) (settlement continuity — same treatment), [FND-S17](../scenarios/foundational-batch-01.md#fnd-s17) (adversarial expansion — reconfirms the same gap-shape a third time; disposition unchanged).
 
 **Open questions:** deferred to Organizations/institutions and Places/settlements/territory
 (future batches). This rule's own acceptance criterion is that those future batches cannot skip

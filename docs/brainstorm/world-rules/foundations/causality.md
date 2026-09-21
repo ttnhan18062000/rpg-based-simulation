@@ -33,7 +33,7 @@ always be traced in code), but nothing at runtime asserts that the *semantic* re
 that call is itself a real precondition rather than an arbitrary label — that gap is exactly why
 CAUSE-04 exists as its own separate rule below rather than being folded into this one.
 
-**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S10](../scenarios/foundational-batch-01.md#fnd-s10).
+**Scenarios:** [FND-S01](../scenarios/foundational-batch-01.md#fnd-s01), [FND-S10](../scenarios/foundational-batch-01.md#fnd-s10), [FND-S18](../scenarios/foundational-batch-01.md#fnd-s18), [FND-S19](../scenarios/foundational-batch-01.md#fnd-s19) (adversarial expansion — a false belief is a real cause of a real action; a held-but-inert belief is legitimately not a cause of anything).
 
 ---
 
@@ -131,19 +131,38 @@ rather than quietly assumed to hold everywhere.
 
 > When history, memory, or chronicles compress detail over time, the compression may drop detail
 > but must not invent a causal relation that wasn't there, and must not silently upgrade a
-> correlation into a stated cause.
+> correlation into a stated cause. Separately, a fact's *significance* — how prominent it is in
+> the world's living memory — may legitimately diminish over time even while the fact itself
+> remains fully retained and unfabricated. Fading significance is not erasure, not fabrication,
+> and not a violation of ID-05/OWN-06; it is a distinct, legitimate kind of change this rule must
+> not be read as forbidding.
 
-**Disposition: ACCEPT, partial-MOVE.** The no-fabrication constraint stays in this family, at this
-level of generality, because it is a direct restatement of CAUSE-03 applied specifically to the
-compression case. The detailed design of *how* compression tiers should work (what gets dropped
-first, how far back full fidelity is kept, etc.) is explicitly deferred to a future History/
-Provenance foundational family — this batch is not the place to design that mechanism, only to
-assert the constraint it must obey whenever it is designed.
+**Disposition: ACCEPT, partial-MOVE, refined 2026-09-21 per adversarial scenario expansion
+(`tmp/world-catalog-expand-scenario-and-review-layer-ext-ai.md`).** The no-fabrication constraint
+stays in this family, at this level of generality, because it is a direct restatement of CAUSE-03
+applied specifically to the compression case. The detailed design of *how* compression tiers
+should work (what gets dropped first, how far back full fidelity is kept, etc.) is explicitly
+deferred to a future History/Provenance foundational family — this batch is not the place to
+design that mechanism, only to assert the constraint it must obey whenever it is designed. The
+added sentence is a light refinement, not a new idea: FND-S21 (a dead entity's historical
+relevance should be able to legitimately fade) showed that ID-05 ("destruction doesn't erase
+history") and OWN-06 ("historical reference doesn't imply present ownership") could otherwise be
+over-read by a future domain author as requiring every recorded fact to stay at constant
+significance forever. Stating the distinction here — fading weight vs. erasure/fabrication —
+closes that over-broad reading without designing the fading mechanism itself, which still belongs
+to the deferred History/Provenance family.
 
-**Repository evidence:** not separately evaluated this batch — no compression-tier mechanism
-exists yet to check against; recorded as MISSING by absence rather than by failure.
+**Repository evidence:** not separately evaluated this batch for compression-tier design — no
+such mechanism exists yet to check against, recorded as MISSING by absence rather than by failure.
+For the added sentence specifically: checked directly, no importance-decay mechanism exists
+anywhere in `src/domains/chronicle/` or `src/domains/fame/legend.py` either — every recorded fact
+stays at constant significance once created, within whatever reach CAUSE-05 already declares.
+This is MISSING in the same sense (no mechanism yet), not a violation of the refined rule, which
+only asserts that such a mechanism *would be* legitimate if built.
 
-**Scenarios:** none yet; deferred to the future History/Provenance batch's own scenario set.
+**Scenarios:** [FND-S20](../scenarios/foundational-batch-01.md#fnd-s20),
+[FND-S21](../scenarios/foundational-batch-01.md#fnd-s21) (the fading-significance counter that
+prompted this refinement).
 
 ---
 
@@ -185,3 +204,7 @@ scenario, scored on causal validity of the chain that produced it, not on collap
 2. CAUSE-06 defers real design work to a future History/Provenance foundational family; this batch
    only asserts the constraint that family must satisfy, and that family does not yet exist in the
    world-rule design order as a numbered item — noted so it isn't silently forgotten.
+3. CAUSE-06's fading-significance sentence (added 2026-09-21) states that fading is legitimate
+   but does not design how it would work — mechanism design (what fades first, at what rate, does
+   it differ by domain) stays with the same deferred History/Provenance family as the rest of
+   CAUSE-06, not resolved here.
