@@ -94,20 +94,26 @@ attempt may be made at all* — they say nothing about combat resolution's own c
 can still miss, be resisted, or fail a check downstream of capability being satisfied.
 
 **Scenarios:** [CTR-S05](../scenarios/foundational-batch-03.md#ctr-s05) (the cross-batch check
-`cost paid ≠ outcome guaranteed`, folded into the same scenario as Cost's own probe).
+`cost paid ≠ outcome guaranteed`, folded into the same scenario as Cost's own probe),
+[CTR-S17](../scenarios/foundational-batch-03.md#ctr-s17) (added 2026-09-21 — a committed attempt
+that consumes its cost and still fails to achieve its intended outcome).
 
 ---
 
-## CAP-05 — Capability may depend on several independent factors, not all of which are confirmed to matter equally
+## CAP-05 — Capability may depend on multiple independent factors
 
 > A capability may depend on subject state, learned ability, equipment, body/form, environment,
 > relationships, or institutional support. These are independent potential sources, not a fixed
-> checklist every capability must draw from.
+> checklist every capability must draw from — which factors actually matter for a given
+> capability, and how, is for the later domain that defines that capability to declare.
 
-**Disposition: ACCEPT, with evidence recorded per factor rather than as one blanket claim —
-the honest finding this batch made is that not all seven listed factors are equally evidenced.**
+**Disposition: ACCEPT, refined 2026-09-21 — repository-status language removed from the Rule
+itself.** The rule states only the semantic shape (capability may draw on any of several
+independent factors, and no domain is required to use all of them); which factors this
+repository's current mechanisms happen to exercise, and which they don't yet, is a fact about the
+repository, not a fact about the world rule, and now lives only in the evidence section below.
 
-**Repository evidence, per factor:**
+**Repository evidence, per factor — status/confirmation language kept here, not in the Rule:**
 - **Subject state:** SUPPORTED (`can_use_skill`'s stamina check).
 - **Learned ability:** SUPPORTED (`SKILL_NOT_LEARNED` reason code).
 - **Equipment:** SUPPORTED (`can_equip_item`'s slot-requirement check).
@@ -118,10 +124,14 @@ the honest finding this batch made is that not all seven listed factors are equa
 - **Environment:** MISSING as a capability gate specifically. `TerrainCostService` (`src/engine/
   rpg_depth.py`) modifies movement *cost*, not whether an action is capability-eligible at all —
   checked directly, no capability check anywhere reads terrain/environment as an eligibility
-  condition. This is a real, confirmed gap, not an oversight in this write-up.
+  condition.
 - **Relationships, institutional support:** MISSING as direct capability gates. (Institutional
   *authority* is real — AUTH-06 — but authority is not capability; nothing currently makes an
   institution's support a precondition for a subject's own capability to act.)
+
+None of the above changes what the Rule itself claims — it is evidence about which factors this
+repository currently exercises, offered so a future domain author knows where to look, not a
+constraint on what the Rule is allowed to mean.
 
 **Scenarios:** [CTR-S03](../scenarios/foundational-batch-03.md#ctr-s03),
 [CTR-S04](../scenarios/foundational-batch-03.md#ctr-s04).

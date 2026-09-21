@@ -38,11 +38,11 @@ order.
 | Time | Foundational Batch 02 — PASS, frozen | [foundations/time.md](foundations/time.md) |
 | Authority | Foundational Batch 02 — PASS, frozen | [foundations/authority.md](foundations/authority.md) |
 | Reach | Foundational Batch 02 — PASS, frozen | [foundations/reach.md](foundations/reach.md) |
-| Capability | Foundational Batch 03 drafted | [foundations/capability.md](foundations/capability.md) |
-| Cost | Foundational Batch 03 drafted | [foundations/cost.md](foundations/cost.md) |
-| Capacity / Limits | Foundational Batch 03 drafted | [foundations/capacity.md](foundations/capacity.md) |
-| Resource / Conservation Semantics | Foundational Batch 03 drafted | [foundations/resource.md](foundations/resource.md) |
-| Transformation | Foundational Batch 03 drafted | [foundations/transformation.md](foundations/transformation.md) |
+| Capability | Foundational Batch 03 — PASS, frozen | [foundations/capability.md](foundations/capability.md) |
+| Cost | Foundational Batch 03 — PASS, frozen | [foundations/cost.md](foundations/cost.md) |
+| Capacity / Limits | Foundational Batch 03 — PASS, frozen | [foundations/capacity.md](foundations/capacity.md) |
+| Resource / Conservation Semantics | Foundational Batch 03 — PASS, frozen | [foundations/resource.md](foundations/resource.md) |
+| Transformation | Foundational Batch 03 — PASS, frozen | [foundations/transformation.md](foundations/transformation.md) |
 
 ## Rule Catalog progress
 
@@ -61,17 +61,20 @@ order.
   freeze**. See `tmp/world-rule-foundational-batch-02-report.md` (local, not part of this
   catalog) for the full disposition report.
 - **Foundational Batch 03** (Capability, Cost, Capacity/Limits, Resource/Conservation Semantics,
-  Transformation): drafted, ready for high-level external review. Threshold semantics were
-  investigated and folded into Capacity (LIMIT-04) rather than given their own family;
-  deterministic randomness was investigated and moved out of the Catalog entirely (see
-  `review-exports/foundational-batch-03-review.md`'s explicit call-outs). See
+  Transformation): drafted, revised once per follow-up instruction (repository-status language
+  removed from CAP-05, COST-03's cost-lifecycle distinction sharpened, RES-01 broadened beyond
+  personally-held resources, universal atomicity removed from RES-04, LIMIT-03 generalized
+  beyond one assumed response), **PASS — ready to freeze**. Threshold semantics were investigated
+  and folded into Capacity (LIMIT-04) rather than given their own family; deterministic
+  randomness was investigated and moved out of the Catalog entirely, on a rationale sharpened by
+  the follow-up (see `review-exports/foundational-batch-03-review.md`'s explicit call-outs). See
   `tmp/world-rule-foundational-batch-03-report.md` (local, not part of this catalog) for the
   full disposition report.
-- No per-domain batch has been started, and no rules have been drafted for History / Provenance
-  yet. Do not begin any per-domain Milestone B batch (Space & environment, Movement, Life/Body,
-  etc.) or the History / Provenance completion pass until all three foundational batches are
-  explicitly reviewed and accepted — per Batch 03's own instruction, History / Provenance is the
-  next planned step once that review happens, not before.
+- All three foundational batches (01, 02, 03) are now drafted; Batch 02 and Batch 03 are both
+  **PASS — ready to freeze**. No per-domain batch has been started, and no rules have been
+  drafted for History / Provenance yet — per the roadmap, that completion pass is the next
+  planned step once these batches are reviewed, not before. Do not begin any per-domain
+  Milestone B batch (Space & environment, Movement, Life/Body, etc.) until then.
 
 ## Scenario Bank index
 
@@ -79,7 +82,7 @@ order.
 |---|---|---|
 | Foundational Batch 01 | [scenarios/foundational-batch-01.md](scenarios/foundational-batch-01.md) | FND-S01 – FND-S21 |
 | Foundational Batch 02 | [scenarios/foundational-batch-02.md](scenarios/foundational-batch-02.md) | TAR-S01 – TAR-S17 |
-| Foundational Batch 03 | [scenarios/foundational-batch-03.md](scenarios/foundational-batch-03.md) | CTR-S01 – CTR-S16 |
+| Foundational Batch 03 | [scenarios/foundational-batch-03.md](scenarios/foundational-batch-03.md) | CTR-S01 – CTR-S20 |
 
 ## Unresolved cross-domain questions
 
@@ -135,7 +138,7 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
   blocked, or lying) — deferred to whichever future batch (most plausibly Perception/knowledge/
   information) first needs it.
 
-**From Foundational Batch 03 (2026-09-21):**
+**From Foundational Batch 03 (drafted 2026-09-21, revised same day per follow-up):**
 
 - **Confirmed MISSING, not merely unexplored.** CAP-05's body/form and environment capability
   gates — deferred to Capability & progression and Space/environment respectively.
@@ -150,9 +153,17 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
 - **RESOLVED — investigated and explicitly folded in, not given a separate family.** Threshold
   semantics live in Capacity (LIMIT-04), cross-linked from Cost/Resource/Transformation rather
   than duplicated.
-- **RESOLVED — investigated and moved out entirely.** Deterministic randomness is not a Rule
-  Catalog concern; the world-semantic residue is already covered by Causality (CAUSE-01/
-  CAUSE-03), and reproducibility/replay stays with Evaluation/implementation.
+- **RESOLVED — investigated and moved out entirely, rationale sharpened by follow-up.**
+  Deterministic randomness is not a Rule Catalog concern; the controlling reason is that valid
+  outcome space and causal legitimacy are already governed by Causality (CAUSE-01/CAUSE-03), not
+  that the repository happens to use a deterministic seed — reproducibility/replay stays with
+  Evaluation/implementation regardless of either.
+- **New, confirmed MISSING (added by follow-up).** LIMIT-03's soft-cap alternative (graduated
+  degradation past a preferred bound, rather than hard rejection) — the revised rule permits it;
+  nothing implements it yet.
+- **New, deferred by follow-up.** RES-04's divisible/interruptible transfer semantics — the
+  revised rule permits a resource to declare non-atomic transfer semantics; whether any future
+  domain actually wants that is not decided.
 
 ## Review index
 
@@ -176,7 +187,7 @@ rationale stay canonical.
 |---|---|---|---|---|
 | Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S21) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Ready for high-level external review |
 | Foundational Batch 02 | `foundations/time.md`, `foundations/authority.md`, `foundations/reach.md` | `scenarios/foundational-batch-02.md` (TAR-S01–S17) | [review-exports/foundational-batch-02-review.md](review-exports/foundational-batch-02-review.md) | PASS — ready to freeze |
-| Foundational Batch 03 | `foundations/capability.md`, `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md` | `scenarios/foundational-batch-03.md` (CTR-S01–S16) | [review-exports/foundational-batch-03-review.md](review-exports/foundational-batch-03-review.md) | Ready for high-level external review |
+| Foundational Batch 03 | `foundations/capability.md`, `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md` | `scenarios/foundational-batch-03.md` (CTR-S01–S20) | [review-exports/foundational-batch-03-review.md](review-exports/foundational-batch-03-review.md) | PASS — ready to freeze |
 | History / Provenance | `foundations/history-provenance.md` (scope only) | none yet | none yet | Scope defined 2026-09-21; not a reviewable batch yet — next planned step once Batch 03 is reviewed |
 
 ## Links to current review batches

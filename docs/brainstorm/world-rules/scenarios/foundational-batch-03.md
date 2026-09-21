@@ -8,18 +8,21 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Foundational Batch 03
 
-**Purpose/scope.** Sixteen scenarios used to pressure-test the Capability, Cost, Capacity,
+**Purpose/scope.** Twenty scenarios used to pressure-test the Capability, Cost, Capacity,
 Resource, and Transformation rule families in `foundations/capability.md`,
 `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, and
-`foundations/transformation.md`, per `tmp/world-rule-batch-3-ext-ai.md`. Covers all twelve
-required probes (capability without authority, authority without capability, capability without
-resources, resource without capability, cost vs. consequence, capacity exceeded, renewable
-resource, resource conversion, qualitative transformation, threshold without automatic
-transformation, unlimited-growth counter, random outcome) plus the explicit cross-batch checks
-the instruction required (`capable ≠ authorized`, `capable ≠ reachable`, `resource exists ≠
-actor can use it`, `cost paid ≠ outcome guaranteed`, `threshold crossed ≠ transformation
-automatically valid`, `transformation ≠ new identity by default`, `delayed regeneration still
-requires causal provenance`).
+`foundations/transformation.md`. CTR-S01–S16 are the original seed set
+(`tmp/world-rule-batch-3-ext-ai.md`), covering all twelve required probes (capability without
+authority, authority without capability, capability without resources, resource without
+capability, cost vs. consequence, capacity exceeded, renewable resource, resource conversion,
+qualitative transformation, threshold without automatic transformation, unlimited-growth
+counter, random outcome) plus the explicit cross-batch checks the instruction required
+(`capable ≠ authorized`, `capable ≠ reachable`, `resource exists ≠ actor can use it`, `cost
+paid ≠ outcome guaranteed`, `threshold crossed ≠ transformation automatically valid`,
+`transformation ≠ new identity by default`, `delayed regeneration still requires causal
+provenance`). CTR-S17–S20 are a follow-up expansion
+(`tmp/world-rule-batch-3-followup-ext-ai.md`), added to directly challenge the refined COST-03,
+RES-01, RES-04, and LIMIT-03 respectively.
 
 Scoring uses the same vocabulary as Batches 01/02: **covered** / **partially covered** /
 **blocked** / **revealed missing rule** / **revealed contradiction**, against current repository
@@ -211,14 +214,83 @@ Does randomness belong in the World Rule Catalog at all?
 
 - **Rules invoked:** none accepted — this scenario's purpose is to test the *disposition*
   itself, not to probe an accepted rule.
-- **Result: moved out, not a Rule Catalog concern.** `state.seed` (`src/engine/kernel.py`)
-  confirms every "random" outcome in this repository is a deterministic function of a stored
-  seed — there is no genuine world-level stochasticity to give semantics to. The one real
-  question a "random" outcome raises at the world-semantic level (is a dice-roll-flavored
-  decision a legitimate cause?) is already fully answered by CAUSE-01 (yes, provided it's a real
-  producer) and CAUSE-03 (no upgrading correlation into fabricated causation). Reproducibility/
+- **Result: moved out, not a Rule Catalog concern — reaffirmed 2026-09-21 on a sharpened
+  rationale.** The controlling reason is not that this repository happens to use a deterministic
+  seed; it is that the valid outcome space for any stochastic-flavored decision, and the causal
+  legitimacy of whichever outcome occurs, are already fully governed by the accepted world Rules
+  and by Causality (CAUSE-01's real-causal-path requirement; CAUSE-03's anti-fabrication
+  standard). A dedicated Randomness family would have nothing new to govern. `state.seed`
+  (`src/engine/kernel.py`) remains cited as supporting implementation evidence only — a world
+  whose implementation used genuinely non-reproducible randomness would reach the same
+  disposition, since the semantic argument doesn't depend on reproducibility. Reproducibility/
   replay is squarely Evaluation/implementation's concern, per the established boundary. This
   scenario's conclusion is the disposition itself, not a new Rule.
+
+## Expansion: follow-up probes (CTR-S17–S20)
+
+Added per `tmp/world-rule-batch-3-followup-ext-ai.md`, directly challenging the four Rules that
+follow-up revised: COST-03 (lifecycle-based cost, not universal "no cost on failure"), RES-01
+(broadened to allow accessible-but-not-personally-held resources), RES-04 (declared transfer
+semantics, not universal atomicity), and LIMIT-03 (explicitly-defined limit response, not one
+universal handling).
+
+## CTR-S17 — A failed committed attempt still costs something
+
+An attack is committed: stamina is spent as part of executing it. The attack then fails to land
+— it misses or is resisted. The stamina already spent is not refunded by the failure.
+
+- **Rules invoked:** COST-03 (costs follow the declared lifecycle of the attempt), CAP-04
+  (capability doesn't guarantee success).
+- **Result: covered.** `skill_actions.py`'s attack handler deducts `stamina_cost` on the
+  attacker's `EntityUpdate` as part of committing the action, independent of the defender's
+  combat-resolution outcome — the cost is incurred at commitment, and a later failure to achieve
+  the intended effect does not retroactively undo it. This is the case COST-03's revision
+  specifically distinguishes from a proposal rejected before execution (which, per the same
+  rule, correctly incurs no cost at all).
+
+## CTR-S18 — An accessible resource, not personally held
+
+An entity draws charges from a resource node. No entity "holds" the node's remaining charge pool
+the way it holds its own inventory gold — the resource is accessible and consumable, but not
+personally possessed by anyone until drawn.
+
+- **Rules invoked:** RES-01 (broadened definition — resource does not require personal
+  holding).
+- **Result: covered.** `ResourceNodeState`'s charges are keyed to the node itself, not to any
+  claimant entity — confirming a resource can be a real, consumable, causally-participating
+  quantity while never being "held" by a subject in the inventory sense. RES-01's four-way
+  exclusion (resource ≠ state/capability/capacity/derived-abstraction) still holds unaffected;
+  only the "must be personally held" assumption was ever in question.
+
+## CTR-S19 — A partial transfer is legitimate (counter to the previous universal atomicity claim)
+
+A hypothetical transfer offers 100 units; only 40 are successfully transferred; the remaining 60
+stays with the source. This scenario does not require any current system to actually implement
+partial transfers — it only needs to confirm that RES-04's revised wording permits one to exist
+legitimately, rather than forbidding it as this family's original wording would have.
+
+- **Rules invoked:** RES-04 (declared transfer semantics, not universal atomicity).
+- **Result: covered, as a boundary check on the Rule's wording rather than a repository
+  finding.** This repository's own resource-conservation contract remains fully atomic by its
+  own declared choice (`resource_conservation_contract.md`) — that does not change. What changes
+  is that RES-04 no longer reads as forbidding a *different* mechanism from someday declaring
+  divisible or interruptible transfer semantics of its own; this scenario exists to confirm the
+  revised wording actually permits that, which it does, since the requirement is now "honor
+  whatever is declared," not "always be atomic."
+
+## CTR-S20 — A soft capacity limit
+
+An activity crosses a subject's preferred capacity. The world permits the activity to continue
+rather than rejecting it outright — but degradation, risk, or cost increases as a consequence of
+operating past the preferred bound.
+
+- **Rules invoked:** LIMIT-03 (explicitly-defined limit response, not one universal handling).
+- **Result: partially covered — confirms the Rule's generalized wording, not a repository
+  finding.** No soft-cap mechanism currently exists in this repository (`CapacityEnforcementPhase`
+  and `DetourService` both implement hard rejection/eviction, not graduated degradation) — this
+  is recorded as MISSING, consistent with `capacity.md`'s own honest evidence entry. The scenario
+  confirms LIMIT-03's revised wording does not forbid a soft cap from existing; it does not
+  demonstrate one existing yet.
 
 ---
 
@@ -241,3 +313,13 @@ CTR-S16 is deliberately the only scenario in this batch whose "result" is a disp
 than a rule confirmation — recorded this way, rather than omitted, because the batch instruction
 explicitly required tracing whether randomness belongs in the Catalog at all, and a scenario that
 concludes "no" is still a completed probe, not a skipped one.
+
+The follow-up expansion's own pattern is different in kind from Batch 02's follow-up: none of
+CTR-S17–S20 found an internal contradiction the way Batch 02's REACH-02/REACH-04 tension did.
+Each instead confirmed that a Rule's *revised* wording (broadened, or generalized away from a
+universal claim) still holds against a real or hypothetical case the *original*, narrower
+wording would have handled incorrectly — CTR-S17 (failure still costs), CTR-S18 (unheld but
+real resource), CTR-S19 (partial transfer permitted by the new wording), and CTR-S20 (soft cap
+permitted by the new wording, though not yet built). Three of the four (S18–S20) are boundary
+checks on wording rather than new repository findings, and are recorded as such rather than
+overstated as discoveries.

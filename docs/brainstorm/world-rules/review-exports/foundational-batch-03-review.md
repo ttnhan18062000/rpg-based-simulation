@@ -21,7 +21,12 @@ Semantics, Transformation — following on Batch 01 (Identity, State Ownership, 
 Batch 02 (Time, Authority, Reach). Not a per-domain batch; deliberately domain-agnostic. Drafted
 per `tmp/world-rule-batch-3-ext-ai.md`, using the same canonical-file + Scenario Bank +
 review-export workflow established in Batches 01/02. All five families were kept separate — no
-merge was found necessary despite the instruction explicitly permitting one.
+merge was found necessary despite the instruction explicitly permitting one. Revised once, per
+`tmp/world-rule-batch-3-followup-ext-ai.md`, to remove repository-status language from CAP-05's
+own rule text, distinguish a rejected proposal from a committed-but-failed attempt in COST-03,
+broaden RES-01 beyond personally-held resources, remove universal atomicity from RES-04, and
+generalize LIMIT-03 beyond one assumed response to exceeding a limit — before being frozen as
+ready for high-level external review.
 
 ## Canonical files included
 
@@ -30,7 +35,7 @@ merge was found necessary despite the instruction explicitly permitting one.
 - `foundations/capacity.md` (LIMIT-01–05)
 - `foundations/resource.md` (RES-01–06)
 - `foundations/transformation.md` (TRANS-01–05)
-- `scenarios/foundational-batch-03.md` (CTR-S01–S16)
+- `scenarios/foundational-batch-03.md` (CTR-S01–S20)
 
 ## Rule Inventory
 
@@ -45,7 +50,7 @@ evidence, and rationale stay in the canonical files linked above.
 | CAP-02 | Capability ≠ Opportunity/Reach | Being able to act doesn't mean the present situation gives the chance to exercise it. | Accepted |
 | CAP-03 | Capability ≠ Resource Availability | Knowing/being able to perform a technique doesn't mean its resource is available. | Accepted |
 | CAP-04 | Capability Doesn't Guarantee Success | Eligibility to attempt ≠ assured outcome. | Accepted |
-| CAP-05 | Capability May Depend on Several Independent Factors | Subject state, learned ability, equipment confirmed; body/form, environment, relationships, institutional support confirmed MISSING as gates. | Accepted |
+| CAP-05 | Capability May Depend on Multiple Independent Factors | Subject state, learned ability, equipment, body/form, environment, relationships, institutional support are all possible sources; which ones matter is for later domains to declare. | Accepted, refined |
 
 ### Cost (`foundations/cost.md`)
 
@@ -53,7 +58,7 @@ evidence, and rationale stay in the canonical files linked above.
 |---|---|---|---|
 | COST-01 | Cost Is Broader Than Currency | Resource, time, energy, health, durability, attention, opportunity, risk, social/political cost are all legitimate categories. | Accepted |
 | COST-02 | Precondition, Cost, Consequence Are Three Distinct Things | Whether an action may occur, what it consumes, and what it produces downstream are not automatically the same. | Accepted |
-| COST-03 | Cost Is Paid Only on Commitment | A rejected attempt never incurs its cost. | Accepted |
+| COST-03 | Cost Follows the Declared Lifecycle of the Attempt | A rejected proposal incurs no execution cost; a committed attempt's cost is not refunded by later failure. | Accepted, refined |
 | COST-04 | Not Every Action Requires a Cost | Cost is opt-in per action type, never a universal requirement. | Accepted |
 | COST-05 | Actor's Cost and Another Subject's Consequence Are Independently Tracked | Even from the same action, cost and consequence on different subjects are separate facts. | Accepted |
 
@@ -63,7 +68,7 @@ evidence, and rationale stay in the canonical files linked above.
 |---|---|---|---|
 | LIMIT-01 | Capacity Is Domain-Specific, Not Universal | Several independent bounds, never one generic "Capacity" stat. | Accepted |
 | LIMIT-02 | Capacity May Degrade Under Strain | A capacity bound can be a live function of current state, not a fixed ceiling. | Accepted |
-| LIMIT-03 | Exceeding Capacity Requires Explicit Handling | Rejection, eviction, or degradation — never silent overflow. | Accepted |
+| LIMIT-03 | Exceeding or Approaching a Limit Requires Explicit Semantics | Rejection, degradation, displacement, overflow-with-consequence, oversubscription, hard/soft cap — never silent overflow, never one assumed response. | Accepted, refined |
 | LIMIT-04 | Threshold-Crossing ≠ Automatic Cause | The accumulated condition, not the check, is the real cause; not promoted to its own family. | Accepted, disposition explicit |
 | LIMIT-05 | Diminishing Returns/Saturation Must Be Explicit | Legitimate, but never assumed to apply just because a limit exists. | Accepted |
 
@@ -71,10 +76,10 @@ evidence, and rationale stay in the canonical files linked above.
 
 | ID | Short name | One-line semantic purpose | Status |
 |---|---|---|---|
-| RES-01 | Resource ≠ State/Capability/Capacity/Derived Abstraction | A resource is a held, consumable/transferable/transformable quantity, not any of these neighbors. | Accepted |
+| RES-01 | Resource ≠ State/Capability/Capacity/Derived Abstraction | A resource is a held/stored/available/accessible/allocated/consumable/transferable/transformable/regenerable quantity — not necessarily personally held — and not any of these neighbors. | Accepted, refined |
 | RES-02 | Creation/Destruction Requires a Declared Cause | Causal legitimacy, not real-world physics. | Accepted |
 | RES-03 | Strict Conservation Is Domain-Specific | Not a universal law — each resource kind's strictness is its own declared choice. | Accepted |
-| RES-04 | Resource Transactions Are Atomic | Fully occurs or fully doesn't; no partial transfer. | Accepted |
+| RES-04 | Transfer Semantics Must Be Declared; Authoritative State Must Never Depend on Accidental Partial Application | Atomic, divisible, partial, or interruptible are all legitimate if declared and honored exactly — universal atomicity is not itself a world law. | Accepted, refined |
 | RES-05 | Renewable Resources Regenerate Through a Declared Process | Reuses TIME-04 directly; regeneration is never unexplained reappearance. | Accepted |
 | RES-06 | Resource Conversion Preserves a Provenance Link | The causal link to inputs is real, independent of the output's identity question (ID-03). | Accepted |
 
@@ -90,8 +95,8 @@ evidence, and rationale stay in the canonical files linked above.
 
 ## Scenario Inventory
 
-One row per scenario, including the required counter and the meta-conclusion scenario. Full
-traces stay in `scenarios/foundational-batch-03.md`.
+One row per scenario, including the required counter, the meta-conclusion scenario, and the
+follow-up probe scenarios. Full traces stay in `scenarios/foundational-batch-03.md`.
 
 | Scenario ID | Short name | Trajectory (initial → consequence) | Rule families challenged | Deferred domain dependencies | Result |
 |---|---|---|---|---|---|
@@ -111,6 +116,10 @@ traces stay in `scenarios/foundational-batch-03.md`.
 | CTR-S14 | Capable, but Out of Reach (cross-batch) | capable actor → LOS obstructed → no effect | Capability, Reach | Space & environment | Covered |
 | CTR-S15 | Growth Meets Its Ceiling | accumulation continues → declared saturation floor prevents unconstrained scaling | Capacity | Ecology/population | Covered |
 | CTR-S16 | Same Situation, Different Outcome? | same situation → several valid outcomes proposed → disposition traced | none (disposition probe) | Evaluation (explicitly excluded) | Moved out |
+| CTR-S17 | A Failed Committed Attempt Still Costs Something | stamina spent on commit → attack misses/resisted → cost not refunded | Cost, Capability | Conflict & combat | Covered |
+| CTR-S18 | An Accessible Resource, Not Personally Held | node charges accessible to any entity → no single holder | Resource | Economy/resources | Covered |
+| CTR-S19 | A Partial Transfer Is Legitimate (counter) | 100 units offered → 40 transferred → 60 stays with source, under a hypothetical declared semantics | Resource | Economy/resources | Covered (wording check) |
+| CTR-S20 | A Soft Capacity Limit | activity crosses preferred capacity → world permits continuation with increased risk/cost | Capacity | Agency/decision | Partial (wording check; mechanism MISSING) |
 
 ## Coverage Summary
 
@@ -126,20 +135,22 @@ What this batch actually stress-tests — coverage shape, not scenario count.
 **Cost**
 - broader-than-currency categories — CTR-S05
 - precondition/cost/consequence triple — CTR-S05
-- cost charged only on commitment — CTR-S05
+- cost follows the declared lifecycle (rejected vs. committed-then-failed) — CTR-S05, CTR-S17
 - actor-cost vs. other-subject-consequence — CTR-S05
 
 **Capacity**
 - domain-specific plural bounds — CTR-S06
 - degradation under strain — CTR-S06
-- exceeding capacity, explicit handling — CTR-S07
+- exceeding capacity, explicitly-defined semantics (hard cap exercised, soft cap MISSING) —
+  CTR-S07, CTR-S20
 - threshold-crossing causal discipline — CTR-S10
 - saturation/diminishing returns — CTR-S15
 
 **Resource**
-- resource vs. neighboring concepts — CTR-S08
+- resource vs. neighboring concepts, including accessible-but-unheld — CTR-S08, CTR-S18
 - declared creation/destruction, strict vs. non-strict — CTR-S09
-- atomicity — CTR-S09
+- declared transfer semantics honored exactly (atomic here; divisible permitted elsewhere) —
+  CTR-S09, CTR-S19
 - renewable regeneration provenance — CTR-S11
 - conversion provenance — CTR-S12
 
@@ -168,6 +179,11 @@ consistent with Batches 01/02's own framing:
   independently re-verified — deferred to Objects & material culture or Capability &
   progression, whichever formalizes crafting content first.
 - LIMIT-05's saturation/diminishing-returns concrete content stays with Ecology/population.
+- LIMIT-03's soft-cap alternative (CTR-S20) is confirmed MISSING — no domain currently
+  implements graduated degradation past a preferred bound; deferred to whichever future domain
+  first wants oversubscription-with-consequence rather than hard rejection.
+- RES-04's divisible/interruptible transfer alternative (CTR-S19) is not designed here — this
+  batch confirms the revised rule permits it, not that any mechanism builds it.
 - RES-01–06's actual resource catalog (what specific things are resources, their kinds) stays
   with Economy/resources and Objects & material culture.
 - TRANS-01–05's actual transformation content (vampire, settlement lifecycle, species
@@ -225,13 +241,21 @@ call-out, per the batch instruction):**
    first?
 4. COST-01's attention and social/political-consequence categories — real cost categories, or
    will they turn out to be consequences of something else once a domain actually models them?
+5. **Added 2026-09-21.** Should a soft-capacity mechanism (graduated degradation past a
+   preferred bound, rather than hard rejection) be built for any domain, and if so, which one
+   first? LIMIT-03's revised wording permits it; nothing currently implements it.
+6. **Added 2026-09-21.** Should any future resource mechanism actually use divisible or
+   interruptible transfer semantics, or does every resource in practice end up wanting full
+   atomicity regardless? RES-04's revised wording permits either; not decided which future
+   domains will actually want.
 
 ## Repository evidence
 
-No CONFLICTING or UNKNOWN findings this batch. Two PARTIAL findings (CTR-S02, reusing Batch 02's
-already-recorded open judgment call; CTR-S04, a genuinely new PARTIAL — the learned-recipe gate
-wasn't independently re-verified). Several confirmed MISSING findings (CAP-05's body/form,
-environment, relationships, institutional-support capability gates) are recorded honestly as
+No CONFLICTING or UNKNOWN findings this batch, in either pass. Three PARTIAL findings (CTR-S02,
+reusing Batch 02's already-recorded open judgment call; CTR-S04, the learned-recipe gate; CTR-S20,
+added this pass — a soft-cap mechanism the revised LIMIT-03 permits but nothing yet implements).
+Several confirmed MISSING findings (CAP-05's body/form, environment, relationships,
+institutional-support capability gates; LIMIT-03's soft-cap alternative) are recorded honestly as
 absent mechanisms, not assumed to exist.
 
 Key evidence, all confirmed by direct code inspection: `src/engine/legality.py`
@@ -251,18 +275,23 @@ disposition's own evidence), `src/core/inventory.py` (`can_equip_item`'s slot-re
 check).
 
 **Which candidate rules were rejected as implementation detail (explicit call-out, per the batch
-instruction):** none this batch. Unlike Batch 02's follow-up pass, no candidate rule required
-walking back an implementation-specific claim after the fact — the starter hypotheses were
-already framed at the semantic level throughout, and repository evidence was checked against
-that framing rather than against an implementation detail that needed removing.
+instruction):** none rejected outright, but the follow-up pass did remove implementation-specific
+language from two rules without rejecting their substance: CAP-05's rule text no longer states
+which factors are "confirmed MISSING as gates" (moved to evidence); COST-03 no longer treats
+"cost is only paid on commitment" as if commitment and success were the same question as
+rejection. Two others (RES-04, LIMIT-03) had a *universal implementation choice* removed from
+the rule's own claim (atomicity; hard-cap response) while the underlying repository behavior
+stayed evidence for one legitimate instance, not the only one.
 
-**Whether deterministic randomness belongs in the Rule Catalog (explicit call-out):** No.
-Disposed of via CTR-S16: every "random" outcome in this repository is a deterministic function
-of a stored `state.seed`; the residual world-semantic question (can a stochastic-flavored
-decision be a legitimate cause?) is already fully covered by CAUSE-01/CAUSE-03; reproducibility/
+**Whether deterministic randomness belongs in the Rule Catalog (explicit call-out, reaffirmed on
+a sharpened rationale per the follow-up):** No. The controlling reason is no longer "this
+repository happens to use a deterministic seed" — it is that the valid outcome space and causal
+legitimacy of any stochastic-flavored decision are already fully governed by the accepted world
+Rules and by Causality (CAUSE-01/CAUSE-03); a dedicated Randomness family would have nothing new
+to govern. `state.seed` remains cited only as supporting implementation evidence. Reproducibility/
 replay belongs to Evaluation/implementation per the established boundary
 (`simulation-rule-world-law-design-preparation.md` §3.8). No Rule family, and no individual
-Rule, was created for it.
+Rule, was created for it — disposition unchanged, argument strengthened.
 
 **Any rule that would accidentally impose real-world physics on the fantasy setting (explicit
 call-out):** None. RES-02/RES-03 were drafted specifically to avoid this — the gold-vs-loot
@@ -289,33 +318,36 @@ All five starter family groupings (Capability, Cost, Capacity/Limits, Resource/C
 Transformation) were kept separate — investigated for a forced merge per the batch instruction's
 own explicit invitation, and rejected: no two families were found semantically inseparable.
 Within them, 26 Rules were drafted (5 Capability, 5 Cost, 5 Capacity, 6 Resource, 5
-Transformation) — all 26 accepted, 0 rejected, 0 split, 0 merged. Two additional investigations
-were explicitly *not* promoted to their own Rule family, per the batch instruction's own
-invitation to make that call: **Threshold semantics** (folded into Capacity as LIMIT-04, cross-
-linked from Cost/Resource/Transformation rather than duplicated) and **Deterministic randomness**
-(moved out of the Catalog entirely, per CTR-S16's disposition). No rule was rejected as an
-implementation concern this batch — the engine-tick-ordering/scheduler-execution-order exclusion
-established in Batches 01/02 was carried forward unchanged, not re-litigated.
+Transformation) — all 26 accepted, 0 rejected, 0 split, 0 merged, in both the original pass and
+the follow-up revision pass. Two additional investigations were explicitly *not* promoted to
+their own Rule family, per the batch instruction's own invitation to make that call: **Threshold
+semantics** (folded into Capacity as LIMIT-04, cross-linked from Cost/Resource/Transformation
+rather than duplicated) and **Deterministic randomness** (moved out of the Catalog entirely, per
+CTR-S16's disposition, reaffirmed on a sharpened rationale by the follow-up pass). No rule was
+rejected as an implementation concern this batch — the engine-tick-ordering/scheduler-execution-
+order exclusion established in Batches 01/02 was carried forward unchanged, not re-litigated.
+
+The follow-up pass refined 5 of the 26 rules (CAP-05, COST-03, RES-01, RES-04, LIMIT-03 — see
+Rule Inventory's "Accepted, refined" rows) without rejecting, splitting, or merging any of them,
+and added 4 further scenarios (CTR-S17–S20) without producing any new rejection either. None of
+the five refinements reversed a rule's substance — each either removed repository-status
+language from the rule's own text (CAP-05), distinguished two cases the original wording had
+conflated (COST-03), or replaced an over-generalized universal claim with the actual, narrower
+requirement the repository's own evidence supports (RES-01, RES-04, LIMIT-03).
 
 Full per-rule disposition, evidence, and rationale: see the canonical files above, or
 `tmp/world-rule-foundational-batch-03-report.md` (local review report, not part of this catalog).
 
 ---
 
-> **FOUNDATIONAL BATCH 03 READY FOR HIGH-LEVEL EXTERNAL REVIEW.**
+> **FOUNDATIONAL BATCH 03 PASS — READY TO FREEZE**
 
-All required artifacts exist: five rule-family files (26 rules total), one scenario file (16
-scenarios covering all 12 required probes plus the explicit cross-batch checks), this review
-export with all nine required sections (Rule Inventory, Scenario Inventory, Coverage Summary,
-Deferred Semantics, Cross-domain findings, Open questions, Repository evidence, Owner-attention
-decisions, Candidate disposition) plus every explicitly-required call-out, and a local
-disposition report. No contradiction was found against Batches 01/02 or within this batch. Per
-the batch instruction's stop condition: all ten checklist items are satisfied (capability
-eligibility clear; authority/reach/resource/precondition boundaries distinct; cost vs.
-consequence clear; capacity semantics exist without a universal stat; resource creation/
-depletion/conversion has causal semantics; transformation semantics integrate with Identity;
-thresholds have explicit meaning, folded into Capacity; deterministic-randomness disposition is
-explicit — moved out; normal and counter-scenarios traced; deferred domain questions explicit).
-Do not begin domain-facing Milestone B batches yet. Per the batch instruction: proceed next to
-the planned Milestone A History/Provenance completion pass before declaring the foundational
-milestone complete.
+All required artifacts reflect the follow-up revision: five rule-family files (26 rules, 5
+refined this pass), one scenario file (20 scenarios: the original 16 plus 4 follow-up probes),
+this review export with all nine required sections plus every explicitly-required call-out, and
+a local disposition report. No new contradiction appeared — the follow-up pass's four probes
+each confirmed a revised rule's wording holds against a real or hypothetical case the original,
+narrower wording would have handled incorrectly, not a contradiction discovered afterward. Per
+the batch instruction's stop condition: all ten checklist items remain satisfied under the
+revised wording. Do not begin domain-facing Milestone B batches yet. Per the follow-up
+instruction: proceed next to the planned Milestone A History/Provenance completion pass.

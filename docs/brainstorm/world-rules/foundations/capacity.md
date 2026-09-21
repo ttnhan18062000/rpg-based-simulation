@@ -57,23 +57,35 @@ is a live function of biological state, not a static ceiling set once at creatio
 
 ---
 
-## LIMIT-03 — Exceeding capacity produces explicit, declared handling — not silent overflow
+## LIMIT-03 — Exceeding or approaching a declared limit must have explicitly defined semantics
 
-> When a subject's commitments would exceed a declared capacity bound, the excess must be
-> handled by an explicit rule (rejection, eviction of the lowest-priority existing commitment,
-> degradation) — never silently accepted past the bound or silently dropped without a traceable
-> cause.
+> Exceeding or approaching a declared limit must have explicitly defined semantics — never
+> silently accepted past the bound or silently dropped without a traceable cause. This does not
+> mean one universal response: rejection, degradation, displacement, overflow with consequence,
+> temporary oversubscription, a hard cap, and a soft cap are all legitimate domain-specific
+> responses, and a given limit may use a different one than another.
 
-**Disposition: ACCEPT.**
+**Disposition: ACCEPT, generalized 2026-09-21 — no longer implies one universal response.** The
+original wording listed "rejection, eviction, degradation" as though exceeding capacity always
+meant one of those three specific outcomes. That's this repository's own current choice for
+cognition capacity specifically, not a universal law — a different domain may legitimately allow
+temporary oversubscription with an increasing risk/cost penalty (a soft cap) rather than hard
+rejection. The requirement that survives generalization is only that *some* explicit, declared
+handling exists — never an assumed default and never silent overflow.
 
-**Repository evidence: SUPPORTED.** `CapacityEnforcementPhase` (`src/engine/pipeline_phases/
+**Repository evidence: SUPPORTED for this repository's own hard-cap choice; a soft-cap
+alternative is confirmed possible in principle, not yet exercised by a live mechanism.**
+*Hard cap, exercised:* `CapacityEnforcementPhase` (`src/engine/pipeline_phases/
 capacity_enforcement.py`) explicitly checks `len(entity.strategic.leads) + len(strat_upd.
 leads_add_or_update) > profile.max_leads` (and the same shape for `concerns`/`projects`) before
-allowing an addition. `DetourService` (`src/systems/strategic_systems/detour.py`) computes
-`excess = active_leads[profile.max_leads:]` and handles it explicitly rather than letting the
-list grow unbounded. Both are real, dedicated mechanisms — not an assumed behavior.
+allowing an addition; `DetourService` (`src/systems/strategic_systems/detour.py`) computes
+`excess = active_leads[profile.max_leads:]` and handles it explicitly. *Soft cap:* not currently
+implemented anywhere in the repository — recorded as MISSING rather than assumed, per the new
+scenario this pass adds specifically to probe it.
 
-**Scenarios:** [CTR-S07](../scenarios/foundational-batch-03.md#ctr-s07).
+**Scenarios:** [CTR-S07](../scenarios/foundational-batch-03.md#ctr-s07),
+[CTR-S20](../scenarios/foundational-batch-03.md#ctr-s20) (added 2026-09-21 — a soft capacity
+limit, confirming this rule does not force hard rejection).
 
 ---
 

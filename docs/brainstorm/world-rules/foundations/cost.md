@@ -62,20 +62,40 @@ and consequence are three distinct code paths here, not three names for the same
 
 ---
 
-## COST-03 — A cost is paid only when the action is actually committed
+## COST-03 — Costs are incurred according to the declared lifecycle of the attempted action
 
-> Merely attempting an action, or having it rejected at the precondition stage, does not incur
-> the action's cost. Cost is charged on commitment, not on attempt.
+> Costs are incurred according to the declared lifecycle of the attempted action/process. A
+> proposal rejected before execution does not silently incur execution cost, unless making the
+> proposal/attempt itself has an explicitly declared cost. A committed attempt that later fails
+> to achieve its intended outcome is not the same case as a proposal rejected before execution —
+> a committed attempt may legitimately have already consumed time, stamina, mana, durability,
+> attention, or risk exposure by the point it fails, and failure does not retroactively refund
+> those.
 
-**Disposition: ACCEPT.**
+**Disposition: ACCEPT, refined 2026-09-21 — the original wording was too universal.** "A cost is
+paid only when the action is actually committed... a rejected attempt never incurs the action's
+cost" was correct for the *rejected-before-execution* case but was overbroad if read as "failure
+never costs anything" — those are two different cases. A proposal that never gets past a
+precondition check (self-attack, insufficient stamina to even attempt) correctly incurs no cost.
+A committed action that proceeds, consumes its declared costs, and *then* fails to land its
+intended effect (a committed attack that consumes stamina but misses) is a different case
+entirely — the cost was already incurred by the point of commitment, and the later failure of
+the *consequence* doesn't undo that. The rule now distinguishes these explicitly rather than
+treating "rejected" and "failed" as the same outcome.
 
-**Repository evidence: SUPPORTED.** `resource_conservation_contract.md`'s own atomicity gate
-(Gate 4) makes this true by construction for resource-transaction costs: "If any check fails, the
-world state is unchanged — no item vanishes, no charge is consumed, no gold is spent." The same
-pattern holds for stamina: `can_use_skill()` is checked *before* `drain_skill()`'s cost is
-applied; a rejected attempt never reaches the deduction step.
+**Repository evidence: SUPPORTED, for both cases distinctly.** *Rejected before execution:*
+`resource_conservation_contract.md`'s atomicity gate (Gate 4) — "If any check fails, the world
+state is unchanged — no item vanishes, no charge is consumed, no gold is spent"; `can_use_skill()`
+is checked *before* `drain_skill()`'s cost is applied, so a rejected attempt never reaches the
+deduction step at all. *Committed attempt that later fails:* `skill_actions.py`'s attack handler
+deducts `stamina_cost` (`StaminaUpdate(current_delta=-stamina_cost)`) on the attacker's
+`EntityUpdate` as part of committing the action, *before* and independent of whatever the
+defender's combat-resolution outcome turns out to be — the stamina cost is paid whether or not
+the attack actually connects.
 
-**Scenarios:** [CTR-S05](../scenarios/foundational-batch-03.md#ctr-s05).
+**Scenarios:** [CTR-S05](../scenarios/foundational-batch-03.md#ctr-s05),
+[CTR-S17](../scenarios/foundational-batch-03.md#ctr-s17) (added 2026-09-21 — a failed committed
+attempt that still costs something).
 
 ---
 
