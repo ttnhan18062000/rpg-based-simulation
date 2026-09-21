@@ -11,6 +11,15 @@ tags: [architecture, performance, determinism]
 
 # TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC
 
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
+> presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
+> concurrent session on this machine. **Nothing about the ticket's own substance was
+> investigated, debugged, or re-scoped as part of this move.** Anyone picking this up should
+> treat it as unstarted backlog work and re-validate its premises first, since it predates a
+> large amount of change in this repo.
+
 ## Title
 Performance-optimization M0: architecture governance — decision ownership, conflict triage, PERF-D1..D6
 

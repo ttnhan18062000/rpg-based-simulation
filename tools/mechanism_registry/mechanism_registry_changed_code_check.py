@@ -11,18 +11,27 @@ mechanism changed and that mechanism's own registry entry (`state`, `depends_on`
 mechanical version of the parity ledger's own decayed "update your entry when behavior changes"
 rule (`docs/plans/mechanism_claims_as_tests_initiative.md` §6 Non-goals).
 
-Two entry points, deliberately separated:
+Three entry points, deliberately separated:
   - `check_drift(old_data, new_data, changed_files)` -- the pure, testable core. Takes two already-
     loaded registry dicts (old/new) and a set of changed file paths; returns every mechanism whose
     `implemented_by` citation includes a changed file, annotated with whether its own entry also
     changed. No git dependency, no subprocess -- this is what the tests exercise directly.
-  - `check_drift_from_git(base_ref, head_ref)` -- the CLI's own git-diff wrapper: resolves changed
-    files via `git diff --name-only`, loads the registry at both refs via `git show`, and calls
-    `check_drift()`.
+  - `check_drift_from_git(base_ref, head_ref)` -- the CI wrapper: resolves changed files via a
+    branch-wide `git diff --name-only`, loads the registry at both refs via `git show`, and calls
+    `check_drift()`. This is what CI runs.
+  - `check_drift_for_ticket(ticket_id, base_ref)` -- the CLOSE-TIME wrapper
+    (TCK-20260920-MECHANISM-REGISTRY-CHANGED-CODE-ADVISORY-AT-CLOSE), used by both the
+    hand-orchestrated close path and `implement-ticket.js`'s Finalize. A branch-wide diff is the
+    wrong changed-files definition here: this repo's real PRs routinely bundle several unrelated
+    tickets into one branch, so it would misattribute drift across tickets that have nothing to do
+    with each other. Instead scopes to `get_changed_files_for_ticket()` -- see that function's own
+    docstring for the definition and its pre-merge-only boundary.
 
 Report-only, same convention as every other detector in this corpus -- never fails the build.
-Not wired into CI (same as `mechanism_state_caller_check.py`/`mechanism_wiring_map_classdef.py`,
-neither of which is CI-wired either); invoked via `make mechanism-registry-changed-code-check`.
+Not wired into CI beyond `make mechanism-registry-changed-code-check` (same as
+`mechanism_state_caller_check.py`/`mechanism_wiring_map_classdef.py`, neither of which is CI-wired
+either); `check_drift_for_ticket` is invoked directly by the ticket-close path instead, never via a
+gate or ratchet.
 
 A second, related signal reported separately: mechanisms whose `implemented_by` was REPLACED
 (already had a citation, now points somewhere different) rather than bound for the first time.
@@ -145,17 +154,87 @@ def check_drift_from_git(
     return check_drift(old_data, new_data, changed_files), check_replacements(old_data, new_data)
 
 
+def _uncommitted_changed_files() -> Set[str]:
+    """Every path with staged, unstaged, or untracked changes right now, via `git status
+    --porcelain` (a single call covers all three, unlike `git diff`, which misses untracked
+    files)."""
+    out = _git("status", "--porcelain")
+    files: Set[str] = set()
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        path = line[3:].strip()
+        if " -> " in path:  # rename: "old -> new"
+            path = path.split(" -> ", 1)[1]
+        files.add(path)
+    return files
+
+
+def get_changed_files_for_ticket(ticket_id: str, base_ref: str = "origin/main") -> Set[str]:
+    """"Changed files" for ONE ticket's own close-time advisory -- deliberately NOT a branch-wide
+    diff against `base_ref`, which mixes in every other ticket committed on the same branch. This
+    repo's own PRs routinely bundle several unrelated tickets into one branch (confirmed real, not
+    hypothetical: commit 97a0e5d96 squash-merges six distinct ticket IDs); a branch-wide diff would
+    misattribute every one of those files to whichever ticket happens to invoke this check.
+
+    Instead: the union of --
+      (a) every file touched by any commit on this branch whose message references `ticket_id`
+          (`git log --grep=<ticket_id>`) -- works because every commit here is required to
+          reference its own ticket ID (CLAUDE.md's Commit Convention);
+      (b) the current working tree's uncommitted state (staged, unstaged, untracked).
+    (b) exists because a hand-orchestrated closer who commits everything in one final closing
+    commit would otherwise run this check BEFORE that commit exists, see nothing cited-and-changed,
+    and read that as "no drift" -- a silent fail-open in the direction that looks like success. This
+    makes the advisory immune to whether it is run before or after the closing commit.
+
+    Boundary, recorded rather than hidden: this definition is PRE-MERGE ONLY, on the ticket's own
+    branch. After a squash-merge, `main` holds a single commit whose message carries every bundled
+    ticket ID (see the 97a0e5d96 example above) -- running this same `--grep` query over post-merge
+    history would match that one commit for every bundled ticket and over-attribute every changed
+    file to every one of them. Never call this against post-merge history to backfill findings; it
+    is close-time-only by design.
+    """
+    log_out = _git("log", "--format=%H", f"--grep={ticket_id}", f"{base_ref}..HEAD")
+    committed: Set[str] = set()
+    for sha in (line.strip() for line in log_out.splitlines() if line.strip()):
+        show_out = _git("show", "--name-only", "--format=", sha)
+        committed.update(line.strip() for line in show_out.splitlines() if line.strip())
+    return committed | _uncommitted_changed_files()
+
+
+def check_drift_for_ticket(
+    ticket_id: str, base_ref: str = "origin/main",
+) -> tuple[List[DriftFinding], List[ReplacementFinding]]:
+    """Close-time entry point: ticket-scoped `changed_files` (see
+    `get_changed_files_for_ticket`), registry compared old (`base_ref`) vs new (`WORKTREE`, so any
+    still-uncommitted closing-commit-in-progress state counts)."""
+    changed_files = get_changed_files_for_ticket(ticket_id, base_ref)
+    old_data = load_registry_at_ref(base_ref)
+    new_data = load_registry_at_ref("WORKTREE")
+    return check_drift(old_data, new_data, changed_files), check_replacements(old_data, new_data)
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="origin/main")
     parser.add_argument("--head", default="HEAD")
+    parser.add_argument(
+        "--ticket-id", default=None,
+        help="Close-time mode: scope changed_files to this ticket's own commits (matched by "
+        "commit message) plus the current uncommitted working tree, instead of a branch-wide "
+        "diff. Pre-merge only -- see get_changed_files_for_ticket's docstring. When given, "
+        "--head is ignored (new-side registry is always read from the worktree).",
+    )
     args = parser.parse_args(argv)
 
     try:
-        drift, replacements = check_drift_from_git(args.base, args.head)
+        if args.ticket_id:
+            drift, replacements = check_drift_for_ticket(args.ticket_id, args.base)
+        else:
+            drift, replacements = check_drift_from_git(args.base, args.head)
     except subprocess.CalledProcessError as e:
         print(f"Changed-code-entry-drift check (report-only, never fails): SKIPPED -- "
-              f"git diff against {args.base!r} failed: {e.stderr.strip()}")
+              f"git command failed: {e.stderr.strip()}")
         return 0
 
     print(f"Changed-code-entry-drift check (report-only, never fails): "

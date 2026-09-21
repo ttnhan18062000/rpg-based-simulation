@@ -11,11 +11,29 @@ tags: [cognition, combat]
 
 # TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER
 
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
+> presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
+> concurrent session on this machine. **Nothing about the ticket's own substance was
+> investigated, debugged, or re-scoped as part of this move** — its prior `BLOCKED` reasoning
+> (a real user-level decision from 2026-09-13, quoted in full immediately below) is preserved
+> as-is, not acted on; `Status` is reset to `OPEN` only as part of this lifecycle correction, not
+> a signal that the underlying decision changed.
+>
+> **A concrete pointer for whoever re-validates this, not a vague "check if things changed"**:
+> this ticket sits in territory the runtime-evidence program has been actively revising
+> conclusions about this same week. Specifically, `perception` was confirmed dormant and its own
+> tracked state corrected from `done` to `orphan` **two days after** this ticket was last
+> touched. This ticket's own stated premises may already be invalid as a result — re-check against
+> the runtime-evidence program's current findings before resuming, rather than assuming the
+> picture below still holds.
+
 ## Title
 No entity can learn that one kind of creature is more dangerous than another — nothing in the simulation ties a danger assessment to an enemy *kind*, so every combat capability estimate falls back to the same hardcoded table regardless of what an entity has actually fought
 
 ## Status
-BLOCKED — **on a user-level decision, 2026-09-13.** Ran the declared-intent check before building
+OPEN — **previously BLOCKED on a user-level decision, 2026-09-13.** Ran the declared-intent check before building
 anything, per instruction: checked the Mechanics Bible, parity ledger,
 `docs/cognition/capability_and_knowledge_contract.md`, and Epic 4.2's own scope. **Nothing declares
 that entities should learn per-enemy-kind danger from combat experience.** See Implementation Notes
