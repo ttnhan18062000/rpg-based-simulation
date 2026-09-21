@@ -74,7 +74,7 @@ CORE_DEPENDENCY_IMPORT_OVERRIDES = {
 }
 
 _SKIP_DIR_NAMES = {
-    ".git", ".venv", "venv", "node_modules", ".pytest_cache",
+    ".git", ".venv", ".venv-knowledge", "venv", "node_modules", ".pytest_cache",
     "build", "dist", "__pycache__",
 }
 

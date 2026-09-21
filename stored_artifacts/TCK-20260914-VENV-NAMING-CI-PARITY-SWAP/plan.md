@@ -12,7 +12,21 @@ tags: [ai, process-improvement]
 
 # Plan — TCK-20260914-VENV-NAMING-CI-PARITY-SWAP
 
-## Why this plan stops short of executing the rename
+## Executed 2026-09-21, at the user's direct go/no-go
+
+This plan originally stopped short of Step 2 (the rename), by design — see the section below,
+preserved as written. On 2026-09-21, per the peer-relayed batch approval, this session verified the
+plan's own premises were still live (`.venv` 3.12.3 / `.venv313` 3.13.14, confirmed unchanged),
+found the plan's own "requires confirmed timing" condition still unmet by a peer relay alone, and
+asked the user directly via `AskUserQuestion` — showing the literal `mv` commands and the current
+concurrent-session count (4 other interactive sessions, shown idle) — for both open decisions: go/no-go
+on timing, and the final name. The user answered **"Proceed now"** and confirmed **`.venv-knowledge`**
+as the name, both directly, not inferred from the batch approval. Executed immediately after,
+atomically with Step 1's file edits. See `investigation.md`'s Addendum for hazards found during this
+pass that this plan's original Step 1 list did not anticipate (headroom launcher, `.gitignore`,
+`pyproject.toml`, a genuinely-stale pinned test) — all fixed in the same pass.
+
+## Why this plan originally stopped short of executing the rename
 
 The rename (`mv .venv .venv-knowledge && mv .venv313 .venv`, or equivalent) mutates shared
 filesystem state outside this repo's git tree, used by every concurrent session on this machine —
@@ -101,8 +115,8 @@ real and reviewable rather than templated placeholders — but the final name is
 assumed. If a different name is chosen, Step 1's edits need the substitution applied before Step 2
 runs; trivial since every occurrence is now enumerated above.
 
-## No code changes yet in this implementation pass
+## Completion note (2026-09-21)
 
-Per the sequencing above, this ticket's own artifacts (investigation.md, this plan.md, test_plan.md)
-are being committed now; Step 1's actual file edits and Step 2's rename are follow-up work gated on
-the user confirming timing, not part of this same commit.
+Step 1 and Step 2 landed together, atomically, as this plan always specified — plus the additional
+Step 1 items found during implementation (Addendum in `investigation.md`). Step 3's verification
+checklist ran immediately after and is recorded in `test_plan.md`.

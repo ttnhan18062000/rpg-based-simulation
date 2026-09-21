@@ -31,10 +31,15 @@ First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatical
 
 | Venv | Python | Use it for | Why |
 |---|---|---|---|
-| `.venv313` | **3.13.14** | **Engine, API, and all test runs** | Matches what CI actually runs (`.github/workflows/test.yml` declares `python-version: "3.13"`). Running tests on anything else means a local pass cannot rule out a version-specific CI failure. |
-| `.venv` | 3.12.3 | Knowledge-search tooling only (`tools/knowledge_search.py`, `search_mcp.py`, `search_server.py`) | Holds `torch`/`sentence-transformers`. Cannot be migrated to 3.13 — see below. |
+| `.venv` | **3.13.14** | **Engine, API, and all test runs** | Matches what CI actually runs (`.github/workflows/test.yml` declares `python-version: "3.13"`). Running tests on anything else means a local pass cannot rule out a version-specific CI failure. |
+| `.venv-knowledge` | 3.12.3 | Knowledge-search tooling only (`tools/knowledge_search.py`, `search_mcp.py`, `search_server.py`) | Holds `torch`/`sentence-transformers`. Cannot be migrated to 3.13 — see below. |
 
-**Run tests as `.venv313/bin/python3 -m pytest …`**, not the bare `python3` on PATH (which is 3.12).
+**Run tests as `.venv/bin/python3 -m pytest …`**, not the bare `python3` on PATH (which is 3.12,
+still resolving to the knowledge-only interpreter — see `.venv-knowledge` above).
+
+*(Renamed `TCK-20260914-VENV-NAMING-CI-PARITY-SWAP`, 2026-09-21: `.venv` is now the CI-matching
+environment; it used to be the knowledge-only one, which is exactly backwards from how the names
+read. `.venv313` no longer exists as a name — the same 3.13 environment is simply `.venv` now.)*
 
 ### Why the knowledge stack is stuck on 3.12
 
@@ -45,7 +50,7 @@ openssl s_client -connect download.pytorch.org:443 | openssl x509 -noout -subjec
 subject=O = Fortinet, CN = Fortiguard SDNS Blocked Page
 ```
 
-So `torch==2.12.1+cpu` cannot be installed for a new Python version from this machine by any tool. The existing `.venv` predates the block and **must be preserved** — deleting it permanently breaks `search_docs` for every session here. `tools/start_search_mcp.sh` hardcodes its absolute path for exactly this reason.
+So `torch==2.12.1+cpu` cannot be installed for a new Python version from this machine by any tool. The existing `.venv-knowledge` predates the block and **must be preserved** — deleting it permanently breaks `search_docs` for every session here. `tools/start_search_mcp.sh` hardcodes its absolute path for exactly this reason.
 
 **Symptoms the block produces, none of which name the real cause:**
 - `pip`: `Could not find a version that satisfies the requirement torch==2.12.1+cpu (from versions: none)` — pip fetched the *block page*, which lists no packages.
@@ -66,8 +71,8 @@ This network also intercepts TLS generally, via a corporate CA in the system sto
 
 ```bash
 uv python install 3.13 --system-certs
-uv venv .venv313 --python 3.13 --system-certs
-uv pip install --python .venv313/bin/python3 --system-certs -r requirements.txt
+uv venv .venv --python 3.13 --system-certs
+uv pip install --python .venv/bin/python3 --system-certs -r requirements.txt
 ```
 
 ---
