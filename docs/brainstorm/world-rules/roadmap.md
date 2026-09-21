@@ -20,8 +20,8 @@ not a target this roadmap should resist justified splits to preserve.
 `simulation-rule-world-law-design-preparation.md`'s world-rule design order and foundational-law
 list. Three gaps found in the original draft are resolved explicitly below (see "Cross-cutting
 layer disposition") rather than left as silent omissions. Batch 01 is complete; Batch 02 (Time /
-Authority / Reach) is drafted and ready for high-level external review; no other batch has
-started.
+Authority / Reach) is drafted, revised once per follow-up review, and **PASS — frozen**; no
+other batch has started.
 
 ---
 
@@ -43,7 +43,9 @@ exact boundary between what stays in Causality and what migrates once it's draft
 
 ### Batch 02 — Time / Authority / Reach
 
-**Status: drafted, ready for high-level external review.** See
+**Status: PASS — frozen.** Drafted, then revised once per follow-up review (implementation
+detail removed from Time, Authority's legitimacy framing broadened beyond actor identity, a real
+internal inconsistency in Reach corrected, 4 scenario probes added). See
 `review-exports/foundational-batch-02-review.md`.
 
 Focus on:

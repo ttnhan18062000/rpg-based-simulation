@@ -35,9 +35,9 @@ order.
 | State Ownership | Foundational Batch 01 drafted | [foundations/state-ownership.md](foundations/state-ownership.md) |
 | Causality | Foundational Batch 01 drafted | [foundations/causality.md](foundations/causality.md) |
 | History / Provenance | Scope defined 2026-09-21; rules not yet drafted — per `roadmap.md`, drafting moved into Milestone A as a completion pass after Batch 03, not left for Final Integration | [foundations/history-provenance.md](foundations/history-provenance.md) |
-| Time | Foundational Batch 02 drafted | [foundations/time.md](foundations/time.md) |
-| Authority | Foundational Batch 02 drafted | [foundations/authority.md](foundations/authority.md) |
-| Reach | Foundational Batch 02 drafted | [foundations/reach.md](foundations/reach.md) |
+| Time | Foundational Batch 02 — PASS, frozen | [foundations/time.md](foundations/time.md) |
+| Authority | Foundational Batch 02 — PASS, frozen | [foundations/authority.md](foundations/authority.md) |
+| Reach | Foundational Batch 02 — PASS, frozen | [foundations/reach.md](foundations/reach.md) |
 
 ## Rule Catalog progress
 
@@ -50,9 +50,11 @@ order.
   family (scope only — see [foundations/history-provenance.md](foundations/history-provenance.md)).
   Not a new batch on its own; per `roadmap.md`, its own rules are drafted as a completion pass
   inside Milestone A, after Batch 03 — not yet reached.
-- **Foundational Batch 02** (Time, Authority, Reach): drafted, ready for high-level external
-  review. See `tmp/world-rule-foundational-batch-02-report.md` (local, not part of this catalog)
-  for the full disposition report.
+- **Foundational Batch 02** (Time, Authority, Reach): drafted, revised once per follow-up
+  instruction (implementation-detail removed from Time, Authority's actor-only framing broadened,
+  a real internal inconsistency in Reach corrected, 4 scenario probes added), **PASS — ready to
+  freeze**. See `tmp/world-rule-foundational-batch-02-report.md` (local, not part of this
+  catalog) for the full disposition report.
 - No other batch has been started, and no rules have been drafted for History / Provenance yet.
   Do not begin Batch 03, any per-domain batch (Space & environment, Movement, Life/Body, etc.),
   the History / Provenance completion pass, or re-open Batch 01/02, until both drafted batches
@@ -63,7 +65,7 @@ order.
 | Batch | File | Scenario IDs |
 |---|---|---|
 | Foundational Batch 01 | [scenarios/foundational-batch-01.md](scenarios/foundational-batch-01.md) | FND-S01 – FND-S21 |
-| Foundational Batch 02 | [scenarios/foundational-batch-02.md](scenarios/foundational-batch-02.md) | TAR-S01 – TAR-S13 |
+| Foundational Batch 02 | [scenarios/foundational-batch-02.md](scenarios/foundational-batch-02.md) | TAR-S01 – TAR-S17 |
 
 ## Unresolved cross-domain questions
 
@@ -99,19 +101,25 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
 - Reputation scalar vs. reputation labels narrative relationship (OWN-03, FND-S05): flagged for
   the Social relations batch — unchanged, not part of this disposition pass.
 
-**From Foundational Batch 02 (2026-09-21):**
+**From Foundational Batch 02 (drafted 2026-09-21, revised same day per follow-up):**
 
 - **Not conclusively verified — a judgment call, not this session's to make.** Whether a
   currently-incapacitated role-holder's unaffected authority (TAR-S07) is intentional or an
   unexamined gap. Flagged for owner review, not resolved by design.
-- **Explicitly deferred per the roadmap's guardrail.** Whether political authority (Politics/
-  authority & war) inherits AUTH-01–06 unchanged or refines them.
+- **Explicitly deferred per the roadmap's guardrail; sharpened by AUTH-06's revision.** Whether
+  political authority (Politics/authority & war) inherits AUTH-01–06 unchanged or refines them —
+  and specifically, what makes a political role/mandate "remain valid."
 - **Explicitly deferred per the same guardrail.** Whether spatial reach (Space/environment) or
   magical reach (Magic/supernatural) inherit REACH-01–06 unchanged or refine them.
-- **DEFER to Magic/supernatural.** Whether aging needs an explicit reversal-exception mechanism
-  (TIME-05).
-- **DEFER to Perception/knowledge/information.** REACH-03's asymmetry finding is read-level
-  evidence only; needs its own scenario trace before that domain builds on it.
+- **Reframed, not merely deferred.** Whether forward-only aging is a Life/Body/Survival law at
+  all, and for which subjects, is now that future batch's own question from scratch (TIME-05's
+  revision) — no longer an accepted Time constraint with only an open exception question.
+- **RESOLVED — upgraded from read-level evidence to a scenario trace.** REACH-03's asymmetry
+  finding now has a dedicated scenario (TAR-S17); formal domain-specific stealth/ambush content
+  is still Perception/knowledge/information's own job.
+- **New, confirmed MISSING.** REACH-05's intermediary-link-failure modeling (a messenger delayed,
+  blocked, or lying) — deferred to whichever future batch (most plausibly Perception/knowledge/
+  information) first needs it.
 
 ## Review index
 
@@ -134,7 +142,7 @@ rationale stay canonical.
 | Batch / Area | Canonical source files | Scenario set | Review export | Status |
 |---|---|---|---|---|
 | Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S21) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Ready for high-level external review |
-| Foundational Batch 02 | `foundations/time.md`, `foundations/authority.md`, `foundations/reach.md` | `scenarios/foundational-batch-02.md` (TAR-S01–S13) | [review-exports/foundational-batch-02-review.md](review-exports/foundational-batch-02-review.md) | Ready for high-level external review |
+| Foundational Batch 02 | `foundations/time.md`, `foundations/authority.md`, `foundations/reach.md` | `scenarios/foundational-batch-02.md` (TAR-S01–S17) | [review-exports/foundational-batch-02-review.md](review-exports/foundational-batch-02-review.md) | PASS — ready to freeze |
 | History / Provenance | `foundations/history-provenance.md` (scope only) | none yet | none yet | Scope defined 2026-09-21; not a reviewable batch yet |
 
 ## Links to current review batches

@@ -8,15 +8,18 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Foundational Batch 02
 
-**Purpose/scope.** Thirteen scenarios used to pressure-test the Time, Authority, and Reach rule
-families in `foundations/time.md`, `foundations/authority.md`, and `foundations/reach.md`, per
-`tmp/world-rule-batch-2-ext-ai.md`. Covers all eleven required probes (delayed consequence,
-temporary effect expires, recurring process, two events with meaningful temporal ordering,
-capability without authority, authority without capability, valid proposal from the wrong actor
-rejected, nearby but unreachable target, distant target reachable through information/
-institution, event outside declared causal reach, past event persists without present reach)
-plus one required positive counterpart (an authorized proposal flowing into committed state) and
-one required counter-scenario (two simultaneous but unrelated events).
+**Purpose/scope.** Seventeen scenarios used to pressure-test the Time, Authority, and Reach rule
+families in `foundations/time.md`, `foundations/authority.md`, and `foundations/reach.md`.
+TAR-S01–S13 are the original seed set (`tmp/world-rule-batch-2-ext-ai.md`), covering all eleven
+required probes (delayed consequence, temporary effect expires, recurring process, two events
+with meaningful temporal ordering, capability without authority, authority without capability,
+valid proposal from the wrong actor rejected, nearby but unreachable target, distant target
+reachable through information/institution, event outside declared causal reach, past event
+persists without present reach) plus one required positive counterpart (an authorized proposal
+flowing into committed state) and one required counter-scenario (two simultaneous but unrelated
+events). TAR-S14–S17 are a follow-up expansion
+(`tmp/world-rule-batch-2-followup-ext-ai.md`), added to directly challenge the refined AUTH-06,
+TIME-04, TIME-07, and REACH-03 respectively.
 
 Scoring uses the same vocabulary as Batch 01: **covered** / **partially covered** / **blocked** /
 **revealed missing rule** / **revealed contradiction**, against current repository behavior, not
@@ -164,6 +167,65 @@ no action at any point after death; only the living heir carries the hostility f
   historical/causal reference while granting it zero present agency; every subsequent effect is
   produced by the living heir, who alone has real present reach.
 
+## Expansion: follow-up probes (TAR-S14–S17)
+
+Added per `tmp/world-rule-batch-2-followup-ext-ai.md`, directly challenging the four Rules that
+follow-up revised: AUTH-06 (conditional survival, not automatic), TIME-04 (occurrences remain
+individually traceable), TIME-07 (scoped to the authoritative fact, not belief/interpretation),
+and REACH-03 (upgraded from read-level evidence to an actual scenario trace).
+
+## TAR-S14 — Role ends with its holder
+
+A clan's leader dies with no eligible successor among the remaining members. Rather than the
+leadership role persisting indefinitely waiting for a future occupant, the clan itself dissolves.
+
+- **Rules invoked:** AUTH-06 (authority survives occupant change only while the role/mandate
+  remains valid).
+- **Result: covered — the counter-outcome AUTH-06's revision specifically required.**
+  `process_succession()` returns `(None, None)` (no succession) when the leader is dead/inactive
+  and no scoreable member remains, explicitly deferring to `process_dissolution()`, which sets
+  `dissolved_tick` once the clan has no members and no assets left. The leadership authority does
+  not outlive the role it was attached to.
+
+## TAR-S15 — Same recurrence, different occurrences
+
+A resource node's regeneration fires repeatedly across many ticks. One specific regeneration
+cycle — not the general recurring rule — is the thing that pushes the node's charge count back
+above the harvest threshold at a particular, identifiable tick.
+
+- **Rules invoked:** TIME-04 (recurrence is a continuing rule, but each occurrence remains its
+  own traceable event).
+- **Result: partially covered.** The recurring-rule half is SUPPORTED (`regen_rate_per_tick`
+  evaluated as one standing rule). The individual-occurrence half is architecturally SUPPORTED
+  (each tick's regen is a separately-applied, tick-stamped delta through the same apply
+  pipeline) but PARTIAL in practice — no current consumer actually asks "which specific
+  regeneration cycle mattered," so the capability is real but unexercised.
+
+## TAR-S16 — Past fact, new understanding
+
+An event occurs and is recorded. Later, new evidence contradicts an entity's belief about who was
+responsible. The entity's belief/interpretation changes; the original world fact of what actually
+happened never does.
+
+- **Rules invoked:** TIME-07 (authoritative past facts are not retroactively rewritten by
+  ordinary forward simulation; belief/knowledge/interpretation may change).
+- **Result: covered.** `BeliefCycleSystem.apply_contradiction()` reduces a contradicted
+  hypothesis's confidence (`new_confidence = max(0.0, hyp.confidence - 0.2)`) — a real, legitimate
+  change to belief — while nothing in that same mechanism, or anywhere else, rewrites the
+  authoritative record of the original event itself.
+
+## TAR-S17 — One-way reach
+
+An observer perceives a target from a distance. The target has no sensory awareness of the
+observer at all — the reach is real in one direction and entirely absent in the other.
+
+- **Rules invoked:** REACH-03 (reach may be asymmetric).
+- **Result: covered — upgrades this rule from read-level evidence to an actual scenario trace.**
+  `PerceptionGate.can_perceive(source_entity, target_signals, context)` computes only a
+  source→target detection result; nothing in its signature, return value, or call sites computes
+  or implies the reciprocal target→source detection. The asymmetry is structural, not merely
+  unimplemented in one direction by omission.
+
 ---
 
 ## Cross-batch note
@@ -181,3 +243,12 @@ different angles (information-mediated reach across space; chronicle retention a
 boundary) — recorded once here rather than as two unrelated findings, since a future domain
 author designing a new reach-constrained mechanism should expect to declare its boundary the same
 way regardless of which channel (space, information, mode) constrains it.
+
+The follow-up expansion's own most useful result was not a new scenario finding but an internal
+consistency check: REACH-02's original wording listed "time" as a reach channel alongside space/
+information/institutions, while REACH-04/TAR-S13 already established that a historical actor
+does *not* retain present reach merely because its consequences persist. Those two claims were in
+tension. Removing "time" from REACH-02's channel list (keeping the "carried forward by a present
+carrier" framing instead) resolves the tension without touching REACH-04 or TAR-S13 at all — a
+genuine internal-consistency fix the follow-up instruction's own request surfaced, not merely a
+wording preference.

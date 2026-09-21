@@ -27,15 +27,23 @@ ordering candidate (`foundations/state-ownership.md`).
 
 ## TIME-01 — Temporal ordering is real and stable
 
-> The world has one real, monotonically-advancing tick counter. Events that occur at different
-> ticks have a real before/after relationship; that relationship does not change once recorded.
+> The world has a stable temporal ordering/reference sufficient to establish before, after,
+> simultaneity where meaningful, and elapsed duration between events. This ordering does not
+> change once established.
 
-**Disposition: ACCEPT.** This is the semantic root the rest of this family refines.
+**Disposition: ACCEPT, refined 2026-09-21 — implementation detail removed from the world rule
+itself.** The original wording tied this directly to "one real, monotonically-advancing tick
+counter." A monotonic tick counter is how *this* repository happens to realize temporal ordering
+— it is repository evidence for the rule, not part of the rule. The world-semantic requirement is
+only that before/after, simultaneity, and elapsed duration be well-defined and stable; a
+different implementation (e.g., a continuous clock, or per-region local clocks with a declared
+synchronization rule) would satisfy the same rule without a global tick counter at all.
 
-**Repository evidence: SUPPORTED.** `AuthoritativeState.tick` advances monotonically; entity and
-registry records stamp real tick numbers at the moment of the event (`birth_tick`, `death_tick`,
-`founded_tick`, `dissolved_tick`, `formation_tick`, `transformed_tick`) rather than recomputing
-"when did this happen" after the fact.
+**Repository evidence: SUPPORTED, as an implementation of this rule, not as the rule itself.**
+`AuthoritativeState.tick` advances monotonically and is the concrete mechanism realizing stable
+temporal ordering here; entity and registry records stamp real tick numbers at the moment of the
+event (`birth_tick`, `death_tick`, `founded_tick`, `dissolved_tick`, `formation_tick`,
+`transformed_tick`) rather than recomputing "when did this happen" after the fact.
 
 **Scenarios:** [TAR-S04](../scenarios/foundational-batch-02.md#tar-s04).
 
@@ -78,41 +86,78 @@ signals.
 
 ---
 
-## TIME-04 — Recurrence is a continuing rule application, not a new causal chain each cycle
+## TIME-04 — Recurrence is a continuing rule, but each occurrence remains its own traceable event
 
 > A process that repeats on a cooldown or cycle (regeneration, reproduction eligibility, skill
-> readiness) is one continuing rule, re-evaluated over time — each cycle is not a fresh,
-> independently-caused event requiring its own CAUSE-01 justification from scratch.
+> readiness, a persistent poison) is one continuing recurring rule — it does not need a fresh
+> causal justification invented each cycle. But each individual occurrence remains its own
+> distinct, independently traceable event or transition:
+>
+> ```text
+> persistent recurring process
+>         → occurrence 1
+>         → occurrence 2
+>         → occurrence 3
+> ```
+>
+> The occurrences share a recurring source/rule but remain independently traceable where causally
+> relevant — e.g., a specific occurrence may itself be the thing a further consequence points
+> back to.
 
-**Disposition: ACCEPT.**
+**Disposition: ACCEPT, refined 2026-09-21 — the "one continuing rule" framing kept, but
+corrected so it no longer implies individual occurrences aren't real, separately-traceable
+events.** The original wording leaned entirely on "not a fresh, independently-caused event
+requiring its own CAUSE-01 justification from scratch," which is true for *why the process keeps
+happening* but was too strong if read as also meaning no single occurrence can stand as its own
+cause of something. Both halves hold: the recurrence itself doesn't need re-justifying every
+cycle, and any one cycle's occurrence can still be the specific, individually-traceable producer
+of a further consequence.
 
-**Repository evidence: SUPPORTED.** `reproduction_cooldowns: Dict[partner_id, cooldown_expiry_
-tick]`, per-skill `cooldowns: Dict[skill_id, tick_when_ready]`, and `regen_rate_per_tick` on
-resource nodes are all evaluated as one standing rule against elapsed ticks, not re-derived as new
-events; this is what makes TIME-02's "must stay traceable" tractable for recurring effects instead
-of requiring a fresh causal justification every cycle.
+**Repository evidence: SUPPORTED for both halves.** `reproduction_cooldowns: Dict[partner_id,
+cooldown_expiry_tick]`, per-skill `cooldowns: Dict[skill_id, tick_when_ready]`, and
+`regen_rate_per_tick` on resource nodes are evaluated as one standing rule against elapsed ticks
+(the recurring-source half). Each occurrence is also architecturally a real, separately-applied
+state delta through the same typed Update→Patch pipeline every other tick's changes go through —
+tick N's regeneration and tick N+1's regeneration are distinguishable, individually-committed
+events, not one undifferentiated ongoing blob, even though nothing in the current repository
+happens to need to trace back to "which specific cycle's occurrence mattered" yet (PARTIAL on
+that specific consuming use case, not on the architectural capability).
 
-**Scenarios:** [TAR-S03](../scenarios/foundational-batch-02.md#tar-s03).
+**Scenarios:** [TAR-S03](../scenarios/foundational-batch-02.md#tar-s03),
+[TAR-S15](../scenarios/foundational-batch-02.md#tar-s15) (added 2026-09-21 — a persistent
+recurring process whose individual occurrences are separately identifiable).
 
 ---
 
-## TIME-05 — Elapsed time is derived, and aging moves in one direction for a given subject
+## TIME-05 — Elapsed time is a real semantic quantity, measured from a reference point
 
-> How much time has passed for a subject is computed from tick difference, not stored as an
-> independent fact, and a subject's own life-stage/aging progression does not run backward.
+> How much time has passed for a subject is meaningful relative to an origin or reference point
+> in its own history (e.g., since it began, since a prior event). This is a semantic quantity the
+> world can reference — not merely an artifact of how any particular implementation happens to
+> compute it.
 
-**Disposition: ACCEPT.** This is the Time-family instance of OWN-03's derived-view principle
-(elapsed time/age is derived, not owned state in its own right) combined with a genuinely new
-directional constraint (forward-only) this batch's evidence surfaced.
+**Disposition: ACCEPT, refined 2026-09-21 — implementation detail and an over-generalized
+biological claim both removed.** The original wording said elapsed time "is computed from tick
+difference, not stored" — that is how this repository happens to implement it (a fact about
+`LifeStageService`, not a world rule) and belongs in repository evidence, not the rule text. The
+original also asserted "aging progression does not run backward" as a universal Time law; aging
+is a biological/Life-Body concept, not a foundational Time one, and stating it here would
+pre-empt that future domain's own investigation. TIME-05 now claims only that elapsed-time-from-
+a-reference-point is real and meaningful — nothing about which subjects experience it
+monotonically.
 
-**Repository evidence: SUPPORTED.** `LifeStageService.get_stage_for_age(age_ticks)` computes life
-stage from elapsed ticks at read time — age itself is never a stored field. Confirmed directly:
-`LifeStageService.is_forward_transition()` exists specifically to reject a life-stage transition
-that would move a subject backward — aging is architecturally one-directional per subject, not
-merely conventionally so.
+**Repository evidence: SUPPORTED for the semantic quantity itself.** `LifeStageService.
+get_stage_for_age(age_ticks)` treats elapsed time as a real, referenceable quantity (derived from
+a tick difference in this implementation, but the semantic point is that "time since birth" is a
+meaningful thing to ask about a subject, independent of how it's computed). The forward-only
+aging finding this session made directly (`LifeStageService.is_forward_transition()` rejects a
+backward life-stage transition) is real and repository-confirmed, but is recorded here explicitly
+as a **later-domain refinement candidate for Life/Body/Survival**, not as this rule's own claim —
+that future batch should decide whether forward-only aging is a Life/Body law, and for which
+kinds of subjects, rather than inheriting it as an already-settled Time rule.
 
-**Scenarios:** none yet directly probe the forward-only constraint itself; flagged for the future
-Life/Body/Survival batch, where aging content is actually designed.
+**Scenarios:** none yet directly probe elapsed-time-as-reference; the forward-only-aging question
+is explicitly deferred to the future Life/Body/Survival batch, not scenario-traced here.
 
 ---
 
@@ -135,24 +180,47 @@ counter-scenario: two same-tick events with no real link between them).
 
 ---
 
-## TIME-07 — The past is fixed; only the present is mutable
+## TIME-07 — Authoritative past world facts are not retroactively rewritten by ordinary forward simulation
 
-> Once a tick has occurred and its state committed, facts about that tick do not change. Later
-> ticks may act on their consequences, reinterpret their meaning (per History/Provenance), or
-> render them historically less prominent (per CAUSE-06's fading-significance clause) — but they
-> cannot rewrite what was true at that tick.
+> Authoritative past world facts are not retroactively rewritten by ordinary forward simulation.
+> This is explicitly narrower than "the past never changes in any sense":
+>
+> ```text
+> belief          — may change
+> knowledge       — may change
+> interpretation  — may change
+> chronicle representation — may change
+> historical significance  — may fade (per CAUSE-06)
+> authoritative world fact of what happened — does not change by ordinary forward simulation
+> ```
+>
+> This rule does not prohibit a future domain from defining an explicit, declared mechanism for
+> genuine temporal alteration (e.g., a Magic/supernatural rule permitting true retroactive
+> change) — it only states that *ordinary* forward simulation never does this implicitly.
 
-**Disposition: ACCEPT.** This is the Time-family statement of the project's own durable-state
-immutability law (`docs/core/state.md`) and of `Do not break determinism` (Hard Rule), stated as a
-world-semantic consequence rather than only as an implementation constraint.
+**Disposition: ACCEPT, refined 2026-09-21 — scoped to the authoritative fact specifically, and
+explicitly left open to a future declared exception.** The original wording ("once a tick has
+occurred... facts about that tick do not change") was correct about the authoritative fact but
+did not distinguish it clearly enough from belief/knowledge/interpretation/chronicle/significance,
+several of which this same batch and Batch 01 already established *do* legitimately change over
+time (contradicted beliefs, fading significance). Left unscoped, a future domain author could
+misread this rule as forbidding those already-accepted kinds of change. The revision also removes
+an implicit universal prohibition on temporal alteration altogether — this rule governs *ordinary*
+forward simulation only, and stays silent on whether some future, explicitly declared mechanism
+(most plausibly Magic/supernatural) could ever cause genuine retroactive change; that possibility
+is neither asserted nor foreclosed here.
 
-**Repository evidence: SUPPORTED architecturally** — the same typed Update→Patch pipeline that
-makes OWN-01 true by construction also makes this true by construction: a committed
-`AuthoritativeState` at tick T is not itself later edited; tick T+1 is a new state built from it,
-never a retroactive rewrite of it.
+**Repository evidence: SUPPORTED architecturally, for the authoritative-fact claim.** The same
+typed Update→Patch pipeline that makes OWN-01 true by construction also makes this true by
+construction: a committed `AuthoritativeState` at tick T is not itself later edited; tick T+1 is a
+new state built from it, never a retroactive rewrite of it. For the "belief/interpretation may
+change" half: `BeliefCycleSystem.apply_contradiction()` reduces a hypothesis's confidence when
+contradicted — confirms belief legitimately changes without the underlying fact being rewritten.
 
 **Scenarios:** [TAR-S13](../scenarios/foundational-batch-02.md#tar-s13) (a past event's fact does
-not change even though the historical actor involved can no longer act).
+not change even though the historical actor involved can no longer act),
+[TAR-S16](../scenarios/foundational-batch-02.md#tar-s16) (added 2026-09-21 — later evidence
+changes belief/interpretation while the original world fact stays unchanged).
 
 ---
 
@@ -162,18 +230,26 @@ not change even though the historical actor involved can no longer act).
   eventual retention)
 - TIME-04 → Capability/progression, Life/body/survival (cooldowns, regeneration, reproduction —
   all future domains' own concrete instances of a foundational recurrence pattern)
-- TIME-05 → Life/body/survival (the future batch that actually designs aging content on top of
-  this forward-only constraint)
-- TIME-07 → History/Provenance (fixed past facts vs. legitimately fading significance),
-  Causality (CAUSE-06)
+- TIME-05 → Life/body/survival (the future batch that owns aging content, including whether
+  forward-only progression is a Life/Body law at all — not inherited pre-decided from Time)
+- TIME-07 → History/Provenance (fixed authoritative fact vs. legitimately fading significance,
+  and vs. changeable belief/knowledge/interpretation/chronicle representation), Causality
+  (CAUSE-06), Perception/knowledge/information (belief/interpretation change)
+- TIME-07 → Magic/supernatural (the explicitly-left-open possibility of a declared, non-ordinary
+  temporal-alteration mechanism — not designed or foreclosed here)
 
 ## Open questions carried forward
 
-1. TIME-05's forward-only aging constraint is stated at the foundational level; whether any
-   future domain (Magic, most plausibly — reversing age is a classic magic trope) needs an
-   *explicit* exception mechanism, analogous to ID-03's identity-ending exception, is not decided
-   here. Flagged for the Magic/supernatural batch.
+1. **Reframed 2026-09-21.** Whether forward-only aging is a Life/Body/Survival law at all, and
+   for which kinds of subjects, is no longer treated as an already-settled Time-family constraint
+   with an open exception question — it is the Life/Body/Survival batch's own question to answer
+   from scratch, informed by (not inherited from) this repository's current
+   `LifeStageService.is_forward_transition()` behavior.
 2. Whether TIME-04's "continuing rule, not a new causal chain" framing needs its own explicit
    Evaluation-side implication (e.g., should a recurring effect's *n*th cycle be scored
    differently from its 1st) is an evaluation-semantics question, not a world-rule one — out of
    scope for this family per the established evaluation/governance boundary.
+3. **Added 2026-09-21.** Whether any future domain will ever define an explicit, declared
+   temporal-alteration mechanism (TIME-07's left-open possibility) is not decided — flagged for
+   Magic/supernatural if and when that domain's own investigation raises it, not assumed in
+   advance either way.

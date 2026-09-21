@@ -38,25 +38,40 @@ the rejection is structural, not merely narrative.
 
 ---
 
-## REACH-02 — Reach is not reducible to physical distance
+## REACH-02 — Reach is not reducible to physical distance, and time is not itself a reach channel
 
-> Reach may be established through space, time, information, relationships, institutions, or
-> (later) magic. A subject with no spatial proximity to a target may still have reach through one
-> of these other channels, and a spatially nearby subject may still lack reach if none of these
+> Reach may be established through space, information, relationships, institutions, or (later)
+> magic. A subject with no spatial proximity to a target may still have reach through one of
+> these other channels, and a spatially nearby subject may still lack reach if none of these
 > channels connect them (see REACH-01's LOS-obstruction case).
+>
+> Temporal separation is *not* itself a reach channel. A past entity's consequences may persist
+> and continue to matter (see REACH-04, History/Provenance), but that persistence is always
+> carried forward through something that presently exists — persistent state, history,
+> information, an institution, or a mediated causal chain — never through the entity itself
+> somehow "reaching through time." Reach is always exercised in a real present, by something that
+> currently exists to exercise it.
 
-**Disposition: ACCEPT.** This is the rule the batch instruction most explicitly required
-("do not reduce Reach to physical distance"), and it is directly evidenced by at least three
-independent, structurally distinct repository mechanisms.
+**Disposition: ACCEPT, refined 2026-09-21 — "time" removed from the channel list.** The original
+list of channels included "time" alongside space/information/relationships/institutions/magic.
+That was a real internal inconsistency, not just loose wording: REACH-04 (below) already
+established that a historical actor does *not* retain present reach merely because its
+consequences persist — treating time as a reach channel in its own right would contradict that.
+The fix keeps every other channel and adds the explicit clarification that temporal persistence
+works *through* a present-existing carrier (state, history, information, institution, chain),
+never as reach exercised directly by something no longer present.
 
-**Repository evidence: SUPPORTED, across three channels.** *Space:* `LegalityServiceV2`'s
-adjacency/occupancy checks. *Perception (a space-plus-senses channel):* `PerceptionGate.
-can_perceive()`'s distance-falloff model, distinct from the pure occupancy check. *Information
-(a non-spatial channel):* `BeliefCycleSystem.process_rumor()` lets a subject who never
-observed an event directly acquire a belief about it, sourced from another entity's report
-(`source_entity_id`) rather than proximity to the event itself. *Institution (a further
-non-spatial channel):* clan-leader authority (`leader_entity_id`) reaches every member's
-join-request evaluation regardless of the leader's spatial position relative to the applicant.
+**Repository evidence: SUPPORTED, across the remaining channels, plus the correction itself
+confirmed.** *Space:* `LegalityServiceV2`'s adjacency/occupancy checks. *Perception (a
+space-plus-senses channel):* `PerceptionGate.can_perceive()`'s distance-falloff model, distinct
+from the pure occupancy check. *Information (a non-spatial channel):* `BeliefCycleSystem.
+process_rumor()` lets a subject who never observed an event directly acquire a belief about it,
+sourced from another entity's report (`source_entity_id`) rather than proximity to the event
+itself. *Institution (a further non-spatial channel):* clan-leader authority (`leader_entity_id`)
+reaches every member's join-request evaluation regardless of the leader's spatial position
+relative to the applicant. *The correction itself:* `_transfer_inherited_feud()` (REACH-04's own
+evidence) confirms the "carried forward by a present carrier" model directly — the dead
+antagonist's own reach is zero; only the living heir, a presently-existing carrier, has any.
 
 **Scenarios:** [TAR-S11](../scenarios/foundational-batch-02.md#tar-s11).
 
@@ -74,8 +89,9 @@ detection as a one-directional query — nothing in its signature or return valu
 computes the reciprocal target→source detection, which is exactly what makes stealth/ambush
 mechanically coherent: A perceiving B does not entail B perceiving A.
 
-**Scenarios:** none yet directly probe asymmetry as its own scenario; the perception evidence
-above is read-level, not scenario-traced, this batch. Flagged for the future Perception/knowledge
+**Scenarios:** [TAR-S17](../scenarios/foundational-batch-02.md#tar-s17) (added 2026-09-21 — a
+dedicated scenario trace, upgrading this rule's evidence from read-level only). Formal
+domain-specific stealth/ambush content is still flagged for the future Perception/knowledge
 batch.
 
 ---
@@ -102,24 +118,40 @@ never conflated.
 
 ---
 
-## REACH-05 — Mediated reach differs in kind from direct reach, not just in degree
+## REACH-05 — Mediated reach means reach through explicit intermediary links, each with its own constraints and failure modes
 
-> Reach established through an intermediary (a report, a rumor, an institution acting on someone's
-> behalf) is not simply a weaker version of direct reach — it carries a different evidentiary
-> status, and that difference should be visible rather than collapsed.
+> Reach established through an intermediary — a messenger, a report, an institution acting on
+> someone's behalf — is reach established through one or more explicit intermediary links, not a
+> direct connection. Each link in that chain carries its own constraints and possible failure
+> modes (a messenger may be delayed, blocked, or lie; an institution may misrepresent or fail to
+> relay), and any such failure can alter the resulting causal path. This is what distinguishes
+> mediated reach from direct reach as a matter of world semantics.
 
-**Disposition: ACCEPT.**
+**Disposition: ACCEPT, refined 2026-09-21 — recentred from "evidentiary status" to "the
+intermediary link itself is a real, constrainable part of the causal path."** The original
+wording made how confident an observer *should be* in mediated information the core of the rule.
+That is a real and correct downstream fact, but it belongs to Perception/Knowledge (how certainty
+is assigned and used), not to Reach's own foundational claim. Reach's job is narrower and more
+structural: mediated reach exists *through* one or more intermediary links, and those links are
+themselves part of the causal path — capable of failing, being delayed, or distorting what
+passes through them — which is what makes mediated reach a different *kind* of reach, not merely
+a weaker one.
 
-**Repository evidence: SUPPORTED.** `process_observation()` (direct) produces a `LeadState` with
-`certainty=LeadCertainty.PRECISE` and a `BeliefEntry` with `certainty=1.0`; `process_rumor()`
-(mediated) produces the same record *types* but with `certainty=LeadCertainty.VAGUE` and
-`certainty=0.3` — the repository already treats mediated reach as categorically different
-evidence, not merely a discounted version of direct observation, confirming this rule rather than
-requiring it to be newly designed.
+**Repository evidence: SUPPORTED for the reach-exists-through-a-link claim; MISSING for
+intermediary-failure modeling specifically.** `process_rumor()` establishes mediated reach exists
+as a real, distinct mechanism from direct observation — `certainty=LeadCertainty.VAGUE`/`0.3` vs.
+`process_observation()`'s `PRECISE`/`1.0` confirms the repository already treats mediated reach
+differently (now understood as a downstream *consequence* of the link existing, per this
+revision, not the rule's own definition). Checked directly: no mechanism currently models a
+messenger's own failure modes (a rumor being lost, distorted in transit, or deliberately falsified
+by the intermediary rather than the original source) as a distinct causal event in its own right
+— `process_rumor()` takes `rumor_detail` directly from `source_entity_id` with no intermediary-
+link step modeled at all. This is a real, honestly-recorded gap, not a violation of the rule,
+which only asserts such failure modes *would be* legitimate causal events if built.
 
 **Scenarios:** [TAR-S11](../scenarios/foundational-batch-02.md#tar-s11) (same scenario as
-REACH-02 — the rumor-to-distant-leader case is simultaneously the cleanest evidence for "reach
-exists" and "mediated reach is evidentially distinct").
+REACH-02 — the rumor-to-distant-leader case establishes mediated reach exists; it does not probe
+intermediary-link failure, which remains unmodeled).
 
 ---
 
@@ -145,18 +177,26 @@ Reach-family principle rather than only a Causality/History-Provenance one.
 
 - REACH-01, REACH-06 → Causality (CAUSE-01, CAUSE-05), History/Provenance (declared-reach
   boundaries generalised)
-- REACH-02 → Perception/knowledge/information, Groups/organizations & institutions (information-
-  and institution-mediated reach)
+- REACH-02 → Perception/knowledge/information, Groups/organizations & institutions
+  (information- and institution-mediated reach), History/Provenance (the "carried forward by a
+  present carrier" boundary against REACH-04)
 - REACH-03 → Perception/knowledge/information (asymmetric detection; future stealth/ambush
   content)
 - REACH-04 → Identity (ID-05), State Ownership (OWN-06), History/Provenance
-- REACH-05 → Perception/knowledge/information (certainty/evidence-tier design)
+- REACH-05 → Perception/knowledge/information (this is now explicitly *where* certainty/
+  evidence-tier design belongs, having been recentred out of REACH-05 itself)
 
 ## Open questions carried forward
 
-1. REACH-03's asymmetry finding is read-level evidence only, not yet scenario-traced; flagged for
-   the Perception/knowledge batch to formally probe rather than resolved here.
+1. **Upgraded 2026-09-21.** REACH-03's asymmetry finding now has a dedicated scenario
+   (TAR-S17), no longer read-level evidence only. Formal domain-specific stealth/ambush content
+   remains flagged for the Perception/knowledge batch.
 2. Whether Politics/authority & war's or Magic/supernatural's own eventual reach concepts
    (diplomatic reach, spell range) inherit REACH-01–06 unchanged or need domain-specific
    refinement is explicitly not decided here, per the roadmap's guardrail against automatically
    unifying foundational and later-domain concepts that share a name.
+3. **Added 2026-09-21.** REACH-05's intermediary-link-failure modeling (a messenger being
+   delayed, blocked, or lying; an institution misrepresenting a relay) is a confirmed MISSING
+   mechanism, not merely unexplored — flagged for whichever future batch (most plausibly
+   Perception/knowledge/information) first needs to model a mediated reach failure as its own
+   causal event.

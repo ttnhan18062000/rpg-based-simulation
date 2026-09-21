@@ -107,21 +107,28 @@ and capability are both satisfied, and authority is still what fails).
 
 ---
 
-## AUTH-05 — An unauthorized actor's proposal must be rejected regardless of content validity
+## AUTH-05 — Proposal content alone is insufficient to establish authority
 
-> If the acting subject is not authorized, the proposed transition is rejected even if the same
-> transition, proposed by a different, authorized actor, would be entirely legitimate. Authority
-> is checked on the actor/transition pair, not on the transition's content alone.
+> Transition legitimacy may depend on the acting subject's identity, role, or mandate, the
+> surrounding context, the target, and current state — not on the proposed transition's content
+> alone. The same proposed content may be legitimate or illegitimate depending on any of these
+> factors independently; content alone never establishes authority by itself.
 
-**Disposition: ACCEPT.** This sharpens OWN-04 (proposed change ≠ committed state) with the
-missing actor-relative half: OWN-04 established that a proposal isn't automatically truth; this
-rule establishes that *whose* proposal it is can independently invalidate it, even when the
-proposed content is otherwise unobjectionable.
+**Disposition: ACCEPT, refined 2026-09-21 — broadened from actor identity alone to the full set
+of factors legitimacy may depend on.** The original wording ("Authority is checked on the
+actor/transition pair") implied identity of the actor was the only thing beyond content that
+mattered. That's too narrow: the repository's own evidence shows *target* and *current state*
+independently affecting legitimacy too, not only who the actor is. The key law this rule states
+is now the general one — content alone is never sufficient — rather than a specific claim about
+which single factor (actor identity) supplies the rest.
 
-**Repository evidence: SUPPORTED.** The self-attack/friendly-fire legality checks are exactly
-this shape: "attack target X" is a perfectly legitimate transition when proposed against a hostile
-target, and the *only* thing that changes between the legal and illegal case is who the target is
-relative to the actor — the content (an attack) never changes.
+**Repository evidence: SUPPORTED, across multiple independent factors.** *Target-relative:*
+`FRIENDLY_FIRE_ILLEGAL`/`SELF_ATTACK_ILLEGAL` — the same "attack" content is legitimate against a
+hostile target and illegitimate against an ally or self; only who the target is changes.
+*Current-state-relative:* combat legality also distinguishes `TARGET_INCAPACITATED` from a fully
+active target — the same attack content can be treated differently depending on the target's own
+current state, a factor independent of actor identity entirely. Both confirm legitimacy is a
+function of several independent factors, never content in isolation.
 
 **Scenarios:** [TAR-S08](../scenarios/foundational-batch-02.md#tar-s08),
 [TAR-S09](../scenarios/foundational-batch-02.md#tar-s09) (the positive counterpart: an authorized
@@ -129,27 +136,39 @@ actor's proposal does flow into committed state through the authoritative apply 
 
 ---
 
-## AUTH-06 — Authority may be held by a role, independent of who currently occupies it
+## AUTH-06 — Authority attached to a role or mandate may survive occupant change, only while that role or mandate remains valid
 
-> Where authority is tied to a role or office rather than a specific individual, the authority
-> persists through a change of occupant — succession changes who holds the authority, not
-> whether the authority exists or what it permits.
+> Authority attached to a persistent role or mandate may survive occupant change when that role
+> or mandate itself remains valid. Succession changing who holds the authority is one possible
+> outcome; the role or mandate ending entirely — taking the authority with it — is another. This
+> rule does not decide which outcome applies for any specific later-domain institution.
 
-**Disposition: ACCEPT.** This is the Authority-family counterpart to ID-06's succession finding,
-viewed from the authority side rather than the identity side.
+**Disposition: ACCEPT, refined 2026-09-21 — corrected from an unconditional claim to a
+conditional one.** The original wording ("the authority persists through a change of occupant")
+was too strong: it implied succession *always* happens and the authority always survives. The
+repository's own evidence shows the opposite outcome is equally real — when no eligible successor
+exists, the role/mandate itself ends rather than persisting indefinitely waiting for one. This is
+the Authority-family counterpart to ID-06's succession finding, viewed from the authority side —
+and, like ID-06, its job is to state that both outcomes are possible and require explicit
+handling, not to assume one.
 
-**Repository evidence: SUPPORTED.** `ClanLifecycleService.process_succession()` replaces
-`leader_entity_id` with a new member's id (`leader_entity_id_set`) while every mechanism that
-checks "who is the leader" (e.g., the join-request appraisal in `core_actions.py`) keeps working
-unchanged against the new occupant — the leadership *authority* itself was never redefined, only
-its current holder.
+**Repository evidence: SUPPORTED, for both outcomes.** *Authority survives occupant change:*
+`ClanLifecycleService.process_succession()` replaces `leader_entity_id` with a new member's id
+(`leader_entity_id_set`) while every mechanism that checks "who is the leader" keeps working
+unchanged against the new occupant. *Role/mandate ends instead:* `process_succession()`'s own
+docstring confirms it returns `(None, None)` — no succession — when the leader is dead/inactive
+and no scoreable member remains, explicitly deferring to `process_dissolution()`, which sets
+`dissolved_tick` once the clan has no members and no assets left. The leadership role does not
+wait indefinitely for a future successor; it ends with the clan.
 
-**Scenarios:** none yet directly probe this in Batch 02; this reuses Batch 01's FND-S15/FND-S16
-evidence rather than requiring a new trace.
+**Scenarios:** [TAR-S14](../scenarios/foundational-batch-02.md#tar-s14) (added 2026-09-21 — the
+role/mandate ending outcome, directly challenging this rule). Batch 01's FND-S15/FND-S16 remain
+the evidence for the succession-survives outcome.
 
 **Open question, per the roadmap's guardrail:** whether *political* authority (a future
-Politics/authority & war domain concept) inherits this rule unchanged, or earns its own refined
-version, is explicitly not decided here — the guardrail requires that domain to investigate on
+Politics/authority & war domain concept) inherits this conditional rule unchanged, or earns its
+own refined version — and, more specifically, what makes a political role/mandate "remain
+valid" — is explicitly not decided here; the guardrail requires that domain to investigate on
 its own rather than assume automatic unification.
 
 ---
