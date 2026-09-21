@@ -167,8 +167,17 @@ itself sufficient for a change of this class; the exact text needs to reach the 
   `.claude/skills/create-tickets/SKILL.md`, `.claude/skills/agent-monitoring-retro/SKILL.md`,
   `.claude/skills/simq-audit/SKILL.md` — one-line pointer each.
 - `stored_artifacts/TCK-20260921-SESSION-CONTEXT-RESET-TRIAL/` (new).
-- **Not changed** (approval-gated, prepared as exact text in the batch report instead):
-  `CLAUDE.md`, `.claude/settings.json`.
+- `CLAUDE.md` — landed in two passes, both with the user's own direct, verbatim approval via
+  `AskUserQuestion`, never on a peer's relay alone: (1) one new bullet in "### After Work" (later
+  replaced, see next) and one new bullet in "## Proactive Tool Use" (batch independent read-only
+  checks into one call); (2) the "After Work" bullet REPLACED with a version naming four concrete
+  stopping points (ticket closed, `Workflow` run finished, plan/batch handed off, a wait begun on
+  another session's report), plus a new sentence appended to PR Lifecycle step 6 and a new sentence
+  appended to CI Failure Triage step 5 — both pointing at the same boundary doc at the exact moment
+  each of those flows reaches its own natural stopping point. Confirmed via `git diff origin/main
+  -- CLAUDE.md` that the full diff contains exactly these four bullets/sentences and nothing else.
+- `.claude/settings.json` — the `SessionStart` hook registration, also with direct user approval,
+  new array (nothing existed to merge into, confirmed via `grep` beforehand); JSON validated after.
 
 ## Completion Summary
 Built and tested the reachability mechanism (hook + gitignored handover directory) and the single
@@ -179,6 +188,16 @@ transcribed as given, with the one genuinely unknown claim (background-notice su
 verification bar the brief set, confirmed the mechanism but not its exact default, and correctly
 left the numeric proposal out rather than guess. Captured a real, independently-corroborating
 "before" baseline via Ticket 1's own tool and documented the trial protocol for measuring a real
-future "after," without fabricating a comparison that hasn't happened yet. Both governing-file
-changes are prepared as exact text and deliberately not committed, pending direct user approval.
-No known material gap left unstated.
+future "after," without fabricating a comparison that hasn't happened yet.
+
+Both governing-file changes landed across two rounds, each with the user's own direct, literal-text
+approval obtained independently via `AskUserQuestion` — never committed on a peer's relay of "the
+user approved this" alone, matching this session's own standing, repeatedly-applied rule for
+`CLAUDE.md`/`.claude/settings.json`. Round 1: the reset-boundary pointer, the batch-read-only-checks
+rule, and the `SessionStart` hook registration, verified with a real smoke test (piping
+`{"source":"clear"}`/`{"source":"startup"}` into the hook against a genuine handover note in this
+checkout, not just the synthetic suite). Round 2: extended the reset-boundary reminder to every
+process the boundary map covers — the "After Work" bullet replaced with one naming concrete
+stopping points, plus a sentence each appended to PR Lifecycle step 6 and CI Failure Triage step 5.
+Every round's `CLAUDE.md` diff against `origin/main` was read back and confirmed to contain only
+the approved lines before pushing. No known material gap left unstated.

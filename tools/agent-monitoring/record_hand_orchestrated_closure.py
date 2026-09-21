@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -143,6 +144,58 @@ def build_records(
     return run_record, event_records
 
 
+def check_sidecar_matches_ticket(ticket_id: str) -> str | None:
+    """Advisory-only: warns (returns a message, never raises) when `.claude/current_run`'s own
+    `run_id` doesn't match the ticket about to be closed.
+
+    This module's own docstring already documents the EXPECTED, benign case: "a hand-orchestrating
+    session never has a live per-phase sidecar during the actual work, so an unattributed phase
+    correctly gets no such keys at all" -- no sidecar file at all is normal and fine. This check
+    catches a DIFFERENT, WORSE case: a STALE sidecar left over from an EARLIER ticket, never
+    cleared or updated when the session moved on to unrelated work. Every real tool call made
+    since then gets silently attributed to the old (run_id, seq) instead of the ticket that's
+    actually running -- corrupting `tool_call_count`/`cost_proxy_score` for BOTH the old ticket
+    (inflated, often all bunched into whatever `seq` was last written) and the new one (starved,
+    reading as `0`/unattributed rather than the real count).
+
+    Confirmed real, not hypothetical: `TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT`
+    -- a sidecar written once for one hotfix's own Implement phase was never updated across two
+    entirely separate subsequent tickets' real work (5.5 hours, 170 real tool-call rows), pushing
+    `tests/tools/test_tool_call_count_mismatch_check.py`'s real-corpus ratchet over its ceiling.
+
+    Prefers the session-scoped sidecar (`.claude/current_run.$CLAUDE_CODE_SESSION_ID`) when
+    present, matching this repo's own established precedent elsewhere (multiple concurrent
+    sessions share the unscoped file); falls back to the unscoped file otherwise.
+    """
+    session_id = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    candidates = []
+    if session_id:
+        candidates.append(Path(f".claude/current_run.{session_id}"))
+    candidates.append(Path(".claude/current_run"))
+
+    for path in candidates:
+        if not path.exists():
+            continue
+        try:
+            sidecar = json.loads(path.read_text())
+        except Exception:
+            continue
+        sidecar_run_id = sidecar.get("run_id")
+        if sidecar_run_id and sidecar_run_id != ticket_id:
+            return (
+                f"sidecar-staleness: {path} still has run_id={sidecar_run_id!r} (seq="
+                f"{sidecar.get('seq')!r}), which does not match --ticket-id {ticket_id!r}. If "
+                f"this sidecar was written for a DIFFERENT, earlier ticket and never cleared or "
+                f"updated, every real tool call made since then has likely been misattributed to "
+                f"that stale run_id — corrupting both tickets' tool_call_count/cost_proxy_score. "
+                f"Clear or update the sidecar before closing further tickets. See "
+                f"TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT for a real, "
+                f"diagnosed instance of exactly this."
+            )
+        return None
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -165,6 +218,10 @@ def main() -> None:
         "'none (hotfix — no staging artifacts)' for hotfix",
     )
     args = parser.parse_args()
+
+    sidecar_warning = check_sidecar_matches_ticket(args.ticket_id)
+    if sidecar_warning:
+        print(f"WARNING: {sidecar_warning}", file=sys.stderr)
 
     try:
         events = json.loads(args.events)
