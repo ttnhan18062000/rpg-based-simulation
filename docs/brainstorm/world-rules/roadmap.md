@@ -10,9 +10,10 @@ tags: [architecture, world, content]
 
 **Purpose.** A lightweight, high-level roadmap for completing the World Rule Catalog. This
 roadmap is for **sequencing and review only** — batch boundaries are not semantic architecture,
-and batches may split or merge when scenario evidence shows another grouping is better. Target
-roughly 10–12 domain-facing batches, grouped into four milestones, plus one final integration
-pass that sits outside that count by design (see "Batch count" below).
+and batches may split or merge when scenario evidence shows another grouping is better. Roughly
+10–12 domain-facing batches, grouped into four milestones, plus one final integration pass that
+sits outside that count by design (see "Batch count" below) — this is a **current forecast**,
+not a target this roadmap should resist justified splits to preserve.
 
 **Status (2026-09-21).** Drafted from an external-reviewer proposal, cross-checked against
 `core_rpg_design_direction.md`'s target domain map and cross-cutting-layer table and
@@ -53,16 +54,29 @@ reach / locality / interaction possibility
 These should answer: **when can something affect something else, and who is semantically
 allowed to do so?**
 
-**Disposition note, added 2026-09-21 — kernel/event-flow/scheduling stays out of this batch.**
+**Clarified 2026-09-21 — world-semantic time is in scope; execution-mechanical time is not:**
+
+```text
+execution scheduling / same-tick domain ordering / engine cadence
+→ out of scope
+
+world-semantic time
+→ in scope
+```
+
+*World-semantic time* — squarely this batch's job — may include ordering, duration, delay,
+recurrence, expiration, aging, simultaneity, and temporal persistence where relevant: whether one
+event happened before another in the world's own causal sense, how long an effect lasts, whether
+something recurs or expires, whether two things can be simultaneous, and how age/duration accrue.
+None of that is the same question as *which system's code runs first within a tick* —
 `core_rpg_design_direction.md`'s Substrate domain scope includes "state transition, scheduling and
-cadence, event flow" alongside identity/time/persistence. Only the semantic side (identity, time,
-causality, persistence, authority, reach) belongs to the Rule Catalog; *tick ordering and
-same-cadence execution sequencing between domains* is an implementation/execution-order concern,
-not a world-semantic law — already decided once, not merely assumed: Batch 01 drafted and
-deliberately rejected a same-tick read/write-ordering candidate rule on exactly this basis (see
-`foundations/state-ownership.md`'s "Candidates considered and not added"). Batch 02 should carry
-that same disposition forward rather than re-deciding it, and should not attempt to write a
-semantic rule for scheduling/cadence/event-flow.
+cadence, event flow" alongside identity/time/persistence, and that execution-mechanical side stays
+out of this batch. This is an implementation/execution-order concern, not a world-semantic law —
+already decided once, not merely assumed: Batch 01 drafted and deliberately rejected a same-tick
+read/write-ordering candidate rule on exactly this basis (see `foundations/state-ownership.md`'s
+"Candidates considered and not added"). Batch 02 should carry that same disposition forward
+rather than re-deciding it, and should not attempt to write a semantic rule for
+scheduling/cadence/event-flow.
 
 ### Batch 03 — Capability / Cost / Capacity / Resource / Transformation
 
@@ -80,8 +94,41 @@ deterministic randomness / reproducibility where semantically relevant
 
 Do not build generic implementation frameworks.
 
+### Foundational completion pass — History / Provenance
+
+**Added 2026-09-21 — moved into Milestone A, as a completion pass after Batch 03, rather than
+left for the Final Integration Batch.** Batch 01 only *named* History/Provenance at scope level
+(`foundations/history-provenance.md`); this pass actually drafts enough of it to close out
+Milestone A. Establish enough semantics for:
+
+```text
+historical continuity
+provenance
+persistence
+causal-history retention
+compression boundaries
+legitimate fading
+```
+
+This is where the persistence-specific substance already flagged for migration out of CAUSE-05
+and CAUSE-06 (declared-reach mechanism, compression-tier design, significance-fading mechanism)
+actually gets drafted as History/Provenance's own rules, per those rules' own forward-reference
+notes and `history-provenance.md`'s "Relationship to Causality" section. **The Final Integration
+Batch later deepens and integrates these already-drafted semantics with significance, world
+reaction, propagation, and long causal chains — it does not define History/Provenance for the
+first time.** (See that batch's own updated wording below.)
+
 **Milestone A exit:** later domains can define their own rules without redefining basic
-identity, causality, authority, reach, time, capability, and persistence semantics.
+identity, causality, authority, reach, time, capability, persistence, and now
+historical-continuity/provenance semantics.
+
+> **Guardrail, added 2026-09-21.** Foundational concepts such as Authority, Reach, Resource,
+> Capacity, and State Ownership must not be automatically unified with similarly named
+> later-domain concepts such as political authority, spatial reach, economic resources, or
+> property ownership. A shared word is not a shared Rule — each later domain earns its own
+> semantics through its own investigation (per `simulation-rule-world-law-design-preparation.md`
+> §3.3's A–L order), even where a foundational family already used the same word at a more
+> abstract level.
 
 ---
 
@@ -268,10 +315,12 @@ counterforces
 long causal chains
 ```
 
-This is also where **History / Provenance** (named at scope level in Batch 01, not yet drafted)
-gets actually designed — persistence-within-reach, compression, and significance-fading
-mechanism design, migrating the relevant substance out of CAUSE-05/CAUSE-06 per those rules' own
-forward-reference notes.
+**Updated 2026-09-21.** History / Provenance is no longer first-defined here — it is drafted in
+Milestone A's foundational completion pass (see above). This batch's job for History /
+Provenance is to **deepen and integrate** those already-drafted semantics (historical
+continuity, provenance, persistence, causal-history retention, compression boundaries,
+legitimate fading) with significance, world reaction, propagation, and long causal chains — not
+to define the family for the first time.
 
 Run a small set of end-to-end canonical trajectories, for example:
 
@@ -310,8 +359,9 @@ possible through valid causal chains.
 domains. This roadmap's batches account for three of them; the other two need an explicit call
 rather than silent omission:
 
-- **History, significance & world reaction** — covered by Batch 01's History/Provenance naming
-  and the Final Integration Batch's actual design work.
+- **History, significance & world reaction** — covered by Batch 01's History/Provenance naming,
+  Milestone A's foundational completion pass (actual drafting), and the Final Integration
+  Batch's later deepening/integration with significance and world reaction specifically.
 - **Systemic pressure & propagation** — covered by the Final Integration Batch ("power
   conversion, cross-domain propagation, counterforces").
 - **Evaluation** — **correctly out of scope for this Catalog**, not a gap. Rule/Law design
@@ -339,10 +389,13 @@ rather than silent omission:
 
 ## Batch count
 
-The 12 numbered batches above plus the Final Integration Batch total 13 labeled units. This is
-intentional, not a drift from the "10–12 batches" target: the Final Integration Batch is
-explicitly not an ordinary domain batch (see its own heading above) and is not counted toward that
-range.
+The 12 numbered batches above, plus the unnumbered Milestone A History/Provenance completion
+pass, plus the Final Integration Batch, total 14 labeled units. **This entire section is a
+current forecast, not a target** — "10–12" was never meant to resist a justified split (or, as
+happened here, a justified insertion); the count is expected to keep moving as scenario evidence
+warrants, per "Roadmap governance" below. The Final Integration Batch specifically is not an
+ordinary domain batch (see its own heading above) and was never counted toward the forecast range
+either way.
 
 ---
 
@@ -382,13 +435,15 @@ unexpected architectural discovery.
 ## Roadmap governance
 
 Keep this roadmap high-level. Do not create implementation milestones yet. Do not estimate code
-effort. Do not freeze the exact number of batches.
+effort. Do not freeze the exact number of batches — the "10–12" figure anywhere in this document
+is a current forecast, never a target to protect by declining a justified split or insertion.
 
 - If a batch becomes too broad: split it.
 - If two adjacent batches are inseparable after investigation: merge them.
 - If scenario evidence reveals a missing foundational family: add it explicitly, but require a
   semantic reason rather than taxonomy completeness (this is exactly how History/Provenance was
-  added in Batch 01 — scenario evidence, not a desire for a complete-looking list).
+  added in Batch 01, and how its own completion pass was then moved into Milestone A — scenario
+  evidence and semantic dependency, not a desire for a complete-looking list or a fixed count).
 
 The governing principle remains: **Scenario Bank and World Rule Catalog co-evolve; the roadmap
 organizes the investigation rather than predetermining its conclusions.**
