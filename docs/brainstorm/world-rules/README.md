@@ -19,6 +19,10 @@ method for, and it inherits its semantics from `docs/brainstorm/core_rpg_design_
 outcome-neutrality principle, evaluation/governance boundary). It does not restate those
 documents; it cites and applies them.
 
+**Roadmap.** [roadmap.md](roadmap.md) is the sequencing plan for the whole Catalog — 12 batches
+across 4 milestones, plus a final integration pass. It is not semantic architecture; batch
+boundaries may split or merge as scenario evidence warrants.
+
 ## Design-area index
 
 Only the areas with actual rule files exist below. Do not scaffold empty files for areas not yet
