@@ -72,3 +72,4 @@ nothing, so the gap is visible rather than invisible.
 - Each child ticket writes its own `implement-ticket` monitoring records; the epic also writes one batch record (`EPIC-{id}` or `FOLDER-{path}`)
 - Sequential only — not parallel
 - For `request` mode: creates the epic ticket and returns `EPIC_CREATED`; no implementation happens until re-run with `epic_id`
+- After Report: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

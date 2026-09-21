@@ -89,3 +89,4 @@ Parse the user's input to extract:
 - Concerns are split or merged based on what investigation reveals about the actual code structure
 - If intra-batch ticket dependencies are detected, a `SEQUENCE.md` is written to enforce implementation order
 - After creation, run `/implement-epic folder=<output_folder>` to implement the tickets
+- After Link: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

@@ -82,3 +82,4 @@ institutional memory of agent behavior over time.
   (`.claude/settings.json` `PostToolUse`) — nudges via `additionalContext` once
   5+ `implement-ticket` runs have completed DONE since the last dated
   `RETRO-<week>.md` report.
+- After committing the report: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`
