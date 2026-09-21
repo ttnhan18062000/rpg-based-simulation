@@ -125,11 +125,13 @@ rather than quietly assumed to hold everywhere.
 
 **Scenarios:** [FND-S04](../scenarios/foundational-batch-01.md#fnd-s04).
 
-**Forward-reference, added 2026-09-21:** the declared-reach *mechanism* this rule describes is
-anticipated to migrate to the now-named **History / Provenance** family
-(`history-provenance.md`) once that family is actually drafted; the causal-validity constraint
-stated here stays in Causality regardless. No semantics changed by naming that family — see
-`history-provenance.md`'s own "Relationship to Causality" section for the exact boundary.
+**Migration complete, 2026-09-21:** the declared-reach *mechanism* this rule describes has
+migrated to **History / Provenance** (`history-provenance.md`'s HP-03), per that family's own
+Milestone A completion pass. The causal-validity constraint stated here — a causal chain must
+still trace to a real producer within whatever reach is declared — stays in Causality
+unchanged. No semantics changed by the migration; see `history-provenance.md`'s "Relationship
+to Causality" section for the exact boundary that was already drawn before drafting, and HP-03
+for the drafted rule itself.
 
 ---
 
@@ -143,30 +145,20 @@ stated here stays in Causality regardless. No semantics changed by naming that f
 > and not a violation of ID-05/OWN-06; it is a distinct, legitimate kind of change this rule must
 > not be read as forbidding.
 
-**Disposition: ACCEPT, partial-MOVE, refined 2026-09-21 per adversarial scenario expansion
-(`tmp/world-catalog-expand-scenario-and-review-layer-ext-ai.md`).** The no-fabrication constraint
-stays in this family, at this level of generality, because it is a direct restatement of CAUSE-03
-applied specifically to the compression case. The detailed design of *how* compression tiers
-should work (what gets dropped first, how far back full fidelity is kept, etc.) is explicitly
-deferred to the now-named **History / Provenance** foundational family
-(`history-provenance.md`, scope defined 2026-09-21, rules not yet drafted) — this batch is not
-the place to design that mechanism, only to assert the constraint it must obey whenever it is
-designed. The
-added sentence is a light refinement, not a new idea: FND-S21 (a dead entity's historical
-relevance should be able to legitimately fade) showed that ID-05 ("destruction doesn't erase
-history") and OWN-06 ("historical reference doesn't imply present ownership") could otherwise be
-over-read by a future domain author as requiring every recorded fact to stay at constant
-significance forever. Stating the distinction here — fading weight vs. erasure/fabrication —
-closes that over-broad reading without designing the fading mechanism itself, which still belongs
-to the now-named, not-yet-drafted History/Provenance family (`history-provenance.md`).
+**Disposition: ACCEPT, migration complete 2026-09-21.** The no-fabrication constraint stays in
+this family, at this level of generality, because it is a direct restatement of CAUSE-03 applied
+specifically to the compression case — that half never migrates, by design (per
+`history-provenance.md`'s own "Relationship to Causality" boundary: causal-validity constraints
+stay in Causality, persistence-specific substance migrates out). The detailed design of *how*
+compression tiers should work, and the significance-fading mechanism itself, have now migrated
+to **History / Provenance**'s HP-04 and HP-05 respectively (`history-provenance.md`), per that
+family's Milestone A completion pass. Both remain undesigned mechanisms there too — the
+migration moved the constraint's canonical home, not its state of completeness.
 
-**Repository evidence:** not separately evaluated this batch for compression-tier design — no
-such mechanism exists yet to check against, recorded as MISSING by absence rather than by failure.
-For the added sentence specifically: checked directly, no importance-decay mechanism exists
-anywhere in `src/domains/chronicle/` or `src/domains/fame/legend.py` either — every recorded fact
-stays at constant significance once created, within whatever reach CAUSE-05 already declares.
-This is MISSING in the same sense (no mechanism yet), not a violation of the refined rule, which
-only asserts that such a mechanism *would be* legitimate if built.
+**Repository evidence:** unchanged by the migration — no compression-tier or significance-fading
+mechanism exists anywhere in this repository (`src/domains/chronicle/`, `src/domains/
+fame/legend.py`), recorded as MISSING in both this file and HP-04/HP-05, not as a contradiction
+between them.
 
 **Scenarios:** [FND-S20](../scenarios/foundational-batch-01.md#fnd-s20),
 [FND-S21](../scenarios/foundational-batch-01.md#fnd-s21) (the fading-significance counter that
@@ -200,8 +192,8 @@ scenario, scored on causal validity of the chain that produced it, not on collap
 
 - CAUSE-02 → Ecology/population, World evolution, Places/settlements (the drought chain)
 - CAUSE-04 → Agency/motivation/decision, Capability/progression (precondition-gated actions)
-- CAUSE-05, CAUSE-06 → History / Provenance (`history-provenance.md` — named 2026-09-21, scope
-  defined, rules not yet drafted)
+- CAUSE-05, CAUSE-06 → History / Provenance (`history-provenance.md` — named 2026-09-21 during
+  Batch 01; drafted 2026-09-21 during the Milestone A completion pass, HP-01–06)
 - CAUSE-07 → Evaluation (SimQ) — explicitly a shared-standard link, not a redefinition either way
 
 ## Open questions carried forward
@@ -212,11 +204,9 @@ scenario, scored on causal validity of the chain that produced it, not on collap
    `simulation-rule-world-law-design-preparation.md` §3.1, only for whichever future domain
    eventually builds the detector to build it once, generally, rather than per-domain. Still the
    most load-bearing MISSING finding in this whole batch.
-2. **Resolved 2026-09-21.** CAUSE-05/CAUSE-06 defer real design work to the now-named History /
-   Provenance foundational family (`history-provenance.md`) — see that file's own scope and its
-   "Relationship to Causality" section for exactly what stays here vs. what migrates once that
-   family is actually drafted (a future batch, not this one).
+2. **Resolved and migrated 2026-09-21.** CAUSE-05/CAUSE-06's persistence-specific substance has
+   now been drafted as History/Provenance's own rules (HP-03/HP-04/HP-05) — see that file's
+   "Relationship to Causality" section for the boundary this migration followed exactly.
 3. CAUSE-06's fading-significance sentence (added 2026-09-21) states that fading is legitimate
    but does not design how it would work — mechanism design (what fades first, at what rate, does
-   it differ by domain) stays with the same History/Provenance family as the rest of CAUSE-06,
-   not resolved here.
+   it differ by domain) is now HP-05's own open question, not resolved here or there.

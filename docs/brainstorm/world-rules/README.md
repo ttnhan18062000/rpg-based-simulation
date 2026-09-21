@@ -34,7 +34,7 @@ order.
 | Identity | Foundational Batch 01 drafted | [foundations/identity.md](foundations/identity.md) |
 | State Ownership | Foundational Batch 01 drafted | [foundations/state-ownership.md](foundations/state-ownership.md) |
 | Causality | Foundational Batch 01 drafted | [foundations/causality.md](foundations/causality.md) |
-| History / Provenance | Scope defined 2026-09-21; rules not yet drafted — per `roadmap.md`, drafting moved into Milestone A as a completion pass after Batch 03, not left for Final Integration | [foundations/history-provenance.md](foundations/history-provenance.md) |
+| History / Provenance | Milestone A completion pass drafted 2026-09-21 (HP-01–06) — ready for high-level external review | [foundations/history-provenance.md](foundations/history-provenance.md) |
 | Time | Foundational Batch 02 — PASS, frozen | [foundations/time.md](foundations/time.md) |
 | Authority | Foundational Batch 02 — PASS, frozen | [foundations/authority.md](foundations/authority.md) |
 | Reach | Foundational Batch 02 — PASS, frozen | [foundations/reach.md](foundations/reach.md) |
@@ -52,9 +52,12 @@ order.
   `tmp/world-rule-foundational-batch-01-report.md` (local, not part of this catalog) for the full
   disposition report.
 - **History / Provenance** introduced 2026-09-21 as an explicit foundational/cross-cutting Rule
-  family (scope only — see [foundations/history-provenance.md](foundations/history-provenance.md)).
-  Not a new batch on its own; per `roadmap.md`, its own rules are drafted as a completion pass
-  inside Milestone A, after Batch 03 — not yet reached.
+  family, then drafted the same day as the Milestone A completion pass planned in `roadmap.md`
+  (HP-01–06 — see [foundations/history-provenance.md](foundations/history-provenance.md)):
+  ready for high-level external review. Not a numbered batch; migrates CAUSE-05/CAUSE-06's
+  persistence-specific substance and consolidates OWN-04/OWN-06/REACH-04 for future chronicle
+  content authors, with only HP-01/HP-02 as genuinely new claims. See
+  `review-exports/history-provenance-completion-review.md`.
 - **Foundational Batch 02** (Time, Authority, Reach): drafted, revised once per follow-up
   instruction (implementation-detail removed from Time, Authority's actor-only framing broadened,
   a real internal inconsistency in Reach corrected, 4 scenario probes added), **PASS — ready to
@@ -70,11 +73,13 @@ order.
   the follow-up (see `review-exports/foundational-batch-03-review.md`'s explicit call-outs). See
   `tmp/world-rule-foundational-batch-03-report.md` (local, not part of this catalog) for the
   full disposition report.
-- All three foundational batches (01, 02, 03) are now drafted; Batch 02 and Batch 03 are both
-  **PASS — ready to freeze**. No per-domain batch has been started, and no rules have been
-  drafted for History / Provenance yet — per the roadmap, that completion pass is the next
-  planned step once these batches are reviewed, not before. Do not begin any per-domain
-  Milestone B batch (Space & environment, Movement, Life/Body, etc.) until then.
+- **Milestone A is now fully drafted**: all three foundational batches (01, 02, 03) plus the
+  History/Provenance completion pass. Batch 02, Batch 03, and History/Provenance are all ready
+  for review (Batch 02/03 **PASS — ready to freeze**; History/Provenance ready for high-level
+  external review, not yet marked frozen). No per-domain Milestone B batch (Space &
+  environment, Movement, Life/Body, etc.) has been started — Batch 04 (Space/Environment/
+  Movement) is the next planned step once Milestone A receives review, per its own instruction's
+  explicit requirement that the History/Provenance completion pass finish first.
 
 ## Scenario Bank index
 
@@ -83,6 +88,7 @@ order.
 | Foundational Batch 01 | [scenarios/foundational-batch-01.md](scenarios/foundational-batch-01.md) | FND-S01 – FND-S21 |
 | Foundational Batch 02 | [scenarios/foundational-batch-02.md](scenarios/foundational-batch-02.md) | TAR-S01 – TAR-S17 |
 | Foundational Batch 03 | [scenarios/foundational-batch-03.md](scenarios/foundational-batch-03.md) | CTR-S01 – CTR-S20 |
+| History / Provenance completion | [scenarios/history-provenance-completion.md](scenarios/history-provenance-completion.md) | HP-S01 – HP-S02 |
 
 ## Unresolved cross-domain questions
 
@@ -111,10 +117,11 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
 - **Treated as an implementation/repository gap, not a design-order question.** No general
   capability/precondition detector exists (CAUSE-04) — does not argue for reordering the
   world-rule design order, only for building the detector once, generally, when it's built.
-- **RESOLVED by naming a family.** History/Provenance compression-tier design and
-  significance-fading design (CAUSE-05, CAUSE-06, FND-S20/S21) are no longer an unnamed deferred
-  item — see [foundations/history-provenance.md](foundations/history-provenance.md) (scope only,
-  rules not yet drafted).
+- **RESOLVED — named, then drafted.** History/Provenance's compression-tier constraint (HP-04)
+  and significance-fading constraint (HP-05) are now drafted Rules, migrated from CAUSE-05/
+  CAUSE-06 — see [foundations/history-provenance.md](foundations/history-provenance.md). The
+  *mechanisms* themselves (what fades first, at what rate) remain undesigned, per HP-04/HP-05's
+  own stated non-goal — not a gap, a deliberate scope boundary.
 - Reputation scalar vs. reputation labels narrative relationship (OWN-03, FND-S05): flagged for
   the Social relations batch — unchanged, not part of this disposition pass.
 
@@ -188,7 +195,7 @@ rationale stay canonical.
 | Foundational Batch 01 | `foundations/identity.md`, `foundations/state-ownership.md`, `foundations/causality.md` | `scenarios/foundational-batch-01.md` (FND-S01–S21) | [review-exports/foundational-batch-01-review.md](review-exports/foundational-batch-01-review.md) | Ready for high-level external review |
 | Foundational Batch 02 | `foundations/time.md`, `foundations/authority.md`, `foundations/reach.md` | `scenarios/foundational-batch-02.md` (TAR-S01–S17) | [review-exports/foundational-batch-02-review.md](review-exports/foundational-batch-02-review.md) | PASS — ready to freeze |
 | Foundational Batch 03 | `foundations/capability.md`, `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md` | `scenarios/foundational-batch-03.md` (CTR-S01–S20) | [review-exports/foundational-batch-03-review.md](review-exports/foundational-batch-03-review.md) | PASS — ready to freeze |
-| History / Provenance | `foundations/history-provenance.md` (scope only) | none yet | none yet | Scope defined 2026-09-21; not a reviewable batch yet — next planned step once Batch 03 is reviewed |
+| History / Provenance completion | `foundations/history-provenance.md` (HP-01–06) | `scenarios/history-provenance-completion.md` (HP-S01–S02) | [review-exports/history-provenance-completion-review.md](review-exports/history-provenance-completion-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -206,4 +213,7 @@ rationale stay canonical.
 - Batch 03 scenario file: `scenarios/foundational-batch-03.md`
 - Batch 03 review export: `review-exports/foundational-batch-03-review.md`
 - Batch 03 report (local, gitignored): `tmp/world-rule-foundational-batch-03-report.md`
-- Scope-only file (not part of any batch's own rule set): `foundations/history-provenance.md`
+- History/Provenance rule file: `foundations/history-provenance.md`
+- History/Provenance scenario file: `scenarios/history-provenance-completion.md`
+- History/Provenance review export: `review-exports/history-provenance-completion-review.md`
+- History/Provenance report (local, gitignored): `tmp/history-provenance-completion-report.md`

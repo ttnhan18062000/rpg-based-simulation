@@ -22,8 +22,10 @@ list. Three gaps found in the original draft are resolved explicitly below (see 
 layer disposition") rather than left as silent omissions. Batch 01 is complete; Batch 02 (Time /
 Authority / Reach) and Batch 03 (Capability / Cost / Capacity / Resource / Transformation) are
 both drafted, each revised once per its own follow-up review, and both **PASS — frozen**; the
-Milestone A History/Provenance completion pass is the next planned step once all three
-foundational batches are reviewed — not yet started.
+Milestone A History/Provenance completion pass is drafted and ready for high-level external
+review. **Milestone A is now fully drafted.** Batch 04 (Space/Environment/Movement) — the first
+domain-facing Milestone B batch — begins next, once Milestone A receives review, per that
+batch's own instruction requiring the History/Provenance completion pass to finish first.
 
 ---
 
@@ -112,10 +114,11 @@ Do not build generic implementation frameworks.
 
 ### Foundational completion pass — History / Provenance
 
-**Added 2026-09-21 — moved into Milestone A, as a completion pass after Batch 03, rather than
-left for the Final Integration Batch.** Batch 01 only *named* History/Provenance at scope level
-(`foundations/history-provenance.md`); this pass actually drafts enough of it to close out
-Milestone A. Establish enough semantics for:
+**Status: drafted 2026-09-21, ready for high-level external review.** See
+`review-exports/history-provenance-completion-review.md`. Six rules (HP-01–06): two restate/
+newly-claim within this family's own home (HP-01, HP-02), three are direct migrations of
+CAUSE-05/CAUSE-06's persistence-specific substance (HP-03/HP-04/HP-05), one consolidates three
+already-accepted rules for future chronicle-content authors (HP-06). Establishes semantics for:
 
 ```text
 historical continuity
