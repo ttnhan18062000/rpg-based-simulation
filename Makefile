@@ -34,6 +34,13 @@ build: ## Build frontend for production
 # own Playwright e2e webServer hit exactly this while starting `make dev` as a subprocess).
 PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
 
+# TCK-20260914-VENV-NAMING-CI-PARITY-SWAP: dedicated interpreter resolution for the knowledge-stack
+# targets (torch/sentence-transformers), independent of $(PYTHON3) -- `.venv` is now the CI-matching
+# 3.13 env and does not have these deps; they live in `.venv-knowledge` (3.12) instead. Uses
+# `command -v` (not `[ -x ]`) for the bare "python3" fallback -- see the PYTHON3 comment above and
+# the PYTHON variable below for why `[ -x "$$py" ]` alone never resolves a bare command via PATH.
+PYTHON_KNOWLEDGE := $(shell for py in .venv-knowledge/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
+
 dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."
 	@echo "Open http://localhost:5173 to view the live map."
@@ -427,12 +434,12 @@ content-inventory: ## Regenerate config/content_inventory.json from real data/co
 knowledge-index: ## Build local semantic knowledge index (developer env only — not CI)
 	@echo "Building knowledge index (requires: pip install -e '.[knowledge]')..."
 	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs HF_HUB_ETAG_TIMEOUT=120 \
-	  $(PYTHON3) \
+	  $(PYTHON_KNOWLEDGE) \
 	  tools/knowledge_search.py build
 
 knowledge-index-update: ## Incremental reindex — only re-embeds changed/new files (fast)
 	SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt SSL_CERT_DIR=/etc/ssl/certs HF_HUB_ETAG_TIMEOUT=120 \
-	  $(PYTHON3) \
+	  $(PYTHON_KNOWLEDGE) \
 	  tools/knowledge_search.py build --incremental
 
 kgmcp-bootstrap: parity-index knowledge-index ## Rebuild all local, gitignored Knowledge Gateway MCP caches for a fresh environment (see docs/guidelines/agent_working_environment.md)
@@ -461,7 +468,7 @@ install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ 
 	@echo "[hooks] post-commit hook installed"
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
-	$(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done) tools/eval_search.py
+	$(PYTHON_KNOWLEDGE) tools/eval_search.py
 
 # [ -x "$$py" ] only resolves an absolute/relative path to a literal file -- it never does a
 # PATH lookup for a bare command name, so "python3" alone always failed this check even when a
@@ -512,7 +519,7 @@ simq-corpus-diversity-slow-isolated: ## [slow] Run test_corpus_diversity.py's -m
 
 mcp-server-test: ## Smoke-test MCP search_docs tool via --test mode (no MCP client needed)
 	@echo '{"query": "damage formula", "top_k": 3}' | \
-	  $(shell for py in .venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do [ -x "$$py" ] && echo "$$py" && break; done) tools/search_mcp.py --test
+	  $(PYTHON_KNOWLEDGE) tools/search_mcp.py --test
 
 # ── Cleanup ──────────────────────────────────────────────
 
