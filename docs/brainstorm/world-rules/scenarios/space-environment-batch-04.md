@@ -8,15 +8,17 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Space / Environment / Movement (Batch 04)
 
-**Purpose/scope.** Twelve scenarios used to pressure-test the Location/Topology, Environment,
+**Purpose/scope.** Fifteen scenarios used to pressure-test the Location/Topology, Environment,
 and Movement/Navigation rule families in `space-environment/location-topology.md`,
-`space-environment/environment.md`, and `space-environment/movement-navigation.md`, per
-`tmp/world-rule-batch-4-ext-ai.md`. Covers all ten required probes (near but unreachable, far
-but connected, one-way passage, enter hazardous environment, leave hazardous environment,
-capable but blocked, destination exists but no path, movement has cost but still fails, teleport/
-supernatural travel boundary, environment descriptive but causally inert) plus the two explicit
-cross-batch checks not otherwise covered (location change ≠ identity change; historical presence
-at a place ≠ current presence/reach).
+`space-environment/environment.md`, and `space-environment/movement-navigation.md`. SPC-S01–S12
+are the original seed set (`tmp/world-rule-batch-4-ext-ai.md`), covering all ten required probes
+(near but unreachable, far but connected, one-way passage, enter hazardous environment, leave
+hazardous environment, capable but blocked, destination exists but no path, movement has cost
+but still fails, teleport/supernatural travel boundary, environment descriptive but causally
+inert) plus the two explicit cross-batch checks not otherwise covered (location change ≠
+identity change; historical presence at a place ≠ current presence/reach). SPC-S13–S15 are a
+follow-up expansion (`tmp/world-rule-batch-4-followup-ext-ai.md`), added to directly challenge
+the refined ENV-02, LOC-01, and LOC-05 respectively.
 
 Scoring uses the same vocabulary as prior batches: **covered** / **partially covered** /
 **blocked** / **revealed missing rule** / **revealed contradiction**, against current
@@ -169,6 +171,53 @@ to affect that place.
   historically-referenced subject has zero present reach; this scenario confirms that finding
   extends cleanly to a *place*-anchored historical reference, not only a person-anchored one.
 
+## Expansion: follow-up probes (SPC-S13–S15)
+
+Added per `tmp/world-rule-batch-4-followup-ext-ai.md`, directly challenging the three Rules that
+follow-up revised: ENV-02 (exposure depends on declared conditions being satisfied, not
+automatic from presence), LOC-01 (spatial state need not be point-like), and LOC-05/the
+Movement-Reach boundary (a route may persist while temporarily inaccessible).
+
+## SPC-S13 — Hazardous region, no exposure
+
+An entity enters a region with a nonzero `hazard_level`, but its faction has a declared immunity
+to that region's `hazard_kind`. Actual exposure does not occur.
+
+- **Rules invoked:** ENV-02 (presence creates an exposure *opportunity*; actual exposure depends
+  on declared conditions being satisfied).
+- **Result: covered.** `EnvironmentService.calculate_hazard_drain()` checks
+  `get_faction_semantics_service().get_hazard_immunities(faction_id)` before computing any
+  drain, returning `0` when the entity's faction is immune to the region's `hazard_kind` —
+  confirming presence/traversal alone does not guarantee exposure; a declared condition (here,
+  immunity) legitimately intervenes.
+
+## SPC-S14 — Spatial extent
+
+A large place occupies more than one spatial unit (a multi-tile city), yet has coherent,
+unambiguous authoritative spatial state — it is not forced into a single point representation.
+
+- **Rules invoked:** LOC-01 (authoritative spatial state must be unambiguous according to its
+  declared spatial model, not necessarily point-like).
+- **Result: covered.** `PlaceState.footprint: Optional[tuple[int, int, int, int]]`
+  ("Sub-bounds, multi-tile CITY-kind only") confirms an area/extent spatial model already
+  coexists with the point-location model (`position`) in the same repository — a `CITY`-kind
+  place's authoritative spatial state is unambiguous (its footprint) without being reducible to
+  one point.
+
+## SPC-S15 — Persistent route, temporary blockage
+
+A path connects A to B. A building comes to occupy a tile along that path, blocking current
+traversal. The underlying route relation persists; only current accessibility is affected.
+
+- **Rules invoked:** LOC-05 (route/path accessibility is derived from topology plus current
+  conditions, not necessarily a stored topology fact itself), MOV-01/Movement-Reach boundary.
+- **Result: covered.** `LegalityServiceV2` distinguishes static, permanent blockage
+  (`PATH_NOT_FOUND`, from `WALL`/`blocked_tiles` terrain) from dynamic, potentially-temporary
+  blockage (`BUILDING_OBSTRUCTION`, from a building occupying a tile) — confirming the
+  repository already treats an obstruction as separable from the underlying terrain/topology:
+  the building can in principle be removed without anything about the route's own topological
+  existence changing.
+
 ---
 
 ## Cross-batch note
@@ -182,3 +231,14 @@ and where this batch's own genuinely new material lives is in the confirmed gaps
 missing route/portal/directional mechanism, MOV-05's missing non-physical movement mechanism,
 ENV-01/ENV-05's confirmed-inert `service_availability`) rather than in contradicting anything
 already accepted.
+
+The follow-up expansion's own most useful result was not a new scenario finding but an
+ownership-framing correction: the original review deferred the LOC-02/LOC-06 route/portal gap
+"primarily to Magic and Organizations," which read as though whichever domain eventually builds
+a connection mechanism would also become its canonical owner. LOC-07 (added by the follow-up)
+corrects this by applying OWN-01/OWN-02's discipline to topology specifically — a domain may
+produce, control, destroy, maintain, or use a spatial connection without owning spatial
+connectivity itself, which remains this family's own concern. The same correction was applied
+to ENV-03 (Environment never owns exposure's consequence, but this batch does not decide which
+domain does) rather than letting the repository's own `CombatUpdate` wiring quietly settle a
+question this batch was never meant to answer.

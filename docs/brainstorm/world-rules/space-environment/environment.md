@@ -26,18 +26,24 @@ capability state where appropriate.
 
 ---
 
-## ENV-01 — Environment creates real causal conditions when a mechanism declares them
+## ENV-01 — Environmental state has causal significance only where a declared world rule/process can consume or react to it
 
-> A region or location's environmental state (hazard, weather, terrain) is a causal condition
-> only where a real mechanism reads it and produces an effect. Environmental state existing as a
-> field is not, by itself, proof that it is causally live — this rule states what environment
-> *should* be (a source of real conditions), and this family's own evidence review found that
-> claim is not automatically true of every environmental field in this repository.
+> A region or location's environmental state (hazard, weather, terrain) has causal significance
+> only where a declared world rule or process can consume or react to it. Environmental state
+> existing as a field is not, by itself, proof that it is causally significant — this rule
+> states what environment *should* be (a source of real conditions with a declared consumer),
+> and this family's own evidence review found that claim is not automatically true of every
+> environmental field in this repository.
 
-**Disposition: ACCEPT, with a confirmed counter-finding this batch's own investigation
-required.** The batch instruction explicitly asked this family to challenge whether
-environmental state has actual consumers — the honest answer is: most of it does, one clear
-field doesn't.
+**Disposition: ACCEPT, refined 2026-09-21 — "a mechanism reads it" replaced with world-semantic
+language.** The original wording described the requirement in terms of a mechanism reading a
+field — an implementation-level description of what causal significance looks like in code,
+not a statement of the semantic requirement itself. The rule now states the semantic
+requirement directly: causal significance requires a *declared world rule/process* able to
+consume or react to the state, of which "a mechanism reads it" is simply this repository's own
+way of realizing that requirement. The batch instruction explicitly asked this family to
+challenge whether environmental state has actual consumers — the honest answer is: most of it
+does, one clear field doesn't.
 
 **Repository evidence: SUPPORTED for most environmental state; MISSING (inert) for at least one
 field, confirmed directly.** *Causally live:* `EnvironmentService.calculate_hazard_drain()`
@@ -54,24 +60,39 @@ counter: environment is descriptive but causally inert).
 
 ---
 
-## ENV-02 — Occupying or traversing a location with a relevant condition creates a real exposure fact
+## ENV-02 — Presence or traversal creates an exposure opportunity; actual exposure depends on whether declared conditions are satisfied
 
-> The causal pattern is: a subject occupies or traverses a location → the environment has a
-> relevant condition → the subject is exposed → another domain may react. Exposure is the real,
-> declared fact this family produces; what happens as a result of exposure belongs to whichever
-> domain owns that consequence (ENV-03).
+> The causal pattern is: presence/traversal → exposure opportunity/context → declared exposure
+> conditions checked → exposure occurs only if those conditions are satisfied → downstream
+> consequence becomes possible. Occupying or traversing a hazardous location does not, by
+> itself, guarantee actual exposure — shelter, immunity, equipment, or form may prevent it.
+> Environment establishes the relevant *condition*; later rules (potentially including
+> Environment's own mechanism, or another domain's) determine whether that condition actually
+> affects the subject.
 
-**Disposition: ACCEPT.**
+**Disposition: ACCEPT, refined 2026-09-21 — removed the implication that occupying/traversing
+automatically produces exposure.** The original wording collapsed "the environment has a
+relevant condition" and "the subject is exposed" into one automatic step. That was too strong,
+and this repository's own evidence already contradicted it before this refinement made the rule
+match: a subject with a declared immunity to a region's hazard kind experiences the condition
+(the hazard is real) without experiencing actual exposure (zero drain). The revised rule states
+the full chain explicitly, with the immunity/shelter/equipment/form check as a legitimate,
+expected step between condition and exposure, not an exception the original wording had no room
+for.
 
-**Repository evidence: SUPPORTED.** `WorldDynamicsSystem.resolve_dynamics()` checks, for every
-active/alive entity, which region contains its current position, and calls
-`EnvironmentService.calculate_hazard_drain()` for that region against that entity — occupying a
-hazardous location is exactly what triggers the exposure calculation, every tick, for every
-entity present.
+**Repository evidence: SUPPORTED, and this refinement is confirmed by evidence already
+gathered, not new evidence.** `EnvironmentService.calculate_hazard_drain()` checks
+`get_faction_semantics_service().get_hazard_immunities(faction_id)` *before* computing any
+drain — a faction with a declared immunity to the region's `hazard_kind` returns `0` regardless
+of `hazard_level`. `WorldDynamicsSystem.resolve_dynamics()` still checks, for every active/alive
+entity, which region contains its position and calls this function — presence/traversal
+reliably creates the *opportunity* for exposure; whether exposure actually results is a further,
+already-real conditional step this repository already implements correctly.
 
 **Scenarios:** [SPC-S04](../scenarios/space-environment-batch-04.md#spc-s04) (enter hazardous
 environment), [SPC-S05](../scenarios/space-environment-batch-04.md#spc-s05) (leave hazardous
-environment).
+environment), [SPC-S13](../scenarios/space-environment-batch-04.md#spc-s13) (added 2026-09-21 —
+hazardous region entered, but immunity prevents actual exposure).
 
 ---
 
@@ -79,20 +100,29 @@ environment).
 
 > Environment produces the *fact and magnitude* of exposure. It does not commit the resulting
 > body/capability/resource state change itself — that commitment happens through whichever
-> domain's own authoritative update path owns the affected state (Life/Body for HP, Capability
-> for impaired ability, etc.). This is OWN-02 (participation ≠ ownership) restated for
-> Environment specifically.
+> domain's own authoritative update path owns the affected state (Life/Body, or another
+> appropriate later domain, depending on what the exposure affects). This is OWN-02
+> (participation ≠ ownership) restated for Environment specifically. **This rule does not
+> decide which domain that is** — only that Environment itself is never that domain.
 
-**Disposition: ACCEPT strongly.** This is one of the cleanest OWN-02 instances this Catalog has
-found — Environment's own function returns a plain number, never touching an `EntityUpdate`
-itself.
+**Disposition: ACCEPT strongly, refined 2026-09-21 — the specific target-owner claim
+loosened.** The original wording named Life/Body (via the repository's own `CombatUpdate` path)
+as though that settled which domain *should* own environmental bodily harm going forward. It
+doesn't: this repository's current implementation happens to route hazard damage through Combat/
+Life's own update path, but that is repository evidence about *today's* wiring, not a target-
+architecture claim that Combat specifically must always own this consequence. A later domain
+(Life/Body more generally, a distinct Survival domain, or something else this Catalog hasn't
+named yet) may end up being the more precise owner once that domain is actually designed — this
+rule's own job is only to keep Environment itself out of that role, not to decide who fills it.
 
-**Repository evidence: SUPPORTED, precisely.** `EnvironmentService.calculate_hazard_drain()`
-returns a plain `int` — it does not construct, touch, or return any `EntityUpdate`/`CombatUpdate`
-object. The actual commitment happens two call-frames away, in `WorldDynamicsSystem.
-resolve_dynamics()`, which builds the `CombatUpdate(hp_delta=..., alive_set=...)` — a Combat/
-Life-domain-owned update, not an Environment-owned one. Environment participates in producing
-the number; Life/Body's own apply path owns what happens to HP.
+**Repository evidence: SUPPORTED for "Environment never owns it"; read as today's wiring, not
+target ownership, for "who does."** `EnvironmentService.calculate_hazard_drain()` returns a
+plain `int` — it does not construct, touch, or return any `EntityUpdate`/`CombatUpdate` object,
+which is the part of this rule that is genuinely settled. The actual commitment happens two
+call-frames away, in `WorldDynamicsSystem.resolve_dynamics()`, which builds a
+`CombatUpdate(hp_delta=..., alive_set=...)` — real evidence of *a* domain other than Environment
+owning the result, cited here as evidence of the boundary holding, not as a claim that Combat is
+where this consequence should live once Life/Body/Survival is actually designed.
 
 **Scenarios:** [SPC-S04](../scenarios/space-environment-batch-04.md#spc-s04),
 [SPC-S05](../scenarios/space-environment-batch-04.md#spc-s05) (same scenarios as ENV-02 — one
@@ -121,11 +151,11 @@ adjacent purpose (a modifier feeding a calculation, rather than exposure feeding
 
 ## ENV-05 — Inert environmental state should be recognized as such, not assumed causal by its mere existence
 
-> If an environmental field exists but no mechanism currently reads it to produce an effect,
-> that is a real, nameable fact about the repository's current state — not a violation of
-> ENV-01, and not something to silently assume is "probably used somewhere." Recognizing inert
-> state explicitly is what keeps ENV-01's "causal conditions, not passive metadata" standard
-> honest rather than aspirational.
+> If an environmental field exists but no declared world rule/process currently consumes or
+> reacts to it, that is a real, nameable fact about the repository's current state — not a
+> violation of ENV-01, and not something to silently assume is "probably used somewhere."
+> Recognizing inert state explicitly is what keeps ENV-01's "causal significance requires a
+> declared consumer" standard honest rather than aspirational.
 
 **Disposition: ACCEPT.** This is the rule ENV-01's own counter-finding motivated — stated
 separately so a future domain author has an explicit standard to check newly-added
@@ -144,8 +174,9 @@ ENV-01).
 
 - ENV-01, ENV-05 → all future domains that add environmental state (a standing standard to check
   new fields against)
-- ENV-02, ENV-03 → Life/body/survival, Capability & progression (the future domains that own
-  exposure's actual downstream consequences)
+- ENV-02, ENV-03 → Life/body/survival, Capability & progression (plausible future owners of
+  exposure's downstream consequences — **not settled here**; ENV-03 keeps Environment itself out
+  of that role without deciding which of these, or another domain not yet named, fills it)
 - ENV-04 → Movement/Navigation (`movement-navigation.md`), Conflict & combat (future terrain-
   affects-combat content)
 - ENV-03 → State Ownership (OWN-02, directly reused)
@@ -162,3 +193,7 @@ ENV-01).
    `active_modifiers` beyond `"MIASMA"` were not exhaustively re-verified for every possible
    modifier string this batch; flagged for whichever future Economy/resources or Ecology/
    population batch next touches regional modifiers, rather than assumed either way.
+3. **Added 2026-09-21.** ENV-03 deliberately leaves open which domain owns exposure's downstream
+   consequences (Life/Body, a future Survival domain, or another not yet named) — not decided
+   here, and not to be read as already-settled by the `CombatUpdate` path this repository
+   currently happens to use.

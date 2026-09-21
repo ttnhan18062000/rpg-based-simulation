@@ -48,18 +48,26 @@ LOC-05), `StaminaService.drain_move`/`MOVE_COST` (cost) are all independent chec
 
 ---
 
-## MOV-02 — Movement requires a valid world-semantic transition, never raw location assignment
+## MOV-02 — Movement is a committed spatial transition governed by declared world constraints
 
-> A movement outcome is the result of resolving a real transition (checking path, occupancy,
-> cost, environment), not a bare overwrite of a position field.
+> Movement is a committed spatial transition governed by declared world constraints, not an
+> unconstrained change of spatial state. What resolves a movement outcome (checking path,
+> occupancy, cost, environment) is this rule's semantic content; that this repository happens to
+> implement that resolution as opposed to a bare field write is evidence of the rule holding,
+> not the rule's own wording.
 
-**Disposition: ACCEPT strongly.**
+**Disposition: ACCEPT strongly, refined 2026-09-21 — "raw overwrite of a position field"
+replaced with world-semantic language.** The original wording described the violation case in
+implementation terms (a bare field write) rather than stating the positive semantic requirement
+directly. The rule now states what movement *is* (a constrained transition) rather than what it
+must not look like in code.
 
-**Repository evidence: SUPPORTED, and explicitly declared as an architectural principle already.**
-`MovementSystem.resolve_move()`'s own docstring cites "Logic ID: COMB-201 (Movement intentions
-are distinct from results)" — the repository already treats a movement *intent* and its
-*resolved outcome* as two different things, resolved through path lookup, a congestion ladder,
-and environment multipliers, never a direct field write.
+**Repository evidence: SUPPORTED, and explicitly declared as an architectural principle
+already.** `MovementSystem.resolve_move()`'s own docstring cites "Logic ID: COMB-201 (Movement
+intentions are distinct from results)" — the repository already treats a movement *intent* and
+its *resolved outcome* as two different things, resolved through path lookup, a congestion
+ladder, and environment multipliers, never a direct field write. This remains evidence for the
+rule, not the rule's own definition.
 
 **Scenarios:** [SPC-S06](../scenarios/space-environment-batch-04.md#spc-s06).
 
@@ -84,23 +92,31 @@ that an attempt does not fully succeed.
 
 ---
 
-## MOV-04 — Movement cost may be incurred per committed step, even when the overall attempt is later interrupted
+## MOV-04 — Movement cost may accrue at declared stages of a movement process
 
-> Where movement resolves incrementally (step by step, tick by tick), the cost of a step that
-> genuinely succeeds is incurred at that step, independent of whether a later step in the same
-> overall attempt fails. This is COST-03's declared-lifecycle principle, applied to movement
-> specifically — a committed step's cost is not refunded by a later interruption of the broader
-> journey.
+> Movement cost may accrue at declared stages or portions of a movement process, including
+> before eventual arrival or failure. This is COST-03's declared-lifecycle principle, applied to
+> movement — a cost incurred at some declared stage is not refunded by a later interruption of
+> the broader journey. This rule does not require a *per-step* accrual model specifically; a
+> per-step model is one legitimate way to realize it, not the general Rule.
 
-**Disposition: ACCEPT.** Directly required by the batch instruction's own cross-batch challenge
-("movement attempt begins/commits → declared cost incurred → interruption prevents arrival").
+**Disposition: ACCEPT, refined 2026-09-21 — generalized beyond the per-step model this
+repository happens to implement.** The original wording made "per committed step" the Rule
+itself, when the underlying requirement is broader: cost accrues at whatever stages a movement
+process declares (which could be per-step, per-leg-of-a-journey, on-commitment-only, or some
+other declared schedule), and a later failure never retroactively un-incurs a cost already
+accrued at an earlier declared stage. Per-step accrual remains this repository's own
+implementation choice, kept as evidence, not elevated to the general Rule.
 
-**Repository evidence: SUPPORTED.** `MovementSystem.resolve_move()` applies
-`StaminaUpdate(current_delta=-entity.stamina.MOVE_COST)` conditioned on `success` — meaning
-*this tick's step* succeeding, not the entity's overall multi-tick destination being reached. An
-earlier tick's step can genuinely succeed (cost paid) while a later tick's step toward the same
-ultimate destination is blocked (arrival never occurs) — the earlier cost is never revisited or
-refunded.
+**Repository evidence: SUPPORTED for the per-step instance; this is one instance of the
+general rule, not proof the general rule requires per-step accrual specifically.**
+`MovementSystem.resolve_move()` applies `StaminaUpdate(current_delta=-entity.stamina.
+MOVE_COST)` conditioned on `success` — meaning *this tick's step* succeeding, not the entity's
+overall multi-tick destination being reached. An earlier tick's step can genuinely succeed (cost
+paid) while a later tick's step toward the same ultimate destination is blocked (arrival never
+occurs) — the earlier cost is never revisited or refunded. This confirms the general principle
+via this repository's own chosen stage granularity (the step), not evidence that the stage must
+always be a step.
 
 **Scenarios:** [SPC-S08](../scenarios/space-environment-batch-04.md#spc-s08).
 

@@ -24,9 +24,8 @@ Authority / Reach) and Batch 03 (Capability / Cost / Capacity / Resource / Trans
 both drafted, each revised once per its own follow-up review, and both **PASS — frozen**; the
 Milestone A History/Provenance completion pass is drafted and ready for high-level external
 review. **Milestone A is fully drafted.** Batch 04 (Space/Environment/Movement) — the first
-domain-facing Milestone B batch — is also drafted and ready for high-level external review,
-begun immediately after Milestone A per that batch's own instruction. Batch 05 (Life/Body/
-Survival/Ecology) is the next planned step once Batch 04 receives review.
+domain-facing Milestone B batch — is drafted, revised once per its own follow-up review, and
+**PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) begins next.
 
 ---
 
@@ -159,7 +158,9 @@ the trajectory of individual entities.
 
 ### Batch 04 — Space / Environment / Movement
 
-**Status: drafted 2026-09-21, ready for high-level external review.** 17 rules across
+**Status: PASS — frozen.** Drafted 2026-09-21, then revised once per follow-up review
+(implementation-specific wording removed from 8 rules, an ownership-framing correction adding
+LOC-07 and loosening ENV-03's target-owner claim, 3 scenario probes added). 18 rules across
 `space-environment/location-topology.md`, `environment.md`, `movement-navigation.md`. Two
 confirmed repository gaps (no route/portal/directional-connection mechanism; no non-physical
 movement mechanism) and one confirmed causally-inert environmental field
