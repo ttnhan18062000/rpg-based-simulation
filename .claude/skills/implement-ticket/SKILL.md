@@ -75,3 +75,4 @@ Hotfix tier skips Investigate (and its shadow-packet step), Plan, Review, and Ar
 - `writeMonitoring` must be called at every exit — gate failures, DONE, and EPIC_SCOPED alike
 - Never write to `agent-monitoring/data/YYYY-Www/runs.jsonl` or `events.jsonl` directly — always go through `record_run.py` / `record_events.py`
 - Pass `ticket_id` to resume from an existing in-progress ticket (Scope phase re-loads it and skips creation)
+- After Finalize: evaluate reset boundary per `docs/guides/agent_session_reset_boundaries.md`

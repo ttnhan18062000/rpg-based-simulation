@@ -302,3 +302,8 @@ website/.docusaurus/
 # still costing real merge conflicts (4 confirmed: #183, #184, #186, and a contamination on the
 # parity branch).
 .claude/.epic_staleness_state.json
+
+# TCK-20260921-SESSION-CONTEXT-RESET-TRIAL: per-role handover notes, one file per role name (not
+# per cwd -- several sessions share the main checkout). Session-local working state, meaningless
+# and merge-conflict-prone in another clone or after the handoff it describes is stale.
+.claude/handover/
