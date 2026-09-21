@@ -324,10 +324,11 @@ instrument must supply its own calibration before any real verdict is trustworth
 
 Both controls are required in the same batch as the first real mechanism, not deferred.
 
-**Two named traps, both real and hit during the first application (`readiness_speed_scaling`,
-`derived_stats`, `evolution`/`xp_leveling`, `tests/mechanic_scenarios/
-test_readiness_and_derived_stats_value_differential.py` and
-`test_evolution_xp_reward_value_differential.py`):**
+**Three named traps, all real and hit during real application of this instrument
+(`readiness_speed_scaling`, `derived_stats`, `evolution`/`xp_leveling`,
+`test_readiness_and_derived_stats_value_differential.py`,
+`test_evolution_xp_reward_value_differential.py`; the third added 2026-09-21 from the `combat`
+program, `test_combat_attributes_real_fight_outcome_value_differential.py`):**
 
 1. **Determinism/seed sensitivity — the value-differential analogue of §5 item 5's cadence trap,
    and subtler.** If varying the input also perturbs RNG draw order (e.g. a different number of
@@ -354,6 +355,30 @@ test_readiness_and_derived_stats_value_differential.py` and
    failure to work around. In practice, the first batch needed no new world: both mechanisms reused
    `data/worlds/mechanic_scenario_combat_judgement_withdrawal/`, already a real catalog-driven,
    combat-capable pairing.
+3. **Derivation timing — a vacuous differential arriving through a third door, neither an
+   unevaluated negative arm nor RNG drift.** When the varied input feeds a DERIVED value rather
+   than being read directly by the mechanism under test, the derivation has to have actually run,
+   relative to the observation point, or both arms measure the pre-change state and look identical
+   for a reason that has nothing to do with whether the input matters. Concrete instance (`combat`
+   program): `attributes.strength` does not feed `calculate_damage()` directly — it feeds
+   `combat.atk` through `LevelingService.recalculate_combat_stats()`, and the real authoritative
+   apply path (`apply.py`'s own `stats_dirty` block) only recalculates derived stats at the END of
+   the tick that changed the underlying attribute. A same-tick "change attribute, then attack"
+   design would have staged a real attribute change and a real forced attack together, watched the
+   fight resolve using the OLD, not-yet-recalculated `combat.atk`, and reported "no difference" — a
+   confident false negative, since the derivation simply hadn't run yet at the moment of
+   observation, not because the attribute doesn't matter. This generalizes beyond combat: any
+   mechanism whose input is derived rather than raw carries this hazard, and the instrument gives
+   no signal when it fires — the numbers are internally consistent, just stale. **The defense**:
+   before staging a differential on a derived input, establish when that derivation actually runs
+   relative to where the observation happens, and stage accordingly — either genuinely separate the
+   derivation tick from the observation tick, or (as done here) call the real derivation function
+   directly to obtain the value a real recalculation would produce, then stage that result for the
+   observation. The second option matters for a specific reason: calling the real function means
+   the scenario's expected value comes from the code, not from the scenario author's own reading of
+   the formula — hand-computing the expected derived value instead would make the scenario agree
+   with that reading rather than with what the code actually does, silently reintroducing exactly
+   the kind of unverified assumption this whole instrument exists to remove.
 
 **Registry recording convention**: a value-differential finding is additive to an existing
 `verified` note (dated, appended), never a silent overwrite of a prior reachability verdict — the

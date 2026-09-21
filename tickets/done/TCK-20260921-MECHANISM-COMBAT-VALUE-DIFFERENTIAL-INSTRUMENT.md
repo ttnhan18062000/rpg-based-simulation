@@ -181,3 +181,15 @@ entity attributes have real purchase on combat outcomes — with 2 focused, real
 the `stats_dirty` P0 finding it exists to qualify. No further combat waves; the full sweep and the
 arbitration instrument both wait for the roadmap session's own read, per peer instruction. PR #232
 closes with this ticket.
+
+**Addendum 2026-09-21, post-report peer review**: a third named trap added to §5.1 (`docs/plans/
+mechanic_verification_scenarios_proposal.md`) — **derivation timing**, distinct from determinism/
+seed-sensitivity and purpose-built worlds: when a differential's varied input feeds a DERIVED value
+rather than being read directly, the derivation has to have actually run relative to the
+observation point, or both arms measure stale pre-change state and look identical for a reason
+unrelated to whether the input matters. This is exactly the hazard this ticket's own end-to-end
+test avoided by calling `LevelingService.recalculate_combat_stats()` directly (the real apply-path
+sequencing recalculates derived stats only at tick-end, so a same-tick change-then-attack design
+would have fought with the OLD `atk`). Also noted explicitly: calling the real derivation function,
+rather than hand-computing the expected value, keeps the scenario's expected value anchored to what
+the code actually does rather than to the scenario author's own reading of the formula.
