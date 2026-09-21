@@ -4,18 +4,32 @@ layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260730-CODEX-CONTROLLED-PILOT
-phase: blocked
+phase: open
 date: 2026-07-30
 tags: [ai, workflows, hooks, agent-monitoring, observability, rollback, testing]
 ---
 
 # TCK-20260730-CODEX-CONTROLLED-PILOT
 
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> activity since at least 2026-08-14 (its own last recorded content change, per `git log`; its
+> own body's last dated note is 2026-08-02), and its presence there (along with several other
+> stale
+> `tickets/inprogress/` entries) was firing this repo's sidecar-check hook on every `Edit`/`Write`
+> in every concurrent session on this machine. **Nothing about the ticket's own substance was
+> investigated, debugged, or re-scoped as part of this move** — its Scope, Acceptance Criteria,
+> and Assumptions below are exactly as they were. Anyone picking this up should treat it as
+> **unstarted backlog work** and re-validate its premises first: it predates a large amount of
+> change in this repo (including the Headroom trial epic, several agent-monitoring reworks, and
+> the retrieval-preference guidance), and nothing here has been checked against the current state
+> of any of that.
+
 ## Title
 Conduct one human-approved, controlled Codex pilot
 
 ## Status
-BLOCKED
+OPEN
 
 ## Tier
 standard

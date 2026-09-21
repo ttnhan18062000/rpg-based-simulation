@@ -240,7 +240,7 @@ Promote to Phase 2 only if all hold:
 Abandon — and revert — if savings are immaterial, any correctness signal degrades, or isolation
 proves unreliable across concurrent sessions.
 
-## Epic-level gate: package installation needs the user's own shell (resolved 2026-09-20, not removed)
+## Epic-level gate: package installation — resolved, with two caveats (2026-09-20)
 
 `TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT` found that `files.pythonhosted.org` (the
 package-download CDN, not the `pypi.org` index — that resolves fine) is unreachable from this
@@ -250,16 +250,30 @@ wheel URL) fails with `SSL: CERTIFICATE_VERIFY_FAILED`, confirmed general (not H
 via an unrelated trivial package. This is the same host-specific-filter shape as CLAUDE.md's
 documented `*.blob.core.windows.net` block, just a different host. A `git+https://github.com/...`
 install would not route around it either, since Headroom's own dependencies resolve through the
-same blocked host.
+same blocked host. This history is kept, not deleted — it's why that ticket closed proving the
+safety envelope from source and a hermetic clean-clone repro rather than by installing anything in
+this sandbox.
 
-**Resolved by asking the user to run the install in their own shell.** The user's shell is not
-behind the same block and installed `headroom-ai` directly into `.venv` without incident. This
-does not remove the gate, only shifts it: **any child ticket that needs Headroom actually present
-in `.venv` (rather than just its `.mcp.json` registration, which an agent session can re-apply on
-its own) needs the user to re-run the install each time** — it is not a one-time unblock, since a
-later revert (or a fresh sandbox) removes the package again and an agent session cannot reinstall
-it itself. `registry.npmjs.org` **is** reachable from the sandbox, which is relevant only to a
-possible Caveman (`@caveman-ai/cli`) candidate-substitution, a decision for the user.
+**Resolved by asking the user to run the install in their own shell, not by working around the
+block.** The user's shell is not behind the same block and installed `headroom-ai` into `.venv`
+twice — once during that ticket's own work (later uninstalled again as part of proving the
+revert), and again afterward, which is the install still present today (confirmed importable,
+runnable, and functionally exercised via a real MCP client smoke test).
+
+**Two honest caveats, not "simply fixed":**
+
+1. **The second install resolved entirely from pip's local cache** (`Using cached` on every
+   wheel) — it did **not** re-prove network access to the blocked host. If that cache is ever
+   cleared, the same block would need working around again via the user's own shell, not assumed
+   already solved.
+2. **The install is machine-level state, not a repository artifact.** It is not checked into git
+   and not reproduced by cloning this repo elsewhere. Any child ticket that needs Headroom
+   actually present in `.venv` (rather than just its `.mcp.json` registration, which an agent
+   session can re-apply on its own directly) depends on that machine-level install still being
+   there — on a different machine, or after this venv is rebuilt, it is not a one-time unblock.
+
+`registry.npmjs.org` **is** reachable from the sandbox, which is relevant only to a possible
+Caveman (`@caveman-ai/cli`) candidate-substitution, a decision for the user.
 
 ## Open questions
 

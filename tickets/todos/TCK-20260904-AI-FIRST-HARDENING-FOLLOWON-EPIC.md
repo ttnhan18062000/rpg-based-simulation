@@ -11,6 +11,24 @@ tags: [governance, ai, agent-monitoring]
 
 # TCK-20260904-AI-FIRST-HARDENING-FOLLOWON-EPIC
 
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> content change since 2026-09-07 (verified via `git log --follow`, not file mtime), and its
+> presence there was the last remaining reason this repo's sidecar-check hook was firing on
+> every `Edit`/`Write` in every concurrent session on this machine. **Nothing about the ticket's
+> own substance was investigated, debugged, or re-scoped as part of this move.** `Status` is left
+> as `EPIC_SCOPED` — that is already the correct, backlog-appropriate value for an un-implemented
+> epic-tier ticket (per this repo's own ticket-format convention), not something that needed
+> resetting the way a stray `BLOCKED` would.
+>
+> **One thing worth recording plainly for whoever finds this ticket next**: a worktree named
+> `ai-first-hardening-planning` still exists on disk, on branch `roadmap-committed-count-fix`
+> (last real commit 2026-09-04) — and it was genuinely dormant when this ticket was moved, not
+> merely quiet: it has no `2026-W38` monitoring shard at all, meaning no session has worked in it
+> this entire week. If a session later returns claiming ownership of this ticket's work, moving
+> it back to `tickets/inprogress/` is a single, one-commit reversal — this note exists so that
+> person isn't confused about why it moved in the meantime.
+
 ## Title
 AI-First Hardening — Bucket B/C follow-on tracking epic (not yet scoped into child tickets)
 
