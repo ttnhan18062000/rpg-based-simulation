@@ -67,6 +67,50 @@ part of that batch's 13 named tests at all (new/different failures), or were par
 NOT re-baselined" 10 per that ticket's own Option A disposition and may simply not have been
 re-checked since.
 
+## Addendum — 2026-09-21 (do not re-baseline yet; parked alongside a related CI decision)
+
+**1. This ticket stays parked under the same 2026-09-16 user decision that parked
+`TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`** (`main`'s own `Slow regression` job
+has failed on every push run at step 5, `make simq-corpus-diversity-slow-isolated`, since that
+date; deliberately deprioritised P2->P3, OPEN->BLOCKED, until the engine re-architecture lands).
+The user has just confirmed the parking stays in effect. The two tickets describe the same CI step
+from different angles: `TCK-20260822-...-EXIT-CODE-2` covers the job-level failure (the `make`
+invocation's own exit code), this ticket covers the assertion content underneath it (which
+specific `(world, pillar)` combos drift and why). Neither should be picked up independently of the
+other while the underlying engine work is still pending.
+
+**2. Do not re-baseline any of this ticket's own anchors until two things are true**: the
+`TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` P0 is fixed, and the post-#222
+combat state has settled. Reason, plainly: this ticket's own recorded "current" scores above (e.g.
+`frontier_extended_seed123_200t -- COMBAT: mean_score=0.8959`) were measured BEFORE PR #222 removed
+85-96% of real `resolve_multi_attack()` combat volume across the corpus worlds
+(`TCK-20260919-COMBAT-HOSTILITY-SOURCE-DIVERGENCE-UNIFICATION`'s own measurement: most of that
+volume was phantom hostility from the pre-fix legacy `Faction` enum, not real catalog hostility).
+Separately, `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` means every one of these
+COMBAT numbers also reflects entities whose species-specific base stats have been silently wiped
+toward generic defaults by any ordinary action taken before the measurement window — confirmed by
+`TCK-20260921-MECHANISM-COMBAT-VALUE-DIFFERENTIAL-INSTRUMENT` to be destroying a real, formula-
+exact determinant of combat outcomes, not a cosmetic drift. Anchoring against either state now
+would lock in a simulation already known to be wrong on two independent, unfixed axes.
+
+**3. Treat any anchor set at a narrative score of exactly 0.0 as suspect, not as ground truth.**
+Several of this ticket's own failing tests are anchored at `anchor_score=0.0`
+(`generated_frontier_3_42_seed123_200t`, `frontier_living_world_seed123_200t`), meaning the test
+effectively asserts that NO narrative-scored event happens at all. The simulation now scores 0.36
+on both. A failure against a 0.0 anchor may mean the simulation improved (narrative events that
+previously never fired now do), not that it regressed. Whoever picks this ticket up has to decide
+bug-versus-correct-behavior for each such test on its own evidence before touching any anchor — per
+this repo's own standing rule against forcing a route just to lift or preserve a score
+(`docs/testing/regression_policy.md` §9's already-established "do not assume a directionally-
+plausible cause is proof of legitimacy" lesson, cited in this ticket's own Scope below, applies with
+equal force in the opposite direction: a directionally-plausible IMPROVEMENT is not proof either).
+
+**4. The `exit code 2` reported by CI is not itself diagnostic.** It is `make`'s own generic return
+code for any failed recipe under `make simq-corpus-diversity-slow-isolated` — it does not by itself
+distinguish a pytest run that was interrupted (timeout, crash, OOM) from one where a real assertion
+failed. Whoever triages this needs the real pytest output, not just the exit code, to know which
+case applies to a given run.
+
 ## Scope
 - Per `docs/testing/regression_policy.md` §9's own established lesson: **do not assume a
   directionally-plausible cause (e.g. "improved population density") is proof of legitimacy** — first
@@ -130,6 +174,11 @@ re-checked since.
   `TCK-20260817-STANDARD-SIMQ-NARRATIVE-EVENT-EMISSION-REGRESSION-FRONTIER` (prior NARRATIVE-pillar
   drift investigations on this same corpus family, establishing the "confirm the real driver, don't
   just re-baseline" precedent this ticket should follow)
+- `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2` (2026-09-21 addendum: the same CI step
+  from the job-failure angle; both stay parked under the same 2026-09-16 user decision)
+- `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`,
+  `TCK-20260921-MECHANISM-COMBAT-VALUE-DIFFERENTIAL-INSTRUMENT` (2026-09-21 addendum: why
+  re-baselining any COMBAT anchor here now would lock in a simulation already known to be wrong)
 
 ## Related Docs
 - `docs/testing/regression_policy.md` §9 (the established triage/re-baseline methodology for this
