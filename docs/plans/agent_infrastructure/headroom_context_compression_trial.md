@@ -1,20 +1,45 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: developer
-maturity: proposed-bounded-trial
+maturity: concluded-phase1-shipped-phase2-abandoned
 date: 2026-09-16
 tags: [ai, workflows, agent-monitoring, process-improvement, optimization]
 ---
 
 # Plan: Headroom Context-Compression Bounded Trial
 
-> **Maturity: PROPOSED BOUNDED TRIAL.** This authorizes a reversible, opt-in evaluation of a
-> third-party compression layer and the measurement needed to judge it. It does **not** authorize
-> making compression a default, wrapping any session by default, enabling `headroom learn`, or
-> putting compression in the path of gate/CI verification work. Promotion beyond the trial
-> requires recorded evidence and the user's explicit approval.
+> **CONCLUDED 2026-09-21 — Phase 1 shipped, Phase 2 abandoned on measured evidence.** The epic
+> (`TCK-20260916-HEADROOM-CONTEXT-COMPRESSION-EPIC`) is closed with all 5 children closed. This is
+> now a record of what was decided and why, not an open proposal — see the Decision Criteria
+> section below for the original bar and the epic's own Completion Summary for the verdict.
+>
+> **Outcome, plainly:** input-side compression savings are immaterial for this repo's real payload
+> shapes and reading habits. The one real payload that compressed (`docs/REGISTRY.yaml`, 99.5%) is
+> an index this repo's own conventions already push agents to query rather than read whole; both
+> named primary targets (real monitoring JSONL, the 54MB dependency graph) measured 0%. Phase 2 (the
+> proxy rollout, session-wide compression) will not be pursued under this epic on that basis.
+>
+> **What stays:** the MCP registration (`.mcp.json`'s `headroom` entry, the launcher, the `.venv`
+> install) remains on `main` — kept as the user's own separate call, not a conclusion this trial
+> reached on its own, since it costs nothing dormant and did deliver one real result. Its usage going
+> forward is automatically visible via `mcp__headroom__*` rows in `agent-monitoring/data/`.
+>
+> **What doesn't get picked up automatically:** Caveman's output-side proxy (compresses what the
+> agent *writes*, addressed briefly under "Alternate candidate" below) is a possible follow-up,
+> deliberately left unticketed — it evaluates a different mechanism than this trial measured and
+> would need its own scoping.
+>
+> The sections below are preserved as originally written, describing the trial as proposed and run,
+> not retroactively edited to read as a foregone conclusion.
+>
+> **Maturity: PROPOSED BOUNDED TRIAL** *(as originally authorized — see the conclusion above for
+> what actually happened).* This authorized a reversible, opt-in evaluation of a third-party
+> compression layer and the measurement needed to judge it. It did **not** authorize making
+> compression a default, wrapping any session by default, enabling `headroom learn`, or putting
+> compression in the path of gate/CI verification work. Promotion beyond the trial required recorded
+> evidence and the user's explicit approval — which is exactly the bar Phase 2 failed to clear.
 
 ## Problem
 

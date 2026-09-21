@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-HEADROOM-CONTEXT-COMPRESSION-EPIC
-phase: open
+phase: done
 date: 2026-09-16
 tags: [ai, agent-monitoring, process-improvement, optimization]
 ---
@@ -16,7 +16,7 @@ Bounded, reversible trial of Headroom context compression — measure real token
 correctness regression, and gain the repo's first real token telemetry
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -76,12 +76,13 @@ measured, zero-exposure trial — a correctness requirement, not caution.
 - Any new mandatory workflow gate or monitoring-writer change — the same boundary that plan sets.
 
 ## Acceptance Criteria
-- [ ] All child tickets are closed, or explicitly abandoned with the reason recorded. **4 of 5
-      closed** (isolation-and-revert, harm-check-baseline, MCP-explicit-trigger-trial, savings-
-      and-harm-verdict). Remaining: `TCK-20260916-HEADROOM-PROXY-SESSION-CLASS-ROLLOUT` (child 5),
-      which **stays `BLOCKED` by design** — its own unblock condition (a "promote" verdict plus
-      the user's explicit approval) was not met, so it is neither closed nor further actioned, per
-      its own already-correct wording.
+- [x] All child tickets are closed, or explicitly abandoned with the reason recorded. **5 of 5
+      closed.** Four delivered evidence (isolation-and-revert, harm-check-baseline,
+      MCP-explicit-trigger-trial, savings-and-harm-verdict). The fifth,
+      `TCK-20260916-HEADROOM-PROXY-SESSION-CLASS-ROLLOUT` (Phase 2, the proxy rollout), is closed
+      **abandoned by decision, not delivered** — its own unblock condition (a "promote" verdict plus
+      the user's explicit approval) cannot be met under the recorded **abandon** verdict, so leaving
+      it open indefinitely would serve no purpose. User decided to close the epic on 2026-09-21.
 - [x] A measured savings figure exists for real repo payloads, from a paired measurement — never a
       cross-ticket cost comparison, which is invalid given ticket-scale variance.
       `TCK-20260916-HEADROOM-MCP-EXPLICIT-TRIGGER-TRIAL`: 4 real payloads, paired on identical
@@ -202,4 +203,31 @@ _Epic tier — no direct implementation. See child tickets._
 _Epic tier — no direct implementation._
 
 ## Completion Summary
-_Open._
+Closed 2026-09-21, at the user's direct decision ("close it and fold into next batch"). All 5 child
+tickets are closed: 4 delivered real measured evidence, and the 5th (Phase 2, the proxy rollout) is
+closed abandoned-by-decision rather than delivered, since its own unblock condition cannot be met
+under the recorded verdict.
+
+**Outcome, stated plainly:** Phase 2 is abandoned on measured evidence, not on the trial being
+poorly run. The one real payload that compressed (`docs/REGISTRY.yaml`, 99.5%) is an index this
+repo's own conventions already push agents to query rather than read whole; both of the trial's own
+named primary targets (real monitoring JSONL, the 54MB dependency graph) measured 0%. Input-side
+savings are immaterial for this repo's real payload shapes and reading habits — that is the actual
+finding, not a failed trial.
+
+**What stays, and what doesn't:**
+- The MCP registration (`.mcp.json`'s `headroom` entry, the launcher script, the pip install) stays
+  on `main` — kept as **the user's own call, not this epic's decision**. It costs nothing dormant,
+  is explicit-trigger-only, and did deliver one real result.
+- Phase 2 (proxy mode, session-wide compression) will not be pursued under this epic. Reopening it
+  would need new evidence, not a re-read of this one.
+- Usage of the kept MCP tools going forward is automatically visible via `mcp__headroom__*` rows in
+  `agent-monitoring/data/`, same as any other MCP tool call — no separate monitoring ticket needed.
+- Caveman's output-side proxy (compresses what the agent *writes*, not what it reads) is recorded in
+  the plan doc as a possible follow-up, deliberately **not ticketed** — it addresses a different
+  problem than this epic evaluated and would need its own scoping if picked up later.
+
+No gate, ratchet, or default-on behavior was introduced anywhere in this epic's lifetime.
+`CLAUDE.md` was touched exactly once, by a sibling ticket
+(`TCK-20260920-MECHANISM-REGISTRY-CHANGED-CODE-ADVISORY-AT-CLOSE`, unrelated to Headroom), with the
+user's direct approval of the literal text — this epic itself never modified it.
