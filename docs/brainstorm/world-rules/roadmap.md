@@ -25,7 +25,9 @@ both drafted, each revised once per its own follow-up review, and both **PASS �
 Milestone A History/Provenance completion pass is drafted and ready for high-level external
 review. **Milestone A is fully drafted.** Batch 04 (Space/Environment/Movement) — the first
 domain-facing Milestone B batch — is drafted, revised once per its own follow-up review, and
-**PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) begins next.
+**PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) is drafted and ready for high-level
+external review. Batch 06 (Perception/Knowledge/Information/Agency) is the next planned step
+once Batch 05 is reviewed.
 
 ---
 
@@ -176,6 +178,12 @@ spatial reach
 ```
 
 ### Batch 05 — Life / Body / Survival / Ecology
+
+**Status: drafted 2026-09-21, ready for high-level external review.** 22 rules across
+`life-body/lifecycle.md`, `body-condition.md`, `survival-needs.md`, `ecology-population.md`.
+Two significant confirmed gaps (no HP recovery mechanism at all; aggregate population change
+currently disconnected from real individual births/deaths) and one confirmed inert field pair
+(`last_meal_tick`/`last_sleep_tick`). See `review-exports/life-body-batch-05-review.md`.
 
 ```text
 life and death

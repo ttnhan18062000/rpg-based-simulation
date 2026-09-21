@@ -46,6 +46,10 @@ order.
 | Location / Topology | Batch 04 — PASS, frozen | [space-environment/location-topology.md](space-environment/location-topology.md) |
 | Environment | Batch 04 — PASS, frozen | [space-environment/environment.md](space-environment/environment.md) |
 | Movement / Navigation | Batch 04 — PASS, frozen | [space-environment/movement-navigation.md](space-environment/movement-navigation.md) |
+| Lifecycle | Batch 05 drafted | [life-body/lifecycle.md](life-body/lifecycle.md) |
+| Body / Condition | Batch 05 drafted | [life-body/body-condition.md](life-body/body-condition.md) |
+| Survival Needs | Batch 05 drafted | [life-body/survival-needs.md](life-body/survival-needs.md) |
+| Ecology / Population | Batch 05 drafted | [life-body/ecology-population.md](life-body/ecology-population.md) |
 
 ## Rule Catalog progress
 
@@ -91,8 +95,18 @@ order.
   `review-exports/space-environment-batch-04-review.md`'s explicit call-outs. See
   `tmp/space-environment-batch-04-report.md` (local, not part of this catalog) for the full
   disposition report.
-- Batch 05 (Life / Body / Survival / Ecology, the next Milestone B batch) is the next planned
-  step now that Batch 04 is frozen.
+- **Batch 05** (Life/Body/Survival/Ecology) — the second domain-facing Milestone B batch, and a
+  high-priority one since individual living entities are the primary narrative subjects —
+  drafted 2026-09-21 immediately after Batch 04. 22 rules across Lifecycle, Body/Condition,
+  Survival Needs, and Ecology/Population; ready for high-level external review. Two
+  significant confirmed gaps (no HP recovery mechanism at all; aggregate population change
+  currently disconnected from real individual births/deaths) and one confirmed inert field
+  pair (`last_meal_tick`/`last_sleep_tick`) — see
+  `review-exports/life-body-batch-05-review.md`'s explicit call-outs. See
+  `tmp/life-body-batch-05-report.md` (local, not part of this catalog) for the full disposition
+  report.
+- Do not begin Batch 06 (Perception / Knowledge / Information / Agency) until Batch 05
+  receives high-level review.
 
 ## Scenario Bank index
 
@@ -103,6 +117,7 @@ order.
 | Foundational Batch 03 | [scenarios/foundational-batch-03.md](scenarios/foundational-batch-03.md) | CTR-S01 – CTR-S20 |
 | History / Provenance completion | [scenarios/history-provenance-completion.md](scenarios/history-provenance-completion.md) | HP-S01 – HP-S02 |
 | Batch 04 (Space/Environment/Movement) | [scenarios/space-environment-batch-04.md](scenarios/space-environment-batch-04.md) | SPC-S01 – SPC-S15 |
+| Batch 05 (Life/Body/Survival/Ecology) | [scenarios/life-body-batch-05.md](scenarios/life-body-batch-05.md) | LB-S01 – LB-S16 |
 
 ## Unresolved cross-domain questions
 
@@ -208,12 +223,28 @@ follow-up):**
 - **Confirmed live, resolving a flagged uncertainty.** `price_modifiers` is causally live
   (`market.py`); `weather`/`active_modifiers` beyond `"MIASMA"` remain unexhaustively verified —
   flagged for Economy/resources or Ecology/population.
-- **New, added by follow-up.** ENV-03 deliberately leaves open which domain owns exposure's
-  downstream consequences — not settled by this repository's own current `CombatUpdate` wiring,
-  which is today's implementation evidence, not a target-architecture decision.
+- **RESOLVED by Batch 05, for bodily harm specifically.** ENV-03 deliberately left open which
+  domain owns exposure's downstream consequences; Batch 05's BODY-07 answers this for *bodily*
+  harm (Life/Body owns it, given subject-specific protection) — other exposure-consequence
+  types (non-bodily) remain open.
 - **New, added by follow-up.** LOC-07 (producing a topology change ≠ owning topology state) is
   a new rule, not merely a wording fix — added because the original framing risked implying
   whichever domain fills the LOC-02/LOC-06 gap would also own it.
+
+**From Batch 05 (Life/Body/Survival/Ecology, drafted 2026-09-21):**
+
+- **Confirmed MISSING — the most load-bearing gap in Body/Condition.** BODY-05's HP recovery
+  mechanism does not exist at all, declared or otherwise — entities can perceive a "healing"
+  need with no fulfillment path anywhere.
+- **Confirmed MISSING — the most load-bearing gap in this whole batch.** ECOL-03's aggregate
+  population change is currently statistical, not driven by real individual births/deaths —
+  the individual → aggregate half of this family's own causal loop doesn't yet exist.
+- **Confirmed inert.** `last_meal_tick`/`last_sleep_tick` (SURV-04) — written on every meal/
+  sleep action, read nowhere; contrasted against the live `well_rested_until`.
+- **PARTIAL, honestly uncertain rather than resolved either way.** BODY-03's HP-loss/injury
+  coupling (confirmed at one production site, independence unverified) and LB-S15's
+  predator-prey pressure (individual role classification exists; no aggregate formula
+  confirmed).
 
 ## Review index
 
@@ -240,6 +271,7 @@ rationale stay canonical.
 | Foundational Batch 03 | `foundations/capability.md`, `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md` | `scenarios/foundational-batch-03.md` (CTR-S01–S20) | [review-exports/foundational-batch-03-review.md](review-exports/foundational-batch-03-review.md) | PASS — ready to freeze |
 | History / Provenance completion | `foundations/history-provenance.md` (HP-01–06) | `scenarios/history-provenance-completion.md` (HP-S01–S02) | [review-exports/history-provenance-completion-review.md](review-exports/history-provenance-completion-review.md) | Ready for high-level external review |
 | Batch 04 (Space/Environment/Movement) | `space-environment/location-topology.md`, `space-environment/environment.md`, `space-environment/movement-navigation.md` | `scenarios/space-environment-batch-04.md` (SPC-S01–S15) | [review-exports/space-environment-batch-04-review.md](review-exports/space-environment-batch-04-review.md) | PASS — ready to freeze |
+| Batch 05 (Life/Body/Survival/Ecology) | `life-body/lifecycle.md`, `life-body/body-condition.md`, `life-body/survival-needs.md`, `life-body/ecology-population.md` | `scenarios/life-body-batch-05.md` (LB-S01–S16) | [review-exports/life-body-batch-05-review.md](review-exports/life-body-batch-05-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -266,3 +298,8 @@ rationale stay canonical.
 - Batch 04 scenario file: `scenarios/space-environment-batch-04.md`
 - Batch 04 review export: `review-exports/space-environment-batch-04-review.md`
 - Batch 04 report (local, gitignored): `tmp/space-environment-batch-04-report.md`
+- Batch 05 rule files: `life-body/lifecycle.md`, `life-body/body-condition.md`,
+  `life-body/survival-needs.md`, `life-body/ecology-population.md`
+- Batch 05 scenario file: `scenarios/life-body-batch-05.md`
+- Batch 05 review export: `review-exports/life-body-batch-05-review.md`
+- Batch 05 report (local, gitignored): `tmp/life-body-batch-05-report.md`
