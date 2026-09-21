@@ -23,9 +23,10 @@ layer disposition") rather than left as silent omissions. Batch 01 is complete; 
 Authority / Reach) and Batch 03 (Capability / Cost / Capacity / Resource / Transformation) are
 both drafted, each revised once per its own follow-up review, and both **PASS — frozen**; the
 Milestone A History/Provenance completion pass is drafted and ready for high-level external
-review. **Milestone A is now fully drafted.** Batch 04 (Space/Environment/Movement) — the first
-domain-facing Milestone B batch — begins next, once Milestone A receives review, per that
-batch's own instruction requiring the History/Provenance completion pass to finish first.
+review. **Milestone A is fully drafted.** Batch 04 (Space/Environment/Movement) — the first
+domain-facing Milestone B batch — is also drafted and ready for high-level external review,
+begun immediately after Milestone A per that batch's own instruction. Batch 05 (Life/Body/
+Survival/Ecology) is the next planned step once Batch 04 receives review.
 
 ---
 
@@ -157,6 +158,12 @@ This milestone should receive especially strong depth because the primary narrat
 the trajectory of individual entities.
 
 ### Batch 04 — Space / Environment / Movement
+
+**Status: drafted 2026-09-21, ready for high-level external review.** 17 rules across
+`space-environment/location-topology.md`, `environment.md`, `movement-navigation.md`. Two
+confirmed repository gaps (no route/portal/directional-connection mechanism; no non-physical
+movement mechanism) and one confirmed causally-inert environmental field
+(`service_availability`). See `review-exports/space-environment-batch-04-review.md`.
 
 ```text
 location

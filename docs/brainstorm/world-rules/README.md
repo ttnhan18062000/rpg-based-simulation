@@ -43,6 +43,9 @@ order.
 | Capacity / Limits | Foundational Batch 03 — PASS, frozen | [foundations/capacity.md](foundations/capacity.md) |
 | Resource / Conservation Semantics | Foundational Batch 03 — PASS, frozen | [foundations/resource.md](foundations/resource.md) |
 | Transformation | Foundational Batch 03 — PASS, frozen | [foundations/transformation.md](foundations/transformation.md) |
+| Location / Topology | Batch 04 drafted | [space-environment/location-topology.md](space-environment/location-topology.md) |
+| Environment | Batch 04 drafted | [space-environment/environment.md](space-environment/environment.md) |
+| Movement / Navigation | Batch 04 drafted | [space-environment/movement-navigation.md](space-environment/movement-navigation.md) |
 
 ## Rule Catalog progress
 
@@ -73,13 +76,21 @@ order.
   the follow-up (see `review-exports/foundational-batch-03-review.md`'s explicit call-outs). See
   `tmp/world-rule-foundational-batch-03-report.md` (local, not part of this catalog) for the
   full disposition report.
-- **Milestone A is now fully drafted**: all three foundational batches (01, 02, 03) plus the
+- **Milestone A is fully drafted**: all three foundational batches (01, 02, 03) plus the
   History/Provenance completion pass. Batch 02, Batch 03, and History/Provenance are all ready
   for review (Batch 02/03 **PASS — ready to freeze**; History/Provenance ready for high-level
-  external review, not yet marked frozen). No per-domain Milestone B batch (Space &
-  environment, Movement, Life/Body, etc.) has been started — Batch 04 (Space/Environment/
-  Movement) is the next planned step once Milestone A receives review, per its own instruction's
-  explicit requirement that the History/Provenance completion pass finish first.
+  external review, not yet marked frozen).
+- **Batch 04** (Space/Environment/Movement) — the first domain-facing Milestone B batch —
+  drafted 2026-09-21 immediately after Milestone A, per that batch's own instruction requiring
+  the History/Provenance completion pass to finish first. 17 rules across Location/Topology,
+  Environment, and Movement/Navigation; ready for high-level external review. Two confirmed
+  repository gaps (no route/portal/directional-connection mechanism; no non-physical movement
+  mechanism) and one confirmed inert environmental field (`service_availability`) — see
+  `review-exports/space-environment-batch-04-review.md`'s explicit call-outs. See
+  `tmp/space-environment-batch-04-report.md` (local, not part of this catalog) for the full
+  disposition report.
+- Do not begin Life / Body / Survival / Ecology (the next Milestone B batch) until Batch 04
+  receives high-level review.
 
 ## Scenario Bank index
 
@@ -89,6 +100,7 @@ order.
 | Foundational Batch 02 | [scenarios/foundational-batch-02.md](scenarios/foundational-batch-02.md) | TAR-S01 – TAR-S17 |
 | Foundational Batch 03 | [scenarios/foundational-batch-03.md](scenarios/foundational-batch-03.md) | CTR-S01 – CTR-S20 |
 | History / Provenance completion | [scenarios/history-provenance-completion.md](scenarios/history-provenance-completion.md) | HP-S01 – HP-S02 |
+| Batch 04 (Space/Environment/Movement) | [scenarios/space-environment-batch-04.md](scenarios/space-environment-batch-04.md) | SPC-S01 – SPC-S12 |
 
 ## Unresolved cross-domain questions
 
@@ -144,6 +156,11 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
 - **New, confirmed MISSING.** REACH-05's intermediary-link-failure modeling (a messenger delayed,
   blocked, or lying) — deferred to whichever future batch (most plausibly Perception/knowledge/
   information) first needs it.
+- **Sharpened by Batch 04.** Whether spatial reach inherits REACH-01–06 unchanged is now
+  answered for the concrete spatial case: MOV-06/LOC-02 confirm spatial reach *instantiates*
+  foundational Reach without needing its own refinement — the earlier open question is resolved
+  for Space specifically (Magic/supernatural's own spatial-adjacent reach concepts remain
+  separately open).
 
 **From Foundational Batch 03 (drafted 2026-09-21, revised same day per follow-up):**
 
@@ -171,6 +188,22 @@ as a bare open question — "unresolved" here means "not yet designed," not "und
 - **New, deferred by follow-up.** RES-04's divisible/interruptible transfer semantics — the
   revised rule permits a resource to declare non-atomic transfer semantics; whether any future
   domain actually wants that is not decided.
+- **Confirmed CTR-S04's own question, from the movement angle.** MOV-04's cost-per-step finding
+  is Batch 03's COST-03 confirmed concretely at the movement level — no new open question, a
+  reconfirmation.
+
+**From Batch 04 (Space/Environment/Movement, drafted 2026-09-21):**
+
+- **Confirmed MISSING — the most load-bearing gap this batch found.** LOC-02/LOC-06's
+  route/portal/directional-connection mechanism — deferred to Magic/supernatural (portals) and
+  Groups/organizations & institutions (trade routes).
+- **Confirmed MISSING, the movement-side counterpart.** MOV-05's non-physical movement
+  mechanism — deferred to Magic/supernatural.
+- **Confirmed inert, not resolved.** `service_availability` (ENV-01/ENV-05) — whether to wire
+  it to a real consumer or leave it forward-declared is not decided.
+- **Confirmed live, resolving a flagged uncertainty.** `price_modifiers` is causally live
+  (`market.py`); `weather`/`active_modifiers` beyond `"MIASMA"` remain unexhaustively verified —
+  flagged for Economy/resources or Ecology/population.
 
 ## Review index
 
@@ -196,6 +229,7 @@ rationale stay canonical.
 | Foundational Batch 02 | `foundations/time.md`, `foundations/authority.md`, `foundations/reach.md` | `scenarios/foundational-batch-02.md` (TAR-S01–S17) | [review-exports/foundational-batch-02-review.md](review-exports/foundational-batch-02-review.md) | PASS — ready to freeze |
 | Foundational Batch 03 | `foundations/capability.md`, `foundations/cost.md`, `foundations/capacity.md`, `foundations/resource.md`, `foundations/transformation.md` | `scenarios/foundational-batch-03.md` (CTR-S01–S20) | [review-exports/foundational-batch-03-review.md](review-exports/foundational-batch-03-review.md) | PASS — ready to freeze |
 | History / Provenance completion | `foundations/history-provenance.md` (HP-01–06) | `scenarios/history-provenance-completion.md` (HP-S01–S02) | [review-exports/history-provenance-completion-review.md](review-exports/history-provenance-completion-review.md) | Ready for high-level external review |
+| Batch 04 (Space/Environment/Movement) | `space-environment/location-topology.md`, `space-environment/environment.md`, `space-environment/movement-navigation.md` | `scenarios/space-environment-batch-04.md` (SPC-S01–S12) | [review-exports/space-environment-batch-04-review.md](review-exports/space-environment-batch-04-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -217,3 +251,8 @@ rationale stay canonical.
 - History/Provenance scenario file: `scenarios/history-provenance-completion.md`
 - History/Provenance review export: `review-exports/history-provenance-completion-review.md`
 - History/Provenance report (local, gitignored): `tmp/history-provenance-completion-report.md`
+- Batch 04 rule files: `space-environment/location-topology.md`,
+  `space-environment/environment.md`, `space-environment/movement-navigation.md`
+- Batch 04 scenario file: `scenarios/space-environment-batch-04.md`
+- Batch 04 review export: `review-exports/space-environment-batch-04-review.md`
+- Batch 04 report (local, gitignored): `tmp/space-environment-batch-04-report.md`
