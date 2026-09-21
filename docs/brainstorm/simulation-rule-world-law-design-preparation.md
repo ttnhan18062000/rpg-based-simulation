@@ -164,7 +164,17 @@ question from the ownership of the facts it references.
 
 ## 3. Design method for the next phase
 
-### 3.1 Bottom-up design order (dependency order, not implementation sequencing)
+### 3.1 World-rule design order (design-area dependency order, not implementation sequencing)
+
+**Terminology corrected, 2026-09-21.** This was previously called a "domain order." That's
+imprecise: `Domain` is one specific level in the structural taxonomy (§2 above), and not every
+entry below is a Domain — item 19 is explicitly the *cross-cutting* history/significance/
+propagation layer (`core_rpg_design_direction.md` §7's own "Cross-cutting layers" table, not its
+domain map), and item 15 deliberately merges two of that map's real domains (Politics/authority/
+war and Law/crime/enforcement) into one design-sequencing step, because they need to be reasoned
+about together even though they're catalogued separately. Calling this a **design-area** order,
+never a domain order, keeps `Domain ≠ Scale ≠ Cross-cutting Layer` intact instead of blurring them
+for convenience.
 
 ```
 1. Substrate / foundational laws
@@ -188,21 +198,23 @@ question from the ownership of the facts it references.
 19. Cross-domain history / significance / propagation
 ```
 
-This orders *design dependency*, never build order or milestone scheduling — a later domain in
-this list can reasonably reuse a semantic concept a foundational one already had to define (e.g.
-ownership, before economy needs it), but nothing here says economy must be *built* before combat.
+This orders *design dependency*, never build order or milestone scheduling — a later design area
+in this list can reasonably reuse a semantic concept a foundational one already had to define
+(e.g. ownership, before economy needs it), but nothing here says economy must be *built* before
+combat.
 
 Repository evidence mostly confirms this order rather than contradicting it, with one genuine
-tension worth naming rather than smoothing over: the domain this session's evidence found
-**weakest** — Places (its runtime immutability blocks the vision's own headline scenario) — sits
-at position 16, quite late, because *settlement standing, abandonment and colonization* genuinely
-depend on population, economy and institutions existing first, per this same dependency logic.
-But the specific missing **primitive** underneath that finding — a place simply having a mutable
-kind at all, with no runtime update path today — is a Space & Reach concern, position 2, and does
-not need to wait for anything downstream. The lesson: a domain's full design position in this
-order and its most urgent missing primitive can legitimately sit at different points in the
-list. This order should not be read as "fix nothing about Places until 15 other domains are
-designed" — only as "Places' *full* semantic design depends on domains that come first."
+tension worth naming rather than smoothing over: the (Places, settlements & territory) domain
+this session's evidence found **weakest** — its runtime immutability blocks the vision's own
+headline scenario — sits at position 16, quite late, because *settlement standing, abandonment
+and colonization* genuinely depend on population, economy and institutions existing first, per
+this same dependency logic. But the specific missing **primitive** underneath that finding — a
+place simply having a mutable kind at all, with no runtime update path today — is a Space &
+environment concern, position 2, and does not need to wait for anything downstream. The lesson: a
+domain's full design position in this order and its most urgent missing primitive can legitimately
+sit at different points in the list. This order should not be read as "fix nothing about Places
+until 15 other design areas are settled" — only as "Places' *full* semantic design depends on
+domains that come first."
 
 ### 3.2 Foundations come first
 
@@ -219,8 +231,7 @@ Capacity / limits Provenance
 
 ### 3.3 Per-domain investigation order
 
-For each future domain, the same order, every time — mechanisms are identified *last*, never
-first:
+For each future domain, the same order, every time:
 
 ```
 A. What fundamental/domain laws apply here?
@@ -238,7 +249,23 @@ L. What semantic failures would make this domain incorrect?
 ```
 
 The governing question throughout is *"what must be true for this part of the world to behave
-coherently?"* — never *"what classes or features should this domain have?"*
+coherently?"* — never *"what classes or features should this domain have?"* Then, once A–L are
+answered, identify candidate mechanisms.
+
+**Corrected, 2026-09-21 — this is not an absolute prohibition on naming a mechanism early.** The
+actual discipline is: **semantics first, mechanism decomposition second.** Do not derive world
+semantics from a desired mechanism decomposition — but existing or provisional mechanism names may
+be referenced throughout A–L as repository evidence; only their *boundaries and structure* wait
+for the semantics to be understood first. Concretely:
+```
+Bad:  We already have ReputationSystem → therefore the world rule must follow
+      ReputationSystem's current behaviour.
+Good: What does recognition/reputation mean in the world? → define the semantic rules
+      → inspect ReputationSystem as evidence → determine whether it already satisfies,
+      partially satisfies, or conflicts with those rules.
+```
+The repository stays evidence, existing mechanisms, constraints, lessons, and counterexamples
+(§3.7) — never the authority defining the target semantics.
 
 ### 3.4 Cross-domain rules are first-class, not afterthoughts
 
