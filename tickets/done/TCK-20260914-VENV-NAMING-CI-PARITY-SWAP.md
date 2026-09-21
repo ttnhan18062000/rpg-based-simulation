@@ -227,3 +227,17 @@ ignored gap — the rename would have silently reintroduced or broken without th
 re-sweep), corrected one wrong claim in the original investigation, and updated one genuinely stale
 pinned test rather than force it to keep passing against outdated behavior. No known material gap
 left unstated.
+
+**The rename is live machine state ahead of merge; checkouts on `origin/main` cannot launch
+knowledge-search/headroom MCP until this lands.** Confirmed directly, not assumed: `origin/main`'s
+own copies of `tools/start_search_mcp.sh`/`tools/start_headroom_mcp.sh` still hardcode `.venv/bin/
+python3`/`.venv/bin/headroom`, and `.venv` is now genuinely the renamed 3.13 env on this machine —
+`/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -c "import sentence_transformers"`
+fails with `ModuleNotFoundError` right now, and `.venv/bin/headroom` no longer exists at all. Any
+session on a worktree/branch still tracking `origin/main` that (re)starts an MCP server after this
+rename but before this branch merges will hit this. Sessions already running when the rename
+happened are unaffected until they restart (this matches the sequencing risk this ticket's own
+Assumptions section named up front). Not a regression introduced by this ticket — it is the direct,
+expected, and previously-flagged consequence of the rename itself being machine-wide state that
+this repository's own tracked files describe; the fix is landing this branch, not reverting the
+rename.
