@@ -57,10 +57,22 @@ def load_all_sources() -> tuple:
 
 
 def build_context_tokens_section() -> dict:
+    """`agent-monitoring/data/*.jsonl` itself carries no token field, and this report is scoped to
+    exactly that data (reproducible from the repo alone, on any machine, in CI). "unavailable" is
+    still correct for THIS report's own status field -- but not because the underlying data is
+    unobtainable everywhere: TCK-20260921-REAL-TOKEN-TELEMETRY corrected the earlier
+    "platform-blocked, no workaround" claim as false. See `workaround` below."""
     return {
         "status": "unavailable",
-        "reason": "Real token/context-size telemetry is platform-blocked and is not recorded "
-                  "anywhere in agent-monitoring/*.jsonl.",
+        "reason": "agent-monitoring/data/*.jsonl carries no token field -- the workflow's own "
+                  "per-event recording never receives real token usage from the Claude Code "
+                  "runtime, so this report (reproducible from repo data alone) cannot include it.",
+        "workaround": "tools/agent-monitoring/real_token_usage.py reads real per-request usage "
+                      "directly from local Claude Code transcripts (~/.claude/projects/**/*.jsonl) "
+                      "-- a separate, machine-local, retrospective analysis, not available in CI "
+                      "or from a fresh clone, so it is not folded into this report's own "
+                      "reproducible-from-repo-data shape. See generate_retro.py's "
+                      "--include-real-tokens flag instead.",
         "citation": "docs/agent-monitoring/schema.md — 'What is not recorded' section",
     }
 

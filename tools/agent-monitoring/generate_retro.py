@@ -37,6 +37,7 @@ from vocabulary import WORKFLOW_AGENTS, WORKFLOW_PHASES, infer_workflow  # noqa:
 from duration_utils import compute_active_idle_split  # noqa: E402
 from validate import load_data_glob  # noqa: E402
 from run_dedup import dedupe_to_latest_per_execution  # noqa: E402
+import real_token_usage  # noqa: E402
 
 # Read-only reference imports for TCK-20260729-RETRIEVAL-RETRO-VIEWS's retrieval-quality views —
 # anti-drift: compute_retrieval_metrics() must never re-literal these values (see
@@ -1252,7 +1253,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
 
 def generate(
     runs, events, label, week_str=None, tickets_root=None, tools=None, all_tools=None,
-    raw_run_count=None, deduped_run_count=None,
+    raw_run_count=None, deduped_run_count=None, real_token_report=None,
 ):
     """Render `compute_retro_metrics()`'s result to the retro report's Markdown text — the sole
     rendering consumer of that function. Signature/behavior unchanged by the
@@ -1276,6 +1277,15 @@ def generate(
     disclose the correction inline, not to recompute anything. Both `None` (a direct `generate()`
     call outside `main()`, e.g. from a test) silently omits the note rather than rendering a
     misleading "0 duplicates" claim it never actually checked.
+
+    `real_token_report` (TCK-20260921-REAL-TOKEN-TELEMETRY): optional, caller-supplied output of
+    `real_token_usage.build_report(...)`. `generate()` itself never touches the filesystem or
+    `~/.claude/projects/` to produce this -- it only renders whatever dict it is handed, exactly
+    like `raw_run_count`/`deduped_run_count` above. `None` (the default, and always the case for a
+    direct `generate()` call from a test) omits the section entirely; `main()` is the only caller
+    that ever collects real data and passes it in, and even then only when the local transcript
+    root exists and matches something (`build_report()`'s own `available: False` path renders a
+    one-line "unavailable" note rather than an empty/misleading section).
     """
     metrics = compute_retro_metrics(
         runs, events, tickets_root, tools=tools, all_tools=all_tools,
@@ -1863,6 +1873,26 @@ def generate(
             lines.append(f"_{zif['derivation']}_")
             lines.append("")
 
+    # Token usage (real) (TCK-20260921-REAL-TOKEN-TELEMETRY): additive, separately-gated section,
+    # same shape as Shadow vs. Baseline above -- omitted entirely (not rendered empty) whenever the
+    # caller has nothing to report, rather than ever touching the filesystem itself. This is the
+    # one section in this report sourced from local ~/.claude/projects/ transcripts, not
+    # agent-monitoring/data/*.jsonl -- developer-machine-only, never available in CI or from a
+    # fresh clone.
+    if real_token_report is not None:
+        lines.append("## Token Usage (Real)")
+        lines.append("")
+        lines.append(
+            "_Real per-request token usage read directly from this machine's local Claude Code "
+            "transcripts (`~/.claude/projects/**/*.jsonl`) via `tools/agent-monitoring/"
+            "real_token_usage.py` -- not from `agent-monitoring/data/*.jsonl`, which carries no "
+            "token field. Developer-machine-only: unavailable in CI or from a fresh clone, and "
+            "never persisted back into this repo._"
+        )
+        lines.append("")
+        lines.append(real_token_usage.render_markdown(real_token_report))
+        lines.append("")
+
     # Notes (human-written)
     lines.append("## Notes")
     lines.append("")
@@ -1932,6 +1962,12 @@ def main():
         "--force", action="store_true",
         help="Discard any existing report's hand-authored ## Notes content instead of preserving it",
     )
+    parser.add_argument(
+        "--include-real-tokens", action="store_true",
+        help="Also collect real token usage from local ~/.claude/projects/ transcripts "
+        "(TCK-20260921-REAL-TOKEN-TELEMETRY). Developer-machine-only, and streams the real local "
+        "transcript corpus (can be ~1GB+) -- opt-in, not part of the default report.",
+    )
     args = parser.parse_args()
 
     all_runs, all_events = _load_runs_and_events()
@@ -1970,9 +2006,23 @@ def main():
     runs = dedupe_to_latest_per_execution(runs)
     deduped_run_count = len(runs)
 
+    real_token_report = None
+    if args.include_real_tokens:
+        if args.all:
+            since = None
+        elif args.days:
+            since = cutoff[:10]
+        else:
+            since, _week_end = week_range(week_str)
+        tr_records, tr_tool_stats, tr_session_meta, tr_compacts = real_token_usage.collect(since=since)
+        real_token_report = real_token_usage.build_report(
+            tr_records, tr_tool_stats, tr_session_meta, tr_compacts,
+        )
+
     report = generate(
         runs, events, label, week_str, tools=tools, all_tools=all_tools,
         raw_run_count=raw_run_count, deduped_run_count=deduped_run_count,
+        real_token_report=real_token_report,
     )
 
     RETRO_DIR.mkdir(parents=True, exist_ok=True)

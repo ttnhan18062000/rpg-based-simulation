@@ -407,3 +407,88 @@ class TestDuplicateWorkingLogRowRefused:
         assert result.returncode == 0, result.stderr
         rows = list(csv.reader(log_path.read_text().splitlines()))
         assert len(rows) == 3
+
+
+class TestSidecarStalenessWarning:
+    """TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT: a stale `.claude/current_run`
+    sidecar left over from an earlier ticket, never cleared/updated, silently misattributes every
+    real tool call since then to the wrong (run_id, seq) -- corrupting both the old and new
+    ticket's tool_call_count/cost_proxy_score. This is a different, worse case than "no sidecar at
+    all" (the benign, documented, expected case `TestUnattributedStatsAreOmittedNotZero` covers).
+    """
+
+    def _run(self, args, tmp_path):
+        return subprocess.run(
+            [sys.executable, str(_RECORD_PATH), *args],
+            capture_output=True, text=True, cwd=tmp_path,
+        )
+
+    def test_check_sidecar_matches_ticket_none_when_no_sidecar_file(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import check_sidecar_matches_ticket
+        monkeypatch.chdir(tmp_path)
+        assert check_sidecar_matches_ticket("TCK-ANY") is None
+
+    def test_check_sidecar_matches_ticket_none_when_sidecar_matches(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import check_sidecar_matches_ticket
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude").mkdir()
+        (tmp_path / ".claude" / "current_run").write_text(json.dumps({"run_id": "TCK-MATCH", "seq": 1}))
+        assert check_sidecar_matches_ticket("TCK-MATCH") is None
+
+    def test_check_sidecar_matches_ticket_warns_when_stale(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import check_sidecar_matches_ticket
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude").mkdir()
+        (tmp_path / ".claude" / "current_run").write_text(
+            json.dumps({"run_id": "TCK-OLD-STALE", "seq": 1}),
+        )
+        warning = check_sidecar_matches_ticket("TCK-NEW")
+        assert warning is not None
+        assert "TCK-OLD-STALE" in warning
+        assert "TCK-NEW" in warning
+
+    def test_check_sidecar_matches_ticket_prefers_session_scoped_file(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import check_sidecar_matches_ticket
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "sess-123")
+        (tmp_path / ".claude").mkdir()
+        # Unscoped file matches (would say "no warning"), but the session-scoped one is stale --
+        # the scoped file must win, since it's the one this actual session's hook writes to.
+        (tmp_path / ".claude" / "current_run").write_text(json.dumps({"run_id": "TCK-NEW", "seq": 1}))
+        (tmp_path / ".claude" / "current_run.sess-123").write_text(
+            json.dumps({"run_id": "TCK-OLD-STALE", "seq": 3}),
+        )
+        warning = check_sidecar_matches_ticket("TCK-NEW")
+        assert warning is not None
+        assert "TCK-OLD-STALE" in warning
+
+    def test_check_sidecar_matches_ticket_tolerates_malformed_json(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import check_sidecar_matches_ticket
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude").mkdir()
+        (tmp_path / ".claude" / "current_run").write_text("not valid json{{{")
+        assert check_sidecar_matches_ticket("TCK-ANY") is None
+
+    def test_cli_prints_warning_to_stderr_but_still_succeeds(self, tmp_path):
+        (tmp_path / ".claude").mkdir()
+        (tmp_path / ".claude" / "current_run").write_text(
+            json.dumps({"run_id": "TCK-OLD-STALE", "seq": 1}),
+        )
+        result = self._run(
+            ["--ticket-id", "TCK-NEW-CLI", "--tier", "hotfix",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "WARNING: sidecar-staleness" in result.stderr
+        assert "TCK-OLD-STALE" in result.stderr
+        assert "TCK-NEW-CLI" in result.stderr
+
+    def test_cli_no_warning_when_sidecar_absent(self, tmp_path):
+        result = self._run(
+            ["--ticket-id", "TCK-NEW-CLI-2", "--tier", "hotfix",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        assert "sidecar-staleness" not in result.stderr

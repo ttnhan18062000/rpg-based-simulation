@@ -1835,6 +1835,50 @@ def test_shadow_comparison_section_rendered_when_shadow_events_nonzero():
     assert "| Retrieval event count | 1 | 1 |" in report
 
 
+# ---------------------------------------------------------------------------
+# "## Token Usage (Real)" (TCK-20260921-REAL-TOKEN-TELEMETRY) — additive, separately-gated
+# section. generate() itself never touches the filesystem for this; it only renders whatever
+# real_token_report dict it is handed (always None from a direct test call unless a test passes
+# one explicitly), exactly like raw_run_count/deduped_run_count.
+# ---------------------------------------------------------------------------
+
+
+def test_real_token_usage_section_omitted_when_not_supplied():
+    runs = [_BASE_RUN]
+    report = generate(runs, [], "test-label")
+    assert "## Token Usage (Real)" not in report
+
+
+def test_real_token_usage_section_rendered_when_report_supplied():
+    from real_token_usage import RequestRecord, build_report
+
+    runs = [_BASE_RUN]
+    record = RequestRecord(
+        project="proj", session="s1", is_sub=False, sub_name="", day="2026-09-21",
+        model="claude-sonnet-5", git_branch="feature-x", in_tokens=1000, cache_write=0,
+        cache_read=0, out_tokens=100, tools=("Bash",), bash_commands=("git status",),
+    )
+    real_token_report = build_report([record], {"Bash": [1, 50]}, {}, compact_count=0)
+
+    report = generate(runs, [], "test-label", real_token_report=real_token_report)
+
+    assert "## Token Usage (Real)" in report
+    assert "feature-x" in report
+    assert "### By git branch (per-batch cost)" in report
+
+
+def test_real_token_usage_section_renders_unavailable_note_not_empty_when_no_records():
+    from real_token_usage import build_report
+
+    runs = [_BASE_RUN]
+    unavailable_report = build_report([], {}, {}, compact_count=0)
+
+    report = generate(runs, [], "test-label", real_token_report=unavailable_report)
+
+    assert "## Token Usage (Real)" in report
+    assert "unavailable" in report
+
+
 def test_shadow_comparison_existing_report_output_byte_identical_on_same_fixture(tmp_path):
     report = generate(_FIXED_CORPUS_RUNS, _FIXED_CORPUS_EVENTS, "fixed-label", tickets_root=tmp_path)
 
