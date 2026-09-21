@@ -106,6 +106,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
   ```
   (or call `record_run.py`/`record_events.py` directly if you need finer control — that path does not append the working_log row, so the bullet above still applies). Monitoring write failure must never fail the workflow, same as the formal pipeline's own rule. To run done-checker's static conditions by hand (e.g. after a hand-orchestrated Finalize), `python3 tools/gate_checks/done_checker_static.py --ticket-id <TCK-ID>` now has a real CLI (`TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`) — it prints a readable PASS/FAIL per condition and exits non-zero on any failure, including `working_log_exactly_one_row`.
 - **Also run the mechanism-registry changed-code advisory** (`TCK-20260920-MECHANISM-REGISTRY-CHANGED-CODE-ADVISORY-AT-CLOSE`): `python3 tools/mechanism_registry/mechanism_registry_changed_code_check.py --ticket-id <TCK-ID>` — flags a mechanism whose `implemented_by`-cited code changed in this ticket's own commits (or is still uncommitted in the working tree) without the mechanism's own registry entry changing too. **Non-blocking, report-only, no exit-code implication** — read what it prints, judge for yourself whether the named mechanism's entry needs a look, and close regardless of what it says. Safe to run before or after your own final closing commit (it checks the working tree too). Reachable only via this manual step for a hand-orchestrated close — `implement-ticket.js`'s own Finalize runs the same check automatically for the pipeline path.
+- Before proposing `/clear` or ending a session at a natural stopping point, evaluate the reset boundary per `docs/guides/agent_session_reset_boundaries.md` — don't assume a stopping point is safe without checking it against that map.
 
 ### Commit Convention
 
@@ -366,6 +367,8 @@ The canonical record of V2 behavior shifts from legacy. Any new divergence must 
 ## Proactive Tool Use
 
 Some tools should be invoked automatically based on the task — the user does not need to mention them.
+
+- When running several independent read-only checks (tests, greps, validators) that don't depend on each other's output, batch them into a single call or a single parallel tool-call batch rather than issuing them one at a time — token efficiency, not just latency.
 
 ### Always auto-invoke (no user prompt required)
 
