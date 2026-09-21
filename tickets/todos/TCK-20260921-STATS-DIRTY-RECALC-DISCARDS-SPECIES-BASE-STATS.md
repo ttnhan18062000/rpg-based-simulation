@@ -67,6 +67,19 @@ the erosion is triggered by progression-adjacent events, but the actual defect a
 radius belong to the simulation's own world-model integrity, not to the progression subsystem's
 own scope.
 
+**Direct answer to this ticket's own open question, added 2026-09-21**
+(`TCK-20260921-MECHANISM-COMBAT-VALUE-DIFFERENTIAL-INSTRUMENT`, a narrow, single-question follow-on
+to the value-differential program): does entity identity actually matter to combat outcomes, or is
+this erosion cosmetic? **Answer: it matters, exactly and measurably.** A real, dispatched fight
+(`tests/mechanic_scenarios/test_combat_attributes_real_fight_outcome_value_differential.py`)
+confirms that an entity's own `strength` attribute, run through the real
+`LevelingService.recalculate_combat_stats()` derivation into `combat.atk`, has real,
+formula-exact purchase on how much damage that entity deals in a real fight
+(`CombatResolutionSystem.calculate_damage()`, also confirmed RNG-free and formula-exact via its own
+differential). This `stats_dirty` bug is therefore severe for the worse of the two reasons this
+ticket's own Request Summary named: it is not silently drifting something decorative, it is
+silently destroying a real, demonstrated determinant of real combat outcomes every time it fires.
+
 ## Scope
 For whoever picks this up:
 1. Confirm whether `EntityState`/`IdentityComponent`/content schema carries a real, addressable
@@ -102,6 +115,8 @@ For whoever picks this up:
 
 ## Related Tickets
 - `TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT` — where this was found
+- `TCK-20260921-MECHANISM-COMBAT-VALUE-DIFFERENTIAL-INSTRUMENT` — direct answer to this ticket's
+  own "does this matter" question: yes, exactly and measurably
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` — prior investigation into
   the same `stats_dirty`/`recalculate_combat_stats` code path, from the reachability angle
 - `TCK-20260921-BIOLOGICAL-PRESSURE-ACCUMULATION-UNIFORM-ACROSS-ENTITIES` — companion finding from

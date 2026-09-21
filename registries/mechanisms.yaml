@@ -124,7 +124,7 @@ mechanisms:
     state: done
     implemented_by: [src/engine/combat.py::CombatResolutionSystem]
     verified:
-      instrument: corpus_run
+      instrument: scenario
       verdict: observed
       date: "2026-09-19"
       note: >-
@@ -163,6 +163,26 @@ mechanisms:
         1418 -> 58 (-95.9%), `quest_dense_frontier` 0 -> 0 (unchanged, already zero). The large
         drop is the fix working as intended -- combat volume in these worlds was substantially not
         the game's own authored hostility model -- not a regression.
+        **Value-differential added 2026-09-21, instrument upgraded corpus_run -> scenario**
+        (TCK-20260921-MECHANISM-COMBAT-VALUE-DIFFERENTIAL-INSTRUMENT, narrow re-scope: one direct
+        question rather than a full 8-mechanism sweep, per peer instruction, motivated by
+        `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`'s own open question).
+        `tests/mechanic_scenarios/test_combat_resolution_damage_value_differential.py` confirms
+        `calculate_damage()`'s own formula responds exactly to `combat.atk`/`combat.def_stat`
+        (positive control) and ignores `identity.evolution_level` (negative control, already
+        proven irrelevant to combat resolution in the progression program).
+        `tests/mechanic_scenarios/test_combat_attributes_real_fight_outcome_value_differential.py`
+        answers the narrow question directly: within a real, dispatched fight, a real strength
+        difference (5 -> 20, via the real `LevelingService.recalculate_combat_stats()` derivation,
+        called directly rather than staged same-tick -- the real apply-path sequencing recalculates
+        derived stats only at the end of the tick that changed them, so a same-tick change-then-
+        attack test would use the OLD atk and risk a vacuous negative arm) deals measurably more
+        real damage; `charisma` (confirmed unread by the derivation function) does not move the
+        outcome at all. Neither function contains an RNG call -- confirmed by direct code trace
+        before staging anything, then confirmed empirically. **Answer: yes, an entity's own combat
+        attributes have real, formula-exact purchase on how a fight resolves** -- which means
+        `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`'s own species-base-stat
+        erosion is destroying something demonstrably real, not a cosmetic drift.
   - id: tactical_decision
     layer: entity
     systems: [combat]
