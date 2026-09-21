@@ -26,10 +26,11 @@ tags: [ai, workflows, agent-monitoring, process-improvement, optimization]
 > reached on its own, since it costs nothing dormant and did deliver one real result. Its usage going
 > forward is automatically visible via `mcp__headroom__*` rows in `agent-monitoring/data/`.
 >
-> **What doesn't get picked up automatically:** Caveman's output-side proxy (compresses what the
-> agent *writes*, addressed briefly under "Alternate candidate" below) is a possible follow-up,
-> deliberately left unticketed — it evaluates a different mechanism than this trial measured and
-> would need its own scoping.
+> **Caveman proxy: closed 2026-09-21, not worth it for cost.** The 14-day real-token retro in
+> `tickets/done/TCK-20260921-REAL-TOKEN-TELEMETRY.md` shows cache-read tokens dominate cost and
+> Bash/grep/git housekeeping dominates context-attributed spend, not tool-output size or output
+> tokens — the two things Caveman's proxy targets. See that ticket for the figures; not re-derived
+> here.
 >
 > The sections below are preserved as originally written, describing the trial as proposed and run,
 > not retroactively edited to read as a foregone conclusion.
