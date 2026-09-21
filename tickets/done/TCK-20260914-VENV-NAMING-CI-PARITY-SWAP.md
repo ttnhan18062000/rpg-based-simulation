@@ -186,24 +186,71 @@ app-deps tooling, same reasoning. `docs/parity_ledger/`, `tickets/working_log.cs
 diff_for_review.md` are historical evidence/baseline records — correctly left untouched, since
 rewriting them would misrepresent what actually ran at the time.
 
+**Launcher hardening, 2026-09-21 (2nd pass, after the pre-merge machine-state consequence was
+flagged).** Root cause of that consequence: both launchers picked the first candidate that merely
+*existed* (`[ -x "$py" ]`), not the first one that could actually run the server — exactly what let
+`origin/main`'s copy of `start_search_mcp.sh` silently select the freshly-renamed, `sentence_
+transformers`-less `.venv` the moment the rename landed. Fixed both launchers to probe real import
+capability before selecting a candidate (`"$py" -c "import sentence_transformers"` /
+`"$py" -c "import headroom"`, both quiet on stdout+stderr), so a future rename or a stale venv falls
+through to a working candidate instead of failing silently, and restored the final "nothing worked"
+error message unchanged.
+
+**A second, independent real bug found while hardening the headroom launcher, not hypothetical**:
+the installed `headroom` console-script wrapper has its own interpreter path **baked into its
+shebang at pip-install time** (`#!/home/u24desktop/.../.venv/bin/python3`, the pre-rename path).
+Confirmed live: `.venv-knowledge/bin/headroom --version` failed with `ModuleNotFoundError: No
+module named 'headroom'` even though the package files genuinely exist at
+`.venv-knowledge/lib/python3.12/site-packages/headroom/` — the wrapper's own shebang still pointed
+at the renamed (headroom-less) `.venv`. My earlier "confirmed present" check in this same ticket
+only verified the file existed (`ls -la`), not that it actually ran — a real gap in my own earlier
+verification, caught by the peer's hardening request rather than by my own initial pass. Fixed at
+the root, not with a band-aid probe on top of the broken wrapper: the launcher now invokes
+`"$py" -m headroom.cli mcp serve` directly, which never goes through the wrapper's own shebang at
+all. Verified: `.venv-knowledge/bin/python3 -m headroom.cli mcp --help` and the full launcher
+(`bash tools/start_headroom_mcp.sh`, 5s smoke test, clean exit) both work; the old
+`exec "$bin" mcp serve` invocation is gone entirely, not merely guarded.
+
+**Explicitly recorded, per instruction: this hardening does NOT fix checkouts on `origin/main`
+before merge.** `origin/main`'s own copies of both launcher scripts only change once this branch
+lands — the pre-merge machine-state consequence recorded in the Completion Summary below still
+applies verbatim until then. This pass makes the *post-merge* behavior more robust against a
+*future* rename or stale venv; it does not retroactively fix the current gap.
+
+New tests: `tests/tools/test_mcp_launcher_hardening.py` (12 tests, source-text-only — no live
+subprocess/real venv invocation, matching `test_dashboard_makefile_targets.py`'s own established
+reasoning, since CI has neither `.venv-knowledge` nor a real headroom-ai install). Asserts: both
+probes present and quiet; the old exists-only selection shortcuts are gone from both scripts; the
+headroom launcher invokes `-m headroom.cli`, never the wrapper binary; `.venv-knowledge` candidates
+precede the vboxuser fallback in both; the final error message and `HEADROOM_WORKSPACE_DIR` export
+both survive.
+
 ## Test Summary
 - Step 3 verification checklist (AC #1/#2/#3/#4): all passed — see `test_plan.md` for the exact
   commands and outputs.
 - `pytest tests/tools/test_dashboard_makefile_targets.py -v` — 5 passed (1 updated for the
   intentional design change, matching Gate Integrity).
-- `pytest tests/tools/ -k "codebase_health or knowledge or agent_codex_posttool or dashboard_makefile"
-  -m "not slow and not extra_slow"` — 123 passed, 7 skipped, 0 failed.
+- `pytest tests/tools/test_mcp_launcher_hardening.py -v` — 12 passed (new).
+- `pytest tests/tools/ -k "codebase_health or knowledge or agent_codex_posttool or dashboard_makefile
+  or mcp_launcher or mcp_json" -m "not slow and not extra_slow"` — 137 passed, 7 skipped, 0 failed.
 - `pytest tests/tools/test_generate_registry.py tests/tools/test_done_checker_static.py tests/tools/
   test_done_checker_audit.py tests/docs/ -m "not slow and not extra_slow"` — 261 passed, 1 skipped,
   1 xfailed, 1 deselected (the real-registry drift check, expected-stale mid-implementation from
   this ticket's own in-progress ticket-location move — resolved by Finalize's registry
   regeneration).
+- Real re-verification after hardening: `bash tools/start_search_mcp.sh --test` returned real,
+  non-empty `search_docs` results; `.venv-knowledge/bin/python3 -m headroom.cli mcp --help` and a
+  5-second smoke test of the full `bash tools/start_headroom_mcp.sh` launcher both ran clean (no
+  `ModuleNotFoundError`, confirming the shebang-bypass fix actually works, not just that it should).
 - All commands run via `.venv/bin/python3` (now 3.13.14) post-rename, confirming the environment
   itself works for ordinary app testing, not just its own verification checklist.
 
 ## Files Changed
-- `tools/start_search_mcp.sh`, `tools/start_headroom_mcp.sh` — absolute/relative knowledge-venv
-  paths updated to `.venv-knowledge`.
+- `tools/start_search_mcp.sh` — absolute/relative knowledge-venv paths updated to `.venv-knowledge`;
+  hardened to probe real `sentence_transformers` importability before selecting a candidate.
+- `tools/start_headroom_mcp.sh` — absolute/relative knowledge-venv paths updated to
+  `.venv-knowledge`; hardened to probe real `headroom` importability and invoke `-m headroom.cli`
+  directly, bypassing the installed wrapper binary's own stale, pre-rename shebang.
 - `Makefile` — new `PYTHON_KNOWLEDGE` variable; `knowledge-index`, `knowledge-index-update`,
   `eval-search`, `mcp-server-test` now use it instead of `$(PYTHON3)` or an inline discovery loop.
 - `docs/guidelines/agent_working_environment.md` — venv table swapped, "Run tests as" sentence,
@@ -212,6 +259,8 @@ rewriting them would misrepresent what actually ran at the time.
 - `pyproject.toml` — added `.venv-knowledge` to pytest's `norecursedirs`.
 - `tools/codebase_health_baseline.py` — added `.venv-knowledge` to the scanner's skip-dir set.
 - `tests/tools/test_dashboard_makefile_targets.py` — updated the one genuinely stale pinned test.
+- `tests/tools/test_mcp_launcher_hardening.py` (new) — 12 source-text-only guards over both
+  launchers' hardened selection logic.
 - Host filesystem (not tracked by git): `mv .venv .venv-knowledge && mv .venv313 .venv`.
 - `staging_artifacts/TCK-20260914-VENV-NAMING-CI-PARITY-SWAP/` (all 3 files updated with the
   implementation-time addendum and executed/verified status).
@@ -241,3 +290,16 @@ Assumptions section named up front). Not a regression introduced by this ticket 
 expected, and previously-flagged consequence of the rename itself being machine-wide state that
 this repository's own tracked files describe; the fix is landing this branch, not reverting the
 rename.
+
+**Launcher selection hardened, at the user's request, 2026-09-21 (2nd pass).** Both launchers'
+root cause for the above consequence — selecting the first candidate that merely *exists* rather
+than the first one that can actually run the server — is now fixed for every future rename or stale
+venv, not just this one: both probe real import capability before selecting a candidate. Hardening
+this also surfaced a second, independent, previously-undetected real bug: the installed `headroom`
+console-script wrapper's own shebang is baked in at pip-install time and pointed at the pre-rename
+`.venv`, so my own earlier "confirmed present" check in this same ticket (file existence only) had
+missed that the wrapper itself was silently broken. Fixed at the root (module invocation, bypassing
+the wrapper's shebang entirely) rather than papering over it with a probe on top of a broken
+mechanism. **This hardening does not retroactively fix the pre-merge consequence above** —
+`origin/main`'s own copies of both scripts are unchanged until this branch merges; it only makes
+the post-merge behavior resilient to the next rename or stale venv, which is what was asked for.
