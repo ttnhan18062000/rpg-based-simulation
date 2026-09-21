@@ -110,6 +110,56 @@ relevant), failure semantics, validation intent, open questions.
 **Not every rule uses every concept.** A content-scoped rule and a fundamental world law need
 wildly different amounts of this list filled in. Proportional detail, never boilerplate.
 
+### Ownership within a Rule: three distinct concepts, not one
+
+**Corrected, 2026-09-21.** "State owner" in the field list above is easy to over-read as *"which
+domain owns this rule,"* as if a rule needed exactly one owner the way a durable state field does.
+It doesn't. **Canonical ownership applies to durable authoritative state, not necessarily to the
+Rule itself** — the constitution's own canonical-state-ownership principle (§7) was always a
+statement about *state*, and a Rule is not state; it can legitimately reference several owned
+things at once. Three separate concepts, easily conflated, need to stay distinct:
+
+| Concept | Question it answers |
+|---|---|
+| **Semantic Home** | Where is this rule catalogued, so it has one clear primary location and we never duplicate it elsewhere? |
+| **State Ownership** | For each durable state concept the rule *references*, which domain/system is authoritative for it? |
+| **Participating / Linked Domains** | Which other domains produce inputs to this rule, consume its outputs, constrain it, or react to its consequences? |
+
+A rule scoped to one domain has all three concepts trivially aligned:
+
+```
+Rule:            Information requires a valid acquisition path.
+Semantic home:   Perception / Knowledge / Information
+State owner:     Knowledge domain owns the entity's knowledge claims.
+Linked domains:  Agency, Politics, Religion, Social
+```
+
+A genuinely cross-domain rule may legitimately span **more than one** state owner — and that is
+not a defect to resolve, it's the whole point of a cross-domain rule existing:
+
+```
+Rule:                Death can trigger succession.
+Semantic home:       Family / Lineage / Succession
+Input state owner:   Life/Body owns death state.
+Output state owner:  Lineage owns succession state.
+Semantic link:       Life → Lineage
+```
+
+For a rule like this, *"which single domain owns the whole rule"* is the wrong question. The
+right three are: where does this rule belong in the catalog (its semantic home); who owns each
+authoritative fact it touches (possibly more than one domain); and what cross-domain semantic
+link does the rule itself define (the relationship those owners' facts stand in, to each other).
+
+> **Every durable state concept referenced by a rule must have an unambiguous authoritative
+> owner. Every rule should have a clear semantic home for cataloguing. But a cross-domain rule may
+> legitimately span multiple state owners and participating domains — that is not an ambiguity
+> to eliminate, it is what makes the rule cross-domain.**
+
+This is a clarification, not a new blocker, and it doesn't change the entry-criteria checklist in
+§4 — "canonical state ownership principle is accepted" already meant *state* ownership, correctly
+understood; this section only makes explicit that a rule's own catalog location is a separate
+question from the ownership of the facts it references.
+
 ---
 
 ## 3. Design method for the next phase
