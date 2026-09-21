@@ -178,7 +178,7 @@ for convenience.
 
 ```
 1. Substrate / foundational laws
-2. Space & reach
+2. Space & environment
 3. Movement
 4. Life / body / survival
 5. Ecology / population
@@ -350,7 +350,100 @@ because this map exists specifically to apply them:
 > hidden knowledge, motives, secrets, or relationships are valid if their causal effects can
 > eventually be inferred or discovered.
 
-### 4.2 EXPECTED DEPTH PRIORITY — PRE-RULE / PRE-SCENARIO
+### 4.2 How to read the priority dimensions
+
+**Added 2026-09-21, so the table in §4.3 cannot be misread as an ambiguous scoring exercise.**
+Each dimension answers one specific question and nothing else — none of them is implementation
+difficulty, code volume, variable count, or build priority.
+
+**Expected Target Depth** answers: *how much semantic/systemic richness do we expect this design
+area to justify at the target state?* It is not implementation difficulty, amount of code, number
+of variables, build priority, or foundational importance by itself — foundational importance has
+its own dimension below, deliberately kept separate. Use the project's existing vocabulary:
+
+- **Primitive** — only enough representation exists to identify the concept or allow basic
+  participation; little independent causal behaviour.
+- **Functional** — the area performs its primary world function with meaningful inputs/outputs; it
+  works, but has limited cross-system consequences or historical richness.
+- **Systemic** — the area participates in multiple meaningful causal relationships, influences
+  other domains, responds to world state, and can contribute to emergent chains.
+- **Deep** — the area supports rich, differentiated, historically consequential behaviour with
+  multiple interacting rules, feedback paths, transformations, and cross-domain consequences.
+
+> **Depth is primarily about the richness of meaningful causal relationships, not variable count
+> or implementation complexity.**
+
+Ranges such as `Systemic → Deep` are allowed when the expected target is intentionally between
+categories — not a sign of an unfinished judgment.
+
+**Entity-Narrative Centrality** answers: *how directly does this area shape the trajectory of
+individually simulated entities?* — what an entity experiences, learns, gains or loses, becomes
+capable of, how it changes, how others respond to it, what history it accumulates. High values
+mean the area sits close to the simulation's primary narrative subject (individual entities and
+their evolving trajectories). **Low values do not imply low importance** — Substrate is the
+worked example below.
+
+**Interaction/Causal Centrality** answers: *how strongly does this area connect entities, domains,
+and causal chains together?* High centrality means its outputs are widely or frequently consumed
+as inputs to further consequences (`scarcity → migration → conflict`; `knowledge → decision →
+political reaction`; `relationship → cooperation/refusal → history`; `wealth → protection →
+influence`). This dimension emphasises **cross-system causal load, not internal complexity** — an
+area with many internal mechanics but few meaningful outgoing links can still score low here.
+
+**Observer Legibility** answers: *how easily can an observer understand, infer, or discover the
+relationship between cause and consequence in this area?* Never immediate visual visibility only —
+legibility may be direct, visible through changed behaviour, discoverable through history,
+inferable from relationships, revealed through rumour/chronicle/report, or understandable only
+through later consequences. Hidden motives, secrets, misinformation, beliefs, and internal state
+may still carry high narrative value if their consequences are eventually legible. Low legibility
+is **not automatically bad** if the area is causally necessary regardless.
+
+**Foundational Criticality** answers: *how much of the rest of the simulation depends on this
+area's semantics being correct and stable?* Candidates with potentially high foundational
+criticality: identity, state ownership, time, authority, causality, space/topology, persistence.
+This dimension represents dependency and correctness importance, and **must be explicitly
+separated from Target Depth**:
+
+```
+Substrate:        Foundational Criticality = Very High,  Expected Target Depth = Systemic
+Social Relations: Foundational Criticality = Medium,      Expected Target Depth = Deep
+```
+
+Both are correct simultaneously. **A concept may be foundationally critical without needing deep
+narrative simulation** — that is exactly the distinction the Substrate row below is built to show,
+not a contradiction the table needs to resolve.
+
+**Qualitative scale for the four non-depth dimensions** (Entity-Narrative Centrality,
+Interaction/Causal Centrality, Observer Legibility, Foundational Criticality):
+
+- **Low** — limited direct relevance on this dimension.
+- **Medium** — meaningful but supporting influence.
+- **High** — regularly important to major causal or narrative behaviour.
+- **Very High** — core to the intended identity or coherence of the simulation; weakness here
+  would materially undermine the target experience/model.
+
+Ranges (`Low–Medium`, `Medium–High`) are allowed when the pre-rule/pre-scenario evidence doesn't
+justify a sharper judgement. **`Undetermined` is valid when there is insufficient design
+evidence** — Magic's row in §4.3, explained further in §4.4, is the worked example. Do not force
+confidence for completeness.
+
+**The five dimensions are independent and must never collapse into one score.** Two rows from
+§4.3, side by side, are both fully valid for entirely different reasons:
+
+```
+Substrate                              Social Relations
+Target Depth: Systemic                 Target Depth: Deep
+Entity-Narrative Centrality: Low       Entity-Narrative Centrality: Very High
+Interaction/Causal Centrality: Medium  Interaction/Causal Centrality: High
+Observer Legibility: Low               Observer Legibility: Medium–High
+Foundational Criticality: Very High    Foundational Criticality: Medium
+```
+
+> **Do not derive Target Depth mechanically from the other four dimensions, and do not combine
+> all dimensions into one priority score.** The table is a design hypothesis, not an optimization
+> formula.
+
+### 4.3 EXPECTED DEPTH PRIORITY — PRE-RULE / PRE-SCENARIO
 
 All 19 areas from §3.1's design order, assessed on four separate dimensions — deliberately kept
 apart rather than collapsed into one number; no single score would survive the next paragraph's
@@ -358,7 +451,7 @@ own worked example (Agency) without losing the information that makes it useful.
 
 | # | Design area | Expected target depth | Entity-narrative centrality | Interaction/causal centrality | Observer legibility | Foundational criticality |
 |---|---|---|---|---|---|---|
-| 1 | Substrate | Deep | Low | Medium (enables, doesn't itself cause) | Low (indirect only) | Very high |
+| 1 | Substrate | Systemic — extremely rigorous | Low | Medium (enables, doesn't itself cause) | Low (indirect only) | Very high |
 | 2 | Space & environment | Systemic | Medium | High | Medium–high | High |
 | 3 | Movement & navigation | Functional | Low–medium | Medium | Medium | High |
 | 4 | Life / body / survival | Deep | Very high | High | High | High |
@@ -378,8 +471,19 @@ own worked example (Agency) without losing the information that makes it useful.
 | 18 | Magic & supernatural | **Undetermined — content-dependent** | Undetermined | Undetermined | Undetermined (must wire outward, per the owner's own domain decision) | Low, until built |
 | 19 | Cross-domain history/significance (layer, not a domain) | Deep | Very high | Very high | Very high | Medium |
 
-### 4.3 Reading the map — three tensions worth naming, not smoothing over
+### 4.4 Reading the map — four tensions worth naming, not smoothing over
 
+- **Substrate (1) was revised from Deep to `Systemic — extremely rigorous`, 2026-09-21.** The
+  original Deep rating conflated foundational importance with desired narrative depth — Substrate
+  scores Low on Entity-Narrative Centrality and Low on Observer Legibility, and §4.2's own
+  definition of Deep ("rich, differentiated, *historically consequential* behaviour... cross-
+  domain consequences") is a narrative-richness claim Substrate was never meant to make. Its Very
+  High Foundational Criticality already carries the correctness/dependency weight this row needs
+  to express — Target Depth and Foundational Criticality are separate dimensions precisely so one
+  doesn't have to inflate to stand in for the other. `Systemic` (participates in multiple causal
+  relationships, influences other domains, responds to world state) is the honest fit; the
+  `— extremely rigorous` qualifier keeps the correctness/precision/stability expectation visible
+  without borrowing the word `Deep`, which §4.2 now reserves for entity-facing historical richness.
 - **Agency (7) is rated Very High on every centrality dimension, and this session's own evidence
   found it the most starved area in the entire repository** (the decision-driven attack path
   fires 0–2 times per 1000–2000 ticks). This is exactly the situation the map exists to surface:
@@ -397,7 +501,7 @@ own worked example (Agency) without losing the information that makes it useful.
   commitment §2's own "would the world still conceptually work if its implementation changed
   completely" test warns against, one level up.
 
-### 4.4 Reassessment after Rule Catalog and Scenario work matures
+### 4.5 Reassessment after Rule Catalog and Scenario work matures
 
 This map is not the last word on itself. Once the World Rule Catalog and the Scenario Bank it
 feeds have matured enough to produce real evidence, a second pass belongs alongside this one:
@@ -422,7 +526,7 @@ not predictions:
 **This second pass is explicitly not performed in this document.** It has no evidence to draw on
 yet — that's the whole reason it waits.
 
-### 4.5 Relationship to the next phase
+### 4.6 Relationship to the next phase
 
 ```
 Expected Depth Priority (this section, now)
@@ -432,7 +536,7 @@ Scenario Bank ↔ World Rule Catalog (next phase)
 Revised Depth Priority (later, evidence-driven)
 ```
 
-The map in §4.2 helps choose where deeper design effort is *likely* worth spending first. It does
+The map in §4.3 helps choose where deeper design effort is *likely* worth spending first. It does
 not gate what gets written, does not become an implementation priority list, and is not itself a
 scorecard to satisfy — the Rule Catalog and Scenario Bank exist to generate the evidence that
 confirms or revises it, not the reverse.
