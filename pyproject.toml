@@ -56,6 +56,7 @@ norecursedirs = [
     "scratch",
     "stored_artifacts",
     ".venv",
+    ".venv-knowledge",
     ".git",
     "node_modules",
     "__pycache__",

@@ -113,6 +113,54 @@ just that the MCP server process starts without crashing. A server that starts b
 zero results (e.g. an empty/stale index) would pass a weaker "does it start" check while still
 being broken for the AC's actual purpose.
 
+## Addendum, written during actual implementation (2026-09-21) — corrections and new hazards
+
+Re-swept per AC #3 ("grep, don't assume") immediately before executing the rename, since roughly a
+week passed between this investigation and implementation and new tooling landed in between.
+
+**Correction to Hazard #3's "codebase_health_baseline.py... directory-name-agnostic... unaffected by
+a rename" claim.** That was wrong: `_SKIP_DIR_NAMES` is an exact-string set (`{".venv", "venv", ...}`),
+not a pattern — it excludes the literal name `.venv`, which after the rename is a *different*
+directory (the CI env) than the one that needs skipping (the knowledge env, now `.venv-knowledge`).
+A codebase-health scan would walk straight into `.venv-knowledge/`'s hundreds of thousands of
+third-party package files post-rename. Fixed: added `.venv-knowledge` to the set.
+
+**New hazard, same root cause, found in `pyproject.toml`.** `[tool.pytest.ini_options].norecursedirs`
+has the identical exact-string-match shape (`".venv"`, not a wildcard) — same fix needed:
+`.venv-knowledge` added, or a bare `.venv/bin/python3 -m pytest` run post-rename would attempt to
+collect tests from inside the renamed knowledge venv's own installed packages.
+
+**New hazard, not named in Hazard #2's own list.** `Makefile`'s `mcp-server-test` target has the
+exact same inline `$(shell for py in .venv/bin/python3 ...)` discovery loop as `eval-search` did,
+also needing the knowledge stack (it smoke-tests `search_mcp.py --test`). Missed by the original
+investigation's own Hazard #2 enumeration; found this pass by re-grepping rather than trusting the
+earlier list was exhaustive — same discipline that list itself used to find Hazard #2 in the first
+place.
+
+**New hazard, could not have been found at investigation time.** `tools/start_headroom_mcp.sh`
+(`TCK-20260916-HEADROOM-TRIAL-ISOLATION-AND-REVERT`) did not exist when this investigation was
+written (2026-09-15) — the Headroom trial landed 2026-09-16 onward. It hardcodes
+`.venv/bin/headroom` (headroom-ai was pip-installed into the pre-rename `.venv`), the identical
+shape as Hazard #1's `start_search_mcp.sh`. Fixed the same way: absolute + relative candidates
+updated to `.venv-knowledge/bin/headroom`.
+
+**New hazard: `.gitignore` would silently recreate this ticket's own root problem.** `.gitignore`'s
+`.venv` line (139) is an exact-name pattern, not a prefix — it does **not** match `.venv-knowledge`,
+exactly the same gap the ticket's own blockquote already documented for `.venv313` ("not matched by
+any `.gitignore` pattern — untracked, but not ignored"). Without an explicit `.venv-knowledge` line,
+the rename would recreate the precise problem it exists to clean up, just under the new name. Fixed:
+added `.venv-knowledge` as its own line.
+
+**Genuinely pre-existing test drift, updated rather than forced.**
+`tests/tools/test_dashboard_makefile_targets.py::test_knowledge_index_targets_use_python3_variable`
+pinned `$(PYTHON3)` for `knowledge-index`/`knowledge-index-update`, written for
+`TCK-20260826-KNOWLEDGE-INDEX-PYTHON3-FIX` at a time when `$(PYTHON3)` was correctly the
+knowledge-capable variable. This ticket's whole point is that `$(PYTHON3)` is no longer the right
+variable for knowledge-stack targets post-rename — the test's own assertion needed to change to
+match the new, intentional design (asserting `$(PYTHON_KNOWLEDGE)`, extended to also cover
+`eval-search`/`mcp-server-test`), not silently left broken or forced to pass by reverting the
+Makefile change.
+
 ## Sequencing hazard (the ticket's own Assumptions, re-confirmed as still live)
 
 `.venv` is shared across every session and worktree on this machine — confirmed via this session's

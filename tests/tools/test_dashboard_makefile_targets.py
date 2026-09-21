@@ -89,17 +89,20 @@ def test_existing_targets_unmodified():
         )
 
 
-def test_knowledge_index_targets_use_python3_variable():
-    """Guards TCK-20260826-KNOWLEDGE-INDEX-PYTHON3-FIX: knowledge-index/knowledge-index-update
-    must consume the top-level $(PYTHON3) variable, matching dev/serve, not their own inline
-    python3-discovery loop (which resolves empty from any git worktree, since worktrees have no
-    .venv/ of their own).
+def test_knowledge_index_targets_use_python_knowledge_variable():
+    """Guards TCK-20260826-KNOWLEDGE-INDEX-PYTHON3-FIX (no inline python3-discovery loop in the
+    recipe body — that resolves empty from any git worktree, since worktrees have no venv of their
+    own) as updated by TCK-20260914-VENV-NAMING-CI-PARITY-SWAP: after that ticket's rename, `.venv`
+    is the CI-matching env and no longer has the knowledge stack (torch/sentence-transformers), so
+    knowledge-index/knowledge-index-update/eval-search/mcp-server-test must consume the dedicated
+    top-level $(PYTHON_KNOWLEDGE) variable instead of $(PYTHON3) — same "resolved once at the top,
+    not inlined per-recipe" shape TCK-20260826 established, just pointed at the renamed env.
     """
     text = _makefile_text()
 
-    for target in ("knowledge-index", "knowledge-index-update"):
+    for target in ("knowledge-index", "knowledge-index-update", "eval-search", "mcp-server-test"):
         recipe = _extract_recipe(text, target)
-        assert "$(PYTHON3)" in recipe, f"expected {target}'s recipe to use $(PYTHON3)"
+        assert "$(PYTHON_KNOWLEDGE)" in recipe, f"expected {target}'s recipe to use $(PYTHON_KNOWLEDGE)"
         assert "for py in" not in recipe, (
             f"expected {target}'s recipe to have no inline python3-discovery loop"
         )

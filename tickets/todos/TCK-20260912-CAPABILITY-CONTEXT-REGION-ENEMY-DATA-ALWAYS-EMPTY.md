@@ -11,12 +11,30 @@ tags: [cognition, self-model]
 
 # TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY
 
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
+> presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
+> concurrent session on this machine. **Nothing about the ticket's own substance was
+> investigated, debugged, or re-scoped as part of this move** — its prior `BLOCKED` reasoning
+> (re-confirmed 2026-09-13, quoted in full immediately below) is preserved as-is, not acted on;
+> `Status` is reset to `OPEN` only as part of this lifecycle correction, not a signal that the
+> underlying block is resolved.
+>
+> **A concrete pointer for whoever re-validates this, not a vague "check if things changed"**:
+> this ticket sits in territory the runtime-evidence program has been actively revising
+> conclusions about this same week. Specifically, `perception` was confirmed dormant and its own
+> tracked state corrected from `done` to `orphan` **two days after** this ticket was last
+> touched. This ticket's own stated premises may already be invalid as a result — re-check against
+> the runtime-evidence program's current findings before resuming, rather than assuming the
+> picture below still holds.
+
 ## Title
 `CapabilityContext.region_data`/`.enemy_data` are read at capability-estimation decision time but
 populated by nothing, from any source — an always-empty decision input
 
 ## Status
-BLOCKED — **still not built, re-confirmed 2026-09-13 after this batch's two blocking tickets
+OPEN — **previously BLOCKED, re-confirmed 2026-09-13 after this batch's two blocking tickets
 landed.** Chain 1 (the guild-lead-belief path) is now genuinely reachable, which changed the
 question from "is there a live belief source" to "does that source actually feed either field" —
 and the answer for each field is different and independently disqualifying. See Completion Summary

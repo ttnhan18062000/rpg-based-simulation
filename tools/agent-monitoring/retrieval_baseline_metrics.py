@@ -165,6 +165,99 @@ def build_legacy_schema_notes(runs: list, events: list, tools: list) -> dict:
     }
 
 
+def build_harm_check_baseline_section(runs: list, events: list, tools: list, window_start_ts: str) -> dict:
+    """Pre-trial harm-check baseline (TCK-20260916-HEADROOM-HARM-CHECK-BASELINE).
+
+    A read-only comparison point captured BEFORE Headroom is enabled, so the eventual harm check
+    has something to compare a trial window against. Not a token/cost baseline — see this
+    ticket's own Request Summary for why that's platform-blocked and would measure the wrong
+    thing anyway (cost_proxy_score is tool-call-shape-derived, not token-derived, so it stays
+    flat regardless of real savings).
+
+    Deliberately does NOT include any Agent-tool-call duration metric: TCK-20260917-FORK-RETURNS-
+    CONTENT-FREE-INDISTINGUISHABLE found that an Agent row's own duration_ms times only the async
+    launch (~2s), never the dispatched work — a real, confirmed finding, not a hypothesis. Any
+    future extension of this baseline that adds an Agent-duration signal must carry that caveat
+    forward explicitly, or it measures launch latency and calls it agent behavior.
+    """
+    window_runs = [r for r in runs if str(r.get("start_ts") or "") >= window_start_ts]
+    window_events = [e for e in events if str(e.get("ts") or "") >= window_start_ts]
+    window_tools = [t for t in tools if str(t.get("ts") or "") >= window_start_ts]
+
+    done_count = sum(1 for r in window_runs if _resolve_status(r) == "DONE")
+    done_rate = done_count / len(window_runs) if window_runs else None
+
+    event_status_counter = Counter(e.get("status") for e in window_events)
+    total_events = len(window_events)
+    failed_rate = (event_status_counter.get("failed", 0) / total_events) if total_events else None
+    blocked_rate = (event_status_counter.get("blocked", 0) / total_events) if total_events else None
+
+    reason_code_frequency = Counter(e.get("reason_code") for e in window_events if e.get("reason_code"))
+
+    # tool_call_count per phase: record_events.py's own compute_tool_stats() writes this field at
+    # write time, so it's read here, never recomputed. None values (rows predating that write, or
+    # any hand-orchestrated closure that never had a live per-phase sidecar) are excluded from the
+    # per-phase aggregate rather than treated as 0, so a genuinely-zero count and a not-recorded
+    # count are never silently conflated.
+    tool_call_count_by_phase = defaultdict(list)
+    for e in window_events:
+        tcc = e.get("tool_call_count")
+        if tcc is not None:
+            tool_call_count_by_phase[e.get("phase") or "MISSING_PHASE"].append(tcc)
+    tool_call_count_per_phase = {
+        phase: {"mean": sum(counts) / len(counts), "n": len(counts)}
+        for phase, counts in sorted(tool_call_count_by_phase.items())
+    }
+    hand_orchestrated_zero_rate_note = (
+        "Every tool_call_count sampled in this window's events is None or 0 — this window's real "
+        "activity is dominated by hand-orchestrated closures (record_hand_orchestrated_closure.py), "
+        "which never had a live per-phase sidecar tracking tool calls as they happened, not because "
+        "no tool calls occurred. The over-compression detector this field is meant to serve "
+        "(tool_call_count inflating when compression drops something the agent needed) will read as "
+        "flat zero for hand-orchestrated trial activity too, for the same structural reason — this "
+        "is a real blind spot in this window's own tool_call_count signal, not fabricated evidence "
+        "of anything."
+        if tool_call_count_per_phase and all(v["mean"] == 0 for v in tool_call_count_per_phase.values())
+        else None
+    )
+
+    session_id_present = sum(1 for t in window_tools if t.get("session_id"))
+    session_id_population_rate = (session_id_present / len(window_tools)) if window_tools else None
+
+    return {
+        "window_start_ts": window_start_ts,
+        "window_end_ts": "now (report generation time) — this is a live snapshot, not a fixed historical range",
+        "population": {
+            "run_count": len(window_runs),
+            "event_count": len(window_events),
+            "tools_count": len(window_tools),
+        },
+        "done_rate": done_rate,
+        "per_event_failed_rate": failed_rate,
+        "per_event_blocked_rate": blocked_rate,
+        "reason_code_frequency": dict(reason_code_frequency),
+        "tool_call_count_per_phase": tool_call_count_per_phase,
+        "tool_call_count_hand_orchestration_caveat": hand_orchestrated_zero_rate_note,
+        "session_id_population_rate": session_id_population_rate,
+        "session_id_reliability_note": (
+            "session_id is populated on effectively every tools.jsonl row in this window "
+            f"({session_id_present}/{len(window_tools)}), so isolating a later trial session's "
+            "own rows by session_id is reliable, not assumed."
+        ),
+        "statistical_limit": (
+            "At roughly 16-70 runs/week, this is a coarse tripwire: able to catch a run of clearly "
+            "worse outcomes, not a subtle few-percent regression. No promotion/abandon decision "
+            "should claim more precision than that."
+        ),
+        "trial_not_yet_started_note": (
+            "Captured before any session routed real work through Headroom compression. A prior "
+            "smoke test (TCK-20260916-HEADROOM-MCP-EXPLICIT-TRIGGER-TRIAL) called headroom_compress/"
+            "retrieve/stats on synthetic payloads via explicit MCP calls only — it changed no "
+            "session's own behavior and is not part of this window's real activity being measured."
+        ),
+    }
+
+
 def build_baseline_report(runs: list, events: list, tools: list) -> dict:
     return {
         "ticket_id": "TCK-20260728-RETRIEVAL-BASELINE-METRICS",
@@ -182,10 +275,23 @@ def build_baseline_report(runs: list, events: list, tools: list) -> dict:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=None, help="optional path to also write the JSON output to")
+    parser.add_argument(
+        "--harm-check-window-start",
+        type=str,
+        default=None,
+        help="ISO-8601 timestamp (e.g. 2026-09-16). When given, prints ONLY the "
+        "TCK-20260916-HEADROOM-HARM-CHECK-BASELINE report for the window from this timestamp to "
+        "now, instead of the default one-off baseline report -- a separate, additive report "
+        "shape, not merged into build_baseline_report()'s own pinned key set.",
+    )
     args = parser.parse_args()
 
     runs, events, tools = load_all_sources()
-    report = build_baseline_report(runs, events, tools)
+
+    if args.harm_check_window_start is not None:
+        report = build_harm_check_baseline_section(runs, events, tools, args.harm_check_window_start)
+    else:
+        report = build_baseline_report(runs, events, tools)
     output = json.dumps(report, indent=2, sort_keys=True) + "\n"
 
     if args.output is not None:

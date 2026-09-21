@@ -137,6 +137,11 @@ celerybeat.pid
 .env
 .envrc
 .venv
+# TCK-20260914-VENV-NAMING-CI-PARITY-SWAP: `.venv` above is an exact-name match, not a prefix --
+# it would NOT have covered the pre-rename `.venv313` (confirmed untracked-but-not-ignored, the
+# ticket's own original finding), and would silently repeat that same gap for the renamed
+# knowledge-only env unless listed explicitly.
+.venv-knowledge
 env/
 venv/
 ENV/
