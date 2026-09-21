@@ -303,3 +303,54 @@ the wrapper's shebang entirely) rather than papering over it with a probe on top
 mechanism. **This hardening does not retroactively fix the pre-merge consequence above** —
 `origin/main`'s own copies of both scripts are unchanged until this branch merges; it only makes
 the post-merge behavior resilient to the next rename or stale venv, which is what was asked for.
+
+**Machine-level rewrite, at the user's direct approval, 2026-09-21 (3rd pass): fixed at the
+source, not just hardened around.** The peer's own follow-up investigation found the shebang
+problem was wider than the headroom launcher alone: 36 console scripts in `.venv-knowledge/bin/`
+(pytest, uvicorn, litellm, mcp, the `rpg-*` entry points, and more) still had shebangs pointing at
+the renamed `.venv` (now 3.13, missing their real deps); `.venv/bin/pytest` itself was broken,
+pointing at the now-nonexistent `.venv313` (`cannot execute: required file not found`); and both
+`bin/activate` files still set `VIRTUAL_ENV` to the pre-rename path. The user approved rewriting
+these paths in place over a full from-scratch reinstall (avoids the torch/headroom-ai network-block
+hazard a reinstall would re-trigger).
+
+**Not a hypothetical fix — every claim below is independently verified, not assumed:**
+- Backed up both venvs' `bin/` directories to the scratchpad before touching anything
+  (`venv-knowledge-bin.tar.gz`, `venv-bin.tar.gz`; file-list-diffed against the live directories to
+  confirm completeness, not just a byte-count check).
+- Rewrote exactly 36 shebangs in `.venv-knowledge/bin/` (`/…/.venv/` → `/…/.venv-knowledge/`,
+  anchored on the trailing slash so `.venv-knowledge` itself is never double-suffixed) and 19 in
+  `.venv/bin/` (`/…/.venv313/` → `/…/.venv/`) — both counts confirmed by direct enumeration, not
+  estimated. `ast-grep`/`sg` (compiled binaries) and the `python`/`python3`/`python3.12` symlinks
+  were correctly left untouched; `activate.ps1` needed no edit (it derives its own path dynamically
+  from its script location, never hardcodes the venv name).
+- Rewrote `VIRTUAL_ENV=`/`setenv VIRTUAL_ENV`/`set -gx VIRTUAL_ENV`/`let virtual_env =`/the `%%~fi`
+  batch form in each venv's `activate`/`activate.csh`/`activate.fish`/`activate.nu`/`activate.bat` —
+  5 files per venv, each matched on its own exact quoting form (checked individually, not assumed
+  identical across variants).
+- Verified zero residual old-path references in either `bin/` directory (a precise scan, filtering
+  out the expected `.venv-knowledge` substring false-positive, not a naive grep count).
+- Verified real execution, not just file content: `.venv-knowledge/bin/pytest --version` and
+  `.venv-knowledge/bin/headroom --help` both run correctly under Python 3.12.3;
+  `.venv/bin/pytest -VV` confirms it runs from `.venv/lib/python3.13/site-packages`. Sourcing each
+  `sh`-form `activate` (via a real subprocess `source` call, not just reading the file) sets
+  `$VIRTUAL_ENV` to the correct new path for both venvs. Both MCP launchers re-verified end to end:
+  a real `search_docs` query returns real results; the headroom launcher's 5-second smoke test exits
+  clean.
+- **Honest gap, not glossed over**: `csh`/`fish`/`nu` are not installed on this machine, so their
+  `activate.csh`/`activate.fish`/`activate.nu` rewrites could only be verified by direct file-content
+  inspection (confirmed correct), not by actually sourcing them under their own shell.
+
+**The rewrite itself is machine-level state, not a git change — it lives only on this host,
+outside version control, exactly like the original rename.** Backups of the pre-rewrite `bin/`
+directories are at `/tmp/claude-1000/-home-u24desktop-Working-rpg-based-simulation--claude-
+worktrees-doc-tag-enforcement/7276a580-444f-4bec-b3fa-c5c059b8534d/scratchpad/venv-bin-backup-
+20260921/` (`venv-knowledge-bin.tar.gz`, `venv-bin.tar.gz`) — this session's own scratchpad, not a
+permanent or shared location; treat it as ephemeral and re-derive a fresh backup before any future
+edit to these directories rather than assuming this one is still current.
+
+`docs/guidelines/agent_working_environment.md`'s venv table corrected in the same pass: `.venv-
+knowledge` is documented as the full general-purpose venv it actually is (this package
+editable-installed, `requirements.txt`'s core deps, the knowledge stack, and the unpinned
+`headroom-ai==0.37.0`), not the narrower "knowledge-search tooling only" the original wording
+claimed. `make knowledge-index-update` run clean afterward (docs/ changed).
