@@ -35,8 +35,9 @@ classification), and **PASS — ready to freeze**. Batch 07 (Capability/Progress
 drafted 2026-09-22, revised the same day per a targeted Rule-admission and semantic cleanup
 follow-up (8 genuine Domain Rules of 26 total catalog entries after PROG-04/CONFLICT-02 were
 reclassified to Inherited and LEARN-02 retired to Repository Findings), and **PASS — ready to
-freeze**. Batch 08 (Objects/Ownership/Resources/Economy) is the next planned step once Batch 07
-is reviewed.
+freeze**. Batch 08 (Objects/Ownership/Resources/Economy) is drafted 2026-09-22 (8 genuine
+Domain Rules of 24 total catalog entries) and ready for high-level external review. Batch 09
+(Social Relations/Family/Lineage) is the next planned step once Batch 08 is reviewed.
 
 ---
 
@@ -281,6 +282,16 @@ learn, survive, die, and accumulate history.
 
 ### Batch 08 — Objects / Ownership / Resources / Economy
 
+**Status: drafted 2026-09-22, ready for high-level external review.** 8 genuine Domain Rules
+(24 total catalog entries — 8 Domain Rules, 8 Inherited/Applied Foundational Rules, 8 Scope/
+Deferred Boundaries) across `material-economy/objects-material-culture.md`,
+`ownership-possession.md` (its own `PROP-*` prefix, deliberately distinct from Batch 01's
+`OWN-*`), `resources-production.md`, `economy-exchange.md`. Most significant finding: the
+heirloom-transfer/inheritance mechanism is **CONFLICTING** — it constructs a real
+`ResourceTransferIntent(source_kind="CHEST")` on death that `src/core/conservation.py`'s own
+resolver rejects with `UNKNOWN_SOURCE_KIND`, so the resolved heir never actually receives the
+property. See `review-exports/material-economy-batch-08-review.md`.
+
 ```text
 objects
 material transformation
@@ -292,10 +303,13 @@ trade
 economic consequences
 ```
 
-Revisit inheritance/property-transfer scenarios here — Batch 01's FND-S15 already found that
-role/authority succession is real but object/wealth transfer to an heir has no mechanism at all
-(deferred jointly across this batch, Family/Lineage, and Politics; see
-`foundations/state-ownership.md`'s OWN-05 open questions).
+**Resolved 2026-09-22.** Batch 01's own FND-S15/OWN-05 open question (role/authority
+succession is real but object/wealth transfer to an heir has no mechanism at all) is now
+resolved for the object/property side: `ownership-possession.md`'s PROP-02 states that the
+producer of an ownership-changing event is not automatically the owner of the resulting
+relation, and this batch's own repository investigation confirmed the specific implementation
+defect (the `"CHEST"` resolver gap) that makes property transfer to an heir actually fail in
+practice today, despite the code's own appearance of completeness.
 
 ### Batch 09 — Social Relations / Family / Lineage
 

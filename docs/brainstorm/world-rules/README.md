@@ -53,9 +53,13 @@ order.
 | Perception | Batch 06 — PASS, frozen | [knowledge-agency/perception.md](knowledge-agency/perception.md) |
 | Knowledge / Information / Memory | Batch 06 — PASS, frozen | [knowledge-agency/knowledge-information.md](knowledge-agency/knowledge-information.md) |
 | Agency / Decision | Batch 06 — PASS, frozen | [knowledge-agency/agency-decision.md](knowledge-agency/agency-decision.md) |
-| Capability / Progression | Batch 07 drafted | [capability-progression/capability-progression.md](capability-progression/capability-progression.md) |
-| Learning / Adaptation | Batch 07 drafted | [capability-progression/learning-adaptation.md](capability-progression/learning-adaptation.md) |
-| Conflict / Combat | Batch 07 drafted | [capability-progression/conflict-combat.md](capability-progression/conflict-combat.md) |
+| Capability / Progression | Batch 07 — PASS, frozen | [capability-progression/capability-progression.md](capability-progression/capability-progression.md) |
+| Learning / Adaptation | Batch 07 — PASS, frozen | [capability-progression/learning-adaptation.md](capability-progression/learning-adaptation.md) |
+| Conflict / Combat | Batch 07 — PASS, frozen | [capability-progression/conflict-combat.md](capability-progression/conflict-combat.md) |
+| Objects / Material Culture | Batch 08 drafted | [material-economy/objects-material-culture.md](material-economy/objects-material-culture.md) |
+| Ownership / Possession | Batch 08 drafted | [material-economy/ownership-possession.md](material-economy/ownership-possession.md) |
+| Resources / Production | Batch 08 drafted | [material-economy/resources-production.md](material-economy/resources-production.md) |
+| Economy / Exchange | Batch 08 drafted | [material-economy/economy-exchange.md](material-economy/economy-exchange.md) |
 
 ## Rule Catalog progress
 
@@ -169,7 +173,26 @@ order.
   `review-exports/capability-progression-batch-07-review.md`'s explicit call-outs for this and
   further confirmed gaps. See `tmp/capability-progression-batch-07-report.md` (local, not part
   of this catalog) for the full disposition report.
-- Do not begin Batch 08 (Objects / Ownership / Resources / Economy) until Batch 07 receives
+- **Batch 08** (Objects/Ownership/Resources/Economy) — the fifth domain-facing Milestone B
+  batch — drafted 2026-09-22 directly with the strict Rule-admission discipline Batch 07's own
+  follow-up established. 8 genuine Domain Rules (24 total catalog entries including 8
+  inherited/applied foundational rules and 8 scope/deferred boundaries) across Objects/
+  Material Culture, Ownership/Possession (using its own `PROP-*` prefix, deliberately distinct
+  from Batch 01's `OWN-*` State Ownership), Resources/Production, and Economy/Exchange; ready
+  for high-level external review. The single most significant finding: this repository's
+  inheritance/heirloom-transfer mechanism is **CONFLICTING** — it constructs a real
+  `ResourceTransferIntent(source_kind="CHEST")` on an entity's death, but
+  `src/core/conservation.py`'s own resolver has no handler for `"CHEST"` and rejects it every
+  time, so the resolved heir never actually receives the inventory or heirlooms; property only
+  ends up in a generically-lootable corpse. A second significant finding: the `ItemInstance`
+  object-provenance/significance mechanism ("ordinary object becomes relic") is fully designed
+  and wired end-to-end, but gated `ENABLE_ITEM_INSTANCE_HISTORY` OFF and never triggered by any
+  production call site — never realized in practice. `ServiceOpportunityProvider` was found to
+  reconfirm Batch 06's own omniscient-decision pattern for economic opportunities. See
+  `review-exports/material-economy-batch-08-review.md`'s explicit call-outs for these and
+  further confirmed gaps. See `tmp/material-economy-batch-08-report.md` (local, not part of
+  this catalog) for the full disposition report.
+- Do not begin Batch 09 (Social Relations / Family / Lineage) until Batch 08 receives
   high-level review.
 
 ## Scenario Bank index
@@ -184,6 +207,7 @@ order.
 | Batch 05 (Life/Body/Survival/Ecology) | [scenarios/life-body-batch-05.md](scenarios/life-body-batch-05.md) | LB-S01 – LB-S16 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | [scenarios/knowledge-agency-batch-06.md](scenarios/knowledge-agency-batch-06.md) | KA-S01 – KA-S20 |
 | Batch 07 (Capability/Progression/Conflict) | [scenarios/capability-progression-batch-07.md](scenarios/capability-progression-batch-07.md) | CP-S01 – CP-S17 |
+| Batch 08 (Objects/Ownership/Resources/Economy) | [scenarios/material-economy-batch-08.md](scenarios/material-economy-batch-08.md) | ME-S01 – ME-S16 |
 
 ## Unresolved cross-domain questions
 
@@ -366,6 +390,25 @@ follow-up):**
   grants XP here" was retired from a Domain Rule to a Repository Finding — the target design
   itself remains open to other experience-types.
 
+**From Batch 08 (Objects/Ownership/Resources/Economy, drafted 2026-09-22):**
+
+- **Confirmed CONFLICTING — the most load-bearing gap in this whole batch.** The
+  heirloom-transfer mechanism constructs a real `ResourceTransferIntent(source_kind="CHEST")`
+  on death, but `src/core/conservation.py`'s resolver has no handler for `"CHEST"` and rejects
+  it with `UNKNOWN_SOURCE_KIND` every time — the resolved heir never actually receives the
+  inventory or heirlooms; property only ends up in a generically-lootable corpse.
+- **Confirmed INERT/OFF.** The `ItemInstance` object-provenance/significance mechanism
+  ("ordinary object becomes relic") is fully wired end-to-end but gated
+  `ENABLE_ITEM_INSTANCE_HISTORY` OFF and never triggered by any production call site.
+- **Confirmed CONFLICTING, reconfirming Batch 06's own pattern.**
+  `ServiceOpportunityProvider.get_opportunities()` reads raw `ServiceRegistry` state with no
+  perception gate.
+- **Confirmed MISSING.** No theft/illegitimate-possession representation exists; no
+  individual member access to collective/organizational wealth exists (faction vaults
+  accumulate, never spent); no wealth → political-influence or wealth → supply-chain-control
+  conversion edge exists; no mechanism computes `price_modifiers` from real scarcity/depletion
+  — scarcity and price are confirmed disconnected mechanisms.
+
 ## Review index
 
 For external review, send the review export first — it's the compact, generated summary; send
@@ -394,6 +437,7 @@ rationale stay canonical.
 | Batch 05 (Life/Body/Survival/Ecology) | `life-body/lifecycle.md`, `life-body/body-condition.md`, `life-body/survival-needs.md`, `life-body/ecology-population.md` | `scenarios/life-body-batch-05.md` (LB-S01–S16) | [review-exports/life-body-batch-05-review.md](review-exports/life-body-batch-05-review.md) | Ready for high-level external review, normalized 2026-09-22 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | `knowledge-agency/perception.md`, `knowledge-agency/knowledge-information.md`, `knowledge-agency/agency-decision.md` | `scenarios/knowledge-agency-batch-06.md` (KA-S01–S20) | [review-exports/knowledge-agency-batch-06-review.md](review-exports/knowledge-agency-batch-06-review.md) | PASS — ready to freeze |
 | Batch 07 (Capability/Progression/Conflict) | `capability-progression/capability-progression.md`, `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md` | `scenarios/capability-progression-batch-07.md` (CP-S01–S17) | [review-exports/capability-progression-batch-07-review.md](review-exports/capability-progression-batch-07-review.md) | PASS — ready to freeze |
+| Batch 08 (Objects/Ownership/Resources/Economy) | `material-economy/objects-material-culture.md`, `material-economy/ownership-possession.md`, `material-economy/resources-production.md`, `material-economy/economy-exchange.md` | `scenarios/material-economy-batch-08.md` (ME-S01–S16) | [review-exports/material-economy-batch-08-review.md](review-exports/material-economy-batch-08-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -435,3 +479,9 @@ rationale stay canonical.
 - Batch 07 scenario file: `scenarios/capability-progression-batch-07.md`
 - Batch 07 review export: `review-exports/capability-progression-batch-07-review.md`
 - Batch 07 report (local, gitignored): `tmp/capability-progression-batch-07-report.md`
+- Batch 08 rule files: `material-economy/objects-material-culture.md`,
+  `material-economy/ownership-possession.md`, `material-economy/resources-production.md`,
+  `material-economy/economy-exchange.md`
+- Batch 08 scenario file: `scenarios/material-economy-batch-08.md`
+- Batch 08 review export: `review-exports/material-economy-batch-08-review.md`
+- Batch 08 report (local, gitignored): `tmp/material-economy-batch-08-report.md`
