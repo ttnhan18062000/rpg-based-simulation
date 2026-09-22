@@ -72,7 +72,8 @@ order.
 | Territory / Control | Batch 11A — PASS, frozen | [places-culture/territory-control.md](places-culture/territory-control.md) |
 | Culture | Batch 11B — PASS, frozen | [places-culture/culture.md](places-culture/culture.md) |
 | Collective Belief | Batch 11B — PASS, frozen | [places-culture/collective-belief.md](places-culture/collective-belief.md) |
-| Magic / Supernatural | Batch 12 drafted | [magic-supernatural/supernatural-ontology.md](magic-supernatural/supernatural-ontology.md), [magic-capability.md](magic-supernatural/magic-capability.md), [magical-effects.md](magic-supernatural/magical-effects.md), [supernatural-transformation.md](magic-supernatural/supernatural-transformation.md), [supernatural-entities-places.md](magic-supernatural/supernatural-entities-places.md) |
+| Magic / Supernatural | Batch 12 — PASS, ready to freeze | [magic-supernatural/supernatural-ontology.md](magic-supernatural/supernatural-ontology.md), [magic-capability.md](magic-supernatural/magic-capability.md), [magical-effects.md](magic-supernatural/magical-effects.md), [supernatural-transformation.md](magic-supernatural/supernatural-transformation.md), [supernatural-entities-places.md](magic-supernatural/supernatural-entities-places.md) |
+| Final Integration (Cross-Domain History/Significance) | PASS — Catalog ready to freeze, zero new Rules | no new canonical rule file — see [scenarios/final-integration-history-significance.md](scenarios/final-integration-history-significance.md) |
 
 ## Rule Catalog progress
 
@@ -356,6 +357,34 @@ order.
   a real cross-reference bug: that finding's evidence trace now lives only in
   `supernatural-entities-places.md`, its correct home.
 - Do not begin the next batch until Batch 12 receives high-level review.
+- **Final Integration** (Cross-Domain History / Significance / Propagation) — completed
+  2026-09-22 per `tmp/world-rule-integration-ext-ai.md`. **Not Batch 13** — introduces no new
+  major domain. Tests whether the frozen/freeze-ready Catalog (Foundations + Batches 04–12)
+  composes into the intended persistent, systemic world. 12 flagship/counter scenario groups
+  (18 scenarios: FI-PER, FI-CRE, FI-OBJ, FI-PLC, FI-LIN, FI-ORG, FI-SET, FI-X) each trace every
+  important stage against current authoritative state, producer, canonical owner, information
+  path, downstream consumer, and persistent consequence. **Zero new Rules were added** — every
+  flagship trajectory (ordinary person → historically significant with no HERO role; ordinary
+  creature → named regional threat; ordinary object → relic via provenance alone; ordinary
+  Place → historic/sacred with multiple simultaneous attributed meanings; family → lineage →
+  descendant consequence without automatic inheritance; group → organization → institution
+  surviving member turnover; a full settlement lifecycle) proved fully derivable end-to-end
+  from Rules that already existed. The candidate "shared historical grammar" wording was
+  explicitly tested and rejected as a standalone Rule — already fully composed from HP-01/02/
+  05, PROG-06, INFO-01/02, KNOW-01/02, BEL-01, and PLACE-02/ORG-01 acting together. **The one
+  finding carried forward:** a recurring cross-domain implementation realization pattern — at
+  six of seven subject scales, a subject's own real state and/or historical fact exists but
+  nothing currently connects a produced deed to a propagated, consumed recognition event —
+  documented as a repository fact, explicitly not resolved into one proposed
+  `UniversalSignificanceSystem`. A pre-existing, non-contradictory ID collision was also
+  noted (`foundations/capability.md` and `magic-supernatural/magic-capability.md` each define
+  their own `CAP-01`/`CAP-02`) — a traceability disambiguation, not a Rule change. See
+  `review-exports/final-integration-history-significance-review.md`'s own Canonical State
+  Ownership matrix and 13 Required Final Answers. See
+  `tmp/final-integration-history-significance-report.md` (local, not part of this catalog) for
+  the full disposition report.
+- **WORLD RULE CATALOG: PASS — READY TO FREEZE.** Next phase: Simulation Rule → Implementation
+  Mapping, once its own instruction file is provided.
 
 ## Scenario Bank index
 
@@ -375,6 +404,7 @@ order.
 | Batch 11A (Places/Settlements/Territory) | [scenarios/places-territory-batch-11a.md](scenarios/places-territory-batch-11a.md) | PT-S01 – PT-S14 |
 | Batch 11B (Culture/Collective Belief) | [scenarios/culture-belief-batch-11b.md](scenarios/culture-belief-batch-11b.md) | CB-S01 – CB-S10 |
 | Batch 12 (Magic/Supernatural) | [scenarios/magic-supernatural-batch-12.md](scenarios/magic-supernatural-batch-12.md) | MAG-S01 – MAG-S29 |
+| Final Integration (Cross-Domain History/Significance) | [scenarios/final-integration-history-significance.md](scenarios/final-integration-history-significance.md) | FI-PER-01/02, FI-CRE-01/02, FI-OBJ-01/02, FI-PLC-01/02, FI-LIN-01, FI-ORG-01/02, FI-SET-01, FI-X-01/02/03 |
 
 ## Unresolved cross-domain questions
 
@@ -779,6 +809,7 @@ rationale stay canonical.
 | Batch 11A (Places/Settlements/Territory) | `places-culture/places.md`, `places-culture/settlements.md`, `places-culture/territory-control.md` | `scenarios/places-territory-batch-11a.md` (PT-S01–S14) | [review-exports/places-territory-batch-11a-review.md](review-exports/places-territory-batch-11a-review.md) | PASS — frozen |
 | Batch 11B (Culture/Collective Belief) | `places-culture/culture.md`, `places-culture/collective-belief.md` | `scenarios/culture-belief-batch-11b.md` (CB-S01–S10) | [review-exports/culture-belief-batch-11b-review.md](review-exports/culture-belief-batch-11b-review.md) | PASS — frozen |
 | Batch 12 (Magic/Supernatural) | `magic-supernatural/{supernatural-ontology,magic-capability,magical-effects,supernatural-transformation,supernatural-entities-places}.md` | `scenarios/magic-supernatural-batch-12.md` (MAG-S01–S29) | [review-exports/magic-supernatural-batch-12-review.md](review-exports/magic-supernatural-batch-12-review.md) | PASS — ready to freeze |
+| Final Integration (Cross-Domain History/Significance) | no new canonical rule file — zero new Rules added | `scenarios/final-integration-history-significance.md` (FI-PER/CRE/OBJ/PLC/LIN/ORG/SET/X) | [review-exports/final-integration-history-significance-review.md](review-exports/final-integration-history-significance-review.md) | PASS — World Rule Catalog ready to freeze |
 
 ## Links to current review batches
 
@@ -853,5 +884,8 @@ rationale stay canonical.
 - Batch 12 scenario file: `scenarios/magic-supernatural-batch-12.md`
 - Batch 12 review export: `review-exports/magic-supernatural-batch-12-review.md`
 - Batch 12 report (local, gitignored): `tmp/magic-supernatural-batch-12-report.md`
+- Final Integration scenario file: `scenarios/final-integration-history-significance.md`
+- Final Integration review export: `review-exports/final-integration-history-significance-review.md`
+- Final Integration report (local, gitignored): `tmp/final-integration-history-significance-report.md`
 - Standing direction (2026-09-22, applies to all remaining batches): `tmp/world-rule-
   direction.md`

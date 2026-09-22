@@ -63,9 +63,11 @@ the same day per a second, targeted semantic-cleanup follow-up (wording precisio
 "independent facts" softened to "semantically distinct facts," EFF-02 broadened to recognize
 a durable-property/consequence shape of persistent supernatural state alongside the
 ongoing-cause shape, SUP-03/CAP-01/CAP-02/STR-02 generalized away from over-strong framings;
-the 10-Domain-Rule count is unchanged). Batch 12 is **PASS — ready to freeze**. The next
-planned step is Final Integration (Cross-Domain History / Significance / Propagation), once
-its own instruction file is provided.
+the 10-Domain-Rule count is unchanged). Batch 12 is **PASS — ready to freeze**. **Final
+Integration (Cross-Domain History / Significance / Propagation) is now complete: PASS — World
+Rule Catalog ready to freeze** (see its own section below) — zero new Rules were required; the
+next planned step is Simulation Rule → Implementation Mapping, once its own instruction file
+is provided.
 
 ---
 
@@ -552,54 +554,39 @@ this case directly against STR-01.
 
 ### Final Integration Batch — Cross-Domain History / Significance / Propagation
 
-This is not another ordinary domain. Use it to examine the World Rule Catalog as one causal
-system:
+**Status: PASS — World Rule Catalog ready to freeze (completed 2026-09-22).** Not another
+ordinary domain — per `tmp/world-rule-integration-ext-ai.md`, this phase tested whether the
+frozen/freeze-ready Rules from Foundations and Batches 04–12 actually compose into the
+intended persistent, systemic world, introducing no new major domain and no new Rule unless
+strictly required. 12 flagship/counter scenario groups (18 scenarios: FI-PER, FI-CRE, FI-OBJ,
+FI-PLC, FI-LIN, FI-ORG, FI-SET, FI-X) in
+`scenarios/final-integration-history-significance.md`, each tracing every important stage
+against current authoritative state, producer, canonical owner, information path, downstream
+consumer, and persistent consequence. **Zero new Rules were added** — every flagship
+trajectory (ordinary person → historically significant with no HERO role; ordinary creature →
+named regional threat; ordinary object → relic via provenance alone; ordinary Place →
+historic/sacred with multiple simultaneous attributed meanings; family → lineage → descendant
+consequence without automatic inheritance; group → organization → institution surviving member
+turnover; a full settlement growth/disaster/decline/resettlement lifecycle) proved fully
+derivable end-to-end from Rules that already existed before this phase began, including the
+candidate "shared historical grammar" wording itself, which was explicitly tested and rejected
+as a standalone Rule (§36) because it is already fully composed from HP-01/02/05, PROG-06,
+INFO-01/02, KNOW-01/02, BEL-01, and PLACE-02/ORG-01 acting together. **The one real finding
+carried forward:** a recurring cross-domain implementation realization pattern — at six of
+seven subject scales (person, creature, object, place, organization, lineage), a subject's own
+real, durably-owned state and/or historical fact exists, but nothing currently connects a
+produced deed to a propagated, consumed recognition event — documented explicitly as a
+repository fact, not resolved into one proposed `UniversalSignificanceSystem`, per the
+instruction's own repeated warning against exactly that move. See
+`review-exports/final-integration-history-significance-review.md` for the full Canonical State
+Ownership matrix, Information/Reach/Aggregate↔Individual audits, and the 13 Required Final
+Answers.
 
-```text
-history
-significance
-world reaction
-power conversion
-cross-domain propagation
-counterforces
-long causal chains
-```
-
-**Updated 2026-09-21.** History / Provenance is no longer first-defined here — it is drafted in
-Milestone A's foundational completion pass (see above). This batch's job for History /
-Provenance is to **deepen and integrate** those already-drafted semantics (historical
-continuity, provenance, persistence, causal-history retention, compression boundaries,
-legitimate fading) with significance, world reaction, propagation, and long causal chains — not
-to define the family for the first time.
-
-Run a small set of end-to-end canonical trajectories, for example:
-
-```text
-ordinary creature
-→ survival
-→ adaptation
-→ growing capability
-→ territory
-→ conflict
-→ reputation
-→ organized response
-→ death / persistence of legacy
-```
-
-and:
-
-```text
-poor individual
-→ knowledge / opportunity
-→ wealth
-→ relationships
-→ organization
-→ political influence
-→ institutional consequence
-```
-
-Do not script these outcomes. Use them to test whether the Rule Catalog makes such trajectories
-possible through valid causal chains.
+History / Provenance itself was not redefined here — it remains first drafted in Milestone A's
+foundational completion pass (see above); this phase deepened and integrated those semantics
+(historical continuity, provenance, persistence, compression boundaries, legitimate fading)
+with significance, world reaction, propagation, and cross-domain power conversion, per that
+Milestone's own original framing.
 
 ---
 
