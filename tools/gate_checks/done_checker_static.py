@@ -440,7 +440,7 @@ def _is_none_section(section_text: str) -> bool:
     return _DOCS_BULLET_RE.search(remainder) is None
 
 
-def _git_touched_paths(root: Path = Path(".")) -> set[str]:
+def _git_status_touched_paths(root: Path = Path(".")) -> set[str]:
     """Return every path `git status --porcelain` reports as changed, relative to `root`.
 
     Read-only, fail-open: any subprocess error (missing `git` binary, `root` not a repo, timeout)
@@ -471,6 +471,57 @@ def _git_touched_paths(root: Path = Path(".")) -> set[str]:
             rest = rest.split(" -> ", 1)[1]
         paths.add(rest.strip())
     return paths
+
+
+def _git_branch_diff_touched_paths(
+    root: Path = Path("."), base_ref: str = "origin/main"
+) -> set[str]:
+    """Return every path changed on the current branch relative to its merge-base with
+    `base_ref` (`git diff --name-only <base_ref>...HEAD`, three-dot — diffs from the merge-base,
+    not `base_ref`'s own current tip, so commits landing on `base_ref` after this branch forked
+    are not misread as "touched by this branch").
+
+    TCK-20260916-DOC-COVERAGE-CHECK-BLIND-TO-COMMITTED-CHANGES: `git status --porcelain` alone
+    (`_git_status_touched_paths`) only sees uncommitted working-tree changes — a doc edit
+    committed earlier in the same hand-orchestrated session (an established, encouraged practice,
+    not an edge case) has a clean tree by Verify/Finalize time and was invisible to the reverse
+    coverage check. This adds the committed side of the same branch's own diff.
+
+    `origin/main` matches this repo's own established convention for exactly this kind of
+    close-time, ticket-scoped diff (`tools/mechanism_registry/mechanism_registry_changed_code_
+    check.py`'s own `base_ref: str = "origin/main"` default and its `get_changed_files()`'s
+    identical `git diff --name-only {base}...{head}` three-dot form) — not assumed fresh here,
+    confirmed against that sibling tool's own real, working precedent.
+
+    Read-only, fail-open, same convention as `_git_status_touched_paths`: `origin/main` may not
+    exist locally (a shallow clone, a fork with a differently-named remote, `origin/main` never
+    fetched) — any subprocess error here returns an empty set, so the caller falls back to
+    whatever `_git_status_touched_paths` alone found, never crashes, and never silently invents a
+    result under a wrong base.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--name-only", f"{base_ref}...HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    if result.returncode != 0:
+        return set()
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
+
+
+def _git_touched_paths(root: Path = Path("."), base_ref: str = "origin/main") -> set[str]:
+    """Union of `_git_status_touched_paths` (uncommitted) and `_git_branch_diff_touched_paths`
+    (committed on this branch since its merge-base with `base_ref`) — see
+    `_git_branch_diff_touched_paths`'s own docstring for why both are needed. Either source
+    failing (see each function's own fail-open contract) still returns whatever the other found,
+    rather than the whole function returning nothing."""
+    return _git_status_touched_paths(root) | _git_branch_diff_touched_paths(root, base_ref)
 
 
 def _path_touched(path: str, touched: set[str]) -> bool:

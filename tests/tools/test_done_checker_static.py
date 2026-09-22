@@ -19,6 +19,8 @@ if str(_TOOLS_DIR) not in sys.path:
 from gate_checks.done_checker_static import (  # noqa: E402
     _find_flagged_data_run_files,
     _frontmatter_has_unregistered_tags,
+    _git_branch_diff_touched_paths,
+    _git_status_touched_paths,
     _git_touched_paths,
     _parse_docs_to_update,
     _parse_resolved_not_applicable_docs,
@@ -1471,6 +1473,87 @@ def test_git_touched_paths_fails_open_on_non_repo(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# _git_branch_diff_touched_paths / _git_touched_paths union
+# (TCK-20260916-DOC-COVERAGE-CHECK-BLIND-TO-COMMITTED-CHANGES)
+# ---------------------------------------------------------------------------
+
+
+def _init_repo_with_base(tmp_path: Path) -> None:
+    """Real repo with one commit, and refs/remotes/origin/main pointed at it -- simulates a real
+    branch's own merge-base with origin/main without needing an actual remote."""
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "README.md").write_text("base", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "base"], cwd=tmp_path, check=True)
+    base_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=tmp_path, capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "update-ref", "refs/remotes/origin/main", base_sha], cwd=tmp_path, check=True,
+    )
+
+
+def test_branch_diff_touched_paths_includes_a_committed_doc_change(tmp_path):
+    """The ticket's own AC: a doc edit committed mid-session (not left uncommitted until
+    Finalize) must still be found."""
+    _init_repo_with_base(tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "committed.md").write_text("content", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "add doc"], cwd=tmp_path, check=True)
+
+    touched = _git_branch_diff_touched_paths(root=tmp_path, base_ref="origin/main")
+    assert "docs/committed.md" in touched
+
+
+def test_git_touched_paths_unions_committed_and_uncommitted(tmp_path):
+    """A ticket that commits one doc edit mid-session and leaves a second one uncommitted must
+    see both — the union is the whole point of the fix."""
+    _init_repo_with_base(tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "committed.md").write_text("content", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "add doc"], cwd=tmp_path, check=True)
+    (tmp_path / "docs" / "uncommitted.md").write_text("content", encoding="utf-8")
+
+    touched = _git_touched_paths(root=tmp_path, base_ref="origin/main")
+    assert "docs/committed.md" in touched
+    assert "docs/uncommitted.md" in touched
+
+
+def test_branch_diff_touched_paths_fails_open_when_base_ref_missing(tmp_path):
+    """No refs/remotes/origin/main at all -- e.g. a shallow clone or origin/main never fetched.
+    Must return an empty set, not raise."""
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "README.md").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
+
+    assert _git_branch_diff_touched_paths(root=tmp_path, base_ref="origin/main") == set()
+
+
+def test_git_touched_paths_falls_back_to_status_only_when_base_ref_missing(tmp_path):
+    """When origin/main is unavailable, _git_touched_paths must still return whatever
+    _git_status_touched_paths alone found -- never crash, never silently drop the working-tree
+    signal along with the unavailable branch-diff signal."""
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    (tmp_path / "README.md").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "uncommitted.md").write_text("content", encoding="utf-8")
+
+    touched = _git_touched_paths(root=tmp_path, base_ref="origin/main")
+    assert "docs/" in touched
+
+
+# ---------------------------------------------------------------------------
 # _path_touched (TCK-20260802-DOC-COVERAGE-CHECK)
 # ---------------------------------------------------------------------------
 
@@ -1942,6 +2025,48 @@ def test_reverse_docs_coverage_hotfix_tier_behavior(tmp_path, monkeypatch):
     )
     status, evidence = check_docs_to_update_coverage(
         "TCK-FAKE", "hotfix", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS"
+
+
+def test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tree(
+    tmp_path, monkeypatch
+):
+    """TCK-20260916-DOC-COVERAGE-CHECK-BLIND-TO-COMMITTED-CHANGES's own real fixture case: a doc
+    edit genuinely committed earlier in a hand-orchestrated session, with a fully clean working
+    tree by the time this check runs (`git status --porcelain` alone would see nothing), must
+    still be recognized when it's NOT declared -- proving the branch-diff half is doing real work,
+    not that the fixture only exercises the pre-existing uncommitted-change path."""
+    _init_repo_with_base(tmp_path)
+    (tmp_path / "docs" / "mechanics").mkdir(parents=True)
+    (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "committed mid-session"], cwd=tmp_path, check=True)
+    # Working tree is now fully clean -- confirm that directly, so this test can't silently pass
+    # for the wrong reason (an accidental leftover uncommitted change).
+    status = subprocess.run(
+        ["git", "status", "--porcelain"], cwd=tmp_path, capture_output=True, text=True, check=True,
+    ).stdout
+    assert status.strip() == "", "fixture setup bug: working tree must be clean for this test"
+
+    base = tmp_path / "staging_artifacts"
+    _write_investigation(base, "TCK-FAKE", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-FAKE", files_changed="None.")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "FAIL"
+    assert "docs/mechanics/combat.md" in evidence
+
+    # Now declare it -- must PASS, this is the ticket's own AC #1.
+    _write_reverse_ticket(
+        tmp_path, "TCK-FAKE",
+        files_changed="- `docs/mechanics/combat.md` — committed mid-session",
+    )
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-FAKE", "standard", base_dir=Path("staging_artifacts")
     )
     assert status == "PASS"
 
