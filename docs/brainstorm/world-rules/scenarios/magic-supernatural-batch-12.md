@@ -8,12 +8,15 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Magic / Supernatural (Batch 12)
 
-**Purpose/scope.** Sixteen scenarios used to pressure-test the Magic/Supernatural rule family
-in `magic-supernatural/supernatural.md`, per `tmp/world-rule-batch-12-ext-ai.md`'s own §24
-minimum scenario suite. No additional scenarios were added beyond this minimum, per that
-instruction's own explicit "do not force unsupported content merely to hit a number" — the
-near-total MISSING repository realization confirmed below leaves no further ambiguity for
-additional scenarios to expose.
+**Purpose/scope.** Twenty-nine scenarios used to pressure-test the Magic/Supernatural rule
+families in `magic-supernatural/{supernatural-ontology,magic-capability,magical-effects,
+supernatural-transformation,supernatural-entities-places}.md`, per
+`tmp/world-rule-batch-12-corrected-ext-ai.md`'s own §34 seed list (25 named scenarios,
+IDs MAG-S05–S29 here) plus four scenarios (MAG-S01–S04) added to directly exercise
+SUP-01/SUP-02 — the anchor Rules of this batch's own Supernatural Ontology family, which the
+official §34 list does not otherwise probe directly (its own scenarios test capability,
+effects, transformation, places, and belief-power, but not the basic truth/evidence/
+attribution split itself). Without these four, SUP-01 would have no scenario coverage at all.
 
 Per the standing direction (`tmp/world-rule-direction.md`): a scenario failing against the
 current repository does not mean the scenario or its Rule fails. Scoring uses the same
@@ -26,12 +29,12 @@ ideal design.
 ## MAG-S01 — Real magic, no witness
 
 A real supernatural event occurs; nobody observes it; nobody believes in it; no institution
-recognizes it; no culture assigns significance to it; the supernatural world-state consequence
-still occurs.
+recognizes it; no culture assigns significance to it; the supernatural world-state
+consequence still occurs.
 
-- **Rules invoked:** MAG-01.
+- **Rules invoked:** SUP-01.
 - **Result: revealed missing rule.** No supernatural-event mechanism of any kind exists to
-  occur unwitnessed in the first place — confirmed MISSING. MAG-01's own requirement
+  occur unwitnessed in the first place — confirmed MISSING. SUP-01's own requirement
   (objective truth never requires recognition unless a mechanism explicitly declares it as a
   prerequisite) remains independently coherent regardless.
 
@@ -40,199 +43,340 @@ still occurs.
 A population strongly believes a place is cursed; the belief affects travel, economics,
 politics, ritual behavior, or settlement behavior; no supernatural curse actually exists.
 
-- **Rules invoked:** MAG-02.
+- **Rules invoked:** SUP-02.
 - **Result: revealed missing rule, though the Rule's own permission is confirmed coherent
-  regardless.** No mechanism connects any belief record to real social/economic/political
-  consequence in this specific shape (belief about a *place* driving *settlement-level*
-  behavior) — confirmed MISSING. Separately and positively confirmed: nothing anywhere
-  derives objective world truth from belief (MAG-02's own SUPPORTED-by-absence finding) — the
-  "no supernatural curse actually exists" half of this scenario holds trivially, since no
-  mechanism could make it exist from belief alone even if one tried.
+  regardless.** No mechanism connects any belief record to real settlement-level behavior in
+  this specific shape — confirmed MISSING. Separately and positively confirmed: nothing
+  anywhere derives objective world truth from belief (SUP-02's own SUPPORTED-by-absence
+  finding) — the "no supernatural curse actually exists" half of this scenario holds
+  trivially, since no mechanism could make it exist from belief alone even if one tried.
 
-## MAG-S03 — Ordinary event mistaken for magic
+## MAG-S03 — Misattribution, both directions
 
 An observer sees an unexplained phenomenon; the actual cause is ordinary but unknown to that
-observer; the observer attributes it to magic.
+observer; the observer attributes it to magic. Conversely: objective magic occurs; the
+observer's own attribution is wrong (an ordinary cause is assigned instead).
 
-- **Rules invoked:** MAG-01, Inherited (Perception/Knowledge, Batch 06).
-- **Result: revealed missing rule.** No supernatural-attribution mechanism exists for an
-  observer to incorrectly form — confirmed MISSING. The general "ordinary cause, incomplete/
-  wrong observer belief" pattern this scenario needs is otherwise well-supported generically
-  (Batch 06's own belief/knowledge machinery), but nothing ties it to a *magic* attribution
-  specifically.
+- **Rules invoked:** SUP-01, Inherited (Perception/Knowledge, Batch 06).
+- **Result: revealed missing rule, in both directions.** No supernatural-attribution
+  mechanism exists for an observer to incorrectly form in either direction — confirmed
+  MISSING, since no objective supernatural truth exists for an observer to misattribute to or
+  away from. The general "ordinary cause, incomplete/wrong observer belief" pattern this
+  scenario needs is otherwise well-supported generically (Batch 06's own belief/knowledge
+  machinery), but nothing ties it to a *magic* attribution specifically.
 
-## MAG-S04 — Real magic mistaken for ordinary cause
-
-Objective magic occurs; the observer's own attribution is wrong (an ordinary cause is
-assigned instead).
-
-- **Rules invoked:** MAG-01.
-- **Result: revealed missing rule.** Same underlying gap as MAG-S03, from the opposite
-  direction — confirmed MISSING, since no objective supernatural truth exists for an observer
-  to misattribute in either direction.
-
-## MAG-S05 — Conflicting explanations of one magical event
+## MAG-S04 — Conflicting explanations of one magical event
 
 The same evidence is available to three observers; observer A believes it was ordinary;
 observer B correctly attributes it to magic; observer C believes a different supernatural
 explanation; all three observed the same event.
 
-- **Rules invoked:** MAG-01.
+- **Rules invoked:** SUP-01.
 - **Result: revealed missing rule.** Confirmed MISSING — no supernatural event/evidence
-  mechanism exists for three observers to diverge over. MAG-01's own claim (one objective
+  mechanism exists for three observers to diverge over. SUP-01's own claim (one objective
   event may support several simultaneously-held, observer-relative explanations without
   changing what happened) remains coherent and testable in principle, reusing the same
   per-observer belief architecture (`BeliefEntry`, `KnowledgeFact`) already confirmed real and
   independent per entity in prior batches.
 
-## MAG-S06 — Capability without use
+## MAG-S05 — Knows spell, cannot cast
 
-A supernatural capability exists; no effect occurs.
+A subject knows a ritual/spell conceptually; the subject is missing a required capability or
+resource; no effect occurs.
 
-- **Rules invoked:** Inherited (supernatural capability ≠ effect).
-- **Result: revealed missing rule.** No supernatural capability field exists on any entity —
-  confirmed MISSING. The general capability-without-exercise pattern this scenario needs is
-  otherwise well-established for non-supernatural capability (Batch 07 evidence, reused
-  directly) — nothing supernatural exists to check the same boundary against yet.
+- **Rules invoked:** CAP-01.
+- **Result: revealed missing rule.** No magical knowledge or capability field exists on any
+  entity — confirmed MISSING. CAP-01's own knowledge ≠ capability distinction remains
+  coherent and testable in principle, reusing the general knowledge/capability machinery
+  already established for non-magical cases.
 
-## MAG-S07 — Failed spell/ritual
+## MAG-S06 — Innate magic without knowledge
 
-A valid attempt is made; the supernatural effect fails or is interrupted.
+A creature has innate supernatural capability; it uses or reacts through a declared
+mechanism; it lacks explicit conceptual knowledge of that mechanism.
 
-- **Rules invoked:** Inherited (magic may fail), MAG-05.
-- **Result: revealed missing rule.** Confirmed MISSING — no spell/ritual-attempt mechanism
-  exists to fail or succeed. The general attempt-may-fail pattern this scenario needs is
-  otherwise well-established (Batch 07/10 evidence, reused directly).
+- **Rules invoked:** CAP-01.
+- **Result: revealed missing rule.** Same underlying gap as MAG-S05, from the opposite
+  direction — confirmed MISSING.
 
-## MAG-S08 — Persistent cursed object changes owner
+## MAG-S07 — Illegal magic still works
 
-Ownership and a supernatural property diverge: the object remains cursed when stolen; the
-owner changes but the supernatural property remains; the object belongs legally to A while
-physically possessed by B; B does not know it is cursed; C knows the curse exists.
+A law prohibits a spell; a mage has the capability; the mage casts successfully; a legal
+consequence may follow. Capability ≠ authority.
 
-- **Rules invoked:** MAG-03.
-- **Result: revealed missing rule.** No supernatural-property field exists on any object —
-  confirmed MISSING. The ownership/possession/knowledge distinctness this scenario also
-  exercises is otherwise already real and confirmed for non-supernatural cases (Batch 08's
-  own `PROP-01`: ownership/possession/custody/access/control distinct — reused directly) —
-  nothing supernatural exists yet to attach to that already-sound machinery.
+- **Rules invoked:** SUP-03, Inherited (magic and law; magic and institutions/authority).
+- **Result: revealed missing rule.** Confirmed MISSING — no law-prohibits-magic or
+  capability-independent-of-authorization mechanism exists. The reused target semantics
+  (LAW-01's own law/compliance/enforcement distinctness, AUTH-01's own authority ≠
+  capability) remain coherent and testable in principle, both already well-established for
+  non-magical cases throughout this Catalog.
 
-## MAG-S09 — Sacred place without magic
+## MAG-S08 — Spell fails after cost
 
-A place is culturally sacred; no supernatural property or effect exists.
+Casting commits; a cost is incurred; the effect fails.
 
-- **Rules invoked:** MAG-04, Inherited (BEL-03, Batch 11B).
+- **Rules invoked:** Inherited (capability ≠ effect; resource/cost/capacity family).
+- **Result: revealed missing rule.** Confirmed MISSING — no magic-specific cost or
+  attempt-resolution mechanism exists. The general "cost incurred, outcome still uncertain"
+  pattern this scenario needs is otherwise well-supported for non-magical cases (Batch 03's
+  own resource/cost family, reused directly).
+
+## MAG-S09 — Permanent spell with no ongoing magic
+
+A spell causes an ordinary wound or environmental change; the magical process ends; the
+normal resulting state persists with no continuing magical cause.
+
+- **Rules invoked:** EFF-01, EFF-02.
+- **Result: revealed missing rule, though the Rule's own permission is confirmed coherent
+  regardless.** No magical-effect mechanism exists to exercise this against — confirmed
+  MISSING. EFF-02's own core test (does the cause need to keep existing for the consequence
+  to continue) remains independently coherent, matching this repository's own real,
+  non-magical pattern (an ordinary combat wound persists without the originating attack
+  needing to keep occurring).
+
+## MAG-S10 — Persistent curse
+
+A curse is applied; persistent supernatural state results; it continuously affects
+capability.
+
+- **Rules invoked:** EFF-02.
+- **Result: revealed missing rule.** Confirmed MISSING — no persistent supernatural state
+  mechanism exists anywhere in this repository.
+
+## MAG-S11 — Dispel removes curse
+
+A valid counter-process removes supernatural state; the downstream condition recalculates.
+
+- **Rules invoked:** EFF-02.
+- **Result: revealed missing rule.** Same underlying gap as MAG-S10 — confirmed MISSING; no
+  dispel/removal mechanism exists to check lifecycle semantics against.
+
+## MAG-S12 — Teleport across blocked space
+
+An ordinary path is unavailable; a valid supernatural reach relation is declared; movement
+succeeds.
+
+- **Rules invoked:** CAP-02.
+- **Result: revealed missing rule.** Confirmed MISSING — no portal, teleport, or
+  supernatural-reach mechanism of any kind exists, confirmed via direct search. CAP-02's own
+  requirement (a declared relation, never a default bypass) remains coherent regardless.
+
+## MAG-S13 — Portal is one-way
+
+An A → B supernatural connection exists; a B → A connection is unavailable.
+
+- **Rules invoked:** CAP-02.
+- **Result: revealed missing rule.** Same underlying gap as MAG-S12 — confirmed MISSING.
+  CAP-02's own explicit non-bidirectionality permission (a portal's own connection is never
+  assumed bidirectional) remains coherent regardless, directly resolving Batch 04's own
+  directional-topology permission for the supernatural case.
+
+## MAG-S14 — Illusion causes real action
+
+An illusion changes perception; a false belief forms; the subject reacts; a real consequence
+follows.
+
+- **Rules invoked:** Inherited (illusion, reusing SUP-01 and Batch 06 Perception/Knowledge).
+- **Result: revealed missing rule.** Confirmed MISSING — no illusion mechanism exists. The
+  general evidence-manufactured-by-a-real-process pattern this scenario needs is otherwise
+  fully covered by SUP-01's own evidence ≠ truth distinction, reused directly.
+
+## MAG-S15 — Divination without omniscience
+
+A subject invokes a valid divination; bounded supernatural information is received;
+uncertainty remains where declared.
+
+- **Rules invoked:** Inherited (divination, reusing Batch 06 PERC-01/KNOW-01).
+- **Result: revealed missing rule.** Confirmed MISSING — no divination mechanism exists. The
+  reused information-channel discipline (a supernatural channel is gated exactly like any
+  other) remains coherent regardless.
+
+## MAG-S16 — Perfect divination where declared (counter)
+
+A world rule explicitly grants an exact answer; the subject receives exact relevant truth.
+
+- **Rules invoked:** Inherited (divination).
+- **Result: revealed missing rule, and the Rule's own permission is confirmed not
+  prohibited by any general Rule.** Confirmed MISSING — no divination mechanism exists to
+  declare exact. Checked directly: no general Rule in this Catalog (including the
+  "no silent omniscience" requirement) forbids a domain from explicitly declaring a channel
+  perfectly reliable — the prohibition is specifically against *unstated* reliability.
+
+## MAG-S17 — Memory alteration
+
+Magic changes memory; world history remains unchanged; later decisions change as a result.
+
+- **Rules invoked:** Inherited (mind/memory magic), EFF-01.
+- **Result: revealed missing rule.** Confirmed MISSING — no memory-altering magic mechanism
+  exists. The reused five-way distinctness (belief ≠ memory ≠ motivation ≠ compelled action ≠
+  relationship) and cross-domain ownership (Knowledge owns the resulting memory/belief state)
+  remain coherent regardless.
+
+## MAG-S18 — Compelled action
+
+A subject prefers option A; a valid magical compulsion requires option B; B is chosen or
+executed within the declared scope.
+
+- **Rules invoked:** Inherited (mind/memory magic, exercising Batch 06's own AGENCY-02
+  compulsion carve-out).
+- **Result: revealed missing rule.** Confirmed MISSING — no compulsion mechanism exists. The
+  carve-out this scenario would exercise (AGENCY-02's own explicit reservation for reflex/
+  compulsion/mind-control overrides) remains coherent and already anticipated by name in
+  Batch 06's own evidence.
+
+## MAG-S19 — Enchanted sword
+
+An ordinary sword is enchanted; it remains the same object with a new supernatural
+capability.
+
+- **Rules invoked:** STR-01, Inherited (magical objects, reusing OBJ-01).
+- **Result: revealed missing rule.** Confirmed MISSING — no enchantment mechanism exists.
+  STR-01's own default-continuity claim, and the Inherited magical-objects entry's own
+  ownership/identity distinctness, both remain coherent regardless, reusing already-real
+  non-magical evidence (`TransformationService`, `EvolutionSystem`, Batch 08's OBJ-01).
+
+## MAG-S20 — Artifact recreated
+
+An ordinary object is destroyed in a ritual; a magical artifact is created; a new identity
+results, with provenance links remaining to the destroyed original.
+
+- **Rules invoked:** STR-01, Inherited (magical objects).
+- **Result: revealed missing rule.** Confirmed MISSING — no ritual-destruction-creates-new-
+  artifact mechanism exists. STR-01's own declared-exception half (identity replacement, not
+  continuity) remains coherent regardless — this is the declared-replacement counterpart to
+  MAG-S19's own declared-continuity case, both resolved by the same Rule's own two permitted
+  outcomes.
+
+## MAG-S21 — Human → vampire
+
+A living human undergoes a supernatural transformation; identity continuity holds by default;
+lifecycle/body/capability changes result.
+
+- **Rules invoked:** STR-01.
+- **Result: revealed missing rule.** Confirmed MISSING — no human-to-vampire or comparable
+  supernatural-transformation mechanism exists anywhere in this repository. STR-01's own
+  default-continuity claim remains coherent regardless, reusing the same real, non-magical
+  evidence as MAG-S19/S20.
+
+## MAG-S22 — Resurrection
+
+A subject dies; death remains a real historical fact; a valid supernatural process occurs;
+the subject becomes active again. Whether the same identity persists is governed by the
+declared rule.
+
+- **Rules invoked:** STR-02.
+- **Result: revealed missing rule.** Confirmed MISSING — no resurrection mechanism exists
+  anywhere in this repository. This repository's own real death/lifecycle machinery
+  (`LifecycleSystem`) already treats death as permanent with no reversal path, consistent
+  with — though narrower than — STR-02's own permitted-but-not-required reversal case.
+
+## MAG-S23 — Undead new identity (counter)
+
+A corpse undergoes necromancy; a new undead subject results, rather than the original person
+being revived. Resurrection ≠ undead creation by default.
+
+- **Rules invoked:** STR-02.
+- **Result: revealed missing rule.** Confirmed MISSING — no necromancy mechanism exists.
+  STR-02's own explicit non-collapse (resurrection and undead-creation are two distinct,
+  separately-declared operations) remains coherent regardless.
+
+## MAG-S24 — Sacred but not magical place
+
+A culture treats a site as sacred; no supernatural property exists there.
+
+- **Rules invoked:** PLC-01, Inherited (sacredness entry, reusing `collective-belief.md`'s
+  BEL-03).
 - **Result: covered, by direct reuse of Batch 11B's own evidence.** BEL-03's own confirmed
   finding (a place may become sacred through cultural interpretation alone, with no
-  supernatural component) already establishes this half of MAG-04's own seven-way split —
+  supernatural component) already establishes this half of PLC-01's own seven-way split —
   reused directly, not re-investigated, since Batch 11B already confirmed the target
   semantics coherent even though no sacred-place mechanism of any kind is realized (MISSING,
-  cross-referenced from BEL-03).
+  cross-referenced).
 
-## MAG-S10 — Magical place without recognition
+## MAG-S25 — Magical but unknown place
 
-A place has objective supernatural truth only; nobody culturally recognizes it.
+A place has an objective supernatural condition; society is unaware; no cultural significance
+has yet formed.
 
-- **Rules invoked:** MAG-04.
-- **Result: revealed missing rule.** This is the specific half of MAG-04's own seven-way
+- **Rules invoked:** PLC-01.
+- **Result: revealed missing rule.** This is the specific half of PLC-01's own seven-way
   split that Batch 11B's own "Real Magic, No Cultural Recognition" boundary probe explicitly
-  left blocked rather than positively defined (per this batch's own §4 framing, "the inverse
-  of Batch 11B's boundary... now positively defined"). Confirmed MISSING: no objective
-  supernatural-property field exists on `PlaceState` for this scenario to exercise, but
-  MAG-04's own positive requirement (objective supernatural truth never requires cultural
-  recognition) is now stated as this family's own target semantics, closing the boundary
-  Batch 11B could only block.
+  left blocked rather than positively defined. Confirmed MISSING: no objective
+  supernatural-property field exists on `PlaceState` — but PLC-01's own positive requirement
+  (objective supernatural truth never requires cultural recognition) is now stated as this
+  family's own target semantics, closing the boundary Batch 11B could only block.
 
-## MAG-S11 — Same place, different sacred interpretations
+## MAG-S26 — Belief-powered effect (permission probe)
 
-Group A regards a place as sacred; Group B regards the same place as ordinary or interprets
-it differently.
+A declared supernatural rule consumes collective belief; a magical effect changes as a
+result. This world is not assumed to use this mechanism.
 
-- **Rules invoked:** MAG-04, Inherited (BEL-03/PLACE-02, both revised).
-- **Result: covered, by direct reuse of Batch 11B's own follow-up evidence.** This is exactly
-  the divergent-attribution clause Batch 11B's own follow-up added to CB-S08 — BEL-03's own
-  revised text already requires multiple, simultaneous, non-reconciled attributions to remain
-  representable, confirmed coherent there and reused here without re-investigation.
+- **Rules invoked:** SUP-02.
+- **Result: revealed missing rule, and the Rule's own permission is confirmed coherent
+  regardless.** No belief-powered-magic mechanism exists — confirmed MISSING, consistent with
+  SUP-02's own explicit statement that no such mechanism is assumed to exist. SUP-02's own
+  requirement (if such a mechanism is ever declared, it must be its own specific causal
+  conversion edge, never a universal "belief = truth" collapse) remains coherent and
+  architecturally unblocked.
 
-## MAG-S12 — Institution declares false miracle
+## MAG-S27 — False religious belief, real magic elsewhere
 
-An institution declares that a miracle occurred; the population believes it; no supernatural
-event actually occurred.
+A culture holds an incorrect cosmology; the real supernatural system behaves differently; the
+culture remains wrong until valid evidence spreads.
 
-- **Rules invoked:** MAG-04, Inherited (BEL-01/BEL-02, Batch 11B; authority entry, Batch 10).
-- **Result: revealed missing rule.** Confirmed MISSING: no institutional-doctrine-about-a-
-  supernatural-event mechanism exists (the same underlying gap `collective-belief.md`'s own
-  doctrine-dissent Inherited entry already found for doctrine generally). MAG-04's own claim
-  (institutional declaration never makes a supernatural claim objectively true) remains
-  coherent regardless, directly reusing BEL-01's own "false collective belief still produces
-  real behavior" finding.
+- **Rules invoked:** SUP-01, Inherited (Collective Belief, Batch 11B's BEL-01/02).
+- **Result: revealed missing rule.** Confirmed MISSING — no supernatural system exists for a
+  culture's own cosmology to diverge from. SUP-01's own six-way distinctness (a false
+  collective belief may coexist indefinitely with a different objective truth, correctable
+  only through a real information path) remains coherent regardless, directly reusing Batch
+  11B's own already-established belief ≠ truth machinery.
 
-## MAG-S13 — Unrecognized real miracle
+## MAG-S28 — Magic creates political consequence
 
-A real supernatural event (a miracle) occurs; no institution recognizes it.
+An ordinary individual acquires supernatural capability; this affects conflict, resources, or
+place; organizations begin reacting to that named individual.
 
-- **Rules invoked:** MAG-04, Inherited (authority entry, Batch 10).
-- **Result: revealed missing rule.** Same underlying gap as MAG-S10/S12, from the
-  institutional-recognition angle specifically — confirmed MISSING. Directly parallels this
-  batch's own §14 "person has real supernatural capability; institution refuses recognition"
-  probe, reusing Batch 10's own authority-never-guaranteed-by-power pattern.
+- **Rules invoked:** EFF-01, Inherited (Organizations, Batch 10; Lineage/Descent, Batch 09;
+  Capability/Progression, Batch 07 — the recurring significance pattern).
+- **Result: revealed missing rule.** Confirmed MISSING — no supernatural-capability-
+  acquisition mechanism exists to feed the already-confirmed-missing "ordinary individual →
+  organizational recognition by name" gap this Catalog has now found at four prior scales
+  (individual, Batch 07; lineage, Batch 09; organization, Batch 10; place, Batch 11A). This
+  scenario confirms the identical gap recurs for a supernatural-capability-driven case too,
+  rather than resolving it.
 
-## MAG-S14 — Supernatural information channel
+## MAG-S29 — Ordinary creature → supernatural regional threat
 
-A supernatural information channel (telepathy, clairvoyance, divine revelation) establishes a
-bounded information path.
+An ordinary creature undergoes supernatural transformation or adaptation; a real capability
+change results; persistent local consequences follow; named recognition or world reaction may
+emerge, but is never scripted automatically.
 
-- **Rules invoked:** Inherited (supernatural information channel).
-- **Result: partially covered.** `PerceptionGate`'s own `magic_sense`/`magic_signal` channel
-  is real, live, structurally-ready infrastructure for exactly this — gated by the same
-  threshold/confidence discipline as any ordinary sense, confirmed by direct inspection. The
-  gap: no content anywhere currently emits a non-default `magic_signal` for this channel to
-  actually carry any real supernatural information through — INERT/OFF, not MISSING, since
-  the gating mechanism itself is real.
-
-## MAG-S15 — Ritual practice without supernatural effect
-
-A cultural/religious ritual is practiced; it has no supernatural effect at all.
-
-- **Rules invoked:** MAG-05, Inherited (CULT-01/02, Batch 11B).
-- **Result: covered, by direct reuse of Batch 11B's own evidence.** Culture/collective-belief
-  content existing with no supernatural component at all is already the default case this
-  entire family assumes throughout (MAG-02's own "belief causes only ordinary consequences by
-  default" finding) — a ritual practiced purely for cultural meaning requires no supernatural
-  mechanism to exist, and none does, confirmed by the same absence.
-
-## MAG-S16 — Supernatural effect without cultural ritual
-
-A supernatural effect occurs without requiring any cultural ritual framing by default.
-
-- **Rules invoked:** MAG-05.
-- **Result: revealed missing rule, though the Rule's own permission is confirmed coherent
-  regardless.** No supernatural-effect mechanism exists at all (the same underlying gap as
-  every other MAG-01/03/04 scenario), so it cannot be checked whether one would require
-  cultural framing — but MAG-05's own explicit requirement (a supernatural mechanism's own
-  activation is never assumed to require cultural/ritual framing by default, exactly as it
-  is never assumed to be belief-gated by default) remains coherent regardless.
+- **Rules invoked:** STR-01, Inherited (the same recurring significance pattern as MAG-S28).
+- **Result: revealed missing rule.** Confirmed MISSING — no creature-transformation-to-
+  regional-threat mechanism exists. STR-01's own identity-continuity default remains coherent
+  regardless (the creature's own identity persists through the transformation by default);
+  the "named recognition may emerge, never scripted automatically" half directly reuses this
+  Catalog's own already-established discipline against a `UniversalSignificanceSystem`.
 
 ---
 
 ## Cross-batch note
 
-MAG-S09/S11/S15's own "covered, by direct reuse" results are this batch's own distinctive
-shape: rather than finding new gaps, these three scenarios confirm that Batch 11B's own
-already-frozen Rules (BEL-03, PLACE-02, CULT-01/02) already fully answer the "cultural/
-attributed" half of this batch's own required boundary (§12) without needing re-investigation
-— the new content this batch adds is specifically the *objective supernatural* half (MAG-01,
-MAG-04) those Rules deliberately left open pending this batch's own arrival.
+MAG-S24's own "covered, by direct reuse" result is this batch's own distinctive shape,
+matching the same pattern Batch 12's own earlier, superseded draft already found: Batch 11B's
+own already-frozen sacredness content fully answers the "cultural" half of PLC-01's own
+required boundary without needing re-investigation — the new content this batch adds is
+specifically the *objective supernatural* half (SUP-01, PLC-01) those Rules deliberately left
+open pending this batch's own arrival.
 
-MAG-S14's own finding (`PerceptionGate`'s `magic_sense`/`magic_signal` channel, real and
-structurally ready, but INERT/OFF) is this batch's own version of the recurring "built, not
-yet visible in play" pattern this Catalog has now found repeatedly — `BeliefInstitution`
-(Batch 11B), `ItemInstance`'s own provenance mechanism (Batch 08), and now this genuinely
-positive perception-channel match, each anticipating exactly the kind of content a later
-batch's own target semantics would require.
+MAG-S28/S29 together confirm the recurring "ordinary subject → historically significant,
+recognized by name" gap — already found at four prior scales across four separate batches
+(individual, lineage, organization, place) — recurs identically for a supernatural-capability-
+driven trajectory, rather than resolving it. Per this batch's own §43 cross-domain
+significance probe, this batch adds no new requirement to that shared grammar beyond
+confirming it applies here too; no Universal Significance system was created as a result.
 
-Every other scenario (MAG-S01–S08, S10, S12, S13, S16) confirms the same pattern Batch 10's
-own Law/Enforcement family first established at this scale: an entire rule family with
-essentially no in-world repository counterpart to check against, recorded honestly as a
-load-bearing semantic gap per the standing direction, not as evidence against the target
-semantics themselves.
+Every scenario except MAG-S24 confirms the same pattern Batch 10's own Law/Enforcement family
+first established at this scale: an entire rule family with essentially no in-world
+repository counterpart to check against, recorded honestly as a load-bearing semantic gap per
+the standing direction, not as evidence against the target semantics themselves.

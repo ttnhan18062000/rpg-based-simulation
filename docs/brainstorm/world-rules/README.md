@@ -72,7 +72,7 @@ order.
 | Territory / Control | Batch 11A — PASS, frozen | [places-culture/territory-control.md](places-culture/territory-control.md) |
 | Culture | Batch 11B — PASS, frozen | [places-culture/culture.md](places-culture/culture.md) |
 | Collective Belief | Batch 11B — PASS, frozen | [places-culture/collective-belief.md](places-culture/collective-belief.md) |
-| Magic / Supernatural | Batch 12 drafted | [magic-supernatural/supernatural.md](magic-supernatural/supernatural.md) |
+| Magic / Supernatural | Batch 12 drafted | [magic-supernatural/supernatural-ontology.md](magic-supernatural/supernatural-ontology.md), [magic-capability.md](magic-supernatural/magic-capability.md), [magical-effects.md](magic-supernatural/magical-effects.md), [supernatural-transformation.md](magic-supernatural/supernatural-transformation.md), [supernatural-entities-places.md](magic-supernatural/supernatural-entities-places.md) |
 
 ## Rule Catalog progress
 
@@ -316,22 +316,34 @@ order.
     `tmp/places-culture-batch-11-report.md` (local, shared, not part of this catalog) for the
     full disposition report, including both follow-up addenda.
 - **Batch 12** (Magic/Supernatural) — the ninth domain-facing batch, and the first in a new
-  integration milestone beyond Milestone C — drafted 2026-09-22 per
-  `tmp/world-rule-batch-12-ext-ai.md`. 5 genuine Domain Rules (14 total catalog entries
-  including 6 inherited/applied foundational rules and 3 scope/deferred boundaries) in
-  `magic-supernatural/supernatural.md`; not split (one coherent batch remained reviewable);
-  ready for high-level external review. Directly reconciles Batch 11A's PLACE-02 and Batch
-  11B's BEL-03 by adding objective supernatural property as an eighth independent fact for
-  Places (MAG-04) — the mandatory boundary those two batches deliberately left open. The
+  integration milestone beyond Milestone C — first drafted 2026-09-21 as a single file
+  (5 genuine Domain Rules) per `tmp/world-rule-batch-12-ext-ai.md`, then fully redrafted
+  2026-09-22 per a corrected, richer instruction file
+  (`tmp/world-rule-batch-12-corrected-ext-ai.md`) before any follow-up review of the original
+  draft was applied. The original single-file draft is superseded and removed (`git rm`).
+  **10 genuine Domain Rules (31 total catalog entries including 16 inherited/applied
+  foundational rules and 5 scope/deferred boundaries)** across five files —
+  `magic-supernatural/{supernatural-ontology,magic-capability,magical-effects,
+  supernatural-transformation,supernatural-entities-places}.md` — ready for high-level
+  external review. Directly reconciles Batch 11A's PLACE-02 and Batch 11B's reclassified
+  sacredness entry by adding objective supernatural property as an eighth independent fact
+  for Places (PLC-01) — the mandatory boundary those two batches deliberately left open.
+  Also directly resolves two named deferred boundaries from earlier batches: Batch 04's
+  non-physical-movement boundary (CAP-02, supernatural reach requires a declared relation,
+  never a default topology bypass) and Batch 06's own AGENCY-02 reflex/compulsion/
+  mind-control carve-out (exercised directly by the mind/memory-magic Inherited entry). The
   single largest finding: no dedicated magic/supernatural mechanism of any kind exists
   anywhere in this repository, comparable in scope to Batch 10's own Law/Enforcement gap.
   A genuinely positive exception: `PerceptionGate`'s own `magic_sense`/`magic_signal` channel
   is real, live, structurally-ready information-channel infrastructure, currently INERT/OFF
-  — no content anywhere emits a non-default value. No CONFLICTING finding was recorded
-  anywhere in this batch. See `review-exports/magic-supernatural-batch-12-review.md`'s
-  explicit call-outs and its Implementation Candidates — Non-Binding section for these and
-  further confirmed gaps. See `tmp/magic-supernatural-batch-12-report.md` (local, not part of
-  this catalog) for the full disposition report.
+  — no content anywhere emits a non-default value. Two more real, non-supernatural
+  mechanisms (`TransformationService`, `EvolutionSystem`) independently confirm this
+  repository's own architecture already supports STR-01's identity-persists/
+  classification-changes shape. No CONFLICTING finding was recorded anywhere in this batch.
+  See `review-exports/magic-supernatural-batch-12-review.md`'s explicit call-outs and its
+  Implementation Candidates — Non-Binding section for these and further confirmed gaps. See
+  `tmp/magic-supernatural-batch-12-report.md` (local, not part of this catalog) for the full
+  disposition report.
 - Do not begin the next batch until Batch 12 receives high-level review.
 
 ## Scenario Bank index
@@ -351,7 +363,7 @@ order.
 | Batch 10 (Organizations/Institutions/Politics/Law) | [scenarios/institutions-politics-batch-10.md](scenarios/institutions-politics-batch-10.md) | IP-S01 – IP-S21 |
 | Batch 11A (Places/Settlements/Territory) | [scenarios/places-territory-batch-11a.md](scenarios/places-territory-batch-11a.md) | PT-S01 – PT-S14 |
 | Batch 11B (Culture/Collective Belief) | [scenarios/culture-belief-batch-11b.md](scenarios/culture-belief-batch-11b.md) | CB-S01 – CB-S10 |
-| Batch 12 (Magic/Supernatural) | [scenarios/magic-supernatural-batch-12.md](scenarios/magic-supernatural-batch-12.md) | MAG-S01 – MAG-S16 |
+| Batch 12 (Magic/Supernatural) | [scenarios/magic-supernatural-batch-12.md](scenarios/magic-supernatural-batch-12.md) | MAG-S01 – MAG-S29 |
 
 ## Unresolved cross-domain questions
 
@@ -680,17 +692,26 @@ load-bearing semantic gaps, not delivery priorities):**
   transmission/blending beyond regional event-driven drift, including no purely-non-durable
   oral-tradition carrier; no sacred-place mechanism of any kind.
 
-**From Batch 12 (Magic/Supernatural, drafted 2026-09-22 — load-bearing semantic gaps, not
-delivery priorities):**
+**From Batch 12 (Magic/Supernatural, redrafted 2026-09-22 per a corrected instruction file,
+superseding the 2026-09-21 single-file draft — load-bearing semantic gaps, not delivery
+priorities):**
 
 - **Resolved.** The mandatory Batch 11A/11B reconciliation boundary — objective supernatural
-  property is now stated as an eighth independent fact for Places (MAG-04), alongside the
-  already-attribution-relative significance (PLACE-02) and sacredness (BEL-03) those batches
-  established.
+  property is now stated as an eighth independent fact for Places (PLC-01), alongside the
+  already-attribution-relative significance (PLACE-02) and sacredness (the reclassified
+  sacredness entry, originally BEL-03) those batches established. Confirmed by direct reuse
+  (MAG-S24): Batch 11B's own sacredness evidence already fully answers the cultural half of
+  this reconciliation without re-investigation.
 - **Positively defined.** The inverse of Batch 11B's own blocked "Real Magic, No Cultural
   Recognition" boundary probe: objective supernatural truth never requires belief,
   observation, recognition, or cultural interpretation, unless a specific mechanism declares
-  one as a causal prerequisite (MAG-01, MAG-04).
+  one as a causal prerequisite (SUP-01, PLC-01).
+- **Directly resolves two named deferred boundaries from earlier batches.** Batch 04's
+  non-physical-movement boundary (CAP-02: supernatural reach bypasses ordinary topology only
+  through a declared relation, never a default; a portal's own connection is never assumed
+  bidirectional). Batch 06's own AGENCY-02 reserved carve-out for reflex/compulsion/
+  mind-control overrides, exercised directly (not newly invented) by the mind/memory-magic
+  Inherited entry.
 - **Confirmed MISSING, the largest single gap this batch found.** No dedicated magic/
   supernatural mechanism of any kind exists anywhere in this repository — every "magic"-named
   element traced (an `ItemDef` category tag, one skill's damage-type multiplier, one region's
@@ -700,6 +721,16 @@ delivery priorities):**
   `magic_sense`/`magic_signal` channel is real, live, structurally-ready information-channel
   infrastructure, gated by the identical threshold/confidence discipline as vision or hearing
   — no content anywhere currently emits a non-default value.
+- **A significant, notable finding, not itself a gap.** `TransformationService`
+  (region kind-shifting) and `EvolutionSystem` (entity growth-milestone transformation) are
+  real, non-supernatural mechanisms already implementing exactly the identity-persists/
+  classification-changes shape STR-01 requires — direct evidence this repository's own
+  architecture already supports this Rule's own target shape.
+- **Confirms, rather than introduces, the recurring significance gap.** MAG-S28/S29 find the
+  same "ordinary subject → historically significant, recognized by name" gap already confirmed
+  missing at four prior scales (individual, lineage, organization, place) recurs for a
+  supernatural-capability-driven trajectory too — no new requirement added to the shared
+  grammar, per the batch's own cross-domain significance probe.
 - **No CONFLICTING finding was recorded anywhere in this batch** — every traced element is
   MISSING, not an active collapse of this family's own distinctions.
 
@@ -736,7 +767,7 @@ rationale stay canonical.
 | Batch 10 (Organizations/Institutions/Politics/Law) | `institutions-politics/organizations.md`, `institutions-politics/roles-institutions.md`, `institutions-politics/politics-authority.md`, `institutions-politics/law-enforcement.md` | `scenarios/institutions-politics-batch-10.md` (IP-S01–S21) | [review-exports/institutions-politics-batch-10-review.md](review-exports/institutions-politics-batch-10-review.md) | PASS — frozen |
 | Batch 11A (Places/Settlements/Territory) | `places-culture/places.md`, `places-culture/settlements.md`, `places-culture/territory-control.md` | `scenarios/places-territory-batch-11a.md` (PT-S01–S14) | [review-exports/places-territory-batch-11a-review.md](review-exports/places-territory-batch-11a-review.md) | PASS — frozen |
 | Batch 11B (Culture/Collective Belief) | `places-culture/culture.md`, `places-culture/collective-belief.md` | `scenarios/culture-belief-batch-11b.md` (CB-S01–S10) | [review-exports/culture-belief-batch-11b-review.md](review-exports/culture-belief-batch-11b-review.md) | PASS — frozen |
-| Batch 12 (Magic/Supernatural) | `magic-supernatural/supernatural.md` | `scenarios/magic-supernatural-batch-12.md` (MAG-S01–S16) | [review-exports/magic-supernatural-batch-12-review.md](review-exports/magic-supernatural-batch-12-review.md) | Ready for high-level external review |
+| Batch 12 (Magic/Supernatural) | `magic-supernatural/{supernatural-ontology,magic-capability,magical-effects,supernatural-transformation,supernatural-entities-places}.md` | `scenarios/magic-supernatural-batch-12.md` (MAG-S01–S29) | [review-exports/magic-supernatural-batch-12-review.md](review-exports/magic-supernatural-batch-12-review.md) | PASS — ready to freeze |
 
 ## Links to current review batches
 
@@ -804,7 +835,10 @@ rationale stay canonical.
 - Batch 11B scenario file: `scenarios/culture-belief-batch-11b.md`
 - Batch 11B review export: `review-exports/culture-belief-batch-11b-review.md`
 - Batch 11 report (local, gitignored, shared by 11A/11B): `tmp/places-culture-batch-11-report.md`
-- Batch 12 rule file: `magic-supernatural/supernatural.md`
+- Batch 12 rule files: `magic-supernatural/supernatural-ontology.md`,
+  `magic-supernatural/magic-capability.md`, `magic-supernatural/magical-effects.md`,
+  `magic-supernatural/supernatural-transformation.md`,
+  `magic-supernatural/supernatural-entities-places.md`
 - Batch 12 scenario file: `scenarios/magic-supernatural-batch-12.md`
 - Batch 12 review export: `review-exports/magic-supernatural-batch-12-review.md`
 - Batch 12 report (local, gitignored): `tmp/magic-supernatural-batch-12-report.md`

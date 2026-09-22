@@ -54,9 +54,13 @@ Settlements/Territory, 10 genuine Domain Rules of 18 total catalog entries) and 
 was reclassified to Inherited on a second follow-up review) per that batch's own explicit
 split permission, then both revised twice the same day per two successive follow-up reviews
 (the second correcting parts of the first — see each sub-batch's own review export), and
-both **PASS — ready to freeze**. Batch 12 (Magic/Supernatural) is being redrafted per a
-corrected instruction file. The next planned
-step is the next batch, once its own instruction file is provided.
+both **PASS — ready to freeze**. Batch 12 (Magic/Supernatural) was first drafted 2026-09-21 as
+a single file (5 genuine Domain Rules) per `tmp/world-rule-batch-12-ext-ai.md`, then fully
+redrafted 2026-09-22 as five files (10 genuine Domain Rules of 31 total catalog entries) per a
+corrected, richer instruction file, before any follow-up review of the original draft was
+applied — the original single-file draft is superseded and removed. Batch 12 is **PASS —
+ready to freeze**. The next planned step is Final Integration (Cross-Domain History /
+Significance / Propagation), once its own instruction file is provided.
 
 ---
 
@@ -487,18 +491,28 @@ institutional, territorial, and cultural structures that themselves evolve histo
 
 ### Batch 12 — Magic / Supernatural
 
-**Status: drafted 2026-09-22, ready for high-level external review.** 5 genuine Domain Rules
-(14 total catalog entries — 5 Domain Rules, 6 Inherited/Applied Foundational Rules, 3 Scope/
-Deferred Boundaries) in `magic-supernatural/supernatural.md`, per
-`tmp/world-rule-batch-12-ext-ai.md`. Not split — one coherent batch, per that instruction's own
-explicit guidance. Directly reconciles Batch 11A's PLACE-02 and Batch 11B's BEL-03 (both
-already attribution-relative) by adding objective supernatural property as an eighth
-independent fact for Places (MAG-04) — the mandatory boundary those two batches deliberately
-left open. The single largest finding: no dedicated magic/supernatural mechanism of any kind
-exists anywhere in this repository, comparable in scope to Batch 10's own Law/Enforcement
-gap — with one genuinely positive exception: `PerceptionGate`'s own `magic_sense`/
-`magic_signal` channel is real, live, structurally-ready information-channel infrastructure,
-currently INERT/OFF. See `review-exports/magic-supernatural-batch-12-review.md`.
+**Status: PASS — ready to freeze (redrafted 2026-09-22).** First drafted 2026-09-21 as a
+single file (5 genuine Domain Rules) per `tmp/world-rule-batch-12-ext-ai.md`, then fully
+redrafted the next day per a corrected, richer instruction file
+(`tmp/world-rule-batch-12-corrected-ext-ai.md`) before any follow-up review of the original
+draft was applied — the original single-file draft is superseded and removed (`git rm`).
+**10 genuine Domain Rules (31 total catalog entries — 10 Domain Rules, 16 Inherited/Applied
+Foundational Rules, 5 Scope/Deferred Boundaries)** across five files:
+`magic-supernatural/{supernatural-ontology,magic-capability,magical-effects,
+supernatural-transformation,supernatural-entities-places}.md`. Directly reconciles Batch 11A's
+PLACE-02 and Batch 11B's reclassified sacredness entry (both already attribution-relative) by
+adding objective supernatural property as an eighth independent fact for Places (PLC-01) — the
+mandatory boundary those two batches deliberately left open. Also directly resolves two named
+deferred boundaries from earlier batches: Batch 04's non-physical-movement boundary (CAP-02)
+and Batch 06's own AGENCY-02 reflex/compulsion/mind-control carve-out (exercised directly by
+the mind/memory-magic Inherited entry). The single largest finding: no dedicated
+magic/supernatural mechanism of any kind exists anywhere in this repository, comparable in
+scope to Batch 10's own Law/Enforcement gap — with one genuinely positive exception:
+`PerceptionGate`'s own `magic_sense`/`magic_signal` channel is real, live, structurally-ready
+information-channel infrastructure, currently INERT/OFF. Two more real, non-supernatural
+mechanisms (`TransformationService`, `EvolutionSystem`) independently confirm this
+repository's own architecture already supports STR-01's identity-persists/
+classification-changes shape. See `review-exports/magic-supernatural-batch-12-review.md`.
 
 Do not make magic an isolated spell subsystem. Define its world rules and connect it outward
 into:
@@ -515,14 +529,13 @@ institutions
 conflict
 ```
 
-**Note (2026-09-22).** The `human → vampire-like transformation` probe this section
-originally flagged is governed by MAG-03 (a supernatural property/condition attaches to its
-subject independently of ownership/identity, reusing ID-03/ID-06/TRANS, with its own
-persistence through transformation independently declared) — no dedicated scenario for this
-specific transformation was drafted this batch, since neither the actual batch instruction's
-own minimum scenario suite nor direct repository investigation surfaced it as a live
-ambiguity requiring its own probe; MAG-03's own target semantics already answer it should a
-future domain choose to model it.
+**Note (2026-09-22, superseded by the redraft below).** The `human → vampire-like
+transformation` probe this section originally flagged is now directly resolved, not merely
+governed indirectly: `supernatural-transformation.md`'s own STR-01 states that a supernatural
+transformation preserves the subject's own identity by default (reusing `places.md`'s
+corrected PLACE-03), with species/kind/form classification stated as its own fact distinct
+from identity — and MAG-S21 ("Human → Vampire") is now a dedicated scenario tracing exactly
+this case directly against STR-01.
 
 ### Final Integration Batch — Cross-Domain History / Significance / Propagation
 
