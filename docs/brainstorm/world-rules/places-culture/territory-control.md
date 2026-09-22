@@ -1,0 +1,273 @@
+---
+status: active
+layer: architecture
+authority: P1
+audience: agent
+tags: [architecture, world, content]
+---
+
+# World Rule Family: Territory / Control
+
+**Purpose/scope.** What it means for land or space to be claimed, controlled, governed,
+occupied, owned, or culturally associated, and how these facts relate to Batch 10's own
+authority/power/legitimacy triad and to Places. Directly resolves the territorial-jurisdiction
+integration Batch 10 explicitly deferred here.
+
+**Standing direction (`tmp/world-rule-direction.md`).** Rule statements describe only target
+world semantics; repository classification records realization only, never delivery priority.
+
+**Status.** Batch 11A (Places/Settlements/Territory), first draft, per
+`tmp/world-rule-batch-11-ext-ai.md`.
+
+---
+
+## Domain Rules
+
+## TERR-01 — Territorial claim, de facto control, legal/institutional jurisdiction, property ownership, military occupation, cultural association, and residence are seven distinct facts about land or space that may all diverge for the same location simultaneously; none collapses into a single owner field
+
+> A territorial **claim** (an assertion of right), **de facto control** (practical governance
+> in fact), **jurisdiction** (legal/institutional applicability, see TERR-04), **property
+> ownership** (a specific parcel's own owned-resource status, Batch 08/01), **military
+> occupation**, **cultural association**, and **residence** are seven independent facts about
+> the same land or space. A kingdom may claim a region a rival occupies militarily, while the
+> local population culturally identifies with a third polity and a merchant owns one estate
+> inside it — all simultaneously, none of them canceling any other. No single `owner_id` field
+> may correctly represent all seven at once.
+
+**Disposition: ACCEPT — REQUIRED.** Passes the admission test: no earlier Rule states this
+specific seven-way distinctness for territorial facts — Batch 10's own INST-03 established an
+analogous authority/capability/power/legitimacy distinctness for institutional subjects, but
+territory's own claim/control/jurisdiction/ownership/occupation/culture/residence split is a
+genuinely different, spatially-scoped fact pattern.
+
+**Repository evidence: PARTIAL, and the single most significant finding this family
+confirms.** `RegionState.owner_faction_id` and `PlaceState.owner_faction_id` are each exactly
+one field, used across this repository for what functions as territorial control (region
+ownership gates tax collection, `region.suppression_active` combat effects, Batch 10's own
+evidence) — confirmed to conflate claim, control, and (implicitly) jurisdiction into that one
+field, exactly the pattern the batch instruction's own §38 investigation warned against. No
+separate claim, cultural-association, or residence field exists anywhere. Property ownership
+(Batch 08's own `OWN-01`/`PROP-01`) is confirmed structurally separate already — an entity's
+own `inventory`/a building's own ownership is never the same field as `owner_faction_id`.
+
+**Scenarios:** [PT-S06](../scenarios/places-territory-batch-11a.md#pt-s06) (claim without
+control), [PT-S07](../scenarios/places-territory-batch-11a.md#pt-s07) (control without
+recognized claim), [PT-S08](../scenarios/places-territory-batch-11a.md#pt-s08) (contested
+territory), [PT-S09](../scenarios/places-territory-batch-11a.md#pt-s09) (jurisdiction without
+ownership), [PT-S10](../scenarios/places-territory-batch-11a.md#pt-s10) (ownership without
+sovereignty).
+
+---
+
+## TERR-02 — Territorial control is real only through a declared causal requirement — presence, administrative reach, military capability, institutional enforcement, resource access, connectivity, or local compliance — and may be partial, contested, intermittent, or domain-specific; a bare ownership-field assignment never by itself constitutes real control
+
+> Control over territory is never established merely by an assignment (`faction.owner_id =
+> region`) — it requires a real, declared causal basis: physical presence, administrative
+> reach, military capability, institutional enforcement capacity, resource access, transport/
+> connectivity, or local compliance. No domain is required to check every one of these for
+> every case; control may legitimately be partial, contested, intermittent, or specific to one
+> of these bases without the others (a kingdom might control taxation but not military
+> security in the same region).
+
+**Disposition: ACCEPT — REQUIRED for the causal-basis requirement; which specific bases apply
+in any given case is PERMITTED, domain-declared content.** Passes the admission test: this is
+the territorial-control-specific instance of the already-established causal-requirement
+pattern (CAUSE-01, Foundational; Batch 10's own ORG-03/POL family), naming the *specific*
+candidate causal bases for territorial control, which no earlier Rule states.
+
+**Repository evidence: PARTIAL.** `region.owner_faction_id` gates real, causally-consequential
+effects (tax collection, `suppression_active` combat penalties for non-controlling-faction
+entities, `region_trauma`/pricing) — confirmed control is not entirely inert once assigned, it
+does drive real downstream mechanics. But the *assignment itself* was not confirmed to trace to
+any of this Rule's own named causal bases (presence, reach, capability, enforcement, access,
+connectivity, compliance) — whether `owner_faction_id` is set through a real conquest/
+presence-tracking mechanism or through a more direct world-compile/event assignment was not
+exhaustively traced this batch.
+
+**Scenarios:** [PT-S06](../scenarios/places-territory-batch-11a.md#pt-s06),
+[PT-S07](../scenarios/places-territory-batch-11a.md#pt-s07).
+
+---
+
+## TERR-03 — A territorial claim may exist without control, and control may exist without a recognized claim; multiple actors may simultaneously claim, control, or culturally associate with the same territory; canonical territorial facts may be represented as several independent, possibly-conflicting relations rather than one winner field
+
+> Claim and control (TERR-01/TERR-02) are never required to agree. A polity may validly claim
+> land it cannot currently control; another actor may exercise real practical control with no
+> recognized legitimate claim at all. Where more than one actor claims, controls, or culturally
+> associates with the same territory simultaneously, this is not an error state requiring
+> resolution to one winner — it is a legitimate, representable world condition, and a domain
+> may model it as several separate, coexisting relations rather than collapsing to a single
+> "current sovereign" field.
+
+**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this is the direct, necessary
+consequence of TERR-01's own seven-way split (claim ≠ control is the specific pairwise
+instance the batch instruction's own §11/§14 singles out as essential) — genuinely new content
+in that it explicitly forbids collapsing contested cases to one winner, which TERR-01 alone
+does not state.
+
+**Repository evidence: CONFLICTING.** `region.owner_faction_id: Optional[int]` is a single
+nullable field — structurally, this repository cannot represent two simultaneous claims, or a
+claim diverging from control, for the same region at all; whichever faction is currently
+assigned is the only one representable. This is a genuine architecture mismatch against this
+Rule's own target requirement, not merely an unrealized feature — the current data shape
+actively forecloses the contested-territory case this Rule requires be representable.
+
+**Scenarios:** [PT-S06](../scenarios/places-territory-batch-11a.md#pt-s06),
+[PT-S07](../scenarios/places-territory-batch-11a.md#pt-s07),
+[PT-S08](../scenarios/places-territory-batch-11a.md#pt-s08).
+
+---
+
+## TERR-05 — A Place may lie inside, span, or remain historically/culturally associated with a territory other than its current political controller; a territory may contain many Places; territory is never synonymous with settlement or region geometry
+
+> A Place's own spatial containment within a territory, and its own historical/cultural
+> association with a polity, are two further facts distinct from its current political
+> controller (TERR-01) — a Place may remain culturally associated with a polity that no longer
+> controls it, or may span more than one territory's own claimed boundary. A territory is
+> never the same concept as a settlement (`settlements.md`'s SETT-01) or as Region geometry
+> (`RegionState.bounds`) — a territory may contain many Places and outlive or precede any
+> particular Region boundary a domain happens to draw.
+
+**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this is a distinct spatial-
+containment/association claim from TERR-01's own fact-type split — TERR-01 is about which
+*kinds* of relation exist between an actor and territory; this Rule is about how a *Place*
+specifically relates to a *territory* geometrically and historically, a different axis the
+batch instruction's own §9 investigates separately.
+
+**Repository evidence: PARTIAL.** `RegionState.places` (a Region containing zero-or-many
+Places, Idea 66 evidence) confirms one half — a territory-equivalent (`RegionState`) already
+contains many Places structurally. Cultural/historical association surviving a change of
+political control was not confirmed to exist as its own tracked fact — no mechanism was found
+that lets a Place's own cultural association diverge from its current `owner_faction_id`.
+
+**Scenarios:** none newly traced; reuses `RegionState.places`'s own structural evidence
+directly.
+
+---
+
+## Inherited / Applied Foundational Rules
+
+### Territorial authority, practical power, and legitimacy remain distinct facts, exactly as Batch 10 already establishes for institutional subjects generally
+
+> Holding formal authority over a territory, having the practical power to enforce it, and
+> being recognized as legitimate are three separate facts — none is substitutable for another
+> merely because they correlate.
+
+**Disposition: INHERITED — direct reuse of Batch 10's INST-03 (authority/capability/power/
+legitimacy are distinct dimensions, correlated not substitutable), applied to territorial
+authority specifically. No new claim beyond confirming the existing distinction extends to
+territorial subject matter without alteration.**
+
+**Repository evidence: SUPPORTED, reusing Batch 10's own evidence directly; no
+territory-specific counter-evidence was found.** `FactionState.military_strength`
+(Batch 10's own real "power" proxy) and `region.owner_faction_id` (a real, if collapsed,
+control fact) remain structurally separate fields, confirming the distinction holds here too.
+
+**Scenarios:** none newly traced.
+
+### Jurisdiction's territorial basis is one declared scope among several — territory is never the universal jurisdiction basis; this directly resolves Batch 10's own deferred integration
+
+> Territorial location is a legitimate basis for a law or institution's own declared scope
+> (Batch 10's own LAW-03), but membership-based, role-based, contractual, event-specific, and
+> temporal scopes remain equally legitimate, non-territorial bases. A law or institution
+> applying outside territorial space entirely (a membership-based or contractual rule) is fully
+> valid.
+
+**Disposition: INHERITED — direct reuse of Batch 10's own LAW-03, which (after that batch's
+own 2026-09-22 follow-up revision) already explicitly lists "territorial" as one declared
+scope among several, alongside membership-based, role-based, contractual, event-specific,
+temporal, and explicitly-global. This directly resolves the territorial-jurisdiction
+integration Batch 10 deferred to this batch — on inspection, LAW-03's own revised text already
+states exactly the content this batch's own §12 asked to investigate, so no new claim is
+required.**
+
+**Repository evidence: MISSING, reusing LAW-03's own evidence directly** — no in-world law/
+jurisdiction mechanism exists at all (Batch 10's own LAW-01 finding), so no territorial
+instance of it exists to check either. The one real, adjacent mechanism —
+`region.suppression_active` combined with faction affiliation — remains a military-suppression
+effect, not a law/jurisdiction mechanism, per Batch 10's own prior finding.
+
+**Scenarios:** [PT-S09](../scenarios/places-territory-batch-11a.md#pt-s09).
+
+---
+
+## Scope / Deferred Boundaries
+
+### Border/boundary geometry detail
+
+> This family investigates border/boundary semantics only at the level needed for causal
+> consequences (movement restriction, taxation, trade, law applicability, military response,
+> migration, cultural contact) — detailed border geometry is not designed merely because
+> boundaries conceptually exist, per the batch instruction's own explicit "a boundary matters
+> where some process consumes it."
+
+**Disposition: SCOPE BOUNDARY.**
+
+### Concrete territorial-claim-resolution-mechanism catalog
+
+> This family states that territory may be contested and that control requires a declared
+> causal basis (TERR-02/03) but does not design a concrete mechanism for resolving competing
+> claims (negotiation, conquest, arbitration, etc.) — deferred, per the batch instruction's own
+> explicit "do not create a universal political-resolution mechanism" (reused from Batch 10).
+
+**Disposition: SCOPE BOUNDARY.**
+
+---
+
+## Repository Findings (significant, cross-referenced)
+
+**These are repository/implementation facts, not World Rule decisions, and imply no delivery
+priority.**
+
+- **CONFLICTING — the single most significant finding this family confirms.**
+  `region.owner_faction_id`/`PlaceState.owner_faction_id` are single nullable fields that
+  actively foreclose representing contested claim/control (TERR-03's own finding) — not merely
+  an unrealized feature, but a data shape incompatible with this Rule's own target requirement.
+- **Confirmed MISSING — no separate claim, cultural-association, or residence field exists
+  anywhere**, beyond the single collapsed `owner_faction_id`. See TERR-01 above.
+- **Confirmed MISSING — no territorial-claim-vs-control causal-basis mechanism was confirmed**
+  (whether `owner_faction_id` traces to presence/capability/enforcement/etc. was not
+  exhaustively determined). See TERR-02 above.
+- **A real, live, already-real jurisdiction-adjacent pattern, cross-referenced from Batch 10.**
+  `region.suppression_active` combined with faction affiliation is a real location-plus-
+  affiliation-scoped effect — but a military-suppression mechanic, not a law/jurisdiction
+  mechanism, since no law concept exists (Batch 10's own LAW-01 finding, reused here).
+
+## Implementation Candidates — Non-Binding
+
+**This section preserves implementation-relevant discoveries only. Nothing here is approved,
+prioritized, or required for implementation during the World Rule Catalog phase.**
+
+- **Target semantic:** territorial claim, control, jurisdiction, ownership, occupation, and
+  cultural association are seven distinct, independently-representable facts (TERR-01), and
+  contested/divergent cases must remain representable, not collapsed to one winner (TERR-03).
+  **Current realization:** `owner_faction_id` is a single nullable field per Region/Place,
+  structurally unable to represent more than one simultaneous claim or a claim diverging from
+  control.
+  **Gap/mismatch:** the current data shape actively forecloses the target requirement, rather
+  than merely lacking it.
+  **Possible implementation direction:** a `TerritorialRelation`-shaped typed record
+  (claimant/controller/kind/since-tick), potentially multiple per region, replacing or
+  supplementing the single `owner_faction_id` field.
+  **Implementation decision:** DEFERRED — no commitment in Rule Catalog phase.
+
+## Cross-domain links recorded here
+
+- TERR-01, TERR-03 → Organizations/Institutions/Politics/Law (Batch 10's own INST-03, the
+  same non-collapsing multi-fact discipline); Objects/Ownership (Batch 08's OWN-01/PROP-01,
+  confirmed already structurally separate from territorial `owner_id`)
+- TERR-02 → Causality (CAUSE-01, Foundational), Organizations (Batch 10's ORG-03/POL family)
+- TERR-05 → Places (`places.md`'s PLACE-01)
+- Inherited authority/power/legitimacy entry → Roles/Institutions (INST-03, Batch 10)
+- Inherited jurisdiction entry → Law/Enforcement (LAW-03, Batch 10 — the deferred integration
+  this entry resolves)
+
+## Open questions carried forward
+
+1. **Does Territory need its own authoritative relation model (a typed record set), or can it
+   remain a derived projection over existing Region/Place/Faction facts once those facts are
+   themselves richer?** Not decided here — this is the design-semantic question underneath the
+   Implementation Candidate above.
+2. Whether `owner_faction_id`'s own assignment ever traces to a real causal basis (presence,
+   conquest, etc.) in any world-generation or event-driven path was not exhaustively confirmed
+   this batch — flagged for future investigation, not decided here.

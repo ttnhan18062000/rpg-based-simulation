@@ -48,8 +48,12 @@ to Inherited), and **PASS — ready to freeze**. This is the first batch drafted
 standing direction (`tmp/world-rule-direction.md`, 2026-09-22): Rule statements describe only
 target world semantics, repository classification implies no delivery priority, and the
 review export carries a non-binding Implementation Candidates section. Batch 11 (Places/
-Settlements/Territory/Culture/Belief) is the next planned step, once its own instruction file
-is provided.
+Settlements/Territory/Culture/Belief) is drafted 2026-09-22, split into **Batch 11A** (Places/
+Settlements/Territory, 10 genuine Domain Rules of 18 total catalog entries) and **Batch 11B**
+(Culture/Collective Belief, 7 genuine Domain Rules of 12 total catalog entries) per that
+batch's own explicit split permission, both ready for high-level external review. Batch 12
+(Magic/Supernatural) is the next planned step, once both 11A and 11B are reviewed and its own
+instruction file is provided.
 
 ---
 
@@ -409,6 +413,37 @@ that a missing implementation does not invalidate a target semantic requirement.
 
 ### Batch 11 — Places / Settlements / Territory / Culture / Belief
 
+**Status: drafted 2026-09-22, split into 11A/11B, both ready for high-level external
+review.** Per this batch's own instruction file's explicit size/split permission, split into
+two coherent semantic clusters without changing this milestone's own overall ordering:
+
+- **Batch 11A — Places / Settlements / Territory.** 10 genuine Domain Rules (18 total catalog
+  entries — 10 Domain Rules, 4 Inherited/Applied Foundational Rules, 4 Scope/Deferred
+  Boundaries) across `places-culture/{places,settlements,territory-control}.md`. Directly
+  resolves Batch 10's own deferred territorial-jurisdiction integration (territory is one
+  declared jurisdiction basis among several, reusing Batch 10's own revised LAW-03 unchanged).
+  This Catalog's own strongest CONFLICTING finding to date: `region.owner_faction_id`/
+  `PlaceState.owner_faction_id` are single nullable fields that actively foreclose
+  representing contested territorial claim/control — a representational impossibility, not
+  merely an absent behavior. See `review-exports/places-territory-batch-11a-review.md`.
+- **Batch 11B — Culture / Collective Belief.** 7 genuine Domain Rules (12 total catalog
+  entries — 7 Domain Rules, 2 Inherited/Applied Foundational Rules, 3 Scope/Deferred
+  Boundaries) across `places-culture/{culture,collective-belief}.md`. This repository's own
+  real, live, consumed "culture" system (`CultureState`, a four-axis derived-tendency score)
+  is confirmed CONFLICTING with this batch's own richer target concept — a naming/scope
+  collision, not a simple gap. A genuinely positive finding, currently INERT/OFF:
+  `BeliefInstitution` is a real, well-shaped, history-grounded collective-belief mechanism
+  with no live caller yet — this Catalog's own clearest present candidate for closing the
+  recurring "ordinary subject → historically significant, recognized by name" gap now found
+  at four scales (individual, Batch 07; lineage, Batch 09; organization, Batch 10; place,
+  11A). See `review-exports/culture-belief-batch-11b-review.md`.
+
+Both sub-batches are drafted under the standing direction (`tmp/world-rule-direction.md`):
+target semantics lead, repository classification implies no delivery priority, and both
+review exports carry a non-binding Implementation Candidates section. See
+`tmp/places-culture-batch-11-report.md` (local, not part of this catalog) for the full,
+shared disposition report.
+
 ```text
 persistent places
 settlement lifecycle
@@ -419,8 +454,13 @@ religion
 belief institutions
 ```
 
-If this becomes too large, split it into two batches. Settlement lifecycle (camp → settlement →
-ruin) is a gap Batch 01 found independently from two angles (ID-03, CAUSE-02) — resolve here.
+**Resolved 2026-09-22.** Settlement lifecycle (camp → settlement → ruin) — the gap Batch 01
+found independently from two angles (ID-03, CAUSE-02) — is now addressed: `places.md`'s
+PLACE-03 and `settlements.md`'s SETT-03 state that transformation continuity is never assumed
+by default and must be declared per case; the repository's own real CITY→RUIN transformation
+trail (`PlaceState.prior_kind`/`transformed_tick`) is confirmed as the one already-realized
+instance, with the reverse (long-abandoned → resettled) and scale-up (village→town) cases
+confirmed MISSING.
 
 **Milestone C exit:** individuals can participate in durable material, economic, social,
 institutional, territorial, and cultural structures that themselves evolve historically.
