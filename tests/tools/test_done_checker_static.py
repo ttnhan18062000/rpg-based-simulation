@@ -19,8 +19,8 @@ if str(_TOOLS_DIR) not in sys.path:
 from gate_checks.done_checker_static import (  # noqa: E402
     _find_flagged_data_run_files,
     _frontmatter_has_unregistered_tags,
-    _git_branch_diff_touched_paths,
     _git_status_touched_paths,
+    _git_ticket_commits_touched_paths,
     _git_touched_paths,
     _parse_docs_to_update,
     _parse_resolved_not_applicable_docs,
@@ -1449,7 +1449,7 @@ def test_git_touched_paths_reflects_real_status(tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "new_file.md").write_text("content", encoding="utf-8")
 
-    touched = _git_touched_paths(root=tmp_path)
+    touched = _git_touched_paths("TCK-FAKE", root=tmp_path)
     assert "docs/" in touched
 
 
@@ -1463,17 +1463,17 @@ def test_git_touched_paths_individual_file_in_tracked_directory(tmp_path):
     subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
 
     (tmp_path / "docs" / "new_file.md").write_text("content", encoding="utf-8")
-    touched = _git_touched_paths(root=tmp_path)
+    touched = _git_touched_paths("TCK-FAKE", root=tmp_path)
     assert "docs/new_file.md" in touched
 
 
 def test_git_touched_paths_fails_open_on_non_repo(tmp_path):
     # tmp_path has no .git directory at all.
-    assert _git_touched_paths(root=tmp_path) == set()
+    assert _git_touched_paths("TCK-FAKE", root=tmp_path) == set()
 
 
 # ---------------------------------------------------------------------------
-# _git_branch_diff_touched_paths / _git_touched_paths union
+# _git_ticket_commits_touched_paths / _git_touched_paths union
 # (TCK-20260916-DOC-COVERAGE-CHECK-BLIND-TO-COMMITTED-CHANGES)
 # ---------------------------------------------------------------------------
 
@@ -1495,17 +1495,42 @@ def _init_repo_with_base(tmp_path: Path) -> None:
     )
 
 
-def test_branch_diff_touched_paths_includes_a_committed_doc_change(tmp_path):
+def _commit_all(tmp_path: Path, message: str) -> None:
+    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", message], cwd=tmp_path, check=True)
+
+
+def test_ticket_commits_touched_paths_includes_a_committed_doc_change(tmp_path):
     """The ticket's own AC: a doc edit committed mid-session (not left uncommitted until
-    Finalize) must still be found."""
+    Finalize) must still be found, when the commit carries this ticket's own ID prefix."""
     _init_repo_with_base(tmp_path)
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "committed.md").write_text("content", encoding="utf-8")
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "add doc"], cwd=tmp_path, check=True)
+    _commit_all(tmp_path, "TCK-FAKE: add doc")
 
-    touched = _git_branch_diff_touched_paths(root=tmp_path, base_ref="origin/main")
+    touched = _git_ticket_commits_touched_paths("TCK-FAKE", root=tmp_path, base_ref="origin/main")
     assert "docs/committed.md" in touched
+
+
+def test_ticket_commits_touched_paths_does_not_cross_attribute_to_a_different_ticket(tmp_path):
+    """The PR-review finding this ticket-scoping fix exists for: a batch branch with commit A
+    (ticket A, touches docs/a.md) and commit B (ticket B, no docs) -- closing B must NOT see
+    docs/a.md as touched by it, only A's own commit query should."""
+    _init_repo_with_base(tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "a.md").write_text("content", encoding="utf-8")
+    _commit_all(tmp_path, "TCK-AAAA: touches docs/a.md")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "b.py").write_text("content", encoding="utf-8")
+    _commit_all(tmp_path, "TCK-BBBB: unrelated code change")
+
+    touched_by_b = _git_ticket_commits_touched_paths("TCK-BBBB", root=tmp_path, base_ref="origin/main")
+    assert "docs/a.md" not in touched_by_b
+    assert "src/b.py" in touched_by_b
+
+    touched_by_a = _git_ticket_commits_touched_paths("TCK-AAAA", root=tmp_path, base_ref="origin/main")
+    assert "docs/a.md" in touched_by_a
+    assert "src/b.py" not in touched_by_a
 
 
 def test_git_touched_paths_unions_committed_and_uncommitted(tmp_path):
@@ -1514,26 +1539,24 @@ def test_git_touched_paths_unions_committed_and_uncommitted(tmp_path):
     _init_repo_with_base(tmp_path)
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "committed.md").write_text("content", encoding="utf-8")
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "add doc"], cwd=tmp_path, check=True)
+    _commit_all(tmp_path, "TCK-FAKE: add doc")
     (tmp_path / "docs" / "uncommitted.md").write_text("content", encoding="utf-8")
 
-    touched = _git_touched_paths(root=tmp_path, base_ref="origin/main")
+    touched = _git_touched_paths("TCK-FAKE", root=tmp_path, base_ref="origin/main")
     assert "docs/committed.md" in touched
     assert "docs/uncommitted.md" in touched
 
 
-def test_branch_diff_touched_paths_fails_open_when_base_ref_missing(tmp_path):
+def test_ticket_commits_touched_paths_fails_open_when_base_ref_missing(tmp_path):
     """No refs/remotes/origin/main at all -- e.g. a shallow clone or origin/main never fetched.
     Must return an empty set, not raise."""
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
     (tmp_path / "README.md").write_text("x", encoding="utf-8")
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
+    _commit_all(tmp_path, "TCK-FAKE: init")
 
-    assert _git_branch_diff_touched_paths(root=tmp_path, base_ref="origin/main") == set()
+    assert _git_ticket_commits_touched_paths("TCK-FAKE", root=tmp_path, base_ref="origin/main") == set()
 
 
 def test_git_touched_paths_falls_back_to_status_only_when_base_ref_missing(tmp_path):
@@ -1544,12 +1567,11 @@ def test_git_touched_paths_falls_back_to_status_only_when_base_ref_missing(tmp_p
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
     (tmp_path / "README.md").write_text("x", encoding="utf-8")
-    subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=tmp_path, check=True)
+    _commit_all(tmp_path, "TCK-FAKE: init")
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "uncommitted.md").write_text("content", encoding="utf-8")
 
-    touched = _git_touched_paths(root=tmp_path, base_ref="origin/main")
+    touched = _git_touched_paths("TCK-FAKE", root=tmp_path, base_ref="origin/main")
     assert "docs/" in touched
 
 
@@ -2041,7 +2063,9 @@ def test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tr
     (tmp_path / "docs" / "mechanics").mkdir(parents=True)
     (tmp_path / "docs" / "mechanics" / "combat.md").write_text("content", encoding="utf-8")
     subprocess.run(["git", "add", "-A"], cwd=tmp_path, check=True)
-    subprocess.run(["git", "commit", "-q", "-m", "committed mid-session"], cwd=tmp_path, check=True)
+    # Commit message carries the ticket's own ID prefix (this repo's real Commit Convention) --
+    # required for the ticket-scoped commit lookup to find it at all.
+    subprocess.run(["git", "commit", "-q", "-m", "TCK-FAKE: committed mid-session"], cwd=tmp_path, check=True)
     # Working tree is now fully clean -- confirm that directly, so this test can't silently pass
     # for the wrong reason (an accidental leftover uncommitted change).
     status = subprocess.run(
@@ -2071,6 +2095,50 @@ def test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tr
     assert status == "PASS"
 
 
+def test_reverse_docs_coverage_multi_ticket_batch_branch_does_not_cross_attribute(
+    tmp_path, monkeypatch
+):
+    """PR review finding on this same ticket, before merge: this repo's own standing practice is
+    one branch per BATCH, not per ticket. A branch-wide diff (the pre-review version of this fix)
+    would attribute ticket A's own committed docs/a.md to ticket B closing later on the same
+    branch, forcing B to redundantly declare a doc it never touched just to pass the gate. Ticket-
+    scoped commit lookup must not do that: closing B (clean tree) with docs/a.md undeclared must
+    PASS; closing A must see docs/a.md as touched."""
+    _init_repo_with_base(tmp_path)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "a.md").write_text("content", encoding="utf-8")
+    _commit_all(tmp_path, "TCK-AAAA: touches docs/a.md")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "b.py").write_text("content", encoding="utf-8")
+    _commit_all(tmp_path, "TCK-BBBB: unrelated code change, no docs")
+    status = subprocess.run(
+        ["git", "status", "--porcelain"], cwd=tmp_path, capture_output=True, text=True, check=True,
+    ).stdout
+    assert status.strip() == "", "fixture setup bug: working tree must be clean for this test"
+
+    base = tmp_path / "staging_artifacts"
+    monkeypatch.chdir(tmp_path)
+
+    # Closing TCK-BBBB: docs/a.md is real, on the branch, but belongs to a different ticket's own
+    # commit -- must not be attributed to B, so the reverse check PASSes without B declaring it.
+    _write_investigation(base, "TCK-BBBB", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-BBBB", files_changed="None.")
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-BBBB", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "PASS", f"TCK-BBBB must not be blamed for TCK-AAAA's own doc: {evidence}"
+
+    # Closing TCK-AAAA: docs/a.md IS its own commit's file -- must be seen as touched, and FAIL
+    # if undeclared, exactly like the single-ticket case.
+    _write_investigation(base, "TCK-AAAA", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-AAAA", files_changed="None.")
+    status, evidence = check_docs_to_update_coverage(
+        "TCK-AAAA", "standard", base_dir=Path("staging_artifacts")
+    )
+    assert status == "FAIL"
+    assert "docs/a.md" in evidence
+
+
 def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_path, monkeypatch):
     # Historical-incident regression fixture (AC #3): reconstructs
     # TCK-20260831-RACE-RELATIONS-MATRIX's pre-hand-patch state — Document-Update added
@@ -2080,7 +2148,7 @@ def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_pat
     # real post-patch tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md file.
     monkeypatch.setattr(
         "gate_checks.done_checker_static._git_touched_paths",
-        lambda root=Path("."): {"docs/mechanics/02_combat_laws.md"},
+        lambda ticket_id, root=Path("."), base_ref="origin/main": {"docs/mechanics/02_combat_laws.md"},
     )
     base = tmp_path / "staging_artifacts"
     _write_investigation(base, "TCK-20260831-RACE-RELATIONS-MATRIX", "None.")

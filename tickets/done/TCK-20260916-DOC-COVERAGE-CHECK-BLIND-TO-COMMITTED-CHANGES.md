@@ -105,14 +105,12 @@ check time.
 Split `_git_touched_paths()` into two composable pieces:
 - `_git_status_touched_paths()` — the original `git status --porcelain` logic, renamed, unchanged
   behavior.
-- `_git_branch_diff_touched_paths(root, base_ref="origin/main")` — new: `git diff --name-only
-  {base_ref}...HEAD` (three-dot, diffs from the merge-base, so commits landing on `base_ref` after
-  this branch forked are never misread as "touched by this branch"). Fails open (empty set) on any
-  subprocess error, same convention as the status-only function — a missing/unfetched `origin/main`
-  falls back cleanly rather than crashing or raising.
-- `_git_touched_paths(root, base_ref="origin/main")` — now the union of both, with the same
-  signature and default `root` the one real call site (`check_docs_to_update_coverage`) already
-  used, so no caller needed to change.
+- `_git_branch_diff_touched_paths(root, base_ref="origin/main")` — original version: `git diff
+  --name-only {base_ref}...HEAD` (three-dot, diffs from the merge-base). Superseded — see PR
+  Review Finding below.
+- `_git_touched_paths(root, base_ref="origin/main")` — the union of both, with the same signature
+  and default `root` the one real call site (`check_docs_to_update_coverage`) already used, so no
+  caller needed to change.
 
 Confirmed the fail-open behavior does not regress any pre-existing test: every existing
 `_git_touched_paths`/`check_docs_to_update_coverage` test builds its own fresh `tmp_path` repo with
@@ -120,33 +118,78 @@ no `refs/remotes/origin/main` set up, so `_git_branch_diff_touched_paths` correc
 for all of them and the union degrades to exactly the old status-only behavior — ran the full
 existing suite to confirm (131 passed, 0 failed), not assumed from reading the code alone.
 
+### PR Review Finding (agent-working-design, before merge) — fixed in this same PR
+
+**Problem**: the original `_git_branch_diff_touched_paths` unioned in `git diff --name-only
+{base_ref}...HEAD` — every commit on the branch, not just this closing ticket's own. This repo's
+own standing practice is one branch per *batch*, not per ticket (multiple tickets routinely land
+on the same branch before one PR opens). So if ticket A commits `docs/x.md` and ticket B closes
+later on the same branch, B's own reverse-direction check would FAIL on `docs/x.md` unless B
+redundantly declares a doc it never touched — the exact false-positive shape this ticket exists to
+eliminate, just shifted from "uncommitted vs. committed" to "this ticket's commits vs. the whole
+branch's." The batch that shipped this fix avoided tripping it only by chance: tickets 1 and 2
+touched no `docs/` path besides `docs/REGISTRY.yaml`, which every ticket declares anyway (it's
+regenerated and staged unconditionally at every close).
+
+**Fix**: scoped the committed side to this ticket's own commits, using this repo's own Commit
+Convention (`TCK-YYYYMMDD-SHORT-SCOPE: Brief description`):
+`_git_branch_diff_touched_paths` → `_git_ticket_commits_touched_paths(ticket_id, root, base_ref)`,
+via `git log --name-only --format= --grep="^<ticket_id>:" <base_ref>..HEAD` (two-dot `git log`
+range — commits reachable from `HEAD` but not `base_ref`, i.e. this branch's own commit list, a
+different and correct idiom from the three-dot `git diff` form it replaces, which diffs *final
+states* rather than enumerating commits). `re.escape()`s the ticket ID before building the regex.
+`_git_touched_paths` now takes `ticket_id` as a required positional argument (no default) — the
+one real call site already has it, and a caller that forgot to pass it would silently reproduce
+this exact bug, so the signature itself now prevents that mistake rather than merely documenting
+it. The forward-direction half (`required_docs` coverage) uses the same scoped `touched` set as a
+side effect of sharing one `_git_touched_paths()` call at the top of the function — the peer
+review's own judgment was that this widening was harmless and one shared definition is simpler
+than two.
+
+Fail-open contract unchanged: a missing/unfetched `origin/main` still returns an empty set from
+`_git_ticket_commits_touched_paths`, falling back cleanly to status-only behavior.
+
 ## Test Summary
 ```
 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -m pytest \
   tests/tools/test_done_checker_static.py tests/tools/test_done_checker_audit.py -q
-# 137 passed
+# 139 passed
 ```
-5 new tests: `test_branch_diff_touched_paths_includes_a_committed_doc_change`,
+7 new tests total (5 from the original fix, kept and updated for the new signature/function name;
+2 new for the review finding): `test_ticket_commits_touched_paths_includes_a_committed_doc_change`,
+`test_ticket_commits_touched_paths_does_not_cross_attribute_to_a_different_ticket` (the review
+finding's own low-level regression — ticket A's commit touches `docs/a.md`, ticket B's commit
+doesn't; scoping to B's own commits correctly excludes A's file),
 `test_git_touched_paths_unions_committed_and_uncommitted`,
-`test_branch_diff_touched_paths_fails_open_when_base_ref_missing`,
+`test_ticket_commits_touched_paths_fails_open_when_base_ref_missing`,
 `test_git_touched_paths_falls_back_to_status_only_when_base_ref_missing`,
-`test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tree` (the ticket's own
-AC #3 fixture, using `_init_repo_with_base()` to simulate a real `origin/main` merge-base without
-needing an actual remote).
+`test_reverse_docs_coverage_catches_a_doc_committed_mid_session_with_clean_tree`, and
+`test_reverse_docs_coverage_multi_ticket_batch_branch_does_not_cross_attribute` — the review
+finding's own integration-level regression through the full `check_docs_to_update_coverage` flow,
+exactly matching the peer's own requested fixture shape: closing ticket B (clean tree, `docs/a.md`
+undeclared) on a branch where ticket A already committed `docs/a.md` → reverse `PASS`; closing
+ticket A with `docs/a.md` undeclared → reverse `FAIL`, same as the single-ticket case.
 
 ## Files Changed
 - `tools/gate_checks/done_checker_static.py` — `_git_touched_paths` split into
-  `_git_status_touched_paths` + new `_git_branch_diff_touched_paths`, unioned back together under
-  the original name/signature.
-- `tests/tools/test_done_checker_static.py` — 5 new tests, 2 new imports.
+  `_git_status_touched_paths` + `_git_ticket_commits_touched_paths` (renamed and rescoped from
+  `_git_branch_diff_touched_paths` per the review finding), unioned back together under the
+  original name; `_git_touched_paths` now requires `ticket_id`.
+- `tests/tools/test_done_checker_static.py` — tests updated for the new function name/signature, 2
+  new regression tests added for the cross-ticket-attribution finding.
 - `docs/REGISTRY.yaml` — regenerated unconditionally as part of this closure.
 
 ## Completion Summary
 Fixed the false-FAIL gap directly: `check_docs_to_update_coverage`'s reverse direction now sees
-both uncommitted working-tree changes and everything committed on the current branch since its
-merge-base with `origin/main`, matching the sibling `mechanism_registry_changed_code_check.py`
-tool's own already-established base-ref convention rather than inventing a new one. Fails open on
-a missing/unfetched `origin/main`, falling back to the original status-only behavior — never
-crashes, never over- or under-reports. All three of the ticket's own AC met, with a real fixture
-proving the committed-mid-session-with-clean-tree case specifically, not just a clean pass on the
-pre-existing uncommitted-change path.
+both uncommitted working-tree changes and everything committed by *this ticket's own commits* on
+the current branch since its merge-base with `origin/main`, matching the sibling
+`mechanism_registry_changed_code_check.py` tool's own already-established base-ref convention
+rather than inventing a new one. A PR review before merge (`agent-working-design`) found the first
+version of this fix over-widened the committed side to the whole branch, not just this ticket's
+own commits — a real false-FAIL risk on this repo's own standard one-branch-per-batch practice,
+not yet observed in production only because this particular batch's other tickets happened not to
+touch a non-`REGISTRY.yaml` doc path. Fixed in the same PR by scoping to the closing ticket's own
+commits via the Commit Convention. Fails open on a missing/unfetched `origin/main` or a ticket with
+no matching commits, falling back to status-only behavior — never crashes, never over- or
+under-reports. All three of the ticket's own AC still met, now with the added guarantee that a
+multi-ticket batch branch cannot cross-attribute one ticket's committed doc to another.

@@ -473,25 +473,36 @@ def _git_status_touched_paths(root: Path = Path(".")) -> set[str]:
     return paths
 
 
-def _git_branch_diff_touched_paths(
-    root: Path = Path("."), base_ref: str = "origin/main"
+def _git_ticket_commits_touched_paths(
+    ticket_id: str, root: Path = Path("."), base_ref: str = "origin/main"
 ) -> set[str]:
-    """Return every path changed on the current branch relative to its merge-base with
-    `base_ref` (`git diff --name-only <base_ref>...HEAD`, three-dot — diffs from the merge-base,
-    not `base_ref`'s own current tip, so commits landing on `base_ref` after this branch forked
-    are not misread as "touched by this branch").
+    """Return every path touched by commits on this branch whose own message belongs to
+    `ticket_id`, per this repo's own Commit Convention (CLAUDE.md: `TCK-YYYYMMDD-SHORT-SCOPE:
+    Brief description`) — `git log --name-only --format= --grep="^<ticket_id>:" <base_ref>..HEAD`.
 
     TCK-20260916-DOC-COVERAGE-CHECK-BLIND-TO-COMMITTED-CHANGES: `git status --porcelain` alone
     (`_git_status_touched_paths`) only sees uncommitted working-tree changes — a doc edit
     committed earlier in the same hand-orchestrated session (an established, encouraged practice,
     not an edge case) has a clean tree by Verify/Finalize time and was invisible to the reverse
-    coverage check. This adds the committed side of the same branch's own diff.
+    coverage check. This adds the committed side, from real git history.
+
+    **Scoped to this ticket's own commits, not the whole branch** (tightened during the same
+    ticket's own PR review, before merge): this repo's own standing practice is one branch per
+    *batch*, not per ticket — a branch-wide `git diff <base_ref>...HEAD --name-only` (the first
+    version of this function) would attribute an EARLIER ticket's own committed doc edit to a
+    LATER ticket closing on the same branch, producing a false reverse-direction FAIL unless the
+    later ticket redundantly re-declares a doc it never touched. `git log <base_ref>..HEAD`
+    (two-dot — commits reachable from HEAD but not `base_ref`, i.e. this branch's own commit list,
+    not a diff of final states) with `--grep` anchored to the start of a commit-message line makes
+    the scope exact: only this ticket's own commits' own files count.
 
     `origin/main` matches this repo's own established convention for exactly this kind of
-    close-time, ticket-scoped diff (`tools/mechanism_registry/mechanism_registry_changed_code_
-    check.py`'s own `base_ref: str = "origin/main"` default and its `get_changed_files()`'s
-    identical `git diff --name-only {base}...{head}` three-dot form) — not assumed fresh here,
-    confirmed against that sibling tool's own real, working precedent.
+    close-time diff (`tools/mechanism_registry/mechanism_registry_changed_code_check.py`'s own
+    `base_ref: str = "origin/main"` default) — not assumed fresh here, confirmed against that
+    sibling tool's own real, working precedent. That tool additionally scopes to one ticket's own
+    commits for the identical reason (see its `get_changed_files_for_ticket()`'s own docstring on
+    why a branch-wide diff misattributes files across bundled tickets) — this function's own
+    ticket-scoping mirrors that established shape rather than inventing a new one.
 
     Read-only, fail-open, same convention as `_git_status_touched_paths`: `origin/main` may not
     exist locally (a shallow clone, a fork with a differently-named remote, `origin/main` never
@@ -501,7 +512,10 @@ def _git_branch_diff_touched_paths(
     """
     try:
         result = subprocess.run(
-            ["git", "diff", "--name-only", f"{base_ref}...HEAD"],
+            [
+                "git", "log", "--name-only", "--format=",
+                f"--grep=^{re.escape(ticket_id)}:", f"{base_ref}..HEAD",
+            ],
             cwd=root,
             capture_output=True,
             text=True,
@@ -515,13 +529,21 @@ def _git_branch_diff_touched_paths(
     return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
 
-def _git_touched_paths(root: Path = Path("."), base_ref: str = "origin/main") -> set[str]:
-    """Union of `_git_status_touched_paths` (uncommitted) and `_git_branch_diff_touched_paths`
-    (committed on this branch since its merge-base with `base_ref`) — see
-    `_git_branch_diff_touched_paths`'s own docstring for why both are needed. Either source
-    failing (see each function's own fail-open contract) still returns whatever the other found,
-    rather than the whole function returning nothing."""
-    return _git_status_touched_paths(root) | _git_branch_diff_touched_paths(root, base_ref)
+def _git_touched_paths(
+    ticket_id: str, root: Path = Path("."), base_ref: str = "origin/main"
+) -> set[str]:
+    """Union of `_git_status_touched_paths` (uncommitted) and `_git_ticket_commits_touched_paths`
+    (committed by `ticket_id`'s own commits on this branch since its merge-base with `base_ref`)
+    — see `_git_ticket_commits_touched_paths`'s own docstring for why both are needed and why the
+    committed half is scoped to one ticket rather than the whole branch. Either source failing
+    (see each function's own fail-open contract) still returns whatever the other found, rather
+    than the whole function returning nothing. `ticket_id` has no default — every real call site
+    (`check_docs_to_update_coverage`) already has one, and a caller that forgot to scope it would
+    silently reproduce the pre-scoping cross-ticket-attribution bug this signature exists to rule
+    out."""
+    return _git_status_touched_paths(root) | _git_ticket_commits_touched_paths(
+        ticket_id, root, base_ref
+    )
 
 
 def _path_touched(path: str, touched: set[str]) -> bool:
@@ -667,7 +689,7 @@ def check_docs_to_update_coverage(
     direction blocks regardless of the other having passed.
     """
     forward_evidence = "hotfix tier — forward direction skipped, no investigation.md"
-    touched = _git_touched_paths()
+    touched = _git_touched_paths(ticket_id)
 
     if tier != "hotfix":
         investigation_path = base_dir / ticket_id / "investigation.md"
