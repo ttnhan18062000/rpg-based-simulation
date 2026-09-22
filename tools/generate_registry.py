@@ -352,23 +352,25 @@ def _build_ticket_entry(root: Path, md_file: Path) -> dict:
 
 
 def collect_tickets(root: Path) -> list:
-    """Walk every ticket location: root/tickets/done/*.md (flat, unchanged), plus
-    root/tickets/inprogress/*.md (flat) and root/tickets/todos/**/*.md (recursive, since todos/
-    holds both bare tickets and nested epic folders) -- TCK-20260913-TICKET-PREMISE-STALENESS-NOT-
-    PROPAGATED-ON-CLOSE, Option A. `SEQUENCE.md` files (epic-folder metadata, not tickets
-    themselves) are excluded from the todos/ walk.
+    """Walk every ticket location: root/tickets/done/*.md (flat) plus root/tickets/done/*/*.md
+    (one level into a folder-closed epic's own directory -- TCK-20260921-NESTED-EPIC-FOLDER-
+    REGISTRY-VISIBILITY-GAP), root/tickets/inprogress/*.md (flat), and
+    root/tickets/todos/**/*.md (recursive, since todos/ holds both bare tickets and nested epic
+    folders) -- TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE, Option A.
+    `SEQUENCE.md` files (epic-folder metadata, not tickets themselves) are excluded from both the
+    done/ and todos/ folder walks.
 
     Purely additive relative to the prior done/-only behavior: every previously-emitted entry
     (path, fields, ordering via sort_entries) is unchanged; this only adds entries for ticket
     files at locations the registry never indexed before.
 
-    Note: this does NOT extend tickets/done/ itself to walk its own nested epic-folder
-    subdirectories (e.g. tickets/done/some-epic/TCK-*.md) -- that flat-only gap is real (confirmed
-    directly: ~80 such subdirectories exist today) but is a distinct defect from this ticket's own
-    decided scope ("index tickets/todos/ and tickets/inprogress/, not only tickets/done/"), and
-    irrelevant to this ticket's own consumption mechanism specifically, which only needs OPEN
-    ticket coverage (a done ticket has no open premise left to go stale). Recorded here rather than
-    silently fixed or silently dropped; not addressed by this ticket.
+    The done/ folder walk is deliberately one level deep only, not recursive (`glob("*/*.md")`,
+    not `rglob`) -- matches CLAUDE.md's own folder-move rule, which only ever nests a single level
+    (`tickets/done/{folder}/{epic-ticket}.md` + `SEQUENCE.md`; individual children already moved
+    out to the flat root as they closed, per the same rule). Confirmed against all 84 real
+    `tickets/done/*/` subdirectories at the time this was fixed: every one holds at most one
+    non-SEQUENCE.md ticket file (the folder's own epic, if one exists) at exactly this depth, never
+    deeper.
 
     Returns list of ticket entry dicts. Missing frontmatter → warning to stderr, entry still
     emitted with defaults (backward compat).
@@ -378,6 +380,10 @@ def collect_tickets(root: Path) -> list:
     done_dir = root / "tickets" / "done"
     if done_dir.is_dir():
         for md_file in sorted(done_dir.glob("*.md")):
+            entries.append(_build_ticket_entry(root, md_file))
+        for md_file in sorted(done_dir.glob("*/*.md")):
+            if md_file.name == "SEQUENCE.md":
+                continue
             entries.append(_build_ticket_entry(root, md_file))
 
     inprogress_dir = root / "tickets" / "inprogress"

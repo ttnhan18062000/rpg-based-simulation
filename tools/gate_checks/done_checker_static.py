@@ -825,6 +825,18 @@ def check_migration_complete(
 ) -> tuple[str, str]:
     if tier == "hotfix":
         return ("NA", "hotfix tier — no migration expected")
+    if tier == "epic":
+        # TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: CLAUDE.md's own literal text
+        # groups epic with standard ("Standard/epic only: Create staging_artifacts/{ticket_id}/"),
+        # but epic tier's own Tier Routing row says "Scope only -- tracks child tickets; no direct
+        # implementation" -- and in practice, no epic ticket, flat or folder-nested, has ever had
+        # its own stored_artifacts/{ticket_id}/ (confirmed against every real epic in
+        # tickets/done/ at the time this was added, not just the two folder-nested precedents this
+        # ticket was filed against). An epic's own investigation/plan/test_plan work is its child
+        # tickets' -- SEQUENCE.md plus those children are the epic's real artifact trail. Treating
+        # this as "no migration expected," same as hotfix, matches actual practice rather than
+        # failing every epic ticket close against a requirement nothing has ever satisfied.
+        return ("NA", "epic tier — scope-only, no ticket-owned stored_artifacts expected")
 
     if staging_dir is None:
         staging_dir = Path(f"staging_artifacts/{ticket_id}")
@@ -840,12 +852,27 @@ def check_migration_complete(
 
 
 def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
-    done_path = Path(f"tickets/done/{ticket_id}.md")
+    """PASS iff the ticket file exists somewhere under tickets/done/ and no longer exists under
+    tickets/inprogress/.
+
+    TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: also checks
+    tickets/done/{folder}/{ticket_id}.md, one level deep -- an epic ticket closed via CLAUDE.md's
+    own folder-move rule ("move the entire folder to tickets/done/{folder}/") never lives at the
+    flat tickets/done/{ticket_id}.md path the original check-only assumed. One level deep only,
+    matching generate_registry.py::collect_tickets()'s own folder-depth assumption and the rule's
+    own real shape (a folder never nests a folder).
+    """
+    flat_done_path = Path(f"tickets/done/{ticket_id}.md")
+    nested_done_matches = sorted(Path("tickets/done").glob(f"*/{ticket_id}.md"))
     inprogress_path = Path(f"tickets/inprogress/{ticket_id}.md")
+
+    done_path = flat_done_path if flat_done_path.exists() else (
+        nested_done_matches[0] if nested_done_matches else flat_done_path
+    )
 
     problems = []
     if not done_path.exists():
-        problems.append(f"{done_path} does not exist")
+        problems.append(f"{flat_done_path} does not exist (flat or one-level-deep under tickets/done/)")
     if inprogress_path.exists():
         problems.append(f"{inprogress_path} still exists")
 

@@ -887,6 +887,19 @@ def test_migration_complete_staging_not_cleaned_fails(tmp_path):
     assert "not cleaned" in evidence
 
 
+def test_migration_complete_epic_is_na(tmp_path):
+    """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: epic tier gets the same NA
+    treatment as hotfix -- no real epic ticket, flat or folder-closed, has ever had its own
+    stored_artifacts/{ticket_id}/; an epic's investigation/plan/test_plan work belongs to its
+    child tickets, not the epic ticket itself."""
+    status, _ = check_migration_complete(
+        "TCK-FAKE", "epic",
+        staging_dir=tmp_path / "staging_artifacts" / "TCK-FAKE",
+        stored_dir=tmp_path / "stored_artifacts" / "TCK-FAKE",
+    )
+    assert status == "NA"
+
+
 # ---------------------------------------------------------------------------
 # check_ticket_finalized
 # ---------------------------------------------------------------------------
@@ -922,6 +935,46 @@ def test_ticket_finalized_fails_when_not_moved_to_done(tmp_path, monkeypatch):
     status, evidence = check_ticket_finalized("TCK-FAKE")
     assert status == "FAIL"
     assert "does not exist" in evidence
+
+
+def test_ticket_finalized_passes_for_folder_closed_epic(tmp_path, monkeypatch):
+    """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: an epic ticket closed via
+    CLAUDE.md's own folder-move rule lives at tickets/done/{folder}/{ticket_id}.md, one level
+    deep -- must PASS, not FAIL on a flat-path-only check."""
+    (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_ticket_finalized("TCK-FAKE")
+    assert status == "PASS"
+    assert "some-epic" in evidence
+
+
+def test_ticket_finalized_prefers_flat_path_over_nested_if_both_exist(tmp_path, monkeypatch):
+    # Should never happen in practice (a ticket can't close at two locations at once), but the
+    # flat path is the common case and should win deterministically if it somehow does.
+    (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    _write_ticket(tmp_path / "tickets" / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_ticket_finalized("TCK-FAKE")
+    assert status == "PASS"
+    assert evidence.startswith("tickets/done/TCK-FAKE.md")
+
+
+def test_ticket_finalized_still_fails_when_folder_nested_but_also_in_inprogress(tmp_path, monkeypatch):
+    (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "some-epic" / "TCK-FAKE.md", "TCK-FAKE")
+    _write_ticket(tmp_path / "tickets" / "inprogress" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+
+    status, evidence = check_ticket_finalized("TCK-FAKE")
+    assert status == "FAIL"
+    assert "still exists" in evidence
 
 
 # ---------------------------------------------------------------------------

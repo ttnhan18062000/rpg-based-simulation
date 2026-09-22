@@ -469,6 +469,61 @@ class TestOpenTicketWalk:
         assert entries == []
 
 
+class TestFolderClosedDoneWalk:
+    """TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: an epic ticket closed via
+    CLAUDE.md's own folder-move rule (`tickets/done/{folder}/{epic}.md` + `SEQUENCE.md`) must be
+    indexed the same way a folder-nested todos/ ticket already was."""
+
+    _FM = (
+        "status: historical\nlayer: engine\nauthority: P1\naudience: agent\n"
+        "ticket_id: {tid}\nphase: done\ndate: 2026-09-15\ntags: []"
+    )
+
+    def test_folder_closed_epic_ticket_is_indexed(self, tmp_path):
+        _make_ticket_at(
+            tmp_path, "tickets/done/some-epic/TCK-20260915-EPIC.md",
+            self._FM.format(tid="TCK-20260915-EPIC"),
+            "## Title\nFolder-closed epic\n",
+        )
+        entries = collect_tickets(tmp_path)
+        assert [e["path"] for e in entries] == ["tickets/done/some-epic/TCK-20260915-EPIC.md"]
+        assert entries[0]["ticket_id"] == "TCK-20260915-EPIC"
+
+    def test_sequence_md_excluded_from_done_folder_walk(self, tmp_path):
+        (tmp_path / "tickets" / "done" / "some-epic").mkdir(parents=True)
+        (tmp_path / "tickets" / "done" / "some-epic" / "SEQUENCE.md").write_text(
+            "# Sequence\n\nNot a ticket.\n", encoding="utf-8",
+        )
+        entries = collect_tickets(tmp_path)
+        assert entries == []
+
+    def test_done_folder_walk_is_one_level_only_not_recursive(self, tmp_path):
+        # A ticket two levels deep under tickets/done/ must NOT be indexed -- CLAUDE.md's own
+        # folder-move rule never nests a folder inside a folder, and collect_tickets() is
+        # deliberately glob("*/*.md"), not rglob, to match that real shape exactly.
+        _make_ticket_at(
+            tmp_path, "tickets/done/some-epic/nested-too-deep/TCK-20260915-TOO-DEEP.md",
+            self._FM.format(tid="TCK-20260915-TOO-DEEP"),
+            "## Title\nToo deep\n",
+        )
+        entries = collect_tickets(tmp_path)
+        assert entries == []
+
+    def test_flat_done_and_folder_closed_done_both_indexed(self, tmp_path):
+        _make_ticket(tmp_path, "TCK-20260601-FLAT.md",
+                     self._FM.format(tid="TCK-20260601-FLAT"), "## Title\nFlat\n")
+        _make_ticket_at(
+            tmp_path, "tickets/done/some-epic/TCK-20260915-EPIC.md",
+            self._FM.format(tid="TCK-20260915-EPIC"), "## Title\nFolder-closed epic\n",
+        )
+        entries = collect_tickets(tmp_path)
+        paths = {e["path"] for e in entries}
+        assert paths == {
+            "tickets/done/TCK-20260601-FLAT.md",
+            "tickets/done/some-epic/TCK-20260915-EPIC.md",
+        }
+
+
 # ---------------------------------------------------------------------------
 # Group 7: YAML output and file written to correct path
 # ---------------------------------------------------------------------------
