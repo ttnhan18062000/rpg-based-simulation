@@ -50,13 +50,13 @@ Supernatural Phenomenon.** A supernatural storm or anomaly occurs; there is no c
 of any kind; a declared environmental/supernatural mechanism is the source; real consequences
 follow regardless.
 
-- **Rules invoked:** SUP-03, CAP-01.
+- **Rules invoked:** SUP-03, MCAP-01.
 - **Result: revealed missing rule, and the Rules' own generalized requirements are confirmed
   coherent against this caster-free case specifically.** Confirmed MISSING — no environmental
   or spontaneous supernatural mechanism of any kind exists. This clause directly tests
   SUP-03's own revised wording (a valid declared cause/process and a real causal path,
   "subject to the semantics relevant to that specific mechanism" — never requiring a caster)
-  and CAP-01's own revised wording (the five candidate facts apply only where a mechanism
+  and MCAP-01's own revised wording (the five candidate facts apply only where a mechanism
   actually uses them; a place-condition-driven or purely environmental mechanism may have no
   "caster" holding capability at all). Both Rules remain coherent against this case without
   modification — this clause exists specifically to confirm neither Rule was accidentally
@@ -108,9 +108,9 @@ explanation; all three observed the same event.
 A subject knows a ritual/spell conceptually; the subject is missing a required capability or
 resource; no effect occurs.
 
-- **Rules invoked:** CAP-01.
+- **Rules invoked:** MCAP-01.
 - **Result: revealed missing rule.** No magical knowledge or capability field exists on any
-  entity — confirmed MISSING. CAP-01's own knowledge ≠ capability distinction remains
+  entity — confirmed MISSING. MCAP-01's own knowledge ≠ capability distinction remains
   coherent and testable in principle, reusing the general knowledge/capability machinery
   already established for non-magical cases.
 
@@ -119,7 +119,7 @@ resource; no effect occurs.
 A creature has innate supernatural capability; it uses or reacts through a declared
 mechanism; it lacks explicit conceptual knowledge of that mechanism.
 
-- **Rules invoked:** CAP-01.
+- **Rules invoked:** MCAP-01.
 - **Result: revealed missing rule.** Same underlying gap as MAG-S05, from the opposite
   direction — confirmed MISSING.
 
@@ -180,18 +180,18 @@ A valid counter-process removes supernatural state; the downstream condition rec
 An ordinary path is unavailable; a valid supernatural reach relation is declared; movement
 succeeds.
 
-- **Rules invoked:** CAP-02.
+- **Rules invoked:** MCAP-02.
 - **Result: revealed missing rule.** Confirmed MISSING — no portal, teleport, or
-  supernatural-reach mechanism of any kind exists, confirmed via direct search. CAP-02's own
+  supernatural-reach mechanism of any kind exists, confirmed via direct search. MCAP-02's own
   requirement (a declared relation, never a default bypass) remains coherent regardless.
 
 ## MAG-S13 — Portal is one-way
 
 An A → B supernatural connection exists; a B → A connection is unavailable.
 
-- **Rules invoked:** CAP-02.
+- **Rules invoked:** MCAP-02.
 - **Result: revealed missing rule.** Same underlying gap as MAG-S12 — confirmed MISSING.
-  CAP-02's own explicit non-bidirectionality permission (a portal's own connection is never
+  MCAP-02's own explicit non-bidirectionality permission (a portal's own connection is never
   assumed bidirectional) remains coherent regardless, directly resolving Batch 04's own
   directional-topology permission for the supernatural case.
 
@@ -424,7 +424,7 @@ the standing direction, not as evidence against the target semantics themselves.
 
 **Follow-up note (2026-09-22).** A targeted semantic-cleanup follow-up added two extended
 clauses to already-existing scenarios rather than new scenario IDs — MAG-S01's own
-"Spontaneous Supernatural Phenomenon" clause confirms SUP-03/CAP-01 are not accidentally
+"Spontaneous Supernatural Phenomenon" clause confirms SUP-03/MCAP-01 are not accidentally
 caster-centric; MAG-S19's own "Permanent Enchantment Without Ongoing Caster" clause is the
 direct probe that motivated EFF-02's own correction to recognize a durable-property/
 consequence shape of persistent supernatural state, distinct from an ongoing-cause shape. The

@@ -166,7 +166,7 @@ without omniscience), [MAG-S16](../scenarios/magic-supernatural-batch-12.md#mag-
 > bypass; the compulsion's own source, target, scope, duration, and conditions remain
 > declared and checkable. **Revised 2026-09-22 per a targeted semantic-cleanup follow-up:**
 > "independent facts" softened to "semantically distinct facts," matching the same correction
-> applied to SUP-01/CAP-01/PLC-01 — these facts may cause one another through a real causal
+> applied to SUP-01/MCAP-01/PLC-01 — these facts may cause one another through a real causal
 > step; they may never be silently substituted for one another absent one.
 
 **Disposition: INHERITED — direct reuse of `supernatural-ontology.md`'s own SUP-01 (belief/

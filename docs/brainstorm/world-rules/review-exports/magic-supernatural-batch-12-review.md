@@ -32,7 +32,7 @@ day per a second, targeted semantic-cleanup follow-up
 
 ## Rule Admission Accounting
 
-**10 genuine Domain Rules** (SUP-01, SUP-02, SUP-03, CAP-01, CAP-02, EFF-01, EFF-02, STR-01,
+**10 genuine Domain Rules** (SUP-01, SUP-02, SUP-03, MCAP-01, MCAP-02, EFF-01, EFF-02, STR-01,
 STR-02, PLC-01) of **31 total catalog entries** — 10 Domain Rules, 16 Inherited/Applied
 Foundational Rules, 5 Scope/Deferred Boundaries — across the five family files, **unchanged by
 the semantic-cleanup follow-up.** The follow-up's own instruction explicitly warned not to
@@ -50,8 +50,8 @@ batch (contrast Batch 11B's BEL-03).
 | SUP-01 | Supernatural Ontology | Objective supernatural truth, evidence, attribution, belief, and knowledge are six semantically distinct facts that must not be silently substituted for one another | ACCEPT — REQUIRED |
 | SUP-02 | Supernatural Ontology | Belief never defaults to causing supernatural truth; belief-powered magic is its own declared conversion edge | ACCEPT — REQUIRED |
 | SUP-03 | Supernatural Ontology | Magic is never a causality exception; a real declared cause/process and causal path is always required, but the specific process shape (caster-driven, caster-free, ritual, standing condition) is mechanism-declared | ACCEPT — REQUIRED (causal discipline); PERMITTED (specific process shape) |
-| CAP-01 | Magic Capability | Magical knowledge, capability, resource, reach, and authorization are semantically distinct where a mechanism actually uses them; not every mechanism uses all five | ACCEPT — REQUIRED (distinctness where applicable); PERMITTED (which facts apply) |
-| CAP-02 | Magic Capability | Supernatural reach bypassing ordinary topology requires declared supernatural reach semantics; non-bidirectionality permitted; a persistent relation record is one possible implementation, not the Rule itself | ACCEPT — REQUIRED (declared-semantics requirement); PERMITTED (specific reach shape/representation) |
+| MCAP-01 | Magic Capability | Magical knowledge, capability, resource, reach, and authorization are semantically distinct where a mechanism actually uses them; not every mechanism uses all five | ACCEPT — REQUIRED (distinctness where applicable); PERMITTED (which facts apply) |
+| MCAP-02 | Magic Capability | Supernatural reach bypassing ordinary topology requires declared supernatural reach semantics; non-bidirectionality permitted; a persistent relation record is one possible implementation, not the Rule itself | ACCEPT — REQUIRED (declared-semantics requirement); PERMITTED (specific reach shape/representation) |
 | EFF-01 | Magical Effects | A magical effect's cause is distinct from the resulting consequence's canonical ownership; magic is never the owner of every downstream effect | ACCEPT — REQUIRED (preserved unchanged) |
 | EFF-02 | Magical Effects | Persistent supernatural state may be an ongoing cause or a durable property/consequence; either requires declared lifecycle semantics; conflicts must not leave undefined state | ACCEPT — REQUIRED |
 | STR-01 | Supernatural Transformation | Transformation preserves identity by default; classification (species/kind/form) ≠ identity | ACCEPT — REQUIRED (default + classification-≠-identity); PERMITTED (specific replacement declarations) |
@@ -89,7 +89,7 @@ probed by the corrected instruction's own §34 seed list); S05–S29 are that se
 scenarios in original order, including 3 explicit counter-probes (S16 perfect divination, S23
 undead new identity, plus S24's covered-by-reuse result acting as a boundary check on PLC-01).
 **Revised 2026-09-22:** MAG-S01 gained an extended "Spontaneous Supernatural Phenomenon" clause
-(testing SUP-03/CAP-01 against caster-centric assumptions) and MAG-S19 gained an extended
+(testing SUP-03/MCAP-01 against caster-centric assumptions) and MAG-S19 gained an extended
 "Permanent Enchantment Without Ongoing Caster" clause (the direct probe that motivated EFF-02's
 own correction) — both added as clauses on existing IDs, not new IDs, per the follow-up's own
 explicit preference. Full trajectories, Rules invoked, and results are in
@@ -97,10 +97,10 @@ explicit preference. Full trajectories, Rules invoked, and results are in
 
 | ID range | Family stress-tested | Result shape |
 |---|---|---|
-| S01–S04 | Supernatural Ontology (SUP-01/02/03) | revealed missing rule (×4); S01's extended clause additionally confirms SUP-03/CAP-01 are not caster-centric |
-| S05–S08 | Magic Capability (CAP-01) | revealed missing rule (×4) |
+| S01–S04 | Supernatural Ontology (SUP-01/02/03) | revealed missing rule (×4); S01's extended clause additionally confirms SUP-03/MCAP-01 are not caster-centric |
+| S05–S08 | Magic Capability (MCAP-01) | revealed missing rule (×4) |
 | S09–S11 | Magical Effects (EFF-01/02) | revealed missing rule (×3) |
-| S12–S13 | Magic Capability (CAP-02) | revealed missing rule (×2) |
+| S12–S13 | Magic Capability (MCAP-02) | revealed missing rule (×2) |
 | S14–S18 | Supernatural Entities/Places, Mind/Memory (Inherited) | revealed missing rule (×5) |
 | S19–S23 | Supernatural Transformation (STR-01/02), Magical Effects (EFF-02) | revealed missing rule (×5); S19's extended clause confirms EFF-02's own corrected durable-property shape |
 | S24–S25 | Supernatural Entities/Places (PLC-01) | covered (S24, direct Batch 11B reuse), revealed missing rule (S25) |
@@ -125,10 +125,10 @@ as such rather than presented as new coverage.
 
 ## Deferred Scenario Semantics
 
-- **S05/S06/S08** presuppose a concrete magical-resource/cost model; CAP-01's own
+- **S05/S06/S08** presuppose a concrete magical-resource/cost model; MCAP-01's own
   distinctness-where-applicable is testable regardless, but the specific resource shape is
   Scope-Deferred.
-- **S12/S13** presuppose a concrete portal/teleport mechanism; CAP-02's own declared-semantics
+- **S12/S13** presuppose a concrete portal/teleport mechanism; MCAP-02's own declared-semantics
   requirement and non-bidirectionality permission are testable regardless.
 - **S15/S16** presuppose whether this world ever declares a perfect divination channel; both
   outcomes are independently coherent under the Inherited divination entry — not decided here.
@@ -148,7 +148,7 @@ as such rather than presented as new coverage.
   Recognition" probe: objective supernatural truth never requires belief, observation,
   recognition, or cultural interpretation (SUP-01, PLC-01), unless a specific mechanism
   declares one as a causal prerequisite.
-- **Directly resolves a named deferred boundary from Batch 04.** CAP-02 states that supernatural
+- **Directly resolves a named deferred boundary from Batch 04.** MCAP-02 states that supernatural
   reach bypassing ordinary spatial topology requires declared supernatural reach semantics,
   with a portal's own connection never assumed bidirectional — the non-physical-movement
   boundary Batch 04 left open. A persistent relation record remains one legitimate
@@ -280,7 +280,7 @@ Catalog phase.**
   **Implementation decision:** DEFERRED — no commitment in Rule Catalog phase.
 - **Target semantic:** a supernatural property or condition attaches to its subject
   independently of ownership, with its own declared persistence rules, in either the
-  ongoing-cause or durable-property/consequence shape (CAP-01/EFF-02).
+  ongoing-cause or durable-property/consequence shape (MCAP-01/EFF-02).
   **Current realization:** no supernatural-property field exists anywhere.
   **Possible implementation direction:** a typed supernatural-condition relation (subject,
   source, kind, activation/removal condition), illustrative only — never a universal
@@ -296,7 +296,7 @@ Catalog phase.**
   **Implementation decision:** DEFERRED.
 - **Target semantic:** supernatural reach bypassing ordinary topology requires declared
   supernatural reach semantics, of which a persistent relation record is one possible shape,
-  not the requirement itself (CAP-02).
+  not the requirement itself (MCAP-02).
   **Current realization:** no portal/teleport mechanism exists; ordinary Reach (Batch 02/04) is
   real and unbypassed today.
   **Possible implementation direction:** a portal/teleport relation reusing the existing Reach
@@ -322,10 +322,10 @@ be evaluated on its own merits if and when a future ticket proposes building it.
 - **Magic obeys normal causal/state-ownership discipline:** yes — SUP-03 states magic is never
   a causality exception (causal discipline universal, process shape mechanism-specific); EFF-01
   states magic is never the canonical owner of every downstream effect.
-- **Supernatural reach and topology:** CAP-02 requires declared reach semantics; no default
+- **Supernatural reach and topology:** MCAP-02 requires declared reach semantics; no default
   bypass; non-bidirectionality explicitly permitted; no specific data representation mandated.
 - **Magic knowledge and capability distinctness:** yes, both directions, where the mechanism
-  uses them — authorization specifically may be inapplicable (CAP-01).
+  uses them — authorization specifically may be inapplicable (MCAP-01).
 - **Magical effects write through owning domains:** yes (EFF-01, preserved unchanged), with
   direct, real, non-supernatural repository evidence that this discipline is already
   architecturally sound.

@@ -22,14 +22,16 @@ across `foundations/`, `space-environment/`, `life-body/`, `knowledge-agency/`,
 `capability-progression/`, `material-economy/`, `social-lineage/`, `institutions-politics/`,
 `places-culture/`, `magic-supernatural/`), not recalled from memory.
 
-**Naming-collision note.** `foundations/capability.md` and `magic-supernatural/magic-
-capability.md` each independently define a `CAP-01`/`CAP-02`. This is a pre-existing ID-scoping
-practice (Rule IDs are unique per family file, not globally), not a semantic contradiction —
-both families' own Rules remain individually correct. Every citation below disambiguates
-explicitly ("foundational CAP-0N" vs "magic capability's own CAP-0N") rather than proposing a
-rename, since renaming an already-frozen batch's own Rule ID purely for global uniqueness is
-exactly the kind of "rewrite existing domains merely for elegance" this phase's own non-goals
-(§47) forbid.
+**ID-collision fix (2026-09-22, applied per a targeted follow-up review).** An earlier pass of
+this export found that `foundations/capability.md` and `magic-supernatural/magic-capability.md`
+each independently defined a `CAP-01`/`CAP-02`, and treated file-scope disambiguation as
+sufficient. The follow-up correctly identified this as unsafe for global citation once Rule IDs
+become references in Implementation Mapping, gap reports, and tickets — a bare `CAP-01` must
+identify one Rule without requiring context. `magic-supernatural/magic-capability.md`'s own two
+Domain Rules are therefore renamed to `MCAP-01`/`MCAP-02` throughout the Catalog (canonical
+files, scenarios, and review exports), leaving `foundations/capability.md`'s own `CAP-01`–
+`CAP-05` untouched. This scenario file's own citations below use `MCAP-01`/`MCAP-02` for the
+magic-capability Rules and plain `CAP-0N` (marked "foundational") for the foundational ones.
 
 ---
 
@@ -312,11 +314,16 @@ becoming magically enchanted.
 CULT-01/02/04, PLACE-02 (generalized), PROG-06, ID-05, STR-01/EFF-02 (magic-supernatural, for
 the ≠-magical-artifact distinction).
 
-**Repository realization:** MISSING for any provenance-accumulation-to-cultural-meaning
-mechanism; `ItemInstance` (Batch 08's own evidence, cross-referenced) already separates object
-identity from ownership correctly (SUPPORTED for stage 1), which is a real, positive structural
-match for this trajectory's own foundation, even though nothing yet consumes it into provenance
-or cultural meaning.
+**Repository realization (corrected 2026-09-22 per a targeted follow-up review):** SUPPORTED
+for stage 1 — `ItemInstance` (Batch 08's own evidence) already separates object identity from
+ownership correctly, a real, positive structural match for this trajectory's own foundation.
+**For provenance accumulation itself (stage 3), the classification is PARTIAL/INERT-OFF, not
+MISSING** — Batch 08's own already-established evidence found `ItemInstance` carries real
+history/provenance machinery that is feature-gated and never triggered in production; the
+mechanism exists but is dormant, which is a materially different fact from "does not exist."
+MISSING remains the correct classification only for stages 4–6 (provenance-to-record,
+record-to-cultural-meaning, and meaning-to-differential-treatment) — no mechanism of any kind
+connects even an *active* provenance chain to cultural meaning or later differential treatment.
 
 ---
 
@@ -341,8 +348,12 @@ to its original history.
   may be revised upward by new evidence exactly as it may be revised downward or corrected by
   any other evidence, per the same mechanism.
 
-**Repository realization:** MISSING — no provenance-loss-and-rediscovery mechanism exists, but
-no Rule gap: HP-03 + INFO-01 + KNOW-01/02 already compose to fully support this without any
+**Repository realization (corrected 2026-09-22):** MISSING for a loss-and-rediscovery
+*mechanism* specifically — nothing currently models an archive being destroyed or new evidence
+resurfacing. This is distinct from FI-OBJ-01's own corrected finding that `ItemInstance`'s
+underlying provenance machinery is PARTIAL/INERT-OFF rather than absent; loss-and-rediscovery
+is a further mechanism this repository has not attempted at all, on top of that dormant one.
+No Rule gap either way: HP-03 + INFO-01 + KNOW-01/02 already compose to fully support this without any
 addition.
 
 ---
@@ -612,7 +623,7 @@ paths without a generic `Power` framework.
 | Wealth → equipment → capability | Ownership/Possession (PROP-01) | A declared purchase/crafting transaction (EXCH-01: value/price/cost/wealth are four distinct facts) | Objects (equipment identity, OBJ-01) then Capability/Progression (PROG-01, once equipped) | Economic reach (must have access to a seller/market) | Price paid, per EXCH-01 | The wielding individual's own future capability checks | PROP-01, EXCH-01, OBJ-01, PROG-01 |
 | Knowledge → better decisions → economic advantage | Knowledge/Belief (KNOW-01) | A real decision informed by that knowledge (AGENCY-01: decision stages causally distinct) | Ownership/Possession or Resources (whatever the decision's own commit path targets) | Requires the knowledge to actually be held by the decider — no silent omniscience (PERC-01) | The decision's own declared cost, if any (COST-01/02) | Whoever the decision affects | KNOW-01, AGENCY-01, COST-01/02 |
 | Office → authority → resource access | Roles/Institutions (INST-01, the office itself) | A declared delegation (INST-02: delegated authority is distinct from capability/membership) | Resources/Production (access rights) | Institutional/jurisdictional reach (LAW-03: scope is declared, never universal by accident) | Whatever the office's own mandate declares | Anyone the office-holder authorizes | INST-01/02, LAW-03 |
-| Magic capability → political consequence | Magic Capability (magic-supernatural's own CAP-01) | A real declared supernatural effect (magic-supernatural's own EFF-01: magic is never the canonical owner of every downstream effect) reaching Authority/Organizations | Roles/Institutions or Organizations (INST-03: power/authority correlated, never substitutable) | Whatever reach that specific supernatural mechanism declares (magic-supernatural's own CAP-02) | Whatever cost/resource that mechanism declares | The reacting institution/faction | magic-supernatural's own CAP-01/02, EFF-01, INST-03 |
+| Magic capability → political consequence | Magic Capability (magic-supernatural's own MCAP-01) | A real declared supernatural effect (magic-supernatural's own EFF-01: magic is never the canonical owner of every downstream effect) reaching Authority/Organizations | Roles/Institutions or Organizations (INST-03: power/authority correlated, never substitutable) | Whatever reach that specific supernatural mechanism declares (magic-supernatural's own MCAP-02) | Whatever cost/resource that mechanism declares | The reacting institution/faction | magic-supernatural's own MCAP-01/02, EFF-01, INST-03 |
 
 **Result:** all four edges are already fully derivable from existing Rules (§4 category A) —
 none required a new cross-domain Rule. PROG-07 (foundational: "different forms of effective
@@ -624,7 +635,7 @@ exactly the "own real, declared mechanism" PROG-07 requires.
 **Repository realization:** PARTIAL for wealth→equipment→capability (Batch 08's own
 `ResourceTransferIntent`/`ItemInstance` evidence is real); MISSING for the other three edges'
 own full chains, though each edge's own component Rules (INST-01/02, LAW-03, magic-supernatural
-CAP-01/02/EFF-01) are individually confirmed MISSING or PARTIAL by their own prior batch's
+MCAP-01/02/EFF-01) are individually confirmed MISSING or PARTIAL by their own prior batch's
 review export, not newly discovered here.
 
 ---
@@ -691,12 +702,29 @@ without treating it as qualitatively different in kind from the "local hero" cas
 
 ## Cross-scenario summary
 
-Across all 12 flagship/counter scenario groups (FI-PER, FI-CRE, FI-OBJ, FI-PLC, FI-LIN, FI-ORG,
-FI-SET, FI-X), every trajectory that reaches a semantic dead end does so at exactly one of two
-points: **(1) no information path completes** (the recurring gap, confirmed here at person,
-creature, object, place, lineage, and organization scale — six of the seven subject types
+**Corrected 2026-09-22 per a targeted follow-up review** — an earlier version of this summary
+claimed every trajectory dead-ends at exactly one of two points, which collapsed
+target-semantic completion together with current repository realization. Kept separate:
+
+**At the target-semantic level**, across all 12 flagship/counter scenario groups (FI-PER,
+FI-CRE, FI-OBJ, FI-PLC, FI-LIN, FI-ORG, FI-SET, FI-X), every trajectory that legitimately stops
+short does so at one of two points: **(1) no information path is declared to exist**, or
+**(2) a downstream consumer exists informationally but never actually reacts** — both
+legitimate defaults, never gaps. No trajectory failed because of an actual Rule contradiction,
+and no trajectory required a new cross-domain Rule to complete — see the Final Integration
+review export's own Rule Gap Admission accounting for the full disposition.
+
+**At the current-repository-realization level**, the picture is not uniform, and this summary
+does not claim it is: the *consistently shared late-stage* gap, confirmed here at person,
+creature, object, place, lineage, and organization scale (six of the seven subject types
 listed in §3, settlement being the seventh and itself dependent on the same underlying gap via
-its own institutions), or **(2) a downstream consumer exists informationally but never actually
-reacts** (a legitimate default, never a gap). No trajectory failed because of an actual Rule
-contradiction, and no trajectory required a new cross-domain Rule to complete — see the Final
-Integration review export's own Rule Gap Admission accounting for the full disposition.
+its own institutions), is the absence of a complete history → propagated recognition →
+consumed reaction chain. This coexists with real, partial upstream realization that differs by
+domain — most notably, object provenance is PARTIAL/INERT-OFF (a real, feature-gated
+`ItemInstance` mechanism, not an absent one; see FI-OBJ-01's own corrected finding), not
+MISSING like most of the other upstream stages. Additional domain-specific realization gaps
+(individual-creature differentiation, settlement-scale institutional persistence, lineage
+declared-channels) remain classified in their own originating batches rather than restated
+here. Nothing in this Final Integration pass supersedes any previously established
+CONFLICTING finding from a prior batch (see the review export's own Rule Contradictions
+section) — this pass's own scenarios simply did not re-exercise those specific mechanisms.

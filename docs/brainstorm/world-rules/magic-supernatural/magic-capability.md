@@ -28,7 +28,7 @@ irrelevant to unregulated/innate/wild magic.
 
 ## Domain Rules
 
-## CAP-01 — Magical knowledge, magical capability, resource/cost availability, target reachability, and institutional authorization are semantically distinct facts where a given mechanism actually uses them; none is implied by any other, and a mechanism may leave one or more of them entirely inapplicable
+## MCAP-01 — Magical knowledge, magical capability, resource/cost availability, target reachability, and institutional authorization are semantically distinct facts where a given mechanism actually uses them; none is implied by any other, and a mechanism may leave one or more of them entirely inapplicable
 
 > Knowing that a spell or ritual exists, or conceptually understanding a magical rule, is
 > never the same fact as being capable of performing it — a scholar may understand magic
@@ -74,7 +74,7 @@ magic still works — capability ≠ authority), [MAG-S08](../scenarios/magic-su
 
 ---
 
-## CAP-02 — Supernatural reach that bypasses ordinary spatial/topological reach must do so through declared supernatural reach semantics; "magic ignores Reach" is never a valid default, and a portal or teleportation is one instance of a declared reach semantic, never forced through ordinary pathfinding
+## MCAP-02 — Supernatural reach that bypasses ordinary spatial/topological reach must do so through declared supernatural reach semantics; "magic ignores Reach" is never a valid default, and a portal or teleportation is one instance of a declared reach semantic, never forced through ordinary pathfinding
 
 > Where an ordinary spatial path is unavailable, a declared supernatural rule may establish a
 > valid alternative reach semantic — touch, line of sight, spatial radius, a named target, a
@@ -193,15 +193,15 @@ still works — magic and institutions; corrects a duplicate citation found duri
 priority.**
 
 - **Confirmed MISSING — no magical capability, knowledge-of-spell, resource, or reach field
-  exists anywhere in this repository.** See CAP-01/CAP-02 above.
+  exists anywhere in this repository.** See MCAP-01/MCAP-02 above.
 - **Confirmed MISSING — no portal or teleportation mechanism exists anywhere**, confirmed via
-  direct search. See CAP-02 above.
+  direct search. See MCAP-02 above.
 
 ## Cross-domain links recorded here
 
-- CAP-01 → Perception/Knowledge (Batch 06), Capability/Progression (Batch 07), Authority
+- MCAP-01 → Perception/Knowledge (Batch 06), Capability/Progression (Batch 07), Authority
   (AUTH-01, Batch 02)
-- CAP-02 → Reach (Batch 02/04's own family — the deferred non-physical-movement boundary this
+- MCAP-02 → Reach (Batch 02/04's own family — the deferred non-physical-movement boundary this
   Rule directly resolves)
 - Inherited capability/effect entry → Agency/Decision (AGENCY-01, Batch 06), Causality
   (CAUSE-01, Foundational), Organizations (Batch 10's authority-can-fail entry)

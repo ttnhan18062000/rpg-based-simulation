@@ -330,7 +330,7 @@ order.
   sacredness entry by adding objective supernatural property as an eighth independent fact
   for Places (PLC-01) — the mandatory boundary those two batches deliberately left open.
   Also directly resolves two named deferred boundaries from earlier batches: Batch 04's
-  non-physical-movement boundary (CAP-02, supernatural reach requires a declared relation,
+  non-physical-movement boundary (MCAP-02, supernatural reach requires a declared relation,
   never a default topology bypass) and Batch 06's own AGENCY-02 reflex/compulsion/
   mind-control carve-out (exercised directly by the mind/memory-magic Inherited entry). The
   single largest finding: no dedicated magic/supernatural mechanism of any kind exists
@@ -346,7 +346,7 @@ order.
   `tmp/magic-supernatural-batch-12-report.md` (local, not part of this catalog) for the full
   disposition report. Revised the same day per a second, targeted semantic-cleanup follow-up
   — wording precision only (10 genuine Domain Rules unchanged): "independent facts" softened
-  to "semantically distinct facts" (SUP-01, CAP-01, PLC-01); SUP-03 generalized away from a
+  to "semantically distinct facts" (SUP-01, MCAP-01, PLC-01); SUP-03 generalized away from a
   caster-centric causal-chain framing; EFF-02 corrected to recognize a durable-property/
   consequence shape of persistent supernatural state (a permanent enchantment outliving its
   caster) alongside the ongoing-cause shape; STR-02's disposition sharpened to separate
@@ -372,13 +372,19 @@ order.
   from Rules that already existed. The candidate "shared historical grammar" wording was
   explicitly tested and rejected as a standalone Rule — already fully composed from HP-01/02/
   05, PROG-06, INFO-01/02, KNOW-01/02, BEL-01, and PLACE-02/ORG-01 acting together. **The one
-  finding carried forward:** a recurring cross-domain implementation realization pattern — at
-  six of seven subject scales, a subject's own real state and/or historical fact exists but
-  nothing currently connects a produced deed to a propagated, consumed recognition event —
-  documented as a repository fact, explicitly not resolved into one proposed
-  `UniversalSignificanceSystem`. A pre-existing, non-contradictory ID collision was also
-  noted (`foundations/capability.md` and `magic-supernatural/magic-capability.md` each define
-  their own `CAP-01`/`CAP-02`) — a traceability disambiguation, not a Rule change. See
+  finding carried forward, precisely stated after a same-day follow-up correction:** no tested
+  subject scale currently realizes a complete generic lived-history → named/contextual
+  recognition → persistent downstream reaction trajectory end-to-end — a recurring, shared
+  *late-stage* gap confirmed at six of seven subject scales, which coexists with real partial
+  upstream realization that differs by domain (most notably, object provenance is
+  PARTIAL/INERT-OFF — `ItemInstance`'s own real, feature-gated, untriggered-in-production
+  provenance machinery, per Batch 08's own evidence — not MISSING). Documented as a repository
+  fact, explicitly not resolved into one proposed `UniversalSignificanceSystem`. **Previously
+  established CONFLICTING findings (e.g., Batch 11A's own TERR-01/TERR-03) are explicitly
+  preserved, not superseded, by this pass.** The pre-existing `CAP-01`/`CAP-02` ID collision
+  between `foundations/capability.md` and `magic-supernatural/magic-capability.md` — initially
+  only disambiguated by file scope — was fixed properly before freeze, per that same follow-up:
+  the magic-capability Rules are renamed `MCAP-01`/`MCAP-02` throughout the Catalog. See
   `review-exports/final-integration-history-significance-review.md`'s own Canonical State
   Ownership matrix and 13 Required Final Answers. See
   `tmp/final-integration-history-significance-report.md` (local, not part of this catalog) for
@@ -748,7 +754,7 @@ priorities):**
   observation, recognition, or cultural interpretation, unless a specific mechanism declares
   one as a causal prerequisite (SUP-01, PLC-01).
 - **Directly resolves two named deferred boundaries from earlier batches.** Batch 04's
-  non-physical-movement boundary (CAP-02: supernatural reach bypasses ordinary topology only
+  non-physical-movement boundary (MCAP-02: supernatural reach bypasses ordinary topology only
   through a declared relation, never a default; a portal's own connection is never assumed
   bidirectional). Batch 06's own AGENCY-02 reserved carve-out for reflex/compulsion/
   mind-control overrides, exercised directly (not newly invented) by the mind/memory-magic

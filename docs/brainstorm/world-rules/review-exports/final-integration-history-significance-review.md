@@ -44,12 +44,19 @@ verified against a live `grep` of each file's own `## <ID> —` headers, not rec
 memory — repository implementation was explicitly **not** treated as the normative input, per
 §2's own instruction.
 
-**Naming-collision note.** `foundations/capability.md` (`CAP-01`–`CAP-05`) and
-`magic-supernatural/magic-capability.md` (`CAP-01`–`CAP-02`) independently reuse the `CAP-0N`
-prefix. This is a pre-existing ID-scoping practice (unique per family file, not globally), not
-a semantic contradiction; every citation below disambiguates ("foundational CAP-0N" vs. "magic
-capability's own CAP-0N"). No rename is proposed — that would be exactly the "rewrite existing
-domains merely for elegance" this phase's non-goals forbid.
+**ID-collision fix (2026-09-22, applied per a targeted follow-up review).** An earlier pass of
+this export found `foundations/capability.md` (`CAP-01`–`CAP-05`) and `magic-supernatural/
+magic-capability.md` (`CAP-01`–`CAP-02`) independently reusing the `CAP-0N` prefix, and treated
+per-file ID scoping as sufficient disambiguation. The follow-up correctly rejected that as
+unsafe once these IDs become citations in Implementation Mapping, gap reports, tickets, and
+architecture decisions — a bare `CAP-01` must identify one Rule without requiring context. Per
+that follow-up's own explicit instruction, this is fixed **before freeze**, not deferred:
+`magic-supernatural/magic-capability.md`'s own two Domain Rules are renamed to `MCAP-01`/
+`MCAP-02` throughout the Catalog (the canonical file itself, every cross-referencing canonical
+file, both batches' own scenario files, and both review exports); `foundations/capability.md`'s
+own `CAP-01`–`CAP-05` are untouched, and no other historical Rule ID was renamed. This was
+citation-safety cleanup, not the "rewrite existing domains merely for elegance" this phase's
+non-goals forbid — the underlying Rule content did not change.
 
 ## Scenario inventory
 
@@ -74,12 +81,27 @@ probes — no fixed scenario count was targeted.
 
 Full per-stage traces (Current authoritative state / Producer or cause / Canonical state
 owner / Information path / Downstream consumer / Persistent consequence, per §32) and explicit
-failure points (§33) are recorded in the scenario file itself, not duplicated here. Summary:
-**every trajectory that reaches a semantic dead end does so at exactly one of two points** —
-no information path completes (the recurring gap, found at six of seven §3-listed subject
-scales: person, creature, object, place, lineage, organization; settlement inherits it via its
-own institutions), or a downstream consumer exists informationally but never reacts (a
-legitimate default). No trajectory failed from an actual Rule contradiction.
+failure points (§33) are recorded in the scenario file itself, not duplicated here. **Corrected
+2026-09-22 per a targeted follow-up review** — an earlier pass of this summary claimed every
+trajectory dead-ends at exactly one of two points; that overstated the result by collapsing
+target-semantic completion together with current repository realization. Separating them:
+
+- **Target semantic completion (this phase's own actual finding):** every flagship trajectory
+  composes end-to-end from existing Rules with no missing semantic link; where a trajectory
+  legitimately stops short at the target-semantic level, it does so either because no
+  information path is declared to exist (a legitimate default, never assumed) or because a
+  downstream consumer exists informationally but never reacts (also legitimate) — both are
+  target-semantic non-events, not defects.
+- **Current repository realization breakpoints (a separate, lightweight finding, not
+  re-investigated in depth here):** the *consistently shared late-stage* realization gap across
+  every tested subject scale is the absence of a complete subject-history → propagated
+  recognition → consumed world-reaction chain. This does not mean every earlier stage is fully
+  realized — additional, domain-specific realization gaps (individual differentiation from
+  aggregate population, object/place provenance activation, settlement-scale institutional
+  persistence, lineage-consequence channels) may also exist upstream of that shared gap, and
+  remain classified in their originating batches' own review exports rather than re-classified
+  here. See the Repository Realization Summary below for the corrected, per-trajectory
+  breakdown.
 
 ## Canonical State Ownership Audit (§20)
 
@@ -98,10 +120,14 @@ legitimate default). No trajectory failed from an actual Rule contradiction.
 | Cultural state | Culture/Collective-Belief (CULT-01/02, BEL-01) | Transmission channels (CULT-04) | Individual belief/practice (CULT-03), Places (sacredness), Institutions | Never reducible to the statistical average of individuals' current states (CULT-02) | Transmission/change requires its own real causal channel; convergence/decay never assumed by default (CULT-04) | None. |
 | Supernatural condition | Magic (`magical-effects.md` EFF-01/02) for the supernatural cause/state itself; the **targeted** domain (Body, Capability, Knowledge, Object, Place, Relationship, Authority, Resource, Movement) for the resulting durable consequence | A declared supernatural mechanism (`supernatural-ontology.md` SUP-03) | Whichever domain the effect targets | Objectively supernatural ≠ culturally sacred ≠ historically significant (`supernatural-entities-places.md` PLC-01) | Persistent supernatural state requires its own declared lifecycle (EFF-02); an ordinary downstream consequence, once produced, is owned entirely by its target domain, never magic | **Explicit anti-pattern already forbidden by name:** magic must never become the canonical owner of every consequence it produces (EFF-01) — the single strongest anti-collapse guarantee in the whole Catalog for this row. |
 
-**Result:** no duplicate canonical ownership, no ambiguous ownership, and no producer-mistaken-
-for-owner pattern was found among these twelve concepts. The one real risk flagged
-(provenance-follows-owner) is already explicitly forbidden by existing Rules (OBJ-01's own
-identity≠ownership split), not an unaddressed gap — a design-discipline reminder, not a defect.
+**Result:** no unresolved canonical-ownership contradiction was found among the twelve audited
+target concepts — specifically, no duplicate canonical ownership, no ambiguous ownership, and
+no producer-mistaken-for-owner pattern among them. This is scoped to what this audit actually
+examined, not a claim that every future state-ownership question across the entire project has
+been exhaustively proven. The one real risk flagged (provenance-follows-owner) is already
+explicitly forbidden by existing Rules (OBJ-01's own identity≠ownership split), not an
+unaddressed gap — a design-discipline reminder, not a defect. Preserved throughout: producer ≠
+owner, projection ≠ truth, history ≠ recognition, magic cause ≠ downstream-state owner.
 
 ## Information / Reach findings (§22/§23)
 
@@ -109,12 +135,15 @@ Every cross-domain reaction audited in the scenario bank traces to a real inform
 composed from Perception (PERC-01), Knowledge (KNOW-01/02), Information transmission
 (INFO-01/02), institutional record-keeping (LAW-02), or Collective Belief (BEL-01) — never an
 implicit "everyone globally knows" shortcut. No repository active bypass around this discipline
-was found (which would be CONFLICTING per §22's own explicit classification instruction) —
-every gap found is an *absence* of a propagation mechanism, not an active circumvention of one.
-Reach is never used as a single universal distance abstraction: FI-X-01's own sampled
-conversion edges and FI-X-03's own scope comparison both confirm that whichever reach relation
-actually applies (physical, social, institutional, economic, informational, or supernatural
-per magic-supernatural's own CAP-02) is mechanism-specific, composing from foundational
+was found by this pass (which would be CONFLICTING per §22's own explicit classification
+instruction) — every gap this pass examined is an *absence* of a propagation mechanism, not an
+active circumvention of one. This does not re-examine or supersede any active bypass a prior
+batch may already have found elsewhere in the repository (see Rule Contradictions/Repository
+Realization Summary below for the explicit preservation of prior CONFLICTING findings). Reach
+is never used as a single universal distance abstraction: FI-X-01's own sampled conversion
+edges and FI-X-03's own scope comparison both confirm that whichever reach relation actually
+applies (physical, social, institutional, economic, informational, or supernatural per
+magic-supernatural's own MCAP-02) is mechanism-specific, composing from foundational
 REACH-01–06 (especially REACH-05's own mediated-reach/intermediary-links model and REACH-06's
 own "declared per mechanism, not assumed universal").
 
@@ -170,11 +199,25 @@ capability change), or significant only posthumously (HP-01's persistence outliv
 subject's own current capability entirely). No Rule anywhere conflates these two axes.
 
 **§5/§6 — significance is not a scalar, and is not history itself.** Confirmed throughout: no
-scenario required, or would even support, a `UniversalSignificanceScore`/`LegendLevel`. Every
-significance fact traced is relational (attributed by a specific actor/culture/institution,
-per PLACE-02's own model, generalized) and multi-stage (event ≠ record ≠ significance ≠
-knowledge-of-significance ≠ reaction — FI-PLC-01's three-attributor case and FI-X-03's scope
-table both exercise this five-way split directly).
+scenario required, or would even support, a `UniversalSignificanceScore`/`LegendLevel`.
+**Corrected 2026-09-22 per a targeted follow-up review** — an earlier pass of this finding
+stated "every significance fact traced is relational," which risked pre-deciding, through
+integration prose rather than an explicit Owner-Attention decision, the open question of
+whether any form of significance could ever be intrinsic (see that section below). The
+precise finding is narrower: **socially/institutionally operative significance is relational/
+contextual in every integration scenario tested** — significant to Faction A, sacred to
+Culture B, threatening within Region C, and therefore always requiring some attributor's own
+recognition/interpretation act (per PLACE-02's own model, generalized). This is explicitly kept
+distinct from the underlying facts a recognizer's attribution is *about*: an objective
+historical fact (HP-01/02), an objective supernatural property (`supernatural-entities-
+places.md`'s PLC-01), or persistent provenance (HP-02) may all exist and persist with zero
+current recognizer — those facts are never called "intrinsically significant" here, but this
+export also does not rule that framing out; it is left open (see Owner-Attention Semantic
+Decisions below). The full chain, kept as four separately-staged facts, is: **historical/
+property fact → potential basis for significance → a recognizer (culture/organization/
+individual) learns and interprets it → attributed/socially-operative significance → a
+consumer reacts → world consequence.** No stage collapses into another; FI-PLC-01's three-
+attributor case and FI-X-03's scope table both exercise this staged split directly.
 
 **§7/§8 — recognition requires a path, and need not be truthful.** Confirmed: every FI-*
 information-propagation step requires an actual path (never assumed); INFO-02's own "content
@@ -199,18 +242,35 @@ them.
 Twelve explicit failure points across the scenario bank (FI-PER-01's FP1–3, FI-CRE-01's FP1–2,
 FI-OBJ-01's FP1–2, FI-PLC-01's FP1–2, FI-LIN-01's FP1–2, FI-ORG-01's FP1–2, FI-SET-01's FP1–2),
 plus five dedicated counter-scenarios (FI-PER-02, FI-CRE-02, FI-OBJ-02, FI-PLC-02, FI-ORG-02).
-Every failure point traces to either "no information path completes" or "a consumer exists but
-never reacts," both explicitly legitimate per the standing direction and per §25/§33's own
-requirement that significance never become automatic.
+At the target-semantic level, every failure point traces to either "no information path is
+declared to exist" or "a consumer exists but never reacts," both explicitly legitimate per the
+standing direction and per §25/§33's own requirement that significance never become automatic
+— this is a statement about what the Rules *permit* as a legitimate stopping point, not a claim
+that no other, earlier-stage repository realization gap exists in any of these trajectories
+(see the corrected Cross-domain trajectory traces and Repository Realization Summary sections).
 
 ## Rule contradictions
 
-**None found.** No two Rules across Foundations or Batches 04–12 were found to require
-incompatible authoritative outcomes for the same fact. The one cross-family naming collision
-(`CAP-01`/`CAP-02` in both `foundations/capability.md` and `magic-supernatural/magic-
-capability.md`) is a traceability hazard, not a contradiction — both definitions remain
-individually correct within their own family scope, and this export disambiguates every
-citation rather than proposing a rename.
+**No new cross-domain contradiction or integration-specific CONFLICTING implementation
+finding was discovered by this Final Integration pass.** No two Rules across Foundations or
+Batches 04–12 were found to require incompatible authoritative outcomes for the same fact.
+The one cross-family naming collision (`CAP-01`/`CAP-02` previously defined in both
+`foundations/capability.md` and `magic-supernatural/magic-capability.md`) was a traceability
+hazard, not a semantic contradiction — it has now been fixed by renaming the magic-capability
+Rules to `MCAP-01`/`MCAP-02` throughout the Catalog, per this same follow-up review (see the
+Catalog inputs section above).
+
+**Previously established repository CONFLICTING findings remain authoritative within their
+originating batch reviews until later Implementation Mapping reassesses them.** This Final
+Integration pass's own lightweight repository check (§40) did not re-investigate, and does not
+supersede, prior CONFLICTING findings already documented elsewhere in the Catalog — most
+notably Batch 11A's own `territory-control.md` TERR-01/TERR-03 finding that this repository's
+sole authoritative `owner_faction_id` field structurally forecloses representing a diverging
+territorial claim from actual control. That finding, and every other prior CONFLICTING/
+PARTIAL/MISSING/INERT-OFF classification recorded in a prior batch's own review export, stands
+exactly as that batch left it. This Final Integration pass simply did not exercise most of
+those mechanisms directly in its own flagship scenarios, and absence of re-exercise here must
+never be read as the finding having disappeared.
 
 ## Rule gaps
 
@@ -234,36 +294,79 @@ not add, content).
 ## Repository Realization Summary (§40, lightweight)
 
 Per flagship trajectory, using only the breakpoints already identified in the scenario bank
-(not a new investigation) — no feature backlog, no ranking:
+(not a new investigation) — no feature backlog, no ranking. **Corrected 2026-09-22 per a
+targeted follow-up review** — the object row previously read a flat MISSING for its own
+provenance mechanism, which understated real, already-established Batch 08 evidence; PARTIAL/
+INERT-OFF is the precise classification, kept distinct from "does not exist":
 
 | Trajectory | Foundation stages | Recognition/propagation stage | World-reaction stage |
 |---|---|---|---|
 | FI-PER (person) | PARTIAL/SUPPORTED (capability, body-condition mechanisms real) | MISSING | MISSING |
 | FI-CRE (creature) | PARTIAL (aggregate ecology real; individual differentiation not) | MISSING | MISSING |
-| FI-OBJ (object) | SUPPORTED (`ItemInstance`'s identity≠ownership split, Batch 08 evidence) | MISSING | MISSING |
+| FI-OBJ (object) | SUPPORTED for object identity≠ownership (`ItemInstance`, Batch 08 evidence); **PARTIAL/INERT-OFF, not MISSING, for provenance specifically** — see note below | MISSING (provenance→cultural-meaning propagation) | MISSING |
 | FI-PLC (place) | PARTIAL (`PlaceState.prior_kind` identity-persistence real, Batch 11A evidence) | MISSING | MISSING |
 | FI-LIN (lineage) | PARTIAL (family/lineage structural facts real, Batch 09 evidence) | MISSING | MISSING |
 | FI-ORG (organization) | SUPPORTED (`FactionState` identity-persists-across-membership, Batch 10 evidence) | MISSING | MISSING |
 | FI-SET (settlement) | SUPPORTED (Place-persists-through-settlement-status-change core, Batch 11A evidence) | MISSING | MISSING |
 
-**No CONFLICTING finding anywhere in this repository reality check** — every gap is an absence
-of a propagation/reaction mechanism, never an active shortcut that bypasses the discipline
-these Rules require (which is the only condition that would warrant CONFLICTING, per the
-standing direction's own repeated reminder across every prior batch).
+**Object provenance note, per Batch 08's own already-established evidence, preserved here
+rather than collapsed into a flat MISSING:**
+
+```text
+Target semantic:      object provenance remains attached to persistent object identity.
+Current realization:  PARTIAL / INERT-OFF -- ItemInstance's own history/provenance
+                       machinery exists (a real, feature-gated mechanism), but its
+                       production activation/significance path is inactive/untriggered.
+End-to-end provenance
+  -> recognition
+  -> reaction:         MISSING.
+```
+
+For Places, provenance/significance realization legitimately remains classified MISSING (no
+comparable feature-gated mechanism has been found for Place provenance specifically) — object
+and Place realization are kept separate rather than assumed identical.
+
+**No NEW cross-domain contradiction or integration-specific CONFLICTING implementation
+finding was discovered by this lightweight repository reality check.** Every gap this check
+itself newly examined is an absence of a propagation/reaction mechanism, not an active
+shortcut that bypasses the discipline these Rules require. This check does not supersede, and
+should not be read as superseding, prior CONFLICTING findings already established in their own
+originating batch review exports (see Rule Contradictions above) — this pass simply did not
+re-exercise those specific mechanisms.
 
 ## Recurring implementation pattern (§41)
 
-**Verified across all six applicable subject scales** (person, creature, object, place,
-organization, lineage — settlement inherits the same gap through its own institutions rather
-than exhibiting an independent instance): *subject has real, durably-owned state and/or a real
-historical fact exists → but named recognition, propagation, or downstream world reaction is
-absent.* This is documented here as a **cross-domain implementation realization pattern** —
-one repository fact recurring at every scale — not as a prescription for one implementation
-solution. Per §41's own explicit instruction, **no `UniversalSignificanceSystem` is proposed**
-as the conclusion; the pattern's own correct semantic decomposition (identity, history,
-information-propagation, and reaction are each already separately and correctly owned by
-existing domains) is itself evidence *against* a unified system, since the six confirmed
-instances above use six different real, existing owning domains, not one shared missing piece.
+**Corrected 2026-09-22 per a targeted follow-up review** — restated more precisely to avoid
+implying this is the *only* repository gap found: **no tested subject scale (person, creature,
+object, place, organization, lineage, settlement) currently realizes a complete generic
+lived-history → named/contextual recognition → persistent downstream reaction trajectory
+end-to-end.** This is compatible with, and does not contradict, partial realization existing
+at earlier stages for specific domains — partial reputation propagation, institutional
+records, one-generation lineage effects, an inactive (INERT/OFF) provenance mechanism for
+objects specifically, and other domain-specific reactions may all legitimately coexist with
+this shared late-stage absence. The important missing composition, stated precisely, is:
+
+```text
+real deed/history
+-> identity-linked evidence/provenance
+-> scoped information propagation
+-> recognition by a specific reactor
+-> durable reactor-owned state
+-> later decision/opportunity/consequence
+```
+
+This is documented here as a **cross-domain implementation realization pattern** — one
+repository fact recurring at every tested scale — not as a prescription for one implementation
+solution, and not as a claim that no other, earlier-stage domain-specific gap exists (those
+remain classified in their own originating batches, per the Rule Contradictions and Repository
+Realization Summary sections above). Per §41's own explicit instruction, **no
+`UniversalSignificanceSystem` is proposed** as the conclusion; the pattern's own correct
+semantic decomposition (identity, history, information-propagation, and reaction are each
+already separately and correctly owned by existing domains) is itself evidence *against* a
+unified system, since the six independently-confirmed scales above (person, creature, object,
+place, organization, lineage — settlement inherits the same gap through its own institutions
+rather than an independent seventh instance) use six different real, existing owning domains,
+not one shared missing piece.
 
 ## Owner-Attention Semantic Decisions (§42)
 
@@ -305,12 +408,16 @@ Catalog phase.**
   other subject/institution through a real information path (Perception → Knowledge/Belief →
   Collective Belief/Institutional Record), which then changes a specific downstream consumer's
   own state (relationship, reputation, standing, opportunity).
-  **Current realization:** MISSING at every one of the six confirmed scales (person, creature,
-  object, place, organization, lineage) — the single most consistently recurring gap this
-  entire Catalog has found, across Batches 07 through this Final Integration phase.
+  **Current realization:** no tested subject scale (person, creature, object, place,
+  organization, lineage, settlement) currently realizes this complete chain end-to-end — the
+  single most consistently recurring late-stage gap this entire Catalog has found, across
+  Batches 07 through this Final Integration phase. This coexists with real, partial upstream
+  realization in specific domains (e.g., object provenance's own PARTIAL/INERT-OFF status
+  below) — the missing piece is specifically the propagated-recognition-to-consumed-reaction
+  composition, not every stage feeding into it.
   **Gap/mismatch:** each individual domain's own state (capability, ownership, place identity,
-  organization identity, lineage) is correctly and separately realized; nothing currently
-  connects a produced deed to a propagated, consumed recognition event.
+  organization identity, lineage) is correctly and separately realized, at least in part;
+  nothing currently connects a produced deed to a propagated, consumed recognition event.
   **Possible implementation direction:** *not designed here* — per §41's own explicit
   instruction not to propose one implementation solution. The semantic decomposition above
   (§20's ownership matrix) suggests any future direction should route through each subject
@@ -320,10 +427,16 @@ Catalog phase.**
 - **Target semantic:** provenance must stay keyed to an object's/Place's own persistent
   identity, never to its current owner/occupant (the accidental-disappearance risk flagged in
   the Canonical State Ownership Audit above).
-  **Current realization:** MISSING (no provenance-tracking mechanism exists at all yet, so the
-  risk has not yet been triggered in either direction).
-  **Gap/mismatch:** none yet realized to mismatch; this is a forward-looking design constraint
-  for whenever provenance tracking is built.
+  **Current realization, corrected 2026-09-22 per a targeted follow-up review — kept object and
+  Place separate rather than collapsed together:** for **objects**, PARTIAL/INERT-OFF —
+  `ItemInstance`'s own history/provenance machinery (Batch 08's own already-established
+  evidence) is a real, feature-gated mechanism, not an absent one; its production activation/
+  significance path is inactive/untriggered, so the risk has not yet been exercised in
+  production, but the mechanism itself is not MISSING. For **Places**, provenance/significance
+  realization legitimately remains MISSING — no comparable mechanism has been found.
+  **Gap/mismatch:** for objects, an existing but dormant mechanism, not an absent one; for
+  Places, a genuine absence. This is a forward-looking design constraint for whenever either
+  is activated or built.
   **Possible implementation direction:** not designed here.
   **Implementation decision:** DEFERRED.
 
@@ -342,10 +455,17 @@ Catalog phase.**
 - [x] significance is not globally automatic (§5, §29, FI-X-03)
 - [x] failure / forgetting / distortion / rediscovery are representable (FI-PER-02, FI-CRE-02,
   FI-OBJ-02, FI-PLC-02, FI-ORG-02, §26/§27/§28)
-- [x] state ownership across domains is coherent (§20's own ownership matrix — no duplicate or
-  ambiguous ownership found)
+- [x] state ownership across domains is coherent — **corrected wording, 2026-09-22:** no
+  unresolved canonical-ownership contradiction was found among the twelve audited target
+  concepts (§20's own ownership matrix); this is not a claim that every future state-ownership
+  question across the entire project has been exhaustively proven, only that producer ≠ owner,
+  projection ≠ truth, history ≠ recognition, and magic-cause ≠ downstream-state-owner all held
+  coherently across everything this pass actually audited
 - [x] aggregate↔individual feedback is coherent where required (§21, FI-X-02)
-- [x] no unresolved cross-domain Rule contradiction remains (Rule Contradictions section above)
+- [x] no unresolved cross-domain Rule contradiction remains — **corrected wording:** no *new*
+  cross-domain contradiction was discovered by this pass; previously established repository
+  CONFLICTING findings (e.g., Batch 11A's TERR-01/TERR-03) remain authoritative within their
+  originating batch reviews and are not superseded here (Rule Contradictions section above)
 - [x] any new Rule has passed strict admission (none was added — the candidate grammar wording
   was explicitly tested and rejected as redundant, per §36)
 - [x] repository gaps remain separate from implementation commitments (Repository Realization
@@ -355,15 +475,18 @@ All 15 conditions are satisfied.
 
 > **FINAL INTEGRATION PASS — WORLD RULE CATALOG READY TO FREEZE**
 >
-> The target world semantics compose coherently across domains. The recurring realization gap
-> (recognition/propagation/world-reaction, confirmed at six subject scales) is a documented
-> repository fact, not a Rule Catalog defect — every dead end found traces to "Rule supports
-> it, repository does not realize it yet," never to a contradiction or a genuinely missing
-> semantic. Known repository realization gaps are documented separately in the Repository
-> Realization Summary and Recurring Implementation Pattern sections above. No implementation
-> commitment is implied by any finding in this export.
+> Target world semantics compose coherently across the tested domains and flagship
+> trajectories. No new cross-domain Rule is required for history/significance/world-reaction
+> composition. The recurring current-repository gap is incomplete realization of the history →
+> scoped recognition → downstream reaction chain, alongside domain-specific gaps already
+> documented in their originating batches (including object provenance's own corrected
+> PARTIAL/INERT-OFF status, not MISSING). Previously established CONFLICTING / PARTIAL /
+> MISSING / INERT-OFF findings remain valid and are not superseded by this integration pass.
+> No implementation commitment is implied by any finding in this export.
 >
-> Next phase: Simulation Rule → Implementation Mapping.
+> Next phase: Simulation Rule → Implementation Mapping. That next phase may reassess
+> repository classifications comprehensively; it must not alter frozen World Rules merely to
+> fit current implementation.
 
 ---
 
@@ -382,8 +505,11 @@ Target semantics answered first, current repository realization noted separately
    identification MISSING).
 3. **Can an ordinary object become a relic through provenance alone?** Yes — FI-OBJ-01, via
    OBJ-01/HP-02/CULT-01/02/04, with historical relic explicitly kept distinct from magical
-   artifact (magic-supernatural's own STR-01/EFF-02). *Realization:* SUPPORTED for object-
-   identity foundation; MISSING for provenance-to-cultural-meaning propagation.
+   artifact (magic-supernatural's own STR-01/EFF-02). *Realization (corrected 2026-09-22):*
+   SUPPORTED for object-identity foundation; **PARTIAL/INERT-OFF, not MISSING, for the
+   provenance mechanism itself** — `ItemInstance`'s own history/provenance machinery is real
+   but feature-gated and untriggered in production (Batch 08's own already-established
+   evidence); MISSING for provenance-to-cultural-meaning propagation and beyond.
 4. **Can an ordinary Place become historically/culturally significant through events?** Yes —
    FI-PLC-01, via PLACE-01/02/03, CULT-01/02/04, with multiple simultaneous attributed meanings
    fully supported by PLACE-02 alone, no new Rule needed. *Realization:* PARTIAL.
@@ -400,12 +526,17 @@ Target semantics answered first, current repository realization noted separately
 7. **Can information about these histories propagate without omniscient shortcuts?** Yes,
    and *must* — every trace in this export explicitly forbids an "everyone globally knows"
    default (§7, §22), requiring PERC-01/KNOW-01-02/INFO-01-02/BEL-01/LAW-02 composed together,
-   with REACH-05/06 governing scope. *Realization:* MISSING (the recurring gap itself).
+   with REACH-05/06 governing scope. *Realization:* no tested subject scale currently realizes
+   this complete propagation chain end-to-end (the recurring late-stage gap) — this coexists
+   with real, partial propagation machinery that already exists for specific domains (e.g.,
+   `BeliefInstitution`, `ItemInstance`'s own inactive provenance path), which is not itself
+   MISSING, only untriggered/unconnected to a full recognition chain.
 8. **Can recognition alter future decisions/opportunities through real consumers?** Yes —
    PROG-06 is the direct foundational anchor cited in every flagship trace; every "world
    reaction" example decomposes to a specific consumer's own real, declared reaction, never a
-   universal one. *Realization:* MISSING (no consumer currently wired to any propagated
-   recognition event).
+   universal one. *Realization:* no consumer is currently wired to a *complete* propagated
+   recognition event at any tested scale; this is the same shared late-stage gap as #7, not an
+   independent finding.
 9. **Can significance remain local/relational rather than globally universal?** Yes — FI-X-03's
    own scope table and PLACE-02/BEL-01's own attribution-relative model both confirm no
    monotonic universal ladder is implied; a subject may be significant in one network and
@@ -428,5 +559,9 @@ Target semantics answered first, current repository realization noted separately
 13. **Does the Catalog support persistent history-driven world change end-to-end?** Yes, as
     target semantics — every stage of the shared historical grammar (§4/§36) is directly
     traceable using only pre-existing Rules, confirmed independently across six different
-    subject types. Current repository realization stops short at the recognition/propagation/
-    world-reaction stage for all six, a documented fact, not a semantic defect.
+    subject types. Current repository realization consistently stops short at the shared
+    recognition/propagation/world-reaction stage for all six — a documented fact, not a
+    semantic defect — while additional, domain-specific realization gaps upstream of that
+    stage (and at least one already-established CONFLICTING finding, Batch 11A's own TERR-01/
+    TERR-03) remain separately classified in their own originating batches rather than
+    restated or superseded here.

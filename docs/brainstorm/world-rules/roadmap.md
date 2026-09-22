@@ -62,7 +62,7 @@ applied — the original single-file draft is superseded and removed. Batch 12 w
 the same day per a second, targeted semantic-cleanup follow-up (wording precision only —
 "independent facts" softened to "semantically distinct facts," EFF-02 broadened to recognize
 a durable-property/consequence shape of persistent supernatural state alongside the
-ongoing-cause shape, SUP-03/CAP-01/CAP-02/STR-02 generalized away from over-strong framings;
+ongoing-cause shape, SUP-03/MCAP-01/MCAP-02/STR-02 generalized away from over-strong framings;
 the 10-Domain-Rule count is unchanged). Batch 12 is **PASS — ready to freeze**. **Final
 Integration (Cross-Domain History / Significance / Propagation) is now complete: PASS — World
 Rule Catalog ready to freeze** (see its own section below) — zero new Rules were required; the
@@ -511,7 +511,7 @@ PLACE-02 and Batch 11B's reclassified sacredness entry (both already attribution
 adding objective supernatural property as an eighth semantically distinct fact for Places
 (PLC-01) — the mandatory boundary those two batches deliberately left open. Also directly
 resolves two named deferred boundaries from earlier batches: Batch 04's non-physical-movement
-boundary (CAP-02) and Batch 06's own AGENCY-02 reflex/compulsion/mind-control carve-out
+boundary (MCAP-02) and Batch 06's own AGENCY-02 reflex/compulsion/mind-control carve-out
 (exercised directly by the mind/memory-magic Inherited entry). The single largest finding: no
 dedicated magic/supernatural mechanism of any kind exists anywhere in this repository,
 comparable in scope to Batch 10's own Law/Enforcement gap — with one genuinely positive
@@ -572,12 +572,22 @@ derivable end-to-end from Rules that already existed before this phase began, in
 candidate "shared historical grammar" wording itself, which was explicitly tested and rejected
 as a standalone Rule (§36) because it is already fully composed from HP-01/02/05, PROG-06,
 INFO-01/02, KNOW-01/02, BEL-01, and PLACE-02/ORG-01 acting together. **The one real finding
-carried forward:** a recurring cross-domain implementation realization pattern — at six of
-seven subject scales (person, creature, object, place, organization, lineage), a subject's own
-real, durably-owned state and/or historical fact exists, but nothing currently connects a
-produced deed to a propagated, consumed recognition event — documented explicitly as a
-repository fact, not resolved into one proposed `UniversalSignificanceSystem`, per the
-instruction's own repeated warning against exactly that move. See
+carried forward, precisely stated after a same-day targeted follow-up correction:** no tested
+subject scale currently realizes a complete generic lived-history → named/contextual
+recognition → persistent downstream reaction trajectory end-to-end — a recurring, shared
+*late-stage* gap at six of seven subject scales (person, creature, object, place, organization,
+lineage), which coexists with real, partial upstream realization that differs by domain (most
+notably, object provenance is **PARTIAL/INERT-OFF**, not MISSING — `ItemInstance`'s own real,
+feature-gated, untriggered-in-production history/provenance machinery, per Batch 08's own
+already-established evidence). Documented explicitly as a repository fact, not resolved into
+one proposed `UniversalSignificanceSystem`, per the instruction's own repeated warning against
+exactly that move. **Previously established repository CONFLICTING findings (most notably
+Batch 11A's own TERR-01/TERR-03 territorial-representation finding) are explicitly preserved,
+not superseded, by this pass** — its own lightweight repository check simply did not
+re-exercise those specific mechanisms. The follow-up also fixed a pre-existing `CAP-01`/
+`CAP-02` ID collision between `foundations/capability.md` and `magic-supernatural/magic-
+capability.md` before freeze, renaming the magic-capability Rules to `MCAP-01`/`MCAP-02`
+throughout the Catalog rather than merely disambiguating by file scope. See
 `review-exports/final-integration-history-significance-review.md` for the full Canonical State
 Ownership matrix, Information/Reach/Aggregate↔Individual audits, and the 13 Required Final
 Answers.
