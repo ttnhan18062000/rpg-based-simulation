@@ -19,66 +19,103 @@ every batch.
 The fifth domain-facing (Milestone B) batch — how material objects, property, resources,
 production, scarcity, exchange, and wealth become durable causal parts of individual and world
 trajectories. Four rule families: Objects/Material Culture, Ownership/Possession, Resources/
-Production, Economy/Exchange. Files live under `material-economy/`, per the batch
-instruction's own directory suggestion — no split or merge was found necessary. Built directly
-with the strict Rule-admission discipline Batch 07's own follow-up review established (pure
-target-semantic Rule statements; every repository fact in Repository evidence/Findings) —
-applied from the first draft this time, not as a correction pass.
+Production, Economy/Exchange. Drafted 2026-09-22, then revised the same day per a targeted
+semantic cleanup (`tmp/world-rule-batch-8-followup-ext-ai.md`) — see "Follow-up revision
+summary" below.
 
-**Naming note.** This family deliberately uses a `PROP-*` prefix for Ownership/Possession
-rather than reusing Batch 01's `OWN-*` — the batch instruction itself stresses "Ownership is
-in-world property semantics, not Batch 01 State Ownership," and reusing the same prefix would
-have invited exactly the conflation the instruction warns against.
+## Follow-up revision summary (2026-09-22)
+
+A targeted semantic cleanup was applied without redesigning the batch or discarding any major
+repository finding:
+
+1. **OBJ-02 reframed.** No longer describes a specific promotion *mechanism* (`ItemStack` →
+   `ItemInstance`) as the normative content; now states the underlying semantic distinction
+   (fungible-quantity vs. identity-bearing representation is a legitimate world choice) and
+   adds a substantive requirement the original draft only implied: meaningful provenance from
+   the source material must remain traceable across individuation. Does not establish that
+   material things are universally fungible by default.
+2. **OBJ-03 reclassified from a Domain Rule to Inherited.** Checked directly against History/
+   Provenance's own scope: HP-02 already names "artifact" (not entity) alongside "fact" and
+   "record" as things whose provenance must be traceable, and HP-05's significance-fading
+   claim uses fully generic language. Both already apply to any first-class simulation
+   subject, not entities alone — "an object can accumulate history/significance" is HP-02/
+   HP-05 applied at Objects' own point of use, not genuinely new content. The flagship
+   trajectory (ordinary object → historically important events → recognized relic) remains
+   fully supported by this reclassification.
+3. **PROP-02 reclassified from a Domain Rule to Inherited.** Its claim ("the durable property
+   relation has an authoritative owner independent of whichever process caused the transfer")
+   is Batch 01's OWN-01/OWN-02 applied at Ownership's own point of use. The broken
+   heirloom-transfer implementation is kept entirely as a CONFLICTING Repository Finding
+   attached to that Inherited entry, per the follow-up's own explicit instruction, not folded
+   into any Rule's own wording.
+4. **PROD-01 generalized.** No longer requires production inputs to be jointly-necessary and
+   non-substitutable; now permits a process to declare whichever inputs/conditions it needs,
+   including any allowed substitution semantics — the only fixed requirement is that a
+   declared-required input may never be silently omitted.
+5. **PROD-02 confirmed already clean** — its own quoted Rule statement did not contain
+   repository-evaluation language; the "confirmed disconnected" finding was already correctly
+   isolated to Repository evidence.
+6. **Two adversarial probes added:** ME-S17 (Individuation From Fungible Material) and ME-S18
+   (Production With Substitutable Inputs) — confirming the revised OBJ-02/PROD-01 are
+   correctly permissive rather than over-restrictive.
+7. **World Rule decisions kept explicitly separate from implementation findings**: each rule
+   family's Repository Findings section now opens with a one-line statement that findings
+   report repository/implementation facts, not World Rule decisions, and that acting on them is
+   implementation planning's own call.
+8. **Both project-level conclusions preserved, not weakened**: "can an ordinary object become
+   historically significant?" — YES in World Rule semantics, PARTIAL/unrealized in the current
+   repository; "wealth only becomes power through concrete causal conversion edges" — one real
+   edge confirmed, three confirmed absent.
 
 ## Canonical files included
 
-- `material-economy/objects-material-culture.md` (OBJ-01, OBJ-02, OBJ-03)
-- `material-economy/ownership-possession.md` (PROP-01, PROP-02)
-- `material-economy/resources-production.md` (PROD-01, PROD-02)
-- `material-economy/economy-exchange.md` (EXCH-01)
-- `scenarios/material-economy-batch-08.md` (ME-S01–S16)
+- `material-economy/objects-material-culture.md` (OBJ-01, OBJ-02 — Domain Rules)
+- `material-economy/ownership-possession.md` (PROP-01 — Domain Rule)
+- `material-economy/resources-production.md` (PROD-01, PROD-02 — Domain Rules)
+- `material-economy/economy-exchange.md` (EXCH-01 — Domain Rule)
+- `scenarios/material-economy-batch-08.md` (ME-S01–S18)
 
 ## Rule admission accounting
 
 Per the standing admission discipline: a statement earns a new local Rule ID only if it adds or
-refines target world semantics beyond Rules already defined elsewhere. This batch's 24 total
-catalog entries break down as:
+refines target world semantics beyond Rules already defined elsewhere. Post-follow-up, this
+batch's 23 total catalog entries break down as:
 
-- **8 genuine Domain Rules**: OBJ-01, OBJ-02, OBJ-03; PROP-01, PROP-02; PROD-01, PROD-02;
-  EXCH-01.
-- **8 Inherited/Applied Foundational Rules** (direct reuse/reconfirmation, no new claim): in
-  `objects-material-culture.md` — creation/destruction via real causal path (CAUSE-01, ID-04),
-  durability as persistent capability-relevant condition (Batch 07's PROG-01/PROG-03); in
-  `ownership-possession.md` — transfer requires a real causal path and proposed≠committed
-  state (CAUSE-01, OWN-04), participation ≠ ownership (OWN-02); in `resources-production.md` —
-  production creates new identity without preserving input identity (ID-04, CAUSE-01),
-  cost-lifecycle for interrupted processes (COST-03); in `economy-exchange.md` — exchange
-  preconditions are domain-declared, never universal (CAP-01–05, AUTH-01–06, REACH-01–06,
-  this batch's own PROP-01, OWN-04), power/wealth conversion edges are specific (Batch 07's
-  PROG-07).
-- **8 Scope/Deferred Boundaries** (no world-semantic claim, only a deferral): universal
-  first-class-object requirement, `ItemInstance` promotion trigger criteria, in
-  `objects-material-culture.md`; Family/Lineage succession eligibility, Law/crime/recovery
-  semantics, in `ownership-possession.md`; crafting trees/content catalogs, in
-  `resources-production.md`; universal transaction engine, equilibrium/stabilizing
-  counterforces, later-domain wealth-conversion downstream semantics, in
-  `economy-exchange.md`.
+- **6 genuine Domain Rules**: OBJ-01, OBJ-02; PROP-01; PROD-01, PROD-02; EXCH-01.
+- **9 Inherited/Applied Foundational Rules** (3 in `objects-material-culture.md`, up from 2 —
+  the reclassified HP-02/HP-05 entry, formerly OBJ-03; 2 in `ownership-possession.md`,
+  unchanged in count — the reclassified OWN-01/OWN-02 entry, formerly PROP-02, replacing the
+  prior generic participation-≠-ownership bullet; 2 in `resources-production.md`, unchanged; 2
+  in `economy-exchange.md`, unchanged): object-level provenance/significance is HP-02/HP-05
+  applied here, object creation/destruction via a real causal path (CAUSE-01, ID-04), and
+  equipment durability as a persistent capability-relevant condition (Batch 07's PROG-01/
+  PROG-03), in `objects-material-culture.md`; the durable property relation has an
+  authoritative owner independent of the transfer's producer (OWN-01, OWN-02), a transfer
+  requires a real causal path (CAUSE-01), in `ownership-possession.md`; production creates new
+  identity without preserving input identity (ID-04, CAUSE-01), interrupted-process
+  cost-lifecycle (COST-03), in `resources-production.md`; exchange preconditions are
+  domain-declared (CAP-01–05, AUTH-01–06, REACH-01–06, PROP-01, OWN-04), power/wealth
+  conversion edges are specific (Batch 07's PROG-07), in `economy-exchange.md`.
+- **8 Scope/Deferred Boundaries** (unchanged by the follow-up): universal first-class-object
+  requirement, `ItemInstance` promotion trigger criteria, in `objects-material-culture.md`;
+  Family/Lineage succession eligibility, Law/crime/recovery semantics, in
+  `ownership-possession.md`; crafting trees/content catalogs, in `resources-production.md`;
+  universal transaction engine, equilibrium/stabilizing counterforces, later-domain
+  wealth-conversion downstream semantics, in `economy-exchange.md`.
 
-**Genuine new-Rule count for this batch: 8.** **Inherited/reused foundation count: 8 entries,
-citing CAUSE-01, ID-04, COST-03, OWN-02, OWN-04, CAP-01–05, AUTH-01–06, REACH-01–06, and this
-batch's own reuse of Batch 07's PROG-01, PROG-03, PROG-07** — 12 distinct foundational Rule IDs
-outside the AUTH/REACH families, plus those two families' own full member sets.
+**Genuine new-Rule count for this batch: 6** (was 8 before the follow-up reclassified OBJ-03
+and PROP-02 to Inherited). **Inherited/reused foundation count: 9 entries, citing CAUSE-01,
+ID-04, COST-03, OWN-01, OWN-02, OWN-04, HP-02, HP-05, CAP-01–05, AUTH-01–06, REACH-01–06, and
+this batch's own reuse of Batch 07's PROG-01, PROG-03, PROG-07.**
 
 ## Rule Inventory
 
 | ID | Category | Short name | One-line semantic purpose | Status |
 |---|---|---|---|---|
 | OBJ-01 | Domain Rule | Object Identity ≠ Owner/Holder/Value/Quantity | A sword changing owner does not change which sword it is. | Accepted |
-| OBJ-02 | Domain Rule | Fungible Quantity by Default; Promotable to Individual Identity | Graduated boundary; promotion is a declared, opt-in choice. | Accepted (mechanism INERT/OFF) |
-| OBJ-03 | Domain Rule | Object-Level Provenance/Significance, Distinct from Entity-Level | An object may accumulate its own historical significance. | Accepted (never realized in practice) |
+| OBJ-02 | Domain Rule | Fungible-or-Individuated Representation; Provenance Must Survive Individuation | A world choice, not a universal-fungible default; provenance requirement added. | Accepted, revised |
 | PROP-01 | Domain Rule | Ownership/Possession/Custody/Access/Control Are Distinct | A mismatch (illegitimate possession) must be representable. | Accepted (PARTIAL — mismatch confirmed unrepresented) |
-| PROP-02 | Domain Rule | Transfer Producer ≠ Transfer Owner | Resolves Batch 01's OWN-05 open question for the object/property side. | Accepted (CONFLICTING implementation) |
-| PROD-01 | Domain Rule | Jointly-Necessary, Non-Substitutable Production Inputs | Multiple input categories may be jointly required. | Accepted |
+| PROD-01 | Domain Rule | Production Declares Its Own Inputs/Conditions, Including Substitution Semantics | Generalized; required inputs cannot be silently omitted. | Accepted, revised |
 | PROD-02 | Domain Rule | Scarcity ≠ Price/Value/Desire | Real, world-driven; confirmed disconnected from this repo's own pricing. | Accepted (confirmed disconnected) |
 | EXCH-01 | Domain Rule | Value ≠ Price ≠ Cost ≠ Wealth, No Universal Value | Price may derive from plural, non-universal influences. | Accepted |
 
@@ -86,10 +123,11 @@ outside the AUTH/REACH families, plus those two families' own full member sets.
 
 | Entry (as stated in its own file) | Foundational Rule(s) reused | File |
 |---|---|---|
+| Object-level provenance/significance (formerly OBJ-03) | HP-02, HP-05 | `objects-material-culture.md` |
 | Object creation/destruction via real causal path, new creation = new identity | CAUSE-01, ID-04 | `objects-material-culture.md` |
 | Equipment durability is persistent, capability-relevant condition | PROG-01, PROG-03 (Batch 07) | `objects-material-culture.md` |
-| Ownership transfer requires a real causal path and proposed≠committed state | CAUSE-01, OWN-04 | `ownership-possession.md` |
-| Participation in producing a change ≠ ownership of the resulting state | OWN-02 | `ownership-possession.md` |
+| Durable property relation has an authoritative owner independent of the transfer producer (formerly PROP-02) | OWN-01, OWN-02 | `ownership-possession.md` |
+| An ownership transfer requires a real causal path | CAUSE-01 | `ownership-possession.md` |
 | Production creates new object identity without preserving input identity | ID-04, CAUSE-01 | `resources-production.md` |
 | Interrupted process cost has its own declared lifecycle | COST-03 | `resources-production.md` |
 | Exchange preconditions are domain-declared, never universal | CAP-01–05, AUTH-01–06, REACH-01–06, PROP-01, OWN-04 | `economy-exchange.md` |
@@ -99,7 +137,7 @@ outside the AUTH/REACH families, plus those two families' own full member sets.
 
 | Scenario ID | Short name | Trajectory | Rule families challenged | Result |
 |---|---|---|---|---|
-| ME-S01 | Sword Changes Hands | create → own → buy → die → heir | Objects, Ownership | Partial |
+| ME-S01 | Sword Changes Hands | create → own → buy → die → heir | Objects, Ownership (inherited) | Partial |
 | ME-S02 | Possession Without Ownership | theft → possession ≠ ownership | Ownership | Revealed gap |
 | ME-S03 | Owner Without Possession | goods owned, stored elsewhere | Ownership | Covered |
 | ME-S04 | Shared Access | org controls stock → member partial use | Ownership | Revealed gap |
@@ -112,215 +150,200 @@ outside the AUTH/REACH families, plus those two families' own full member sets.
 | ME-S11 | Theft | non-consensual transfer → possession changes | Ownership | Revealed gap |
 | ME-S12 | Wealth Does Not Automatically Mean Power | wealth → no valid path → capability unchanged | Economy (inherited) | Covered |
 | ME-S13 | Resource Access but No Ownership | harvest access ≠ owning the source | Ownership | Covered |
-| ME-S14 | Ordinary Object Becomes Relic (flagship) | object → events → provenance → recognition | Objects | Revealed missing rule enforcement |
-| ME-S15 | Inheritance | death → property persists → succession → transfer | Ownership | Revealed contradiction (CONFLICTING) |
+| ME-S14 | Ordinary Object Becomes Relic (flagship) | object → events → provenance → recognition | Objects (inherited HP-02/HP-05) | Revealed missing rule enforcement |
+| ME-S15 | Inheritance | death → property persists → succession → transfer | Ownership (inherited) | Revealed contradiction (CONFLICTING) |
 | ME-S16 | Market Feedback (schematic) | scarcity → price/behavior → production → scarcity | Resources/Production, Economy | Blocked |
+| ME-S17 | Individuation From Fungible Material (added) | stack → one portion individuated → own history | Objects | Covered by permission; MISSING by exercise |
+| ME-S18 | Production With Substitutable Inputs (added) | material A unavailable → declared substitute B → valid | Resources/Production | Covered by permission; not exercised |
 
 ## Coverage Summary
 
 **Objects/Material Culture**
 - object identity ≠ owner/holder/value/quantity — ME-S01
-- fungible quantity vs. promotable individual identity, object-level provenance — ME-S05,
-  ME-S14
+- fungible-or-individuated representation, provenance-through-individuation — ME-S05, ME-S17
+- object-level provenance/significance (inherited HP-02/HP-05) — ME-S14
 
 **Ownership/Possession**
 - ownership/possession/custody/access/control distinctness — ME-S02, ME-S03, ME-S11, ME-S13
 - collective ownership with partial member access — ME-S04
-- transfer producer ≠ transfer owner, resolving OWN-05 — ME-S15
+- authoritative owner independent of transfer producer (inherited) — ME-S15
 
 **Resources/Production**
-- jointly-necessary, non-substitutable inputs — ME-S05
+- production declares its own inputs/conditions, including substitution — ME-S05, ME-S18
 - interrupted-process cost lifecycle — ME-S06
 - scarcity is real and world-driven, confirmed disconnected from price — ME-S07, ME-S08, ME-S16
 
 **Economy/Exchange**
 - value/price/cost/wealth distinctness, plural price influences — ME-S09
-- power/wealth conversion edges are specific — ME-S10, ME-S12
+- power/wealth conversion edges are specific (inherited) — ME-S10, ME-S12
 
 ## Deferred Semantics
 
 - No universal first-class-object requirement; `ItemStack`'s fungible default remains
-  legitimate.
-- `ItemInstance`'s own promotion trigger criteria (what makes an item worth tracking
-  individually) are not decided here.
-- Family/Lineage succession eligibility (*who* is a valid heir) stays with a future domain;
-  this batch owns only the resulting property relation.
-- Law/crime/recovery semantics for illegitimate possession stay deferred.
-- Crafting trees/content catalogs are not designed here.
-- No universal transaction engine, no required equilibrium for economic feedback loops, and
-  later-domain wealth-conversion downstream semantics (Social/Politics) all stay deferred.
+  legitimate — and, per the follow-up, this is now explicitly not framed as a universal-
+  fungible-by-default claim either.
+- `ItemInstance`'s own promotion trigger criteria are not decided here.
+- Family/Lineage succession eligibility, Law/crime/recovery semantics for illegitimate
+  possession, crafting trees/content catalogs, universal transaction engine, required
+  equilibrium for economic feedback loops, and later-domain wealth-conversion downstream
+  semantics all stay deferred, unchanged by the follow-up.
 
 ## Cross-domain findings
 
-- Objects/Ownership ↔ History/Provenance: OBJ-03's object-level provenance/significance claim
-  is a genuinely new category alongside HP-01/HP-04/HP-05's subject-level claims, not a
-  restatement of them — the first time this Rule Catalog has addressed provenance for a
-  non-entity subject.
-- Ownership ↔ State Ownership (Batch 01): PROP-02 is this batch's own resolution of OWN-05's
-  own carried-forward open question ("succession's property/wealth transfer... deferred
-  jointly")  — and the resolution immediately surfaced a real implementation defect
-  (the `"CHEST"` resolver gap), making this one of the highest-value cross-domain resolutions
-  this Catalog has produced, because verifying the resolution's own repository evidence is what
-  found the bug.
-- Resources/Production ↔ Perception/Knowledge (Batch 06) ↔ Economy: PROD-02's confirmed
-  scarcity/price disconnection and `ServiceOpportunityProvider`'s confirmed perception-bypass
-  (Repository Finding, `ownership-possession.md`) are two independent but related findings
-  about this repository's economic decision-making surface reading raw world/registry state
-  rather than any subject-local, causally-connected representation.
+- Objects/Ownership ↔ History/Provenance: the reclassification of OBJ-03 is the cleanest
+  example in this batch of the admission discipline working correctly on a second pass — a
+  claim that felt locally important on first draft, but that checking History/Provenance's own
+  actual scope (HP-02 explicitly names "artifact") showed was already covered.
+- Ownership ↔ State Ownership (Batch 01): the reclassified PROP-02 entry preserves this
+  batch's own resolution of OWN-05's carried-forward open question (which domain owns the
+  property relation after a death-triggered transfer) as Repository-evidence-bearing
+  Inherited content — the resolution's own value (finding the `"CHEST"` resolver gap) survives
+  the reclassification untouched.
+- Resources/Production: PROD-01's generalization directly parallels Batch 07's PROG-05
+  ("repeatable sources must declare their scaling/limiting semantics, unlimited must not arise
+  accidentally") — both moved from a specific restrictive shape to a declared-choice
+  permission during their own follow-up review, the same corrective pattern applied twice now.
 - Economy/Exchange ↔ Capability/Progression (Batch 07): the inherited power/wealth-conversion
-  entry directly parallels PROG-07's own combat/fame-side finding — of the two conversion
-  chains this Rule Catalog has now checked (combat→fame→influence, wealth→protection→
-  influence), both break at the same downstream point (political/social influence), a real,
-  recurring pattern worth a future owner's attention.
+  entry directly parallels PROG-07's own combat/fame-side finding — unchanged by this
+  follow-up.
 
-**Explicit call-out — genuine Domain Rule count:** **8.**
+**Explicit call-out — genuine Domain Rule count:** **6** (was 8 before the follow-up).
 
 **Explicit call-out — object identity vs. resource representation:** Object identity
-(`ItemInstance`, opt-in) and resource-quantity representation (`ItemStack`, default) coexist
-without collapsing — OBJ-01/OBJ-02. The promotion boundary between them is real and
-well-designed but never exercised in production (confirmed INERT/OFF).
+(individuated, `ItemInstance`) and resource-quantity representation (`ItemStack`, default)
+coexist without collapsing — OBJ-01/OBJ-02. OBJ-02 no longer claims fungibility is universal
+by default; it states the choice is a world's own to make, with provenance required to survive
+individuation when it occurs.
 
 **Explicit call-out — ownership vs. possession/access/control:** Distinct in principle
-(PROP-01); collapsed to inventory-location in practice for the general (non-`ItemInstance`)
-case; a legitimate-owner/current-possessor mismatch (theft) is confirmed unrepresentable
-anywhere in this repository.
+(PROP-01); collapsed to inventory-location in practice for the general case; a legitimate-
+owner/current-possessor mismatch (theft) is confirmed unrepresentable anywhere in this
+repository.
 
 **Explicit call-out — whether inheritance transfers real property:** **No — confirmed
-CONFLICTING, the single most significant finding in this batch.** The heirloom-transfer intent
-is constructed with `source_kind="CHEST"`, which `src/core/conservation.py`'s resolver does
-not handle, rejecting every such transfer with `UNKNOWN_SOURCE_KIND`. Property persists as a
-generically-lootable corpse; it never actually reaches the resolved heir.
+CONFLICTING, the single most significant finding in this batch, unchanged by the follow-up.**
+The heirloom-transfer intent is constructed with `source_kind="CHEST"`, which `src/core/
+conservation.py`'s resolver does not handle, rejecting every such transfer with
+`UNKNOWN_SOURCE_KIND`. This is a repository/implementation finding, not a World Rule
+decision — the target semantics (a durable property relation has an authoritative owner
+independent of the transfer's producer) remain coherent and are now correctly filed as
+Inherited rather than a new Rule.
 
 **Explicit call-out — whether scarcity derives from real world state:** **Yes, confirmed.**
-`ResourceNodeState.remaining_charges` depletes from real harvest events and feeds real
-downstream route-scoring consequences.
 
-**Explicit call-out — whether prices have causal inputs:** **Yes, but not from scarcity.**
-`calculate_price()`'s multiplier chain (`region_mod`/`building_mod`/`type_bias`) is real and
-causal, but every write site for those modifiers is static/authored content — never computed
-from actual resource depletion. Scarcity and price are confirmed disconnected.
+**Explicit call-out — whether prices have causal inputs:** **Yes, but not from scarcity** —
+confirmed disconnected, unchanged by the follow-up.
 
 **Explicit call-out — whether wealth has meaningful conversion edges:** **One real edge
 (wealth → equipment → capability); three confirmed MISSING (protection, political influence,
-supply-chain control).** Of every lived-history conversion chain this Rule Catalog has traced
-so far, wealth's own breaks earliest.
+supply-chain control).** Preserved project-level conclusion: wealth only becomes power through
+concrete causal conversion edges.
 
 **Explicit call-out — whether economic agents use omniscient information:** **Yes, confirmed
-CONFLICTING, reconfirming Batch 06's own pattern from the market/service side.**
-`ServiceOpportunityProvider.get_opportunities()` reads `ServiceRegistry.all()` filtered only by
-region, with no `PerceptionGate` check — the same active-violation shape as Batch 06's
-`ResourceOpportunityProvider`/`HarvestScorer`.
+CONFLICTING**, unchanged by the follow-up.
 
-**Explicit call-out — whether objects can acquire provenance/significance:** **Permitted by a
-real, fully-wired mechanism (`ItemInstance`); never realized in practice** — gated
-`ENABLE_ITEM_INSTANCE_HISTORY` OFF, and zero production call sites ever set
-`significant=True`.
+**Explicit call-out — whether objects can acquire provenance/significance:** **Preserved
+project-level conclusion: YES in World Rule semantics (now via History/Provenance's own
+HP-02/HP-05, correctly filed as Inherited rather than a new Objects-specific Rule) — PARTIAL/
+unrealized in the current repository.**
 
-**Explicit call-out — which economic/material state is causally inert:** `ItemInstance`'s own
-provenance-tracking mechanism (INERT/OFF, both flag-gated and never-triggered);
-`faction_{id}_gold` vaults (accumulate, never spent by members); `ContractKind.PROTECTION`
-(DORMANT, certification-only).
+**Explicit call-out — which economic/material state is causally inert:** unchanged by the
+follow-up — `ItemInstance`'s provenance-tracking mechanism, `faction_{id}_gold` vaults,
+`ContractKind.PROTECTION`.
 
-**Explicit call-out — whether an ordinary object can causally become a relic:** **Permitted by
-the target Rules; never realized by the current repository** — see ME-S14 and OBJ-03's own
-evidence. The mirror image of Batch 07's own non-HERO-significance finding, on the object side
-rather than the individual-entity side.
+**Explicit call-out — whether an ordinary object can causally become a relic:** see the
+preserved project-level conclusion above.
 
 ## Repository Findings
 
-Classified per the CONFLICTING/INERT-OFF/MISSING distinction Batch 06/07 established.
+Classified per the CONFLICTING/INERT-OFF/MISSING distinction Batch 06/07 established. **These
+are repository/implementation facts, not World Rule decisions** — the Rules and Inherited
+entries above state what this batch's own target semantics require and permit; the findings
+below report where this repository's own current implementation does or does not realize them.
+Whether and how to act on any of them is implementation planning's own call, not this Rule
+Catalog's.
 
-**CONFLICTING (2 findings):**
+**CONFLICTING (2 findings, unchanged by the follow-up):**
 1. **The single most significant finding in this whole batch.** The heirloom-transfer
-   mechanism constructs a real `ResourceTransferIntent(source_kind="CHEST")` that
-   `src/core/conservation.py`'s resolver has no handler for, rejecting it with
-   `UNKNOWN_SOURCE_KIND` every time. See PROP-02.
+   mechanism constructs a real `ResourceTransferIntent(source_kind="CHEST")` that `src/core/
+   conservation.py`'s resolver has no handler for, rejecting it with `UNKNOWN_SOURCE_KIND`
+   every time.
 2. `ServiceOpportunityProvider.get_opportunities()` reads raw `ServiceRegistry` state with no
-   perception gate — an active violation of Batch 06's own PERC-01 default, reconfirming the
-   same pattern found for resource opportunities.
+   perception gate.
 
-**INERT/OFF (2 findings):**
+**INERT/OFF (2 findings, unchanged):**
 3. `ItemInstance`'s provenance/significance mechanism is fully wired but gated
-   `ENABLE_ITEM_INSTANCE_HISTORY` (default OFF) and never triggered (`significant=True` set
-   nowhere in production).
-4. `ContractKind.PROTECTION` exists and is appraised but constructed only in
-   `src/certification/scenarios.py`, never real production gameplay code.
+   `ENABLE_ITEM_INSTANCE_HISTORY` (default OFF) and never triggered.
+4. `ContractKind.PROTECTION` exists and is appraised but constructed only in certification
+   fixtures.
 
-**MISSING (4 findings):**
+**MISSING (4 findings, unchanged):**
 5. No theft/illegitimate-possession representation exists anywhere.
-6. No individual member access to collective/organizational wealth exists — faction vaults
-   accumulate, never spent.
+6. No individual member access to collective/organizational wealth exists.
 7. No wealth → political-influence or wealth → supply-chain-control conversion edge exists.
-8. No mechanism computes `price_modifiers` from real scarcity/depletion data — price and
-   scarcity are confirmed disconnected mechanisms.
+8. No mechanism computes `price_modifiers` from real scarcity/depletion data.
 
-**Not classified under the three-way distinction (an architecture/documentation observation):**
-9. "Value" to a specific subject (as opposed to market price) has no dedicated mechanism —
-   architecturally permitted to diverge from price, but this repository does not yet implement
-   a separate computation that could.
+**Not classified under the three-way distinction:**
+9. "Value" to a specific subject has no dedicated mechanism distinct from market price.
 
 Key evidence, all confirmed by direct code/doc inspection: `docs/mechanics/
-03_economic_laws.md`, `src/core/state.py` (`ItemStack`, `ItemInstance`, home storage),
-`src/engine/apply_plan.py` (corpse creation), `src/systems/lifecycle_systems/lifecycle.py`
-(heirloom transfer), `src/core/conservation.py` (the `source_kind` resolver dispatch),
-`src/systems/economy_systems/market.py` (`calculate_price`), `src/world/
-regional_sovereignty.py` (`faction_{id}_gold`), `src/world/providers/services.py`
-(`ServiceOpportunityProvider`), `docs/brainstorm/
-2026-09-19-core-rpg-lived-history-growth-brainstorm.md` (Scenario B, cross-checked against
-source for `ContractKind.PROTECTION`).
+03_economic_laws.md`, `src/core/state.py`, `src/engine/apply_plan.py`,
+`src/systems/lifecycle_systems/lifecycle.py`, `src/core/conservation.py`,
+`src/systems/economy_systems/market.py`, `src/world/regional_sovereignty.py`,
+`src/world/providers/services.py`, `docs/brainstorm/
+2026-09-19-core-rpg-lived-history-growth-brainstorm.md`.
 
 ## Owner-attention decisions
 
-- **Highest priority.** Whether to fix the heirloom-transfer resolver gap (add a `"CHEST"`
-  handler, or route the transfer through an already-handled `source_kind` such as `CORPSE`) —
-  a confirmed, real defect in a mechanism that otherwise looks complete.
-- Whether `ENABLE_ITEM_INSTANCE_HISTORY` should be turned on, and what should trigger
-  `significant=True` in production.
-- Whether theft/illegitimate-possession should gain its own representable state.
-- Whether individual members should gain real access to collective/organizational wealth.
-- Whether `price_modifiers` should ever be computed from real scarcity/depletion data.
-- Whether wealth should gain a real protection/political-influence/supply-chain conversion
-  edge, and whether `ServiceOpportunityProvider` should be re-scoped through perception.
+Unchanged by the follow-up — see the batch's own original list: fixing the heirloom-transfer
+resolver gap (highest priority); `ENABLE_ITEM_INSTANCE_HISTORY` and its trigger criteria;
+theft/illegitimate-possession representation; collective-wealth member access;
+scarcity-driven `price_modifiers`; wealth → protection/political-influence/supply-chain
+conversion edges; re-scoping `ServiceOpportunityProvider` through perception.
 
 ## Candidate disposition
 
-Eight Domain Rules were drafted across four families (3 Objects/Material Culture, 2
-Ownership/Possession, 2 Resources/Production, 1 Economy/Exchange) — **all 8 accepted, 0
-rejected, 0 split, 0 merged.** No target rule count was set in advance. Eight further entries
-were identified as Inherited/Applied Foundational Rules and eight as Scope/Deferred
-Boundaries — none required a new Rule ID, and none represents lost work.
+Six Domain Rules survive the follow-up's stricter re-examination across four families (2
+Objects/Material Culture, 1 Ownership/Possession, 2 Resources/Production, 1 Economy/
+Exchange) — **all 6 accepted, 0 rejected.** Two Domain Rules from the original draft (OBJ-03,
+PROP-02) were reclassified to Inherited; two others (OBJ-02, PROD-01) were generalized rather
+than reclassified or dropped. No target-semantic contradiction was introduced by any of these
+changes — every reclassification narrowed the Domain Rule count without discarding a single
+piece of evidence, scenario result, or cross-domain link; every generalization widened a
+Rule's own permission without removing any repository finding attached to it. Nine
+Inherited/Applied Foundational Rules and eight Scope/Deferred Boundaries round out the 23
+total catalog entries.
 
 Full per-rule disposition, evidence, and rationale: see the canonical files above, or
 `tmp/material-economy-batch-08-report.md` (local review report, not part of this catalog).
 
 ---
 
-> **BATCH 08 (OBJECTS / OWNERSHIP / RESOURCES / ECONOMY) READY FOR HIGH-LEVEL EXTERNAL
-> REVIEW.**
+> **BATCH 08 PASS — READY TO FREEZE.**
 
-All required artifacts exist: four rule-family files (8 genuine Domain Rules; 24 total
-catalog entries), one scenario file (16 scenarios covering all sixteen required seed probes),
-this review export with all required sections plus every explicitly-required call-out, and a
-local disposition report. No contradiction was found against any prior batch — this batch's
-own genuinely new material is concentrated in one confirmed CONFLICTING implementation defect
-(the heirloom-transfer resolver gap, PROP-02) and one confirmed INERT/OFF mechanism
-(`ItemInstance` provenance tracking, OBJ-02/03), both structurally identical in shape to
-findings prior batches already established elsewhere, plus a reconfirmation of Batch 06's own
-omniscient-economic-decision pattern. All thirteen of the batch instruction's own
-stop-condition checklist items are satisfied: object identity and resource quantity are
-clearly distinguished; ownership/possession/access/control are not collapsed (though the
-general case's own collapse-in-practice is honestly recorded); transfer semantics have valid
-causal ownership updates in principle, with a confirmed real defect named rather than
-smoothed over; production/conversion semantics preserve appropriate provenance; scarcity is
-distinct from price/value (and confirmed disconnected in practice); wealth matters only
-through real conversion paths, most of which are confirmed missing; inheritance's property
-side is semantically clear even though the implementation is broken; theft/non-owner
-possession is representable *in principle* by this Rule Catalog's own semantics, even though
-this repository does not yet implement it; economic decisions were checked against Knowledge/
-Agency boundaries and a real violation was found and classified correctly; material/economic
-state with no consumer is identified; object lived-history/significance has been probed;
-aggregate economic behavior's entity-facing consequences were traced; genuine Rules remain
-separated from repository findings.
+All required artifacts exist: four rule-family files (6 genuine Domain Rules; 23 total
+catalog entries), one scenario file (18 scenarios covering all sixteen required seed probes
+plus two follow-up-required additions), this review export with all required sections plus
+every explicitly-required call-out, and a local disposition report. No target-semantic
+contradiction was introduced by the follow-up's own reclassifications or generalizations — each
+one either narrowed which statements carry a local Rule ID (OBJ-03, PROP-02 → Inherited) or
+widened a Rule's own permission (OBJ-02, PROD-01), without changing what any Rule requires of
+the world and without discarding any repository finding. All thirteen of the batch
+instruction's own original stop-condition checklist items remain satisfied, several sharpened
+rather than weakened: object identity and resource quantity are clearly distinguished, with
+the fungible/individuated boundary now stated as a world choice rather than a default;
+ownership/possession/access/control are not collapsed, with the general case's own
+collapse-in-practice honestly recorded; transfer semantics have a clear authoritative-owner
+requirement, with a confirmed real defect named rather than smoothed over; production/
+conversion semantics preserve appropriate provenance, now explicitly required across
+individuation too; scarcity is distinct from price/value and confirmed disconnected in
+practice; wealth matters only through real conversion paths, most confirmed missing;
+inheritance's property side is semantically clear even though the implementation is broken;
+theft/non-owner possession is representable in principle, even though unimplemented; economic
+decisions were checked against Knowledge/Agency boundaries and a real violation was found;
+material/economic state with no consumer is identified; object lived-history/significance has
+been probed and both preserved project-level conclusions remain intact; aggregate economic
+behavior's entity-facing consequences were traced; genuine Rules remain separated from
+repository findings, now under a stricter reading than the first draft applied.
 
-Do not begin Batch 09 (Social Relations / Family / Lineage) until this batch receives
-high-level review.
+Proceed to Batch 09 (Social Relations / Family / Lineage).

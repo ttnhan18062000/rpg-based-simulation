@@ -8,11 +8,13 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Objects / Ownership / Resources / Economy (Batch 08)
 
-**Purpose/scope.** Sixteen scenarios used to pressure-test the Objects/Material Culture,
+**Purpose/scope.** Eighteen scenarios used to pressure-test the Objects/Material Culture,
 Ownership/Possession, Resources/Production, and Economy/Exchange rule families in
 `material-economy/objects-material-culture.md`, `ownership-possession.md`,
-`resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`.
-Covers all sixteen required seed probes from that instruction's §15.
+`resources-production.md`, and `economy-exchange.md`, per `tmp/world-rule-batch-8-ext-ai.md`
+and its 2026-09-22 follow-up (`tmp/world-rule-batch-8-followup-ext-ai.md`). Covers all sixteen
+required seed probes from the original instruction's §15, plus two further probes the
+follow-up required (ME-S17, ME-S18).
 
 Scoring uses the same vocabulary as prior batches: **covered** / **partially covered** /
 **blocked** / **revealed missing rule** / **revealed contradiction**, against current
@@ -25,14 +27,15 @@ repository behavior, not the ideal design.
 A smith creates a sword; a merchant owns it; a warrior buys it; the warrior dies; an heir
 receives it.
 
-- **Rules invoked:** OBJ-01, Inherited (ID-04, CAUSE-01).
+- **Rules invoked:** OBJ-01, Inherited (ID-04, CAUSE-01, the reclassified "authoritative owner
+  independent of transfer producer" entry in `ownership-possession.md`).
 - **Result: partially covered.** Object identity itself is confirmed stable across ownership
   changes for a promoted `ItemInstance` (OBJ-01) — but this specific chain's *final* step
   (the warrior's death, heir receiving it) is where this batch's own most significant finding
   bites: the heirloom-transfer intent that step would rely on is confirmed rejected by
-  `src/core/conservation.py`'s resolver (`ownership-possession.md`'s PROP-02). The sword's own
-  identity survives every step in principle; whether the heir actually *receives* it in this
-  repository's own current implementation does not.
+  `src/core/conservation.py`'s resolver. The sword's own identity survives every step in
+  principle; whether the heir actually *receives* it in this repository's own current
+  implementation does not.
 
 ## ME-S02 — Possession without ownership
 
@@ -183,21 +186,24 @@ source.
 An ordinary object participates in historically important events, accumulates provenance/
 significance, and later entities value or react to this specific object.
 
-- **Rules invoked:** OBJ-02, OBJ-03.
+- **Rules invoked:** OBJ-02, Inherited (HP-02, HP-05 — the reclassified entry originally
+  drafted as OBJ-03).
 - **Result: revealed missing rule enforcement — the trajectory is permitted by design but
   never realized in practice, the mirror image of Batch 07's own non-HERO-significance
-  finding.** `ItemInstance`'s append-only `owner_history` is exactly the accumulating record
-  this trajectory needs, and the promotion mechanism (`significant=True`) is fully wired
-  end-to-end — but gated `ENABLE_ITEM_INSTANCE_HISTORY` (default OFF) and, independently,
+  finding.** `ItemInstance`'s append-only `owner_history` is exactly the accumulating causal-
+  ancestor record HP-02 requires, and the promotion mechanism (`significant=True`) is fully
+  wired end-to-end — but gated `ENABLE_ITEM_INSTANCE_HISTORY` (default OFF) and, independently,
   never triggered by any production call site. No ordinary object has ever actually begun
-  accumulating provenance in this repository. The current Rules permit the full trajectory;
-  the current repository realizes none of it.
+  accumulating provenance in this repository. **Target answer, preserved from the original
+  draft: YES in World Rule semantics (HP-02/HP-05 already permit it, generally, for any
+  first-class subject including artifacts) — PARTIAL/unrealized in the current repository.**
 
 ## ME-S15 — Inheritance
 
 An owner dies; property persists; a valid succession trigger fires; ownership changes.
 
-- **Rules invoked:** PROP-02.
+- **Rules invoked:** Inherited (the "authoritative owner independent of transfer producer"
+  entry, originally drafted as PROP-02).
 - **Result: revealed contradiction — CONFLICTING, the single most significant finding in this
   batch.** `LifecycleSystem`'s heirloom-transfer logic resolves a real heir and constructs a
   real `ResourceTransferIntent(source_kind="CHEST")` — but `src/core/conservation.py`'s own
@@ -220,6 +226,39 @@ Scarcity changes behavior/price; production/trade changes; scarcity later change
   Kept schematic per the batch instruction's own instruction; scored as blocked rather than
   partial, since the loop's own first causal link is confirmed absent, not merely weak.
 
+## ME-S17 — Individuation from fungible material (added 2026-09-22 per follow-up)
+
+A fungible quantity/stack has one portion become individually distinguished; that portion
+later acquires its own history.
+
+- **Rules invoked:** OBJ-02.
+- **Result: covered by permission; MISSING by exercise — the same shape as ME-S14, checked
+  from the individuation-moment angle specifically.** OBJ-02's own revised text explicitly
+  requires that "any meaningful provenance the source material already carried must remain
+  traceable through individuation." Checked directly: this repository's own `ItemInstance`
+  schema begins `owner_history` only from the moment of individuation onward — it has no field
+  for anything the source `ItemStack` carried before that moment (which node it was harvested
+  from, which crafting batch produced it). Because individuation never actually occurs in
+  production (`significant=True` set nowhere), this gap has never been exercised either, but
+  it is real and checkable: if individuation ever fires, this repository's own current schema
+  would start that object's history from a blank slate, not from whatever the source quantity's
+  own provenance was.
+
+## ME-S18 — Production with substitutable inputs (added 2026-09-22 per follow-up)
+
+Production requires a suitable material; material A is unavailable; a declared material B is
+an acceptable substitute; production remains valid.
+
+- **Rules invoked:** PROD-01.
+- **Result: covered by permission; not exercised by any real recipe.** PROD-01's own revised
+  text explicitly permits a process to declare substitution semantics for a required input
+  category. Checked directly: no recipe in this repository's own current content declares any
+  substitute-material relationship — every recipe's `requires_items` names exact `item_id`s
+  with no alternative accepted. This scenario directly challenged the old, stricter PROD-01
+  formulation (which would have forbidden this trajectory outright) and confirms the revised
+  Rule permits it cleanly; this repository simply has not yet authored a recipe that exercises
+  the permission.
+
 ---
 
 ## Cross-batch note
@@ -230,17 +269,32 @@ omniscience finding, and Batch 07's farming-counterforce gap. Classified CONFLIC
 MISSING, per the same distinction Batch 06/07 established: this is not an absent feature — the
 code actively constructs a specific transaction that its own resolver actively rejects, a real,
 live mismatch between two parts of this repository's own implementation. This does not
-invalidate the Rule Catalog; PROP-02's own target semantics (the producer of an ownership
-change is not automatically its owner) remain coherent — the Catalog successfully exposed a
-real, documented implementation bug.
+invalidate the Rule Catalog; the target semantics (a durable property relation has an
+authoritative owner independent of whichever process caused the transfer, reclassified
+2026-09-22 as Inherited rather than a new Rule) remain coherent — the Catalog successfully
+exposed a real, documented implementation bug, and the 2026-09-22 follow-up review confirms
+this is a repository/implementation finding to hand to implementation planning, not a World
+Rule decision.
 
 ME-S14's finding (the `ItemInstance` provenance mechanism is fully designed, wired, and never
 triggered) is this batch's second most significant discovery, and is structurally identical to
 Batch 07's own `Breakthrough`-granting and `combat_engagement` findings: a real mechanism,
-fully wired end-to-end, that nothing in production ever switches on or exercises.
+fully wired end-to-end, that nothing in production ever switches on or exercises. **Preserved
+project-level conclusion: can an ordinary object become historically significant because of
+what happens to it? YES in World Rule semantics (now via History/Provenance's own HP-02/HP-05,
+reclassified as Inherited rather than a new Objects-specific Rule) — PARTIAL/unrealized in the
+current repository.**
 
 ME-S12's finding (wealth → protection/political-influence/supply-chain-control all confirmed
 MISSING) reconfirms, from the Economy side, the same "power conversion edges are specific,
 never automatic" pattern Batch 07 established from the Combat/Fame side (PROG-07) — of the
 concrete conversion chains checked across this whole Rule Catalog, wealth's own chain breaks
-earliest.
+earliest. **Preserved project-level conclusion: wealth only becomes power through concrete
+causal conversion edges — this batch confirms one real edge (equipment) and three confirmed
+absent ones (protection, political influence, supply-chain control).**
+
+ME-S17/S18 (added per the 2026-09-22 follow-up) confirm the revised OBJ-02/PROD-01 are
+correctly permissive rather than over-restrictive: individuation must preserve provenance
+where it occurs (OBJ-02), and substitution semantics are a process's own declared choice, not
+forbidden by this Rule Catalog (PROD-01) — neither probe reveals a new gap beyond what OBJ-02/
+PROD-01's own revised text already discloses.

@@ -56,10 +56,10 @@ order.
 | Capability / Progression | Batch 07 — PASS, frozen | [capability-progression/capability-progression.md](capability-progression/capability-progression.md) |
 | Learning / Adaptation | Batch 07 — PASS, frozen | [capability-progression/learning-adaptation.md](capability-progression/learning-adaptation.md) |
 | Conflict / Combat | Batch 07 — PASS, frozen | [capability-progression/conflict-combat.md](capability-progression/conflict-combat.md) |
-| Objects / Material Culture | Batch 08 drafted | [material-economy/objects-material-culture.md](material-economy/objects-material-culture.md) |
-| Ownership / Possession | Batch 08 drafted | [material-economy/ownership-possession.md](material-economy/ownership-possession.md) |
-| Resources / Production | Batch 08 drafted | [material-economy/resources-production.md](material-economy/resources-production.md) |
-| Economy / Exchange | Batch 08 drafted | [material-economy/economy-exchange.md](material-economy/economy-exchange.md) |
+| Objects / Material Culture | Batch 08 — PASS, frozen | [material-economy/objects-material-culture.md](material-economy/objects-material-culture.md) |
+| Ownership / Possession | Batch 08 — PASS, frozen | [material-economy/ownership-possession.md](material-economy/ownership-possession.md) |
+| Resources / Production | Batch 08 — PASS, frozen | [material-economy/resources-production.md](material-economy/resources-production.md) |
+| Economy / Exchange | Batch 08 — PASS, frozen | [material-economy/economy-exchange.md](material-economy/economy-exchange.md) |
 
 ## Rule Catalog progress
 
@@ -174,21 +174,28 @@ order.
   further confirmed gaps. See `tmp/capability-progression-batch-07-report.md` (local, not part
   of this catalog) for the full disposition report.
 - **Batch 08** (Objects/Ownership/Resources/Economy) — the fifth domain-facing Milestone B
-  batch — drafted 2026-09-22 directly with the strict Rule-admission discipline Batch 07's own
-  follow-up established. 8 genuine Domain Rules (24 total catalog entries including 8
-  inherited/applied foundational rules and 8 scope/deferred boundaries) across Objects/
-  Material Culture, Ownership/Possession (using its own `PROP-*` prefix, deliberately distinct
-  from Batch 01's `OWN-*` State Ownership), Resources/Production, and Economy/Exchange; ready
-  for high-level external review. The single most significant finding: this repository's
+  batch — drafted 2026-09-22, then revised the same day per a targeted semantic cleanup
+  follow-up (OBJ-03 and PROP-02 reclassified from Domain Rules to Inherited — both fully
+  covered by History/Provenance's HP-02/HP-05 and State Ownership's OWN-01/OWN-02
+  respectively; OBJ-02 reframed away from a specific promotion-mechanism description toward
+  the underlying fungible-vs-individuated semantic choice, with a provenance-must-survive-
+  individuation requirement added; PROD-01 generalized to permit declared substitution
+  semantics rather than requiring strict non-substitutable joint inputs; two adversarial
+  probes added), **PASS — ready to freeze**. 6 genuine Domain Rules (23 total catalog entries
+  including 9 inherited/applied foundational rules and 8 scope/deferred boundaries) across
+  Objects/Material Culture, Ownership/Possession (using its own `PROP-*` prefix, deliberately
+  distinct from Batch 01's `OWN-*` State Ownership), Resources/Production, and Economy/
+  Exchange. The single most significant finding, unchanged by the follow-up and now correctly
+  filed as a Repository Finding rather than inside a Rule's own wording: this repository's
   inheritance/heirloom-transfer mechanism is **CONFLICTING** — it constructs a real
   `ResourceTransferIntent(source_kind="CHEST")` on an entity's death, but
   `src/core/conservation.py`'s own resolver has no handler for `"CHEST"` and rejects it every
-  time, so the resolved heir never actually receives the inventory or heirlooms; property only
-  ends up in a generically-lootable corpse. A second significant finding: the `ItemInstance`
-  object-provenance/significance mechanism ("ordinary object becomes relic") is fully designed
-  and wired end-to-end, but gated `ENABLE_ITEM_INSTANCE_HISTORY` OFF and never triggered by any
-  production call site — never realized in practice. `ServiceOpportunityProvider` was found to
-  reconfirm Batch 06's own omniscient-decision pattern for economic opportunities. See
+  time, so the resolved heir never actually receives the inventory or heirlooms. A second
+  significant finding, likewise preserved: the `ItemInstance` object-provenance/significance
+  mechanism ("ordinary object becomes relic") is fully designed and wired end-to-end, but
+  gated `ENABLE_ITEM_INSTANCE_HISTORY` OFF and never triggered by any production call site —
+  the batch's own preserved project-level conclusion is YES in World Rule semantics (now via
+  History/Provenance's own HP-02/HP-05), PARTIAL/unrealized in the current repository. See
   `review-exports/material-economy-batch-08-review.md`'s explicit call-outs for these and
   further confirmed gaps. See `tmp/material-economy-batch-08-report.md` (local, not part of
   this catalog) for the full disposition report.

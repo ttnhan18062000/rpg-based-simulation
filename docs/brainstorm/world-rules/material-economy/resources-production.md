@@ -12,7 +12,11 @@ tags: [architecture, world, content]
 makes something scarce in the simulated world. Does not design crafting trees/content
 catalogs. Distinguishes resource scarcity from price, value, and desire.
 
-**Status.** Batch 08 (Objects/Ownership/Resources/Economy), first draft. Candidates below
+**Status.** Batch 08 (Objects/Ownership/Resources/Economy), drafted 2026-09-22, revised the
+same day per follow-up review (`tmp/world-rule-batch-8-followup-ext-ai.md`): PROD-01
+generalized from a strict "jointly-necessary, no-substitution" requirement to a broader
+permission — a production process declares whatever inputs/conditions and substitution
+semantics it needs, required inputs simply cannot be silently skipped. Candidates below
 originated as external-reviewer hypotheses (`tmp/world-rule-batch-8-ext-ai.md`); each carries
 this session's disposition and repository evidence. Structured per the normalized five-category
 methodology.
@@ -21,30 +25,39 @@ methodology.
 
 ## Domain Rules
 
-## PROD-01 — A declared production process may require multiple, jointly-necessary input categories; satisfying some never substitutes for a missing one
+## PROD-01 — A production process declares whichever inputs/conditions it requires, including any allowed substitution semantics; a required input cannot be silently omitted
 
-> A production process may declare several distinct, independently-tracked input categories
-> (raw materials, capability, tools/equipment, time, currency cost) as jointly necessary —
-> having abundant supply of one category does not substitute for lacking another. This is a
-> permission for a world to declare joint requirements, not a requirement that every process
-> use every category.
+> A production process declares the inputs/conditions required for that process (raw
+> materials, capability, tools/equipment, time, currency cost, environmental conditions),
+> including any allowed substitution semantics — one required category may permit alternative,
+> substitutable materials to satisfy it, or may not, entirely as the process's own declaration
+> states. What a process may never do is silently omit a declared-required input: satisfying it
+> through an undeclared substitute, or skipping it entirely, is not permitted merely because
+> some other input was abundant.
 
-**Disposition: ACCEPT.** Passes the admission test: no earlier Rule states that production
-inputs may be jointly required across independently-tracked categories with no substitution
-between them — COST-01 (Batch 03) already establishes that cost is broader than currency (many
-cost *dimensions* exist), but does not state that several of them may be required *jointly, by
-one process, with no substitution* — that joint-and-not-substitutable structure is this Rule's
-own new content.
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — generalized from a strict
+"jointly-necessary, no-substitution" requirement (which would have wrongly forbidden a world
+from ever declaring substitutable materials) to a broader permission: substitution semantics
+are themselves something a process may declare, not something this Rule forbids.** Passes the
+admission test: no earlier Rule states that production inputs are declared per-process,
+including their own substitution rules, with only the "cannot silently omit a required input"
+half held constant — COST-01 (Batch 03) establishes that cost has many dimensions, not that a
+process may declare its own substitution semantics across them.
 
-**Repository evidence: SUPPORTED.** `docs/mechanics/03_economic_laws.md` §5's Crafting law
-requires, jointly, for one production event: (1) exact recipe material item counts, (2) a
-gold cost, and (3) for some recipes, a specific station/building type — all three are checked
-independently, and none substitutes for another (extra gold does not waive a missing
-material; abundant materials do not waive the gold cost or a missing station requirement).
+**Repository evidence: SUPPORTED for the current, unconditional-requirement shape this
+repository actually implements; this repository's own current recipes happen to declare no
+substitution semantics at all, which this Rule now explicitly permits as one legitimate
+choice among several, not the only one.** `docs/mechanics/03_economic_laws.md` §5's Crafting
+law requires exact recipe material item counts, a gold cost, and (for some recipes) a specific
+station/building type — none of these are ever satisfied by a substitute in this repository's
+own current content, and none is ever silently skipped. This is one legitimate instance of
+this Rule's own permission (a process declaring strict, non-substitutable requirements), not
+evidence that non-substitutable is the only shape a process may take.
 
 **Scenarios:** [ME-S05](../scenarios/material-economy-batch-08.md#me-s05) (resource
 conversion), [ME-S06](../scenarios/material-economy-batch-08.md#me-s06) (production fails
-after partial cost).
+after partial cost), [ME-S18](../scenarios/material-economy-batch-08.md#me-s18) (production
+with substitutable inputs, added per 2026-09-22 follow-up).
 
 ---
 
@@ -133,6 +146,11 @@ instruction. No new claim.**
 ---
 
 ## Repository Findings (significant, cross-referenced)
+
+**These are repository/implementation facts, not World Rule decisions.** PROD-02 states that
+scarcity and price *may* be disconnected; the finding below reports that in this repository
+they *are*. Whether to connect them is an implementation-planning decision this Rule Catalog
+identifies but does not make.
 
 - **CONFIRMED — scarcity and price are actually disconnected in this repository, not merely
   conceptually separable.** See PROD-02 above — no producer computes price modifiers from real

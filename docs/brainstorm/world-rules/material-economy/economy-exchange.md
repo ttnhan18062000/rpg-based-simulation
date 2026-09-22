@@ -151,6 +151,12 @@ beyond a SimQ-only scoring flag (`faction_monopoly`, not a real mechanism) — c
 
 ## Repository Findings (significant, cross-referenced)
 
+**These are repository/implementation facts, not World Rule decisions.** EXCH-01 and the
+Inherited power-conversion entry above state what value/price/wealth semantics permit; the
+findings below report which of those permitted conversion edges this repository actually
+implements. Whether to build the missing edges is an implementation-planning decision this
+Rule Catalog identifies but does not make.
+
 - **CONFLICTING — economic decisions read raw registry/world state without a perception gate,
   reconfirming Batch 06's own finding from the market/service side.** See
   `ownership-possession.md`'s own Repository Findings for `ServiceOpportunityProvider`'s own

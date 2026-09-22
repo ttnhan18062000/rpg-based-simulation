@@ -35,9 +35,10 @@ classification), and **PASS — ready to freeze**. Batch 07 (Capability/Progress
 drafted 2026-09-22, revised the same day per a targeted Rule-admission and semantic cleanup
 follow-up (8 genuine Domain Rules of 26 total catalog entries after PROG-04/CONFLICT-02 were
 reclassified to Inherited and LEARN-02 retired to Repository Findings), and **PASS — ready to
-freeze**. Batch 08 (Objects/Ownership/Resources/Economy) is drafted 2026-09-22 (8 genuine
-Domain Rules of 24 total catalog entries) and ready for high-level external review. Batch 09
-(Social Relations/Family/Lineage) is the next planned step once Batch 08 is reviewed.
+freeze**. Batch 08 (Objects/Ownership/Resources/Economy) is drafted 2026-09-22, revised the
+same day per a targeted semantic-cleanup follow-up (6 genuine Domain Rules of 23 total catalog
+entries after OBJ-03/PROP-02 were reclassified to Inherited), and **PASS — ready to freeze**.
+Batch 09 (Social Relations/Family/Lineage) is the next step.
 
 ---
 
@@ -282,15 +283,17 @@ learn, survive, die, and accumulate history.
 
 ### Batch 08 — Objects / Ownership / Resources / Economy
 
-**Status: drafted 2026-09-22, ready for high-level external review.** 8 genuine Domain Rules
-(24 total catalog entries — 8 Domain Rules, 8 Inherited/Applied Foundational Rules, 8 Scope/
-Deferred Boundaries) across `material-economy/objects-material-culture.md`,
-`ownership-possession.md` (its own `PROP-*` prefix, deliberately distinct from Batch 01's
-`OWN-*`), `resources-production.md`, `economy-exchange.md`. Most significant finding: the
-heirloom-transfer/inheritance mechanism is **CONFLICTING** — it constructs a real
-`ResourceTransferIntent(source_kind="CHEST")` on death that `src/core/conservation.py`'s own
-resolver rejects with `UNKNOWN_SOURCE_KIND`, so the resolved heir never actually receives the
-property. See `review-exports/material-economy-batch-08-review.md`.
+**Status: drafted 2026-09-22, revised the same day per a targeted semantic-cleanup follow-up,
+PASS — ready to freeze.** 6 genuine Domain Rules (23 total catalog entries — 6 Domain Rules, 9
+Inherited/Applied Foundational Rules, 8 Scope/Deferred Boundaries) across `material-economy/
+objects-material-culture.md`, `ownership-possession.md` (its own `PROP-*` prefix, deliberately
+distinct from Batch 01's `OWN-*`), `resources-production.md`, `economy-exchange.md`. OBJ-03 and
+PROP-02 were reclassified to Inherited (fully covered by History/Provenance's HP-02/HP-05 and
+State Ownership's OWN-01/OWN-02); OBJ-02 and PROD-01 were generalized. Most significant
+finding, unchanged: the heirloom-transfer/inheritance mechanism is **CONFLICTING** — it
+constructs a real `ResourceTransferIntent(source_kind="CHEST")` on death that `src/core/
+conservation.py`'s own resolver rejects with `UNKNOWN_SOURCE_KIND`, so the resolved heir never
+actually receives the property. See `review-exports/material-economy-batch-08-review.md`.
 
 ```text
 objects
