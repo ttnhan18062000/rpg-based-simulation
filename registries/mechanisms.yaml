@@ -124,7 +124,7 @@ mechanisms:
     state: done
     implemented_by: [src/engine/combat.py::CombatResolutionSystem]
     verified:
-      instrument: corpus_run
+      instrument: scenario
       verdict: observed
       date: "2026-09-19"
       note: >-
@@ -163,6 +163,26 @@ mechanisms:
         1418 -> 58 (-95.9%), `quest_dense_frontier` 0 -> 0 (unchanged, already zero). The large
         drop is the fix working as intended -- combat volume in these worlds was substantially not
         the game's own authored hostility model -- not a regression.
+        **Value-differential added 2026-09-21, instrument upgraded corpus_run -> scenario**
+        (TCK-20260921-MECHANISM-COMBAT-VALUE-DIFFERENTIAL-INSTRUMENT, narrow re-scope: one direct
+        question rather than a full 8-mechanism sweep, per peer instruction, motivated by
+        `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`'s own open question).
+        `tests/mechanic_scenarios/test_combat_resolution_damage_value_differential.py` confirms
+        `calculate_damage()`'s own formula responds exactly to `combat.atk`/`combat.def_stat`
+        (positive control) and ignores `identity.evolution_level` (negative control, already
+        proven irrelevant to combat resolution in the progression program).
+        `tests/mechanic_scenarios/test_combat_attributes_real_fight_outcome_value_differential.py`
+        answers the narrow question directly: within a real, dispatched fight, a real strength
+        difference (5 -> 20, via the real `LevelingService.recalculate_combat_stats()` derivation,
+        called directly rather than staged same-tick -- the real apply-path sequencing recalculates
+        derived stats only at the end of the tick that changed them, so a same-tick change-then-
+        attack test would use the OLD atk and risk a vacuous negative arm) deals measurably more
+        real damage; `charisma` (confirmed unread by the derivation function) does not move the
+        outcome at all. Neither function contains an RNG call -- confirmed by direct code trace
+        before staging anything, then confirmed empirically. **Answer: yes, an entity's own combat
+        attributes have real, formula-exact purchase on how a fight resolves** -- which means
+        `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`'s own species-base-stat
+        erosion is destroying something demonstrably real, not a cosmetic drift.
   - id: tactical_decision
     layer: entity
     systems: [combat]
@@ -326,6 +346,17 @@ mechanisms:
         called from `SkillScalingService.get_effective_stats()` (`src/engine/rpg_depth.py`), itself
         called from `apply.py`'s own `stats_dirty` block (`src/engine/apply.py:616`) -- confirms
         the note's own "correct code, rarely exercised" reading rather than changing it.
+        **Value-differential added 2026-09-21** (TCK-20260921-MECHANISM-PROGRESSION-VALUE-
+        DIFFERENTIAL-INSTRUMENT, new axis distinct from the reachability instrumentation above):
+        `tests/mechanic_scenarios/test_readiness_and_derived_stats_value_differential.py` confirms,
+        via a real call into `ApplyPath._apply_entity_update()` (the same authoritative merge code
+        a full Kernel tick runs, not a separate bypassed phase -- `stats_dirty`'s own trigger and
+        recalculation live inside this exact function), that a +10 agility delta moves
+        `readiness_speed` by exactly +10.0 (positive control) while a +10 vitality/strength delta
+        leaves it unchanged (negative control). This is a distinct claim from the corpus-
+        reachability verdict above and does not change it: the formula has real purchase on the
+        outcome WHEN it runs; it still rarely runs in real corpus play. `state` stays `partial` for
+        the reachability reason already recorded.
   - id: interaction_channeling
     layer: entity
     systems: [social]
@@ -398,6 +429,22 @@ mechanisms:
         elsewhere) but a second, not-yet-investigated code path touching the same age concept;
         flagged on `aging_death`'s own entry as a possible unintended duplication, out of scope to
         resolve here.
+        **Value-differential investigated and declined 2026-09-21**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT, priority candidate for
+        the §5.1 horizon rule's first real compounding-mechanism test): confirmed by direct code
+        read that this note's own cited formula (`hunger=min(100, bio.hunger + 0.1*cadence...)`,
+        `sleep_debt=min(100, bio.sleep_debt + 0.05*cadence...)`, `apply.py:88-91`) is a FLAT,
+        uniform rate -- the only quantities it reads are `cadence.biological` (a world/profile-
+        level config, not a per-entity field) and the entity's own current hunger/sleep_debt value
+        (for the `min(100, ...)` cap only). No per-entity multiplier (personality/industry trait,
+        species modifier, or anything else) feeds this rate anywhere in the function. There is no
+        real per-entity varying input to build a value-differential against -- the instrument does
+        not apply to this mechanism as currently implemented, not "not yet tested." Declining
+        deliberately rather than forcing a compounding case into existence to exercise the horizon
+        rule for its own sake (explicit peer instruction). The horizon rule itself was already
+        proven able to certify a real positive result on `aging_death` (a threshold, not a
+        compounding-rate, shape) -- it remains written but unexercised on a genuinely compounding
+        mechanism, since none of `progression`'s remaining candidates carry one.
   - id: derived_stats
     layer: entity
     systems: [progression]
@@ -406,7 +453,7 @@ mechanisms:
     implemented_by:
       - src/engine/rpg_depth.py::SkillScalingService::get_effective_stats
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -420,6 +467,21 @@ mechanisms:
         (`LevelingService.recalculate_combat_stats`) computes one specific field within this same
         pipeline; kept as a separate, more specific citation there rather than merged into this
         entry's own binding.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT):
+        `tests/mechanic_scenarios/test_readiness_and_derived_stats_value_differential.py` confirms
+        a +10 vitality delta moves `max_hp` by exactly +20 and a +10 strength delta moves `atk` by
+        exactly +5, matching the documented formulas (positive control), while a +10 agility delta
+        moves neither (negative control) -- same real `ApplyPath._apply_entity_update()` dispatch
+        as `readiness_speed_scaling`'s own new value-differential entry. **Separate real finding,
+        not fixed here, filed as `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS`**:
+        `apply.py:616-624`'s call site never passes `base_hp`/`base_atk`/`base_def`, so every
+        `stats_dirty` recalculation silently discards an entity's spawned/species-specific base
+        stats and substitutes `get_effective_stats()`'s generic defaults (100/10/5) -- confirmed
+        directly (a goblin_scout spawned at max_hp=35 recalculates to max_hp=112 on any zero-delta
+        stats_dirty trigger). Does not invalidate this entry's own delta-based value-differential
+        above (both arms of every comparison undergo the identical default-base substitution), but
+        is a materially different defect worth its own disposition.
   - id: race_archetype
     layer: entity
     systems: [progression]
@@ -508,7 +570,7 @@ mechanisms:
     implemented_by:
       - src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem::resolve_lifecycle
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -529,6 +591,19 @@ mechanisms:
         touching the same concept, not investigated further here (out of scope for a binding-only
         pass); flagging in case it represents unintended duplication rather than intentional
         redundancy.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT wave 2, this axis's first
+        application to a tick-based/threshold mechanism -- the new §5.1 null-result rule's first
+        real test):
+        `tests/mechanic_scenarios/test_aging_death_value_differential.py` stages `age_ticks=1000`
+        fixed in both arms and varies only `max_age_ticks` (the real field
+        `resolve_lifecycle()`'s own check reads) -- staged directly rather than relying on the real
+        per-tick age increment (itself cadence-gated in `apply.py`, `is_life_due =
+        should_run(tick, None, cadence.lifecycle)`, avoiding the same cadence trap Program A hit on
+        `goal_hierarchy`). `max_age_ticks=999` (below the fixed age) produces a real old-age death
+        within a single real Kernel tick (positive control); `max_age_ticks=5000` (above) leaves
+        the entity alive (negative control). Satisfies §5.1(a) directly -- the outcome is fully
+        computed within the one-tick scenario window, no horizon-weakening needed.
   - id: succession
     layer: entity
     systems: [progression]
@@ -536,7 +611,7 @@ mechanisms:
     state: done
     implemented_by: [src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem]
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-16"
       note: >-
@@ -557,6 +632,17 @@ mechanisms:
         this). No flag gates resolve_lifecycle() or this branch -- run_phase("lifecycle", ...)
         is called with no flag argument. Corrected via
         TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION's own addendum.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT wave 3):
+        `tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py` stages a
+        real entity's death (reusing `aging_death`'s own guaranteed-death technique) with two real
+        bond candidates on a real corpus world (`crowded_frontier`, 38 real entities). Positive
+        control, run in both directions: the candidate with the higher `0.6*familiarity +
+        0.4*((sentiment+1)/2)` score is selected heir, and the selection swaps when the scores
+        swap -- confirms bond strength's own value, not a fixed candidate or iteration order,
+        decides the outcome. Negative control: `last_interaction_tick` (a tie-break field only,
+        read after score in the sort key) does not override a decisive score gap. Pure,
+        deterministic, no RNG -- immediate, same-tick outcome, no §5.1 horizon concern.
   - id: genetics_aptitude
     layer: entity
     systems: [progression]
@@ -596,6 +682,23 @@ mechanisms:
         TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS's own addendum for the
         full trace. This mechanism's own code is confirmed correct; see `xp_leveling` for why it
         still doesn't fire in real corpus play.
+        **Value-differential added 2026-09-21** (TCK-20260921-MECHANISM-PROGRESSION-VALUE-
+        DIFFERENTIAL-INSTRUMENT, applying the new axis to this mechanism's own `xp_reward=
+        defender.identity.evolution_level*10` formula, `src/engine/combat.py:510`):
+        `tests/mechanic_scenarios/test_evolution_xp_reward_value_differential.py` runs three real
+        Kernel-tick forced-kill arms (goblin one-hits a staged-HP=1 orc) -- positive control:
+        varying only the defender's `evolution_level` (1 -> 5) scales the attacker's XP gain
+        proportionally (10 -> 50); negative control: varying the defender's own `evolution_points`
+        (same identity component, a field the reward formula and combat resolution both provably
+        never read) leaves the XP gain unchanged. Determinism-trap check done by direct code trace
+        before staging (see the test file's own docstring and this ticket's investigation.md):
+        `calculate_damage()` and `recalculate_combat_stats()` never read `identity.evolution_level`
+        or `evolution_points`, so the fight itself (and any RNG it might consume) is byte-identical
+        across all three arms -- only the post-kill reward differs. This confirms `xp_leveling`'s
+        own merged claim (the reward's SIZE has real purchase on the outcome) as a distinct finding
+        from `evolution`'s existing reachability-shaped positive control above (which showed the
+        chain fires correctly for one fixed reward size, not that varying the reward's own input
+        matters).
   - id: skill_unlocks
     layer: entity
     systems: [combat]
@@ -706,7 +809,7 @@ mechanisms:
     implemented_by:
       - src/core/enums.py::EntityRole
     verified:
-      instrument: code_trace
+      instrument: scenario
       verdict: observed
       date: "2026-09-20"
       note: >-
@@ -715,6 +818,17 @@ mechanisms:
         `src/engine/military_conflict.py`, `src/engine/evolution.py`, etc.) -- e.g.
         `EvolutionSystem.evaluate()` gates skill-learning on `entity.identity.role ==
         EntityRole.HERO`. Symbol-level binding since `enums.py` defines 9 unrelated enums.
+        **Value-differential added 2026-09-21, instrument upgraded code_trace -> scenario**
+        (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT wave 2), applying the new
+        axis specifically to the branch this note already names:
+        `tests/mechanic_scenarios/test_entity_role_level_up_branch_value_differential.py` reuses
+        the real forced-kill staging (attacker evolution_points=95, one level-1 kill crosses the
+        100-XP threshold, `evolution`'s own already-cited positive control) and varies only the
+        attacker's `identity.role`. `role=HERO` genuinely takes the AP/skill-tree branch
+        (`unspent_ap>0`) on the resulting level-up (positive control); `role=GUARD` (this world's
+        own compiled role) takes the other real branch instead and grants no AP (negative control)
+        -- confirms `role`'s own value, not merely that a level-up happened, selects the outcome.
+        Same-tick, immediate (no §5.1 horizon concern).
 
   # ── Entity layer — Modification (2, atlas `entity-modification`) ───────────────────────────
 

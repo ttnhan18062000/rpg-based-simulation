@@ -352,6 +352,9 @@ mechanism-wiring-map-classdef-check: ## Check the wiring map's Entity Operating 
 mechanism-status-language-check: ## Report-only: scan atlas/capabilities desc fields and wiring-map node labels for status vocabulary that belongs in the registry, not prose
 	$(PYTHON3) tools/mechanism_registry/mechanism_status_language_check.py
 
+mechanism-prose-field-drift-check: ## Report-only: flag a mechanism entry whose own verified.note claims an instrument/verdict transition that contradicts its own structured fields
+	$(PYTHON3) tools/mechanism_registry/mechanism_prose_field_drift_check.py
+
 mechanism-registry-changed-code-check: ## Report-only: flag implemented_by-cited code that changed without its mechanism's own entry changing, plus implemented_by replacements
 	$(PYTHON3) tools/mechanism_registry/mechanism_registry_changed_code_check.py
 

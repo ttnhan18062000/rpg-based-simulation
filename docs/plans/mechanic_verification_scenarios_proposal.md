@@ -293,6 +293,183 @@ document, in the same spirit as the census's own unsuppressable `LIMITATION_HEAD
 here whether that's a fixed string constant or a per-scenario field, left for the implementation
 pass.
 
+## 5.1 · A second, distinct axis: the value-differential instrument (added 2026-09-21,
+`TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT`)
+
+Everything in §§2-5 is **reachability-shaped**: the two arms of a differential differ on whether a
+precondition is present or absent, and the question is whether the mechanism fires at all. That
+axis cannot answer a second, equally real question for stat/trait/modifier-shaped mechanisms:
+`readiness_speed_scaling` and `breakthrough_bonuses` are both real, wired, reachable code — the
+open question for them is not "does this run," it's "does its own input value have any purchase
+on the outcome." Per-system runtime-evidence share after Program A (merged `main`, `cognition`
+11/20, `combat` 4/8, `world` 3/25, `progression` 3/15, `faction`/`social`/`economy` 0 each) showed
+sweeping reachability differentials into these systems hits diminishing returns for exactly this
+reason — they don't fail by not running, they fail by not mattering.
+
+**Instrument shape**: both arms run the identical real mechanism dispatch. Only the mechanism's own
+input value differs between arms — the world is otherwise held fixed. The question is whether a
+downstream outcome differs. This is a genuinely different comparison than §3.3's differential
+assertions (present/absent), not a variant of it.
+
+**Calibration is a harder requirement here than for reachability.** Program A's reachability axis
+had a known negative available in `quest_generation_sourcing` (a real precondition provably never
+met). No equivalent "value that provably doesn't matter" exists a priori for this axis, so the
+instrument must supply its own calibration before any real verdict is trustworthy:
+- **Positive control**: an input certain to affect the outcome (a documented, direct formula
+  input) — confirms the instrument can detect a real difference.
+- **Negative control**: an input that provably does NOT feed the mechanism under test — confirms
+  the instrument does not report a difference whenever anything is perturbed. Without this, a
+  "values matter" result is unreadable: an instrument that always reports a difference is worse
+  than none, because it would mark every mechanism as mattering.
+
+Both controls are required in the same batch as the first real mechanism, not deferred.
+
+**Three named traps, all real and hit during real application of this instrument
+(`readiness_speed_scaling`, `derived_stats`, `evolution`/`xp_leveling`,
+`test_readiness_and_derived_stats_value_differential.py`,
+`test_evolution_xp_reward_value_differential.py`; the third added 2026-09-21 from the `combat`
+program, `test_combat_attributes_real_fight_outcome_value_differential.py`):**
+
+1. **Determinism/seed sensitivity — the value-differential analogue of §5 item 5's cadence trap,
+   and subtler.** If varying the input also perturbs RNG draw order (e.g. a different number of
+   combat rounds before a kill resolves), downstream differences can appear that have nothing to
+   do with the mechanism itself. Not hypothetical here: the `evolution`/`xp_leveling` mechanism's
+   own input (`defender.identity.evolution_level`) is read inside a real combat-kill resolution,
+   raising exactly this risk. Resolved by direct code trace **before staging anything**, not by
+   assumption: `CombatResolutionSystem.calculate_damage()` (`src/engine/combat.py:31-46`) reads
+   only `combat.atk`/`combat.def_stat`, no RNG call in the function; `LevelingService.
+   recalculate_combat_stats()` (`src/progression/leveling.py:76-180`) reads only
+   `AttributeComponent` fields, never `identity.evolution_level`; two independent in-code comments
+   (`src/domains/combat_engagement/power.py:49`, `perception.py:51`) state `evolution_level` is
+   "deliberately excluded, not merely unweighted" from combat-power comparisons. The varied field
+   is therefore structurally inert on the fight's own resolution — confirmed by trace, then
+   confirmed again empirically (all three arms of the real test resolve the kill identically). A
+   pure, RNG-free mechanism (`readiness_speed_scaling`/`derived_stats`'s own
+   `recalculate_combat_stats`) is immune to this trap by construction and makes the strongest
+   calibration-mechanism candidate for exactly that reason.
+2. **Purpose-built worlds.** The single-shared-world limitation (§3.2) binds here too: a world with
+   no progression-capable entities can't show XP mattering. Building a small number of focused
+   worlds is legitimate infrastructure for this program — but they must stay production-shaped, no
+   forced routes, no entity configurations the real simulation would never produce. If a mechanism
+   only matters in a world the game never generates, that is itself the finding, not a staging
+   failure to work around. In practice, the first batch needed no new world: both mechanisms reused
+   `data/worlds/mechanic_scenario_combat_judgement_withdrawal/`, already a real catalog-driven,
+   combat-capable pairing.
+3. **Derivation timing — a vacuous differential arriving through a third door, neither an
+   unevaluated negative arm nor RNG drift.** When the varied input feeds a DERIVED value rather
+   than being read directly by the mechanism under test, the derivation has to have actually run,
+   relative to the observation point, or both arms measure the pre-change state and look identical
+   for a reason that has nothing to do with whether the input matters. Concrete instance (`combat`
+   program): `attributes.strength` does not feed `calculate_damage()` directly — it feeds
+   `combat.atk` through `LevelingService.recalculate_combat_stats()`, and the real authoritative
+   apply path (`apply.py`'s own `stats_dirty` block) only recalculates derived stats at the END of
+   the tick that changed the underlying attribute. A same-tick "change attribute, then attack"
+   design would have staged a real attribute change and a real forced attack together, watched the
+   fight resolve using the OLD, not-yet-recalculated `combat.atk`, and reported "no difference" — a
+   confident false negative, since the derivation simply hadn't run yet at the moment of
+   observation, not because the attribute doesn't matter. This generalizes beyond combat: any
+   mechanism whose input is derived rather than raw carries this hazard, and the instrument gives
+   no signal when it fires — the numbers are internally consistent, just stale. **The defense**:
+   before staging a differential on a derived input, establish when that derivation actually runs
+   relative to where the observation happens, and stage accordingly — either genuinely separate the
+   derivation tick from the observation tick, or (as done here) call the real derivation function
+   directly to obtain the value a real recalculation would produce, then stage that result for the
+   observation. The second option matters for a specific reason: calling the real function means
+   the scenario's expected value comes from the code, not from the scenario author's own reading of
+   the formula — hand-computing the expected derived value instead would make the scenario agree
+   with that reading rather than with what the code actually does, silently reintroducing exactly
+   the kind of unverified assumption this whole instrument exists to remove.
+
+**Registry recording convention**: a value-differential finding is additive to an existing
+`verified` note (dated, appended), never a silent overwrite of a prior reachability verdict — the
+two axes answer different questions about the same mechanism and both stay recorded. `instrument`
+upgrades from `code_trace` to `scenario` when a real differential lands; `verdict` and `state`
+change only when the new evidence actually changes that specific claim (see
+`readiness_speed_scaling`'s own registry entry: value-differential confirmed positive, corpus-
+reachability verdict unchanged, because they are different claims).
+
+Arbitration (the third failure-to-matter shape catalogued in
+`TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`) is out of scope for this axis — it
+needs its own instrument.
+
+**A "no difference" verdict requires proof the difference would have been observable within the
+scenario's own window — added 2026-09-21, per peer review of batch 1 before approving further
+scaling.** Batch 1's three mechanisms were all immediate and deterministic: the outcome is fully
+computed in the same tick the input is staged (a formula recalculation, a single combat kill's
+reward). Most of `progression` is not shaped that way — skill unlocks fire at thresholds, reward
+scaling compounds over many ticks, advancement curves may only diverge after hundreds of events. On
+those, a short scenario can show no observable difference while the mechanism matters enormously,
+and recording that as "the value doesn't matter" would be a confident false negative of a new kind
+— the value-axis analogue of §5 item 5's vacuous negative arm, arriving on a different axis (there:
+prove the mechanism was reached and declined, not merely that nothing happened; here: prove the
+outcome was actually computed, not merely that no difference was observed by the time the scenario
+stopped watching).
+
+**Distinguish from this axis's own negative control (defined above)**: a negative control varies an
+input the mechanism provably never reads at all (e.g. `evolution_points` for the XP-reward
+formula) — no horizon question applies, because there is no outcome to wait for; the formula
+structurally cannot see that field regardless of how long the scenario runs. This new rule applies
+to a **real, relevant** input whose effect may simply not have manifested yet within the window
+staged — a fundamentally different reason for observing "no difference."
+
+The requirement: for any mechanism whose outcome is not fully computed within the same tick/call
+the input is varied, a "no difference" result must do one of:
+- **(a) demonstrate the outcome is actually computed within the scenario's own window** — e.g. run
+  enough ticks/events inside the scenario itself to cross the threshold, complete the compounding
+  window, or otherwise reach the point where a real difference would show up if one existed, or
+- **(b) state the horizon explicitly and weaken the verdict accordingly** — record it as "no
+  difference observed within N ticks/events," not "the value doesn't matter," and say in the
+  registry note what would need to change (a longer window, a different starting position) to
+  actually test it.
+
+Positive results need neither — a detected difference is a detected difference regardless of how
+short the window was. It is specifically the null result that must earn its own label.
+
+**The instrument's own scope boundary — added 2026-09-21, after `progression` batch 1 + waves 2-3
+went 7-for-7 real mechanisms with a 100% pass rate.** A perfect pass rate on this axis is not
+evidence the axis reaches everything; it is evidence of *which mechanisms were selected*, and every
+one selected so far shares a shape: a documented formula (or discrete branch/threshold selection)
+producing a fully-computed, same-tick outcome, with no RNG in the path. That shape is exactly what
+this instrument verifies well. It is a materially narrower claim than "this system's values
+matter," and reporting "N of M mechanisms in a system now carry a value-differential scenario"
+without saying so reads as progress toward covering M, when the honest claim is closer to "N of the
+~N mechanisms this instrument can currently address." This is the coverage-claim error (§3.3's own
+selection-effect framing) recurring on the value axis instead of the reachability axis — the fix is
+the same: state what was actually tested, not what the count implies.
+
+Three mechanism shapes, by how well this instrument reaches them:
+- **Reaches well: a documented formula or discrete branch selection with a same-tick, RNG-free (or
+  RNG-provably-inert) outcome.** Every mechanism this program has verified so far is this shape
+  (`readiness_speed_scaling`, `derived_stats`, `evolution`/`xp_leveling`, `aging_death`,
+  `entity_role`, `succession`). The instrument's calibration (a positive and negative control) is
+  meaningful here because the outcome is a clean function of a clean input.
+- **Reaches poorly, closer to `code_trace` than a real differential: a static catalog/content
+  lookup** (e.g. `class_assignment`'s `resolve_role_defaults(role_id)` — a dict lookup by key, not
+  an ongoing per-tick mechanism). Varying the lookup key and observing a different record comes
+  back is barely distinguishable from reading the resolver's own source; it does not exercise
+  runtime behavior the way a real Kernel-tick differential does. Treat a mechanism of this shape as
+  presumptively out of scope for this instrument, not as a scenario waiting to be written.
+- **Cannot reach at all, without an instrument this program has not built:**
+  - **Decision-scoring inputs that feed a choice among competing options** (e.g. `personality`'s
+    `bravery` feeding combat-vs-flee utility scoring) — varying the input might change a *score*,
+    but whether that changes the *decision* depends on what it's competing against. This is the
+    arbitration shape (`TCK-20260920-VALUE-DIFFERENTIAL-VERIFICATION-INSTRUMENT-GAP`'s third named
+    shape), explicitly out of scope for this instrument, not merely unattempted.
+  - **A compounding/accumulating rate with no real per-entity varying input** — the §5.1 horizon
+    rule above was written to handle a compounding mechanism whose outcome takes many ticks to
+    materialize, but it presupposes a real input worth waiting for. If a mechanism's own rate is
+    flat and uniform (the same for every entity, driven only by a global cadence/profile config,
+    not by anything on the entity itself), there is no entity-level value to differential-test at
+    all — the horizon rule has nothing to apply to. This is a distinct finding from "not yet
+    tested": it means the instrument does not apply to that mechanism as currently implemented,
+    full stop, not that a longer scenario would eventually show a difference.
+
+A close-out or status report against this instrument should state coverage as "N of the mechanisms
+in scope for this instrument," name which mechanisms were excluded and why (one of the three
+shapes above, or one of the program's own stated out-of-scope reasons — no real producer, flag-
+gated, no instrument yet), and never present the excluded count as remaining work for this same
+instrument to eventually pick up.
+
 ## 6 · Explicitly not decided here
 
 - The exact assertion-vocabulary API (a small typed-object DSL as sketched in §3.3, vs. plain
