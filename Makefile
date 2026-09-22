@@ -32,14 +32,35 @@ build: ## Build frontend for production
 # bare python3 lacks pydantic there, so `serve`/`dev` would silently crash at backend startup
 # with no indication other than every API call refusing to connect (TCK-20260825-LIVE-MAP-DEV-AUTH-AND-WS-PROXY-FIX's
 # own Playwright e2e webServer hit exactly this while starting `make dev` as a subprocess).
-PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
+#
+# TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT: hardened to probe real capability
+# (`pydantic` importable), not just existence -- `command -v "$$py"` alone would happily pick a
+# candidate that exists but lacks pydantic, the exact shape TCK-20260914-VENV-NAMING-CI-PARITY-SWAP
+# (PR #233) fixed in tools/start_search_mcp.sh/start_headroom_mcp.sh after a real rename made that
+# script pick a broken venv silently. Decision recorded here rather than left implicit: this
+# variable IS worth the same hardening, because the failure shape is identical -- a single
+# candidate is picked once (here, at Makefile-parse time via `:=`; there, at script-invocation
+# time) with no fallthrough if it lacks the real capability every consuming target needs. Uses
+# `importlib.util.find_spec` (spec-lookup, no execution), not a full `import pydantic` -- unlike
+# the shell launchers' original probe shape, this runs on *every* `make` invocation (`:=` is
+# immediate, not deferred to first use), so a full import's cost would tax every unrelated target
+# too; find_spec keeps that cost negligible regardless of what's chosen for capability.
+PYTHON3 := $(shell for py in .venv/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 /home/vboxuser/Work/venv/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('pydantic') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 # TCK-20260914-VENV-NAMING-CI-PARITY-SWAP: dedicated interpreter resolution for the knowledge-stack
 # targets (torch/sentence-transformers), independent of $(PYTHON3) -- `.venv` is now the CI-matching
 # 3.13 env and does not have these deps; they live in `.venv-knowledge` (3.12) instead. Uses
 # `command -v` (not `[ -x ]`) for the bare "python3" fallback -- see the PYTHON3 comment above and
 # the PYTHON variable below for why `[ -x "$$py" ]` alone never resolves a bare command via PATH.
-PYTHON_KNOWLEDGE := $(shell for py in .venv-knowledge/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && echo "$$py" && break; done)
+#
+# TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT: hardened the same way and for the same
+# reason as PYTHON3 above -- probes `sentence_transformers` real capability via
+# `importlib.util.find_spec`, not existence alone. find_spec (not a full import) matters even more
+# here than for PYTHON3: `sentence_transformers` pulls in `torch`, and a full import was measured
+# at ~5.66s (this same ticket's own part (b) finding for tools/start_search_mcp.sh) -- paying that
+# on every `make` invocation, including targets that never touch the knowledge stack, would be a
+# regression on its own, not just an inconsistency fix.
+PYTHON_KNOWLEDGE := $(shell for py in .venv-knowledge/bin/python3 /home/u24desktop/Working/rpg-based-simulation/.venv-knowledge/bin/python3 python3; do command -v "$$py" >/dev/null 2>&1 && "$$py" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('sentence_transformers') else 1)" >/dev/null 2>&1 && echo "$$py" && break; done)
 
 dev: ## Start backend + frontend dev server with live map (hot reload)
 	@echo "Starting backend on :8000 and frontend on :5173..."

@@ -24,9 +24,23 @@ def _text(path: Path) -> str:
 
 def test_search_launcher_probes_sentence_transformers_before_selecting():
     text = _text(_SEARCH_LAUNCHER)
-    assert 'import sentence_transformers' in text, (
-        "expected the search launcher to probe sentence_transformers importability, not just "
+    assert "find_spec('sentence_transformers')" in text, (
+        "expected the search launcher to probe sentence_transformers locatability, not just "
         "interpreter existence, before selecting a candidate"
+    )
+
+
+def test_search_launcher_probe_uses_find_spec_not_full_import():
+    """TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT: the probe must not pay the full
+    ~5.66s sentence_transformers/torch import cost a second time -- the exec'd server pays it once,
+    for real, moments later anyway."""
+    text = _text(_SEARCH_LAUNCHER)
+    assert "importlib.util.find_spec" in text, (
+        "expected the probe to use importlib.util.find_spec, not a full `import "
+        "sentence_transformers` (which pulls in torch and roughly doubles cold-start cost)"
+    )
+    assert '"$py" -c "import sentence_transformers"' not in text, (
+        "expected the old full-import probe invocation to be gone"
     )
 
 
@@ -40,7 +54,7 @@ def test_search_launcher_has_no_bare_exists_then_exec_shortcut():
 
 def test_search_launcher_probe_is_quiet():
     text = _text(_SEARCH_LAUNCHER)
-    assert 'import sentence_transformers" >/dev/null 2>&1' in text, (
+    assert "find_spec('sentence_transformers') else 1)\" >/dev/null 2>&1" in text, (
         "expected the sentence_transformers probe to suppress both stdout and stderr on failure"
     )
 
