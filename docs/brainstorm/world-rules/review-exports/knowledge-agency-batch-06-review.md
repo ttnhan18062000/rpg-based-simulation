@@ -21,61 +21,105 @@ information transfer, memory, and autonomous agency are the mechanisms by which 
 entities form an imperfect view of the world and act from it. Three rule families: Perception,
 Knowledge/Information/Memory, Agency/Decision. Files live under `knowledge-agency/`, per the
 batch instruction's own directory suggestion; Memory was folded into the Knowledge/Information
-file rather than given its own, since its own genuinely new content (MEM-02) and its inherited
-content (individual memory ≠ world history) both belong naturally alongside Knowledge's own
-category work — no further split or merge was found necessary beyond that one adjustment.
-Built directly with the five-category admission discipline Batch 05 established
-(`world-rules/roadmap.md`'s standing governance rule) — no separate normalization pass was
-needed.
+file rather than given its own. Drafted 2026-09-22 with the five-category admission discipline
+Batch 05 established, then revised the same day per a targeted semantic-cleanup follow-up
+review (`tmp/world-rule-batch-6-followup-ext-ai.md`) — see "Follow-up revision summary" below.
+
+## Follow-up revision summary (2026-09-22)
+
+A targeted semantic cleanup was applied without redesigning the batch, preserving the
+normalized Rule-admission structure:
+
+1. **PERC-01 generalized.** No longer requires every perception mechanism to jointly gate on
+   capability + channel + distance + attention — those are possible constraints, not a
+   universal mandatory formula. Explicit-rule-permitted complete/perfect perception is no
+   longer implicitly prohibited. Core principle narrowed to: perception does not imply complete
+   or perfect knowledge *by default*.
+2. **KNOW-01 loosened.** No longer requires every belief/knowledge claim to carry gradable
+   certainty — exact/categorical knowledge remains a legitimate representation. Certainty and
+   objective truth remain distinct facts wherever certainty *is* represented.
+3. **KNOW-02 and KNOW-03 merged.** KNOW-03 was refined to "beliefs do not automatically
+   synchronize with changing world truth; only a declared process (contradiction, new evidence,
+   decay) revises certainty/content — a subject may remain confidently wrong." Once stated this
+   way, it no longer added semantics separate from KNOW-02's own "no automatic truth-injection"
+   claim, so the two were merged under KNOW-02.
+4. **INFO-01 loosened.** Kept "source trust ≠ claim certainty" as the core claim; removed the
+   universal requirement that trust be gradually-adjusted and per-source — trust may legitimately
+   be source-specific, relationship-specific, institution-specific, contextual, or abruptly
+   revised, depending on later domain semantics.
+5. **AGENCY-02 reworded.** Removed implementation language ("inside one scoring formula");
+   softened to "ordinary motivations influence decision preference without automatically
+   determining the chosen action"; explicitly allows future reflex/panic/compulsion/
+   mind-control/hard-threshold rules to override ordinary choice (new Scope/Deferred Boundary).
+6. **AGENCY-03 terminology clarified.** Introduced an explicit two-tier distinction: Opportunity
+   (a world-relative possibility worth considering) vs. Actionable Affordance (an Opportunity
+   currently exercisable under this subject's actual capability/reach). KA-S12–S15 revisited
+   using this terminology; KA-S14 given a clean explanation (positive expected benefit is itself
+   a motivational/utility input, distinct from a pre-existing named goal but not from motivation
+   in the broader sense AGENCY-02 describes).
+7. **Repository classification corrected.** `ResourceOpportunityProvider`/`HarvestScorer`
+   reclassified from MISSING to **CONFLICTING** — active behavior that violates the target
+   semantic boundary, not merely an unbuilt feature. A three-way distinction (CONFLICTING /
+   INERT-OFF / MISSING) now applies across all three canonical files' Repository Findings.
+   This does not invalidate the Rule Catalog — the target semantics remain coherent; the Catalog
+   successfully exposed a real, documented architecture mismatch.
+8. **Three adversarial probes added:** KA-S18 (complete observation where declared), KA-S19
+   (stale but confident), KA-S20 (compelled action) — confirming the revised Rules are correctly
+   bounded rather than over-broad.
+
+**The major architectural finding is preserved, not weakened:** individual agents already have
+real belief/perception infrastructure, but some live decision paths bypass it and read
+omniscient state directly instead.
 
 ## Canonical files included
 
 - `knowledge-agency/perception.md` (PERC-01)
-- `knowledge-agency/knowledge-information.md` (KNOW-01–03, INFO-01–02, MEM-02)
+- `knowledge-agency/knowledge-information.md` (KNOW-01–02, INFO-01–02, MEM-02)
 - `knowledge-agency/agency-decision.md` (AGENCY-01–05)
-- `scenarios/knowledge-agency-batch-06.md` (KA-S01–S17)
+- `scenarios/knowledge-agency-batch-06.md` (KA-S01–S20)
 
 ## Rule admission accounting
 
 Per the standing admission discipline: a statement earns a new local Rule ID only if it adds or
-refines target world semantics beyond Rules already defined elsewhere. This batch's 26 total
-catalog entries break down as:
+refines target world semantics beyond Rules already defined elsewhere. Post-follow-up, this
+batch's 26 total catalog entries break down as:
 
-- **12 genuine Domain Rules**: PERC-01; KNOW-01, KNOW-02, KNOW-03; INFO-01, INFO-02; MEM-02;
+- **11 genuine Domain Rules**: PERC-01; KNOW-01, KNOW-02 (merged); INFO-01, INFO-02; MEM-02;
   AGENCY-01, AGENCY-02, AGENCY-03, AGENCY-04, AGENCY-05.
-- **8 Inherited/Applied Foundational Rules** (direct reuse/reconfirmation, no new claim):
-  "world fact ≠ perceived/believed fact" (reuses OWN-04, OWN-06, CAUSE-01), "reach is
-  asymmetric" (REACH-03) in `perception.md`; "belief/knowledge is subject-owned, never a
-  duplicate of ground truth" (OWN-01, OWN-02, OWN-06), "information requires a real transfer
-  path" (REACH-01, REACH-02, REACH-05), "individual memory ≠ world history" (HP-01, OWN-06) in
-  `knowledge-information.md`; "capability/authority/reach are independent preconditions"
-  (CAP-01, AUTH-01, REACH-01/02), "need pressure/threshold produces real consequence" (SURV-02),
-  "a false belief may still be a real cause" (CAUSE-01, Batch 01's FND-S18/S19) in
-  `agency-decision.md`.
-- **6 Scope/Deferred Boundaries** (no world-semantic claim, only a deferral): formal
+- **8 Inherited/Applied Foundational Rules** (unchanged by the follow-up — direct reuse/
+  reconfirmation, no new claim): "world fact ≠ perceived/believed fact" (OWN-04, OWN-06,
+  CAUSE-01), "reach is asymmetric" (REACH-03) in `perception.md`; "belief/knowledge is
+  subject-owned, never a duplicate of ground truth" (OWN-01, OWN-02, OWN-06), "information
+  requires a real transfer path" (REACH-01, REACH-02, REACH-05), "individual memory ≠ world
+  history" (HP-01, OWN-06) in `knowledge-information.md`; "capability/authority/reach are
+  independent preconditions" (CAP-01, AUTH-01, REACH-01/02), "need pressure/threshold produces
+  real consequence" (SURV-02), "a false belief may still be a real cause" (CAUSE-01, Batch 01's
+  FND-S18/S19) in `agency-decision.md`.
+- **7 Scope/Deferred Boundaries** (6 original + 1 added by the follow-up): formal
   stealth/ambush content, universal perception-formula generalization in `perception.md`; no
   universal epistemology representation, population-scale belief content
   (`BeliefInstitution`) in `knowledge-information.md`; Hybrid Agency's organization-scale
-  deferral, detailed psychological modeling in `agency-decision.md`.
+  deferral, detailed psychological modeling, and (new) non-ordinary override mechanisms
+  (reflex/panic/compulsion/mind control/hard survival thresholds) in `agency-decision.md`.
 
-**Genuine new-Rule count for this batch: 12.** **Inherited/reused foundation count: 8** (citing
-OWN-01/02/04/06, CAUSE-01, REACH-01/02/03/05, HP-01, CAP-01, AUTH-01, SURV-02 — eleven distinct
-foundational Rule IDs across the 8 inherited entries).
+**Genuine new-Rule count for this batch: 11** (was 12 before the follow-up's KNOW-02/03 merge).
+**Inherited/reused foundation count: 8 entries, citing 13 distinct foundational Rule IDs**
+(OWN-01, OWN-02, OWN-04, OWN-06, CAUSE-01, REACH-01, REACH-02, REACH-03, REACH-05, HP-01,
+CAP-01, AUTH-01, SURV-02).
 
 ## Rule Inventory
 
 | ID | Category | Short name | One-line semantic purpose | Status |
 |---|---|---|---|---|
-| PERC-01 | Domain Rule | Perception Is Bounded and Gated | Capability/channel/distance/attention jointly gate partial access; never automatic or complete. | Accepted |
-| KNOW-01 | Domain Rule | Certainty Is Gradable, Never Binary | Every belief/knowledge claim carries its own gradable certainty. | Accepted |
-| KNOW-02 | Domain Rule | Belief Changes Only Through a Declared Arrival Path | Hidden world truth is never injected into a subject's belief/knowledge model. | Accepted |
-| KNOW-03 | Domain Rule | Contradiction/Staleness Degrade Certainty, Never Self-Correct | Certainty changes only through a real, traceable mechanism. | Accepted |
-| INFO-01 | Domain Rule | Source Trust ≠ Claim Certainty | Trust is a distinct, gradually-adjusted per-source property. | Accepted |
+| PERC-01 | Domain Rule | Perception Is Bounded by Declared Constraints | A default of partiality; possible (not mandatory joint) dimensions; explicit-rule perfect perception permitted. | Accepted, revised |
+| KNOW-01 | Domain Rule | Certainty May Be Represented Where Relevant, ≠ Truth | Belief/knowledge semantics permit uncertainty; exact/categorical knowledge remains legitimate. | Accepted, revised |
+| KNOW-02 | Domain Rule | Belief Revises Only Through a Declared Process | No hidden-truth injection; no automatic re-sync; a subject may remain confidently wrong. (Merged with former KNOW-03.) | Accepted, revised/merged |
+| INFO-01 | Domain Rule | Source Trust ≠ Claim Certainty | Distinct properties; trust's specific shape (gradual/per-source) is one example, not a universal requirement. | Accepted, revised |
 | INFO-02 | Domain Rule | Information Content May Change in Transit, Where Declared | Permission for content-level distortion; confirmed unrealized in this repository. | Accepted (mechanism MISSING) |
 | MEM-02 | Domain Rule | Experiential Memory ≠ Declarative Knowledge | Causal/spatial/temporal memory is a distinct category from knowledge_model. | Accepted |
 | AGENCY-01 | Domain Rule | Decision Stages Are Causally Distinct | Want/choose/capable/authorized/reach/commit/succeed never collapse into one gate. | Accepted |
-| AGENCY-02 | Domain Rule | Motivation Weights, Never Forces, Decisions | Need pressure competes inside one scoring formula; multiple motivations may compete. | Accepted |
-| AGENCY-03 | Domain Rule | Opportunity ≠ Desire/Capability/Authority | A real, world-relative fact independent of wanting/being-able/being-allowed. | Accepted |
+| AGENCY-02 | Domain Rule | Ordinary Motivation Influences, Never Automatically Determines | Competing influence on preference; future declared overrides (reflex/compulsion) are a distinct, permitted category. | Accepted, revised |
+| AGENCY-03 | Domain Rule | Opportunity ≠ Actionable Affordance ≠ Desire | Two explicit tiers: a world-relative possibility, and one currently exercisable by this subject; neither depends on desire. | Accepted, revised |
 | AGENCY-04 | Domain Rule | Decision Validity ≠ Execution Outcome | A well-formed decision may still fail; failure never invalidates it retroactively. | Accepted |
 | AGENCY-05 | Domain Rule | Hidden Cognition Is Not Globally Visible | Motive/belief/need are private by default; only inferable via a real mechanism. | Accepted (inference mechanism MISSING) |
 
@@ -94,175 +138,174 @@ foundational Rule IDs across the 8 inherited entries).
 
 ## Scenario Inventory
 
-| Scenario ID | Short name | Trajectory | Rule families challenged | Deferred domain dependencies | Result |
-|---|---|---|---|---|---|
-| KA-S01 | See It, Know Something About It | observe → belief → decision | Perception, Knowledge | — | Covered |
-| KA-S02 | Event Happens Unobserved | world event → no observer → state changes anyway | Perception | — | Covered |
-| KA-S03 | Partial Observation | observe part → incomplete belief, not auto-filled | Perception, Knowledge | — | Covered |
-| KA-S04 | False Rumor, Real Action | false report → believed → action → real consequence | Agency (inherited) | — | Covered (reconfirms FND-S18/S19) |
-| KA-S05 | Conflicting Reports | source A vs. source B → contradiction/trust handling | Knowledge, Information | — | Covered |
-| KA-S06 | Stale Knowledge | learn state → world changes → old belief persists | Knowledge | — | Covered |
-| KA-S07 | Information Does Not Teleport | distant event → unrelated entity stays unaware | Knowledge, Reach (inherited) | — | Covered |
-| KA-S08 | Rumor Degrades | witness → messenger → recipient → content unchanged | Information, Reach (inherited) | Groups/organizations (future messenger content) | Revealed gap |
-| KA-S09 | Memory Fades but History Remains | fact occurs → memory fades → history unchanged | Knowledge/Memory, History/Provenance (inherited) | — | Covered |
-| KA-S10 | Decision Reads Omniscient State (added) | goal-scoring selects a never-perceived target | Perception, Agency | — | Revealed missing rule enforcement |
-| KA-S11 | Need Influences but Doesn't Dictate | hunger raises priority; another action still chosen | Agency | — | Covered |
-| KA-S12 | Capability Without Knowledge | capable but unaware → opportunity not chosen | Agency | — | Covered, with KA-S10 caveat |
-| KA-S13 | Knowledge Without Capability | knows what's needed, lacks means → cannot execute | Agency | — | Covered |
-| KA-S14 | Opportunity Without Desire | valid opportunity, no motivation → may still be chosen on benefit | Agency | — | Partial |
-| KA-S15 | Desire Without Opportunity | strong want, no path → structural fallback instead | Agency | — | Covered, with nuance |
-| KA-S16 | Decision Fails | valid decision → committed → outcome fails | Agency | — | Covered |
-| KA-S17 | Hidden Motive, Visible Consequence | motive hidden → pattern observable → inferable in principle | Agency | Social relations (future inference content) | Revealed missing rule |
+| Scenario ID | Short name | Trajectory | Rule families challenged | Result |
+|---|---|---|---|---|
+| KA-S01 | See It, Know Something About It | observe → belief → decision | Perception, Knowledge | Covered |
+| KA-S02 | Event Happens Unobserved | world event → no observer → state changes anyway | Perception | Covered |
+| KA-S03 | Partial Observation | observe part → incomplete belief, not auto-filled | Perception, Knowledge | Covered |
+| KA-S04 | False Rumor, Real Action | false report → believed → action → real consequence | Agency (inherited) | Covered |
+| KA-S05 | Conflicting Reports | source A vs. source B → contradiction/trust handling | Knowledge, Information | Covered |
+| KA-S06 | Stale Knowledge | learn state → world changes → old belief persists | Knowledge | Covered |
+| KA-S07 | Information Does Not Teleport | distant event → unrelated entity stays unaware | Knowledge, Reach (inherited) | Covered |
+| KA-S08 | Rumor Degrades | witness → messenger → recipient → content unchanged | Information, Reach (inherited) | Revealed gap (MISSING) |
+| KA-S09 | Memory Fades but History Remains | fact occurs → memory fades → history unchanged | Knowledge/Memory, History/Provenance (inherited) | Covered |
+| KA-S10 | Decision Reads Omniscient State (added) | goal-scoring selects a never-perceived target | Perception, Agency | Revealed contradiction (CONFLICTING) |
+| KA-S11 | Need Influences but Doesn't Dictate | hunger raises priority; another action still chosen | Agency | Covered |
+| KA-S12 | Capability Without Knowledge | capable but unaware → not chosen as Actionable Affordance | Agency | Covered, KA-S10 caveat |
+| KA-S13 | Knowledge Without Capability | knows what's needed, lacks means → not Actionable | Agency | Covered |
+| KA-S14 | Opportunity Without Desire | valid Opportunity, no pre-existing goal → benefit itself is motivational | Agency | Partial, cleanly explained |
+| KA-S15 | Desire Without Opportunity | strong want, no path → structural fallback instead | Agency | Covered, with nuance |
+| KA-S16 | Decision Fails | valid decision → committed → outcome fails | Agency | Covered |
+| KA-S17 | Hidden Motive, Visible Consequence | motive hidden → pattern observable → inferable in principle | Agency | Revealed gap (MISSING) |
+| KA-S18 | Complete Observation Where Declared (added) | special channel → complete relevant information | Perception | Covered (permission, not built example) |
+| KA-S19 | Stale but Confident (added) | high-confidence belief → world changes → no new info → confidently wrong forever | Knowledge | Covered |
+| KA-S20 | Compelled Action (added) | ordinary preference A → declared reflex/compulsion → B occurs | Agency, Scope Boundary | Covered (permission, not built example) |
 
 ## Coverage Summary
 
 **Perception**
-- bounded/gated access, never automatic/complete — KA-S01, KA-S02, KA-S03
+- bounded-by-declared-constraints, defaults to partial, permits explicit complete observation —
+  KA-S01, KA-S02, KA-S03, KA-S18
 - world fact independent of observation — KA-S02
-- reach asymmetry — evidenced by reuse, no dedicated new scenario this batch
 
 **Knowledge/Information/Memory**
-- certainty as gradable property — KA-S05
-- information-opacity invariant (no hidden-truth injection) — KA-S01, KA-S07
-- contradiction/staleness degrade certainty — KA-S05, KA-S06
-- source trust distinct from claim certainty — KA-S05
+- certainty permitted where relevant, ≠ truth, exact knowledge remains legitimate — KA-S05
+- no hidden-truth injection, no automatic re-sync, confidently-wrong-forever permitted — KA-S01,
+  KA-S06, KA-S07, KA-S19
+- source trust ≠ claim certainty, shape not mandated — KA-S05
 - content-level distortion permitted but unrealized — KA-S08
-- experiential memory vs. declarative knowledge — KA-S09
-- individual memory vs. world history — KA-S09
+- experiential memory vs. declarative knowledge, individual memory vs. world history — KA-S09
 
 **Agency/Decision**
 - decision-stage distinctness — KA-S12, KA-S13, KA-S16
-- motivation weights, doesn't force — KA-S11
-- opportunity independent of desire/capability/authority — KA-S12–S15
+- ordinary motivation influences, doesn't determine; declared overrides are a distinct category
+  — KA-S11, KA-S20
+- Opportunity ≠ Actionable Affordance ≠ desire — KA-S12–S15
 - decision validity ≠ outcome — KA-S16
 - hidden cognition privacy/inference boundary — KA-S17
-- omniscient-state reads (cross-cutting Perception ↔ Agency finding) — KA-S10
+- omniscient-state reads (cross-cutting Perception ↔ Agency CONFLICTING finding) — KA-S10
 
 ## Deferred Semantics
 
-An unresolved later-domain question is not the same thing as an incomplete foundational rule —
-consistent with every prior batch's own framing:
-
-- Formal stealth/ambush content (concealment, detection rolls) stays deferred, per REACH-03's
-  own carried-forward open question — this batch only reconfirms the underlying asymmetry.
+- Formal stealth/ambush content stays deferred, per REACH-03's own carried-forward open
+  question — this batch only reconfirms the underlying asymmetry.
 - No universal epistemology representation is being built — `BeliefEntry`, `KnowledgeFact`/
   `knowledge_model`, the Memory domain's three subsystems, and `BeliefInstitution` remain
-  deliberately separate, per `TCK-20260904-KNOWLEDGE-BELIEF-REPRESENTATION-RECONCILIATION`'s
-  own already-confirmed judgment, extended here to the Memory domain and `BeliefInstitution`.
-- Population-scale organized belief content (myth drift, culture drift, further
-  `BeliefInstitution` design) stays with Social relations/Politics batches.
-- Hybrid Agency's organization/settlement/institution-scale coarser models stay deferred, per
-  the batch instruction's own locked principle — this batch covers individual agents only.
+  deliberately separate.
+- Population-scale organized belief content (myth drift, culture drift) stays with Social
+  relations/Politics batches.
+- Hybrid Agency's organization/settlement/institution-scale coarser models stay deferred.
 - Detailed psychological/cognitive-architecture modeling beyond what this repository already
-  evidences (personality traits feeding route-scoring bias) is not introduced, per §15's own
-  discipline — no new candidate state met the five-part bar (alters decisions, persists
-  meaningfully, affected by other systems, observable/inferable, differentiates trajectories).
+  evidences is not introduced.
+- **Added by the follow-up.** Non-ordinary override mechanisms (reflex, panic, compulsion, mind
+  control, hard survival thresholds) are permitted by AGENCY-02's own carve-out but not
+  designed here — deferred to whichever future batch first needs a concrete override mechanism.
 - INFO-02's content-distortion permission and AGENCY-05's motive-inference mechanism both stay
-  unbuilt — deferred to whichever future batch or ticket first needs either (most plausibly
-  Groups/organizations & institutions for messenger content, Social relations for
-  motive-inference gameplay).
+  unbuilt — deferred to future batches or tickets.
 
 ## Cross-domain findings
 
 - Perception ↔ Agency/Decision: KA-S10 is this batch's own most significant cross-cutting
-  finding — `ResourceOpportunityProvider.get_opportunities()` and `HarvestScorer.score()` both
-  read raw/omniscient world state directly, bypassing `PerceptionGate` and
-  `entity.cognition.knowledge_model` entirely. PERC-01 and AGENCY-03 both state the *intended*
-  boundary correctly; this repository's actual decision call sites do not yet respect it for at
-  least these two paths.
+  finding, and — per the follow-up review's own required correction — is classified
+  **CONFLICTING**, not MISSING: `ResourceOpportunityProvider.get_opportunities()` and
+  `HarvestScorer.score()` both actively read raw/omniscient world state, directly contradicting
+  PERC-01's own default and AGENCY-03's own generation-independence claim, rather than merely
+  lacking an unbuilt feature.
 - Knowledge/Information ↔ Reach: INFO-01/INFO-02 and the inherited "information requires a real
-  transfer path" entry are, together, the domain-refined completion of REACH-02's and REACH-05's
-  own explicitly-flagged forward references — REACH-05's own open question ("flagged for
-  whichever future batch, most plausibly Perception/knowledge/information, first needs to model
-  mediated reach failure") is reconfirmed still open, not resolved, by this batch's own direct
-  investigation.
-- Knowledge/Information ↔ History/Provenance: MEM-02's inherited boundary ("individual memory ≠
-  world history") directly satisfies HP-01's own explicit non-goal ("rumour propagation...
-  stays with Perception/knowledge/information") — this batch is where that deferred content
-  was actually built, not merely cross-referenced.
+  transfer path" entry complete REACH-02's and REACH-05's own explicitly-flagged forward
+  references — REACH-05's own open question is reconfirmed still open (MISSING), not resolved.
+- Knowledge/Information ↔ History/Provenance: MEM-02's inherited boundary satisfies HP-01's own
+  explicit non-goal ("rumour propagation... stays with Perception/knowledge/information").
 - Agency/Decision ↔ Capability/Authority/Reach (Batch 03/02): AGENCY-01's decision-stage chain
-  reuses CAP-01/AUTH-01/REACH-01/02 for its capability/authority/reach nodes without needing to
-  re-derive them — the same "foundational Rules predict most of a domain's own shape" pattern
-  every prior domain-facing batch has found.
+  reuses CAP-01/AUTH-01/REACH-01/02 without needing to re-derive them.
 - Agency/Decision ↔ Causality (Batch 01): AGENCY-04's decision-validity/outcome distinction and
-  the inherited "false belief may still be a real cause" entry both trace to CAUSE-01 and Batch
-  01's own FND-S18/S19 — the batch instruction's own explicit instruction to "revisit Batch 01's
-  principle" is satisfied by reuse, per the admission discipline, not by restating it as new.
+  the inherited "false belief may still be a real cause" entry both trace to CAUSE-01 and
+  FND-S18/S19.
 
-**Explicit call-out — genuine new Domain Rule count:** 12 (see "Rule admission accounting"
-above).
+**Explicit call-out — genuine new Domain Rule count:** **11** (was 12 before the follow-up
+merged KNOW-02/KNOW-03).
 
 **Explicit call-out — inherited/reused foundation count:** 8 entries, citing 13 distinct
 foundational Rule IDs across them (OWN-01, OWN-02, OWN-04, OWN-06, CAUSE-01, REACH-01, REACH-02,
 REACH-03, REACH-05, HP-01, CAP-01, AUTH-01, SURV-02).
 
-**Explicit call-out — whether agents currently access omniscient state:** **Yes, confirmed for
-at least two major decision paths.** `ResourceOpportunityProvider.get_opportunities()` reads
-`state.resource_nodes` directly (region-scoped only, not perception/knowledge-gated, every
-opportunity surfaced at `confidence=1.0`); `HarvestScorer.score()` calls
-`SpatialQueryService.nearest_resource_node(state, ...)` — the nearest node in the entire world
-state. See KA-S10.
+**Explicit call-out — whether agents currently access omniscient state:** **Yes, confirmed and
+now explicitly classified CONFLICTING (an active violation), not merely MISSING (an absent
+feature), for at least two major decision paths.** `ResourceOpportunityProvider.
+get_opportunities()` reads `state.resource_nodes` directly; `HarvestScorer.score()` calls
+`SpatialQueryService.nearest_resource_node(state, ...)` against the entire world state. See
+KA-S10.
 
 **Explicit call-out — whether beliefs materially affect decisions:** **Split verdict.**
-`strategic.leads`/`BeliefEntry` (the belief/lead system) materially affects decisions — read by
-`src/ai/goals/scorers.py` and routed through `LeadContradictionSystem`/`LeadRoutingSystem`.
-`entity.cognition.knowledge_model` (`KnowledgeFact`/`UnknownFact`) does **not** — confirmed no
-consumer outside `src/cognition/` itself.
+`strategic.leads`/`BeliefEntry` materially affects decisions (read by `src/ai/goals/scorers.py`
+and `LeadContradictionSystem`). `entity.cognition.knowledge_model` does **not** — confirmed
+INERT/OFF (no consumer outside `src/cognition/` itself; not CONFLICTING, since nothing actively
+violates KNOW-02's own boundary there — it is simply never consumed).
 
 **Explicit call-out — how false/stale information propagates:** False information propagates
-exactly like true information at the point of receipt (a rumor is a real belief with lower
-certainty, `0.3` vs. `1.0`) — its falseness is never checked at assimilation time, only
-discovered later through contradiction (`BeliefContradictionService`) or left to decay through
-staleness (`decay_stale_leads()`, and only for non-`PRECISE` leads). Content itself never
-degrades or distorts through propagation — only certainty and trust do (KNOW-03, INFO-01,
-INFO-02's confirmed gap).
+exactly like true information at the point of receipt — its falseness is discovered only
+through contradiction or left to decay through staleness (and only for non-`PRECISE` leads).
+Per KNOW-02's own revised text, a subject may remain confidently, stably wrong indefinitely
+absent a real revision event (KA-S19). Content itself never degrades or distorts through
+propagation — only certainty and trust do (KNOW-02, INFO-01, INFO-02's confirmed MISSING gap).
 
 **Explicit call-out — whether information has real reach constraints:** **Yes.** Every
-information-arrival path (direct observation, rumor with `source_entity_id`, paid query
-response) requires a real, traceable source; nothing teleports knowledge across the world
-without one of these paths (KA-S07). Intermediary-link failure modeling remains confirmed
-MISSING (REACH-05, reconfirmed).
+information-arrival path requires a real, traceable source (KA-S07). Intermediary-link failure
+modeling remains confirmed MISSING (REACH-05, reconfirmed).
 
 **Explicit call-out — whether needs/motivations create differentiated choices:** **Yes.**
-`AdventureRouteScorer.score()`'s additive formula (urgency + benefit + personality_bias +
-confidence_bonus − risk_penalty − blocker_penalty) means different entities with different
-needs, traits, and capability estimates score the same opportunity set differently, and the
-same entity's own choice shifts as its needs/traits change tick to tick — confirmed
-differentiation, not a fixed lookup.
+Different entities with different needs, traits, and capability estimates score the same
+Opportunity set differently, per AGENCY-02's own revised "influence, not determination" claim —
+confirmed differentiation, not a fixed lookup, and not (per KA-S20) a claim that no future
+override category could ever force a specific outcome.
 
-**Explicit call-out — which cognitive state is causally inert:** `entity.cognition.
-knowledge_model` (no decision consumer, though internally consistent and tested);
-`CausalMemoryEntry.confidence` (typed as gradable, hardcoded to `0.8` for every entry, never
-actually varies); the entire Memory domain (causal/spatial/temporal) while
-`ENABLE_MEMORY_UPDATE` defaults OFF (wired but inactive); `entity.self_model.capabilities.
-estimates` (the persisted storage location, confirmed always empty in production, even though
-the estimation logic itself is live and consumed ad hoc elsewhere).
+**Explicit call-out — which cognitive state is causally inert (INERT/OFF specifically, as
+distinguished from CONFLICTING or MISSING):** `entity.cognition.knowledge_model` (no decision
+consumer, though internally consistent and tested); `CausalMemoryEntry.confidence` (hardcoded
+to `0.8` for every entry, never actually varies); the entire Memory domain while
+`ENABLE_MEMORY_UPDATE` defaults OFF; `entity.self_model.capabilities.estimates` (confirmed
+always empty in production, though the estimation logic itself is live and consumed ad hoc
+elsewhere — not classified under the three-way distinction, since no Rule requires this storage
+populated).
 
 ## Repository Findings
 
-No CONFLICTING or UNKNOWN findings. Load-bearing MISSING/gap findings, most significant first:
+Classified per the three-way distinction the follow-up review required: **CONFLICTING** (a
+live, active behavior that violates a target Rule's own boundary — a real architecture
+mismatch, not something invalidating the Catalog), **INERT/OFF** (a real mechanism that simply
+does not run, violating nothing), and **MISSING** (a permitted mechanism never built at all).
 
-1. **Decision-making bypasses perception/knowledge entirely for at least two live paths**
-   (`ResourceOpportunityProvider`, `HarvestScorer`) — reads raw world state directly. The single
-   most load-bearing finding in this batch.
-2. **`entity.cognition.knowledge_model` has zero decision-making consumers** outside
+**CONFLICTING (1 finding — the most significant in this batch):**
+1. `ResourceOpportunityProvider.get_opportunities()` and `HarvestScorer.score()` actively read
+   raw/omniscient world state directly, bypassing `PerceptionGate` and `entity.cognition.
+   knowledge_model` entirely, for at least two live decision paths. This directly contradicts
+   PERC-01's own default and AGENCY-03's own generation-independence claim. **This does not
+   invalidate the Rule Catalog — it means the Catalog successfully exposed a real, documented
+   architecture mismatch**, and remains one of the most important findings produced so far:
+   individual agents already have real belief/perception infrastructure, but some live decision
+   paths bypass it entirely.
+
+**INERT/OFF (3 findings):**
+2. `entity.cognition.knowledge_model` has zero decision-making consumers outside
    `src/cognition/` itself.
-3. **`PerceptionUpdatePhase` (the salience/attention/budget layer) has zero call sites in
-   production** — only the upstream binary `PerceptionGate` is confirmed live.
-4. **`MemoryUpdatePhase` is wired but inactive** — gated behind `ENABLE_MEMORY_UPDATE`, default
-   OFF.
-5. **No in-simulation motive-inference mechanism exists** — `CognitionPatternMiner` is offline
+3. `PerceptionUpdatePhase` (the salience/attention/budget layer) has zero call sites in
+   production — only the upstream binary `PerceptionGate` is confirmed live.
+4. `MemoryUpdatePhase` is wired but inactive — gated behind `ENABLE_MEMORY_UPDATE`, default OFF.
+
+**MISSING (3 findings):**
+5. No in-simulation motive-inference mechanism exists — `CognitionPatternMiner` is offline
    developer tooling, not a world mechanism.
-6. **`CapabilityEstimateService` is scorer-local/ad hoc and architecturally split from the
-   entity's own persisted self-model** — `entity.self_model.capabilities.estimates` stays empty
-   in production; no active confidence decay.
-7. **No intermediary-link failure modeling** (messenger delayed/blocked/lying) — reconfirms
+6. No intermediary-link failure modeling (messenger delayed/blocked/lying) — reconfirms
    REACH-05's already-flagged gap.
-8. **No content-level distortion through information transmission** — only certainty/trust
-   vary; content itself never does.
-9. **A minor naming collision** (two distinct `KnowledgeFact` classes across
-   `src/world/providers/information.py` and `src/core/self_model.py`) — not a semantic gap,
-   flagged so a future author isn't misled.
+7. No content-level distortion through information transmission — only certainty/trust vary.
+
+**Not classified under the three-way distinction (an architecture observation, not a
+Rule-boundary finding):**
+8. `CapabilityEstimateService` is scorer-local/ad hoc and architecturally split from the
+   entity's own persisted self-model — `entity.self_model.capabilities.estimates` stays empty
+   in production; no active confidence decay. No AGENCY Rule requires this storage populated.
+9. A minor naming collision (two distinct `KnowledgeFact` classes across
+   `src/world/providers/information.py` and `src/core/self_model.py`) — not a semantic gap.
 
 Key evidence, all confirmed by direct code/doc inspection: `src/world/perception/gate.py`,
 `src/domains/perception/{phase,filter,salience,service}.py`,
@@ -277,56 +320,65 @@ resources.py`, `src/ai/goals/scorers.py`, `src/domains/adventure/{scoring,genera
 
 ## Owner-attention decisions
 
-- Whether `ResourceOpportunityProvider`/`HarvestScorer` (and any other undiscovered
-  omniscience-reading call site) should be re-scoped through perception/knowledge is the single
-  highest-priority implementation question this batch surfaces — a real architecture gap
-  between intended and actual cognitive-gating behavior, not merely an unbuilt nice-to-have.
+- **Highest priority.** Whether `ResourceOpportunityProvider`/`HarvestScorer` (and any other
+  undiscovered CONFLICTING call site) should be re-scoped through perception/knowledge — a
+  confirmed, active architecture mismatch, not merely an unbuilt nice-to-have.
 - Whether `entity.cognition.knowledge_model` should gain a real consumer, or be considered
-  redundant against `strategic.leads`/`BeliefEntry` and deprecated, is a real design fork not
-  decided here.
+  redundant against `strategic.leads`/`BeliefEntry` and deprecated.
 - Whether to prioritize building intermediary-link failure modeling (REACH-05) or
   content-distortion (INFO-02) — both remain confirmed-absent, permitted-but-unbuilt gaps.
 - Whether `PerceptionUpdatePhase` and `MemoryUpdatePhase`/`ENABLE_MEMORY_UPDATE` should be
-  wired live is a rollout decision, not a semantic one.
+  wired live — a rollout decision, not a semantic one.
+- Whether a future domain should design a concrete reflex/compulsion/mind-control override
+  mechanism, now that AGENCY-02 explicitly permits one.
 
 ## Candidate disposition
 
-Twelve Domain Rules were drafted across three families (1 Perception, 6 Knowledge/Information/
-Memory, 5 Agency/Decision) — **all 12 accepted, 0 rejected, 0 split, 0 merged.** Eight further
-entries were identified as Inherited/Applied Foundational Rules and six as Scope/Deferred
-Boundaries, per the admission discipline — none of these required a new Rule ID, and none
-represents lost work: every one carries its own evidence and cross-domain link. The batch
-instruction's own suggested file grouping (perception / knowledge-information / agency-decision)
-was kept, with Memory folded into the Knowledge/Information file rather than given a fourth —
-investigated directly and found to fit naturally rather than requiring its own file.
+Eleven Domain Rules (post-merge) were drafted across three families (1 Perception: PERC-01; 5
+Knowledge/Information/Memory: KNOW-01, KNOW-02, INFO-01, INFO-02, MEM-02; 5 Agency/Decision:
+AGENCY-01–05) — **all accepted, 0 rejected, 0 split.** One merge occurred during the follow-up
+review (KNOW-02 + KNOW-03 → KNOW-02), reducing the Domain Rule count from 12 to 11 without
+losing any evidence, scenario coverage, or cross-domain link — the merged Rule's own text
+carries both original claims. Eight Inherited/Applied Foundational Rules and seven
+Scope/Deferred Boundaries (six original, one added by the follow-up for non-ordinary override
+mechanisms) round out the 26 total catalog entries.
 
 Full per-rule disposition, evidence, and rationale: see the canonical files above, or
 `tmp/knowledge-agency-batch-06-report.md` (local review report, not part of this catalog).
 
 ---
 
-> **BATCH 06 (PERCEPTION / KNOWLEDGE / INFORMATION / AGENCY) READY FOR HIGH-LEVEL EXTERNAL
-> REVIEW.**
+> **BATCH 06 PASS — READY TO FREEZE.**
+>
+> Target semantics are coherent. The repository contains a documented **CONFLICTING**
+> implementation gap where some decision paths (`ResourceOpportunityProvider`, `HarvestScorer`)
+> bypass subject-local perception/knowledge and read omniscient world state directly — this is
+> a real, honestly-recorded architecture mismatch, not a defect in the Rule Catalog itself.
 
-All required artifacts exist: three rule-family files (12 genuine Domain Rules; 26 total
-catalog entries including inherited/scope entries), one scenario file (17 scenarios covering all
-sixteen required seed probes plus one directly evidence-driven addition), this review export
-with all ten required sections plus every explicitly-required call-out, and a local disposition
-report. All twelve of the batch instruction's own stop-condition checklist items are satisfied:
-world truth and belief are kept semantically distinct (PERC-01, inherited OWN-04/06); perception
-does not imply omniscience (PERC-01) — though the batch's own investigation found that *decision-
-making*, as distinct from perception itself, currently does read omniscient state, and this is
-recorded honestly as a Repository Finding, not smoothed over; information requires valid
-propagation paths (INFO-01/02, inherited REACH-01/02/05); false/stale/conflicting information
-can and does exist (KA-S04–S06); memory and world history remain distinct (MEM-02); decisions
-can depend on subject-local knowledge (AGENCY-01, though two call sites currently bypass this);
-motivation influences without dictating (AGENCY-02); capability/authority/opportunity/decision/
-success remain distinct (AGENCY-01, AGENCY-03, AGENCY-04); hidden cognition remains compatible
-with observer legibility (AGENCY-05, inference mechanism confirmed not yet built);
-repository omniscience/inert-state gaps are identified (Repository Findings, above); genuine
-Domain Rules are distinguished from inherited foundations/findings (Rule admission accounting,
-above); adversarial scenarios have been traced (KA-S01–S17, including two explicit counter/
-partial results at KA-S08 and KA-S14).
+All required artifacts exist: three rule-family files (11 genuine Domain Rules; 26 total
+catalog entries), one scenario file (20 scenarios covering all sixteen required seed probes,
+one evidence-driven addition, and three follow-up-required adversarial probes), this review
+export with all ten required sections plus every explicitly-required call-out, and a local
+disposition report. No new contradiction was introduced by the follow-up cleanup within the
+target Rules themselves — every revision either generalized an over-specific claim (PERC-01,
+KNOW-01, INFO-01, AGENCY-02), merged two Rules that had converged on one boundary (KNOW-02/03),
+clarified ambiguous terminology (AGENCY-03), or corrected a Repository Finding's own
+classification (CONFLICTING vs. MISSING) — none of which changes what any Rule requires of the
+world, only how precisely and honestly that requirement and the repository's relationship to it
+are now stated. All twelve of the batch instruction's own stop-condition checklist items remain
+satisfied, now more precisely: world truth and belief are kept semantically distinct; perception
+does not imply omniscience by default, and explicit exceptions are permitted; information
+requires valid propagation paths; false/stale/conflicting information can and does exist, and a
+subject may remain confidently wrong indefinitely; memory and world history remain distinct;
+decisions can depend on subject-local knowledge, though two call sites currently do not (a
+documented CONFLICTING gap, not smoothed over); motivation influences without dictating, and
+declared overrides are an explicitly permitted distinct category; capability/authority/
+opportunity/decision/success remain distinct, with opportunity now split into two clearly
+named tiers; hidden cognition remains compatible with observer legibility; repository
+omniscience/inert-state gaps are identified and correctly classified (CONFLICTING vs. INERT/OFF
+vs. MISSING); genuine Domain Rules are distinguished from inherited foundations/findings;
+adversarial scenarios have been traced, now including three added specifically to confirm the
+revised Rules are correctly bounded rather than over-broad.
 
 Do not begin Batch 07 (Capability / Progression / Conflict) until this batch receives
 high-level review.

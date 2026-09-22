@@ -124,20 +124,26 @@ order.
 - **Batch 06** (Perception/Knowledge/Information/Agency) — the third domain-facing Milestone B
   batch, and a high-priority one, since perception/knowledge/agency govern how an individual
   forms an imperfect view of the world and acts from it — drafted 2026-09-22 directly with the
-  five-category admission discipline (no separate normalization pass needed). 12 genuine Domain
-  Rules (26 total catalog entries including 8 inherited/applied foundational rules and 6 scope/
-  deferred boundaries) across Perception, Knowledge/Information/Memory (Memory folded in rather
-  than given its own file), and Agency/Decision; ready for high-level external review. The
-  single most load-bearing finding: at least two live decision paths
-  (`ResourceOpportunityProvider.get_opportunities()`, `HarvestScorer.score()`) read raw/
-  omniscient world state directly, bypassing `PerceptionGate` and `entity.cognition.
-  knowledge_model` entirely — see `review-exports/knowledge-agency-batch-06-review.md`'s
-  explicit call-outs for this and five further confirmed gaps (`knowledge_model` has no
-  decision consumer; `PerceptionUpdatePhase` has zero production call sites;
-  `MemoryUpdatePhase` is wired but inactive; no in-simulation motive-inference mechanism; no
-  intermediary-link-failure or content-distortion modeling, reconfirming REACH-05's own
-  already-flagged gap). See `tmp/knowledge-agency-batch-06-report.md` (local, not part of this
-  catalog) for the full disposition report.
+  five-category admission discipline, then revised the same day per a targeted semantic-cleanup
+  follow-up (generalized PERC-01/KNOW-01/INFO-01/AGENCY-02 away from over-specific wording,
+  merged KNOW-02/KNOW-03, clarified AGENCY-03's Opportunity/Actionable-Affordance terminology,
+  and reclassified the omniscience finding as CONFLICTING rather than MISSING), **PASS — ready
+  to freeze**. 11 genuine Domain Rules (26 total catalog entries including 8 inherited/applied
+  foundational rules and 7 scope/deferred boundaries) across Perception, Knowledge/Information/
+  Memory (Memory folded in rather than given its own file), and Agency/Decision. The single most
+  load-bearing finding, now correctly classified **CONFLICTING** (an active violation, not
+  merely an absent feature): at least two live decision paths (`ResourceOpportunityProvider.
+  get_opportunities()`, `HarvestScorer.score()`) read raw/omniscient world state directly,
+  bypassing `PerceptionGate` and `entity.cognition.knowledge_model` entirely — this does not
+  invalidate the Rule Catalog; it means the Catalog successfully exposed a real architecture
+  mismatch. See `review-exports/knowledge-agency-batch-06-review.md`'s explicit call-outs for
+  this and further confirmed gaps, correctly split into CONFLICTING / INERT-OFF / MISSING
+  categories (`knowledge_model` has no decision consumer, INERT/OFF; `PerceptionUpdatePhase`
+  has zero production call sites, INERT/OFF; `MemoryUpdatePhase` is wired but inactive,
+  INERT/OFF; no in-simulation motive-inference mechanism, MISSING; no intermediary-link-failure
+  or content-distortion modeling, MISSING, reconfirming REACH-05's own already-flagged gap). See
+  `tmp/knowledge-agency-batch-06-report.md` (local, not part of this catalog) for the full
+  disposition report.
 - Do not begin Batch 07 (Capability / Progression / Conflict) until Batch 06 receives
   high-level review.
 
@@ -151,7 +157,7 @@ order.
 | History / Provenance completion | [scenarios/history-provenance-completion.md](scenarios/history-provenance-completion.md) | HP-S01 – HP-S02 |
 | Batch 04 (Space/Environment/Movement) | [scenarios/space-environment-batch-04.md](scenarios/space-environment-batch-04.md) | SPC-S01 – SPC-S15 |
 | Batch 05 (Life/Body/Survival/Ecology) | [scenarios/life-body-batch-05.md](scenarios/life-body-batch-05.md) | LB-S01 – LB-S16 |
-| Batch 06 (Perception/Knowledge/Information/Agency) | [scenarios/knowledge-agency-batch-06.md](scenarios/knowledge-agency-batch-06.md) | KA-S01 – KA-S17 |
+| Batch 06 (Perception/Knowledge/Information/Agency) | [scenarios/knowledge-agency-batch-06.md](scenarios/knowledge-agency-batch-06.md) | KA-S01 – KA-S20 |
 
 ## Unresolved cross-domain questions
 
@@ -282,20 +288,23 @@ follow-up):**
 
 **From Batch 06 (Perception/Knowledge/Information/Agency, drafted 2026-09-22):**
 
-- **Confirmed MISSING — the most load-bearing gap in this whole batch.** Decision-making
-  currently reads raw/omniscient world state directly for at least two live paths
-  (`ResourceOpportunityProvider.get_opportunities()`, `HarvestScorer.score()`), bypassing
-  `PerceptionGate` and `entity.cognition.knowledge_model` entirely. Whether these call sites
-  should be re-scoped through perception/knowledge is a real implementation question, not
-  decided here.
-- **Confirmed MISSING.** `entity.cognition.knowledge_model` (`KnowledgeFact`/`UnknownFact`) has
-  zero decision-making consumers outside `src/cognition/` itself — decisions that do depend on
-  belief-like state read the separate `strategic.leads`/`BeliefEntry` system instead.
-- **Confirmed dead in production.** `PerceptionUpdatePhase` (the salience/attention/budget
-  layer) has zero call sites in `AuthoritativeApplyPipeline.refine()`; only the upstream binary
-  `PerceptionGate` is confirmed live.
-- **Confirmed wired-but-inactive.** `MemoryUpdatePhase` (causal/spatial/temporal memory) is
-  gated behind `ENABLE_MEMORY_UPDATE`, which defaults OFF.
+- **Confirmed CONFLICTING (not merely MISSING) — the most load-bearing gap in this whole
+  batch, and one of the most important findings the Rule Catalog has produced to date.**
+  Decision-making actively reads raw/omniscient world state directly for at least two live
+  paths (`ResourceOpportunityProvider.get_opportunities()`, `HarvestScorer.score()`), bypassing
+  `PerceptionGate` and `entity.cognition.knowledge_model` entirely — this is active behavior
+  that violates the target semantics, not an absent feature. Does not invalidate the Rule
+  Catalog: it means the Catalog successfully exposed a real architecture mismatch. Whether
+  these call sites should be re-scoped through perception/knowledge is a real implementation
+  question, not decided here.
+- **Confirmed INERT/OFF.** `entity.cognition.knowledge_model` (`KnowledgeFact`/`UnknownFact`)
+  has zero decision-making consumers outside `src/cognition/` itself — decisions that do depend
+  on belief-like state read the separate `strategic.leads`/`BeliefEntry` system instead.
+- **Confirmed INERT/OFF (dead in production).** `PerceptionUpdatePhase` (the salience/attention/
+  budget layer) has zero call sites in `AuthoritativeApplyPipeline.refine()`; only the upstream
+  binary `PerceptionGate` is confirmed live.
+- **Confirmed INERT/OFF (wired-but-inactive).** `MemoryUpdatePhase` (causal/spatial/temporal
+  memory) is gated behind `ENABLE_MEMORY_UPDATE`, which defaults OFF.
 - **Confirmed MISSING.** No in-simulation motive-inference mechanism exists —
   `CognitionPatternMiner` is offline developer/observability tooling, not a world mechanism.
 - **Reconfirmed MISSING, from Batch 02's own REACH-05.** No intermediary-link-failure modeling
@@ -328,7 +337,7 @@ rationale stay canonical.
 | History / Provenance completion | `foundations/history-provenance.md` (HP-01–06) | `scenarios/history-provenance-completion.md` (HP-S01–S02) | [review-exports/history-provenance-completion-review.md](review-exports/history-provenance-completion-review.md) | Ready for high-level external review |
 | Batch 04 (Space/Environment/Movement) | `space-environment/location-topology.md`, `space-environment/environment.md`, `space-environment/movement-navigation.md` | `scenarios/space-environment-batch-04.md` (SPC-S01–S15) | [review-exports/space-environment-batch-04-review.md](review-exports/space-environment-batch-04-review.md) | PASS — ready to freeze |
 | Batch 05 (Life/Body/Survival/Ecology) | `life-body/lifecycle.md`, `life-body/body-condition.md`, `life-body/survival-needs.md`, `life-body/ecology-population.md` | `scenarios/life-body-batch-05.md` (LB-S01–S16) | [review-exports/life-body-batch-05-review.md](review-exports/life-body-batch-05-review.md) | Ready for high-level external review, normalized 2026-09-22 |
-| Batch 06 (Perception/Knowledge/Information/Agency) | `knowledge-agency/perception.md`, `knowledge-agency/knowledge-information.md`, `knowledge-agency/agency-decision.md` | `scenarios/knowledge-agency-batch-06.md` (KA-S01–S17) | [review-exports/knowledge-agency-batch-06-review.md](review-exports/knowledge-agency-batch-06-review.md) | Ready for high-level external review |
+| Batch 06 (Perception/Knowledge/Information/Agency) | `knowledge-agency/perception.md`, `knowledge-agency/knowledge-information.md`, `knowledge-agency/agency-decision.md` | `scenarios/knowledge-agency-batch-06.md` (KA-S01–S20) | [review-exports/knowledge-agency-batch-06-review.md](review-exports/knowledge-agency-batch-06-review.md) | PASS — ready to freeze |
 
 ## Links to current review batches
 

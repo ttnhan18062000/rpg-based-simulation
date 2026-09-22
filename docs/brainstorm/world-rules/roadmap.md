@@ -28,10 +28,11 @@ domain-facing Milestone B batch — is drafted, revised once per its own follow-
 **PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) is drafted, normalized 2026-09-22 per
 a Rule admission-discipline review (14 genuine Domain Rules of 22 original entries — see that
 batch's own status below), and ready for high-level external review. Batch 06
-(Perception/Knowledge/Information/Agency) is drafted 2026-09-22, directly with the admission
-discipline applied from the first draft (12 genuine Domain Rules of 26 total catalog entries),
-and ready for high-level external review. Batch 07 (Capability/Progression/Conflict) is the
-next planned step once Batch 06 is reviewed.
+(Perception/Knowledge/Information/Agency) is drafted 2026-09-22, revised the same day per a
+targeted semantic-cleanup follow-up (11 genuine Domain Rules of 26 total catalog entries after
+a KNOW-02/KNOW-03 merge, plus a corrected CONFLICTING/INERT-OFF/MISSING repository-finding
+classification), and **PASS — ready to freeze**. Batch 07 (Capability/Progression/Conflict) is
+the next planned step once Batch 06 is reviewed.
 
 ---
 
@@ -206,14 +207,18 @@ Keep individual entity semantics distinct from aggregate ecology.
 
 ### Batch 06 — Perception / Knowledge / Information / Agency
 
-**Status: drafted 2026-09-22, ready for high-level external review.** 12 genuine Domain Rules
-(26 total catalog entries — 12 Domain Rules, 8 Inherited/Applied Foundational Rules, 6 Scope/
-Deferred Boundaries, per the standing admission discipline applied from the first draft) across
-`knowledge-agency/perception.md`, `knowledge-information.md`, `agency-decision.md` (Memory
-folded into the Knowledge/Information file rather than given its own). The single most
-load-bearing finding: at least two live decision paths read raw/omniscient world state
-directly, bypassing perception and the knowledge model entirely. See
-`review-exports/knowledge-agency-batch-06-review.md`.
+**Status: drafted 2026-09-22, revised the same day per a targeted semantic-cleanup follow-up
+review, PASS — ready to freeze.** 11 genuine Domain Rules (26 total catalog entries — 11 Domain
+Rules after a KNOW-02/KNOW-03 merge, 8 Inherited/Applied Foundational Rules, 7 Scope/Deferred
+Boundaries) across `knowledge-agency/perception.md`, `knowledge-information.md`,
+`agency-decision.md` (Memory folded into the Knowledge/Information file rather than given its
+own). PERC-01/KNOW-01/INFO-01/AGENCY-02 were generalized away from over-specific wording,
+AGENCY-03 given an explicit Opportunity/Actionable-Affordance terminology, and three
+adversarial probes added (KA-S18–S20). The single most load-bearing finding, now correctly
+classified **CONFLICTING** rather than MISSING: at least two live decision paths actively read
+raw/omniscient world state directly, bypassing perception and the knowledge model entirely —
+this does not invalidate the Rule Catalog; it means the Catalog successfully exposed a real
+architecture mismatch. See `review-exports/knowledge-agency-batch-06-review.md`.
 
 ```text
 observation

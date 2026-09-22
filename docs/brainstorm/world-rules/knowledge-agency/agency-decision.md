@@ -14,10 +14,15 @@ simulated living agents, per the locked **Hybrid Agency** principle (organizatio
 institutions may later use coarser goal/pressure models — not designed here). Does not require
 every agent to use the same internal decision architecture.
 
-**Status.** Batch 06 (Perception/Knowledge/Information/Agency), first draft. Candidates below
-originated as external-reviewer hypotheses (`tmp/world-rule-batch-6-ext-ai.md`); each carries
-this session's disposition and repository evidence. Structured per the normalized five-category
-methodology established in Batch 05's admission-discipline pass.
+**Status.** Batch 06 (Perception/Knowledge/Information/Agency), drafted 2026-09-22, revised the
+same day per follow-up review (`tmp/world-rule-batch-6-followup-ext-ai.md`): AGENCY-02
+reworded to remove implementation-specific language ("inside one scoring formula") and to
+explicitly allow future reflex/compulsion/mind-control/hard-threshold rules to override
+ordinary motivation; AGENCY-03 given a clarified two-tier Opportunity/Actionable-Affordance
+terminology. Candidates below originated as external-reviewer hypotheses
+(`tmp/world-rule-batch-6-ext-ai.md`); each carries this session's disposition and repository
+evidence. Structured per the normalized five-category methodology established in Batch 05's
+admission-discipline pass.
 
 ---
 
@@ -53,75 +58,110 @@ capability), [KA-S16](../scenarios/knowledge-agency-batch-06.md#ka-s16) (decisio
 
 ---
 
-## AGENCY-02 — Motivation/need pressure competitively weights decisions rather than deterministically forcing them
+## AGENCY-02 — Ordinary motivations influence decision preference without automatically determining the chosen action
 
-> A subject's motivations and needs (fear, curiosity, hunger, greed, personality traits) add
-> real, competing weight to a decision-scoring process. Multiple motivations may compete within
-> one decision, and the highest-pressure motivation does not automatically win — it wins only if
-> its weighted contribution outscores the alternatives. A threshold removes meaningful choice
-> only where a specific world rule explicitly declares that it does; absent such a declaration,
-> pressure is influence, not override.
+> A subject's ordinary motivations and needs (fear, curiosity, hunger, greed, personality
+> traits) add real, competing influence to which action a subject prefers. Multiple motivations
+> may compete, and the highest-pressure motivation does not automatically win — it prevails
+> only where the world's own declared decision semantics actually favor it over the
+> alternatives. This describes *ordinary* motivation only. It does not ban non-voluntary
+> behavior in general: a future world rule may explicitly declare a reflex, panic response,
+> compulsion, mind-control effect, or hard survival threshold that overrides ordinary
+> preference and forces a specific action — such a declared override is a different, legitimate
+> category from ordinary motivational influence, not a violation of this Rule.
 
-**Disposition: ACCEPT.** Passes the admission test: Batch 05's SURV-02 already established that
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — reworded to remove
+implementation-specific language ("inside one scoring formula") and to explicitly carve out
+room for future non-ordinary override rules.** The original wording's specific mechanism
+description (a weighted addend inside one scoring formula) stated this repository's own
+current implementation as if it were the Rule itself; the fix states the semantic principle
+(influence, not automatic determination) independent of any one scoring mechanism's shape, and
+explicitly distinguishes *ordinary* motivational influence (what this Rule governs) from a
+*declared override* (reflex/compulsion/mind-control/hard-threshold — a legitimately different
+category, carved out as its own Scope/Deferred Boundary, below, rather than smuggled in as an
+exception clause). Passes the admission test: Batch 05's SURV-02 already established that
 crossing a need threshold produces a real consequence (Inherited, below); the new claim here is
-specific to Agency — that in this repository's actual decision architecture, that consequence
-takes the form of a *weighted, competing addend* inside one scoring formula, never a
-deterministic override, and that several independent motivations may compete simultaneously
-within the same decision.
+specific to Agency — that ordinary motivation *competes for preference* rather than
+*determining the outcome*, and that several independent motivations may compete simultaneously.
 
-**Repository evidence: SUPPORTED.** `AdventureRouteScorer.score()`'s formula (`score = urgency +
-benefit + personality_bias + confidence_bonus − risk_penalty − blocker_penalty`) sums need
-urgency, benefit, and up to five independent personality-trait biases (caution, greed,
-curiosity, industry, sociability) into one competing scalar per candidate route — a route with
-zero matching need urgency can still win on benefit/bias alone (per the routing contract's own
-documented edge case: "Entity with no active needs → `urgency=0.0` for all routes; benefit and
-personality_bias alone drive scoring"), and a high-urgency need does not force its own matching
-route to win if a competing route scores higher overall. `NeedInterpretationService.interpret()`
-itself can register multiple simultaneous needs (healing, food, rest, gold, equipment,
-information) with independent urgency values — genuine multi-motivation competition, not a
-single dominant-need switch.
+**Repository evidence: SUPPORTED, as one legitimate implementation of the principle — not the
+principle's own definition.** `AdventureRouteScorer.score()`'s formula (`score = urgency +
+benefit + personality_bias + confidence_bonus − risk_penalty − blocker_penalty`) is this
+repository's own current mechanism for realizing "influence, not automatic determination": it
+sums need urgency, benefit, and up to five independent personality-trait biases (caution,
+greed, curiosity, industry, sociability) into one competing scalar per candidate route — a
+route with zero matching need urgency can still win on benefit/bias alone (per the routing
+contract's own documented edge case: "Entity with no active needs → `urgency=0.0` for all
+routes; benefit and personality_bias alone drive scoring"), and a high-urgency need does not
+force its own matching route to win if a competing route scores higher overall.
+`NeedInterpretationService.interpret()` itself can register multiple simultaneous needs
+(healing, food, rest, gold, equipment, information) with independent urgency values — genuine
+multi-motivation competition, not a single dominant-need switch. No override mechanism
+(reflex/compulsion/mind-control/hard-threshold) currently exists in this repository — this
+Rule's own carve-out for one is a standing permission for future content, not a description of
+something already built.
 
 **Scenarios:** [KA-S11](../scenarios/knowledge-agency-batch-06.md#ka-s11) (need influences but
-doesn't dictate).
+doesn't dictate), [KA-S20](../scenarios/knowledge-agency-batch-06.md#ka-s20) (compelled action —
+confirms this Rule describes ordinary motivation only, not a ban on all non-voluntary
+behavior).
 
 ---
 
-## AGENCY-03 — An opportunity/affordance is a real, world-state-relative fact independent of a subject's desire, capability, or authority to act on it
+## AGENCY-03 — Opportunity and actionable affordance are two distinct tiers, independent of a subject's desire, capability, or authority
 
-> An opportunity is a currently-available action possibility generated by world state relative
-> to a particular subject (its position, its region, its blockers) — a real fact distinct from
-> whether that subject *wants* it (motivation), *can* execute it (capability), or *may*
-> legitimately execute it (authority). Lacking capability or authority does not remove a real
-> opportunity from existing as a candidate; it only affects whether committing to it succeeds.
+> **Opportunity** = a world-relative possibility worth considering: an action possibility that
+> exists relative to a particular subject's position/region/context, independent of whether
+> that subject currently wants it, can execute it, or may legitimately execute it. **Actionable
+> affordance** = an opportunity that is currently exercisable by this specific subject, given
+> its actual capability, authority, and reach at this moment. Every actionable affordance is an
+> opportunity; not every opportunity is currently an actionable affordance — a subject may face
+> a real opportunity it cannot yet act on (missing capability/authority/reach), and the
+> opportunity does not stop existing merely because it is not, right now, exercisable. Neither
+> tier depends on the subject's desire: wanting is a separate fact from both (AGENCY-01,
+> AGENCY-02).
 
-**Disposition: ACCEPT.** Directly answers the batch instruction's own §8 investigation
-("whether Affordance/Opportunity deserves explicit domain semantics") — the answer is yes, and
-the repository already implements almost exactly this concept under the name `Opportunity`.
-Passes the admission test: no earlier Rule names or states this category.
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — the original draft used
+"opportunity" and "affordance" as loose synonyms; this revision establishes the explicit
+two-tier distinction the follow-up required, since one tier depends on capability/reach and the
+other does not.** Directly answers the batch instruction's own §8 investigation ("whether
+Affordance/Opportunity deserves explicit domain semantics") — the answer is yes, and the
+repository already implements almost exactly the Opportunity tier under that name; the
+Actionable-affordance tier is real but not reified as its own separate type (see evidence,
+below). Passes the admission test: no earlier Rule names or states either category.
 
-**Repository evidence: SUPPORTED — this concept is already a first-class repository type, not
-merely inferable.** `Opportunity` (`src/world/providers/resources.py`,
-`src/domains/adventure/schema.py`) is a frozen dataclass with `kind`, `target_id`, `subject`,
-`estimated_reward`, `estimated_risk`, `requirements`, and `confidence` fields — generated
-independent of any particular subject's motivation (a resource node opportunity exists whether
-or not the entity currently needs that resource) and surviving a capability shortfall as a
-still-valid, merely-penalized candidate (`blocker_penalty`, AGENCY-01's own evidence). A route
-whose need-urgency is `0.0` (no matching motivation) can still be generated and even selected on
-benefit alone (AGENCY-02) — opportunity, motivation, and capability are visibly three separate
-inputs to one scoring formula, never collapsed.
+**Repository evidence: SUPPORTED for the Opportunity tier as a first-class repository type;
+SUPPORTED but implicit for the Actionable-affordance tier.** `Opportunity`
+(`src/world/providers/resources.py`, `src/domains/adventure/schema.py`) is a frozen dataclass
+with `kind`, `target_id`, `subject`, `estimated_reward`, `estimated_risk`, `requirements`, and
+`confidence` fields — generated independent of any particular subject's motivation (a resource
+node opportunity exists whether or not the entity currently needs that resource), and this is
+exactly the Opportunity tier. The Actionable-affordance tier is real but this repository never
+reifies it as its own object: a capability shortfall does not remove an `Opportunity` from the
+candidate set, it only attaches `blocker_penalty=2.0` at scoring time (AGENCY-01's own
+evidence) — meaning "is this currently exercisable" is computed implicitly, per-candidate, at
+scoring time, rather than being a persisted second-tier fact a caller could inspect directly.
+Opportunity, motivation, and capability remain three separate inputs to one scoring formula,
+never collapsed, even though only one of the three (Opportunity) has its own named type.
 
-**Repository Finding, attached: opportunities in this repository are currently generated from
-raw/omniscient world state, not gated by the subject's own perception or knowledge.** See
-`perception.md`'s own Repository Findings (`ResourceOpportunityProvider.get_opportunities()`
-reads `state.resource_nodes` directly, region-scoped only, not perception/knowledge-scoped).
-This is a real tension with PERC-01's own gating principle: the Opportunity *concept* is
-correctly subject-relative and desire/capability-independent, but its current *generation
-mechanism* does not respect the subject's own bounded perception — an opportunity the entity has
-never perceived or learned of is nonetheless surfaced to it as a scoring candidate.
+**Repository Finding, attached: CONFLICTING — opportunities in this repository are currently
+generated from raw/omniscient world state, not gated by the subject's own perception or
+knowledge.** See `perception.md`'s own Repository Findings for the full evidence
+(`ResourceOpportunityProvider.get_opportunities()` reads `state.resource_nodes` directly,
+region-scoped only, not perception/knowledge-scoped; `HarvestScorer.score()` similarly).
+Classified CONFLICTING, not MISSING, per the follow-up review's own required correction: this
+is active, live behavior that contradicts PERC-01's own boundary for these specific decisions,
+not an absent or dormant feature. The Opportunity *tier itself* is correctly subject-relative
+and desire/capability-independent by design; its current *generation mechanism* is what fails
+to respect the subject's own bounded perception — an opportunity the entity has never perceived
+or learned of is nonetheless surfaced to it as a candidate, at full `confidence=1.0`.
 
-**Scenarios:** [KA-S14](../scenarios/knowledge-agency-batch-06.md#ka-s14) (opportunity without
+**Scenarios:** [KA-S12](../scenarios/knowledge-agency-batch-06.md#ka-s12) (capability without
+knowledge), [KA-S13](../scenarios/knowledge-agency-batch-06.md#ka-s13) (knowledge without
+capability), [KA-S14](../scenarios/knowledge-agency-batch-06.md#ka-s14) (opportunity without
 desire), [KA-S15](../scenarios/knowledge-agency-batch-06.md#ka-s15) (desire without
-opportunity).
+opportunity) — all four revisited in the scenario file using the clarified Opportunity/
+Actionable-affordance terminology.
 
 ---
 
@@ -246,6 +286,18 @@ action — reuses/deepens FND-S18/S19 directly).
 
 **Disposition: SCOPE BOUNDARY.**
 
+### Non-ordinary override mechanisms (reflex, panic, compulsion, mind control, hard survival thresholds)
+
+> AGENCY-02's own carve-out permits a future world rule to declare a reflex, panic response,
+> compulsion, mind-control effect, or hard survival threshold that overrides ordinary
+> motivational preference. Designing any such concrete mechanism — its trigger conditions, its
+> scope, how it interacts with AGENCY-01's decision-stage chain — is not done here. This batch
+> only establishes that AGENCY-02 describes *ordinary* motivation and does not implicitly ban
+> such an override from ever existing.
+
+**Disposition: SCOPE BOUNDARY.** Added 2026-09-22 per follow-up review, alongside AGENCY-02's
+own reworded carve-out — not a Domain Rule, since it designs no concrete override content.
+
 ### Detailed psychological/cognitive-architecture modeling
 
 > This family does not require every agent to use the same internal decision architecture, and
@@ -262,10 +314,30 @@ action — reuses/deepens FND-S18/S19 directly).
 
 ## Repository Findings (significant, cross-referenced)
 
-- **Confirmed MISSING — no in-simulation motive-inference mechanism.** See AGENCY-05 above.
-  `CognitionPatternMiner` is offline developer tooling, not a world-semantic mechanism.
-- **Confirmed — capability estimation is scorer-local, ad hoc, and architecturally split from
-  the entity's own persisted self-model, with no active confidence decay.**
+Classified per the three-way distinction sharpened by the 2026-09-22 follow-up review:
+**CONFLICTING** (a live, active behavior that violates a target Rule's own boundary),
+**INERT/OFF** (a real mechanism that simply does not run), or **MISSING** (a permitted
+mechanism never built at all).
+
+- **CONFLICTING — opportunity generation (AGENCY-03) currently bypasses perception/knowledge
+  entirely**, reading raw world state directly. See `perception.md`'s own Repository Findings
+  for the full evidence; recorded here as the Agency-side half of the same finding, since it is
+  this family's own Opportunity tier that the omniscient read populates. Classified
+  CONFLICTING, not MISSING: this is active behavior contradicting a target boundary
+  (PERC-01/AGENCY-03's own desire/capability-independence, undermined at the generation-source
+  level), not an absent feature. **This is one of the most important findings the Rule Catalog
+  has produced to date: individual agents already have real belief/perception infrastructure
+  (`PerceptionGate`, `BeliefEntry`/`leads`, `KnowledgeModelService`), but some live decision
+  paths bypass it entirely and read omniscient state directly instead.** This finding does not
+  invalidate the Rule Catalog — PERC-01 and AGENCY-03's own target semantics remain coherent —
+  it means the Catalog successfully exposed a real, documented architecture mismatch.
+- **MISSING — no in-simulation motive-inference mechanism.** See AGENCY-05 above.
+  `CognitionPatternMiner` is offline developer tooling, not a world-semantic mechanism. This is
+  a permitted-but-unbuilt gap, not an active violation — AGENCY-05's privacy-by-default half
+  holds cleanly; only the inference half is unbuilt.
+- **Not classified under the three-way distinction (a code-cleanliness finding, not a
+  Rule-boundary finding) — capability estimation is scorer-local, ad hoc, and architecturally
+  split from the entity's own persisted self-model, with no active confidence decay.**
   `CapabilityEstimateService.estimate()` is called directly by `AdventureRouteScorer.score()`
   (for `GATHER_RESOURCE`/`CRAFT_UPGRADE` routes) and `TacticalDecisionSystem.target_score()`
   (combat targeting) — both read-only, ad hoc call sites that bypass `SelfModelUpdatePhase`
@@ -274,18 +346,18 @@ action — reuses/deepens FND-S18/S19 directly).
   self-model's own persisted capability-estimate storage is confirmed unpopulated, even though
   the estimation logic itself is real, live, and consumed. The subsystem also has no active
   confidence decay — estimates are static until re-computed (`last_updated_tick` exists for
-  freshness-checking but nothing currently checks it).
-- **Confirmed — opportunity generation (AGENCY-03) currently bypasses perception/knowledge
-  entirely**, reading raw world state directly. See `perception.md`'s own Repository Findings
-  for the full evidence; recorded here as the Agency-side half of the same finding, since it is
-  this family's own `Opportunity` concept that the omniscient read populates.
+  freshness-checking but nothing currently checks it). No AGENCY Rule requires this storage to
+  be populated, so this is not itself a CONFLICTING finding against any stated Rule — it is
+  flagged as an architecture observation worth a future owner's attention.
 
 ## Cross-domain links recorded here
 
 - AGENCY-01 → Capability (CAP-01), Authority (AUTH-01), Reach (REACH-01/02, inherited above)
-- AGENCY-02 → Survival Needs (SURV-02, inherited above)
+- AGENCY-02 → Survival Needs (SURV-02, inherited above); its own carve-out → the non-ordinary
+  override Scope Boundary, above, for whichever future domain first designs a concrete reflex/
+  compulsion/mind-control mechanism
 - AGENCY-03 → Perception (`perception.md`'s PERC-01 and its own Repository Findings — the
-  omniscience-bypass finding)
+  omniscience-bypass finding, now classified CONFLICTING on both sides)
 - AGENCY-04 → Lifecycle (LIFE-02, loosely — decision validity vs. lifecycle outcome are
   analogous but distinct claims, not the same rule)
 - AGENCY-05 → Reach (REACH-03, inherited above, for the general asymmetry precedent), Knowledge

@@ -8,14 +8,14 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Perception / Knowledge / Information / Agency (Batch 06)
 
-**Purpose/scope.** Seventeen scenarios used to pressure-test the Perception, Knowledge/
+**Purpose/scope.** Twenty scenarios used to pressure-test the Perception, Knowledge/
 Information/Memory, and Agency/Decision rule families in `knowledge-agency/perception.md`,
 `knowledge-agency/knowledge-information.md`, and `knowledge-agency/agency-decision.md`, per
-`tmp/world-rule-batch-6-ext-ai.md`. Covers all sixteen required seed probes from that
-instruction's §11, plus one additional scenario (KA-S10) added directly from this batch's own
-repository investigation — a confirmed, evidence-grounded finding the seed list did not
-anticipate (decisions currently reading omniscient world state rather than any perception/
-knowledge-gated representation).
+`tmp/world-rule-batch-6-ext-ai.md` and its 2026-09-22 follow-up
+(`tmp/world-rule-batch-6-followup-ext-ai.md`). Covers all sixteen required seed probes from the
+original instruction's §11, plus one additional scenario (KA-S10) added directly from this
+batch's own repository investigation, plus three further adversarial probes the follow-up
+review required (KA-S18–S20).
 
 Scoring uses the same vocabulary as prior batches: **covered** / **partially covered** /
 **blocked** / **revealed missing rule** / **revealed contradiction**, against current
@@ -72,28 +72,31 @@ A false report is believed; an action is chosen; a real consequence follows.
 Source A says X; source B says not-X; the entity must retain uncertainty/conflict or resolve it
 through declared semantics.
 
-- **Rules invoked:** KNOW-01, KNOW-03, INFO-01.
+- **Rules invoked:** KNOW-01, KNOW-02, INFO-01.
 - **Result: covered.** `BeliefContradictionService.detect()` provides the declared resolution
   path: a later direct observation demotes a conflicting lead's certainty by exactly one step
   and degrades the matching `BeliefEntry.certainty` by `0.3`, incrementing `contradictions` —
   the entity does not average or silently pick a source; contradiction is a real, traceable
-  event. `SourceTrustUpdateService` separately tracks each source's own trust, gradually,
-  per-source — a second, independent axis for handling conflicting sources over time.
+  event. `SourceTrustUpdateService` separately tracks each source's own trust — this
+  repository's own current implementation happens to be gradual and per-source, one legitimate
+  shape among the several INFO-01 now explicitly permits — as a second, independent axis for
+  handling conflicting sources over time.
 
 ## KA-S06 — Stale knowledge
 
 An entity learns a location/state; the world changes later; the old belief remains; a decision
 is based on outdated information.
 
-- **Rules invoked:** KNOW-03.
+- **Rules invoked:** KNOW-02.
 - **Result: covered.** `decay_stale_leads()` only demotes `APPROXIMATE`/`VAGUE` leads after
   `stale_threshold=50` ticks without refresh — and explicitly does not touch `PRECISE` leads
   ("direct observations decay slower") — meaning a `PRECISE` belief about a location can remain
   at full certainty indefinitely even after the world has changed, until a new direct
   observation or an explicit contradiction event corrects it. This is the honest, confirmed
-  shape of staleness in this repository: certainty-based demotion for uncertain leads, but no
-  active mechanism at all forces even a `PRECISE` belief to re-check itself against current
-  world state.
+  shape of KNOW-02's own "no automatic re-sync" claim in this repository: certainty-based
+  demotion for uncertain leads, but no active mechanism at all forces even a `PRECISE` belief to
+  re-check itself against current world state — a subject may remain confidently, stably wrong
+  indefinitely. See KA-S19 for the adversarial version of this same finding.
 
 ## KA-S07 — Information does not teleport
 
@@ -136,17 +139,22 @@ An entity's goal-scoring or opportunity-generation path selects a target the ent
 perceived, observed, or been told about.
 
 - **Rules invoked:** PERC-01 (Repository Finding), AGENCY-03 (Repository Finding).
-- **Result: revealed missing rule enforcement — a confirmed, load-bearing gap, not a design
-  choice this batch endorses.** `ResourceOpportunityProvider.get_opportunities()` surfaces every
-  resource node in the entity's current *region* directly from `state.resource_nodes`, at
-  `confidence=1.0`, regardless of whether `PerceptionGate` would ever have let that node's
-  signal through to the entity. `HarvestScorer.score()` independently confirms the same pattern
-  via `SpatialQueryService.nearest_resource_node(state, ...)` — the nearest node in the *entire*
-  world, not the entity's own perceived or known set. Both are real, live, and unconditional
-  today. This scenario is added specifically because the seed list's own emphasis ("agents
-  reading omniscient world state" — §16) is not merely a hypothetical to probe; it is a
-  confirmed fact about two major decision paths in this repository, and deserves its own
-  scenario trace rather than living only as a Repository Finding prose note.
+- **Result: revealed contradiction — CONFLICTING, per the 2026-09-22 follow-up review's own
+  required correction, not merely MISSING.** `ResourceOpportunityProvider.get_opportunities()`
+  surfaces every resource node in the entity's current *region* directly from
+  `state.resource_nodes`, at `confidence=1.0`, regardless of whether `PerceptionGate` would ever
+  have let that node's signal through to the entity. `HarvestScorer.score()` independently
+  confirms the same pattern via `SpatialQueryService.nearest_resource_node(state, ...)` — the
+  nearest node in the *entire* world, not the entity's own perceived or known set. Both are
+  real, live, and unconditional today — active behavior, not an absent or dormant feature, which
+  is exactly why this is classified CONFLICTING rather than MISSING: the target semantics
+  (subject-bounded perception/knowledge should gate these decisions) are coherent and already
+  partly implemented (`PerceptionGate` itself); these two call sites simply do not route through
+  it. This scenario is added specifically because the seed list's own emphasis ("agents reading
+  omniscient world state" — §16) is not merely a hypothetical to probe; it is a confirmed,
+  active fact about two major decision paths in this repository, and deserves its own scenario
+  trace rather than living only as a Repository Finding prose note. This does not invalidate
+  the Rule Catalog — it means the Catalog successfully exposed a real architecture mismatch.
 
 ## KA-S11 — Need influences but doesn't dictate
 
@@ -163,54 +171,66 @@ A hungry entity finds food a higher priority, but chooses another urgent action 
 ## KA-S12 — Capability without knowledge
 
 An entity is physically capable of exploiting an opportunity but does not know it exists, so
-does not choose it.
+does not choose it. Revisited using the clarified terminology: capability alone does not turn
+an Opportunity into a chosen Actionable Affordance if the subject never learns the Opportunity
+exists.
 
-- **Rules invoked:** AGENCY-01.
-- **Result: covered, with a caveat tied to KA-S10's finding.** In the *intended* design, an
-  opportunity the entity's own perception/knowledge never surfaced cannot be chosen, because it
-  never enters the candidate set — this is capability-without-knowledge working correctly by
-  omission. The caveat: since opportunity generation currently bypasses perception (KA-S10),
-  the actual boundary this scenario probes is enforced by *region-scoping*, not by knowledge —
-  an entity may still "know" (be offered) an opportunity in-region it never perceived, which is
-  not the same failure mode the probe describes, but is adjacent to it.
+- **Rules invoked:** AGENCY-01, AGENCY-03 (Opportunity/Actionable-affordance distinction).
+- **Result: covered, with a caveat tied to KA-S10's CONFLICTING finding.** In the *intended*
+  design, an Opportunity the entity's own perception/knowledge never surfaced cannot become a
+  chosen Actionable Affordance, because it never enters the candidate set — this is
+  capability-without-knowledge working correctly by omission. The caveat: since Opportunity
+  generation currently bypasses perception (KA-S10, CONFLICTING), the actual boundary this
+  scenario probes is enforced by *region-scoping*, not by knowledge — an entity may still be
+  offered an Opportunity in-region it never perceived, which is not the same failure mode the
+  probe describes, but is adjacent to it.
 
 ## KA-S13 — Knowledge without capability
 
 An entity knows exactly what must be done but lacks the capability/resources to execute it, and
-cannot.
+cannot. Revisited: the entity correctly identifies a real Opportunity, but it never becomes an
+Actionable Affordance for this entity because the capability precondition is unmet.
 
-- **Rules invoked:** AGENCY-01.
+- **Rules invoked:** AGENCY-01, AGENCY-03.
 - **Result: covered.** The routing contract's own blocked-buy-upgrade example is exactly this:
-  the entity's belief/lead may correctly identify a needed item or gold amount, but
-  `blocker_penalty=2.0` (not exclusion) means the route remains a visible, chosen-but-failing
-  candidate rather than a silently-removed one — knowledge does not manufacture capability.
+  the entity's belief/lead may correctly identify a needed item or gold amount (the Opportunity
+  is real and known), but `blocker_penalty=2.0` (not exclusion) means the route remains a
+  visible, chosen-but-failing candidate rather than a silently-removed one — knowledge does not
+  manufacture the missing capability that would make it a genuinely Actionable Affordance.
 
 ## KA-S14 — Opportunity without desire
 
-A valid opportunity exists; the agent has no relevant goal/motivation; the opportunity is
-ignored — or, per AGENCY-02's own nuance, may still be chosen for its raw benefit alone.
+A valid Opportunity exists; the agent has no relevant pre-existing goal/motivation for it. Per
+AGENCY-02's own clarified explanation, this does not automatically mean the Opportunity is
+ignored.
 
 - **Rules invoked:** AGENCY-02, AGENCY-03.
-- **Result: partially covered — the probe's literal premise ("opportunity ignored") does not
-  always hold, and this batch records that honestly rather than assuming it.** Per the routing
-  contract's own documented edge case, an opportunity with zero matching need urgency is not
-  automatically dropped from consideration — it can still win on `benefit`/`personality_bias`
-  alone. The Rule (AGENCY-03: opportunity is independent of desire) is confirmed; the specific
-  behavioral claim ("no desire → ignored") only holds when no other scoring term makes that
-  opportunity the best available choice.
+- **Result: partially covered — cleanly explained per the follow-up review's own required
+  clarification, not merely "partially covered and left unresolved."** An Opportunity with zero
+  matching need urgency is not automatically dropped from consideration in this repository's
+  scoring formula — it can still win on `benefit`/`personality_bias` alone. This is not a
+  violation of "opportunity ≠ desire," and it is not evidence that desire was secretly present
+  either: **positive expected benefit is itself a motivational/utility input to the decision**,
+  distinct from a pre-existing named goal but not distinct from motivation in the broader sense
+  AGENCY-02 describes. The clean statement: absence of a *pre-existing goal* does not entail
+  absence of *all* decision-relevant motivation, since raw expected benefit is itself one such
+  input. The Rule (AGENCY-03: Opportunity's existence is independent of desire) is fully
+  confirmed either way — an Opportunity with no matching need is still real and still
+  candidate-eligible; whether it is *chosen* is a separate question this scenario now answers
+  precisely rather than leaving open.
 
 ## KA-S15 — Desire without opportunity
 
-An agent strongly wants an outcome, but no reachable affordance/path exists; it cannot
-currently pursue it.
+An agent strongly wants an outcome, but no reachable Opportunity/Actionable-Affordance path
+exists; it cannot currently pursue it.
 
 - **Rules invoked:** AGENCY-02, AGENCY-03.
-- **Result: covered, with a nuance.** If no opportunity of the matching kind exists in the
-  generated candidate set, the entity cannot select a route toward that specific desire — but
-  it is not left idle: structural defaults (forced `RECOVER` for low-health/healing needs,
-  forced `ASK_INFORMATION` for equipment needs) or the `DEFER_WITH_REASON` fallback ensure the
-  entity always ends up with *some* valid decision, just not the one matching its strongest
-  unmet desire.
+- **Result: covered, with a nuance.** If no Opportunity of the matching kind exists in the
+  generated candidate set, no Actionable Affordance toward that specific desire can exist
+  either — but the entity is not left idle: structural defaults (forced `RECOVER` for
+  low-health/healing needs, forced `ASK_INFORMATION` for equipment needs) or the
+  `DEFER_WITH_REASON` fallback ensure the entity always ends up with *some* valid decision, just
+  not the one matching its strongest unmet desire.
 
 ## KA-S16 — Decision fails
 
@@ -235,22 +255,81 @@ another entity may later infer the motive.
   (`CognitionPatternMiner` is offline developer tooling, not a world mechanism) — this supports
   observer legibility as a *permitted future capability*, not a currently-realized one.
 
+## KA-S18 — Complete observation where declared (adversarial probe, added 2026-09-22)
+
+A special channel or an explicitly declared condition grants a subject complete, relevant
+information about something, rather than the usual bounded/partial access.
+
+- **Rules invoked:** PERC-01.
+- **Result: covered — confirms PERC-01 does not prohibit legitimate perfect observation.**
+  PERC-01's own revised wording states a *default* ("perception does not imply complete or
+  perfect knowledge by default"), not a prohibition — an explicit world rule declaring a
+  channel or condition that grants complete observation (a special sense, an unconditional
+  reveal) is a legitimate, permitted exception, not a violation. No such mechanism was found to
+  currently exist in this repository (every real channel — `PerceptionGate`'s 7 senses,
+  `BeliefCycleSystem`'s observation/rumor paths — produces bounded, partial, or graded access),
+  so this scenario is scored as covered against the *Rule's own permission*, not against a real
+  repository example of it being exercised.
+
+## KA-S19 — Stale but confident (adversarial probe, added 2026-09-22)
+
+A subject learns X with high confidence; the world later changes to not-X; no new information
+ever arrives; the subject remains confidently wrong indefinitely.
+
+- **Rules invoked:** KNOW-02.
+- **Result: covered — this is exactly KNOW-02's own revised claim, exercised adversarially.**
+  A `PRECISE`-certainty lead (`certainty=1.0`-equivalent observation-sourced belief) is
+  explicitly *not* touched by `decay_stale_leads()` ("direct observations decay slower") and is
+  only ever demoted by `BeliefContradictionService.detect()`, which requires a real, matching
+  direct-observation event to fire. If no such event ever occurs — the world changes, but the
+  entity never happens to observe the change directly — nothing in this repository ever revises
+  that belief. The entity remains confidently, stably wrong indefinitely. This is not a defect;
+  it is KNOW-02's own explicit, intended shape ("a subject may therefore remain confidently
+  wrong for as long as no declared revision process actually runs").
+
+## KA-S20 — Compelled action (adversarial probe, added 2026-09-22)
+
+An entity's ordinary preference favors action A; an explicit reflex/compulsion rule requires
+action B instead; B occurs.
+
+- **Rules invoked:** AGENCY-02, Scope Boundary (non-ordinary override mechanisms).
+- **Result: covered by permission, not by an existing mechanism — confirms AGENCY-02 describes
+  ordinary motivation only, not a ban on all non-voluntary behavior.** AGENCY-02's own revised
+  text explicitly carves out room for a future reflex/panic/compulsion/mind-control/
+  hard-threshold rule to override ordinary preference; no such override mechanism currently
+  exists in this repository (checked directly: no code path forces an action against the
+  competitive scoring formula's own selected outcome). This scenario confirms the Rule's own
+  boundary is honest about what it does and does not govern — ordinary motivational competition,
+  not every possible category of action-selection — rather than confirming a built mechanism.
+
 ---
 
 ## Cross-batch note
 
 KA-S10 is this batch's own most load-bearing discovery, on par with Batch 05's ECOL-03 and
-BODY-05: two independent, unconditional, live decision paths (`ResourceOpportunityProvider`,
-`HarvestScorer`) read raw world state directly rather than routing through any perception- or
-knowledge-gated representation. This does not contradict PERC-01 or AGENCY-03 as *Rules* — both
-Rules state what perception-gating and opportunity-independence *should* look like — but it is a
-confirmed, real divergence between this repository's own intended cognitive architecture (a real
-`PerceptionGate`, a real `KnowledgeModelService`, a real `BeliefEntry`/`leads` system) and what
-its actual decision-making call sites do today. Recorded honestly, per every prior batch's own
-practice of naming absence and divergence rather than assuming the intended design is already
-realized.
+BODY-05, and confirmed **CONFLICTING** (not merely MISSING) per the 2026-09-22 follow-up
+review's own required correction: two independent, unconditional, live decision paths
+(`ResourceOpportunityProvider`, `HarvestScorer`) read raw world state directly rather than
+routing through any perception- or knowledge-gated representation. This is not a dormant or
+absent feature — it is active behavior that directly contradicts PERC-01's own default and
+AGENCY-03's own generation-independence claim for these specific decisions. **Individual agents
+already have real belief/perception infrastructure (`PerceptionGate`, `BeliefEntry`/`leads`,
+`KnowledgeModelService`), but some live decision paths bypass it entirely and read omniscient
+state directly instead** — this remains one of the most important findings the Rule Catalog has
+produced. Recorded honestly, per every prior batch's own practice of naming divergence rather
+than assuming the intended design is already realized, and explicitly not treated as
+invalidating the Catalog: PERC-01 and AGENCY-03's own target semantics remain coherent: the
+Catalog successfully exposed a real, documented architecture mismatch.
 
-KA-S08's and KA-S17's findings are this batch's other significant new material: INFO-02's
+KA-S08's and KA-S17's findings remain this batch's other significant new material: INFO-02's
 confirmed absence of content-level distortion (only certainty/trust vary, never claim content
-itself), and AGENCY-05's confirmed absence of any in-simulation motive-inference mechanism —
-both real, both honestly recorded as permitted-but-unbuilt rather than assumed to already exist.
+itself — MISSING), and AGENCY-05's confirmed absence of any in-simulation motive-inference
+mechanism (MISSING) — both real, both honestly recorded as permitted-but-unbuilt rather than
+assumed to already exist, and both distinct in kind from KA-S10's own CONFLICTING finding.
+
+KA-S18–S20 (added per the 2026-09-22 follow-up review) confirm the batch's revised Rules are
+correctly bounded rather than over-broad: PERC-01 permits legitimate perfect observation
+(KA-S18), KNOW-02 permits a subject to remain confidently, stably wrong indefinitely absent a
+real revision event (KA-S19), and AGENCY-02 permits — without currently implementing — a
+declared override of ordinary motivation (KA-S20). None of the three reveals a new gap beyond
+what KNOW-02/AGENCY-02's own revised text already discloses.
