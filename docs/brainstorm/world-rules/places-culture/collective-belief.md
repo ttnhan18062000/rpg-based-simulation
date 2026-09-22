@@ -47,20 +47,29 @@ shared myth) is the specific new content this Rule adds beyond LAW-02's own inst
 claim, alongside applying it to *collective* belief specifically rather than one institution's
 own record.
 
-**Repository evidence: PARTIAL, and a genuinely positive, real structural match.**
+**Repository evidence: PARTIAL, for the institution-backed half only; MISSING for the
+institution-free half (narrowed 2026-09-22 per external follow-up review).**
 `BeliefInstitution`/`BeliefInstitutionCarryForward` (`src/domains/belief_institution/model.py`,
 "idea 63, Belief Grows Around Real History") is a real, per-(clan, origin-event) collective
 belief record, explicitly documented as "a genuinely third, population-scale concept" distinct
 from the per-entity `BeliefEntry` (tactical belief) and `KnowledgeFact` (settled individual
-knowledge) — confirming this Rule's own individual/collective distinctness by direct
-construction, at the design-intent level. `belief_strength` is derived from a real Chronicle
-event (the legendary subject's own fame), confirming collective belief grounded in real history
-rather than fabricated from nothing. The gap: this mechanism is explicitly documented as having
-"no live caller yet... built, not yet visible in play" — a real, well-shaped mechanism that
-is currently INERT/OFF rather than CONFLICTING or fully SUPPORTED.
+knowledge) — a genuinely positive structural match for this Rule's own individual/collective
+distinctness, at the design-intent level, but only for the case this Rule requires an
+institution *not* be present for at all: `BeliefInstitution` is, by its own design, keyed to a
+specific `clan_id` — it is a promising carrier for institution-backed doctrine/belief, and it
+may participate in culturally or religiously grounded significance (`collective-belief.md`'s
+own BEL-03), but it does not cover, and is not evidence for, this Rule's own broader
+institution-*free* permission (a folk myth no clan or institution ever declares). `belief_
+strength` is derived from a real Chronicle event (the legendary subject's own fame), confirming
+collective belief grounded in real history rather than fabricated from nothing, for the
+institution-backed case specifically. The mechanism itself is explicitly documented as having
+"no live caller yet... built, not yet visible in play" — currently INERT/OFF rather than
+CONFLICTING or fully SUPPORTED, for that same institution-backed case. For the institution-
+free case, no candidate mechanism of any kind was found — confirmed MISSING, not merely
+INERT/OFF, since nothing here is even built for it to be unconsumed.
 
 **Scenarios:** [CB-S07](../scenarios/culture-belief-batch-11b.md#cb-s07) (false shared
-belief).
+belief, extended to cover both the institution-backed and institution-free cases).
 
 ---
 
@@ -92,21 +101,38 @@ recognition, boundary probe).
 
 ---
 
-## BEL-03 — A place, object, or event may become sacred, revered, or culturally significant through shared cultural interpretation alone, without any supernatural transformation of the physical world; pilgrimage, ritual, avoidance, or defense may all follow from purely social/cultural meaning
+## BEL-03 — A place, object, or event may become sacred, revered, or culturally significant through shared cultural interpretation alone, without any supernatural transformation of the physical world; sacredness/significance is always attributed by a specific culture, group, or institution, never a bare universal property, and different attributors may hold different or conflicting attributions toward the same subject at once
 
 > A location, object, or historical event acquiring sacred or deeply significant status is a
-> social/cultural fact — a shared interpretation a population holds — and never requires any
-> actual change to that location, object, or event's own physical or mechanical properties.
-> Pilgrimage, ritual observance, avoidance, or defense of a sacred place are all legitimate
-> consequences of purely cultural meaning, with no supernatural mechanism required to explain
-> any of them.
+> social/cultural fact — a shared interpretation a *specific* culture, group, or institution
+> holds — and never requires any actual change to that location, object, or event's own
+> physical or mechanical properties. Sacredness is never a bare, attributor-free property a
+> Place simply *has*; it is always attributed, exactly as `places.md`'s own revised PLACE-02
+> requires for Place significance generally, of which sacredness is one culturally/religiously
+> flavored instance. Two distinct cultures or groups may hold different, or directly
+> conflicting, attributions toward the identical Place at once — Culture A regarding it as
+> sacred while Culture B, aware of that same Place, regards it as ordinary or interprets it
+> differently — with no supernatural effect required to explain either attribution, and
+> neither attribution overriding the other. Pilgrimage, ritual observance, avoidance, or
+> defense of a place a given culture holds sacred are all legitimate consequences of that
+> specific culture's own attributed meaning, never of a universal property every subject must
+> react to identically.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this directly answers the
-batch instruction's own §23 "Sacred/Significant Places" investigation and its explicit
-"a place can become sacred without supernatural transformation" framing — genuinely new
-content connecting Places (`places.md`'s PLACE-02), Culture (`culture.md`'s CULT-01), and this
-family's own belief/interpretation content, none of which alone states that sacredness is
-achievable through cultural interpretation without magic.
+**Disposition: ACCEPT — REQUIRED; revised 2026-09-22 per external follow-up review to make
+sacredness explicitly attribution-relative, directly reconciled with `places.md`'s own revised
+PLACE-02.** The original wording ("a place... becomes sacred... through shared cultural
+interpretation") risked being read as though, once attributed, sacredness became a single
+fact true of the Place for everyone — incompatible with two cultures legitimately holding
+different views of the same Place at once. This revision states sacredness as always
+attributed by a specific culture/group/institution, explicitly permitting simultaneous,
+non-reconciled, divergent attributions, the same relational shape PLACE-02 now requires more
+generally. Passes the admission test unchanged: this directly answers the batch instruction's
+own §23 "Sacred/Significant Places" investigation and its explicit "a place can become sacred
+without supernatural transformation" framing — genuinely new content connecting Places
+(`places.md`'s PLACE-02), Culture (`culture.md`'s CULT-01), and this family's own belief/
+interpretation content, none of which alone states that sacredness is achievable through
+cultural interpretation without magic, or that it is attribution-relative rather than
+universal.
 
 **Repository evidence: MISSING.** No mechanism was found that marks any Place, object, or
 event as sacred/culturally significant, with or without a supernatural component — confirmed
@@ -188,11 +214,17 @@ to gate correctly or violate.
 **These are repository/implementation facts, not World Rule decisions, and imply no delivery
 priority.**
 
-- **A genuinely positive, well-shaped finding, currently INERT/OFF.** `BeliefInstitution`
-  (`src/domains/belief_institution/model.py`) is a real, already-designed collective-belief
-  concept grounded in real history (Chronicle-derived fame), explicitly documented as a
-  "genuinely third, population-scale concept" distinct from individual belief and knowledge —
-  but has "no live caller yet." See BEL-01 above.
+- **A genuinely positive, well-shaped finding, currently INERT/OFF — but scoped to the
+  institution-backed case only (narrowed 2026-09-22 per external follow-up review).**
+  `BeliefInstitution` (`src/domains/belief_institution/model.py`) is a real, already-designed
+  collective-belief concept grounded in real history (Chronicle-derived fame), explicitly
+  documented as a "genuinely third, population-scale concept" distinct from individual belief
+  and knowledge — but has "no live caller yet," and is keyed to a specific `clan_id`. It is a
+  promising carrier for institution-backed doctrine/belief, not a general-purpose collective-
+  belief mechanism. See BEL-01 above.
+- **Confirmed MISSING — the institution-*free* half of BEL-01's own permission (a folk myth/
+  taboo no institution ever declares) has no candidate mechanism of any kind**, distinct from
+  the institution-backed case above. See BEL-01's own re-verified evidence.
 - **SUPPORTED, by absence — no content anywhere grants ritual/doctrine a real supernatural
   effect.** See BEL-02 above; the correct outcome, not a gap.
 - **Confirmed MISSING — no sacred-place, doctrine-dissent, or cultural/religious-significance
@@ -204,24 +236,39 @@ priority.**
 prioritized, or required for implementation during the World Rule Catalog phase.**
 
 - **Target semantic:** collective belief may exist and produce real behavior, grounded in
-  real history, without requiring an institution to declare it (BEL-01).
+  real history, and — per BEL-01's own explicit permission — may exist with no institution
+  ever declaring it at all.
   **Current realization:** `BeliefInstitution` is a real, well-shaped, but currently
-  unconsumed ("no live caller yet") mechanism.
-  **Gap/mismatch:** the mechanism exists but produces no downstream behavioral consequence.
+  unconsumed ("no live caller yet") mechanism — and it is, by its own design, **institution-
+  backed only**: every `BeliefInstitution` record is keyed to a specific `clan_id`. It is a
+  promising existing carrier for the institution-backed half of BEL-01, not a general-purpose
+  collective-belief mechanism, and it has no bearing on the institution-*free* case at all
+  (corrected 2026-09-22 per external follow-up review — the prior draft here overstated its
+  scope, see the cross-domain observation below).
+  **Gap/mismatch:** the institution-backed mechanism exists but produces no downstream
+  behavioral consequence; the institution-free case (a folk myth/taboo no institution ever
+  declares) has no candidate mechanism at all, and wiring `BeliefInstitution` would not close
+  it.
   **Possible implementation direction:** wire a consumer that reads `belief_strength` to bias
   a clan's own decisions or reactions toward the origin event's own subject or descendants —
-  potentially the same bridge that would close the recurring "ordinary individual → named
-  recognition" gap this Catalog has now found at four scales (Batches 07/09/10/11A).
+  this would exercise only the institution-backed subset of BEL-01, and a separate,
+  institution-free mechanism would still be needed for the rest of BEL-01's own permitted
+  range.
   **Implementation decision:** DEFERRED — no commitment in Rule Catalog phase.
-- **Target semantic:** a place may become sacred through cultural interpretation alone
-  (BEL-03).
+- **Target semantic:** a place, object, or event may become sacred/significant through
+  cultural interpretation alone, always attributed by a specific culture/group/institution,
+  never a universal property (BEL-03, revised).
   **Current realization:** no bridge exists between `PlaceState`, `CultureState`, and
   `BeliefInstitution`.
-  **Possible implementation direction:** a declared "significance" or "sacred" tag on
-  `PlaceState`, populated by a process reading real events and cultural/belief state, gated by
-  the same information-reach discipline this family's own Inherited recognition entry
-  requires.
-  **Implementation decision:** DEFERRED.
+  **Possible implementation direction (constrained 2026-09-22 per external follow-up
+  review):** if any "significance"/"sacred"-style field is ever added to `PlaceState` itself,
+  it could only be a derived/cached projection with explicit provenance and scope (which
+  attributor, as of when) — never the canonical representation of a perspective-dependent
+  attribution, since BEL-03/PLACE-02 both require multiple, simultaneous, non-reconciled
+  attributions to remain representable. The preferred semantic model is relational
+  (`significant-to`, `sacred-to`, `recognized-as` — attributor, subject, value), not a
+  universal boolean or scalar on the Place itself.
+  **Implementation decision:** DEFERRED. No concrete storage design is committed here.
 
 ## Cross-domain links recorded here
 
@@ -242,6 +289,10 @@ prioritized, or required for implementation during the World Rule Catalog phase.
    Catalog should ever name a small closed set of legitimate doctrine-enforcement patterns
    (as INST-04, Batch 10, left open for legitimacy/authority) is not decided here.
 2. Whether `BeliefInstitution`'s own "no live caller yet" status should ever be closed by
-   wiring it toward the recurring individual/organization/place significance gap this Catalog
-   has now found at four scales is a repository-realization and future-mapping question, not
-   decided here.
+   wiring it is a repository-realization and future-mapping question, not decided here — and,
+   per the 2026-09-22 follow-up's own item 7, doing so would close only the institution-backed
+   subset of BEL-01/the recurring significance gap, never the institution-free case, which
+   would need its own, separate mechanism regardless.
+3. **Added 2026-09-22 per external follow-up review.** What mechanism, if any, should ever
+   realize BEL-01's own institution-free collective-belief permission (a folk myth/taboo no
+   institution declares)? Not decided here — no candidate exists in this repository today.

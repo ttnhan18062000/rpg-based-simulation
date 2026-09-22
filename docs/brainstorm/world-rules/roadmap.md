@@ -51,9 +51,10 @@ review export carries a non-binding Implementation Candidates section. Batch 11 
 Settlements/Territory/Culture/Belief) is drafted 2026-09-22, split into **Batch 11A** (Places/
 Settlements/Territory, 10 genuine Domain Rules of 18 total catalog entries) and **Batch 11B**
 (Culture/Collective Belief, 7 genuine Domain Rules of 12 total catalog entries) per that
-batch's own explicit split permission, both ready for high-level external review. Batch 12
-(Magic/Supernatural) is the next planned step, once both 11A and 11B are reviewed and its own
-instruction file is provided.
+batch's own explicit split permission, then both revised the same day per a targeted
+focused-revision follow-up (Domain Rule counts unchanged for both), and both **PASS — ready
+to freeze**. Batch 12 (Magic/Supernatural) is the next planned step, once its own instruction
+file is provided.
 
 ---
 
@@ -413,36 +414,44 @@ that a missing implementation does not invalidate a target semantic requirement.
 
 ### Batch 11 — Places / Settlements / Territory / Culture / Belief
 
-**Status: drafted 2026-09-22, split into 11A/11B, both ready for high-level external
-review.** Per this batch's own instruction file's explicit size/split permission, split into
-two coherent semantic clusters without changing this milestone's own overall ordering:
+**Status: PASS — both 11A and 11B frozen 2026-09-22.** Per this batch's own instruction
+file's explicit size/split permission, split into two coherent semantic clusters without
+changing this milestone's own overall ordering, then both revised the same day per a targeted
+focused-revision follow-up (`tmp/world-rule-batch-11-followup-ext-ai.md` — no rule added
+merely to increase count; Domain Rule counts unchanged for both):
 
 - **Batch 11A — Places / Settlements / Territory.** 10 genuine Domain Rules (18 total catalog
   entries — 10 Domain Rules, 4 Inherited/Applied Foundational Rules, 4 Scope/Deferred
   Boundaries) across `places-culture/{places,settlements,territory-control}.md`. Directly
   resolves Batch 10's own deferred territorial-jurisdiction integration (territory is one
   declared jurisdiction basis among several, reusing Batch 10's own revised LAW-03 unchanged).
-  This Catalog's own strongest CONFLICTING finding to date: `region.owner_faction_id`/
-  `PlaceState.owner_faction_id` are single nullable fields that actively foreclose
-  representing contested territorial claim/control — a representational impossibility, not
-  merely an absent behavior. See `review-exports/places-territory-batch-11a-review.md`.
+  The follow-up re-verified `owner_faction_id`'s CONFLICTING classification against actual
+  consumers (not the field's shape alone): retained CONFLICTING, narrowed to a
+  directly-evidenced control-vs-sovereignty conflation (`PlaceState`'s own field comment says
+  "Sovereignty override"); claim, cultural association, and residence correctly reclassified
+  MISSING, since none was ever attempted. The follow-up also re-opened Settlement identity
+  vs. Place identity (SETT-01 no longer assumes they move together for total-abandonment-
+  then-resettlement) and made Place significance explicitly attribution-relative (PLACE-02) —
+  never a universal property, reconciled directly with Batch 11B's own BEL-03. See
+  `review-exports/places-territory-batch-11a-review.md`.
 - **Batch 11B — Culture / Collective Belief.** 7 genuine Domain Rules (12 total catalog
   entries — 7 Domain Rules, 2 Inherited/Applied Foundational Rules, 3 Scope/Deferred
   Boundaries) across `places-culture/{culture,collective-belief}.md`. This repository's own
   real, live, consumed "culture" system (`CultureState`, a four-axis derived-tendency score)
   is confirmed CONFLICTING with this batch's own richer target concept — a naming/scope
-  collision, not a simple gap. A genuinely positive finding, currently INERT/OFF:
-  `BeliefInstitution` is a real, well-shaped, history-grounded collective-belief mechanism
-  with no live caller yet — this Catalog's own clearest present candidate for closing the
-  recurring "ordinary subject → historically significant, recognized by name" gap now found
-  at four scales (individual, Batch 07; lineage, Batch 09; organization, Batch 10; place,
-  11A). See `review-exports/culture-belief-batch-11b-review.md`.
+  collision, not a simple gap. The follow-up narrowed the cross-domain observation about
+  `BeliefInstitution` (a real, well-shaped, history-grounded, but INERT/OFF collective-belief
+  mechanism): it is a promising carrier for the **institution-backed** subset of collective
+  belief only (BEL-01), never a universal significance mechanism — the institution-free case
+  (a folk myth no institution declares) remains its own, separately confirmed MISSING gap.
+  BEL-03 was also made attribution-relative, matching PLACE-02. See
+  `review-exports/culture-belief-batch-11b-review.md`.
 
 Both sub-batches are drafted under the standing direction (`tmp/world-rule-direction.md`):
 target semantics lead, repository classification implies no delivery priority, and both
 review exports carry a non-binding Implementation Candidates section. See
 `tmp/places-culture-batch-11-report.md` (local, not part of this catalog) for the full,
-shared disposition report.
+shared disposition report, including the follow-up's own addendum.
 
 ```text
 persistent places

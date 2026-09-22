@@ -67,11 +67,11 @@ order.
 | Roles / Institutions | Batch 10 — PASS, frozen | [institutions-politics/roles-institutions.md](institutions-politics/roles-institutions.md) |
 | Politics / Authority | Batch 10 — PASS, frozen | [institutions-politics/politics-authority.md](institutions-politics/politics-authority.md) |
 | Law / Enforcement | Batch 10 — PASS, frozen | [institutions-politics/law-enforcement.md](institutions-politics/law-enforcement.md) |
-| Places | Batch 11A drafted | [places-culture/places.md](places-culture/places.md) |
-| Settlements | Batch 11A drafted | [places-culture/settlements.md](places-culture/settlements.md) |
-| Territory / Control | Batch 11A drafted | [places-culture/territory-control.md](places-culture/territory-control.md) |
-| Culture | Batch 11B drafted | [places-culture/culture.md](places-culture/culture.md) |
-| Collective Belief | Batch 11B drafted | [places-culture/collective-belief.md](places-culture/collective-belief.md) |
+| Places | Batch 11A — PASS, frozen | [places-culture/places.md](places-culture/places.md) |
+| Settlements | Batch 11A — PASS, frozen | [places-culture/settlements.md](places-culture/settlements.md) |
+| Territory / Control | Batch 11A — PASS, frozen | [places-culture/territory-control.md](places-culture/territory-control.md) |
+| Culture | Batch 11B — PASS, frozen | [places-culture/culture.md](places-culture/culture.md) |
+| Collective Belief | Batch 11B — PASS, frozen | [places-culture/collective-belief.md](places-culture/collective-belief.md) |
 
 ## Rule Catalog progress
 
@@ -270,35 +270,44 @@ order.
   disposition report.
 - **Batch 11** (Places/Settlements/Territory/Culture/Belief) — the eighth domain-facing batch —
   drafted 2026-09-22, split into two coherent semantic clusters per that batch's own
-  instruction file's explicit size/split permission, without changing the roadmap's overall
-  milestone ordering:
+  instruction file's explicit size/split permission, then revised the same day per a targeted
+  focused-revision follow-up (Domain Rule counts unchanged for both — no rule added merely to
+  increase count), without changing the roadmap's overall milestone ordering:
   - **Batch 11A** (Places/Settlements/Territory). 10 genuine Domain Rules (18 total catalog
     entries including 4 inherited/applied foundational rules and 4 scope/deferred boundaries)
-    across Places, Settlements, Territory/Control; ready for high-level external review.
-    Directly resolves Batch 10's own deferred territorial-jurisdiction integration by direct
-    reuse (territory is one declared jurisdiction basis among several, per Batch 10's own
-    revised LAW-03, unchanged). This Catalog's own strongest CONFLICTING finding to date:
-    `region.owner_faction_id`/`PlaceState.owner_faction_id` are single nullable fields that
-    actively foreclose representing contested territorial claim/control — a representational
-    impossibility, not merely an absent behavior. The recurring "ordinary subject →
-    historically significant, recognized by name" gap recurs at a fourth scale (Place),
-    continuing individual (Batch 07), lineage (Batch 09), and organization (Batch 10).
+    across Places, Settlements, Territory/Control; **PASS — ready to freeze**. Directly
+    resolves Batch 10's own deferred territorial-jurisdiction integration by direct reuse
+    (territory is one declared jurisdiction basis among several, per Batch 10's own revised
+    LAW-03, unchanged). The follow-up re-verified this Catalog's own strongest CONFLICTING
+    finding against actual consumers rather than the field's shape alone: `owner_faction_id`
+    is retained CONFLICTING, narrowed to a directly-evidenced control-vs-sovereignty
+    conflation (`PlaceState`'s own field comment: "Sovereignty override," plus taxation/
+    suppression consumers) — claim, cultural association, and residence are correctly
+    MISSING, not CONFLICTING, since they were never attempted at all. The follow-up also
+    re-opened Settlement identity vs. Place identity: SETT-01 no longer assumes "same Place"
+    implies "same settlement" for the total-abandonment-then-resettlement case. The recurring
+    "ordinary subject → historically significant, recognized by name" gap recurs at a fourth
+    scale (Place), continuing individual (Batch 07), lineage (Batch 09), and organization
+    (Batch 10) — now stated as attribution-relative (significant-**to** a specific
+    actor/group), never a universal property.
   - **Batch 11B** (Culture/Collective Belief). 7 genuine Domain Rules (12 total catalog
     entries including 2 inherited/applied foundational rules and 3 scope/deferred boundaries)
-    across Culture, Collective Belief; ready for high-level external review. This
-    repository's own real, live, consumed "culture" system (`CultureState`, a four-axis
-    derived-tendency score) is confirmed CONFLICTING with this batch's own richer target
-    concept (language/custom/ritual/symbol) — a naming/scope collision, not a simple gap. A
-    genuinely positive finding, currently INERT/OFF: `BeliefInstitution` is a real,
-    well-shaped, history-grounded collective-belief mechanism with no live caller yet — this
-    Catalog's own clearest present candidate for closing the recurring significance gap above.
+    across Culture, Collective Belief; **PASS — ready to freeze**. This repository's own
+    real, live, consumed "culture" system (`CultureState`, a four-axis derived-tendency score)
+    is confirmed CONFLICTING with this batch's own richer target concept (language/custom/
+    ritual/symbol) — a naming/scope collision, not a simple gap. A genuinely positive
+    finding: `BeliefInstitution` is a real, well-shaped, history-grounded collective-belief
+    mechanism with no live caller yet — the follow-up narrowed this to a promising carrier for
+    the **institution-backed** subset of collective belief only (BEL-01), never a universal
+    significance mechanism; the institution-free case (a folk myth no institution declares)
+    remains confirmed MISSING, with no candidate mechanism at all.
   - See `review-exports/places-territory-batch-11a-review.md` and
     `review-exports/culture-belief-batch-11b-review.md`'s explicit call-outs and their
     Implementation Candidates — Non-Binding sections for these and further confirmed gaps. See
     `tmp/places-culture-batch-11-report.md` (local, shared, not part of this catalog) for the
     full disposition report.
-- Batch 12 (Magic / Supernatural) is the next planned step, once Batch 11A and Batch 11B both
-  receive high-level review and its own instruction file is provided.
+- Batch 12 (Magic / Supernatural) is the next planned step, once its own instruction file is
+  provided.
 
 ## Scenario Bank index
 
@@ -581,8 +590,8 @@ load-bearing semantic gaps, not delivery priorities):**
   `faction_id`), deliberately bridged via `get_legacy_faction_bucket()` — the same shape as
   Batch 09's own resolved reputation-naming-collision finding, not an accidental duplicate.
 
-**From Batch 11A (Places/Settlements/Territory, drafted 2026-09-22 — load-bearing semantic
-gaps, not delivery priorities):**
+**From Batch 11A (Places/Settlements/Territory, drafted 2026-09-22, PASS — frozen 2026-09-22
+— load-bearing semantic gaps, not delivery priorities):**
 
 - **Resolved.** Batch 10's own deferred territorial-jurisdiction integration — territory is
   one declared jurisdiction basis among several, per Batch 10's own revised LAW-03, reused
@@ -590,31 +599,45 @@ gaps, not delivery priorities):**
 - **Resolved.** Batch 01's own settlement-lifecycle gap (camp → settlement → ruin, found
   independently via ID-03/CAUSE-02) — `places.md`'s PLACE-03/`settlements.md`'s SETT-03 state
   transformation continuity is never assumed by default; the real CITY→RUIN trail
-  (`PlaceState.prior_kind`/`transformed_tick`) is the one already-realized case.
-- **Confirmed CONFLICTING, this Catalog's own strongest CONFLICTING finding to date.**
-  `region.owner_faction_id`/`PlaceState.owner_faction_id` are single nullable fields that
-  actively foreclose representing contested territorial claim/control — a representational
-  impossibility, not merely an absent behavior.
-- **Confirmed MISSING, a fourth scale for the same recurring gap.** No significance/
-  historical-meaning field exists on `PlaceState` — the same "ordinary subject →
-  historically significant, recognized by name" gap as Batches 07/09/10, now at the Place
-  scale.
+  (`PlaceState.prior_kind`/`transformed_tick`) is the one already-realized case for
+  continuous habitation only.
+- **Confirmed CONFLICTING, narrowed 2026-09-22 per follow-up re-verification against actual
+  consumers.** `owner_faction_id` is actively read as both control (taxation, suppression)
+  and, per `PlaceState`'s own field comment, "sovereignty" — two distinct concepts collapsed
+  into one field by real, current consumers. Claim, cultural association, and residence are
+  correctly reclassified MISSING, not CONFLICTING — never attempted at all, so nothing is
+  being actively collapsed.
+- **Confirmed MISSING, a fourth scale for the same recurring gap — now stated as attribution-
+  relative, never a universal property (revised 2026-09-22).** No attributed-significance
+  field exists on `PlaceState` — the same "ordinary subject → historically significant,
+  recognized by name" gap as Batches 07/09/10, now at the Place scale.
+- **Re-opened 2026-09-22.** Whether Settlement identity necessarily continues merely because
+  the underlying Place persists is no longer assumed — SETT-01 explicitly declines to resolve
+  the total-abandonment-then-unrelated-resettlement case, which remains an open design
+  question.
 - **Confirmed MISSING.** No settlement growth/decline causal mechanism; no migration
-  mechanism of any kind anywhere in this repository; no separate territorial claim/cultural-
-  association/residence field beyond the single collapsed `owner_faction_id`.
+  mechanism of any kind anywhere in this repository; no territorial claim/cultural-
+  association/residence field of any kind.
 
-**From Batch 11B (Culture/Collective Belief, drafted 2026-09-22 — load-bearing semantic
-gaps, not delivery priorities):**
+**From Batch 11B (Culture/Collective Belief, drafted 2026-09-22, PASS — frozen 2026-09-22 —
+load-bearing semantic gaps, not delivery priorities):**
 
 - **Confirmed CONFLICTING.** This repository's own real, live, consumed "culture" system
   (`CultureState`, a fixed four-axis derived-tendency score) is structurally mismatched to
   this batch's own richer target concept (language/custom/ritual/symbol/story) — a
   naming/scope collision, not a simple gap.
-- **A genuinely positive finding, currently INERT/OFF.** `BeliefInstitution` is a real,
-  well-shaped, history-grounded collective-belief mechanism ("idea 63, Belief Grows Around
-  Real History") with no live caller yet — this Catalog's own clearest present candidate for
-  closing the recurring significance gap found at four scales (individual, lineage,
-  organization, place).
+- **A genuinely positive finding, currently INERT/OFF — narrowed 2026-09-22 to the
+  institution-backed case only.** `BeliefInstitution` is a real, well-shaped, history-
+  grounded, but institution-backed-only collective-belief mechanism ("idea 63, Belief Grows
+  Around Real History") with no live caller yet — a promising carrier for that specific
+  subset of collective belief, never presumed to be a universal significance mechanism. The
+  institution-free case (a folk myth no institution ever declares) remains confirmed
+  MISSING, with no candidate mechanism at all.
+- **Revised 2026-09-22 — attributed sacredness is never intrinsic or universal.** A place,
+  object, or event may become sacred through cultural interpretation alone, but always
+  relative to a specific attributor; different groups may hold different or conflicting
+  attributions toward the same subject simultaneously, directly reconciled with Place
+  significance (11A).
 - **Confirmed MISSING.** No individual-level cultural participation/adoption mechanism (every
   entity in a region is affected identically by `CultureState`); no channel-mediated cultural
   transmission/blending beyond regional event-driven drift; no sacred-place mechanism of any
@@ -651,8 +674,8 @@ rationale stay canonical.
 | Batch 08 (Objects/Ownership/Resources/Economy) | `material-economy/objects-material-culture.md`, `material-economy/ownership-possession.md`, `material-economy/resources-production.md`, `material-economy/economy-exchange.md` | `scenarios/material-economy-batch-08.md` (ME-S01–S18) | [review-exports/material-economy-batch-08-review.md](review-exports/material-economy-batch-08-review.md) | PASS — ready to freeze |
 | Batch 09 (Social Relations/Family/Lineage) | `social-lineage/social-relations.md`, `social-lineage/family-kinship.md`, `social-lineage/lineage-descent.md` | `scenarios/social-lineage-batch-09.md` (SL-S01–S18) | [review-exports/social-lineage-batch-09-review.md](review-exports/social-lineage-batch-09-review.md) | PASS — frozen |
 | Batch 10 (Organizations/Institutions/Politics/Law) | `institutions-politics/organizations.md`, `institutions-politics/roles-institutions.md`, `institutions-politics/politics-authority.md`, `institutions-politics/law-enforcement.md` | `scenarios/institutions-politics-batch-10.md` (IP-S01–S21) | [review-exports/institutions-politics-batch-10-review.md](review-exports/institutions-politics-batch-10-review.md) | PASS — frozen |
-| Batch 11A (Places/Settlements/Territory) | `places-culture/places.md`, `places-culture/settlements.md`, `places-culture/territory-control.md` | `scenarios/places-territory-batch-11a.md` (PT-S01–S14) | [review-exports/places-territory-batch-11a-review.md](review-exports/places-territory-batch-11a-review.md) | Ready for high-level external review |
-| Batch 11B (Culture/Collective Belief) | `places-culture/culture.md`, `places-culture/collective-belief.md` | `scenarios/culture-belief-batch-11b.md` (CB-S01–S10) | [review-exports/culture-belief-batch-11b-review.md](review-exports/culture-belief-batch-11b-review.md) | Ready for high-level external review |
+| Batch 11A (Places/Settlements/Territory) | `places-culture/places.md`, `places-culture/settlements.md`, `places-culture/territory-control.md` | `scenarios/places-territory-batch-11a.md` (PT-S01–S14) | [review-exports/places-territory-batch-11a-review.md](review-exports/places-territory-batch-11a-review.md) | PASS — frozen |
+| Batch 11B (Culture/Collective Belief) | `places-culture/culture.md`, `places-culture/collective-belief.md` | `scenarios/culture-belief-batch-11b.md` (CB-S01–S10) | [review-exports/culture-belief-batch-11b-review.md](review-exports/culture-belief-batch-11b-review.md) | PASS — frozen |
 
 ## Links to current review batches
 

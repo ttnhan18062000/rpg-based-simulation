@@ -37,18 +37,34 @@ world semantics; repository classification records realization only, never deliv
 **Disposition: ACCEPT — REQUIRED.** Passes the admission test: no earlier Rule states this
 specific seven-way distinctness for territorial facts — Batch 10's own INST-03 established an
 analogous authority/capability/power/legitimacy distinctness for institutional subjects, but
-territory's own claim/control/jurisdiction/ownership/occupation/culture/residence split is a
-genuinely different, spatially-scoped fact pattern.
+territory's own claim/control/jurisdiction/ownership/occupation/cultural-association/residence
+split is a genuinely different, spatially-scoped fact pattern. Terminology note (2026-09-22
+follow-up): this family always says "cultural association" for the territorial relation, never
+bare "culture" — the latter is reserved for `places-culture/culture.md`'s own, much fuller
+Culture concept (CULT-01), and the two must never be read as the same fact.
 
-**Repository evidence: PARTIAL, and the single most significant finding this family
-confirms.** `RegionState.owner_faction_id` and `PlaceState.owner_faction_id` are each exactly
-one field, used across this repository for what functions as territorial control (region
-ownership gates tax collection, `region.suppression_active` combat effects, Batch 10's own
-evidence) — confirmed to conflate claim, control, and (implicitly) jurisdiction into that one
-field, exactly the pattern the batch instruction's own §38 investigation warned against. No
-separate claim, cultural-association, or residence field exists anywhere. Property ownership
-(Batch 08's own `OWN-01`/`PROP-01`) is confirmed structurally separate already — an entity's
-own `inventory`/a building's own ownership is never the same field as `owner_faction_id`.
+**Repository evidence: mixed — CONFLICTING for a narrower, directly-evidenced claim; MISSING
+for the rest (re-verified 2026-09-22 per external follow-up review, tracing actual consumers
+rather than inferring from the field's own shape alone).** `RegionState.owner_faction_id` and
+`PlaceState.owner_faction_id` are each exactly one field. Checked directly: this single field
+**is currently, actively read as the authoritative representation of at least two distinct
+target concepts at once** — `TownResolutionSystem`'s tax/maintenance pass and
+`region.suppression_active`'s combat-penalty check both read it as **de facto control**
+(who currently governs/taxes/militarily dominates this region), while `PlaceState.
+owner_faction_id`'s own field comment explicitly calls it a **"Sovereignty override"** — a
+third, higher-order legitimacy-adjacent concept named in the code's own documentation, applied
+to the identical field. Three different consumers treating one field as control, taxation-
+authority, and sovereignty simultaneously is direct, checked evidence of an active collapse
+between at least those concepts — this specific, narrow finding is retained as **CONFLICTING**.
+By contrast, **claim** (an assertion independent of current control), **residence**, and
+**cultural association** are not merely collapsed into this field — nothing anywhere reads or
+writes `owner_faction_id` *as* any of these three concepts at all; they are simply absent, with
+no attempted representation to collapse. Per the follow-up's own explicit test ("if the field
+genuinely represents ownership/control only and the other relations simply do not exist,
+classify the absent relations as MISSING"), these three are reclassified **MISSING**, not
+CONFLICTING. Property ownership (Batch 08's own `OWN-01`/`PROP-01`) remains confirmed
+structurally separate already — an entity's own `inventory`/a building's own ownership is
+never the same field as `owner_faction_id`.
 
 **Scenarios:** [PT-S06](../scenarios/places-territory-batch-11a.md#pt-s06) (claim without
 control), [PT-S07](../scenarios/places-territory-batch-11a.md#pt-s07) (control without
@@ -105,12 +121,24 @@ instance the batch instruction's own §11/§14 singles out as essential) — gen
 in that it explicitly forbids collapsing contested cases to one winner, which TERR-01 alone
 does not state.
 
-**Repository evidence: CONFLICTING.** `region.owner_faction_id: Optional[int]` is a single
-nullable field — structurally, this repository cannot represent two simultaneous claims, or a
-claim diverging from control, for the same region at all; whichever faction is currently
-assigned is the only one representable. This is a genuine architecture mismatch against this
-Rule's own target requirement, not merely an unrealized feature — the current data shape
-actively forecloses the contested-territory case this Rule requires be representable.
+**Repository evidence: MISSING/INCOMPLETE, not CONFLICTING (reclassified 2026-09-22 per
+external follow-up review, after tracing actual consumers rather than reasoning from the
+field's shape alone).** The original draft classified this CONFLICTING on the reasoning that a
+single nullable field "actively forecloses" the contested case. Re-examined against the
+follow-up's own explicit test: nothing in this repository currently attempts to represent a
+territorial *claim* independent of control at all — `owner_faction_id` is read/written only as
+control/sovereignty (TERR-01's own re-verified evidence), never as a claim. Since the "claim"
+side of this Rule's own claim/control divergence was never attempted, there is nothing being
+actively collapsed between two live representations — the correct, more precise
+classification is that the claim-vs-control divergence this Rule requires be representable is
+**MISSING/INCOMPLETE**, per the same repository-realization fact TERR-01 now reports for
+"claim" specifically. A real structural caveat remains, short of a live conflict: because
+`owner_faction_id` is a single field rather than a set of independent relations, a future
+domain adding a genuine claim concept could not simply add it alongside control without
+addressing that same field — a design consideration for any future implementation mapping,
+not evidence of a present behavioral violation. This item concerns repository-realization
+classification only; TERR-01 and TERR-03's own target-semantic text is unchanged by this
+re-verification.
 
 **Scenarios:** [PT-S06](../scenarios/places-territory-batch-11a.md#pt-s06),
 [PT-S07](../scenarios/places-territory-batch-11a.md#pt-s07),
@@ -219,12 +247,18 @@ effect, not a law/jurisdiction mechanism, per Batch 10's own prior finding.
 **These are repository/implementation facts, not World Rule decisions, and imply no delivery
 priority.**
 
-- **CONFLICTING — the single most significant finding this family confirms.**
-  `region.owner_faction_id`/`PlaceState.owner_faction_id` are single nullable fields that
-  actively foreclose representing contested claim/control (TERR-03's own finding) — not merely
-  an unrealized feature, but a data shape incompatible with this Rule's own target requirement.
-- **Confirmed MISSING — no separate claim, cultural-association, or residence field exists
-  anywhere**, beyond the single collapsed `owner_faction_id`. See TERR-01 above.
+- **CONFLICTING, narrowly and directly evidenced (re-verified 2026-09-22 per external
+  follow-up review).** `owner_faction_id` is currently, actively read as the authoritative
+  representation of at least **control** (tax collection, `suppression_active` combat
+  penalties) and **sovereignty** (`PlaceState`'s own field comment: "Sovereignty override")
+  simultaneously — three different consumers treating one field as satisfying two distinct
+  target concepts at once. This is the narrow, checked basis for this classification, not the
+  field's bare existence alone.
+- **Confirmed MISSING, not CONFLICTING (reclassified 2026-09-22) — no separate claim,
+  cultural-association, or residence field exists anywhere, and nothing reads
+  `owner_faction_id` as any of the three.** Since these three concepts were never attempted at
+  all, their absence is a gap, not an active collapse — see TERR-01/TERR-03 above for the
+  direct-evidence trace this reclassification is based on.
 - **Confirmed MISSING — no territorial-claim-vs-control causal-basis mechanism was confirmed**
   (whether `owner_faction_id` traces to presence/capability/enforcement/etc. was not
   exhaustively determined). See TERR-02 above.
@@ -241,11 +275,12 @@ prioritized, or required for implementation during the World Rule Catalog phase.
 - **Target semantic:** territorial claim, control, jurisdiction, ownership, occupation, and
   cultural association are seven distinct, independently-representable facts (TERR-01), and
   contested/divergent cases must remain representable, not collapsed to one winner (TERR-03).
-  **Current realization:** `owner_faction_id` is a single nullable field per Region/Place,
-  structurally unable to represent more than one simultaneous claim or a claim diverging from
-  control.
-  **Gap/mismatch:** the current data shape actively forecloses the target requirement, rather
-  than merely lacking it.
+  **Current realization:** `owner_faction_id` is a single field, actively conflating control
+  and sovereignty (CONFLICTING, re-verified 2026-09-22); claim, cultural association, and
+  residence are simply absent (MISSING) — see the reclassified findings above.
+  **Gap/mismatch:** the single-field shape means a future claim concept could not be added
+  alongside control without addressing the same field, even though no live conflict exists
+  today since claim was never attempted.
   **Possible implementation direction:** a `TerritorialRelation`-shaped typed record
   (claimant/controller/kind/since-tick), potentially multiple per region, replacing or
   supplementing the single `owner_faction_id` field.

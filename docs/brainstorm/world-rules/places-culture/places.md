@@ -60,31 +60,49 @@ counter).
 
 ---
 
-## PLACE-02 — A Place's own historical, social, cultural, or institutional significance is distinct from the mere fact that an event occurred there, from any specific subject's own knowledge of that significance, and from universal recognition
+## PLACE-02 — A Place's own historical, social, cultural, or institutional significance is never an intrinsic, universal property of the Place; it is always attributed by some specific actor, group, culture, or institution, and different attributors may attribute different, even conflicting, significance to the same Place simultaneously
 
-> An event occurring at a Place is one fact. That Place subsequently becoming significant (as a
-> battle site, a birthplace, a site of massacre, a sacred grove) is a second, distinct fact —
-> significance does not follow automatically from an event merely having occurred. A third,
-> further-distinct fact is whether any specific subject knows of that significance at all —
-> significance existing as a real, declared world/cultural fact never means every subject
-> automatically knows or reacts to it. No mechanism may propagate significance globally without
-> a real information/recognition path.
+> An event occurring at a Place is one fact — distinct from, and never automatically producing,
+> significance. Significance itself is a second, further-distinct kind of fact: it is always
+> **attributed** by some specific actor, group, culture, or institution — it is never a bare,
+> attributor-free property the Place simply *has*. "Is Place P significant?" therefore has no
+> single, universal answer; the honest question is always "significant **to whom**?" Two
+> distinct groups, cultures, or institutions may attribute different, or directly conflicting,
+> significance to the identical Place at the same time — one regarding it as sacred, another as
+> ordinary, another as something else entirely — and both attributions remain simultaneously
+> real and representable, neither one "the" correct answer the other must yield to. A third,
+> further-distinct fact is whether any *other* specific subject knows of, or recognizes, a
+> given attribution at all — recognizing that group A attributes significance to P is itself
+> distinct from independently attributing the same significance oneself, and from objective
+> world truth (which remains its own, separate fact throughout — see also `collective-
+> belief.md`'s BEL-03). No mechanism may propagate any one attribution globally, or treat it as
+> universal recognition, without a real information/recognition path.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this is the Place-specific
-instance of the flagship "ordinary subject → historically significant subject" trajectory this
-Catalog has now traced for individuals (Batch 07/09) and organizations (Batch 10) — the
-three-way event/significance/knowledge split is genuinely new content for a *spatial* subject,
-though it reuses the underlying History/Provenance and Perception/Knowledge machinery those
-earlier batches already established.
+**Disposition: ACCEPT — REQUIRED; revised 2026-09-22 per external follow-up review to make
+significance explicitly perspective-scoped/relational, reconciled directly with
+`collective-belief.md`'s BEL-03.** The original wording ("a Place subsequently becoming
+significant... is a second, distinct fact") risked being read as though significance, once it
+existed, were a single intrinsic property of the Place itself — real or not, but at most one
+value. The follow-up correctly identified this as incompatible with culturally/religiously
+attributed significance (BEL-03's own domain), where two different groups may legitimately
+attribute different or conflicting significance to the same Place at once. This revision
+replaces "the Place becoming significant" with "significance being attributed by a specific
+actor/group/culture/institution," explicitly permitting multiple, simultaneous, non-
+reconciled attributions — a relational (`significant-to`) reading rather than a universal-
+boolean one. Passes the admission test unchanged: this remains the Place-specific instance of
+the flagship "ordinary subject → historically significant subject" trajectory this Catalog has
+now traced for individuals (Batch 07/09) and organizations (Batch 10), now correctly stated as
+attribution-relative rather than intrinsic.
 
 **Repository evidence: PARTIAL — the "event happened" and "identity persists" halves are real;
-the "significance becomes a tracked fact" and "recognition respects information reach" halves
-are confirmed MISSING.** `PlaceState.prior_kind`/`transformed_tick` record that *something*
-transformed the Place, but nothing resembling a significance score, historical tag, or
-cultural-meaning field exists on `PlaceState` — no mechanism was found that marks a Place as
-"where the Battle of X happened" or "birthplace of Y" as its own durable fact. Consequently,
-the "does recognition respect information reach" question cannot be positively tested either —
-there is no significance fact yet for a recognition mechanism to gate or fail to gate.
+attribution, multi-attributor divergence, and recognition-respecting-information-reach are all
+confirmed MISSING.** `PlaceState.prior_kind`/`transformed_tick` record that *something*
+transformed the Place, but nothing resembling an attributed-significance record, historical
+tag, or cultural-meaning field exists on `PlaceState` — no mechanism was found that marks a
+Place as "significant-to Group A as the site of the Battle of X." Consequently, neither the
+multi-attributor-divergence half (two groups holding different attributions at once) nor the
+"does recognition respect information reach" half can be positively tested — there is no
+attribution fact yet for either to be checked against.
 
 **Scenarios:** [PT-S14](../scenarios/places-territory-batch-11a.md#pt-s14) (ordinary place
 becomes historically significant, flagship).
@@ -128,11 +146,14 @@ town), [PT-S04](../scenarios/places-territory-batch-11a.md#pt-s04) (town becomes
 
 ## Inherited / Applied Foundational Rules
 
-### Recognition of a Place's own significance requires a real information/perception path, exactly as any other world fact requires
+### Recognition of another subject's own attributed significance requires a real information/perception path, exactly as any other world fact requires
 
-> That a Place is significant existing as a real fact does not mean any given subject knows it
-> — a subject's own recognition of a Place's significance requires the same declared
-> observation/report/record path Perception/Knowledge already requires for any fact.
+> That some actor/group/culture attributes significance to a Place existing as a real fact
+> does not mean any other given subject knows of that attribution — a subject's own
+> recognition of it requires the same declared observation/report/record path Perception/
+> Knowledge already requires for any fact. (Updated 2026-09-22 per external follow-up review
+> to match PLACE-02's own revised, attribution-relative framing — recognition is of a
+> specific attribution, never of a bare, attributor-free significance fact.)
 
 **Disposition: INHERITED — direct reuse of Batch 06's PERC-01/KNOW-01 and Batch 09's own
 reputation-reach Inherited entry (`social-lineage/social-relations.md`), applied to place
@@ -174,17 +195,20 @@ priority.**
 - **Confirmed MISSING — no significance/historical-meaning field exists on `PlaceState`.** See
   PLACE-02 above. `prior_kind`/`transformed_tick` record *that* a transformation happened, not
   *why it mattered*.
-- **A single-field ownership pattern, the same class of finding Batch 10 already flagged for
-  `owner_id`.** `PlaceState.owner_faction_id`/`RegionState.owner_faction_id` conflate whatever
-  claim/control/legitimacy/occupation facts a Place or Region might have into one field —
-  cross-referenced in depth in `territory-control.md`'s own TERR-01.
+- **A single-field ownership pattern, re-verified 2026-09-22 against actual consumers rather
+  than the field's shape alone.** `PlaceState.owner_faction_id`/`RegionState.owner_faction_id`
+  are confirmed CONFLICTING specifically for control-vs-sovereignty (both concepts are
+  actively read from the same field by real consumers) and MISSING for claim/cultural-
+  association/residence (never attempted at all, not collapsed) — the full, re-verified
+  trace lives in `territory-control.md`'s own TERR-01/TERR-03, not duplicated here.
 
 ## Cross-domain links recorded here
 
 - PLACE-01 → Identity (ID-03/ID-06, Foundational), History/Provenance (Foundational)
 - PLACE-02 → History/Provenance (Foundational), Perception/Knowledge (Batch 06), and the same
   flagship pattern as Capability/Progression (Batch 07), Lineage/Descent (Batch 09),
-  Organizations (Batch 10)
+  Organizations (Batch 10); directly reconciled with `collective-belief.md`'s BEL-03
+  (attributed sacredness) per the 2026-09-22 follow-up's own item 6
 - PLACE-03 → Identity (ID-03/ID-06, TRANS family, Foundational)
 - Inherited recognition entry → Perception/Knowledge (PERC-01/KNOW-01, Batch 06), Social
   Relations (Batch 09's reputation-reach entry)
@@ -196,3 +220,10 @@ priority.**
 2. Whether the CITY→RUIN transformation trail (`prior_kind`/`transformed_tick`) should ever be
    deepened into a fuller history log, or is intentionally kept as a single-hop trail, is not
    decided here — a repository-realization fact, not a Rule Catalog decision.
+3. **Added 2026-09-22 per external follow-up review.** If a `significance`/`sacred`-style
+   field is ever added to `PlaceState`, it could only be a derived/cached projection with
+   explicit provenance and scope (which attributor, as of when) — never the canonical
+   representation of a perspective-dependent attribution. The preferred semantic model is
+   relational (`significant-to`, `sacred-to`, `recognized-as`), not a universal boolean. No
+   concrete storage design is committed here; see `collective-belief.md`'s own Implementation
+   Candidates for the fuller non-binding discussion.

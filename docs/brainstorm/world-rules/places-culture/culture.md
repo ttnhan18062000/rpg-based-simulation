@@ -63,23 +63,32 @@ cultures).
 
 ---
 
-## CULT-02 — Culture consists of durable collective artifacts — institutions, rituals, practices, norms, records, symbols, public narratives — that persist beyond the current distribution of individual belief or practice; culture is never simply the statistical average of individuals' own current states
+## CULT-02 — Culture may contain durable/shared practices, norms, rituals, institutions, records, symbols, or traditions that persist beyond the current distribution of individual belief or practice; culture is never reducible to the statistical average of individuals' own current states
 
-> A settlement's or population's own cultural pattern is not computed as the average of its
-> current residents' own private beliefs or practices — culture consists of durable collective
-> artifacts (declared institutions, rituals, records, symbols, shared public narratives) that
-> may persist even as the individuals holding, practicing, or believing them turn over
-> entirely. A settlement's custom favoring ancestor worship does not imply every resident
-> personally believes in it, and does not disappear merely because the current population's
-> own average belief has shifted, absent a real, declared change process (see CULT-04).
+> A settlement's or population's own cultural pattern is never computed merely as the average
+> of its current residents' own private beliefs or practices. Culture *may* contain durable,
+> shared practices, norms, rituals, institutions, records, symbols, traditions, or other
+> socially persistent structures — but this is a permitted, non-exhaustive description of what
+> culture can consist of, not a definition that culture *is* only these artifacts and nothing
+> else. Whatever a specific culture's own content turns out to be, it is never reducible to a
+> live average of current individual states: a settlement's custom favoring ancestor worship
+> does not imply every resident personally believes in it, and does not disappear merely
+> because the current population's own average belief has shifted, absent a real, declared
+> change process (see CULT-04).
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this goes beyond the already-
-established individual/aggregate distinctness (Batch 05's ECOL-01/02, Batch 09's SOC-01)
-by stating the specific *structural* content of culture (durable artifacts, not a live
-statistical average) — the batch instruction's own §35 explicitly names "average individual
-belief = culture" as a mistake to avoid, which the pure aggregate/individual boundary alone
-does not itself forbid (an aggregate *could* legitimately be defined as a live average of
-something else; this Rule specifically forbids that shape for culture).
+**Disposition: ACCEPT — REQUIRED; reworded 2026-09-22 per external follow-up review to fix an
+over-literal equation.** The original wording ("culture consists of durable collective
+artifacts") risked being read as a strict, exhaustive definition — that culture *is* durable
+artifacts and nothing else. This revision keeps the substantive non-admission claim (culture is
+never reducible to a live statistical average of current individual belief) while stating the
+durable-artifact content as a permitted, non-exhaustive description rather than a definition,
+consistent with CULT-01's own open-ended-content principle. Passes the admission test
+unchanged: this goes beyond the already-established individual/aggregate distinctness
+(Batch 05's ECOL-01/02, Batch 09's SOC-01) by forbidding the specific "average = culture"
+shape the batch instruction's own §35 names as a mistake, which the pure aggregate/individual
+boundary alone does not itself forbid (an aggregate *could* legitimately be defined as a live
+average of something else; this Rule specifically forbids that shape for culture, without
+otherwise constraining what culture's own content may be).
 
 **Repository evidence: PARTIAL.** `CultureCarryForward`'s own per-region, per-episode
 snapshot shape is durable and persists independently of any single entity's own belief state —
@@ -202,15 +211,21 @@ priority.**
 **This section preserves implementation-relevant discoveries only. Nothing here is approved,
 prioritized, or required for implementation during the World Rule Catalog phase.**
 
-- **Target semantic:** cultural participation/identification is an individual-level fact
-  requiring its own causal path to change (CULT-03).
+- **Target semantic:** cultural knowledge, practice, rejection, and identification are each
+  their own distinct individual-level fact, none collapsible into the others, each requiring
+  its own causal path to change (CULT-03).
   **Current realization:** `CultureState` is read uniformly by every entity in a region; no
-  individual-level field exists.
+  individual-level field of any kind exists.
   **Gap/mismatch:** the individual/collective boundary this family's own CULT-02/03 requires
   is not represented at all.
-  **Possible implementation direction:** a per-entity cultural-affinity value, updated through
-  declared exposure events (family, education, migration), read alongside — not instead of —
-  the existing regional `CultureState`.
+  **Possible implementation direction (corrected 2026-09-22 per external follow-up review —
+  the prior draft here proposed a single `cultural_affinity` scalar, which would itself
+  violate CULT-03's own distinctness requirement and is withdrawn):** whatever shape is
+  eventually chosen must keep knowledge, practice, rejection, and identification
+  independently representable — for example separate typed fields or relations per
+  individual-per-culture (a `knows: bool`, a `practices: Set[custom_id]`, a
+  `rejects: Set[custom_id]`, an `identifies_as: bool`, or an equivalent structure), never one
+  scalar standing in for all four. No specific schema is committed here.
   **Implementation decision:** DEFERRED — no commitment in Rule Catalog phase.
 
 ## Cross-domain links recorded here

@@ -72,13 +72,26 @@ persists.
 ## PT-S05 — Abandoned and resettled
 
 A settlement is abandoned; later a population returns; continuity must be explicitly
-determined.
+determined. **Extended per the 2026-09-22 follow-up's own §1 counter-scenario:** an existing
+settlement at Place P is completely abandoned; Place P persists as a geographic/historical
+Place; after a long discontinuity, a *different, unrelated* population establishes a
+settlement at the same Place. Place-identity continuity and Settlement-identity continuity
+must be evaluated as two independent questions, never assumed to move together — "same
+Place" does not, by itself, imply "same settlement."
 
-- **Rules invoked:** PLACE-03.
-- **Result: revealed missing rule.** No resettlement-after-abandonment mechanism was found —
-  confirmed MISSING. PLACE-03's own requirement (a domain must explicitly determine
-  continuity for this case) has nothing yet to check against, since the case itself does not
-  occur in this repository.
+- **Rules invoked:** PLACE-03, SETT-01 (revised).
+- **Result: revealed missing rule, on both independent questions.** No resettlement-after-
+  abandonment mechanism was found — confirmed MISSING. PLACE-03's own requirement (a domain
+  must explicitly determine continuity for this case) has nothing yet to check against, since
+  the case itself does not occur in this repository. **Extended clause: revealed missing
+  rule, and the two independent questions the follow-up asked to keep separate remain equally
+  open.** Whether Place P's own `place_id` would persist through total abandonment and later
+  resettlement is untested (the one real transformation case this repository has,
+  `PlaceState.prior_kind`/`transformed_tick`, is a kind change, not an abandonment-then-
+  resettlement case). Whether the *settlement* founded by the new, unrelated population would
+  be the same settlement or a genuinely new one is a second, further-untested question — this
+  repository has no mechanism to answer either question, let alone confirm they resolve the
+  same way. SETT-01's own revised text explicitly declines to assume they do.
 
 ## PT-S06 — Claim without control
 
@@ -86,11 +99,14 @@ A kingdom claims a region; it has no effective presence or reach there; the clai
 practical control is absent.
 
 - **Rules invoked:** TERR-01, TERR-02, TERR-03.
-- **Result: revealed contradiction.** `region.owner_faction_id` is a single field that, by
-  construction, cannot represent "claimed by A, controlled by neither A nor anyone else" — the
-  field either names a controller or is `None`; there is no way to record a claim independent
-  of the control field at all. This is TERR-03's own confirmed CONFLICTING finding exercised
-  directly: the data shape actively forecloses this scenario, not merely leaves it unrealized.
+- **Result: revealed missing rule (reclassified 2026-09-22 per external follow-up review —
+  was "revealed contradiction").** Re-verified against actual consumers, not the field's shape
+  alone: `region.owner_faction_id` is never read or written *as* a claim anywhere in this
+  repository — the "claim independent of control" concept was never attempted, so there is no
+  live representation for this scenario to actively contradict. This is TERR-03's own
+  reclassified MISSING/INCOMPLETE finding exercised directly: the concept is absent, not
+  collapsed. (`owner_faction_id`'s own *control*-vs-*sovereignty* conflation, a separate,
+  narrower CONFLICTING finding, is not what this specific scenario exercises — see TERR-01.)
 
 ## PT-S07 — Control without recognized claim
 
@@ -98,10 +114,13 @@ An army occupies territory; practical control is real; formal legitimacy/claim i
 
 - **Rules invoked:** TERR-01, TERR-02, TERR-03, Inherited (authority/power/legitimacy
   distinctness, Batch 10's INST-03).
-- **Result: revealed contradiction, same underlying gap as PT-S06.** `owner_faction_id`'s
-  single-field shape cannot distinguish "controls without a recognized claim" from "controls
-  with a fully legitimate claim" — both look identical in this repository's own state,
-  confirming the same CONFLICTING finding from the opposite direction.
+- **Result: revealed missing rule, same underlying gap as PT-S06 (reclassified 2026-09-22).**
+  No claim/legitimacy concept exists for "control without it" to diverge from — confirmed
+  MISSING. Separately, and worth naming here: `PlaceState.owner_faction_id`'s own field
+  comment calls the same field a "Sovereignty override," which is direct evidence that this
+  repository's own code already treats bare military/administrative control as if it were
+  sovereignty — the narrow CONFLICTING finding TERR-01 retains, distinct from this scenario's
+  own claim-concept absence.
 
 ## PT-S08 — Contested territory
 
@@ -109,9 +128,13 @@ Actor A claims; actor B controls; population C recognizes neither; separate fact
 coexist.
 
 - **Rules invoked:** TERR-01, TERR-03.
-- **Result: revealed contradiction.** The clearest, richest exercise of TERR-03's own
-  CONFLICTING finding — a three-way divergence (claim/control/local-recognition) has no
-  representable shape at all in a single nullable `owner_faction_id` field.
+- **Result: revealed missing rule (reclassified 2026-09-22).** A three-way divergence (claim/
+  control/local-recognition) has no representable shape in a single nullable
+  `owner_faction_id` field — but re-verified against actual evidence, this is because "claim"
+  and "local recognition" were never attempted as their own facts, not because an active
+  collapse between two live representations is occurring. The structural caveat remains: any
+  future claim/recognition mechanism could not simply be added alongside the existing field
+  without addressing it directly.
 
 ## PT-S09 — Jurisdiction without ownership
 
@@ -177,13 +200,16 @@ semantic depth.
 An unremarkable crossroads hosts a major historical event; survivors tell others; records/
 cultural memory persist; later travelers react to this specific place differently.
 
-- **Rules invoked:** PLACE-02, Inherited (recognition requires an information path).
+- **Rules invoked:** PLACE-02 (revised), Inherited (recognition requires an information
+  path).
 - **Result: revealed missing rule.** Confirmed MISSING at every stage checked: no
-  significance-tracking field exists on `PlaceState` (the "event → place provenance" link is
-  absent), so "information transmission → shared recognition → changed behavior" has nothing
-  to transmit in the first place. This mirrors, at the Place scale, the identical flagship gap
-  already found for individuals (Batch 07/09) and organizations (Batch 10) — see the
-  cross-batch note below.
+  attributed-significance field exists on `PlaceState` (the "event → attribution by some
+  specific actor/group" link is absent), so "information transmission → recognition of that
+  attribution → changed behavior" has nothing to transmit in the first place. Per PLACE-02's
+  own revision, even a future realization of this scenario must keep "significant" scoped to
+  whichever specific attributor holds it — never a bare, attributor-free property the crossroads
+  simply has. This mirrors, at the Place scale, the identical flagship gap already found for
+  individuals (Batch 07/09) and organizations (Batch 10) — see the cross-batch note below.
 
 ---
 
@@ -196,8 +222,13 @@ isolated missing feature at any one scale; it is a recurring cross-domain struct
 per this batch's own §37 explicit request to record whether this now constitutes a clear
 integration concern. It does.
 
-PT-S06/S07/S08's own shared finding (a single nullable `owner_faction_id` field cannot
-represent contested claim/control) is this sub-batch's own single most significant repository
-mismatch — structurally analogous to, but more severe than, Batch 10's own single-field
-`owner_id` warning (which was raised there as a risk to avoid, not yet confirmed as an actual
-present violation the way this batch's own direct inspection confirms it here).
+PT-S06/S07/S08's own shared finding was re-verified 2026-09-22 per an external follow-up
+review: tracing actual consumers rather than reasoning from the field's shape alone shows the
+"claim independent of control" concept was simply never attempted in this repository (MISSING/
+INCOMPLETE), not actively collapsed with control (which would be CONFLICTING). A narrower,
+directly-evidenced CONFLICTING finding survives the re-verification: `owner_faction_id` is
+actively read as both control (taxation, `suppression_active`) and, per `PlaceState`'s own
+field comment, "sovereignty" — two distinct concepts collapsed into one field by this
+repository's own current consumers, not merely inferred from the field's shape. This narrower
+finding remains structurally analogous to Batch 10's own single-field `owner_id` warning,
+correctly scoped this time to what the evidence actually supports.

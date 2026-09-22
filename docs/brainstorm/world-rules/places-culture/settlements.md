@@ -33,22 +33,44 @@ world semantics; repository classification records realization only, never deliv
 > territory it sits in, or to whichever government or institution governs it. A settlement may,
 > but need not, additionally have built environment, resource access, services, institutions,
 > economic activity, defenses, or political relationships — no domain is required to model all
-> of them for every settlement.
+> of them for every settlement. **Settlement identity is never assumed to be simply an alias
+> for Place identity** (added 2026-09-22 per external follow-up review): ordinary resident
+> turnover, where population changes gradually while continuous habitation never lapses, is one
+> case this Rule confirms settlement identity survives — but *whether* a settlement's own
+> identity necessarily continues merely because its underlying Place persists is a distinct
+> question this Rule does not resolve for every case, particularly where habitation lapses
+> entirely (total abandonment) before an unrelated population later resettles the same Place.
+> That case may require its own independently representable settlement identity or episode
+> marker, distinct from the Place's own — a domain must determine this explicitly (see
+> PLACE-03), never assume "same Place" implies "same settlement."
 
 **Disposition: ACCEPT — REQUIRED for the distinctness; which optional facts any given
-settlement has is PERMITTED, domain-specific content.** Passes the admission test: no earlier
-Rule states this specific settlement-vs-five-adjacent-concepts distinction — it directly
-parallels Batch 10's ORG-02 (membership ≠ six adjacent concepts) and this batch's own PLACE-01,
-but requires new content specific to what makes a *settlement* (as opposed to a bare Place or a
-bare population) its own coherent concept.
+settlement has is PERMITTED, domain-specific content; softened 2026-09-22 per external
+follow-up review to explicitly not assume Place identity and Settlement identity are the same
+question.** Passes the admission test: no earlier Rule states this specific settlement-vs-
+five-adjacent-concepts distinction — it directly parallels Batch 10's ORG-02 (membership ≠ six
+adjacent concepts) and this batch's own PLACE-01, but requires new content specific to what
+makes a *settlement* (as opposed to a bare Place or a bare population) its own coherent
+concept. The follow-up correctly identified that the original draft's own repository-evidence
+paragraph over-concluded: confirming that `PlaceKind.CITY` is a *sufficient host* for ordinary
+settlement content (population, buildings, scale) is not the same claim as confirming that
+Settlement identity is *definitively* just an alias for Place identity in every case,
+including total-abandonment-then-unrelated-resettlement — that stronger claim is not
+established and this revision removes it.
 
-**Repository evidence: SUPPORTED, by construction, with a notable collapsing pattern.**
-`PlaceState`'s own `CITY` kind already *is* this repository's settlement concept — no separate
-`SettlementState` class exists, and none is required by this Rule; `PlaceKind.CITY`'s own
-fields (`scale`, `building_ids`, `entity_ids`) are exactly the "Place hosting population and
-built environment" shape this Rule describes, confirming the collapse this Rule permits (a
-settlement need not be its own separate durable-state object) is already this repository's own
-real choice, not a gap.
+**Repository evidence: SUPPORTED, by construction, for the ordinary-turnover case only; open,
+not confirmed, for the total-abandonment-then-resettlement case (re-verified 2026-09-22).**
+`PlaceState`'s own `CITY` kind already *is* this repository's settlement concept for the case
+this Rule can positively check — no separate `SettlementState` class exists, and
+`PlaceKind.CITY`'s own fields (`scale`, `building_ids`, `entity_ids`) are exactly the "Place
+hosting population and built environment" shape this Rule describes for continuous
+habitation. This confirms the collapse this Rule permits is a real, working choice for that
+case — but no resettlement-after-total-abandonment mechanism exists anywhere in this
+repository (PT-S05's own confirmed MISSING finding, extended below) for the harder case to be
+checked against at all. The original draft's own stronger conclusion ("already this
+repository's own real choice, not a gap") is retracted for that harder case specifically —
+there is no repository evidence either way, only an unresolved design question, per the
+Open Questions below.
 
 **Scenarios:** [PT-S03](../scenarios/places-territory-batch-11a.md#pt-s03),
 [PT-S11](../scenarios/places-territory-batch-11a.md#pt-s11) (migration changes settlement).
@@ -198,3 +220,10 @@ prioritized, or required for implementation during the World Rule Catalog phase.
 2. Whether `PlaceState.scale` is ever mutated during simulation (as opposed to only at
    world-compile time) was not exhaustively confirmed this batch — a repository-realization
    fact for future investigation, not a Rule Catalog decision.
+3. **Added 2026-09-22 per external follow-up review — does settlement continuity, in the
+   total-abandonment-then-unrelated-resettlement case, require its own independently
+   representable identity/episode distinct from the underlying Place's own identity, or is a
+   settlement genuinely nothing more than "a Place with population, whenever population
+   exists"?** Not decided here — SETT-01 (revised) explicitly declines to resolve this for
+   every case, and no repository mechanism exists to test either answer against (PT-S05's own
+   confirmed MISSING finding, extended).
