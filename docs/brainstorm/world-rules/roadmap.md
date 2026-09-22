@@ -53,8 +53,9 @@ Settlements/Territory, 10 genuine Domain Rules of 18 total catalog entries) and 
 (Culture/Collective Belief, 7 genuine Domain Rules of 12 total catalog entries) per that
 batch's own explicit split permission, then both revised the same day per a targeted
 focused-revision follow-up (Domain Rule counts unchanged for both), and both **PASS — ready
-to freeze**. Batch 12 (Magic/Supernatural) is the next planned step, once its own instruction
-file is provided.
+to freeze**. Batch 12 (Magic/Supernatural) is drafted 2026-09-22 (5 genuine Domain Rules of 14
+total catalog entries, not split) and ready for high-level external review. The next planned
+step is the next batch, once its own instruction file is provided.
 
 ---
 
@@ -480,6 +481,19 @@ institutional, territorial, and cultural structures that themselves evolve histo
 
 ### Batch 12 — Magic / Supernatural
 
+**Status: drafted 2026-09-22, ready for high-level external review.** 5 genuine Domain Rules
+(14 total catalog entries — 5 Domain Rules, 6 Inherited/Applied Foundational Rules, 3 Scope/
+Deferred Boundaries) in `magic-supernatural/supernatural.md`, per
+`tmp/world-rule-batch-12-ext-ai.md`. Not split — one coherent batch, per that instruction's own
+explicit guidance. Directly reconciles Batch 11A's PLACE-02 and Batch 11B's BEL-03 (both
+already attribution-relative) by adding objective supernatural property as an eighth
+independent fact for Places (MAG-04) — the mandatory boundary those two batches deliberately
+left open. The single largest finding: no dedicated magic/supernatural mechanism of any kind
+exists anywhere in this repository, comparable in scope to Batch 10's own Law/Enforcement
+gap — with one genuinely positive exception: `PerceptionGate`'s own `magic_sense`/
+`magic_signal` channel is real, live, structurally-ready information-channel infrastructure,
+currently INERT/OFF. See `review-exports/magic-supernatural-batch-12-review.md`.
+
 Do not make magic an isolated spell subsystem. Define its world rules and connect it outward
 into:
 
@@ -495,9 +509,14 @@ institutions
 conflict
 ```
 
-Use previously deferred cases such as `human → vampire-like transformation` as real scenario
-probes — Batch 01's ID-03/FND-S14 already confirmed the default+exception slot is sufficient
-without inventing a universal identity-ending test; this batch writes the actual exception.
+**Note (2026-09-22).** The `human → vampire-like transformation` probe this section
+originally flagged is governed by MAG-03 (a supernatural property/condition attaches to its
+subject independently of ownership/identity, reusing ID-03/ID-06/TRANS, with its own
+persistence through transformation independently declared) — no dedicated scenario for this
+specific transformation was drafted this batch, since neither the actual batch instruction's
+own minimum scenario suite nor direct repository investigation surfaced it as a live
+ambiguity requiring its own probe; MAG-03's own target semantics already answer it should a
+future domain choose to model it.
 
 ### Final Integration Batch — Cross-Domain History / Significance / Propagation
 
