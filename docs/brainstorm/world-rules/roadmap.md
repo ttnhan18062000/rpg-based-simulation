@@ -28,9 +28,10 @@ domain-facing Milestone B batch — is drafted, revised once per its own follow-
 **PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) is drafted, normalized 2026-09-22 per
 a Rule admission-discipline review (14 genuine Domain Rules of 22 original entries — see that
 batch's own status below), and ready for high-level external review. Batch 06
-(Perception/Knowledge/Information/Agency) is the next planned step once Batch 05 is reviewed,
-and must apply the same admission discipline from its own first draft rather than as a later
-correction.
+(Perception/Knowledge/Information/Agency) is drafted 2026-09-22, directly with the admission
+discipline applied from the first draft (12 genuine Domain Rules of 26 total catalog entries),
+and ready for high-level external review. Batch 07 (Capability/Progression/Conflict) is the
+next planned step once Batch 06 is reviewed.
 
 ---
 
@@ -205,6 +206,15 @@ Keep individual entity semantics distinct from aggregate ecology.
 
 ### Batch 06 — Perception / Knowledge / Information / Agency
 
+**Status: drafted 2026-09-22, ready for high-level external review.** 12 genuine Domain Rules
+(26 total catalog entries — 12 Domain Rules, 8 Inherited/Applied Foundational Rules, 6 Scope/
+Deferred Boundaries, per the standing admission discipline applied from the first draft) across
+`knowledge-agency/perception.md`, `knowledge-information.md`, `agency-decision.md` (Memory
+folded into the Knowledge/Information file rather than given its own). The single most
+load-bearing finding: at least two live decision paths read raw/omniscient world state
+directly, bypassing perception and the knowledge model entirely. See
+`review-exports/knowledge-agency-batch-06-review.md`.
+
 ```text
 observation
 belief
@@ -216,14 +226,15 @@ motivation
 opportunity / affordance
 ```
 
-This batch should strongly revisit scenarios such as:
+This batch strongly revisited scenarios such as:
 
 ```text
 false belief → real action → real consequence
 ```
 
-(Batch 01's FND-S18/S19 already probed this at the foundational level via Causality/State
-Ownership; this batch is where the actual Perception/Agency domain semantics get written.)
+Batch 01's FND-S18/S19 already probed this at the foundational level via Causality/State
+Ownership; this batch's own AGENCY reuses that evidence directly (Inherited, not restated as
+new) and writes the actual Perception/Agency domain semantics on top of it.
 
 ### Batch 07 — Capability / Progression / Conflict
 
