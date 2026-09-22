@@ -169,14 +169,17 @@ def _find_governing_epic_status(inprogress_dir: Path, child_ids: list) -> Option
     """Cross-references tickets/inprogress/ for an epic-tier ticket whose own
     '## Related Tickets' body references at least one of a todos_dir
     subfolder's child ticket IDs. Used when the subfolder itself has no
-    epic-tier ticket file (e.g. tickets/todos/codex-runtime-activation/,
-    whose real governing epic TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC
-    lives in tickets/inprogress/ instead), so the folder candidate's status
-    (e.g. BLOCKED) is still discoverable instead of falling through to None.
-    Cross-referencing by child-ID overlap is used rather than a folder-name-
-    to-epic-id string convention because it is anchored on data the two
-    tickets already carry (parent/child references) and survives folder or
-    epic-ticket renames that a name-matching heuristic would not."""
+    epic-tier ticket file (the motivating real case, tickets/todos/codex-
+    runtime-activation/'s own governing epic living in tickets/inprogress/
+    instead of the subfolder itself, has since moved to tickets/backlogs/ as
+    deliberate housekeeping -- TCK-20260922-CODEX-TICKETS-TO-BACKLOG -- but
+    the shape this cross-reference exists for is general, not specific to
+    that one folder), so the folder candidate's status (e.g. BLOCKED) is
+    still discoverable instead of falling through to None. Cross-referencing
+    by child-ID overlap is used rather than a folder-name-to-epic-id string
+    convention because it is anchored on data the two tickets already carry
+    (parent/child references) and survives folder or epic-ticket renames
+    that a name-matching heuristic would not."""
     if not child_ids or not inprogress_dir.exists():
         return None
     child_id_set = set(child_ids)

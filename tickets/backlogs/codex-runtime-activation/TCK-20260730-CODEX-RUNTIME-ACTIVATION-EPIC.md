@@ -4,12 +4,18 @@ layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC
-phase: open
+phase: backlog
 date: 2026-07-30
 tags: [ai, workflows, hooks, agent-monitoring, process-improvement]
 ---
 
 # TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC
+
+> **Physically moved to `tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — this epic and
+> `SEQUENCE.md` moved from `tickets/todos/` unchanged, alongside the real, current
+> `TCK-20260730-CODEX-CONTROLLED-PILOT.md` (also moved); a separate, older, stale duplicate of that
+> pilot ticket that had sat inside `tickets/todos/codex-runtime-activation/` was deleted, not
+> moved, matching the 2026-09-20 lifecycle decision below.
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
 > **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
