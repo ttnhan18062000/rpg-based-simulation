@@ -12,10 +12,13 @@ flagged stale. TCK-20260702-OBSISO-EPIC was originally the repo's real live
 proof of the never-started case, but its folder (tickets/todos/obs-isolation)
 completed and moved to tickets/done/obs-isolation/ per the standard Finalize
 convention — no live repo path is genuinely "zero child activity ever" as of
-2026-08-17 (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP investigation:
-the only other tickets/todos/ folder, codex-runtime-activation/, has real,
-non-zero child activity and would itself be flagged stale). The never-started
-case is therefore proven via a synthetic tmp_path fixture instead.
+2026-08-17 (TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP investigation).
+The never-started case is therefore proven via a synthetic tmp_path fixture
+instead — same reasoning independently applies to the folder-mode cross-
+reference regression below (TCK-20260922-CODEX-TICKETS-TO-BACKLOG: the
+tickets/todos/codex-runtime-activation/ folder this file once referenced here
+moved to tickets/backlogs/codex-runtime-activation/ as deliberate backlog
+housekeeping, so it is no longer a live tickets/todos/ path at all).
 """
 import sys
 from datetime import date, datetime, timezone
@@ -581,29 +584,34 @@ def test_folder_mode_no_epic_ticket_file_leaves_status_none_not_crash(tmp_path):
     assert is_epic_blocked(candidates[0]) is False
 
 
-def test_real_codex_runtime_activation_folder_is_status_aware(tmp_path):
-    """TCK-20260819-HOTFIX-EPIC-STALENESS-FOLDER-BLOCKED-GAP: the folder-mode
-    candidate for tickets/todos/codex-runtime-activation/ (epic_id
-    FOLDER-tickets-todos-codex-runtime-activation) has no epic-tier ticket
-    file inside the subfolder itself — its real governing epic,
-    TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC, lives in tickets/inprogress/
-    instead. Before this fix, that left the folder candidate's status=None,
-    so it could never be classified BLOCKED and fell through to the
-    genuinely-stale bucket despite the governing epic being deliberately
-    parked. Copies the real folder + the real inprogress/ epic ticket into a
-    synthetic tree — read-only, does not touch the live repo tree — to prove
-    the cross-reference now finds the governing epic's BLOCKED status."""
-    real_folder = (
-        Path(__file__).parent.parent.parent
-        / "tickets" / "todos" / "codex-runtime-activation"
-    )
-    real_epic_ticket = (
-        Path(__file__).parent.parent.parent
-        / "tickets" / "inprogress" / "TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC.md"
-    )
-    if not real_folder.exists() or not real_epic_ticket.exists():
-        return
+# ---------------------------------------------------------------------------
+# Synthetic folder-mode cross-reference regression — full pipeline
+#
+# Replaces the original real-repo-backed test_real_codex_runtime_activation_
+# folder_is_status_aware (TCK-20260922-CODEX-TICKETS-TO-BACKLOG): the real
+# tickets/todos/codex-runtime-activation/ folder and its real governing epic
+# both moved to tickets/backlogs/codex-runtime-activation/ as deliberate
+# backlog housekeeping, so no live repo path reproduces "a todos/ subfolder
+# with no epic-tier ticket file of its own, whose governing epic is
+# discoverable only via cross-reference" any more. This synthetic tmp_path
+# fixture exercises the same full discover_candidate_epics/find_stale_epics/
+# compute_stale_epics_report pipeline the original real-file test did (not
+# just is_epic_blocked() directly, which
+# test_folder_mode_cross_reference_finds_governing_epic_status above already
+# covers at the unit level) against a controlled folder-mode candidate whose
+# status is BLOCKED only via cross-reference — preserving the regression
+# TCK-20260819-HOTFIX-EPIC-STALENESS-FOLDER-BLOCKED-GAP guards against
+# without depending on any live repo path.
+# ---------------------------------------------------------------------------
 
+def test_synthetic_folder_mode_cross_reference_is_status_aware_full_pipeline(tmp_path):
+    """TCK-20260819-HOTFIX-EPIC-STALENESS-FOLDER-BLOCKED-GAP: a folder-mode
+    candidate with no epic-tier ticket file of its own, whose governing epic
+    lives in tickets/inprogress/ instead. Before that fix, this left the
+    folder candidate's status=None, so it could never be classified BLOCKED
+    and fell through to the genuinely-stale bucket despite the governing
+    epic being deliberately parked. Proves the cross-reference finds the
+    governing epic's BLOCKED status and that staleness/report output agree."""
     inprogress_dir = tmp_path / "inprogress"
     todos_dir = tmp_path / "todos"
     working_log_path = tmp_path / "working_log.csv"
@@ -611,37 +619,45 @@ def test_real_codex_runtime_activation_folder_is_status_aware(tmp_path):
     inprogress_dir.mkdir()
     todos_dir.mkdir()
 
-    (inprogress_dir / real_epic_ticket.name).write_text(real_epic_ticket.read_text())
-    synthetic_folder = todos_dir / real_folder.name
-    synthetic_folder.mkdir()
-    for item in real_folder.iterdir():
-        if item.is_file():
-            (synthetic_folder / item.name).write_text(item.read_text())
-
-    # Old activity for one of the epic's real children, past the 5-day
-    # window, reproducing the exact false-positive shape this ticket was
-    # filed against — the folder candidate must land in BLOCKED, not stale.
-    working_log_path.write_text(
-        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
-        "2026-07-31T00:00:00Z,TCK-20260730-CLAUDE-EXECUTION-IDENTITY,t,DONE,s,none\n"
+    _write_ticket(
+        inprogress_dir / "TCK-20260701-SYNTH-BLOCKED-GOVERNING-EPIC.md",
+        "TCK-20260701-SYNTH-BLOCKED-GOVERNING-EPIC",
+        "epic",
+        "2026-07-01",
+        related_tickets="TCK-20260701-SYNTH-BLOCKED-CHILD",
+        body_status="BLOCKED",
     )
 
-    integration_now = datetime(2026, 8, 19, 12, 0, 0, tzinfo=timezone.utc)
+    folder_name = "synthetic-blocked-governed-folder"
+    folder = todos_dir / folder_name
+    folder.mkdir()
+    (folder / "SEQUENCE.md").write_text(
+        f"Epic: `FOLDER-tickets-todos-{folder_name}`.\n\n"
+        "| Order | Ticket |\n|---|---|\n"
+        "| 1 | TCK-20260701-SYNTH-BLOCKED-CHILD |\n"
+    )
+
+    # Old activity for the child, past the 5-day window, reproducing the
+    # exact false-positive shape TCK-20260819-HOTFIX-EPIC-STALENESS-FOLDER-
+    # BLOCKED-GAP was filed against — the folder candidate must land in
+    # BLOCKED, not stale.
+    working_log_path.write_text(
+        "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+        "2026-07-02T00:00:00Z,TCK-20260701-SYNTH-BLOCKED-CHILD,t,DONE,s,none\n"
+    )
 
     candidates = discover_candidate_epics(inprogress_dir, todos_dir)
-    folder_epic_id = f"FOLDER-tickets-todos-{real_folder.name}"
+    folder_epic_id = f"FOLDER-tickets-todos-{folder_name}"
     folder_candidate = next(c for c in candidates if c.epic_id == folder_epic_id)
     assert folder_candidate.mode == "folder"
     assert folder_candidate.status == "BLOCKED"
     assert is_epic_blocked(folder_candidate) is True
 
-    stale = find_stale_epics(
-        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=integration_now
-    )
+    stale = find_stale_epics(inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW)
     assert folder_epic_id not in [c.epic_id for c in stale]
 
     report = compute_stale_epics_report(
-        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=integration_now
+        inprogress_dir, todos_dir, working_log_path, runs_data_root, now=NOW
     )
     stale_section = report.split("Informational:")[0]
     assert folder_epic_id not in stale_section
