@@ -196,6 +196,52 @@ def check_sidecar_matches_ticket(ticket_id: str) -> str | None:
     return None
 
 
+def clear_sidecar_if_matches(ticket_id: str) -> None:
+    """Clear `.claude/current_run`/`.claude/current_run.$CLAUDE_CODE_SESSION_ID` immediately
+    after this ticket's closure has been recorded, if either still holds this ticket's own
+    `run_id` -- never a different one (see below).
+
+    TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT: a *different*
+    variant from the one `check_sidecar_matches_ticket()` above catches. There, the sidecar's
+    `run_id` correctly matched the ticket at the moment this script ran (no warning fired) --
+    the corruption happened AFTER this script's own ground-truth snapshot: real tool calls for
+    this same ticket's remaining closure steps (registry regen, staging-to-stored migration,
+    `git add`/`commit`) kept accumulating onto the same, now-already-recorded `(run_id, seq)`
+    pair, because nothing cleared the sidecar once its snapshot was taken. Confirmed real via 3
+    fresh instances found the same day `check_sidecar_matches_ticket()`'s own prior ceiling raise
+    landed: `TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT`,
+    `TCK-20260921-CAVEMAN-CLOSE-OUT`, `TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT`.
+
+    Deliberately only clears a sidecar that still holds THIS ticket_id -- if it already holds a
+    DIFFERENT one (the stale-sidecar case `check_sidecar_matches_ticket()` already warned about
+    above, in this same call), clearing it here would destroy that evidence rather than fix
+    anything; leave it exactly as `check_sidecar_matches_ticket()`'s own warning describes it.
+    Never raises -- a failure to clear must not fail the closure recording that already
+    succeeded.
+    """
+    session_id = os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    candidates = []
+    if session_id:
+        candidates.append(Path(f".claude/current_run.{session_id}"))
+    candidates.append(Path(".claude/current_run"))
+    empty = {
+        "run_id": None, "seq": None, "phase": None, "agent": None,
+        "execution_id": None, "provider": None, "ticket_id": None,
+    }
+    for path in candidates:
+        if not path.exists():
+            continue
+        try:
+            sidecar = json.loads(path.read_text())
+        except Exception:
+            continue
+        if sidecar.get("run_id") == ticket_id:
+            try:
+                path.write_text(json.dumps(empty))
+            except OSError:
+                pass
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -322,6 +368,8 @@ def main() -> None:
 
     if not log_ok:
         print("WARNING: working_log.csv was not updated — append it manually", file=sys.stderr)
+
+    clear_sidecar_if_matches(args.ticket_id)
 
     print(f"DONE: recorded 1 run + {len(event_records)} event record(s) for {args.ticket_id}")
 

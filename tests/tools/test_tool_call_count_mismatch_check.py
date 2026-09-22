@@ -92,14 +92,15 @@ def test_fails_when_mismatch_count_exceeds_ceiling():
 
 
 def test_ceiling_matches_its_own_documented_history():
-    assert MISMATCH_CEILING == 50, (
+    assert MISMATCH_CEILING == 53, (
         "MISMATCH_CEILING changed again -- if this is because a legitimate fix reduced the real "
         "post-fix mismatch count, lower this value to match; if it's because a fresh, fully "
         "root-cause-diagnosed instance of an already-documented failure class pushed the real "
         "corpus over the previous ceiling (as TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-"
-        "INCIDENT did, 49 -> 50), raising it with the same standard of evidence is legitimate. "
-        "Never raise it to paper over an unexplained new mismatch; see the module's own "
-        "docstring for why this must be a ratchet, not a zero-tolerance assertion."
+        "INCIDENT did, 49 -> 50, and TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-"
+        "ACCUMULATION-INCIDENT did, 50 -> 53), raising it with the same standard of evidence is "
+        "legitimate. Never raise it to paper over an unexplained new mismatch; see the module's "
+        "own docstring for why this must be a ratchet, not a zero-tolerance assertion."
     )
 
 
