@@ -14,10 +14,17 @@ than Combat; does not force every conflict through Combat, and does not create a
 conflict-resolution framework merely to support every imaginable contest. Reuses rather than
 redefines Capability, Authority, Reach, Cost, and Life/Body.
 
-**Status.** Batch 07 (Capability/Progression/Conflict), first draft. Candidates below
-originated as external-reviewer hypotheses (`tmp/world-rule-batch-7-ext-ai.md`); each carries
-this session's disposition and repository evidence. Structured per the normalized five-category
-methodology established in Batch 05/06's admission-discipline passes.
+**Status.** Batch 07 (Capability/Progression/Conflict), drafted 2026-09-22, revised the same
+day per a follow-up Rule-admission and semantic cleanup
+(`tmp/world-rule-batch-7-followup-ext-ai.md`): CONFLICT-02 reclassified from a Domain Rule to
+Inherited — the semantic requirement that decisions must respect subject-local perception/
+knowledge is already fully established by Batch 06 (PERC-01, KNOW-01, AGENCY-01, AGENCY-02);
+that live combat targeting correctly uses `PerceptionGate` is real, valuable Repository
+evidence supporting that already-established boundary, not a new Conflict-specific semantic
+claim. CONFLICT-01 survives the same re-examination unchanged. Candidates below originated as
+external-reviewer hypotheses (`tmp/world-rule-batch-7-ext-ai.md`); each carries this session's
+disposition and repository evidence. Structured per the normalized five-category methodology
+established in Batch 05/06's admission-discipline passes.
 
 ---
 
@@ -50,19 +57,27 @@ without combat).
 
 ---
 
-## CONFLICT-02 — Threat estimation and engagement consideration are separate causal stages; conflict decisions must route through Perception/Knowledge, never an omniscient shortcut
+---
+
+## Inherited / Applied Foundational Rules
+
+### Conflict/combat decisions must respect subject-local perception/knowledge, never an omniscient shortcut (originally drafted as CONFLICT-02)
 
 > Assessing how dangerous an opponent is (estimation) and deciding whether that danger is worth
-> heeding (consideration/risk tolerance) are two separate causal stages — conflating them
-> produces the wrong conclusion about *why* an entity engages or avoids a fight. Neither stage
-> may be satisfied by reading another entity's hidden, unperceived state directly; both must
-> route through the same subject-local Perception/Knowledge layer Batch 06 already established.
+> heeding (consideration/risk tolerance) are two separate causal stages, and neither may be
+> satisfied by reading another entity's hidden, unperceived state directly — both must route
+> through the same subject-local Perception/Knowledge layer.
 
-**Disposition: ACCEPT.** Passes the admission test: this is the Conflict/Combat-specific
-instantiation the batch instruction's own §15 (Agency integration) required — no earlier Rule
-states the estimation/consideration distinction for Combat specifically, though it reuses
-Batch 06's general decision-stage and perception-gating principles (Inherited, below) for the
-"never an omniscient shortcut" half.
+**Disposition: INHERITED — reclassified 2026-09-22 per follow-up review, from a Domain Rule
+(originally drafted as CONFLICT-02) to this Inherited entry.** The semantic requirement itself
+is already fully established by Batch 06: PERC-01/KNOW-01 already state that perception and
+belief are bounded, subject-local facts a decision must route through, and AGENCY-01/AGENCY-02
+already state that a decision's stages (including estimation-adjacent "wanting"/"choosing")
+are causally distinct and never satisfied by omniscient access. The estimation/consideration
+framing this entry adds is a restatement of that same boundary in Combat's own vocabulary, not
+a new semantic claim — the batch instruction's own §15 (Agency integration) asked this batch to
+*verify* the boundary holds for Conflict/Combat specifically, which is exactly what Repository
+evidence is for, not grounds for a second Rule stating what Batch 06 already requires.
 
 **Repository evidence: SUPPORTED for both halves, with one confirmed live counter-example to
 Batch 06's own CONFLICTING findings — checked directly, not assumed from old evidence.**
@@ -70,8 +85,9 @@ Batch 06's own CONFLICTING findings — checked directly, not assumed from old e
 law directly ("a wolf is not bad at sensing that a human is dangerous... it charges anyway. That
 is low *consideration*, not poor *estimation*") and cites `EngagementRiskEvaluator`'s own real
 separation (`caution = 1.0 - bravery`; the estimate's own accuracy is untouched by bravery;
-bravery only changes `risk_score`, which changes the resulting `CombatPosture`). **Perception-
-gated engagement, confirmed live**: `TacticalDecisionSystem.evaluate_entity_intent()`
+bravery only changes `risk_score`, which changes the resulting `CombatPosture`) — a concrete
+instance of AGENCY-02's own already-established "influence, not determination" claim. **
+Perception-gated engagement, confirmed live**: `TacticalDecisionSystem.evaluate_entity_intent()`
 (`src/engine/tactical.py`) builds its `hostiles` candidate list by calling
 `PerceptionGate.can_perceive(entity, get_entity_signals(n), {"distance": ...})` for every
 neighbor *before* that neighbor becomes eligible as a target at all — the comment at the call
@@ -90,10 +106,6 @@ richer true/apparent/estimate power pipeline for *how dangerous* each one is jud
 **Scenarios:** [CP-S11](../scenarios/capability-progression-batch-07.md#cp-s11) (combat, defeat,
 survival), [CP-S12](../scenarios/capability-progression-batch-07.md#cp-s12) (stronger entity
 still loses).
-
----
-
-## Inherited / Applied Foundational Rules
 
 ### Combat outcomes form a real, differentiated vocabulary; victory ≠ kill and defeat ≠ death
 
@@ -167,9 +179,10 @@ evidence for this same inherited entry.
 
 - **SUPPORTED — a genuine, positive, live counter-example to Batch 06's own CONFLICTING
   findings.** `TacticalDecisionSystem`'s hostile-candidate gathering routes through
-  `PerceptionGate.can_perceive()` before any neighbor becomes target-eligible. See CONFLICT-02
-  above. This directly satisfies the batch instruction's own §15 requirement to verify current
-  behavior rather than assume old findings hold everywhere.
+  `PerceptionGate.can_perceive()` before any neighbor becomes target-eligible. See the
+  Inherited perception/knowledge entry above (originally drafted as CONFLICT-02). This directly
+  satisfies the batch instruction's own §15 requirement to verify current behavior rather than
+  assume old findings hold everywhere.
 - **INERT/OFF — the richer declared power-estimation pipeline (`combat_engagement` domain)
   never runs in production.** `OpponentPerceptionService`/`CombatLearning`/
   `EngagementRiskEvaluator` are real, detailed, specified in
@@ -189,9 +202,9 @@ evidence for this same inherited entry.
 ## Cross-domain links recorded here
 
 - CONFLICT-01 → Resource (RES-*, Batch 03), Ecology/Population (ECOL-04, Batch 05)
-- CONFLICT-02 → Perception (PERC-01, Batch 06), Agency/Decision (AGENCY-01/02/03, Batch 06),
-  Capability/Progression (`capability-progression.md`, the same ad hoc `CapabilityEstimateService`
-  finding)
+- Inherited perception/knowledge entry (formerly CONFLICT-02) → Perception (PERC-01, KNOW-01,
+  Batch 06), Agency/Decision (AGENCY-01/02, Batch 06), Capability/Progression
+  (`capability-progression.md`, the same ad hoc `CapabilityEstimateService` finding)
 - Inherited combat-outcome entry → Life/Body (LIFE-01/02, Batch 05)
 - Inherited bodily-consequence entry → Life/Body (BODY-07, Batch 05), State Ownership (OWN-02,
   Batch 01)

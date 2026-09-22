@@ -15,56 +15,66 @@ transition) is not restated here — this family investigates the acquisition/lo
 foundational Capability deliberately left open. Does not require one universal capability
 representation.
 
-**Status.** Batch 07 (Capability/Progression/Conflict), first draft. Candidates below
-originated as external-reviewer hypotheses (`tmp/world-rule-batch-7-ext-ai.md`); each carries
-this session's disposition and repository evidence. Structured per the normalized five-category
-methodology established in Batch 05/06's admission-discipline passes — only genuinely new or
-domain-refined semantics receive a local Rule ID.
+**Status.** Batch 07 (Capability/Progression/Conflict), drafted 2026-09-22, revised the same
+day per a follow-up Rule-admission and semantic cleanup
+(`tmp/world-rule-batch-7-followup-ext-ai.md`): PROG-01/02/05/06 rewritten to remove
+repository-evaluation language ("checked," "verified," "this repository has N mechanisms")
+from their own Rule statements — that language now lives only in Repository Findings/Evidence;
+PROG-04 reclassified from a Domain Rule to Inherited, since its distinctness claim is fully
+covered by combining Identity/History-Provenance/Body-Condition Rules already established, not
+genuinely new progression-specific content. Candidates below originated as external-reviewer
+hypotheses (`tmp/world-rule-batch-7-ext-ai.md`); each carries this session's disposition and
+repository evidence. Structured per the normalized five-category methodology established in
+Batch 05/06's admission-discipline passes — only genuinely new or domain-refined semantics
+receive a local Rule ID.
 
 ---
 
 ## Domain Rules
 
-## PROG-01 — Capability change traces to a declared acquisition/loss mechanism; no single universal representation is required
+## PROG-01 — Capability acquisition and loss occur through declared causal mechanisms; different mechanisms may coexist without being unified into one progression system
 
-> A living entity's capability changes only through one of several legitimately distinct,
-> declared mechanisms — never an arbitrary edit. This repository does not unify those
-> mechanisms into one representation, and this family does not require it to.
+> Capability acquisition and loss occur through declared causal mechanisms, and different
+> mechanisms may coexist without being unified into one progression system.
 
-**Disposition: ACCEPT.** Passes the admission test: no earlier Rule states that capability
-acquisition/loss must trace to a declared mechanism *and* that multiple, non-unified mechanisms
-are legitimate — CAP-01–05 (Batch 03) establish eligibility semantics, not acquisition/loss
-plurality.
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — the Rule's own quoted
+statement now states only the semantic core; the specific count and identity of this
+repository's own mechanisms moved to Repository evidence, where a repository fact belongs.**
+Passes the admission test: no earlier Rule states that capability acquisition/loss must trace
+to a declared mechanism *and* that multiple, non-unified mechanisms are legitimate — CAP-01–05
+(Batch 03) establish eligibility semantics, not acquisition/loss plurality.
 
 **Repository evidence: SUPPORTED, by real plurality.** At least five independent, non-unified
-mechanisms exist: (1) XP/Level → `LevelingService._execute_level_up()` grants `+5` Attribute
-Points and level-gated skill unlocks for `EntityRole.HERO`; (2) direct attribute deltas
-(`vitality`/`strength`/`endurance`, scaled by `entity.aptitude`) for non-HERO entities on the
-*same* level-up event (`EvolutionSystem.evaluate()`) — a role-differentiated mechanism, not one
-path; (3) equipment (`recalculate_combat_stats()` Step 2 — atk/def/hp/evasion bonuses from
-equipped, non-broken items); (4) `BreakthroughService`/`ClassTierService` registries (ad hoc
-attribute bonuses, `apply_bonuses()`); (5) `WoundState`/`ScarState` (Batch 01/05's own
-evidence — persistent capability *penalties* from injury). None of these mechanisms is required
-to route through any other; a future capability-affecting mechanism may add a sixth without
-touching the other five.
+mechanisms exist in this repository: (1) XP/Level → `LevelingService._execute_level_up()`
+grants `+5` Attribute Points and level-gated skill unlocks for `EntityRole.HERO`; (2) direct
+attribute deltas (`vitality`/`strength`/`endurance`, scaled by `entity.aptitude`) for non-HERO
+entities on the *same* level-up event (`EvolutionSystem.evaluate()`) — a role-differentiated
+mechanism, not one path; (3) equipment (`recalculate_combat_stats()` Step 2 — atk/def/hp/
+evasion bonuses from equipped, non-broken items); (4) `BreakthroughService`/`ClassTierService`
+registries (ad hoc attribute bonuses, `apply_bonuses()`); (5) `WoundState`/`ScarState`
+(Batch 01/05's own evidence — persistent capability *penalties* from injury). None of these
+mechanisms is required to route through any other; a future capability-affecting mechanism may
+add a sixth without touching the other five — this is this repository's own current instance
+of the Rule's own permissive claim, not the claim itself.
 
 **Scenarios:** [CP-S01](../scenarios/capability-progression-batch-07.md#cp-s01) (practice
 creates capability), [CP-S07](../scenarios/capability-progression-batch-07.md#cp-s07)
-(capability without level).
+(capability without level), [CP-S17](../scenarios/capability-progression-batch-07.md#cp-s17)
+(non-combat lived experience, added per 2026-09-22 follow-up).
 
 ---
 
-## PROG-02 — XP/Level is a materialized abstraction whose real downstream capability consequence must be verified, not assumed
+## PROG-02 — XP and Level are materialized abstractions whose meaning comes from their declared world consequences
 
-> XP and Level may be real, canonical simulation state without being known diegetically by
-> every subject, and without automatically implying any particular downstream effect. Whether a
-> given Level actually changes anything must be checked against the repository's own
-> implementation, not assumed from the existence of the abstraction itself.
+> XP and Level are materialized abstractions whose meaning comes from their declared world
+> consequences; neither substitutes for the underlying capability/history it represents.
 
-**Disposition: ACCEPT.** Passes the admission test: this states XP/Level's own representational
-status and the discipline for verifying it — a domain-specific claim distinct from BODY-01's
-analogous claim about HP (a different subject, not reused here), and not addressed by any
-earlier Rule.
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — restated as a semantic claim
+about what gives XP/Level their meaning, removing the original wording's "must be checked
+against the repository's own implementation" framing, which described a verification
+discipline rather than a world semantic.** Passes the admission test: this states XP/Level's
+own representational status — a domain-specific claim distinct from BODY-01's analogous claim
+about HP (a different subject, not reused here), and not addressed by any earlier Rule.
 
 **Repository evidence: SUPPORTED — checked directly, with a real downstream consequence
 confirmed.** `identity.evolution_points`/`identity.evolution_level` are real `AuthoritativeState`
@@ -102,44 +112,24 @@ improve stats beyond its own fixed `+20 HP`/skill-unlock grant.
 
 ---
 
-## PROG-04 — Capability loss/regression is a legitimate category, distinct from identity loss and history erasure
+## PROG-05 — Repeatable accumulation/progression sources must declare their scaling, limiting, or counterforce semantics; unlimited repeatability must not arise accidentally
 
-> A subject may durably lose capability (injury, equipment loss/breakage, a spent or reverted
-> breakthrough) without that touching its own identity or historical record. Capability loss,
-> identity loss, and history erasure are three separate facts, never conflated.
+> Repeatable accumulation/progression sources must declare their scaling, limiting, or
+> counterforce semantics; unlimited repeatability must not arise accidentally. This does not
+> require equilibrium or guaranteed diminishing returns — a mechanism may legitimately declare
+> no limiting effect at all — but that must be a stated design choice, not a silent default no
+> one decided.
 
-**Disposition: ACCEPT.** Passes the admission test: no earlier Rule names capability loss as
-its own category distinct from identity/history loss — Batch 05's LIFE-03 addresses *death* not
-ending identity/history, a different subject matter.
-
-**Repository evidence: SUPPORTED for capability loss via injury and equipment; MISSING for
-several other named loss categories.** `WoundState`/`ScarState` penalties (Batch 01/05
-evidence) and equipment breaking (`durability <= 0` zeroing its stat contribution on the next
-recalculation) are both real, confirmed capability-loss paths that touch neither identity nor
-history. **Confirmed MISSING**, checked directly: no skill-decay-from-disuse mechanism exists
-(a learned skill, once unlocked, is never removed or weakened by lack of use); no mechanism
-reduces capability from "lost social access" (out of this family's own scope — Social relations'
-own concern). Aging as a capability-loss driver was not found either — `EvolutionSystem`'s own
-level-gated growth is the only age-adjacent mechanism, and it is monotonically upward, never a
-decline.
-
-**Scenarios:** [CP-S08](../scenarios/capability-progression-batch-07.md#cp-s08) (injury causes
-regression), [CP-S16](../scenarios/capability-progression-batch-07.md#cp-s16) (loss of
-capability without loss of history).
-
----
-
-## PROG-05 — Repeated trivial activity does not, by itself, produce unbounded progression; a claimed counterforce must be verified against real behavior, not assumed present
-
-> A world's own rules decide whether trivial, low-challenge repetition yields diminishing,
-> bounded, or unbounded progression — this is a design choice each mechanism must make
-> explicitly, and a documentation claim that a bound exists is not the same fact as the bound
-> actually existing in the mechanism itself.
-
-**Disposition: ACCEPT, with a confirmed gap and a confirmed documentation/implementation
-mismatch this batch's own investigation found.** The batch instruction explicitly required
-challenging farming/exploit-like loops — the honest finding is that this repository currently
-implements no counterforce at all for its primary progression source (combat XP).
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — restated so the Rule requires
+a *declared* scaling/limiting/counterforce stance (which may legitimately be "none"), rather
+than requiring a counterforce to exist or be verified against behavior.** The original wording
+("must be verified against real behavior, not assumed present") described a verification
+discipline, not a world semantic; this revision keeps the semantic core (unlimited
+repeatability must be a stated choice, not an accident) while moving the verification act
+itself to Repository evidence. The batch instruction explicitly required challenging
+farming/exploit-like loops — the honest finding, now recorded purely as evidence, is that this
+repository's combat-XP source declares no scaling/limiting/counterforce stance at all — an
+accidental default, not a stated one.
 
 **Repository Finding: MISSING, confirmed directly — the most load-bearing finding in this
 family.** `xp_gain = defender.identity.evolution_level * classification.xp_multiplier`
@@ -164,17 +154,19 @@ does not guarantee progression, counter-adjacent).
 
 ---
 
-## PROG-06 — Progression can, in principle, alter how the world reacts to an entity, through a real causal path from capability/kind change to world-facing consequence
+## PROG-06 — Progression may change how the world reacts to an individual through declared causal channels
 
-> A subject becoming more capable, or changing kind through growth, is permitted to produce
-> real, observable changes in how the surrounding world responds to it — this is not merely
-> aspirational; a real, if currently narrow, causal path must exist for the claim to hold, and
-> this family checks that it does rather than assuming it.
+> Progression may change how the world reacts to an individual through declared causal
+> channels — a subject becoming more capable, or changing kind through growth, is permitted to
+> produce real, observable changes in how the surrounding world responds to it, wherever a
+> real channel connects the two.
 
-**Disposition: ACCEPT — the causal path is real, but narrower and less capability-scaled than
-the batch instruction's own flagship scenario ("Ordinary Creature → Regional Threat") might
-suggest. This is the most important finding this batch was asked to check, and the honest
-answer is partial, not a clean yes or no.**
+**Disposition: ACCEPT, revised 2026-09-22 per follow-up review — restated as the semantic
+permission itself, removing the original wording's "this family checks that it does rather
+than assuming it" framing, which described this session's own verification act rather than a
+world semantic.** The batch instruction's own flagship scenario ("Ordinary Creature → Regional
+Threat") is exactly what this Rule states is permitted; whether this repository's own current
+channels realize it fully is a Repository Finding (below), not part of the Rule's own claim.
 
 **Repository evidence: PARTIAL, checked directly against two independent real channels.**
 (1) `ThreatService.record_kill()` (`src/world/threat.py`) raises a region's
@@ -201,7 +193,8 @@ yet realized as a clean, capability-scaled, individual-tracking pipeline for ord
 **Scenarios:** [CP-S13](../scenarios/capability-progression-batch-07.md#cp-s13) (power
 conversion), [CP-S14](../scenarios/capability-progression-batch-07.md#cp-s14) (progression
 changes world reaction), [CP-S15](../scenarios/capability-progression-batch-07.md#cp-s15)
-(ordinary creature → regional threat, flagship).
+(ordinary creature → regional threat, flagship — deepened 2026-09-22 to explicitly distinguish
+generic kind/threat reaction from reaction to this specific historied individual).
 
 ---
 
@@ -234,6 +227,37 @@ real; the follower-grant half is confirmed absent.
 ---
 
 ## Inherited / Applied Foundational Rules
+
+### Capability loss/regression is distinct from identity loss and history erasure (PROG-04)
+
+> A subject may durably lose capability (injury, equipment loss/breakage, a spent or reverted
+> breakthrough) without that touching its own identity or historical record. Capability loss,
+> identity loss, and history erasure are three separate facts, never conflated.
+
+**Disposition: INHERITED — reclassified 2026-09-22 per follow-up review, from a Domain Rule
+(originally drafted as PROG-04) to this Inherited entry.** The distinctness claim is fully
+covered by combining Identity/History-Provenance/Body-Condition Rules already established:
+Batch 05's LIFE-03/HP-01 (death/identity ends action, never identity or history) and Batch 01/
+05's BODY-04/BODY-06 (injury durably reduces capability, a separate owned fact) jointly already
+establish everything this claim needs — capability can degrade (BODY-04/06) without that
+touching identity or history (LIFE-03/HP-01). No genuinely new progression-specific semantic
+content survives once those two boundaries are combined; the importance of the distinction is
+not, by itself, a reason to keep a local Rule ID for it.
+
+**Repository evidence: SUPPORTED for capability loss via injury and equipment; MISSING for
+several other named loss categories.** `WoundState`/`ScarState` penalties (Batch 01/05
+evidence) and equipment breaking (`durability <= 0` zeroing its stat contribution on the next
+recalculation) are both real, confirmed capability-loss paths that touch neither identity nor
+history. **Confirmed MISSING**, checked directly: no skill-decay-from-disuse mechanism exists
+(a learned skill, once unlocked, is never removed or weakened by lack of use); no mechanism
+reduces capability from "lost social access" (out of this family's own scope — Social relations'
+own concern). Aging as a capability-loss driver was not found either — `EvolutionSystem`'s own
+level-gated growth is the only age-adjacent mechanism, and it is monotonically upward, never a
+decline.
+
+**Scenarios:** [CP-S08](../scenarios/capability-progression-batch-07.md#cp-s08) (injury causes
+regression), [CP-S16](../scenarios/capability-progression-batch-07.md#cp-s16) (loss of
+capability without loss of history).
 
 ### Foundational Capability (eligibility) is distinct from acquisition/loss mechanics
 
@@ -294,8 +318,9 @@ entity still loses).
 > penalties read directly into stat recalculation), not merely a cosmetic record.
 
 **Disposition: INHERITED — direct reuse of Batch 01/05's BODY-04/BODY-06. No new claim: this
-family's own PROG-04 cites this as one of capability loss's real, confirmed instances, but the
-underlying mechanism and its ownership were already fully established.**
+family's own PROG-04 entry (above, itself Inherited) cites this as one of capability loss's
+real, confirmed instances, but the underlying mechanism and its ownership were already fully
+established.**
 
 **Repository evidence: SUPPORTED**, reused directly from BODY-04/BODY-06's own evidence.
 
@@ -401,7 +426,7 @@ real trigger, never an unconditional or arbitrary kind edit.
 - PROG-02, PROG-03 → State Ownership (OWN-01, the authoritative-field pattern), Perception/
   Knowledge (Batch 06's own "materialized abstraction" framing precedent, BODY-01, analogous
   but not reused)
-- PROG-04 → Identity/History (LIFE-03, distinct claim, not reused)
+- PROG-04 (now Inherited) → Identity/History (LIFE-03, HP-01), Body/Condition (BODY-04/06)
 - PROG-05 → Causality (CAUSE-01, the general real-causal-path requirement this Rule's own
   counterforce question sits alongside without restating)
 - PROG-06 → Ecology/Population (ECOL-03/04, Batch 05 — the individual↔aggregate causal-loop

@@ -148,22 +148,27 @@ order.
   `tmp/knowledge-agency-batch-06-report.md` (local, not part of this catalog) for the full
   disposition report.
 - **Batch 07** (Capability/Progression/Conflict) — the fourth domain-facing Milestone B batch —
-  drafted 2026-09-22 directly with the five-category admission discipline. 11 genuine Domain
-  Rules (25 total catalog entries including 9 inherited/applied foundational rules and 5
-  scope/deferred boundaries) across Capability/Progression, Learning/Adaptation (a genuine
-  2-Rule family, not padded), and Conflict/Combat; ready for high-level external review. The
-  most load-bearing finding: no counterforce exists against repeated-trivial-kill XP farming,
-  and a documentation claim of a `max_xp_per_tick` bound does not match the actual
-  implementation. The batch instruction's own "especially important" question (can an ordinary
-  entity become historically significant?) resolved to a real but partial answer: the
-  trajectory is causally possible, but this repository's individual-significance tracking
-  (`LegendFact`/`FameState`) is role-gated to HERO entities only. A genuinely positive
-  cross-batch finding: live combat targeting (`TacticalDecisionSystem`) is confirmed already
-  perception-gated, a real counter-example to Batch 06's own two CONFLICTING findings
-  elsewhere. See `review-exports/capability-progression-batch-07-review.md`'s explicit
-  call-outs for this and further confirmed gaps. See
-  `tmp/capability-progression-batch-07-report.md` (local, not part of this catalog) for the
-  full disposition report.
+  drafted 2026-09-22, then revised the same day per a targeted Rule-admission and semantic
+  cleanup follow-up (PROG-01/02/05/06 rewritten to remove repository-evaluation language from
+  their own Rule statements; PROG-04 and CONFLICT-02 reclassified from Domain Rules to
+  Inherited; LEARN-02 retired to Repository Findings and LEARN-01 rewritten into genuinely
+  normative form; two new adversarial probes added), **PASS — ready to freeze**. 8 genuine
+  Domain Rules (26 total catalog entries including 13 inherited/applied foundational rules and
+  5 scope/deferred boundaries) across Capability/Progression, Learning/Adaptation (now a
+  genuine 1-Rule family), and Conflict/Combat. The most load-bearing finding, unchanged by the
+  follow-up: no counterforce exists against repeated-trivial-kill XP farming, and a
+  documentation claim of a `max_xp_per_tick` bound does not match the actual implementation.
+  The batch instruction's own "especially important" question (can an ordinary entity become
+  historically significant?) was sharpened by the follow-up into two distinct halves: a generic
+  reaction to a creature's kind/threat is real and confirmed; a reaction to *this specific
+  historied individual* is confirmed MISSING for any non-HERO entity — `LegendFact`/`FameState`
+  is role-gated to HERO entities only. A genuinely positive cross-batch finding, preserved as
+  Repository evidence under a reclassified Inherited entry: live combat targeting
+  (`TacticalDecisionSystem`) is confirmed already perception-gated, a real counter-example to
+  Batch 06's own two CONFLICTING findings elsewhere. See
+  `review-exports/capability-progression-batch-07-review.md`'s explicit call-outs for this and
+  further confirmed gaps. See `tmp/capability-progression-batch-07-report.md` (local, not part
+  of this catalog) for the full disposition report.
 - Do not begin Batch 08 (Objects / Ownership / Resources / Economy) until Batch 07 receives
   high-level review.
 
@@ -178,7 +183,7 @@ order.
 | Batch 04 (Space/Environment/Movement) | [scenarios/space-environment-batch-04.md](scenarios/space-environment-batch-04.md) | SPC-S01 – SPC-S15 |
 | Batch 05 (Life/Body/Survival/Ecology) | [scenarios/life-body-batch-05.md](scenarios/life-body-batch-05.md) | LB-S01 – LB-S16 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | [scenarios/knowledge-agency-batch-06.md](scenarios/knowledge-agency-batch-06.md) | KA-S01 – KA-S20 |
-| Batch 07 (Capability/Progression/Conflict) | [scenarios/capability-progression-batch-07.md](scenarios/capability-progression-batch-07.md) | CP-S01 – CP-S16 |
+| Batch 07 (Capability/Progression/Conflict) | [scenarios/capability-progression-batch-07.md](scenarios/capability-progression-batch-07.md) | CP-S01 – CP-S17 |
 
 ## Unresolved cross-domain questions
 
@@ -332,26 +337,34 @@ follow-up):**
   (a messenger delayed, blocked, or lying) and no content-level information distortion — only
   certainty/trust vary through transmission, never claim content itself.
 
-**From Batch 07 (Capability/Progression/Conflict, drafted 2026-09-22):**
+**From Batch 07 (Capability/Progression/Conflict, drafted 2026-09-22, revised same day per
+follow-up):**
 
-- **Confirmed MISSING — the most load-bearing gap in this whole batch.** No counterforce
-  exists against repeated-trivial-kill XP farming; a documentation claim
-  (`max_xp_per_tick`) does not match the actual implementation, which has none.
-- **Confirmed PARTIAL — the batch instruction's own "especially important" question.**
-  Progression's world-reaction channel is real (`ThreatService.record_kill()`'s retaliation
-  pressure, `entity.kind`-keyed world-system branches) but narrow and mostly
-  capability-agnostic; individual-significance tracking (`LegendFact`/`FameState`) is
-  role-gated to HERO entities only, not general.
-- **Confirmed SUPPORTED — a genuinely positive cross-batch finding.**
-  `TacticalDecisionSystem`'s live targeting already routes through `PerceptionGate` before any
-  neighbor becomes target-eligible — a real counter-example to Batch 06's own two CONFLICTING
-  findings elsewhere.
+- **Confirmed MISSING — the most load-bearing gap in this whole batch, unchanged by the
+  follow-up.** No counterforce exists against repeated-trivial-kill XP farming; a
+  documentation claim (`max_xp_per_tick`) does not match the actual implementation, which has
+  none.
+- **Sharpened by the 2026-09-22 follow-up into two distinct halves.** A generic reaction to a
+  creature's kind/threat is real and confirmed (`ThreatService.record_kill()`'s retaliation
+  pressure, `entity.kind`-keyed world-system branches); a reaction to *this specific historied
+  individual* is confirmed MISSING for any non-HERO entity — individual-significance tracking
+  (`LegendFact`/`FameState`) is role-gated to HERO entities only.
+- **Confirmed SUPPORTED — a genuinely positive cross-batch finding, preserved as Repository
+  evidence under a reclassified Inherited entry.** `TacticalDecisionSystem`'s live targeting
+  already routes through `PerceptionGate` before any neighbor becomes target-eligible — a real
+  counter-example to Batch 06's own two CONFLICTING findings elsewhere.
 - **Confirmed INERT/OFF.** The declared `combat_engagement` domain (subjective power
   estimation, "estimation ≠ consideration") never runs in production; `Breakthrough` granting
   is never invoked outside tests.
 - **Confirmed MISSING.** `TRAIN_SKILL` (practice) is an unreachable route family; no
   surrender/capture/forced-displacement combat outcome exists; no fame-to-followers conversion
   edge exists.
+- **Reclassified 2026-09-22, not removed.** "Capability loss ≠ identity/history loss" and
+  "decisions must respect perception/knowledge for Conflict/Combat specifically" were both
+  Domain Rules on first draft; the follow-up correctly reclassified both as Inherited (fully
+  covered by combining earlier Rules) without discarding either's own evidence. "Only success
+  grants XP here" was retired from a Domain Rule to a Repository Finding — the target design
+  itself remains open to other experience-types.
 
 ## Review index
 
@@ -380,7 +393,7 @@ rationale stay canonical.
 | Batch 04 (Space/Environment/Movement) | `space-environment/location-topology.md`, `space-environment/environment.md`, `space-environment/movement-navigation.md` | `scenarios/space-environment-batch-04.md` (SPC-S01–S15) | [review-exports/space-environment-batch-04-review.md](review-exports/space-environment-batch-04-review.md) | PASS — ready to freeze |
 | Batch 05 (Life/Body/Survival/Ecology) | `life-body/lifecycle.md`, `life-body/body-condition.md`, `life-body/survival-needs.md`, `life-body/ecology-population.md` | `scenarios/life-body-batch-05.md` (LB-S01–S16) | [review-exports/life-body-batch-05-review.md](review-exports/life-body-batch-05-review.md) | Ready for high-level external review, normalized 2026-09-22 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | `knowledge-agency/perception.md`, `knowledge-agency/knowledge-information.md`, `knowledge-agency/agency-decision.md` | `scenarios/knowledge-agency-batch-06.md` (KA-S01–S20) | [review-exports/knowledge-agency-batch-06-review.md](review-exports/knowledge-agency-batch-06-review.md) | PASS — ready to freeze |
-| Batch 07 (Capability/Progression/Conflict) | `capability-progression/capability-progression.md`, `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md` | `scenarios/capability-progression-batch-07.md` (CP-S01–S16) | [review-exports/capability-progression-batch-07-review.md](review-exports/capability-progression-batch-07-review.md) | Ready for high-level external review |
+| Batch 07 (Capability/Progression/Conflict) | `capability-progression/capability-progression.md`, `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md` | `scenarios/capability-progression-batch-07.md` (CP-S01–S17) | [review-exports/capability-progression-batch-07-review.md](review-exports/capability-progression-batch-07-review.md) | PASS — ready to freeze |
 
 ## Links to current review batches
 

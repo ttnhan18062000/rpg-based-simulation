@@ -8,11 +8,14 @@ tags: [architecture, world, content]
 
 # Scenario Bank: Capability / Progression / Conflict (Batch 07)
 
-**Purpose/scope.** Sixteen scenarios used to pressure-test the Capability/Progression,
+**Purpose/scope.** Seventeen scenarios used to pressure-test the Capability/Progression,
 Learning/Adaptation, and Conflict/Combat rule families in
 `capability-progression/capability-progression.md`, `learning-adaptation.md`, and
-`conflict-combat.md`, per `tmp/world-rule-batch-7-ext-ai.md`. Covers all sixteen required seed
-probes from that instruction's §13.
+`conflict-combat.md`, per `tmp/world-rule-batch-7-ext-ai.md` and its 2026-09-22 follow-up
+(`tmp/world-rule-batch-7-followup-ext-ai.md`). Covers all sixteen required seed probes from the
+original instruction's §13, plus one further probe the follow-up required (CP-S17, Non-Combat
+Lived Experience); CP-S15 (Ordinary Creature → Regional Threat) was deepened in place per the
+follow-up's own explicit preference, rather than duplicated as a second scenario.
 
 Scoring uses the same vocabulary as prior batches: **covered** / **partially covered** /
 **blocked** / **revealed missing rule** / **revealed contradiction**, against current
@@ -25,36 +28,39 @@ repository behavior, not the ideal design.
 An entity repeatedly performs a meaningful activity through a valid learning/adaptation
 process; capability improves.
 
-- **Rules invoked:** PROG-01, LEARN-02.
+- **Rules invoked:** PROG-01, LEARN-01.
 - **Result: partially covered — the general claim holds only for combat/quest success, not for
-  "practice" in the sense the probe names.** Repeated *success* (kills, completed quests) does
-  produce capability via XP/Level (PROG-01/PROG-02). Repeated *practice* specifically —
-  deliberate, non-combat skill exercise — has no live path at all (`TRAIN_SKILL`'s unreachable
-  opportunity generation, `capability-progression.md`'s own confirmed MISSING finding). The
-  probe is covered under a substituted mechanism (combat success), not under practice itself.
+  "practice" in the sense the probe names.** LEARN-01 permits practice to be declared as a
+  capability-affecting experience-type; this repository has not declared it as one. Repeated
+  *success* (kills, completed quests) does produce capability via XP/Level (PROG-01/PROG-02).
+  Repeated *practice* specifically — deliberate, non-combat skill exercise — has no live path
+  at all (`TRAIN_SKILL`'s unreachable opportunity generation, `capability-progression.md`'s own
+  confirmed MISSING finding). The probe is covered under a substituted mechanism (combat
+  success), not under practice itself.
 
 ## CP-S02 — Repetition without learning
 
 The same trivial action is repeated with no meaningful new challenge or information; progression
 eventually stops or remains negligible.
 
-- **Rules invoked:** PROG-05, LEARN-02.
+- **Rules invoked:** PROG-05, LEARN-01.
 - **Result: revealed missing rule — the opposite of what the probe expects to find.** This
   repository has no mechanism that makes trivial repetition stop or diminish: repeatedly
   defeating the same trivial opponent grants the identical, undiminished XP every time
   (`defender.identity.evolution_level * classification.xp_multiplier`, no repeat-count or
-  difficulty-mismatch adjustment). PROG-05's own Rule states that a counterforce is a legitimate
-  design choice, not a requirement — but this repository's own choice is to have none, and a
+  difficulty-mismatch adjustment). PROG-05's own Rule requires a *declared* scaling/limiting/
+  counterforce stance (which may legitimately be "none") — but this repository's own combat-XP
+  source declares no stance at all, an accidental default rather than a stated choice, and a
   documentation claim of a bound (`max_xp_per_tick`) does not match the actual implementation.
-  Scored as revealing a confirmed gap, not a rule violation — PROG-05 permits either shape;
-  this repository picked the unbounded one.
+  Scored as revealing a confirmed gap against PROG-05's own "must declare, never accidentally
+  unlimited" requirement, not against a rule that merely permits either shape.
 
 ## CP-S03 — Failure teaches
 
 An entity attempts a difficult action, fails, gains information/experience, and later capability
 changes.
 
-- **Rules invoked:** LEARN-01, LEARN-02, Inherited (CAUSE-01).
+- **Rules invoked:** LEARN-01, Inherited (CAUSE-01).
 - **Result: partially covered — failure teaches epistemically, not capability-wise.**
   `CausalAttributionService.attribute()` fires exactly on qualifying failure events
   (`combat_loss`, `failed_search`, `failed_craft`, `party_abandoned`) and produces a real
@@ -113,11 +119,11 @@ Injury, training, equipment, or adaptation changes capability; Level is unchange
 
 An experienced fighter is injured; persistent impairment follows; some capability decreases.
 
-- **Rules invoked:** PROG-04, Inherited (BODY-04/06).
+- **Rules invoked:** Inherited (PROG-04, BODY-04/06).
 - **Result: covered — reuses Life/Body's own evidence directly.** `WoundState`/`ScarState`
   penalties (`atk_penalty`/`def_penalty`/`speed_penalty`/`max_hp_penalty`) are real, persistent,
   and read directly into combat-stat recalculation — a genuine capability regression, distinct
-  from any identity or history change (PROG-04's own claim).
+  from any identity or history change (PROG-04's own claim, now Inherited).
 
 ## CP-S09 — Conflict without combat
 
@@ -184,31 +190,58 @@ An ordinary entity becomes unusually capable; other entities begin responding di
   `ecology.py`/`creature_territory.py`/`boss.py`/`calamity.py` are real but mostly hardcoded to
   specific kind strings, not a general function of growing capability.
 
-## CP-S15 — Ordinary creature → regional threat (flagship, schematic)
+## CP-S15 — Ordinary creature → regional threat, and significance without HERO role (flagship, schematic — deepened 2026-09-22 per follow-up)
 
 An ordinary creature survives encounters, adapts, gains capability; territory/conflict
 consequences increase; other entities begin reacting. Not scripted — asked whether current
-Rules permit this trajectory causally.
+Rules permit this trajectory causally. **Deepened per the follow-up review's own explicit
+instruction** to distinguish two, easily-conflated things: a *generic* reaction to the
+creature's *kind* or the *raw fact* of a threat existing in a region, versus a reaction to
+*this specific historied individual* — recognizing that this particular creature, by its own
+individual history, is the source of the danger.
 
 - **Rules invoked:** PROG-06, PROG-07, Inherited (TRANS-01/ID-03, the evolution-as-
   transformation entry).
 - **Result: partially covered — the trajectory is causally *possible* through real channels,
-  but not yet a clean, unified pipeline.** Survival/adaptation is real (`EvolutionSystem`'s
-  level-threshold-triggered kind change, TRANS-01-compliant); gaining capability is real
-  (PROG-01/02/03); territory/conflict consequences increasing is real but narrow
-  (`record_kill()`'s retaliation pressure, `creature_territory.py`'s per-kind maturity rate);
-  "other entities begin reacting" holds for the region generally (retaliation pressure raises
-  danger signals other entities' own scarcity/migration/threat-avoidance logic already reads,
-  per Batch 05's ECOL-04) but does not hold for *named-individual* recognition of this specific
-  creature's own growing significance — that channel (`LegendFact`/`FameState`) is real but
-  role-gated to HERO entities only. The current Rules permit the trajectory; the current
-  repository realizes about half of it for a non-HERO creature specifically.
+  but the two reaction-types the deepened probe distinguishes are realized very unevenly.**
+  Survival/adaptation is real (`EvolutionSystem`'s level-threshold-triggered kind change,
+  TRANS-01-compliant); gaining capability is real (PROG-01/02/03). **Generic reaction (real,
+  confirmed):** territory/conflict consequences increasing is real but narrow
+  (`record_kill()`'s flat, capability-agnostic retaliation pressure; `creature_territory.py`'s
+  per-*kind* maturity rate) — this is a reaction to the *fact* of danger/kind in a region, never
+  to a specific individual's own identity. Other entities' own scarcity/migration/threat-
+  avoidance logic (Batch 05's ECOL-04) reads exactly this generic signal. **Reaction to this
+  specific historied individual (confirmed MISSING for non-HERO entities):** checked directly —
+  no mechanism lets any entity, or the world's own tracked state, identify *this particular*
+  evolved creature (by its own stable identity, not its kind-string) as the specific cause of
+  increased danger, the way `LegendFact`/`FameState` tracks a named HERO's own fame from
+  `entity_death`/`quest_completed` events. A non-HERO creature that survives a dozen encounters
+  and grows dangerous produces exactly the same generic `record_kill()`/kind-branch signal as
+  one that has never fought before — its own individual history is not the thing being reacted
+  to, only its current kind/behavior is. The current Rules permit the full trajectory,
+  including individual-level recognition; the current repository realizes only the generic
+  half, and only for HERO entities does the individual-recognition half exist at all.
+
+## CP-S17 — Non-combat lived experience (added 2026-09-22 per follow-up)
+
+An ordinary entity has repeated, meaningful environmental, social, or practical experience,
+through a declared adaptation/learning process; a durable capability change follows.
+
+- **Rules invoked:** LEARN-01, PROG-01, Inherited (CAUSE-01).
+- **Result: revealed missing rule — a legitimate MISSING result, not a rule violation.**
+  LEARN-01 explicitly keeps this outcome open (an experience's capability effect may be
+  declared for any experience-type a world chooses); this repository has declared no such
+  mechanism for environmental, social, or practical experience specifically — only combat/quest
+  success feeds capability (see `learning-adaptation.md`'s own Repository Findings). This probe
+  exists specifically to confirm the target Rule Catalog does not accidentally define
+  progression as combat/quest XP only — LEARN-01/PROG-01 confirm it does not; this repository's
+  own current implementation simply has not exercised the wider permission yet.
 
 ## CP-S16 — Loss of capability without loss of history
 
 A legendary fighter ages or is injured; capability declines; historical significance persists.
 
-- **Rules invoked:** PROG-04, Inherited (LIFE-03, HP-01).
+- **Rules invoked:** Inherited (PROG-04, LIFE-03, HP-01).
 - **Result: covered for the injury half; MISSING for the aging half — recorded honestly rather
   than assumed symmetric.** Injury-driven capability decline is real (`WoundState`/`ScarState`,
   CP-S08's own evidence) and, per PROG-04/LIFE-03/HP-01, never touches the fighter's own
@@ -225,16 +258,27 @@ A legendary fighter ages or is injured; capability declines; historical signific
 ## Cross-batch note
 
 CP-S02's and PROG-05's own finding (no counterforce against repeated-trivial-kill farming,
-including a confirmed documentation/implementation mismatch around `max_xp_per_tick`) is this
-batch's single most load-bearing discovery, on par with Batch 05's ECOL-03/BODY-05 and
-Batch 06's own CONFLICTING omniscience finding. CP-S14/S15's own finding (progression's
-world-reaction channel is real but narrow and mostly capability-agnostic) is the batch
-instruction's own explicitly "especially important" question, answered honestly as partial
-rather than forced to a clean yes.
+including a confirmed documentation/implementation mismatch around `max_xp_per_tick`) remains
+this batch's single most load-bearing discovery, on par with Batch 05's ECOL-03/BODY-05 and
+Batch 06's own CONFLICTING omniscience finding. CP-S15's own deepened finding (per the
+2026-09-22 follow-up review) is the batch instruction's own explicitly "especially important"
+question, now sharpened rather than merely answered partially: the *generic* reaction to a
+creature's kind or the raw fact of danger is real and confirmed; the reaction to *this specific
+historied individual* is confirmed MISSING for any non-HERO entity. This distinction — generic
+kind/threat reaction versus reaction to a specific historied individual — is central to the
+project's own vision and is preserved prominently, not softened, by this follow-up.
 
 CP-S11's confirmation that `TacticalDecisionSystem`'s live targeting already routes through
-`PerceptionGate` (CONFLICT-02's own evidence) is a genuinely positive counter-example to
-Batch 06's CONFLICTING findings elsewhere — not every decision path in this repository bypasses
-perception, and this batch's own investigation (per its §15's explicit instruction to verify
-current behavior rather than assume) confirms that directly rather than assuming Batch 06's
-findings generalize everywhere.
+`PerceptionGate` (the Inherited perception/knowledge entry in `conflict-combat.md`, originally
+drafted as CONFLICT-02) is a genuinely positive counter-example to Batch 06's CONFLICTING
+findings elsewhere — not every decision path in this repository bypasses perception, and this
+batch's own investigation (per its §15's explicit instruction to verify current behavior
+rather than assume) confirms that directly rather than assuming Batch 06's findings generalize
+everywhere. The 2026-09-22 follow-up review reclassified this finding's own Rule
+(CONFLICT-02) as Inherited rather than new — the finding itself, and its importance, are
+unchanged.
+
+CP-S17 (added per the follow-up) confirms LEARN-01's own revised, genuinely open target
+semantics do not accidentally reduce to "progression is combat/quest XP only" — this
+repository's own current implementation happens to be narrow, but the Rule Catalog's own target
+design is not.

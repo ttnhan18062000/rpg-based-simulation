@@ -16,78 +16,128 @@ every batch.
 
 ## Batch scope
 
-The fourth domain-facing (Milestone B) batch, and a high-priority one — how lived experience
-becomes durable capability change, how power is plural rather than one stat, and how conflict
-creates consequences without reducing progression to bigger numbers. Three rule families:
-Capability/Progression, Learning/Adaptation, Conflict/Combat. Files live under
-`capability-progression/`, per the batch instruction's own directory suggestion — no split or
-merge was found necessary beyond the three families already proposed, though
-Learning/Adaptation ended up a genuinely small (2 Domain Rule) family rather than a padded one,
-per the batch instruction's own explicit "a family with 2 genuine Rules is valid" allowance.
-Built directly with the five-category admission discipline Batches 05/06 established.
+The fourth domain-facing (Milestone B) batch — how lived experience becomes durable capability
+change, how power is plural rather than one stat, and how conflict creates consequences
+without reducing progression to bigger numbers. Three rule families: Capability/Progression,
+Learning/Adaptation, Conflict/Combat. Drafted 2026-09-22, then revised the same day per a
+targeted Rule-admission and semantic cleanup (`tmp/world-rule-batch-7-followup-ext-ai.md`) —
+see "Follow-up revision summary" below.
+
+## Follow-up revision summary (2026-09-22)
+
+A targeted Rule-admission and semantic cleanup was applied without redesigning the batch or
+discarding any repository finding:
+
+1. **Repository/evaluation language removed from Domain Rule statements.** PROG-01, PROG-02,
+   PROG-05, PROG-06 all originally stated repository facts ("this repository has N mechanisms,"
+   "must be checked/verified against the repository's own implementation," "a documentation
+   claim... does not match") inside their own quoted Rule text. Each was rewritten to state only
+   the target semantic core; every repository fact moved to that Rule's own Repository
+   evidence/Findings, where it belongs.
+2. **PROG-04 reclassified from a Domain Rule to Inherited.** "Capability loss ≠ identity loss ≠
+   history erasure" is fully covered by combining Batch 01/05's LIFE-03/HP-01 (death/identity
+   persistence) with Batch 01/05's BODY-04/06 (injury durably reduces capability) — no
+   genuinely new progression-specific semantic content survives the combination. Importance of
+   a distinction is not, by itself, grounds for a local Rule ID.
+3. **Learning/Adaptation's two original Rules reassessed.** The original LEARN-01 ("this
+   repository's learning is epistemic, not capability") and LEARN-02 ("only success grants XP
+   here") were primarily repository findings, not target world laws. LEARN-02 retired entirely
+   to Repository Findings — the follow-up review explicitly required not establishing
+   "success-only progression" as a law merely because current code behaves that way. LEARN-01
+   was rewritten into a genuinely normative statement (an experience's epistemic and capability
+   effects are distinct, independently-declared outputs) that keeps the target design open to
+   practice → capability, failure → learning, exposure → adaptation, or success → progression,
+   whichever a world declares. This family now has exactly one genuine Domain Rule.
+4. **CONFLICT-02 reclassified from a Domain Rule to Inherited.** The semantic requirement that
+   decisions must respect subject-local perception/knowledge is already fully established by
+   Batch 06 (PERC-01, KNOW-01, AGENCY-01, AGENCY-02). That live combat targeting correctly uses
+   `PerceptionGate` is real, valuable Repository evidence supporting that already-established
+   boundary, not a new Conflict-specific semantic claim. CONFLICT-01 survived unchanged.
+5. **Two progression probes added.** CP-S17 (Non-Combat Lived Experience — the repository may
+   legitimately return MISSING; the purpose is confirming the target Rule Catalog does not
+   accidentally define progression as combat/quest XP only). CP-S15 (Ordinary Creature →
+   Regional Threat) was deepened in place, rather than duplicated, to explicitly distinguish
+   generic reaction to a creature's kind/threat from reaction to this specific historied
+   individual — central to the project's own vision.
+6. **All major findings preserved prominently, not weakened**: combat XP farming without a
+   real counterforce; lived-history → capability progression is narrow; `TRAIN_SKILL` has no
+   producer; ordinary non-HERO significance tracking is missing; fame → followers conversion is
+   missing; capability changes that do exist have strong downstream consumers; Evolution kind
+   changes are causally live.
 
 ## Canonical files included
 
-- `capability-progression/capability-progression.md` (PROG-01–07)
-- `capability-progression/learning-adaptation.md` (LEARN-01–02)
-- `capability-progression/conflict-combat.md` (CONFLICT-01–02)
-- `scenarios/capability-progression-batch-07.md` (CP-S01–S16)
+- `capability-progression/capability-progression.md` (PROG-01, PROG-02, PROG-03, PROG-05,
+  PROG-06, PROG-07 — Domain Rules; PROG-04 — Inherited)
+- `capability-progression/learning-adaptation.md` (LEARN-01 — Domain Rule)
+- `capability-progression/conflict-combat.md` (CONFLICT-01 — Domain Rule)
+- `scenarios/capability-progression-batch-07.md` (CP-S01–S17)
 
 ## Rule admission accounting
 
 Per the standing admission discipline: a statement earns a new local Rule ID only if it adds or
-refines target world semantics beyond Rules already defined elsewhere. This batch's 25 total
-catalog entries break down as:
+refines target world semantics beyond Rules already defined elsewhere. Post-follow-up, this
+batch's 26 total catalog entries break down as:
 
-- **11 genuine Domain Rules**: PROG-01, PROG-02, PROG-03, PROG-04, PROG-05, PROG-06, PROG-07;
-  LEARN-01, LEARN-02; CONFLICT-01, CONFLICT-02.
-- **9 Inherited/Applied Foundational Rules** (direct reuse/reconfirmation, no new claim): in
-  `capability-progression.md` — foundational Capability (CAP-01–05), a real causal path
-  requirement (CAUSE-01), capability ≠ guaranteed success (CAP-01/AGENCY-04), injury/scars
-  reduce capability (BODY-04/06), ordinary transformation via valid trigger (TRANS-01/ID-03); in
-  `learning-adaptation.md` — the same causal-path requirement (CAUSE-01), restated at this
-  family's own point of use; in `conflict-combat.md` — combat outcomes are a real, differentiated
-  vocabulary (LIFE-01/02), Combat produces events while Life/Body owns bodily consequence
-  (BODY-07/OWN-02), capability ≠ guaranteed conflict outcome (CAP-01/AGENCY-04).
-- **5 Scope/Deferred Boundaries** (no world-semantic claim, only a deferral): major
-  supernatural transformation stays with Magic, later-domain power-conversion chains, no
-  universal progression architecture, in `capability-progression.md`; detailed conditioning/
-  habit/psychological modeling, in `learning-adaptation.md`; no universal conflict-resolution
+- **8 genuine Domain Rules**: PROG-01, PROG-02, PROG-03, PROG-05, PROG-06, PROG-07; LEARN-01;
+  CONFLICT-01.
+- **13 Inherited/Applied Foundational Rules** (6 original + 1 reclassified in
+  `capability-progression.md`; 1 original + 2 added in `learning-adaptation.md`; 3 original + 1
+  reclassified in `conflict-combat.md`): in `capability-progression.md` — capability loss ≠
+  identity/history loss (PROG-04, reclassified — LIFE-03, HP-01, BODY-04, BODY-06),
+  foundational Capability (CAP-01–05), a real causal path requirement (CAUSE-01), capability ≠
+  guaranteed success (CAP-01, AGENCY-04), injury/scars reduce capability (BODY-04, BODY-06),
+  ordinary transformation via valid trigger (TRANS-01, ID-03); in `learning-adaptation.md` — a
+  durable-change causal-bridge requirement (CAUSE-01), capability changes only through a
+  declared mechanism (this batch's own PROG-01), belief/knowledge changes only through a
+  declared path (KNOW-02); in `conflict-combat.md` — combat outcomes are a real, differentiated
+  vocabulary (LIFE-01, LIFE-02), Combat produces events while Life/Body owns bodily consequence
+  (BODY-07, OWN-02), capability ≠ guaranteed conflict outcome (CAP-01, AGENCY-04),
+  conflict/combat decisions must respect perception/knowledge (CONFLICT-02, reclassified —
+  PERC-01, KNOW-01, AGENCY-01, AGENCY-02).
+- **5 Scope/Deferred Boundaries** (unchanged by the follow-up): major supernatural
+  transformation stays with Magic, later-domain power-conversion chains, no universal
+  progression architecture, in `capability-progression.md`; detailed conditioning/habit/
+  psychological modeling, in `learning-adaptation.md`; no universal conflict-resolution
   framework, in `conflict-combat.md`.
 
-**Genuine new-Rule count for this batch: 11.** **Inherited/reused foundation count: 9 entries,
-citing 15 distinct foundational Rule IDs** (CAP-01, CAP-02, CAP-03, CAP-04, CAP-05, CAUSE-01,
-BODY-04, BODY-06, BODY-07, OWN-02, TRANS-01, ID-03, LIFE-01, LIFE-02, AGENCY-04).
+**Genuine new-Rule count for this batch: 8** (was 11 before the follow-up reclassified PROG-04
+and CONFLICT-02 to Inherited and retired LEARN-02 to Repository Findings while rewriting
+LEARN-01 into normative form). **Inherited/reused foundation count: 13 entries, citing 17
+distinct foundational Rule IDs** (CAP-01, CAP-02, CAP-03, CAP-04, CAP-05, CAUSE-01, BODY-04,
+BODY-06, BODY-07, OWN-02, TRANS-01, ID-03, LIFE-01, LIFE-02, LIFE-03, HP-01, AGENCY-04, PERC-01,
+KNOW-01, AGENCY-01, AGENCY-02 — 21 IDs, several cited more than once across entries).
 
 ## Rule Inventory
 
 | ID | Category | Short name | One-line semantic purpose | Status |
 |---|---|---|---|---|
-| PROG-01 | Domain Rule | Capability Change Traces to a Declared Mechanism, Plural | At least 5 independent, non-unified acquisition/loss mechanisms exist. | Accepted |
-| PROG-02 | Domain Rule | XP/Level's Real Consequence Must Be Verified | Materialized abstraction; checked, not assumed — real consequences confirmed. | Accepted |
+| PROG-01 | Domain Rule | Capability Change Traces to a Declared Mechanism, Plural | Different mechanisms may coexist without unification. | Accepted, revised |
+| PROG-02 | Domain Rule | XP/Level's Meaning Comes From Declared Consequences | Materialized abstractions; neither substitutes for what it represents. | Accepted, revised |
 | PROG-03 | Domain Rule | Capability ≠ Level, Bidirectionally Independent | Neither implies the other; confirmed both directions. | Accepted |
-| PROG-04 | Domain Rule | Capability Loss ≠ Identity Loss ≠ History Erasure | A real, distinct category; confirmed via injury/equipment, MISSING elsewhere. | Accepted |
-| PROG-05 | Domain Rule | Trivial-Repeat Progression Requires a Checked Counterforce | This repository has none for combat XP; a doc claim (`max_xp_per_tick`) doesn't match code. | Accepted (confirmed real gap) |
-| PROG-06 | Domain Rule | Progression Can Alter World Reaction, Checked Not Assumed | Real but narrow, mostly capability-agnostic channel confirmed. | Accepted (PARTIAL) |
-| PROG-07 | Domain Rule | Power Conversion Edges Are Specific, Never Automatic | Combat→fame real; fame→followers confirmed MISSING. | Accepted (PARTIAL) |
-| LEARN-01 | Domain Rule | This Repository's "Learning" Is Epistemic, Not Capability | Three independent mechanisms confirmed epistemic-only. | Accepted |
-| LEARN-02 | Domain Rule | Success ≠ Repetition/Failure for Progression Purposes | Only success grants XP here; failure/repetition feed only belief. | Accepted |
+| PROG-05 | Domain Rule | Repeatable Sources Must Declare Scaling/Limiting Semantics | Unlimited repeatability must not arise accidentally. | Accepted, revised |
+| PROG-06 | Domain Rule | Progression May Change World Reaction Through Declared Channels | Real but narrow channel confirmed as evidence. | Accepted, revised |
+| PROG-07 | Domain Rule | Power Conversion Edges Are Specific, Never Automatic | Combat→fame real; fame→followers confirmed MISSING. | Accepted |
+| LEARN-01 | Domain Rule | Epistemic and Capability Effects Are Distinct, Declared Outputs | Rewritten from a repository description into genuinely open target semantics. | Accepted, revised |
 | CONFLICT-01 | Domain Rule | Conflict Is Broader Than Combat | Resource contention resolves incompatible outcomes without a fight. | Accepted |
-| CONFLICT-02 | Domain Rule | Estimation ≠ Consideration; No Omniscient Shortcut | Live targeting confirmed perception-gated; richer pipeline confirmed INERT/OFF. | Accepted |
 
 ## Inherited Foundations Summary
 
 | Entry (as stated in its own file) | Foundational Rule(s) reused | File |
 |---|---|---|
+| Capability loss ≠ identity loss ≠ history erasure (formerly PROG-04) | LIFE-03, HP-01, BODY-04, BODY-06 | `capability-progression.md` |
 | Foundational Capability ≠ acquisition/loss mechanics | CAP-01–05 | `capability-progression.md` |
 | A durable consequence requires a real causal path | CAUSE-01 | `capability-progression.md` |
 | Capability does not guarantee success | CAP-01, AGENCY-04 | `capability-progression.md` |
 | Injury/scars are a real capability-reducing mechanism | BODY-04, BODY-06 | `capability-progression.md` |
 | Ordinary transformation is a valid Transformation instance | TRANS-01, ID-03 | `capability-progression.md` |
 | A durable change requires a real causal bridge | CAUSE-01 | `learning-adaptation.md` |
+| Capability changes only through a declared mechanism | PROG-01 (this batch) | `learning-adaptation.md` |
+| Belief/knowledge changes only through a declared path | KNOW-02 (Batch 06) | `learning-adaptation.md` |
 | Combat outcomes are a real, differentiated vocabulary | LIFE-01, LIFE-02 | `conflict-combat.md` |
 | Combat produces events; Life/Body owns bodily consequence | BODY-07, OWN-02 | `conflict-combat.md` |
 | Capability does not guarantee a favorable conflict outcome | CAP-01, AGENCY-04 | `conflict-combat.md` |
+| Conflict/combat decisions must respect perception/knowledge (formerly CONFLICT-02) | PERC-01, KNOW-01, AGENCY-01, AGENCY-02 | `conflict-combat.md` |
 
 ## Scenario Inventory
 
@@ -100,176 +150,165 @@ BODY-04, BODY-06, BODY-07, OWN-02, TRANS-01, ID-03, LIFE-01, LIFE-02, AGENCY-04)
 | CP-S05 | Level Up With Real Consequence | threshold → level → real change | Progression | Covered |
 | CP-S06 | Level With No Consumer (counter) | level increases → no consumer | Progression | Blocked (premise false here) |
 | CP-S07 | Capability Without Level | injury/equipment → capability, Level unchanged | Progression | Covered |
-| CP-S08 | Injury Causes Regression | injury → persistent impairment → decrease | Progression, Life/Body (inherited) | Covered |
+| CP-S08 | Injury Causes Regression | injury → persistent impairment → decrease | Progression (inherited), Life/Body (inherited) | Covered |
 | CP-S09 | Conflict Without Combat | contention → yield/loss → no fight | Conflict | Covered |
 | CP-S10 | Combat Does Not Guarantee Progression | combat occurs → no qualifying cause → unchanged | Progression | Covered |
 | CP-S11 | Combat, Defeat, Survival | fight → defeat → survives → later effect | Conflict/Combat (inherited) | Covered |
 | CP-S12 | Stronger Entity Still Loses | higher capability → context differs → loses | Conflict/Combat (inherited) | Covered |
 | CP-S13 | Power Conversion | wins → reputation → opportunity/follower | Progression | Partial |
 | CP-S14 | Progression Changes World Reaction | capable entity → others respond differently | Progression | Partial |
-| CP-S15 | Ordinary Creature → Regional Threat (flagship) | survive → adapt → capable → world reacts | Progression | Partial |
-| CP-S16 | Loss of Capability Without Loss of History | age/injury → decline → significance persists | Progression, Life/Body & History (inherited) | Partial (injury yes, aging MISSING) |
+| CP-S15 | Ordinary Creature → Regional Threat + Significance Without HERO Role (deepened) | survive → adapt → capable → generic vs. individual reaction | Progression | Partial, sharpened |
+| CP-S16 | Loss of Capability Without Loss of History | age/injury → decline → significance persists | Progression (inherited), Life/Body & History (inherited) | Partial (injury yes, aging MISSING) |
+| CP-S17 | Non-Combat Lived Experience (added) | environmental/social/practical experience → declared mechanism → capability change | Learning, Progression | Revealed gap (legitimate MISSING) |
 
 ## Coverage Summary
 
 **Capability/Progression**
 - plural, non-unified acquisition/loss mechanisms — CP-S01, CP-S07
-- XP/Level materialized-abstraction, real consequence checked — CP-S05, CP-S06
+- XP/Level materialized-abstraction, meaning from declared consequences — CP-S05, CP-S06
 - capability ≠ Level, both directions — CP-S07
-- capability loss ≠ identity/history loss — CP-S08, CP-S16
-- trivial-repeat progression requires a checked counterforce (confirmed absent) — CP-S02, CP-S10
-- progression → world reaction, real but narrow — CP-S14, CP-S15
+- capability loss ≠ identity/history loss (inherited) — CP-S08, CP-S16
+- repeatable sources must declare scaling/limiting semantics (confirmed undeclared here) —
+  CP-S02, CP-S10
+- progression → world reaction through declared channels (real but narrow) — CP-S14, CP-S15
 - power conversion edges are specific — CP-S13
 
 **Learning/Adaptation**
-- learning is epistemic, not capability — CP-S03, CP-S04
-- success ≠ repetition/failure for progression — CP-S01, CP-S02, CP-S03
+- epistemic and capability effects are distinct, declared outputs — CP-S01, CP-S02, CP-S03,
+  CP-S04, CP-S17
 
 **Conflict/Combat**
 - Conflict broader than Combat — CP-S09
-- estimation ≠ consideration, perception-gated live targeting confirmed — CP-S11, CP-S12
-- combat outcome vocabulary, capability ≠ guaranteed outcome — CP-S10, CP-S11, CP-S12
+- perception/knowledge-respecting decisions (inherited), capability ≠ guaranteed outcome
+  (inherited) — CP-S10, CP-S11, CP-S12
 
 ## Deferred Semantics
 
-- Major supernatural transformation (human → vampire) stays with Magic — ordinary
-  progression-driven kind-change (EvolutionSystem) is the only transformation content this
-  batch touches, and only as an Inherited instantiation of TRANS-01/ID-03.
+- Major supernatural transformation (human → vampire) stays with Magic.
 - Later-domain power-conversion chains (economic, social, political, institutional,
   territorial, magical) stay deferred to their own future domain batches.
-- No universal progression architecture (`UniversalProgressionSystem`, `BasePower`,
-  `GenericExperience`, `UniversalSkill`) is introduced.
+- No universal progression architecture is introduced.
 - Detailed conditioning/habit/psychological modeling beyond what this repository already
   evidences is not introduced.
-- No universal Conflict-resolution framework covering every imaginable contest type
-  (competition, chase, coercion, territorial dispute as named mechanisms) is built.
+- No universal Conflict-resolution framework covering every imaginable contest type is built.
 
 ## Cross-domain findings
 
-- Capability/Progression ↔ Causality (Batch 01): PROG-05's counterforce question and the
-  Learning/Adaptation family's own causal-bridge requirement both reuse CAUSE-01 directly
-  rather than restating it — the same "foundational Rules predict most of a domain's own shape"
-  pattern every prior domain-facing batch has found.
-- Capability/Progression ↔ Ecology/Population (Batch 05): PROG-06's own finding (progression's
-  world-reaction channel is real but narrow, mostly capability-agnostic) echoes ECOL-03's own
-  individual↔aggregate causal-loop gap at a different scale — a real, general pattern in this
-  repository where an individual-level change has a confirmed but narrow path to aggregate/
-  world-level consequence, not a fully-closed loop.
-- Conflict/Combat ↔ Perception/Agency (Batch 06): CONFLICT-02 is this batch's own most
-  significant cross-cutting finding, and it is a genuinely positive one — `TacticalDecisionSystem`'s
-  live targeting is confirmed to already route through `PerceptionGate`, a real counter-example
-  to Batch 06's own two CONFLICTING findings elsewhere. Not every decision path in this
-  repository bypasses perception; this batch's own investigation (per its §15's explicit
-  instruction to verify current behavior) confirms that directly.
-- Learning/Adaptation ↔ Perception/Knowledge (Batch 06): LEARN-01 resolves a genuine ambiguity
-  in the batch's own conceptual grammar by confirming every "learning-shaped" mechanism in this
-  repository sits on the Knowledge/Memory side of Batch 06's own boundary, never the Capability
-  side.
-- Capability/Progression ↔ History/Provenance (Batch 05's Milestone A completion pass):
-  PROG-07's fame→bias conversion edge and CP-S16's injury-vs-aging finding both reuse
-  `LegendFact`/`FameState`/HP-01 evidence directly.
+- Capability/Progression ↔ Identity/History-Provenance/Body-Condition: the reclassified
+  PROG-04 entry is the cleanest example this batch produced of the admission discipline
+  working correctly on a second pass — a claim that felt locally important on first draft, but
+  that a stricter reading showed was fully covered by combining two already-established
+  boundaries.
+- Learning/Adaptation ↔ Perception/Knowledge (Batch 06) ↔ Capability/Progression: LEARN-01's
+  revised form sits exactly at the seam between KNOW-02 (belief changes only via declared path)
+  and PROG-01 (capability changes only via declared mechanism) — its own genuine contribution is
+  stating that these are two distinct possible *outputs* of one experience, not a third
+  independent claim about either side.
+- Conflict/Combat ↔ Perception/Agency (Batch 06): the reclassified CONFLICT-02 entry preserves
+  this batch's own most significant cross-cutting finding (live combat targeting is already
+  perception-gated, a positive counter-example to Batch 06's two CONFLICTING findings) as
+  Repository evidence supporting an already-established Rule, exactly where that evidence
+  belongs once the underlying semantic claim is recognized as Batch 06's own.
+- Capability/Progression ↔ Ecology/Population (Batch 05) ↔ History/Provenance: CP-S15's own
+  deepened finding (generic kind/threat reaction vs. reaction to a specific historied
+  individual) is this batch's own sharpened version of the "individual↔aggregate causal loop"
+  pattern ECOL-03 first surfaced — here specialized to the question of *named* recognition
+  rather than aggregate population counts.
 
-**Explicit call-out — genuine new Domain Rule count:** **11.**
+**Explicit call-out — genuine new Domain Rule count:** **8** (was 11 before the follow-up).
 
-**Explicit call-out — semantic meaning of XP and Level:** XP (`identity.evolution_points`) is
-canonical, accumulated simulation state, granted only via the conservation path from combat/
-quest success — never diegetically implied to be known by every subject. Level
-(`identity.evolution_level`) is a materialized threshold-crossing abstraction whose crossing
+**Explicit call-out — semantic meaning of XP and Level:** XP and Level are materialized
+abstractions whose meaning comes from their declared world consequences; neither substitutes
+for the underlying capability or history it represents (PROG-02, revised). This repository's
+own XP is granted only via the conservation path from combat/quest success; Level's crossing
 triggers real, verified downstream consequences (AP grant, skill unlocks, a flat HP bump, stat
-recalculation) — confirmed, not assumed (PROG-02).
+recalculation) — confirmed as Repository evidence, not asserted by the Rule itself.
 
 **Explicit call-out — whether progression currently derives from lived history:** **Only
-narrowly.** Combat/quest success (a lived event) drives XP directly. Most other named
-lived-history categories (near-death survival beyond `REBIRTH`'s own generation bump,
-environmental exposure, social experience, leadership, long-term practice, injury as a driver
-of anything beyond its own direct capability penalty) produce no capability change at all —
-confirmed MISSING (PROG-04's own evidence).
+narrowly.** Combat/quest success drives XP directly. Most other named lived-history categories
+produce no capability change at all — confirmed MISSING (see Repository Findings), and CP-S17
+confirms this narrowness is a fact about this repository, not a limitation of the target
+Rules, which remain open to a wider set of experience-types (LEARN-01).
 
 **Explicit call-out — whether capability changes have real downstream consumers:** **Yes,
 richly, for the capability changes that do occur.** `recalculate_combat_stats()` is triggered
-by every relevant `IdentityUpdate`/`AttributeUpdate`/`EquipmentUpdate`, and its output (atk/def/
-hp/evasion/readiness_speed/move_cost/tactical role) feeds directly into combat resolution,
-tactical targeting, and adventure-route scoring.
+by every relevant `IdentityUpdate`/`AttributeUpdate`/`EquipmentUpdate`, feeding directly into
+combat resolution, tactical targeting, and adventure-route scoring.
 
 **Explicit call-out — whether Evolution/kind changes are causally live or inert:** **Live,
-richly so.** `entity.kind` (mutated by `EvolutionSystem._get_evolved_kind()`) is read across at
-least eight distinct modules (`world/ecology.py`, `world/creature_territory.py`,
-`world/boss.py`, `world/calamity.py`, `world/threat.py`, `domains/adventure/scoring.py`,
-`engine/tactical.py`, `engine/combat.py`) — not inert, though PROG-06's own finding notes most
-of these reads are hardcoded kind-string branches rather than a general capability-scaled
-function.
+richly so.** `entity.kind` is read across at least eight distinct modules — confirmed, not
+inert, though most of those reads are hardcoded kind-string branches rather than a general
+capability-scaled function.
 
 **Explicit call-out — whether conflict consequences propagate beyond combat:** **Yes, for one
-real, narrow channel.** `ThreatService.record_kill()` raises regional `retaliation_pressure`
-per kill (any kill, capability-agnostic), which other entities' own scarcity/migration/threat-
-avoidance logic (ECOL-04, Batch 05) already reads. No named-individual, capability-scaled
-propagation channel exists for non-HERO entities specifically (PROG-06's own confirmed gap).
+real, narrow, generic channel** (`ThreatService.record_kill()`'s retaliation pressure) —
+**but not for named-individual recognition**, per CP-S15's own deepened finding.
 
 **Explicit call-out — whether repeated trivial activity can create unbounded progression:**
 **Yes, confirmed, for combat XP specifically — the single most load-bearing finding in this
-batch.** No diminishing-returns, repeat-count, or difficulty-mismatch adjustment exists on the
-XP-reward formula; a documentation claim of a `max_xp_per_tick` bound does not match the actual
-implementation, which has none (PROG-05).
+batch, unchanged by the follow-up.** No diminishing-returns, repeat-count, or difficulty-
+mismatch adjustment exists on the XP-reward formula; PROG-05's own revised Rule requires a
+*declared* stance, and this repository's combat-XP source declares none — an accidental
+default, not a stated design choice.
 
 **Explicit call-out — whether capability loss/regression exists:** **Yes, for injury and
-equipment specifically; MISSING for skill decay, aging, and most other named loss categories.**
-See PROG-04, CP-S16.
+equipment specifically (now an Inherited entry, PROG-04); MISSING for skill decay, aging, and
+most other named loss categories.** See CP-S16.
 
-**Explicit call-out — whether ordinary entities can causally become historically significant:**
-**Partially — this is the batch instruction's own "especially important" question, and the
-honest answer is not a clean yes.** The trajectory (survive → adapt → gain capability →
-territory/conflict consequences increase → other entities react) is causally *possible* through
-real channels (`EvolutionSystem`'s kind-transformation, `record_kill()`'s retaliation pressure,
-`entity.kind`-keyed world-system branches), but this repository's own individual-significance-
-tracking mechanism (`LegendFact`/`FameState`) is role-gated to HERO entities only — an ordinary,
-non-HERO creature that becomes locally dangerous is not tracked or reacted to *by name* the way
-a HERO's fame is. The current Rules permit the full trajectory; the current repository realizes
-roughly half of it for a non-HERO creature specifically (PROG-06, CP-S15).
+**Explicit call-out — whether ordinary entities can causally become historically
+significant:** **Sharpened by the follow-up review into two distinct halves.** A *generic*
+reaction to a creature's kind or the raw fact of a threat is real and confirmed
+(`record_kill()`'s retaliation pressure, `entity.kind`-keyed branches). A reaction to *this
+specific historied individual* — the world or another entity recognizing that this particular
+creature, by its own lived history, is the source of the danger — is confirmed **MISSING** for
+any non-HERO entity; only `LegendFact`/`FameState` provides this for HERO-role entities. The
+current Rules permit the full trajectory, including individual recognition; the current
+repository realizes only the generic half for ordinary creatures (CP-S15).
 
 ## Repository Findings
 
 No fully CONFLICTING finding (an active violation of a target Rule) was identified in this
 batch's own new territory — the one CONFLICTING-adjacent question this batch was specifically
 asked to check (§15's Agency-integration requirement) resolved to a **positive, SUPPORTED**
-counter-example instead (live combat targeting is perception-gated), not a violation. Findings
-below use the same CONFLICTING/INERT-OFF/MISSING distinction Batch 06's own follow-up
-established, applied honestly rather than forced to produce a CONFLICTING result where none was
-found.
+counter-example instead (live combat targeting is perception-gated), preserved as Repository
+evidence under the reclassified Inherited entry in `conflict-combat.md`.
 
 **SUPPORTED (1 finding, notably positive):**
 1. `TacticalDecisionSystem`'s live hostile-candidate gathering routes through
-   `PerceptionGate.can_perceive()` before any neighbor becomes target-eligible — a genuine,
-   live counter-example to Batch 06's own two CONFLICTING findings elsewhere. Not every
-   decision path in this repository bypasses perception.
+   `PerceptionGate.can_perceive()` before any neighbor becomes target-eligible.
 
 **INERT/OFF (2 findings):**
-2. The declared `combat_engagement` domain (`OpponentPerceptionService`/`CombatLearning`/
-   `EngagementRiskEvaluator`, specified in detail in `docs/mechanics/04_strategic_cognition.md`
-   §13) never runs in production — gated behind `ENABLE_COMBAT_ENGAGEMENT`, default OFF.
-3. `BreakthroughService`'s bonus-application path is real and live, but the granting path
-   (`IdentityUpdate(breakthroughs_add=...)`) is never invoked in production outside tests.
+2. The declared `combat_engagement` domain never runs in production
+   (`ENABLE_COMBAT_ENGAGEMENT` default OFF).
+3. `BreakthroughService`'s granting path is never invoked in production outside tests.
 
-**MISSING (6 findings):**
-4. No counterforce exists against repeated-trivial-kill farming for combat XP — the most
-   load-bearing finding in this batch (PROG-05).
-5. `TRAIN_SKILL` (practice) is an unreachable route family — never generated as an opportunity
-   by any producer.
+**MISSING (7 findings, all preserved prominently per the follow-up's own explicit
+instruction):**
+4. No counterforce (diminishing returns, difficulty-mismatch scaling, or a real per-tick cap)
+   exists against repeated-trivial-kill farming for combat XP — the most load-bearing finding
+   in this batch.
+5. `TRAIN_SKILL` (practice) is an unreachable route family.
 6. No capability-improving mechanism exists for most named lived-experience categories
    (environmental exposure, social experience, leadership, long-term practice, near-death
-   survival beyond `REBIRTH`'s own lifecycle fact).
+   survival beyond `REBIRTH`'s own lifecycle fact) — lived-history → capability progression is
+   narrow.
 7. No surrender, capture, or forced-displacement-as-a-combat-outcome exists.
 8. No fame-to-followers (or any concrete recruitment) conversion edge exists.
-9. No general, capability-scaled world-reaction/individual-significance-tracking channel
-   exists for non-HERO entities (PROG-06/CP-S15's own confirmed partial finding).
+9. **No mechanism recognizes a specific non-HERO individual's own growing significance** —
+   only generic kind/threat-level reaction exists for ordinary creatures; `LegendFact`/
+   `FameState`'s individual-tracking channel is role-gated to HERO entities only. Sharpened by
+   the 2026-09-22 follow-up's own deepened CP-S15.
+10. Success-only progression (only combat/quest success grants capability-relevant XP in this
+    repository) is a repository fact, not a target-semantic requirement — LEARN-01's own
+    revised Rule keeps the target design open to other experience-types.
 
 **Documentation/implementation mismatch (not itself a Rule-conformance finding):**
-10. `docs/engine/supported_progression_surface_phase5.md` claims "progression is bounded by
-    `max_xp_per_tick`" — no such symbol, constant, or check exists anywhere in `src/`.
+11. `docs/engine/supported_progression_surface_phase5.md` claims progression is bounded by
+    `max_xp_per_tick` — no such symbol, constant, or check exists anywhere in `src/`.
 
 **Naming near-collision (not a semantic overlap):**
-11. `src/world/displacement.py` exists but is a calamity-driven, World-Evolution-domain
-    population-relocation mechanism, unrelated to any combat-defeat outcome — worth naming so a
-    future author isn't misled by the shared vocabulary.
+12. `src/world/displacement.py` is a calamity-driven, World-Evolution-domain population-
+    relocation mechanism, unrelated to any combat-defeat outcome.
 
 Key evidence, all confirmed by direct code/doc inspection: `docs/mechanics/
 attribute_progression_contract.md`, `docs/engine/supported_progression_surface_phase5.md`,
@@ -282,26 +321,29 @@ attribute_progression_contract.md`, `docs/engine/supported_progression_surface_p
 
 ## Owner-attention decisions
 
-- **Highest priority.** Whether a counterforce (diminishing returns, risk/difficulty scaling,
-  or a real per-tick cap) should be added to combat XP rewards — a confirmed, real gap, and a
-  documentation claim that does not match current behavior.
-- Whether `TRAIN_SKILL` should gain a real opportunity producer and a real capability grant on
-  arrival.
+- **Highest priority.** Whether a counterforce should be added to combat XP rewards — a
+  confirmed, real gap, and a documentation claim that does not match current behavior.
 - Whether an ordinary (non-HERO) entity's individually-growing significance should gain its own
-  tracking mechanism, closing PROG-06's own confirmed gap.
+  tracking mechanism, closing the sharpened CP-S15 gap.
+- Whether `TRAIN_SKILL` should gain a real opportunity producer and a real capability grant.
 - Whether fame/reputation should gain a real follower/recruitment conversion edge.
-- Whether the declared `combat_engagement` domain should be turned on, and whether its live
-  perception-gate fallback (`try/except: pass`, permissive) should instead fail closed.
+- Whether the declared `combat_engagement` domain should be turned on, and whether its
+  permissive perception-gate fallback should instead fail closed.
+- Whether this repository should ever declare a non-success experience-type (failure,
+  repetition, exposure) as capability-affecting — LEARN-01's own Rule leaves this fully open.
 
 ## Candidate disposition
 
-Eleven Domain Rules were drafted across three families (7 Capability/Progression, 2 Learning/
-Adaptation, 2 Conflict/Combat) — **all 11 accepted, 0 rejected, 0 split, 0 merged.** No target
-rule count was set in advance, per the batch instruction's own explicit requirement — the count
-emerged entirely from what genuinely earned a new local Rule ID under the admission test.
-Nine further entries were identified as Inherited/Applied Foundational Rules and five as
-Scope/Deferred Boundaries — none of these required a new Rule ID, and none represents lost
-work: every one carries its own evidence and cross-domain link.
+Eight Domain Rules survive the follow-up's stricter re-examination across three families (6
+Capability/Progression, 1 Learning/Adaptation, 1 Conflict/Combat) — **all 8 accepted, 0
+rejected.** Two Domain Rules from the original draft (PROG-04, CONFLICT-02) were reclassified
+to Inherited; one (LEARN-02) was retired to Repository Findings; one (LEARN-01) was rewritten
+into normative form rather than merged or dropped. No target-semantic contradiction was
+introduced by any of these changes — every reclassification narrowed the Domain Rule count
+without discarding a single piece of evidence, a single scenario result, or a single cross-
+domain link; everything moved to a more accurate category rather than being lost. Thirteen
+Inherited/Applied Foundational Rules and five Scope/Deferred Boundaries round out the 26 total
+catalog entries.
 
 Full per-rule disposition, evidence, and rationale: see the canonical files above, or
 `tmp/capability-progression-batch-07-report.md` (local review report, not part of this
@@ -309,26 +351,31 @@ catalog).
 
 ---
 
-> **BATCH 07 (CAPABILITY / PROGRESSION / CONFLICT) READY FOR HIGH-LEVEL EXTERNAL REVIEW.**
+> **BATCH 07 PASS — READY TO FREEZE.**
+>
+> The target Rule Catalog supports an ordinary individual's causal path toward exceptional
+> capability and historical significance, but the current repository only partially realizes
+> that path, especially for non-HERO named individuals.
 
-All required artifacts exist: three rule-family files (11 genuine Domain Rules; 25 total
-catalog entries), one scenario file (16 scenarios covering all sixteen required seed probes),
-this review export with all eleven required sections plus every explicitly-required call-out,
-and a local disposition report. No contradiction was found against any prior batch or within
-this one. This batch's own genuinely new material is concentrated in one major confirmed gap
-(no farming counterforce, PROG-05), one especially-important partial finding
-(progression → world reaction is real but narrow, PROG-06/CP-S15), and one genuinely positive
-cross-batch discovery (live combat targeting is already perception-gated, CONFLICT-02) — rather
-than a uniform spread of small findings. All twelve of the batch instruction's own
-stop-condition checklist items are satisfied: foundational Capability is not duplicated; XP/
-Level semantics are explicit where they exist; lived experience can produce durable change
-through declared paths (and is confirmed absent where no such path exists); progression is not
-assumed monotonic (real loss/regression exists); capability change has meaningful downstream
+All required artifacts exist: three rule-family files (8 genuine Domain Rules; 26 total
+catalog entries), one scenario file (17 scenarios covering all sixteen required seed probes
+plus one follow-up-required addition, with one probe deepened rather than duplicated), this
+review export with all required sections plus every explicitly-required call-out, and a local
+disposition report. No target-semantic contradiction was introduced by the follow-up's own
+reclassifications — each one narrowed which statements carry a local Rule ID without changing
+what any Rule requires of the world, and without discarding any repository finding. All twelve
+of the batch instruction's own original stop-condition checklist items remain satisfied,
+sharpened rather than weakened: foundational Capability is not duplicated; XP/Level semantics
+are explicit where they exist; lived experience can produce durable change through declared
+paths, and the target design remains genuinely open to which experience-types qualify
+(LEARN-01); progression is not assumed monotonic; capability change has meaningful downstream
 consequences; Conflict is broader than Combat; defeat/death remain distinct; capability does
-not guarantee success; progression can alter world reaction in principle (confirmed, narrowly);
-trivial-repeat/unbounded-growth pressure has been challenged and found genuinely unbounded;
-repository inert/disconnected progression state is identified; individual trajectory scenarios
-have been traced; genuine Rules remain separated from inherited rules/findings.
+not guarantee success; progression can alter world reaction in principle, now with the
+generic-vs-individual distinction made explicit; trivial-repeat/unbounded-growth pressure has
+been challenged and found genuinely, accidentally unbounded; repository inert/disconnected
+progression state is identified; individual trajectory scenarios have been traced, including
+two new adversarial probes; genuine Rules remain separated from inherited rules/findings, now
+under a stricter reading than the first draft applied.
 
 Do not begin Batch 08 (Objects / Ownership / Resources / Economy) until this batch receives
 high-level review.
