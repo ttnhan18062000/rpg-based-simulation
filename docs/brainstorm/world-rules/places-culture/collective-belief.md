@@ -57,8 +57,9 @@ knowledge) — a genuinely positive structural match for this Rule's own individ
 distinctness, at the design-intent level, but only for the case this Rule requires an
 institution *not* be present for at all: `BeliefInstitution` is, by its own design, keyed to a
 specific `clan_id` — it is a promising carrier for institution-backed doctrine/belief, and it
-may participate in culturally or religiously grounded significance (`collective-belief.md`'s
-own BEL-03), but it does not cover, and is not evidence for, this Rule's own broader
+may participate in culturally or religiously grounded significance (this file's own
+reclassified sacredness entry, originally BEL-03), but it does not cover, and is not
+evidence for, this Rule's own broader
 institution-*free* permission (a folk myth no clan or institution ever declares). `belief_
 strength` is derived from a real Chronicle event (the legendary subject's own fame), confirming
 collective belief grounded in real history rather than fabricated from nothing, for the
@@ -101,51 +102,48 @@ recognition, boundary probe).
 
 ---
 
-## BEL-03 — A place, object, or event may become sacred, revered, or culturally significant through shared cultural interpretation alone, without any supernatural transformation of the physical world; sacredness/significance is always attributed by a specific culture, group, or institution, never a bare universal property, and different attributors may hold different or conflicting attributions toward the same subject at once
+## Inherited / Applied Foundational Rules
 
-> A location, object, or historical event acquiring sacred or deeply significant status is a
-> social/cultural fact — a shared interpretation a *specific* culture, group, or institution
-> holds — and never requires any actual change to that location, object, or event's own
-> physical or mechanical properties. Sacredness is never a bare, attributor-free property a
-> Place simply *has*; it is always attributed, exactly as `places.md`'s own revised PLACE-02
-> requires for Place significance generally, of which sacredness is one culturally/religiously
-> flavored instance. Two distinct cultures or groups may hold different, or directly
-> conflicting, attributions toward the identical Place at once — Culture A regarding it as
-> sacred while Culture B, aware of that same Place, regards it as ordinary or interprets it
-> differently — with no supernatural effect required to explain either attribution, and
-> neither attribution overriding the other. Pilgrimage, ritual observance, avoidance, or
-> defense of a place a given culture holds sacred are all legitimate consequences of that
-> specific culture's own attributed meaning, never of a universal property every subject must
-> react to identically.
+### Where sacredness or comparable social sanctity is modeled, it may arise through collective cultural interpretation alone, without requiring supernatural transformation or an objectively magical property; different attributors may hold different or conflicting attributions toward the same subject at once
 
-**Disposition: ACCEPT — REQUIRED; revised 2026-09-22 per external follow-up review to make
-sacredness explicitly attribution-relative, directly reconciled with `places.md`'s own revised
-PLACE-02.** The original wording ("a place... becomes sacred... through shared cultural
-interpretation") risked being read as though, once attributed, sacredness became a single
-fact true of the Place for everyone — incompatible with two cultures legitimately holding
-different views of the same Place at once. This revision states sacredness as always
-attributed by a specific culture/group/institution, explicitly permitting simultaneous,
-non-reconciled, divergent attributions, the same relational shape PLACE-02 now requires more
-generally. Passes the admission test unchanged: this directly answers the batch instruction's
-own §23 "Sacred/Significant Places" investigation and its explicit "a place can become sacred
-without supernatural transformation" framing — genuinely new content connecting Places
-(`places.md`'s PLACE-02), Culture (`culture.md`'s CULT-01), and this family's own belief/
-interpretation content, none of which alone states that sacredness is achievable through
-cultural interpretation without magic, or that it is attribution-relative rather than
-universal.
+> A location, object, or historical event acquiring sacred status is a social/cultural fact —
+> a shared interpretation a *specific* culture, group, or institution holds — and never
+> requires any actual change to that subject's own physical or supernatural properties,
+> exactly as BEL-02 already requires generally for social/religious belief. Because
+> significance/sacredness is always attributed by a specific actor (`places.md`'s own revised
+> PLACE-02), two distinct cultures or groups may hold different, or directly conflicting,
+> attributions toward the identical subject at once — Culture A regarding it as sacred while
+> Culture B, aware of the same subject, regards it as ordinary or interprets it differently —
+> with no supernatural effect required to explain either, and neither overriding the other.
+> Where a domain models sacredness at all, this is a permitted possibility a domain may choose
+> to realize, never a required universal feature of every world.
+
+**Disposition: INHERITED (reclassified from a Domain Rule, originally drafted as BEL-03,
+during a second 2026-09-22 follow-up review).** The follow-up first asked that this content's
+own status be reframed from REQUIRED to PERMITTED — sacredness, where modeled, *may* arise
+from cultural interpretation alone; not every world must contain culturally-created
+sacredness, and this content's own primary purpose is protecting the boundary "social
+sacredness ≠ supernatural truth," not mandating that sacredness exist. Having reframed it that
+way, the follow-up then asked whether it still adds genuinely new semantics beyond BEL-02
+(social/religious belief ≠ supernatural truth/mechanism) combined with `places.md`'s own
+PLACE-02 (significance is always attributed, never intrinsic, with divergent simultaneous
+attributions already permitted there). On that reassessment: it does not. "Sacredness" is the
+culturally/religiously-flavored instance of the "significance" concept PLACE-02 already
+covers in full generality, and "achievable without supernatural transformation" is simply
+BEL-02's own belief/truth boundary applied to that specific case — combining two
+already-established Rules for one named example, not new content. Per the follow-up's own
+explicit instruction not to preserve the Rule count artificially, this is moved to Inherited
+rather than kept as a separate Domain Rule.
 
 **Repository evidence: MISSING.** No mechanism was found that marks any Place, object, or
 event as sacred/culturally significant, with or without a supernatural component — confirmed
-via direct search (no "sacred"/"pilgrimage"/"shrine" terms anywhere in `src/`). This Rule's
-own target semantics remain independently coherent, connecting three already-real
-mechanisms (`PlaceState`, `CultureState`, `BeliefInstitution`) that simply have no bridge
-between them yet.
+via direct search (no "sacred"/"pilgrimage"/"shrine" terms anywhere in `src/`). This entry's
+own target semantics remain independently coherent, connecting three already-real mechanisms
+(`PlaceState`, `CultureState`, `BeliefInstitution`) that simply have no bridge between them
+yet — a repository-realization fact, not evidence favoring any one of those three as the
+eventual bridge (see the significance-grammar note under Cross-domain links below).
 
 **Scenarios:** [CB-S08](../scenarios/culture-belief-batch-11b.md#cb-s08).
-
----
-
-## Inherited / Applied Foundational Rules
 
 ### An institution's own declared doctrine does not require every member's private acceptance; membership remains possible alongside private disagreement, exactly as membership already does not require alignment with any other organizational fact
 
@@ -228,7 +226,8 @@ priority.**
 - **SUPPORTED, by absence — no content anywhere grants ritual/doctrine a real supernatural
   effect.** See BEL-02 above; the correct outcome, not a gap.
 - **Confirmed MISSING — no sacred-place, doctrine-dissent, or cultural/religious-significance
-  recognition mechanism exists.** See BEL-03 and the two Inherited entries above.
+  recognition mechanism exists.** See the reclassified sacredness entry (originally BEL-03)
+  and the two other Inherited entries above.
 
 ## Implementation Candidates — Non-Binding
 
@@ -257,17 +256,18 @@ prioritized, or required for implementation during the World Rule Catalog phase.
   **Implementation decision:** DEFERRED — no commitment in Rule Catalog phase.
 - **Target semantic:** a place, object, or event may become sacred/significant through
   cultural interpretation alone, always attributed by a specific culture/group/institution,
-  never a universal property (BEL-03, revised).
+  never a universal property (the reclassified sacredness entry, originally BEL-03).
   **Current realization:** no bridge exists between `PlaceState`, `CultureState`, and
-  `BeliefInstitution`.
+  `BeliefInstitution` — and, per the significance-grammar note below, this section names no
+  candidate among the three as the intended eventual bridge; that choice remains undecided.
   **Possible implementation direction (constrained 2026-09-22 per external follow-up
   review):** if any "significance"/"sacred"-style field is ever added to `PlaceState` itself,
   it could only be a derived/cached projection with explicit provenance and scope (which
   attributor, as of when) — never the canonical representation of a perspective-dependent
-  attribution, since BEL-03/PLACE-02 both require multiple, simultaneous, non-reconciled
-  attributions to remain representable. The preferred semantic model is relational
-  (`significant-to`, `sacred-to`, `recognized-as` — attributor, subject, value), not a
-  universal boolean or scalar on the Place itself.
+  attribution, since the reclassified sacredness entry and PLACE-02 both require multiple,
+  simultaneous, non-reconciled attributions to remain representable. The preferred semantic
+  model is relational (`significant-to`, `sacred-to`, `recognized-as` — attributor, subject,
+  value), not a universal boolean or scalar on the Place itself.
   **Implementation decision:** DEFERRED. No concrete storage design is committed here.
 
 ## Cross-domain links recorded here
@@ -277,10 +277,27 @@ prioritized, or required for implementation during the World Rule Catalog phase.
   correcting-information entry)
 - BEL-02 → Authority (AUTH-04, Batch 02 — the same explicit-boundary-drawing pattern), Magic/
   Supernatural (Batch 12, deferred)
-- BEL-03 → Places (`places.md`'s PLACE-02), Culture (`culture.md`'s CULT-01)
+- Inherited sacredness entry (originally BEL-03) → Places (`places.md`'s PLACE-02), Culture
+  (`culture.md`'s CULT-01), Collective Belief (this file's own BEL-02)
 - Inherited doctrine-dissent entry → Organizations (ORG-02, Batch 10)
 - Inherited recognition entry → Perception/Knowledge (Batch 06), Social Relations (Batch 09),
   Places (`places.md`)
+
+## Significance-grammar note (added 2026-09-22 per a second external follow-up review)
+
+Batch 11A independently confirmed the same recurring grammar already seen for individuals
+(Batch 07), objects (Batch 08), lineage (Batch 09), and organizations (Batch 10): a persistent
+subject, plus a consequential event/history, produces provenance, which requires a valid path
+to socially available recognition, which then may produce a changed future world reaction.
+This is now clearly a cross-domain integration concern, preserved as such. At the semantic
+level, this Catalog concludes only: **significance requires some valid path from a subject's
+own history/provenance to socially available recognition, and from there to downstream
+reaction.** Which mechanism, if any, eventually supplies that path — `BeliefInstitution`,
+some other existing structure, or something not yet designed — is an implementation-shape
+question this Catalog does not decide. `BeliefInstitution` being a real, well-shaped,
+institution-backed carrier (see the Implementation Candidates above) is acceptable to record
+there, but it is not, and must not be read as, part of this family's own target semantic
+architecture merely because that structure already happens to exist in the repository.
 
 ## Open questions carried forward
 

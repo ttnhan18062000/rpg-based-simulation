@@ -271,42 +271,50 @@ order.
   disposition report.
 - **Batch 11** (Places/Settlements/Territory/Culture/Belief) — the eighth domain-facing batch —
   drafted 2026-09-22, split into two coherent semantic clusters per that batch's own
-  instruction file's explicit size/split permission, then revised the same day per a targeted
-  focused-revision follow-up (Domain Rule counts unchanged for both — no rule added merely to
-  increase count), without changing the roadmap's overall milestone ordering:
+  instruction file's explicit size/split permission, then revised twice the same day per two
+  successive targeted follow-up reviews (the second correcting parts of the first), without
+  changing the roadmap's overall milestone ordering:
   - **Batch 11A** (Places/Settlements/Territory). 10 genuine Domain Rules (18 total catalog
     entries including 4 inherited/applied foundational rules and 4 scope/deferred boundaries)
     across Places, Settlements, Territory/Control; **PASS — ready to freeze**. Directly
     resolves Batch 10's own deferred territorial-jurisdiction integration by direct reuse
     (territory is one declared jurisdiction basis among several, per Batch 10's own revised
-    LAW-03, unchanged). The follow-up re-verified this Catalog's own strongest CONFLICTING
-    finding against actual consumers rather than the field's shape alone: `owner_faction_id`
-    is retained CONFLICTING, narrowed to a directly-evidenced control-vs-sovereignty
-    conflation (`PlaceState`'s own field comment: "Sovereignty override," plus taxation/
-    suppression consumers) — claim, cultural association, and residence are correctly
-    MISSING, not CONFLICTING, since they were never attempted at all. The follow-up also
-    re-opened Settlement identity vs. Place identity: SETT-01 no longer assumes "same Place"
-    implies "same settlement" for the total-abandonment-then-resettlement case. The recurring
-    "ordinary subject → historically significant, recognized by name" gap recurs at a fourth
-    scale (Place), continuing individual (Batch 07), lineage (Batch 09), and organization
-    (Batch 10) — now stated as attribution-relative (significant-**to** a specific
-    actor/group), never a universal property.
-  - **Batch 11B** (Culture/Collective Belief). 7 genuine Domain Rules (12 total catalog
-    entries including 2 inherited/applied foundational rules and 3 scope/deferred boundaries)
+    LAW-03, unchanged). PLACE-03 was corrected to match the foundational default (identity
+    continuity is the default outcome of a transformation, not a case-by-case decision with
+    no default); SETT-01 was corrected to define settlement by its own declared function/
+    state rather than population alone, stating the default relationship that settlement
+    status may end/become dormant while the underlying Place's own identity persists.
+    `owner_faction_id`'s own contested-territory finding was re-verified twice: a first pass
+    narrowed the CONFLICTING finding and downgraded the contested-claim half to MISSING; a
+    second pass corrected that downgrade, restoring **CONFLICTING** — the field's own active
+    role as the sole authoritative territorial-control slot structurally forecloses
+    representing a diverging claim, an active incompatibility, not a bare absence. Cultural
+    association and residence remain correctly MISSING. The recurring "ordinary subject →
+    historically significant, recognized by name" gap recurs at a fourth scale (Place),
+    continuing individual (Batch 07), lineage (Batch 09), and organization (Batch 10) — now
+    stated as attribution-relative (significant-**to** a specific actor/group), never a
+    universal property.
+  - **Batch 11B** (Culture/Collective Belief). 6 genuine Domain Rules (12 total catalog
+    entries including 3 inherited/applied foundational rules and 3 scope/deferred boundaries)
     across Culture, Collective Belief; **PASS — ready to freeze**. This repository's own
     real, live, consumed "culture" system (`CultureState`, a four-axis derived-tendency score)
-    is confirmed CONFLICTING with this batch's own richer target concept (language/custom/
-    ritual/symbol) — a naming/scope collision, not a simple gap. A genuinely positive
-    finding: `BeliefInstitution` is a real, well-shaped, history-grounded collective-belief
-    mechanism with no live caller yet — the follow-up narrowed this to a promising carrier for
-    the **institution-backed** subset of collective belief only (BEL-01), never a universal
-    significance mechanism; the institution-free case (a folk myth no institution declares)
-    remains confirmed MISSING, with no candidate mechanism at all.
+    was reassessed against actual consumers rather than its shared name alone: correctly
+    **PARTIAL** — a real, valid, narrower projection, not CONFLICTING, since nothing treats
+    its four axes as culture's complete or exhaustive definition. BEL-03 (originally a Domain
+    Rule stating sacredness is achievable through cultural interpretation alone) was first
+    reframed from REQUIRED to PERMITTED, then reclassified to Inherited once that reframing
+    showed it added no content beyond combining BEL-02 and PLACE-02 — 11B's own genuine
+    Domain Rule count drops from 7 to 6. A genuinely positive finding, its own role now
+    correctly narrowed: `BeliefInstitution` is a real, well-shaped, history-grounded
+    collective-belief mechanism with no live caller yet, a promising carrier for the
+    **institution-backed** subset of collective belief only (BEL-01), never presumed to be
+    the semantic or implementation home for the recurring significance gap; the
+    institution-free case remains confirmed MISSING, with no candidate mechanism at all.
   - See `review-exports/places-territory-batch-11a-review.md` and
     `review-exports/culture-belief-batch-11b-review.md`'s explicit call-outs and their
     Implementation Candidates — Non-Binding sections for these and further confirmed gaps. See
     `tmp/places-culture-batch-11-report.md` (local, shared, not part of this catalog) for the
-    full disposition report.
+    full disposition report, including both follow-up addenda.
 - **Batch 12** (Magic/Supernatural) — the ninth domain-facing batch, and the first in a new
   integration milestone beyond Milestone C — drafted 2026-09-22 per
   `tmp/world-rule-batch-12-ext-ai.md`. 5 genuine Domain Rules (14 total catalog entries
@@ -619,47 +627,58 @@ load-bearing semantic gaps, not delivery priorities):**
   transformation continuity is never assumed by default; the real CITY→RUIN trail
   (`PlaceState.prior_kind`/`transformed_tick`) is the one already-realized case for
   continuous habitation only.
-- **Confirmed CONFLICTING, narrowed 2026-09-22 per follow-up re-verification against actual
-  consumers.** `owner_faction_id` is actively read as both control (taxation, suppression)
-  and, per `PlaceState`'s own field comment, "sovereignty" — two distinct concepts collapsed
-  into one field by real, current consumers. Claim, cultural association, and residence are
-  correctly reclassified MISSING, not CONFLICTING — never attempted at all, so nothing is
-  being actively collapsed.
+- **Confirmed CONFLICTING, re-verified twice on 2026-09-22 — a first pass narrowed and
+  partly downgraded this finding, a second pass corrected that downgrade.**
+  `owner_faction_id` is actively read as both control (taxation, suppression) and, per
+  `PlaceState`'s own field comment, "sovereignty." The field's own active role as the *sole*
+  authoritative territorial-control slot also structurally forecloses ever representing a
+  diverging claim or contested state — an intermediate revision had downgraded this specific
+  half to MISSING, reasoning "claim" was never separately attempted; the second follow-up
+  corrected that as understating the conflict. Cultural association and residence remain
+  correctly MISSING (never attempted at all, no comparable structural incompatibility).
 - **Confirmed MISSING, a fourth scale for the same recurring gap — now stated as attribution-
-  relative, never a universal property (revised 2026-09-22).** No attributed-significance
-  field exists on `PlaceState` — the same "ordinary subject → historically significant,
-  recognized by name" gap as Batches 07/09/10, now at the Place scale.
-- **Re-opened 2026-09-22.** Whether Settlement identity necessarily continues merely because
-  the underlying Place persists is no longer assumed — SETT-01 explicitly declines to resolve
-  the total-abandonment-then-unrelated-resettlement case, which remains an open design
-  question.
+  relative, never a universal property.** No attributed-significance field exists on
+  `PlaceState` — the same "ordinary subject → historically significant, recognized by name"
+  gap as Batches 07/09/10, now at the Place scale.
+- **Corrected 2026-09-22.** PLACE-03 now states identity continuity as the *default* outcome
+  of a Place transformation (matching the foundational ID-03/ID-06/TRANS principle), not a
+  case-by-case decision with no default; SETT-01 now states the default relationship between
+  settlement status and Place identity explicitly — status may end/become dormant while Place
+  identity persists by default. Whether a resettlement after total abandonment *reactivates*
+  or *replaces* settlement identity remains an open, domain-declared question.
 - **Confirmed MISSING.** No settlement growth/decline causal mechanism; no migration
-  mechanism of any kind anywhere in this repository; no territorial claim/cultural-
-  association/residence field of any kind.
+  mechanism of any kind anywhere in this repository; no settlement-status field distinct from
+  raw population presence.
 
 **From Batch 11B (Culture/Collective Belief, drafted 2026-09-22, PASS — frozen 2026-09-22 —
 load-bearing semantic gaps, not delivery priorities):**
 
-- **Confirmed CONFLICTING.** This repository's own real, live, consumed "culture" system
-  (`CultureState`, a fixed four-axis derived-tendency score) is structurally mismatched to
-  this batch's own richer target concept (language/custom/ritual/symbol/story) — a
-  naming/scope collision, not a simple gap.
-- **A genuinely positive finding, currently INERT/OFF — narrowed 2026-09-22 to the
-  institution-backed case only.** `BeliefInstitution` is a real, well-shaped, history-
-  grounded, but institution-backed-only collective-belief mechanism ("idea 63, Belief Grows
-  Around Real History") with no live caller yet — a promising carrier for that specific
-  subset of collective belief, never presumed to be a universal significance mechanism. The
+- **Reassessed 2026-09-22 — PARTIAL, not CONFLICTING.** This repository's own real, live,
+  consumed "culture" system (`CultureState`, a fixed four-axis derived-tendency score) shares
+  a name with this batch's own richer target concept, but nothing treats those four axes as
+  culture's complete or exhaustive definition — naming collision and narrower scope alone are
+  not sufficient grounds for CONFLICTING; this is correctly a real, valid, narrower
+  projection.
+- **A genuinely positive finding, currently INERT/OFF — its role narrowed to the
+  institution-backed case only, and explicitly not presumed to be the semantic/
+  implementation home for the recurring significance gap (corrected 2026-09-22).**
+  `BeliefInstitution` is a real, well-shaped, history-grounded, but institution-backed-only
+  collective-belief mechanism ("idea 63, Belief Grows Around Real History") with no live
+  caller yet — a promising carrier for that specific subset of collective belief only. The
   institution-free case (a folk myth no institution ever declares) remains confirmed
   MISSING, with no candidate mechanism at all.
-- **Revised 2026-09-22 — attributed sacredness is never intrinsic or universal.** A place,
-  object, or event may become sacred through cultural interpretation alone, but always
-  relative to a specific attributor; different groups may hold different or conflicting
-  attributions toward the same subject simultaneously, directly reconciled with Place
-  significance (11A).
+- **Revised 2026-09-22 — sacredness is never intrinsic or universal, and — reassessed a
+  second time the same day — is Inherited, not a separate Domain Rule.** A place, object, or
+  event may become sacred through cultural interpretation alone, but always relative to a
+  specific attributor; different groups may hold different or conflicting attributions
+  toward the same subject simultaneously, directly reconciled with Place significance (11A).
+  Reframed from REQUIRED to PERMITTED, then found to add no content beyond BEL-02 + PLACE-02
+  combined — reclassified to Inherited (originally BEL-03), dropping 11B's own genuine Domain
+  Rule count from 7 to 6.
 - **Confirmed MISSING.** No individual-level cultural participation/adoption mechanism (every
   entity in a region is affected identically by `CultureState`); no channel-mediated cultural
-  transmission/blending beyond regional event-driven drift; no sacred-place mechanism of any
-  kind.
+  transmission/blending beyond regional event-driven drift, including no purely-non-durable
+  oral-tradition carrier; no sacred-place mechanism of any kind.
 
 **From Batch 12 (Magic/Supernatural, drafted 2026-09-22 — load-bearing semantic gaps, not
 delivery priorities):**

@@ -75,16 +75,18 @@ counter).
 > given attribution at all — recognizing that group A attributes significance to P is itself
 > distinct from independently attributing the same significance oneself, and from objective
 > world truth (which remains its own, separate fact throughout — see also `collective-
-> belief.md`'s BEL-03). No mechanism may propagate any one attribution globally, or treat it as
-> universal recognition, without a real information/recognition path.
+> belief.md`'s own sacredness content, Inherited, originally drafted as BEL-03). No mechanism
+> may propagate any one attribution globally, or treat it as universal recognition, without a
+> real information/recognition path.
 
 **Disposition: ACCEPT — REQUIRED; revised 2026-09-22 per external follow-up review to make
 significance explicitly perspective-scoped/relational, reconciled directly with
-`collective-belief.md`'s BEL-03.** The original wording ("a Place subsequently becoming
-significant... is a second, distinct fact") risked being read as though significance, once it
-existed, were a single intrinsic property of the Place itself — real or not, but at most one
-value. The follow-up correctly identified this as incompatible with culturally/religiously
-attributed significance (BEL-03's own domain), where two different groups may legitimately
+`collective-belief.md`'s own sacredness content (Inherited, originally drafted as BEL-03).**
+The original wording ("a Place subsequently becoming significant... is a second, distinct
+fact") risked being read as though significance, once it existed, were a single intrinsic
+property of the Place itself — real or not, but at most one value. The follow-up correctly
+identified this as incompatible with culturally/religiously attributed significance
+(collective-belief.md's own sacredness domain), where two different groups may legitimately
 attribute different or conflicting significance to the same Place at once. This revision
 replaces "the Place becoming significant" with "significance being attributed by a specific
 actor/group/culture/institution," explicitly permitting multiple, simultaneous, non-
@@ -109,38 +111,54 @@ becomes historically significant, flagship).
 
 ---
 
-## PLACE-03 — Place identity continuity through kind/use transformation requires its own declared determination for each transformation case; no single universal answer decides whether a transformed location remains the same Place
+## PLACE-03 — A Place undergoing a declared transformation preserves its identity by default; identity ends, is replaced, splits, or merges only where the transformation explicitly establishes that different identity semantics apply
 
-> Whether a Place transformed by damage, rebuilding, change of use, or long abandonment and
-> resettlement remains the *same* Place, or becomes a *new* Place at the same location, is a
-> domain-declared determination specific to that transformation — not decided once for every
-> case by this Rule. A village becoming a town, a fort becoming a ruin, a shrine becoming a
-> major temple, and a battlefield becoming a memorial site may each resolve differently. This
-> is the Place-specific refinement of the foundational identity/transformation Rules (ID-03,
-> ID-06, and the TRANS family) — those Rules already require that any split/merge/
-> transformation state its own continuity semantics; this Rule states that Places specifically
-> are not exempt, and are not assumed continuous or discontinuous by default.
+> Whether a Place transformed by damage, rebuilding, change of use, growth, or long
+> abandonment and resettlement remains the *same* Place, or becomes a *new* Place, is not a
+> free, undirected case-by-case choice — it follows the same default this Catalog's own
+> foundational identity/transformation Rules (ID-03, ID-06, and the TRANS family) already
+> establish for any persisting subject: **identity continuity is the default outcome of a
+> transformation of an existing subject**, and only an explicit declaration that the
+> transformation ends, replaces, splits, or merges that identity displaces that default. A
+> village growing into a town, a fort becoming a ruin, a place being renamed, or a structure
+> being rebuilt may all preserve Place identity by this same default — changed Place state or
+> kind is never automatically a new Place. The default may still be displaced by a real
+> declared exception: an ancient temple destroyed, followed centuries later by an entirely
+> unrelated settlement built at the same coordinates, may legitimately establish a new Place
+> identity rather than continuing the old one. Same coordinates never automatically means the
+> same Place either way — the default concerns identity *continuity through a transformation
+> of an existing Place*, not bare spatial coincidence with no transformation relationship at
+> all.
 
-**Disposition: ACCEPT — REQUIRED for the "no default answer" requirement; which specific
-transformations preserve identity is PERMITTED, domain-declared content.** Passes the
-admission test: applies the already-established ID-03/ID-06/TRANS-family discipline to Places
-specifically, per the batch instruction's own explicit request ("use ID-03/ID-06/TRANS
-semantics and add only genuinely place-specific refinements") — the refinement itself
-(Place transformation is never assumed continuous or discontinuous by default) is the new
-content.
+**Disposition: ACCEPT — REQUIRED for the default-continuity requirement and for the
+exception needing explicit declaration; corrected 2026-09-22 per external follow-up
+review.** The original wording ("no single universal answer... not assumed continuous or
+discontinuous by default") incorrectly presented Place transformation as having no default at
+all, decided fresh case by case — this conflicts with the already-established foundational
+principle (ID-03/ID-06/TRANS) that identity continuity is itself the default outcome for a
+transformation of an *existing* subject, with an identity-ending/replacement case being the
+declared exception, not a coin-flip alternative. This correction aligns PLACE-03 with that
+default rather than contradicting it. Passes the admission test unchanged: applying the
+already-established default explicitly to Places, and stating that "same coordinates" alone
+(with no transformation relationship) is a different question from continuity-through-
+transformation, is the Place-specific content this Rule adds — per the batch instruction's own
+explicit request to use ID-03/ID-06/TRANS-family semantics and add only genuinely
+place-specific refinements.
 
-**Repository evidence: PARTIAL.** `PlaceState.prior_kind`/`transformed_tick` shows exactly one
-real, already-decided case: a CITY→RUIN transformation keeps the same `place_id` — this
-repository has already made a real, if implicit, continuity determination for that specific
-transformation (continuous), consistent with this Rule's own requirement that *some*
-determination be made, though it was not found to be declared as an explicit, named policy
-distinct from simply reusing the same struct. No mechanism was found for the reverse case
-(unrelated resettlement of an abandoned location becoming a genuinely new Place) or for
-village→town/shrine→temple-style scale-up transformations specifically.
+**Repository evidence: PARTIAL, and now confirmed consistent with the corrected default
+rather than merely one arbitrary choice among many.** `PlaceState.prior_kind`/
+`transformed_tick`'s own CITY→RUIN transformation keeping the same `place_id` is exactly the
+default-continuity outcome this Rule's own corrected wording requires, not an arbitrary
+implicit choice — the repository's own real behavior matches the target default cleanly. No
+mechanism was found for the declared-exception case (an unrelated resettlement establishing a
+genuinely new Place identity at an old location) or for village→town/shrine→temple-style
+growth transformations specifically, but neither is required to exist for this Rule's own
+default to hold.
 
 **Scenarios:** [PT-S03](../scenarios/places-territory-batch-11a.md#pt-s03) (village becomes
-town), [PT-S04](../scenarios/places-territory-batch-11a.md#pt-s04) (town becomes ruin),
-[PT-S05](../scenarios/places-territory-batch-11a.md#pt-s05) (abandoned and resettled).
+town, extended — transformation with default continuity), [PT-S04](../scenarios/places-territory-batch-11a.md#pt-s04)
+(town becomes ruin), [PT-S05](../scenarios/places-territory-batch-11a.md#pt-s05) (abandoned
+and resettled, extended — depopulated settlement).
 
 ---
 
@@ -175,10 +193,10 @@ realization exists to check it against.
 
 ### Concrete place-transformation continuity catalog
 
-> This family states that Place transformation continuity is never assumed by default
-> (PLACE-03) but does not design the concrete catalog of which specific transformations
-> preserve identity for every Place kind — implementation-level content, deferred per this
-> family's own scope.
+> This family states that Place transformation identity continuity is the default outcome,
+> displaced only by an explicitly declared exception (PLACE-03), but does not design the
+> concrete catalog of which specific transformations count as declared exceptions for every
+> Place kind — implementation-level content, deferred per this family's own scope.
 
 **Disposition: SCOPE BOUNDARY.**
 
@@ -207,8 +225,8 @@ priority.**
 - PLACE-01 → Identity (ID-03/ID-06, Foundational), History/Provenance (Foundational)
 - PLACE-02 → History/Provenance (Foundational), Perception/Knowledge (Batch 06), and the same
   flagship pattern as Capability/Progression (Batch 07), Lineage/Descent (Batch 09),
-  Organizations (Batch 10); directly reconciled with `collective-belief.md`'s BEL-03
-  (attributed sacredness) per the 2026-09-22 follow-up's own item 6
+  Organizations (Batch 10); directly reconciled with `collective-belief.md`'s own sacredness
+  content (Inherited, originally BEL-03) per the 2026-09-22 follow-up's own item 6
 - PLACE-03 → Identity (ID-03/ID-06, TRANS family, Foundational)
 - Inherited recognition entry → Perception/Knowledge (PERC-01/KNOW-01, Batch 06), Social
   Relations (Batch 09's reputation-reach entry)

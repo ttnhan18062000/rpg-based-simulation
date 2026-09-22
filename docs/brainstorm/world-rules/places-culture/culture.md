@@ -27,35 +27,50 @@ separately), first draft, per `tmp/world-rule-batch-11-ext-ai.md`.
 
 ## CULT-01 — Culture, where modeled, is a real collective pattern of language, custom, norm, ritual, symbol, story, aesthetic practice, or shared historical interpretation, distinct from individual belief, law, religion, faction membership, ethnicity, and settlement identity, though it may overlap with any of these without being identical to them
 
-> Culture is never required to be a generic scalar (a `CultureScore`) — it is whichever of
-> language, customs, norms, rituals, symbols, stories, aesthetic practices, food, social
-> expectations, or shared historical interpretation a domain chooses to model, with no fixed
-> catalog required in advance. Culture is distinct from an individual's own belief (a person
-> may belong to a culture and privately reject parts of it), from law (a legal rule and a
-> cultural norm are different facts even where they agree), from religion (a culture may
-> contain religious content without being reducible to it), from faction membership (an
-> organization is not the same fact as a shared culture, though members may share one), from
-> ethnicity, and from settlement identity — a culture may overlap with any of these without
-> collapsing into it.
+> Culture is whichever of language, customs, norms, rituals, symbols, stories, aesthetic
+> practices, food, social expectations, or shared historical interpretation a domain chooses
+> to model, with no fixed catalog required in advance. Culture is distinct from an
+> individual's own belief (a person may belong to a culture and privately reject parts of
+> it), from law (a legal rule and a cultural norm are different facts even where they agree),
+> from religion (a culture may contain religious content without being reducible to it), from
+> faction membership (an organization is not the same fact as a shared culture, though members
+> may share one), from ethnicity, and from settlement identity — a culture may overlap with
+> any of these without collapsing into it. Culture cannot be reduced to any single one of
+> these adjacent concepts, nor to one assumed-universal scalar.
 
 **Disposition: ACCEPT — REQUIRED for the distinctness; which specific cultural content any
-domain models is PERMITTED, open-ended content.** Passes the admission test: no earlier Rule
-addresses culture as its own concept — this is genuinely new content, explicitly warned by the
-batch instruction against being reduced to one generic score, and against being collapsed into
-five adjacent, already-established concepts (individual belief: Batch 06; law: Batch 10;
-faction membership: Batch 10's ORG-02; settlement: `settlements.md`'s SETT-01).
+domain models is PERMITTED, open-ended content; wording corrected 2026-09-22 per a second
+external follow-up review to remove implementation-oriented language from the Rule statement
+itself.** The original wording ("Culture is never required to be a generic scalar (a
+`CultureScore`)") stated an implementation-shaped prohibition directly inside the Rule's own
+normative text. The follow-up correctly identified that the underlying semantic principle —
+culture cannot be reduced to a single adjacent concept or to one assumed-universal scalar — is
+what belongs in the Rule itself; whether any specific domain later derives a score or
+projection *from* a richer culture model is an implementation matter, addressed in Repository
+Findings/Implementation Candidates, not a constraint the Rule's own text needs to name by a
+specific data-shape term. Passes the admission test unchanged: no earlier Rule addresses
+culture as its own concept — this is genuinely new content, against being collapsed into five
+adjacent, already-established concepts (individual belief: Batch 06; law: Batch 10; faction
+membership: Batch 10's ORG-02; settlement: `settlements.md`'s SETT-01).
 
-**Repository evidence: CONFLICTING, and this family's own single most significant finding.**
+**Repository evidence: PARTIAL — a narrower, valid representation, not CONFLICTING (reassessed
+2026-09-22 per a second external follow-up review, examining what `CultureState` actually
+claims to represent and how its consumers use it, rather than treating the shared name
+"culture" or its narrower scope as sufficient grounds for CONFLICTING on their own).**
 `CultureState`/`CultureCarryForward` (`src/domains/culture/model.py`, E62A/E62B) is real, live,
-and genuinely consumed (`CulturalBiasApplicator` biases route-scoring tags from it) — but it is
+and genuinely consumed (`CulturalBiasApplicator` biases route-scoring tags from it) — it is
 structurally a fixed four-axis derived-tendency score (`fatalism`, `hero_veneration`,
 `resource_scarcity_memory`, `faction_conflict_exposure`), each a float in `[0.0, 1.0]` derived
-from event history and carried per-region across campaign episodes. This is exactly the
-`CultureScore`-shaped pattern the batch instruction's own §15 explicitly warns against, sharing
-this repository's own name ("culture") with this Rule's own much richer target concept
-(language, custom, ritual, symbol, story) while realizing none of that content — a genuine
-naming/scope mismatch between what this repository calls "culture" and what this Rule's own
-target semantics mean by it, not merely an incomplete implementation of the same concept.
+from event history and carried per-region across campaign episodes. Checked directly: no code
+anywhere treats these four axes as the complete, authoritative, or exhaustive definition of
+culture in a way that would foreclose a richer culture model coexisting alongside it —
+`CulturalBiasApplicator`'s own consumption is a transient, per-scoring-call bias delta, never
+written to durable state, and nothing in the model or its consumers asserts or enforces that
+these four axes are all "culture" could ever be. This is correctly classified as a
+**derived regional cultural tendency/projection** — a real, narrower, and semantically valid
+representation of one slice of what culture can mean, not an active collapse of this Rule's
+own richer target concept. Naming the same word ("culture") for a narrower thing is, by
+itself, not sufficient grounds for CONFLICTING, per the follow-up's own explicit correction.
 
 **Scenarios:** [CB-S01](../scenarios/culture-belief-batch-11b.md#cb-s01) (culture spans
 border), [CB-S02](../scenarios/culture-belief-batch-11b.md#cb-s02) (one territory, multiple
@@ -63,42 +78,45 @@ cultures).
 
 ---
 
-## CULT-02 — Culture may contain durable/shared practices, norms, rituals, institutions, records, symbols, or traditions that persist beyond the current distribution of individual belief or practice; culture is never reducible to the statistical average of individuals' own current states
+## CULT-02 — Culture is a persistent collective social pattern that may be carried through practices, norms, rituals, institutions, stories, symbols, records, language, and repeated social behavior — through durable artifacts/institutions or through oral tradition and repeated practice with no durable artifact at all; culture is never reducible to the statistical average of individuals' own current states
 
 > A settlement's or population's own cultural pattern is never computed merely as the average
-> of its current residents' own private beliefs or practices. Culture *may* contain durable,
-> shared practices, norms, rituals, institutions, records, symbols, traditions, or other
-> socially persistent structures — but this is a permitted, non-exhaustive description of what
-> culture can consist of, not a definition that culture *is* only these artifacts and nothing
-> else. Whatever a specific culture's own content turns out to be, it is never reducible to a
-> live average of current individual states: a settlement's custom favoring ancestor worship
-> does not imply every resident personally believes in it, and does not disappear merely
-> because the current population's own average belief has shifted, absent a real, declared
-> change process (see CULT-04).
+> of its current residents' own private beliefs or practices, and it is never identical to
+> every individual's own behavior. Culture may be carried through durable artifacts and
+> institutions (records, symbols, declared rules), but that is only one legitimate carrier
+> among several — an oral tradition, a repeated social practice, or a shared convention may
+> just as legitimately carry a real, persistent cultural pattern through nothing but ongoing
+> social transmission, with no institution, record, or physical object storing it at all.
+> Whatever a specific culture's own content and carrier turn out to be, it is never reducible
+> to a live average of current individual states: a settlement's custom favoring ancestor
+> worship does not imply every resident personally believes in it, and does not disappear
+> merely because the current population's own average belief has shifted, absent a real,
+> declared change process (see CULT-04).
 
-**Disposition: ACCEPT — REQUIRED; reworded 2026-09-22 per external follow-up review to fix an
-over-literal equation.** The original wording ("culture consists of durable collective
-artifacts") risked being read as a strict, exhaustive definition — that culture *is* durable
-artifacts and nothing else. This revision keeps the substantive non-admission claim (culture is
-never reducible to a live statistical average of current individual belief) while stating the
-durable-artifact content as a permitted, non-exhaustive description rather than a definition,
-consistent with CULT-01's own open-ended-content principle. Passes the admission test
+**Disposition: ACCEPT — REQUIRED; reworded twice, 2026-09-22, per two successive external
+follow-up reviews.** The original wording ("culture consists of durable collective
+artifacts") risked being read as a strict, exhaustive definition. A first follow-up loosened
+this to "may contain durable/shared... structures," but a second follow-up correctly
+identified that even that revision still implicitly centered culture on durability/artifacts
+as the primary carrier — this further revision makes explicit that a purely non-durable
+carrier (oral tradition, repeated practice, shared convention, with no institution, record, or
+object storing it) is an equally legitimate way for culture to persist, not a lesser or
+implied case. This keeps the substantive non-admission claim (culture is never reducible to a
+live statistical average of current individual belief) fully intact while removing any
+remaining artifact-centric bias from the Rule's own wording. Passes the admission test
 unchanged: this goes beyond the already-established individual/aggregate distinctness
 (Batch 05's ECOL-01/02, Batch 09's SOC-01) by forbidding the specific "average = culture"
 shape the batch instruction's own §35 names as a mistake, which the pure aggregate/individual
-boundary alone does not itself forbid (an aggregate *could* legitimately be defined as a live
-average of something else; this Rule specifically forbids that shape for culture, without
-otherwise constraining what culture's own content may be).
+boundary alone does not itself forbid.
 
 **Repository evidence: PARTIAL.** `CultureCarryForward`'s own per-region, per-episode
-snapshot shape is durable and persists independently of any single entity's own belief state —
-consistent with the "durable, not a live average" half of this Rule. Whether it is populated
-from genuine collective artifacts (declared institutions/rituals/records) or is itself simply
-an aggregated statistic derived from individual-level events was not fully resolved — its own
-docstring describes deriving axes "from calamity events," "from deaths of HERO entities," and
-similar event-aggregation language, which sits closer to a derived statistical tendency than to
-a durable institutional artifact, a distinction this Rule's own admission depends on and
-which future investigation should sharpen.
+snapshot shape is durable and persists independently of any single entity's own belief state
+— consistent with the "persistent, not a live average" half of this Rule, realized here via
+the durable-artifact/institutional-projection carrier (CULT-01's own PARTIAL finding), not the
+oral-tradition/repeated-practice carrier this revision also explicitly permits. No mechanism
+was found that carries any cultural content purely through repeated social behavior with no
+durable backing at all — confirmed MISSING for that specific carrier, though this Rule does
+not require it to exist, only permits it.
 
 **Scenarios:** [CB-S03](../scenarios/culture-belief-batch-11b.md#cb-s03) (individual rejects
 local culture).
@@ -194,12 +212,14 @@ genuinely new structural content beyond a pure restatement.)*
 **These are repository/implementation facts, not World Rule decisions, and imply no delivery
 priority.**
 
-- **CONFLICTING — this repository's own "culture" system is a four-axis derived-tendency
-  score, not the rich concept this family's own target semantics describe.** See CULT-01
-  above. Real, live, and genuinely consumed (`CulturalBiasApplicator`), which makes this a
-  more significant naming/scope mismatch than a simple MISSING finding — a reader searching
-  this codebase for "culture" will find a real, working system that does not implement what
-  this family means by the word.
+- **PARTIAL, not CONFLICTING (reassessed 2026-09-22 per a second external follow-up
+  review) — this repository's own "culture" system is a four-axis derived-tendency score, a
+  narrower, valid projection, not an active collapse of this family's own richer target
+  semantics.** See CULT-01 above. Real, live, and genuinely consumed
+  (`CulturalBiasApplicator`), and worth a reader's attention precisely because it shares the
+  word "culture" with this family's own much richer concept — but nothing in the code treats
+  those four axes as complete or exhaustive, so this is correctly a narrower-scope PARTIAL
+  finding, not a naming collision serious enough to call CONFLICTING on its own.
 - **Confirmed MISSING — no individual-level cultural participation/adoption mechanism
   exists.** Every entity in a region is affected identically by `CultureState`, regardless of
   that entity's own history. See CULT-03 above.
@@ -227,6 +247,17 @@ prioritized, or required for implementation during the World Rule Catalog phase.
   `rejects: Set[custom_id]`, an `identifies_as: bool`, or an equivalent structure), never one
   scalar standing in for all four. No specific schema is committed here.
   **Implementation decision:** DEFERRED — no commitment in Rule Catalog phase.
+- **Target semantic:** culture is a real, richer collective pattern than a fixed set of
+  derived-tendency axes, though a narrower projection is a legitimate partial realization
+  (CULT-01, CULT-02).
+  **Current realization:** `CultureState`'s own four fixed axes are a real, valid, but
+  narrower regional-tendency projection (PARTIAL, per the second follow-up's own
+  reassessment) — not a violation, but also not the full concept.
+  **Possible implementation direction (moved here 2026-09-22 from Owner-Attention, per the
+  second follow-up's own explicit instruction):** should `CultureState` ever be renamed,
+  reconciled with, or kept fully separate from a future richer culture model, as an
+  implementation/data-shape decision — no schema or renaming is committed here.
+  **Implementation decision:** DEFERRED.
 
 ## Cross-domain links recorded here
 
@@ -244,6 +275,14 @@ prioritized, or required for implementation during the World Rule Catalog phase.
    social-relations.md`'s own reputation-representations Inherited entry, Batch 09)**?** Both
    are aggregate, region/population-scoped facts — whether they should ever be unified at the
    data-shape level or remain conceptually and structurally separate is not decided here.
-2. Whether `CultureState`'s own four fixed axes should ever be reconciled with, renamed
-   relative to, or kept fully separate from this family's own richer target concept is a
-   repository-realization question, not decided here.
+2. **Added 2026-09-22 per a second external follow-up review — what makes cultural state
+   persistent beyond current individuals?** Not decided here in the abstract — CULT-02's own
+   revision names durable artifacts/institutions and oral tradition/repeated practice as two
+   legitimate carriers, but which carrier(s) any specific domain actually uses, and how a
+   domain would recognize "the culture is still the same culture" through either carrier's
+   own drift, remains open.
+
+*(The prior version of this list's own item 2 — "whether `CultureState`'s own four fixed
+axes should ever be reconciled..." — was moved to Implementation Candidates below, per the
+second follow-up's own explicit instruction to keep storage/data-shape questions there
+rather than in Owner-Attention/Open Questions.)*

@@ -12,7 +12,11 @@ tags: [architecture, world, content]
 Territory/Control rule families in `places-culture/places.md`, `settlements.md`, and
 `territory-control.md`, per `tmp/world-rule-batch-11-ext-ai.md`'s own §32 seed list — the
 Places/Settlements/Territory half of Batch 11, split from Culture/Collective Belief
-(Batch 11B) per that instruction's own explicit §1 size/split permission.
+(Batch 11B) per that instruction's own explicit §1 size/split permission. Extended twice on
+2026-09-22, by two successive follow-up reviews (`tmp/world-rule-batch-11-followup-ext-
+ai.md`, then `tmp/world-rule-batch-11-followup-2-ext-ai.md`) — PT-S03, PT-S05, PT-S06, PT-S07,
+and PT-S08 each carry probes added or corrected by one or both follow-ups, extended in place
+rather than as new IDs.
 
 Per the standing direction (`tmp/world-rule-direction.md`): a scenario failing against the
 current repository does not mean the scenario or its Rule fails. Scoring uses the same
@@ -44,17 +48,23 @@ ground; spatial location is the same; place identity may differ.
   repository currently has no realized case of the "new place at the same location" half of
   PLACE-03's own permitted range, only the "same place, changed kind" half.
 
-## PT-S03 — Village becomes town
+## PT-S03 — Village becomes town / transformation with default continuity
 
 Population/activity/infrastructure change; settlement capability/state changes; identity
-persists.
+persists. **Extended per the second 2026-09-22 follow-up's own §7 "Transformation With
+Default Continuity" probe:** a village grows into a town; its functional/type state changes;
+Place identity remains — testing that PLACE-03's own *corrected* default (continuity is the
+default outcome of a transformation, not a coin-flip) actually holds for a growth
+transformation, not merely the one already-confirmed CITY→RUIN case.
 
-- **Rules invoked:** SETT-01, SETT-03.
+- **Rules invoked:** SETT-01 (revised), SETT-03, PLACE-03 (corrected).
 - **Result: partially covered.** Identity persistence through a kind/scale change is
   structurally supported (`place_id` stable, `PlaceKind.CITY`'s own `scale` field could in
-  principle represent this). No causal mechanism was found that actually drives a
-  population/activity change into a `scale` change — confirmed MISSING for the causal half,
-  consistent with SETT-02's own finding.
+  principle represent this) — consistent with PLACE-03's own corrected default (identity
+  continuity is the default outcome of a transformation), even though no growth-transformation
+  mechanism exists to positively exercise it. No causal mechanism was found that actually
+  drives a population/activity change into a `scale` change — confirmed MISSING for the
+  causal half, consistent with SETT-02's own finding.
 
 ## PT-S04 — Town becomes ruin
 
@@ -91,7 +101,16 @@ Place" does not, by itself, imply "same settlement."
   resettlement case). Whether the *settlement* founded by the new, unrelated population would
   be the same settlement or a genuinely new one is a second, further-untested question — this
   repository has no mechanism to answer either question, let alone confirm they resolve the
-  same way. SETT-01's own revised text explicitly declines to assume they do.
+  same way. SETT-01's own revised text explicitly declines to assume they do. **Further
+  extended per the second 2026-09-22 follow-up's own §7 "Depopulated Settlement" probe:** a
+  settlement's own population reaches zero; its active settlement function ends or becomes
+  dormant; Place/history persists regardless. **Result: partially covered.** SETT-01's own
+  revised default (settlement status may end/become dormant while the underlying Place's own
+  identity persists, per PLACE-03's corrected default) is now stated as this Rule's own target
+  semantics — but checked directly, no settlement-status field distinct from raw population
+  presence exists at all (SETT-01's own re-verified finding), so this default is confirmed
+  coherent as a target requirement without yet being positively exercised against any real
+  dormant/active status transition.
 
 ## PT-S06 — Claim without control
 
@@ -99,14 +118,14 @@ A kingdom claims a region; it has no effective presence or reach there; the clai
 practical control is absent.
 
 - **Rules invoked:** TERR-01, TERR-02, TERR-03.
-- **Result: revealed missing rule (reclassified 2026-09-22 per external follow-up review —
-  was "revealed contradiction").** Re-verified against actual consumers, not the field's shape
-  alone: `region.owner_faction_id` is never read or written *as* a claim anywhere in this
-  repository — the "claim independent of control" concept was never attempted, so there is no
-  live representation for this scenario to actively contradict. This is TERR-03's own
-  reclassified MISSING/INCOMPLETE finding exercised directly: the concept is absent, not
-  collapsed. (`owner_faction_id`'s own *control*-vs-*sovereignty* conflation, a separate,
-  narrower CONFLICTING finding, is not what this specific scenario exercises — see TERR-01.)
+- **Result: revealed contradiction (restored 2026-09-22 by a second external follow-up
+  review, correcting an intermediate same-day revision).** `region.owner_faction_id` is a
+  single field this repository currently treats as the complete, authoritative answer to "who
+  controls this territory" — checked directly, this active, singular role structurally
+  forecloses ever representing a claim independent of that control value, not merely because
+  "claim" happens to be unattempted, but because the field's own current use *is* the
+  authoritative slot a claim concept would need to share or displace. This is TERR-01/TERR-03's
+  own CONFLICTING finding exercised directly, not a bare absence.
 
 ## PT-S07 — Control without recognized claim
 
@@ -114,13 +133,12 @@ An army occupies territory; practical control is real; formal legitimacy/claim i
 
 - **Rules invoked:** TERR-01, TERR-02, TERR-03, Inherited (authority/power/legitimacy
   distinctness, Batch 10's INST-03).
-- **Result: revealed missing rule, same underlying gap as PT-S06 (reclassified 2026-09-22).**
-  No claim/legitimacy concept exists for "control without it" to diverge from — confirmed
-  MISSING. Separately, and worth naming here: `PlaceState.owner_faction_id`'s own field
-  comment calls the same field a "Sovereignty override," which is direct evidence that this
-  repository's own code already treats bare military/administrative control as if it were
-  sovereignty — the narrow CONFLICTING finding TERR-01 retains, distinct from this scenario's
-  own claim-concept absence.
+- **Result: revealed contradiction, same underlying finding as PT-S06.** `PlaceState.
+  owner_faction_id`'s own field comment calls the same field a "Sovereignty override," direct
+  evidence that this repository's own code already treats bare military/administrative
+  control as if it were legitimate sovereignty — the same field cannot distinguish "controls
+  without a recognized claim" from "controls with a fully legitimate claim," confirming the
+  CONFLICTING finding from this scenario's own opposite direction.
 
 ## PT-S08 — Contested territory
 
@@ -128,13 +146,10 @@ Actor A claims; actor B controls; population C recognizes neither; separate fact
 coexist.
 
 - **Rules invoked:** TERR-01, TERR-03.
-- **Result: revealed missing rule (reclassified 2026-09-22).** A three-way divergence (claim/
-  control/local-recognition) has no representable shape in a single nullable
-  `owner_faction_id` field — but re-verified against actual evidence, this is because "claim"
-  and "local recognition" were never attempted as their own facts, not because an active
-  collapse between two live representations is occurring. The structural caveat remains: any
-  future claim/recognition mechanism could not simply be added alongside the existing field
-  without addressing it directly.
+- **Result: revealed contradiction.** The clearest, richest exercise of TERR-01/TERR-03's own
+  restored CONFLICTING finding — a three-way divergence (claim/control/local-recognition) has
+  no representable shape at all in a single field this repository currently treats as the
+  sole authoritative territorial-control answer.
 
 ## PT-S09 — Jurisdiction without ownership
 
@@ -222,13 +237,16 @@ isolated missing feature at any one scale; it is a recurring cross-domain struct
 per this batch's own §37 explicit request to record whether this now constitutes a clear
 integration concern. It does.
 
-PT-S06/S07/S08's own shared finding was re-verified 2026-09-22 per an external follow-up
-review: tracing actual consumers rather than reasoning from the field's shape alone shows the
-"claim independent of control" concept was simply never attempted in this repository (MISSING/
-INCOMPLETE), not actively collapsed with control (which would be CONFLICTING). A narrower,
-directly-evidenced CONFLICTING finding survives the re-verification: `owner_faction_id` is
-actively read as both control (taxation, `suppression_active`) and, per `PlaceState`'s own
-field comment, "sovereignty" — two distinct concepts collapsed into one field by this
-repository's own current consumers, not merely inferred from the field's shape. This narrower
-finding remains structurally analogous to Batch 10's own single-field `owner_id` warning,
-correctly scoped this time to what the evidence actually supports.
+PT-S06/S07/S08's own shared finding was revised twice on 2026-09-22. A first follow-up review
+traced actual consumers rather than reasoning from the field's shape alone, and (correctly)
+found `owner_faction_id` is actively read as both control (taxation, `suppression_active`)
+and, per `PlaceState`'s own field comment, "sovereignty" — but (incorrectly) concluded from
+this that the *contested-claim* half specifically should be downgraded to MISSING/INCOMPLETE,
+on the reasoning that "claim" itself was never separately attempted. A second follow-up
+review corrected this: the conflict does not depend on claim having been attempted — it
+follows from the field's own current, active role as the *sole* authoritative territorial-
+control slot, which structurally forecloses ever representing a diverging claim or a
+contested state without conflating it with, or overwriting, that same value. The restored
+CONFLICTING finding remains structurally analogous to Batch 10's own single-field `owner_id`
+warning, now correctly scoped to what the evidence actually supports on both passes, not
+merely the first.

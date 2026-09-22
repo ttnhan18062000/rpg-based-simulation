@@ -12,7 +12,10 @@ tags: [architecture, world, content]
 families in `places-culture/culture.md` and `collective-belief.md`, per
 `tmp/world-rule-batch-11-ext-ai.md`'s own §32 seed list — the Culture/Belief half of Batch 11,
 split from Places/Settlements/Territory (Batch 11A) per that instruction's own explicit §1
-size/split permission.
+size/split permission. Extended twice on 2026-09-22, by two successive follow-up reviews
+(`tmp/world-rule-batch-11-followup-ext-ai.md`, then `tmp/world-rule-batch-11-followup-2-ext-
+ai.md`) — CB-S03, CB-S06, CB-S07, and CB-S08 each carry probes added by one or both
+follow-ups, extended in place rather than as new IDs.
 
 Per the standing direction (`tmp/world-rule-direction.md`): a scenario failing against the
 current repository does not mean the scenario or its Rule fails. Scoring uses the same
@@ -46,16 +49,20 @@ membership.
   culture is not collapsed into political membership at the data-shape level, even without any
   richer cultural content realized.
 
-## CB-S03 — Individual rejects local culture / four-way divergence
+## CB-S03 — Individual rejects local culture / four-way divergence / shared practice, different beliefs
 
 A settlement's cultural pattern exists; a resident rejects a major norm; collective ≠
 individual. **Extended per the 2026-09-22 follow-up's own §5 probe:** a single individual
 knows the local culture well, practices one of its customs, rejects another, and does not
 identify with the culture overall — all four facts hold simultaneously and independently.
 This extended clause is designed to fail any realization that reduces all four facts to one
-scalar (e.g., a single `cultural_affinity` value).
+scalar (e.g., a single `cultural_affinity` value). **Further extended per a second 2026-09-22
+follow-up's own §14 "Shared Practice, Different Beliefs" probe:** multiple people participate
+in the same ritual or custom; each individual gives it a different personal meaning; the
+shared cultural practice remains real regardless — challenging both "culture = average
+belief" and "culture = uniform doctrine every participant must share."
 
-- **Rules invoked:** CULT-02, CULT-03.
+- **Rules invoked:** CULT-02 (revised), CULT-03.
 - **Result: revealed missing rule.** No individual-level cultural-participation field exists
   at all (CULT-03's own MISSING finding) — there is no positive mechanism for an individual to
   align with the regional `CultureState` in the first place, so there is equally no mechanism
@@ -66,7 +73,14 @@ scalar (e.g., a single `cultural_affinity` value).
   ≠ practice ≠ rejection ≠ identification) cannot be exercised — but CULT-03's own requirement
   that these remain independently representable is precisely what would fail a future
   single-scalar realization; this scenario exists to hold that requirement visible until a
-  real mechanism is built, per the follow-up's own explicit corrected Implementation Candidate.
+  real mechanism is built, per the follow-up's own explicit corrected Implementation
+  Candidate. **Further extended clause: revealed missing rule, and CULT-02's own revised
+  permission is confirmed coherent regardless.** No mechanism represents a single shared
+  practice with per-participant divergent meanings — but CULT-02's own revised text (culture
+  is never identical to every individual's own behavior/belief, and a shared practice remains
+  real regardless of each participant's own private interpretation) already states exactly
+  the requirement this clause probes, independently of whether any mechanism yet exists to
+  exercise it.
 
 ## CB-S04 — Migrant adopts some practices
 
@@ -92,14 +106,24 @@ Two groups interact or trade; each learns about the other; no cultural adoption 
   explicit permission (encountering a culture never implies adopting it) remains valid and
   testable in principle even without a mechanism to check it against yet.
 
-## CB-S06 — Cultural blending
+## CB-S06 — Cultural blending / culture without a durable artifact
 
 Persistent contact; a declared transmission/adaptation process; a new mixed practice emerges.
+**Extended per a second 2026-09-22 follow-up's own §14 "Culture Without Durable Artifact"
+probe:** a community maintains an oral custom; repeated social transmission continues; no
+institution, record, or object stores it; the cultural pattern persists regardless —
+challenging CULT-02's own (pre-second-follow-up) framing.
 
-- **Rules invoked:** CULT-04.
+- **Rules invoked:** CULT-04, CULT-02 (revised).
 - **Result: revealed missing rule.** Confirmed MISSING — no cultural-blending mechanism of
   any kind exists; `CultureCarryForward`'s own regional drift is event-driven, not
-  contact-driven between two distinct cultural patterns.
+  contact-driven between two distinct cultural patterns. **Extended clause: revealed missing
+  rule, and the Rule's own permission is confirmed coherent regardless.** No mechanism
+  carries any cultural content purely through repeated social behavior with no durable
+  backing at all — confirmed MISSING for this specific carrier — but CULT-02's own revised
+  text (an oral tradition or repeated practice may carry culture with no durable artifact at
+  all) remains independently coherent, precisely the permission this probe exists to protect
+  against being silently dropped.
 
 ## CB-S07 — False shared belief / institution-free folk belief
 
@@ -134,18 +158,19 @@ regards it as ordinary, or interprets it differently; no supernatural effect exi
 way; both states — A's attribution and B's differing view — must be simultaneously
 representable, neither one overriding or invalidating the other.
 
-- **Rules invoked:** BEL-02, BEL-03 (revised).
-- **Result: revealed missing rule.** No sacred-place mechanism of any kind exists (BEL-03's
-  own confirmed MISSING finding, via direct search for "sacred"/"pilgrimage"/"shrine" terms).
-  BEL-02's own boundary (no supernatural mechanism required) is trivially satisfied by the
-  same absence — there is neither a cultural sacredness mechanism nor a supernatural one to
-  conflate. **Extended clause: revealed missing rule, and the Rule's own relational
-  requirement is confirmed coherent regardless.** With no attribution mechanism of any kind,
-  Group A's and Group B's own divergent views cannot be exercised — but BEL-03's own revised
-  requirement (attribution is always relative to a specific attributor, and divergent
-  attributions must remain simultaneously representable, never collapsed to one "the place is/
-  isn't sacred" answer) is exactly the shape any future realization must satisfy, confirmed
-  independently coherent even with nothing yet built to check it against.
+- **Rules invoked:** BEL-02, Inherited (the reclassified sacredness entry, originally BEL-03).
+- **Result: revealed missing rule.** No sacred-place mechanism of any kind exists (the
+  reclassified sacredness entry's own confirmed MISSING finding, via direct search for
+  "sacred"/"pilgrimage"/"shrine" terms). BEL-02's own boundary (no supernatural mechanism
+  required) is trivially satisfied by the same absence — there is neither a cultural
+  sacredness mechanism nor a supernatural one to conflate. **Extended clause: revealed
+  missing rule, and the entry's own relational requirement is confirmed coherent regardless.**
+  With no attribution mechanism of any kind, Group A's and Group B's own divergent views
+  cannot be exercised — but the reclassified entry's own requirement (attribution is always
+  relative to a specific attributor, and divergent attributions must remain simultaneously
+  representable, never collapsed to one "the place is/isn't sacred" answer) is exactly the
+  shape any future realization must satisfy, confirmed independently coherent even with
+  nothing yet built to check it against.
 
 ## CB-S09 — Real magic, no cultural recognition (boundary probe)
 
@@ -197,18 +222,28 @@ institution-backed subset of BEL-01 (`BeliefInstitution` is always keyed to a `c
 institution-free half of BEL-01's own permission (CB-S07's own extended clause) has no
 structural match of any kind, confirmed MISSING rather than merely unconsumed.
 
-**Cross-batch consistency re-confirmed 2026-09-22 (per the follow-up's own item 8):** Place
-identity ≠ Settlement identity (11A's own re-opened SETT-01); territorial cultural
+**Cross-batch consistency re-confirmed 2026-09-22 (per the first follow-up's own item 8):**
+Place identity ≠ Settlement identity (11A's own re-opened SETT-01); territorial cultural
 association ≠ Culture (`territory-control.md`'s own terminology fix); Culture ≠ average
 individual belief (CULT-02, reworded); individual cultural knowledge/practice/identity/
 rejection remain non-collapsed (CULT-03, its Implementation Candidate corrected); collective
 belief ≠ individual belief (BEL-01); collective belief does not require an institution
 (BEL-01, now with its own dedicated scenario clause); attributed significance/sacredness ≠
-universal recognition (PLACE-02/BEL-03, both revised to be attribution-relative); attributed
-sacredness ≠ supernatural truth (BEL-02, unchanged, still holds); political control/conquest
-does not automatically rewrite culture (CULT-04's own no-default-convergence clause, unchanged,
-still holds — no conquest-driven cultural-rewrite mechanism was found either way);
-`owner_faction_id`'s own classification now matches directly-traced evidence rather than
-schema appearance alone (`territory-control.md`'s own re-verified TERR-01/TERR-03). No
-universal Significance system was created as part of this update, per the follow-up's own
+universal recognition (PLACE-02/the then-current BEL-03, both revised to be
+attribution-relative); attributed sacredness ≠ supernatural truth (BEL-02, unchanged, still
+holds); political control/conquest does not automatically rewrite culture (CULT-04's own
+no-default-convergence clause, unchanged, still holds — no conquest-driven cultural-rewrite
+mechanism was found either way); `owner_faction_id`'s own classification now matches
+directly-traced evidence rather than schema appearance alone (`territory-control.md`'s own
+re-verified TERR-01/TERR-03).
+
+**Superseded in part by a second 2026-09-22 follow-up review.** Two of the conclusions above
+were corrected: `owner_faction_id`'s own contested-claim/territorial-divergence finding was
+restored to CONFLICTING (the first follow-up's own MISSING/INCOMPLETE reclassification had
+understated the conflict — see `territory-control.md`'s own TERR-01/TERR-03 for the corrected
+evidence trace), and BEL-03 was itself reclassified from a Domain Rule to an Inherited entry
+(a direct combination of BEL-02 and PLACE-02, not new content) once reframed as a permission
+rather than a requirement — the attribution-relative content survives unchanged, only its own
+Rule-ID status changed. No universal Significance system was created as part of either
+update, per the follow-up's own
 explicit prohibition.
