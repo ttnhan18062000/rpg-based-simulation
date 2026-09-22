@@ -38,7 +38,9 @@ reclassified to Inherited and LEARN-02 retired to Repository Findings), and **PA
 freeze**. Batch 08 (Objects/Ownership/Resources/Economy) is drafted 2026-09-22, revised the
 same day per a targeted semantic-cleanup follow-up (6 genuine Domain Rules of 23 total catalog
 entries after OBJ-03/PROP-02 were reclassified to Inherited), and **PASS — ready to freeze**.
-Batch 09 (Social Relations/Family/Lineage) is the next step.
+Batch 09 (Social Relations/Family/Lineage) is drafted 2026-09-22 (7 genuine Domain Rules of 18
+total catalog entries) and ready for high-level external review. Batch 10 (Organizations/
+Institutions/Politics/Law) is the next planned step once Batch 09 is reviewed.
 
 ---
 
@@ -316,6 +318,14 @@ practice today, despite the code's own appearance of completeness.
 
 ### Batch 09 — Social Relations / Family / Lineage
 
+**Status: drafted 2026-09-22, ready for high-level external review.** 7 genuine Domain Rules
+(18 total catalog entries — 7 Domain Rules, 7 Inherited/Applied Foundational Rules, 4 Scope/
+Deferred Boundaries) across `social-lineage/social-relations.md`, `family-kinship.md`,
+`lineage-descent.md`. Two clean resolutions of long-carried-forward open questions (Batch 01's
+OWN-03 reputation-naming-collision, Batch 05's LIFE-05 family-meaning deferral) and one
+significant, notable finding: this repository's own default heir-eligibility mechanism is
+social-bond-based, not kinship-based. See `review-exports/social-lineage-batch-09-review.md`.
+
 ```text
 relationships
 reputation
@@ -327,9 +337,13 @@ feuds
 obligations
 ```
 
-Also formally document the reputation-scalar-vs-reputation-labels naming collision Batch 01's
-OWN-03/FND-S05 surfaced (two legitimately separate owned fields with an undocumented narrative
-relationship) — flagged there, not resolved there.
+**RESOLVED 2026-09-22.** The reputation-scalar-vs-reputation-labels naming collision Batch
+01's OWN-03/FND-S05 surfaced is now formally documented: `SocialComponent.public_reputation`
+(numeric scalar) and `PublicReputationProfile.labels` (qualitative label map, populated via
+`ReputationUpdateService.process_witnessed_event()`, called from `src/engine/quests.py`) are
+confirmed two legitimately separate, real, independently-owned fields — neither a duplicate of
+the other. See `social-lineage/social-relations.md`'s own Inherited entry for the reputation
+boundary.
 
 ### Batch 10 — Organizations / Institutions / Politics / Law
 

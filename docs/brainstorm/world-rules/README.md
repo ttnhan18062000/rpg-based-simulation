@@ -60,6 +60,9 @@ order.
 | Ownership / Possession | Batch 08 — PASS, frozen | [material-economy/ownership-possession.md](material-economy/ownership-possession.md) |
 | Resources / Production | Batch 08 — PASS, frozen | [material-economy/resources-production.md](material-economy/resources-production.md) |
 | Economy / Exchange | Batch 08 — PASS, frozen | [material-economy/economy-exchange.md](material-economy/economy-exchange.md) |
+| Social Relations | Batch 09 drafted | [social-lineage/social-relations.md](social-lineage/social-relations.md) |
+| Family / Kinship | Batch 09 drafted | [social-lineage/family-kinship.md](social-lineage/family-kinship.md) |
+| Lineage / Descent | Batch 09 drafted | [social-lineage/lineage-descent.md](social-lineage/lineage-descent.md) |
 
 ## Rule Catalog progress
 
@@ -199,8 +202,26 @@ order.
   `review-exports/material-economy-batch-08-review.md`'s explicit call-outs for these and
   further confirmed gaps. See `tmp/material-economy-batch-08-report.md` (local, not part of
   this catalog) for the full disposition report.
-- Do not begin Batch 09 (Social Relations / Family / Lineage) until Batch 08 receives
-  high-level review.
+- **Batch 09** (Social Relations/Family/Lineage) — the sixth domain-facing Milestone B batch —
+  drafted 2026-09-22 directly with the strict Rule-admission discipline. 7 genuine Domain
+  Rules (18 total catalog entries including 7 inherited/applied foundational rules and 4
+  scope/deferred boundaries) across Social Relations, Family/Kinship, and Lineage/Descent;
+  ready for high-level external review. Two clean resolutions of long-carried-forward open
+  questions: Batch 01's OWN-03 (reputation scalar vs. reputation labels naming collision) is
+  confirmed as two legitimately separate, real fields, neither a duplicate of the other; Batch
+  05's own LIFE-05 deferred boundary (what biological parentage means socially) is directly
+  answered by FAM-01. A significant, notable finding: this repository's own default
+  heir-eligibility mechanism (`_select_default_heir()`) is a social-bond mechanism, not a
+  kinship mechanism — it never reads `parent_a/b_entity_id` at all, meaning the candidate
+  Batch 08's own confirmed-broken property-transfer mechanism would have delivered property to
+  is not guaranteed to be an actual relative. A parent's own reputation is confirmed to seed a
+  newborn's own starting standing (a real, one-generation "Famous Ancestor" echo), but nothing
+  propagates significance any deeper. See
+  `review-exports/social-lineage-batch-09-review.md`'s explicit call-outs for these and
+  further confirmed gaps. See `tmp/social-lineage-batch-09-report.md` (local, not part of this
+  catalog) for the full disposition report.
+- Do not begin Batch 10 (Organizations / Institutions / Politics / Law) until Batch 09
+  receives high-level review.
 
 ## Scenario Bank index
 
@@ -214,7 +235,8 @@ order.
 | Batch 05 (Life/Body/Survival/Ecology) | [scenarios/life-body-batch-05.md](scenarios/life-body-batch-05.md) | LB-S01 – LB-S16 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | [scenarios/knowledge-agency-batch-06.md](scenarios/knowledge-agency-batch-06.md) | KA-S01 – KA-S20 |
 | Batch 07 (Capability/Progression/Conflict) | [scenarios/capability-progression-batch-07.md](scenarios/capability-progression-batch-07.md) | CP-S01 – CP-S17 |
-| Batch 08 (Objects/Ownership/Resources/Economy) | [scenarios/material-economy-batch-08.md](scenarios/material-economy-batch-08.md) | ME-S01 – ME-S16 |
+| Batch 08 (Objects/Ownership/Resources/Economy) | [scenarios/material-economy-batch-08.md](scenarios/material-economy-batch-08.md) | ME-S01 – ME-S18 |
+| Batch 09 (Social Relations/Family/Lineage) | [scenarios/social-lineage-batch-09.md](scenarios/social-lineage-batch-09.md) | SL-S01 – SL-S18 |
 
 ## Unresolved cross-domain questions
 
@@ -416,6 +438,27 @@ follow-up):**
   conversion edge exists; no mechanism computes `price_modifiers` from real scarcity/depletion
   — scarcity and price are confirmed disconnected mechanisms.
 
+**From Batch 09 (Social Relations/Family/Lineage, drafted 2026-09-22):**
+
+- **Resolved.** Batch 01's own OWN-03 open question (reputation scalar vs. reputation labels
+  naming collision) is confirmed as two legitimately separate, real, independently-owned
+  fields (`SocialComponent.public_reputation`, `PublicReputationProfile.labels`), neither a
+  duplicate of the other.
+- **Resolved.** Batch 05's own LIFE-05 deferred boundary (what biological parentage means
+  socially) is directly answered by FAM-01: biological parentage, social parenthood,
+  marriage, household, and lineage membership are distinct facts, none implying affection,
+  loyalty, inheritance, or authority.
+- **Confirmed, a significant, notable finding.** This repository's own default heir-
+  eligibility mechanism (`_select_default_heir()`) is a social-bond mechanism, not a kinship
+  mechanism — it never reads `parent_a/b_entity_id` at all.
+- **Confirmed SUPPORTED, but shallow.** A parent's own reputation seeds a newborn's own
+  starting `public_reputation` (a real, one-generation "Famous Ancestor" echo,
+  `TCK-20260904-INHERITED-REPUTATION-SEED`) — nothing propagates significance any deeper.
+- **Confirmed MISSING.** No social parenthood/adoption tracking; no household/co-residence
+  tracking; no derived-kinship (sibling/grandparent) computation exists anywhere.
+- **Confirmed INERT.** `debt_history`, `fear_history`, `salience_history`,
+  `place_attachment` have zero consumers outside their own write path.
+
 ## Review index
 
 For external review, send the review export first — it's the compact, generated summary; send
@@ -444,7 +487,8 @@ rationale stay canonical.
 | Batch 05 (Life/Body/Survival/Ecology) | `life-body/lifecycle.md`, `life-body/body-condition.md`, `life-body/survival-needs.md`, `life-body/ecology-population.md` | `scenarios/life-body-batch-05.md` (LB-S01–S16) | [review-exports/life-body-batch-05-review.md](review-exports/life-body-batch-05-review.md) | Ready for high-level external review, normalized 2026-09-22 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | `knowledge-agency/perception.md`, `knowledge-agency/knowledge-information.md`, `knowledge-agency/agency-decision.md` | `scenarios/knowledge-agency-batch-06.md` (KA-S01–S20) | [review-exports/knowledge-agency-batch-06-review.md](review-exports/knowledge-agency-batch-06-review.md) | PASS — ready to freeze |
 | Batch 07 (Capability/Progression/Conflict) | `capability-progression/capability-progression.md`, `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md` | `scenarios/capability-progression-batch-07.md` (CP-S01–S17) | [review-exports/capability-progression-batch-07-review.md](review-exports/capability-progression-batch-07-review.md) | PASS — ready to freeze |
-| Batch 08 (Objects/Ownership/Resources/Economy) | `material-economy/objects-material-culture.md`, `material-economy/ownership-possession.md`, `material-economy/resources-production.md`, `material-economy/economy-exchange.md` | `scenarios/material-economy-batch-08.md` (ME-S01–S16) | [review-exports/material-economy-batch-08-review.md](review-exports/material-economy-batch-08-review.md) | Ready for high-level external review |
+| Batch 08 (Objects/Ownership/Resources/Economy) | `material-economy/objects-material-culture.md`, `material-economy/ownership-possession.md`, `material-economy/resources-production.md`, `material-economy/economy-exchange.md` | `scenarios/material-economy-batch-08.md` (ME-S01–S18) | [review-exports/material-economy-batch-08-review.md](review-exports/material-economy-batch-08-review.md) | PASS — ready to freeze |
+| Batch 09 (Social Relations/Family/Lineage) | `social-lineage/social-relations.md`, `social-lineage/family-kinship.md`, `social-lineage/lineage-descent.md` | `scenarios/social-lineage-batch-09.md` (SL-S01–S18) | [review-exports/social-lineage-batch-09-review.md](review-exports/social-lineage-batch-09-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -492,3 +536,8 @@ rationale stay canonical.
 - Batch 08 scenario file: `scenarios/material-economy-batch-08.md`
 - Batch 08 review export: `review-exports/material-economy-batch-08-review.md`
 - Batch 08 report (local, gitignored): `tmp/material-economy-batch-08-report.md`
+- Batch 09 rule files: `social-lineage/social-relations.md`,
+  `social-lineage/family-kinship.md`, `social-lineage/lineage-descent.md`
+- Batch 09 scenario file: `scenarios/social-lineage-batch-09.md`
+- Batch 09 review export: `review-exports/social-lineage-batch-09-review.md`
+- Batch 09 report (local, gitignored): `tmp/social-lineage-batch-09-report.md`
