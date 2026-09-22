@@ -26,13 +26,21 @@ let runId = null
 let startTs = null
 
 const events = []
+// TCK-20260915-SIBLING-WORKFLOW-SUMMARY-TRUNCATION-MARKERS: visible truncation marker instead of
+// a silent cut, mirroring implement-ticket.js's own truncateSummary() (TCK-20260915-EVENT-
+// SUMMARY-TRUNCATION) — no shared module exists between these standalone workflow scripts, so
+// this is a local copy, same shape, not a new import.
+const truncateSummary = (s) => {
+  const str = (s || '').toString()
+  return str.length > 200 ? str.slice(0, 196) + ' […]' : str
+}
 const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount) => {
   events.push({
     seq: events.length + 1,
     phase: phaseLabel,
     agent: agentName,
     status,
-    summary: (summary || '').toString().slice(0, 200),
+    summary: truncateSummary(summary),
     ts: ts || null,
     tool_call_count: toolCallCount != null ? toolCallCount : null,
   })
@@ -124,7 +132,7 @@ const recalText = recalOutput.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
 startTs = recalTs
 runId = 'SIMQ-AUDIT-' + (recalTs ? recalTs.replace(/[:-]/g, '') : 'UNKNOWN')
 
-pushEvent('Recalibrate', 'workflow', 'ok', recalText.slice(0, 200), recalTs)
+pushEvent('Recalibrate', 'workflow', 'ok', recalText, recalTs)
 
 // ─── Phase 2: Classify Drift ──────────────────────────────────────────────────
 
@@ -288,7 +296,7 @@ Report the exit code is not applicable here; just report which files were touche
 
 const syncDocsTs = syncDocsOutput.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
 const syncDocsText = syncDocsOutput.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
-pushEvent('Sync Docs', 'doc-syncer', 'ok', syncDocsText.slice(0, 200), syncDocsTs)
+pushEvent('Sync Docs', 'doc-syncer', 'ok', syncDocsText, syncDocsTs)
 
 // ─── Phase 5: Parity Check ─────────────────────────────────────────────────────
 
@@ -322,7 +330,7 @@ Then report: entries updated (by ID and what changed), any P0 entries missing a 
 
 const parityTs = parityOutput.toString().match(/^PHASE_TS: (\S+)/m)?.[1] || null
 const parityText = parityOutput.toString().replace(/^PHASE_TS: \S+\n?/, '').trim()
-pushEvent('Parity Check', 'parity-updater', 'ok', parityText.slice(0, 200), parityTs)
+pushEvent('Parity Check', 'parity-updater', 'ok', parityText, parityTs)
 
 // ─── Phase 6: Verify ───────────────────────────────────────────────────────────
 

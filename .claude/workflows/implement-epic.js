@@ -347,13 +347,23 @@ for (const tid of ticketIds) {
 // batchRunId is declared once, hoisted above (before the Discover agent() call) — see that
 // declaration's comment for the full rationale.
 
+// TCK-20260915-SIBLING-WORKFLOW-SUMMARY-TRUNCATION-MARKERS: visible truncation marker instead of
+// a silent cut, mirroring implement-ticket.js's own truncateSummary() (TCK-20260915-EVENT-
+// SUMMARY-TRUNCATION) — no shared module exists between these standalone workflow scripts, so
+// this is a local copy, same shape, not a new import. This file has no central pushEvent cluster
+// (see the comment near this file's top), so the helper is defined here, at its one use site.
+const truncateSummary = (s) => {
+  const str = (s || '').toString()
+  return str.length > 200 ? str.slice(0, 196) + ' […]' : str
+}
+
 const doneCount = results.filter(r => r.status === 'DONE').length
 const batchEvents = results.map((r, i) => ({
   seq: i + 1,
   phase: 'Implement',
   agent: 'implement-ticket',
   status: r.status === 'DONE' ? 'ok' : 'failed',
-  summary: (r.implementation_summary || r.message || r.status || '').slice(0, 200),
+  summary: truncateSummary(r.implementation_summary || r.message || r.status || ''),
 }))
 
 // Pre-embed batchStartTs so the agent only substitutes one placeholder (<END_TS>).
