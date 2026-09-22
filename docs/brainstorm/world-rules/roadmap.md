@@ -32,7 +32,9 @@ batch's own status below), and ready for high-level external review. Batch 06
 targeted semantic-cleanup follow-up (11 genuine Domain Rules of 26 total catalog entries after
 a KNOW-02/KNOW-03 merge, plus a corrected CONFLICTING/INERT-OFF/MISSING repository-finding
 classification), and **PASS — ready to freeze**. Batch 07 (Capability/Progression/Conflict) is
-the next planned step once Batch 06 is reviewed.
+drafted 2026-09-22 (11 genuine Domain Rules of 25 total catalog entries) and ready for
+high-level external review. Batch 08 (Objects/Ownership/Resources/Economy) is the next planned
+step once Batch 07 is reviewed.
 
 ---
 
@@ -242,6 +244,16 @@ Ownership; this batch's own AGENCY reuses that evidence directly (Inherited, not
 new) and writes the actual Perception/Agency domain semantics on top of it.
 
 ### Batch 07 — Capability / Progression / Conflict
+
+**Status: drafted 2026-09-22, ready for high-level external review.** 11 genuine Domain Rules
+(25 total catalog entries — 11 Domain Rules, 9 Inherited/Applied Foundational Rules, 5 Scope/
+Deferred Boundaries) across `capability-progression/capability-progression.md`,
+`learning-adaptation.md`, `conflict-combat.md`. Most load-bearing finding: no counterforce
+against repeated-trivial-kill XP farming, and a documentation claim (`max_xp_per_tick`) does
+not match the actual implementation. The batch's own "especially important" question (can an
+ordinary entity become historically significant?) resolved to a real but partial answer, and a
+genuinely positive cross-batch finding confirmed live combat targeting is already
+perception-gated. See `review-exports/capability-progression-batch-07-review.md`.
 
 ```text
 learning

@@ -50,9 +50,12 @@ order.
 | Body / Condition | Batch 05 drafted, normalized 2026-09-22 | [life-body/body-condition.md](life-body/body-condition.md) |
 | Survival Needs | Batch 05 drafted, normalized 2026-09-22 | [life-body/survival-needs.md](life-body/survival-needs.md) |
 | Ecology / Population | Batch 05 drafted, normalized 2026-09-22 | [life-body/ecology-population.md](life-body/ecology-population.md) |
-| Perception | Batch 06 drafted | [knowledge-agency/perception.md](knowledge-agency/perception.md) |
-| Knowledge / Information / Memory | Batch 06 drafted | [knowledge-agency/knowledge-information.md](knowledge-agency/knowledge-information.md) |
-| Agency / Decision | Batch 06 drafted | [knowledge-agency/agency-decision.md](knowledge-agency/agency-decision.md) |
+| Perception | Batch 06 — PASS, frozen | [knowledge-agency/perception.md](knowledge-agency/perception.md) |
+| Knowledge / Information / Memory | Batch 06 — PASS, frozen | [knowledge-agency/knowledge-information.md](knowledge-agency/knowledge-information.md) |
+| Agency / Decision | Batch 06 — PASS, frozen | [knowledge-agency/agency-decision.md](knowledge-agency/agency-decision.md) |
+| Capability / Progression | Batch 07 drafted | [capability-progression/capability-progression.md](capability-progression/capability-progression.md) |
+| Learning / Adaptation | Batch 07 drafted | [capability-progression/learning-adaptation.md](capability-progression/learning-adaptation.md) |
+| Conflict / Combat | Batch 07 drafted | [capability-progression/conflict-combat.md](capability-progression/conflict-combat.md) |
 
 ## Rule Catalog progress
 
@@ -144,7 +147,24 @@ order.
   or content-distortion modeling, MISSING, reconfirming REACH-05's own already-flagged gap). See
   `tmp/knowledge-agency-batch-06-report.md` (local, not part of this catalog) for the full
   disposition report.
-- Do not begin Batch 07 (Capability / Progression / Conflict) until Batch 06 receives
+- **Batch 07** (Capability/Progression/Conflict) — the fourth domain-facing Milestone B batch —
+  drafted 2026-09-22 directly with the five-category admission discipline. 11 genuine Domain
+  Rules (25 total catalog entries including 9 inherited/applied foundational rules and 5
+  scope/deferred boundaries) across Capability/Progression, Learning/Adaptation (a genuine
+  2-Rule family, not padded), and Conflict/Combat; ready for high-level external review. The
+  most load-bearing finding: no counterforce exists against repeated-trivial-kill XP farming,
+  and a documentation claim of a `max_xp_per_tick` bound does not match the actual
+  implementation. The batch instruction's own "especially important" question (can an ordinary
+  entity become historically significant?) resolved to a real but partial answer: the
+  trajectory is causally possible, but this repository's individual-significance tracking
+  (`LegendFact`/`FameState`) is role-gated to HERO entities only. A genuinely positive
+  cross-batch finding: live combat targeting (`TacticalDecisionSystem`) is confirmed already
+  perception-gated, a real counter-example to Batch 06's own two CONFLICTING findings
+  elsewhere. See `review-exports/capability-progression-batch-07-review.md`'s explicit
+  call-outs for this and further confirmed gaps. See
+  `tmp/capability-progression-batch-07-report.md` (local, not part of this catalog) for the
+  full disposition report.
+- Do not begin Batch 08 (Objects / Ownership / Resources / Economy) until Batch 07 receives
   high-level review.
 
 ## Scenario Bank index
@@ -158,6 +178,7 @@ order.
 | Batch 04 (Space/Environment/Movement) | [scenarios/space-environment-batch-04.md](scenarios/space-environment-batch-04.md) | SPC-S01 – SPC-S15 |
 | Batch 05 (Life/Body/Survival/Ecology) | [scenarios/life-body-batch-05.md](scenarios/life-body-batch-05.md) | LB-S01 – LB-S16 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | [scenarios/knowledge-agency-batch-06.md](scenarios/knowledge-agency-batch-06.md) | KA-S01 – KA-S20 |
+| Batch 07 (Capability/Progression/Conflict) | [scenarios/capability-progression-batch-07.md](scenarios/capability-progression-batch-07.md) | CP-S01 – CP-S16 |
 
 ## Unresolved cross-domain questions
 
@@ -311,6 +332,27 @@ follow-up):**
   (a messenger delayed, blocked, or lying) and no content-level information distortion — only
   certainty/trust vary through transmission, never claim content itself.
 
+**From Batch 07 (Capability/Progression/Conflict, drafted 2026-09-22):**
+
+- **Confirmed MISSING — the most load-bearing gap in this whole batch.** No counterforce
+  exists against repeated-trivial-kill XP farming; a documentation claim
+  (`max_xp_per_tick`) does not match the actual implementation, which has none.
+- **Confirmed PARTIAL — the batch instruction's own "especially important" question.**
+  Progression's world-reaction channel is real (`ThreatService.record_kill()`'s retaliation
+  pressure, `entity.kind`-keyed world-system branches) but narrow and mostly
+  capability-agnostic; individual-significance tracking (`LegendFact`/`FameState`) is
+  role-gated to HERO entities only, not general.
+- **Confirmed SUPPORTED — a genuinely positive cross-batch finding.**
+  `TacticalDecisionSystem`'s live targeting already routes through `PerceptionGate` before any
+  neighbor becomes target-eligible — a real counter-example to Batch 06's own two CONFLICTING
+  findings elsewhere.
+- **Confirmed INERT/OFF.** The declared `combat_engagement` domain (subjective power
+  estimation, "estimation ≠ consideration") never runs in production; `Breakthrough` granting
+  is never invoked outside tests.
+- **Confirmed MISSING.** `TRAIN_SKILL` (practice) is an unreachable route family; no
+  surrender/capture/forced-displacement combat outcome exists; no fame-to-followers conversion
+  edge exists.
+
 ## Review index
 
 For external review, send the review export first — it's the compact, generated summary; send
@@ -338,6 +380,7 @@ rationale stay canonical.
 | Batch 04 (Space/Environment/Movement) | `space-environment/location-topology.md`, `space-environment/environment.md`, `space-environment/movement-navigation.md` | `scenarios/space-environment-batch-04.md` (SPC-S01–S15) | [review-exports/space-environment-batch-04-review.md](review-exports/space-environment-batch-04-review.md) | PASS — ready to freeze |
 | Batch 05 (Life/Body/Survival/Ecology) | `life-body/lifecycle.md`, `life-body/body-condition.md`, `life-body/survival-needs.md`, `life-body/ecology-population.md` | `scenarios/life-body-batch-05.md` (LB-S01–S16) | [review-exports/life-body-batch-05-review.md](review-exports/life-body-batch-05-review.md) | Ready for high-level external review, normalized 2026-09-22 |
 | Batch 06 (Perception/Knowledge/Information/Agency) | `knowledge-agency/perception.md`, `knowledge-agency/knowledge-information.md`, `knowledge-agency/agency-decision.md` | `scenarios/knowledge-agency-batch-06.md` (KA-S01–S20) | [review-exports/knowledge-agency-batch-06-review.md](review-exports/knowledge-agency-batch-06-review.md) | PASS — ready to freeze |
+| Batch 07 (Capability/Progression/Conflict) | `capability-progression/capability-progression.md`, `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md` | `scenarios/capability-progression-batch-07.md` (CP-S01–S16) | [review-exports/capability-progression-batch-07-review.md](review-exports/capability-progression-batch-07-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -374,3 +417,8 @@ rationale stay canonical.
 - Batch 06 scenario file: `scenarios/knowledge-agency-batch-06.md`
 - Batch 06 review export: `review-exports/knowledge-agency-batch-06-review.md`
 - Batch 06 report (local, gitignored): `tmp/knowledge-agency-batch-06-report.md`
+- Batch 07 rule files: `capability-progression/capability-progression.md`,
+  `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md`
+- Batch 07 scenario file: `scenarios/capability-progression-batch-07.md`
+- Batch 07 review export: `review-exports/capability-progression-batch-07-review.md`
+- Batch 07 report (local, gitignored): `tmp/capability-progression-batch-07-report.md`
