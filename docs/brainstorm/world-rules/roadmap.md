@@ -42,12 +42,14 @@ Batch 09 (Social Relations/Family/Lineage) is drafted 2026-09-22, revised the sa
 targeted semantic-cleanup follow-up (6 genuine Domain Rules of 19 total catalog entries after
 SOC-04 was reclassified to Inherited and a reputation-reach re-investigation added a new
 Inherited entry), and **PASS — ready to freeze**. Batch 10 (Organizations/Institutions/
-Politics/Law) is drafted 2026-09-22 (13 genuine Domain Rules of 31 total catalog entries) and
-ready for high-level external review. This is the first batch drafted under the standing
-direction (`tmp/world-rule-direction.md`, 2026-09-22): Rule statements describe only target
-world semantics, repository classification implies no delivery priority, and the review
-export now carries a non-binding Implementation Candidates section. Batch 11 (Places/
-Settlements/Territory/Culture/Belief) is the next planned step, once Batch 10 is reviewed.
+Politics/Law) is drafted 2026-09-22, revised the same day per a targeted semantic-cleanup
+follow-up (12 genuine Domain Rules of 31 total catalog entries after POL-02 was reclassified
+to Inherited), and **PASS — ready to freeze**. This is the first batch drafted under the
+standing direction (`tmp/world-rule-direction.md`, 2026-09-22): Rule statements describe only
+target world semantics, repository classification implies no delivery priority, and the
+review export carries a non-binding Implementation Candidates section. Batch 11 (Places/
+Settlements/Territory/Culture/Belief) is the next planned step, once its own instruction file
+is provided.
 
 ---
 
@@ -365,17 +367,25 @@ boundary.
 
 ### Batch 10 — Organizations / Institutions / Politics / Law
 
-**Status: drafted 2026-09-22, ready for high-level external review.** 13 genuine Domain Rules
-(31 total catalog entries — 13 Domain Rules, 10 Inherited/Applied Foundational Rules, 8 Scope/
-Deferred Boundaries) across `institutions-politics/organizations.md`, `roles-institutions.md`,
-`politics-authority.md`, `law-enforcement.md`. The first batch drafted under the standing
-direction (`tmp/world-rule-direction.md`, 2026-09-22) — target semantics lead, repository
-classification implies no delivery priority, and the review export carries a new non-binding
-Implementation Candidates section. Two carried-forward open questions resolved: Batch 02's
-AUTH-06 (political authority inherits the role-persists-occupant-change rule unchanged) and
-Batch 09's `lineage-descent.md` deferral of political succession (POL-01: succession ≠
-kinship ≠ property inheritance). The single largest finding: no in-world law/crime/violation/
-enforcement subsystem exists at all. See
+**Status: PASS — frozen 2026-09-22.** Drafted 2026-09-22, then revised the same day per a
+targeted semantic-cleanup follow-up. 12 genuine Domain Rules (31 total catalog entries — 12
+Domain Rules, 11 Inherited/Applied Foundational Rules, 8 Scope/Deferred Boundaries) across
+`institutions-politics/organizations.md`, `roles-institutions.md`, `politics-authority.md`,
+`law-enforcement.md`. The first batch drafted under the standing direction
+(`tmp/world-rule-direction.md`, 2026-09-22) — target semantics lead, repository
+classification implies no delivery priority, and the review export carries a non-binding
+Implementation Candidates section. The follow-up generalized ORG-03 (standing policy
+permitted without a fresh decision), refined INST-01 (organization/institution/role stay
+conceptually distinct without requiring separate materialization), refined INST-03/INST-04
+(authority/capability/power/legitimacy are correlated and causally related, not independent;
+legitimacy's relationship to authority is institution-declared, not fixed), reclassified
+POL-02 to Inherited (fully covered by SOC-03 + PROG-05), generalized LAW-01 (nine distinct
+facts, no mandatory pipeline), and refined LAW-03 (an explicitly-global declared scope is
+permitted; only *accidental* universality is prohibited). Two carried-forward open questions
+resolved: Batch 02's AUTH-06 (political authority inherits the role-persists-occupant-change
+rule unchanged) and Batch 09's `lineage-descent.md` deferral of political succession (POL-01:
+succession ≠ kinship ≠ property inheritance). The single largest finding, unchanged by the
+follow-up: no in-world law/crime/violation/enforcement subsystem exists at all. See
 `review-exports/institutions-politics-batch-10-review.md`.
 
 ```text

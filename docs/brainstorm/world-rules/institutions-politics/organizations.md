@@ -96,40 +96,49 @@ memberships).
 
 ---
 
-## ORG-03 — An organization's own action requires a valid collective decision mechanism, an authorized actor or process to execute it, and a resulting committed action; collective desire alone never directly changes world state
+## ORG-03 — An organizationally-attributed world change requires a valid organizational process and a real execution/commit path; authorization is required only where the declared process makes authority relevant
 
-> For a proposition of the form "the organization decided/did X" to be valid, a real chain must
-> hold: some collective or institutional state produces a decision through a valid mechanism,
-> an authorized actor or process carries it out, and a committed action results. An
-> organization's own goals, pressures, or priorities are legitimate coarse-grained inputs to
-> this chain — organizations need not share individual agents' own cognition architecture — but
-> they are never, by themselves, sufficient to change world state without an executing
-> mechanism in between.
+> For a proposition of the form "the organization decided/did X" to be valid, a real,
+> declared organizational process must produce it and a real execution/commit path must carry
+> it out. That process need not be a fresh, deliberative, case-by-case decision every time — a
+> standing policy, an automatic recurring process, a delegated procedure, an emergency rule, an
+> individual officer's own decision, or a genuinely collective decision are all legitimate
+> process shapes, and a domain is never required to pick only one. Authorization becomes a
+> relevant check only where the declared process itself makes it relevant — a scheduled tax
+> collection running from a standing rule needs no fresh authority check at each execution,
+> while a one-off discretionary spend may. What is always prohibited: organizational desire
+> alone becoming true without passing through any declared process and execution path at all.
 
-**Disposition: ACCEPT — REQUIRED.** This is the "Hybrid Agency" principle the batch instruction
-locks for collective subjects, and it is genuinely new content: Batch 06's AGENCY-01/02
-establish an analogous decision/execution distinction, but only for an *individual* agent's own
-cognition; extending the same discipline to a *collective* subject (which may have no unified
-cognition at all) requires stating what a valid collective decision chain consists of, which no
-earlier Rule does.
+**Disposition: ACCEPT — REQUIRED (revised 2026-09-22 per external follow-up review).** The
+original wording ("decision mechanism → authorized actor → committed action") stated one
+mandatory process shape as if every organizational action required a fresh, individually
+authorized decision. The follow-up correctly identified this as over-specifying a universal
+process where the batch's own target concept (Hybrid Agency for collective subjects) only
+requires *some* real, declared process and a real execution path — a standing policy executed
+automatically by a scheduled process is just as valid an instance as an individually authorized
+one-off decision. This revision keeps the one thing that must always hold (a real process, a
+real execution path, and no bare "desire becomes true" shortcut) while removing the implied
+requirement that authorization or a fresh decision must gate every instance. Passes the
+admission test unchanged from the original: no earlier Rule states what a valid collective
+decision/execution chain consists of.
 
-**Repository evidence: PARTIAL — real for the resource-extraction side, absent for anything
-resembling a deliberative collective decision.** `TownResolutionSystem`'s tax/maintenance pass
-(`src/engine/town_resolution.py`) is a real, fully automatic collective-resource-state
-transition (`state.global_resources`) with no per-decision authorized actor at all — it is a
-declared systemic process, which satisfies "valid mechanism → committed action" without ever
-needing an individual authorized actor, a legitimate instance of this Rule's own permitted
-shape (a process, not necessarily a person, may be the authorized executor). No mechanism in
-this repository resembles an organization *choosing among options* (a goal-weighing,
-deliberative collective decision) — `FactionState.active_doctrines`/`military_strength`/
-`tension_level` are read by `src/engine/faction_decision.py` as inputs to some downstream
-process, which is evidence toward the "goals/pressures as coarse-grained inputs" half of this
-Rule, though a full decision→authorization→execution trace through that file was not
-exhaustively confirmed this batch.
+**Repository evidence: PARTIAL — real, and now confirmed to be exactly the "standing policy,
+no fresh decision" shape this Rule's own revision anticipates, not a gap relative to it.**
+`TownResolutionSystem`'s tax/maintenance pass (`src/engine/town_resolution.py`) is a real,
+fully automatic collective-resource-state transition (`state.global_resources`) run from a
+standing, scheduled rule (`is_tax_tick`) with no per-occurrence authorization check and no
+fresh collective decision at each execution — confirmed, on re-examination, to be a clean
+positive instance of this Rule's own revised permission, not a deviation from a stricter
+original requirement. No mechanism in this repository resembles an organization *choosing among
+options* (a goal-weighing, deliberative collective decision) — `FactionState.
+active_doctrines`/`military_strength`/`tension_level` are read by `src/engine/
+faction_decision.py` as inputs to some downstream process, evidence toward the "goals/pressures
+as coarse-grained inputs" half of this Rule, though a full trace through that file was not
+exhaustively confirmed.
 
 **Scenarios:** [IP-S01](../scenarios/institutions-politics-batch-10.md#ip-s01),
 [IP-S18](../scenarios/institutions-politics-batch-10.md#ip-s18) (organization wealth,
-authorized vs. unauthorized spending).
+authorized vs. unauthorized spending, extended — standing policy without a fresh decision).
 
 ---
 
@@ -390,5 +399,8 @@ prioritized, or required for implementation during the World Rule Catalog phase.
 1. Whether multi-membership *within* the same organization kind should ever be positively
    modeled or explicitly forbidden is an open design-semantic question, not decided here —
    `find_clan_id_for_entity()`'s own single-match assumption is a repository fact, not a Rule.
-2. Whether "Organization" needs its own durable-state category distinct from "Institution" (see
-   `roles-institutions.md`'s INST-01) is carried forward as an owner-attention question below.
+2. **What semantic facts make an institution distinct from its hosting organization?**
+   (Revised 2026-09-22 per external follow-up review, away from the storage-shaped framing
+   "does Organization need its own durable-state category distinct from Institution" — see
+   `roles-institutions.md`'s INST-01, which no longer requires separate materialization at
+   all.) Carried forward as an owner-attention question below.

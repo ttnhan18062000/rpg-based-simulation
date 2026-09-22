@@ -11,8 +11,11 @@ tags: [architecture, world, content]
 **Purpose/scope.** Twenty-one scenarios used to pressure-test the Organizations, Roles/
 Institutions, Politics/Authority, and Law/Enforcement rule families in
 `institutions-politics/organizations.md`, `roles-institutions.md`, `politics-authority.md`,
-and `law-enforcement.md`, per `tmp/world-rule-batch-10-ext-ai.md`'s own §25 seed list. Covers
-every named scenario in that list.
+and `law-enforcement.md`, per `tmp/world-rule-batch-10-ext-ai.md`'s own §25 seed list, plus
+five adversarial probes added by the 2026-09-22 follow-up
+(`tmp/world-rule-batch-10-followup-ext-ai.md`'s §10) — extended in place onto IP-S04, IP-S07,
+IP-S15, IP-S18, and IP-S21 rather than as new IDs, per that follow-up's own explicit
+instruction to reuse/extend existing scenarios where possible.
 
 Per the standing direction (`tmp/world-rule-direction.md`): a scenario failing against the
 current repository does not mean the scenario or its Rule fails — it may simply show target
@@ -65,18 +68,27 @@ the member refuses.
   this Rule reuses) was not independently confirmed to exist for the Clan/leader relationship
   specifically.
 
-## IP-S04 — Office outlives occupant
+## IP-S04 — Office outlives occupant / institution hosted by organization
 
 An officeholder dies; the office remains; authority becomes vacant; a successor later occupies
-the same office.
+the same office. **Extended per the 2026-09-22 follow-up's own §10 "Institution Hosted by
+Organization" probe:** the guild persists; the guild hosts an office and institutional rules;
+organization, institution, and role remain conceptually distinguishable; no requirement exists
+for three separately-materialized subjects.
 
-- **Rules invoked:** INST-01, Inherited (role/office persists across occupant change, AUTH-06).
+- **Rules invoked:** INST-01 (revised), Inherited (role/office persists across occupant
+  change, AUTH-06).
 - **Result: partially covered.** `ClanLifecycleService.process_succession()` is the clearest
   real instance of authority surviving occupant change (AUTH-06's own evidence, reused). The
-  "office" half of this scenario is not independently confirmed, since INST-01 finds no
-  office/institution concept exists separately from the organization hosting it — what
-  persists here is the *clan's own* leadership slot, not a separable "office" that could, in
-  principle, outlive the clan itself.
+  "office" half of this scenario is not independently confirmed as a *governing-rule* concept,
+  since no institutional-semantics content beyond the bare occupant pointer was found — but per
+  INST-01's own revision, this is no longer itself a gap: `ClanState` embodying its own
+  leadership role directly, with no separate "Institution"/"Role" object anywhere, is exactly
+  the permitted shape this Rule's own revision describes. **Extended clause: covered.** The
+  conceptual distinction (organization/institution/role are not the same idea) holds regardless
+  of `ClanState` never materializing them separately — nothing in the repository conflates a
+  clan's own identity with its leadership slot's own identity, confirming the two concepts
+  remain distinguishable even when embodied in one object.
 
 ## IP-S05 — Unauthorized actor succeeds
 
@@ -100,14 +112,23 @@ authority is not automatically granted.
   semantics (a claim existing ≠ authority being granted) remain coherent and testable in
   principle, but this repository has nothing for the scenario to exercise.
 
-## IP-S07 — Contested claim
+## IP-S07 — Contested claim / legitimacy constitutes authority where declared
 
 Two claimants exist; different subjects/institutions recognize different claimants; canonical
-institutional status stays separate from belief where applicable.
+institutional status stays separate from belief where applicable. **Extended per the
+2026-09-22 follow-up's own §10 "Legitimacy Constitutes Authority Where Declared" probe:** a
+claimant satisfies most office conditions; a recognition procedure is incomplete; authority is
+not yet valid; the recognition procedure completes; authority becomes valid — without this
+being treated as a universal rule for every institution.
 
-- **Rules invoked:** INST-04.
+- **Rules invoked:** INST-04 (revised).
 - **Result: revealed missing rule.** Same underlying gap as IP-S06 — confirmed MISSING. No
-  canonical institutional-status field exists for two beliefs to diverge around.
+  canonical institutional-status field exists for two beliefs to diverge around. **Extended
+  clause: revealed missing rule, same underlying gap.** INST-04's own revision permits a
+  domain to declare "authority becomes valid only once recognition completes" as one legitimate
+  pattern among several — but with no institutional-claim or legitimacy concept realized at
+  all, no mechanism exists to exercise even one such declared pattern, let alone confirm this
+  repository chooses it over the alternative (appointment alone establishes authority).
 
 ## IP-S08 — Kinship does not automatically grant office
 
@@ -185,16 +206,26 @@ spend has different semantics from an authorized allocation.
   The scenario's own distinction (authorized vs. unauthorized spend having different
   semantics) cannot yet be exercised, since neither case is realized.
 
-## IP-S15 — Enforcement fails
+## IP-S15 — Enforcement fails / enforcement without a separate judgment stage
 
 A valid sanction is ordered; the enforcing agent lacks capability, reach, or resources; the
-sanction is not executed.
+sanction is not executed. **Extended per the 2026-09-22 follow-up's own §10 "Enforcement
+Without Separate Judgment" probe:** a declared rule exists; a violation is detected; a declared
+automatic consequence executes with no separate adjudication stage — testing that LAW-01
+(revised) does not accidentally require every intermediate stage.
 
-- **Rules invoked:** LAW-01, Inherited (sanction execution requires a real causal mechanism,
-  `law-enforcement.md`).
+- **Rules invoked:** LAW-01 (revised), Inherited (sanction execution requires a real causal
+  mechanism, `law-enforcement.md`).
 - **Result: revealed missing rule.** No sanction-ordering or sanction-execution mechanism
   exists — confirmed MISSING. The target semantic (execution may fail independently of the
-  order's own validity) remains coherent; nothing realizes either half yet.
+  order's own validity) remains coherent; nothing realizes either half yet. **Extended clause:
+  revealed missing rule, same underlying gap — but the Rule's own permission is confirmed
+  coherent even without repository evidence.** LAW-01's own revision explicitly permits
+  "detected violation → automatic declared consequence" as one legitimate shape with no
+  separate judgment stage; this repository has no detection or consequence mechanism to
+  exercise the pattern against, but the target semantics themselves impose no requirement that
+  a judgment stage exist, so this scenario finds no tension between the Rule and what a future
+  minimal implementation could look like.
 
 ## IP-S16 — Law is ignored
 
@@ -219,17 +250,27 @@ individual specifically.
   continuation of the same flagship gap Batches 07 (PROG-06/CP-S15) and 09 (LIN-02/SL-S15)
   already found at the individual and lineage scales.
 
-## IP-S18 — Organization wealth
+## IP-S18 — Organization wealth / standing policy without a fresh decision
 
 An organization owns a treasury; an authorized member spends a subset; personal ownership does
-not arise automatically from the spend.
+not arise automatically from the spend. **Extended per the 2026-09-22 follow-up's own §10
+"Standing Policy Without Fresh Decision" probe:** the organization establishes a valid standing
+policy; a recurring process executes later; an organization-attributed consequence occurs; no
+fresh collective decision is made each time.
 
-- **Rules invoked:** ORG-03, Inherited (organizational resource ownership ≠ member ownership).
+- **Rules invoked:** ORG-03 (revised), Inherited (organizational resource ownership ≠ member
+  ownership).
 - **Result: partially covered.** Organizational ownership of `state.global_resources` as its
   own fact, distinct from any member's personal `inventory.gold`, is confirmed real
   (`organizations.md`'s own evidence). The "authorized member spends a subset" half is
   confirmed MISSING — the only mechanism that touches the vault is `TownResolutionSystem`'s
   own fully automatic tax/maintenance pass, never an individual member's own authorized draw.
+  **Extended clause: covered.** That same automatic tax/maintenance pass is exactly the
+  "standing policy, no fresh decision" shape ORG-03's own revision permits — `is_tax_tick`
+  triggers a real, organization-attributed resource change on a declared schedule with no
+  per-occurrence authorization check, confirming this Rule's own revised requirement (a real
+  process + a real execution path, not necessarily a fresh authorized decision) is already
+  satisfied here rather than merely permitted in the abstract.
 
 ## IP-S19 — Conflicting memberships
 
@@ -260,20 +301,28 @@ official's own memory.
   but are not populated by any individual official's own act of "learning and recording" a
   specific fact.
 
-## IP-S21 — Powerful but illegitimate / legitimate but weak (both directions)
+## IP-S21 — Powerful but illegitimate / legitimate but weak (both directions) / power without a power stat
 
 A warlord controls forces and resources, can cause outcomes, but lacks a recognized office.
 Separately: a recognized ruler holds office but lacks resources or forces, and orders often
-fail.
+fail. **Extended per the 2026-09-22 follow-up's own §10 "Power Without a Power Stat" probe:**
+an actor controls soldiers, resources, and information; the actor can cause outcomes others
+cannot; practical power exists; no canonical numeric Power field is required for this to hold.
 
-- **Rules invoked:** INST-03.
+- **Rules invoked:** INST-03 (revised).
 - **Result: partially covered, in both directions.** `FactionState.military_strength` gives a
   real, tracked practical-capacity fact independent of any formal-authority field — the data
   shape supports "powerful but illegitimate" in principle. The "legitimate but weak" direction
   is confirmed MISSING on the legitimacy side specifically (no legitimacy/recognition concept
   exists at all, INST-04's own finding), though "holds a role but has low practical capacity"
   is representable in principle via the same independent `military_strength` field simply
-  being low rather than high.
+  being low rather than high. **Extended clause: covered.** INST-03's own revision explicitly
+  permits power to be derived relationally rather than requiring a canonical scalar; while this
+  repository's own one real proxy happens to be a tracked field (`military_strength`), nothing
+  in this Rule's own target semantics required that shape — a future domain modeling power as
+  derived purely from `resources + capabilities + relationships` without any dedicated field
+  would satisfy this Rule exactly as well, confirming the permission is genuine and not merely
+  theoretical.
 
 ---
 
@@ -297,3 +346,11 @@ or an inert flag) — the entire Politics/Law territory these nine scenarios pro
 in-world realization to check against at all**. Per the standing direction
 (`tmp/world-rule-direction.md`), this is recorded honestly as a load-bearing semantic gap, not
 as evidence against the target semantics themselves, and implies no delivery priority.
+
+The 2026-09-22 follow-up's own five extended clauses (IP-S04, IP-S07, IP-S15, IP-S18, IP-S21)
+each confirm the same shape: none revealed a genuine tension between the revised Rules'
+own broadened permissions and the repository's own real evidence. IP-S18's extended clause is
+the one case where the extension turned a previously-"MISSING-adjacent" reading into a clean
+**covered** result — `TownResolutionSystem`'s automatic tax pass was already exactly the
+"standing policy, no fresh decision" shape ORG-03's own revision anticipated, simply not
+recognized as such under the original, more mandatory wording.

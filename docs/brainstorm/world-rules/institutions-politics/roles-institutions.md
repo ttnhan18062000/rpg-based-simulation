@@ -26,35 +26,46 @@ priority.
 
 ## Domain Rules
 
-## INST-01 — Organization, institution, and role/office are three distinct concepts and must not be treated as synonyms
+## INST-01 — Organization, institution, and role/office are three semantically distinct concepts that must not be accidentally conflated, without requiring each to materialize as its own separate persistent-state object
 
 > An **organization** is a persistent collective actor/group (see `organizations.md`'s ORG-01).
 > An **institution** is a persistent role, rule, or authority structure that may outlive any
 > particular organization that currently hosts it, or exist without a single organization ever
-> having created it. A **role/office** is a specific, occupiable position within either. An
-> organization may exist and host no institution at all (a loose alliance with no persistent
-> office); an institution may outlive the organization that created it (a legal custom
-> surviving the collapse of the body that first declared it) or exist independent of any single
-> organization (a widely-recognized custom with no governing body). Where investigation shows a
-> cleaner decomposition for a specific case, this ontology is not forced — but the three
-> concepts are never casually interchanged.
+> having created it. A **role/office** is a specific, occupiable position within either. These
+> are semantic distinctions, not a mandatory storage requirement: an organization may itself
+> embody or host an institution and its roles without any of the three ever being materialized
+> as a separately-tracked entity — a guild (organization) may simply *be* the thing whose
+> guildmaster office (role) and governing customs (institutional semantics) live entirely
+> within the guild's own state, with no separate "Institution" record anywhere. What this Rule
+> forbids is treating the three concepts themselves as interchangeable — an institution
+> outliving its hosting organization, or a role persisting past its occupant, are real
+> possibilities the concepts must be able to express, whether or not a given implementation
+> ever separately stores them.
 
-**Disposition: ACCEPT — REQUIRED for the distinctness; which concrete cases use all three is
-PERMITTED, domain-specific content.** Passes the admission test: no earlier Rule addresses
-whether these three concepts are the same or different — Batch 01's ID-06 named
-"organizations & institutions" together as one deferred domain without itself distinguishing
-them, leaving this open.
+**Disposition: ACCEPT — REQUIRED for the conceptual distinctness; separate materialization is
+explicitly NOT required (revised 2026-09-22 per external follow-up review).** The original
+wording risked being read as requiring three separate durable-state objects for every case.
+The follow-up correctly distinguished a semantic distinction from a storage/entity-separation
+requirement — this revision keeps the conceptual boundary (the three ideas must never be
+casually treated as synonyms) while explicitly permitting one organization's own state to
+embody all three without separate materialization. Passes the admission test unchanged: no
+earlier Rule addresses whether these three concepts are the same or different.
 
-**Repository evidence: PARTIAL — Organization is realized (twice, differently); Institution
-and Role/Office, as concepts independent of a specific organization, are not realized at all.**
-`FactionState` and `ClanState` are both real organization-shaped subjects (ORG-01's own
-evidence). No durable state anywhere represents an institution or role as existing
-independently of the specific organization that currently hosts it — `ClanState.
-leader_entity_id` and `GroupRecord.leader_id` are both organization-owned fields, not a
-separate "office" concept that could, in principle, outlive the clan or group itself.
+**Repository evidence: PARTIAL — Organization is realized (twice, differently), fully
+consistent with this Rule's own revised permission that Institution and Role/Office may live
+inside it rather than as separate objects.** `FactionState` and `ClanState` are both real
+organization-shaped subjects (ORG-01's own evidence) that embody their own leadership role
+(`ClanState.leader_entity_id`) directly, exactly the "no separate materialization required"
+shape this Rule permits. What remains unconfirmed is not separate storage (which this Rule no
+longer requires) but whether the *conceptual* distinction is ever exercised at all —
+`ClanState.leader_entity_id` was not confirmed to carry any institutional semantics (declared
+rules/practices governing what the role permits) beyond the bare occupant pointer itself; the
+"office outlives occupant" half is real (`ClanLifecycleService.process_succession()`), but a
+governing-rule-for-the-role concept, embodied or separate, was not found.
 
 **Scenarios:** [IP-S04](../scenarios/institutions-politics-batch-10.md#ip-s04) (office outlives
-occupant).
+occupant, extended — institution hosted by organization, no separate materialization
+required).
 
 ---
 
@@ -85,41 +96,53 @@ never a bounded subset of its authority while the prior holder retains the rest.
 
 ---
 
-## INST-03 — Authority, capability, practical power, and legitimacy are four independent facts about an actor's relationship to a transition or role; none implies another
+## INST-03 — Authority, capability, practical power, and legitimacy are semantically distinct dimensions; none may be substituted for another merely because they are correlated
 
 > **Authority** is a recognized permission or right to cause a class of transition.
 > **Capability** is the mechanical ability to perform it (Batch 02's own AUTH-01 already
 > establishes authority ≠ capability). **Power** is the practical capacity to cause outcomes
 > through whatever means are actually available, whether or not those means are authorized.
 > **Legitimacy** is a socially or institutionally recognized basis for authority, where a domain
-> chooses to model such a concept at all — not every authority relationship requires it. All
-> four may vary independently: an actor may hold formal authority with little practical power;
-> an actor may hold enormous coercive power with no formal authority; a claimed office may be
-> contested without resolving whether the claim is legitimate.
+> chooses to model such a concept at all. These four are semantically distinct — but not
+> causally unrelated: legitimacy may help establish authority, wealth or resources may create
+> practical power, holding an office may create authority, military capability may create
+> coercive power. None of these causal relationships is universal, and none licenses treating
+> one dimension as simply a restatement of another merely because they are frequently
+> correlated. Power in particular is never required to be its own canonical scalar or tracked
+> field — it may instead be derived relationally from resources, capabilities, relationships,
+> authority, reach, or information, according to whatever concrete causal paths a domain
+> declares.
 
-**Disposition: ACCEPT — REQUIRED for the four-way distinctness.** Passes the admission test:
-AUTH-01 already establishes authority ≠ capability; this Rule's genuinely new content is
-introducing **Power** and **Legitimacy** as two further, independent concepts that no earlier
-Rule defines, and stating that a domain is never required to invoke legitimacy for authority to
-exist at all.
+**Disposition: ACCEPT — REQUIRED for the distinctness and the non-substitutability claim;
+REVISED 2026-09-22 per external follow-up review to remove an overstated independence claim.**
+The original wording ("four independent facts... none implies another") was too strong — the
+follow-up correctly identified that these concepts routinely have real causal relationships
+(legitimacy helping establish authority, wealth producing power) and that stating them as fully
+independent would misrepresent the target semantics. This revision keeps the substantive
+requirement (never substitute one for another merely because they correlate) while explicitly
+permitting declared causal relationships between them, and explicitly removes any implication
+that Power needs its own tracked scalar. Passes the admission test unchanged: AUTH-01 already
+establishes authority ≠ capability; this Rule's own new content remains introducing Power and
+Legitimacy as further distinct dimensions.
 
 **Repository evidence: PARTIAL.** Authority (checked via `LegalityServiceV2`'s
 `SELF_ATTACK_ILLEGAL`/`FRIENDLY_FIRE_ILLEGAL`) and capability (`SKILL_ON_COOLDOWN`,
-`INSUFFICIENT_READINESS`) are both real and confirmed independent (AUTH-01's own evidence,
-reused). "Power" as its own tracked fact is not directly represented — `FactionState.
-military_strength` is the closest real proxy (a faction's own practical capacity), but nothing
-in this repository explicitly separates it from that faction's own formal authority the way
-this Rule requires; the two happen to coincide in every case checked because no faction-level
-authority concept exists to diverge from in the first place. "Legitimacy" as a tracked fact is
-confirmed **MISSING** entirely — see INST-04 below.
+`INSUFFICIENT_READINESS`) are both real and confirmed distinct (AUTH-01's own evidence,
+reused). "Power" has a real proxy (`FactionState.military_strength`) that this Rule's own
+revision now correctly frames as one legitimate concrete representation among several
+possible ones (a tracked scalar is permitted, not required) — no confirmed case of it being
+substituted for authority or vice versa was found, consistent with this Rule's own
+non-substitutability requirement rather than a violation of it. "Legitimacy" as a tracked
+fact is confirmed **MISSING** entirely — see INST-04 below.
 
 **Scenarios:** [IP-S05](../scenarios/institutions-politics-batch-10.md#ip-s05) (unauthorized
 actor succeeds — power without authority), [IP-S21](../scenarios/institutions-politics-batch-10.md#ip-s21)
-(powerful but illegitimate / legitimate but weak, both directions).
+(powerful but illegitimate / legitimate but weak, both directions, extended — power without a
+power stat).
 
 ---
 
-## INST-04 — Legitimacy or recognition, where a domain models it, is distinct from an individual's own belief about status, from public reputation, and from actual behavioral compliance; none is automatically implied by the others, and legitimacy is not required for authority to exist
+## INST-04 — Legitimacy or recognition, where a domain models it, is distinct from an individual's own belief about status, from public reputation, and from actual behavioral compliance; its causal relationship to authority is declared by the relevant institution, not fixed by this Rule
 
 > Where a domain chooses to model legitimacy or recognition at all, a claimant's own
 > institutional/legal status is a fact independent of whether any specific subject believes it,
@@ -127,15 +150,23 @@ actor succeeds — power without authority), [IP-S21](../scenarios/institutions-
 > actually comply with it. A claimant may hold a legitimate institutional status while some
 > subjects do not know, do not believe, or do not accept it — and widespread acceptance does
 > not, by itself, change the canonical rule defining the status unless a domain declares a
-> mechanism by which it does.
+> mechanism by which it does. How legitimacy relates to authority is not fixed by this Rule:
+> one institution may declare that office appointment alone establishes authority regardless of
+> recognition; another may declare that authority becomes valid only once a recognition or
+> confirmation procedure completes. Both are legitimate, and this Rule does not decide between
+> them — it only requires that whichever relationship a domain declares, legitimacy itself
+> remains a fact distinct from belief, reputation, and compliance.
 
-**Disposition: ACCEPT — PERMITTED (legitimacy modeling itself is optional, per INST-03),
-REQUIRED (the four-way distinctness, wherever it is modeled).** Passes the admission test:
-this integrates Batch 06's belief/knowledge boundary and Batch 09's public-reputation findings,
-but requires genuinely new content — establishing "legitimacy/recognition" as its own fourth
-fact-category alongside belief, reputation, and compliance, none of which previously existed as
-a concept in this Catalog. This is the same kind of multi-way-distinctness content that
-justified Batch 09's SOC-01 and FAM-01 as Domain Rules rather than pure applications.
+**Disposition: ACCEPT — REQUIRED for the distinctness; REVISED 2026-09-22 per external
+follow-up review to remove an overstated universal claim.** The original wording ("legitimacy
+is not required for authority to exist") stated one specific relationship between legitimacy
+and authority as if it held universally. The follow-up correctly identified that different
+institutional systems may legitimately declare the opposite (authority valid only after
+recognition completes) — this revision preserves the four-way distinctness (the genuinely new
+content) while removing the universal claim about which relationship holds, leaving that
+declared by whichever institution models it. This is the same kind of multi-way-distinctness
+content that justified Batch 09's SOC-01 and FAM-01 as Domain Rules rather than pure
+applications.
 
 **Repository evidence: MISSING, for the concept itself.** No field anywhere represents
 "legitimacy" or "recognition" of an institutional claim as distinct from `public_reputation`
@@ -143,10 +174,12 @@ justified Batch 09's SOC-01 and FAM-01 as Domain Rules rather than pure applicat
 repository has never yet needed the concept, since it has no institutional office/claim
 mechanism for legitimacy to attach to in the first place (INST-01's own finding). The Rule's own
 target semantics remain independently coherent and testable via scenario even though nothing
-currently realizes them.
+currently realizes them; the legitimacy-vs-authority causal question this revision leaves open
+has no repository evidence either way, since neither concept is realized.
 
 **Scenarios:** [IP-S06](../scenarios/institutions-politics-batch-10.md#ip-s06) (invalid
-claimant), [IP-S07](../scenarios/institutions-politics-batch-10.md#ip-s07) (contested claim).
+claimant), [IP-S07](../scenarios/institutions-politics-batch-10.md#ip-s07) (contested claim,
+extended — legitimacy constitutes authority where declared).
 
 ---
 
@@ -262,11 +295,16 @@ prioritized, or required for implementation during the World Rule Catalog phase.
 
 ## Open questions carried forward
 
-1. Whether "Power" deserves its own tracked durable-state field distinct from
-   `military_strength`, or whether the current proxy is an adequate stand-in until a real
-   authority-vs-power divergence case is found, is an open design-semantic question, not
-   decided here.
-2. Whether "Institution" should ever become its own durable-state category (distinct from
-   Organization and Role), or should remain a purely conceptual label layered over existing
-   Organization + Role state with no dedicated field, is carried forward as an owner-attention
-   question below.
+1. **Is practical power authoritative state or a derived relation?** (Revised 2026-09-22 per
+   external follow-up review, away from the storage-shaped framing "does Power deserve its own
+   tracked field.") INST-03's own revision explicitly permits either — this asks the semantic
+   question underneath: is power itself a first-class fact a domain declares directly, or
+   always a computed function of other declared facts (resources, capabilities, relationships,
+   authority, reach, information)? Not decided here.
+2. **What semantic facts make an institution distinct from its hosting organization, given
+   that INST-01 no longer requires separate materialization?** (Revised 2026-09-22, away from
+   "does Institution need a dedicated field.") Not decided here.
+3. **Under what declared conditions does legitimacy affect authority?** INST-04's own revision
+   leaves this open by design — different institutions may declare office-appointment-alone or
+   recognition-gated authority; whether this Catalog should ever name a small closed set of
+   legitimate patterns, or leave it fully domain-declared indefinitely, is not decided here.

@@ -26,27 +26,36 @@ repository realization.
 
 ## Domain Rules
 
-## LAW-01 — A law's existence, a subject's knowledge of it, general compliance, detection of a violation, judgment, and executed sanction are six distinct facts in a causal chain; none is implied by any other, and any link may fail
+## LAW-01 — Rule existence, applicability, subject action, compliance/violation, knowledge or belief about the rule/event, detection/report, adjudication (where applicable), sanction decision (where applicable), and sanction execution are semantically distinct facts that do not automatically imply one another
 
-> A law or institutional rule existing does not mean every subject knows it, that subjects
-> generally obey it, that a violation is detected when it occurs, that a detected violation is
-> correctly judged, or that a judged violation's sanction is actually executed. The full
-> potential chain — rule applies → subject acts → violation occurs → violation becomes known/
-> detected → an authorized process responds → a consequence results — has independent links,
-> and every one of them may fail without any of the others failing. A law remaining formally
-> valid despite repeated disobedience is one legitimate outcome among several; law existence is
-> never the same fact as behavioral compliance.
+> A law or institutional rule existing does not mean it applies to every subject/place/time
+> (see LAW-03), that a subject acted in a way the rule addresses, that the action complied or
+> violated it, that any subject knows or believes either the rule or the event occurred, that a
+> violation is detected or reported, that a detected matter is adjudicated, that adjudication
+> produces a sanction decision, or that a decided sanction is actually executed. These are
+> semantically distinct facts, and none is required by any legal system to route through every
+> other one — a domain may validly declare a violation that is simply never detected; a
+> detected violation that triggers an automatic declared consequence with no separate
+> adjudication step; or a full accusation → adjudication → sanction pipeline. What must always
+> hold regardless of which stages a specific institution declares: a sanction being decided is
+> never the same fact as that sanction being successfully executed — reach, capability, or
+> authority may still prevent execution — and a law remaining formally valid despite repeated
+> disobedience is a legitimate outcome, never a sign the law itself has lapsed.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: no earlier Rule states this
-specific six-way chain — the closest existing content, Batch 06's AGENCY-01 (decision stages
-are causally distinct), is about an individual's own decision process, not an institutional
-enforcement chain spanning multiple subjects and a detection/judgment step. This is the
-foundational claim the rest of this family and `politics-authority.md`'s enforcement-adjacent
-content depend on.
+**Disposition: ACCEPT — REQUIRED for the distinctness; which stages any specific legal system
+actually uses is PERMITTED, domain-specific content (REVISED 2026-09-22 per external follow-up
+review).** The original wording ("six distinct facts in a causal chain") risked implying one
+mandatory justice pipeline every legal system must implement in full. This revision keeps the
+substantive requirement (these are genuinely separate facts, not automatically implying each
+other) while explicitly permitting a domain to declare a shorter chain — skipping detection
+entirely, or collapsing detection straight into an automatic declared consequence with no
+separate judgment stage — without weakening the one universal constraint this Rule still
+requires: decision ≠ execution. Passes the admission test unchanged: no earlier Rule states
+this specific multi-way distinctness for an institutional rule-enforcement context.
 
-**Repository evidence: MISSING, for the entire chain — this repository has no in-world law,
-crime, violation, or sanction subsystem at all.** Confirmed via direct, broad search: every
-"law"/"crime"/"violation"/"sanction" hit in this repository belongs to observability/
+**Repository evidence: MISSING, for the entire set of facts — this repository has no in-world
+law, crime, violation, or sanction subsystem at all.** Confirmed via direct, broad search:
+every "law"/"crime"/"violation"/"sanction" hit in this repository belongs to observability/
 anomaly-detection tooling (`src/observability/hard_law_monitor.py`, `src/observability/
 anomaly/*`) or meta-level engine invariants (`src/core/concurrency_law.py`) — a
 development/monitoring concern about the simulation's own code correctness, entirely unrelated
@@ -54,12 +63,13 @@ to an in-world subject violating an in-world rule. `LegalityServiceV2`'s own
 `ReasonCode.ILLEGAL_ACTION`/`SELF_ATTACK_ILLEGAL` (Batch 02's AUTH family) is the closest
 adjacent concept, but it rejects an *attempted* action before it ever becomes a committed world
 event — it is not a violation-detection-and-sanction chain over an action that already
-occurred, which is what this Rule's own chain requires.
+occurred, which is what this Rule's own facts require.
 
 **Scenarios:** [IP-S11](../scenarios/institutions-politics-batch-10.md#ip-s11),
 [IP-S12](../scenarios/institutions-politics-batch-10.md#ip-s12) (violation goes undetected),
-[IP-S15](../scenarios/institutions-politics-batch-10.md#ip-s15) (enforcement fails),
-[IP-S16](../scenarios/institutions-politics-batch-10.md#ip-s16) (law is ignored).
+[IP-S15](../scenarios/institutions-politics-batch-10.md#ip-s15) (enforcement fails, extended —
+enforcement without a separate judgment stage), [IP-S16](../scenarios/institutions-politics-batch-10.md#ip-s16)
+(law is ignored).
 
 ---
 
@@ -96,22 +106,30 @@ accusation).
 
 ---
 
-## LAW-03 — Law or authority applicability has a declared scope — by membership, role, location, institution, contract, or time period — rather than being globally universal by default
+## LAW-03 — Law or authority applicability is determined by a declared scope, which may itself be territorial, membership-based, role-based, contractual, event-specific, temporal, or explicitly global — but is never universal merely by accident of a rule existing
 
 > Whether a law or an authority relationship applies to a given subject, place, or moment is
-> determined by a declared scope specific to that law or authority — membership in a governed
-> group, an occupied role, physical location or territory, a specific institution, a contract,
-> or a time period. A law or authority is never assumed to apply everywhere, to everyone, and
-> at all times merely because it exists. Full territorial sovereignty is not designed here —
-> only that applicability itself must be scoped rather than universal by default.
+> determined by a declared scope specific to that law or authority. That declared scope may
+> take many legitimate forms — territorial (a specific region), membership-based (a governed
+> group), role-based (an occupied position), contractual, event-specific, temporal (a time
+> period), or explicitly global (declared to apply everywhere, to everyone, at all times). What
+> this Rule forbids is not global applicability itself — a domain may validly declare a
+> universal law — but *accidental* universality: a law or authority applying everywhere merely
+> because no scope was ever declared, rather than because global scope was itself the declared
+> choice. Full territorial sovereignty is not designed here.
 
-**Disposition: ACCEPT — REQUIRED for the scoped-not-universal requirement; the concrete
-scoping mechanism for any specific law is PERMITTED, domain-specific content.** Passes the
-admission test: this is related to but distinct from Batch 02's AUTH-05 (transition legitimacy
-depends on actor/target/context, never content alone) — AUTH-05 is about what factors determine
-whether *a specific proposed transition* is legitimate; this Rule is about whether a *rule
-itself* applies to a given subject/place/time at all, a prior, more basic question AUTH-05 does
-not address.
+**Disposition: ACCEPT — REQUIRED for the declared-scope requirement (explicitly permitting a
+declared-global scope); REVISED 2026-09-22 per external follow-up review to remove an
+overstated anti-universality framing.** The original wording ("rather than being globally
+universal by default") risked reading as though global applicability itself were prohibited.
+This revision keeps the substantive requirement (scope must be *declared*, never an accident of
+a rule simply existing) while explicitly listing "explicitly global" as one legitimate declared
+scope among several, matching this Rule's own real target: prohibiting accidental universality,
+not universality itself. Passes the admission test unchanged: this is related to but distinct
+from Batch 02's AUTH-05 (transition legitimacy depends on actor/target/context, never content
+alone) — AUTH-05 is about what factors determine whether *a specific proposed transition* is
+legitimate; this Rule is about whether a *rule itself* applies to a given subject/place/time at
+all, a prior, more basic question AUTH-05 does not address.
 
 **Repository evidence: PARTIAL — no law-specific scoping mechanism exists, but the general
 pattern (location + affiliation determining an applied effect) is already real elsewhere in
@@ -150,8 +168,8 @@ mechanism exists to check this against.**
 
 ### Concrete criminal-justice content catalog
 
-> This family states the law-existence/knowledge/compliance/detection/judgment/enforcement
-> chain (LAW-01) and the record-vs-truth distinction (LAW-02) but does not design a concrete
+> This family states the distinct law/knowledge/compliance/detection/adjudication/sanction
+> facts (LAW-01) and the record-vs-truth distinction (LAW-02) but does not design a concrete
 > catalog of specific crimes, laws, sanctions, or legal procedures — deferred, per this
 > family's own scope, and per the batch instruction's own explicit "do not design criminal
 > justice content deeply."
@@ -192,10 +210,11 @@ valid or important.**
 **This section preserves implementation-relevant discoveries only. Nothing here is approved,
 prioritized, or required for implementation during the World Rule Catalog phase.**
 
-- **Target semantic:** a law's existence, knowledge, compliance, detection, judgment, and
-  sanction are six distinct, independently-failing facts (LAW-01).
-  **Current realization:** none of the six exist as in-world concepts.
-  **Gap/mismatch:** the entire chain is unrealized, not merely one link.
+- **Target semantic:** rule existence, applicability, subject action, compliance/violation,
+  knowledge/belief, detection, adjudication, sanction decision, and sanction execution are
+  semantically distinct facts that do not automatically imply one another (LAW-01).
+  **Current realization:** none of these exist as in-world concepts.
+  **Gap/mismatch:** the entire set of facts is unrealized, not merely one of them.
   **Possible implementation direction:** a minimal declared-rule/violation-record mechanism,
   potentially reusing the existing `ReasonCode`/legality-check machinery's own shape (Batch
   02's AUTH family) as a structural starting point for the "detection/judgment" half, combined
@@ -217,10 +236,13 @@ prioritized, or required for implementation during the World Rule Catalog phase.
 
 ## Open questions carried forward
 
-1. Whether LAW-02's own institutional-record concept should ever be unified with Batch 06's
-   individual belief-modeling machinery (`BeliefEntry`/`LeadState`) at the data-shape level, or
-   should remain a conceptually related but structurally separate concept, is an open
-   design-semantic question, not decided here.
+1. **Can one record simultaneously serve institutional and individual epistemic roles without
+   violating ownership?** (Revised 2026-09-22 per external follow-up review, away from the
+   storage-shaped framing "should institutional record reuse `BeliefEntry`'s data shape.")
+   LAW-02 requires institutional record, world truth, and individual belief to remain three
+   distinct *facts*; whether one durable object could ever validly represent more than one of
+   these roles at once without collapsing the distinction this Rule requires is not decided
+   here.
 2. Whether this family's own near-total MISSING realization reflects a genuine, currently
    deprioritized simulation area, or whether Batch 11's own territorial/settlement work will
    supply prerequisites (e.g., real jurisdiction boundaries) that make this family's own

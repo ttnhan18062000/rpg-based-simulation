@@ -62,7 +62,9 @@ grant office).
 
 ---
 
-## POL-02 — Political/institutional stability is never an unstated default; collapse, decay, fragmentation, corruption, and rebellion are all permitted outcomes of real, declared causal conditions, and any stabilizing counterforce must itself be a real, declared mechanism
+## Inherited / Applied Foundational Rules
+
+### Political stability, instability, collapse, consolidation, and fragmentation require causal mechanisms; stability is not assumed as the default outcome
 
 > A political or institutional system does not tend toward equilibrium by default. Authority
 > collapse, institutional decay, civil conflict, corruption, fragmentation, failed enforcement,
@@ -71,12 +73,16 @@ grant office).
 > counterforce (a stabilizing mechanism) exists, it must itself be a real, declared mechanism
 > that can also fail, never an assumed default that instability must overcome.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this generalizes the batch
-instruction's own "Open Instability" guidance (item 29) into a positive declared-causality
-requirement, the same structural pattern as Batch 09's revised SOC-03 (persistence/decay occur
-only per declared semantics) and Batch 07's PROG-05 (limiting semantics must be declared, not
-assumed) — both already-accepted precedents for stating "no default X" as a genuine semantic
-requirement rather than mere implementation guidance.
+**Disposition: INHERITED (reclassified from a Domain Rule, originally drafted as POL-02,
+during the 2026-09-22 follow-up review).** The follow-up correctly re-tested this against the
+admission discipline: on stricter re-examination, it adds no Politics-specific content beyond
+applying two already-locked patterns to this batch's own subject matter — Batch 09's revised
+SOC-03 (persistence/decay/rupture/expiration occur only per declared semantics, never an
+unstated default) and Batch 07's PROG-05 (limiting semantics must be declared, not assumed).
+The batch instruction's own "Open Instability" guidance (item 29) is itself an instance of the
+already-locked "no default X" principle, not a new one Politics itself contributes. Per the
+follow-up's own explicit instruction not to preserve a Rule merely to keep two Politics Rules,
+this is moved rather than kept as a Domain Rule.
 
 **Repository evidence: PARTIAL.** `FactionState.tension_level`/`pairwise_tension`
 (`src/core/state.py`) and `DiplomaticStateMachine` (`src/domains/faction/
@@ -88,10 +94,6 @@ permitted, not required) rather than a violation.
 
 **Scenarios:** none directly traced; reuses the diplomatic-tension evidence above as a
 standing instance of the permitted-instability case.
-
----
-
-## Inherited / Applied Foundational Rules
 
 ### Authority never guarantees compliance; practical power can produce behavior without formal authority
 
@@ -176,7 +178,7 @@ priority.**
   bargaining advantage) is unrealized.** See the power-conversion Inherited entry above.
 - **PARTIAL — a real, live instability channel exists** (`FactionState.tension_level`/
   `pairwise_tension`, `DiplomaticStateMachine`) **with no confirmed stabilizing counterforce** —
-  consistent with, not a violation of, POL-02's own permission.
+  consistent with, not a violation of, the Open-Instability Inherited entry's own permission.
 - **A real territorial-jurisdiction-style pattern already exists elsewhere in the engine, even
   though no law/rule subsystem yet consumes it.** `region.suppression_active` combined with
   `entity.identity.faction != region.owner_faction_id` applies real combat penalties to
@@ -208,8 +210,9 @@ prioritized, or required for implementation during the World Rule Catalog phase.
 - POL-01 → Lineage/Descent (`social-lineage/lineage-descent.md`'s LIN-01, Batch 09 — the
   deferred boundary this Rule directly resolves), Authority (AUTH-06, Batch 02 — its own
   carried-forward open question)
-- POL-02 → Social Relations (SOC-03, Batch 09 — the same declared-semantics pattern), Capability/
-  Progression (PROG-05, Batch 07 — the same declared-limiting-semantics pattern)
+- Inherited open-instability entry → Social Relations (SOC-03, Batch 09 — the same
+  declared-semantics pattern), Capability/Progression (PROG-05, Batch 07 — the same
+  declared-limiting-semantics pattern)
 - Inherited authority-can-fail entry → Agency/Decision (AGENCY-01/02, Batch 06)
 - Inherited power-conversion entry → Capability/Progression (PROG-07, Batch 07), Economy/
   Exchange (EXCH-01, Batch 08)
