@@ -79,9 +79,13 @@ exists to be neutral *toward*. Checked directly:
 - The same doc's §3 confirms this repo currently has **no `.codex/` directory** — no live Codex
   runtime presence exists here at all.
 - `tickets/backlogs/codex-runtime-activation/` (moved from `tickets/todos/` 2026-09-22, deliberate
-  backlog housekeeping, not a substance change — 5 tickets: epic, controlled pilot, posttool
-  adapter, runtime shadow, provider-hook-policy) confirms real second-provider activation work is
-  entirely unstarted.
+  backlog housekeeping, not a substance change — now holds only the epic and the controlled-pilot
+  ticket; the 4 supporting readiness tickets, `TCK-20260730-CLAUDE-EXECUTION-IDENTITY`,
+  `PROVIDER-HOOK-POLICY`, `CODEX-POSTTOOL-ADAPTER`, `CODEX-RUNTIME-SHADOW`, are all in
+  `tickets/done/`) confirms real second-provider *activation* work is still entirely unstarted:
+  those 4 done tickets build and verify controlled readiness only, per the folder's own
+  `SEQUENCE.md` Safety Boundary — none of them invokes live Codex. The controlled-pilot ticket,
+  the one step that would, remains backlogged.
 
 So: Codex's hook framework can *reference* MCP tools by name, which is a positive signal for the
 MCP-tool option's future viability — but there is zero live Codex execution in this repo to test

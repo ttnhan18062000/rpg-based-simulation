@@ -11,10 +11,11 @@ tags: [ai, workflows, hooks, agent-monitoring, process-improvement]
 
 # TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC
 
-> **Physically moved to `tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — the
-> `tickets/todos/` copy of this epic and its own `TCK-20260730-CODEX-CONTROLLED-PILOT.md` +
-> `SEQUENCE.md` folder duplicate were superseded by that folder's own already-stale copy, so both
-> now live together under `tickets/backlogs/`, matching the 2026-09-20 lifecycle decision below.
+> **Physically moved to `tickets/backlogs/codex-runtime-activation/`, 2026-09-22** — this epic and
+> `SEQUENCE.md` moved from `tickets/todos/` unchanged, alongside the real, current
+> `TCK-20260730-CODEX-CONTROLLED-PILOT.md` (also moved); a separate, older, stale duplicate of that
+> pilot ticket that had sat inside `tickets/todos/codex-runtime-activation/` was deleted, not
+> moved, matching the 2026-09-20 lifecycle decision below.
 
 > **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
 > **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further

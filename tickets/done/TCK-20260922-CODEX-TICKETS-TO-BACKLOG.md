@@ -12,8 +12,7 @@ tags: [ai, process-improvement]
 # TCK-20260922-CODEX-TICKETS-TO-BACKLOG
 
 ## Title
-Remove the duplicate Codex ticket copy and move the Codex runtime-activation epic to
-`tickets/backlogs/`
+Remove the duplicate Codex ticket copy and move the Codex runtime-activation epic to `tickets/backlogs/`
 
 ## Status
 DONE
