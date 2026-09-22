@@ -1248,9 +1248,18 @@
   status: verified
   priority: P1
   legacy_evidence: null
-  v2_evidence: "src/domains/culture/applicator.py (CulturalBiasApplicator.compute_culture_delta\
-    \ \u2014 returns float only); src/domains/motivation/service.py (culture_values\
-    \ optional param \u2014 reads CulturalBiasApplicator result, never mutates entity)"
+  v2_evidence: 'src/domains/culture/applicator.py (CulturalBiasApplicator.compute_culture_delta
+    -- returns float only, unchanged); consumed without mutating entity durable state
+    by src/domains/adventure/scoring.py:294 (route-scoring''s local `personality_bias`
+    float accumulator, folded into a new route-option value via dataclasses.replace(),
+    never written back onto `entity`) and src/domains/culture/settlement_personality.py:97
+    (SettlementPersonalityService.describe(), module docstring explicitly states "Pure
+    and stateless... WORLD-CULT-002/003 stay untouched", builds an immutable frozen-dataclass
+    descriptor). Consumption citation updated 2026-09-21 (TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP):
+    the previously-cited src/domains/motivation/service.py was deleted (commit fc1abd089,
+    dead Doctrine/Values chain retirement); these are its real current consumers,
+    both read directly and confirmed to hold the same never-mutates-entity property
+    the law requires.'
   proof_type: parity
   test_path: tests/unit/domains/culture/test_culture_applicator.py::test_zero_culture_produces_zero_delta
   divergence_note: null

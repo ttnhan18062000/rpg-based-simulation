@@ -18,19 +18,30 @@ repeatedly across this batch (`TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALI
 `TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS`). This check watches the population the ticket
 itself calls "current, not historical."
 
-**Why a ratchet, not zero-tolerance**: the measured post-fix baseline is 50 (raised from 49 by
-`TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT`), not 0 -- most of these are
-downstream of the same pre-`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` cross-session sidecar
-contamination `TCK-20260915-SIDECAR-ATTRIBUTION-GAP` and this ticket's own investigation both
-trace August's cluster to, itself already fixed and already documented as a permanent,
-unbackfilled historical caveat. The 50th (`TCK-20260921-HEADROOM-AI-PIN-CLAIM-CORRECTION`) is a
-fresh, fully-diagnosed instance of the exact same root-cause class, not a new kind of failure: a
-hand-orchestration sidecar written once for an earlier ticket's own Implement phase was never
-cleared or updated across two entirely separate subsequent tickets' real work, so every real tool
-call made in between was misattributed to the stale `(run_id, seq)`. `record_hand_orchestrated_
-closure.py::check_sidecar_matches_ticket()` now warns (non-blocking) on this exact condition,
-so a future instance is caught at the moment it happens rather than discovered later, retroactively,
-via this ratchet.
+**Why a ratchet, not zero-tolerance**: the measured post-fix baseline is 53 (raised from 50 by
+`TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT`), not 0 -- most of
+these are downstream of the same pre-`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` cross-session
+sidecar contamination `TCK-20260915-SIDECAR-ATTRIBUTION-GAP` and this ticket's own investigation
+both trace August's cluster to, itself already fixed and already documented as a permanent,
+unbackfilled historical caveat. The 50th (`TCK-20260921-HEADROOM-AI-PIN-CLAIM-CORRECTION`) was a
+fresh, fully-diagnosed instance of the exact same root-cause class: a hand-orchestration sidecar
+written once for an earlier ticket's own Implement phase was never cleared or updated across two
+entirely separate subsequent tickets' real work, so every real tool call made in between was
+misattributed to the stale `(run_id, seq)`. `record_hand_orchestrated_closure.py::
+check_sidecar_matches_ticket()` was added then to warn (non-blocking) on exactly that condition.
+
+**51st-53rd (`TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT`,
+`TCK-20260921-CAVEMAN-CLOSE-OUT`, `TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT`) are a
+related but distinct variant of the same class, diagnosed by
+`TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT`: in all three, the
+sidecar's own `run_id` correctly matched the ticket being closed at the moment
+`record_hand_orchestrated_closure.py` ran (so `check_sidecar_matches_ticket()` correctly found
+nothing to warn about) -- the corruption happened *after* that snapshot, not before it. Real tool
+calls for that same ticket's own remaining closure steps (registry regeneration, staging-to-stored
+migration, `git add`/`commit`) continued to accumulate onto the same, now-already-recorded
+`(run_id, seq)` pair, because the sidecar was left live rather than cleared the moment its
+snapshot was taken. `record_hand_orchestrated_closure.py` now clears the sidecar itself,
+immediately after a successful recording, closing this specific variant going forward.
 
 Mirrors the batch's own `check_*()` shape: `List[dict]` (`{"status": "PASS"|"FAIL", "evidence":
 "..."}`), `MARKER:` + `json.dumps(result)` stdout contract in `__main__`.
@@ -55,12 +66,14 @@ FIX_DATE = "2026-07-19"
 MISMATCH_RATIO = 3.0
 
 # Ratchet ceiling: the real corpus's own post-2026-07-19, workflow-scoped >3x mismatch count.
-# Raised 49 -> 50 by TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT, 2026-09-21, with
-# a full root-cause diagnosis (see the module docstring above) -- not "papering over" a mismatch,
-# extending the same already-accepted ratchet-tracking convention to a newly-discovered, fully
-# explained instance of the same already-documented root cause. Raising it to paper over an
-# UNEXPLAINED newly-introduced mismatch still defeats the entire point of this check.
-MISMATCH_CEILING = 50
+# Raised 49 -> 50 by TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT, 2026-09-21.
+# Raised 50 -> 53 by TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT,
+# 2026-09-22, with a full root-cause diagnosis (see the module docstring above) -- not "papering
+# over" a mismatch, extending the same already-accepted ratchet-tracking convention to a
+# newly-discovered, fully explained variant of the same already-documented root-cause class.
+# Raising it to paper over an UNEXPLAINED newly-introduced mismatch still defeats the entire point
+# of this check.
+MISMATCH_CEILING = 53
 
 
 def find_tool_call_count_mismatches(

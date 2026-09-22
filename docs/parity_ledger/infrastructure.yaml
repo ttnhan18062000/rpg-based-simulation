@@ -2899,17 +2899,33 @@
     \ {} when strict=False and catalog is absent.  Module-level default runtime_content_source\
     \ in src/core/registries.py changed from \"legacy_hardcoded\" to None. Resolves\
     \ D02 \xA76.6 [P]. (TCK-20260627-P2N-DEGRADED-FALLBACK)\n"
-  status: verified
+  status: missing
   priority: P1
   legacy_evidence: null
-  v2_evidence: 'src/domains/optimization/degradation.py::GracefulDegradationManager.resolve_content_source
-    + src/content/repository.py::CatalogRepository.get_lowest_cost_for_type + src/core/registries.py::runtime_content_source
-    (default=None)
-
-    '
+  v2_evidence: src/content/repository.py::CatalogRepository.get_lowest_cost_for_type
+    (real, unchanged) + src/core/registries.py::runtime_content_source (default=None,
+    real, unchanged) -- GracefulDegradationManager.resolve_content_source() (previously
+    cited here) confirmed deleted along with all of src/domains/optimization/degradation.py;
+    see divergence_note.
   proof_type: null
-  test_path: tests/unit/core/test_degraded_fallback.py::test_resolve_content_source_degraded_uses_catalog
-  divergence_note: null
+  test_path: null
+  divergence_note: 'Headline behavior gone: GracefulDegradationManager.resolve_content_source()''s
+    cheapest-first catalog selection in degraded mode no longer exists -- src/domains/optimization/degradation.py
+    was deleted via PR #176 ("Batch: gate inert API subsystems, delete the remaining
+    src/domains/optimization/ package"). The cited test_path (test_resolve_content_source_degraded_uses_catalog)
+    does not exist in tests/unit/core/test_degraded_fallback.py (grep confirms only
+    4 other test functions present); cleared rather than left dangling. A sibling
+    investigation (tickets/done/TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION.md)
+    found a structural-match successor for the general degradation mechanism (src/engine/governor.py::ResourceGovernor)
+    but explicitly left this specific behavior unconfirmed: does ResourceGovernor
+    or anything else provide cheapest-first catalog selection in degraded mode, or
+    was it silently dropped? Still open -- not re-pointed here. One sub-claim of this
+    entry survives independently and is still live: the module-level runtime_content_source
+    default in src/core/registries.py changing from "legacy_hardcoded" to None is
+    tested by tests/unit/core/test_degraded_fallback.py::test_runtime_content_source_module_default_is_not_legacy_hardcoded
+    (line 30). That test covers only the default-source sub-claim, not the headline
+    degraded-mode catalog-selection behavior -- the whole-entry downgrade to `missing`
+    stands regardless. (TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP)'
   support_boundary: null
 - id: INFRA-229
   text: 'PersonalitySnapshotRecorder emits per-entity personality snapshots to entity_personality_snapshots.jsonl

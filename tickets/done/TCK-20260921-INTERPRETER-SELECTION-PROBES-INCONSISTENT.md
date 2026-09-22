@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P2
 audience: agent
 ticket_id: TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT
-phase: open
+phase: done
 date: 2026-09-21
 tags: [ai, process-improvement, performance]
 ---
@@ -17,7 +17,7 @@ existence alone (the exact weakness #233 fixed in the MCP launchers), and the se
 new probe roughly doubles cold-start time doing it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -88,15 +88,23 @@ When picked up:
   rides along unbuilt until someone picks it up deliberately.
 
 ## Acceptance Criteria
-- [ ] A deliberate decision is recorded on whether `Makefile`'s `PYTHON3`/`PYTHON_KNOWLEDGE` get the
-      same hardening as the shell launchers, with reasoning, not just "yes, be consistent."
-- [ ] If hardened: a planted stale/wrong-venv case demonstrates a `make` target falls through to a
-      working candidate instead of failing on the wrong one.
-- [ ] `start_search_mcp.sh`'s probe uses `importlib.util.find_spec` (or an equivalently non-importing
+- [x] A deliberate decision is recorded on whether `Makefile`'s `PYTHON3`/`PYTHON_KNOWLEDGE` get the
+      same hardening as the shell launchers, with reasoning, not just "yes, be consistent." Decided
+      yes, via `find_spec` (not a full import, since `:=` runs on every `make` invocation) — see
+      `investigation.md` § Part (a).
+- [x] If hardened: a planted stale/wrong-venv case demonstrates a `make` target falls through to a
+      working candidate instead of failing on the wrong one. Demonstrated live (not statically) by
+      `tests/tools/test_makefile_interpreter_selection.py`, extracting the real Makefile shell
+      command and running it against planted broken/working candidates.
+- [x] `start_search_mcp.sh`'s probe uses `importlib.util.find_spec` (or an equivalently non-importing
       check), with a real measured before/after cold-start timing recorded — not the estimate this
-      ticket makes, a fresh measurement of the actual changed code.
-- [ ] `find_spec`'s weaker guarantee (module locatable ≠ module actually importable without error) is
-      explicitly weighed and the decision recorded, not silently accepted as strictly better.
+      ticket makes, a fresh measurement of the actual changed code. Measured: 10.899s before,
+      6.176s/7.179s after (two runs) — a real ~35-45% cut, smaller than the pre-implementation ~5s
+      estimate; the gap and why is recorded honestly in `investigation.md` and the script's own
+      comment.
+- [x] `find_spec`'s weaker guarantee (module locatable ≠ module actually importable without error) is
+      explicitly weighed and the decision recorded, not silently accepted as strictly better. See
+      `investigation.md` § weighed.
 
 ## Related Tickets
 - `TCK-20260914-VENV-NAMING-CI-PARITY-SWAP` (done) — the PR #233 hardening this generalizes from.
@@ -105,7 +113,8 @@ When picked up:
 - None yet.
 
 ## Related Stored Artifacts
-- None yet.
+- `stored_artifacts/TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT/` (plan.md,
+  investigation.md, test_plan.md).
 
 ## Related Code Areas
 - `Makefile` (`PYTHON3` line 35, `PYTHON_KNOWLEDGE` line 42, and every target that consumes either)
@@ -129,18 +138,47 @@ When picked up:
   problem is real and worth ~2x, not a permanent SLA to hold any future implementation to exactly.
 
 ## Implementation Notes
-Not implemented. Measure the real before/after delta on the actual changed code before claiming a
-number in any future closure of this ticket — the numbers here are for the CURRENT (unfixed) code,
-establishing that the problem is real, not a benchmark of the fix.
+See `stored_artifacts/TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT/investigation.md` for
+the full decision record and measurements. Summary:
+- `Makefile:PYTHON3`/`PYTHON_KNOWLEDGE` hardened to probe real capability (`pydantic` /
+  `sentence_transformers`) via `importlib.util.find_spec`, not existence alone — decision recorded
+  with reasoning (a `:=`-assigned variable's probe cost is paid on every `make` invocation, so
+  `find_spec` was chosen over a full import even though the original shell-launcher pattern used a
+  full import).
+- `tools/start_search_mcp.sh`'s probe switched from `import sentence_transformers` to
+  `importlib.util.find_spec('sentence_transformers')`. Real before/after measured, not estimated:
+  10.899s → 6.176s/7.179s (two runs).
+- `find_spec`'s weaker guarantee weighed explicitly and accepted, both in `investigation.md` and in
+  the script's own updated comment.
+- Pre-existing static guard test (`test_mcp_launcher_hardening.py`) updated for the new probe text
+  shape; a new live-behavior test added for the Makefile fallthrough case.
 
 ## Test Summary
-_Not yet — deferred._
+```
+/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -m pytest \
+  tests/tools/test_makefile_interpreter_selection.py \
+  tests/tools/test_mcp_launcher_hardening.py \
+  tests/tools/test_dashboard_makefile_targets.py \
+  tests/tools/test_search_mcp.py \
+  tests/tools/test_mcp_json_registration.py -q
+# 46 passed
+```
+`graphify update .` run after the code/test changes — no topology changes detected.
 
 ## Files Changed
-_None — filed, not implemented._
+- `Makefile` — `PYTHON3`/`PYTHON_KNOWLEDGE` hardened with `find_spec`-based capability probes.
+- `tools/start_search_mcp.sh` — probe switched from full import to `find_spec`.
+- `tests/tools/test_makefile_interpreter_selection.py` (new) — live fallthrough regression test.
+- `tests/tools/test_mcp_launcher_hardening.py` — updated for the new probe text shape.
+- `docs/REGISTRY.yaml` — regenerated.
 
 ## Completion Summary
-_Open. Filed 2026-09-21 with real measured evidence for the performance claim (probe alone: 5.66s;
-find_spec alone: 0.04s; full launcher: 10.60s) rather than an assumed number, per the user's
-defer-minor-effect rule: record now with evidence, fix later when someone has a reason to
-prioritize it._
+Both parts of the ticket's scope implemented. (a) Makefile's `PYTHON3`/`PYTHON_KNOWLEDGE` now probe
+real capability via `find_spec`, matching the shell launchers' fallthrough resilience without
+paying a full-import cost on every `make` invocation — the design tradeoff the ticket asked to be
+decided explicitly, not assumed. Demonstrated live with a planted broken-then-working candidate
+test. (b) `start_search_mcp.sh`'s probe switched to `find_spec`; real before/after cold-start timing
+measured on the actual changed code (10.899s → 6.176s/7.179s), a genuine ~35-45% improvement,
+smaller than the ticket's own pre-implementation estimate — recorded honestly rather than claiming
+the original estimate held. `find_spec`'s weaker guarantee weighed and accepted in both places, with
+the reasoning for why it's an acceptable tradeoff recorded in code comments, not just the ticket.

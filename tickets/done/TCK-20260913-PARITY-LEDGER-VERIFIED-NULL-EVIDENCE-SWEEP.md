@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP
-phase: open
+phase: done
 date: 2026-09-13
 tags: [testing, registry]
 ---
@@ -16,7 +16,7 @@ A `status: verified` parity ledger entry can name a class that no longer exists 
 a dangling citation, not merely a missing one
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -52,8 +52,8 @@ missing one. `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` owns the 1307-en
 question (freeze as historical baseline / flag as distinct reportable state / new status value);
 this ticket does not duplicate that measurement or pre-empt that decision.
 
-**This ticket records the need for the fix. It does not implement it** — filed now, picked up
-later.
+**Picked up 2026-09-21** as part of a batch with `TCK-20260921-CAVEMAN-CLOSE-OUT`. See
+Implementation Notes / Completion Summary for the result.
 
 ## Scope
 - Query `docs/parity_ledger/*.yaml` (all shards, not just `progression.yaml`) for `status:
@@ -84,15 +84,22 @@ later.
   that file needs its own sweep.
 
 ## Acceptance Criteria
-- [ ] A ledger-wide count of `status: verified` entries whose named class/symbol is confirmed
+- [x] A ledger-wide count of `status: verified` entries whose named class/symbol is confirmed
       absent from `src/` (dangling), distinct from — and not double-counting — the bare-missing-
-      citation corpus `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` already measured.
-- [ ] Each hit independently re-verified via git history, not present-day grep alone, before
-      correction.
-- [ ] Every confirmed dangling entry corrected via `parity_ledger_writer.py`, recording the
-      dangling reference as evidence, never repointed at a plausible substitute.
-- [ ] Cross-referenced explicitly against `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` so a
-      reader of either ticket understands which owns which defect.
+      citation corpus `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` already measured. Result:
+      2 of 1888 (`INFRA-228`, `WORLD-CULT-002`); see `investigation.md` for the full accounting of
+      why the other 154 initial hits (120 strong-candidate + 34 module-path) were false positives.
+- [x] Each hit independently re-verified via git history, not present-day grep alone, before
+      correction. `git log --diff-filter=D --follow` for both confirmed entries' deleted paths.
+- [x] Every confirmed dangling entry corrected via `parity_ledger_writer.py`, recording the
+      dangling reference as evidence, never repointed at a plausible substitute. `INFRA-228`
+      downgraded to `missing` (not repointed — the one relevant successor investigation declines to
+      confirm one). `WORLD-CULT-002`'s stale consumption citation was repointed, but only after
+      direct code-level confirmation (CERTAIN) that both real consumers satisfy the law's required
+      non-mutation property — not a "plausible-looking substitute," a verified one.
+- [x] Cross-referenced explicitly against `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` so a
+      reader of either ticket understands which owns which defect. See Related Tickets (unchanged)
+      and `investigation.md`'s Related section.
 
 ## Related Tickets
 - `TCK-20260904-PARITY-TESTPATH-STALE-CITATIONS-AUDIT` (done — found and corrected `PROG-001`, a
@@ -116,7 +123,8 @@ later.
   its own version of this defect — see Scope's last bullet)
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+`stored_artifacts/TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP/` (plan.md,
+investigation.md, test_plan.md).
 
 ## Related Code Areas
 - `tools/parity_ledger_writer.py` (`write_entry()`, `validate_entry()` — the sanctioned write path
@@ -125,19 +133,59 @@ None yet — standard tier, staging artifacts created when picked up.
   for querying `status`/`test_path` across all shards without hand-parsing YAML)
 
 ## Assumptions / Open Questions
-- Whether other dangling-class-reference entries exist beyond `PROG-014` is genuinely unknown —
-  this ticket's own scan (confirmed absent from `src/`, not merely uncited) is a different query
-  than `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`'s own measurement, so its 1677-entry
-  count does not directly answer how many of those are also dangling versus merely uncited.
+Resolved: a corpus-wide sweep of all 1888 `status: verified` entries (not just `PROG-014`'s own
+file) found exactly 2 additional dangling/stale-citation entries — see `investigation.md`. `PROG-014`
+itself was already corrected (`status: missing`) before this sweep began, by
+`TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED` — confirmed directly against `origin/main`
+during gate review, not a gap in this sweep's own pipeline.
 
 ## Implementation Notes
-_(pending — filed, not yet picked up)_
+See `stored_artifacts/TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP/investigation.md`
+for the full method, false-positive accounting, and the two confirmed findings. Both corrections
+applied via `tools/parity_ledger_writer.py::write_entry()`:
+- `INFRA-228`: `status: verified` → `missing`; `test_path` cleared (cited function does not exist);
+  `divergence_note` added naming both the open successor question
+  (`TCK-20260911-OPTIMIZATION-PACKAGE-SUPERSEDED-OR-MISSING-DETERMINATION`) and the one surviving
+  sub-claim (module-level `runtime_content_source` default), per `rpg-feature-planning`'s and
+  `agent-working-design`'s review.
+- `WORLD-CULT-002`: `status: verified` unchanged (core claim + test independently sound);
+  `v2_evidence`'s stale consumption-site citation re-pointed to the two real current call sites,
+  confirmed CERTAIN by direct code read before writing.
+
+`python3 tools/parity_index.py build` run as a separate, visible Bash call after both writes (the
+writer itself already rebuilds the index in-process; the separate call is what the
+`parity_write_safety` retro metric detects, per the writer module's own docstring).
+
+The method's own limitation (existence-check, not correctness-check) is stated explicitly in
+`investigation.md` — the other 1886 entries passed "every cited symbol resolves," not "the entry is
+correct."
 
 ## Test Summary
-_(pending)_
+53 passed: `tests/tools/test_parity_ledger_writer.py`, `tests/tools/test_parity_ledger_schema.py`,
+`tests/tools/test_parity_ledger_scan.py` (scoped, via
+`/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3`). Both edited entries individually
+validated against `docs/parity_ledger/schema.json`'s `items` sub-schema (pass). `git diff` confirms
+only the two intended entries changed in their respective shards. See
+`stored_artifacts/TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP/test_plan.md` for full
+detail, including the pre-write factual verification for `WORLD-CULT-002`'s re-point.
 
 ## Files Changed
-_(pending)_
+- `docs/parity_ledger/infrastructure.yaml` — `INFRA-228` downgraded to `missing`.
+- `docs/parity_ledger/world_dynamics.yaml` — `WORLD-CULT-002`'s consumption citation re-pointed.
+- `docs/REGISTRY.yaml` — regenerated (unconditional post-migration self-check per closure process).
+- `staging_artifacts/TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP/` → moved to
+  `stored_artifacts/` at close.
+- `tickets/todos/TCK-20260913-PARITY-LEDGER-VERIFIED-NULL-EVIDENCE-SWEEP.md` → `tickets/done/`.
 
 ## Completion Summary
-_(pending)_
+Swept all 1888 `status: verified` parity-ledger entries across all 9 shards for `PROG-014`-shape
+dangling citations. Found the corpus is, on the whole, well-maintained — the large majority of
+apparent hits from an initial narrow (`src/`-only) or path-substring search resolved to real,
+often self-documented relocations once checked at the correct scope. Confirmed exactly 2 genuine
+corrections: `INFRA-228` (a confirmed-dead class, downgraded, with the open successor question
+named rather than guessed at) and `WORLD-CULT-002` (a sound core claim with one stale supporting
+citation, re-pointed only after direct, CERTAIN verification). `PROG-014`, the ticket's own
+motivating example, was independently confirmed already resolved before this sweep began — not a
+gap in the method. The ticket's own scope boundary against
+`TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` held throughout; no bare-missing-`test_path`
+entries were touched.
