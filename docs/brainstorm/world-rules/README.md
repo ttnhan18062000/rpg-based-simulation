@@ -63,6 +63,10 @@ order.
 | Social Relations | Batch 09 — PASS, frozen | [social-lineage/social-relations.md](social-lineage/social-relations.md) |
 | Family / Kinship | Batch 09 — PASS, frozen | [social-lineage/family-kinship.md](social-lineage/family-kinship.md) |
 | Lineage / Descent | Batch 09 — PASS, frozen | [social-lineage/lineage-descent.md](social-lineage/lineage-descent.md) |
+| Organizations | Batch 10 drafted | [institutions-politics/organizations.md](institutions-politics/organizations.md) |
+| Roles / Institutions | Batch 10 drafted | [institutions-politics/roles-institutions.md](institutions-politics/roles-institutions.md) |
+| Politics / Authority | Batch 10 drafted | [institutions-politics/politics-authority.md](institutions-politics/politics-authority.md) |
+| Law / Enforcement | Batch 10 drafted | [institutions-politics/law-enforcement.md](institutions-politics/law-enforcement.md) |
 
 ## Rule Catalog progress
 
@@ -231,8 +235,30 @@ order.
   ungated read. See `review-exports/social-lineage-batch-09-review.md`'s explicit call-outs
   for these and further confirmed gaps. See `tmp/social-lineage-batch-09-report.md` (local,
   not part of this catalog) for the full disposition report.
-- Batch 10 (Organizations / Institutions / Politics / Law) is the next planned step, once its
-  own instruction file is provided — no `tmp/world-rule-batch-10-ext-ai.md` exists yet.
+- **Batch 10** (Organizations/Institutions/Politics/Law) — the seventh domain-facing batch,
+  and the first drafted under the standing direction (`tmp/world-rule-direction.md`, applied
+  from this batch onward: Rules state target semantics only; repository classification
+  implies no delivery priority) — drafted 2026-09-22 per `tmp/world-rule-batch-10-ext-ai.md`.
+  13 genuine Domain Rules (31 total catalog entries including 10 inherited/applied
+  foundational rules and 8 scope/deferred boundaries) across Organizations, Roles/
+  Institutions, Politics/Authority, and Law/Enforcement; ready for high-level external review.
+  Resolves two carried-forward open questions: Batch 02's own AUTH-06 open question (does
+  political authority inherit the role-persists-occupant-change rule unchanged? — yes,
+  confirmed by AUTH-06's own pre-existing evidence) and Batch 09's own `lineage-descent.md`
+  deferral of political succession (POL-01: succession ≠ kinship ≠ property inheritance). The
+  single largest finding: this repository has **no in-world law, crime, violation, detection,
+  judgment, or sanction subsystem at all** — every "law"/"crime" hit found belongs to
+  development-time observability tooling, unrelated to in-world subjects — recorded as a
+  load-bearing semantic gap per the standing direction, not a delivery priority. A third
+  scale (after individual, Batch 07, and lineage, Batch 09) at which the same "ordinary
+  individual becomes significant by name" gap recurs: no organization tracks or reacts to one
+  specific individual's own history, distinct from population-wide reputation. See
+  `review-exports/institutions-politics-batch-10-review.md`'s explicit call-outs and its new
+  Implementation Candidates — Non-Binding section for these and further confirmed gaps. See
+  `tmp/institutions-politics-batch-10-report.md` (local, not part of this catalog) for the full
+  disposition report.
+- Do not begin Batch 11 (Places / Settlements / Territory / Culture / Belief) until Batch 10
+  receives high-level review.
 
 ## Scenario Bank index
 
@@ -248,6 +274,7 @@ order.
 | Batch 07 (Capability/Progression/Conflict) | [scenarios/capability-progression-batch-07.md](scenarios/capability-progression-batch-07.md) | CP-S01 – CP-S17 |
 | Batch 08 (Objects/Ownership/Resources/Economy) | [scenarios/material-economy-batch-08.md](scenarios/material-economy-batch-08.md) | ME-S01 – ME-S18 |
 | Batch 09 (Social Relations/Family/Lineage) | [scenarios/social-lineage-batch-09.md](scenarios/social-lineage-batch-09.md) | SL-S01 – SL-S18 |
+| Batch 10 (Organizations/Institutions/Politics/Law) | [scenarios/institutions-politics-batch-10.md](scenarios/institutions-politics-batch-10.md) | IP-S01 – IP-S21 |
 
 ## Unresolved cross-domain questions
 
@@ -485,6 +512,33 @@ follow-up):**
   `place_attachment`, and (confirmed via the follow-up) `PublicReputationProfile.labels` all
   have zero consumers outside their own write path.
 
+**From Batch 10 (Organizations/Institutions/Politics/Law, drafted 2026-09-22 — per the
+standing direction, `tmp/world-rule-direction.md`, these are load-bearing semantic gaps, not
+delivery priorities):**
+
+- **Resolved.** Batch 02's own AUTH-06 open question (does political authority inherit the
+  role-persists-occupant-change rule unchanged?) — yes, confirmed by AUTH-06's own
+  pre-existing `ClanLifecycleService` evidence; no institution-specific refinement was needed.
+- **Resolved.** Batch 09's own `lineage-descent.md` deferral of political succession — POL-01
+  states succession ≠ kinship eligibility ≠ property inheritance, none automatically granting
+  the others.
+- **Confirmed MISSING, the largest single gap this batch found.** No in-world law, crime,
+  violation, detection, judgment, or sanction subsystem exists anywhere — every "law"/"crime"
+  hit in this repository belongs to development-time observability/anomaly-detection tooling,
+  unrelated to in-world subjects.
+- **Confirmed MISSING, a third scale for the same recurring gap.** No organization tracks or
+  reacts to one specific ordinary individual's own history by name, distinct from
+  population-wide reputation — the same shape Batch 07 (individual scale) and Batch 09
+  (lineage scale) already found, now confirmed at the organizational scale too.
+- **Confirmed MISSING.** No organization split/merge mechanism; no authorized-member-access
+  path to collective resources; no delegation mechanism; no legitimacy/recognition concept
+  distinct from belief or reputation; no political office concept independent of ordinary
+  group leadership.
+- **A significant, notable finding, not itself a gap.** Two structurally separate "faction"
+  representations exist (the legacy `Faction` IntEnum and the richer `FactionState`/catalog
+  `faction_id`), deliberately bridged via `get_legacy_faction_bucket()` — the same shape as
+  Batch 09's own resolved reputation-naming-collision finding, not an accidental duplicate.
+
 ## Review index
 
 For external review, send the review export first — it's the compact, generated summary; send
@@ -515,6 +569,7 @@ rationale stay canonical.
 | Batch 07 (Capability/Progression/Conflict) | `capability-progression/capability-progression.md`, `capability-progression/learning-adaptation.md`, `capability-progression/conflict-combat.md` | `scenarios/capability-progression-batch-07.md` (CP-S01–S17) | [review-exports/capability-progression-batch-07-review.md](review-exports/capability-progression-batch-07-review.md) | PASS — ready to freeze |
 | Batch 08 (Objects/Ownership/Resources/Economy) | `material-economy/objects-material-culture.md`, `material-economy/ownership-possession.md`, `material-economy/resources-production.md`, `material-economy/economy-exchange.md` | `scenarios/material-economy-batch-08.md` (ME-S01–S18) | [review-exports/material-economy-batch-08-review.md](review-exports/material-economy-batch-08-review.md) | PASS — ready to freeze |
 | Batch 09 (Social Relations/Family/Lineage) | `social-lineage/social-relations.md`, `social-lineage/family-kinship.md`, `social-lineage/lineage-descent.md` | `scenarios/social-lineage-batch-09.md` (SL-S01–S18) | [review-exports/social-lineage-batch-09-review.md](review-exports/social-lineage-batch-09-review.md) | PASS — frozen |
+| Batch 10 (Organizations/Institutions/Politics/Law) | `institutions-politics/organizations.md`, `institutions-politics/roles-institutions.md`, `institutions-politics/politics-authority.md`, `institutions-politics/law-enforcement.md` | `scenarios/institutions-politics-batch-10.md` (IP-S01–S21) | [review-exports/institutions-politics-batch-10-review.md](review-exports/institutions-politics-batch-10-review.md) | Ready for high-level external review |
 
 ## Links to current review batches
 
@@ -567,3 +622,12 @@ rationale stay canonical.
 - Batch 09 scenario file: `scenarios/social-lineage-batch-09.md`
 - Batch 09 review export: `review-exports/social-lineage-batch-09-review.md`
 - Batch 09 report (local, gitignored): `tmp/social-lineage-batch-09-report.md`
+- Batch 10 rule files: `institutions-politics/organizations.md`,
+  `institutions-politics/roles-institutions.md`,
+  `institutions-politics/politics-authority.md`,
+  `institutions-politics/law-enforcement.md`
+- Batch 10 scenario file: `scenarios/institutions-politics-batch-10.md`
+- Batch 10 review export: `review-exports/institutions-politics-batch-10-review.md`
+- Batch 10 report (local, gitignored): `tmp/institutions-politics-batch-10-report.md`
+- Standing direction (2026-09-22, applies to all remaining batches): `tmp/world-rule-
+  direction.md`
