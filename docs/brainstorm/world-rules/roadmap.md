@@ -38,9 +38,12 @@ reclassified to Inherited and LEARN-02 retired to Repository Findings), and **PA
 freeze**. Batch 08 (Objects/Ownership/Resources/Economy) is drafted 2026-09-22, revised the
 same day per a targeted semantic-cleanup follow-up (6 genuine Domain Rules of 23 total catalog
 entries after OBJ-03/PROP-02 were reclassified to Inherited), and **PASS — ready to freeze**.
-Batch 09 (Social Relations/Family/Lineage) is drafted 2026-09-22 (7 genuine Domain Rules of 18
-total catalog entries) and ready for high-level external review. Batch 10 (Organizations/
-Institutions/Politics/Law) is the next planned step once Batch 09 is reviewed.
+Batch 09 (Social Relations/Family/Lineage) is drafted 2026-09-22, revised the same day per a
+targeted semantic-cleanup follow-up (6 genuine Domain Rules of 19 total catalog entries after
+SOC-04 was reclassified to Inherited and a reputation-reach re-investigation added a new
+Inherited entry), and **PASS — ready to freeze**. Batch 10 (Organizations/Institutions/
+Politics/Law) is the next planned step, once its own instruction file is provided — no
+`tmp/world-rule-batch-10-ext-ai.md` exists yet.
 
 ---
 
@@ -318,13 +321,24 @@ practice today, despite the code's own appearance of completeness.
 
 ### Batch 09 — Social Relations / Family / Lineage
 
-**Status: drafted 2026-09-22, ready for high-level external review.** 7 genuine Domain Rules
-(18 total catalog entries — 7 Domain Rules, 7 Inherited/Applied Foundational Rules, 4 Scope/
-Deferred Boundaries) across `social-lineage/social-relations.md`, `family-kinship.md`,
-`lineage-descent.md`. Two clean resolutions of long-carried-forward open questions (Batch 01's
-OWN-03 reputation-naming-collision, Batch 05's LIFE-05 family-meaning deferral) and one
-significant, notable finding: this repository's own default heir-eligibility mechanism is
-social-bond-based, not kinship-based. See `review-exports/social-lineage-batch-09-review.md`.
+**Status: PASS — frozen 2026-09-22.** Drafted 2026-09-22, then revised the same day per a
+targeted semantic-cleanup follow-up. 6 genuine Domain Rules (19 total catalog entries — 6
+Domain Rules, 9 Inherited/Applied Foundational Rules, 4 Scope/Deferred Boundaries) across
+`social-lineage/social-relations.md`, `family-kinship.md`, `lineage-descent.md`. The follow-up
+reworked SOC-01 (removed a five-fact decomposition requirement in favor of a two-category
+structural-relation/subjective-attitude split), generalized SOC-03 to a positive
+declared-semantics framing, reclassified SOC-04 to Inherited (fully covered by SOC-03 +
+CAUSE-01 + KNOW-02), and narrowed LIN-01. Two clean resolutions of long-carried-forward open
+questions (Batch 01's OWN-03 reputation-naming-collision, Batch 05's LIFE-05 family-meaning
+deferral); one significant, notable finding, preserved: this repository's own default
+heir-eligibility mechanism is social-bond-based, not kinship-based. A direct re-investigation
+of reputation/recognition reach (left unchecked in the first draft) found it **CONFLICTING**
+with Batch 06's own Perception/Knowledge semantics — every reputation consumer checked reads
+another subject's `public_reputation` as globally available truth, never through a
+perception/knowledge-mediated channel, collapsing the two causal steps between "an ancestor's
+significance seeds a descendant's own starting standing" and "another subject learns of that
+ancestry and reacts accordingly" into one ungated read. See
+`review-exports/social-lineage-batch-09-review.md`.
 
 ```text
 relationships

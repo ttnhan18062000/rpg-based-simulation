@@ -11,7 +11,10 @@ tags: [architecture, world, content]
 **Purpose/scope.** Eighteen scenarios used to pressure-test the Social Relations, Family/
 Kinship, and Lineage/Descent rule families in `social-lineage/social-relations.md`,
 `family-kinship.md`, and `lineage-descent.md`, per `tmp/world-rule-batch-9-ext-ai.md`. Covers
-all eighteen required seed probes from that instruction's §20.
+all eighteen required seed probes from that instruction's §20, plus two focused probes added by
+the 2026-09-22 follow-up (`tmp/world-rule-batch-9-followup-ext-ai.md`'s §9) — extended in place
+onto SL-S11 and SL-S15 rather than as new IDs, per that follow-up's own explicit instruction to
+prefer extension where an existing scenario fits cleanly.
 
 Scoring uses the same vocabulary as prior batches: **covered** / **partially covered** /
 **blocked** / **revealed missing rule** / **revealed contradiction**, against current
@@ -64,7 +67,8 @@ A trusts B; B betrays A; A learns/experiences betrayal; trust relationship chang
 False information causes A to believe B harmed them; hostility develops; later the truth is
 discovered; hostility does not automatically disappear.
 
-- **Rules invoked:** SOC-04.
+- **Rules invoked:** Inherited (the correcting-information-behind-a-change entry, originally
+  drafted as SOC-04).
 - **Result: covered — a confirmed, honest gap in the *repair* direction, not a violation.**
   The hostility-forming half is covered by the same causal-path mechanism as SL-S04. The
   repair half: checked directly, no code path restores `sentiment`/`role` when a
@@ -131,16 +135,27 @@ A and B share a declared parent; a sibling relation is derivable.
   derivation exists at all; the probe's own premise (deriving sibling status) is not
   currently exercised.
 
-## SL-S11 — Kinship without affection
+## SL-S11 — Kinship without affection / structural relation, opposed attitudes
 
-Siblings have a hostile relationship.
+Siblings have a hostile relationship. **Extended per the 2026-09-22 follow-up's own §9
+"Structural Relation, Opposed Attitudes" probe:** A and B are siblings; A trusts B; B hates A —
+verify that the structural kinship fact and each party's own independent subjective attitude
+remain independently valid at once.
 
-- **Rules invoked:** FAM-01.
+- **Rules invoked:** FAM-01, SOC-01 (revised).
 - **Result: covered.** Nothing in this repository derives `sentiment`/`bonds` from
   `parent_a/b_entity_id` — a shared parent creates zero automatic effect on the siblings' own
   `SocialBond` records toward each other. Family relation is confirmed not to dictate
   attitude, consistent with FAM-01's own claim, though again confirmed by the absence of any
-  coupling rather than a positive "hostile siblings" mechanism.
+  coupling rather than a positive "hostile siblings" mechanism. **Extended clause: covered.**
+  `parent_a_entity_id`/`parent_b_entity_id` sharing a value establishes the siblings' own
+  structural kinship fact independent of either's attitude; `A.social.bonds[B]` (trust,
+  positive sentiment) and `B.social.bonds[A]` (hostility, negative sentiment) are two
+  independent `SocialBond` records — checked directly, nothing forces them to agree with each
+  other or with the underlying structural fact. All three facts (structural kinship, A's own
+  attitude toward B, B's own attitude toward A) are confirmed independently valid and
+  independently storable at once, exactly as SOC-01's own revised claim requires, with no
+  fourth "world relationship" fact needed for symmetry.
 
 ## SL-S12 — Lineage across generations
 
@@ -182,12 +197,16 @@ kinship alone does not transfer property.
   candidacy at all if no bond exists — kinship alone is confirmed never sufficient to
   transfer property in this repository, exactly as this Rule requires.
 
-## SL-S15 — Famous ancestor (flagship)
+## SL-S15 — Famous ancestor (flagship) / famous parent, uninformed stranger
 
 An ordinary person becomes historically significant; descendants later encounter changed
-social opportunities/reactions. No automatic capability/stat bonuses.
+social opportunities/reactions. No automatic capability/stat bonuses. **Extended per the
+2026-09-22 follow-up's own §9 "Famous Parent, Uninformed Stranger" probe:** the child inherits
+whatever lineage/reputation association is declared; a stranger has never learned who the
+child is; the stranger must not react as though personally informed.
 
-- **Rules invoked:** LIN-02.
+- **Rules invoked:** LIN-02, and (extended clause) `social-relations.md`'s reputation-reach
+  Inherited entry (Batch 06's PERC-01/KNOW-01).
 - **Result: partially covered — real for one generation, confirmed absent beyond it.**
   `V2EntityBuilder.birth_record()`'s reputation-seed mechanism is a real, live, declared
   channel from a parent's own `public_reputation` to a newborn child's own starting value — no
@@ -195,6 +214,17 @@ social opportunities/reactions. No automatic capability/stat bonuses.
   directly: no mechanism extends this, or any comparable channel, beyond the immediate
   parent — a grandchild's or great-grandchild's own social treatment is never affected by a
   distant ancestor's own historical significance.
+- **Extended clause result: revealed contradiction.** Checked directly: nothing in this
+  repository's own reputation-consuming decision logic (`SocialAppraisalSystem.
+  appraise_contract()`, `ShopService`'s reputation discount path) conditions its read of
+  `public_reputation` on whether the evaluating entity has ever perceived, been told of, or
+  otherwise learned anything about the specific descendant being evaluated — every consumer
+  reads the descendant's own current `public_reputation` scalar directly and unconditionally.
+  A total stranger reacts identically to someone who has genuinely observed this descendant's
+  own history, because the mechanism never distinguishes the two. This directly contradicts
+  Batch 06's own PERC-01 (perception bounded by declared constraints, default of partiality)
+  as applied to reputation-reach — the same class of finding as Batch 06's own CONFLICTING
+  `ResourceOpportunityProvider` finding, now confirmed for reputation specifically.
 
 ## SL-S16 — Family feud
 
@@ -261,3 +291,12 @@ SL-S18's four-plus confirmed-inert findings are this batch's own reconfirmation 
 `SocialComponent`'s real multiplicity of tracking fields (`social-relations.md`'s own
 Repository Findings) is not merely a naming-duplication risk but includes genuinely unused
 state — worth an owner's attention alongside the duplication concern, not instead of it.
+
+SL-S15's extended clause and `social-relations.md`'s own new reputation-reach Inherited entry
+are the same finding checked from two angles: this batch's 2026-09-22 follow-up re-investigated
+a question the original draft explicitly left unchecked ("whether reputation/recognition obeys
+information reach") and confirmed it does not — every reputation consumer reads
+`public_reputation` as globally available truth, with no perception/knowledge-mediated gate, so
+an ancestor's significance and a stranger's own personal knowledge of a descendant are
+confirmed collapsed into one ungated read rather than kept as the two distinct causal steps
+LIN-02's own boundary requires.
