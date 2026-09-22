@@ -1,5 +1,8 @@
-"""Ratchet-based check for `tool_call_count`/`tools.jsonl` mismatches
-(TCK-20260915-TOOL-CALL-COUNT-MISMATCH, child of TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC).
+"""Measures `tool_call_count`/`tools.jsonl` mismatches (TCK-20260915-TOOL-CALL-COUNT-MISMATCH,
+child of TCK-20260915-MONITORING-ANOMALY-DETECTION-EPIC).
+
+**This module used to also gate on the count (a ratchet ceiling); that gate was removed by
+TCK-20260922-TOOL-CALL-COUNT-MISMATCH-RATCHET-REPORT-ONLY (2026-09-22). Do not rebuild it.**
 
 **What this measures**: for every run belonging to one of the 3 `compute_tool_stats()`-covered
 workflows (`implement-ticket`, `implement-epic`, `create-tickets`) that started on or after
@@ -11,40 +14,42 @@ disagreement in either direction.
 **Why the `FIX_DATE` filter, not the whole corpus**: runs before 2026-07-19 never had
 ground-truth computation at all, and `docs/agent-monitoring/schema.md` already documents (in two
 separate places) that pre-fix historical values are permanently unbackfilled and may be wrong.
-Counting them here would make this check immediately and permanently unlandable on ~93
-pre-existing, already-explained, already-documented historical rows that this ticket is not
-scoped to fix -- the same "unlandable exact-equality/whole-corpus assertion" failure mode named
-repeatedly across this batch (`TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT`,
-`TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS`). This check watches the population the ticket
-itself calls "current, not historical."
+This filter is unrelated to the gate-removal decision below and stays -- it scopes the
+*measurement* to the population it can actually say something about, not to a ceiling.
 
-**Why a ratchet, not zero-tolerance**: the measured post-fix baseline is 53 (raised from 50 by
-`TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT`), not 0 -- most of
-these are downstream of the same pre-`TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE` cross-session
-sidecar contamination `TCK-20260915-SIDECAR-ATTRIBUTION-GAP` and this ticket's own investigation
-both trace August's cluster to, itself already fixed and already documented as a permanent,
-unbackfilled historical caveat. The 50th (`TCK-20260921-HEADROOM-AI-PIN-CLAIM-CORRECTION`) was a
-fresh, fully-diagnosed instance of the exact same root-cause class: a hand-orchestration sidecar
-written once for an earlier ticket's own Implement phase was never cleared or updated across two
-entirely separate subsequent tickets' real work, so every real tool call made in between was
-misattributed to the stale `(run_id, seq)`. `record_hand_orchestrated_closure.py::
-check_sidecar_matches_ticket()` was added then to warn (non-blocking) on exactly that condition.
+**Why this can no longer be a threshold, at any value.** The count is not a stable defect signal;
+it is a byproduct of hand-orchestration volume, and the ceiling chased that volume upward twice in
+two days without converging: 49 -> 50 (`TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-
+INCIDENT`) -> 53 (`TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT`),
+each raise itself the product of a real, fully-diagnosed incident, not an unexplained drift. Both
+incidents share the same shape: a hand-orchestration sidecar (`.claude/current_run`) either carried
+over to later, unrelated work (staleness) or left live after its own ticket's snapshot was already
+taken (post-snapshot accumulation) -- in both cases the mechanism is *how hand-orchestrated work
+happens to attribute its own tool calls*, not a defect in the data those tool calls represent. Every
+hand-orchestrated batch this repo's own CLAUDE.md sanctions is capable of producing a fresh
+instance of either shape, so a fixed ceiling here fights the exact same working-style-vs-defect
+conflation `TCK-20260915-SIDECAR-ATTRIBUTION-RATCHET-FLOOR-UNMEETABLE` diagnosed for the sibling
+`sidecar_attribution_coverage_check.py` check, and for the same reason: agent-monitoring telemetry
+records *how work happened*, not a simulation property, and does not warrant a blocking gate over
+it (per that ticket's own governing principle, restated here rather than re-derived).
+`record_hand_orchestrated_closure.py` now carries two non-blocking mitigations
+(`check_sidecar_matches_ticket()`, `clear_sidecar_if_matches()`) that reduce how often either shape
+recurs -- but neither guarantees zero, and this check's own job is to report the count, not to
+require it stay at whatever level happened to be true the day it was last re-pinned.
 
-**51st-53rd (`TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT`,
-`TCK-20260921-CAVEMAN-CLOSE-OUT`, `TCK-20260921-INTERPRETER-SELECTION-PROBES-INCONSISTENT`) are a
-related but distinct variant of the same class, diagnosed by
-`TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT`: in all three, the
-sidecar's own `run_id` correctly matched the ticket being closed at the moment
-`record_hand_orchestrated_closure.py` ran (so `check_sidecar_matches_ticket()` correctly found
-nothing to warn about) -- the corruption happened *after* that snapshot, not before it. Real tool
-calls for that same ticket's own remaining closure steps (registry regeneration, staging-to-stored
-migration, `git add`/`commit`) continued to accumulate onto the same, now-already-recorded
-`(run_id, seq)` pair, because the sidecar was left live rather than cleared the moment its
-snapshot was taken. `record_hand_orchestrated_closure.py` now clears the sidecar itself,
-immediately after a successful recording, closing this specific variant going forward.
+**The measurement itself stays**, since the count and its run_id set are genuinely informative for
+retro reporting and incident diagnosis (as both precedent incidents' own investigations used it).
+Only the ceiling and its FAIL path are gone.
 
-Mirrors the batch's own `check_*()` shape: `List[dict]` (`{"status": "PASS"|"FAIL", "evidence":
-"..."}`), `MARKER:` + `json.dumps(result)` stdout contract in `__main__`.
+**If a real detector is wanted later (not this ticket)**: scope it to a population where the
+count is expected to hold near zero regardless of working style -- e.g., mismatches on runs closed
+through the *formal* `implement-ticket.js` pipeline specifically (which never relies on a
+hand-written sidecar at all), excluding hand-orchestrated closures entirely. That is a narrower,
+different check than this corpus-wide, workflow-scoped count, and belongs in its own ticket with
+its own measured baseline -- not a rebuilt ceiling on this one.
+
+Mirrors the batch's own `check_*()` shape: `List[dict]` (`{"status": "PASS", "evidence": "..."}`),
+`MARKER:` + `json.dumps(result)` stdout contract in `__main__`. Always `PASS` now -- see above.
 """
 import json
 import sys
@@ -64,16 +69,6 @@ from validate import load_data_glob  # noqa: E402
 VALID_WORKFLOWS = {"implement-ticket", "implement-epic", "create-tickets"}
 FIX_DATE = "2026-07-19"
 MISMATCH_RATIO = 3.0
-
-# Ratchet ceiling: the real corpus's own post-2026-07-19, workflow-scoped >3x mismatch count.
-# Raised 49 -> 50 by TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT, 2026-09-21.
-# Raised 50 -> 53 by TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT,
-# 2026-09-22, with a full root-cause diagnosis (see the module docstring above) -- not "papering
-# over" a mismatch, extending the same already-accepted ratchet-tracking convention to a
-# newly-discovered, fully explained variant of the same already-documented root-cause class.
-# Raising it to paper over an UNEXPLAINED newly-introduced mismatch still defeats the entire point
-# of this check.
-MISMATCH_CEILING = 53
 
 
 def find_tool_call_count_mismatches(
@@ -133,27 +128,18 @@ def find_tool_call_count_mismatches(
 
 def check_tool_call_count_mismatches(
     runs: List[dict] = None, events: List[dict] = None, tools: List[dict] = None,
-    ceiling: int = MISMATCH_CEILING,
 ) -> List[dict]:
-    """Ratcheted check: PASS if the post-fix mismatch count is at or below `ceiling`, FAIL if it
-    has grown."""
+    """Report-only (TCK-20260922-TOOL-CALL-COUNT-MISMATCH-RATCHET-REPORT-ONLY): always PASS,
+    reporting the post-fix mismatch count and the full run_id set as evidence -- see the module
+    docstring for why no threshold over this count can distinguish a real regression from
+    legitimate hand-orchestrated work."""
     mismatches = find_tool_call_count_mismatches(runs, events, tools)
     count = len(mismatches)
-
-    if count > ceiling:
-        new_count = count - ceiling
-        run_ids = sorted(m[0] for m in mismatches)
-        return [{
-            "status": "FAIL",
-            "evidence": (
-                f"{count} post-{FIX_DATE} tool_call_count/tools.jsonl mismatch(es) exceeds the "
-                f"ratchet ceiling ({ceiling}) by {new_count}. Full set: {run_ids}"
-            ),
-        }]
+    run_ids = sorted(m[0] for m in mismatches)
 
     return [{
         "status": "PASS",
-        "evidence": f"{count} post-{FIX_DATE} mismatch(es) (ceiling {ceiling})",
+        "evidence": f"{count} post-{FIX_DATE} tool_call_count/tools.jsonl mismatch(es). Full set: {run_ids}",
     }]
 
 

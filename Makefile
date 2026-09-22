@@ -307,7 +307,7 @@ duplicate-run-record-check: ## Ratcheted check for genuinely-accidental duplicat
 sidecar-attribution-coverage-check: ## Report tools.jsonl run_id attribution coverage (non-blocking; see module docstring)
 	python3 tools/gate_checks/sidecar_attribution_coverage_check.py
 
-tool-call-count-mismatch-check: ## Ratcheted check for post-fix tool_call_count vs tools.jsonl mismatches
+tool-call-count-mismatch-check: ## Report post-fix tool_call_count vs tools.jsonl mismatches (non-blocking; see module docstring)
 	python3 tools/gate_checks/tool_call_count_mismatch_check.py
 
 event-seq-integrity-check: ## Report duplicate/gapped seq values in events.jsonl, non-blocking

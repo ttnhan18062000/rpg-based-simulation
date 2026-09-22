@@ -160,8 +160,9 @@ def check_sidecar_matches_ticket(ticket_id: str) -> str | None:
 
     Confirmed real, not hypothetical: `TCK-20260921-HAND-ORCHESTRATION-SIDECAR-STALENESS-INCIDENT`
     -- a sidecar written once for one hotfix's own Implement phase was never updated across two
-    entirely separate subsequent tickets' real work (5.5 hours, 170 real tool-call rows), pushing
-    `tests/tools/test_tool_call_count_mismatch_check.py`'s real-corpus ratchet over its ceiling.
+    entirely separate subsequent tickets' real work (5.5 hours, 170 real tool-call rows), which
+    `tests/tools/test_tool_call_count_mismatch_check.py` flagged before that check's own blocking
+    ceiling was removed by `TCK-20260922-TOOL-CALL-COUNT-MISMATCH-RATCHET-REPORT-ONLY`.
 
     Prefers the session-scoped sidecar (`.claude/current_run.$CLAUDE_CODE_SESSION_ID`) when
     present, matching this repo's own established precedent elsewhere (multiple concurrent
