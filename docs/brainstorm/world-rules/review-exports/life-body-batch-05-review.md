@@ -30,32 +30,64 @@ families already suggested.
 - `life-body/ecology-population.md` (ECOL-01–05)
 - `scenarios/life-body-batch-05.md` (LB-S01–S16)
 
+## Rule admission normalization (2026-09-22)
+
+Applied per external-reviewer instruction (`tmp/world-rule-batch-5-normalization-ext-ai.md`):
+there is no expected or preferred rule count per family, and a statement earns a new local
+Rule ID only if it adds or refines target world semantics beyond Rules already defined
+elsewhere. Reconfirmations of an earlier Rule, scope deferrals, and repository-implementation
+facts are recategorized rather than counted as new Rules. No entry was removed, no evidence
+discarded, and no ID renumbered — see each canonical file's own "Normalized 2026-09-22" note
+for the per-entry rationale.
+
+Of this batch's 22 original entries:
+
+- **14 are genuine Domain Rules** (new or domain-refined semantic constraints): LIFE-01,
+  LIFE-02; BODY-01, BODY-03, BODY-04, BODY-05, BODY-06, BODY-07; SURV-01, SURV-02, SURV-03,
+  SURV-04; ECOL-03, ECOL-04.
+- **7 are Inherited / Applied Foundational Rules** (direct reuse/reconfirmation of an existing
+  Rule ID, no new claim): LIFE-03 (reuses ID-05, HP-01), LIFE-04 (reuses ID-04), LIFE-06
+  (reuses TRANS-01), BODY-02 (reuses this batch's own LIFE-02), ECOL-01, ECOL-02 (both reuse
+  ID-07), ECOL-05 (reuses LOC-02).
+- **1 is a Scope / Deferred Boundary** (no world-semantic claim, only a deferral): LIFE-05
+  (defers to Family/Lineage).
+
+ECOL-03 and SURV-04 were specifically inspected per the instruction: both keep their target
+semantic principle as a Domain Rule (population change *should* be individual-event-driven;
+unconsumed need-adjacent state *is* a nameable gap), while the specific repository facts that
+evidence them (`process_demographics()`'s statistical formula; `last_meal_tick`/
+`last_sleep_tick` being unread) are now presented as Repository Findings within those rules'
+own entries, not as the Rule's own content.
+
+**Genuine new-Rule count for this batch: 14** (not 22). The Rule Inventory below tags each
+entry's category explicitly.
+
 ## Rule Inventory
 
-| ID | Short name | One-line semantic purpose | Status |
-|---|---|---|---|
-| LIFE-01 | Active Participation ≠ Permanent Termination | `combat.alive` and `is_permadeath_set` are separately tracked facts. | Accepted |
-| LIFE-02 | Incapacitation/Defeat ≠ Necessarily Death | A real classification (KILL/DEFEAT/REBIRTH/PERMADEATH) determines fate, not one automatic outcome. | Accepted |
-| LIFE-03 | Death Terminates Participation, Not Identity/History | Restates ID-05/HP-01 at this family's point of use. | Accepted, by reuse |
-| LIFE-04 | Reproduction Establishes a New, Distinct Identity | Restates ID-04 for Lifecycle; defers family-meaning content. | Accepted |
-| LIFE-05 | Biological Parentage ≠ Social/Familial Meaning | Explicit scope boundary — defers to Family/Lineage. | Accepted, scope boundary |
-| LIFE-06 | Lifecycle Transitions Require a Valid Trigger | Restates TRANS-01 for lifecycle transitions. | Accepted |
-| BODY-01 | HP Is a Materialized Abstraction, Not Complete Physical Truth | HP and richer wound detail coexist; HP claims no biological completeness. | Accepted |
-| BODY-02 | Zero HP Triggers Classification, Not One Automatic Outcome | Reaching zero is a necessary trigger, never sufficient for a predetermined result. | Accepted |
-| BODY-03 | HP Loss and Injury Are Related but Not Identical | Coupled at the one production site checked; independence unverified either way. | Accepted, PARTIAL evidence |
-| BODY-04 | Body Condition Creates Real Capability Consequences | Never decorative numbers — wound penalties are read into real recalculation. | Accepted |
-| BODY-05 | Recovery Requires a Valid, Declared Process | Confirmed gap: no HP-recovery process exists at all, declared or otherwise. | Accepted (mechanism MISSING) |
-| BODY-06 | Persistent Injury May Outlast the Harmful Event | Legitimate, expected persistence, not a bug. | Accepted |
-| BODY-07 | Life/Body Owns Bodily Consequence of Exposure, Given Protection | Resolves Batch 04's ENV-03 open question for bodily harm specifically. | Accepted |
-| SURV-01 | Need ≠ Resource ≠ Cost ≠ Body Condition ≠ Pressure | Category distinction, confirmed by contrast. | Accepted |
-| SURV-02 | Need Pressure Accumulates; Thresholds Produce Real Consequences | Richly evidenced across HP, capacity, and decision-priority consequences. | Accepted |
-| SURV-03 | Only Causally-Consequential Needs Are Modeled | Scope discipline, matching COST-04. | Accepted |
-| SURV-04 | Need-Adjacent State With No Consumer Is Inert | Confirmed: `last_meal_tick`/`last_sleep_tick`, contrasted against the live `well_rested_until`. | Accepted (one confirmed inert pair) |
-| ECOL-01 | Individual and Aggregate Ecology Are Distinct Representations | Restates ID-07 for this domain. | Accepted |
-| ECOL-02 | Aggregate Change Doesn't Automatically Mutate Individuals | The same ID-07 boundary, from its own direction. | Accepted |
-| ECOL-03 | Aggregate Population Change Is Currently Statistical, Not Individual-Event-Driven | Confirmed gap: `process_demographics()` never reads real birth/death events. | Accepted (confirmed real gap) |
-| ECOL-04 | Aggregate Pressure Feeds Back Into Individual Behavior | The working half of the causal loop — reused from CAUSE-02/LIMIT-05. | Accepted |
-| ECOL-05 | Regional Adjacency Is Geometric, Consistent With LOC-02 | Reconfirmation, not a new finding. | Accepted, by reconfirmation |
+| ID | Category | Short name | One-line semantic purpose | Status |
+|---|---|---|---|---|
+| LIFE-01 | Domain Rule | Active Participation ≠ Permanent Termination | `combat.alive` and `is_permadeath_set` are separately tracked facts. | Accepted |
+| LIFE-02 | Domain Rule | Incapacitation/Defeat ≠ Necessarily Death | A real classification (KILL/DEFEAT/REBIRTH/PERMADEATH) determines fate, not one automatic outcome. | Accepted |
+| LIFE-03 | Inherited | Death Terminates Participation, Not Identity/History | Direct reuse of ID-05/HP-01 at this family's point of use. | Inherited, no new claim |
+| LIFE-04 | Inherited | Reproduction Establishes a New, Distinct Identity | Direct reuse of ID-04 for Lifecycle; defers family-meaning content. | Inherited, no new claim |
+| LIFE-05 | Scope Boundary | Biological Parentage ≠ Social/Familial Meaning | Explicit scope boundary — defers to Family/Lineage. | Scope boundary, not a semantic claim |
+| LIFE-06 | Inherited | Lifecycle Transitions Require a Valid Trigger | Direct reuse of TRANS-01 for lifecycle transitions. | Inherited, no new claim |
+| BODY-01 | Domain Rule | HP Is a Materialized Abstraction, Not Complete Physical Truth | HP and richer wound detail coexist; HP claims no biological completeness. | Accepted |
+| BODY-02 | Inherited | Zero HP Triggers Classification, Not One Automatic Outcome | Direct reuse of this batch's own LIFE-02, restated at the HP-zero level. | Inherited, no new claim |
+| BODY-03 | Domain Rule | HP Loss and Injury Are Related but Not Identical | Coupled at the one production site checked; independence unverified either way. | Accepted, PARTIAL evidence |
+| BODY-04 | Domain Rule | Body Condition Creates Real Capability Consequences | Never decorative numbers — wound penalties are read into real recalculation. | Accepted |
+| BODY-05 | Domain Rule | Recovery Requires a Valid, Declared Process | Rule stands; Repository Finding: no HP-recovery process exists at all. | Accepted (mechanism MISSING) |
+| BODY-06 | Domain Rule | Persistent Injury May Outlast the Harmful Event | Legitimate, expected persistence, not a bug. | Accepted |
+| BODY-07 | Domain Rule | Life/Body Owns Bodily Consequence of Exposure, Given Protection | Resolves Batch 04's ENV-03 open question for bodily harm specifically. | Accepted |
+| SURV-01 | Domain Rule | Need ≠ Resource ≠ Cost ≠ Body Condition ≠ Pressure | Category distinction, confirmed by contrast. | Accepted |
+| SURV-02 | Domain Rule | Need Pressure Accumulates; Thresholds Produce Real Consequences | Richly evidenced across HP, capacity, and decision-priority consequences. | Accepted |
+| SURV-03 | Domain Rule | Only Causally-Consequential Needs Are Modeled | Scope-discipline claim specific to this family's own need catalog. | Accepted |
+| SURV-04 | Domain Rule | Need-Adjacent State With No Consumer Is Inert | Rule stands; Repository Finding: `last_meal_tick`/`last_sleep_tick` unread. | Accepted (one confirmed inert pair) |
+| ECOL-01 | Inherited | Individual and Aggregate Ecology Are Distinct Representations | Direct reuse of ID-07 for this domain. | Inherited, no new claim |
+| ECOL-02 | Inherited | Aggregate Change Doesn't Automatically Mutate Individuals | The same ID-07 boundary, from its own direction. | Inherited, no new claim |
+| ECOL-03 | Domain Rule | Aggregate Population Change Should Be Individual-Event-Driven | Rule stands; Repository Finding: `process_demographics()` is purely statistical. | Accepted (confirmed real gap) |
+| ECOL-04 | Domain Rule | Aggregate Pressure Feeds Back Into Individual Behavior | The working half of the causal loop, generalized beyond CAUSE-02's own specific chain. | Accepted |
+| ECOL-05 | Inherited | Regional Adjacency Is Geometric, Consistent With LOC-02 | Reconfirmation, not a new finding. | Inherited, by reconfirmation |
 
 ## Scenario Inventory
 
@@ -235,28 +267,37 @@ statistical birth/death formula, `find_adjacent_regions`'s geometric adjacency,
 
 ## Starter-candidate disposition summary
 
-22 rules drafted across four families (6 Lifecycle, 7 Body/Condition, 4 Survival Needs, 5
-Ecology/Population) — all 22 accepted, 0 rejected, 0 split, 0 merged. The batch instruction's
-own suggested file grouping was kept as-is — no split or merge was found necessary beyond the
-four families already proposed. No rule was rejected as an implementation concern; the
-batch's own explicit non-goals (detailed wound-location simulation, transformation content,
-universal need catalogs, detailed food-web ecology) were respected throughout rather than
-quietly designed anyway.
+22 entries drafted across four families (6 Lifecycle, 7 Body/Condition, 4 Survival Needs, 5
+Ecology/Population) — all 22 accepted at the time, 0 rejected, 0 split, 0 merged. The batch
+instruction's own suggested file grouping was kept as-is — no split or merge was found
+necessary beyond the four families already proposed. No rule was rejected as an implementation
+concern; the batch's own explicit non-goals (detailed wound-location simulation, transformation
+content, universal need catalogs, detailed food-web ecology) were respected throughout rather
+than quietly designed anyway.
+
+**Post-normalization (2026-09-22):** of those 22 entries, **14 are genuine Domain Rules, 7 are
+Inherited/Applied Foundational Rules, and 1 is a Scope/Deferred Boundary** — see "Rule admission
+normalization" above. This is a taxonomy correction, not a disposition change: nothing was
+rejected, and every entry's own evidence and scenario coverage is unchanged.
 
 Full per-rule disposition, evidence, and rationale: see the canonical files above, or
 `tmp/life-body-batch-05-report.md` (local review report, not part of this catalog).
 
 ---
 
-> **BATCH 05 (LIFE / BODY / SURVIVAL / ECOLOGY) READY FOR HIGH-LEVEL EXTERNAL REVIEW.**
+> **BATCH 05 (LIFE / BODY / SURVIVAL / ECOLOGY) READY FOR HIGH-LEVEL EXTERNAL REVIEW — PASS,
+> NORMALIZED.**
 
-All required artifacts exist: four rule-family files (22 rules), one scenario file (16
-scenarios covering all sixteen required probes), this review export with all nine required
-sections plus every explicitly-required call-out, and a local disposition report. No
-contradiction was found against any prior batch or within this one — this batch's own
-genuinely new material is concentrated in two significant confirmed gaps (BODY-05's absent
-recovery mechanism; ECOL-03's disconnected individual/aggregate population link) and one
-confirmed inert field pair, rather than in tension with anything already accepted. Per the
-batch instruction's stop condition: all twelve checklist items are satisfied. Do not begin
-Batch 06 (Perception / Knowledge / Information / Agency) until this batch receives high-level
-review.
+All required artifacts exist: four rule-family files (22 catalog entries — 14 genuine Domain
+Rules, 7 Inherited/Applied Foundational Rules, 1 Scope/Deferred Boundary, per the 2026-09-22
+admission-discipline normalization pass), one scenario file (16 scenarios covering all sixteen
+required probes), this review export with all nine required sections plus every
+explicitly-required call-out, and a local disposition report. No semantic contradiction was
+introduced by normalization — it recategorizes which entries carry new local Rule IDs, it does
+not change any accepted claim, evidence, or scenario result. This batch's own genuinely new
+material is concentrated in two significant confirmed gaps (BODY-05's absent recovery
+mechanism; ECOL-03's disconnected individual/aggregate population link) and one confirmed inert
+field pair, rather than in tension with anything already accepted. Per the batch instruction's
+stop condition: all twelve checklist items are satisfied. Do not begin Batch 06 (Perception /
+Knowledge / Information / Agency) until this batch receives high-level review — the normalized
+structure should be externally checked once before Batch 06 begins.

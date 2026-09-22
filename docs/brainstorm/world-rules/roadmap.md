@@ -25,9 +25,12 @@ both drafted, each revised once per its own follow-up review, and both **PASS �
 Milestone A History/Provenance completion pass is drafted and ready for high-level external
 review. **Milestone A is fully drafted.** Batch 04 (Space/Environment/Movement) — the first
 domain-facing Milestone B batch — is drafted, revised once per its own follow-up review, and
-**PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) is drafted and ready for high-level
-external review. Batch 06 (Perception/Knowledge/Information/Agency) is the next planned step
-once Batch 05 is reviewed.
+**PASS — frozen**. Batch 05 (Life/Body/Survival/Ecology) is drafted, normalized 2026-09-22 per
+a Rule admission-discipline review (14 genuine Domain Rules of 22 original entries — see that
+batch's own status below), and ready for high-level external review. Batch 06
+(Perception/Knowledge/Information/Agency) is the next planned step once Batch 05 is reviewed,
+and must apply the same admission discipline from its own first draft rather than as a later
+correction.
 
 ---
 
@@ -179,9 +182,12 @@ spatial reach
 
 ### Batch 05 — Life / Body / Survival / Ecology
 
-**Status: drafted 2026-09-21, ready for high-level external review.** 22 rules across
-`life-body/lifecycle.md`, `body-condition.md`, `survival-needs.md`, `ecology-population.md`.
-Two significant confirmed gaps (no HP recovery mechanism at all; aggregate population change
+**Status: drafted 2026-09-21, normalized 2026-09-22 per Rule admission-discipline review,
+ready for high-level external review.** 22 catalog entries across `life-body/lifecycle.md`,
+`body-condition.md`, `survival-needs.md`, `ecology-population.md` — of these, **14 are genuine
+Domain Rules, 7 are Inherited/Applied Foundational Rules, 1 is a Scope/Deferred Boundary**
+(no entry removed, no ID renumbered; see each file's own "Normalized 2026-09-22" note). Two
+significant confirmed gaps (no HP recovery mechanism at all; aggregate population change
 currently disconnected from real individual births/deaths) and one confirmed inert field pair
 (`last_meal_tick`/`last_sleep_tick`). See `review-exports/life-body-batch-05-review.md`.
 
@@ -479,6 +485,17 @@ is a current forecast, never a target to protect by declining a justified split 
   semantic reason rather than taxonomy completeness (this is exactly how History/Provenance was
   added in Batch 01, and how its own completion pass was then moved into Milestone A — scenario
   evidence and semantic dependency, not a desire for a complete-looking list or a fixed count).
+- **Rule admission discipline (standing, applied 2026-09-22 to Batch 05, required from the
+  first draft for every batch from Batch 06 onward).** There is no expected or preferred rule
+  count per family — "roughly 5–6 rules per family" is never an implicit template; let
+  scenarios and semantics determine the shape. Before assigning a new Rule ID, ask: does this
+  statement add or refine target world semantics beyond Rules already defined elsewhere? A
+  direct reuse/reconfirmation of an earlier Rule ID → Inherited/Applied Foundational Rule, no
+  new ID. "This belongs to a later domain" → Scope/Deferred Boundary, no new ID. A repository
+  implementation fact or gap → Repository Finding, evidence within a Rule, not the Rule itself.
+  Only a genuinely new or domain-refined semantic constraint earns a new local Rule ID. Each
+  canonical domain-family file should separate Domain Rules / Inherited / Scope-Deferred /
+  Repository Findings / Open Questions explicitly.
 
 The governing principle remains: **Scenario Bank and World Rule Catalog co-evolve; the roadmap
 organizes the investigation rather than predetermining its conclusions.**

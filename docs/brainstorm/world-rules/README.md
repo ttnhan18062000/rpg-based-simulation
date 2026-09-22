@@ -97,14 +97,27 @@ order.
   disposition report.
 - **Batch 05** (Life/Body/Survival/Ecology) — the second domain-facing Milestone B batch, and a
   high-priority one since individual living entities are the primary narrative subjects —
-  drafted 2026-09-21 immediately after Batch 04. 22 rules across Lifecycle, Body/Condition,
-  Survival Needs, and Ecology/Population; ready for high-level external review. Two
-  significant confirmed gaps (no HP recovery mechanism at all; aggregate population change
-  currently disconnected from real individual births/deaths) and one confirmed inert field
-  pair (`last_meal_tick`/`last_sleep_tick`) — see
+  drafted 2026-09-21 immediately after Batch 04, then normalized 2026-09-22 per a Rule
+  admission-discipline review: of its 22 original entries, **14 are genuine Domain Rules, 7 are
+  Inherited/Applied Foundational Rules (reused/reconfirmed, no new claim), and 1 is a
+  Scope/Deferred Boundary** — no entry removed, no evidence discarded, no ID renumbered. Four
+  families: Lifecycle, Body/Condition, Survival Needs, Ecology/Population; ready for
+  high-level external review. Two significant confirmed gaps (no HP recovery mechanism at all;
+  aggregate population change currently disconnected from real individual births/deaths) and
+  one confirmed inert field pair (`last_meal_tick`/`last_sleep_tick`) — see
   `review-exports/life-body-batch-05-review.md`'s explicit call-outs. See
   `tmp/life-body-batch-05-report.md` (local, not part of this catalog) for the full disposition
   report.
+- **Rule admission discipline (applied 2026-09-22, standing for every future batch).** There is
+  no expected or preferred rule count per family — a statement earns a new local Rule ID only
+  if it adds or refines target world semantics beyond Rules already defined elsewhere. A
+  direct reuse of an earlier Rule ID is an Inherited/Applied Foundational Rule; "this belongs
+  to a later domain" is a Scope/Deferred Boundary; a repository implementation fact or gap is a
+  Repository Finding; a reconfirmation of an earlier Rule is evidence, not a new Rule. Only
+  genuinely new or domain-refined semantic constraints get a new Rule ID. Each canonical
+  domain-family file should separate these categories explicitly (Domain Rules / Inherited /
+  Scope-Deferred / Repository Findings / Open Questions) rather than let its own Rule Inventory
+  imply every accepted candidate earned a new ID.
 - Do not begin Batch 06 (Perception / Knowledge / Information / Agency) until Batch 05
   receives high-level review.
 
@@ -231,7 +244,7 @@ follow-up):**
   a new rule, not merely a wording fix — added because the original framing risked implying
   whichever domain fills the LOC-02/LOC-06 gap would also own it.
 
-**From Batch 05 (Life/Body/Survival/Ecology, drafted 2026-09-21):**
+**From Batch 05 (Life/Body/Survival/Ecology, drafted 2026-09-21, normalized 2026-09-22):**
 
 - **Confirmed MISSING — the most load-bearing gap in Body/Condition.** BODY-05's HP recovery
   mechanism does not exist at all, declared or otherwise — entities can perceive a "healing"
