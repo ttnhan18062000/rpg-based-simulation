@@ -58,9 +58,14 @@ both **PASS — ready to freeze**. Batch 12 (Magic/Supernatural) was first draft
 a single file (5 genuine Domain Rules) per `tmp/world-rule-batch-12-ext-ai.md`, then fully
 redrafted 2026-09-22 as five files (10 genuine Domain Rules of 31 total catalog entries) per a
 corrected, richer instruction file, before any follow-up review of the original draft was
-applied — the original single-file draft is superseded and removed. Batch 12 is **PASS —
-ready to freeze**. The next planned step is Final Integration (Cross-Domain History /
-Significance / Propagation), once its own instruction file is provided.
+applied — the original single-file draft is superseded and removed. Batch 12 was then revised
+the same day per a second, targeted semantic-cleanup follow-up (wording precision only —
+"independent facts" softened to "semantically distinct facts," EFF-02 broadened to recognize
+a durable-property/consequence shape of persistent supernatural state alongside the
+ongoing-cause shape, SUP-03/CAP-01/CAP-02/STR-02 generalized away from over-strong framings;
+the 10-Domain-Rule count is unchanged). Batch 12 is **PASS — ready to freeze**. The next
+planned step is Final Integration (Cross-Domain History / Significance / Propagation), once
+its own instruction file is provided.
 
 ---
 
@@ -501,18 +506,26 @@ Foundational Rules, 5 Scope/Deferred Boundaries)** across five files:
 `magic-supernatural/{supernatural-ontology,magic-capability,magical-effects,
 supernatural-transformation,supernatural-entities-places}.md`. Directly reconciles Batch 11A's
 PLACE-02 and Batch 11B's reclassified sacredness entry (both already attribution-relative) by
-adding objective supernatural property as an eighth independent fact for Places (PLC-01) — the
-mandatory boundary those two batches deliberately left open. Also directly resolves two named
-deferred boundaries from earlier batches: Batch 04's non-physical-movement boundary (CAP-02)
-and Batch 06's own AGENCY-02 reflex/compulsion/mind-control carve-out (exercised directly by
-the mind/memory-magic Inherited entry). The single largest finding: no dedicated
-magic/supernatural mechanism of any kind exists anywhere in this repository, comparable in
-scope to Batch 10's own Law/Enforcement gap — with one genuinely positive exception:
-`PerceptionGate`'s own `magic_sense`/`magic_signal` channel is real, live, structurally-ready
-information-channel infrastructure, currently INERT/OFF. Two more real, non-supernatural
-mechanisms (`TransformationService`, `EvolutionSystem`) independently confirm this
-repository's own architecture already supports STR-01's identity-persists/
-classification-changes shape. See `review-exports/magic-supernatural-batch-12-review.md`.
+adding objective supernatural property as an eighth semantically distinct fact for Places
+(PLC-01) — the mandatory boundary those two batches deliberately left open. Also directly
+resolves two named deferred boundaries from earlier batches: Batch 04's non-physical-movement
+boundary (CAP-02) and Batch 06's own AGENCY-02 reflex/compulsion/mind-control carve-out
+(exercised directly by the mind/memory-magic Inherited entry). The single largest finding: no
+dedicated magic/supernatural mechanism of any kind exists anywhere in this repository,
+comparable in scope to Batch 10's own Law/Enforcement gap — with one genuinely positive
+structural exception: `PerceptionGate`'s own `magic_sense`/`magic_signal` channel is real,
+live, structurally-ready information-channel infrastructure, currently INERT/OFF (existing
+perception infrastructure capable of hosting a supernatural channel, not itself evidence the
+channel's target semantics are implemented). Two more real, non-supernatural mechanisms
+(`TransformationService`, `EvolutionSystem`) independently confirm this repository's own
+architecture already supports STR-01's identity-persists/classification-changes shape.
+**Revised the same day per a second, targeted semantic-cleanup follow-up** — wording
+precision only, 10-Rule count unchanged: "independent facts" softened to "semantically
+distinct facts" throughout; SUP-03 generalized away from a caster-centric causal-chain
+framing; EFF-02 corrected to recognize a durable-property/consequence shape of persistent
+supernatural state (e.g., a permanent enchantment outliving its caster) alongside the
+ongoing-cause shape; STR-02 sharpened to separate required distinctness from permitted
+existence. See `review-exports/magic-supernatural-batch-12-review.md`.
 
 Do not make magic an isolated spell subsystem. Define its world rules and connect it outward
 into:

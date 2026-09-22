@@ -343,7 +343,18 @@ order.
   See `review-exports/magic-supernatural-batch-12-review.md`'s explicit call-outs and its
   Implementation Candidates — Non-Binding section for these and further confirmed gaps. See
   `tmp/magic-supernatural-batch-12-report.md` (local, not part of this catalog) for the full
-  disposition report.
+  disposition report. Revised the same day per a second, targeted semantic-cleanup follow-up
+  — wording precision only (10 genuine Domain Rules unchanged): "independent facts" softened
+  to "semantically distinct facts" (SUP-01, CAP-01, PLC-01); SUP-03 generalized away from a
+  caster-centric causal-chain framing; EFF-02 corrected to recognize a durable-property/
+  consequence shape of persistent supernatural state (a permanent enchantment outliving its
+  caster) alongside the ongoing-cause shape; STR-02's disposition sharpened to separate
+  required distinctness (where modeled) from permitted existence; SUP-02's own repository
+  evidence corrected from "SUPPORTED, by absence" to "no CONFLICT observed; positive
+  realization MISSING," with the same correction applied to the `magic_sense`/`magic_signal`
+  finding (structural capability, not implemented semantics) — which also turned up and fixed
+  a real cross-reference bug: that finding's evidence trace now lives only in
+  `supernatural-entities-places.md`, its correct home.
 - Do not begin the next batch until Batch 12 receives high-level review.
 
 ## Scenario Bank index

@@ -22,33 +22,43 @@ world semantics; repository classification records realization only, never deliv
 
 **Status.** Batch 12 (Magic/Supernatural), drafted per a corrected instruction file
 (`tmp/world-rule-batch-12-corrected-ext-ai.md`), superseding an earlier draft built from a
-since-withdrawn instruction file. Not split into 12A/12B — the batch instruction's own
-suggested five-file structure organizes one coherent batch, not a batch-level split.
+since-withdrawn instruction file, then revised the same day per a targeted semantic-cleanup
+follow-up (`tmp/world-rule-batch-12-corrected-followup-ext-ai.md`) — softening "independent
+facts" language to "semantically distinct facts," generalizing SUP-03's causal-chain wording
+away from one universal process shape, and sharpening the SUP-02 repository-evidence framing.
+Not split into 12A/12B — the batch instruction's own suggested five-file structure organizes
+one coherent batch, not a batch-level split.
 
 ---
 
 ## Domain Rules
 
-## SUP-01 — Objective supernatural truth, observed evidence, an observer's own causal attribution, that observer's own belief, that observer's own knowledge (governed entirely by Batch 06's own KNOW-01, never a parallel supernatural-specific knowledge system), and collective/institutional belief are six independent facts; none is implied by any other, and one objective supernatural event may support several simultaneously-held, observer-relative explanations without changing what actually happened
+## SUP-01 — Objective supernatural truth, observed evidence, an observer's own causal attribution, that observer's own belief, that observer's own knowledge (governed entirely by Batch 06's own KNOW-01, never a parallel supernatural-specific knowledge system), and collective/institutional belief are six semantically distinct facts/dimensions that must not be silently substituted for one another; any causal connection among them requires an applicable information/interpretation process, and one objective supernatural event may support several simultaneously-held, observer-relative explanations without changing what actually happened
 
 > Whether a supernatural event, effect, or property objectively exists in world state
-> (**truth**) is distinct from whatever evidence an observer happens to receive (**evidence**
-> — which need not identify the true cause), which is distinct from whichever cause that
-> observer assigns to it (**attribution** — "a ghost did it," "the wind did it," "I don't
-> know," any of which may be right, wrong, incomplete, or deceptive), which is distinct from
-> that observer's own resulting **belief**, which is further distinct from what that observer
-> actually **knows** under the certainty/grounding standard Batch 06's own KNOW-01 already
-> defines — belief is not automatically knowledge, and this family never builds a parallel
-> supernatural-specific Knowledge system; supernatural knowledge is knowledge, governed
-> exactly as any other domain's. A population's own **collective or institutional belief**
-> about the same event (Batch 11B's BEL-01/BEL-02) is a sixth, further-independent fact that
-> may diverge from the true cause and from any individual's own evidence, attribution,
-> belief, or knowledge, simultaneously — a god may objectively exist while society denies it;
-> a society may worship a god that does not exist; a ritual may be culturally sacred with no
-> supernatural effect; witnesses may misinterpret a real supernatural event. Magic owns
-> objective supernatural truth/mechanism; Culture/Belief owns social interpretation;
-> Knowledge owns what individuals think is true — none of the three owns, or may silently
-> stand in for, either of the other two.
+> (**truth**) is a semantically distinct fact from whatever evidence an observer happens to
+> receive (**evidence** — which need not identify the true cause), which is distinct from
+> whichever cause that observer assigns to it (**attribution** — "a ghost did it," "the wind
+> did it," "I don't know," any of which may be right, wrong, incomplete, or deceptive), which
+> is distinct from that observer's own resulting **belief**, which is further distinct from
+> what that observer actually **knows** under the certainty/grounding standard Batch 06's own
+> KNOW-01 already defines — belief is not automatically knowledge, and this family never
+> builds a parallel supernatural-specific Knowledge system; supernatural knowledge is
+> knowledge, governed exactly as any other domain's. A population's own **collective or
+> institutional belief** about the same event (Batch 11B's BEL-01/BEL-02) is a sixth,
+> semantically distinct fact that may diverge from the true cause and from any individual's
+> own evidence, attribution, belief, or knowledge, simultaneously. These six are never
+> causally independent in the strong sense — evidence may cause belief; an accurate
+> information/interpretation path may cause accurate knowledge; a past supernatural event may
+> later cause historical significance — but no such causal connection is ever assumed to hold
+> by default, and none of the six may substitute for another without that connection actually
+> applying: a god may objectively exist while society denies it; a society may worship a god
+> that does not exist; a ritual may be culturally sacred with no supernatural effect;
+> witnesses may misinterpret a real supernatural event; magic may occur with nobody knowing at
+> all. Magic owns objective supernatural truth/mechanism; Culture/Belief owns social
+> interpretation; Knowledge owns what individuals think is true — none of the three owns, or
+> may silently stand in for, either of the other two. Nothing here requires every supernatural
+> phenomenon to materialize all six dimensions at once.
 
 **Disposition: ACCEPT — REQUIRED.** Passes the admission test: Batch 06's KNOW-01/KNOW-02
 already establish belief ≠ truth generally, and Batch 11B's BEL-01/BEL-02 already establish
@@ -58,7 +68,11 @@ belief and knowledge. That refinement (evidence received ≠ cause attributed �
 belief ≠ resulting knowledge) is genuinely new content this domain specifically requires,
 since magic is exactly the domain where "I saw something happen" and "I believe X caused it"
 must be kept separable for misattribution and multiple-conflicting-witness scenarios to be
-representable at all.
+representable at all. **Revised 2026-09-22 per a targeted semantic-cleanup follow-up:**
+"independent facts" overstated the claim — these facts may have explicit causal relationships
+(evidence causing belief, a real information path causing knowledge); the Rule's own actual
+requirement is that no connection is assumed by default and no dimension may be silently
+substituted for another, not that the six are causally walled off from each other.
 
 **Repository evidence: PARTIAL, for the perceptual/evidence layer generally (reused, not
 new); MISSING, for any supernatural-specific truth/evidence/attribution content.** No field
@@ -104,14 +118,21 @@ fact converting into another (wealth into equipment, reputation into leverage); 
 governs the qualitatively different, stronger case of a belief/epistemic fact converting into
 objective ontological truth, which no earlier Rule addresses.
 
-**Repository evidence: MISSING, for the entire domain — no current mechanism realizes or
-violates this either way.** No mechanism anywhere derives any objective world-state change
-from `CultureState`, `BeliefInstitution`, or any individual belief/knowledge record —
-confirmed via direct inspection of `CulturalBiasApplicator` (Batch 11B evidence: it only ever
-biases a transient route-scoring delta, never writes durable world state) and
-`BeliefInstitution` (Batch 11B evidence: currently has no live caller at all). There is no
-existing "belief becomes reality" shortcut to correct, and no belief-powered-magic mechanism
-of any kind to check the permitted case against either.
+**Repository evidence: no CONFLICT observed; positive supernatural realization: MISSING.**
+**Revised 2026-09-22 per a targeted semantic-cleanup follow-up** — the original wording
+("SUPPORTED, by absence") overstated what this absence actually shows. The repository
+contains no mechanism that accidentally collapses belief into supernatural truth: no
+mechanism anywhere derives any objective world-state change from `CultureState`,
+`BeliefInstitution`, or any individual belief/knowledge record, confirmed via direct
+inspection of `CulturalBiasApplicator` (Batch 11B evidence: it only ever biases a transient
+route-scoring delta, never writes durable world state) and `BeliefInstitution` (Batch 11B
+evidence: currently has no live caller at all). But because this repository has essentially no
+supernatural realization of any kind, that absence does not constitute positive
+implementation support for this Rule's own full target semantics — it only confirms the
+narrower, correct claim that no existing shortcut needs correcting. Positive supernatural
+realization of SUP-02 (a working belief-powered-magic mechanism, declared and gated correctly)
+remains MISSING, same as every other Rule in this family. This distinction matters for any
+future implementation mapping that reads these classifications.
 
 **Scenarios:** [MAG-S02](../scenarios/magic-supernatural-batch-12.md#mag-s02) (false magic
 belief), [MAG-S26](../scenarios/magic-supernatural-batch-12.md#mag-s26) (belief-powered
@@ -119,26 +140,38 @@ effect, permission probe).
 
 ---
 
-## SUP-03 — Magic is never a causality exception; any supernatural world change requires the same real, declared causal chain (source/cause, mechanism, applicable conditions, valid target/reach, commit/effect, persistent consequence where applicable) any ordinary change requires, and "magic happened" never terminates causal explanation by itself
+## SUP-03 — Magic is never a causality exception; a supernatural world change requires a valid declared supernatural cause/process and a real causal path to its consequences, subject to the semantics relevant to that specific mechanism, and "magic happened" never terminates causal explanation by itself
 
 > The fictional content of a supernatural mechanism may violate ordinary physical
 > expectations; it must not violate this world's own declared causal semantics merely because
-> it is supernatural. A valid supernatural outcome always traces to: a real actor or source, a
-> declared mechanism that actor has access to, whatever conditions that mechanism requires, a
-> valid target/reach relationship, a real commit step producing the effect, and — where the
-> mechanism itself declares one — a persistent downstream consequence. "Magic happened" is
-> never, by itself, a sufficient causal explanation; it is a placeholder for a real chain that
-> must still be traceable in principle, exactly as any other domain's own causal explanation
-> must be.
+> it is supernatural. Causal discipline is universal; the specific process shape is not — a
+> valid supernatural outcome always traces to a real declared cause/process and a real path to
+> its consequences, but different mechanisms may take genuinely different shapes: a caster
+> invoking a spell against a target; a place's own standing condition producing a periodic
+> effect with no caster at all; an artifact's own property producing a consequence for whoever
+> bears it; a collective ritual producing a supernatural transition; an innate creature process
+> producing an environmental effect. This Rule never requires every mechanism to share an
+> identical chain (e.g., caster + resource + authorization + target) — it requires only that
+> whichever chain a given mechanism actually uses remains real and traceable. "Magic happened"
+> is never, by itself, a sufficient causal explanation; it is a placeholder for a real chain
+> that must still be traceable in principle, exactly as any other domain's own causal
+> explanation must be.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: this is the direct, necessary
-statement of the batch instruction's own governing principle ("treat fictional rules as real
-rules") as a target-semantic requirement, not merely a framing note. CAUSE-01 (Foundational)
-already requires any change to trace to a real, declared causal event in general; this Rule's
-own genuinely new content is the explicit, domain-specific refusal to grant magic an implicit
-exemption from that requirement merely by virtue of being supernatural — a refusal no earlier
-Rule needed to state, since no earlier domain carried this specific risk of being treated as
-an exception to ordinary causal discipline.
+**Disposition: ACCEPT — REQUIRED for the causal-discipline requirement; the specific process
+shape a mechanism uses is PERMITTED, mechanism-declared content.** Passes the admission test:
+this is the direct, necessary statement of the batch instruction's own governing principle
+("treat fictional rules as real rules") as a target-semantic requirement, not merely a framing
+note. CAUSE-01 (Foundational) already requires any change to trace to a real, declared causal
+event in general; this Rule's own genuinely new content is the explicit, domain-specific
+refusal to grant magic an implicit exemption from that requirement merely by virtue of being
+supernatural — a refusal no earlier Rule needed to state, since no earlier domain carried this
+specific risk of being treated as an exception to ordinary causal discipline. **Revised
+2026-09-22 per a targeted semantic-cleanup follow-up:** the original wording risked implying
+one universal supernatural process shape (an implicit caster-centric chain); this revision
+generalizes the requirement to causal discipline only, explicitly permitting caster-free
+mechanism shapes (a standing place condition, a spontaneous environmental phenomenon, an
+innate creature process) — see MAG-S01's own extended "Spontaneous Supernatural Phenomenon"
+clause below.
 
 **Repository evidence: MISSING, for the entire domain — no in-world supernatural mechanism
 exists to check this against, in either direction.** No code path anywhere resolves a
@@ -148,9 +181,12 @@ confirmed. `CAUSE-01`'s own general discipline is otherwise well-established for
 non-supernatural cases throughout this repository (reused directly from every prior batch's
 own evidence).
 
-**Scenarios:** [MAG-S06](../scenarios/magic-supernatural-batch-12.md#mag-s06) (failed spell
-after cost), [MAG-S07](../scenarios/magic-supernatural-batch-12.md#mag-s07) (illegal magic
-still works — capability and causal chain remain intact regardless of legality).
+**Scenarios:** [MAG-S08](../scenarios/magic-supernatural-batch-12.md#mag-s08) (spell fails
+after cost — corrects a stale citation to MAG-S06 found during the 2026-09-22 follow-up
+review), [MAG-S07](../scenarios/magic-supernatural-batch-12.md#mag-s07) (illegal magic still
+works — capability and causal chain remain intact regardless of legality), [MAG-S01](../scenarios/magic-supernatural-batch-12.md#mag-s01)
+(real magic, no witness — extended with a "Spontaneous Supernatural Phenomenon" clause testing
+the caster-free case).
 
 ---
 
@@ -206,9 +242,12 @@ priority.**
   from names alone — no CONFLICTING finding results, per the standing direction's own
   reminder not to classify CONFLICTING merely because the richer target system does not yet
   exist.
-- **Confirmed SUPPORTED, by absence, for SUP-02's own "belief does not create truth by
-  default" requirement — the correct outcome, not a gap.** No mechanism anywhere derives
-  objective world state from belief or cultural state.
+- **No CONFLICT observed for SUP-02's own "belief does not create truth by default"
+  requirement; positive supernatural realization remains MISSING — corrected 2026-09-22.**
+  No mechanism anywhere derives objective world state from belief or cultural state, so no
+  existing shortcut needs correcting — but the near-total absence of any supernatural
+  realization in this repository means that absence is not, by itself, positive
+  implementation evidence for the Rule's full target semantics.
 
 ## Cross-domain links recorded here
 

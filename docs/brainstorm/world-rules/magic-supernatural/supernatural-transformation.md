@@ -20,7 +20,10 @@ world semantics; repository classification records realization only, never deliv
 
 **Status.** Batch 12 (Magic/Supernatural), drafted per a corrected instruction file
 (`tmp/world-rule-batch-12-corrected-ext-ai.md`). This is the direct resolution of "a major
-deferred boundary from earlier batches," per that instruction's own explicit framing.
+deferred boundary from earlier batches," per that instruction's own explicit framing. Revised
+the same day per a targeted semantic-cleanup follow-up
+(`tmp/world-rule-batch-12-corrected-followup-ext-ai.md`) — sharpening STR-02's own status to
+separate distinctness (required where modeled) from existence (permitted, content-dependent).
 
 ---
 
@@ -77,7 +80,7 @@ supernatural regional threat).
 
 ---
 
-## STR-02 — Death, resurrection, and undeath are distinguishable processes that do not resolve to one default relationship; death remains a real historical fact even where a valid supernatural process later reactivates the subject, resurrection restoring the same identity is a distinct question from a corpse becoming the basis for a genuinely new undead subject, and neither is assumed by default — each requires its own declared supernatural process
+## STR-02 — Death, resurrection, and undeath must not be silently collapsed into one default relationship where a domain models resurrection or undeath at all; death remains a real historical fact even where a valid supernatural process later reactivates the subject, resurrection restoring the same identity is a distinct question from a corpse becoming the basis for a genuinely new undead subject, and neither is assumed by default — each requires its own declared supernatural process
 
 > A subject's own death, once it occurs, remains a real historical fact regardless of any
 > later supernatural process — resurrection is never permitted to retroactively erase that
@@ -88,16 +91,25 @@ supernatural regional threat).
 > separately-declared question — resurrection is never assumed to be the same operation as
 > undead creation merely because both begin from a corpse. Whether memory, ownership, or
 > social status automatically restore alongside a resurrected identity is a further,
-> independently-declared question this Rule does not pre-answer.
+> independently-declared question this Rule does not pre-answer. None of this requires this
+> world to model resurrection or undeath at all — the distinctness requirement applies only
+> where a domain chooses to model either.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: no earlier Rule addresses
-death/resurrection/undeath distinctness at all — this is squarely new content the batch
-instruction's own item 16 asks to be "probed carefully," combining History/Provenance's
-already-established "historical facts persist" pattern with Identity's own transformation-
-requires-declaration pattern for the specific, high-stakes case where the transformation in
-question is death itself being causally reversed. The genuinely new content is the explicit
-three-way non-collapse this Rule states: death-persists-as-history ≠ resurrection-restores-
-same-identity ≠ undeath-creates-new-identity, none of which any earlier Rule distinguishes.
+**Disposition: ACCEPT — REQUIRED for the distinctness-where-modeled requirement; whether
+resurrection or undeath exist in this world at all is PERMITTED, content-dependent.** Passes
+the admission test: no earlier Rule addresses death/resurrection/undeath distinctness at all
+— this is squarely new content the batch instruction's own item 16 asks to be "probed
+carefully," combining History/Provenance's already-established "historical facts persist"
+pattern with Identity's own transformation-requires-declaration pattern for the specific,
+high-stakes case where the transformation in question is death itself being causally
+reversed. The genuinely new content is the explicit three-way non-collapse this Rule states:
+death-persists-as-history ≠ resurrection-restores-same-identity ≠ undeath-creates-new-
+identity, none of which any earlier Rule distinguishes. **Revised 2026-09-22 per a targeted
+semantic-cleanup follow-up:** the disposition now explicitly separates the two claims this
+Rule actually makes — the three-way distinctness is REQUIRED wherever a domain models any of
+these processes, but nothing here requires this world to commit to resurrection or undeath
+existing at all, matching the same required-distinctness/permitted-existence split
+`supernatural-ontology.md`'s SUP-02 and this file's own STR-01 already use.
 
 **Repository evidence: MISSING.** No resurrection, undeath, or comparable supernatural
 death-reversal mechanism exists anywhere in this repository — confirmed via direct search.

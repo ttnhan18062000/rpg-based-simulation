@@ -18,7 +18,10 @@ transformation (see `supernatural-transformation.md`).
 world semantics; repository classification records realization only, never delivery priority.
 
 **Status.** Batch 12 (Magic/Supernatural), drafted per a corrected instruction file
-(`tmp/world-rule-batch-12-corrected-ext-ai.md`).
+(`tmp/world-rule-batch-12-corrected-ext-ai.md`), then revised the same day per a targeted
+semantic-cleanup follow-up (`tmp/world-rule-batch-12-corrected-followup-ext-ai.md`) —
+broadening EFF-02 to recognize two distinct persistent-supernatural-state shapes and
+preserving EFF-01's own anti-dumping-ground discipline unchanged.
 
 ---
 
@@ -42,6 +45,12 @@ becomes an informal dumping ground for every magically-caused outcome across eve
 domain, simply because magic was the proximate cause. Stating this explicitly, and naming the
 specific candidate target domains, is this Rule's own genuinely new content, directly
 required by the batch instruction's own explicit warning against exactly this anti-pattern.
+**Preserved unchanged 2026-09-22 per a targeted semantic-cleanup follow-up** — explicitly
+confirmed as one of this batch's strongest conclusions, not revised: magic causing a wound
+means Body owns the wound; magic changing memory means Knowledge/Memory owns the resulting
+state; magic burning a forest means Environment/Place owns the resulting state; a lasting
+curse remains a magical-owned fact only because the supernatural cause itself persists
+(EFF-02), never because magic caused it once.
 
 **Repository evidence: MISSING.** No magical-effect mechanism exists to check cross-domain
 ownership against — but the general pattern this Rule requires is otherwise already
@@ -57,37 +66,57 @@ creates political consequence).
 
 ---
 
-## EFF-02 — A magical effect requires its own continuing durable supernatural state only where the supernatural cause must itself remain active to sustain the consequence; a one-time magical cause that produces an ordinary persistent downstream effect (e.g., a spell causing a wound that then heals or persists normally) requires no continuing magical state at all, and where persistent supernatural state does exist, it requires its own explicit lifecycle semantics (duration, expiration, maintenance, dispel/removal condition), never assumed to be permanent or removable by default; conflicting supernatural effects must not produce undefined authoritative state
+## EFF-02 — Persistent supernatural state exists when an enduring supernatural fact remains part of a subject's or the world's current authoritative state — this may be an ongoing cause that must itself keep existing to sustain a consequence, or a durable supernatural property/consequence that persists as current state even after the originating action no longer actively executes; a one-time magical cause that produces an ordinary, non-supernatural persistent downstream effect (e.g., a spell causing a wound that then heals or persists normally) requires no continuing supernatural state at all; where persistent supernatural state does exist in either shape, it requires its own declared lifecycle semantics (duration, expiration, maintenance, dispel/removal condition) where lifecycle transitions are applicable, never assumed permanent or removable by default; conflicting supernatural effects must not produce undefined authoritative state
 
-> "Magic caused this" is not, by itself, a reason to keep a magical state alive — the test is
-> whether the *cause* must keep existing for the *consequence* to continue. A spell causing a
-> wound produces an ordinary persistent Body-owned condition once the spell itself is done; no
-> continuing magical state is required. A curse that continuously suppresses strength requires
-> the curse's own persistent supernatural state to keep existing, because removing the curse
-> should remove the suppression. Where persistent supernatural state exists at all (curse,
-> blessing, enchantment, pact, ward, magical mark), the specific mechanism must declare its own
-> duration, expiration, maintenance requirement, and removal/dispel condition — none of these
-> is assumed true or false by default. Where two or more supernatural effects interact or
-> conflict, the declared mechanism must resolve them to a definite, coherent authoritative
-> state — conflicting supernatural effects are never permitted to leave that state undefined,
-> though the specific resolution (priority, suppression, stacking, incompatibility) remains
-> domain-specific.
+> "Magic caused this" is not, by itself, a reason to keep supernatural state alive — but the
+> test is not simply "does the original cause keep executing." There are at least two
+> distinct, valid shapes of persistent supernatural state. **Ongoing cause:** a curse that
+> continuously suppresses strength requires the curse's own persistent supernatural state to
+> keep existing, because removing the curse should remove the suppression — the state *is*
+> the active cause. **Durable supernatural property/consequence:** an object permanently
+> enchanted remains objectively enchanted as its own current property even after the
+> enchanting ritual is long finished and its caster has left or died — the enchantment
+> persists as current state, not as a continuously re-executing cause, and yet it remains
+> genuinely supernatural state (not an ordinary Body/Object-owned consequence) because the
+> enchantment itself, not merely its downstream effect, is what persists. Contrast both with a
+> spell that causes an ordinary wound: the spell ends, the wound persists as an ordinary
+> Body-owned condition, and no supernatural state remains at all — this is the case that
+> requires no continuing supernatural state of either shape. Where persistent supernatural
+> state exists, in either shape, the specific mechanism must declare its own duration,
+> expiration, maintenance requirement, and removal/dispel condition where those transitions
+> are applicable — none of these is assumed true or false by default. Where two or more
+> supernatural effects interact or conflict, the declared mechanism must resolve them to a
+> definite, coherent authoritative state — conflicting supernatural effects are never
+> permitted to leave that state undefined, though the specific resolution (priority,
+> suppression, stacking, incompatibility) remains domain-specific.
 
 **Disposition: ACCEPT — REQUIRED.** Passes the admission test: no earlier Rule distinguishes
-"magic as an ongoing cause" from "magic as a one-time trigger of an ordinary persistent
-effect" — this is a genuinely new supernatural-specific refinement, since ordinary causal
-producers in this Catalog rarely raise the question of whether the *producer itself* must
-keep existing for its own *effect* to persist (an ordinary sword blow does not need to keep
-happening for the wound it caused to remain). The lifecycle-declaration requirement, and the
-no-undefined-state-on-conflict requirement, are the specific, named content this Rule adds
-beyond the general determinism discipline this Catalog's own architecture already requires.
+supernatural state that persists as an ongoing cause from supernatural state that persists as
+a durable property/consequence, nor either from a one-time magical trigger of an ordinary,
+non-supernatural persistent effect — this three-way distinction is a genuinely new
+supernatural-specific refinement, since ordinary causal producers in this Catalog rarely raise
+the question of whether the *producer itself* must keep existing for its own *effect* to
+persist (an ordinary sword blow does not need to keep happening for the wound it caused to
+remain). The lifecycle-declaration requirement, and the no-undefined-state-on-conflict
+requirement, are the specific, named content this Rule adds beyond the general determinism
+discipline this Catalog's own architecture already requires. **Corrected 2026-09-22 per a
+targeted semantic-cleanup follow-up:** the original wording ("persistent supernatural state
+is required only where the cause must itself remain active") was too narrow — it did not
+recognize the durable-property/consequence shape (a permanent enchantment that outlives its
+own casting action) as genuine persistent supernatural state at all, when it plainly is; this
+distinction matters for Final Integration and for correct canonical ownership, since a
+durable enchantment is magic's own to own, not the bearer-domain's, even though it is not an
+"ongoing cause" in the original narrower sense.
 
-**Repository evidence: MISSING.** No persistent supernatural state (curse, blessing,
-enchantment) exists anywhere in this repository to check lifecycle semantics against.
+**Repository evidence: MISSING.** No persistent supernatural state of either shape (curse,
+blessing, enchantment) exists anywhere in this repository to check lifecycle semantics
+against.
 
 **Scenarios:** [MAG-S10](../scenarios/magic-supernatural-batch-12.md#mag-s10) (persistent
-curse), [MAG-S11](../scenarios/magic-supernatural-batch-12.md#mag-s11) (dispel removes
-curse).
+curse — ongoing-cause shape), [MAG-S11](../scenarios/magic-supernatural-batch-12.md#mag-s11)
+(dispel removes curse), [MAG-S19](../scenarios/magic-supernatural-batch-12.md#mag-s19)
+(enchanted sword — extended with a "Permanent Enchantment Without Ongoing Caster" clause
+testing the durable-property/consequence shape).
 
 ---
 

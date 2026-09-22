@@ -17,6 +17,13 @@ SUP-01/SUP-02 — the anchor Rules of this batch's own Supernatural Ontology fam
 official §34 list does not otherwise probe directly (its own scenarios test capability,
 effects, transformation, places, and belief-power, but not the basic truth/evidence/
 attribution split itself). Without these four, SUP-01 would have no scenario coverage at all.
+Revised 2026-09-22 per a targeted semantic-cleanup follow-up
+(`tmp/world-rule-batch-12-corrected-followup-ext-ai.md`): MAG-S01 and MAG-S19 each gained an
+extended clause (Spontaneous Supernatural Phenomenon; Permanent Enchantment Without Ongoing
+Caster) rather than new IDs, per that follow-up's own explicit preference to reuse/extend
+existing scenarios where cleaner; two stale citations elsewhere (a wrong scenario-ID label on
+SUP-03, a duplicate citation on the magic-and-authority entry) were also corrected as part of
+this same pass.
 
 Per the standing direction (`tmp/world-rule-direction.md`): a scenario failing against the
 current repository does not mean the scenario or its Rule fails. Scoring uses the same
@@ -37,6 +44,23 @@ consequence still occurs.
   occur unwitnessed in the first place — confirmed MISSING. SUP-01's own requirement
   (objective truth never requires recognition unless a mechanism explicitly declares it as a
   prerequisite) remains independently coherent regardless.
+
+**Extended clause (added 2026-09-22 per a targeted semantic-cleanup follow-up): Spontaneous
+Supernatural Phenomenon.** A supernatural storm or anomaly occurs; there is no caster or actor
+of any kind; a declared environmental/supernatural mechanism is the source; real consequences
+follow regardless.
+
+- **Rules invoked:** SUP-03, CAP-01.
+- **Result: revealed missing rule, and the Rules' own generalized requirements are confirmed
+  coherent against this caster-free case specifically.** Confirmed MISSING — no environmental
+  or spontaneous supernatural mechanism of any kind exists. This clause directly tests
+  SUP-03's own revised wording (a valid declared cause/process and a real causal path,
+  "subject to the semantics relevant to that specific mechanism" — never requiring a caster)
+  and CAP-01's own revised wording (the five candidate facts apply only where a mechanism
+  actually uses them; a place-condition-driven or purely environmental mechanism may have no
+  "caster" holding capability at all). Both Rules remain coherent against this case without
+  modification — this clause exists specifically to confirm neither Rule was accidentally
+  drafted as caster-centric.
 
 ## MAG-S02 — False magic belief
 
@@ -235,6 +259,23 @@ capability.
   ownership/identity distinctness, both remain coherent regardless, reusing already-real
   non-magical evidence (`TransformationService`, `EvolutionSystem`, Batch 08's OBJ-01).
 
+**Extended clause (added 2026-09-22 per a targeted semantic-cleanup follow-up): Permanent
+Enchantment Without Ongoing Caster.** The caster who enchanted the sword completes the
+enchanting ritual, then leaves or dies; the sword remains objectively enchanted as its own
+current property regardless.
+
+- **Rules invoked:** EFF-02 (corrected).
+- **Result: revealed missing rule, and EFF-02's own corrected two-shape distinction is
+  confirmed coherent against exactly the case that motivated the correction.** Confirmed
+  MISSING — no enchantment-persistence mechanism exists. This clause is the direct probe
+  EFF-02's own follow-up correction was written to satisfy: the enchantment is genuinely
+  persistent supernatural state (magic's own to own, per EFF-01), yet it is not an "ongoing
+  cause" in the original narrower sense — the caster is gone and the enchanting action is not
+  re-executing. EFF-02's own corrected "durable supernatural property/consequence" shape
+  covers this case directly; the original, narrower wording ("requires the cause to remain
+  active") would have wrongly implied no persistent supernatural state remains once the
+  caster is gone.
+
 ## MAG-S20 — Artifact recreated
 
 An ordinary object is destroyed in a ritual; a magical artifact is created; a new identity
@@ -380,3 +421,15 @@ Every scenario except MAG-S24 confirms the same pattern Batch 10's own Law/Enfor
 first established at this scale: an entire rule family with essentially no in-world
 repository counterpart to check against, recorded honestly as a load-bearing semantic gap per
 the standing direction, not as evidence against the target semantics themselves.
+
+**Follow-up note (2026-09-22).** A targeted semantic-cleanup follow-up added two extended
+clauses to already-existing scenarios rather than new scenario IDs — MAG-S01's own
+"Spontaneous Supernatural Phenomenon" clause confirms SUP-03/CAP-01 are not accidentally
+caster-centric; MAG-S19's own "Permanent Enchantment Without Ongoing Caster" clause is the
+direct probe that motivated EFF-02's own correction to recognize a durable-property/
+consequence shape of persistent supernatural state, distinct from an ongoing-cause shape. The
+same follow-up corrected two stale citations found during this pass: SUP-03 had cited
+MAG-S06 under the label "failed spell after cost" (the correct scenario for that label is
+MAG-S08; MAG-S06 is "Innate Magic Without Knowledge") and the magic-and-authority Inherited
+entry in `magic-capability.md` cited MAG-S07 twice. Neither correction changes any Rule's own
+substance — both are traceability fixes.

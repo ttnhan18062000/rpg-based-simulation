@@ -9,8 +9,9 @@ tags: [architecture, world, content]
 # World Rule Family: Magic Capability
 
 **Purpose/scope.** What makes an entity capable of producing a supernatural effect; how
-magical knowledge, capability, resource, reach, and authorization relate as independent
-facts; and how supernatural reach may or may not bypass ordinary spatial topology. Builds on
+magical knowledge, capability, resource, reach, and authorization relate as semantically
+distinct facts where a mechanism actually uses them; and how supernatural reach may or may not
+bypass ordinary spatial topology. Builds on
 Batch 02/03/04/07's own capability/cost/reach families. Does not decide cross-domain effect
 ownership (see `magical-effects.md`) or transformation (see `supernatural-transformation.md`).
 
@@ -18,13 +19,16 @@ ownership (see `magical-effects.md`) or transformation (see `supernatural-transf
 world semantics; repository classification records realization only, never delivery priority.
 
 **Status.** Batch 12 (Magic/Supernatural), drafted per a corrected instruction file
-(`tmp/world-rule-batch-12-corrected-ext-ai.md`).
+(`tmp/world-rule-batch-12-corrected-ext-ai.md`), then revised the same day per a targeted
+semantic-cleanup follow-up (`tmp/world-rule-batch-12-corrected-followup-ext-ai.md`) —
+softening "independent facts" language and clarifying that authorization may be entirely
+irrelevant to unregulated/innate/wild magic.
 
 ---
 
 ## Domain Rules
 
-## CAP-01 — Magical knowledge, magical capability, resource/cost availability, target reachability, and institutional authorization are five independent facts; none is implied by any other
+## CAP-01 — Magical knowledge, magical capability, resource/cost availability, target reachability, and institutional authorization are semantically distinct facts where a given mechanism actually uses them; none is implied by any other, and a mechanism may leave one or more of them entirely inapplicable
 
 > Knowing that a spell or ritual exists, or conceptually understanding a magical rule, is
 > never the same fact as being capable of performing it — a scholar may understand magic
@@ -34,17 +38,27 @@ world semantics; repository classification records realization only, never deliv
 > distinct from having the resource a mechanism requires, from the target actually being
 > reachable, and from being institutionally authorized to use it — capable ≠ has resource,
 > capable ≠ target is reachable, capable ≠ authorized, capable ≠ guaranteed success. None of
-> these five facts (knowledge, capability, resource, reach, authorization) implies any other.
+> these facts (knowledge, capability, resource, reach, authorization) implies any other where
+> a mechanism uses them — but not every mechanism uses all five. Authorization in particular
+> may be entirely irrelevant to a wild magical creature, a natural supernatural phenomenon, or
+> an unregulated innate ability; this Rule never implies that every magical action requires an
+> authorization fact to exist at all, only that where one does apply, it remains its own,
+> non-substitutable fact.
 
-**Disposition: ACCEPT — REQUIRED.** Passes the admission test: Batch 06 already establishes
-knowledge as its own fact distinct from belief for *world facts*; Batch 07's own capability
-family already establishes capability ≠ execution ≠ effect generally. Neither states the
-specific pairing this Rule requires — "conceptual understanding of a mechanism" as its own
-fact distinct from "practical capability to perform it," a skill-knowledge/capability split
-this Catalog has not previously drawn, since ordinary Batch 06 knowledge concerns knowing that
-some world fact is true, not knowing how to perform an action. This pairing, plus tying it
-together with resource/reach/authorization into one five-way distinctness statement specific
-to magic, is this Rule's own genuinely new content.
+**Disposition: ACCEPT — REQUIRED for the distinctness-where-applicable requirement; which
+facts a given mechanism actually uses is PERMITTED, mechanism-declared content.** Passes the
+admission test: Batch 06 already establishes knowledge as its own fact distinct from belief
+for *world facts*; Batch 07's own capability family already establishes capability ≠
+execution ≠ effect generally. Neither states the specific pairing this Rule requires —
+"conceptual understanding of a mechanism" as its own fact distinct from "practical capability
+to perform it," a skill-knowledge/capability split this Catalog has not previously drawn,
+since ordinary Batch 06 knowledge concerns knowing that some world fact is true, not knowing
+how to perform an action. This pairing, plus tying it together with resource/reach/
+authorization into one distinctness statement specific to magic, is this Rule's own
+genuinely new content. **Revised 2026-09-22 per a targeted semantic-cleanup follow-up:**
+"five independent facts" overstated universality — the distinctness holds only among the
+facts a given mechanism actually engages, and authorization specifically is never assumed
+applicable by default.
 
 **Repository evidence: MISSING.** No supernatural capability, knowledge-of-a-spell, or
 magic-specific resource field exists anywhere in this repository — confirmed via direct
@@ -60,27 +74,34 @@ magic still works — capability ≠ authority), [MAG-S08](../scenarios/magic-su
 
 ---
 
-## CAP-02 — Supernatural reach may bypass ordinary spatial topology only through a declared supernatural relation; "magic ignores Reach" is never a valid default, and a portal or teleportation establishes its own source/target/eligibility/effect/history where meaningful, never forced through ordinary pathfinding
+## CAP-02 — Supernatural reach that bypasses ordinary spatial/topological reach must do so through declared supernatural reach semantics; "magic ignores Reach" is never a valid default, and a portal or teleportation is one instance of a declared reach semantic, never forced through ordinary pathfinding
 
 > Where an ordinary spatial path is unavailable, a declared supernatural rule may establish a
-> valid alternative reach relation — touch, line of sight, spatial radius, a named target, a
-> sympathetic link, a portal, a remote ritual, or a cross-plane relation are all legitimate
-> declared forms. What is never legitimate is treating "this is magic" as sufficient reason to
-> skip Reach's own requirement that a real relation connect actor and target. A portal
-> establishing a temporary topology edge, and a teleport establishing a direct supernatural
-> transition, are two different declared shapes — neither is forced through ordinary
-> pathfinding, but each still tracks its own source, target, eligibility, effect, and history
-> where that matters, and a portal's own connection is never assumed bidirectional merely
-> because it exists in one direction.
+> valid alternative reach semantic — touch, line of sight, spatial radius, a named target, a
+> sympathetic link, a portal connection, a remote ritual, or a cross-plane relation are all
+> legitimate declared forms. What is never legitimate is treating "this is magic" as
+> sufficient reason to skip Reach's own requirement that a real, declared relation connect
+> actor and target. A portal establishing a temporary topology edge, and a teleport
+> establishing a direct supernatural transition, are two different declared shapes — neither
+> is forced through ordinary pathfinding, but each still tracks its own source, target,
+> eligibility, effect, and history where that matters, and a portal's own connection is never
+> assumed bidirectional merely because it exists in one direction. A persistent relation
+> record (source, target, eligibility) is one possible way to implement this — it is one
+> implementation possibility, not the Rule itself; the Rule requires only that the reach
+> semantic be declared, not any particular data shape for declaring it.
 
-**Disposition: ACCEPT — REQUIRED for the declared-relation requirement; the specific reach
-shape (touch, portal, sympathetic link, etc.) is PERMITTED, domain-declared content.** Passes
-the admission test: this directly resolves Batch 04's own non-physical-movement boundary,
-per the batch instruction's own explicit framing — Reach (Batch 02/04) already requires a
-real relation connecting actor and target generally, but does not itself state that
-supernatural mechanisms may establish *new* reach relations bypassing ordinary topology, nor
-that doing so requires its own explicit declaration rather than an implicit "magic bypasses
-reach" default. That refinement is this Rule's own genuinely new content.
+**Disposition: ACCEPT — REQUIRED for the declared-semantics requirement; the specific reach
+shape (touch, portal, sympathetic link, etc.) and its implementation representation are
+PERMITTED, domain-declared content.** Passes the admission test: this directly resolves Batch
+04's own non-physical-movement boundary, per the batch instruction's own explicit framing —
+Reach (Batch 02/04) already requires a real relation connecting actor and target generally,
+but does not itself state that supernatural mechanisms may establish *new* reach relations
+bypassing ordinary topology, nor that doing so requires its own explicit declaration rather
+than an implicit "magic bypasses reach" default. That refinement is this Rule's own genuinely
+new content. **Revised 2026-09-22 per a targeted semantic-cleanup follow-up:** reworded away
+from "declared supernatural relation" (which risked reading as a mandatory data
+representation) to "declared supernatural reach semantics" — a persistent relation record
+remains one legitimate implementation shape, never the Rule's own requirement.
 
 **Repository evidence: MISSING.** No portal, teleport, or supernatural-reach mechanism of any
 kind exists anywhere in this repository — confirmed via direct search (no "portal"/"teleport"
@@ -148,8 +169,9 @@ new claim.**
 
 **Repository evidence: MISSING.**
 
-**Scenarios:** [MAG-S07](../scenarios/magic-supernatural-batch-12.md#mag-s07) (magic and
-institutions), [MAG-S07](../scenarios/magic-supernatural-batch-12.md#mag-s07).
+**Scenarios:** [MAG-S07](../scenarios/magic-supernatural-batch-12.md#mag-s07) (illegal magic
+still works — magic and institutions; corrects a duplicate citation found during the
+2026-09-22 follow-up review).
 
 ---
 

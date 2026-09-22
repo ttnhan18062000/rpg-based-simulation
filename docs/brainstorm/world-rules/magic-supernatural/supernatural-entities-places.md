@@ -18,27 +18,39 @@ cross-domain effect ownership generally (see `magical-effects.md`).
 world semantics; repository classification records realization only, never delivery priority.
 
 **Status.** Batch 12 (Magic/Supernatural), drafted per a corrected instruction file
-(`tmp/world-rule-batch-12-corrected-ext-ai.md`).
+(`tmp/world-rule-batch-12-corrected-ext-ai.md`), then revised the same day per a targeted
+semantic-cleanup follow-up (`tmp/world-rule-batch-12-corrected-followup-ext-ai.md`) —
+softening PLC-01's "independent facts" language and correcting the `magic_sense`/
+`magic_signal` finding's own framing (structural capability, not implemented semantics),
+which this revision also relocates here in full from its own prior, incorrect
+cross-reference to `magic-capability.md` (that file never actually contained it).
 
 ---
 
 ## Domain Rules
 
-## PLC-01 — A Place's own objective supernatural property, a culture's attributed sacredness, an institution's declared sacredness, an individual's own knowledge of that declaration, an individual's own personal belief, the Place's own historical significance, and a past supernatural event occurring there are seven independent facts; none automatically implies any other, and no single global "sacred" or "magic" boolean may represent all seven
+## PLC-01 — A Place's own objective supernatural property, a culture's attributed sacredness, an institution's declared sacredness, an individual's own knowledge of that declaration, an individual's own personal belief, the Place's own historical significance, and a past supernatural event occurring there are seven semantically distinct facts that must not be silently substituted for one another; no single global "sacred" or "magic" boolean may represent all seven, and no Place is required to materialize all seven at once
 
 > Extending `places.md`'s own PLACE-02 (significance is always attributed, never intrinsic)
 > and `collective-belief.md`'s own sacredness content (Inherited, originally BEL-03 —
 > sacredness may arise through cultural interpretation alone, without requiring supernatural
 > transformation) to the supernatural case specifically: a Place may have a real, objective
 > supernatural property (`supernatural-ontology.md`'s SUP-01, applied to a location) that is
-> entirely independent of whether any culture attributes sacredness to it, whether any
-> institution formally declares it sacred, whether any specific individual knows of that
+> a semantically distinct fact from whether any culture attributes sacredness to it, whether
+> any institution formally declares it sacred, whether any specific individual knows of that
 > declaration, whether that individual personally believes it, whether the Place has ordinary
-> historical significance, or whether a supernatural event occurred there in the past. All
-> seven facts may combine in any combination — a Place may be objectively magical with zero
-> cultural recognition; culturally sacred with zero objective supernatural property; both;
-> or neither. This is a critical distinction: culturally sacred ≠ objectively magical, in
-> either direction.
+> historical significance, or whether a supernatural event occurred there in the past. These
+> seven facts may have real causal relationships — a past supernatural event occurring there
+> may later cause historical significance; an institution's own declaration may later cause
+> individual belief to spread — but no such connection is ever assumed by default, and any two
+> of the seven may combine in any way absent one: a supernatural event happened here ≠ the
+> place is currently supernatural; the place is objectively supernatural ≠ any culture knows
+> it; a culture considers the place sacred ≠ the place is objectively supernatural; an
+> institution declares it sacred ≠ every individual actually believes it. A Place may be
+> objectively magical with zero cultural recognition; culturally sacred with zero objective
+> supernatural property; both; or neither — and the ordinary case is that most Places
+> materialize few or none of these seven at all. This is a critical distinction: culturally
+> sacred ≠ objectively magical, in either direction.
 
 **Disposition: ACCEPT — REQUIRED.** Passes the admission test: the batch instruction's own
 item 24 explicitly frames "culturally sacred ≠ objectively magical" as "critical," and this
@@ -47,10 +59,13 @@ here. `places.md`'s PLACE-02 and `collective-belief.md`'s own sacredness content
 establish significance/sacredness as attribution-relative — but neither introduces
 **objective supernatural property** as an eighth kind of fact alongside the attribution/
 recognition/belief/history facts they already separate. Adding that missing fact, and
-stating that all seven remain independently combinable, is this Rule's own genuinely new
+stating that all seven remain semantically distinct, is this Rule's own genuinely new
 content — this Catalog's identical genuinely-new content requirement already satisfied once
-before, in the now-superseded draft of this same batch, and preserved here unchanged since
-the underlying reconciliation requirement is unchanged by the corrected instruction.
+before, in the now-superseded draft of this same batch, and preserved here since the
+underlying reconciliation requirement is unchanged by the corrected instruction. **Revised
+2026-09-22 per a targeted semantic-cleanup follow-up:** "independent" softened to
+"semantically distinct," with an explicit statement that these facts may have real causal
+relationships and that no Place is required to materialize more than a few of them.
 
 **Repository evidence: MISSING.** No field represents an objective supernatural property on
 `PlaceState`, consistent with PLACE-02/the reclassified sacredness entry's own prior findings
@@ -120,23 +135,39 @@ declared-perfect channel does not violate that reuse (an already-implicit coroll
 *silent* omniscience," made explicit here per the batch instruction's own item 20). No new
 claim.**
 
-**Repository evidence: MISSING.**
+**Repository evidence: MISSING, for any populated supernatural-information-channel content;
+one genuinely positive structural match, currently INERT/OFF — corrected 2026-09-22 per a
+targeted semantic-cleanup follow-up.** `PerceptionGate`'s own `magic_sense`/`magic_signal`
+mapping (`src/world/perception/gate.py`) already treats a magic-flavored channel as a
+first-class sense, gated by the same threshold/confidence discipline as vision, hearing, or
+smell. This is **existing perception infrastructure structurally capable of hosting a
+supernatural information channel** — not, as an earlier draft of this same entry
+characterized it, evidence that this Rule's own target semantics are already implemented.
+The channel's own shape exists; the content and source semantics a real divination mechanism
+would need to populate it do not — no content anywhere sets a non-default `magic_signal`
+value (`get_entity_signals()`'s own fallback is exercised by every entity checked). See the
+family's own Repository Findings below for the complete evidence trace, kept here in full
+rather than cross-referenced elsewhere.
 
 **Scenarios:** [MAG-S15](../scenarios/magic-supernatural-batch-12.md#mag-s15) (divination
 without omniscience), [MAG-S16](../scenarios/magic-supernatural-batch-12.md#mag-s16)
 (perfect divination where declared, counter-probe).
 
-### Mind and memory magic: changed belief, changed memory, changed motivation, compelled action, and changed relationship are five independent facts, none automatically implying the others; compulsion exercises the explicit reflex/compulsion/mind-control carve-out Batch 06's own AGENCY-02 already reserved, and a compulsion rule may constrain or override ordinary choice only where declared, preserving its own source/target/scope/duration/conditions/result
+### Mind and memory magic: changed belief, changed memory, changed motivation, compelled action, and changed relationship are five semantically distinct facts that must not be silently substituted for one another; compulsion exercises the explicit reflex/compulsion/mind-control carve-out Batch 06's own AGENCY-02 already reserved, and a compulsion rule may constrain or override ordinary choice only where declared, preserving its own source/target/scope/duration/conditions/result
 
 > A magical false memory changes belief; whether that later changes a relationship requires
 > its own further, real causal step (social consequence) — magic never skips causal layers
-> merely because the initiating cause was supernatural. Ordinary motivation is never the same
+> merely because the initiating cause was supernatural, though one of these facts may still
+> legitimately cause another through such a real step. Ordinary motivation is never the same
 > fact as supernatural compulsion (Batch 06's own AGENCY-02 already reserves this exact
 > distinction, and its own explicit carve-out for future reflex/compulsion/mind-control
 > overrides is precisely what this domain exercises) — a declared compulsion rule may
 > constrain or override ordinary choice, but "mind control" is never used as a bare causality
 > bypass; the compulsion's own source, target, scope, duration, and conditions remain
-> declared and checkable.
+> declared and checkable. **Revised 2026-09-22 per a targeted semantic-cleanup follow-up:**
+> "independent facts" softened to "semantically distinct facts," matching the same correction
+> applied to SUP-01/CAP-01/PLC-01 — these facts may cause one another through a real causal
+> step; they may never be silently substituted for one another absent one.
 
 **Disposition: INHERITED — direct reuse of `supernatural-ontology.md`'s own SUP-01 (belief/
 knowledge/memory distinctness) and Batch 06's AGENCY-01/AGENCY-02 (decision stages causally
@@ -188,12 +219,18 @@ priority.**
 - **Confirmed MISSING — no objective supernatural Place property, magical object, illusion,
   divination, or mind/memory magic mechanism exists anywhere in this repository.** See
   PLC-01 and the Inherited entries above.
-- **Cross-referenced from `magic-capability.md`.** `PerceptionGate`'s own `magic_sense`/
-  `magic_signal` channel (`src/world/perception/gate.py`) remains this batch's own single
-  genuinely positive structural match — real, live, structurally ready to gate a supernatural
-  information channel exactly as the divination Inherited entry requires, currently INERT/OFF
-  since no content emits a non-default value. Not duplicated here in full; see that file's own
-  Repository Findings for the complete evidence trace.
+- **A genuinely positive structural match, currently INERT/OFF — corrected 2026-09-22, and
+  relocated here in full.** An earlier draft of this section cross-referenced this finding to
+  `magic-capability.md`'s own Repository Findings; that file never actually contained it, so
+  this is now the finding's own single, complete home. `PerceptionGate`'s own `magic_sense`/
+  `magic_signal` channel (`src/world/perception/gate.py`) is real, live perception-gating
+  infrastructure, gated by the identical threshold/confidence discipline as vision or hearing
+  — **existing perception infrastructure structurally capable of hosting a supernatural
+  information channel**, not evidence that this family's own target semantics (a real,
+  populated divination or illusion mechanism) are already realized. The gap: no content
+  anywhere sets a non-default `magic_signal` value — `get_entity_signals()`'s own fallback is
+  exercised by every entity checked, confirming the channel shape exists while its content and
+  source semantics remain MISSING.
 
 ## Cross-domain links recorded here
 
