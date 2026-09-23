@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION
-phase: open
+phase: done
 date: 2026-09-17
 tags: [architecture, schema, simulation-quality]
 ---
@@ -16,7 +16,7 @@ Extend `implemented_by` coverage beyond 26 of 89 mechanisms — the unticketed p
 queued detectors
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -225,9 +225,32 @@ edit in this batch.
   with a real-investigation comment explaining the delta.
 
 ## Completion Summary
-**Partial, ongoing** (per this ticket's own explicit "deliberately incremental" out-of-scope note —
-not moved to `tickets/done/`). This batch: 5 of 7 `systems: [combat]` mechanisms now bound
-(`action_pacing_readiness`/`skill_unlocks` left unbound with a stated, symbol-level-boundary
-reason each), plus one real state correction (`status_effects` partial->orphan) surfaced and fully
-propagated per AC #3. `orphan`/`gated` coverage (this ticket's own 100%-target claim-types) is
-unchanged by this batch and remains the next priority for whoever continues it.
+**Closed as superseded, 2026-09-23**, per peer review (`rpg-feature-planning`) closing out the
+`mechanism-verification` epic. Re-verified directly before closing rather than taken on faith:
+current `registries/mechanisms.yaml` (93 mechanisms total) shows **76 of 93 bound** (a direct count
+of non-empty `implemented_by`, not `len(report.bound)` from
+`mechanism_registry_completeness_check.py`, per this ticket's own counting-note caveat — confirmed
+still correct), up from the 26 of 89 this ticket was filed against. Checked against this ticket's
+own coverage acceptance targets (Scope, "Coverage acceptance targets" section):
+
+- **`orphan` → 100% target: met.** All 13 `orphan`-state mechanisms are bound. 0 unbound.
+- **`gated` → 100% target: not yet met, but reduced to 1 of 8** (`information_trust_deception`;
+  the other 4 named as still-unbound in this ticket's own Batch 1 note — `self_model`,
+  `knowledge_model`, `quest_generation_sourcing`, `opportunity_rumor_seeds` — were bound in
+  intervening batches not recorded in this ticket file).
+- **`done`/`partial`/`verified`: no numeric target, per this ticket's own Scope text** — not a
+  completion bar.
+
+This ticket's own hardest, mechanically-decidable acceptance target (`orphan` → 100%) is already
+met, and its own explicit "deliberately incremental, ongoing work" framing (Out of Scope) means
+there was never a fixed completion count to finish against. What remains is a genuinely different
+shape of work than this ticket's own scope: of the 17 still-unbound mechanisms, 12 are `state: gap`
+(no implementing code exists, so `implemented_by` doesn't apply — never a real coverage hole, and
+this ticket's own framing never distinguished that, which is itself a real gap this closure
+corrects going forward). The real residue is 5 mechanisms whose `state` claims something real
+(`done`/`partial`/`gated`/`skeleton`) but which remain unbound:
+`affection_relationship_bonds`, `calamity_intensity`, `xp_leveling`, `information_trust_deception`,
+`social_memory`. Superseded by `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which
+scopes that residue precisely (most of it already has its own deep investigation trail explicitly
+flagging a roadmap-level identity/merge question, not a plain binding gap — see that ticket) and
+adds the `state: gap` → N/A rule this ticket's own framing was missing.
