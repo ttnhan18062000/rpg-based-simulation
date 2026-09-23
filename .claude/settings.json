@@ -97,6 +97,15 @@
             "command": "python3 -c \"import json,sys\ntry:\n    from tools.write_path_guard import scan_for_secrets\n    d=json.load(sys.stdin)\n    m=scan_for_secrets(d.get('tool_input',d).get('command',''))\n    if m: print(json.dumps({'hookSpecificOutput':{'hookEventName':'PreToolUse','additionalContext':'secret-scan: possible '+m+' pattern detected in this Bash command. Advisory only, not blocked.'}}))\nexcept Exception:\n    pass\" 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/agent-monitoring/cd_prefix_advisory_hook.py 2>/dev/null || true"
+          }
+        ]
       }
     ],
     "PostToolUse": [
