@@ -6,16 +6,16 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**20 runtime-verified, 62 static (`code_trace`)-verified, 11 unverified** — of 93 total.
+**24 runtime-verified, 59 static (`code_trace`)-verified, 10 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
 | `belief_cycle` | entity | done | runtime | observed | 15 | 3 |
-| `entity_role` | entity | done | static | observed | 15 | 3 |
+| `entity_role` | entity | done | runtime | observed | 15 | 3 |
 | `movement` | entity | done | static | observed | 15 | 3 |
 | `personality` | entity | done | static | observed | 10 | 2 |
 | `status_effects` | entity | orphan | static | observed | 10 | 2 |
-| `aging_death` | entity | done | static | observed | 5 | 1 |
+| `aging_death` | entity | done | runtime | observed | 5 | 1 |
 | `attributes_biology` | entity | done | static | observed | 5 | 1 |
 | `combat_resolution` | entity | done | runtime | observed | 5 | 1 |
 | `goal_hierarchy` | entity | done | runtime | observed | 5 | 1 |
@@ -34,7 +34,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `belief_institution` | world | partial | static | observed | 0 | 0 |
 | `betrayal_siege_war` | faction | partial | static | contradicted | 0 | 0 |
 | `breakthrough_bonuses` | entity | partial | static | contradicted | 0 | 0 |
-| `build_diversity` | entity | gap | unverified | unverified | 0 | 0 |
+| `build_diversity` | entity | partial | static | observed | 0 | 0 |
 | `building_sabotage` | world | done | static | observed | 0 | 0 |
 | `calamity_intensity` | world | done | runtime | contradicted | 0 | 0 |
 | `camp` | region | done | static | contradicted | 0 | 0 |
@@ -58,7 +58,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `cultural_drift` | world | done | static | observed | 0 | 0 |
 | `declared_cognition_schema` | entity | orphan | static | observed | 0 | 0 |
 | `demographic_cohort_cycle` | region | done | static | contradicted | 0 | 0 |
-| `derived_stats` | entity | done | static | observed | 0 | 0 |
+| `derived_stats` | entity | done | runtime | observed | 0 | 0 |
 | `emotion` | entity | done | runtime | observed | 0 | 0 |
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
 | `equipment_scoring` | world | orphan | static | contradicted | 0 | 0 |
@@ -95,7 +95,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `strategic_intelligence_core` | entity | done | runtime | observed | 0 | 0 |
 | `strategic_learning_bias` | entity | done | static | observed | 0 | 0 |
 | `strategic_redirection` | entity | orphan | static | observed | 0 | 0 |
-| `succession` | entity | done | static | observed | 0 | 0 |
+| `succession` | entity | done | runtime | observed | 0 | 0 |
 | `tactical_decision` | entity | done | runtime | contradicted | 0 | 0 |
 | `team_up` | entity | gap | unverified | unverified | 0 | 0 |
 | `temporal_pressure` | entity | gated | runtime | observed | 0 | 0 |

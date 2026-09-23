@@ -264,6 +264,21 @@ mechanisms:
         `tactical_decision`). A verdict proves the mechanism works under the conditions measured;
         this one was never a general claim about the simulation, and is corrected here to say so
         explicitly rather than leaving "1960 -> 837" to be read as one.
+        **Card-desc addendum, 2026-09-23 (TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT)**:
+        this card's own desc text carries a 2026-09-15 self-correction ("nothing downstream ever
+        acts on the result... does not reproduce on current code, should be read as historical, not
+        current") that is now itself stale -- confirmed by direct code read that this "1960 -> 837"
+        figure's real mechanism is `action_router.py`'s per-attack risk gate
+        (`src/engine/domain/action_router.py:74-98`, `_RISK_ACCEPTED_POSTURES` check against
+        `entity.identity.properties["last_combat_posture"]`), added by the already-closed
+        `TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION` -- same day as, but after,
+        the desc's own "nothing consumes this" correction. `PostureIntentResolver.resolve()`'s own
+        `intent`/`strat` output is still discarded (`EntityUpdate.intent_results` stays
+        hardcoded `[]` in `combat_engagement/phase.py`) -- that specific claim in the desc remains
+        true -- but the desc's broader "posture selection has no real effect" framing is false as of
+        that fix: the property-keyed gate is a second, separate, real consumer, and this verified
+        block's own "1960 -> 837" figure already reflects it. Card desc corrected to cite this
+        instead of reading as an open, unresolved contradiction between its own two paragraphs.
   - id: movement
     layer: entity
     systems: [combat, world]
@@ -555,13 +570,64 @@ mechanisms:
     layer: entity
     systems: [progression]
     depends_on: []
-    state: gap
-    # EDGE RESOLVED 2026-09-19 (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION):
-    # `-> class_assignment` REMOVED, same reasoning as `conversation`'s own edge above --
-    # `build_diversity` has zero implementing code anywhere in src/ (confirmed) or any atlas/
-    # wiring-map card, so nothing exists to verify a depends_on edge FROM it, regardless of
-    # `class_assignment`'s own real status (which was independently resolved KEEP in this same
-    # pass -- see `class_assignment`'s own entry).
+    state: partial
+    implemented_by:
+      - src/progression/class_tiers.py::ClassTierService
+    verified:
+      instrument: code_trace
+      verdict: observed
+      date: "2026-09-23"
+      note: >-
+        TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT. This card's own desc ("class_id is
+        never reassigned anywhere in the live codebase... no specialization, prestige class,
+        ascension, or transcendence concept exists in any form, not even a stub") and the
+        2026-09-19 depends_on-edge-resolution comment below (now removed) both said `state: gap`
+        (zero implementing code) -- both are stale as of `TCK-20260831-CLASS-TIER-BRANCHING`
+        (`docs/guidelines/intentional_divergences.md` §2.49 / DEV-006), which landed real,
+        mutually-exclusive class-tier branching infrastructure BEFORE the 2026-09-19 check that
+        still said "zero implementing code": `IdentityUpdate.class_id_set`, wired into
+        `IdentityPatch.apply()` (`src/engine/patches.py:214`); `CLASS_TIER_REGISTRY`
+        (`src/core/classes.py`, >=2 mutually-exclusive next-tier options per base class); and
+        `ClassTierService.apply_bonuses()` (`src/progression/class_tiers.py`), called live from
+        `src/engine/rpg_depth.py:368` (confirmed a real, non-test caller) on every effective-stats
+        computation. `state` corrected `gap` -> `partial`, not `orphan`: `orphan` in this registry's
+        own vocabulary means zero callers, mechanically decidable -- `ClassTierService.apply_bonuses`
+        does not qualify (`mechanism_state_caller_check.py`'s own `orphan_with_callers` check
+        confirmed a real, non-test caller when `orphan` was tried first). But `done` overstates it
+        too: `apply_bonuses()`'s own `_lookup(class_id)` returns `None` (a no-op) for every real
+        entity today, because nothing in `src/` ever sets `class_id_set` to a tier value during real
+        play (confirmed by direct grep -- `class_id_set` appears only in `patches.py`/`apply.py`/
+        `updates.py`'s own generic plumbing, never in a production AI/decision producer, matching
+        DEV-006's own "Scope note"). So: the consumer is real, live, and called every tick; the
+        producer that would make it do anything doesn't exist. `partial` matches
+        `xp_leveling`/`skill_unlocks`'s own "real, tested, wired code, defeated by an unmet
+        production precondition" shape more precisely than either `gap` (no code) or `orphan` (zero
+        callers) would.
+
+        **Why `observed`, not `contradicted`, and why this is a `state` question, not a `verdict`
+        one (peer question, 2026-09-23 PR review, answered here so the next reader doesn't re-derive
+        it)**: this entry's own schema comment above is explicit that `contradicted` is reserved for
+        `state: done` plus a *runtime* instrument (census/scenario/corpus_run) finding the claimed
+        behavior doesn't actually happen -- `camp`'s own disposition fits exactly that: `state: done`
+        and a real corpus/world-composition check. This entry has neither precondition: `state` is
+        `partial`, not `done` (the incompleteness is already carried by `state`, not left for
+        `verdict` to carry too), and the evidence gathered here is `code_trace` -- confirms what the
+        code *says* (a real caller exists, `class_id_set` has zero production writers), never that
+        reachable code has (or lacks) its claimed runtime effect, per this file's own STATIC vs
+        RUNTIME comment above. Using `contradicted` here would misapply the vocabulary on both axes
+        at once, not just one. If a future runtime instrument (a real corpus/scenario run) confirms
+        `class_id_set` is genuinely never set across real play, the right move is not changing this
+        `verdict` to `contradicted` -- it's re-deriving `state` itself against `xp_leveling`'s own
+        precedent (a `partial` mechanism that stays `partial` under runtime confirmation, since the
+        code is real and correct, just precondition-starved) or reconsidering whether `partial` even
+        applies to code with zero real-world triggers yet. Not decided here; this is evidence for
+        that future check, not a resolution of it.
+        The `-> class_assignment` `depends_on` edge removed 2026-09-19 on the
+        (now-corrected) zero-code premise is NOT restored here -- edge semantics were that ticket's
+        own deliberate, separate exercise (`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
+        RESOLUTION`), out of this ticket's own scope; flagged as a real re-open candidate for
+        whoever next touches this entry's edges, not decided unilaterally here. Card desc corrected
+        to cite DEV-006 and this real infrastructure instead of "not even a stub."
   - id: aging_death
     layer: entity
     systems: [progression]
@@ -604,6 +670,37 @@ mechanisms:
         within a single real Kernel tick (positive control); `max_age_ticks=5000` (above) leaves
         the entity alive (negative control). Satisfies §5.1(a) directly -- the outcome is fully
         computed within the one-tick scenario window, no horizon-weakening needed.
+
+        **Addendum, 2026-09-23 (TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT)**: the
+        atlas card's own desc calls `demographics/cohort.py::compute_elder_attribute_update()` "a
+        genuine orphan... a repo-wide search for its own name finds only its definition and its
+        internal self-call... nothing calls it on a live entity." That claim is now false: a direct
+        code read finds a real call site inside this entry's own bound method --
+        `LifecycleSystem.resolve_lifecycle()` (`src/systems/lifecycle_systems/lifecycle.py:162-167`)
+        calls it on every forward transition into `LifeStage.ELDER`, added by `git blame`-confirmed
+        commit `5993cac368` (2026-08-31) -- predating the card's "genuine orphan" claim, which
+        should have found this caller and did not. A second, related card claim is stale for the
+        same reason: the card's own "declared LifeStage enum (CHILD/ADULT/ELDER)... defaults to
+        ADULT and never transitions" is also false as of the same 2026-08-31 commit --
+        `resolve_lifecycle()`'s own `life_stage_set=target_stage` line (the block immediately
+        preceding the elder-update call) is a real, live forward-only life-stage transition,
+        landed by the already-closed `TCK-20260824-LIFE-STAGE-TRANSITIONS`. The card's own "three
+        independent, non-communicating age-bracket implementations" framing should now read as (at
+        least) four, with the first (the `LifeStage` enum itself) no longer static. Reachability at
+        real corpus scale is still
+        genuinely open, not resolved here: the real (not the card's stated "default 10,000", itself
+        stale -- `src/core/state.py:165` reads `max_age_ticks: int = 70 *
+        TICKS_PER_FANTASY_YEAR` = 20,160,000 ticks) default death age is numerically above the
+        ELDER threshold (60 fantasy years = 17,280,000 ticks, `src/ai/life_stage.py`), so an entity
+        is theoretically alive as an ELDER for up to ~2.88M ticks before dying of old age -- but no
+        real corpus/scenario run at that tick-depth has been executed to confirm the transition
+        actually fires in practice (every real corpus run cited elsewhere in this registry runs
+        1000-5000 ticks total, ~3-4 orders of magnitude short). Matches this same epic's own
+        null-result-horizon caution (`docs/plans/mechanic_verification_scenarios_proposal.md` §5.1)
+        -- code and caller both real, real-play reachability unconfirmed either way, not decided
+        here. `state` unchanged (`done` -- this entry's own dominant OLD_AGE-death claim is
+        independently scenario-verified above and unaffected by this addendum). Card desc corrected
+        to drop the "nothing calls it" claim and cite this real caller instead.
   - id: succession
     layer: entity
     systems: [progression]
@@ -876,6 +973,30 @@ mechanisms:
         own "structurally real, currently unexercised" framing -- wounds are created BY combat
         resolution as a direct result of its own damage calculation, a textbook functional
         prerequisite, fully exercised in real play.
+
+        **Addendum, 2026-09-23 (TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT)**: the
+        atlas card's own desc frames Wound and Scar as one continuous lifecycle ("Once a Wound
+        heals, it may leave behind a smaller Scar... has a chance to") without citing
+        `docs/guidelines/intentional_divergences.md` DEV-005 (`TCK-20260824-WOUND-HEALING-DECISION`)
+        -- confirmed by direct code read that DEV-005 is still the live state: `heal_wound()` and
+        `get_diagnosis_quality()` were deleted outright (a repo-wide search for `heal_wound`/
+        `create_wound`/`ScarState(` finds `create_wound()` real and called, `heal_wound` absent
+        entirely). Wounds are declared **permanent** by that ticket's own decision, not merely
+        unhealed-so-far -- the card's "may heal, may scar" framing describes a decision this
+        codebase deliberately reversed, not an open probability. Separately, `ScarState`
+        (`src/core/state.py`) and `WoundUpdate.scars_add` remain real, typed, and apply-path-wired
+        (`patches.py:672` reads `scars_add` if present, `tactical_decision` reads
+        `get_scar_stat_penalties()` if any exist) -- but with `heal_wound()` gone, nothing in `src/`
+        ever populates `scars_add`, so Scar formation itself is zero-producer today: correct, wired
+        code with no caller, the same shape as `camp`, scoped to the Scar half of this entry only.
+        `state` stays `done` -- Wound infliction, this entry's dominant, title-bearing claim, remains
+        real and fully exercised -- but Scar formation specifically should be read as `orphan`-shaped
+        indefinitely under DEV-005's own permanent-wounds decision: `TCK-20260824-TACTICAL-WOUND-
+        SCAR-WIRING` (closed, DEV-005's own 2026-08-29 update) already confirmed scar formation
+        "remains a zero-producer follow-up" and no later ticket tracks building one -- this is a
+        known, documented, deliberately-unticketed gap under the permanence decision, not a pending
+        follow-up. Card desc corrected to drop the "has a chance to" framing and cite DEV-005
+        directly.
   - id: status_effects
     layer: entity
     systems: [combat]
@@ -1116,6 +1237,23 @@ mechanisms:
         dependent, and its own code is confirmed deleted (see that entry's own verified block), so
         it offers no further lead. Left unbound rather than guessed; flagged for the roadmap
         session.
+
+        **Addendum, 2026-09-23 (TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT)**: separate
+        from the binding ambiguity above, the atlas card's own desc names a specific real caveat
+        within this entry's own claimed scope -- `place_attachment: Dict[RegionID, float]` (the
+        card's own "affection to a city" half) accumulates for real (`+0.001/tick` while present in
+        a region, `src/systems/social_systems/memory.py`) and is durably written on the apply path
+        (`relationships.py`, `core/updates.py`), but a direct repo-wide check for any *read* of
+        `place_attachment` outside its own writer/apply/serialization chain finds none -- no decision
+        logic, goal scorer, or gate consumes it anywhere in `src/`. Confirmed matching the card's own
+        claim exactly (it already stated this correctly) -- recorded here as this entry's own
+        `verified` block per AC #2, since the existing block above only covers the binding
+        ambiguity, not this caveat. `state` unchanged (`done` -- the entry's dominant claim, personal
+        sentiment/trust/nemesis tracking, is real, live, and has real consumers: Combat's Bond
+        Synergy modifier, party/group recruitment scoring, `SocialAppraisalSystem`'s hard-cancel
+        gate). `place_attachment` specifically is a write-only, zero-effect sub-field within an
+        otherwise-real mechanism -- camp's precondition-gap shape, scoped to one field, not the
+        whole entry.
   - id: motivation_doctrine
     layer: entity
     systems: [cognition]

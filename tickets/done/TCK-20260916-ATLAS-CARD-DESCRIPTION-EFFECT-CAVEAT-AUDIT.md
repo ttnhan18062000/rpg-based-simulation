@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT
-phase: open
+phase: done
 date: 2026-09-16
 tags: [architecture, investigation, schema]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, investigation, schema]
 Re-read every mechanism card's full description for effect-level caveats the badge doesn't carry — `camp` is the confirmed instance, there may be more among the other 74
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -166,11 +166,36 @@ scope to resolve; recorded so it is a decision to make deliberately later, not s
 rediscovered from scratch.
 
 ## Test Summary
-Not yet started.
+`tests/unit/tools/` mechanism suite (257 tests) run clean after every registry/atlas edit, including
+the load-bearing `test_real_atlas_has_no_drift_against_the_real_registry`,
+`test_real_capabilities_has_no_drift_against_the_real_registry`,
+`test_real_wiring_map_has_no_drift_against_the_real_registry`, and
+`test_real_registry_findings_pinned` (`mechanism_state_caller_check.py`'s own baseline, which
+correctly caught and forced correction of a wrong first-attempt `build_diversity: orphan` state to
+`partial` before this ticket closed — see investigation.md). `mechanism_prose_field_drift_check.py`
+(report-only) ran clean: 0 hits across 93 mechanisms. `make mechanism-registry-validate` passes.
 
 ## Files Changed
-None yet (this ticket file only).
+- `registries/mechanisms.yaml` — 1 real state correction (`build_diversity`: `gap` → `partial`,
+  `implemented_by` added), 4 `verified`-block addenda with no state change (`trauma`,
+  `combat_engagement`, `aging_death`, `affection_relationship_bonds`).
+- `docs/brainstorm/rpg_feature_atlas.html` — 6 card `desc` corrections (all 6 findings), plus 1
+  badge `cls` fix (`build_diversity`, tool-regenerated).
+- `docs/brainstorm/simulation_capabilities.html` — 1 tier fix (`build_diversity`, tool-regenerated).
+- `staging_artifacts/TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT/` — plan.md,
+  investigation.md, test_plan.md (this ticket's own required standard-tier artifacts).
 
 ## Completion Summary
-Open. Filed as a real, separately-scoped follow-up per peer review, rather than swept into
-`TCK-20260915-ARTIFACT-STATE-CONVERGENCE`'s own scope.
+**Closed 2026-09-23.** All 73 mechanism-mapped atlas cards' `desc` text actually read (68
+non-`camp`/`motivation_doctrine` by a forked triage pass + independent code-level re-verification,
+`camp`/`motivation_doctrine` already resolved pre-ticket) — AC #1 met, not sampled. 6 real findings
+beyond the two known instances, all with real `code_trace` evidence, one real `state` correction
+(`build_diversity: gap → partial`), four addenda with state unchanged, one quick stale-cross-
+reference fix — AC #2 met, each with a citation to the specific text that surfaced it. Not a
+"handful, not many" negative result (AC #3's own acceptable-negative-result framing) — every flagged
+candidate turned out to have real substance, none were pure false positives. Every correction
+propagated to atlas + capabilities (wiring map checked, needed no change) per the ticket's own Scope
+item 3/AC #2. Full findings and disposition reasoning in `staging_artifacts/.../investigation.md`.
+Hand-orchestrated closure as part of a peer-planning-directed batch (`rpg-feature-planning`,
+2026-09-23) that also closed `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` (superseded)
+and the `mechanism-system-membership` epic folder.
