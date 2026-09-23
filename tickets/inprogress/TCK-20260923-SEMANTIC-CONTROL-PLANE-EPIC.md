@@ -77,16 +77,46 @@ Milestone dispositions (this epic closes only when every row below has one):
 | Milestone | Ticket | Disposition |
 |---|---|---|
 | M0 — schema + validator | `TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION` | **DONE** 2026-09-23, branch `semantic-control-plane-m0`, unpushed. Full standard pipeline, 0 blocking gate failures. |
-| M1 — Territory/Control slice | not yet created | **UNBLOCKED** by M0. Gated behind `TCK-20260923-STATUS-VOCABULARY-RECONCILIATION` by owner decision (see below). |
+| M1 — Territory/Control slice | not yet created | **READY** — both gates cleared (M0 done, vocabulary reconciliation done). Next to scope. |
 | M2 — drift detection | not yet created | Gated on M1. |
 | M3 — finding ingestion | not yet created | Permanent stream, startable after M0. Only hard bar: Territory+Combat triage before M4. |
 | M4 — Combat slice + cross-domain view | not yet created | Gated on M1, M2, and M3's narrow triage only. |
 
 Cross-cutting, not a milestone:
-- `TCK-20260923-STATUS-VOCABULARY-RECONCILIATION` (OPEN, standard, P1) — reconciles the four
-  overlapping status vocabularies. **Must land between M0 and M1**: M1 populates the first real
-  rows against the control plane's realization vocabulary, so reconciling afterwards costs a data
-  migration plus a validator change instead of one ticket.
+- `TCK-20260923-STATUS-VOCABULARY-RECONCILIATION` — **DONE** 2026-09-23, landed between M0 and M1 as
+  intended. Deliverable: `docs/plans/status_axis_model.md`.
+
+### Vocabulary reconciliation disposition (recorded 2026-09-23, by the epic owner)
+
+The ticket's central assumption — four genuinely distinct axes, reconcile rather than merge —
+**survived falsification**. All four remain separate; `VALID_STATES`, `VALID_VERDICTS` and
+`VALID_RULE_CLASSIFICATIONS` stay independently enforced.
+
+Decisions now binding on M1 and everything after:
+- **Both homographs keep their words.** `MISSING` (compass §10) × `MISSING` (Rule realization) is
+  *correlation, not equivalence* — different granularity and a different evidentiary bar, since the
+  control plane's `MISSING` requires investigated, evidenced absence while `UNKNOWN` means "not yet
+  looked at." `OFF` × `INERT-OFF` is equivalence in intent; cite `INERT-OFF`'s evidence when both
+  apply. Renaming was rejected because it would have widened M0's already-landed schema.
+- **No new registry field for `STARVED`/`REACH-LIMITED`.** The compass's own §11 admission test was
+  run against a hypothetical `reach` field using `tactical_decision` as the test case, and the field
+  **failed** it twice over: no system consumes a structured reach value (Q4), and `verified.note`
+  already captures the case in full (Q12). Adopted instead: a prose convention — when
+  `verified.verdict: contradicted` pairs with a runtime instrument, the `note` names which of
+  STARVED / REACH-LIMITED / genuinely-broken applies. Deliberately not validator-enforced.
+
+**Material finding, wider than this ticket.** Compass §10 is far weaker than its prominence
+suggests: **zero** mechanism rows carry a §10 value, no validator checks any §10 term, and only 2 of
+its 10 values (`STARVED`, `REACH-LIMITED`) are defined in prose anywhere in the repo. The axis model
+therefore ranks §10 as the *least* authoritative of the four axes and explicitly declines to bind
+`orphan` × `DORMANT`, recording it as undefined rather than inferring a mapping onto an undefined
+word. `skeleton` likewise has no §10 counterpart (zero hits). **This is a live gap in the compass
+itself, not a control-plane problem — it needs an owner decision, not a ticket from this epic.**
+
+Verified by the epic owner against the branch: `registries/mechanisms.yaml` changed by exactly one
+3-line comment cross-reference (AC 7 holds — no `state` or `verdict` value altered), and M0's three
+schema registries are byte-identical, with `tools/semantic_control_plane/registry.py` changed only
+by a 3-line docstring pointer (AC 8 holds).
 
 ## Related Docs
 - `docs/plans/simulation_semantic_control_plane/README.md`
