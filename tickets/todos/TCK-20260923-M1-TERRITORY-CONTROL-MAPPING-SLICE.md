@@ -151,17 +151,31 @@ at execution time:
 
 ## Assumptions / Open Questions
 
-- **Expected outcome, stated so it can be falsified rather than manufactured:** TERR-01 and TERR-03
-  are expected to classify `CONFLICTING`. TERR-01 requires seven independently-representable
-  relation types and TERR-03 forbids collapsing contested cases to one winner, while the
-  implementation carries a single `RegionState.owner_faction_id` slot;
-  `territory-control.md:76` already states that slot "is itself incompatible with the divergence
-  TERR-01/TERR-03 require." **If the evidence does not support `CONFLICTING`, record what it does
-  support.** Do not reach for `CONFLICTING` because this ticket predicted it.
-- **Open:** TERR-02 says a bare ownership-field assignment never constitutes control, and the
-  implementation's control signal is largely that assignment. Whether this is `CONFLICTING` or
-  `PARTIAL` depends on whether `FactionInfluenceService` supplies a real causal requirement. Decide
-  on evidence.
+- **TERR-01 `CONFLICTING` is settled design, not a prediction to test.** *Confirmed 2026-09-23 by
+  the Catalog's author; verified in the doc.* `architecture.md:132` uses TERR-01 as its own worked
+  example: "`TERR-01` is `CONFLICTING` (a shared field actively serves three incompatible concepts)
+  even though the mechanisms reading `owner_faction_id` are all `state: done` — the code works
+  exactly as written; the semantics it expresses are wrong." TERR-03 follows the same shape.
+  Still record the evidence rather than copying the verdict across — but this is a documented
+  precedent to apply, not an open question.
+
+- **Use this litmus test for every `CONFLICTING` vs `PARTIAL` call in this slice** (the Catalog's
+  own consistent rule across precedents):
+  - **`CONFLICTING`** — the current representation *actively, structurally forecloses* representing
+    the Rule's required distinction. Usually one overloaded field or slot serving 2+ incompatible
+    concepts at once, so the missing piece cannot be added without restructuring.
+    `RegionState.owner_faction_id` is the textbook overloaded-slot case.
+  - **`PARTIAL`** — a real, valid, non-contradictory *narrower slice*. It doesn't claim
+    completeness, but nothing blocks eventually adding the rest. Precedent:
+    `docs/world_rules/README.md:725`, Batch 11B's culture reassessment — "PARTIAL, not CONFLICTING…
+    nothing treats its four axes as culture's complete definition."
+
+- **Open — genuinely undecided, decide on evidence:** TERR-02 says a bare ownership-field assignment
+  never by itself constitutes real control. Per the Catalog author, this sits on a *different axis*
+  than the one above: the question is `SUPPORTED` vs `MISSING` (does a real causal-basis mechanism
+  exist at all?), not `PARTIAL` vs `CONFLICTING`. It turns on whether `FactionInfluenceService`
+  supplies a genuine causal requirement — presence, administrative reach, enforcement, connectivity
+  — or merely writes the ownership field. Nothing is pre-loaded here deliberately.
 - **Open:** where the generated Territory view lives (path and format) is undecided — M0
   deliberately left rendering out. Follow the existing generated-view precedent
   (`mechanism_system_rollup_view.md` and siblings are regenerated, never hand-edited) and state the
@@ -198,13 +212,23 @@ _To be completed by the implementer._
 
 ## Findings Recorded During Scoping
 
-1. **`TERR-04` is a dangling cross-reference.** `territory-control.md:30` cites "jurisdiction
-   (legal/institutional applicability, see TERR-04)" but no `TERR-04` heading exists anywhere in
-   `docs/world_rules/` — the file's own numbering runs 01, 02, 03, 05. Either the Rule was removed
-   or renamed without updating the reference, or it was never written. This matters beyond
-   cosmetics: M0's validator resolves `rule_id` against a **live scan** of `docs/world_rules/`
-   headings, so any attempt to map `TERR-04` fails validation correctly. Needs its own ticket
-   against the frozen Catalog — deliberately not fixed here.
+1. **`TERR-04` is a stale citation, NOT a coverage gap.** *Resolved 2026-09-23 by the Catalog's
+   author (`world-rule-catalog-design`); verified against the file before recording here.*
+   `territory-control.md:30` cites "jurisdiction (legal/institutional applicability, see TERR-04)",
+   but jurisdiction was admitted as an **Inherited entry**, not a new Domain Rule — a direct reuse of
+   Batch 10's `LAW-03` with no new semantics (`territory-control.md:217`, the heading
+   "Jurisdiction's territorial basis is one declared scope among several", which carries **no
+   TERR-0N ID**, and `:324`, "Inherited jurisdiction entry → Law/Enforcement (LAW-03, Batch 10)").
+   Under the Catalog's own admission discipline, Inherited entries never receive a local ID, so a
+   `TERR-04` heading was never going to exist *by design*. Corroborating: none of TERR-01's other
+   six relation types carries a self-referential `TERR-0N` pointer either — "one ID per relation
+   type" was never the pattern.
+
+   So the numbering gap is correct and nothing is missing from the Catalog. Only TERR-01's inline
+   citation is wrong — a leftover from a drafting guess made before the admission pass concluded
+   Inherited. **M0's validator rejecting `TERR-04` is correct behavior, not evidence against the
+   Catalog.** Still deliberately not fixed here: a one-line edit to a frozen doc wants its own
+   traceability. Tracked as `TCK-20260923-TERR01-STALE-JURISDICTION-CITATION` (hotfix).
 2. **`regional_sovereignty`'s binding was already wrong once.** `RegionalSovereigntyService` has
    zero real callers; the live mechanism is `FactionInfluenceService`. Recorded here so M1 does not
    re-introduce the plausible-but-dead binding.
