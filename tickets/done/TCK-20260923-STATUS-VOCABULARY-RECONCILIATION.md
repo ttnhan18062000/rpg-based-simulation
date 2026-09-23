@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260923-STATUS-VOCABULARY-RECONCILIATION
-phase: open
+phase: done
 date: 2026-09-23
 tags: [architecture, schema, taxonomy, registry, documentation]
 ---
@@ -17,7 +17,7 @@ Reconcile the four overlapping mechanism/rule status vocabularies into one decla
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -176,25 +176,123 @@ change. This ticket must land **between M0 and M1**.
 
 ## Implementation Notes
 
-_To be completed by the implementer._
+Implemented exactly per `staging_artifacts/TCK-20260923-STATUS-VOCABULARY-RECONCILIATION/plan.md`
+Steps 1-9, with the architecture-review advisory folded into Steps 1 and 8:
 
-Sequencing note for whoever picks this up: the registry vocabularies (1) and (2) are the only ones
-with real data behind them (93 mechanism rows). Treat them as the load-bearing reference and bind
-the others to them, rather than reshaping them to fit two vocabularies that have never been applied
-to a row.
+- **Step 1** — authored `docs/plans/status_axis_model.md` (new doc): four-axis table (A/B enforced
+  with 93 real rows, D enforced but empty, C aspirational/unenforced — explicitly ranked, not
+  co-equal), a 7-row binding table covering all AC-2-required pairs (`MISSING`×2, `OFF`/`INERT-OFF`,
+  `partial`×`PARTIAL`, `gated`×`OFF`, `orphan`×`DORMANT`, `skeleton`'s non-relationship), a closing
+  "all other cross-axis value pairs not listed above have no defined relationship" line (the
+  architecture-review advisory #2, so AC 2 is satisfied without enumerating the full combinatorial
+  cross product), both homograph decisions (§3: keep both words in both cases), and the
+  STARVED/REACH-LIMITED decision (§4: no new registry field — §11 admission test fails Q4/Q12 against
+  `tactical_decision`; a documented `verified.note` prose convention instead, explicitly not
+  validator-enforced, AC 6 not triggered). Used the plan's corrected citations
+  (`docs/world_rules/README.md:172`, `roadmap.md:581`,
+  `simulation_semantic_control_plane/architecture.md:189-190`), verified by direct grep before
+  writing, not investigation.md's original mis-cited `roadmap.md:171-177`.
+- **Steps 2-6** — one-line cross-reference pointers added at all four AC-5-required homes
+  (`registries/mechanisms.yaml` header after line 99, `tools/mechanism_registry/registry.py`
+  docstring before `Usage:`, `core_rpg_design_direction.md` §10 after the REACH-LIMITED bullet,
+  `simulation_semantic_control_plane/architecture.md` end of §4) plus the optional fifth pointer
+  (`tools/semantic_control_plane/registry.py` docstring). All are prose-only pointer lines, no
+  vocabulary content duplicated, no enum/frozenset touched.
+- **Step 7** — new permanent test `tests/unit/tools/test_status_axis_model_cross_references.py`
+  proving the doc exists/is non-empty and all four required homes contain the literal string
+  `status_axis_model.md`. 2/2 passed.
+- **Step 8 (AC 7)** — per the architecture-review advisory #1, built a real deterministic check
+  instead of eyeballed prose: a small script that parses `git diff registries/mechanisms.yaml`'s
+  hunk headers and fails loudly if any changed line falls at/after the pre-edit `layers:` boundary
+  (original line 109). Run once (scratchpad-only, not committed — this is a one-time/CI-adjacent
+  verification per the plan's own Step 8 reasoning, not a permanent 93-row baseline test that would
+  false-positive on every legitimate future `state`/`verdict` correction): output confirmed
+  "AC-7 OK: zero changed lines at/after the layers: boundary." Cross-checked by reading the full
+  `git diff registries/mechanisms.yaml` directly — the only hunk is 3 added header-comment lines
+  between the existing "instrument finding..." line and "Validate with:", entirely inside the
+  header block.
+- **Step 9** — ran the three scoped pytest commands (all green: 83 passed
+  `test_mechanism_registry.py`, 25 passed `test_semantic_control_plane_schema.py`, 2 passed the new
+  cross-reference test). Confirmed AC 8: `git diff --stat` on
+  `registries/rule_classifications.yaml`, `registries/rule_mechanism_edges.yaml`,
+  `registries/mechanism_causal_edges.yaml` shows no output (untouched); `git diff
+  tools/semantic_control_plane/registry.py` shows a docstring-only 3-line addition, with
+  `VALID_RULE_CLASSIFICATIONS`/`VALID_RULE_MECHANISM_EDGE_TYPES` unchanged, confirmed both by the
+  diff itself and by the full unchanged pass of `test_semantic_control_plane_schema.py` (which
+  directly asserts those frozensets' exact value sets).
+
+No deviations from the plan's approved shape. Ran `graphify update .` after adding the new test
+file under `tests/`.
+
+Sequencing note (retained from Scope): the registry vocabularies (1) and (2) were the only ones with
+real data behind them (93 mechanism rows) going in. Treated them as the load-bearing reference per
+the plan, rather than reshaping them to fit two vocabularies that have never been applied to a row.
 
 ## Test Summary
 
-_To be completed by the implementer._
+AC 4 resolved to "no new registry field," so no validator accept/reject fixture pair was needed
+(AC 6 not triggered — recorded explicitly as a decision, not silently skipped).
 
-Expected shape: a validator test only if AC 4 adds a field (normal accept + deliberately-broken
-fixture reject per AC 6), plus a regression assertion for AC 7 that no existing `state`/`verdict`
-value changed. Mostly a documentation-contract ticket; do not manufacture coverage beyond this.
+Ran, all green:
+- `python3 -m pytest tests/unit/tools/test_mechanism_registry.py -q` — 83 passed
+- `python3 -m pytest tests/unit/tools/test_semantic_control_plane_schema.py -q` — 25 passed
+- `python3 -m pytest tests/unit/tools/test_status_axis_model_cross_references.py -q` — 2 passed (new)
+
+AC 7's zero-row-reclassification requirement was verified by a deterministic script (parses
+`git diff registries/mechanisms.yaml`'s hunk headers, fails if any changed line falls at/after the
+pre-edit `layers:` boundary) plus manual confirmation of the actual diff — both show the only change
+is 3 added header-comment lines, no row content touched. Not run as a permanent pytest test per the
+plan's own reasoning (a hardcoded 93-row baseline would break on every legitimate future
+`state`/`verdict` correction, an unrelated maintenance tax).
+
+Used `/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3` — the bare `python3` on PATH
+lacks `pydantic` and fails collecting `tests/conftest.py`, a known local-sandbox gap, not a real
+test failure.
 
 ## Files Changed
 
-_To be completed by the implementer._
+- `docs/plans/status_axis_model.md` (new) — the axis-model doc itself: four-axis table, binding
+  table, homograph decisions, STARVED/REACH-LIMITED decision, §10 enforcement-status statement.
+- `registries/mechanisms.yaml` — two-line cross-reference added to the header comment block
+  (lines 100-101), no row content changed.
+- `tools/mechanism_registry/registry.py` — three-line cross-reference added to the module docstring
+  before `Usage:`, no code/constant changed.
+- `docs/brainstorm/core_rpg_design_direction.md` — cross-reference + aspirational-status note added
+  after the §10 REACH-LIMITED bullet; the ten-value code block itself unchanged.
+- `docs/plans/simulation_semantic_control_plane/architecture.md` — cross-reference added at the end
+  of §4; `VALID_RULE_CLASSIFICATIONS`'s code block unchanged.
+- `tools/semantic_control_plane/registry.py` — optional docstring-only cross-reference added
+  (Step 6); `VALID_RULE_CLASSIFICATIONS`/`VALID_RULE_MECHANISM_EDGE_TYPES` frozensets unchanged.
+- `tests/unit/tools/test_status_axis_model_cross_references.py` (new) — permanent test proving the
+  axis-model doc exists and all four AC-5-required homes reference it.
+- `staging_artifacts/TCK-20260923-STATUS-VOCABULARY-RECONCILIATION/plan.md` — added a "Deviations"
+  section documenting the AC-7 verification-shape change (see Implementation Notes).
+- `staging_artifacts/TCK-20260923-STATUS-VOCABULARY-RECONCILIATION/investigation.md`,
+  `staging_artifacts/TCK-20260923-STATUS-VOCABULARY-RECONCILIATION/test_plan.md` — created during
+  this run's own Investigate/Plan phases (untracked prior to this close); listed here per ticket
+  hygiene even though not authored by the Implement phase itself.
+- `tickets/inprogress/TCK-20260923-STATUS-VOCABULARY-RECONCILIATION.md` — this ticket file (Status,
+  Implementation Notes, Test Summary, Files Changed, Completion Summary).
+- `agent-monitoring/data/2026-W39/tools.jsonl` — auto-updated per-tool-call shard (pre-existing
+  modification from prior session tool calls, not authored by this Implement pass).
+
+No `src/` files were changed.
 
 ## Completion Summary
 
-_To be completed by the implementer._
+Reconciled the four overlapping mechanism/rule status vocabularies (registry `state`, registry
+`verified.verdict`, compass §10 runtime status, control-plane Rule realization) into one declared
+axis model at `docs/plans/status_axis_model.md`, without merging any of them and without
+reclassifying any existing mechanism row. The doc states which axis is canonical for which question,
+binds every cross-axis value pair the ticket named (both homographs, `partial`/`PARTIAL`,
+`gated`/`OFF`, `orphan`/`DORMANT`, `skeleton`'s non-relationship) with an explicit
+equivalence/implication/correlation/undefined label, and records two decisions: keep both homograph
+pairs as separate words (never rename, since renaming Axis D would widen M0's already-landed schema
+out of scope), and represent STARVED/REACH-LIMITED as a documented `verified.note` prose convention
+rather than a new registry field (§11 admission test fails on no current consumer and duplication of
+the existing `note` field). All four AC-5-required vocabulary homes now cross-reference the new doc,
+proven by a new permanent test. AC 7 (zero mechanism row reclassification) and AC 8 (M0 schema
+byte-identical) were both verified deterministically: the only change to `registries/mechanisms.yaml`
+is two header-comment lines, and `tools/semantic_control_plane/registry.py`'s only change is a
+docstring addition with both frozensets untouched. All three scoped pytest suites pass (83 + 25 + 2
+tests, 110 total).

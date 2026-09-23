@@ -142,6 +142,11 @@ prohibition (`TERR-01`: distinctness is REQUIRED, therefore silently collapsing 
 invalid) without a new enum value. Add `FORBIDDEN` only if real future work proves REQUIRED/
 PERMITTED insufficient — not because a three-value enum is aesthetically cleaner.
 
+See `docs/plans/status_axis_model.md` for the full cross-axis binding table between this Rule
+realization vocabulary, the Mechanism Registry's `state`/`verified.verdict` axes, and the compass's
+§10 runtime-status vocabulary — including the `MISSING` and `OFF`/`INERT-OFF` homograph decisions
+this section's own values are party to.
+
 ## 5. Delivery truth reuses two existing mechanisms — no Conformance Profile yet
 
 The World Rule Catalog's own batch admission discipline already has a category for exactly

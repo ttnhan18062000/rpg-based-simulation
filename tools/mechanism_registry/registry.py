@@ -48,6 +48,10 @@ the first -- "build the failure loud" (this ticket's own Implementation Notes). 
 keys()` (invariant 11) follows the same shape but is a separate function, not folded into
 `validate()`'s own body -- see its own docstring for why.
 
+See `docs/plans/status_axis_model.md` for how this module's `VALID_STATES`/`VALID_VERDICTS` axes
+relate to the compass's §10 runtime-status vocabulary and the semantic control plane's Rule
+realization vocabulary -- the same shape, three deliberately separate axes, never conflated.
+
 Usage:
   python3 tools/mechanism_registry/registry.py               # validate the real committed file
   python3 tools/mechanism_registry/registry.py <path>         # validate an arbitrary file (used by tests)

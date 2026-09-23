@@ -26,6 +26,9 @@ since a parsed dict can no longer show that a key was written twice.
 never modified) rather than re-parsing `registries/mechanisms.yaml`. `rule_id` resolution reuses
 `rule_catalog.scan_rule_ids()`.
 
+See `docs/plans/status_axis_model.md` for how `VALID_RULE_CLASSIFICATIONS` relates to the Mechanism
+Registry's `state`/`verified.verdict` axes and the compass's §10 runtime-status vocabulary.
+
 Usage:
   python3 tools/semantic_control_plane/registry.py    # validate the real committed files
 """
