@@ -27,10 +27,24 @@ an arbitrary ISO-week range (`--since-week`/`--through-week`) so a before/after 
 Batch B's advisory hooks (cd-prefix nudge, search-before-grep nudge) is a single command, diffed
 against a prior run's `--json` output.
 
-Read-only: never opens `agent-monitoring/data/` for writing.
+**Reproducibility caveat, found the hard way (TCK-20260923-BASH-MIX-REF-PINNING):** a plain
+filesystem read (the default, `--data-dir`) reflects THIS worktree's own git state, which can be
+silently behind `origin/main` -- one real case found this ticket's own currently-behind worktree
+give 40 `search_docs` calls for a "closed" ISO week against 58 on a worktree that was current, an
+18-call/45% understatement from staleness alone, not from any real corpus difference. A "closed"
+week is also never really closed: every PR merge stages `agent-monitoring/`, so a session whose
+real activity happened during week W but whose PR lands later still appends W-stamped rows well
+after that week ends. For any before/after comparison, pass `--ref origin/main` (or any other
+exact ref/SHA) to pin the read to a git tree via `git ls-tree`/`git show` instead of the working
+tree -- the report then carries `measured_ref`/`measured_sha` so two runs' provenance is checkable
+before treating a difference between them as a real signal rather than worktree drift.
+
+Read-only: never opens `agent-monitoring/data/` for writing. `--ref` mode never touches the
+working tree at all -- it reads git blobs only.
 """
 import argparse
 import json
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -91,6 +105,64 @@ def load_tools_rows(
     return rows
 
 
+def resolve_ref_sha(ref: str, repo_root: Path = REPO_ROOT) -> str:
+    """`git rev-parse <ref>` -- the exact commit a `--ref` measurement is pinned to, so two runs'
+    provenance is checkable before treating a difference between them as a real signal."""
+    result = subprocess.run(
+        ["git", "rev-parse", ref], capture_output=True, text=True, check=True, cwd=str(repo_root),
+    )
+    return result.stdout.strip()
+
+
+def load_tools_rows_from_ref(
+    ref: str, source: str = "tools",
+    since_week: "str | None" = None, through_week: "str | None" = None,
+    repo_root: Path = REPO_ROOT,
+) -> "tuple[list, str]":
+    """Reads agent-monitoring/data/*/<source>.jsonl shards from a git ref's tree via `git ls-tree`
+    + `git show`, never the working tree -- immune to a worktree being behind `origin/main` (see
+    module docstring's reproducibility caveat). Returns (rows, resolved_sha)."""
+    sha = resolve_ref_sha(ref, repo_root)
+
+    listing = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", sha, "--", "agent-monitoring/data/"],
+        capture_output=True, text=True, check=True, cwd=str(repo_root),
+    ).stdout
+
+    shard_paths = []
+    suffix = f"/{source}.jsonl"
+    for line in listing.splitlines():
+        line = line.strip()
+        if not line.endswith(suffix):
+            continue
+        parts = line.split("/")
+        if len(parts) != 4:  # agent-monitoring/data/<week>/<source>.jsonl
+            continue
+        week = parts[2]
+        if since_week and week < since_week:
+            continue
+        if through_week and week > through_week:
+            continue
+        shard_paths.append((week, line))
+
+    rows: list = []
+    for _week, path in sorted(shard_paths):
+        content = subprocess.run(
+            ["git", "show", f"{sha}:{path}"],
+            capture_output=True, text=True, check=True, cwd=str(repo_root),
+        ).stdout
+        for line in content.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    return rows, sha
+
+
 def bash_head(input_summary: str) -> str:
     if not input_summary:
         return "?"
@@ -111,6 +183,7 @@ def bash_subcommand_key(head: str, input_summary: str) -> str:
 
 def build_bash_mix_report(
     rows: list, since_week: "str | None" = None, through_week: "str | None" = None,
+    measured_ref: "str | None" = None, measured_sha: "str | None" = None,
 ) -> dict:
     bash_rows = [r for r in rows if r.get("tool") == "Bash"]
     search_docs_calls = sum(1 for r in rows if r.get("tool") == SEARCH_DOCS_TOOL_NAME)
@@ -144,6 +217,8 @@ def build_bash_mix_report(
         "ticket_id": TICKET_ID,
         "since_week": since_week,
         "through_week": through_week,
+        "measured_ref": measured_ref,
+        "measured_sha": measured_sha,
         "total_rows_seen": total_all,
         "total_bash_calls": total_bash,
         "bash_share_of_all_calls": (total_bash / total_all) if total_all else 0.0,
@@ -171,6 +246,12 @@ def render_markdown(report: dict, top: int = 12) -> str:
     lines.append(f"Window: {window}. Rows seen: {report['total_rows_seen']:,}. "
                  f"Bash calls: {report['total_bash_calls']:,} "
                  f"({_pct(report['bash_share_of_all_calls'])} of all rows).")
+    if report.get("measured_ref"):
+        lines.append(f"Measured from git ref `{report['measured_ref']}` "
+                     f"(resolved SHA `{report['measured_sha']}`) -- not the local working tree.")
+    else:
+        lines.append("Measured from the local working tree (no `--ref` given) -- may be behind "
+                     "`origin/main`; pass `--ref origin/main` for a reproducible, pinned reading.")
     lines.append("")
     lines.append(f"`cd`: {report['cd_calls']:,} calls "
                  f"({_pct(report['cd_share_of_bash_calls'])} of Bash calls).")
@@ -203,15 +284,22 @@ def render_markdown(report: dict, top: int = 12) -> str:
 
 def main(argv: "list | None" = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (mainly for testing).")
+    parser.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (mainly for testing). Ignored if --ref is given.")
+    parser.add_argument("--ref", default=None, help='Read shards from a git ref/SHA tree instead of the working tree (e.g. "origin/main") -- recommended for any before/after comparison; see module docstring.')
     parser.add_argument("--since-week", default=None, help='Inclusive lower ISO week bound, e.g. "2026-W30".')
     parser.add_argument("--through-week", default=None, help='Inclusive upper ISO week bound, e.g. "2026-W39".')
     parser.add_argument("--json", action="store_true", help="Print the raw report dict as JSON instead of markdown.")
     args = parser.parse_args(argv)
 
-    data_dir = Path(args.data_dir) if args.data_dir else DEFAULT_DATA_DIR
-    rows = load_tools_rows(data_dir, args.since_week, args.through_week)
-    report = build_bash_mix_report(rows, args.since_week, args.through_week)
+    if args.ref:
+        rows, sha = load_tools_rows_from_ref(args.ref, "tools", args.since_week, args.through_week)
+        report = build_bash_mix_report(
+            rows, args.since_week, args.through_week, measured_ref=args.ref, measured_sha=sha,
+        )
+    else:
+        data_dir = Path(args.data_dir) if args.data_dir else DEFAULT_DATA_DIR
+        rows = load_tools_rows(data_dir, args.since_week, args.through_week)
+        report = build_bash_mix_report(rows, args.since_week, args.through_week)
 
     if args.json:
         sys.stdout.write(json.dumps(report, indent=2, sort_keys=True) + "\n")

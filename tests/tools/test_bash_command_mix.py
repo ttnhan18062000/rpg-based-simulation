@@ -28,8 +28,10 @@ from bash_command_mix import (  # noqa: E402
     bash_subcommand_key,
     build_bash_mix_report,
     load_tools_rows,
+    load_tools_rows_from_ref,
     load_tools_rows_with_line_count,
     render_markdown,
+    resolve_ref_sha,
     week_shards,
 )
 
@@ -291,3 +293,86 @@ def test_cli_runs_with_json_flag_and_prints_valid_report():
     assert report["since_week"] == "2026-W30"
     assert report["through_week"] == "2026-W39"
     assert sum(report["bash_head_counts"].values()) == report["total_bash_calls"]
+    assert report["measured_ref"] is None
+    assert report["measured_sha"] is None
+
+
+# ---------------------------------------------------------------------------
+# --ref mode — git-blob-based reading, immune to worktree staleness
+# (TCK-20260923-BASH-MIX-REF-PINNING)
+# ---------------------------------------------------------------------------
+
+def test_resolve_ref_sha_returns_a_real_sha_for_head():
+    sha = resolve_ref_sha("HEAD")
+    assert len(sha) == 40
+    assert all(c in "0123456789abcdef" for c in sha)
+
+
+def test_load_tools_rows_from_ref_is_a_prior_or_equal_snapshot_of_the_working_tree():
+    """HEAD's committed tools.jsonl shards can never exceed the live working tree's row count —
+    the corpus is append-only between commits (every session's own PostToolUse hook only adds
+    rows), so a --ref HEAD read is always a prior-or-equal snapshot, never a divergent one. Exact
+    equality is NOT asserted here on purpose: this test runs against the real, live corpus, and a
+    concurrent session's hook write between this test's two reads would make the working tree
+    strictly ahead of HEAD — which is precisely the staleness gap this feature exists to make
+    checkable via measured_sha, not a bug in either read."""
+    fs_rows = load_tools_rows(_REAL_DATA_DIR)
+    ref_rows, sha = load_tools_rows_from_ref("HEAD")
+
+    assert len(sha) == 40
+    assert len(ref_rows) > 0
+    assert len(ref_rows) <= len(fs_rows)
+
+
+def test_load_tools_rows_from_ref_respects_week_range():
+    all_rows, _ = load_tools_rows_from_ref("HEAD")
+    bounded_rows, _ = load_tools_rows_from_ref("HEAD", since_week="2026-W30", through_week="2026-W30")
+    assert len(bounded_rows) <= len(all_rows)
+    assert len(bounded_rows) > 0
+
+
+def test_build_bash_mix_report_carries_measured_ref_and_sha_when_given():
+    report = build_bash_mix_report([], measured_ref="origin/main", measured_sha="abc123")
+    assert report["measured_ref"] == "origin/main"
+    assert report["measured_sha"] == "abc123"
+
+
+def test_render_markdown_shows_measured_ref_when_present():
+    report = build_bash_mix_report([], measured_ref="origin/main", measured_sha="deadbeef")
+    md = render_markdown(report)
+    assert "origin/main" in md
+    assert "deadbeef" in md
+
+
+def test_render_markdown_warns_local_working_tree_when_ref_absent():
+    report = build_bash_mix_report([])
+    md = render_markdown(report)
+    assert "local working tree" in md
+
+
+def test_cli_ref_mode_prints_measured_ref_and_sha_in_json():
+    result = subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--json", "--ref", "HEAD",
+         "--since-week", "2026-W30", "--through-week", "2026-W30"],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+    )
+    report = json.loads(result.stdout)
+    assert report["measured_ref"] == "HEAD"
+    assert len(report["measured_sha"]) == 40
+    assert sum(report["bash_head_counts"].values()) == report["total_bash_calls"]
+
+
+def test_cli_ref_mode_never_touches_working_tree():
+    """Read-only guard, ref-mode variant: --ref must never write to agent-monitoring/data/, same
+    property the filesystem-mode test proves for the default path."""
+    pre_sizes = _file_size_snapshot()
+    subprocess.run(
+        [sys.executable, str(_MODULE_PATH), "--ref", "HEAD"],
+        cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
+    )
+    post_sizes = _file_size_snapshot()
+
+    deleted = set(pre_sizes) - set(post_sizes)
+    assert not deleted
+    shrunk = {p: (pre_sizes[p], post_sizes[p]) for p in pre_sizes if p in post_sizes and post_sizes[p] < pre_sizes[p]}
+    assert not shrunk
