@@ -1,0 +1,26 @@
+# Rule -> Mechanism edges -- part of the Simulation Semantic Control Plane's M0 schema
+# (TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION). Records how a Rule from docs/world_rules/ is
+# realized by, or constrains, a Mechanism from registries/mechanisms.yaml.
+#
+# Physically separate from registries/mechanism_causal_edges.yaml (a Mechanism -> Mechanism
+# causal fact, not a Rule -> Mechanism one) and registries/rule_classifications.yaml (a Rule's
+# own aggregate realization verdict) -- see
+# docs/plans/simulation_semantic_control_plane/architecture.md §3 for why these three stay three
+# distinct structures rather than one merged shape.
+#
+# Each row: rule_id, mechanism_id, edge_type, evidence, date.
+#   edge_type: REALIZES | PARTIALLY_REALIZES | CONSTRAINED_BY
+# `rule_id` resolves against a live scan of docs/world_rules/**/*.md headings
+# (tools/semantic_control_plane/rule_catalog.py::scan_rule_ids()), never a hardcoded list.
+# `mechanism_id` resolves against registries/mechanisms.yaml (via
+# tools.mechanism_registry.registry.MechanismRegistry).
+#
+# Validate with: python3 tools/semantic_control_plane/registry.py
+#
+# No real rows yet -- M0 builds only the schema and validator. Populating real Rule<->Mechanism
+# findings is M1's own deliverable
+# (docs/plans/simulation_semantic_control_plane/roadmap.md). Do NOT generate the Cartesian
+# product (172 Rules x 93 mechanisms) -- an absent edge means UNKNOWN, not MISSING, per
+# architecture.md §7, "Unknown is permanent, not a bug to eliminate."
+
+edges: []

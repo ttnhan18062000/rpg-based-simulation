@@ -475,6 +475,8 @@ MISSING · DESIGNED · EXPERIMENTAL · OFF · DORMANT · STARVED · REACH-LIMITE
 - **STARVED** — a live path whose conditions almost never occur in real simulation.
 - **REACH-LIMITED** (added 2026-09-20) — live and reached, but only inside a narrow slice of reality: one execution mode, one corpus profile, or only at episode boundaries. Several finished mechanics in this project are in exactly this state, and calling them "live" has repeatedly overstated what the world can actually do.
 
+See `docs/plans/status_axis_model.md` for how this vocabulary relates to the Mechanism Registry's `state`/`verified.verdict` axes and the semantic control plane's Rule realization axis. This vocabulary is aspirational prose, not an enforced enum: no validator checks it and no mechanism row currently carries a §10 value (only `STARVED` and `REACH-LIMITED` above have a real one-line definition; the other eight values are undefined here or anywhere else in the repo).
+
 and, at the system level: how many domains, systems, mechanisms, cross-system links and feedback loops exist.
 
 Mechanism metadata worth carrying eventually: id, domain, system, purpose, rule type, scope, inputs, outputs, state owner, consumers, cross-system links, persistence, observability, optionality, replacement boundary, counterforce, depth, runtime status, validation scenario.

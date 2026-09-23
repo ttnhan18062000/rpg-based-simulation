@@ -97,6 +97,9 @@
 # `contradicted` is reserved for the historically expensive case: `state: done` with a *runtime*
 # instrument finding the claimed behavior doesn't actually happen.
 #
+# For how this file's state/verified axes relate to the compass's §10 runtime-status vocabulary
+# and the control plane's Rule realization vocabulary, see docs/plans/status_axis_model.md.
+#
 # Validate with: make mechanism-registry-validate  (tools/mechanism_registry/registry.py)
 # Render the verification view with: make mechanism-verification-view
 #
