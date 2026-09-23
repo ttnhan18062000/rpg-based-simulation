@@ -172,16 +172,22 @@ neither holds:
   is regenerated from the registry, never a fixed number — cite it as "run
   `make mechanism-system-rollup-view` and read the current `combat` row," never a hardcoded
   percentage that will go stale again the next time the registry changes).
-- **Combat is not actually uniform.** Checked directly in `registries/mechanisms.yaml`: of
-  combat's 8 mechanisms, `tactical_decision` is `state: done` but `verified.verdict: contradicted`
-  (its ATTACK-intent branch doesn't actually fire in real corpus play —
-  `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`, already closed, its finding
-  already reflected in this `verdict`), `status_effects` is `state: orphan`, and `skill_unlocks`
-  is `state: partial`. A genuinely open, paused ticket,
+- **Combat is not actually uniform, and one of its two known instabilities is still live.** Checked
+  directly in `registries/mechanisms.yaml`: of combat's 8 mechanisms, `tactical_decision` is
+  `state: done` but `verified.verdict: contradicted` (its ATTACK-intent branch doesn't actually
+  fire in real corpus play), `status_effects` is `state: orphan`, and `skill_unlocks` is
+  `state: partial`. The `tactical_decision` finding is settled *as fact* — closed investigation
+  `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`, nothing for M4 to wait on
+  reporting — but the *behavior* it found is not settled: the ticket's own closing line states the
+  strategic layer's dispatch gate never derives a `DEFEAT_ENEMY` objective from the winning goal,
+  and explicitly leaves "whether this should change" as "a design question for the user," not
+  resolved by that ticket. If that design question is ever resolved, `tactical_decision`'s verdict
+  can move. Separately, a genuinely open, paused ticket,
   `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, sits in this same territory and could
-  still change combat's real numbers if it resumes before or during this slice — re-check the live
-  registry state immediately before finalizing M4's mapping, not from any number cited here or
-  anywhere else in this document.
+  also change combat's real numbers if it resumes. **Neither of these is a hard gate on M4** — both
+  are named here so M4 re-checks the live registry state (including `tactical_decision`'s own
+  current verdict, not just the numbers cited anywhere in this document) immediately before
+  finalizing its mapping, rather than treating `contradicted` as permanent.
 
 **Combat is kept as the second domain anyway** — not because it's expected to be clean, but
 because it is *mixed*: some mechanisms cleanly `SUPPORTED`, at least one (`tactical_decision`)
