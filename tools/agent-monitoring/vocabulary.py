@@ -71,6 +71,24 @@ WORKFLOW_AGENTS = {
         # the same concept as "orchestrator"/"claude" above, just spelled after the workflow
         # instead of describing the role generically. Registered for the same reason.
         "implement-ticket",
+        # "architecture-reviewer-shadow": the shadow-reviewer mechanism's own agent literal for
+        # the Architecture-Verify phase's advisory candidate-model call, grep-confirmed at
+        # .claude/workflows/implement-ticket.js:1074/:1099. Originally built opt-in behind
+        # SHADOW_REVIEWER_LOGGING_ENABLED by TCK-20260904-SHADOW-REVIEWER-LOGGING;
+        # TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON flipped it to opt-out/default-on,
+        # which is what turned this from occasional to every-ticket volume and pushed the real
+        # corpus count over AGENT_DRIFT_CEILING. Registered here by
+        # TCK-20260923-SHADOW-REVIEWER-VOCABULARY-GAP -- a real, intentional, already-documented
+        # mechanism (see docs/agent-monitoring/schema.md's Shadow-reviewer-event field family
+        # section), not drift.
+        "architecture-reviewer-shadow",
+        # "security-reviewer-shadow": the same shadow-reviewer mechanism's agent literal for the
+        # Security-Review phase's advisory candidate-model call, grep-confirmed at
+        # .claude/workflows/implement-ticket.js:1519/:1539. Same origin/registration history as
+        # "architecture-reviewer-shadow" above -- TCK-20260904-SHADOW-REVIEWER-LOGGING (opt-in),
+        # TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON (opt-out/default-on), registered here
+        # by TCK-20260923-SHADOW-REVIEWER-VOCABULARY-GAP.
+        "security-reviewer-shadow",
     },
     "create-tickets": {
         "create-tickets", "structure", "ticket-scoper", "link-epic",

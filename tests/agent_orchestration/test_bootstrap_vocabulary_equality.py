@@ -63,9 +63,21 @@ def test_bootstrap_phase_agent_vocabulary_matches_vocabulary_py():
     #   - "implement-ticket": the workflow's own name used as a self-referential "the orchestrator
     #     of this workflow did it directly" label -- same underlying concept as "claude"/
     #     "orchestrator", just spelled after the workflow instead of the role.
+    #
+    # TCK-20260923-SHADOW-REVIEWER-VOCABULARY-GAP registered 2 more literals in
+    # vocabulary.py's WORKFLOW_AGENTS["implement-ticket"] set, independently confirmed to be the
+    # same pseudo-agent/advisory category as the five above, not real contract-declared subagent
+    # roles (re-verified against agent-orchestration/workflows/implement-ticket.yaml's own
+    # `agents:` list, which declares none of the seven):
+    #   - "architecture-reviewer-shadow": the Architecture-Verify phase's shadow-reviewer advisory
+    #     call site's own agent literal (.claude/workflows/implement-ticket.js:1074/:1099) -- an
+    #     advisory logging mechanism, not a contract-declared subagent, following the same pattern
+    #     as "context-packet-wrapper" above.
+    #   - "security-reviewer-shadow": the Security-Review phase's equivalent shadow-reviewer
+    #     advisory call site (.claude/workflows/implement-ticket.js:1519/:1539) -- same category.
     expected_agents = vocabulary.WORKFLOW_AGENTS["implement-ticket"] - {
         "implement-ticket-orchestrator", "claude", "orchestrator", "context-packet-wrapper",
-        "implement-ticket",
+        "implement-ticket", "architecture-reviewer-shadow", "security-reviewer-shadow",
     }
     assert contract_agent_ids == expected_agents
 
