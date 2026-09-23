@@ -589,7 +589,7 @@ This does not mean every question about the world's rules is answered — it mea
 for answering them is settled well enough that the next phase can begin writing rules without
 another conceptual cleanup round first.
 
-The Catalog this section anticipated now exists: see `docs/brainstorm/world-rules/README.md`.
+The Catalog this section anticipated now exists: see `docs/world_rules/README.md`.
 
 ---
 
