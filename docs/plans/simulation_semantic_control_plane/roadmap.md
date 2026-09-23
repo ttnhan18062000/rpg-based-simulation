@@ -158,23 +158,42 @@ gate M4 actually depends on is narrower and lives in M4's own gating clause belo
 ## M4 — Second slice and first cross-domain view (gated on M1, M2, and M3's Territory+Combat-scoped triage only — not full-catalog M3)
 
 **Goal.** Prove the model generalizes past Territory's own idiosyncrasies (a domain whose defining
-finding is a *conflict*, `CONFLICTING`) by running it against a domain in a structurally different
-state, then produce the first real multi-domain management view (`rollout_plan.md` Stage E,
-pulled forward here because a *second* slice is this roadmap's own generalization test, not
-Stage D's ongoing organic growth).
+finding is a *conflict*, `CONFLICTING`) by running it against a second domain, then produce the
+first real multi-domain management view (`rollout_plan.md` Stage E, pulled forward here because a
+*second* slice is this roadmap's own generalization test, not Stage D's ongoing organic growth).
 
 **Chosen second domain: Combat / Conflict**
-(`docs/world_rules/capability-progression/conflict-combat.md`). Chosen because it is Territory's
-structural opposite in realization terms — the `combat` system already clears the Mechanism
-Registry's own system-rollup baseline cleanly (71.4% bound / 71.4% verified vs. a 35.5%/26.9%
-registry-wide baseline, per `docs/brainstorm/mechanism_system_rollup_view.md`), so this slice tests
-whether the mapping model produces a clean, mostly-`SUPPORTED` picture when the underlying
-mechanisms genuinely are in good shape — the case Territory's own `CONFLICTING` finding did not
-exercise at all.
+(`docs/world_rules/capability-progression/conflict-combat.md`). **Corrected 2026-09-23** — an
+earlier version of this section cited a stale rollup snapshot (71.4%/71.4% vs. 35.5%/26.9%
+baseline) and framed Combat as an expected "clean, mostly-`SUPPORTED`" contrast to Territory. Both
+claims were checked against this repo's own live data (an independent peer review caught this) and
+neither holds:
+- **The rollup is live-computed and drifts** (`docs/brainstorm/mechanism_system_rollup_view.md`
+  is regenerated from the registry, never a fixed number — cite it as "run
+  `make mechanism-system-rollup-view` and read the current `combat` row," never a hardcoded
+  percentage that will go stale again the next time the registry changes).
+- **Combat is not actually uniform.** Checked directly in `registries/mechanisms.yaml`: of
+  combat's 8 mechanisms, `tactical_decision` is `state: done` but `verified.verdict: contradicted`
+  (its ATTACK-intent branch doesn't actually fire in real corpus play —
+  `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`, already closed, its finding
+  already reflected in this `verdict`), `status_effects` is `state: orphan`, and `skill_unlocks`
+  is `state: partial`. A genuinely open, paused ticket,
+  `TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, sits in this same territory and could
+  still change combat's real numbers if it resumes before or during this slice — re-check the live
+  registry state immediately before finalizing M4's mapping, not from any number cited here or
+  anywhere else in this document.
+
+**Combat is kept as the second domain anyway** — not because it's expected to be clean, but
+because it is *mixed*: some mechanisms cleanly `SUPPORTED`, at least one (`tactical_decision`)
+likely to map `CONFLICTING` or `PARTIAL` against whatever Rule covers actually-attacking, at least
+one `orphan`. A domain in a mixed real state is arguably a *better* generalization test than a
+uniform one — it exercises the full classification vocabulary in one slice rather than mostly one
+value, which a genuinely "clean" domain would not have done.
 
 **Deliverables:**
 - Real mapping entries for Combat/Conflict's Rules against real mechanisms (`combat_resolution`,
-  `tactical_decision`, and others — verify against the live registry, not this list).
+  `tactical_decision`, and others — verify against the live registry at execution time, not
+  against any state described in this document).
 - Both domains' management views combined into the first real cross-domain view
   (`architecture.md` §8), with `mapped`/`unmapped` and `verified`/`unverified` counts shown
   alongside any classification breakdown, per the pre-filtered-sample lesson already on record
@@ -184,11 +203,11 @@ exercise at all.
 **Success condition, stated precisely to avoid biasing the result:** the model must faithfully
 represent whatever the real evidence shows for each domain, and two structurally different domains
 must be representable without distorting either into the same shape. **This is not**: "Territory
-must come out looking bad and Combat must come out looking clean." The 71.4%/71.4% vs. 35.5%/26.9%
-baseline comparison (§ above) is a reason to *expect* Combat to skew `SUPPORTED`, not a target to
-engineer. If Combat's real mapping turns up meaningful `PARTIAL`, `CONFLICTING`, or `UNKNOWN`
-results, those are recorded as-is — never smoothed over, and never used as grounds to adjust the
-classification model just to make the expected contrast appear.
+must come out looking bad and Combat must come out looking clean." If Combat's real mapping turns
+up meaningful `PARTIAL`, `CONFLICTING`, or `UNKNOWN` results — which the known `tactical_decision`/
+`status_effects`/`skill_unlocks` evidence above already makes likely — those are recorded as-is,
+named up front as expected rather than treated as a surprise, and never smoothed over or used as
+grounds to adjust the classification model to manufacture a cleaner contrast.
 
 **Exit criteria.** Two domains mapped, validated, and rendered in one combined view; the comparison
 recorded honestly, whatever it actually shows.
@@ -331,12 +350,17 @@ plug into. Brief summary, since M0–M4 reference specific stages by letter:
   exists" turned out to be based on an incomplete search and was wrong. M3 cites this as the reason
   existing prose findings must be re-verified against current reality before being trusted as fact,
   not simply copied forward.
-- **The `combat` system's 71.4%/71.4% vs. 35.5%/26.9% numbers (M4)** — a per-system rollup already
-  computed for the Mechanism Registry shows the `combat` system's mechanisms are bound to real code
-  and runtime-verified at roughly double the rate of the registry-wide average. M4 uses this as the
-  reason Combat/Conflict is a good second test domain: it is expected to look *healthy* in the new
-  mapping, the opposite of Territory's expected `CONFLICTING`-heavy result, so the comparison tests
-  whether the model can tell the difference at all.
+- **Why Combat/Conflict is M4's second domain (corrected 2026-09-23)** — an earlier version of this
+  appendix cited a stale rollup snapshot and framed Combat as an expected "clean" contrast to
+  Territory's `CONFLICTING` result. An independent peer review checked this against live data and
+  found it wrong on both counts: the rollup is regenerated from the registry and had already moved
+  past the cited numbers, and Combat itself is not uniform — `tactical_decision` is
+  `verified.verdict: contradicted`, `status_effects` is `orphan`, `skill_unlocks` is `partial`
+  (all three checked directly in `registries/mechanisms.yaml`). Combat is kept as the second domain
+  anyway, but for a different, more honest reason: it's a *mixed* domain — some mechanisms cleanly
+  supported, at least one likely `CONFLICTING`/`PARTIAL` — which exercises more of the
+  classification vocabulary in one slice than a uniformly "clean" domain would have. See M4's own
+  text for the full correction.
 
 ### E. One project convention referenced without explanation
 
