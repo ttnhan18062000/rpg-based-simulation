@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260917-EPIC-MECHANISM-VERIFICATION
-phase: open
+phase: done
 date: 2026-09-17
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ Mechanism registry follow-up work: claims-as-tests detectors, binding coverage, 
 caveat audit — the epic's own next phase, not absorbed into the closed registry PR
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -182,4 +182,13 @@ Not applicable — epic tier, scope-only.
   children (one new, three relocated from `tickets/todos/` root).
 
 ## Completion Summary
-Open. Tracks four children in the order `SEQUENCE.md` specifies. Closes when all four close.
+**Closed 2026-09-23.** All five children closed: `TCK-20260917-MECHANISM-IDENTITY-RULES-AND-CHANGE-
+TAXONOMY`, `TCK-20260916-MECHANISM-STATUS-LANGUAGE-DETECTION`, and `TCK-20260916-MECHANISM-CHANGED-
+CODE-ENTRY-DRIFT-DETECTION` closed in earlier sessions; `TCK-20260917-MECHANISM-IMPLEMENTED-BY-
+COVERAGE-EXTENSION` closed as superseded (its hardest, mechanically-decidable target — `orphan` →
+100% bound — was already met; real residue replaced by `TCK-20260923-MECHANISM-IMPLEMENTED-BY-
+RESIDUE-RESOLUTION`); `TCK-20260916-ATLAS-CARD-DESCRIPTION-EFFECT-CAVEAT-AUDIT` closed with 6 real
+findings beyond `camp`/`motivation_doctrine`, all corrected and propagated. Folder moved from
+`tickets/todos/mechanism-verification/` to `tickets/done/mechanism-verification/` per this repo's
+own folder-hygiene rule. Hand-orchestrated closure, peer-planning-directed batch (`rpg-feature-
+planning`, 2026-09-23).

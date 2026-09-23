@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260918-EPIC-MECHANISM-SYSTEM-MEMBERSHIP
-phase: open
+phase: done
 date: 2026-09-18
 tags: [architecture, documentation, schema]
 ---
@@ -16,7 +16,7 @@ The `system` tier as declared system membership on mechanisms — investigate th
 registry and the membership pass
 
 ## Status
-EPIC_SCOPED
+DONE
 
 ## Tier
 epic
@@ -131,4 +131,12 @@ Per child.
 None (epic).
 
 ## Completion Summary
-Open.
+**Closed.** Both children completed: `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-VALUE-INVESTIGATION`
+(child 1, recommendation: proceed) and `TCK-20260918-MECHANISM-SYSTEM-MEMBERSHIP-FOUNDATION` (child 2,
+registry + `systems: []` field + membership pass), both in `tickets/done/`. Child 3 (rollup views),
+named but not drafted at epic-scoping time, shipped as `generate_mechanism_system_rollup_view.py` +
+"Render system membership on mechanism_registry.html" (#227) rather than as a separately drafted
+child ticket of this epic. Folder moved from `tickets/todos/mechanism-system-membership/` to
+`tickets/done/mechanism-system-membership/` per this repo's own folder-hygiene rule (CLAUDE.md
+"After Work") — closed 2026-09-23, hand-orchestrated, as part of a peer-planning-directed batch
+alongside the mechanism-verification epic's own closeout.
