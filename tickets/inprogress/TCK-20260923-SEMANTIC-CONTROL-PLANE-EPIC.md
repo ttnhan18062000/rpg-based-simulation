@@ -71,7 +71,22 @@ of it. This epic tracks scoping the child tickets only, milestone by milestone, 
       blocked, or explicitly deferred) — per `roadmap.md`'s own milestone gating.
 
 ## Related Tickets
-- TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION
+
+Milestone dispositions (this epic closes only when every row below has one):
+
+| Milestone | Ticket | Disposition |
+|---|---|---|
+| M0 — schema + validator | `TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION` | **DONE** 2026-09-23, branch `semantic-control-plane-m0`, unpushed. Full standard pipeline, 0 blocking gate failures. |
+| M1 — Territory/Control slice | not yet created | **UNBLOCKED** by M0. Gated behind `TCK-20260923-STATUS-VOCABULARY-RECONCILIATION` by owner decision (see below). |
+| M2 — drift detection | not yet created | Gated on M1. |
+| M3 — finding ingestion | not yet created | Permanent stream, startable after M0. Only hard bar: Territory+Combat triage before M4. |
+| M4 — Combat slice + cross-domain view | not yet created | Gated on M1, M2, and M3's narrow triage only. |
+
+Cross-cutting, not a milestone:
+- `TCK-20260923-STATUS-VOCABULARY-RECONCILIATION` (OPEN, standard, P1) — reconciles the four
+  overlapping status vocabularies. **Must land between M0 and M1**: M1 populates the first real
+  rows against the control plane's realization vocabulary, so reconciling afterwards costs a data
+  migration plus a validator change instead of one ticket.
 
 ## Related Docs
 - `docs/plans/simulation_semantic_control_plane/README.md`
@@ -98,7 +113,35 @@ None.
   expected to resolve this, not this epic.
 - Assumes `create-tickets`' Investigate phase, run against `roadmap.md`'s M0 section, will derive
   real file paths and concrete ACs the way it did for the PERF-M0-ARCHITECTURE-GOVERNANCE epic
-  (`TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC`) — not yet confirmed for this run.
+  (`TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC`) — **confirmed for this run**: M0's own
+  investigation resolved both deliberately-open decisions (see M0 disposition below).
+
+### M0 disposition (recorded 2026-09-23, by the epic owner)
+
+Both decisions `architecture.md`/`roadmap.md` deliberately left open are now **closed**:
+- **Serialization/location:** three sibling YAML registries — `registries/rule_mechanism_edges.yaml`,
+  `registries/mechanism_causal_edges.yaml`, `registries/rule_classifications.yaml` — kept physically
+  separate, matching `roadmap.md`'s explicit warning against merging a Rule→Mechanism edge and a
+  Mechanism→Mechanism edge into one row shape.
+- **Self-edges:** `producer_mechanism_id == consumer_mechanism_id` is **rejected** by the validator.
+- Validator lives in its own sibling package `tools/semantic_control_plane/`, not inside
+  `tools/mechanism_registry/`, mirroring the latter's `validate()`/`check_duplicate_keys()` split.
+- `rule_id` resolves against a **live scan** of `docs/world_rules/**/*.md`
+  (`rule_catalog.py::scan_rule_ids()`), never a hardcoded list — so the 172-Rule foreign key cannot
+  silently rot.
+
+Verified by the epic owner against the branch, not taken on report: all three registries ship
+genuinely empty (`edges: []`), so M0 populated zero mapping rows as scoped; `architecture.md` is the
+only design doc touched. Each registry header additionally warns against generating the
+172×93 Cartesian product, holding `architecture.md` §7's "an absent edge means UNKNOWN, not
+MISSING" — a durable guard M1 inherits.
+
+One real defect surfaced and fixed mid-pipeline: the documented CLI invocation threw
+`ModuleNotFoundError` (no repo-root `sys.path` bootstrap before its `tools.*` imports). Caught by
+the shadow architecture-reviewer that PR #240 had just defaulted on, **independently reproduced
+before being acted on** (that path is advisory-only and never gates), fixed with a subprocess-based
+regression test. Production Architecture-Verify had already APPROVED beforehand — this was added
+substance, not gate-routing.
 
 ## Implementation Notes
 
