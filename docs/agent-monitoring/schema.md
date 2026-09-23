@@ -376,12 +376,13 @@ is illustrative documentation, same convention as `vocabulary.py`/`RETRIEVAL_EVE
 All fields are optional additions on top of the 7 base fields already documented above; they never
 replace or narrow the base REQUIRED set enforced by `record_events.py::validate_record()`.
 
-An advisory, opt-in candidate model (`claude-fable-5-1`, a distinct model family from whatever the
+An advisory candidate model (`claude-fable-5-1`, a distinct model family from whatever the
 main-loop/production reviewer call inherits — de-correlating failure modes was the whole point) runs
 alongside the production `architecture-reviewer` call (Architecture-Verify phase) and the production
 `security-reviewer` call (Security-Review phase, itself tag-gated — see the `phase` values table
 above), on the same diff/evidence, purely for logging. Gated behind `SHADOW_REVIEWER_LOGGING_ENABLED`
-(strict `"1"` string equality, off by default) AND a bounded per-reviewer sample window
+(on by default as of `TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON` — set to `"0"` to opt
+out; strict string comparison, not a truthy/falsy check) AND a bounded per-reviewer sample window
 (`tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open()` — 50 prior samples for
 `architecture-reviewer`, 10 for `security-reviewer`, sized from each reviewer's real historical
 event volume, ~34:1 asymmetric). The candidate's verdict never reaches `pushEvent(..., 'failed', ...)`,

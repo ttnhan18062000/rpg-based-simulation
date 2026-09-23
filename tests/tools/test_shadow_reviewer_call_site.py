@@ -227,7 +227,7 @@ def test_shadow_reviewer_call_site_is_fail_open_and_env_gated():
     source = _workflow_source()
 
     for block in (_arch_shadow_block(source), _security_shadow_block(source)):
-        assert 'if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" = "1" ]' in block
+        assert 'if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" != "0" ]' in block
         assert "timeout 15s python3 -c" in block
         assert "2>/dev/null || true" in block
         assert re.search(r"except Exception:\s*\n\s*pass", block)
@@ -235,6 +235,21 @@ def test_shadow_reviewer_call_site_is_fail_open_and_env_gated():
         # (API error, timeout, etc.) propagate out of the shadow block.
         assert "try {" in block
         assert "} catch (e) {" in block
+
+
+# ---------------------------------------------------------------------------
+# 11. Default-on polarity guard (TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON):
+#     the opt-out comparand must be "0", never a reversion to opt-in "1"
+# ---------------------------------------------------------------------------
+
+
+def test_shadow_reviewer_default_on_opt_out_literal_is_zero_not_one():
+    source = _workflow_source()
+
+    for block in (_arch_shadow_block(source), _security_shadow_block(source)):
+        assert 'SHADOW_REVIEWER_LOGGING_ENABLED" != "0"' in block
+        assert 'SHADOW_REVIEWER_LOGGING_ENABLED" = "1"' not in block
+        assert 'SHADOW_REVIEWER_LOGGING_ENABLED" != "1"' not in block
 
 
 # ---------------------------------------------------------------------------
