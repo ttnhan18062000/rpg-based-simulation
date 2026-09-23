@@ -408,6 +408,57 @@ def test_all_three_schemas_pass_on_real_seed_data():
     assert errors == []
 
 
+def test_all_four_terr_rules_have_a_classification_record():
+    """TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE AC 1/AC 3: TERR-01/02/03/05 each have
+    exactly one classification record; TERR-04 has none (it is not a real Rule ID)."""
+    path = REPO_ROOT / "registries" / "rule_classifications.yaml"
+    import yaml
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    records = data.get("classifications", []) or []
+    rule_ids = [r["rule_id"] for r in records]
+
+    for expected in ("TERR-01", "TERR-02", "TERR-03", "TERR-05"):
+        assert rule_ids.count(expected) == 1, (
+            f"expected exactly one classification record for {expected}, found "
+            f"{rule_ids.count(expected)}"
+        )
+    assert "TERR-04" not in rule_ids
+
+
+def test_terr04_never_appears_in_populated_registries():
+    """Directly enforces the ticket's own Out of Scope line: TERR-04 is a stale citation, not a
+    real Rule ID, and must never be written to either populated registry."""
+    for filename in ("rule_mechanism_edges.yaml", "rule_classifications.yaml"):
+        text = (REPO_ROOT / "registries" / filename).read_text(encoding="utf-8")
+        assert "TERR-04" not in text, f"{filename} must never reference TERR-04"
+
+
+def test_real_rule_mechanism_edges_have_nonempty_evidence_and_date():
+    """AC 2: zero uncited edges -- every row's evidence is a non-empty string and date matches
+    YYYY-MM-DD."""
+    import re
+    import yaml
+
+    path = REPO_ROOT / "registries" / "rule_mechanism_edges.yaml"
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    edges = data.get("edges", []) or []
+    assert edges, "expected at least one real edge to check"
+
+    date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    for edge in edges:
+        evidence = edge.get("evidence")
+        assert isinstance(evidence, str) and evidence.strip(), (
+            f"edge {edge.get('rule_id')} -> {edge.get('mechanism_id')} has empty evidence"
+        )
+        date = edge.get("date")
+        assert isinstance(date, str) and date_re.match(date), (
+            f"edge {edge.get('rule_id')} -> {edge.get('mechanism_id')} has invalid date {date!r}"
+        )
+
+
 def test_documented_cli_invocation_actually_runs():
     """The module docstring and all three registry file headers document
     `python3 tools/semantic_control_plane/registry.py` as the validation entry point -- run it for

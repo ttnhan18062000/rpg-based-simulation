@@ -1957,7 +1957,9 @@ mechanisms:
       verdict: contradicted
       date: "2026-09-17"
       note: >-
-        `region.trauma_score` accumulation/decay is real, wired code
+        This is a STARVED case per `docs/plans/status_axis_model.md` §4: the logic is correct and
+        would fire under real combat conditions; the Lair region's actual gameplay never supplies
+        the precondition. `region.trauma_score` accumulation/decay is real, wired code
         (src/world/consequences.py's own natural decay; combat/death events elsewhere accrue it;
         read by `camp.py`, `boss.py::check_for_boss_spawn()`, `creature_territory.py`,
         `threat.py`). But the Lair region specifically was directly measured to never accumulate
