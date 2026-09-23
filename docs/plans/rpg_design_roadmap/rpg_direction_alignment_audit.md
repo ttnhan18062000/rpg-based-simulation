@@ -17,7 +17,7 @@ pass did not act on.
 
 **Purpose**: for work this large, re-reviewing every one of 65 investigated ideas against the creative
 direction is slower and noisier than reviewing the direction itself once and tracing it back through what's
-already scored. This audit does the latter: a full re-read of `docs/brainstorm/the_unwritten_world.html` (the
+already scored. This audit does the latter: a full re-read of `docs/archive/the_unwritten_world.html` (the
 8 creative-direction principles), cross-checked against `docs/brainstorm/design_merit_scorecard.html`'s
 Direction Fit axis (all 65 ideas, one real per-idea score each) and this roadmap's own Known Open Items.
 

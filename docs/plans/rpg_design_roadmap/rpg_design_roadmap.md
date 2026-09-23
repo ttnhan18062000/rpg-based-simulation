@@ -42,7 +42,7 @@ placement, and per-idea quality scores — lives in three published documents, n
   Phase Placement & Testing Strategy.
 - `docs/brainstorm/design_merit_scorecard.html` — a 7-axis quality score for every idea (Direction Fit,
   Narrative Generativity, Groundedness, Pillar Reach, Efficiency, Risk-Adjusted Cost, Leverage).
-- `docs/brainstorm/the_unwritten_world.html` — the 8 creative-direction principles every idea was checked
+- `docs/archive/the_unwritten_world.html` — the 8 creative-direction principles every idea was checked
   against.
 
 Each milestone epic below cites specific idea numbers; look them up in the atlas by anchor
@@ -833,7 +833,7 @@ with the new terminology is a separate decision, not bundled into this rename.
   wiring diagram: Entity/Group/Faction/Region/World/World Objects, expected/current/proposed status per
   connection, plus an Entity-level operating-loop and lifecycle-arc drill-down)
 - `docs/brainstorm/design_merit_scorecard.html`
-- `docs/brainstorm/the_unwritten_world.html`
+- `docs/archive/the_unwritten_world.html`
 - `docs/brainstorm/simulation_capabilities.html` (plain-language companion, for non-technical review)
 - `docs/plans/live_map_scaling_roadmap.md`, `docs/plans/hud_design_system_foundation_epic.md`'s sibling-epic
   roadmap (the two structural precedents this doc follows)
