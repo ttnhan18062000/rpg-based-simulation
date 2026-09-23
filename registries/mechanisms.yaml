@@ -602,7 +602,27 @@ mechanisms:
         producer that would make it do anything doesn't exist. `partial` matches
         `xp_leveling`/`skill_unlocks`'s own "real, tested, wired code, defeated by an unmet
         production precondition" shape more precisely than either `gap` (no code) or `orphan` (zero
-        callers) would. The `-> class_assignment` `depends_on` edge removed 2026-09-19 on the
+        callers) would.
+
+        **Why `observed`, not `contradicted`, and why this is a `state` question, not a `verdict`
+        one (peer question, 2026-09-23 PR review, answered here so the next reader doesn't re-derive
+        it)**: this entry's own schema comment above is explicit that `contradicted` is reserved for
+        `state: done` plus a *runtime* instrument (census/scenario/corpus_run) finding the claimed
+        behavior doesn't actually happen -- `camp`'s own disposition fits exactly that: `state: done`
+        and a real corpus/world-composition check. This entry has neither precondition: `state` is
+        `partial`, not `done` (the incompleteness is already carried by `state`, not left for
+        `verdict` to carry too), and the evidence gathered here is `code_trace` -- confirms what the
+        code *says* (a real caller exists, `class_id_set` has zero production writers), never that
+        reachable code has (or lacks) its claimed runtime effect, per this file's own STATIC vs
+        RUNTIME comment above. Using `contradicted` here would misapply the vocabulary on both axes
+        at once, not just one. If a future runtime instrument (a real corpus/scenario run) confirms
+        `class_id_set` is genuinely never set across real play, the right move is not changing this
+        `verdict` to `contradicted` -- it's re-deriving `state` itself against `xp_leveling`'s own
+        precedent (a `partial` mechanism that stays `partial` under runtime confirmation, since the
+        code is real and correct, just precondition-starved) or reconsidering whether `partial` even
+        applies to code with zero real-world triggers yet. Not decided here; this is evidence for
+        that future check, not a resolution of it.
+        The `-> class_assignment` `depends_on` edge removed 2026-09-19 on the
         (now-corrected) zero-code premise is NOT restored here -- edge semantics were that ticket's
         own deliberate, separate exercise (`TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
         RESOLUTION`), out of this ticket's own scope; flagged as a real re-open candidate for
