@@ -1,0 +1,27 @@
+# Per-Rule realization classification -- part of the Simulation Semantic Control Plane's M0
+# schema (TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION). Exactly one record per Rule ID: the
+# Rule's own aggregate realization verdict, a human judgment call that does NOT mechanically fall
+# out of registries/rule_mechanism_edges.yaml's or registries/mechanism_causal_edges.yaml's edge
+# lists -- see docs/plans/simulation_semantic_control_plane/architecture.md §3/§4 and
+# docs/plans/mechanism_tier_model_initiative.md §3's "declared, not derived" precedent for the
+# `system` tier, the same lesson this schema must not repeat as a mistake. No function anywhere
+# in tools/semantic_control_plane/ takes only the two edge schemas above as input and returns or
+# writes a classification value -- enforced by omission, not by this comment alone.
+#
+# Each row: rule_id, classification, evidence, review_date.
+#   classification: SUPPORTED | PARTIAL | CONFLICTING | MISSING | INERT-OFF | UNKNOWN
+# (the same vocabulary the Rule Catalog's own review-exports already use in prose, e.g.
+# docs/world_rules/places-culture/territory-control.md's TERR-01 entry, "Repository evidence:
+# CONFLICTING for control/sovereignty ... MISSING for cultural association and residence
+# specifically").
+#
+# UNKNOWN is a permanent, valid, expected value -- "not yet looked at" -- and is never silently
+# rewritten to MISSING ("investigated, found absent"). A Rule with NO record at all is not an
+# error either; only a *second* record for an already-present rule_id is rejected. See
+# architecture.md §7, "Unknown is permanent, not a bug to eliminate."
+#
+# Validate with: python3 tools/semantic_control_plane/registry.py
+#
+# No real rows yet -- M1's own deliverable, same discipline as the two edge schemas above.
+
+classifications: []

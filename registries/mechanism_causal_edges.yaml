@@ -1,0 +1,25 @@
+# Mechanism -> Mechanism causal edges -- part of the Simulation Semantic Control Plane's M0
+# schema (TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION). Records "A produces input for B" as one
+# directed fact between two mechanisms in registries/mechanisms.yaml, distinct from that file's
+# own depends_on field (functional prerequisite, unordered-in-time, hand-authored only one way)
+# and from registries/rule_mechanism_edges.yaml (a Rule-to-mechanism relation, not a
+# mechanism-to-mechanism one).
+#
+# Each row: producer_mechanism_id, consumer_mechanism_id, evidence, date. NO edge_type field --
+# this schema never shares its row shape with rule_mechanism_edges.yaml's edge_type enum
+# (docs/plans/simulation_semantic_control_plane/roadmap.md names an earlier draft that conflated
+# the two as an already-happened mistake).
+#
+# The inverse ("what does mechanism B consume") is a computed/traversed query
+# (tools/semantic_control_plane/registry.py::consumers_of() / producers_for()), never a
+# hand-authored reverse row -- do not add both (A, B) and (B, A) rows to represent one
+# bidirectional relationship; each row is its own independently-evidenced directed claim.
+#
+# producer_mechanism_id == consumer_mechanism_id on the same row is rejected by the validator: a
+# mechanism cannot meaningfully produce input for itself within one directed causal fact.
+#
+# Validate with: python3 tools/semantic_control_plane/registry.py
+#
+# No real rows yet -- M1's own deliverable, same discipline as rule_mechanism_edges.yaml above.
+
+edges: []
