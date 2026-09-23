@@ -51,6 +51,25 @@ def test_flags_relative_dot_target_matching_current_dir():
     assert msg is not None
 
 
+def test_flags_newline_separated_cd_the_dominant_real_shape():
+    """TCK-20260923-CD-PREFIX-SEPARATOR-REACH-FIX: a real-corpus reach check found newline is the
+    dominant separator in this corpus (47.7% of all cd-headed calls vs. under 2.4% for &&/;
+    combined) -- the original &&-only pattern missed 97.7% of the population it targeted. This is
+    the shape that must never regress again."""
+    msg = detect_redundant_cd_prefix(
+        "cd /home/u24desktop/Working/repo\npython3 -c \"print(1)\"",
+        "/home/u24desktop/Working/repo",
+    )
+    assert msg is not None
+
+
+def test_flags_semicolon_separated_cd():
+    msg = detect_redundant_cd_prefix(
+        "cd /home/u24desktop/Working/repo; pytest tests/", "/home/u24desktop/Working/repo",
+    )
+    assert msg is not None
+
+
 # ---------------------------------------------------------------------------
 # detect_redundant_cd_prefix — must NOT flag a genuine directory switch
 # ---------------------------------------------------------------------------
@@ -58,6 +77,14 @@ def test_flags_relative_dot_target_matching_current_dir():
 def test_does_not_flag_cd_into_a_different_directory():
     msg = detect_redundant_cd_prefix(
         "cd /home/u24desktop/Working/other-repo && git status", "/home/u24desktop/Working/repo",
+    )
+    assert msg is None
+
+
+def test_does_not_flag_newline_separated_cd_into_a_different_directory():
+    msg = detect_redundant_cd_prefix(
+        "cd /home/u24desktop/Working/other-repo\npython3 -c \"print(1)\"",
+        "/home/u24desktop/Working/repo",
     )
     assert msg is None
 
