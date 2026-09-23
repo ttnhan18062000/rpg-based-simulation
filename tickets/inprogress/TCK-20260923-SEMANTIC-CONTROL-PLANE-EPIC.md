@@ -77,14 +77,47 @@ Milestone dispositions (this epic closes only when every row below has one):
 | Milestone | Ticket | Disposition |
 |---|---|---|
 | M0 — schema + validator | `TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION` | **DONE** 2026-09-23, branch `semantic-control-plane-m0`, unpushed. Full standard pipeline, 0 blocking gate failures. |
-| M1 — Territory/Control slice | not yet created | **READY** — both gates cleared (M0 done, vocabulary reconciliation done). Next to scope. |
-| M2 — drift detection | not yet created | Gated on M1. |
+| M1 — Territory/Control slice | `TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE` | **DONE** 2026-09-24. First real data through M0's schemas; Territory six-axis view wired (`make territory-control-view`). |
+| M2 — drift detection | not yet created | **READY** — M1 done, so real mappings now exist to check drift against. |
 | M3 — finding ingestion | not yet created | Permanent stream, startable after M0. Only hard bar: Territory+Combat triage before M4. |
 | M4 — Combat slice + cross-domain view | not yet created | Gated on M1, M2, and M3's narrow triage only. |
 
 Cross-cutting, not a milestone:
 - `TCK-20260923-STATUS-VOCABULARY-RECONCILIATION` — **DONE** 2026-09-23, landed between M0 and M1 as
   intended. Deliverable: `docs/plans/status_axis_model.md`.
+
+### M1 disposition (recorded 2026-09-24, by the epic owner)
+
+Verified against the branch, not taken on report.
+
+**Classifications produced** (`registries/rule_classifications.yaml`), each citing real code paths:
+- **TERR-01 `CONFLICTING`** — on *two structurally distinct* pieces of evidence, not one. The known
+  `owner_faction_id` three-concept overload, **plus** an independently-discovered second desync:
+  `betrayal_siege_war`/FAC-010 transfers control via `FactionState.territory` on every real siege
+  conquest without ever updating `RegionState.owner_faction_id`. Two representations of "who
+  controls this region" that diverge in normal play.
+- **TERR-03 `CONFLICTING`** — same root cause as TERR-01.
+- **TERR-02 `PARTIAL`** — landed on the axis M1's ticket left open (`SUPPORTED` vs `MISSING`), and
+  resolved to neither: `FactionInfluenceService` *does* supply a real causal basis (accumulated
+  in-region combat-death evidence crossing a threshold), so it isn't a bare assignment — but
+  world-generation-time initial ownership (`src/worldbuilding/compiler.py:415,446`) is bare
+  declarative assignment with zero causal basis, and the threshold disagreement below is unresolved.
+- **TERR-05 `PARTIAL`** — **overrode an initial `MISSING` suggestion on evidence**, correctly.
+  `RegionState.places`/`PlaceState.region_id` genuinely realizes the containment half; the
+  cultural-association half is *confirmed absent* (`PlaceState` carries no such field, and
+  `prior_kind`/`transformed_tick` is a Place-kind trail, not a polity fact) rather than unexamined.
+  That is the `MISSING`-vs-`UNKNOWN` distinction `architecture.md` §7 requires, applied correctly.
+
+**Verified by the epic owner:** AC 8 holds — a diff of `registries/mechanisms.yaml` against
+`origin/main` shows **zero** `state` or `verdict` changes. The six-axis Territory view is wired as
+`make territory-control-view`, mirroring the `mechanism-system-rollup-view` precedent.
+
+**Escalated out of the slice:** a four-way regional-sovereignty threshold disagreement — ±100 in the
+Mechanics Bible and `src/engine/world_dynamics.py:82,86`, ±50 in the runtime contract and
+`src/world/influence.py:29-30`. Two *live* ownership-transfer paths on different thresholds, so this
+is a parity violation and a consistency hazard, not doc drift. Correctly recorded rather than fixed
+in a mapping slice. Filed as `TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT` (standard,
+P1); every citation independently re-verified before filing.
 
 ### Vocabulary reconciliation disposition (recorded 2026-09-23, by the epic owner)
 
