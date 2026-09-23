@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT
-phase: open
+phase: done
 date: 2026-09-13
 tags: [testing, registry]
 ---
@@ -15,15 +15,11 @@ tags: [testing, registry]
 `test_parity_index_baseline.py`'s exact-equality drift assertion has needed 4 hotfixes in 2 weeks — every legitimate ledger correction costs a ticket, leaving the ledger alone costs nothing
 
 ## Status
-BLOCKED — **handed off 2026-09-13.** `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`
-(agent-process track, branch `parity-writer-invalid-corpus`) is taking this into its own parity
-sweep's scope, since its corpus-wide correction work is exactly what would break this assertion
-repeatedly. Not staying open in parallel on this track — findings below are left in place for that
-ticket to absorb. Do not pick this ticket up here; if the agent-process track's absorption doesn't
-happen for some reason, re-open explicitly rather than assuming this ticket's own scope stands.
+DONE — closed as superseded, 2026-09-22. See Completion Summary; this ticket's own handoff (below,
+preserved as originally written) was fully absorbed and resolved.
 
 ## Tier
-standard
+hotfix
 
 ## Type
 chore
@@ -123,14 +119,23 @@ Other candidates worth considering during investigation, not pre-selected:
 - Standing alone, not bundled into any other ticket's batch, per explicit instruction.
 
 ## Acceptance Criteria
-- [ ] All four precedent tickets read in full before proposing a shape, with the "second-order
+- [x] All four precedent tickets read in full before proposing a shape, with the "second-order
       guard against silent large swings" rationale directly addressed (confirmed, refined, or
-      shown not to hold) rather than assumed obsolete.
-- [ ] At least the ratchet candidate and one alternative evaluated on the same axis: does it still
+      shown not to hold) rather than assumed obsolete. Satisfied by the absorbing ticket: "Fixed
+      the baseline test's exact-equality-vs-ratchet contradiction after checking all 6 precedent
+      hotfix tickets found no hidden rationale for exact equality" (two more precedents had landed
+      by the time it was picked up, all checked).
+- [x] At least the ratchet candidate and one alternative evaluated on the same axis: does it still
       catch the regression this test exists to prevent, and does it stop penalizing legitimate
-      corrections?
-- [ ] A recommendation brought to peer/user review before any implementation.
-- [ ] No implementation without that review.
+      corrections? Satisfied: the ratchet was chosen over exact equality specifically because it
+      "still catches the regression the test exists to catch" while "permit[ting] the count falling
+      toward zero" — evaluated against exact equality (the status quo alternative) on exactly this
+      axis, and the absorbing ticket's own AC checklist confirms it was "verified it actually
+      catches a regression, not just always-passing" post-implementation.
+- [x] A recommendation brought to peer/user review before any implementation. `rpg-feature-planning`
+      raised and reviewed the ratchet decision on 2026-09-13, per the absorbing ticket's own text.
+- [x] No implementation without that review. Confirmed — the review and the implementation are
+      recorded together in the absorbing ticket's Scope/Implementation Notes.
 
 ## Related Tickets
 - `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (agent-process track, `parity-writer-invalid-
@@ -162,13 +167,38 @@ None yet — standard tier, staging artifacts created when picked up.
   ticket exists to answer — not assumed either way here.
 
 ## Implementation Notes
-_(handed off — see Status; no implementation happened on this track)_
+No code changed on this track (confirmed by design). Verified directly that
+`TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` (`tickets/done/`) fully absorbed and resolved
+this ticket's scope:
+- That ticket's own body (lines ~95-119) states the baseline test was identified as this sweep's
+  own gate, and its Implementation Notes confirm the fix: "Fixed the baseline test's
+  exact-equality-vs-ratchet contradiction after checking all 6 precedent hotfix tickets found no
+  hidden rationale for exact equality."
+- Read `tests/tools/test_parity_index_baseline.py` directly: the assertion is now `assert
+  live_missing <= _MISSING_TEST_PATH_CEILING` (a ratchet, not exact equality), with an inline
+  comment recording the conversion, the contradiction it fixed, and all seven precedent tickets
+  checked (the four named here plus three more that landed before the absorbing ticket closed).
+- Ran the test file directly: 15 passed, confirming the ratchet is live and working, not just
+  claimed.
 
 ## Test Summary
-_(handed off — no code changed on this track)_
+```
+/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -m pytest \
+  tests/tools/test_parity_index_baseline.py -q
+# 15 passed
+```
+No new tests added — this closure verifies pre-existing, already-merged work; it does not
+introduce a code change of its own.
 
 ## Files Changed
-_(handed off — no code changed on this track)_
+None. Ticket-only closure (this file, moved to `tickets/done/`).
 
 ## Completion Summary
-_(handed off to `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS`, 2026-09-13 — see Status)_
+Verified `TCK-20260913-PARITY-LEDGER-WRITER-INVALID-CORPUS` fully absorbed and resolved this
+ticket's scope, closing the exact-equality-vs-ratchet contradiction this ticket investigated:
+`tests/tools/test_parity_index_baseline.py`'s drift assertion is now a one-directional ratchet
+(`live_missing <= _MISSING_TEST_PATH_CEILING`), confirmed live by direct test run (15 passed), with
+all four of this ticket's own AC met by that ticket's own recorded work — precedent tickets read,
+the ratchet evaluated against exact equality on the regression-catching axis, and the decision
+peer-reviewed by `rpg-feature-planning` before implementation. Closing this ticket as superseded;
+no independent work remained.

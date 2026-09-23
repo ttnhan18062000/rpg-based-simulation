@@ -440,7 +440,7 @@ def _is_none_section(section_text: str) -> bool:
     return _DOCS_BULLET_RE.search(remainder) is None
 
 
-def _git_touched_paths(root: Path = Path(".")) -> set[str]:
+def _git_status_touched_paths(root: Path = Path(".")) -> set[str]:
     """Return every path `git status --porcelain` reports as changed, relative to `root`.
 
     Read-only, fail-open: any subprocess error (missing `git` binary, `root` not a repo, timeout)
@@ -471,6 +471,79 @@ def _git_touched_paths(root: Path = Path(".")) -> set[str]:
             rest = rest.split(" -> ", 1)[1]
         paths.add(rest.strip())
     return paths
+
+
+def _git_ticket_commits_touched_paths(
+    ticket_id: str, root: Path = Path("."), base_ref: str = "origin/main"
+) -> set[str]:
+    """Return every path touched by commits on this branch whose own message belongs to
+    `ticket_id`, per this repo's own Commit Convention (CLAUDE.md: `TCK-YYYYMMDD-SHORT-SCOPE:
+    Brief description`) — `git log --name-only --format= --grep="^<ticket_id>:" <base_ref>..HEAD`.
+
+    TCK-20260916-DOC-COVERAGE-CHECK-BLIND-TO-COMMITTED-CHANGES: `git status --porcelain` alone
+    (`_git_status_touched_paths`) only sees uncommitted working-tree changes — a doc edit
+    committed earlier in the same hand-orchestrated session (an established, encouraged practice,
+    not an edge case) has a clean tree by Verify/Finalize time and was invisible to the reverse
+    coverage check. This adds the committed side, from real git history.
+
+    **Scoped to this ticket's own commits, not the whole branch** (tightened during the same
+    ticket's own PR review, before merge): this repo's own standing practice is one branch per
+    *batch*, not per ticket — a branch-wide `git diff <base_ref>...HEAD --name-only` (the first
+    version of this function) would attribute an EARLIER ticket's own committed doc edit to a
+    LATER ticket closing on the same branch, producing a false reverse-direction FAIL unless the
+    later ticket redundantly re-declares a doc it never touched. `git log <base_ref>..HEAD`
+    (two-dot — commits reachable from HEAD but not `base_ref`, i.e. this branch's own commit list,
+    not a diff of final states) with `--grep` anchored to the start of a commit-message line makes
+    the scope exact: only this ticket's own commits' own files count.
+
+    `origin/main` matches this repo's own established convention for exactly this kind of
+    close-time diff (`tools/mechanism_registry/mechanism_registry_changed_code_check.py`'s own
+    `base_ref: str = "origin/main"` default) — not assumed fresh here, confirmed against that
+    sibling tool's own real, working precedent. That tool additionally scopes to one ticket's own
+    commits for the identical reason (see its `get_changed_files_for_ticket()`'s own docstring on
+    why a branch-wide diff misattributes files across bundled tickets) — this function's own
+    ticket-scoping mirrors that established shape rather than inventing a new one.
+
+    Read-only, fail-open, same convention as `_git_status_touched_paths`: `origin/main` may not
+    exist locally (a shallow clone, a fork with a differently-named remote, `origin/main` never
+    fetched) — any subprocess error here returns an empty set, so the caller falls back to
+    whatever `_git_status_touched_paths` alone found, never crashes, and never silently invents a
+    result under a wrong base.
+    """
+    try:
+        result = subprocess.run(
+            [
+                "git", "log", "--name-only", "--format=",
+                f"--grep=^{re.escape(ticket_id)}:", f"{base_ref}..HEAD",
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    if result.returncode != 0:
+        return set()
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
+
+
+def _git_touched_paths(
+    ticket_id: str, root: Path = Path("."), base_ref: str = "origin/main"
+) -> set[str]:
+    """Union of `_git_status_touched_paths` (uncommitted) and `_git_ticket_commits_touched_paths`
+    (committed by `ticket_id`'s own commits on this branch since its merge-base with `base_ref`)
+    — see `_git_ticket_commits_touched_paths`'s own docstring for why both are needed and why the
+    committed half is scoped to one ticket rather than the whole branch. Either source failing
+    (see each function's own fail-open contract) still returns whatever the other found, rather
+    than the whole function returning nothing. `ticket_id` has no default — every real call site
+    (`check_docs_to_update_coverage`) already has one, and a caller that forgot to scope it would
+    silently reproduce the pre-scoping cross-ticket-attribution bug this signature exists to rule
+    out."""
+    return _git_status_touched_paths(root) | _git_ticket_commits_touched_paths(
+        ticket_id, root, base_ref
+    )
 
 
 def _path_touched(path: str, touched: set[str]) -> bool:
@@ -616,7 +689,7 @@ def check_docs_to_update_coverage(
     direction blocks regardless of the other having passed.
     """
     forward_evidence = "hotfix tier — forward direction skipped, no investigation.md"
-    touched = _git_touched_paths()
+    touched = _git_touched_paths(ticket_id)
 
     if tier != "hotfix":
         investigation_path = base_dir / ticket_id / "investigation.md"
@@ -825,6 +898,18 @@ def check_migration_complete(
 ) -> tuple[str, str]:
     if tier == "hotfix":
         return ("NA", "hotfix tier — no migration expected")
+    if tier == "epic":
+        # TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: CLAUDE.md's own literal text
+        # groups epic with standard ("Standard/epic only: Create staging_artifacts/{ticket_id}/"),
+        # but epic tier's own Tier Routing row says "Scope only -- tracks child tickets; no direct
+        # implementation" -- and in practice, no epic ticket, flat or folder-nested, has ever had
+        # its own stored_artifacts/{ticket_id}/ (confirmed against every real epic in
+        # tickets/done/ at the time this was added, not just the two folder-nested precedents this
+        # ticket was filed against). An epic's own investigation/plan/test_plan work is its child
+        # tickets' -- SEQUENCE.md plus those children are the epic's real artifact trail. Treating
+        # this as "no migration expected," same as hotfix, matches actual practice rather than
+        # failing every epic ticket close against a requirement nothing has ever satisfied.
+        return ("NA", "epic tier — scope-only, no ticket-owned stored_artifacts expected")
 
     if staging_dir is None:
         staging_dir = Path(f"staging_artifacts/{ticket_id}")
@@ -840,12 +925,27 @@ def check_migration_complete(
 
 
 def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
-    done_path = Path(f"tickets/done/{ticket_id}.md")
+    """PASS iff the ticket file exists somewhere under tickets/done/ and no longer exists under
+    tickets/inprogress/.
+
+    TCK-20260921-NESTED-EPIC-FOLDER-REGISTRY-VISIBILITY-GAP: also checks
+    tickets/done/{folder}/{ticket_id}.md, one level deep -- an epic ticket closed via CLAUDE.md's
+    own folder-move rule ("move the entire folder to tickets/done/{folder}/") never lives at the
+    flat tickets/done/{ticket_id}.md path the original check-only assumed. One level deep only,
+    matching generate_registry.py::collect_tickets()'s own folder-depth assumption and the rule's
+    own real shape (a folder never nests a folder).
+    """
+    flat_done_path = Path(f"tickets/done/{ticket_id}.md")
+    nested_done_matches = sorted(Path("tickets/done").glob(f"*/{ticket_id}.md"))
     inprogress_path = Path(f"tickets/inprogress/{ticket_id}.md")
+
+    done_path = flat_done_path if flat_done_path.exists() else (
+        nested_done_matches[0] if nested_done_matches else flat_done_path
+    )
 
     problems = []
     if not done_path.exists():
-        problems.append(f"{done_path} does not exist")
+        problems.append(f"{flat_done_path} does not exist (flat or one-level-deep under tickets/done/)")
     if inprogress_path.exists():
         problems.append(f"{inprogress_path} still exists")
 

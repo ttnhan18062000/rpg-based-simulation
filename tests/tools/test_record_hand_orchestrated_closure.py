@@ -492,3 +492,98 @@ class TestSidecarStalenessWarning:
         )
         assert result.returncode == 0, result.stderr
         assert "sidecar-staleness" not in result.stderr
+
+
+class TestSidecarClearedAfterClosure:
+    """TCK-20260922-HAND-ORCHESTRATION-SIDECAR-POST-SNAPSHOT-ACCUMULATION-INCIDENT: a sidecar that
+    correctly matched the ticket at recording time (no staleness warning) still corrupted
+    tool_call_count if left live afterward -- real tool calls for the rest of that same ticket's
+    closure (registry regen, git add/commit) kept accumulating onto the already-recorded
+    (run_id, seq). clear_sidecar_if_matches() removes that window by clearing the sidecar the
+    moment its snapshot is taken.
+    """
+
+    def _run(self, args, tmp_path):
+        return subprocess.run(
+            [sys.executable, str(_RECORD_PATH), *args],
+            capture_output=True, text=True, cwd=tmp_path,
+        )
+
+    def test_clears_sidecar_that_matches(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import clear_sidecar_if_matches
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude").mkdir()
+        sidecar_path = tmp_path / ".claude" / "current_run"
+        sidecar_path.write_text(json.dumps({"run_id": "TCK-MATCH", "seq": 1, "phase": "Implement"}))
+
+        clear_sidecar_if_matches("TCK-MATCH")
+
+        cleared = json.loads(sidecar_path.read_text())
+        assert cleared["run_id"] is None
+
+    def test_leaves_sidecar_holding_a_different_ticket_untouched(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import clear_sidecar_if_matches
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude").mkdir()
+        sidecar_path = tmp_path / ".claude" / "current_run"
+        sidecar_path.write_text(json.dumps({"run_id": "TCK-OTHER-LIVE-WORK", "seq": 2}))
+
+        clear_sidecar_if_matches("TCK-MATCH")
+
+        untouched = json.loads(sidecar_path.read_text())
+        assert untouched["run_id"] == "TCK-OTHER-LIVE-WORK"
+
+    def test_no_sidecar_file_does_not_raise(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import clear_sidecar_if_matches
+        monkeypatch.chdir(tmp_path)
+        clear_sidecar_if_matches("TCK-ANY")  # must not raise
+
+    def test_malformed_sidecar_json_does_not_raise(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import clear_sidecar_if_matches
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / ".claude").mkdir()
+        (tmp_path / ".claude" / "current_run").write_text("not valid json{{{")
+        clear_sidecar_if_matches("TCK-ANY")  # must not raise
+
+    def test_clears_session_scoped_sidecar_preferentially(self, tmp_path, monkeypatch):
+        from record_hand_orchestrated_closure import clear_sidecar_if_matches
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "sess-123")
+        (tmp_path / ".claude").mkdir()
+        scoped_path = tmp_path / ".claude" / "current_run.sess-123"
+        scoped_path.write_text(json.dumps({"run_id": "TCK-MATCH", "seq": 1}))
+
+        clear_sidecar_if_matches("TCK-MATCH")
+
+        cleared = json.loads(scoped_path.read_text())
+        assert cleared["run_id"] is None
+
+    def test_cli_clears_matching_sidecar_after_recording(self, tmp_path):
+        (tmp_path / ".claude").mkdir()
+        sidecar_path = tmp_path / ".claude" / "current_run"
+        sidecar_path.write_text(
+            json.dumps({"run_id": "TCK-CLI-CLEAR", "seq": 1, "phase": "Implement"}),
+        )
+        result = self._run(
+            ["--ticket-id", "TCK-CLI-CLEAR", "--tier", "hotfix",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        cleared = json.loads(sidecar_path.read_text())
+        assert cleared["run_id"] is None
+
+    def test_cli_leaves_a_different_tickets_sidecar_alone(self, tmp_path):
+        # A stale sidecar for a DIFFERENT ticket must be left exactly as the staleness warning
+        # describes it -- clearing it here would destroy the evidence, not fix anything.
+        (tmp_path / ".claude").mkdir()
+        sidecar_path = tmp_path / ".claude" / "current_run"
+        sidecar_path.write_text(json.dumps({"run_id": "TCK-STALE-OTHER", "seq": 1}))
+        result = self._run(
+            ["--ticket-id", "TCK-CLI-CLEAR-2", "--tier", "hotfix",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        untouched = json.loads(sidecar_path.read_text())
+        assert untouched["run_id"] == "TCK-STALE-OTHER"

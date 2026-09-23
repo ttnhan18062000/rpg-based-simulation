@@ -977,7 +977,7 @@ def test_real_registry_verification_view_seeds_non_empty(registry_data):
     by_id = {row["id"]: row for row in view}
     expected = {
         "combat_engagement": "scenario",
-        "succession": "code_trace",
+        "class_assignment": "code_trace",
         "motivation_doctrine": "code_trace",
         "information_trust_deception": "code_trace",
         "opportunity_rumor_seeds": "code_trace",
@@ -993,7 +993,12 @@ def test_reader_get_verification_known_and_unknown(registry):
     verified = registry.get_verification("combat_engagement")
     assert verified is not None
     assert verified["instrument"] == "scenario"
-    assert registry.get_verification("succession")["instrument"] == "code_trace"
+    assert registry.get_verification("class_assignment")["instrument"] == "code_trace"
+    # `succession` was this example until TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-
+    # INSTRUMENT gave it a real scenario verified block (progression value-differential program,
+    # wave 3); swapped to `class_assignment`, presumptively out of scope for that same instrument
+    # per its own §5.1 scope statement (a static catalog lookup, not an ongoing per-tick mechanism)
+    # -- unlikely to gain a scenario block soon.
     assert registry.get_verification("clan") is None  # real, unverified id -- `movement` itself
     # was this example until TCK-20260920-MECHANISM-BOUND-UNVERIFIED-INSTRUMENT-RUN gave it a
     # real verified block (batch 3 of the unbound-claims program); swapped to `clan`, still
@@ -1046,3 +1051,98 @@ def test_makefile_wires_mechanism_verification_view_target():
     makefile_text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
     assert "mechanism-verification-view:" in makefile_text
     assert "tools/mechanism_registry/generate_mechanism_verification_view.py" in makefile_text
+
+
+# ── prose/field drift check (TCK-20260921-MECHANISM-PROGRESSION-VALUE-DIFFERENTIAL-INSTRUMENT) ──
+
+
+def test_prose_field_drift_check_detects_the_real_incident_shape():
+    from tools.mechanism_registry.mechanism_prose_field_drift_check import check
+
+    mechs = [{
+        "id": "test_mech",
+        "verified": {
+            "instrument": "code_trace",
+            "verdict": "observed",
+            "note": "Value-differential added 2026-09-21, instrument upgraded code_trace -> "
+                     "scenario. Some more prose here.",
+        },
+    }]
+    hits = check(mechs)
+    assert len(hits) == 1
+    assert hits[0].mechanism_id == "test_mech"
+    assert hits[0].field == "instrument"
+    assert hits[0].claimed == "scenario"
+    assert hits[0].actual == "code_trace"
+
+
+def test_prose_field_drift_check_is_clean_when_the_field_was_actually_updated():
+    from tools.mechanism_registry.mechanism_prose_field_drift_check import check
+
+    mechs = [{
+        "id": "test_mech",
+        "verified": {
+            "instrument": "scenario",
+            "verdict": "observed",
+            "note": "Value-differential added 2026-09-21, instrument upgraded code_trace -> "
+                     "scenario. Some more prose here.",
+        },
+    }]
+    assert check(mechs) == []
+
+
+def test_prose_field_drift_check_does_not_flag_unrelated_arrow_prose():
+    from tools.mechanism_registry.mechanism_prose_field_drift_check import check
+
+    mechs = [{
+        "id": "test_mech",
+        "verified": {
+            "instrument": "code_trace",
+            "verdict": "observed",
+            "note": "State correction, done -> orphan -> partial (self-corrected same batch). "
+                     "instrument and verdict fields are unaffected by this state history.",
+        },
+    }]
+    # "done -> orphan" etc. is a STATE transition, not an instrument/verdict one, and none of the
+    # arrow targets are valid instrument/verdict enum values -- must not false-positive on it.
+    assert check(mechs) == []
+
+
+def test_prose_field_drift_check_detects_verdict_drift_using_the_same_idiom():
+    from tools.mechanism_registry.mechanism_prose_field_drift_check import check
+
+    mechs = [{
+        "id": "test_mech",
+        "verified": {
+            "instrument": "code_trace",
+            "verdict": "observed",
+            "note": "verdict correction, observed -> contradicted, per fresh corpus evidence.",
+        },
+    }]
+    hits = check(mechs)
+    assert len(hits) == 1
+    assert hits[0].field == "verdict"
+    assert hits[0].claimed == "contradicted"
+    assert hits[0].actual == "observed"
+
+
+def test_real_registry_has_no_prose_field_drift():
+    # The load-bearing regression check: the real committed file must itself be clean, mirroring
+    # test_real_registry_has_no_duplicate_keys's own "must pass on the real file" discipline.
+    from tools.mechanism_registry.mechanism_prose_field_drift_check import (
+        _load_mechanisms, check,
+    )
+
+    mechanisms = _load_mechanisms(_REGISTRY_PATH)
+    assert check(mechanisms) == []
+
+
+def test_makefile_wires_mechanism_prose_field_drift_check_target():
+    makefile_text = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
+    assert "mechanism-prose-field-drift-check:" in makefile_text
+    assert "tools/mechanism_registry/mechanism_prose_field_drift_check.py" in makefile_text
+
+
+def test_ci_wires_mechanism_prose_field_drift_check_as_report_only():
+    workflow_text = (REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
+    assert "make mechanism-prose-field-drift-check || true" in workflow_text

@@ -98,6 +98,14 @@ const sourceSlug = source.replace(/\.[^/.]+$/, '').replace(/[^A-Za-z0-9]+/g, '-'
 const runId = `CREATE-TICKETS-${sourceSlug}`
 
 const events = []
+// TCK-20260915-SIBLING-WORKFLOW-SUMMARY-TRUNCATION-MARKERS: visible truncation marker instead of
+// a silent cut, mirroring implement-ticket.js's own truncateSummary() (TCK-20260915-EVENT-
+// SUMMARY-TRUNCATION) — no shared module exists between these standalone workflow scripts, so
+// this is a local copy, same shape, not a new import.
+const truncateSummary = (s) => {
+  const str = (s || '').toString()
+  return str.length > 200 ? str.slice(0, 196) + ' […]' : str
+}
 // reasonCode (TCK-20260706-CREATE-TICKETS-TAG-CHECK, reusing the reason_code field from
 // TCK-20260706-MONITORING-REASON-CODE): optional, null by default. Populated on the Structure
 // phase's 'blocked' event when tasks are skipped for having an unregistered tag.
@@ -107,7 +115,7 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, reasonCode) => {
     phase: phaseLabel,
     agent: agentName,
     status,
-    summary: (summary || '').toString().slice(0, 200),
+    summary: truncateSummary(summary),
     ts: ts || null,
     reason_code: reasonCode || null,
   })
@@ -882,7 +890,7 @@ Step 3 — report: DONE (file path updated) or SKIPPED (epic ticket not found).`
   )
 
   const linkText = (linkResult || '').toString()
-  pushEvent('Link', 'link-epic', linkText.includes('SKIPPED') ? 'skipped' : 'ok', linkText.slice(0, 200) || `Linked to ${epicId}`, null)
+  pushEvent('Link', 'link-epic', linkText.includes('SKIPPED') ? 'skipped' : 'ok', linkText || `Linked to ${epicId}`, null)
   log(`Linked ${ticketIds.length} ticket(s) to epic ${epicId}`)
 }
 
