@@ -42,8 +42,8 @@ placeholders for a future `create-tickets` pass, not yet-existing tickets.
 | 15 | ~~Phase-level resume — design/validation-rule resolution~~ **SHIPPED** — `TCK-20260907-PHASE-RESUME-VALIDATION-RULE-DESIGN` | B — Experiment | H1 (was) | `workflow_reliability_epic.md` (M3 — shipped) |
 | 16 | Model-diverse reviewer — shadow comparison &amp; cutover decision | B — Experiment | H2 | `review_independence_epic.md` (M2) |
 | 17 | Bash secret-exposure hook — blocking-escalation decision | B — Experiment | H2 | `governance_capability_policy_epic.md` (follow-on, post-M5) |
-| 18 | Model-based routing for mechanical agents | C — Future option | H2, blocked | `bucket_c_future_options.md` |
-| 19 | Task-success-rate metric closing the improvement loop | C — Future option | H3, blocked | `bucket_c_future_options.md` |
+| 18 | Model-based routing for mechanical agents — **unblocked 2026-09-23, scoped into an Experiment Specification** (`TCK-20260923-MODEL-ROUTING-MECHANICAL-AGENTS-EXPERIMENT-SPEC`, not yet run) | C — Future option | H2 | `bucket_c_future_options.md`, `model_routing_mechanical_agents_experiment.md` |
+| 19 | Task-success-rate metric closing the improvement loop — **unblocked 2026-09-23, scoped into an Experiment Specification** (`TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC`, not yet run) | C — Future option | H3 | `bucket_c_future_options.md`, `task_success_rate_metric_experiment.md` |
 | 20 | Full agent-behavior eval platform | C — Future option | H3, blocked | `bucket_c_future_options.md` |
 | 21 | Live Codex provider pilot | C — Future option | H3, blocked | `bucket_c_future_options.md` |
 | — | Workflow-engine migration, A2A, full sandboxing, general AI-config platform, general command-risk policy | Rejected | — | `bucket_c_future_options.md` (§"Explicitly not recommended") |

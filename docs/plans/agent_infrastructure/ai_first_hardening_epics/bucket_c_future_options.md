@@ -30,6 +30,11 @@ quality regression from routing otherwise. This is a hard sequencing rule, not a
 **When it clears**: revisit as a Bucket-B experiment (not straight to a ticket) — pilot `model:`
 overrides on `done-checker.md`/`ticket-scoper.md` only, A/B against the eval baseline's scoring.
 
+**Cleared 2026-09-23** — item 13's eval pilot completed with all 3 Exit Criteria MET
+(`TCK-20260907-FILTERED-REPLAY-EVAL-PILOT`). Scoped into an Experiment Specification:
+`model_routing_mechanical_agents_experiment.md` (`TCK-20260923-MODEL-ROUTING-MECHANICAL-AGENTS-EXPERIMENT-SPEC`).
+Not yet run — the spec document only.
+
 ### Task-success-rate metric closing the improvement loop
 
 **Blocked on**: `agent_evaluation_foundation_experiment.md`'s scoring approach proving repeatable
@@ -37,6 +42,11 @@ overrides on `done-checker.md`/`ticket-scoper.md` only, A/B against the eval bas
 
 **When it clears**: extend `tools/agent-monitoring/cost_proxy.py`'s existing before/after
 comparison pattern (already used for cost-proxy weight changes) to agent-prompt changes generally.
+
+**Cleared 2026-09-23** — item 13's eval pilot completed with all 3 Exit Criteria MET
+(`TCK-20260907-FILTERED-REPLAY-EVAL-PILOT`). Scoped into an Experiment Specification:
+`task_success_rate_metric_experiment.md` (`TCK-20260923-TASK-SUCCESS-RATE-METRIC-EXPERIMENT-SPEC`).
+Not yet run — the spec document only.
 
 ### Full agent-behavior eval platform
 

@@ -12253,7 +12253,7 @@
   support_boundary: Agent-orchestration/monitoring-pipeline tooling only -- no simulation
     behavior is involved.
 - id: INFRA-409
-  text: 'Advisory, opt-in shadow candidate-reviewer logging (TCK-20260904-SHADOW-REVIEWER-LOGGING)
+  text: 'Advisory shadow candidate-reviewer logging (TCK-20260904-SHADOW-REVIEWER-LOGGING)
     added at two call sites in .claude/workflows/implement-ticket.js: the Architecture-Verify
     phase (after the production architecture-reviewer agent() call at line ~1004,
     before the if (archVerify.verdict !== ''APPROVED'') block at ~line 1106) and the
@@ -12263,8 +12263,9 @@
     the main-loop/production reviewer call inherits, chosen to de-correlate failure
     modes) runs against the same diff/evidence the production reviewer just judged,
     on an identical prompt, for logging only. Gated behind SHADOW_REVIEWER_LOGGING_ENABLED
-    (strict "1" string equality, off by default) AND a bounded per-reviewer sample
-    window (tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open(),
+    (on by default as of TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON -- set
+    to "0" to opt out; strict string comparison, not a truthy/falsy check) AND a bounded
+    per-reviewer sample window (tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open(),
     thresholds 50 for architecture-reviewer / 10 for security-reviewer, sized from
     real historical event volume: 478 vs. 14 historical Architecture-Verify/Security-Review
     events, a ~34:1 ratio) -- once a reviewer''s window closes, zero further candidate
@@ -12304,7 +12305,11 @@
     tools/agent-monitoring/shadow_reviewer_window.py (new -- is_shadow_window_open(),
     compute_shadow_seq(), SHADOW_MAX_SAMPLES, SHADOW_SEQ_BASE). tools/agent-monitoring/shadow_reviewer_events.py
     (new -- emit_shadow_reviewer_event(), SHADOW_REVIEWER_EVENT_FIELDS). docs/agent-monitoring/schema.md
-    (new Shadow-reviewer-event field family section; seq field exception note extended).'
+    (new Shadow-reviewer-event field family section; seq field exception note extended).
+    TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON: both call sites'' gate condition
+    changed from `= "1"` (opt-in, off by default) to `!= "0"` (on by default, opt-out
+    via SHADOW_REVIEWER_LOGGING_ENABLED=0) -- tests/tools/test_shadow_reviewer_call_site.py''s
+    env-gated assertion and new polarity guard updated to match.'
   proof_type: contract
   test_path: tests/tools/test_shadow_reviewer_call_site.py, tests/tools/test_shadow_reviewer_window.py,
     tests/tools/test_current_run_sidecar_orchestrator.py::test_sidecar_bash_write_precedes_each_covered_agent_call
