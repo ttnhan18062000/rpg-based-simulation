@@ -181,6 +181,25 @@ rollout row). This baseline script itself is unchanged and still valid for its o
 sizing a wave's candidate scope from real per-agent tool-call patterns before landing it — the
 caveat applies specifically to using it as a post-landing denial/regression signal.
 
+## Bash Command Mix Baseline
+
+`tools/agent-monitoring/bash_command_mix.py` is a separate, read-only measurement over
+`agent-monitoring/data/*/tools.jsonl` answering two questions neither `real_token_usage.py` nor
+`agent_tool_usage_baseline.py` already cover: (1) the raw call-count mix of Bash command heads
+(`cd` vs `grep` vs `git` vs `python3`, etc — not context-token attribution, and not fragmented by
+`cd`'s own destination directory the way `real_token_usage.py::attribute_by_bash_family` splits
+it), and (2) how many Bash calls are grep-flavored (`grep`/`rg` head) against how many real
+`mcp__knowledge-search__search_docs` calls happened in the same window — closing a gap
+`generate_retro.py::build_raw_investigation_count_section` documents explicitly (it substitutes a
+Read-count proxy because "no distinct `Grep` tool name is ever recorded"; this script classifies
+Bash's own `input_summary` command head instead). Sourced from `agent-monitoring/data/`, which is
+committed to git — unlike `real_token_usage.py`'s developer-machine-only transcript corpus, this
+tool's baseline is reproducible by any session or CI. Re-runnable over an arbitrary inclusive ISO
+week range (`--since-week`/`--through-week`), so a before/after comparison for an advisory nudge
+(e.g. the `cd`-prefix habit or the search-before-grep rule) is one command per side, diffed via
+`--json` output. Built by `TCK-20260923-BASH-COMMAND-MIX-BASELINE` as the measurement baseline for
+Batch B's two advisory-hook tickets.
+
 ## Recording coverage for a hand-orchestrated closure
 
 If you close a ticket without going through the `Workflow` tool's `implement-ticket.js` pipeline,
