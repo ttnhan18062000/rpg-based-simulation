@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE
-phase: open
+phase: done
 date: 2026-09-23
 tags: [architecture, schema, registry, world]
 ---
@@ -18,7 +18,7 @@ domain management view
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -187,28 +187,144 @@ at execution time:
 
 ## Implementation Notes
 
-_To be completed by the implementer._
+Implemented per `staging_artifacts/TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE/plan.md`'s 13
+ordered steps, edges laid down and validator-clean before the separate classification pass (Step 5
+run only after Steps 1-2 were on disk), exactly per the sequencing hint below.
 
-Sequencing hint: classify the Rules **after** laying down the edges, not while doing it. The
-classification is deliberately a separate judgment (`architecture.md` §3/§4), and doing both in one
-pass is how it silently becomes a mechanical roll-up — the exact mistake the three-schema split
-exists to prevent.
+1. **AC 7 schema-friction disposition (resolved: deferred with reason, no schema revision).**
+   `registries/mechanism_causal_edges.yaml`'s `producer_mechanism_id`/`consumer_mechanism_id` row
+   shape models "A produces input for B." The one candidate relation found during mapping —
+   `regional_sovereignty` (`FactionInfluenceService`, `src/world/influence.py`) and
+   `betrayal_siege_war` (`MilitaryConflictPhase`, `src/engine/military_conflict.py`)
+   independently and inconsistently writing the same durable field
+   (`RegionState.owner_faction_id`) — is a conflict/duplication relation, not a producer→consumer
+   one, and does not fit this schema's shape (no `edge_type` field exists here; the relation is
+   also not a `producer == consumer` self-edge, the schema's only other special case). Disposition:
+   the file stays at zero rows (a correct, documented outcome, not a gap); an inline header comment
+   now records this reasoning for a future mapper, and the same fact is cited as evidence on the
+   `TERR-01`/`TERR-03` → `betrayal_siege_war` edges in `rule_mechanism_edges.yaml`. No schema field
+   was added or changed.
+2. **Threshold-mismatch finding — now confirmed three-way, not just two code paths.** The
+   already-known `FactionInfluenceService` (`src/world/influence.py`, `±50.0`) vs.
+   `WorldDynamicsSystem` (`src/engine/world_dynamics.py`, `±100.0`) inconsistency was cross-checked
+   against the two governing docs during this implementation pass:
+   `docs/mechanics/regional_sovereignty.md:22-24` states `±100.0` as canonical ("Hero Guild
+   Control: Influence > 100.0", "Monster Horde Control: Influence < -100.0", "Contested: Between
+   -50.0 and 50.0"), matching `world_dynamics.py`; but
+   `docs/world/regional_sovereignty_runtime_contract.md:24,109` states `±50.0` as canonical ("one
+   faction's influence >= +50... or <= -50", "The influence threshold (±50) is configurable
+   per-region"), matching `influence.py`. So the Mechanics Bible chapter and the runtime contract
+   doc disagree with **each other**, independent of either code path. Recorded as evidence on the
+   `TERR-02` / `regional_sovereignty` edge; explicitly not fixed here (Out of Scope — no `src/` or
+   `docs/` edit made). The doc-vs-doc disagreement itself (as distinct from the already-known
+   code-vs-code one) is worth a separate follow-up ticket — not filed by this ticket.
+3. Pointer to the fuller record: `staging_artifacts/TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE/investigation.md`'s
+   "Risks and Open Questions" section covers both findings' original discovery context.
+
+One implementation-time correction from the plan's own draft text (recorded in `plan.md`'s
+Deviations section): the plan's own suggested header-comment wording for
+`rule_mechanism_edges.yaml` (Step 1) would have spelled out the literal string `TERR-04`, which
+conflicts with Step 6's own `test_terr04_never_appears_in_populated_registries` guard (a
+literal-string check over the whole file, comments included). Reworded to describe the stale
+citation without spelling out the ID it points at; no change to the guard's own intent or
+strictness.
+
+Sequencing hint (already followed): classify the Rules **after** laying down the edges, not while
+doing it. The classification is deliberately a separate judgment (`architecture.md` §3/§4), and
+doing both in one pass is how it silently becomes a mechanical roll-up — the exact mistake the
+three-schema split exists to prevent.
 
 ## Test Summary
 
-_To be completed by the implementer._
+Scoped regression run (117 tests, all passing):
+```
+pytest tests/unit/tools/test_semantic_control_plane_schema.py \
+       tests/unit/tools/test_mechanism_registry.py \
+       tests/unit/tools/test_territory_control_view.py \
+       tests/unit/tools/test_terr_mapping_mechanism_state_stability.py -v
+```
+- `test_semantic_control_plane_schema.py` (28 tests, 3 new: `test_all_four_terr_rules_have_a_classification_record`,
+  `test_terr04_never_appears_in_populated_registries`,
+  `test_real_rule_mechanism_edges_have_nonempty_evidence_and_date`) — all pass, including
+  `test_all_three_schemas_pass_on_real_seed_data` and `test_documented_cli_invocation_actually_runs`
+  (real subprocess run of `tools/semantic_control_plane/registry.py`, confirms AC 4's zero-manual-
+  override requirement against the real populated files).
+- `test_mechanism_registry.py` (regression surface, zero code changes to
+  `tools/mechanism_registry/` this ticket makes) — all 83 tests pass unmodified.
+- `test_territory_control_view.py` (5 new tests) — six-axis rendering, `UNKNOWN` positive control,
+  mapped/unmapped + verified/unverified counts, no-collapsed-badge guard, `--check` staleness
+  detection, and committed-output-matches-fresh-render regression — all pass.
+- `test_terr_mapping_mechanism_state_stability.py` (1 new test, AC 8 guard) — run once against the
+  real `registries/mechanisms.yaml` *before* the Step 4 note edit (baseline) and once *after*
+  (regression) — passes both times.
 
-Expected shape: validator passes on the populated files; a regression assertion for AC 8 that no
-`state`/`verdict` changed; a test that the generated view renders all six axes including any
-`UNKNOWN`. Do not manufacture coverage beyond the data's own invariants.
+Manual `git diff registries/mechanisms.yaml` confirms the only change is inside
+`regional_trauma`'s `note: >-` block (STARVED-convention prose); no `state`/`verified.instrument`/
+`verified.verdict`/`verified.date` line changed anywhere in the file, on this or any other
+mechanism.
+
+`make territory-control-view` run twice in a row (before and after committing) produces byte-
+identical output — the generator is deterministic against the committed registry state.
 
 ## Files Changed
 
-_To be completed by the implementer._
+- `registries/rule_mechanism_edges.yaml` — 6 real edges (TERR-01/02/03/05 against
+  `regional_sovereignty`, `betrayal_siege_war`, `city`), each with evidence + date.
+- `registries/rule_classifications.yaml` — 4 real classifications (TERR-01: CONFLICTING, TERR-02:
+  PARTIAL, TERR-03: CONFLICTING, TERR-05: PARTIAL), each with evidence + review_date.
+- `registries/mechanism_causal_edges.yaml` — unchanged row count (still zero rows); added an
+  inline header comment recording the AC 7 schema-friction disposition.
+- `registries/mechanisms.yaml` — `regional_trauma`'s `verified.note` prose only (STARVED-convention
+  naming per `docs/plans/status_axis_model.md` §4); no `state`/`verified.verdict` change anywhere
+  in the file.
+- `tools/semantic_control_plane/generate_territory_control_view.py` (new) — Territory-only
+  six-axis management view generator, mirroring
+  `tools/mechanism_registry/generate_mechanism_system_rollup_view.py`'s conventions.
+- `Makefile` — new `territory-control-view` target.
+- `docs/brainstorm/territory_control_management_view.md` (new, generated) — the real Territory
+  management view output.
+- `docs/brainstorm/mechanism_verification_view.md` (generated, regenerated as a side effect of
+  running `test_mechanism_registry.py`'s own `test_make_target_generates_verification_view`,
+  which calls `make mechanism-verification-view` for real) — the only content change is
+  `regional_trauma`'s own row picking up the same STARVED-convention note prose edited in
+  `registries/mechanisms.yaml`; never hand-edited.
+- `tests/unit/tools/test_terr_mapping_mechanism_state_stability.py` (new) — AC 8 state/verdict
+  stability guard for the five TERR-implicated mechanisms.
+- `tests/unit/tools/test_semantic_control_plane_schema.py` — 3 new cross-schema data-integrity
+  tests.
+- `tests/unit/tools/test_territory_control_view.py` (new) — Territory view rendering tests.
+- `tickets/inprogress/TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE.md` — Implementation Notes,
+  Test Summary, Files Changed, Completion Summary, Status filled in.
+- `staging_artifacts/TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE/plan.md` — Deviations section
+  added (one wording-only correction, no decision change).
 
 ## Completion Summary
 
-_To be completed by the implementer._
+Populated the Simulation Semantic Control Plane's three M0 schemas with their first real data: 6
+Rule→Mechanism edges and 4 Rule classifications covering all four real Territory/Control Rules
+(TERR-01, TERR-02, TERR-03, TERR-05), with `mechanism_causal_edges.yaml` correctly staying at zero
+rows (a documented, evidenced outcome, not a gap). Applied the STARVED-naming convention to
+`regional_trauma`'s note only, with zero `state`/`verified.verdict` changes anywhere in
+`registries/mechanisms.yaml` (confirmed by both a dedicated regression test and a manual diff).
+Built and wired a new Territory-only management-view generator rendering all four Rules across
+`architecture.md` §8's six axes (DESIGN, REALIZATION, IMPLEMENTATION, VERIFICATION, INTEGRATION,
+OBSERVED OUTCOME), with explicit `UNKNOWN` values, mapped/unmapped and verified/unverified counts,
+and no collapsed score — generated via `make territory-control-view` into
+`docs/brainstorm/territory_control_management_view.md`. M0's validator passes with zero manual
+overrides. All 8 acceptance criteria are satisfied: AC 1-3 by the populated edges/classifications
+(TERR-04 never written, confirmed by a dedicated guard test), AC 4 by the clean validator run, AC
+5-6 by the generated view and its own test coverage, AC 7 by the documented schema-friction
+disposition (Implementation Notes above), and AC 8 by the note-only `mechanisms.yaml` diff. No
+`src/` file was touched anywhere in this ticket.
+
+Two fixes were applied during Verify before Finalize: (1) a stale duplicate of this ticket's own
+source file under `tickets/todos/` was deleted as part of Verify-phase cleanup — the ticket
+originated directly in `tickets/todos/` (no subfolder), so its removal is the full required
+cleanup step, confirmed gone at Finalize time; (2) the TERR-04 follow-up cross-reference in
+"Findings Recorded During Scoping" (finding 1) was corrected to point at the actual closed
+implementing ticket, `TCK-20260923-TERR01-CITATION-FIX` (hotfix, DONE, confirmed present in
+`tickets/done/`), rather than the earlier tracking ID `TCK-20260923-TERR01-STALE-JURISDICTION-CITATION`
+under which the work was originally filed.
 
 ## Findings Recorded During Scoping
 
@@ -228,7 +344,9 @@ _To be completed by the implementer._
    citation is wrong — a leftover from a drafting guess made before the admission pass concluded
    Inherited. **M0's validator rejecting `TERR-04` is correct behavior, not evidence against the
    Catalog.** Still deliberately not fixed here: a one-line edit to a frozen doc wants its own
-   traceability. Tracked as `TCK-20260923-TERR01-STALE-JURISDICTION-CITATION` (hotfix).
+   traceability. Tracked as `TCK-20260923-TERR01-STALE-JURISDICTION-CITATION`, implemented and
+   closed under the ID `TCK-20260923-TERR01-CITATION-FIX` (hotfix, DONE — see
+   `tickets/done/TCK-20260923-TERR01-CITATION-FIX.md`).
 2. **`regional_sovereignty`'s binding was already wrong once.** `RegionalSovereigntyService` has
    zero real callers; the live mechanism is `FactionInfluenceService`. Recorded here so M1 does not
    re-introduce the plausible-but-dead binding.

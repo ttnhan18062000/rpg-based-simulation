@@ -20,6 +20,20 @@
 #
 # Validate with: python3 tools/semantic_control_plane/registry.py
 #
+# TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE (AC 7 schema-friction disposition): this
+# ticket's own investigation found no real producer->consumer fact among the five mechanisms it
+# mapped (regional_sovereignty, betrayal_siege_war, city, regional_trauma,
+# settlement_capacity_axis). The one candidate relation considered -- regional_sovereignty
+# (FactionInfluenceService, src/world/influence.py, +-50.0 thresholds) and betrayal_siege_war
+# (MilitaryConflictPhase, src/engine/military_conflict.py) independently and inconsistently
+# writing the same durable field (RegionState.owner_faction_id) -- is a conflict/duplication
+# relation, not a producer->consumer one, and does not fit this schema's
+# producer_mechanism_id/consumer_mechanism_id row shape (no edge_type field here; a
+# producer==consumer self-edge is rejected outright, neither of which this relation actually is).
+# Recorded instead as evidence on the TERR-01/TERR-03 -> betrayal_siege_war rows in
+# registries/rule_mechanism_edges.yaml. Explicitly deferred with this reason -- no schema revision
+# performed; zero rows remains the correct outcome for this ticket.
+#
 # No real rows yet -- M1's own deliverable, same discipline as rule_mechanism_edges.yaml above.
 
 edges: []
