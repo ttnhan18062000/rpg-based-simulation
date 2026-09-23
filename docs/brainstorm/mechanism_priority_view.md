@@ -3,7 +3,7 @@
 Generated from `registries/mechanisms.yaml` — regenerate with
 `make mechanism-priority-view`. Do not hand-edit.
 
-**Which mechanism to verify next.** 11 of 93 mechanisms are currently
+**Which mechanism to verify next.** 10 of 93 mechanisms are currently
 unverified (see `docs/brainstorm/mechanism_verification_view.md`). Priority is derived, never
 hand-ranked: `layer weight × transitive dependent-count`, computed from the registry's own
 `depends_on` edges — a hub mechanism nobody has verified is the highest-value next target, since
@@ -16,7 +16,6 @@ _0 of this registry's declared `depends_on` edges are unaudited (see `unaudited_
 | Mechanism | Layer | State | Priority | Transitive Dependents | Unaudited Edges |
 |---|---|---|---|---|---|
 | `social_memory` | faction | skeleton | 3 | 1 | 0 |
-| `build_diversity` | entity | gap | 0 | 0 | 0 |
 | `clan` | faction | gap | 0 | 0 | 0 |
 | `conversation` | entity | gap | 0 | 0 | 0 |
 | `entity_trade` | entity | gap | 0 | 0 | 0 |
@@ -38,7 +37,6 @@ flowchart BT
     classDef gated fill:#f7ecd2,stroke:#9a6b0c,stroke-width:2px,stroke-dasharray: 3 3,color:#232019
     classDef skeleton fill:#eee,stroke:#888,stroke-width:1px,stroke-dasharray: 1 3,color:#232019
 
-    build_diversity["build diversity"]:::gap
     clan["clan"]:::gap
     conversation["conversation"]:::gap
     entity_trade["entity trade"]:::gap
