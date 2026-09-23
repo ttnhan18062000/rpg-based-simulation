@@ -411,9 +411,14 @@ phase (`Architecture-Verify` / `Security-Review` — both already canonical in
 `vocabulary.WORKFLOW_PHASES["implement-ticket"]`), so **`phase` never shows as drift** under
 `compute_drift_report()` — a deliberate difference from the shadow-packet precedent, where
 `phase="Retrieval"` is itself non-canonical. `agent` is `architecture-reviewer-shadow` /
-`security-reviewer-shadow` (neither in `WORKFLOW_AGENTS["implement-ticket"]`), so these are expected
-to show under `compute_drift_report()`'s "Non-canonical agent values" going forward — the same
-non-gating precedent as `context-packet-wrapper`, not a vocabulary regression to chase.
+`security-reviewer-shadow`, both now canonical in `vocabulary.WORKFLOW_AGENTS["implement-ticket"]`
+as of `TCK-20260923-SHADOW-REVIEWER-VOCABULARY-GAP` — registered for the same reason
+`context-packet-wrapper` was earlier registered by `TCK-20260915-MONITORING-ANOMALY-VALIDATOR`: a
+real, intentional, already-documented mechanism that the registry hadn't caught up to yet, not a
+vocabulary regression to chase. (Prior to that ticket, shadow-reviewer collection was opt-in behind
+`SHADOW_REVIEWER_LOGGING_ENABLED`, so these literals appeared too rarely to register; flipping
+collection to default-on via `TCK-20260923-SHADOW-REVIEWER-COLLECTION-DEFAULT-ON` pushed them to
+every-ticket volume, which is what surfaced the registry gap.)
 
 ---
 
