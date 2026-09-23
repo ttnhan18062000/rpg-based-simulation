@@ -1046,7 +1046,8 @@ verified_by (list which findings came from the static script vs. independent jud
   // Runs a candidate model (claude-fable-5-1) against the SAME diff/evidence the production
   // architecture-reviewer just judged, purely for logging -- this block never reads or writes
   // archVerify.verdict, and nothing below it reads this block's own verdict. Gated by
-  // SHADOW_REVIEWER_LOGGING_ENABLED=1 AND a bounded per-reviewer sample window
+  // SHADOW_REVIEWER_LOGGING_ENABLED (on by default as of TCK-20260923-SHADOW-REVIEWER-COLLECTION-
+  // DEFAULT-ON -- set to 0 to opt out) AND a bounded per-reviewer sample window
   // (tools/agent-monitoring/shadow_reviewer_window.py::is_shadow_window_open) -- a run outside the
   // window makes zero extra model calls. Fail-open at every level -- shell (`2>/dev/null || true`),
   // Python (`try/except Exception: pass`), AND this entire JS block (`try/catch`) -- because the
@@ -1054,7 +1055,7 @@ verified_by (list which findings came from the static script vs. independent jud
   // timeout, thrown exception -- not just a bad verdict) to the production gate outcome, same
   // convention as SHADOW_CONTEXT_PACKET_ENABLED (INFRA-299).
   const archShadowWindowOutput = await bash(
-    `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" = "1" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "architecture-reviewer" "${tid}" 2>/dev/null; fi`
+    `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" != "0" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "architecture-reviewer" "${tid}" 2>/dev/null; fi`
   )
   let archShadowWindow = null
   const archShadowWindowMarker = (archShadowWindowOutput || '').indexOf('SHADOW_WINDOW_JSON:')
@@ -1499,7 +1500,7 @@ violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤
   // (`try/catch`) -- the shadow candidate path is advisory-only and must never propagate ANY
   // failure to the production gate outcome.
   const securityShadowWindowOutput = await bash(
-    `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" = "1" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "security-reviewer" "${tid}" 2>/dev/null; fi`
+    `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" != "0" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "security-reviewer" "${tid}" 2>/dev/null; fi`
   )
   let securityShadowWindow = null
   const securityShadowWindowMarker = (securityShadowWindowOutput || '').indexOf('SHADOW_WINDOW_JSON:')
