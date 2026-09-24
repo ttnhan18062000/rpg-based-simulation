@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-DELIVERY-CI-TRIAGE-CLASSIFIER
-phase: open
+phase: done
 date: 2026-09-24
 tags: [delivery, ai, process-improvement]
 ---
@@ -16,7 +16,7 @@ Classify a CI failure into the four categories `CLAUDE.md` already defines, and 
 prescribes — advisory, with the agent still filing the ticket
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -153,10 +153,40 @@ When the signals are weak, leaning toward "may be a real regression, investigate
 — but that is a reason to report uncertainty, not to fabricate a category.
 
 ## Test Summary
-To be completed during implementation.
+- `python3 -m pytest tests/tools/test_delivery_ci_triage_classifier.py -v` (repo venv): **16
+  passed** — one per Acceptance Criterion (AC1–AC9) plus regression-prone paths (TLS-vs-generic
+  `UNKNOWN`, the parked-job note, no-write-side-effect).
+- Sanity-checked both parsers against the **real** `docs/testing/regression_policy.md` (16 soft-
+  monitor paths extracted) and the **real** `.github/workflows/test.yml` (15 jobs, correct
+  `pytest` path extraction per job) before trusting the fixture-only test suite.
+- Full regression: `python3 -m pytest tests/tools/ -m "not slow"` — **2994 passed, 25 skipped, 28
+  deselected, 1 xfailed**, 0 failed.
 
 ## Files Changed
-To be completed during implementation.
+- `tools/delivery/ci_triage_classifier.py` (new) — the classifier module and CLI.
+- `tests/tools/test_delivery_ci_triage_classifier.py` (new) — 16 tests.
+- `staging_artifacts/TCK-20260924-DELIVERY-CI-TRIAGE-CLASSIFIER/{investigation,plan,test_plan}.md`
+  (new).
 
 ## Completion Summary
-Open.
+Built `tools/delivery/ci_triage_classifier.py`, classifying a `pr_status.py` `FAILING`/`ABSENT`/
+`UNKNOWN` payload into the four `CLAUDE.md`-defined categories plus a load-bearing `UNCLASSIFIED`
+outcome, and naming the remedy each category prescribes. Resolved the real constraint that
+`pr_status.py`'s payload carries only job/step-level detail, never an individual failing test
+path (fetching one would require a log body) — changed-file correlation for category 1 therefore
+operates at job granularity, parsing each job's actual `pytest <paths>` invocation from
+`.github/workflows/test.yml` rather than guessing, with the coarser basis stated explicitly in the
+output rather than implying false precision. Category 2 is read from
+`docs/testing/regression_policy.md`'s `## 3. Soft Monitors` table at runtime (backtick-quoted
+paths only — a narrow, honest parse of one structured section, not a claim the whole prose
+document is machine-readable). Category 3 starts from a single named pattern
+(`test_parity_index_baseline.py`) rather than generalizing, per the ticket's own instruction.
+Multiple failing jobs that classify differently resolve to `UNCLASSIFIED` overall rather than
+picking one job's category — a mixed signal is exactly the ambiguity `UNCLASSIFIED` exists to
+protect. The parked "Slow regression" job is flagged `parked: true` with an explicit "not a new
+finding" note without suppressing its underlying classification. No test, baseline, gate, or
+assertion is ever written by this module — it only reads the payload, the two doc/workflow files,
+and `git diff --name-only`.
+
+No known material gap. `data_runs_clean` is expected to FAIL again on this close for the same
+pre-existing, not-this-ticket's-own reason as the prior five closes in this batch.
