@@ -280,7 +280,11 @@ evidence under the reclassified Inherited entry in `conflict-combat.md`.
 
 **INERT/OFF (2 findings):**
 2. The declared `combat_engagement` domain never runs in production
-   (`ENABLE_COMBAT_ENGAGEMENT` default OFF).
+   (`ENABLE_COMBAT_ENGAGEMENT` default OFF). **Superseded note (2026-09-24):** this flag flipped
+   to default ON via `TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER` (PR #190, `1e075b807`),
+   predating this file's own `last_verified` date above — see `conflict-combat.md`'s own
+   Repository Findings section for the full correction. Current state is tracked by the
+   Semantic Control Plane's M3 triage, not this generated export.
 3. `BreakthroughService`'s granting path is never invoked in production outside tests.
 
 **MISSING (7 findings, all preserved prominently per the follow-up's own explicit
