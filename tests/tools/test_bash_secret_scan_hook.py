@@ -144,6 +144,11 @@ def test_scan_for_secrets_module_unchanged_by_this_ticket():
 
 
 def test_existing_bash_and_sidecar_hooks_untouched():
+    """Name predates TCK-20260923-GREP-HOOK-SEARCH-DOCS-MENTION, which did intentionally change
+    the grep-nudge hook's message (see the inline comment below) -- "untouched" here means "still
+    present, still Bash-matcher, still distinct from the secret-scan hook", not "byte-identical to
+    its original text". The sidecar-check hook this test also covers remains genuinely untouched.
+    """
     settings = _load_settings()
     pre_tool_use = settings["hooks"]["PreToolUse"]
 
