@@ -325,16 +325,63 @@ dead code, so the ticket's "consistency hazard" framing was correct.
 
 ## Implementation Notes
 
-_To be completed by the implementer._
+**IN PROGRESS — Steps 1-7 of `plan.md` landed; Steps 8-9 blocked on PR #245 merging.**
+
+`plan.md` implements R1/R3/R4 (threshold unified to ±50, `WorldDynamicsSystem`'s block undeleted
+and importing shared constants, dual-writer documented + deferred). Pre-implementation
+architecture review (2 rounds) found and this session fixed one blocking issue before Steps 8-9
+could be scoped: the `_COMPARISON_TEXT` fix (added scope item, AC8) targets
+`tools/semantic_control_plane/generate_territory_control_view.py`'s `render_cross_domain()`,
+which exists only in PR #245 (`semantic-control-plane-m4`, still open/unmerged as of this note) —
+confirmed via `grep` (zero hits on this branch/`origin/main`) and
+`git merge-base --is-ancestor 42fff7d52 HEAD`/`...origin/main` (both false). Steps 1-7 have no such
+dependency and are complete; Step 8-9 (and the corresponding AC8) remain open until #245 merges.
 
 ## Test Summary
 
-_To be completed by the implementer._
+Steps 1-7's scoped regression, real venv:
+```
+pytest tests/unit/world/test_sovereignty_events.py \
+       tests/unit/world/test_influence.py \
+       tests/unit/world/test_stronghold.py \
+       tests/integration/world/test_regional_sovereignty.py -v
+```
+**17 passed, 0 failed.** New tests: `test_world_dynamics_ownership_threshold_uses_shared_constants`,
+`test_world_dynamics_flips_ownership_at_shared_threshold_boundary` (both in
+`test_sovereignty_events.py`, AC5). One existing test's fixture updated:
+`test_no_sovereignty_event_when_influence_below_threshold` (`influence=50.0` → `30.0`, since 50.0
+is now exactly the new threshold, not safely below it). `test_conquest_and_liberation_thresholds`
+(`test_influence.py`) and both `test_stronghold.py` tests confirmed unaffected, unchanged.
+`test_regional_ownership_flip` (the integration test proving the real end-to-end flip) still
+passes at the corrected magnitude.
+
+Parity ledger `WORLD-107` validated directly against `tools/parity_ledger_writer.py::validate_entry()`
+(no dedicated CLI validator found for a single-entry check; used the same function the writer
+tool itself calls).
+
+Steps 8-9's own test (`test_comparison_counts_match_the_computed_banner`) and full-file regression
+for `tests/unit/tools/test_cross_domain_management_view.py` are pending #245's merge.
 
 ## Files Changed
 
-_To be completed by the implementer._
+- `docs/mechanics/regional_sovereignty.md` — §1.2 thresholds corrected to ±50, reachable
+  comparisons; `last_verified` bumped.
+- `src/engine/world_dynamics.py` — ownership block now imports and compares against
+  `FactionInfluenceService.LIBERATION_THRESHOLD`/`CONQUEST_THRESHOLD` instead of hardcoded
+  `100.0`/`-100.0`. No other line changed.
+- `tests/unit/world/test_sovereignty_events.py` — module docstring corrected to ±50; one fixture
+  value fixed (50.0 → 30.0); two new tests added.
+- `docs/world/regional_sovereignty_runtime_contract.md` — new "Two independent ownership writers"
+  section, pointing at `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`.
+- `docs/parity_ledger/world_dynamics.yaml` — `WORLD-107` updated in place (text, v2_evidence,
+  test_path).
+- `docs/guidelines/intentional_divergences.md` — new §2.58 entry, rationale class Unified.
+
+**Not yet changed (blocked on #245):**
+`tools/semantic_control_plane/generate_territory_control_view.py`,
+`tests/unit/tools/test_cross_domain_management_view.py`.
 
 ## Completion Summary
 
-_To be completed by the implementer._
+_Not yet complete — Steps 8-9 (AC8) pending PR #245's merge. Do not close this ticket until those
+land and their own tests pass._
