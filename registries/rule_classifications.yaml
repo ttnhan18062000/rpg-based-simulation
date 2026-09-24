@@ -43,7 +43,14 @@ classifications:
       diverging from RegionState.owner_faction_id on every real siege conquest. Matches the
       Catalog's own pre-settled precedent (architecture.md:132, "TERR-01 is CONFLICTING ... even
       though the mechanisms reading owner_faction_id are all state: done -- the code works exactly
-      as written; the semantics it expresses are wrong").
+      as written; the semantics it expresses are wrong"). (3) MISSING, not merely unlooked-at, as
+      its own confirmed sub-fact within the CONFLICTING verdict above: PlaceState/RegionState
+      (src/core/state.py:344-383) carry no residence or cultural-association field of any kind, and
+      nothing in src/ reads or writes owner_faction_id as standing for either concept -- the
+      overloaded slot in (1) forecloses representing them, and no fallback field exists elsewhere
+      either. Re-verified 2026-09-24 (TCK-20260924-M3-TERRITORY-COMBAT-FINDING-TRIAGE); the
+      aggregate CONFLICTING verdict is unchanged, this itemizes a sub-fact the original evidence
+      text named only implicitly.
     review_date: "2026-09-24"
   - rule_id: TERR-02
     classification: PARTIAL
