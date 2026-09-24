@@ -108,20 +108,34 @@ condition, not the presence of `UNKNOWN`.
 
 ## M2 — Drift detection (gated on M1 — needs real mappings to check drift against)
 
+**Status: SHIPPED** 2026-09-24 (`TCK-20260924-M2-MAPPING-DRIFT-DETECTION`).
+
 **Goal.** Execute `rollout_plan.md` Stage C's detector, scoped to what M1 just created.
 
-**Deliverables:**
-- A report-only detector (mirroring `mechanism_registry_changed_code_check.py`'s own philosophy)
-  catching: an `implemented_by` path cited by a mapped mechanism changed since the mapping entry
-  was last reviewed; a mapped mechanism or Rule was renamed, removed, split, or merged; a mapped
-  mechanism's `verified.verdict` changed since the mapping was last reviewed.
-- Wired somewhere it actually runs — a `make` target at minimum, CI if the volume justifies it at
-  this stage (Territory alone is a handful of entries; CI wiring is more likely to make sense once
-  M4 exists, but the target itself must exist and be runnable now, not deferred to "later").
-- Proof it fires on a deliberately-stale fixture (same discipline as M0's validator).
+**Deliverables (shipped):**
+- A report-only detector, `tools/semantic_control_plane/mapping_drift_check.py` (mirroring
+  `mechanism_registry_changed_code_check.py`'s own pure-core/git-wrapper/CLI philosophy), catching
+  two of the three named drift classes: (1) an `implemented_by` path cited by a mapped mechanism
+  changed since the mapping entry was last reviewed; (3) a mapped mechanism's `verified.verdict`
+  changed since the mapping was last reviewed, recovered from `registries/mechanisms.yaml`'s own
+  git history pinned to the commit that last touched `registries/rule_mechanism_edges.yaml` on or
+  before the row's date. Drift class (2) — rename/removal/split/merge with a resolvable ID — is
+  consciously descoped as its own detector code: no lineage field exists anywhere in the schema,
+  and the one real precedent case is undetectable short of duplicating the changed-code check's own
+  whole-entry-diff approach on a new axis, for a scenario that has not occurred once among M1's
+  five mapped mechanisms. See `stored_artifacts/TCK-20260924-M2-MAPPING-DRIFT-DETECTION/
+  investigation.md`'s "Risks and Open Questions" for the full reasoning. (Plain rename/removal is
+  already a hard validator failure today via `registry.py::validate_rule_mechanism_edges()`'s
+  unresolved-id check, independent of this milestone.)
+- Wired via `make semantic-control-plane-drift-check`. No CI wiring at this milestone, per plan
+  (Territory alone is a handful of entries).
+- Proof each implemented drift class fires on a deliberately-stale fixture
+  (`tests/unit/tools/test_semantic_control_plane_drift_detector.py`).
 
-**Exit criteria.** Running the detector against Territory's live mapping reports "clean" today, and
-reports a specific violation when a fixture mapping is deliberately made stale.
+**Exit criteria.** Running the detector against Territory's live mapping reports "clean" today
+(confirmed: `make semantic-control-plane-drift-check` → 0 cited-code findings, 0 verdict findings,
+2026-09-24), and reports a specific violation when a fixture mapping is deliberately made stale
+(covered by the fixture tests above).
 
 ---
 

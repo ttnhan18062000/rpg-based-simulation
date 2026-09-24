@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-M2-MAPPING-DRIFT-DETECTION
-phase: open
+phase: done
 date: 2026-09-24
 tags: [architecture, schema, registry]
 ---
@@ -17,7 +17,7 @@ M2 — report-only drift detector for the semantic control plane's Rule↔Mechan
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -118,23 +118,23 @@ fail the build; a pure testable core separated from its git wrapper).
 
 ## Acceptance Criteria
 
-- [ ] A detector module exists under `tools/semantic_control_plane/` with a pure, git-free core
+- [x] A detector module exists under `tools/semantic_control_plane/` with a pure, git-free core
       function and a separate git-backed wrapper, mirroring
       `mechanism_registry_changed_code_check.py`'s three-entry-point separation.
-- [ ] All three `roadmap.md` M2 drift classes are implemented, or any one consciously descoped with
+- [x] All three `roadmap.md` M2 drift classes are implemented, or any one consciously descoped with
       a written reason in `investigation.md` and a note in this ticket (class 2's overlap with the
       existing validator is the expected candidate).
-- [ ] A `make` target runs it and is documented in the Makefile's own help text.
-- [ ] Running it against M1's live Territory mapping produces a report. If the report is not
+- [x] A `make` target runs it and is documented in the Makefile's own help text.
+- [x] Running it against M1's live Territory mapping produces a report. If the report is not
       clean, every finding is recorded in this ticket's Completion Summary with a disposition
       (real drift → follow-up ticket filed; false positive → detector fixed).
-- [ ] For **each** drift class implemented, a test proves the detector reports a deliberately-stale
+- [x] For **each** drift class implemented, a test proves the detector reports a deliberately-stale
       fixture, not just that it passes on clean data.
-- [ ] Report-only: exits 0 with findings present. A test asserts this.
-- [ ] `python3 tools/semantic_control_plane/registry.py` still validates clean (M2 must not alter
+- [x] Report-only: exits 0 with findings present. A test asserts this.
+- [x] `python3 tools/semantic_control_plane/registry.py` still validates clean (M2 must not alter
       the committed mapping files).
-- [ ] Every status word in the output resolves to `docs/plans/status_axis_model.md`.
-- [ ] `docs/plans/simulation_semantic_control_plane/roadmap.md`'s M2 section and the epic's
+- [x] Every status word in the output resolves to `docs/plans/status_axis_model.md`.
+- [x] `docs/plans/simulation_semantic_control_plane/roadmap.md`'s M2 section and the epic's
       milestone-disposition table are updated to reflect the shipped state.
 
 ## Related Tickets
@@ -176,7 +176,8 @@ fail the build; a pure testable core separated from its git wrapper).
 - `tools/mechanism_registry/registry.py` — `parse_implemented_by_entry`, `MechanismRegistry`.
 - `registries/{rule_mechanism_edges,rule_classifications,mechanism_causal_edges,mechanisms}.yaml`
 - `Makefile` (~line 361 `territory-control-view`, ~382 `mechanism-registry-changed-code-check`).
-- `tests/tools/` — new test module.
+- `tests/unit/tools/` — new test module (corrected from this ticket's own original Scope text,
+  which named `tests/tools/`; see `investigation.md`'s "Current Behavior" section).
 
 ## Assumptions / Open Questions
 
@@ -186,26 +187,131 @@ fail the build; a pure testable core separated from its git wrapper).
 - **Assumed:** the review-time verdict is recoverable from git history, so no schema change is
   needed. Verify this early in Implement — `registries/mechanisms.yaml` must have a commit on or
   before each row's review date. If it does not, raise it before adding a field.
-- **Open (implementer's call, record it):** does drift class 2 justify its own code at all, given
-  the validator already hard-fails rename/removal? Scope says the split/merge residue is the real
-  gap; if investigation finds no mechanical signal for split/merge, descope class 2 with a written
-  reason rather than shipping a check that cannot fire.
+- **Resolved (implementer's call):** drift class 2 does NOT get its own detector code. Investigation
+  confirmed no lineage field exists anywhere in `registries/mechanisms.yaml` (grep for
+  `split_from|merged_into|successor|predecessor|lineage|renamed_from` returns zero real hits), and
+  the one real precedent (`action_pacing_readiness`, a kept-ID split) is only detectable via a
+  full-entry snapshot diff against a stored review-time baseline, which would duplicate
+  `mechanism_registry_changed_code_check.py`'s own whole-entry-equality check (`check_drift`'s
+  `old_mechs.get(mid) == mech`) on a different (per-row-date, not two-ref) axis, for a scenario
+  that has not occurred once among M1's five mapped mechanisms. Descoped with this written reason,
+  per `investigation.md`'s "Risks and Open Questions" section. Plain rename/removal is already a
+  hard validator failure today via `tools/semantic_control_plane/registry.py::
+  validate_rule_mechanism_edges()`'s unresolved-id check, independent of this milestone.
 - **Open (not blocking):** whether a row's `date` should be interpreted as a calendar date only
   (no time component — both files store `"2026-09-24"`). Pick the conservative reading (a same-day
   code change counts as "changed since review") and state it in a test.
 
 ## Implementation Notes
 
-_(implementer fills)_
+Built `tools/semantic_control_plane/mapping_drift_check.py` with three entry points mirroring
+`mechanism_registry_changed_code_check.py`'s shape:
+
+- `check_cited_code_drift(edge_rows, mechanism_cited_paths, file_last_commit_dates)` — pure core,
+  drift class 1. Deviates slightly from the plan's literal 2-argument signature
+  (`edge_rows, file_last_commit_dates`): a third argument, `mechanism_cited_paths` (a pre-resolved
+  `{mechanism_id: [bare_path, ...]}` map), was added so the function has ZERO dependency on the
+  real `MechanismRegistry()`/`registries/mechanisms.yaml`, matching the plan's own stated purity
+  contract ("no git dependency and does no file I/O") and letting
+  `test_pure_core_takes_no_git_dependency`/the fixture tests run against a synthetic, non-real
+  `mechanism_id` without touching the committed registry. See `plan.md`'s Deviations section.
+- `check_verdict_drift(edge_rows, review_time_verdicts, current_verdicts)` — pure core, drift
+  class 3, exactly as planned (no deviation).
+- `check_drift_from_git()` — the git-backed wrapper. Resolves cited paths via `MechanismRegistry` +
+  `parse_implemented_by_entry` (reused, never re-parsed), each cited path's last-commit date via
+  `git log -1 --format=%ad --date=short`, and each mapped mechanism's review-time verdict via the
+  anchor-commit design from `plan.md` Step 2: the last commit on/before the row's `date` that
+  touched `registries/rule_mechanism_edges.yaml` itself (`git log --before=<date> 23:59:59 --
+  registries/rule_mechanism_edges.yaml`, taking the first/most-recent result — git's own
+  newest-first log ordering IS the tie-break for two same-day commits), then `git show
+  <sha>:registries/mechanisms.yaml` at that pinned commit.
+- `main(argv=None)` — CLI entry point, always returns 0 (report-only, never fails the build).
+
+**Drift class 2 (split/merge with a resolvable ID) is consciously descoped**, not implemented as
+its own detector code. See the Assumptions / Open Questions section above for the full written
+reason (no lineage field in the schema; the one real precedent is undetectable short of a
+full-entry-diff duplicating `mechanism_registry_changed_code_check.py`'s own approach on a new
+axis). `investigation.md`'s "Risks and Open Questions" carries the same reasoning.
+
+Used `MechanismRegistry.all_mechanisms()` (public API) rather than reaching into the private
+`_mechanisms` dict, when building `mechanism_cited_paths` inside the git wrapper.
+
+**Live run against M1's Territory mapping** (`make semantic-control-plane-drift-check`,
+2026-09-24): **clean** — 0 cited-code drift findings, 0 verdict drift findings. Confirmed
+independently: all three cited implementation files (`src/world/influence.py` last touched
+2026-06-12, `src/engine/military_conflict.py` last touched 2026-08-27, `src/core/state.py` last
+touched 2026-09-20) predate every M1 row's `date` ("2026-09-24"); `registries/mechanisms.yaml`'s
+only commit touching the three cited mechanisms (`regional_sovereignty`, `betrayal_siege_war`,
+`city`) is the same squash-merge (`741b117de`) that introduced `rule_mechanism_edges.yaml` itself,
+so the anchor-commit-recovered review-time verdict is identical to the current verdict for all
+three. This matches `roadmap.md` M2's own "clean today" exit criterion — no follow-up ticket
+needed.
+
+Test module placed at `tests/unit/tools/test_semantic_control_plane_drift_detector.py`, per
+`investigation.md`'s directory correction (the ticket's own original Scope text named
+`tests/tools/`, which holds no `test_*.py` files in this repo).
+
+`Makefile` target `semantic-control-plane-drift-check` added immediately after
+`mechanism-registry-changed-code-check`, matching the family's naming/help-comment convention.
 
 ## Test Summary
 
-_(implementer fills)_
+New test module `tests/unit/tools/test_semantic_control_plane_drift_detector.py`, 12 tests, all
+passing:
+- `test_pure_core_takes_no_git_dependency` — purity guard via `co_names` bytecode inspection (a
+  raw source-string scan would false-positive on the word "git" inside each function's own
+  docstring prose), plus a synthetic-mechanism-id run proving no real-registry dependency.
+- `test_drift_class_1_fires_on_planted_stale_citation` / `_silent_when_cited_file_unchanged_since_review`
+  / `_silent_when_no_cited_paths_resolved` — drift class 1 fixture proof (fire + 2 negative controls).
+- `test_drift_class_3_fires_on_planted_verdict_change` / `_silent_when_verdict_unchanged_since_review`
+  — drift class 3 fixture proof (fire + negative control).
+- `test_drift_class_3_review_time_recovery_uses_commit_not_bare_date_string` — plants two commits
+  on the same calendar date (distinct wall-clock timestamps via `GIT_AUTHOR_DATE`/
+  `GIT_COMMITTER_DATE`) touching `rule_mechanism_edges.yaml`, asserts the anchor-commit resolution
+  picks the most-recent-on/before-date commit deterministically.
+- `test_report_only_exits_zero_with_findings_present` — `main()` returns 0 even with both finding
+  types present (via a monkeypatched `check_drift_from_git`).
+- `test_registries_still_validate_clean_after_running_detector` — runs the real, committed
+  registries through `validate_all()` before and after `check_drift_from_git()`, both `[]`.
+- `test_detector_status_words_resolve_to_status_axis_model_vocabulary` — every echoed
+  `old_verdict`/`new_verdict` from the real live run is a member of `VALID_VERDICTS`.
+- `test_live_run_against_territory_mapping_reports_or_records_finding` — the real, non-mocked
+  `check_drift_from_git()` against the committed registries completes without raising.
+- `test_make_target_runs_clean` — `make semantic-control-plane-drift-check` subprocess, exit 0.
+
+Also ran `tests/unit/tools/test_semantic_control_plane_schema.py`,
+`tests/unit/tools/test_mechanism_registry_changed_code_check.py`, and
+`tests/unit/tools/test_mechanism_registry.py` (128 tests) to confirm no regression in sibling
+modules this ticket reads from — all passing.
 
 ## Files Changed
 
-_(implementer fills)_
+- `tools/semantic_control_plane/mapping_drift_check.py` (new)
+- `tests/unit/tools/test_semantic_control_plane_drift_detector.py` (new)
+- `Makefile` (new `semantic-control-plane-drift-check` target)
+- `docs/plans/simulation_semantic_control_plane/roadmap.md` (M2 section rewritten to shipped state)
+- `tickets/inprogress/TCK-20260923-SEMANTIC-CONTROL-PLANE-EPIC.md` (M2 milestone-disposition row)
+- `tickets/inprogress/TCK-20260924-M2-MAPPING-DRIFT-DETECTION.md` (this file — Status, Acceptance
+  Criteria, Assumptions/Open Questions, Related Code Areas, Implementation Notes, Test Summary,
+  Files Changed, Completion Summary)
+- `staging_artifacts/TCK-20260924-M2-MAPPING-DRIFT-DETECTION/plan.md` (Deviations section added)
 
 ## Completion Summary
 
-_(implementer fills)_
+Implemented the M2 report-only mapping drift detector: `tools/semantic_control_plane/
+mapping_drift_check.py`, mirroring `mechanism_registry_changed_code_check.py`'s pure-core/git-
+wrapper/CLI shape. Two of `roadmap.md` M2's three named drift classes shipped as code — class 1
+(cited `implemented_by` code changed since a row's own `date`) and class 3 (a mapped mechanism's
+`verified.verdict` changed since the row's own `review_date`, recovered via a git-history anchor
+commit rather than an ambiguous bare-date search) — each proven firing on a deliberately-planted
+fixture, not just passing on clean data. Class 2 (split/merge with a resolvable ID) was consciously
+descoped: no lineage field exists anywhere in the schema, and the one real precedent case is
+undetectable short of duplicating the sibling tool's own whole-entry-diff approach on a new axis,
+for a scenario that has not occurred once among M1's five mapped mechanisms. Wired via `make
+semantic-control-plane-drift-check`; report-only, exits 0 unconditionally, no CI wiring (all
+matching Out of Scope). The real, live run against M1's Territory mapping (`TERR-01/02/03/05`)
+reports clean — 0 cited-code findings, 0 verdict findings — matching `roadmap.md` M2's own "clean
+today" exit criterion; no follow-up ticket was needed. `roadmap.md`'s M2 section and the epic
+ticket's milestone-disposition table were both updated to reflect shipped state. 12 new tests added
+under `tests/unit/tools/` (the real, established test-directory location, correcting the ticket's
+own original Scope text); 128 sibling tests re-run to confirm no regression.

@@ -382,6 +382,9 @@ mechanism-prose-field-drift-check: ## Report-only: flag a mechanism entry whose 
 mechanism-registry-changed-code-check: ## Report-only: flag implemented_by-cited code that changed without its mechanism's own entry changing, plus implemented_by replacements
 	$(PYTHON3) tools/mechanism_registry/mechanism_registry_changed_code_check.py
 
+semantic-control-plane-drift-check: ## Report-only: flag M1 mapping rows whose cited code or mapped mechanism's verdict changed since the row's own review date
+	$(PYTHON3) tools/semantic_control_plane/mapping_drift_check.py
+
 mechanism-atlas-check: ## Check the atlas's mapped card badge cls values against the real registry state (--check, writes nothing)
 	$(PYTHON3) tools/mechanism_registry/mechanism_atlas_regenerate.py --check
 
