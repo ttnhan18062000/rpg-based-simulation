@@ -97,7 +97,7 @@ def _ls_remote_rule(sha):
 def test_green_when_all_applicable_runs_succeed_against_current_head():
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}]),
     ])
     result = pr_status.compute_pr_status(run_command=runner)
     assert result["verdict"] == "GREEN"
@@ -108,7 +108,7 @@ def test_green_when_all_applicable_runs_succeed_against_current_head():
 def test_pending_when_applicable_run_in_progress():
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "in_progress", "conclusion": None}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "in_progress", "conclusion": None}]),
     ])
     result = pr_status.compute_pr_status(run_command=runner)
     assert result["verdict"] == "PENDING"
@@ -118,7 +118,7 @@ def test_pending_when_applicable_run_in_progress():
 def test_json_output_contains_verdict_head_sha_reason(capsys):
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}]),
     ])
     result = pr_status.compute_pr_status(run_command=runner)
     exit_code = _emit(result, as_json=True, capsys=capsys)
@@ -134,7 +134,7 @@ def test_json_output_contains_verdict_head_sha_reason(capsys):
 def test_json_output_and_human_output_agree_on_verdict(capsys):
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}]),
     ])
     result = pr_status.compute_pr_status(run_command=runner)
     pr_status._print_human(result)
@@ -171,12 +171,85 @@ def test_stale_sha_plus_current_sha_in_progress_yields_pending():
         _pr_view_rule(head_sha="current999"),
         _runs_list_rule([
             {"id": 1, "head_sha": "old111", "status": "completed", "conclusion": "success"},
-            {"id": 2, "head_sha": "current999", "status": "in_progress", "conclusion": None},
+            {"id": 2, "head_sha": "current999", "path": ".github/workflows/test.yml", "status": "in_progress", "conclusion": None},
         ]),
     ])
     result = pr_status.compute_pr_status(run_command=runner)
     assert result["verdict"] == "PENDING"
     assert result["head_sha"] == "current999"
+
+
+# ---------------------------------------------------------------------------
+# Workflow scoping (TCK-20260924-DELIVERY-STATUS-TOOL-WORKFLOW-SCOPE)
+#
+# `actions/runs?head_sha=` is repo-wide across every workflow. Runs are partitioned, not
+# filtered: only the target workflow's runs at this SHA may produce GREEN/PENDING/FAILING; any
+# other workflow's run at the same SHA is reported in `other_workflow_runs` and must never, on
+# its own, turn the verdict FAILING (AC2) or vote on it at all.
+# ---------------------------------------------------------------------------
+
+def test_other_workflow_failure_does_not_turn_verdict_failing():
+    """AC1/AC2/AC3: two workflows at one head SHA, target passing, other failing — GREEN, and the
+    other workflow's failure is reported separately, never voted into the verdict."""
+    runner = FakeRunner([
+        _pr_view_rule(head_sha="abc123"),
+        _runs_list_rule([
+            {"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml",
+             "status": "completed", "conclusion": "success"},
+            {"id": 2, "head_sha": "abc123", "path": ".github/workflows/deploy-docs.yml",
+             "status": "completed", "conclusion": "failure"},
+        ]),
+    ])
+    result = pr_status.compute_pr_status(run_command=runner)
+    assert result["verdict"] == "GREEN"
+    assert result["failing_jobs"] == []
+    assert len(result["other_workflow_runs"]) == 1
+    assert result["other_workflow_runs"][0]["path"] == ".github/workflows/deploy-docs.yml"
+
+
+def test_target_workflow_failure_is_failing_regardless_of_other_workflow_success():
+    """Symmetric case: target workflow fails, other workflow (unrelated) succeeds — still FAILING,
+    proving the partition works both directions, not just "other failures are ignored"."""
+    runner = FakeRunner([
+        _pr_view_rule(head_sha="abc123"),
+        _runs_list_rule([
+            {"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml",
+             "status": "completed", "conclusion": "failure"},
+            {"id": 2, "head_sha": "abc123", "path": ".github/workflows/deploy-docs.yml",
+             "status": "completed", "conclusion": "success"},
+        ]),
+        _run_jobs_rule(1, [{"id": 99, "name": "unit-tests", "conclusion": "failure"}]),
+        _job_steps_rule(99, [{"name": "Run tests", "conclusion": "failure"}]),
+    ])
+    result = pr_status.compute_pr_status(run_command=runner)
+    assert result["verdict"] == "FAILING"
+    assert len(result["other_workflow_runs"]) == 1
+
+
+def test_only_other_workflow_ran_at_current_sha_yields_unknown_not_absent_or_failing():
+    """No run from the target workflow at this SHA yet, but another workflow did run here — must
+    not be reported as ABSENT (a run DOES exist, just not the target's) nor FAILING (the other
+    workflow's own conclusion must not vote)."""
+    runner = FakeRunner([
+        _pr_view_rule(head_sha="abc123"),
+        _runs_list_rule([
+            {"id": 2, "head_sha": "abc123", "path": ".github/workflows/deploy-docs.yml",
+             "status": "completed", "conclusion": "failure"},
+        ]),
+    ])
+    result = pr_status.compute_pr_status(run_command=runner)
+    assert result["verdict"] == "UNKNOWN"
+    assert len(result["other_workflow_runs"]) == 1
+
+
+def test_other_workflow_runs_key_present_and_empty_on_single_workflow_verdicts():
+    runner = FakeRunner([
+        _pr_view_rule(head_sha="abc123"),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml",
+                          "status": "completed", "conclusion": "success"}]),
+    ])
+    result = pr_status.compute_pr_status(run_command=runner)
+    assert result["other_workflow_runs"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -295,7 +368,7 @@ def test_unknown_when_ls_remote_fails_during_absent_disambiguation(tmp_path):
 def test_ls_remote_disambiguator_never_called_when_runs_exist():
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}]),
     ])
     pr_status.compute_pr_status(run_command=runner)
     assert not any(_is(cmd, "git", *LS_REMOTE_TOKENS) for cmd in runner.calls)
@@ -308,7 +381,7 @@ def test_ls_remote_disambiguator_never_called_when_runs_exist():
 def test_failing_verdict_never_fetches_a_log_endpoint():
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "failure"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "failure"}]),
         _run_jobs_rule(1, [{"id": 99, "name": "unit-tests", "conclusion": "failure"}]),
         _job_steps_rule(99, [{"name": "Run tests", "conclusion": "failure"}]),
     ])
@@ -321,7 +394,7 @@ def test_failing_verdict_never_fetches_a_log_endpoint():
 def test_failing_verdict_includes_step_name_and_conclusion_per_failing_job():
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "failure"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "failure"}]),
         _run_jobs_rule(1, [
             {"id": 99, "name": "unit-tests", "conclusion": "failure"},
             {"id": 100, "name": "lint", "conclusion": "success"},
@@ -347,7 +420,7 @@ MUTATING_SUBSTRINGS = ("commit", "push", "pr create", "pr merge", "run rerun", "
 def test_no_git_or_gh_mutating_command_ever_issued():
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}]),
     ])
     pr_status.compute_pr_status(run_command=runner)
     for cmd in runner.calls:
@@ -360,7 +433,7 @@ def test_working_tree_and_index_unchanged_after_run():
     before = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}]),
     ])
     pr_status.compute_pr_status(run_command=runner)
     after = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
@@ -368,9 +441,9 @@ def test_working_tree_and_index_unchanged_after_run():
 
 
 @pytest.mark.parametrize("runs,expected", [
-    ([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "success"}], "GREEN"),
-    ([{"id": 1, "head_sha": "abc123", "status": "in_progress", "conclusion": None}], "PENDING"),
-    ([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "failure"}], "FAILING"),
+    ([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "success"}], "GREEN"),
+    ([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "in_progress", "conclusion": None}], "PENDING"),
+    ([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "failure"}], "FAILING"),
 ])
 def test_exit_code_zero_for_every_verdict(runs, expected, monkeypatch, capsys):
     rules = [_pr_view_rule(head_sha="abc123"), _runs_list_rule(runs)]
@@ -417,7 +490,7 @@ def test_exit_code_nonzero_only_on_internal_error(monkeypatch):
 def test_cli_exit_code_zero_for_a_real_failing_computation(monkeypatch):
     runner = FakeRunner([
         _pr_view_rule(head_sha="abc123"),
-        _runs_list_rule([{"id": 1, "head_sha": "abc123", "status": "completed", "conclusion": "failure"}]),
+        _runs_list_rule([{"id": 1, "head_sha": "abc123", "path": ".github/workflows/test.yml", "status": "completed", "conclusion": "failure"}]),
         _run_jobs_rule(1, [{"id": 99, "name": "unit-tests", "conclusion": "failure"}]),
         _job_steps_rule(99, [{"name": "Run tests", "conclusion": "failure"}]),
     ])

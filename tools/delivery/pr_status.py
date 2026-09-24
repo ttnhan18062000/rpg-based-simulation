@@ -21,9 +21,18 @@ which exists specifically because a blocked fetch has, in this repo, previously 
   as GREEN.
 
 "Required" is defined here as "every check that ran completed successfully" (ticket Assumption 2)
-— no repo-configured required-status-checks list is read. `deploy-docs.yml` runs are never in
-scope, since this module only ever reasons about the single workflow file it is pointed at
-(ticket Assumption 3).
+— no repo-configured required-status-checks list is read.
+
+**Workflow scoping (TCK-20260924-DELIVERY-STATUS-TOOL-WORKFLOW-SCOPE, fixing a doc/code
+disagreement in the originating ticket).** `gh api .../actions/runs?head_sha=` is repo-wide across
+every workflow, not just the one `--workflow-path` names. Runs are **partitioned**, not filtered:
+only runs whose `path` matches `--workflow-path` (default `.github/workflows/test.yml`) can produce
+GREEN/PENDING/FAILING; every other run at the same head SHA is reported separately in the result's
+`other_workflow_runs` field rather than silently voting on the verdict or being discarded — matching
+the originating ticket's own Assumption 3 recommendation ("reported separately: a docs-publish
+failure is not a code regression"). A head SHA with runs from another workflow but none yet from
+the target workflow is `UNKNOWN`, not `FAILING` or `ABSENT` — the other workflow's outcome says
+nothing about the target workflow's state.
 
 Out of scope, deliberately (see the ticket's own Out of Scope section): polling/retry loops (one
 call in, one verdict out — the caller decides when to ask again), any write of any kind (read-only,
@@ -121,12 +130,16 @@ def _git(run_command: CommandRunner, args: list) -> tuple[Optional[str], Optiona
     return result.stdout, None
 
 
-def _verdict(verdict: str, head_sha: Optional[str], reason: str, failing_jobs=None) -> dict:
+def _verdict(
+    verdict: str, head_sha: Optional[str], reason: str, failing_jobs=None,
+    other_workflow_runs=None,
+) -> dict:
     return {
         "verdict": verdict,
         "head_sha": head_sha,
         "reason": reason,
         "failing_jobs": failing_jobs or [],
+        "other_workflow_runs": other_workflow_runs or [],
     }
 
 
@@ -305,25 +318,46 @@ def compute_pr_status(
         return _verdict("UNKNOWN", head_sha, f"could not fetch run list: {err}")
 
     all_runs = runs_payload.get("workflow_runs", []) if isinstance(runs_payload, dict) else []
-    applicable = [r for r in all_runs if r.get("head_sha") == head_sha]
+    sha_matching = [r for r in all_runs if r.get("head_sha") == head_sha]
+
+    # Partition (not filter) by workflow — see the module docstring's Workflow scoping note. Only
+    # the target workflow's runs at this SHA may produce GREEN/PENDING/FAILING; a run from any
+    # other workflow is reported separately and never votes on the verdict (AC2).
+    target_path = str(workflow_path)
+    applicable = [r for r in sha_matching if r.get("path") == target_path]
+    other_workflow_runs = [r for r in sha_matching if r.get("path") != target_path]
 
     if applicable:
-        return _verdict_from_applicable_runs(applicable, head_sha, run_command)
-
-    if all_runs:
-        return _verdict(
+        result = _verdict_from_applicable_runs(applicable, head_sha, run_command)
+    elif sha_matching:
+        result = _verdict(
+            "UNKNOWN", head_sha,
+            f"{len(other_workflow_runs)} run(s) found for the current head SHA, but none from the "
+            f"target workflow ({target_path}) — another workflow's outcome says nothing about the "
+            f"target workflow's state",
+        )
+    elif all_runs:
+        result = _verdict(
             "UNKNOWN", head_sha,
             f"{len(all_runs)} run(s) found, but all are for an older SHA than the current head "
             f"({head_sha}) — a stale run says nothing about the current commit",
         )
+    else:
+        result = _absent_reason(pr_info, resolved_branch, head_sha, workflow_path, run_command)
 
-    return _absent_reason(pr_info, resolved_branch, head_sha, workflow_path, run_command)
+    result["other_workflow_runs"] = other_workflow_runs
+    return result
 
 
 def _print_human(result: dict) -> None:
     print(f"verdict: {result['verdict']}")
     print(f"head_sha: {result['head_sha']}")
     print(f"reason: {result['reason']}")
+    other = result.get("other_workflow_runs") or []
+    if other:
+        print(f"other_workflow_runs: {len(other)} (did not vote on this verdict)")
+        for run in other:
+            print(f"  {run.get('path')}: status={run.get('status')} conclusion={run.get('conclusion')}")
     for job in result["failing_jobs"]:
         print(f"  failing job: {job.get('job_name')} (run {job.get('run_id')}, job {job.get('job_id')})")
         for step in job.get("steps", []):
