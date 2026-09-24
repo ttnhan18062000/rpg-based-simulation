@@ -169,7 +169,17 @@ try:
         "ticket_id": ticket_id,
     }
 
-    tools_file = Path("agent-monitoring/data") / iso_week / "tools.jsonl"
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: write to a per-ticket file
+    # when a ticket is actively in progress -- two different tickets can never collide on a git
+    # diff hunk if they write to different paths, even under a GitHub squash-merge (this repo's
+    # own merge=union .gitattributes entry only protects a real git merge, never a squash-merge).
+    # Falls back to the shared file unchanged when no ticket_id is attributed (ad-hoc, non-ticket
+    # work) -- there is no "which ticket" to collide on in that case. Consolidated back into the
+    # canonical tools.jsonl by tools/agent-monitoring/monitoring_consolidation.py.
+    if ticket_id:
+        tools_file = Path("agent-monitoring/data") / iso_week / f"{ticket_id}.tools.jsonl"
+    else:
+        tools_file = Path("agent-monitoring/data") / iso_week / "tools.jsonl"
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     write_line(tools_file, json.dumps(record, separators=(",", ":")))
 

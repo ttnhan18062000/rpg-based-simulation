@@ -90,8 +90,17 @@ def compute_tool_stats(
     if not wanted:
         return {}
 
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: post_tool_hook.py now writes
+    # to a per-ticket <run_id>.tools.jsonl when a ticket is active, so this glob must also read
+    # those files, not just the canonical shared tools.jsonl -- otherwise tool_call_count/
+    # cost_proxy_score would silently zero out for every ticket using the new write path, since
+    # this SAME run's own tool-call rows for the events being written right now would be invisible
+    # until a future retro consolidation folds them into the canonical file.
+    tools_paths = sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl")) + sorted(
+        Path(".").glob("agent-monitoring/data/*/*.tools.jsonl")
+    )
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
-    for tools_path in sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl")):
+    for tools_path in tools_paths:
         for line in tools_path.read_text().splitlines():
             if not line:
                 continue
@@ -180,20 +189,34 @@ def main():
             records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
     # iso_week is computed once per batch, not once per record: write_lines() takes one
-    # target_path for the whole batch, so a batch straddling a UTC-midnight-on-Sunday ISO
+    # target_path per group, so a batch straddling a UTC-midnight-on-Sunday ISO
     # week boundary lands entirely in whichever week "now" resolved to at this point — the
     # only interpretation compatible with write_lines' single-target batch-contiguity contract.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
-    events_file.parent.mkdir(parents=True, exist_ok=True)
-    lines = [json.dumps(record, separators=(",", ":")) for record in records]
-    ok = write_lines(events_file, lines)
-    if not ok:
-        print(
-            f"WARNING: append failed for {len(records)} event record(s), "
-            f"see agent-monitoring/data/{iso_week}/.writer_health.jsonl",
-            file=sys.stderr,
-        )
+
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: group by run_id and write
+    # each group to its own per-ticket file (same rationale as post_tool_hook.py/record_run.py).
+    # A real batch is normally all-one-run_id (one ticket's own closure); grouping defensively
+    # handles a mixed batch too, without ever losing the "one write_lines call = one contiguous
+    # block" property *per group*.
+    groups: dict = defaultdict(list)
+    for record in records:
+        groups[record.get("run_id")].append(record)
+
+    for run_id, group_records in groups.items():
+        if run_id:
+            events_file = Path("agent-monitoring/data") / iso_week / f"{run_id}.events.jsonl"
+        else:
+            events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+        events_file.parent.mkdir(parents=True, exist_ok=True)
+        lines = [json.dumps(record, separators=(",", ":")) for record in group_records]
+        ok = write_lines(events_file, lines)
+        if not ok:
+            print(
+                f"WARNING: append failed for {len(group_records)} event record(s) "
+                f"(run_id={run_id}), see {events_file.parent}/.writer_health.jsonl",
+                file=sys.stderr,
+            )
 
     print(f"DONE: appended {len(records)} event record(s)")
 

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE
-phase: open
+phase: done
 date: 2026-09-24
 tags: [agent-monitoring, data-quality, process-improvement]
 ---
@@ -16,7 +16,7 @@ Per-ticket write targets for `agent-monitoring/data/*/*.jsonl` and `tickets/work
 consolidated at retro time, to remove the one gap `merge=union` doesn't cover: GitHub squash-merge
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -186,10 +186,94 @@ last-ordered epic ticket) both for the dependency reason above and so it's simpl
 on that branch before the batch PR opens.
 
 ## Test Summary
-_To be filled during implementation._
+- `python3 -m pytest tests/tools/test_monitoring_consolidation.py -v` (repo venv): **13 passed** —
+  including a real throwaway-git-repo fixture proving two per-ticket files never conflict under
+  sequential squash-merges (AC1), round-trip equivalence (AC2), idempotency (AC4), and
+  confirmation that `writer.py` and `done_checker_static.py` are unaffected (AC5).
+- Fixing this ticket's own change surfaced real, load-bearing breakage in three existing test
+  files that pinned the *old* shared-file write path directly — each investigated and fixed
+  individually, not assumed:
+  - `tests/tools/test_record_run.py` (4 tests), `tests/tools/test_post_tool_hook.py` (1 test),
+    `tests/tools/test_record_events.py` (6 tests) — path assertions updated to the new per-ticket
+    filename. All three files' full suites re-run clean (22, 22, 31 passed respectively).
+  - `tools/retrieval_events.py::emit_retrieval_event()` — a **third, previously undiscovered**
+    independent copy of the write-target formula (explicitly documented as mirroring
+    `record_events.py`'s own logic), broken by this ticket's change and now updated identically.
+    `tests/tools/test_retrieval_events.py`: 36 passed.
+  - `tests/tools/test_execution_identity_end_to_end.py` (3 tests) — its own path-reproducing
+    helpers needed a `ticket_id` parameter; the "prefix unchanged" test's semantics were
+    redesigned (not just path-patched) since a ticket-scoped write now creates a brand-new file
+    rather than appending to a seeded one — the stronger, correct claim for the new design is that
+    the pre-existing shared/legacy files are byte-for-byte untouched. All 3 pass.
+- Full regression: `python3 -m pytest tests/tools/ -m "not slow"` — **3018 passed, 25 skipped, 28
+  deselected, 1 xfailed**, 0 failed.
+- `python3 -m pytest tests/integrity/` — 37 passed, 1 skipped, 1 xfailed, **1 failed**:
+  `test_logic_guards.py::test_autonomous_loop_determinism_drift_guard`, a simulation-kernel
+  determinism test with no relationship to any file this ticket touches, and matching an
+  already-known, already-parked nondeterminism issue in this repo (confirmed non-regression: it
+  reproduced as `xfailed`, not a hard failure, on an isolated re-run — consistent with pre-existing
+  flakiness, not something introduced here). Reported per Gate Integrity, not silently dismissed
+  or fixed.
+- Real live confirmation, not just fixtures: this ticket's own session's monitoring writes were
+  already observed landing in a real per-ticket file
+  (`agent-monitoring/data/2026-W39/TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE.tools.jsonl`)
+  immediately after the `post_tool_hook.py` edit, produced by the live hook, not a test harness.
 
 ## Files Changed
-_To be filled during implementation._
+- `tools/agent-monitoring/post_tool_hook.py` — per-ticket `tools_file` when `ticket_id` is truthy.
+- `tools/agent-monitoring/record_run.py` — per-ticket `runs_file` when `run_id` is truthy.
+- `tools/agent-monitoring/record_events.py` — per-ticket `events_file` per `run_id` group;
+  `compute_tool_stats()`'s glob widened to also read per-ticket `tools.jsonl` files.
+- `tools/agent-monitoring/monitoring_consolidation.py` (new) — the consolidation module and CLI.
+- `tools/agent-monitoring/generate_retro.py` — calls `consolidate_all()` before reading, wrapped
+  in try/except (fail-open).
+- `tools/retrieval_events.py` — `emit_retrieval_event()`'s own independent copy of the write-target
+  formula updated identically (see Test Summary — a real, previously-undiscovered third writer).
+- `Makefile` — new `agent-monitoring-consolidate` target.
+- `tests/tools/test_monitoring_consolidation.py` (new) — 13 tests.
+- `tests/tools/test_record_run.py`, `tests/tools/test_post_tool_hook.py`,
+  `tests/tools/test_record_events.py`, `tests/tools/test_retrieval_events.py`,
+  `tests/tools/test_execution_identity_end_to_end.py` — updated to the new per-ticket write path;
+  no assertion weakened, several strengthened (see Test Summary).
+- `staging_artifacts/TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE/
+  {investigation,plan,test_plan}.md` (new).
+- **Not changed** (disclosed scope reduction — see investigation.md):
+  `tools/working_log_writer.py`, `tickets/working_log.csv`'s write path,
+  `tools/gate_checks/done_checker_static.py::check_working_log_exactly_one_row()`.
 
 ## Completion Summary
-Open.
+Implemented per-ticket write targets for `agent-monitoring/data/*/*.jsonl` (`runs`/`events`/
+`tools`), removing the one gap `.gitattributes`' `merge=union` doesn't cover: a GitHub squash-merge
+invokes no merge driver at all, so two tickets both appending to the same shared weekly file could
+still conflict or duplicate under squash-merge even though a real git merge already handles this
+case cleanly (confirmed live earlier this same epic batch). Two different tickets writing to two
+different per-ticket files can never collide on a diff hunk, proven against a real throwaway git
+repo reproducing the exact sequential-squash-merge shape, not asserted by inspection.
+Consolidation (`tools/agent-monitoring/monitoring_consolidation.py`) folds per-ticket files back
+into the canonical per-week shape every existing reader expects, wired into the existing retro
+cadence plus an on-demand `make agent-monitoring-consolidate` target — idempotent by deleting a
+per-ticket file only after its lines are successfully folded in, deliberately not manifest-tracked
+(a manifest would itself be new, small, non-append-only state with its own merge-conflict
+exposure — the exact class of problem this ticket removes, reintroduced at a smaller scale).
+
+**Deliberate, disclosed scope reduction**: `tickets/working_log.csv`'s write path is unchanged.
+Investigation found `done_checker_static.py::check_working_log_exactly_one_row()` reads that file
+**synchronously at every ticket's own close** (unlike the JSONL files, which have no such
+dependency — CLAUDE.md's own Definition of Done states their coverage is "guaranteed by
+workflow — not verified by done-checker"), with deliberately nuanced reopen-vs-duplicate detection
+logic. Deferring its write to retro-cadence consolidation, as this ticket's own Assumption 2
+recommended, would break that check for every ticket closed via the new path until the next retro
+run. Fixing this properly needs either extending that check's own logic or a different
+synchronization mechanism — real, correctly-scoped follow-up work, not a rushed addition here. AC3
+is therefore **not satisfied by this ticket**; `TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-
+GAP`'s existing detection-only mitigation remains the standing protection for `working_log.csv`.
+
+Fixing the in-scope JSONL change surfaced real breakage in existing tests across 5 files,
+including a third, previously undiscovered independent copy of the write-target formula in
+`tools/retrieval_events.py` — found only by running the full regression suite, not by inspection
+of the ticket's own Related Code Areas list, which didn't name that file. Every found breakage was
+investigated and fixed on its own merits, not assumed away. One pre-existing, already-known,
+already-parked simulation-determinism test failure in `tests/integrity/` (unrelated to any file
+this ticket touches) was reported, not silently dismissed. `data_runs_clean` is expected to FAIL
+again on this close for the same pre-existing, shared-worktree reason as every other close in this
+batch.

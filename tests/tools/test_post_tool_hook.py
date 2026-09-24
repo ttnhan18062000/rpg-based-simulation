@@ -51,9 +51,12 @@ def _run_hook(cwd, payload):
     )
 
 
-def _tools_lines(cwd):
+def _tools_lines(cwd, ticket_id=None):
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: a truthy ticket_id in the
+    # sidecar now writes to a per-ticket file, not the bare shared tools.jsonl.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    tools_file = cwd / "agent-monitoring" / "data" / iso_week / "tools.jsonl"
+    filename = f"{ticket_id}.tools.jsonl" if ticket_id else "tools.jsonl"
+    tools_file = cwd / "agent-monitoring" / "data" / iso_week / filename
     return tools_file.read_text().splitlines()
 
 
@@ -196,7 +199,7 @@ def test_execution_identity_fields_included_when_sidecar_present(tmp_path):
     result = _run_hook(tmp_path, _payload())
     assert result.returncode == 0
 
-    lines = _tools_lines(tmp_path)
+    lines = _tools_lines(tmp_path, ticket_id="TCK-X")
     record = json.loads(lines[0])
     assert set(record.keys()) == _RECORD_FIELDS
     assert record["execution_id"] == "claude-TCK-X-1234567890-abcd1234"

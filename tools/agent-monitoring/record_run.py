@@ -83,7 +83,14 @@ def main():
     record["duration_s"] = compute_duration_s(record)
 
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = Path("agent-monitoring/data") / iso_week / "runs.jsonl"
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: per-ticket write target --
+    # see post_tool_hook.py's own comment for the full rationale. run_id is required (REQUIRED
+    # set above), so this is always taken; the shared-file fallback exists only for defense.
+    run_id = record.get("run_id")
+    if run_id:
+        runs_file = Path("agent-monitoring/data") / iso_week / f"{run_id}.runs.jsonl"
+    else:
+        runs_file = Path("agent-monitoring/data") / iso_week / "runs.jsonl"
     runs_file.parent.mkdir(parents=True, exist_ok=True)
     ok = write_line(runs_file, json.dumps(record, separators=(",", ":")))
     if not ok:

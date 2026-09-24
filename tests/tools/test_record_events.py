@@ -177,7 +177,7 @@ class TestVocabularyWarning:
         assert "WARNING" in result.stderr
         assert "TotallyMadeUpPhase" in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        written = (tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl").read_text()
+        written = (tmp_path / "agent-monitoring" / "data" / iso_week / "TCK-VOCAB-WARN-TEST.events.jsonl").read_text()
         assert "TCK-VOCAB-WARN-TEST" in written
 
 
@@ -222,7 +222,7 @@ def test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not
     )
     assert result.returncode == 0
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "TCK-COST-PROXY-TEST.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["cost_proxy_score"] == 3.0
     assert written["tool_call_count"] == 3
@@ -241,7 +241,7 @@ def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
     )
     assert result.returncode == 0
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "TCK-NO-TOOLS-FILE.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["cost_proxy_score"] == 0.0
     assert written["tool_call_count"] == 0
@@ -417,11 +417,12 @@ def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
 
     record_events.main()
 
-    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl"
+    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "TCK-FAKE-RUN.events.jsonl"
     assert written_path.exists()
     written = json.loads(written_path.read_text().strip())
     assert written["run_id"] == "TCK-FAKE-RUN"
     assert not (tmp_path / "agent-monitoring" / "events.jsonl").exists()
+    assert not (tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl").exists()
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
@@ -441,8 +442,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, mo
     )
     record_events.main()
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "events.jsonl"
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "TCK-WEEK-36.events.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "TCK-WEEK-37.events.jsonl"
     assert week_36.exists()
     assert week_37.exists()
     assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"
@@ -472,7 +473,7 @@ def test_tool_call_count_correct_for_tool_rows_in_a_non_current_week_folder(tmp_
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "TCK-CROSS-WEEK-TEST.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["tool_call_count"] == 2
     assert written["cost_proxy_score"] > 0.0
@@ -497,7 +498,7 @@ def test_tool_call_count_sums_rows_across_multiple_weeks_for_same_key(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "TCK-MULTI-WEEK-SAME-KEY.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["tool_call_count"] == 2
 
@@ -522,7 +523,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{record['run_id']}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
@@ -552,7 +553,10 @@ def test_batch_write_holds_contiguous_lines_under_concurrent_writer(tmp_path):
     import threading
 
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: the subprocess batch below
+    # uses run_id "TCK-BATCH-CONTIG-TEST", so its real write target is now the per-ticket file --
+    # the concurrent single-line writer below must race against that same actual target.
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "TCK-BATCH-CONTIG-TEST.events.jsonl"
     events_file.parent.mkdir(parents=True, exist_ok=True)
 
     batch_size = 5

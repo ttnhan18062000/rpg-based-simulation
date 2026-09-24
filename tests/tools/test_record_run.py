@@ -178,7 +178,9 @@ class TestDurationWrittenToRecord:
         )
         assert result.returncode == 0, result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl"
+        # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: a truthy run_id now
+        # writes to a per-ticket file, not the bare shared runs.jsonl.
+        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{data['run_id']}.runs.jsonl"
         written = json.loads(runs_file.read_text().strip())
         return written
 
@@ -227,7 +229,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{record['run_id']}.runs.jsonl"
     written = json.loads(runs_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
@@ -262,11 +264,12 @@ def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
 
     record_run.main()
 
-    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "runs.jsonl"
+    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "TCK-FAKE-RUN.runs.jsonl"
     assert written_path.exists()
     written = json.loads(written_path.read_text().strip())
     assert written["run_id"] == "TCK-FAKE-RUN"
     assert not (tmp_path / "agent-monitoring" / "runs.jsonl").exists()
+    assert not (tmp_path / "agent-monitoring" / "data" / "2026-W36" / "runs.jsonl").exists()
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
@@ -286,8 +289,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, mo
     )
     record_run.main()
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "runs.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "runs.jsonl"
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "TCK-WEEK-36.runs.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "TCK-WEEK-37.runs.jsonl"
     assert week_36.exists()
     assert week_37.exists()
     assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"

@@ -24,8 +24,10 @@ from pathlib import Path
 # collect_completed_tickets/extract_frontmatter/_ticket_id_effective_date, never modifies them.
 _TOOLS_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_TOOLS_DIR))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tag_registry import load_registry  # noqa: E402
 from tag_report import categorize_tag, collect_completed_tickets  # noqa: E402
+from monitoring_consolidation import consolidate_all  # noqa: E402
 from validate_frontmatter import (  # noqa: E402
     TAG_TAXONOMY_EFFECTIVE_DATE,
     _ticket_id_effective_date,
@@ -1969,6 +1971,18 @@ def main():
         "transcript corpus (can be ~1GB+) -- opt-in, not part of the default report.",
     )
     args = parser.parse_args()
+
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: fold any per-ticket shard
+    # files into the canonical per-week files before reading, so this run's own report (and every
+    # downstream reader that runs after it) sees fully-consolidated data. The existing retro
+    # cadence (weekly / 5+ tickets / before an agent-prompt change) becomes the default
+    # consolidation trigger with no extra scheduling. Wrapped here (consolidate_all() itself does
+    # not swallow exceptions) so a consolidation failure never blocks report generation, matching
+    # every other monitoring write path's fail-open rule.
+    try:
+        consolidate_all()
+    except Exception:
+        pass
 
     all_runs, all_events = _load_runs_and_events()
     all_tools = _load_source(DEFAULT_TOOLS_FILE, "tools")

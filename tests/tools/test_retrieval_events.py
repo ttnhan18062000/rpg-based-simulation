@@ -213,13 +213,18 @@ class TestEmitRetrievalEvent:
         write-time-computed local inside record_events.py::main()) — this default must
         reproduce that same current-ISO-week target, not the old flat
         agent-monitoring/events.jsonl path (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-
-        DEAD-CONSTANTS). Confirmed by writing through both this function's own default and
-        record_events.py's real main() and asserting they land in the identical file."""
+        DEAD-CONSTANTS). TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE further
+        extended that target to a per-run_id file when run_id is truthy -- both calls below now
+        use the SAME run_id, so this test still proves the two formulas agree (same run_id ->
+        same file), rather than proving something no longer true (any two run_ids -> same file).
+        Confirmed by writing through both this function's own default and record_events.py's
+        real main() and asserting they land in the identical file."""
         monkeypatch.chdir(tmp_path)
         assert not hasattr(record_events, "EVENTS_FILE")
 
+        shared_run_id = "RETRIEVAL-EVENT-test"
         re_mod.emit_retrieval_event(
-            run_id="RETRIEVAL-EVENT-test",
+            run_id=shared_run_id,
             seq=1,
             phase="Retrieval",
             agent="hybrid-retrieval-wrapper",
@@ -228,11 +233,11 @@ class TestEmitRetrievalEvent:
         )
 
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        expected_path = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        expected_path = tmp_path / "agent-monitoring" / "data" / iso_week / f"{shared_run_id}.events.jsonl"
         assert expected_path.exists()
         assert "default events_file test" in expected_path.read_text()
 
-        # Cross-check against record_events.py's own real write path for the same run, not
+        # Cross-check against record_events.py's own real write path for the SAME run_id, not
         # just a hand-reproduced formula -- proves this write lands in the exact same file
         # record_events.py's own hook writes to.
         monkeypatch.setattr(
@@ -242,7 +247,7 @@ class TestEmitRetrievalEvent:
                 "--data",
                 json.dumps(
                     {
-                        "run_id": "some-other-run",
+                        "run_id": shared_run_id,
                         "seq": 1,
                         "ts": "2026-09-04T00:00:00Z",
                         "phase": "Implement",

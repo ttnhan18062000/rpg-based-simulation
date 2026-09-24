@@ -57,16 +57,19 @@ def _current_week_dir(agent_monitoring_dir: Path) -> Path:
     return agent_monitoring_dir / "data" / _current_iso_week()
 
 
-def _current_week_tools_file(agent_monitoring_dir: Path) -> Path:
-    return _current_week_dir(agent_monitoring_dir) / "tools.jsonl"
+def _current_week_tools_file(agent_monitoring_dir: Path, ticket_id: str | None = None) -> Path:
+    name = f"{ticket_id}.tools.jsonl" if ticket_id else "tools.jsonl"
+    return _current_week_dir(agent_monitoring_dir) / name
 
 
-def _current_week_events_file(agent_monitoring_dir: Path) -> Path:
-    return _current_week_dir(agent_monitoring_dir) / "events.jsonl"
+def _current_week_events_file(agent_monitoring_dir: Path, ticket_id: str | None = None) -> Path:
+    name = f"{ticket_id}.events.jsonl" if ticket_id else "events.jsonl"
+    return _current_week_dir(agent_monitoring_dir) / name
 
 
-def _current_week_runs_file(agent_monitoring_dir: Path) -> Path:
-    return _current_week_dir(agent_monitoring_dir) / "runs.jsonl"
+def _current_week_runs_file(agent_monitoring_dir: Path, ticket_id: str | None = None) -> Path:
+    name = f"{ticket_id}.runs.jsonl" if ticket_id else "runs.jsonl"
+    return _current_week_dir(agent_monitoring_dir) / name
 
 
 # ---------------------------------------------------------------------------
@@ -261,12 +264,13 @@ def _seed_one_legacy_line_per_file(agent_monitoring_dir: Path) -> None:
 
 
 def test_controlled_claude_execution_produces_coherent_identity_across_jsonl_sources(tmp_path):
-    identity_1 = _perform_one_simulated_execution(tmp_path, ticket_id="TCK-EXEC-IDENTITY-ONE")
+    ticket_id = "TCK-EXEC-IDENTITY-ONE"
+    identity_1 = _perform_one_simulated_execution(tmp_path, ticket_id=ticket_id)
 
     agent_monitoring_dir = tmp_path / "agent-monitoring"
-    events_file = _current_week_events_file(agent_monitoring_dir)
-    runs_file = _current_week_runs_file(agent_monitoring_dir)
-    tools_file = _current_week_tools_file(agent_monitoring_dir)
+    events_file = _current_week_events_file(agent_monitoring_dir, ticket_id)
+    runs_file = _current_week_runs_file(agent_monitoring_dir, ticket_id)
+    tools_file = _current_week_tools_file(agent_monitoring_dir, ticket_id)
 
     events_lines = events_file.read_text().strip().splitlines()
     runs_lines = runs_file.read_text().strip().splitlines()
@@ -302,46 +306,47 @@ def test_controlled_claude_execution_produces_coherent_identity_across_jsonl_sou
 
 
 def test_baseline_prefix_unchanged_after_new_identity_writes(tmp_path):
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: a real ticket_id now writes
+    # to its own per-ticket file, not the week-shared one the legacy content below is seeded
+    # into -- so "prefix preserved" for a ticket-scoped write is the stronger, simpler claim that
+    # the pre-existing shared/legacy files are byte-for-byte UNCHANGED (nothing new ever touches
+    # them), while the new per-ticket file contains only the new execution's own lines.
     agent_monitoring_dir = tmp_path / "agent-monitoring"
     agent_monitoring_dir.mkdir(parents=True)
     _seed_one_legacy_line_per_file(agent_monitoring_dir)
 
-    events_file = _current_week_events_file(agent_monitoring_dir)
-    runs_file = _current_week_runs_file(agent_monitoring_dir)
-    tools_file = _current_week_tools_file(agent_monitoring_dir)
+    ticket_id = "TCK-NEW-IDENTITY"
+    week_events_file = _current_week_events_file(agent_monitoring_dir)
+    week_runs_file = _current_week_runs_file(agent_monitoring_dir)
+    week_tools_file = _current_week_tools_file(agent_monitoring_dir)
 
-    events_prefix_before = events_file.read_text()
-    runs_prefix_before = runs_file.read_text()
-    tools_prefix_before = tools_file.read_text()
+    week_events_before = week_events_file.read_text()
+    week_runs_before = week_runs_file.read_text()
+    week_tools_before = week_tools_file.read_text()
     legacy_events_prefix_before = (agent_monitoring_dir / "events.jsonl").read_text()
     legacy_runs_prefix_before = (agent_monitoring_dir / "runs.jsonl").read_text()
     legacy_tools_prefix_before = (agent_monitoring_dir / "tools.jsonl").read_text()
-    events_checksum_before = hashlib.sha256(events_prefix_before.encode("utf-8")).hexdigest()
-    runs_checksum_before = hashlib.sha256(runs_prefix_before.encode("utf-8")).hexdigest()
-    tools_checksum_before = hashlib.sha256(tools_prefix_before.encode("utf-8")).hexdigest()
 
-    _perform_one_simulated_execution(tmp_path, ticket_id="TCK-NEW-IDENTITY", seq_start=1)
+    _perform_one_simulated_execution(tmp_path, ticket_id=ticket_id, seq_start=1)
 
-    events_after = events_file.read_text()
-    runs_after = runs_file.read_text()
-    tools_after = tools_file.read_text()
+    # The week-shared files (where the legacy content lives) are completely untouched — a
+    # ticket-scoped write never reads or rewrites them.
+    assert week_events_file.read_text() == week_events_before
+    assert week_runs_file.read_text() == week_runs_before
+    assert week_tools_file.read_text() == week_tools_before
 
-    # Pure append: the pre-existing prefix bytes are untouched — never rewritten.
-    assert events_after.startswith(events_prefix_before)
-    assert runs_after.startswith(runs_prefix_before)
-    assert tools_after.startswith(tools_prefix_before)
-    assert hashlib.sha256(events_after[: len(events_prefix_before)].encode("utf-8")).hexdigest() == events_checksum_before
-    assert hashlib.sha256(runs_after[: len(runs_prefix_before)].encode("utf-8")).hexdigest() == runs_checksum_before
-    assert hashlib.sha256(tools_after[: len(tools_prefix_before)].encode("utf-8")).hexdigest() == tools_checksum_before
-
-    # Exactly N + appended-record-count lines — pure append, no drop, no in-place mutation.
-    assert len(events_after.strip().splitlines()) == 1 + 2
-    assert len(runs_after.strip().splitlines()) == 1 + 1
-    assert len(tools_after.strip().splitlines()) == 1 + 1
+    # The new execution's own per-ticket files contain exactly its own appended lines — brand
+    # new files, so there is no pre-existing prefix to preserve within them.
+    ticket_events_file = _current_week_events_file(agent_monitoring_dir, ticket_id)
+    ticket_runs_file = _current_week_runs_file(agent_monitoring_dir, ticket_id)
+    ticket_tools_file = _current_week_tools_file(agent_monitoring_dir, ticket_id)
+    assert len(ticket_events_file.read_text().strip().splitlines()) == 2
+    assert len(ticket_runs_file.read_text().strip().splitlines()) == 1
+    assert len(ticket_tools_file.read_text().strip().splitlines()) == 1
 
     # The legacy monolithic `{events,runs,tools}.jsonl` files (pre-unification write targets)
     # are never resurrected by a stray write — all 3 real writers now target only the unified
-    # current-week directory.
+    # current-week directory (shared or per-ticket).
     assert (agent_monitoring_dir / "events.jsonl").read_text() == legacy_events_prefix_before
     assert (agent_monitoring_dir / "runs.jsonl").read_text() == legacy_runs_prefix_before
     assert (agent_monitoring_dir / "tools.jsonl").read_text() == legacy_tools_prefix_before
@@ -359,15 +364,19 @@ def test_newly_appended_lines_have_no_duplicate_identity_keys_and_correct_values
     agent_monitoring_dir.mkdir(parents=True)
     _seed_one_legacy_line_per_file(agent_monitoring_dir)
 
-    events_file = _current_week_events_file(agent_monitoring_dir)
-    runs_file = _current_week_runs_file(agent_monitoring_dir)
-    tools_file = _current_week_tools_file(agent_monitoring_dir)
+    ticket_id = "TCK-CONTENT-CHECK"
+    identity = _perform_one_simulated_execution(tmp_path, ticket_id=ticket_id, seq_start=1)
 
-    identity = _perform_one_simulated_execution(tmp_path, ticket_id="TCK-CONTENT-CHECK", seq_start=1)
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: this ticket-scoped execution
+    # writes to its own brand-new per-ticket file, which carries no seeded legacy line at all —
+    # every line in it is a newly-appended one, so there is no leading legacy line to skip.
+    events_file = _current_week_events_file(agent_monitoring_dir, ticket_id)
+    runs_file = _current_week_runs_file(agent_monitoring_dir, ticket_id)
+    tools_file = _current_week_tools_file(agent_monitoring_dir, ticket_id)
 
-    new_event_lines = events_file.read_text().strip().splitlines()[1:]
-    new_run_lines = runs_file.read_text().strip().splitlines()[1:]
-    new_tool_lines = tools_file.read_text().strip().splitlines()[1:]
+    new_event_lines = events_file.read_text().strip().splitlines()
+    new_run_lines = runs_file.read_text().strip().splitlines()
+    new_tool_lines = tools_file.read_text().strip().splitlines()
 
     assert len(new_event_lines) == 2
     assert len(new_run_lines) == 1
