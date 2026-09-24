@@ -358,6 +358,9 @@ mechanism-registry-view: ## Regenerate docs/brainstorm/mechanism_registry_view.m
 mechanism-system-rollup-view: ## Regenerate docs/brainstorm/mechanism_system_rollup_view.md (per-system counts vs whole-registry baseline, never a badge)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_system_rollup_view.py
 
+territory-control-view: ## Regenerate docs/brainstorm/territory_control_management_view.md (Territory Rules against architecture.md §8's six axes)
+	$(PYTHON3) tools/semantic_control_plane/generate_territory_control_view.py
+
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 

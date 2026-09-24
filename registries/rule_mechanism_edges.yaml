@@ -1,0 +1,111 @@
+# Rule -> Mechanism edges -- part of the Simulation Semantic Control Plane's M0 schema
+# (TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION). Records how a Rule from docs/world_rules/ is
+# realized by, or constrains, a Mechanism from registries/mechanisms.yaml.
+#
+# Physically separate from registries/mechanism_causal_edges.yaml (a Mechanism -> Mechanism
+# causal fact, not a Rule -> Mechanism one) and registries/rule_classifications.yaml (a Rule's
+# own aggregate realization verdict) -- see
+# docs/plans/simulation_semantic_control_plane/architecture.md §3 for why these three stay three
+# distinct structures rather than one merged shape.
+#
+# Each row: rule_id, mechanism_id, edge_type, evidence, date.
+#   edge_type: REALIZES | PARTIALLY_REALIZES | CONSTRAINED_BY
+# `rule_id` resolves against a live scan of docs/world_rules/**/*.md headings
+# (tools/semantic_control_plane/rule_catalog.py::scan_rule_ids()), never a hardcoded list.
+# `mechanism_id` resolves against registries/mechanisms.yaml (via
+# tools.mechanism_registry.registry.MechanismRegistry).
+#
+# Validate with: python3 tools/semantic_control_plane/registry.py
+#
+# M1's own real Rule<->Mechanism findings (TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE).
+# Only TERR-01/02/03/05 against docs/world_rules/places-culture/territory-control.md -- no other
+# Rule family. One of that doc's own inline citations (territory-control.md:30) points at a
+# jurisdiction Rule ID that was never admitted as its own heading (an Inherited entry carries no
+# local ID by the Catalog's own admission discipline) -- that dangling citation is stale, tracked
+# separately as TCK-20260923-TERR01-STALE-JURISDICTION-CITATION, and its own referenced ID is
+# never written to this file. Do NOT generate the Cartesian product
+# (172 Rules x 93 mechanisms) -- an absent edge means UNKNOWN, not MISSING, per architecture.md
+# §7, "Unknown is permanent, not a bug to eliminate."
+
+edges:
+  - rule_id: TERR-01
+    mechanism_id: regional_sovereignty
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      RegionState.owner_faction_id (src/core/state.py:282, "Faction that currently controls the
+      region") is written by FactionInfluenceService.process_influence_shift()
+      (src/world/influence.py:33-71) as the single slot representing one of TERR-01's seven
+      required distinct relation types (de facto control -- also read for tax/suppression gating
+      at src/engine/town_resolution.py:65,128-170), while PlaceState.owner_faction_id's own field
+      comment (src/core/state.py:360, "Sovereignty override; defaults to the parent Region's")
+      names a third concept sharing the identical field shape -- the same slot cannot represent
+      claim vs. control vs. jurisdiction vs. cultural-association simultaneously, per
+      territory-control.md:27.
+    date: "2026-09-24"
+  - rule_id: TERR-01
+    mechanism_id: betrayal_siege_war
+    edge_type: CONSTRAINED_BY
+    evidence: >-
+      Siege-driven territory transfer (src/engine/military_conflict.py::MilitaryConflictPhase.execute(),
+      docstring :161-165, "RegionState.owner_faction_id is NOT set during transfer") updates
+      FactionUpdate.territory_add/remove but never RegionState.owner_faction_id, confirmed
+      independently by docs/parity_ledger/faction.yaml:227-242 (FAC-010, status: verified) -- a
+      second, structurally distinct representation of "who controls this region" diverging from
+      regional_sovereignty's own owner_faction_id on every real siege-driven conquest. Not a
+      restatement of the regional_sovereignty edge's own evidence.
+    date: "2026-09-24"
+  - rule_id: TERR-02
+    mechanism_id: regional_sovereignty
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      FactionInfluenceService.process_influence_shift() (src/world/influence.py:28-30,33-71)
+      gates ownership writes behind accumulated in-region combat-death evidence crossing
+      CONQUEST_THRESHOLD = -50.0 / LIBERATION_THRESHOLD = 50.0, a real causal-basis proxy per
+      territory-control.md:100's military-capability basis, but two caveats stop full
+      realization: (1) world-generation-time initial ownership
+      (src/worldbuilding/compiler.py:415,446) is a bare declarative assignment with zero causal
+      basis; (2) a second live writer, WorldDynamicsSystem.resolve_dynamics()
+      (src/engine/world_dynamics.py:23,82-87), re-implements the same check at an inconsistent
+      +-100.0 threshold, not +-50.0. This threshold mismatch is a genuine THREE-WAY disagreement,
+      not just a two-code-path one: docs/mechanics/regional_sovereignty.md (:22-24, "Hero Guild
+      Control: Influence > 100.0", "Monster Horde Control: Influence < -100.0", "Contested:
+      Between -50.0 and 50.0") states +-100.0 as canonical, matching world_dynamics.py; but
+      docs/world/regional_sovereignty_runtime_contract.md (:24,109, "one faction's influence >= +50
+      ... or <= -50", "The influence threshold (+-50) is configurable per-region") states +-50.0
+      as canonical, matching influence.py -- so the Mechanics Bible chapter and the runtime
+      contract doc disagree with EACH OTHER, not only with one code path each. Recorded here as
+      evidence, not fixed (Out of Scope); the doc-vs-doc disagreement itself is worth a separate
+      follow-up ticket (not filed by this ticket).
+    date: "2026-09-24"
+  - rule_id: TERR-03
+    mechanism_id: regional_sovereignty
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Same overloaded-slot mechanism as the TERR-01 / regional_sovereignty edge above, applied to
+      TERR-03's own claim-vs-control simultaneous-representability requirement
+      (territory-control.md:130) -- the single owner_faction_id slot (src/core/state.py:282)
+      forecloses ever representing a claim that diverges from actual control.
+    date: "2026-09-24"
+  - rule_id: TERR-03
+    mechanism_id: betrayal_siege_war
+    edge_type: CONSTRAINED_BY
+    evidence: >-
+      Same FAC-010 second-desync fact as the TERR-01 / betrayal_siege_war edge above
+      (src/engine/military_conflict.py:161-165, docs/parity_ledger/faction.yaml:227-242), cited
+      independently for TERR-03's own claim-vs-control requirement (distinct citation per Rule,
+      per architecture.md §3's typed, non-Cartesian edge model -- not a copy-paste of the TERR-01
+      row).
+    date: "2026-09-24"
+  - rule_id: TERR-05
+    mechanism_id: city
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      RegionState.places (src/core/state.py:295) / PlaceState.region_id (src/core/state.py:355-356)
+      confirm the structural containment half of TERR-05's requirement ("a Place may lie
+      inside... a territory other than its current controller", territory-control.md:170) via the
+      city mechanism (RegionState itself, registries/mechanisms.yaml -- "City-state IS
+      RegionState", depends_on: [regional_sovereignty], state: partial). The
+      cultural/historical-association-survives-control-change half has zero implementing field on
+      PlaceState (src/core/state.py:344-383) and is NOT mapped as its own edge -- recorded as
+      MISSING in rule_classifications.yaml's own evidence instead of an invented edge.
+    date: "2026-09-24"

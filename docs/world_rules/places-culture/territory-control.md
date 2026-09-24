@@ -27,7 +27,7 @@ world semantics; repository classification records realization only, never deliv
 ## TERR-01 — Territorial claim, de facto control, legal/institutional jurisdiction, property ownership, military occupation, cultural association, and residence are distinct relation types where a domain models them; none is required to be materialized for every territory, and the existence of one never silently establishes another
 
 > A territorial **claim** (an assertion of right), **de facto control** (practical governance
-> in fact), **jurisdiction** (legal/institutional applicability, see TERR-04), **property
+> in fact), **jurisdiction** (legal/institutional applicability — Inherited jurisdiction entry → Law/Enforcement, LAW-03, Batch 10, the deferred integration this entry resolves), **property
 > ownership** (a specific parcel's own owned-resource status, Batch 08/01), **military
 > occupation**, **cultural association**, and **residence** are distinct relation types — where
 > a domain models more than one of them for the same land or space, none is automatically

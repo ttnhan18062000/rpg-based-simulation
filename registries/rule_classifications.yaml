@@ -1,0 +1,91 @@
+# Per-Rule realization classification -- part of the Simulation Semantic Control Plane's M0
+# schema (TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION). Exactly one record per Rule ID: the
+# Rule's own aggregate realization verdict, a human judgment call that does NOT mechanically fall
+# out of registries/rule_mechanism_edges.yaml's or registries/mechanism_causal_edges.yaml's edge
+# lists -- see docs/plans/simulation_semantic_control_plane/architecture.md §3/§4 and
+# docs/plans/mechanism_tier_model_initiative.md §3's "declared, not derived" precedent for the
+# `system` tier, the same lesson this schema must not repeat as a mistake. No function anywhere
+# in tools/semantic_control_plane/ takes only the two edge schemas above as input and returns or
+# writes a classification value -- enforced by omission, not by this comment alone.
+#
+# Each row: rule_id, classification, evidence, review_date.
+#   classification: SUPPORTED | PARTIAL | CONFLICTING | MISSING | INERT-OFF | UNKNOWN
+# (the same vocabulary the Rule Catalog's own review-exports already use in prose, e.g.
+# docs/world_rules/places-culture/territory-control.md's TERR-01 entry, "Repository evidence:
+# CONFLICTING for control/sovereignty ... MISSING for cultural association and residence
+# specifically").
+#
+# UNKNOWN is a permanent, valid, expected value -- "not yet looked at" -- and is never silently
+# rewritten to MISSING ("investigated, found absent"). A Rule with NO record at all is not an
+# error either; only a *second* record for an already-present rule_id is rejected. See
+# architecture.md §7, "Unknown is permanent, not a bug to eliminate."
+#
+# Validate with: python3 tools/semantic_control_plane/registry.py
+#
+# M1's own real classifications (TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE). Written as a
+# separate pass, after registries/rule_mechanism_edges.yaml and
+# registries/mechanism_causal_edges.yaml were already on disk and validator-clean -- each row
+# below is its own human judgment call, not mechanically derived from the edge list (see this
+# file's own header above and architecture.md §3/§4).
+
+classifications:
+  - rule_id: TERR-01
+    classification: CONFLICTING
+    evidence: >-
+      Two structurally distinct pieces of CONFLICTING evidence: (1) the shared
+      RegionState.owner_faction_id / PlaceState.owner_faction_id three-concept overload
+      (registries/rule_mechanism_edges.yaml's own TERR-01 / regional_sovereignty edge) -- one
+      field slot actively, structurally forecloses representing claim vs. control vs.
+      jurisdiction vs. cultural-association as distinct facts, the textbook overloaded-slot case
+      per this Catalog's own CONFLICTING-vs-PARTIAL litmus test; (2) the independent FAC-010
+      betrayal_siege_war second-desync (the same edge file's TERR-01 / betrayal_siege_war row) --
+      a second, different representation of "who controls this region" (FactionState.territory)
+      diverging from RegionState.owner_faction_id on every real siege conquest. Matches the
+      Catalog's own pre-settled precedent (architecture.md:132, "TERR-01 is CONFLICTING ... even
+      though the mechanisms reading owner_faction_id are all state: done -- the code works exactly
+      as written; the semantics it expresses are wrong").
+    review_date: "2026-09-24"
+  - rule_id: TERR-02
+    classification: PARTIAL
+    evidence: >-
+      A real causal-basis mechanism exists for conquest/liberation: FactionInfluenceService gates
+      ownership transitions behind accumulated in-region combat-death evidence crossing a declared
+      threshold, a genuine (if narrow) military-capability proxy per territory-control.md:100.
+      This is a real, non-contradictory narrower slice, not a bare assignment -- the PARTIAL, not
+      CONFLICTING, side of the litmus test (nothing structurally forecloses adding the rest). Two
+      real gaps stop this from being SUPPORTED: (1) world-generation-time initial ownership
+      (src/worldbuilding/compiler.py:415,446) is a bare declarative assignment with zero causal
+      basis for every region's starting state; (2) the +-50.0 (FactionInfluenceService) vs.
+      +-100.0 (WorldDynamicsSystem) threshold mismatch is not just a two-code-path disagreement --
+      docs/mechanics/regional_sovereignty.md states +-100.0 as canonical and
+      docs/world/regional_sovereignty_runtime_contract.md states +-50.0 as canonical, so the two
+      governing docs disagree with each other as well as with one code path each. Matches this
+      Rule's own doc verdict (territory-control.md:116-123, PARTIAL), now backed by an exhaustive
+      trace instead of a hedge.
+    review_date: "2026-09-24"
+  - rule_id: TERR-03
+    classification: CONFLICTING
+    evidence: >-
+      Same root cause as TERR-01's own CONFLICTING classification above: the overloaded
+      RegionState.owner_faction_id slot (registries/rule_mechanism_edges.yaml's TERR-03 /
+      regional_sovereignty edge) forecloses ever representing a claim that diverges from actual
+      control, per TERR-03's own claim-vs-control simultaneous-representability requirement
+      (territory-control.md:130); independently reinforced by the same FAC-010
+      betrayal_siege_war second-desync (the same edge file's TERR-03 / betrayal_siege_war row).
+    review_date: "2026-09-24"
+  - rule_id: TERR-05
+    classification: PARTIAL
+    evidence: >-
+      A real, live, structural mechanism exists for TERR-05's containment half:
+      RegionState.places (src/core/state.py:295) / PlaceState.region_id
+      (src/core/state.py:355-356), mapped via the city mechanism
+      (registries/rule_mechanism_edges.yaml's TERR-05 / city edge) -- "a Place may lie inside...
+      a territory other than its current controller" (territory-control.md:170) is genuinely
+      realized. The cultural/historical-association-survives-control-change half is confirmed
+      MISSING, not merely unlooked-at: PlaceState (src/core/state.py:344-383) carries no field for
+      it -- prior_kind/transformed_tick (:365-367) is a Place-kind transformation trail (City ->
+      Ruin), not a polity-association fact, and nothing else in src/ reads or writes such a
+      concept. A real, non-complete slice with one confirmed-absent half is PARTIAL, not MISSING
+      (an edge exists) and not SUPPORTED (a real, confirmed gap remains). Matches this Rule's own
+      doc verdict (territory-control.md:186-190, PARTIAL).
+    review_date: "2026-09-24"
