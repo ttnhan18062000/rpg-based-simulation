@@ -6,7 +6,8 @@ directly — it tracks the six below.
 
 ## Order
 
-1. TCK-20260924-DELIVERY-STATUS-TOOL  (no deps in this batch)
+1. TCK-20260924-DELIVERY-STATUS-TOOL  (no deps in this batch)  — DONE 2026-09-24 (ed95e92d4)
+1b. TCK-20260924-DELIVERY-STATUS-TOOL-WORKFLOW-SCOPE  (depends on: TCK-20260924-DELIVERY-STATUS-TOOL)
 2. TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES  (no deps in this batch)
 3. TCK-20260924-DELIVERY-PR-RENDERER  (depends on: TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES)
 4. TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY  (depends on: TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES)
@@ -42,6 +43,17 @@ explicitly forbidden from fetching that state itself.
 
 Ticket 6 runs last and depends on 1 at minimum, because it measures whether the epic actually reduced
 `gh` calls per PR. Running it before the tools it measures would record a "before" number twice.
+
+## Ticket 1b — added after ticket 1 closed
+
+`TCK-20260924-DELIVERY-STATUS-TOOL-WORKFLOW-SCOPE` was filed on 2026-09-24 during review of ticket
+1's output. `pr_status.py`'s docstring claims non-target workflows are out of scope; the code filters
+runs on `head_sha` alone, so every workflow's runs vote on the verdict. The defect is **latent** —
+`deploy-docs.yml` is `workflow_dispatch:`-only today — but the docstring is false now, the two-workflow
+test case is missing now, and ticket 5 builds a classifier directly on this payload. It runs before
+ticket 5 for that reason; it does not block ticket 2, which shares no code with it.
+
+This is a correction to ticket 1's output, not a re-opening of any settled decision below.
 
 ## Two settled decisions this batch must not re-open
 
