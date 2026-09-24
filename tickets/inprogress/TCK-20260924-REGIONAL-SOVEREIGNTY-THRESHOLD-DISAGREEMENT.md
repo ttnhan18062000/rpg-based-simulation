@@ -105,9 +105,18 @@ doesn't cover, but that's a finding to report separately, not something this tic
 1. One canonical threshold is chosen and the rationale is recorded, including why the alternative
    was rejected.
 2. All four sources state that threshold: both docs and both code paths.
-3. The authority relationship between `FactionInfluenceService` and `WorldDynamicsSystem` ownership
+3. ~~The authority relationship between `FactionInfluenceService` and `WorldDynamicsSystem` ownership
    transfer is explicit — either one path is removed/made to defer, or the doc states why two
-   independent paths are correct.
+   independent paths are correct.~~ **REVISED by R4 (2026-09-24): consolidation is deferred.**
+   Satisfied instead by *documenting* that two ownership writers exist, that they now agree on the
+   threshold, and that consolidation is deferred to
+   `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` — with a pointer to that ticket from
+   `docs/world/regional_sovereignty_runtime_contract.md`. Do **not** remove or re-home either path in
+   this ticket.
+   3a. Both code paths read the threshold from the **same constants** —
+   `WorldDynamicsSystem` imports `CONQUEST_THRESHOLD`/`LIBERATION_THRESHOLD` from
+   `src/world/influence.py` rather than hardcoding literals, so they cannot drift apart numerically
+   again even while two writers remain.
 4. The strict-inequality vs. clamp interaction is reconciled: the documented comparison is actually
    reachable given `influence.py:59`'s clamp.
 5. A regression test asserts the threshold in both code paths and fails if either drifts.
@@ -150,10 +159,13 @@ doesn't cover, but that's a finding to report separately, not something this tic
 
 ## Decision (2026-09-24, REVISED) — SUPERSEDED IN PART, read the revision below first
 
-> **The original decision recorded in the next section has been REVISED by the user on 2026-09-24
-> after new evidence.** Read `## Decision Revision` below before implementing. The threshold flipped
-> from ±100 to **±50**, and the `world_dynamics.py` deletion is no longer a bare delete. The
-> original section is kept verbatim for provenance — do not implement from it alone.
+> **The original decision recorded in the next section has been REVISED by the user, twice.** Read
+> `## Decision Revision` below — specifically **R1** and **R4** — before implementing. Net effect:
+> the threshold flipped from ±100 to **±50**, and the `world_dynamics.py` deletion is **cancelled
+> entirely** (R4 supersedes R2; no block is deleted and no HERO_GUILD branch is added). The scope is
+> now: correct one Bible chapter, share one pair of constants between the two code paths, record the
+> divergence, and fix the `_COMPARISON_TEXT` drift. The original section and R2 are kept verbatim for
+> provenance — do not implement from either alone.
 
 ## Decision (2026-09-24) — original, superseded in part
 
@@ -244,6 +256,55 @@ currently proves that capability exists.
   capability loss is needed.** AC7's entry is still required only if the ±50 consolidation changes
   observable behavior — note that with ±50 retained in code, the observable change is the removal of
   the ±100 transfer path, not a threshold move.
+
+### R4. Authority consolidation is DEFERRED — R2's HERO_GUILD branch is VOID
+
+Decided by the user 2026-09-24 (recorded 2026-09-25), after `rpg-implementer (2)` found R2's
+"add a HERO_GUILD branch" instruction architecturally insufficient. All findings below were
+independently re-verified before escalating.
+
+**What R2 missed:** the two paths differ in *trigger* and *phase position*, not just in what they
+write.
+- `FactionInfluenceService.process_influence_shift` has exactly **one** production caller,
+  `src/systems/lifecycle_systems/lifecycle.py:272`, gated behind `if recent_deaths:` — it only ever
+  evaluates regions where a death occurred this tick.
+- `WorldDynamicsSystem`'s block is an **unconditional sweep** over every region in
+  `state.regions`, against final settled influence (stored value + any `influence_delta` written
+  that tick), regardless of cause.
+- `world_dynamics` runs at `src/engine/pipeline.py:348`; `lifecycle` at `:414` — **`world_dynamics`
+  runs first.**
+- The block also carries `is_protector`/`is_invader` faction-semantics guards
+  (`world_dynamics.py:82,86`) preventing redundant re-flips to the side already holding a region.
+  That is real logic which would have to be reproduced anywhere ownership moves to — not a bare
+  threshold compare.
+- **Consolidating onto a single sweep at `world_dynamics`'s position would delay death-driven
+  ownership flips by one tick**, because death influence deltas are not written until the later
+  `lifecycle` phase. Today `process_influence_shift` flips ownership same-tick. That is a
+  determinism/ordering change and needs its own investigation, not a branch added in passing.
+- `tests/integration/world/test_regional_sovereignty.py::test_regional_ownership_flip` injects a raw
+  `WorldUpdate(influence_delta=10.0)` with no death at all and asserts a `HERO_GUILD` flip — proving
+  the unconditional sweep is load-bearing for non-death influence sources.
+
+**The decision: fix the threshold disagreement, defer the architecture.**
+- **`WorldDynamicsSystem`'s ownership block is NOT deleted.** It stays where it is, at the same phase
+  position, with its guards and its `SOVEREIGNTY_SHIFT` emission intact.
+- **No HERO_GUILD branch is added to `FactionInfluenceService`.** R2's instruction is void; the
+  capability was never at risk once the block survives.
+- `world_dynamics.py:82,86` change from the hardcoded `100.0`/`-100.0` to the **imported**
+  `LIBERATION_THRESHOLD`/`CONQUEST_THRESHOLD` constants from `src/world/influence.py`.
+- Both writers remain, but they now agree numerically and share one constant, so **the P1 consistency
+  hazard this ticket was filed for is resolved** — the hazard was the disagreement, not the plurality.
+- Consolidation moves to `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`.
+
+**Rationale, in the user's framing:** three successive verification rounds each found hidden
+structure in what was scoped as a ten-line delete. Continuing would turn an alignment-phase quick fix
+into a pipeline-ordering change. Stop at the defect actually filed.
+
+**Behavior-change note for AC7, state it plainly:** lowering `world_dynamics`'s effective threshold
+from ±100 to ±50 makes ownership flips occur *sooner and more often* via the unconditional sweep.
+This is unavoidable — any direction that makes the sources agree changes behavior — and it must be
+recorded in `docs/guidelines/intentional_divergences.md` with rationale class **Unified** and a
+verification path. Do not describe this ticket as behavior-neutral.
 
 ### R3. Still open for the implementer, unchanged by this revision
 
