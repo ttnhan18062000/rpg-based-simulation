@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES
-phase: open
+phase: done
 date: 2026-09-24
 tags: [delivery, documentation, claude-md]
 ---
@@ -16,7 +16,7 @@ One authoritative delivery contract plus real git/GitHub templates, with `CLAUDE
 hardening roadmap reduced to pointers at it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -153,6 +153,39 @@ None yet.
    duplicate.
 
 ## Implementation Notes
+**AC8 grep run before touching CLAUDE.md or `.github/`**: `grep -rl "CLAUDE\.md" tests/` found 14
+files. Two are directly load-bearing on the exact section being collapsed —
+`tests/docs/test_ci_triage_absent_run_branch.py` and `tests/docs/test_ci_per_directory_steps_documented.py`
+both slice `CLAUDE.md`'s text between the literal headers `"### CI Failure Triage"` and `"### PR
+Lifecycle"` and assert on its content. Both were retargeted to
+`docs/guides/delivery_process.md` (same header strings, so only the file-path constant changed, no
+assertion weakened) — this is exactly the settings.json-hook-shape-test failure mode this ticket's
+own Implementation Notes warned about, caught here before it became a CI regression. The other 12
+files (`test_kernel_phase_names_consistent.py`, `test_prescan_mandate_instruction_draft.py`, and 10
+unrelated files) reference `CLAUDE.md` for unrelated content (a phase-name-consistency check, and a
+pinned-historical-commit-range diff) not touched by this edit — confirmed by reading each, not
+assumed. `grep -rl "ai_first_hardening_epics/roadmap" tests/` found zero files — no test pins
+`roadmap.md`.
+
+**Decision (Assumption 1): the machine-readable template spec lives beside the renderer**,
+`tools/delivery/pr_template_spec.json`, with the guide pointing at it — matching the recommendation
+that the executable copy be the source and the doc be the rendering.
+
+**Decision (Assumption 2, confirmed not assumed): `commit.template` propagates to every worktree.**
+`extensions.worktreeConfig` is unset in this repo, so `.git/config` is shared by every worktree —
+`git config commit.template .gitmessage` run once applies everywhere. Documented in the guide,
+including the caveat that the relative path resolves against the CWD at commit time (works here
+because commits are always made from a worktree's own root).
+
+**Decision (Assumption 4): the guide states policy, `pr_status.py` does detection.** The CI Failure
+Triage section is the relocated CLAUDE.md prose unchanged in substance, with one added forward
+pointer per bullet to the tool function it now automates — not a duplication of the tool's verdict
+logic in prose.
+
+**Real before/after line count (Assumption 3): CLAUDE.md dropped from 440 to 387 lines** (53 net,
+not exactly 84 — the four sections keep short pointer paragraphs rather than being deleted
+outright; every incident citation is still present, just relocated, per AC2's citation-diff check).
+
 **Two governing-file edits in this ticket require direct user confirmation of the literal diff
 before they are committed: `CLAUDE.md` and `roadmap.md`.**
 
@@ -178,11 +211,56 @@ The relocation must be lossless on citations (criterion 2). The ticket IDs in th
 entire reason the rules are trusted; a rule that arrives in the new guide without its incident
 citation has quietly become an assertion.
 
+**Direct user confirmation obtained**: both literal diffs (CLAUDE.md and roadmap.md) were pasted in
+full into the chat and confirmed via `AskUserQuestion` — "Approve both diffs as shown" — before
+either file was committed. Not inferred from this ticket's own existence or from
+`agent-working-design`'s scoping message.
+
 ## Test Summary
-To be completed during implementation.
+- `python3 -m pytest tests/docs/test_ci_triage_absent_run_branch.py tests/docs/test_ci_per_directory_steps_documented.py tests/tools/test_delivery_templates.py -v`
+  (via the repo's own venv): **18 passed** — the two retargeted doc-content tests (all 11 of their
+  assertions, unweakened) plus 7 new tests for the PR template / spec / `.gitmessage`.
+- `python3 -m pytest tests/docs/ tests/tools/test_bash_secret_scan_hook.py
+  tests/tools/test_current_run_sidecar_orchestrator.py tests/tools/test_done_checker_static.py
+  tests/tools/test_finalize_knowledge_index_refresh.py tests/tools/test_generate_registry.py
+  tests/tools/test_monitoring_bypass_fix.py tests/tools/test_record_hand_orchestrated_closure.py
+  tests/integration/campaigns/test_mid_episode_grief_trigger.py
+  tests/unit/domains/adventure/test_phase3_project_switch_routing_guard.py
+  tests/unit/domains/faction/test_clan_reputation_association.py
+  tests/tools/test_delivery_pr_status.py tests/tools/test_delivery_templates.py -q` — every file the
+  AC8 grep found referencing `CLAUDE.md`, run together: **401 passed, 1 skipped, 1 xfailed**, 0
+  failed.
 
 ## Files Changed
-To be completed during implementation.
+- `docs/guides/delivery_process.md` (new) — the single authoritative delivery-process guide.
+- `.gitmessage` (new) — commit template, comment-only.
+- `.github/pull_request_template.md` (new) — PR body skeleton, no attribution trailer.
+- `tools/delivery/pr_template_spec.json` (new) — machine-readable section spec for ticket 3's renderer.
+- `tests/tools/test_delivery_templates.py` (new) — 7 tests for the three files above.
+- `tests/docs/test_ci_triage_absent_run_branch.py`,
+  `tests/docs/test_ci_per_directory_steps_documented.py` — retargeted from `CLAUDE.md` to the new
+  guide (same assertions, same section-header strings, only the file path changed).
+- `CLAUDE.md` — four delivery sections collapsed to pointers (440 → 387 lines); committed only after
+  direct user confirmation of the literal diff.
+- `docs/plans/agent_infrastructure/ai_first_hardening_epics/roadmap.md` — `## Git & delivery
+  process` collapsed to a pointer, preserving the `.claude/settings.json` three-way coordination note
+  and the planning-doc claim-visibility note; committed only after direct user confirmation.
+- `docs/REGISTRY.yaml` — auto-regenerated (new doc added).
+- Local git config: `commit.template` set to `.gitmessage` (shared `.git/config`, confirmed to
+  propagate to every worktree in this repo — not a tracked/committed file).
 
 ## Completion Summary
-Open.
+Created the single authoritative delivery-process guide (`docs/guides/delivery_process.md`),
+relocating `CLAUDE.md`'s four delivery sections verbatim with every incident citation preserved
+(verified by diffing extracted ticket IDs before/after), and shipped the templates that make the
+contract visible at author time: `.gitmessage` (wired via `commit.template`, confirmed to propagate
+across every worktree in this repo since `.git/config` is shared), `.github/pull_request_template.md`
+(no attribution trailer, asserted by test), and a machine-readable section spec for the future
+renderer. `CLAUDE.md` and `roadmap.md` were both collapsed to pointers and committed only after
+their literal diffs were shown to and confirmed directly by the user — no self-approval, no relay
+accepted from `agent-working-design` despite the edit already being agreed in scope. The mandatory
+pre-edit grep (AC8) caught two existing tests that would otherwise have broken silently — the exact
+settings.json-hook-shape failure mode this ticket's own Implementation Notes warned about — and
+retargeted them to the new guide with no assertion weakened. No known material gap left unstated;
+`data_runs_clean` is expected to FAIL again on this close for the same pre-existing, not-this-
+ticket's-own, shared-worktree reason as the prior two tickets in this batch.

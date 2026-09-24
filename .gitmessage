@@ -1,0 +1,17 @@
+# TCK-YYYYMMDD-SHORT-SCOPE: imperative subject, <=72 chars, no trailing period
+#
+# <why this change exists -- one short paragraph, not a restatement of the diff>
+#
+# - concrete change 1
+# - concrete change 2
+#
+# Tests: <the scoped pytest command actually run, and its result>
+# Refs: <related TCK ids, doc paths, or PR numbers; omit if none>
+#
+# Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+# Claude-Session: <session url>
+#
+# See docs/guides/delivery_process.md ("Commit Contract") for the full shape.
+# One ticket per commit -- a commit never spans two TCK- IDs. The subject's ID
+# must match a real ticket file. Tests: states the command, not a claim of
+# confidence.
