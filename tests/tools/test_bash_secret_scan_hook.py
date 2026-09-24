@@ -57,9 +57,11 @@ def test_new_bash_secret_scan_hook_entry_registered():
     bash_entries = [
         entry for entry in settings["hooks"]["PreToolUse"] if entry["matcher"] == "Bash"
     ]
-    # Both the existing grep-nudge Bash entry (PreToolUse[1]) and the new secret-scan Bash entry
-    # (PreToolUse[4]) must coexist -- this ticket is purely additive.
-    assert len(bash_entries) == 2
+    # The existing grep-nudge Bash entry (PreToolUse[1]), the secret-scan Bash entry
+    # (PreToolUse[4]), and the cd-prefix advisory Bash entry (PreToolUse[5], added by
+    # TCK-20260923-CD-PREFIX-ADVISORY-HOOK) must all coexist -- this ticket is purely additive,
+    # and so was that later one.
+    assert len(bash_entries) == 3
 
     commands = [entry["hooks"][0]["command"] for entry in bash_entries]
     secret_scan_commands = [c for c in commands if "scan_for_secrets" in c or "write_path_guard" in c]
@@ -147,7 +149,13 @@ def test_existing_bash_and_sidecar_hooks_untouched():
 
     grep_nudge_command = pre_tool_use[1]["hooks"][0]["command"]
     assert pre_tool_use[1]["matcher"] == "Bash"
-    assert "graphify: Knowledge graph exists" in grep_nudge_command
+    # TCK-20260923-GREP-HOOK-SEARCH-DOCS-MENTION amended this hook's message: it previously
+    # mentioned only "graphify", never search_docs, despite CLAUDE.md requiring search_docs
+    # first. The literal old string this test pinned no longer exists by design -- pin the new,
+    # corrected invariant instead (search_docs named, graphify still referenced, still no
+    # overlap with the separate secret-scan hook).
+    assert "search_docs" in grep_nudge_command
+    assert "graphify" in grep_nudge_command
     assert "scan_for_secrets" not in grep_nudge_command
 
     edit_write_command = pre_tool_use[3]["hooks"][0]["command"]
