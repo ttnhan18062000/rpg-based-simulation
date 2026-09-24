@@ -131,7 +131,14 @@ Bible's strict-inequality phrasing needs to be reconciled with the clamp.
 - `src/world/influence.py:29-30,59,65,69` — `FactionInfluenceService`, ±50 plus the ±100 clamp
 - `src/engine/world_dynamics.py:82,86` — `WorldDynamicsSystem`, ±100
 
-## Decision (2026-09-24) — SETTLED BY THE USER, do not re-open
+## Decision (2026-09-24, REVISED) — SUPERSEDED IN PART, read the revision below first
+
+> **The original decision recorded in the next section has been REVISED by the user on 2026-09-24
+> after new evidence.** Read `## Decision Revision` below before implementing. The threshold flipped
+> from ±100 to **±50**, and the `world_dynamics.py` deletion is no longer a bare delete. The
+> original section is kept verbatim for provenance — do not implement from it alone.
+
+## Decision (2026-09-24) — original, superseded in part
 
 Decided by the user via `world-rule-catalog-design`, after this ticket was raised to them twice
 unanswered. **Explicitly scoped as a quick fix, not a balance investigation** — the user's stated
@@ -161,6 +168,71 @@ balance-tuning phase. Three mechanical edits, no number-picking, no redesign.
 
 **Supersedes the two open questions previously recorded here** (which threshold is correct; whether
 precedence alone should settle it without a balance judgment). Both are answered: ±100, and yes.
+
+## Decision Revision (2026-09-24) — SETTLED BY THE USER, authoritative over the section above
+
+Decided by the user via `rpg-feature-planning`, after `rpg-implementer (2)`'s investigation surfaced
+two facts the original decision was made without. Both were independently re-verified against
+`src/` and `docs/mechanics/` before escalating. This revision changes the threshold and the shape of
+the `world_dynamics.py` change; everything else in the original section still holds.
+
+### R1. Threshold: **±50**, not ±100. The Bible was split against itself.
+
+"The Mechanics Bible wins on precedence" could not settle this, because the split is *inside* the
+Bible — a fact not known when ±100 was chosen:
+
+| Source | Says | Last changed |
+|---|---|---|
+| `docs/mechanics/05_world_evolution.md:62-69` | **±50**, and explicitly rebuts ±100 as "only the influence value's clamp bound, not itself a trigger", citing `influence.py:29-30,59` | **2026-09-02** |
+| `docs/mechanics/regional_sovereignty.md:20-24` | `> 100.0` / `< -100.0` | **2026-05-18** (`Resource V2 Implementation`) |
+
+The ±50 statement is 3.5 months **newer**, is code-cited, and was written as a deliberate correction
+that anticipated exactly the reasoning used to pick ±100. The ±100 statement is older and its
+strict-inequality phrasing is provably unreachable against the `[-100, 100]` clamp — the defect this
+ticket already flagged in `## Request Summary`. Precedence applied with full information therefore
+points to ±50.
+
+**Consequences — the fix gets smaller, not bigger:**
+- `src/world/influence.py`: **no constant change.** `CONQUEST_THRESHOLD = -50.0` /
+  `LIBERATION_THRESHOLD = 50.0` are already correct and stay as they are.
+- `docs/mechanics/regional_sovereignty.md:20-24`: corrected to ±50, with reachable comparisons
+  (`>= +50.0` / `<= -50.0`).
+- `docs/mechanics/05_world_evolution.md`: **no change.** Already correct.
+- `docs/world/regional_sovereignty_runtime_contract.md`: **no change.** Already ±50.
+- `docs/world/threat_and_consequences_contract.md`: **no change.** Already ±50.
+- **The original decision's item 3 is VOID** — there is no 50–100 band to fold into "Contested",
+  because ±50 is the ownership boundary. `regional_sovereignty.md`'s existing "Contested: between
+  -50.0 and 50.0" becomes correct as written.
+
+### R2. `world_dynamics.py`: preserve HERO_GUILD, do not bare-delete.
+
+`FactionInfluenceService.process_influence_shift()` (`src/world/influence.py:64-70`) only ever writes
+`MONSTER_HORDE` (conquest) or the `None`-sentinel (liberation) — it has **no HERO_GUILD branch**.
+`WorldDynamicsSystem`'s block (`src/engine/world_dynamics.py:79-89`) is the only code that ever
+grants `Faction.HERO_GUILD` ownership via an influence threshold. A literal delete would remove a
+real game capability, not just restructure authority, and would break
+`tests/integration/world/test_regional_sovereignty.py::test_regional_ownership_flip`, which
+currently proves that capability exists.
+
+- **Give `FactionInfluenceService` a real HERO_GUILD branch before the deletion lands.** This is new
+  logic and stretches the original "delete, don't rewrite" instruction — that is accepted
+  deliberately, because it keeps the change behavior-neutral, which is what the alignment-phase
+  framing actually intended. "No new abstraction / no service extraction" still holds: a branch
+  inside the existing method, nothing more.
+- `FactionInfluenceService` still becomes the **sole writer** of `owner_faction_id`.
+- `world_dynamics.py:91-100`'s `SOVEREIGNTY_SHIFT` emission reads `new_owner`, a local set only
+  inside the deleted block, so the emission **must move** with whatever writes ownership. The block
+  cannot be removed in isolation regardless of the HERO_GUILD question.
+- Because HERO_GUILD conquest is preserved, **no second `intentional_divergences.md` entry for a
+  capability loss is needed.** AC7's entry is still required only if the ±50 consolidation changes
+  observable behavior — note that with ±50 retained in code, the observable change is the removal of
+  the ±100 transfer path, not a threshold move.
+
+### R3. Still open for the implementer, unchanged by this revision
+
+`WORLD-107` in `docs/parity_ledger/world_dynamics.yaml` updated in place (rather than a new entry)
+is the accepted approach. Both threshold paths were confirmed live-reachable every tick — neither is
+dead code, so the ticket's "consistency hazard" framing was correct.
 
 ## Assumptions / Open Questions
 
