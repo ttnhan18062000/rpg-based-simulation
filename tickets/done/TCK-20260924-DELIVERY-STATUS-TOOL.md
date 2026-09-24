@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-DELIVERY-STATUS-TOOL
-phase: open
+phase: done
 date: 2026-09-24
 tags: [delivery, ai, process-improvement]
 ---
@@ -16,7 +16,7 @@ One tool call returns a typed PR delivery verdict, with the CI triage tree encod
 ~14 polling round-trips per PR
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -174,10 +174,38 @@ failure it prevents already happened: a poll loop read a TLS error as "0 pending
 green while it was still running.
 
 ## Test Summary
-To be completed during implementation.
+- `python3 -m pytest tests/tools/test_delivery_pr_status.py -v` (run via the repo's own venv,
+  `/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3` — bare `python3` lacks
+  `pydantic` in this sandbox, unrelated to this ticket): **28 passed**. One test per Acceptance
+  Criterion plus edge cases/failure modes per `staging_artifacts/TCK-20260924-DELIVERY-STATUS-TOOL/
+  test_plan.md`, including AC2's stale-SHA-yields-UNKNOWN fixture, AC3's CONFLICTING+trigger-only
+  ABSENT fixture, AC4's two failed-fetch variants (non-zero exit; exit-0-but-unparseable-stdout),
+  AC5's no-log-fetch assertion, AC7's working-tree-unchanged assertion, and AC8's exit-code
+  parametrization across all five verdicts.
+- Full regression check: `python3 -m pytest tests/tools/ -m "not slow"` — **2933 passed, 25
+  skipped, 28 deselected, 1 xfailed**, 0 failed. No existing test broke from adding
+  `tools/delivery/__init__.py` or the new test file.
 
 ## Files Changed
-To be completed during implementation.
+- `tools/delivery/__init__.py` (new) — package marker, empty.
+- `tools/delivery/pr_status.py` (new) — the status-verdict module and CLI per this ticket's Scope.
+- `tests/tools/test_delivery_pr_status.py` (new) — 28 tests, one per Acceptance Criterion plus
+  edge/failure-mode coverage.
+- `staging_artifacts/TCK-20260924-DELIVERY-STATUS-TOOL/{investigation,plan,test_plan}.md` (new).
 
 ## Completion Summary
-Open.
+Built `tools/delivery/pr_status.py`, a single-call typed PR delivery verdict
+(`GREEN`/`PENDING`/`FAILING`/`ABSENT`/`UNKNOWN`) encoding the CLAUDE.md CI Failure Triage decision
+tree as tested code. All I/O routes through an injectable `run_command` callable, so every branch —
+including the two real incidents this ticket exists to encode (a `CONFLICTING` PR producing zero
+runs, and a blocked/failed fetch being misread as an empty/green result) — is covered by a
+deterministic fixture test rather than a live network call. Head-SHA binding is enforced
+client-side (every returned run is re-checked against the expected head SHA before being trusted),
+which is what makes the `ABSENT` (confirmed zero runs, known cause) vs `UNKNOWN` (only a stale run
+found, or the fetch itself failed) distinction in AC2/AC3 both correct and testable. No polling
+loop, no write of any kind, and the CLI always exits 0 except on a genuine internal error in the
+tool's own code (AC8) — verified directly by test, not just by design intent.
+
+No known gaps at close. Followed CLAUDE.md's `## Related Docs` instruction not to touch
+`CLAUDE.md` itself in this ticket (that edit belongs to
+`TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES`).
