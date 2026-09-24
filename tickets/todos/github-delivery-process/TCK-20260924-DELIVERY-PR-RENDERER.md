@@ -74,6 +74,17 @@ Note the honest framing of the traceability gap: it is **moderate, not a broken 
 6. **Consumes the template spec** from `TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES` rather than
    hardcoding section names and order, so the human template and the renderer cannot disagree.
 
+7. **A test pinning CLAUDE.md's pointer to `docs/guides/delivery_process.md`** (folded in on
+   2026-09-24 at the user's direction; found while reviewing ticket 2). Ticket 2 relocated CLAUDE.md's
+   four delivery sections into that guide and retargeted the two tests that had pinned CLAUDE.md's
+   text — correctly, path-only, assertions unchanged. But the result is that **every** test now
+   asserts against the guide and **none** asserts that CLAUDE.md still references it. CLAUDE.md is
+   the always-loaded context; the pointer is the only thing connecting an agent to the guide. Delete
+   the pointer and the guide orphans silently, with a fully green test suite. Assert that CLAUDE.md
+   contains the path `docs/guides/delivery_process.md`. This is deliberately a content check on the
+   pointer's existence, not on its wording — pinning the prose would recreate the brittleness ticket
+   2 just removed.
+
 ## Out of Scope
 - **Opening, editing or posting to a PR.** The renderer writes to stdout or a file. `gh pr create`
   and `gh pr edit` remain user-authorized actions taken by the agent deliberately, not side effects
@@ -109,7 +120,9 @@ Note the honest framing of the traceability gap: it is **moderate, not a broken 
    difference and exits zero either way.
 9. Section names and order come from the template spec, not from literals in this module — proven by
    a test that alters the spec fixture and observes the rendered output follow it.
-10. Scoped tests pass; command and result recorded in `## Test Summary`.
+10. A test asserts `CLAUDE.md` contains the string `docs/guides/delivery_process.md`, and fails if
+    the pointer is removed (Scope item 7).
+11. Scoped tests pass; command and result recorded in `## Test Summary`.
 
 ## Related Tickets
 - `TCK-20260924-EPIC-GITHUB-DELIVERY-PROCESS` — parent

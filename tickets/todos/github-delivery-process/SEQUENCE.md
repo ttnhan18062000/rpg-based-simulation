@@ -55,6 +55,19 @@ ticket 5 for that reason; it does not block ticket 2, which shares no code with 
 
 This is a correction to ticket 1's output, not a re-opening of any settled decision below.
 
+## One non-child ticket riding this branch
+
+`TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE` (`tickets/todos/`, filed 2026-09-24)
+is **not** a child of this epic — it belongs to agent-monitoring's own data model, not the delivery
+lane, same reasoning as the vocabulary check below. But per the user's explicit instruction its
+implementation lands on this same `github-delivery-process-epic` branch rather than opening a second
+PR, and it **must not start before `TCK-20260924-DELIVERY-COST-MEASUREMENT` (ticket 6) lands** —
+both touch `tools/agent-monitoring/`.
+
+So the effective branch order is 1 → 1b → 2 → {3, 4, 5} → 6 → the shard ticket. It is listed here
+only so the ordering constraint is visible to whoever sequences the next dispatch; it does not make
+the ticket an epic child, and the epic is complete without it.
+
 ## Two settled decisions this batch must not re-open
 
 Both were decided at scoping and are recorded in plan §7. A child ticket finding them inconvenient
