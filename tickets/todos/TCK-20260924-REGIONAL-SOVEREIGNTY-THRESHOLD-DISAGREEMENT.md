@@ -131,14 +131,42 @@ Bible's strict-inequality phrasing needs to be reconciled with the clamp.
 - `src/world/influence.py:29-30,59,65,69` — `FactionInfluenceService`, ±50 plus the ±100 clamp
 - `src/engine/world_dynamics.py:82,86` — `WorldDynamicsSystem`, ±100
 
+## Decision (2026-09-24) — SETTLED BY THE USER, do not re-open
+
+Decided by the user via `world-rule-catalog-design`, after this ticket was raised to them twice
+unanswered. **Explicitly scoped as a quick fix, not a balance investigation** — the user's stated
+reasoning is that this project is still in its documentation/architecture-alignment phase, not its
+balance-tuning phase. Three mechanical edits, no number-picking, no redesign.
+
+**1. Threshold: ±100. The Mechanics Bible wins on precedence, full stop.**
+- `src/world/influence.py`: `CONQUEST_THRESHOLD` / `LIBERATION_THRESHOLD` ±50 → ±100.
+- `docs/world/regional_sovereignty_runtime_contract.md`: update to match.
+- `docs/mechanics/regional_sovereignty.md`: `> 100.0` → `>= 100.0`, so the rule is reachable
+  against the existing `[-100, 100]` clamp.
+- **No balance investigation.** A future balance-driven move to ±50 is a *separate* ticket with its
+  own `docs/guidelines/intentional_divergences.md` entry — not this one.
+
+**2. Dual authority: structural fix, not a redesign.**
+- `FactionInfluenceService` becomes the **sole writer** of `owner_faction_id` — it already holds
+  the only symmetric conquest+liberation logic.
+- **Delete** `WorldDynamicsSystem`'s own conquest block (`src/engine/world_dynamics.py:80-89`)
+  rather than rewriting it. It becomes a pure reader of whatever `FactionInfluenceService` decided
+  that tick, consistent with the trauma/hazard bookkeeping already surrounding it.
+- **No new abstraction or service extraction.**
+
+**3. The undefined 50–100 / −100–−50 Bible bands: fold into "Contested."**
+- Since ±100 is now the only place ownership changes, widen the Bible's "Contested" range from
+  "−50 to 50" to "anything short of ±100." Pure doc-gap closure — the gap existed only because of
+  the ±50/±100 split. Zero balance judgment.
+
+**Supersedes the two open questions previously recorded here** (which threshold is correct; whether
+precedence alone should settle it without a balance judgment). Both are answered: ±100, and yes.
+
 ## Assumptions / Open Questions
 
-- **Open, and the real decision:** which threshold is correct? Not inferable from the code — both
-  are deliberate, each matches one doc. The Mechanics Bible's precedence rule argues for ±100, but
-  the Bible is also the source that is currently unreachable-as-written given the clamp, so
-  precedence alone should not settle it without a balance judgment.
-- **Open:** is `WorldDynamicsSystem`'s path the newer one? Check `git log -S` on both constants
-  before assuming which drifted from which — do not assume the Bible-matching path is the original.
+- **Still worth checking during implementation:** is `WorldDynamicsSystem`'s path the newer one?
+  `git log -S` on both constants. This no longer affects *which* threshold wins — that is settled —
+  but it may affect how cleanly the block deletes.
 - **Assumption:** both paths genuinely execute in normal runs. If investigation finds one is
   effectively dead, that changes the fix from "reconcile" to "remove," and is a finding to report
   before implementing.
