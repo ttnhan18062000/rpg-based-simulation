@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-DELIVERY-PR-RENDERER
-phase: open
+phase: done
 date: 2026-09-24
 tags: [delivery, ai, documentation]
 ---
@@ -16,7 +16,7 @@ Render the PR title and body from the ticket files on the branch, instead of com
 each time
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -169,10 +169,34 @@ test fixtures — they are real strings from this repo's own history, which is b
 invented example.
 
 ## Test Summary
-To be completed during implementation.
+- `python3 -m pytest tests/tools/test_delivery_pr_render.py -v` (repo venv): **18 passed** — one per
+  Acceptance Criterion (AC1–AC10) plus regression-prone-path coverage (cross-directory ticket
+  lookup, scope-tie determinism, `## Why` first-paragraph-only, no-write-side-effect).
+- Full regression: `python3 -m pytest tests/tools/ -m "not slow"` — **2962 passed, 25 skipped, 28
+  deselected, 1 xfailed**, 0 failed.
 
 ## Files Changed
-To be completed during implementation.
+- `tools/delivery/pr_render.py` (new) — the renderer module and CLI.
+- `tests/tools/test_delivery_pr_render.py` (new) — 18 tests.
+- `staging_artifacts/TCK-20260924-DELIVERY-PR-RENDERER/{investigation,plan,test_plan}.md` (new).
 
 ## Completion Summary
-Open.
+Built `tools/delivery/pr_render.py`, rendering a PR title and body from the ticket files on the
+current branch per plan §3.5/§3.6, consuming ticket 2's `pr_template_spec.json` rather than
+hardcoding section order (AC9). Resolved an apparent inconsistency between plan §3.5's abstract
+single-ticket template (no count suffix) and its own three worked real-repo examples (all three
+carry a count suffix, including the two single-ticket ones) toward the worked examples, per this
+ticket's own instruction to use them as fixtures — documented in investigation.md. `## Verification`
+reads each ticket's own recorded `## Test Summary`/`## Completion Summary` text rather than
+re-running `done_checker_static.py` live, since a live re-run would reflect current (constantly
+drifting, in this shared worktree) working-tree state rather than what was true at that ticket's own
+close — "Known gaps" is a literal `FAIL`-substring scan over those two sections, formalizing the
+convention this batch's own tickets already used by hand. Ticket discovery reconciles commit-subject
+IDs (primary) against changed-`tickets/`-file IDs (secondary), reporting any mismatch rather than
+silently picking one (AC7). Added the CLAUDE.md-pointer regression test (Scope item 7/AC10) folded
+in during ticket 2's review. No attribution trailer anywhere in rendered output (AC4), `## Review
+notes` never generated (AC5), no write side effect (verified by test), `--check` never blocking.
+
+No known material gap. `data_runs_clean` is expected to FAIL again on this close for the same
+pre-existing, not-this-ticket's-own, shared-worktree reason as the prior three closes in this batch —
+reported, not routed around.
