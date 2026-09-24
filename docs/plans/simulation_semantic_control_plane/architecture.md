@@ -83,11 +83,28 @@ would claim "investigated, absent" for something never investigated at all).
 (containment, execution order, collaboration) — this mapping is a fourth, semantic-realization axis
 and lives in a sibling structure, not inside the Mechanism Registry.
 
-**Where it lives.** Deliberately undecided in detail here — per §7's own discipline, the exact
-schema is `roadmap.md` M0's own deliverable, decided (and validator-enforced) before the first
-slice populates real data in M1, not designed up front in this document. It will be a sibling
-file/registry to `registries/mechanisms.yaml`, validated the same way (a `validate()` pass, real
-invariants, tested against deliberately-broken fixtures) — not a hand-maintained prose table.
+**Where it lives.** Decided by `roadmap.md` M0
+(`TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION`): three separate YAML files, siblings to
+`registries/mechanisms.yaml` and mirroring its own hand-authored, dict-of-list-of-dicts shape —
+
+- `registries/rule_mechanism_edges.yaml` — top-level key `edges:`, each row
+  `{rule_id, mechanism_id, edge_type, evidence, date}`, `edge_type` one of
+  `REALIZES | PARTIALLY_REALIZES | CONSTRAINED_BY`.
+- `registries/mechanism_causal_edges.yaml` — top-level key `edges:`, each row
+  `{producer_mechanism_id, consumer_mechanism_id, evidence, date}`, deliberately with **no**
+  `edge_type` field and no row shape shared with the file above.
+- `registries/rule_classifications.yaml` — top-level key `classifications:`, each row
+  `{rule_id, classification, evidence, review_date}`, `classification` one of the six-value
+  vocabulary in §4, exactly one record per Rule ID present in the file.
+
+All three are validated by `tools/semantic_control_plane/registry.py::validate_all()` (plus a
+`check_duplicate_keys()` guard against `yaml.safe_load()`'s silent-last-key-wins risk, mirroring
+`tools/mechanism_registry/registry.py`'s own split), proven against deliberately-broken fixtures
+the same way the Mechanism Registry's own validator was. `rule_id` resolves against a live scan
+of `docs/world_rules/**/*.md` headings, not a hardcoded list; `mechanism_id` resolves via the
+existing `MechanismRegistry`. An absent row for a given Rule×mechanism pair or Rule is not itself
+an error — per §7's own discipline, `UNKNOWN` is a permanent, expected value, never coerced to
+`MISSING`.
 
 **Two distinct records, not one.** M0 must define both: (1) the individual Rule↔Mechanism mapping
 edges described above, and (2) a separate, Rule-level *realization classification* record (§4) —
@@ -124,6 +141,11 @@ freeze, the real Catalog never once needed a third modality — every one of 172
 prohibition (`TERR-01`: distinctness is REQUIRED, therefore silently collapsing the relations is
 invalid) without a new enum value. Add `FORBIDDEN` only if real future work proves REQUIRED/
 PERMITTED insufficient — not because a three-value enum is aesthetically cleaner.
+
+See `docs/plans/status_axis_model.md` for the full cross-axis binding table between this Rule
+realization vocabulary, the Mechanism Registry's `state`/`verified.verdict` axes, and the compass's
+§10 runtime-status vocabulary — including the `MISSING` and `OFF`/`INERT-OFF` homograph decisions
+this section's own values are party to.
 
 ## 5. Delivery truth reuses two existing mechanisms — no Conformance Profile yet
 
