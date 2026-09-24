@@ -78,7 +78,7 @@ Milestone dispositions (this epic closes only when every row below has one):
 |---|---|---|
 | M0 — schema + validator | `TCK-20260923-M0-SCHEMA-VALIDATOR-FOUNDATION` | **DONE** 2026-09-23, branch `semantic-control-plane-m0`, unpushed. Full standard pipeline, 0 blocking gate failures. |
 | M1 — Territory/Control slice | `TCK-20260923-M1-TERRITORY-CONTROL-MAPPING-SLICE` | **DONE** 2026-09-24. First real data through M0's schemas; Territory six-axis view wired (`make territory-control-view`). |
-| M2 — drift detection | `TCK-20260924-M2-MAPPING-DRIFT-DETECTION` | **SCOPED** 2026-09-24, dispatched to `rpg-implementer`. Standard tier, P1. Checks M1's live Territory mapping for the three `roadmap.md` M2 drift classes; report-only, `make` target, no CI wiring at this milestone. |
+| M2 — drift detection | `TCK-20260924-M2-MAPPING-DRIFT-DETECTION` | **DONE** 2026-09-24. `tools/semantic_control_plane/mapping_drift_check.py` + `make semantic-control-plane-drift-check`. Drift classes 1 (cited-code-changed) and 3 (verdict-changed) implemented and fixture-tested; class 2 (split/merge) consciously descoped — no lineage field exists in the schema, written reason in `investigation.md`. Live run against M1's Territory mapping: clean (0 findings). Report-only, exit 0 always, no CI wiring at this milestone. |
 | M3 — finding ingestion | not yet created | Permanent stream, startable after M0. Only hard bar: Territory+Combat triage before M4. |
 | M4 — Combat slice + cross-domain view | not yet created | Gated on M1, M2, and M3's narrow triage only. |
 
