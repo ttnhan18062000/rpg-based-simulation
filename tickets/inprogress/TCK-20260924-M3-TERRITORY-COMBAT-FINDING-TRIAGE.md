@@ -201,6 +201,62 @@ during Investigate rather than trusting this list** — it is a scoping read, no
    been run here). Use `graphify query` and direct reads; do not report the missing index as a
    defect.
 
+## Scoping Decisions (2026-09-24, post-Investigate)
+
+Three questions surfaced by Investigate, resolved by the ticket owner. Each was independently
+re-verified before answering; none is a relayed claim.
+
+**D1 — `ENABLE_COMBAT_ENGAGEMENT` is dispositioned `PROMOTE-AT-M4` with corrected evidence, not
+`CONFLICTING`.** Verified independently: `src/domains/optimization/feature_flags.py:32` is
+`FeatureMode.ON`, flipped by `TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER` (#190, commit
+`1e075b807`) — nine days before both Combat source docs' own `last_verified: 2026-09-23`. The
+implementer's lean was right; the reason matters more than the answer. **`CONFLICTING` is part of
+the realization-classification vocabulary, which describes code-vs-Rule: "code exists and actively
+does the wrong thing relative to the Rule."** What is conflicting here is doc-vs-reality — a stale
+prose premise. Recording documentation staleness as `CONFLICTING` would assert a semantic violation
+of a Rule that has not been shown to exist, which is exactly the vocabulary laundering
+`docs/plans/status_axis_model.md` governs against.
+
+Further: **M3 records verified evidence; M4 makes the classification.** This triage must not assert
+`INERT-OFF`, `SUPPORTED`, or any other classification for `combat_engagement` — it records that the
+flag is ON, live-wired into `src/engine/pipeline.py`'s tick loop, with observed runtime effect
+already in `registries/mechanisms.yaml` (posture gate 1960→837 attacks), and lets M4 judge.
+
+This is the first case where the re-verification requirement (AC2) earned its keep — a finding
+would have entered the control plane with an inverted premise. **Call that out explicitly in the
+triage log**; it is evidence the "ingest, don't launder" discipline works, not an incidental catch.
+
+**D2 — do not edit `conflict-combat.md`'s stale prose. Out of scope.** Three reasons, in order:
+`docs/world_rules/` is the **frozen** Rule Catalog — changing it is a deliberate documented
+decision, not a routine correction ridden in on another ticket; `world-rule-catalog-design` owns
+that catalog, not this track; and correcting the prose *and* recording the fact in the triage log
+would put live flag state in two places, which is how it drifted in the first place ("define
+information once"). The registries and the triage log are the live layer now; the catalog prose is
+a dated artifact and reads correctly as one. The staleness has been handed to
+`world-rule-catalog-design` separately as a verified report, not left implicit.
+
+**D3 — the Territory source enumerates 3 findings, not 10. Confirmed as fact, not judgment.**
+`places-territory-batch-11a-review.md`'s Repository Findings list is mechanically separable: every
+numbered item carries its own Rule ID. Items 1 (TERR-01/TERR-03), 2 (TERR-01) and 8 (TERR-02) are
+Territory; items 3 (PLACE-02), 4 (PT-S02/PT-S05), 5 (SETT-03/SETT-01), 6 (SETT-02), 7
+(`settlements.md`), 9 (SETT-02/PT-S13) and 10 (SETT-01) are Places/Settlements and are out of
+scope. **AC1's "every finding in every source" means these 3 for this source.**
+
+Item 2 is a real, in-scope Territory promotion: verified directly against
+`registries/rule_classifications.yaml` — TERR-01's evidence text names cultural-association only as
+one of the overloaded-slot concepts, and does not record the separate MISSING sub-fact that no
+residence or cultural-association field exists anywhere and nothing reads `owner_faction_id` as
+either. Amend that row's evidence. The aggregate `CONFLICTING` verdict stays correct and does not
+move.
+
+**Process note accepted (not a decision, a correction to this ticket).** The Scope section's
+first-read batch-07 split listed only some items as out-of-scope and never mentioned 3, 8 or 9 at
+all — a partial enumeration presented as a near-complete one. It worked only because the ticket
+also said to verify it. M4's ticket will enumerate every item with an explicit in/out disposition
+rather than a partial list, and the Scope table will carry the "triage by content, not section
+name" warning for **both** domains' sources — it was written for batch-07 only, and the Territory
+source turned out to have the identical hazard.
+
 ## Implementation Notes
 
 _(filled during implementation)_
