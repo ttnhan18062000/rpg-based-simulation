@@ -244,6 +244,25 @@ grounds to adjust the classification model to manufacture a cleaner contrast.
 **Exit criteria.** Two domains mapped, validated, and rendered in one combined view; the comparison
 recorded honestly, whatever it actually shows.
 
+**Done 2026-09-24** (`TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW`). Combat/Conflict's real
+mappable surface — 12 Rule IDs in `conflict-combat.md`, only `CONFLICT-01` its own local heading,
+the other 11 Inherited/Applied Foundational entries cited under their originating Rule ID (now
+documented in `architecture.md` §3) — was mapped: 10 Rule IDs got a real edge + classification
+(all `PARTIAL`, each for its own independent, evidence-specific reason — a STARVED perception
+gate, world-specific gating, a confirmed-missing outcome clause, or an unconfirmed consumer side),
+2 (`CONFLICT-01`, `ECOL-04`) stayed `UNKNOWN` because their own cited evidence resolves to zero
+registered mechanism. The first real cross-domain view
+(`make cross-domain-management-view`, `docs/brainstorm/cross_domain_management_view.md`) renders
+both domains in separate sections with combined raw mapped/unmapped and verified/unverified
+counts, never a bare percentage. The written comparison records, plainly, that Combat's much
+higher Rule-level verified-count is not "more done" than Territory — its own most-cited mechanism
+(`tactical_decision`) is verified by a real corpus run and that same run is what proved its
+`ATTACK`-intent branch essentially never fires in real play. **This closes the roadmap's own
+bounded M0–M4 proof-of-generalization goal — it does not finish the mapping itself.** The
+remaining ~46 Rule families stay `UNKNOWN` by design, and `rollout_plan.md`'s Stages D
+(per-ticket expansion), E (broader multi-domain view as coverage grows), and F (Context Compiler)
+continue indefinitely, unaffected by this milestone closing.
+
 ---
 
 ## Past M4 — not this roadmap's job

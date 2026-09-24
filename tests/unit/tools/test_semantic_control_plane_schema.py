@@ -188,6 +188,124 @@ def test_rule_mechanism_edge_same_pair_different_edge_type_is_not_a_duplicate():
     assert errors == []
 
 
+def test_rule_mechanism_edge_shared_rule_id_across_domains_is_not_a_duplicate():
+    """TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW: two edges sharing one rule_id but citing
+    different mechanism_ids -- from two structurally different domains' own investigation passes,
+    not a copy-paste same-file duplicate -- must both validate cleanly. Territory's own mapping
+    never exercised this (Territory only ever cited Territory-domain mechanisms); this is the one
+    real schema property the M4 ticket's own Assumption #2 required checking before writing any
+    real cross-domain row."""
+    data = {
+        "edges": [
+            {
+                "rule_id": "PERC-01",
+                "mechanism_id": "regional_sovereignty",
+                "edge_type": "CONSTRAINED_BY",
+                "evidence": "synthetic fixture standing in for a hypothetical Perception-domain "
+                "mapping pass, deliberately citing an unrelated real mechanism_id",
+                "date": "2026-09-01",
+            },
+            {
+                "rule_id": "PERC-01",
+                "mechanism_id": "tactical_decision",
+                "edge_type": "PARTIALLY_REALIZES",
+                "evidence": "the real Combat-domain citation this ticket writes",
+                "date": "2026-09-24",
+            },
+        ]
+    }
+    errors = validate_rule_mechanism_edges(
+        data,
+        known_rule_ids={"PERC-01"},
+        known_mechanism_ids={"regional_sovereignty", "tactical_decision"},
+    )
+    assert errors == []
+
+
+def test_all_twelve_combat_rule_ids_resolve_against_the_live_corpus():
+    """TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW AC1: the ticket's own claimed 12-ID mappable
+    surface in conflict-combat.md, re-derived directly against the live docs/world_rules/ corpus.
+    CONFLICT-02 must NOT appear -- it is a historical/superseded citation only, never a live
+    heading."""
+    ids = scan_rule_ids()
+    for expected in (
+        "CONFLICT-01",
+        "PERC-01",
+        "KNOW-01",
+        "AGENCY-01",
+        "AGENCY-02",
+        "AGENCY-04",
+        "LIFE-01",
+        "LIFE-02",
+        "BODY-07",
+        "OWN-02",
+        "CAP-01",
+        "ECOL-04",
+    ):
+        assert expected in ids, f"expected {expected} to resolve against the live corpus"
+    assert "CONFLICT-02" not in ids
+
+
+def test_combat_rule_mechanism_edges_have_nonempty_evidence_and_date():
+    """TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW AC1/AC2: the ticket's own core deliverable
+    actually landed -- every one of the 10 mapped Combat Rule IDs has at least one real row in
+    rule_mechanism_edges.yaml with non-empty evidence and a well-formed date. CONFLICT-01 and
+    ECOL-04 are deliberately absent (stay UNKNOWN) and are asserted absent, not present."""
+    import re
+    import yaml
+
+    path = REPO_ROOT / "registries" / "rule_mechanism_edges.yaml"
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    edges = data.get("edges", []) or []
+
+    date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    mapped_combat_ids = {
+        "PERC-01",
+        "KNOW-01",
+        "AGENCY-01",
+        "AGENCY-02",
+        "AGENCY-04",
+        "LIFE-01",
+        "LIFE-02",
+        "BODY-07",
+        "OWN-02",
+        "CAP-01",
+    }
+    seen = set()
+    for edge in edges:
+        rule_id = edge.get("rule_id")
+        if rule_id not in mapped_combat_ids:
+            continue
+        seen.add(rule_id)
+        evidence = edge.get("evidence")
+        assert isinstance(evidence, str) and evidence.strip(), (
+            f"edge {rule_id} -> {edge.get('mechanism_id')} has empty evidence"
+        )
+        date = edge.get("date")
+        assert isinstance(date, str) and date_re.match(date), (
+            f"edge {rule_id} -> {edge.get('mechanism_id')} has invalid date {date!r}"
+        )
+
+    assert seen == mapped_combat_ids, (
+        f"expected a row for every mapped Combat Rule ID, missing {mapped_combat_ids - seen}"
+    )
+    all_rule_ids = {edge.get("rule_id") for edge in edges}
+    assert "CONFLICT-01" not in all_rule_ids, "CONFLICT-01 stays UNKNOWN, no edge row"
+    assert "ECOL-04" not in all_rule_ids, "ECOL-04 stays UNKNOWN, no edge row"
+
+
+def test_architecture_md_section_3_documents_inherited_entry_citation_rule():
+    """TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW Scope item 4 / AC6: §3 must state that an
+    Inherited/Applied Foundational Catalog entry is cited under the original Rule ID it derives
+    from, never a new local ID -- the undocumented assumption that sent both TERR-04/jurisdiction
+    and M4's own initial surface count sideways."""
+    text = _ARCHITECTURE_MD_PATH.read_text(encoding="utf-8")
+    section_3 = text.split("## 3.", 1)[1].split("## 4.", 1)[0]
+    assert "Inherited" in section_3
+    assert "original Rule ID" in section_3
+
+
 # ── Schema 2: Mechanism -> Mechanism causal edges ───────────────────────────────────────────
 
 

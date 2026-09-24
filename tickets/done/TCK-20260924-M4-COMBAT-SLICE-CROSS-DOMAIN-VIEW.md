@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW
-phase: open
+phase: done
 date: 2026-09-24
 tags: [architecture, schema, registry, combat]
 ---
@@ -17,7 +17,7 @@ M4: Combat/Conflict mapping slice and the first cross-domain management view
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -206,16 +206,127 @@ write inherited-derived edges without.
 
 ## Implementation Notes
 
-_(filled during implementation)_
+**AC3 — live re-checks (Steps 1 and 4 of `plan.md`), run twice, independently, before writing any
+edge and again immediately before writing any classification:**
+
+- Re-check #1 (before Step 2's edges): `tactical_decision` — `state: done`, `verified.instrument:
+  corpus_run`, `verified.verdict: contradicted`, `verified.date: "2026-09-19"`. Hostility sweep
+  ticket: found only at `tickets/todos/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP.md`
+  (not `inprogress/`, not `done/`), body `## Status` = `OPEN` — still paused.
+- Re-check #2 (before Step 5's classifications): identical result on both — `tactical_decision`
+  unchanged (`contradicted`, dated `2026-09-19`, predates today), hostility sweep still `OPEN` in
+  `tickets/todos/`, not resumed. Both re-checks agree; no stale-evidence stop condition triggered.
+
+**Scope item 5, second bullet — §10 runtime-status terms actually needed (report only, no term
+defined/pruned/edited):** **None of the eight undefined `core_rpg_design_direction.md` §10 terms**
+(`MISSING`, `DESIGNED`, `EXPERIMENTAL`, `OFF`, `DORMANT`, `LIVE`, `DEPRECATED`, `REPLACED`) are
+needed anywhere in the cross-domain view — every cell in `render()`/`render_cross_domain()` draws
+exclusively from Axis A (`state`), Axis B (`verified.verdict`/`instrument`), and Axis D (the
+six-value Rule classification vocabulary), confirmed by direct read of the real generator source.
+The one term that would fit the written comparison's own prose is `STARVED` (the one term with a
+real existing definition, and the accurate word for `tactical_decision`'s situation) — the
+comparison text does not currently use that exact word, which is a wording choice, not a gap. This
+finding belongs to `world-rule-catalog-design` to act on if they choose; nothing in this ticket
+edits the vocabulary.
+
+**AC2 architecture-review finding, fixed before Step 7 landed:** the pre-implementation
+architecture review flagged that `plan.md`'s own draft comparison prose overstated
+mechanism-level runtime coverage ("every mapped mechanism ... scenario or corpus_run" — false,
+since `movement`, cited by `LIFE-01`/`LIFE-02`, is `code_trace`-only). Corrected in `plan.md`
+before implementation, and the shipped `## Comparison` section states the Rule-level-vs-
+mechanism-level distinction explicitly rather than the overstated claim.
 
 ## Test Summary
 
-_(filled during implementation)_
+Full scoped regression, real venv (`/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3`,
+bare `python3` lacks `pydantic`):
+
+```
+pytest tests/unit/tools/test_semantic_control_plane_schema.py \
+       tests/unit/tools/test_territory_control_view.py \
+       tests/unit/tools/test_semantic_control_plane_drift_detector.py \
+       tests/unit/tools/test_cross_domain_management_view.py \
+       tests/unit/tools/test_mechanism_registry.py \
+       tests/unit/tools/test_core_rpg_design_direction_docs.py \
+       -v
+```
+**137 passed, 0 failed.** New tests added: 4 in `test_semantic_control_plane_schema.py`
+(`test_rule_mechanism_edge_shared_rule_id_across_domains_is_not_a_duplicate`,
+`test_all_twelve_combat_rule_ids_resolve_against_the_live_corpus`,
+`test_combat_rule_mechanism_edges_have_nonempty_evidence_and_date`,
+`test_architecture_md_section_3_documents_inherited_entry_citation_rule` — this one deliberately
+run red before the `architecture.md` §3 edit and green after, confirmed both states); 4 in the new
+`tests/unit/tools/test_cross_domain_management_view.py`
+(`test_cross_domain_view_renders_both_domains`,
+`test_cross_domain_view_shows_raw_counts_not_bare_percentage`,
+`test_combat_mixed_realization_is_not_smoothed_into_a_clean_result`,
+`test_real_cross_domain_view_is_up_to_date`); 1 in the new
+`tests/unit/tools/test_core_rpg_design_direction_docs.py`
+(`test_core_rpg_design_direction_section_10_has_no_run_on_paragraph`).
+
+Validator: `python3 tools/semantic_control_plane/registry.py` → `OK`, zero violations, zero
+manual overrides (AC2).
+
+Drift check (AC5): `make semantic-control-plane-drift-check` → `0 cited-code drift finding(s), 0
+verdict drift finding(s)` — clean, as expected (new rows dated `2026-09-24`, `tactical_decision`'s
+`contradicted` verdict predates that, `2026-09-19`).
+
+Territory regression: `generate_territory_control_view.py --output ...` (no flag) confirmed
+byte-identical to the already-committed `docs/brainstorm/territory_control_management_view.md`,
+both before and after the M4 extension; `--check` reports `OK`.
 
 ## Files Changed
 
-_(filled during implementation)_
+- `registries/rule_mechanism_edges.yaml` — 12 new Combat/Conflict edges (10 mapped Rule IDs, some
+  with 2 edges each; `CONFLICT-01`/`ECOL-04` deliberately absent).
+- `registries/rule_classifications.yaml` — 10 new Combat/Conflict classification rows, all
+  `PARTIAL`.
+- `tools/semantic_control_plane/generate_territory_control_view.py` — extended in place: shared
+  `_build_rows()` helper, `build_combat_view()`, `build_cross_domain_view()`,
+  `render_cross_domain()`, `_render_domain_section()`, `--combined` CLI flag, `_COMPARISON_TEXT`.
+  Territory's own `render()`/`main()` no-flag path is unchanged (verified byte-identical).
+- `Makefile` — new `cross-domain-management-view` target, alongside the existing
+  `territory-control-view` target (untouched).
+- `docs/brainstorm/cross_domain_management_view.md` — new, generated file (the first real
+  cross-domain view).
+- `docs/plans/simulation_semantic_control_plane/architecture.md` — §3: added the inherited-entry
+  citation rule sentence (AC6).
+- `docs/plans/simulation_semantic_control_plane/roadmap.md` — M4 section: recorded disposition,
+  roadmap-complete-but-mapping-continues framing (AC9).
+- `tickets/inprogress/TCK-20260923-SEMANTIC-CONTROL-PLANE-EPIC.md` — M4 milestone row updated
+  (AC9).
+- `docs/brainstorm/core_rpg_design_direction.md` — §10: blank-line fix, no content change (Scope
+  item 5).
+- `tests/unit/tools/test_semantic_control_plane_schema.py` — 4 new tests (see Test Summary).
+- `tests/unit/tools/test_cross_domain_management_view.py` — new file, 4 tests.
+- `tests/unit/tools/test_core_rpg_design_direction_docs.py` — new file, 1 test.
+- This ticket's own `## Implementation Notes`/`## Test Summary`/`## Files Changed`/
+  `## Completion Summary`.
 
 ## Completion Summary
 
-_(filled during implementation)_
+M4 — the roadmap's final milestone — is done. Combat/Conflict's real 12-Rule-ID surface
+(`conflict-combat.md`) is mapped: 10 Rule IDs got a real, evidence-cited edge + classification
+(all `PARTIAL`, each for its own independent reason — a STARVED perception gate, world-specific
+gating outside `metropolis`, a confirmed-missing surrender/capture/displacement outcome clause, or
+an unconfirmed Life/Body consumer side); `CONFLICT-01` and `ECOL-04` stay `UNKNOWN`, deliberately,
+because their own cited evidence (`ResourceOpportunityProvider`, `blocker_penalty`, an `ECOL-04`
+migration/scarcity mechanism) resolves to zero registered `mechanism_id` — never coerced to
+`MISSING` and never forced onto a wrong-identity Combat mechanism.
+
+The first real cross-domain management view (`make cross-domain-management-view`) renders
+Territory and Combat in separate sections with one combined mapped/unmapped and
+verified/unverified count alongside the classification breakdown, never a bare percentage. The
+written comparison states plainly that Combat's much higher Rule-level verified-count (10/10) is
+not evidence it is "more done" than Territory (0/4): its own most-cited mechanism,
+`tactical_decision`, is verified by a real corpus run, and that same run is exactly what proved
+its `ATTACK`-intent branch essentially never fires in real play. Neither domain was smoothed to
+look cleaner than the other.
+
+**This closes the roadmap's own bounded M0–M4 proof-of-generalization goal. It does not finish
+the mapping itself** — the remaining ~46 Rule families stay `UNKNOWN` by design, and
+`rollout_plan.md`'s Stages D/E/F continue indefinitely, unaffected by this milestone closing.
+
+No `src/` files were touched. No defect the mapping surfaced (the fail-open perception-gate
+`try/except`, the ±50/±100 threshold disagreement carried from M1, the missing combat outcome
+clause) was fixed — each is recorded as evidence only, per Out of Scope.

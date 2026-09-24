@@ -106,6 +106,11 @@ existing `MechanismRegistry`. An absent row for a given Rule×mechanism pair or 
 an error — per §7's own discipline, `UNKNOWN` is a permanent, expected value, never coerced to
 `MISSING`.
 
+**An Inherited / Applied Foundational entry in the World Rule Catalog — one that reuses an
+earlier batch's Rule ID rather than being admitted as its own new Rule — is cited in this mapping
+under that original Rule ID; it never receives a new local ID of its own, since direct reuse of an
+earlier Rule ID is itself the entry's citable identity.**
+
 **Two distinct records, not one.** M0 must define both: (1) the individual Rule↔Mechanism mapping
 edges described above, and (2) a separate, Rule-level *realization classification* record (§4) —
 one Rule's aggregate `SUPPORTED`/`PARTIAL`/`CONFLICTING`/`MISSING`/`INERT-OFF`/`UNKNOWN` verdict,
