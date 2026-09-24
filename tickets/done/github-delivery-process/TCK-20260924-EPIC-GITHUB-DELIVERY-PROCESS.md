@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-EPIC-GITHUB-DELIVERY-PROCESS
-phase: open
+phase: done
 date: 2026-09-24
 tags: [delivery, ai, process-improvement]
 ---
@@ -167,4 +167,36 @@ Per child ticket.
 None (epic).
 
 ## Completion Summary
-Open.
+All six children closed, in `SEQUENCE.md` order, plus one hotfix correction discovered during
+review:
+
+1. `TCK-20260924-DELIVERY-STATUS-TOOL` — `tools/delivery/pr_status.py`, five-verdict CI status tool.
+1b. `TCK-20260924-DELIVERY-STATUS-TOOL-WORKFLOW-SCOPE` (hotfix) — partitioned the status tool's
+   verdict by workflow, fixing a doc/code disagreement found in review.
+2. `TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES` — `docs/guides/delivery_process.md`,
+   `.gitmessage`, `.github/pull_request_template.md`; `CLAUDE.md` (440→387 lines) and `roadmap.md`
+   collapsed to pointers, both committed only after the user's direct confirmation of the literal
+   diff.
+3. `TCK-20260924-DELIVERY-PR-RENDERER` — `tools/delivery/pr_render.py`.
+4. `TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY` — `tools/delivery/pre_push_advisory_hook.py`, wired
+   into `.claude/settings.json` after the same direct-confirmation rule.
+5. `TCK-20260924-DELIVERY-CI-TRIAGE-CLASSIFIER` — `tools/delivery/ci_triage_classifier.py`.
+6. `TCK-20260924-DELIVERY-COST-MEASUREMENT` — `tools/delivery/delivery_cost_measurement.py`, plus
+   the real pre-epic baseline (`origin/main` W30–W39, SHA `0e0ff8f2172634226b1e8a04338fec8b5972a2c6`):
+   16.04 `gh` calls per PR (`gh_pr_create_count` matches plan §1.1's cited 106 exactly; the modest
+   difference in total `gh` calls from the plan's own 16.9 figure is ref drift, not a discrepancy).
+   No "after" number was computed — the epic's own tools were not yet in use while tickets 1–5 were
+   implemented, so this batch's corpus is not a valid after-datapoint; that measurement waits for a
+   real PR delivered using the new tools.
+
+Every check this epic shipped is advisory (zero-exit asserted by test in every case). No PR body
+produced by this epic's tooling carries an attribution trailer (asserted by test). All governing-
+file edits (`CLAUDE.md`, `roadmap.md`, `.claude/settings.json`) were shown to and approved directly
+by the user, never inferred from scope agreement or a peer's relay. `docs/testing/regression_
+policy.md` is read at runtime by child 5, never duplicated. `tools/agent-monitoring/
+bash_command_mix.py` was extended, not duplicated, by child 6. `data_runs_clean` FAILed on every
+close for the same pre-existing, shared-worktree reason (not attributable to any child ticket) —
+reported each time, not routed around.
+
+`TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE` rides the same branch as a
+deliberate non-child (different subsystem), now unblocked with this ticket's own closure.

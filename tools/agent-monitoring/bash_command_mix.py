@@ -170,6 +170,30 @@ def bash_head(input_summary: str) -> str:
     return parts[0] if parts else "?"
 
 
+# gh subcommand classification (TCK-20260924-DELIVERY-COST-MEASUREMENT). `bash_subcommand_key`'s
+# own 2-word breakdown collapses `gh pr view`/`gh pr create`/`gh pr checks`/`gh pr diff` to the
+# same "gh pr" key -- too coarse to compute "gh calls per PR", which needs `pr create` (the PR-
+# count denominator) distinguished from the other `pr` verbs. This goes one word deeper, but only
+# for rows `bash_head()` already classified as `gh` -- it calls into, never duplicates, the
+# existing head classification.
+GH_OBSERVATION_SUBCOMMANDS = frozenset({
+    "gh pr view", "gh pr checks", "gh pr diff", "gh run view", "gh run list", "gh api",
+})
+GH_ACTION_SUBCOMMANDS = frozenset({"gh pr create", "gh run rerun", "gh run watch"})
+
+
+def gh_subcommand_key(input_summary: str) -> "str | None":
+    """Returns a `gh <verb> <noun>` key (`gh api` collapses past its path, since paths vary per
+    call) for a `gh`-headed command, or `None` if it has fewer than 2 tokens (Assumption 3:
+    unparseable rows are counted separately by the caller, never silently dropped)."""
+    parts = input_summary.strip().split()
+    if len(parts) < 2 or parts[0] != "gh":
+        return None
+    if len(parts) < 3:
+        return f"gh {parts[1]}"
+    return f"gh {parts[1]} {parts[2]}" if parts[1] in ("pr", "run", "repo", "issue", "workflow") else f"gh {parts[1]}"
+
+
 def bash_subcommand_key(head: str, input_summary: str) -> str:
     """head alone for most commands; head + truncated second word for the heads this batch's
     own measurement broke down further (git/gh/make/python3/grep/rg)."""

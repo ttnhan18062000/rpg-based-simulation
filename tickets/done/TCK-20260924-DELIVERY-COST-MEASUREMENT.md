@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-DELIVERY-COST-MEASUREMENT
-phase: open
+phase: done
 date: 2026-09-24
 tags: [delivery, agent-monitoring, benchmarking]
 ---
@@ -16,7 +16,7 @@ Report `gh`-calls-per-PR and subject traceability over a week range in one comma
 before/after is measured rather than asserted
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -156,10 +156,55 @@ Shipping a second Bash-command classifier inside the tool that measures the epic
 self-contradiction, and criterion 5 exists to make it visible in review.
 
 ## Test Summary
-To be completed during implementation.
+- `python3 -m pytest tests/tools/test_delivery_cost_measurement.py -v` (repo venv): **11 passed** —
+  one per Acceptance Criterion (AC1–AC6) plus regression-prone paths, including a direct run of
+  `bash_command_mix.py`'s own existing test suite from inside this file to prove the extension
+  didn't change its behavior.
+- Full regression: `python3 -m pytest tests/tools/ -m "not slow"` — **3005 passed, 25 skipped, 28
+  deselected, 1 xfailed**, 0 failed.
+- **AC7/AC8 — real pre-epic baseline, `origin/main` W30–W39** (measured SHA
+  `0e0ff8f2172634226b1e8a04338fec8b5972a2c6` — `origin/main`'s current tip, which predates every
+  commit on `github-delivery-process-epic`, so it is a legitimate pre-epic baseline with no special
+  pinning needed):
+  ```
+  gh_calls_total: 1700, gh_pr_create_count: 106, gh_calls_per_pr: 16.04
+  gh_observation_calls: 1472 (86.6%), gh_action_calls: 161, gh_unparseable_count: 0
+  git_calls_total: 13060, git_status_diff_share: 56.4%
+  subject_traceability: 44/201 (21.9%) subjects carry a TCK- ID, same-week-range denominator
+  ```
+  Compared to plan §1.1's cited figures (1,796 `gh` / 106 `gh pr create` / 16.9 per PR at
+  `75ab942b4`): `gh_pr_create_count` matches **exactly** (106); `gh_calls_total`/`gh_calls_per_pr`
+  differ modestly (1,700 vs 1,796; 16.04 vs 16.9). Per AC8, this difference is attributed to ref
+  drift — `origin/main` has advanced past `75ab942b4` since the plan's own figures were measured —
+  not treated as a discrepancy to reconcile away. **No "after" number was computed or attempted**,
+  per design's explicit warning that this batch's own corpus is not a valid after-datapoint (the
+  epic's tools were not in use while tickets 1–5 were implemented, and this session's own review
+  traffic is git-heavy/gh-light for unrelated reasons) — this is a recorded baseline only.
 
 ## Files Changed
-To be completed during implementation.
+- `tools/agent-monitoring/bash_command_mix.py` — added `gh_subcommand_key()` and the
+  `GH_OBSERVATION_SUBCOMMANDS`/`GH_ACTION_SUBCOMMANDS` frozensets; purely additive, no existing
+  function's behavior changed (confirmed by its own test suite passing unchanged).
+- `tools/delivery/delivery_cost_measurement.py` (new) — the report module and CLI.
+- `tests/tools/test_delivery_cost_measurement.py` (new) — 11 tests.
+- `staging_artifacts/TCK-20260924-DELIVERY-COST-MEASUREMENT/{investigation,plan,test_plan}.md`
+  (new).
 
 ## Completion Summary
-Open.
+Built `tools/delivery/delivery_cost_measurement.py`, reporting `gh`-calls-per-PR, the observation/
+action split by subcommand, and subject traceability over a week range in one command, built on
+(never duplicating) `tools/agent-monitoring/bash_command_mix.py`'s shared classifier — extended
+with a `gh`-specific 3-word subcommand key, since the existing 2-word breakdown couldn't
+distinguish `gh pr create` (the PR-count denominator) from `gh pr view`/`checks`/`diff`. Both
+measurement traps from the Request Summary are designed in: `--ref` reads shards from a pinned git
+tree, never the working tree, and omitting it labels the output unmistakably as a working-tree
+snapshot rather than silently substituting an equivalent reading; every report carries the
+"a closed week keeps growing" caveat regardless. Ran the real baseline measurement against
+`origin/main` over W30–W39 (recorded above with its resolved SHA) rather than presenting a
+scratchpad figure as this ticket's own evidence — `gh_pr_create_count` matched plan §1.1's cited
+figure exactly, and the modest difference in total `gh` calls is explained by ref drift, per AC8.
+Per design's explicit instruction, no "after" number was attempted: this ticket records the
+pre-epic baseline only, since no PR has yet been delivered using the tools this epic built.
+
+No known material gap. `data_runs_clean` is expected to FAIL again on this close for the same
+pre-existing, not-this-ticket's-own reason as the prior six closes in this batch.
