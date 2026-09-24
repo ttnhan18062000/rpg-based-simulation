@@ -80,6 +80,17 @@ Bible's strict-inequality phrasing needs to be reconciled with the clamp.
 - Add a regression test asserting the chosen threshold in **both** code paths, so they cannot drift
   apart again silently.
 
+**Added scope item, decided by the user during PR #245's review, not part of the original
+request:** `tools/semantic_control_plane/generate_territory_control_view.py`'s `_COMPARISON_TEXT`
+(the M4 cross-domain view's hand-written comparison prose, lines ~203-238) hardcodes counts
+(`0/4`, `10/10`, classification breakdowns) that this ticket's own fix invalidates the moment it
+lands — this work moves `TERR-02` off `PARTIAL`. Compute those counts from the registries the same
+way the view's own banner already does, rather than leaving them as a stale hand-authored literal
+inside a file headed "Do not hand-edit." Scope guard: this is the counts in `_COMPARISON_TEXT`
+only — not a rewrite of the generator, and not a broadening of `mapping_drift_check.py`'s own
+drift classes (a "generated prose vs. computed banner" drift class is a real gap the M2 detector
+doesn't cover, but that's a finding to report separately, not something this ticket builds).
+
 ## Out of Scope
 
 - Any other sovereignty behavior: influence accrual rates, trauma, taxation cadence, stronghold
@@ -104,6 +115,12 @@ Bible's strict-inequality phrasing needs to be reconciled with the clamp.
    `v2_evidence` pointing at that test.
 7. If the chosen value changes observable behavior, it is recorded in
    `docs/guidelines/intentional_divergences.md` with a rationale class and verification path.
+8. **(Added scope, from #245's review.)** `generate_territory_control_view.py`'s
+   `_COMPARISON_TEXT` computes its counts/classification-breakdown from the real registries
+   (mirroring the banner's own existing computation) instead of hardcoding them, and a real
+   assertion fails if the prose and the computed banner ever disagree — not merely relying on the
+   existing regeneration test, which cannot catch this drift class (stale prose regenerates
+   byte-for-byte identical to itself).
 
 ## Related Tickets
 
