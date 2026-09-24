@@ -167,6 +167,18 @@ tickets or a targeted sweep touches it, exactly per Stage D.
 **Exit criteria.** There is no "M3 complete" state — this stream is permanent (like Stage D). The
 gate M4 actually depends on is narrower and lives in M4's own gating clause below.
 
+**Narrow bar met 2026-09-24** (`TCK-20260924-M3-TERRITORY-COMBAT-FINDING-TRIAGE`) — M3 itself is
+**not** "complete" (it has no complete state, per above), but the one thing M4 was gated on is
+done: every named finding in Territory/Control's and Combat/Conflict's sources, re-verified
+against live state today, dispositioned in
+`docs/plans/simulation_semantic_control_plane/finding_triage_log.md` (5 Territory findings — 2
+not-a-control-plane-fact, 1 `UNKNOWN`, 2 already-covered by M1's existing rows, one via an
+evidence-text amendment; 8 Combat findings/questions — 3 `PROMOTE-AT-M4`, 2
+not-a-control-plane-fact, 3 `UNKNOWN`, 1 resolved-by-event). The triage caught and corrected a
+stale premise in both Combat source docs (`ENABLE_COMBAT_ENGAGEMENT` characterized as default-OFF;
+live state is `ON` since 2026-09-14) — recorded as verified evidence for M4, not asserted as a
+classification. No Combat mapping rows were written; that stays M4's own deliverable.
+
 ---
 
 ## M4 — Second slice and first cross-domain view (gated on M1, M2, and M3's Territory+Combat-scoped triage only — not full-catalog M3)

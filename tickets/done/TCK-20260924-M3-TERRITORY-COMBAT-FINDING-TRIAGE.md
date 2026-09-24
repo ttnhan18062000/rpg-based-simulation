@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-M3-TERRITORY-COMBAT-FINDING-TRIAGE
-phase: open
+phase: done
 date: 2026-09-24
 tags: [architecture, schema, registry, combat]
 ---
@@ -18,7 +18,7 @@ Semantic Control Plane, or record why each stays UNKNOWN
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -259,16 +259,61 @@ source turned out to have the identical hazard.
 
 ## Implementation Notes
 
-_(filled during implementation)_
+Investigate re-verified every named finding against live state and surfaced two real scope
+questions, sent back to the epic owner rather than resolved unilaterally (per the ticket's own
+instruction): (1) how to disposition the `ENABLE_COMBAT_ENGAGEMENT` staleness — both Combat source
+docs claim default-OFF, live state is ON since 2026-09-14, nine days before their own
+`last_verified` date; (2) whether `places-territory-batch-11a-review.md`'s Repository Findings
+enumerates 10 Territory items or fewer (it mixes three rule families under one list, the same
+hazard the ticket flagged for batch-07 but not for this Territory source). Both resolved by the
+epic owner in the ticket's own `## Scoping Decisions` section (D1/D2/D3) before Plan proceeded.
+
+Plan and Implement executed exactly those decisions: `finding_triage_log.md` written as the new
+durable triage record; one existing registry row's evidence text amended (TERR-01, adding the
+residence/cultural-association MISSING sub-fact — the aggregate `CONFLICTING` verdict did not
+move); `roadmap.md`'s M3 section and the epic ticket's M3 milestone row both updated to record the
+narrow bar met without marking M3 "complete." Zero Combat mapping rows written — Combat's mapping
+stays M4's own deliverable, confirmed by direct grep at Verify. Post-Implement architecture review
+passed all 7 checks (TERR-01 classification unchanged, no Combat rows, M3/M4 classification
+boundary respected in the triage log's own prose, `docs/world_rules/` untouched, UNKNOWN/MISSING
+discipline held, no `src/` or durable-state touch, AC7's "not complete" language preserved).
+
+The `ENABLE_COMBAT_ENGAGEMENT` doc staleness was **not** corrected in `conflict-combat.md` itself
+(D2 — out of scope, `world-rule-catalog-design` owns the frozen Rule Catalog); the epic owner
+handed that staleness report to that track separately.
 
 ## Test Summary
 
-_(filled during implementation)_
+`pytest tests/unit/tools/test_semantic_control_plane_schema.py
+tests/unit/tools/test_semantic_control_plane_drift_detector.py
+tests/unit/tools/test_territory_control_view.py -v` — 45/45 passed.
+
+`python3 tools/semantic_control_plane/registry.py` — `OK`, zero manual overrides (AC3).
+
+`make semantic-control-plane-drift-check` — `0 cited-code drift finding(s), 0 verdict drift
+finding(s)` after the TERR-01 evidence-text edit (AC5).
+
+Manual guard (AC4): `grep -n "CONFLICT-" registries/{rule_mechanism_edges,rule_classifications}.yaml`
+— zero hits in both files, confirmed independently by the architecture-reviewer agent as well as
+directly.
 
 ## Files Changed
 
-_(filled during implementation)_
+- `docs/plans/simulation_semantic_control_plane/finding_triage_log.md` (new) — the triage record,
+  M3's durable deliverable
+- `registries/rule_classifications.yaml` — TERR-01 evidence text amended (classification unchanged)
+- `docs/plans/simulation_semantic_control_plane/roadmap.md` — M3 section: narrow-bar-met note added
+- `tickets/inprogress/TCK-20260923-SEMANTIC-CONTROL-PLANE-EPIC.md` — M3 milestone row updated
+- `staging_artifacts/TCK-20260924-M3-TERRITORY-COMBAT-FINDING-TRIAGE/{investigation.md,test_plan.md,plan.md}` (new)
 
 ## Completion Summary
 
-_(filled during implementation)_
+M3's narrow Territory+Combat triage bar is met. 5 Territory findings and 8 Combat
+findings/open-questions triaged, every disposition citing today's re-verification against live
+state, not the original prose. Two real scope ambiguities were caught during Investigate and
+resolved by the epic owner before Plan proceeded, rather than worked around — both are now
+recorded permanently in the ticket's own Scoping Decisions section for future tickets to cite. The
+`ENABLE_COMBAT_ENGAGEMENT` catch is the concrete proof AC2's re-verification requirement earns its
+keep: a finding would otherwise have entered the control plane with an inverted premise. All
+acceptance criteria met; full standard pipeline; architecture review clean; zero blocking gate
+failures.
