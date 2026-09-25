@@ -361,6 +361,9 @@ mechanism-system-rollup-view: ## Regenerate docs/brainstorm/mechanism_system_rol
 territory-control-view: ## Regenerate docs/brainstorm/territory_control_management_view.md (Territory Rules against architecture.md §8's six axes)
 	$(PYTHON3) tools/semantic_control_plane/generate_territory_control_view.py
 
+cross-domain-management-view: ## Regenerate docs/brainstorm/cross_domain_management_view.md (Territory + Combat, architecture.md §8's six axes, both domains)
+	$(PYTHON3) tools/semantic_control_plane/generate_territory_control_view.py --combined
+
 mechanism-registry-html: ## Regenerate docs/brainstorm/mechanism_registry.html (generated, data-only page; never hand-edit)
 	$(PYTHON3) tools/mechanism_registry/generate_mechanism_registry_html.py
 
