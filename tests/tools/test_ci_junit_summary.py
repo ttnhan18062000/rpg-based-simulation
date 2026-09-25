@@ -12,8 +12,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from tools.ci_junit_summary import (
+    _escape_annotation_message,
     _normalize_collect_only_node_id,
     classify_new_vs_existing,
+    format_failure_annotations,
     main,
     parse_collect_only_ids,
     parse_junit_xml,
@@ -286,3 +288,71 @@ def test_main_with_missing_base_collect_only_path_falls_back_gracefully(capsys) 
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "New vs. existing tests" not in captured.out
+
+
+def test_parse_testcase_records_extracts_failure_and_error_messages() -> None:
+    failure_records = parse_testcase_records(_FIXTURES / "has_failure.xml")
+    by_id = {r.test_id: r for r in failure_records}
+    assert by_id["tests.unit.core.test_b::test_three"].message == "assert 1 == 2"
+    assert by_id["tests.unit.core.test_a::test_one"].message == ""
+
+    error_records = parse_testcase_records(_FIXTURES / "has_error.xml")
+    by_id = {r.test_id: r for r in error_records}
+    assert by_id["tests.unit.core.test_a::test_two"].message == "fixture setup failed"
+    assert by_id["tests.unit.core.test_b::test_three"].message == ""
+
+
+def test_format_failure_annotations_emits_one_line_per_failure_and_error() -> None:
+    records = parse_testcase_records(_FIXTURES / "head_with_testcases.xml")
+    lines = format_failure_annotations(records)
+    assert len(lines) == 3
+    assert any(
+        "::error::FAILED tests.unit.core.test_new::test_new_failed" in line for line in lines
+    )
+    assert any(
+        "::error::ERROR tests.unit.core.test_new::test_new_error" in line for line in lines
+    )
+    assert any("::error::FAILED tests.unit.core.test_a::test_two" in line for line in lines)
+
+
+def test_format_failure_annotations_skips_passed_and_skipped() -> None:
+    records = parse_testcase_records(_FIXTURES / "all_pass.xml")
+    assert format_failure_annotations(records) == []
+
+
+def test_format_failure_annotations_includes_the_message() -> None:
+    records = parse_testcase_records(_FIXTURES / "has_failure.xml")
+    lines = format_failure_annotations(records)
+    assert lines == ["::error::FAILED tests.unit.core.test_b::test_three - assert 1 == 2"]
+
+
+def test_escape_annotation_message_order_is_percent_then_cr_then_lf() -> None:
+    # '%' must be escaped first so the '%0D'/'%0A' this function inserts are never themselves
+    # re-escaped into '%250D'/'%250A'.
+    assert _escape_annotation_message("50%") == "50%25"
+    assert _escape_annotation_message("line1\r\nline2") == "line1%0D%0Aline2"
+    assert _escape_annotation_message("100% done\nnext") == "100%25 done%0Anext"
+
+
+def test_format_failure_annotations_escapes_special_characters_end_to_end() -> None:
+    records = parse_testcase_records(_FIXTURES / "has_failure_with_special_chars.xml")
+    lines = format_failure_annotations(records)
+    assert lines == [
+        "::error::FAILED tests.tools.test_x::test_percent_and_newlines"
+        " - assert 50%25 == 100%25%0Asecond line"
+    ]
+
+
+def test_main_emits_annotations_to_stderr_not_stdout(capsys) -> None:
+    exit_code = main([str(_FIXTURES / "has_failure.xml"), "unit-core-world"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "::error::" not in captured.out
+    assert "::error::FAILED tests.unit.core.test_b::test_three" in captured.err
+
+
+def test_main_emits_no_annotations_when_all_passing(capsys) -> None:
+    exit_code = main([str(_FIXTURES / "all_pass.xml"), "unit-core-world"])
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert captured.err == ""
