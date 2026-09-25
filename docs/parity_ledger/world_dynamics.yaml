@@ -1367,8 +1367,8 @@
     '
   support_boundary: null
 - id: WORLD-107
-  text: 'Sovereignty shift WorldEvent (E52G): when a region''s influence crosses +100
-    (HERO_GUILD takeover) or -100 (MONSTER_HORDE takeover), a WorldEvent(category=SOVEREIGNTY_SHIFT,
+  text: 'Sovereignty shift WorldEvent (E52G): when a region''s influence crosses +50
+    (HERO_GUILD takeover) or -50 (MONSTER_HORDE takeover), a WorldEvent(category=SOVEREIGNTY_SHIFT,
     severity=0.9) is emitted into StateUpdate.world_events_add. The event carries
     region_id, subject (new owner faction name), tick, and payload={"influence": <current>,
     "prev_owner": <prior>}. Events are flushed into recent_world_events via the authoritative
@@ -1383,9 +1383,12 @@
   v2_evidence: "src/domains/world_emergence/schema.py \u2014 WorldEventCategory.SOVEREIGNTY_SHIFT\
     \ added. src/engine/world_dynamics.py \u2014 step 2.2 collects sovereignty_events;\
     \ step 2.2b flushes them via update.replace(world_events_add=...). Verified by\
-    \ TCK-20260628-E52G-SOVEREIGNTY-EVENTS.\n"
+    \ TCK-20260628-E52G-SOVEREIGNTY-EVENTS.\n TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT:\
+    \ threshold literals replaced with FactionInfluenceService.LIBERATION_THRESHOLD/CONQUEST_THRESHOLD\
+    \ imports, resolving a prior \xB150/\xB1100 disagreement against src/world/influence.py;\
+    \ event emission and flush mechanism unchanged.\n"
   proof_type: parity
-  test_path: tests/unit/world/test_sovereignty_events.py::test_sovereignty_shift_event_emitted_on_hero_takeover
+  test_path: tests/unit/world/test_sovereignty_events.py::test_world_dynamics_flips_ownership_at_shared_threshold_boundary
   divergence_note: "New mechanic added by TCK-20260628-E52G-SOVEREIGNTY-EVENTS. Previously,\
     \ ownership changes produced WorldUpdate.owner_faction_id_set but no WorldEvent\
     \ was emitted \u2014 shifts were invisible to the WorldEmergencePhase and agent\
