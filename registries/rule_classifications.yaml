@@ -96,3 +96,115 @@ classifications:
       (an edge exists) and not SUPPORTED (a real, confirmed gap remains). Matches this Rule's own
       doc verdict (territory-control.md:186-190, PARTIAL).
     review_date: "2026-09-24"
+
+  # M4's own real classifications (TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW). Written as a
+  # separate pass, after registries/rule_mechanism_edges.yaml's own new Combat rows were already
+  # on disk and validator-clean. CONFLICT-01 and ECOL-04 deliberately have NO row here -- their
+  # own cited evidence resolves to zero registered mechanism_id (see rule_mechanism_edges.yaml's
+  # own header comment); both stay UNKNOWN, the permanent "not yet resolvable" state, never
+  # coerced into MISSING. Every PARTIAL below is an independent human judgment call over real,
+  # re-verified evidence (registries/mechanisms.yaml: tactical_decision verified.verdict=
+  # contradicted, status_effects state=orphan, skill_unlocks state=partial, re-checked live
+  # 2026-09-24) -- not a formula over the edge list, and not a forced uniform result: each has its
+  # own reason (STARVED dormancy, world-specific gating, a confirmed-missing outcome clause, or an
+  # unconfirmed consumer side), spelled out per-row below.
+  - rule_id: PERC-01
+    classification: PARTIAL
+    evidence: >-
+      A real, correctly-wired perception gate exists (rule_mechanism_edges.yaml's PERC-01 /
+      tactical_decision edge, PerceptionGate.can_perceive() at src/engine/tactical.py:196-199), but
+      two independent facts stop this from being SUPPORTED: (1) the ATTACK-intent branch it gates
+      is a textbook STARVED case (registries/mechanisms.yaml: tactical_decision verified.verdict=
+      contradicted, corpus_run, 2026-09-19; 0 of 1130 real corpus calls had a non-empty hostiles
+      list) -- a real, correct gate that almost never actually gates anything in real play; (2) a
+      try/except Exception: pass fail-open fallback around the same gate call
+      (tactical.py:196-200) means enforcement is not airtight even when the branch does fire. Not
+      CONFLICTING (nothing demonstrates the gate doing the wrong thing) and not SUPPORTED (the
+      guarantee is not robustly demonstrated in practice).
+    review_date: "2026-09-24"
+  - rule_id: KNOW-01
+    classification: PARTIAL
+    evidence: >-
+      Same root cause and evidence as PERC-01's own PARTIAL classification above -- the identical
+      perception/knowledge gate (tactical.py:196-199), re-cited independently for KNOW-01's own
+      foreign key per the citation rule (architecture.md §3).
+    review_date: "2026-09-24"
+  - rule_id: AGENCY-01
+    classification: PARTIAL
+    evidence: >-
+      Same root cause and evidence as PERC-01's own PARTIAL classification above -- the identical
+      perception gate forecloses decision stages reading hidden state directly, re-cited
+      independently for AGENCY-01's own foreign key.
+    review_date: "2026-09-24"
+  - rule_id: AGENCY-02
+    classification: PARTIAL
+    evidence: >-
+      A real, correct code-level separation of estimation from consideration exists
+      (rule_mechanism_edges.yaml's AGENCY-02 / combat_engagement edge,
+      EngagementRiskEvaluator.caution = max(0.0, min(1.0, 1.0 - bravery)),
+      src/domains/combat_engagement/risk_evaluator.py:56), but combat_engagement's own
+      verified.note (registries/mechanisms.yaml:261-269) confirms this evaluator's own gated path
+      only measurably fires in the synthetic metropolis reference scenario -- 0-2 calls per
+      1000-2000 ticks in the three real corpus worlds, the same real-play dormancy PERC-01/KNOW-01/
+      AGENCY-01's own gate shows. Real, correct code, weakly exercised in real play -- PARTIAL, not
+      a hedge.
+    review_date: "2026-09-24"
+  - rule_id: AGENCY-04
+    classification: PARTIAL
+    evidence: >-
+      combat_resolution's calculate_damage() (rule_mechanism_edges.yaml's AGENCY-04 /
+      combat_resolution edge) is confirmed deterministic, no-RNG, responding only to
+      combat.atk/combat.def_stat (registries/mechanisms.yaml:169-188) -- real mechanical support
+      for capability mattering to outcome. The Rule's full claim (context/environment/
+      decision-quality/resources may still produce an unfavorable outcome for the nominally
+      stronger side) is only partly covered by this one mechanism's own pure formula; the rest of
+      that claim's support lives in combat_engagement's separate, already-caveated risk gate
+      (AGENCY-02 above), not inside this mechanism. Split support across two mechanisms, complete
+      in neither -- PARTIAL.
+    review_date: "2026-09-24"
+  - rule_id: CAP-01
+    classification: PARTIAL
+    evidence: >-
+      Same root cause and evidence as AGENCY-04's own PARTIAL classification above -- this
+      Inherited entry reuses both CAP-01 and AGENCY-04 together (conflict-combat.md:154-159),
+      re-cited independently for CAP-01's own foreign key.
+    review_date: "2026-09-24"
+  - rule_id: LIFE-01
+    classification: PARTIAL
+    evidence: >-
+      A real, live, differentiated outcome vocabulary exists (rule_mechanism_edges.yaml's LIFE-01
+      / combat_resolution and LIFE-01 / movement edges -- src/engine/combat.py's real
+      KILL/DEFEAT/REBIRTH/PERMADEATH/SURVIVE/REJECTED plus src/engine/movement.py's
+      EVASIVE_SUCCESS as a seventh, withdrawal outcome), genuinely satisfying "incapacitated !=
+      dead." conflict-combat.md:126-130 itself confirms MISSING, not merely unlooked-at: no
+      surrender, capture, or forced-displacement-as-a-combat-outcome exists anywhere. A real edge
+      plus one confirmed-absent clause -- the same TERR-05 shape from M1 -- is PARTIAL, not
+      MISSING (an edge exists) and not SUPPORTED (a real, confirmed gap remains).
+    review_date: "2026-09-24"
+  - rule_id: LIFE-02
+    classification: PARTIAL
+    evidence: >-
+      Same root cause and evidence as LIFE-01's own PARTIAL classification above -- both LIFE-01
+      and LIFE-02 are cited together by this one Inherited entry, re-cited independently for
+      LIFE-02's own foreign key.
+    review_date: "2026-09-24"
+  - rule_id: BODY-07
+    classification: PARTIAL
+    evidence: >-
+      combat_resolution's own outcome_kind/CombatUpdate construction
+      (rule_mechanism_edges.yaml's BODY-07 / combat_resolution CONSTRAINED_BY edge,
+      src/engine/combat.py:147-233) confirms a real producer-side half: it produces triggering
+      events only, never writing bodily-consequence state itself. The actual consequence-owning
+      mechanism is Life/Body's own domain, entirely outside Combat's 8 registered mechanisms and
+      this ticket's investigated scope (Out of Scope: no third domain) -- never independently
+      confirmed by this ticket. A real, confirmed half plus a genuinely uninvestigated other half
+      is PARTIAL, not UNKNOWN (something real was found and evidenced) and not SUPPORTED
+      (asserting the unconfirmed consumer side works would be an unevidenced claim).
+    review_date: "2026-09-24"
+  - rule_id: OWN-02
+    classification: PARTIAL
+    evidence: >-
+      Same root cause and evidence as BODY-07's own PARTIAL classification above -- this Inherited
+      entry cites both BODY-07 and OWN-02 together (conflict-combat.md:139-142), re-cited
+      independently for OWN-02's own foreign key.
+    review_date: "2026-09-24"
