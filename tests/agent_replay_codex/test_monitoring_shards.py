@@ -60,6 +60,24 @@ def test_source_paths_resolves_real_shape_sorted_including_unknown_week(tmp_path
 
 
 @pytest.mark.parametrize("source", _SOURCES)
+def test_source_paths_picks_up_per_identifier_shaped_shards_too(tmp_path, source):
+    """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: a per-ticket/per-branch shaped shard
+    (e.g. `some-branch.runs.jsonl`) must be found too, not just the bare name."""
+    monitoring_dir = tmp_path / "agent-monitoring"
+    week_dir = monitoring_dir / "data" / "2026-W01"
+    week_dir.mkdir(parents=True)
+    bare = week_dir / source
+    bare.write_text('{"bare": true}\n', encoding="utf-8")
+    stem = source.removesuffix(".jsonl")
+    per_identifier = week_dir / f"some-branch.{stem}.jsonl"
+    per_identifier.write_text('{"per_identifier": true}\n', encoding="utf-8")
+
+    resolved = source_paths(monitoring_dir, source)
+
+    assert set(resolved) == {bare, per_identifier}
+
+
+@pytest.mark.parametrize("source", _SOURCES)
 def test_source_paths_prefers_real_shape_over_a_stray_scratch_file(tmp_path, source):
     monitoring_dir = tmp_path / "agent-monitoring"
     (monitoring_dir / source).parent.mkdir(parents=True, exist_ok=True)

@@ -63,6 +63,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import record_events  # noqa: E402
 import record_run  # noqa: E402
 from vocabulary import CANONICAL_TIERS  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
@@ -318,9 +319,16 @@ def main() -> None:
             tool_call_count, cost_proxy_score = tool_stats[key]
             event_records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: this was the headline bug -- this wrapper
+    # (the one CLAUDE.md instructs every hand-orchestrated close to use) hardcoded the shared
+    # paths here, never adopting TCK-20260924's per-identifier write target at all, so every
+    # hand-orchestrated closure's run/event records landed in the shared files regardless of what
+    # record_run.py/record_events.py's own (correctly per-identifier) write functions did when
+    # called directly. Now delegates to the one shared resolver instead of re-deriving (a fourth
+    # time) a formula that has already drifted once.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = Path("agent-monitoring/data") / iso_week / "runs.jsonl"
-    events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+    runs_file = resolve_write_target("runs", iso_week=iso_week)
+    events_file = resolve_write_target("events", iso_week=iso_week)
     runs_file.parent.mkdir(parents=True, exist_ok=True)
 
     from writer import write_line, write_lines  # noqa: E402

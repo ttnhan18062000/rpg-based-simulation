@@ -280,35 +280,21 @@ roadmap, not assumed.
 ## Git &amp; delivery process
 
 Not yet exercised (no tickets exist), but stated now so the milestone breakdown above and the
-eventual `create-tickets`/`implement-ticket` pass agree on how the work actually lands, per
-CLAUDE.md's Worktree &amp; Branch Isolation and Commit Convention rules.
+eventual `create-tickets`/`implement-ticket` pass agree on how the work actually lands. The general
+delivery-lane rules (worktree granularity, branch naming, commit convention, PR lifecycle,
+`agent-monitoring/` staging) are the same defaults every ticket in this repo follows — see
+`docs/guides/delivery_process.md`, the single authoritative source, rather than restating them
+here. Nothing about this roadmap changes that default flow.
 
-- **Worktree granularity: per ticket, not per epic or per milestone.** CLAUDE.md's default is one
-  git worktree per unit of work. Once each milestone above becomes a ticket, it gets its own
-  `EnterWorktree`-created branch off `origin/main` — the same way the 5 worktrees already active in
-  this repo today (`m1-quick-wins`, `m4-institutions-economic-signals-implementation`,
-  `navigation-canonical-hash-gap`, `worktree-monitoring-tools-weekly-sharding`,
-  `brainstorm-idea-cross-index`) are each scoped to one unit of work. This planning pass itself
-  stays directly on `main`, uncommitted, per direct instruction — it is not itself a unit of
-  implementation work.
+Two pieces of substance are specific to *this* roadmap and stay here rather than moving to the
+general guide:
+
 - **The `.claude/settings.json` three-way coordination point** (dependency 2 above): whichever of
   items 2, 5, or 7's tickets merges to `main` first lands cleanly; each subsequent ticket's branch
   rebases onto the updated `main` before opening its own PR, so hook entries/edits are added
   alongside prior ones rather than overwriting them. This is a normal git rebase step at merge
   time — it does **not** make any of the three items depend on the others in the roadmap sense,
   and does not require them to be worked in a fixed order.
-- **Branch naming**: standard worktree-per-ticket naming once tickets exist — no epic- or
-  milestone-level branch is created ahead of a real ticket.
-- **Commit convention**: every commit for a milestone's eventual ticket references that ticket's
-  `TCK-YYYYMMDD-SHORT-SCOPE` ID per CLAUDE.md's Commit Convention. No commits exist yet under any
-  item in this roadmap — every doc in this subfolder predates ticket creation by design.
-- **PR lifecycle**: one PR per ticket, following CLAUDE.md's standard PR Lifecycle steps (push →
-  `gh pr create` → CI triage → report back; merge remains the user's call). Nothing about this
-  roadmap changes that default flow — the three-way file-overlap note above is the only
-  non-default consideration this roadmap introduces.
-- **`agent-monitoring/` staging**: per Hard Rules, every commit for every milestone's ticket stages
-  `agent-monitoring/` (including any trailing auto-write from the monitoring hook) alongside the
-  substantive change — routine for this repo, called out here only for completeness.
 - **Planning-doc claim visibility** (added during planning discussion): until an item in this
   subfolder becomes a real ticket, nothing marks it as "someone is actively working from this doc"
   — a real gap given how normal concurrent sessions are in this repo. Lightweight fix, not a new

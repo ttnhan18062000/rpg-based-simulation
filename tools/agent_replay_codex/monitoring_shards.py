@@ -39,7 +39,10 @@ def source_paths(agent_monitoring_dir: Path, source: str) -> list[Path]:
     """
     data_dir = agent_monitoring_dir / _DATA_DIR_NAME
     if data_dir.is_dir():
-        return sorted(data_dir.glob(f"*/{source}"))
+        # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
+        # (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
+        source_stem = source.removesuffix(".jsonl")
+        return sorted(data_dir.glob(f"*/{source}")) + sorted(data_dir.glob(f"*/*.{source_stem}.jsonl"))
     single = agent_monitoring_dir / source
     return [single] if single.exists() else []
 

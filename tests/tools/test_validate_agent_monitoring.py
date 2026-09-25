@@ -49,6 +49,43 @@ _BASE_RUN = {
 
 
 # ---------------------------------------------------------------------------
+# load_data_glob / load_data_glob_with_line_count — TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP
+# ---------------------------------------------------------------------------
+
+def _write_jsonl_line(path: Path, record: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+
+def test_load_data_glob_picks_up_bare_and_per_identifier_shaped_files(tmp_path):
+    week_dir = tmp_path / "2026-W01"
+    bare_record = {"run_id": "TCK-BARE", "seq": 1}
+    per_ticket_record = {"run_id": "TCK-PER-TICKET", "seq": 1}
+    per_branch_record = {"run_id": "TCK-PER-BRANCH", "seq": 1}
+    _write_jsonl_line(week_dir / "events.jsonl", bare_record)
+    _write_jsonl_line(week_dir / "TCK-PER-TICKET.events.jsonl", per_ticket_record)
+    _write_jsonl_line(week_dir / "some-branch-name.events.jsonl", per_branch_record)
+
+    records = validate.load_data_glob(tmp_path, "events")
+
+    assert bare_record in records
+    assert per_ticket_record in records
+    assert per_branch_record in records
+    assert len(records) == 3
+
+
+def test_load_data_glob_with_line_count_sums_across_all_shard_shapes(tmp_path):
+    week_dir = tmp_path / "2026-W01"
+    _write_jsonl_line(week_dir / "runs.jsonl", {"run_id": "TCK-BARE"})
+    _write_jsonl_line(week_dir / "my-branch.runs.jsonl", {"run_id": "TCK-BRANCH"})
+
+    records, total_lines = validate.load_data_glob_with_line_count(tmp_path, "runs")
+
+    assert len(records) == 2
+    assert total_lines == 2
+
+
+# ---------------------------------------------------------------------------
 # compute_drift_report
 # ---------------------------------------------------------------------------
 

@@ -67,11 +67,14 @@ def week_shards(
     data_dir: Path = DEFAULT_DATA_DIR, source: str = "tools",
     since_week: "str | None" = None, through_week: "str | None" = None,
 ) -> list:
-    """Sorted shard paths under data_dir/*/source.jsonl, optionally bounded to an inclusive ISO
-    week range. String comparison is correct for "YYYY-Wnn" labels (matches iso_week() /
-    week_range()'s own convention in generate_retro.py). None on either side means unbounded."""
+    """Sorted shard paths under data_dir/*/source.jsonl (bare) or data_dir/*/*.source.jsonl
+    (per-identifier -- TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP), optionally bounded to an
+    inclusive ISO week range. String comparison is correct for "YYYY-Wnn" labels (matches
+    iso_week() / week_range()'s own convention in generate_retro.py). None on either side means
+    unbounded."""
     shards = []
-    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+    all_shards = sorted(data_dir.glob(f"*/{source}.jsonl")) + sorted(data_dir.glob(f"*/*.{source}.jsonl"))
+    for shard in sorted(all_shards):
         week = shard.parent.name
         if since_week and week < since_week:
             continue
@@ -168,6 +171,30 @@ def bash_head(input_summary: str) -> str:
         return "?"
     parts = input_summary.strip().split()
     return parts[0] if parts else "?"
+
+
+# gh subcommand classification (TCK-20260924-DELIVERY-COST-MEASUREMENT). `bash_subcommand_key`'s
+# own 2-word breakdown collapses `gh pr view`/`gh pr create`/`gh pr checks`/`gh pr diff` to the
+# same "gh pr" key -- too coarse to compute "gh calls per PR", which needs `pr create` (the PR-
+# count denominator) distinguished from the other `pr` verbs. This goes one word deeper, but only
+# for rows `bash_head()` already classified as `gh` -- it calls into, never duplicates, the
+# existing head classification.
+GH_OBSERVATION_SUBCOMMANDS = frozenset({
+    "gh pr view", "gh pr checks", "gh pr diff", "gh run view", "gh run list", "gh api",
+})
+GH_ACTION_SUBCOMMANDS = frozenset({"gh pr create", "gh run rerun", "gh run watch"})
+
+
+def gh_subcommand_key(input_summary: str) -> "str | None":
+    """Returns a `gh <verb> <noun>` key (`gh api` collapses past its path, since paths vary per
+    call) for a `gh`-headed command, or `None` if it has fewer than 2 tokens (Assumption 3:
+    unparseable rows are counted separately by the caller, never silently dropped)."""
+    parts = input_summary.strip().split()
+    if len(parts) < 2 or parts[0] != "gh":
+        return None
+    if len(parts) < 3:
+        return f"gh {parts[1]}"
+    return f"gh {parts[1]} {parts[2]}" if parts[1] in ("pr", "run", "repo", "issue", "workflow") else f"gh {parts[1]}"
 
 
 def bash_subcommand_key(head: str, input_summary: str) -> str:

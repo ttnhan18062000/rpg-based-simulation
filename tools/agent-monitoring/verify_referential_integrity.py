@@ -66,7 +66,10 @@ def load_all_weeks(data_dir: Path, source: str) -> list[tuple[dict, str]]:
     line, since writer.py's write_line() never mutates already-written bytes).
     """
     records: list[tuple[dict, str]] = []
-    for path in sorted(data_dir.glob(f"*/{source}.jsonl")):
+    # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
+    # (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
+    shard_paths = sorted(data_dir.glob(f"*/{source}.jsonl")) + sorted(data_dir.glob(f"*/*.{source}.jsonl"))
+    for path in sorted(shard_paths):
         week_folder = path.parent.name
         for i, line in enumerate(path.read_text().splitlines(), 1):
             if not line:

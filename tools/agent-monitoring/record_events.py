@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 from writer import write_lines  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
@@ -90,8 +91,17 @@ def compute_tool_stats(
     if not wanted:
         return {}
 
+    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: post_tool_hook.py now writes
+    # to a per-ticket <run_id>.tools.jsonl when a ticket is active, so this glob must also read
+    # those files, not just the canonical shared tools.jsonl -- otherwise tool_call_count/
+    # cost_proxy_score would silently zero out for every ticket using the new write path, since
+    # this SAME run's own tool-call rows for the events being written right now would be invisible
+    # until a future retro consolidation folds them into the canonical file.
+    tools_paths = sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl")) + sorted(
+        Path(".").glob("agent-monitoring/data/*/*.tools.jsonl")
+    )
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
-    for tools_path in sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl")):
+    for tools_path in tools_paths:
         for line in tools_path.read_text().splitlines():
             if not line:
                 continue
@@ -179,19 +189,25 @@ def main():
             tool_call_count, cost_proxy_score = tool_stats[key]
             records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
-    # iso_week is computed once per batch, not once per record: write_lines() takes one
-    # target_path for the whole batch, so a batch straddling a UTC-midnight-on-Sunday ISO
-    # week boundary lands entirely in whichever week "now" resolved to at this point — the
-    # only interpretation compatible with write_lines' single-target batch-contiguity contract.
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
+    # prior per-run_id key). The identifier no longer depends on record content at all -- it's
+    # the current git branch, constant for the whole batch -- so every record in this call goes
+    # to the same file in one write_lines() call, the same single-contiguous-block property this
+    # module has always relied on, with no per-run_id grouping needed any more.
+    #
+    # iso_week is still computed here, not inside resolve_write_target(), and passed in
+    # explicitly -- see monitoring_batch_identifier.resolve_write_target()'s own docstring for
+    # why: this module's own datetime import is what a test suite freezes to test week-boundary
+    # behavior deterministically, and that freeze must keep working.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+    events_file = resolve_write_target("events", iso_week=iso_week)
     events_file.parent.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(record, separators=(",", ":")) for record in records]
     ok = write_lines(events_file, lines)
     if not ok:
         print(
             f"WARNING: append failed for {len(records)} event record(s), "
-            f"see agent-monitoring/data/{iso_week}/.writer_health.jsonl",
+            f"see {events_file.parent}/.writer_health.jsonl",
             file=sys.stderr,
         )
 

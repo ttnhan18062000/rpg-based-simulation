@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "agent-monitoring"))
 
-from verify_referential_integrity import compute_referential_integrity_report  # noqa: E402
+from verify_referential_integrity import compute_referential_integrity_report, load_all_weeks  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
@@ -28,6 +28,22 @@ _REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
 def _write_jsonl(path: Path, records: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(json.dumps(r) for r in records) + "\n" if records else "")
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP — must see per-identifier shards too
+# ---------------------------------------------------------------------------
+
+def test_load_all_weeks_picks_up_per_identifier_shaped_shards(tmp_path):
+    data_dir = tmp_path / "data"
+    week = data_dir / "2026-W10"
+    _write_jsonl(week / "runs.jsonl", [{"run_id": "TCK-BARE"}])
+    _write_jsonl(week / "some-branch.runs.jsonl", [{"run_id": "TCK-BRANCH"}])
+
+    records = load_all_weeks(data_dir, "runs")
+
+    run_ids = {r.get("run_id") for r, _week in records}
+    assert run_ids == {"TCK-BARE", "TCK-BRANCH"}
 
 
 # ---------------------------------------------------------------------------

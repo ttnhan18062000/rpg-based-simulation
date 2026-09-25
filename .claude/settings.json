@@ -106,6 +106,15 @@
             "command": "python3 tools/agent-monitoring/cd_prefix_advisory_hook.py 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/delivery/pre_push_advisory_hook.py 2>/dev/null || true"
+          }
+        ]
       }
     ],
     "PostToolUse": [

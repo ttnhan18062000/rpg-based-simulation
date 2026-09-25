@@ -98,9 +98,17 @@ def _jsonl_rows_for_run_id_across_weeks(data_root: Path, filename: str, run_id: 
     `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent).
     A data_root that doesn't exist, or exists with no matching week folders,
     yields an empty glob and returns [] — matching the old single-file
-    ".exists() -> []" precedent, not an error."""
+    ".exists() -> []" precedent, not an error.
+
+    TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
+    (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX)
+    — confirmed by direct execution that `check_monitoring_write_recorded()` (this function's own
+    caller) silently FAILed for a real ticket closed under the per-PR scheme before this fix,
+    without this glob widening."""
+    source = filename.removesuffix(".jsonl")
+    shard_paths = sorted(data_root.glob(f"*/{filename}")) + sorted(data_root.glob(f"*/*.{source}.jsonl"))
     rows: list[dict] = []
-    for path in sorted(data_root.glob(f"*/{filename}")):
+    for path in sorted(shard_paths):
         rows.extend(_jsonl_rows_for_run_id(path, run_id))
     return rows
 

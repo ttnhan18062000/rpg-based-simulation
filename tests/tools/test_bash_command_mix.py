@@ -186,6 +186,20 @@ def test_week_shards_filters_to_inclusive_range(tmp_path):
     assert weeks_matched == {"2026-W29", "2026-W30"}
 
 
+def test_week_shards_picks_up_per_identifier_shaped_files_too(tmp_path):
+    """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: a per-ticket/per-branch shaped shard
+    must be found too, not just the bare `tools.jsonl` name."""
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    (data_dir / "2026-W30").mkdir(parents=True)
+    (data_dir / "2026-W30" / "tools.jsonl").write_text(json.dumps({"tool": "Bash"}) + "\n")
+    (data_dir / "2026-W30" / "some-branch.tools.jsonl").write_text(json.dumps({"tool": "Read"}) + "\n")
+
+    shards = week_shards(data_dir, source="tools")
+
+    names = {s.name for s in shards}
+    assert names == {"tools.jsonl", "some-branch.tools.jsonl"}
+
+
 def test_load_tools_rows_respects_week_range(tmp_path):
     data_dir = tmp_path / "agent-monitoring" / "data"
     (data_dir / "2026-W01").mkdir(parents=True)

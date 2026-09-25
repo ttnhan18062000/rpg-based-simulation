@@ -333,16 +333,62 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
-      - name: Run
+      # Split into one step per test directory, each with if: always(), so a failure names its
+      # own directory via step conclusions alone -- readable even when raw logs are unreachable
+      # (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS, applied here by
+      # TCK-20260925-CI-API-TOOLS-LOGGING-PER-DIRECTORY-STEPS after this job went without it and
+      # a deterministic PR #246 failure could not be localized any other way). Verified against
+      # the prior single-step form: identical pass/fail/skip/deselect totals and order. Each step
+      # writes its own junit-xml; "Merge JUnit XML" below recombines them into the same
+      # reports/junit/api-tools.xml path the existing "Job summary" step already reads, so
+      # nothing downstream changes.
+      - name: "Run: tests/api"
+        if: always()
         run: |
-          pytest tests/api \
-                 tests/cli \
-                 tests/tools \
-                 tests/logging \
-                 tests/engine \
-                 tests/observability \
-                 -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools.xml
+          pytest tests/api -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-api.xml
+      - name: "Run: tests/cli"
+        if: always()
+        run: |
+          pytest tests/cli -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-cli.xml
+      - name: "Run: tests/tools"
+        if: always()
+        run: |
+          pytest tests/tools -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-tools.xml
+      - name: "Run: tests/logging"
+        if: always()
+        run: |
+          pytest tests/logging -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-logging.xml
+      - name: "Run: tests/engine"
+        if: always()
+        run: |
+          pytest tests/engine -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-engine.xml
+      - name: "Run: tests/observability"
+        if: always()
+        run: |
+          pytest tests/observability -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-observability.xml
+      - name: Merge JUnit XML
+        if: always()
+        run: |
+          python3 tools/ci_junit_merge.py --out reports/junit/api-tools.xml \
+                 reports/junit/api-tools-api.xml \
+                 reports/junit/api-tools-cli.xml \
+                 reports/junit/api-tools-tools.xml \
+                 reports/junit/api-tools-logging.xml \
+                 reports/junit/api-tools-engine.xml \
+                 reports/junit/api-tools-observability.xml
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-tools-junit-${{ github.sha }}
+          path: reports/junit/api-tools*.xml
+          retention-days: 30
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
         run: |
