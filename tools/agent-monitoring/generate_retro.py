@@ -79,10 +79,13 @@ def _load_source(path, source):
 
 def _source_mtime(path, source_name):
     """Newest relevant mtime for one source: max mtime across
-    agent-monitoring/data/*/<source_name>.jsonl if path is the data-dir root (a directory),
-    else the literal file's own mtime if it exists, else None."""
+    agent-monitoring/data/*/<source_name>.jsonl AND the per-identifier-shaped
+    agent-monitoring/data/*/*.<source_name>.jsonl (TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP)
+    if path is the data-dir root (a directory), else the literal file's own mtime if it exists,
+    else None."""
     if path.is_dir():
-        mtimes = [f.stat().st_mtime for f in path.glob(f"*/{source_name}.jsonl")]
+        shard_paths = list(path.glob(f"*/{source_name}.jsonl")) + list(path.glob(f"*/*.{source_name}.jsonl"))
+        mtimes = [f.stat().st_mtime for f in shard_paths]
         return max(mtimes) if mtimes else None
     if path.exists():
         return path.stat().st_mtime

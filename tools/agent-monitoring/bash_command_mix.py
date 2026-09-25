@@ -67,11 +67,14 @@ def week_shards(
     data_dir: Path = DEFAULT_DATA_DIR, source: str = "tools",
     since_week: "str | None" = None, through_week: "str | None" = None,
 ) -> list:
-    """Sorted shard paths under data_dir/*/source.jsonl, optionally bounded to an inclusive ISO
-    week range. String comparison is correct for "YYYY-Wnn" labels (matches iso_week() /
-    week_range()'s own convention in generate_retro.py). None on either side means unbounded."""
+    """Sorted shard paths under data_dir/*/source.jsonl (bare) or data_dir/*/*.source.jsonl
+    (per-identifier -- TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP), optionally bounded to an
+    inclusive ISO week range. String comparison is correct for "YYYY-Wnn" labels (matches
+    iso_week() / week_range()'s own convention in generate_retro.py). None on either side means
+    unbounded."""
     shards = []
-    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+    all_shards = sorted(data_dir.glob(f"*/{source}.jsonl")) + sorted(data_dir.glob(f"*/*.{source}.jsonl"))
+    for shard in sorted(all_shards):
         week = shard.parent.name
         if since_week and week < since_week:
             continue

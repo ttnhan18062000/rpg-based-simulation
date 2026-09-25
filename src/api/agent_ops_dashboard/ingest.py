@@ -128,9 +128,14 @@ def _week_shard_paths(data_root: Path, filename: str) -> list[Path]:
     doesn't exist — the scratch/legacy shape this subsystem's own synthetic test fixtures still
     build directly. Mirrors tools/agent_replay_codex/monitoring_shards.py::source_paths and
     tools/agent-monitoring/manifest.py::_source_paths, the landed precedents for this exact
-    dual-mode resolution (TCK-20260904-HOTFIX-MANIFEST-DASHBOARD-SCRATCH-SHAPE-FALLBACK)."""
+    dual-mode resolution (TCK-20260904-HOTFIX-MANIFEST-DASHBOARD-SCRATCH-SHAPE-FALLBACK).
+
+    TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
+    (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX)
+    — without this, the dashboard itself was blind to any ticket closed under either scheme."""
     if data_root.is_dir():
-        return sorted(data_root.glob(f"*/{filename}"))
+        source = filename.removesuffix(".jsonl")
+        return sorted(data_root.glob(f"*/{filename}")) + sorted(data_root.glob(f"*/*.{source}.jsonl"))
     single = data_root.parent / filename
     return [single] if single.exists() else []
 
