@@ -109,3 +109,129 @@ edges:
       PlaceState (src/core/state.py:344-383) and is NOT mapped as its own edge -- recorded as
       MISSING in rule_classifications.yaml's own evidence instead of an invented edge.
     date: "2026-09-24"
+
+  # M4's own real Rule<->Mechanism findings (TCK-20260924-M4-COMBAT-SLICE-CROSS-DOMAIN-VIEW).
+  # Second domain: Combat/Conflict, docs/world_rules/capability-progression/conflict-combat.md.
+  # 12 real Rule IDs found in that file; only CONFLICT-01 is its own local heading, the other 11
+  # are Inherited/Applied Foundational entries cited under the original Rule ID they derive from
+  # (see architecture.md §3's own citation-rule addition). CONFLICT-01 and ECOL-04 deliberately
+  # have NO row below -- their own cited evidence (ResourceOpportunityProvider, blocker_penalty,
+  # an ECOL-04 migration/scarcity mechanism) resolves to zero registered mechanism_id in
+  # registries/mechanisms.yaml; both stay UNKNOWN, never coerced into a wrong-identity edge or
+  # into MISSING (a full economy/ecology sweep is out of this ticket's scope). See
+  # rule_classifications.yaml's own header comment for the same note.
+  - rule_id: PERC-01
+    mechanism_id: tactical_decision
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Perception-gated targeting: PerceptionGate.can_perceive(...) (src/engine/tactical.py:196-199)
+      runs before any neighbor becomes target-eligible, cited by tactical_decision's own registry
+      note (registries/mechanisms.yaml:234-247) and conflict-combat.md:91-95 -- caveated by the
+      try/except Exception: pass fail-open fallback around the same gate call
+      (tactical.py:196-200, conflict-combat.md's own Open Question #2, explicitly unresolved) and
+      by the branch's own STARVED dormancy (0 of 1130 real corpus calls had a non-empty hostiles
+      list, registries/mechanisms.yaml:216-217).
+    date: "2026-09-24"
+  - rule_id: KNOW-01
+    mechanism_id: tactical_decision
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Same live mechanism as the PERC-01 / tactical_decision edge above, cited independently for
+      KNOW-01's own foreign key -- conflict-combat.md:69-70 states perception AND knowledge must
+      both route through the same gate before a target becomes eligible; this is the
+      knowledge-side citation of that identical gate.
+    date: "2026-09-24"
+  - rule_id: AGENCY-01
+    mechanism_id: tactical_decision
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Same live mechanism as the PERC-01 / tactical_decision edge above, cited independently for
+      AGENCY-01's own foreign key -- decision stages must not read hidden state directly, and the
+      same perception gate (tactical.py:196-199) is what forecloses that shortcut for Combat's own
+      targeting path.
+    date: "2026-09-24"
+  - rule_id: AGENCY-02
+    mechanism_id: combat_engagement
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      EngagementRiskEvaluator.caution = max(0.0, min(1.0, 1.0 - bravery))
+      (src/domains/combat_engagement/risk_evaluator.py:56) keeps the capability estimate itself
+      untouched by bravery, changing only the resulting risk_score/CombatPosture -- a direct
+      instance of "influence, not determination" -- caveated by combat_engagement's own
+      world-specificity note (registries/mechanisms.yaml:261-269): the gated path this evaluator
+      feeds only measurably fires in the synthetic metropolis reference scenario, 0-2 calls per
+      1000-2000 ticks elsewhere.
+    date: "2026-09-24"
+  - rule_id: AGENCY-04
+    mechanism_id: combat_resolution
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      calculate_damage()'s confirmed, no-RNG, deterministic response to combat.atk/
+      combat.def_stat (registries/mechanisms.yaml:169-188,
+      tests/mechanic_scenarios/test_combat_resolution_damage_value_differential.py) is real
+      mechanical support for capability mattering to outcome, but the Rule's full "may still lose"
+      claim (context/decision-quality/resources) is only partly covered by this one mechanism's
+      own deterministic formula -- the rest of that claim's support lives in combat_engagement's
+      separate risk gate (see the AGENCY-02 edge above), not inside this mechanism.
+    date: "2026-09-24"
+  - rule_id: CAP-01
+    mechanism_id: combat_resolution
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Same evidence as the AGENCY-04 / combat_resolution edge above -- conflict-combat.md:154-159
+      cites this as the same Inherited entry reusing both CAP-01 and AGENCY-04 together; both are
+      independently citable foreign keys per the citation rule (architecture.md §3), same
+      underlying evidence, not a copy-paste duplicate (distinct rule_id, same shape as this file's
+      own TERR-01/TERR-03 -> betrayal_siege_war precedent).
+    date: "2026-09-24"
+  - rule_id: LIFE-01
+    mechanism_id: combat_resolution
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      src/engine/combat.py's real outcome_kind assignments (:147,164-172,185-188,233) --
+      KILL/DEFEAT/REBIRTH/PERMADEATH/SURVIVE/REJECTED, a genuine differentiated vocabulary
+      satisfying "incapacitated != dead." PARTIALLY_REALIZES because the Rule's own scope (per
+      conflict-combat.md:126-130) also names surrender/capture/forced-displacement, which no
+      mechanism covers -- confirmed MISSING directly by that file's own text, not merely unlooked-at.
+    date: "2026-09-24"
+  - rule_id: LIFE-01
+    mechanism_id: movement
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      src/engine/movement.py:216-219, "combat_escape": "EVASIVE_SUCCESS" -- the seventh, withdrawal
+      outcome conflict-combat.md:124-126 explicitly adds beyond Batch 05's own six.
+      PARTIALLY_REALIZES for the same confirmed-missing-clause reason as the LIFE-01 /
+      combat_resolution edge above.
+    date: "2026-09-24"
+  - rule_id: LIFE-02
+    mechanism_id: combat_resolution
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Same evidence as the LIFE-01 / combat_resolution edge above, cited independently for
+      LIFE-02's own foreign key -- both LIFE-01 and LIFE-02 are cited together by this one
+      Inherited entry, per the citation rule.
+    date: "2026-09-24"
+  - rule_id: LIFE-02
+    mechanism_id: movement
+    edge_type: PARTIALLY_REALIZES
+    evidence: >-
+      Same evidence as the LIFE-01 / movement edge above, cited independently for LIFE-02's own
+      foreign key.
+    date: "2026-09-24"
+  - rule_id: BODY-07
+    mechanism_id: combat_resolution
+    edge_type: CONSTRAINED_BY
+    evidence: >-
+      src/engine/combat.py's outcome_kind/CombatUpdate construction (:147-233) produces
+      triggering events only -- no line in src/engine/combat.py writes bodily-consequence state
+      (life/body fields) directly. The Rule bounds this mechanism's own scope (producer-only)
+      without this mechanism being the Rule's primary realization -- that owner is Life/Body's own
+      domain, outside Combat's 8 registered mechanisms and this ticket's investigated scope.
+    date: "2026-09-24"
+  - rule_id: OWN-02
+    mechanism_id: combat_resolution
+    edge_type: CONSTRAINED_BY
+    evidence: >-
+      Same evidence as the BODY-07 / combat_resolution edge above, cited independently -- this
+      Inherited entry cites both BODY-07 and OWN-02 together (conflict-combat.md:139-142).
+    date: "2026-09-24"
