@@ -11,6 +11,7 @@ from __future__ import annotations
 import inspect
 import json
 import sqlite3
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -39,6 +40,19 @@ import hybrid_retrieval as hr  # noqa: E402
 import retrieval_cache as rc  # noqa: E402
 import context_packet_assembler as cpa  # noqa: E402
 import record_events  # noqa: E402
+
+
+_TEST_BRANCH = "test-branch"
+
+
+def _init_git_repo_on_test_branch(path: Path) -> None:
+    """TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the write target now keys off the current
+    git branch, not run_id -- a real repo on a known branch name gives tests a stable,
+    predictable filename to assert against."""
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.name", "Test"], check=True)
+    subprocess.run(["git", "-C", str(path), "checkout", "-q", "-b", _TEST_BRANCH], check=True)
 
 
 # ---------------------------------------------------------------------------
@@ -213,12 +227,14 @@ class TestEmitRetrievalEvent:
         write-time-computed local inside record_events.py::main()) — this default must
         reproduce that same current-ISO-week target, not the old flat
         agent-monitoring/events.jsonl path (TCK-20260904-HOTFIX-RETRIEVAL-TOOLS-CONSUMERS-
-        DEAD-CONSTANTS). TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE further
-        extended that target to a per-run_id file when run_id is truthy -- both calls below now
-        use the SAME run_id, so this test still proves the two formulas agree (same run_id ->
-        same file), rather than proving something no longer true (any two run_ids -> same file).
-        Confirmed by writing through both this function's own default and record_events.py's
-        real main() and asserting they land in the identical file."""
+        DEAD-CONSTANTS). TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX further extended that
+        target to a per-batch (git branch) file, superseding the prior per-run_id key -- both
+        calls below now happen on the SAME real git branch, so this test still proves the two
+        formulas agree (same batch -> same file), rather than proving something no longer true
+        (any two run_ids -> same file). Confirmed by writing through both this function's own
+        default and record_events.py's real main() and asserting they land in the identical
+        file."""
+        _init_git_repo_on_test_branch(tmp_path)
         monkeypatch.chdir(tmp_path)
         assert not hasattr(record_events, "EVENTS_FILE")
 
@@ -233,7 +249,7 @@ class TestEmitRetrievalEvent:
         )
 
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        expected_path = tmp_path / "agent-monitoring" / "data" / iso_week / f"{shared_run_id}.events.jsonl"
+        expected_path = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
         assert expected_path.exists()
         assert "default events_file test" in expected_path.read_text()
 

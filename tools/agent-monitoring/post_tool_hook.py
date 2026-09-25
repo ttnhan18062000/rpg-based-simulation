@@ -8,6 +8,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
+# Decision 3 (TCK-20260902-MONITORING-SHARD-WRITE-PATH's plan.md) ruled out importing
+# generate_retro.py (2,344 lines, pulls in sqlite3/re/three cross-module imports) into this hot
+# hook purely to reuse a one-line strftime call -- a real, heavy transitive-dependency cost for a
+# trivial reuse. monitoring_batch_identifier.py is the opposite trade-off: it is itself stdlib-only
+# (sys, datetime, pathlib -- confirmed by its own test asserting no subprocess/heavy import), and
+# it is the one place the actual new logic this ticket needs (git-worktree-aware branch
+# resolution, detached-HEAD handling, sidecar self-healing) lives at all -- there is no cheaper
+# duplicate-instead-of-share trade-off available here, unlike Decision 3's case.
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 # TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: a per-session scoped sidecar file is new durable
 # state and needs a defined lifecycle (CLAUDE.md's Durable State Rule) — there is no "session
@@ -65,11 +74,6 @@ try:
 
     now_dt = datetime.now(timezone.utc)
     now = now_dt.isoformat().replace("+00:00", "Z")
-    iso_week = now_dt.strftime("%G-W%V")  # matches generate_retro.py::iso_week() (tools/agent-monitoring/generate_retro.py:126)
-                                            # and its --week current-week default (generate_retro.py:152).
-                                            # Duplicated (not imported) to keep this hot hook's import
-                                            # graph stdlib-only — see Decision 3 in plan.md. If this
-                                            # format ever changes, update generate_retro.py::iso_week() too.
 
     # Compute duration from pre-hook timestamp
     duration_ms = None
@@ -169,17 +173,20 @@ try:
         "ticket_id": ticket_id,
     }
 
-    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: write to a per-ticket file
-    # when a ticket is actively in progress -- two different tickets can never collide on a git
-    # diff hunk if they write to different paths, even under a GitHub squash-merge (this repo's
-    # own merge=union .gitattributes entry only protects a real git merge, never a squash-merge).
-    # Falls back to the shared file unchanged when no ticket_id is attributed (ad-hoc, non-ticket
-    # work) -- there is no "which ticket" to collide on in that case. Consolidated back into the
-    # canonical tools.jsonl by tools/agent-monitoring/monitoring_consolidation.py.
-    if ticket_id:
-        tools_file = Path("agent-monitoring/data") / iso_week / f"{ticket_id}.tools.jsonl"
-    else:
-        tools_file = Path("agent-monitoring/data") / iso_week / "tools.jsonl"
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
+    # prior per-ticket key, and reconciling this file's own former ticket_id-based branch with
+    # every other site's run_id-based one -- one shared identifier now, not two that could
+    # disagree). Two different branches can never collide on a git diff hunk if they write to
+    # different paths, even under a GitHub squash-merge (this repo's own merge=union
+    # .gitattributes entry only protects a real git merge, never a squash-merge). No `if
+    # ticket_id` branch any more: a batch identifier is always resolvable (worst case, a
+    # clearly-labeled detached-HEAD fallback -- see monitoring_batch_identifier.py), unlike
+    # ticket_id, which was genuinely absent for ad-hoc, non-ticket work. Consolidated back into
+    # the canonical tools.jsonl by tools/agent-monitoring/monitoring_consolidation.py.
+    # iso_week is (re)computed from now_dt here, not inside resolve_write_target() -- see that
+    # function's own docstring: this hook's own datetime import is what a test suite freezes to
+    # test week-boundary behavior deterministically.
+    tools_file = resolve_write_target("tools", iso_week=now_dt.strftime("%G-W%V"))
     tools_file.parent.mkdir(parents=True, exist_ok=True)
     write_line(tools_file, json.dumps(record, separators=(",", ":")))
 

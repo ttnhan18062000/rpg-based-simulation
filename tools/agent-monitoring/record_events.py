@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 from writer import write_lines  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
@@ -188,35 +189,27 @@ def main():
             tool_call_count, cost_proxy_score = tool_stats[key]
             records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
-    # iso_week is computed once per batch, not once per record: write_lines() takes one
-    # target_path per group, so a batch straddling a UTC-midnight-on-Sunday ISO
-    # week boundary lands entirely in whichever week "now" resolved to at this point — the
-    # only interpretation compatible with write_lines' single-target batch-contiguity contract.
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
+    # prior per-run_id key). The identifier no longer depends on record content at all -- it's
+    # the current git branch, constant for the whole batch -- so every record in this call goes
+    # to the same file in one write_lines() call, the same single-contiguous-block property this
+    # module has always relied on, with no per-run_id grouping needed any more.
+    #
+    # iso_week is still computed here, not inside resolve_write_target(), and passed in
+    # explicitly -- see monitoring_batch_identifier.resolve_write_target()'s own docstring for
+    # why: this module's own datetime import is what a test suite freezes to test week-boundary
+    # behavior deterministically, and that freeze must keep working.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-
-    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: group by run_id and write
-    # each group to its own per-ticket file (same rationale as post_tool_hook.py/record_run.py).
-    # A real batch is normally all-one-run_id (one ticket's own closure); grouping defensively
-    # handles a mixed batch too, without ever losing the "one write_lines call = one contiguous
-    # block" property *per group*.
-    groups: dict = defaultdict(list)
-    for record in records:
-        groups[record.get("run_id")].append(record)
-
-    for run_id, group_records in groups.items():
-        if run_id:
-            events_file = Path("agent-monitoring/data") / iso_week / f"{run_id}.events.jsonl"
-        else:
-            events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
-        events_file.parent.mkdir(parents=True, exist_ok=True)
-        lines = [json.dumps(record, separators=(",", ":")) for record in group_records]
-        ok = write_lines(events_file, lines)
-        if not ok:
-            print(
-                f"WARNING: append failed for {len(group_records)} event record(s) "
-                f"(run_id={run_id}), see {events_file.parent}/.writer_health.jsonl",
-                file=sys.stderr,
-            )
+    events_file = resolve_write_target("events", iso_week=iso_week)
+    events_file.parent.mkdir(parents=True, exist_ok=True)
+    lines = [json.dumps(record, separators=(",", ":")) for record in records]
+    ok = write_lines(events_file, lines)
+    if not ok:
+        print(
+            f"WARNING: append failed for {len(records)} event record(s), "
+            f"see {events_file.parent}/.writer_health.jsonl",
+            file=sys.stderr,
+        )
 
     print(f"DONE: appended {len(records)} event record(s)")
 

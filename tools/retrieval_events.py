@@ -39,6 +39,7 @@ if str(_MONITORING_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_DIR))
 import record_events  # noqa: E402
 from writer import write_lines  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 # Distinct from tools/retrieval_cache.py::RETRIEVAL_VERSION (the cache *key*-versioning constant,
 # bumped on cache-key/invalidation logic changes). This constant versions the retrieval-event
@@ -141,18 +142,11 @@ def emit_retrieval_event(
     if events_file is not None:
         target = events_file
     else:
-        # Matches record_events.py::main()'s own write-time iso_week/events_file computation
-        # verbatim (tools/agent-monitoring/record_events.py) — record_events.EVENTS_FILE
-        # no longer exists as a module attribute (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY),
-        # so this default must reproduce record_events.py's own current-week target rather than
-        # reference a removed constant. TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-
-        # AVOIDANCE extended that target to a per-run_id file when run_id is truthy -- mirrored
-        # here for the identical reason: two independent copies of this formula must never drift.
-        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        if run_id:
-            target = Path("agent-monitoring/data") / iso_week / f"{run_id}.events.jsonl"
-        else:
-            target = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+        # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: delegates to the one shared write-target
+        # resolver every monitoring write site now uses, instead of re-deriving this formula
+        # independently -- this module's own prior copy is exactly the kind of drift the shared
+        # resolver exists to prevent.
+        target = resolve_write_target("events")
     target.parent.mkdir(parents=True, exist_ok=True)
     return write_lines(target, [json.dumps(record, separators=(",", ":"))])
 

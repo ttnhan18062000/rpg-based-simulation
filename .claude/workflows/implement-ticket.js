@@ -624,11 +624,16 @@ sys.path.insert(0, 'tools')
 sys.path.insert(0, 'tools/agent-monitoring')
 from retrieval_events import wrap_context_packet_assembly
 from validate import load_jsonl
-import record_events
+from monitoring_batch_identifier import resolve_write_target
 try:
     run_id = sys.argv[1]
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: was 'record_events.EVENTS_FILE', an
+    # attribute TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY removed before this line was ever
+    # written -- silently raised AttributeError into the try/except below on every invocation,
+    # a dead branch since before this epic started. Now reads the same per-PR/batch file every
+    # other monitoring write site uses.
     prior_shadow_count = sum(
-        1 for e in load_jsonl(record_events.EVENTS_FILE)
+        1 for e in load_jsonl(resolve_write_target('events'))
         if e.get('run_id') == run_id and e.get('agent') == 'context-packet-wrapper'
     )
     shadow_seq = -(1 + prior_shadow_count)

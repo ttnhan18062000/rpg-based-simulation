@@ -40,7 +40,24 @@ def _payload(session_id="sess-1", command="pytest tests/"):
     }
 
 
+_TEST_BRANCH = "test-branch"
+
+
+def _ensure_git_repo_on_test_branch(cwd) -> None:
+    """TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the write target now keys off the current
+    git branch, not ticket_id -- a real repo on a known branch name gives these tests a stable,
+    predictable filename to assert against. Idempotent (checked via `.git` existing) since some
+    tests call `_run_hook` more than once against the same `cwd`."""
+    if (cwd / ".git").exists():
+        return
+    subprocess.run(["git", "init", "-q", str(cwd)], check=True)
+    subprocess.run(["git", "-C", str(cwd), "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", str(cwd), "config", "user.name", "Test"], check=True)
+    subprocess.run(["git", "-C", str(cwd), "checkout", "-q", "-b", _TEST_BRANCH], check=True)
+
+
 def _run_hook(cwd, payload):
+    _ensure_git_repo_on_test_branch(cwd)
     return subprocess.run(
         [sys.executable, str(_HOOK_PATH)],
         input=json.dumps(payload),
@@ -51,12 +68,11 @@ def _run_hook(cwd, payload):
     )
 
 
-def _tools_lines(cwd, ticket_id=None):
-    # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: a truthy ticket_id in the
-    # sidecar now writes to a per-ticket file, not the bare shared tools.jsonl.
+def _tools_lines(cwd):
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: keys by the current git branch now, not
+    # ticket_id.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    filename = f"{ticket_id}.tools.jsonl" if ticket_id else "tools.jsonl"
-    tools_file = cwd / "agent-monitoring" / "data" / iso_week / filename
+    tools_file = cwd / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.tools.jsonl"
     return tools_file.read_text().splitlines()
 
 
@@ -77,6 +93,7 @@ def _run_hook_with_frozen_now(cwd, payload, frozen_iso):
     )
     shim = cwd / f"post_tool_hook_frozen_now_shim_{frozen_iso.replace(':', '')}.py"
     shim.write_text(shim_source)
+    _ensure_git_repo_on_test_branch(cwd)
     return subprocess.run(
         [sys.executable, str(shim)],
         input=json.dumps(payload),
@@ -199,7 +216,7 @@ def test_execution_identity_fields_included_when_sidecar_present(tmp_path):
     result = _run_hook(tmp_path, _payload())
     assert result.returncode == 0
 
-    lines = _tools_lines(tmp_path, ticket_id="TCK-X")
+    lines = _tools_lines(tmp_path)
     record = json.loads(lines[0])
     assert set(record.keys()) == _RECORD_FIELDS
     assert record["execution_id"] == "claude-TCK-X-1234567890-abcd1234"
@@ -233,6 +250,12 @@ def test_phase_and_agent_default_to_none_on_partial_sidecar(tmp_path):
 def test_concurrent_writers_produce_no_interleaved_or_truncated_lines(tmp_path):
     n_writers = 10
     iterations_per_writer = 15
+
+    # Initialize the git repo up front, before spawning concurrent workers -- _run_hook's own
+    # idempotent git-init check (via .git existing) is not itself safe against N threads racing
+    # their FIRST call simultaneously; pre-creating it here means every worker's own call finds
+    # .git already present and no-ops immediately, closing that race window.
+    _ensure_git_repo_on_test_branch(tmp_path)
 
     def _worker(worker_idx):
         for i in range(iterations_per_writer):
@@ -472,6 +495,7 @@ def test_locking_failure_does_not_propagate(tmp_path):
     )
     shim = tmp_path / "post_tool_hook_locking_failure_shim.py"
     shim.write_text(shim_source)
+    _ensure_git_repo_on_test_branch(tmp_path)
 
     result = subprocess.run(
         [sys.executable, str(shim)],
@@ -501,7 +525,7 @@ def test_writes_to_unified_week_folder(tmp_path):
     result = _run_hook_with_frozen_now(tmp_path, _payload(), "2026-08-31T12:00:00+00:00")
     assert result.returncode == 0
 
-    week_file = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "tools.jsonl"
+    week_file = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.tools.jsonl"
     assert week_file.exists()
     lines = week_file.read_text().splitlines()
     assert len(lines) == 1
@@ -523,8 +547,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path):
     )
     assert result_2.returncode == 0
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "tools.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "tools.jsonl"
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.tools.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / f"{_TEST_BRANCH}.tools.jsonl"
     assert week_36.exists()
     assert week_37.exists()
 
@@ -547,7 +571,7 @@ def test_iso_week_shard_directory_created_on_first_write(tmp_path):
 
     week_dir = tmp_path / "agent-monitoring" / "data" / "2026-W36"
     assert week_dir.exists()
-    assert (week_dir / "tools.jsonl").exists()
+    assert (week_dir / f"{_TEST_BRANCH}.tools.jsonl").exists()
 
 
 def test_iso_week_computation_failure_does_not_propagate(tmp_path):

@@ -116,6 +116,29 @@ def test_consolidation_round_trip_matches_direct_append(tmp_path):
     assert not (week_dir / "TCK-B.tools.jsonl").exists()
 
 
+def test_consolidation_folds_mixed_old_per_ticket_and_new_per_pr_shaped_files(tmp_path):
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: real historical per-ticket-shaped files
+    # (written before this fix) will coexist with new per-PR/branch-shaped ones until the next
+    # retro consolidation run -- confirms consolidate_jsonl_kind()'s glob is genuinely
+    # identifier-shape-agnostic, not just tested against one shape.
+    week_dir = tmp_path / "2026-W01"
+    week_dir.mkdir()
+    old_shape_row = {"run_id": "TCK-OLD-TICKET-SHAPED", "seq": 1, "tool": "Bash"}
+    new_shape_row = {"run_id": "TCK-SOME-TICKET", "seq": 1, "tool": "Read"}
+    _write_jsonl(week_dir / "TCK-OLD-TICKET-SHAPED.tools.jsonl", [old_shape_row])
+    _write_jsonl(week_dir / "some-branch-name.tools.jsonl", [new_shape_row])
+
+    count = mc.consolidate_jsonl_kind(week_dir, "tools")
+    assert count == 2
+
+    consolidated = _read_jsonl(week_dir / "tools.jsonl")
+    assert old_shape_row in consolidated
+    assert new_shape_row in consolidated
+    assert len(consolidated) == 2
+    assert not (week_dir / "TCK-OLD-TICKET-SHAPED.tools.jsonl").exists()
+    assert not (week_dir / "some-branch-name.tools.jsonl").exists()
+
+
 def test_consolidation_merges_with_pre_existing_canonical_content(tmp_path):
     week_dir = tmp_path / "2026-W01"
     week_dir.mkdir()

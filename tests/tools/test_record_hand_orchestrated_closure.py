@@ -33,6 +33,21 @@ _TITLE_ARGS = ["--title", "Fake ticket title", "--log-summary", "Fake one-senten
 
 _WORKING_LOG_HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
 
+_TEST_BRANCH = "test-branch"
+
+
+def _init_git_repo_on_test_branch(path: Path) -> None:
+    """TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the write target now keys off the current
+    git branch, not ticket_id/run_id -- a real repo on a known branch name gives these tests a
+    stable, predictable filename to assert against. This is also the file at the center of that
+    ticket's headline fix: prior to it, this wrapper hardcoded the shared path regardless of git
+    state at all, so these tests' own prior (bare-filename) assertions were exactly what let the
+    real bug pass unnoticed -- a green test over the writer, not the wrapper's real behavior."""
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.name", "Test"], check=True)
+    subprocess.run(["git", "-C", str(path), "checkout", "-q", "-b", _TEST_BRANCH], check=True)
+
 
 def test_build_records_shares_run_id_execution_id_provider_ticket_id_across_events():
     run_record, event_records = build_records(
@@ -117,6 +132,7 @@ class TestCLIWritesRealRecords:
         )
 
     def test_writes_one_run_and_n_event_records(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             ["--ticket-id", "TCK-FAKE-CLI", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
             tmp_path,
@@ -124,8 +140,8 @@ class TestCLIWritesRealRecords:
         assert result.returncode == 0, result.stderr
 
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl"
-        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
 
         run_record = json.loads(runs_file.read_text().strip())
         assert run_record["run_id"] == "TCK-FAKE-CLI"
@@ -164,6 +180,7 @@ class TestCLIWritesRealRecords:
         assert "non-empty" in result.stderr
 
     def test_final_status_and_workflow_are_overridable(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             [
                 "--ticket-id", "TCK-FAKE-CLI", "--tier", "epic", "--events", json.dumps(_MINIMAL_EVENTS),
@@ -173,7 +190,7 @@ class TestCLIWritesRealRecords:
         )
         assert result.returncode == 0, result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl"
+        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
         run_record = json.loads(runs_file.read_text().strip())
         assert run_record["final_status"] == "NEEDS_HUMAN_INPUT"
         assert run_record["workflow"] == "implement-epic"
@@ -191,6 +208,7 @@ class TestUnattributedStatsAreOmittedNotZero:
         )
 
     def test_no_matching_tools_jsonl_rows_omits_stats_keys_entirely(self, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             ["--ticket-id", "TCK-NO-SIDECAR-CLI", "--tier", "hotfix",
              "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
@@ -198,7 +216,7 @@ class TestUnattributedStatsAreOmittedNotZero:
         )
         assert result.returncode == 0, result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
         for event in event_lines:
             assert "tool_call_count" not in event
@@ -207,6 +225,7 @@ class TestUnattributedStatsAreOmittedNotZero:
     def test_real_attributed_rows_still_computed_correctly(self, tmp_path):
         # A mixed case: seq=1 has real tools.jsonl rows (e.g. a session that partially used the
         # live workflow before finishing via hand-orchestration); seq=2 has none.
+        _init_git_repo_on_test_branch(tmp_path)
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
         week_dir = tmp_path / "agent-monitoring" / "data" / iso_week
         week_dir.mkdir(parents=True, exist_ok=True)
@@ -222,7 +241,7 @@ class TestUnattributedStatsAreOmittedNotZero:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
-        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
         seq1, seq2 = event_lines[0], event_lines[1]
         assert seq1["tool_call_count"] == 1
@@ -310,6 +329,7 @@ class TestWorkingLogCsvAppended:
     def test_missing_working_log_parent_dir_warns_but_does_not_fail_the_run(self, tmp_path):
         # No tickets/ dir at all in this isolated cwd -- monitoring writes must never fail the
         # workflow (CLAUDE.md Hard Rule), so the run/event write still succeeds.
+        _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             ["--ticket-id", "TCK-LOG-NODIR", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
              *_TITLE_ARGS],
@@ -318,7 +338,7 @@ class TestWorkingLogCsvAppended:
         assert result.returncode == 0, result.stderr
         assert "working_log.csv" in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        assert (tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl").exists()
+        assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
 
 
 class TestDuplicateWorkingLogRowRefused:
@@ -369,6 +389,7 @@ class TestDuplicateWorkingLogRowRefused:
         sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
         from working_log_writer import append_working_log_row  # noqa: E402
 
+        _init_git_repo_on_test_branch(tmp_path)
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-DUP-MONITORING", "Same title", "DONE", "First write.",
@@ -383,7 +404,7 @@ class TestDuplicateWorkingLogRowRefused:
 
         assert result.returncode != 0
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        assert (tmp_path / "agent-monitoring" / "data" / iso_week / "runs.jsonl").exists()
+        assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
 
     def test_different_title_same_ticket_id_is_not_treated_as_a_duplicate(self, tmp_path):
         """A different-title reopen for the same ticket_id is a different defect class
@@ -587,3 +608,58 @@ class TestSidecarClearedAfterClosure:
         assert result.returncode == 0, result.stderr
         untouched = json.loads(sidecar_path.read_text())
         assert untouched["run_id"] == "TCK-STALE-OTHER"
+
+
+class TestRealClosureProducesExactlyThreePerPRFiles:
+    """TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX's own central acceptance test: this is
+    exactly the wrapper the repo's CLAUDE.md instructs every hand-orchestrated close to use, and
+    exactly the gap that let the prior ticket's bug (this wrapper hardcoding the shared path)
+    pass unnoticed -- unit tests over record_run.py/record_events.py's own writer functions
+    proved nothing about which writer this wrapper actually calls. Invokes the real CLI as a real
+    subprocess (never imports and calls internal functions directly) against a real git repo on a
+    known branch, with pre-existing shared files seeded to prove they are left untouched."""
+
+    def _run(self, args, tmp_path):
+        return subprocess.run(
+            [sys.executable, str(_RECORD_PATH), *args],
+            capture_output=True, text=True, cwd=tmp_path,
+        )
+
+    def test_real_closure_produces_exactly_three_per_pr_files_and_leaves_shared_files_untouched(
+        self, tmp_path
+    ):
+        _init_git_repo_on_test_branch(tmp_path)
+
+        # Seed pre-existing shared files, simulating "another ticket already closed on a
+        # different branch" -- these must be provably untouched by this closure.
+        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+        week_dir = tmp_path / "agent-monitoring" / "data" / iso_week
+        week_dir.mkdir(parents=True)
+        seeded_runs = json.dumps({"run_id": "TCK-OTHER-BRANCH", "start_ts": "2026-01-01T00:00:00Z"}) + "\n"
+        seeded_events = json.dumps({"run_id": "TCK-OTHER-BRANCH", "seq": 1, "phase": "Scope"}) + "\n"
+        seeded_tools = json.dumps({"run_id": "TCK-OTHER-BRANCH", "seq": 1, "tool": "Bash"}) + "\n"
+        (week_dir / "runs.jsonl").write_text(seeded_runs)
+        (week_dir / "events.jsonl").write_text(seeded_events)
+        (week_dir / "tools.jsonl").write_text(seeded_tools)
+
+        result = self._run(
+            ["--ticket-id", "TCK-REAL-CLOSURE-TEST", "--tier", "hotfix",
+             "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+
+        # Exactly the per-PR files exist, keyed by the real branch name.
+        runs_file = week_dir / f"{_TEST_BRANCH}.runs.jsonl"
+        events_file = week_dir / f"{_TEST_BRANCH}.events.jsonl"
+        assert runs_file.exists()
+        assert events_file.exists()
+        run_record = json.loads(runs_file.read_text().strip())
+        assert run_record["run_id"] == "TCK-REAL-CLOSURE-TEST"
+        event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
+        assert len(event_lines) == len(_MINIMAL_EVENTS)
+
+        # The pre-existing shared files are byte-identical to their seeded content -- untouched.
+        assert (week_dir / "runs.jsonl").read_text() == seeded_runs
+        assert (week_dir / "events.jsonl").read_text() == seeded_events
+        assert (week_dir / "tools.jsonl").read_text() == seeded_tools

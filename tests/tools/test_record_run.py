@@ -22,6 +22,20 @@ from record_run import compute_duration_s, validate_record  # noqa: E402
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_run.py"
 
 
+_TEST_BRANCH = "test-branch"
+
+
+def _init_git_repo_on_test_branch(path: Path) -> None:
+    """TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the write target now keys off the current
+    git branch, not run_id -- a real repo on a known branch name gives these tests a stable,
+    predictable filename to assert against (matching this project's own established preference
+    for real git state over a synthetic/hardcoded fallback shape)."""
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.name", "Test"], check=True)
+    subprocess.run(["git", "-C", str(path), "checkout", "-q", "-b", _TEST_BRANCH], check=True)
+
+
 def _freeze_now(monkeypatch, frozen_iso):
     frozen = datetime.fromisoformat(frozen_iso)
 
@@ -170,6 +184,7 @@ def test_compute_duration_s_zero_when_end_equals_start():
 
 class TestDurationWrittenToRecord:
     def _run_and_read(self, data: dict, tmp_path):
+        _init_git_repo_on_test_branch(tmp_path)
         result = subprocess.run(
             [sys.executable, str(_RECORD_PATH), "--data", json.dumps(data)],
             capture_output=True,
@@ -178,9 +193,9 @@ class TestDurationWrittenToRecord:
         )
         assert result.returncode == 0, result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        # TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE: a truthy run_id now
-        # writes to a per-ticket file, not the bare shared runs.jsonl.
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{data['run_id']}.runs.jsonl"
+        # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: keys by the current git branch now, not
+        # run_id.
+        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
         written = json.loads(runs_file.read_text().strip())
         return written
 
@@ -215,6 +230,7 @@ class TestDurationWrittenToRecord:
 
 
 def test_execution_identity_fields_pass_through_unchanged(tmp_path):
+    _init_git_repo_on_test_branch(tmp_path)
     record = {
         **_VALID_RECORD,
         "execution_id": "claude-TCK-FAKE-RUN-1234567890-abcd1234",
@@ -229,7 +245,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{record['run_id']}.runs.jsonl"
+    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
     written = json.loads(runs_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
@@ -258,13 +274,14 @@ def test_append_failure_is_non_blocking(tmp_path, monkeypatch, capsys):
 
 
 def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
+    _init_git_repo_on_test_branch(tmp_path)
     monkeypatch.chdir(tmp_path)
     _freeze_now(monkeypatch, "2026-08-31T12:00:00+00:00")
     monkeypatch.setattr(sys, "argv", ["record_run.py", "--data", json.dumps(dict(_VALID_RECORD))])
 
     record_run.main()
 
-    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "TCK-FAKE-RUN.runs.jsonl"
+    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.runs.jsonl"
     assert written_path.exists()
     written = json.loads(written_path.read_text().strip())
     assert written["run_id"] == "TCK-FAKE-RUN"
@@ -273,6 +290,7 @@ def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
+    _init_git_repo_on_test_branch(tmp_path)
     monkeypatch.chdir(tmp_path)
 
     _freeze_now(monkeypatch, "2026-08-31T12:00:00+00:00")
@@ -289,8 +307,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, mo
     )
     record_run.main()
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "TCK-WEEK-36.runs.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "TCK-WEEK-37.runs.jsonl"
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.runs.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / f"{_TEST_BRANCH}.runs.jsonl"
     assert week_36.exists()
     assert week_37.exists()
     assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"

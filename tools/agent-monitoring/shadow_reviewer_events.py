@@ -22,6 +22,7 @@ import record_events  # noqa: E402
 from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from validate import load_data_glob  # noqa: E402
 from writer import write_lines  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 shadow_reviewer_event_schema_version: int = 1
 
@@ -99,9 +100,10 @@ def emit_shadow_reviewer_event(
     if events_file is not None:
         target = events_file
     else:
-        # Matches record_events.py's own current-week target (record_events.py:153-154) --
-        # EVENTS_FILE no longer exists as a module attribute (TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY).
-        iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        target = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+        # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: this was a confirmed 5th independent
+        # copy of the write-target formula, and unlike record_events.py/retrieval_events.py it
+        # never had a per-identifier branch at all -- it always wrote to the shared file. Now
+        # delegates to the one shared resolver, closing that gap.
+        target = resolve_write_target("events")
     target.parent.mkdir(parents=True, exist_ok=True)
     return write_lines(target, [json.dumps(record, separators=(",", ":"))])
