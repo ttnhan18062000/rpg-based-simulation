@@ -193,6 +193,13 @@ evidence for this same inherited entry.
   Additionally, a live minor fallback risk: the gate call at `tactical.py`'s own call site is
   wrapped in `try/except Exception: pass` — a gate failure fails open (permissive), not closed;
   worth noting as a real, if narrow, robustness gap rather than a semantic violation.
+  **Superseded note (2026-09-24):** `ENABLE_COMBAT_ENGAGEMENT` flipped to default ON via
+  `TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER` (PR #190, `1e075b807`), predating this file's
+  own `last_verified` date above — the INERT/OFF characterization no longer reflects live state.
+  This Repository Finding is a point-in-time snapshot, not continuously re-verified; the
+  Semantic Control Plane's ongoing M3 triage stream
+  (`TCK-20260924-M3-TERRITORY-COMBAT-FINDING-TRIAGE`) is the current source of truth for
+  `combat_engagement`'s realization status.
 - **MISSING — no surrender, capture, or forced-displacement combat outcome exists.** See the
   inherited combat-outcome-vocabulary entry above.
 - **MISSING — no non-combat Conflict superclass or contest-resolution mechanism is named as
