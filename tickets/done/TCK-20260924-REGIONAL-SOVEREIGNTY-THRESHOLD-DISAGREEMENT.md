@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT
-phase: open
+phase: done
 date: 2026-09-24
 tags: [world, documentation, determinism]
 ---
@@ -18,7 +18,7 @@ governing docs disagreeing the same way
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -325,42 +325,56 @@ dead code, so the ticket's "consistency hazard" framing was correct.
 
 ## Implementation Notes
 
-**IN PROGRESS — Steps 1-7 of `plan.md` landed; Steps 8-9 blocked on PR #245 merging.**
+**All of `plan.md`'s Steps 1-9 complete.** #245 (`semantic-control-plane-m4`) merged to `main` as
+`022dfd1dd` on 2026-09-25; `origin/main` merged into this branch (`e9c623024`) to pick up
+`generate_territory_control_view.py`'s cross-domain-view code before Steps 8-9 could proceed.
+Pre-implementation architecture review (2 rounds) correctly held Steps 8-9 until that dependency
+was real — confirmed via `git merge-base --is-ancestor 42fff7d52 HEAD`/`...origin/main` (both
+false before the merge, both true after).
 
-`plan.md` implements R1/R3/R4 (threshold unified to ±50, `WorldDynamicsSystem`'s block undeleted
-and importing shared constants, dual-writer documented + deferred). Pre-implementation
-architecture review (2 rounds) found and this session fixed one blocking issue before Steps 8-9
-could be scoped: the `_COMPARISON_TEXT` fix (added scope item, AC8) targets
-`tools/semantic_control_plane/generate_territory_control_view.py`'s `render_cross_domain()`,
-which exists only in PR #245 (`semantic-control-plane-m4`, still open/unmerged as of this note) —
-confirmed via `grep` (zero hits on this branch/`origin/main`) and
-`git merge-base --is-ancestor 42fff7d52 HEAD`/`...origin/main` (both false). Steps 1-7 have no such
-dependency and are complete; Step 8-9 (and the corresponding AC8) remain open until #245 merges.
+Steps 1-7 implement R1/R3/R4 exactly (threshold unified to ±50, `WorldDynamicsSystem`'s block
+undeleted and importing shared constants, dual-writer documented + deferred to
+`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`).
+
+Steps 8-9 (`_COMPARISON_TEXT` → `_render_comparison(view)`, AC8) surfaced a real, concrete instance
+of the exact drift class AC8 exists to catch: the *original* hardcoded prose stated "Combat is
+`10/10` verified," but the document's own per-domain banner convention (already established by M4)
+uses `verified/total_rows` as the denominator — `10/12` (10 verified, 12 total Combat rows
+including the 2 `UNKNOWN` ones) — not `10/10`. Computing the count instead of hand-typing it fixed
+a real, pre-existing inaccuracy, not just future-proofed against one. Verified the new anti-drift
+test actually catches this class of regression by temporarily reintroducing the stale `10/10`
+literal and confirming `test_comparison_counts_match_the_computed_banner` fails with a clear
+diff, then reverting.
 
 ## Test Summary
 
-Steps 1-7's scoped regression, real venv:
+Full scoped regression, real venv:
 ```
 pytest tests/unit/world/test_sovereignty_events.py \
        tests/unit/world/test_influence.py \
        tests/unit/world/test_stronghold.py \
-       tests/integration/world/test_regional_sovereignty.py -v
+       tests/integration/world/test_regional_sovereignty.py \
+       tests/unit/tools/test_cross_domain_management_view.py \
+       tests/unit/tools/test_territory_control_view.py \
+       tests/unit/tools/test_semantic_control_plane_schema.py \
+       tests/unit/tools/test_semantic_control_plane_drift_detector.py -v
 ```
-**17 passed, 0 failed.** New tests: `test_world_dynamics_ownership_threshold_uses_shared_constants`,
-`test_world_dynamics_flips_ownership_at_shared_threshold_boundary` (both in
-`test_sovereignty_events.py`, AC5). One existing test's fixture updated:
+**71 passed, 0 failed.** New tests: `test_world_dynamics_ownership_threshold_uses_shared_constants`,
+`test_world_dynamics_flips_ownership_at_shared_threshold_boundary` (AC5), and
+`test_comparison_counts_match_the_computed_banner` (AC8, proven to fail on a deliberately
+reintroduced stale literal, then reverted). One existing test's fixture updated:
 `test_no_sovereignty_event_when_influence_below_threshold` (`influence=50.0` → `30.0`, since 50.0
-is now exactly the new threshold, not safely below it). `test_conquest_and_liberation_thresholds`
-(`test_influence.py`) and both `test_stronghold.py` tests confirmed unaffected, unchanged.
-`test_regional_ownership_flip` (the integration test proving the real end-to-end flip) still
-passes at the corrected magnitude.
+is now exactly the new threshold, not safely below it). `test_conquest_and_liberation_thresholds`,
+both `test_stronghold.py` tests, and Territory's own regeneration test all confirmed unaffected,
+unchanged. `test_regional_ownership_flip` (the integration test proving the real end-to-end flip)
+still passes at the corrected magnitude.
 
-Parity ledger `WORLD-107` validated directly against `tools/parity_ledger_writer.py::validate_entry()`
-(no dedicated CLI validator found for a single-entry check; used the same function the writer
-tool itself calls).
-
-Steps 8-9's own test (`test_comparison_counts_match_the_computed_banner`) and full-file regression
-for `tests/unit/tools/test_cross_domain_management_view.py` are pending #245's merge.
+Validator: `python3 tools/semantic_control_plane/registry.py` → `OK`. Drift check:
+`make semantic-control-plane-drift-check` → `0 cited-code drift finding(s), 0 verdict drift
+finding(s)`. Parity ledger `WORLD-107` validated directly against
+`tools/parity_ledger_writer.py::validate_entry()` (no dedicated single-entry CLI found; reused the
+same function the writer tool itself calls). Territory's own output confirmed byte-identical
+(`--check` → `OK`) both before and after the `_render_comparison` refactor.
 
 ## Files Changed
 
@@ -376,12 +390,33 @@ for `tests/unit/tools/test_cross_domain_management_view.py` are pending #245's m
 - `docs/parity_ledger/world_dynamics.yaml` — `WORLD-107` updated in place (text, v2_evidence,
   test_path).
 - `docs/guidelines/intentional_divergences.md` — new §2.58 entry, rationale class Unified.
-
-**Not yet changed (blocked on #245):**
-`tools/semantic_control_plane/generate_territory_control_view.py`,
-`tests/unit/tools/test_cross_domain_management_view.py`.
+- `tools/semantic_control_plane/generate_territory_control_view.py` — `_COMPARISON_TEXT` (static
+  literal) replaced with `_render_comparison(view)` (computed from the same `view` dict the
+  banner already renders from) plus a new `_classification_breakdown_prose()` helper. Qualitative
+  prose left hand-written per AC8's own scope guard.
+- `docs/brainstorm/cross_domain_management_view.md` — regenerated; the `## Comparison` section's
+  counts now match the rest of the document's own established denominator convention (the
+  pre-existing `10/10`→`10/12` inaccuracy this fix caught and corrected).
+- `tests/unit/tools/test_cross_domain_management_view.py` — new
+  `test_comparison_counts_match_the_computed_banner` (AC8).
+- `staging_artifacts/TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT/{investigation.md,test_plan.md,plan.md}`.
 
 ## Completion Summary
 
-_Not yet complete — Steps 8-9 (AC8) pending PR #245's merge. Do not close this ticket until those
-land and their own tests pass._
+All 9 acceptance criteria met. Three rounds of investigation/escalation (R1: ±50, not ±100, since
+the Mechanics Bible was split against itself and the newer chapter explicitly rebutted ±100; R2
+voided: no `FactionInfluenceService` HERO_GUILD branch, since `WorldDynamicsSystem`'s block was
+never actually at risk of deletion; R4: writer consolidation deliberately deferred, since the two
+paths differ in trigger and phase position and naive consolidation risked a one-tick determinism
+change) each changed the outcome before any code landed — the pre-implementation architecture-
+review gate held at each round rather than letting an interpretation get implemented and later
+reverted.
+
+Net effect: `WorldDynamicsSystem` and `FactionInfluenceService` now share one threshold constant
+pair and can no longer numerically disagree, resolving the P1 consistency hazard this ticket was
+filed for. Both writers remain, documented and deliberately not consolidated
+(`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`, filed separately). This is explicitly
+**not** behavior-neutral — `WorldDynamicsSystem`'s own unconditional per-tick sweep now triggers
+sooner and more often — recorded in `intentional_divergences.md` §2.58 (rationale class Unified).
+The added `_COMPARISON_TEXT` scope item (from PR #245's review) is also complete and, in the
+process, fixed a real pre-existing inaccuracy in that generated view's own prose.
