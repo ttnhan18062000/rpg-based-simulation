@@ -200,7 +200,7 @@ def test_working_log_writer_untouched_by_this_ticket():
 
 def test_done_checker_static_suite_still_passes():
     result = subprocess.run(
-        ["/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3", "-m", "pytest",
+        [sys.executable, "-m", "pytest",
          "tests/tools/test_done_checker_static.py", "-q"],
         capture_output=True, text=True,
     )

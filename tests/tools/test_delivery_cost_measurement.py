@@ -6,6 +6,7 @@ MEASUREMENT/test_plan.md.
 import inspect
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -156,7 +157,7 @@ def test_gh_row_with_single_token_counted_as_unparseable():
 
 def test_bash_command_mix_own_tests_unaffected():
     result = subprocess.run(
-        ["/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3", "-m", "pytest",
+        [sys.executable, "-m", "pytest",
          "tests/tools/test_bash_command_mix.py", "-q"],
         capture_output=True, text=True,
     )
