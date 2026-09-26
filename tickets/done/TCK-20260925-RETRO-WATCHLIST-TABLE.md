@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260925-RETRO-WATCHLIST-TABLE
-phase: open
+phase: done
 date: 2026-09-25
 tags: [agent-monitoring, documentation, process-improvement]
 ---
@@ -150,31 +150,76 @@ _None yet._
 
 ## Assumptions / Open Questions
 
-1. **Whether to seed the table with the delivery epic's outstanding after-measurement.**
-   `TCK-20260924-DELIVERY-COST-MEASUREMENT` recorded 16.04 `gh` calls/PR at SHA `0e0ff8f21` and
-   deliberately attempted no "after", because the epic's own tools were not in use while it was
-   built. That commitment currently exists only in a closed ticket's Completion Summary. It is the
-   most natural first row, but the user scoped this ticket to the restructure itself rather than to
-   seeding it — so **propose it, do not add it unilaterally**, and let the user decide.
-2. Whether the existing sections are all genuinely watchlist entries. Some (e.g. `Skill Usage
-   Metric`) may be durable documentation of a metric rather than a one-time check. Migrating a
-   durable section into a table whose rule is "delete when answered" would lose it. Classify each
-   before moving it, and leave genuinely durable ones as prose sections.
-3. Where the table belongs within `README.md`'s existing structure. It should sit near the cadence
-   material rather than at the end, but confirm against the file's actual navigation.
+1. **Whether to seed the table with the delivery epic's outstanding after-measurement.** —
+   **RESOLVED: the user has ruled on this, directly, not via this ticket's own proposal path — seed
+   it.** Seeded with the exact figure and SHA from `TCK-20260924-DELIVERY-COST-MEASUREMENT`'s Test
+   Summary, plus an explicit note that this implementation batch's own corpus is also not a valid
+   "after" (same reason the original baseline recorded no "after": the epic's tooling wasn't in
+   ordinary day-to-day use while these tickets were built either).
+2. Whether the existing sections are all genuinely watchlist entries. — **RESOLVED, see
+   investigation.md's classification table.** Read each of the 7 sections' actual content (not just
+   its heading) against the test "does it record a specific baseline+ref+check-by-point, or does it
+   permanently document a standing tool": 6 of 7 are durable tool documentation and stay as prose,
+   unchanged. Only the already-answered, already-pointed-elsewhere Knowledge Gateway MCP stub is
+   removed outright (nothing left to check; its historical fact already lives at
+   `docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md`, cited from the
+   stub's own text).
+3. Where the table belongs within `README.md`'s existing structure. — **RESOLVED**: placed in the
+   exact slot the one-off sections already occupied (right after `## What It Does NOT Capture`'s
+   cadence material, before the durable standing-tool sections) — a reader who already knows to look
+   there for "one-off things to check" finds the same thing in the same place.
 
 ## Implementation Notes
 
-_To be filled during implementation._
+Full reasoning in `staging_artifacts/TCK-20260925-RETRO-WATCHLIST-TABLE/{investigation,plan}.md`.
+Summary: read all 7 candidate sections' actual content rather than assuming the heading list from
+the Request Summary was itself the final migration list — that read is what produced the 6-durable/
+1-removed/1-new-table split, not a blanket "migrate everything named" pass. The retro skill's `##
+What This Skill Does` gained a 4th numbered step naming `docs/agent-monitoring/README.md`'s watchlist
+table explicitly, per AC4/AC5's requirement that this be a real procedure step, not a `## Related`
+footer line (confirmed by reading the skill file first: it had zero references to that path
+anywhere, exactly as the ticket's Scope item 3 states).
 
 ## Test Summary
 
-_To be filled during implementation._
+- New `tests/tools/test_agent_monitoring_readme_watchlist.py` (6 tests, light per the ticket's own
+  "not a schema validator" instruction): watchlist heading + non-empty table exist; KGMCP stub
+  removed; seeded row carries its baseline number, SHA, and the "not this batch either" caveat; all
+  6 durable section headings still present; removal rule stated in the table's preamble; the retro
+  skill's numbered procedure (not its `## Related` footer) names the README path. `/home/u24desktop/
+  Working/rpg-based-simulation/.venv/bin/python3 -m pytest
+  tests/tools/test_agent_monitoring_readme_watchlist.py -v` — **6 passed**.
+- Checked for other test coupling to the removed KGMCP stub text or the README's exact structure
+  (`grep -rln "agent-monitoring/README.md\|Knowledge Gateway MCP" tests/ ...`) — every other hit is
+  about the separate, unrelated Knowledge Gateway MCP project's own docs/contracts, not this specific
+  README section. None fail.
 
 ## Files Changed
 
-_To be filled during implementation._
+- `docs/agent-monitoring/README.md` — removed the answered KGMCP stub; added `## Measurement
+  Watchlist` with its preamble and one seeded row in the same slot.
+- `.claude/skills/agent-monitoring-retro/SKILL.md` — `## What This Skill Does` gained step 4.
+- `tests/tools/test_agent_monitoring_readme_watchlist.py` (new) — 6 tests.
+- `staging_artifacts/TCK-20260925-RETRO-WATCHLIST-TABLE/{investigation,plan,test_plan}.md` (new).
+- `docs/REGISTRY.yaml` — regenerated as part of ticket close (routine, unconditional per the
+  Finalize rule).
 
 ## Completion Summary
 
-_To be filled during implementation._
+Replaced the accreted one-off measurement sections' failure mode (permanent-looking documentation
+of an already-answered question, the exact shape that let the Knowledge Gateway MCP section rot
+until a whole separate ticket removed it) with a single, structured watchlist table carrying an
+explicit removal rule in its own preamble, plus a real numbered step in the retro skill's own
+procedure that reads it — not a `## Related` footer pointer, which the ticket's own Scope item 3
+names as the reason nothing was ever going to surface the old KGMCP section on its own.
+
+Classified all 7 candidate sections by actual content rather than by name: 6 are durable standing-
+tool documentation (left as prose, unchanged) and 1 (KGMCP) was already fully answered and pointed
+elsewhere, so it was removed outright rather than given a table row with nothing left to check.
+Seeded the table with the one real, ref-pinned commitment on file
+(`TCK-20260924-DELIVERY-COST-MEASUREMENT`'s 16.04 `gh` calls/PR baseline at `0e0ff8f21`), per the
+user's direct ruling, carrying forward the caveat that this implementation batch's own corpus is
+also not a valid "after" measurement, for the identical reason the original baseline recorded none.
+
+No known material gap. `data_runs_clean` is expected to FAIL again on this close for the same
+pre-existing, not-this-ticket's-own reason tracked by `TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS`.
