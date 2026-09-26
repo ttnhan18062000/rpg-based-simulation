@@ -21,6 +21,19 @@ from record_hand_orchestrated_closure import build_records  # noqa: E402
 from record_run import validate_record as validate_run_record  # noqa: E402
 from record_events import validate_record as validate_event_record  # noqa: E402
 
+_TOOLS_DIR = _MONITORING_TOOLS_DIR.parent
+if str(_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR))
+from working_log_writer import consolidate_pending_rows  # noqa: E402
+
+
+def _consolidate(tmp_path: Path, log_path: Path) -> dict:
+    """TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: the closure script now stages its
+    working_log row rather than writing the CSV directly -- fold pending shards under this test's
+    isolated cwd into log_path before asserting on its content, mirroring what a real
+    `monitoring_consolidation.py` run would do."""
+    return consolidate_pending_rows(data_root=tmp_path / "agent-monitoring" / "data", csv_path=log_path)
+
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_hand_orchestrated_closure.py"
 
 _MINIMAL_EVENTS = [
@@ -273,6 +286,7 @@ class TestWorkingLogCsvAppended:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
+        _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
         assert rows[0] == ["timestamp", "ticket_id", "title", "status", "summary", "artifacts_path"]
         assert len(rows) == 2
@@ -291,6 +305,7 @@ class TestWorkingLogCsvAppended:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
+        _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
         assert rows[1][5] == "stored_artifacts/TCK-LOG-STANDARD"
 
@@ -302,6 +317,7 @@ class TestWorkingLogCsvAppended:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
+        _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
         assert rows[1][5] == "custom/path"
 
@@ -313,6 +329,7 @@ class TestWorkingLogCsvAppended:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
+        _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
         assert rows[1][4] == "Fixed the bug, added tests, updated docs."
 
@@ -326,9 +343,13 @@ class TestWorkingLogCsvAppended:
         assert result.returncode != 0
         assert not (tmp_path / "agent-monitoring").exists()
 
-    def test_missing_working_log_parent_dir_warns_but_does_not_fail_the_run(self, tmp_path):
-        # No tickets/ dir at all in this isolated cwd -- monitoring writes must never fail the
-        # workflow (CLAUDE.md Hard Rule), so the run/event write still succeeds.
+    def test_missing_working_log_parent_dir_no_longer_warns_since_the_write_no_longer_touches_it(self, tmp_path):
+        """TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: append_working_log_row() now stages
+        to agent-monitoring/data/, not tickets/working_log.csv directly, and creates its own
+        parent dirs -- the missing-tickets/-dir OSError this test originally exercised can no
+        longer happen at all, a strictly stronger guarantee than "warns but doesn't fail" (which
+        still holds too, per CLAUDE.md's Hard Rule, just via a different mechanism now)."""
+        # No tickets/ dir at all in this isolated cwd.
         _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             ["--ticket-id", "TCK-LOG-NODIR", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
@@ -336,9 +357,10 @@ class TestWorkingLogCsvAppended:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
-        assert "working_log.csv" in result.stderr
+        assert "working_log.csv" not in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
         assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
+        assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.working_log.jsonl").exists()
 
 
 class TestDuplicateWorkingLogRowRefused:
@@ -426,6 +448,7 @@ class TestDuplicateWorkingLogRowRefused:
         )
 
         assert result.returncode == 0, result.stderr
+        _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
         assert len(rows) == 3
 

@@ -53,6 +53,7 @@ from generate_registry import generate_registry, parse_body_section, _strip_fron
 from ticket_field_values import check_ticket_field_values, TIER_VALUES, WORKFLOW_STATUS_VALUES  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
+from working_log_parser import parse_pending_working_log_shards, HEADER_FIELDS  # noqa: E402
 
 _MONITORING_DIR = _TOOLS_DIR / "agent-monitoring"
 if str(_MONITORING_DIR) not in sys.path:
@@ -138,40 +139,53 @@ def _extract_section_text(ticket_text: str, heading: str) -> str:
     return ticket_text[body_start:end].strip()
 
 
-def _count_rows_for_ticket(csv_path: Path, ticket_id: str) -> int:
-    """Count rows in csv_path that contain ticket_id in ANY column.
+def _pending_rows_for_ticket_as_lists(ticket_id: str, data_root: Path) -> list:
+    """`parse_pending_working_log_shards()`'s dicts (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-
+    TARGET), converted to the same raw 6-cell list shape `csv.reader` produces, filtered to
+    `ticket_id`, so a just-staged, not-yet-consolidated row is visible to the same
+    "ticket_id in row" / status-extraction logic every CSV-sourced row already goes through —
+    no separate matching rule for the two sources."""
+    rows = []
+    for row in parse_pending_working_log_shards(data_root):
+        if row.get("ticket_id") == ticket_id:
+            rows.append([row.get(field, "") for field in HEADER_FIELDS])
+    return rows
+
+
+def _count_rows_for_ticket(
+    csv_path: Path, ticket_id: str, data_root: Path = Path("agent-monitoring/data")
+) -> int:
+    """Count rows in csv_path (plus any still-pending working_log shard under data_root) that
+    contain ticket_id in ANY column.
 
     Deliberately does not use `csv.DictReader` keyed on the header — a confirmed historical bug
     class (`TCK-20260705-WORKING-LOG-BACKFILL`) has rows with `ticket_id` shifted to column 1
     instead of column 2. Scanning every column of every row is the only way to not silently miss
     those malformed rows.
     """
-    if not csv_path.exists():
-        return 0
-    count = 0
-    with csv_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # header row
-        for row in reader:
-            if ticket_id in row:
-                count += 1
-    return count
+    return len(_rows_for_ticket(csv_path, ticket_id, data_root))
 
 
-def _rows_for_ticket(csv_path: Path, ticket_id: str) -> list:
-    """Same matching rule and same column-shift tolerance as `_count_rows_for_ticket` (scans
-    every column, never assumes a fixed column index), but returns the matching rows themselves
-    rather than just a count — needed by `check_working_log_exactly_one_row` to distinguish a
-    legitimate reopen from a real duplicate, which requires looking at each row's own status."""
-    if not csv_path.exists():
-        return []
+def _rows_for_ticket(
+    csv_path: Path, ticket_id: str, data_root: Path = Path("agent-monitoring/data")
+) -> list:
+    """Same matching rule and same column-shift tolerance as before (scans every column, never
+    assumes a fixed column index), but also includes any row still staged in a pending
+    working_log shard under data_root (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET) — needed
+    so `check_working_log_no_row_yet`/`check_working_log_exactly_one_row` see a just-closed
+    ticket's own row at Verify time without depending on a later consolidation run having
+    happened. Returns the matching rows themselves — needed by `check_working_log_exactly_one_row`
+    to distinguish a legitimate reopen from a real duplicate, which requires looking at each row's
+    own status."""
     rows = []
-    with csv_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # header row
-        for row in reader:
-            if ticket_id in row:
-                rows.append(row)
+    if csv_path.exists():
+        with csv_path.open(newline="", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            next(reader, None)  # header row
+            for row in reader:
+                if ticket_id in row:
+                    rows.append(row)
+    rows.extend(_pending_rows_for_ticket_as_lists(ticket_id, data_root))
     return rows
 
 
@@ -369,15 +383,17 @@ def check_ticket_location(
 
 
 def check_working_log_no_row_yet(
-    ticket_id: str, csv_path: Path = Path("tickets/working_log.csv")
+    ticket_id: str,
+    csv_path: Path = Path("tickets/working_log.csv"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
-    count = _count_rows_for_ticket(csv_path, ticket_id)
+    count = _count_rows_for_ticket(csv_path, ticket_id, data_root)
     if count == 0:
-        return ("PASS", f"No existing row for {ticket_id} in {csv_path}")
+        return ("PASS", f"No existing row for {ticket_id} in {csv_path} or a pending shard")
     return (
         "FAIL",
-        f"Found {count} row(s) for {ticket_id} in {csv_path} — a pre-existing row at Verify "
-        "time — possible duplicate/re-run",
+        f"Found {count} row(s) for {ticket_id} in {csv_path} or a pending working_log shard — a "
+        "pre-existing row at Verify time — possible duplicate/re-run",
     )
 
 
@@ -1019,7 +1035,9 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
 
 
 def check_working_log_exactly_one_row(
-    ticket_id: str, csv_path: Path = Path("tickets/working_log.csv")
+    ticket_id: str,
+    csv_path: Path = Path("tickets/working_log.csv"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
     """PASS iff there is at most one working_log row per *(ticket_id, status)* pair for this
     ticket, not at most one row per ticket_id overall (TCK-20260913-DONE-CHECKER-WORKING-LOG-
@@ -1039,7 +1057,7 @@ def check_working_log_exactly_one_row(
     a metric that moves on every ordinary ticket close/open corpus-wide, not for a per-ticket
     write-count invariant that only ever moves when a real duplicate write happens.
     """
-    rows = _rows_for_ticket(csv_path, ticket_id)
+    rows = _rows_for_ticket(csv_path, ticket_id, data_root)
     if not rows:
         return ("FAIL", "no working_log row found — Finalize did not append")
 
