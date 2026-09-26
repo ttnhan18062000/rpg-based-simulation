@@ -94,20 +94,26 @@ domain, not just the ones under active development.
 
 | Status | Finding |
 |---|---|
-| `DESIGNED` | Fully — Milestone A is frozen and complete. |
+| `DESIGNED` | Fully, within the frozen Catalog's current scope — Milestone A is complete for the cases it addresses; this is not a claim that every future world case is designed. |
 | `REALIZED` | Strong for the domains this investigation traced (Combat, Harvest, Quest reward — Part A). |
 | `VERIFIED` | Partial — `TCK-20260401-ACTION-CONVERGENCE`'s bit-identical-replay acceptance criterion is real, checked evidence for the authoritative-apply/replay-determinism law specifically; not every domain's own state-authority pattern has been individually checked. |
 | `INTEGRATED` | **Confirmed fragile even where individually verified** — the regional-sovereignty dual-authority bug (two systems independently writing the same field, at different thresholds) was found in an already-shipped, already-tested domain, during unrelated work this same investigation arc. This is the concrete cautionary example for this whole capability area: verification of one domain in isolation does not prove integration across domains. |
-| `PLAYER-EXPERIENCED` | N/A — foundation layer, never directly player-facing. |
+| `PLAYER-EXPERIENCED` | Not directly surfaced as its own player-visible layer — but experienced indirectly, whenever a player encounters a coherent consequence that depends on this substrate holding (e.g. a region's ownership actually changing consistently). Not yet evaluated for that indirect effect specifically. |
 
-**Cross-domain proof**: a systematic pass (not yet scoped as tickets) checking whether the
-regional-sovereignty pattern (two writers, one field) recurs anywhere else — the meaningful proof
-here is absence-of-recurrence, not a new positive demo.
+**Cross-domain proof, revised to a bounded target (external review correction, 2026-09-26)**: an
+open-ended "does this pattern recur anywhere" pass cannot be proven complete by a finite audit.
+Bounded instead: identify the most consequential cross-domain mutation paths (durable ownership/
+control fields written from more than one system, the shape the regional-sovereignty bug actually
+had), review ownership/authority at those specific boundaries, and exercise representative
+integration scenarios for each. Report the scope actually covered and name what remains `UNKNOWN`
+outside that scope — never claim the absence of a defect outside the boundary actually checked.
 
-**Open**: whether a shared *semantic obligation* ("never commit on stale assumptions without a
-declared resolution rule," corrected per the foundational synthesis) needs any cross-domain checking
-mechanism at all, or whether domain-local discipline is sufficient once this one pattern is known to
-watch for.
+**Open**: whether a shared *semantic obligation* holds cross-domain — restated precisely per
+external review: **every persistent fact has a canonical authority, and a world effect must not
+commit from stale assumptions without a declared resolution rule.** This does **not** imply one
+physical code writer per fact, or one universal `revalidate()` API for every domain action and world
+process — reservations, multistage actions, ongoing processes, and environmental effects may each
+have a different, equally legitimate way of honoring the same obligation.
 
 ### 3.2 Autonomous world dynamics
 
@@ -118,24 +124,27 @@ implementation depth being required or assumed**.
 **Semantic foundation**: Batches 04, 05, 08, 09, 10, 11B, 12 — the entire frozen Catalog outside
 Milestone A and the Agency/Recognition thread.
 
-| Domain | `DESIGNED` | `REALIZED` (high-level) |
+| Domain | `DESIGNED` (within current Catalog scope) | `REALIZED` (high-level) |
 |---|---|---|
-| Life/Body/Ecology (Batch 05) | Full | Uneven — no HP recovery mechanism at all; aggregate population disconnected from individual births/deaths (Batch 05's own finding, not re-verified this arc) |
-| Space/Environment (Batch 04) | Full | Two confirmed repository gaps (no route/portal mechanism; no non-physical movement) at Catalog-freeze time, not re-checked this arc |
-| Material/Economy (Batch 08) | Full | **Confirmed gaps this arc**: wealth→leverage conversion `MISSING` on three independent paths (`ME-S12`); the heirloom/`"CHEST"` resolver bug, plus a sibling risk in the harvest `"NODE"` resolver path (Part A) |
-| Social/Lineage (Batch 09) | Full | **The strongest existing proof in the whole investigation** — feud inheritance, dying wishes, displacement, heirloom transfer, and leadership succession are all `PROVEN CURRENT` and already compose into a real history-to-behavior loop, with zero new work needed |
-| Institutions/Politics/Law (Batch 10) | Full | **Confirmed gap**: no per-(institution, individual) standing of any kind (`IP-S17`); no in-world law/enforcement subsystem at all (Batch 10's own freeze-time finding) |
-| Culture/Belief (Batch 11B) | Full | `CultureState` real but correctly `PARTIAL` (not the complete definition of culture); belief-institution role narrowly scoped |
-| Magic/Supernatural (Batch 12) | Full | **Weakest realization of any domain** — no dedicated magic mechanism of any kind exists, with one real, live, structurally-ready exception (`PerceptionGate`'s own `magic_sense`/`magic_signal` channel, currently `INERT-OFF`) |
+| Life/Body/Ecology (Batch 05) | Full, for cases the batch investigated | Uneven — no HP recovery mechanism at all; aggregate population disconnected from individual births/deaths (Batch 05's own finding, not re-verified this arc) |
+| Space/Environment (Batch 04) | Full, for cases the batch investigated | Two confirmed repository gaps (no route/portal mechanism; no non-physical movement) at Catalog-freeze time, not re-checked this arc |
+| Material/Economy (Batch 08) | Full, for cases the batch investigated | **Confirmed gaps this arc**: wealth→leverage conversion `MISSING` on three independent paths (`ME-S12`); the heirloom/`"CHEST"` resolver bug, plus a sibling risk in the harvest `"NODE"` resolver path (Part A) |
+| Social/Lineage (Batch 09) | Full, for cases the batch investigated | **Real, evidenced proof of the general shape working** (not a full cross-domain generalization by itself) — feud inheritance, dying wishes, displacement, heirloom transfer, and leadership succession are all `PROVEN CURRENT` at the mechanism level and compose into a real history-to-behavior loop; whether this *scales* to a presentable, temporally-continuous player-facing sequence is a separate, unchecked question (§5) |
+| Institutions/Politics/Law (Batch 10) | Full, for cases the batch investigated | **Confirmed gap**: no per-(institution, individual) standing of any kind (`IP-S17`); no in-world law/enforcement subsystem at all (Batch 10's own freeze-time finding) |
+| Culture/Belief (Batch 11B) | Full, for cases the batch investigated | `CultureState` real but correctly `PARTIAL` (not the complete definition of culture); belief-institution role narrowly scoped |
+| Magic/Supernatural (Batch 12) | Full, for cases the batch investigated | **Weakest realization of any domain** — no dedicated magic mechanism of any kind exists, with one real, live, structurally-ready exception (`PerceptionGate`'s own `magic_sense`/`magic_signal` channel, currently `INERT-OFF`) |
 
-**Cross-domain proof**: the lineage domain already *is* one, unprompted — worth treating as a
-working reference example while other domains catch up, not just a gap to eventually close
-elsewhere.
+**Cross-domain proof**: the lineage domain already provides real, mechanism-level evidence that the
+general shape (history → durable consequence → later behavior) can work — worth treating as a
+working reference example while other domains catch up. This is evidence the *pattern* is
+achievable, not a claim that lineage itself is a fully verified, player-facing cross-domain proof
+(see §5's feasibility gate for that separate, unchecked question).
 
-**Open**: none of these domains' own gaps require new Rules — every one above is a realization
-question under already-frozen content. Sequencing across domains is explicitly **not** required to
-be uniform; lineage needs no further foundational work, economy/institutions need targeted
-realization work, magic needs the most (though still zero new Rules, per Batch 12's own already-
+**Open**: the investigated cases in every domain above found no new Rule required — this is a claim
+about the cases actually traced, not that no semantic gap can exist anywhere in these domains'
+fuller scope. Sequencing across domains is explicitly **not** required to be uniform; lineage needs
+no further foundational work at the mechanism level, economy/institutions need targeted realization
+work, magic needs the most (though still zero new Rules found necessary, per Batch 12's own already-
 frozen scope).
 
 ### 3.3 Situated agency and action
@@ -148,11 +157,11 @@ masquerade as an agent action**.
 
 | Status | Finding |
 |---|---|
-| `DESIGNED` | Fully. |
+| `DESIGNED` | Fully, within the frozen Catalog's current scope. |
 | `REALIZED` | Strong for Combat (most rigorously evidenced of any traced family — a documented fix raised real coverage 6.3%→93.7%) and Harvest (live via generic `INTERACT`, contra two dead named-harvest files); cleanest state-authority pattern found anywhere is Quest reward's single-writer stage. |
 | `VERIFIED` | Partial — the upstream edge (how a selected `ActionIntent` becomes an `ActionRouter` payload) is `UNKNOWN` across all three traced families, not confirmed broken, simply untraced. |
-| `INTEGRATED` | Confirmed genuinely plural, not unified — three independent action-dispatch paths exist (bounded-worker `ActionRouter`, direct pipeline-phase calls for Guild-visit/Objective-Reward, and a dead, never-adopted typed model), each with a stated architectural reason. **This plurality is a finding to design around, not a defect to fix by forcing one shape** — non-agent world processes (hazard, calamity, sovereignty shifts) already correctly bypass the agent-action path entirely, exactly as this capability area requires. |
-| `PLAYER-EXPERIENCED` | N/A directly — this is the decision/execution substrate beneath whatever a gameplay lens eventually exposes. |
+| `INTEGRATED` | Confirmed genuinely plural, not unified — three independent action-dispatch paths exist (bounded-worker `ActionRouter`, direct pipeline-phase calls for Guild-visit/Objective-Reward, and a dead, never-adopted typed model). **A world process and an agent action needing different execution paths is a valid architectural boundary in the two specific cases checked** (Guild-visit, Objective-Reward — each carries its own stated architectural reason). This does not establish that every current bypass path in the codebase is semantically correct by the same standard — only these two were individually checked. This plurality is a finding to design around, not a defect to fix by forcing one shape. |
+| `PLAYER-EXPERIENCED` | Not directly surfaced — this is decision/execution substrate beneath whatever a gameplay lens eventually exposes. Experienced indirectly whenever a player encounters a consequence that depended on a correct attempt/resolution (e.g. an attack that fired against current, not stale, state). Not yet evaluated for that indirect effect. |
 
 **Cross-domain proof**: the three already-traced families (Combat/Harvest/Quest-reward)
 individually sound, *and* their one shared unproven edge confirmed either way — not three separate
@@ -172,8 +181,8 @@ lived-history→recognition→reaction finding, `politics-authority.md`'s power-
 
 | Status | Finding |
 |---|---|
-| `DESIGNED` | Fully. |
-| `REALIZED` | Strong for individual-participant history (`TurningPointState`, `SocialComponent`'s direct-interaction `bonds`/`trust_history`) and lineage specifically (§3.2). **Confirmed `MISSING`**: witnessed/secondhand propagation into that same already-correct state (the single narrowest confirmed bottleneck in the whole investigation); institutional standing at any level; opportunity-generation reading standing/reputation as an input at all. |
+| `DESIGNED` | Fully, within the frozen Catalog's current scope. |
+| `REALIZED` | Strong for individual-participant history (`TurningPointState`, `SocialComponent`'s direct-interaction `bonds`/`trust_history`) and lineage specifically (§3.2). **Confirmed `MISSING`**: a producer for witnessed/secondhand evidence at all (the single narrowest confirmed bottleneck in the whole investigation); institutional standing at any level; opportunity-generation reading standing/reputation as an input at all. **Correction, external review, 2026-09-26**: this does not mean `bonds`/`trust_history` is the decided destination for witnessed or hearsay evidence once a producer exists — the foundational synthesis leaves that representation choice open on purpose (direct participation, direct witnessing, and secondhand report are kept as three distinguishable primitives, not assumed to share one shape). |
 | `VERIFIED` | The individual-participant case only — `appraisal.py`'s real, checked bond→trust_history→global-fallback priority order. |
 | `INTEGRATED` | Not yet — this is precisely the gap the whole investigation exists to close. |
 | `PLAYER-EXPERIENCED` | Not yet — no player-visible proof exists today that traces cleanly to real propagated evidence rather than an omniscient global read. |
@@ -231,7 +240,7 @@ M3 ongoing ingestion stream.
 | `REALIZED` | Real, live, already in use for unrelated tracks. |
 | `VERIFIED` | Ongoing, by design (M3's own "permanent, ongoing stream" framing). |
 | `INTEGRATED` | This roadmap's own job is ensuring the capability areas above *feed* this machinery once they produce real findings — not building new evaluation infrastructure. |
-| `PLAYER-EXPERIENCED` | N/A — evaluation infrastructure, not itself player-facing. |
+| `PLAYER-EXPERIENCED` | Not directly surfaced — evaluation infrastructure isn't itself player-facing, but a player experiences its effect indirectly whenever it catches a regression before it reaches them. Not evaluated for that indirect effect. |
 
 **M3 stays exactly what it already is**: an ongoing, non-blocking ingestion stream. Nothing in this
 roadmap gates on M3, and this roadmap does not propose changing M3's own scope or cadence.
@@ -271,17 +280,43 @@ recognition work to land first.
 
 ## 5. Delivery path
 
-**Initial product proof** — an ordinary subject's real, already-mechanism-backed history becomes
-something a player can *encounter* and reasonably interpret, right or wrong:
-- **Cheapest, evidenced-today candidate**: the lineage trajectory (§3.2). A player observes a
-  family's fortunes shift across generations and forms their own theory about why — the underlying
-  mechanism is `PROVEN CURRENT` today; the only missing piece is a player-facing surface projecting
-  it, not new simulation work. **Recommend this as the actual first product proof shipped**, since it
-  requires zero new capability-area work, only §3.5's own design effort.
-- **The recognition-domain proof** (once §3.4's propagation gap closes): a player notices two
-  merchants treat the same character differently, and can reconstruct why from situated context
-  (who was where, when) — the scenario the whole investigation traced in code terms, now stated in
-  player terms.
+**First-proof selection: `OPEN`, with lineage the leading candidate — corrected per external
+review, 2026-09-26.** The earlier draft called lineage the committed first proof because its
+underlying *mechanisms* are `PROVEN CURRENT`. That's true, but it doesn't prove a player-facing
+*projection* of them is feasible — event selection, temporal continuity, viewpoint/scope,
+provenance, and pacing are product-design and integration questions this investigation never
+checked, even though no new simulation mechanism looks necessary. "Few new simulation mechanisms
+needed" is not the same claim as "cheap to deliver."
+
+**Feasibility gate to run before committing to any candidate** (five questions, per external
+review):
+1. Can a real seeded run produce a consequential sequence from existing authoritative state/
+   history, without inventing events or causes?
+2. What traces could a player plausibly encounter through a proposed gameplay lens, and what might
+   legitimately remain unknown?
+3. Can an initial presentation preserve identity, chronology, and causal continuity across the
+   relevant period?
+4. Is the player-facing proof feasible with projection/integration work alone, or does the run
+   reveal a missing simulation or evidence-production edge?
+5. How does it compare in feasibility and experiential clarity to at least one other candidate
+   trajectory?
+
+**Current state of this gate for lineage, honestly**: mechanism-level evidence favors it strongly
+(feud inheritance, dying wishes, displacement, heirloom transfer, and leadership succession are all
+individually `PROVEN CURRENT` — Pass 2). Whether they *compose into one coherent, presentable
+sequence for a single family across the relevant span* — questions 1 and 3 specifically — was never
+checked; **`UNKNOWN`, not assumed**. Question 5's comparison: the economy/wealth trajectory needs
+real simulation work first (`ME-S12`'s confirmed `MISSING` conversion edges), not just projection
+work, so lineage still looks relatively more feasible on that one axis — but this is a comparison of
+relative confidence, not a completed gate.
+
+**Recommendation**: lineage remains the leading candidate to run this gate against first, but
+**selection is `OPEN` until it is actually run** — not a committed first-shipped proof.
+
+**The recognition-domain proof** (once §3.4's propagation gap closes): a player notices two
+merchants treat the same character differently, and can reconstruct why from situated context (who
+was where, when) — the scenario the whole investigation traced in code terms, now stated in player
+terms. This proof requires its own capability-area work (§3.4) to exist at all, unlike lineage.
 
 **Later closed-loop proof**, distinguished explicitly from reaction-only: changed opportunity must
 feed a **later decision** producing a **durable, player-observable outcome** — not merely a merchant
@@ -299,16 +334,38 @@ one — a non-recognition, non-combat domain, evidenced today. A second contrast
 
 | Proof | Currently evidenced | Requires engineering | Evidence needed to claim delivery |
 |---|---|---|---|
-| Lineage (initial) | Mechanism: yes (`PROVEN CURRENT`) | Player-facing projection only | Player-observation evidence: a player, given only the projection, can state a plausible causal account matching real underlying state |
+| Lineage (leading candidate, gate not yet run) | Mechanism: yes (`PROVEN CURRENT`); product feasibility: `UNKNOWN` | Feasibility gate (above) first; then projection work, scope depending on the gate's own findings | Gate questions 1/3 answered from a real seeded run, *then* player-observation evidence per the calibrated criterion below |
 | Recognition (later) | Partial — direct-interaction case only | §3.4's propagation gap, §3.5's projection | Scenario-runtime evidence: a seeded scenario where two observers diverge, sourced from real propagation, not a global-scalar read |
 | Closed-loop (later still) | No | §3.4 opportunity-feedback + a later-decision trace | Scenario-runtime evidence spanning two decision points, not one |
 | Economy (contrasting) | No | §3.2's wealth-conversion edge | Scenario-runtime evidence for one concrete declared edge |
 
-**Evaluation criterion, stated explicitly**: every proof above is judged on what a player could
-reasonably understand *from the available evidence*, never on an internal state transition or debug
-trace alone. Symmetrically, a player's plausible-but-wrong interpretation is not itself a bug, as
-long as the underlying world stayed causally coherent — matching §2's own ambiguity-vs-opacity
-distinction exactly.
+**Evaluation criterion, calibrated per external review, 2026-09-26 — two separate checks, not one:**
+
+1. **World-side truth check**: the underlying outcome has a coherent, Rule-conforming causal
+   trace, and every player-facing clue originates from legitimate world evidence or an explicitly
+   scoped projection of it — never fabricated for the demo.
+2. **Player-side inference check**: given only the available clues, a player can form one or more
+   *intelligible* hypotheses, distinguish observation from their own speculation, and revise an
+   earlier interpretation when later evidence arrives. **The hypothesis does not need to be true** —
+   only reasonably supported by the clues actually given. (The earlier draft's "a player can state a
+   plausible causal account matching the real underlying state" wrongly turned this into "guess the
+   correct hidden answer" — corrected here.)
+
+**Explicit failure cases to test against, not just success cases**: an outcome the product expects
+a player to understand but that has no meaningful clue leading to it at all; a nominally in-world
+surface (biography, HUD, dialogue) that silently leaks hidden world truth; and behavior that changes
+with no coherent world cause behind it. **Not every private event needs a publicly discoverable
+trace** — salience and the product's own promised level of comprehension matter, and a genuinely
+private event staying private is not automatically a failure.
+
+An event being unknown to the player is not itself a defect. The defect is an outcome the product
+presents as learnable or important with no fair, situated way to reason about it, or behavior that
+violates the world's own causal rules — not mystery itself.
+
+**`PLAYER-EXPERIENCED` is an evidence level, not a property automatically produced by a projection
+existing in code** — a small player-observation exercise, or equivalent usability evidence, is
+required before any proof in the table above can claim it, no matter how complete the underlying
+mechanism or projection looks from source alone.
 
 ---
 
@@ -339,30 +396,70 @@ Recognition-Opportunity loop this investigation traced most deeply. This documen
 
 ---
 
-## Owner Decision List
+## External review response, 2026-09-26
 
-Only genuinely unresolved world-semantic or product-scope questions — not engineering decisions
-(exact record types, class reuse, symbol retirement all stay with local engineering investigation).
+Responding to `tmp/external-ai-review-systemic-world-roadmap-instruction.md`, mapped to its five
+required-change areas:
 
-1. **Individual vs. institutional standing — one record shape or two?** Recommended default: two
-   distinct types initially (specialize `FactionSentiment` downward for institutions; keep
-   `SocialComponent` as-is for individuals); revisit unification only if a real shared-query need
-   emerges. `OPEN/UNKNOWN` either way — a real semantic-architecture call, not evidence-resolvable.
-2. **Institutional standing's domain ownership.** Recommended: the institutions domain (Batch 10),
-   since `IP-S17` is already that domain's own scenario and its Rule content already anticipates
-   organizations tracking member history. Flagged, not fully resolved: whether this creates any
-   cross-domain authority question with the social/relationship domain that owns the individual
-   case — not found to conflict this arc, but not exhaustively checked either.
-3. **`public_reputation`'s intended long-term meaning** — a genuinely publicly-knowable fact, a
-   narrow declared-scope claim, a derived projection, or a technical fallback (its confirmed current
-   role: the last resort `appraisal.py` uses only for total strangers, which might be worth
-   *keeping* deliberately rather than replacing). No recommended default — genuinely `OPEN` until
-   §3.4's propagation work reveals what, if anything, still needs a cheap global signal.
-4. **This document's own promotion path** — stays `PROPOSED/FOR REVIEW` indefinitely, or is promoted
-   to `active` status once reviewed, and if so, does it then warrant its own milestone-epic
-   breakdown the way `rpg_design_roadmap.md` did for M1-M9? Recommended default: review first,
-   decide the breakdown shape only once the capability areas above are accepted at all — premature
-   to ticket-plan an unapproved document.
+1. **Lineage reclassified** from committed first proof to leading candidate, gated by a five-
+   question feasibility check (§5) — the check has not been run; selection is `OPEN`.
+2. **Player-understanding criterion split** into a world-side truth check and a player-side
+   inference check (§5), with explicit failure cases and an "unknown ≠ defect" clarification added.
+3. **Broad status claims narrowed** throughout §3 — `DESIGNED`/"no Rule needed" now scoped to "within
+   the frozen Catalog's current scope"/"the cases investigated," never an implied claim about the
+   whole future engine; `PLAYER-EXPERIENCED: N/A` replaced with "not directly surfaced"/"experienced
+   indirectly, not yet evaluated" for world substrate, agency, and evaluation; §3.4's wording no
+   longer implies `bonds`/`trust_history` is the decided destination for witnessed/hearsay evidence.
+4. **§3.1's foundation verification bounded** — replaced the unfalsifiable "absence of recurrence"
+   framing with a stated, finite scope (most consequential cross-domain mutation paths, reviewed at
+   their boundaries, with named remaining `UNKNOWN`s), and restated the semantic obligation precisely
+   (canonical authority + a declared resolution rule, not one writer or one universal `revalidate()`).
+5. **Owner Decision List reframed** — item 1 restated as the real semantic question (are individual
+   and institutional standing distinct concepts, not just different record shapes) with a Rule-
+   sourced default; item 2 downgraded from open decision to a proposed default, escalated only on a
+   real conflict; item 3 reframed as "define the meaning first," not a retain/retire choice; item 4
+   (promotion path) removed as a numbered item and replaced with the real near-term choice — which
+   candidate the feasibility gate runs against first.
+
+**External-review concerns rejected on repository evidence: none.** Every requested correction is
+directly supported by evidence already gathered this arc (Part A/B's own citations, the frozen
+Catalog's own Rule text) — no counter-evidence was found against any of the five points.
+
+---
+
+## Owner Decision List (refined per external review, 2026-09-26)
+
+Only genuinely unresolved world-semantic or product-scope questions. Two items from the prior
+version were downgraded here on external review: item 1 was mostly an implementation/modeling
+question restated as if it were semantic; item 4 (roadmap promotion) is a governance step after
+review, not a fourth conceptual decision competing with the real ones.
+
+1. **Are individual subjective relations and institutional judgments distinct world concepts, with
+   different authority, evidence, and update rules — or one concept at two scales?** This is the
+   real semantic question underneath the prior "one record shape or two" framing, which wrongly
+   pitched it as an implementation choice. **Recommended semantic default, from the frozen Rules
+   themselves**: yes, distinct — `SOC-01` already separates structural relation from subjective
+   attitude at individual scale, and `INST-03` already treats institutional authority/capability/
+   power/legitimacy as its own, correlated-but-not-substitutable cluster; nothing in either Rule
+   suggests collapsing the two scales into one concept. The exact record types implementing that
+   semantic default stay with local engineering investigation.
+2. **Institutional standing's domain ownership — not an owner-level decision unless a real conflict
+   surfaces.** `IP-S17` and Batch 10's own Rule content already support the institutions domain as
+   the semantic home; propose that as the default directly rather than presenting it as open. Escalate
+   to the owner only if a genuine, unresolved cross-domain authority conflict with the social/
+   relationship domain is found — none has been, this arc.
+3. **`public_reputation`'s intended world meaning — state this as the open semantic question itself,
+   not a retain-or-retire choice.** Is it meant to be a genuinely publicly-knowable fact, a narrow
+   declared-scope claim, a derived projection, or a technical fallback? A global scalar that
+   `appraisal.py` currently uses only as a last resort for total strangers is not automatically
+   evidence that it's *meant* to be public knowledge — that's exactly the kind of silent-leak risk
+   §2's epistemic principle warns about. Do not decide retain-vs-retire until this meaning, and its
+   information provenance/scope, is established.
+4. **The real near-term product choice: which candidate trajectory should the feasibility gate (§5)
+   be run against first?** Lineage is the leading candidate on current evidence, but the gate itself
+   is `OPEN` until actually run (§5) — this is the owner's genuinely open choice right now, not this
+   document's own promotion path (that's a review-sequencing step, not a conceptual decision, and is
+   not listed as a numbered item here).
 
 **Confirmed explicitly not owner-level, per the instruction's own boundary**: which existing class
 to extend for any new record type, whether to retire or adopt the dead `ActionProposal` model,
