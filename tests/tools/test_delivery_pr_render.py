@@ -4,6 +4,7 @@ One section per Acceptance Criterion, per staging_artifacts/TCK-20260924-DELIVER
 test_plan.md. Fixture tickets are small throwaway .md files under tmp_path; git calls are faked.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -361,6 +362,44 @@ def test_why_section_uses_first_paragraph_only(tmp_path):
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "Only the first paragraph should appear." in result["body"]
     assert "This second paragraph must not." not in result["body"]
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260925-PR-RENDER-TABLE-CELL-NEWLINES — multi-line/`|` titles must not break the table
+# ---------------------------------------------------------------------------
+
+def test_multiline_title_with_pipe_collapses_to_one_row(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    multiline_title = "Report `gh`-calls-per-PR and subject traceability over a week range in one\ncommand, so this | epic's before/after is measured rather than asserted"
+    _write_ticket(tickets_root, "TCK-20260924-A", "ai", multiline_title)
+    _write_ticket(tickets_root, "TCK-20260924-B", "ai", "Second thing")
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
+        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+    ])
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    body = result["body"]
+
+    table_rows = [l for l in body.splitlines() if l.startswith("| TCK-")]
+    assert len(table_rows) == 2  # AC1/AC3: exactly one line per ticket, no mid-cell break
+    for row in table_rows:
+        # AC2/AC3: split on pipes a markdown table parser would treat as separators (an escaped
+        # `\|` is not one) — 3 cells means 2 leading/trailing empty segments plus 3 cell segments.
+        columns = re.split(r"(?<!\\)\|", row)
+        assert len(columns) == 5
+    assert "Report `gh`-calls-per-PR and subject traceability over a week range in one command, " \
+        "so this \\| epic's before/after is measured rather than asserted" in table_rows[0]
+    # AC4: no content lost — every word from the original multi-line title is still present.
+    for word in ("Report", "command,", "asserted"):
+        assert word in table_rows[0]
+
+    what_landed_lines = [
+        l for l in body.splitlines()
+        if l.startswith("- TCK-") and "Report" in l
+    ]
+    assert len(what_landed_lines) == 1  # AC5: one line per ticket in "## What landed" too
+    assert "\n" not in what_landed_lines[0]
 
 
 def test_no_write_side_effect(tmp_path):
