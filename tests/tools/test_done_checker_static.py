@@ -188,7 +188,10 @@ def test_data_runs_clean_file_at_or_after_start_ts_fails_naming_path(tmp_path):
     assert str(leaked) in evidence
 
 
-def test_data_runs_clean_unparsable_start_ts_flags_any_file(tmp_path):
+def test_data_runs_clean_absent_start_ts_no_ticket_context_is_indeterminate(tmp_path):
+    """TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS: an absent start_ts with no ticket_id
+    to look up a run record is INDETERMINATE, not FAIL — the hand-orchestrated CLI path's original
+    bug was reading this identically to a real dirty-repo finding."""
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     runs_dir.mkdir(parents=True)
@@ -199,8 +202,89 @@ def test_data_runs_clean_unparsable_start_ts_flags_any_file(tmp_path):
     old_epoch = time.mktime(time.strptime("2020-01-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
     os.utime(old, (old_epoch, old_epoch))
 
-    status, _ = check_data_runs_clean(None, runs_dir=runs_dir, proof_dir=proof_dir)
+    status, evidence = check_data_runs_clean(None, runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "INDETERMINATE"
+    assert "--start-ts" in evidence
+
+
+def test_data_runs_clean_present_garbage_start_ts_still_flags_any_file(tmp_path):
+    """AC4/pipeline fail-closed rule: an explicit-but-unparsable start_ts (not merely absent)
+    still flags every file, unchanged from before this ticket."""
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    old = runs_dir / "old_run.json"
+    old.write_text("{}", encoding="utf-8")
+    old_epoch = time.mktime(time.strptime("2020-01-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(old, (old_epoch, old_epoch))
+
+    status, _ = check_data_runs_clean("not-a-date", runs_dir=runs_dir, proof_dir=proof_dir)
     assert status == "FAIL"
+
+
+def test_data_runs_clean_resolves_start_ts_from_own_run_record_pass(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    data_root = tmp_path / "agent-monitoring" / "data"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leftover = runs_dir / "old_run.json"
+    leftover.write_text("{}", encoding="utf-8")
+    old_epoch = time.mktime(time.strptime("2026-07-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leftover, (old_epoch, old_epoch))
+
+    _write_jsonl(
+        data_root / "2026-W27" / "runs.jsonl",
+        [{"run_id": "TCK-FAKE", "start_ts": "2026-07-05T00:00:00Z"}],
+    )
+
+    status, evidence = check_data_runs_clean(
+        None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
+    )
+    assert status == "PASS"
+    assert "run record" in evidence
+
+
+def test_data_runs_clean_resolves_start_ts_from_own_run_record_fail(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    data_root = tmp_path / "agent-monitoring" / "data"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leaked = runs_dir / "leaked_run.json"
+    leaked.write_text("{}", encoding="utf-8")
+    new_epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leaked, (new_epoch, new_epoch))
+
+    _write_jsonl(
+        data_root / "2026-W27" / "runs.jsonl",
+        [{"run_id": "TCK-FAKE", "start_ts": "2026-07-05T00:00:00Z"}],
+    )
+
+    status, evidence = check_data_runs_clean(
+        None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
+    )
+    assert status == "FAIL"
+    assert str(leaked) in evidence
+
+
+def test_data_runs_clean_ticket_id_with_no_matching_run_record_is_indeterminate(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    data_root = tmp_path / "agent-monitoring" / "data"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+    _write_jsonl(data_root / "2026-W27" / "runs.jsonl", [{"run_id": "TCK-OTHER", "start_ts": "2026-07-05T00:00:00Z"}])
+
+    status, evidence = check_data_runs_clean(
+        None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
+    )
+    assert status == "INDETERMINATE"
+    assert "--start-ts" in evidence
 
 
 # ---------------------------------------------------------------------------

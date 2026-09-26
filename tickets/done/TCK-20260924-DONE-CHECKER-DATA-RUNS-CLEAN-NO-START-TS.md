@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS
-phase: open
+phase: done
 date: 2026-09-24
 tags: [workflows, process-improvement, agent-monitoring]
 ---
@@ -124,40 +124,78 @@ _None yet._
 
 ## Assumptions / Open Questions
 
-1. **Where a hand-orchestrated `start_ts` should come from.** Candidates, roughly in order of
-   preference:
-   - the ticket's own run record in `agent-monitoring/data/YYYY-Www/runs.jsonl`, which
-     `record_hand_orchestrated_closure.py` writes and which already carries a start timestamp;
-   - the author date of the ticket's first commit (`git log` filtered by the ticket ID, matching
-     the convention `mechanism_registry_changed_code_check.py` already uses to find "this ticket's
-     own commits");
-   - the `tickets/inprogress/{ticket_id}.md` file's own creation/mtime, weakest and last resort.
-   The first is the most semantically correct but requires the monitoring record to exist *before*
-   the check runs; CLAUDE.md's documented ordering runs the closure recorder and the static checker
-   as separate steps, so the implementer must confirm the ordering actually holds rather than
-   assume it.
-2. **How to represent "indeterminate".** The precheck returns `(status, evidence)` pairs where
-   status is `PASS`/`FAIL` today. Adding a third value touches every consumer of that contract, so
-   the implementer should check what reads these tuples before introducing one; a `PASS` with an
-   explicit "not measured — no start point" evidence string may be the smaller, safer change, but
-   risks reading as a clean bill of health. This is the main design decision in the ticket and
-   should be settled in `plan.md` with the consumer list as evidence, not chosen by feel.
-3. Whether the shared-worktree case needs anything beyond a correct `start_ts`. Provisionally no:
-   with a real start point, another session's older `data/runs/` output is already excluded by
-   mtime. Worth confirming during investigation before adding any worktree-aware logic.
+1. **Where a hand-orchestrated `start_ts` should come from.** — **RESOLVED, see
+   investigation.md/plan.md.** The ordering assumption (closure recorder runs before the static
+   checker) **was confirmed, not assumed**: `record_hand_orchestrated_closure.py` sets
+   `run_id == ticket_id`, and `check_monitoring_write_recorded` already reads exactly that shape.
+   But reading `record_hand_orchestrated_closure.py`'s own source found the first candidate's
+   ranking was too confident: its `start_ts` defaults to **closure time** (`start_ts or now`)
+   unless the closer explicitly passed a real one to *that* command — which nothing in this
+   session's own several closures this batch did. Used as the sole fallback anyway (still the only
+   candidate with a real, already-`start_ts`-shaped field and a shared reader to reuse — the other
+   two candidates collapse toward the same closure-adjacent moment under this repo's actual
+   hand-orchestration pattern, confirmed by reading, not assumed either), but the evidence string
+   now discloses that caveat inline whenever it's used, rather than presenting a resolved value as
+   unconditionally trustworthy.
+2. **How to represent "indeterminate".** — **RESOLVED: new `INDETERMINATE` value, not a `PASS`.**
+   Checked every real consumer before introducing it (investigation.md's full list):
+   `_render_results`/`classify_checklist_failure` only ever special-case the literal string
+   `"FAIL"`, and `NA` already exists safely in this exact contract for a different reason
+   (`check_staging_artifacts_complete`'s hotfix case) — proving a third value is already a safe
+   pattern here, not a novel risk. The pipeline's LLM done-checker agent reads the raw JSON
+   directly rather than doing a rigid string match, so a self-explanatory evidence string is
+   sufficient without a new prompt rule, mirroring how `NA` already works there.
+3. Whether the shared-worktree case needs anything beyond a correct `start_ts`. — **Confirmed
+   provisionally-no, unchanged**: no worktree-aware logic added.
 
 ## Implementation Notes
 
-_To be filled during implementation._
+Full reasoning in `staging_artifacts/TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS/
+{investigation,plan}.md`. `check_data_runs_clean` gained an optional `ticket_id` parameter (kept
+`start_ts` first and positional so all 5 existing real-`start_ts` call sites are untouched — AC4).
+Resolution order: explicit `start_ts` (unchanged, including the unparsable-flags-everything case) →
+this ticket's own run record via the already-shared `_jsonl_rows_for_run_id_across_weeks` (reused,
+not reimplemented) → `INDETERMINATE`. `run_static_precheck` now passes `ticket_id` through.
+Corrected a stale module-docstring claim ("no new status vocabulary here") that `NA`'s own
+pre-existing addition had already invalidated before this ticket, found while reading the header
+to scope the change.
 
 ## Test Summary
 
-_To be filled during implementation._
+- `tests/tools/test_done_checker_static.py::check_data_runs_clean` section: renamed the one test
+  whose expected outcome changes (absent `start_ts`, no ticket context → `INDETERMINATE`, was
+  `FAIL`), added 4 new tests (present-but-garbage `start_ts` still `FAIL`; run-record fallback
+  `PASS`/`FAIL` sub-cases; `ticket_id` given but no matching run record → `INDETERMINATE`). All 5
+  pre-existing real-`start_ts` tests unchanged. `/home/u24desktop/Working/rpg-based-simulation/
+  .venv/bin/python3 -m pytest tests/tools/test_done_checker_static.py -v` — **137 passed**
+  (confirmed the 11 `data_runs_clean`-scoped tests individually too).
+- Full regression: `tests/tools/ -m "not slow and not extra_slow"` — **3055 passed**, 25 skipped,
+  28 deselected, 1 xfailed, 0 failed.
 
 ## Files Changed
 
-_To be filled during implementation._
+- `tools/gate_checks/done_checker_static.py` — `check_data_runs_clean()` gained `ticket_id`/
+  `data_root` params and the run-record fallback + `INDETERMINATE` path; `run_static_precheck()`
+  passes `ticket_id` through; module docstring's stale "no new status vocabulary" claim corrected.
+- `tests/tools/test_done_checker_static.py` — 1 test renamed/re-asserted, 4 new tests.
+- `staging_artifacts/TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS/
+  {investigation,plan,test_plan}.md` (new).
+- `docs/REGISTRY.yaml` — regenerated as part of ticket close (routine, unconditional per the
+  Finalize rule).
 
 ## Completion Summary
 
-_To be filled during implementation._
+`data_runs_clean` no longer FAILs purely because the hand-orchestrated CLI path has no source for
+`start_ts` — it now falls back to the ticket's own run record (reusing the existing shared reader,
+not a new one) and, failing that, reports a new `INDETERMINATE` status that is explicitly not a
+`FAIL` and not a `PASS`, distinguishable in both the human CLI output and exit-code semantics
+(only the literal string `"FAIL"` triggers non-zero, confirmed against every real consumer, not
+assumed). The genuinely-dirty and explicit-unparsable pipeline paths are both byte-identical to
+before.
+
+Two things the ticket's own Open Questions got right to flag as uncertain and which investigation
+corrected rather than confirmed as stated: the ordering assumption *does* hold, but the top-ranked
+`start_ts` candidate is weaker evidence than "most semantically correct" implied — it defaults to
+closure time, not true session start, in this repo's actual observed hand-orchestration pattern.
+The evidence string now says so inline rather than presenting a resolved value as unconditionally
+trustworthy. No known material gap.

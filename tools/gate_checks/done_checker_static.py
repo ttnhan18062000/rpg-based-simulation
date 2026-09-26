@@ -5,11 +5,15 @@ and Finalize (after its own migration steps) both currently rely entirely on LLM
 conditions that are actually machine-checkable. This module gives both call sites a deterministic
 verifier for that subset:
 
-- Part A (`run_static_precheck`): the 5 pre-Finalize conditions `done-checker` can check before
+- Part A (`run_static_precheck`): the pre-Finalize conditions `done-checker` can check before
   Finalize has run (staging artifacts complete, data/runs+release_proof clean, ticket still in
-  tickets/inprogress/, no working_log row yet, frontmatter valid). Called from the Verify-phase
-  agent prompt in `.claude/workflows/implement-ticket.js`; a static FAIL downgrades to the
-  existing `DOD_BLOCKED` status — no new status vocabulary here.
+  tickets/inprogress/, no working_log row yet, frontmatter valid, and more added since). Called
+  from the Verify-phase agent prompt in `.claude/workflows/implement-ticket.js`; a static FAIL
+  downgrades to the existing `DOD_BLOCKED` status. Not FAIL-or-PASS-only: `NA` (a condition that
+  doesn't apply to this tier) and, since TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS,
+  `INDETERMINATE` (a condition that couldn't be measured at all) both exist alongside PASS/FAIL —
+  every real consumer of this contract branches only on the literal string `"FAIL"`, never on an
+  assumption that only two values exist.
 - Part B (`run_finalize_selfcheck`): the 4 post-Finalize conditions confirming Finalize's own
   migration actually landed (stored_artifacts/ complete and staging_artifacts/ gone, ticket moved
   to tickets/done/, exactly one working_log row, and — as of TCK-20260709-REGISTRY-REGEN-ON-CLOSE
@@ -239,9 +243,61 @@ def _find_flagged_data_run_files(
 
 def check_data_runs_clean(
     start_ts: str | None,
+    ticket_id: str | None = None,
     runs_dir: Path = Path("data/runs"),
     proof_dir: Path = Path("reports/release_proof"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
+    """`start_ts` given (whether it parses or not) is unchanged, existing behavior (AC4) — an
+    explicit-but-unparsable value still flags every file, the pipeline path's fail-closed rule.
+
+    When `start_ts` is absent (the hand-orchestrated CLI path, which has never had a source for
+    it), falls back to this ticket's own run record in `agent-monitoring/data/*/runs.jsonl`
+    (`run_id == ticket_id`, the same shape `check_monitoring_write_recorded` already reads via
+    `_jsonl_rows_for_run_id_across_weeks`) — but that value is only as reliable as whatever the
+    closer passed to `record_hand_orchestrated_closure.py`'s own `--start-ts`; if that was also
+    omitted, it defaults to closure time, not true session start (see this ticket's
+    investigation.md), so the evidence string discloses the source and its caveat rather than
+    presenting a resolved value as unconditionally trustworthy.
+
+    If neither source resolves, returns `INDETERMINATE` (TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-
+    NO-START-TS) — never `FAIL` purely for lack of a start point (that was the bug: "unparsable start_ts
+    is not evidence of cleanliness" correctly means "don't call it PASS," not "call it FAIL and read
+    identically to a real dirty-repo finding")."""
+    if not start_ts and ticket_id:
+        run_rows = _jsonl_rows_for_run_id_across_weeks(data_root, "runs.jsonl", ticket_id)
+        resolved = run_rows[0].get("start_ts") if run_rows else None
+        if resolved:
+            flagged = _find_flagged_data_run_files(resolved, runs_dir, proof_dir)
+            source = (
+                f"this ticket's own run record in {data_root}/*/runs.jsonl (start_ts={resolved!r}) "
+                "-- caveat: reliable only if the closer passed a real --start-ts to "
+                "record_hand_orchestrated_closure.py; if that was also omitted this defaults to "
+                "closure time, not true session start, so a PASS here is weaker evidence than an "
+                "explicit --start-ts would give"
+            )
+            if flagged:
+                return (
+                    "FAIL",
+                    f"File(s) at/after start_ts (source: {source}): "
+                    f"{', '.join(str(f) for f in flagged)}",
+                )
+            return ("PASS", f"{runs_dir} and {proof_dir} clean of this session's artifacts (source: {source})")
+        return (
+            "INDETERMINATE",
+            f"no --start-ts given and no run record for {ticket_id} found under "
+            f"{data_root}/*/runs.jsonl -- data_runs_clean cannot be measured for this invocation; "
+            "pass --start-ts <ISO-8601> reflecting when this ticket's own work began for a real "
+            "determination",
+        )
+    if not start_ts:
+        return (
+            "INDETERMINATE",
+            "no --start-ts given and no ticket_id supplied to look up a run record -- "
+            "data_runs_clean cannot be measured for this invocation; pass --start-ts <ISO-8601> "
+            "reflecting when this ticket's own work began for a real determination",
+        )
+
     flagged = _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)
     if flagged:
         return (
@@ -804,7 +860,7 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
     """
     checks = (
         ("staging_artifacts_complete", check_staging_artifacts_complete(ticket_id, tier)),
-        ("data_runs_clean", check_data_runs_clean(start_ts)),
+        ("data_runs_clean", check_data_runs_clean(start_ts, ticket_id)),
         ("ticket_location", check_ticket_location(ticket_id)),
         ("working_log_no_row_yet", check_working_log_no_row_yet(ticket_id)),
         ("frontmatter_valid", check_frontmatter_valid(ticket_id, tier)),
