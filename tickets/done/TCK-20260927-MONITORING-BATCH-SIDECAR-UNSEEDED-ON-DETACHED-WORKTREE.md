@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260927-MONITORING-BATCH-SIDECAR-UNSEEDED-ON-DETACHED-WORKTREE
-phase: open
+phase: done
 date: 2026-09-27
 tags: [agent-monitoring, data-quality, hooks]
 ---
@@ -157,33 +157,81 @@ None yet.
   cost. But it leaves this worktree, and any other worktree detached at the wrong moment, generating
   a fragment per SHA forever, which is the outcome the rationale assumed was rare.
 
-Recommend **A**, with the docstring updated to state the reflog step explicitly. B is the acceptable
-fallback if investigation finds the reflog unreliable in a way the observed case did not show — e.g.
-if `gc.reflogExpire` pruning or a `logs/HEAD`-less worktree turns out to be common here rather than
-theoretical. That reliability question is the thing investigation should settle first.
+**RESOLVED: Option A implemented.** Verified independently on a SECOND worktree (this one,
+`doc-tag-enforcement`, not just the reporting worktree): 90 real `checkout: moving from ... to
+...` entries in its own reflog, most recent one naming its actual current branch — the reflog's
+reliability is not specific to one worktree's own history shape. No sign of `gc.reflogExpire`
+pruning or a missing `logs/HEAD` in either worktree examined; Option B was not needed.
 
-Open, smaller:
+Open, smaller — both decided:
 
-- Should a reflog-recovered branch name be validated against `refs/heads/` before use, or is a
-  stale-but-real-looking name acceptable? The sidecar is a cache for attribution, not a git
-  operation, so a deleted branch's name may still be the correct attribution for those rows — but
-  this should be decided deliberately, not fall out of the implementation.
-- Should the recovered value be written to the sidecar (persisting it, so later calls are cheap) or
-  only used in-memory? Writing it matches the existing refresh-on-resolution design; not writing it
-  keeps the sidecar meaning "a real attached resolution happened here".
+- **Validate against `refs/heads/`? No.** Confirmed as reasoned: the sidecar is for attribution,
+  not a live git operation. Proven with a direct test (`test_reflog_names_deleted_branch_still_
+  used_not_validated`) — a branch checked out, detached from, then deleted still resolves to its
+  own name.
+- **Write the recovered value to the sidecar? Yes.** This is what actually closes the ticket's own
+  gap — a worktree detached at every moment a hook has ever run on it would otherwise never get a
+  first chance to seed `.claude/current_batch`. Matches the module's own existing "refreshed on
+  every successful resolution" principle; the reflog recovery is a successful resolution, just a
+  colder one than a live attached HEAD.
 
 ## Implementation Notes
 
-_To be filled during implementation._
+A subtlety found only by writing the tests, not anticipated in planning: **the detach operation
+itself writes a `checkout: moving from <branch> to <sha>` reflog entry** — the exact same textual
+shape being searched for, with the detach's own SHA target standing in as `<name>`. The most
+recent real-branch-target entry is *not* simply "the last reflog line matching the pattern" — it's
+the last one whose `<name>` isn't itself a raw SHA. Without this check, `_branch_from_reflog()`
+would have returned the detach's own commit SHA as a "recovered branch name" on the very first real
+test case exercised (`test_detached_head_without_sidecar_falls_back_to_labeled_identifier`, an
+*existing* test this ticket must not break) — confirmed by running the naive version first and
+watching that pre-existing test fail. Added `_RAW_SHA_RE` (`^[0-9a-f]{7,40}$`) to skip exactly this
+shape while scanning backward.
 
 ## Test Summary
 
-_To be filled during implementation._
+- `tests/tools/test_monitoring_batch_identifier.py` — 7 new tests (reflog recovers + seeds
+  sidecar; all-SHA reflog falls through; absent reflog falls through; deleted-branch name still
+  used; attached-HEAD short-circuits before reflog is ever consulted; `detached-<sha>` still
+  reachable with its warning; end-to-end `resolve_write_target()` uses the recovered name).
+  `/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -m pytest
+  tests/tools/test_monitoring_batch_identifier.py -v` — **16 passed** (9 existing unmodified + 7
+  new).
+- Every real downstream consumer's own test suite re-run unmodified: `test_working_log_writer.py`,
+  `test_retrieval_events.py`, `test_record_run.py`, `test_shadow_reviewer_window.py`,
+  `test_shadow_reviewer_call_site.py`, `test_post_tool_hook.py`,
+  `test_record_hand_orchestrated_closure.py` — **154 passed**, 0 failed.
+- AC2 (no subprocess introduced) — the module's own pre-existing
+  `test_resolver_module_makes_no_subprocess_call` test already covers this generically; re-ran
+  green, no new import added.
+- Full cross-cutting regression: `tests/tools/ tests/agent_replay_codex/ tests/api/ -m "not slow
+  and not extra_slow"` — **3278 passed**, 30 skipped, 28 deselected, 1 xfailed, 0 failed.
 
 ## Files Changed
 
-_To be filled during implementation._
+- `tools/agent-monitoring/monitoring_batch_identifier.py` — `_branch_from_reflog()` (new),
+  `_RAW_SHA_RE` guard against mistaking a detach's own SHA target for a branch name, resolution
+  order gains the reflog step between the sidecar and `detached-<sha>`, docstring corrected to
+  state the real coverage guarantee, `detached-<sha>` warning message updated.
+- `tests/tools/test_monitoring_batch_identifier.py` — 7 new tests.
+- `staging_artifacts/TCK-20260927-MONITORING-BATCH-SIDECAR-UNSEEDED-ON-DETACHED-WORKTREE/
+  {investigation,plan,test_plan}.md` (new).
+- `docs/REGISTRY.yaml` — regenerated as part of ticket close (routine, unconditional per the
+  Finalize rule).
 
 ## Completion Summary
 
-_To be filled during implementation._
+`monitoring_batch_identifier.py`'s docstring claimed the sidecar covers "a worktree that was ever
+attached to a real branch even once"; the actual coverage was "a worktree in which a hook ran
+while attached, after this module shipped" — a real gap, confirmed live on a worktree attached to
+20+ real branches with `.claude/current_batch` still never seeded. Closed by inserting a reflog-
+recovery step (verified reliable on a second, independent worktree, not just the one that reported
+it) between the sidecar and the `detached-<sha>` last resort, seeding the sidecar on success so the
+docstring's stated guarantee now actually holds. Deliberately does not validate the recovered name
+against `refs/heads/` (a deleted branch is still correct historical attribution) and deliberately
+does not re-litigate the `detached-<sha>` design itself, per this ticket's own Out of Scope.
+
+Found and fixed one subtlety during test-writing that planning didn't anticipate: a detach's own
+reflog entry has the exact same textual shape as a real branch checkout and had to be explicitly
+excluded, or the very first existing test this ticket touches would have broken. No known material
+gap.
