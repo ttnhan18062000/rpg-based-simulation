@@ -124,6 +124,16 @@ Check each condition. Mark PASS, FAIL, or N/A with evidence.
 9. **Repo state is consistent**
    - No leftover staging or temp files.
    - No half-written files or uncommitted partial work that would confuse future readers.
+   - **A `tickets/todos/` copy of the ticket under check is a failure only when the caller did
+     not declare it.** Scope deliberately copies a non-epic ticket from `tickets/todos/` to
+     `tickets/inprogress/` and leaves the `tickets/todos/` original in place; Finalize deletes it
+     after this check passes — so at Verify time that exact duplicate is expected pipeline state,
+     not inconsistency, and must not be flagged. If the Verify prompt names a
+     `todos_source_path` for this ticket, treat exactly that path as declared and expected; any
+     other `tickets/todos/` duplicate is still a real finding. If no `todos_source_path` is named
+     (e.g. a hand-orchestrated closure with no orchestrator to declare it), a `tickets/todos/`
+     duplicate is a real finding — nothing else will delete it on that path
+     (`TCK-20260927-PHASE-PROMPTS-OMIT-GATE-PRECONDITIONS`).
 
 10. **Temporary run data cleaned** (Step 0a auto-cleans immediately before this check — see Step 0 above)
     - `data/runs/` is clear of this session's run artifacts (or note why they were kept).
