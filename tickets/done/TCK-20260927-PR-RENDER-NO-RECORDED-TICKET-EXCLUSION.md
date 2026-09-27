@@ -111,6 +111,12 @@ needed operator judgment.
    separately as today.
 3. A `--check` run with no operator-supplied flags reproduces the recorded exclusions — demonstrated
    by a test that reads the record from the repo rather than from call arguments.
+   **[Superseded — design-peer review nit, corrected before PR]: "the repo" is stale wording from
+   before the design moved to the PR body. The record lives in the live PR body (an HTML comment),
+   never a repo file — that is the entire point of the corrected design (see Implementation Notes'
+   retraction). AC3 is satisfied by `test_ac3_check_with_no_operator_flags_reproduces_recorded_
+   exclusion_from_live_body_alone`, which reads the record from a faked `gh pr view` body, not
+   from any repo path.**
 4. Excluding an ID that is not in the discovered set is **reported**, not silently ignored.
 5. The commit-subject/changed-file mismatch warning still appears for the underlying disagreement even
    when an exclusion is recorded for it.
@@ -186,12 +192,26 @@ HTML comment embedded in the rendered PR body itself, read back via the `gh pr v
 - `pytest tests/tools/ -m "not slow"` (full scoped regression) — **3130 passed, 25 skipped, 28
   deselected, 1 xfailed, 0 failed.**
 
+**Post-close, pre-PR review finding (design peer), fixed in a follow-up commit before opening the
+PR:** a `reason` containing an unescaped `"` silently truncated the recorded reason at
+`_EXCLUSION_COMMENT_RE`'s `[^"]*` capture and dropped the exclusion entirely on the next
+round-trip through `extract_recorded_exclusions()` — the exact "silent, unexplained drift"
+symptom this ticket exists to fix, one level down, with no warning anywhere. A `-->` in the
+reason also closes the HTML comment early in GitHub's own renderer. Verified directly against
+this module (not accepted on the peer's report alone) before fixing. Fixed by validating both
+cases in `render_exclusion_comment()` itself — the single write path every caller (CLI, the
+internal re-render inside `check_against_live()`, direct test/API use) goes through — raising
+`ValueError` with a message naming the exact problem, rather than only gating the CLI's
+`--exclude-reason` flag. 3 new tests added; `pytest tests/tools/test_delivery_pr_render.py -v` —
+**41 passed** (38 + 3).
+
 ## Files Changed
 - `tools/delivery/pr_render.py` — added `_EXCLUSION_COMMENT_RE`, `render_exclusion_comment()`,
   `extract_recorded_exclusions()`; widened `discover_tickets()`/`render()`/`render_body()` with an
   `exclusions` parameter; `check_against_live()` now reads exclusions from the fetched live body;
   new `--exclude-ticket`/`--exclude-reason` CLI flags for the first render before a PR exists.
-- `tests/tools/test_delivery_pr_render.py` — 12 new tests.
+  Follow-up: `render_exclusion_comment()` now rejects a `reason` containing `"` or `-->`.
+- `tests/tools/test_delivery_pr_render.py` — 12 new tests, plus 3 more from the review-driven fix.
 - `staging_artifacts/TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION/` —
   `investigation.md`/`plan.md`/`test_plan.md` (including the documented design retraction).
 
@@ -207,4 +227,6 @@ already fetches, so a PR whose body reflects its own recorded exclusion reports 
 `matches: True` — closing the gap PR #251 exposed one section over from
 `TCK-20260927-PR-RENDER-CHECK-ALWAYS-DIFFERS`'s own fix. The underlying commit-subject/changed-
 file mismatch warning is untouched by an exclusion (AC5) — recording one is presentation, never a
-resolution of the diagnostic.
+resolution of the diagnostic. A second design-peer review pass, before the PR was ever opened,
+caught a real quote-escaping bug in the comment format itself (see the Test Summary addendum
+above) — fixed the same session, verified independently before accepting.

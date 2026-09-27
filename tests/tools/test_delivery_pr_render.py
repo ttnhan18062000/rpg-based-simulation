@@ -758,3 +758,33 @@ def test_cli_exclude_ticket_and_reason_must_pair_up(capsys):
     exit_code = pr_render.main(["--exclude-ticket", "TCK-20260924-A"])
     assert exit_code == 1
     assert "same number of times" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------------------
+# Design-peer review finding, pre-PR (same ticket): a reason containing an unescaped `"` silently
+# truncates the recorded reason and drops the exclusion entirely on the next round-trip -- exactly
+# the "silent, unexplained drift" symptom this ticket exists to fix, one level down. Fixed by
+# validating at render_exclusion_comment()'s single write path.
+# ---------------------------------------------------------------------------
+
+def test_reason_with_double_quote_is_rejected_not_silently_corrupted():
+    with pytest.raises(ValueError, match="double quote"):
+        pr_render.render_exclusion_comment("TCK-20260924-A", 'named as "context" only')
+
+
+def test_reason_with_html_comment_close_is_rejected_not_silently_corrupted():
+    with pytest.raises(ValueError, match="-->"):
+        pr_render.render_exclusion_comment("TCK-20260924-A", "closed --> already, no action needed")
+
+
+def test_reason_with_double_quote_via_render_surfaces_as_a_clean_cli_error(tmp_path):
+    """The validation protects every call path, not just a CLI-level flag check -- exercised here
+    through render()'s own normal call chain (render() -> render_body() ->
+    render_exclusion_comment()), the same path a bad --exclude-reason value or a bad
+    programmatic `exclusions` dict would take."""
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    with pytest.raises(ValueError, match="double quote"):
+        pr_render.render(
+            tickets_root=tickets_root, run_command=runner,
+            exclusions={"TCK-20260924-B": 'named as "context" only'},
+        )

@@ -132,7 +132,33 @@ def load_ticket(path: Path) -> dict:
 
 def render_exclusion_comment(ticket_id: str, reason: str) -> str:
     """Formats one `pr-render:exclude` HTML comment line -- the single place the literal comment
-    shape is written, so `_EXCLUSION_COMMENT_RE` above always matches what this emits."""
+    shape is written, so `_EXCLUSION_COMMENT_RE` above always matches what this emits.
+
+    Raises `ValueError` if `reason` contains `"` or `-->`, neither of which can be safely embedded
+    unescaped in `reason="..."` inside an HTML comment: a `"` truncates `_EXCLUSION_COMMENT_RE`'s
+    `[^"]*` capture at the first occurrence, silently dropping the rest of the reason AND the
+    exclusion itself on the next round-trip through `extract_recorded_exclusions()` -- with no
+    warning anywhere, which recreates the exact "silent, unexplained drift" symptom this ticket
+    exists to fix, one level down. A `-->` inside the reason closes the HTML comment early in
+    GitHub's own renderer, spilling the remainder as visible text on the rendered PR page. Found
+    by design-peer review before this ticket's PR was ever opened, verified directly against this
+    module before accepting the finding -- validated here, at the single write path, rather than
+    only in the CLI argument parser, so every caller (CLI, `check_against_live()`'s own internal
+    re-render, direct test/API use) is protected, not just the interactive `--exclude-reason` flag.
+    """
+    if '"' in reason:
+        raise ValueError(
+            f"exclusion reason for {ticket_id!r} contains a double quote, which would silently "
+            f"truncate the recorded reason (and drop the exclusion entirely) on the next "
+            f"round-trip through extract_recorded_exclusions() -- rewrite the reason without a "
+            f'literal " character: {reason!r}'
+        )
+    if "-->" in reason:
+        raise ValueError(
+            f"exclusion reason for {ticket_id!r} contains '-->', which would close the HTML "
+            f"comment early in GitHub's own renderer and spill the remainder as visible text on "
+            f"the rendered PR page -- rewrite the reason without a literal '-->': {reason!r}"
+        )
     return f'<!-- pr-render:exclude {ticket_id} reason="{reason}" -->'
 
 
