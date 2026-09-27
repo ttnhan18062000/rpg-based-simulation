@@ -37,6 +37,12 @@ the end for the short list of things this document cannot decide for itself.
 standalone location, not appended to any of the above. Marked `PROPOSED / FOR REVIEW` throughout;
 promotion to `active` status is the owner's call, not decided here.
 
+**Companion document, added 2026-09-27 (fourth review round)**:
+`docs/plans/systemic_world_first_wave_plan.md` holds the concrete milestone plan (entry/exit
+evidence, domain ownership, a decision gate) for the first wave this roadmap's §7/§8 recommend —
+kept separate so this document stays a capability/dependency map rather than a milestone transcript,
+per the finalize instruction's own request.
+
 ---
 
 ## 1. Product north star
@@ -97,7 +103,7 @@ domain, not just the ones under active development.
 | `DESIGNED` | Fully, within the frozen Catalog's current scope — Milestone A is complete for the cases it addresses; this is not a claim that every future world case is designed. |
 | `REALIZED` | Strong for the domains this investigation traced (Combat, Harvest, Quest reward — Part A). |
 | `VERIFIED` | Partial — `TCK-20260401-ACTION-CONVERGENCE`'s bit-identical-replay acceptance criterion is real, checked evidence for the authoritative-apply/replay-determinism law specifically; not every domain's own state-authority pattern has been individually checked. |
-| `INTEGRATED` | **Confirmed fragile even where individually verified** — the regional-sovereignty dual-authority bug (two systems independently writing the same field, at different thresholds) was found in an already-shipped, already-tested domain, during unrelated work this same investigation arc. This is the concrete cautionary example for this whole capability area: verification of one domain in isolation does not prove integration across domains. |
+| `INTEGRATED` | **Confirmed fragile even where individually verified — and confirmed recurring, not a one-off.** The regional-sovereignty dual-authority bug (two systems independently writing the same field, at different thresholds) was found in an already-shipped, already-tested domain during unrelated work this arc. The bounded audit run this round (below) found a **second, independent instance of the same defect class**: `entity.lifecycle.active` is raced between `ApplyPath`'s passive-decay branch and `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE dispatch (§7) — this one directly breaks the lineage trajectory's own natural-aging path, not a hypothetical elsewhere. Two independent, confirmed instances in one investigation arc is stronger evidence for this row's own concern than either instance alone. |
 | `PLAYER-EXPERIENCED` | Not directly surfaced as its own player-visible layer — but experienced indirectly, whenever a player encounters a coherent consequence that depends on this substrate holding (e.g. a region's ownership actually changing consistently). Not yet evaluated for that indirect effect specifically. |
 
 **Cross-domain proof, revised to a bounded target (external review correction, 2026-09-26)**: an
@@ -107,6 +113,35 @@ control fields written from more than one system, the shape the regional-soverei
 had), review ownership/authority at those specific boundaries, and exercise representative
 integration scenarios for each. Report the scope actually covered and name what remains `UNKNOWN`
 outside that scope — never claim the absence of a defect outside the boundary actually checked.
+
+**Audit actually run, 2026-09-27 (fourth round, per the finalize instruction's §4)** — a named,
+finite set of 5 boundaries, each with an explicit outcome, not "swept the whole engine":
+
+| # | Boundary | Classification |
+|---|---|---|
+| 1 | Region ownership: `RegionState.owner_faction_id` vs. `FactionState.territory` (siege transfer) | `DEFECT_CONFIRMED` — but already known/tracked (`FAC-010`, `docs/parity_ledger/faction.yaml:227-237`, `status: verified`, intentional divergence, not hidden). Downstream consequence (does taxation fire against a stale post-siege owner?) is `UNKNOWN_WITH_REASON` — no test combines siege transfer with a subsequent taxation tick. |
+| 2 | Entity death: `alive_set` written from `combat.py` (5 sites) and `world_dynamics.py` (hazard damage) | `UNKNOWN_WITH_REASON` — explicit cross-system precedence comments exist (`groups.py:99`, `clan_lifecycle.py:19`), suggesting deliberate ordering, but no scenario test exercises a same-tick hazard-kill + combat-kill collision to verify it. |
+| 3 | Faction diplomacy: `diplomatic_relations_set` from the autonomous state machine and the auto-alliance handler, same tick, same pipeline phase | `UNKNOWN_WITH_REASON` — ordering is fixed and looks intentional (transitions computed, then alliance layered after, `pipeline.py:255-283`), but no test asserts the same-pair-same-tick collision case. |
+| 4 | Quest status: `QuestUpdate.status_set` from 4 files across distinct pipeline phases | `CONFIRMED_FINE_WITHIN_SCOPE` — a strict forward state machine; matches Part A's own prior finding that quest reward is the cleanest single-writer-per-stage pattern found anywhere. |
+| 5 | Public reputation: `SocialComponent.reputation` (`reputation_set`) from `social_memory.py` and `orchestrator.py` | `UNKNOWN_WITH_REASON` — two real writer call sites for the same durable field; phase ordering and same-tick-same-entity collision not checked this round. Separate from the roadmap's already-flagged *semantic* question of what `public_reputation` means (Owner Decision List item 3) — this is a mechanical dual-writer check only. |
+
+**A sixth, unplanned finding surfaced independently** (not part of this 5-boundary set, found instead
+while investigating the lineage feasibility gate, §7): `entity.lifecycle.active` is raced between
+`ApplyPath`'s passive-decay branch and `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE dispatch —
+a confirmed, reproducible `DEFECT_CONFIRMED` of the exact same class, found by running code rather
+than reading it. See §7 for the full account; it directly blocks natural-aging succession, not a
+hypothetical case.
+
+**Exit condition, stated exactly**: this is a named set of 5 (+1 unplanned) boundaries with explicit
+outcomes — 2 `DEFECT_CONFIRMED`, 3 `UNKNOWN_WITH_REASON`, 1 `CONFIRMED_FINE_WITHIN_SCOPE`. It does
+**not** claim the regional-sovereignty defect class is absent elsewhere in the engine. **Deliberately
+not checked this round** (named, not silently skipped): market/economy authoritative price or
+inventory fields; combat durability/HP fields across the three known dispatch paths (Part A already
+flagged dispatch plurality from a different angle); `cooldown_set`, `group_id_set`/`GroupRecord`,
+and strategic-cognition bundle fields; `src/economy/vacancy.py`'s vacancy/settlement fields;
+institutional standing (does not yet exist as a mechanism, so moot). No production code was changed
+by this audit — boundary 1's downstream-consequence gap and the new lifecycle-active race are
+flagged for escalation, not fixed here.
 
 **The semantic obligation itself is already supported, within investigated scope — corrected per
 external review, 2026-09-27**: every persistent fact has a canonical authority, and a world effect
@@ -130,10 +165,10 @@ Milestone A and the Agency/Recognition thread.
 
 | Domain | `DESIGNED` (within current Catalog scope) | `REALIZED` (high-level) |
 |---|---|---|
-| Life/Body/Ecology (Batch 05) | Full, for cases the batch investigated | Uneven — no HP recovery mechanism at all; aggregate population disconnected from individual births/deaths (Batch 05's own finding, not re-verified this arc) |
+| Life/Body/Ecology (Batch 05) | Full, for cases the batch investigated | Uneven — no HP recovery mechanism at all; aggregate population disconnected from individual births/deaths (Batch 05's own finding, not re-verified this arc). **Confirmed this round (fourth review round, checked as a candidate trajectory, §7)**: `regional_trauma`/`calamity_intensity` (environmental-threat/calamity mechanisms) are `state: done` but real corpus runs `contradicted` them outright — built and wired, but the `trauma_score`/`calamity_intensity` values never actually move in real play (already-open tickets `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`, `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`). This is a stronger finding than "uneven" — a mechanism that was tested and found not to fire, not merely untested. |
 | Space/Environment (Batch 04) | Full, for cases the batch investigated | Two confirmed repository gaps (no route/portal mechanism; no non-physical movement) at Catalog-freeze time, not re-checked this arc |
 | Material/Economy (Batch 08) | Full, for cases the batch investigated | **Confirmed gaps this arc**: wealth→leverage conversion `MISSING` on three independent paths (`ME-S12`); the heirloom/`"CHEST"` resolver bug, plus a sibling risk in the harvest `"NODE"` resolver path (Part A) |
-| Social/Lineage (Batch 09) | Full, for cases the batch investigated | **Real, evidenced proof of the general shape working** (not a full cross-domain generalization by itself) — feud inheritance, dying wishes, displacement, heirloom transfer, and leadership succession are all `PROVEN CURRENT` at the mechanism level and compose into a real history-to-behavior loop; whether this *scales* to a presentable, temporally-continuous player-facing sequence is a separate, unchecked question (§5) |
+| Social/Lineage (Batch 09) | Full, for cases the batch investigated | **Real, evidenced proof of the general shape working, with a confirmed reachability caveat (fourth round, 2026-09-27)** — feud inheritance, dying wishes, displacement, heirloom transfer, and leadership succession are all `PROVEN CURRENT` at the mechanism level *for the artificially-staged already-past-max-age case both repo tests use*. Attempting to compose a second hop through **ordinary, gradual per-tick aging** (no manual staging) surfaced a real, reproducible defect: `ApplyPath`'s passive-decay branch deactivates the entity one tick before `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE check ever runs, so succession/heirloom/dying-wish dispatch **never fires** for a death that arrives gradually rather than pre-staged (§7). Whether this *scales* to a presentable, temporally-continuous player-facing sequence is now blocked on fixing this specific defect, not merely an unchecked design question (§5, §7). |
 | Institutions/Politics/Law (Batch 10) | Full, for cases the batch investigated | **Confirmed gap**: no per-(institution, individual) standing of any kind (`IP-S17`); no in-world law/enforcement subsystem at all (Batch 10's own freeze-time finding) |
 | Culture/Belief (Batch 11B) | Full, for cases the batch investigated | `CultureState` real but correctly `PARTIAL` (not the complete definition of culture); belief-institution role narrowly scoped |
 | Magic/Supernatural (Batch 12) | Full, for cases the batch investigated | **Weakest realization of any domain** — no dedicated magic mechanism of any kind exists, with one real, live, structurally-ready exception (`PerceptionGate`'s own `magic_sense`/`magic_signal` channel, currently `INERT-OFF`) |
@@ -355,7 +390,7 @@ one — a non-recognition, non-combat domain, evidenced today. A second contrast
 
 | Proof | Currently evidenced | Requires engineering | Evidence needed to claim delivery |
 |---|---|---|---|
-| Lineage (leading candidate, gate partially run — §7) | Mechanism: yes, for the single death-to-heir transition (`PROVEN CURRENT`, re-confirmed 2026-09-27); composition into a longer sequence and product/player feasibility: `UNKNOWN` (gate Q1 partial, Q2/Q3 unknown, Q4 partial) | Resolve gate Q2/Q3 (feasibility exercise, §8) first; then projection work, scope depending on findings | Gate questions 1 (full composition) and 3 answered from a real seeded run at the longer timescale, *then* player-observation evidence per the calibrated criterion below |
+| Lineage (leading candidate, gate partially run — §7) | Mechanism: yes, for the single death-to-heir transition (`PROVEN CURRENT`, re-confirmed 2026-09-27); composition into a longer sequence: `BLOCKED` on a confirmed dual-writer race, not `UNKNOWN` (§7.1); product/player feasibility for the single hop: `partial`, design-check evidence exists (§7.2) | Turn the §7.2 design sketch into a real observer test (feasibility exercise, §8) for the single hop now; the multi-hop half needs §7.1's defect fixed first — a separate, tracked prerequisite, not open-ended projection work | The §7.1 defect fixed, *then* gate questions 1 (full composition) and 3 answered from a real seeded run at the longer timescale, *then* player-observation evidence per the calibrated criterion below |
 | Recognition (later) | Partial — direct-interaction case only | §3.4's propagation gap, §3.5's projection | Scenario-runtime evidence: a seeded scenario where two observers diverge, sourced from real propagation, not a global-scalar read |
 | Closed-loop (later still) | No | §3.4 opportunity-feedback + a later-decision trace | Scenario-runtime evidence spanning two decision points, not one |
 | Economy (contrasting) | No | §3.2's wealth-conversion edge | Scenario-runtime evidence for one concrete declared edge |
@@ -411,7 +446,7 @@ registry/test checks), **player observation** (which legitimate traces a player 
 | Area | Related Rules (SCP-mapped only where noted) | Realization/integration evidence | Consequential gaps | Missing evidence | Player-facing-proof potential |
 |---|---|---|---|---|---|
 | 3.1 World substrate | Milestone A (`ID-*`/`TIME-*`/`AUTH-*`/etc.) — **not SCP-mapped**, Catalog-level only | `TCK-20260401-ACTION-CONVERGENCE`'s replay-determinism law, verified. Regional-sovereignty dual-writer bug confirmed live (verified current, this session, 2026-09-23/24). | Cross-domain integration unverified outside the one checked case. | Whether the dual-writer pattern recurs elsewhere — `UNKNOWN`, bounded audit not yet run (§3.1). | Indirect only — a player never sees this layer directly. |
-| 3.2 Autonomous world dynamics (lineage slice) | `SOC-01` (Batch 09) — **not SCP-mapped** | `succession`/`aging_death` mechanisms, `registries/mechanisms.yaml`, `state: done`, `verified: {instrument: scenario, verdict: observed}` — the strongest evidence tier this repo uses. Two individual death-to-heir transitions re-run and confirmed passing 2026-09-27 (`tests/simulation_quality/test_heir_inventory_transfer_corpus.py`, `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py`) — **evidence for those specific transitions, not a composed longer sequence** (external review correction, third round). | Whether individual, proven transitions compose into a *longer*, multi-generation observable sequence — no test found running this at that timescale. | Chronology-over-a-real-period, identity continuity across many ticks — `UNKNOWN`, not fabricated (§7). | High on single-transition mechanism evidence; composed-sequence and player-facing feasibility still `UNKNOWN`, gated by §7's feasibility exercise (§8). |
+| 3.2 Autonomous world dynamics (lineage slice) | `SOC-01` (Batch 09) — **not SCP-mapped** | `succession`/`aging_death` mechanisms, `registries/mechanisms.yaml`, `state: done`, `verified: {instrument: scenario, verdict: observed}` — the strongest evidence tier this repo uses. Two individual death-to-heir transitions re-run and confirmed passing 2026-09-27 (`tests/simulation_quality/test_heir_inventory_transfer_corpus.py`, `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py`) — **evidence for those specific (artificially-staged) transitions, not a composed longer sequence**. | Whether individual, proven transitions compose into a *longer*, multi-generation observable sequence — **now `BLOCKED`, not merely untested (fourth round, §7.1)**: a real, reproducible dual-writer race on `entity.lifecycle.active` (`ApplyPath` vs. `LifecycleSystem.resolve_lifecycle`) prevents succession from firing at all for a death that arrives through ordinary per-tick aging rather than pre-staging. | Chronology-over-a-real-period, identity continuity across many ticks — `BLOCKED`, not fabricated, moot until §7.1's defect clears. | High on single-transition mechanism evidence; single-hop player-facing feasibility `partial` (a design-check observer sketch exists, §7.2); composed-sequence feasibility gated on a confirmed defect fix, not open design work (§7.1, §8). |
 | 3.3 Situated agency | `AGENCY-*`/`PERC-01`/`KNOW-01` — **SCP-mapped, all `PARTIAL`** (`registries/rule_classifications.yaml`, re-verified 2026-09-27) | Part A's own direct trace: Combat/Harvest/Quest-reward dispatch real; intent→payload edge `UNKNOWN`. | Shared upstream edge untraced across all three families. | Same. | Indirect — substrate beneath any future lens. |
 | 3.4 History and feedback (recognition) | `SOC-01`/`HP-*` — **not SCP-mapped** for the recognition-specific finding (the mapped `AGENCY`/`PERC`/`KNOW` rows above are Combat's own citations, not this area's) | Part B's own direct trace: `bonds`/`trust_history` real for direct participation; no producer for witnessed/hearsay. | The confirmed narrowest bottleneck in the whole arc. | Three-way primitive split still `OPEN` (§3.4). | Requires §3.4's own work to exist at all first. |
 | 3.5 Observation/player delivery | None — explicitly outside Catalog scope | Epistemic principle (§2) only; no gameplay lens chosen. | Everything — genuinely new area. | Everything not yet designed. | This *is* the delivery layer once built. |
@@ -424,48 +459,145 @@ simply a different evidentiary tier than an SCP-registered classification, and t
 conflate the two. No full-Catalog sweep was run to produce this table — only the Rules and
 mechanisms needed for the candidates actually under consideration in §7 were inspected.
 
-## 7. Feasibility gate results — lineage vs. economy/wealth (run 2026-09-27, reclassified per third external review round, 2026-09-27)
+## 7. Feasibility gate results — lineage vs. economy/wealth and other candidates (run 2026-09-27; composition probe and observer sketch actually executed, fourth review round, 2026-09-27)
 
-**Comparison candidate chosen**: economy/wealth (a genuinely different domain and causal path from
-lineage, per the instruction's own requirement) — not treated as ready; its own conversion edges
-are independently confirmed `MISSING` (`ME-S12`, Part B), which is itself informative for question 5.
+**Comparison candidates chosen**: economy/wealth (confirmed `BLOCKED` — no conversion mechanism
+registered anywhere), plus a bounded search this round for a second, genuinely-different-shape
+candidate (below). Every claim in this section is scoped to what was actually run or read, not
+narrated.
 
-**What the two re-run tests actually establish, precisely (external review correction, third
-round)**: `test_heir_inventory_transfer_corpus.py` and
-`test_lineage_dispatch_deterministic_kernel_tick.py` (re-run and passing, 2026-09-27) are real,
-`verified: observed`-tier evidence for **two specific death-to-heir transitions** — nothing more.
-They are **not** a completed five-question feasibility gate and **not** a player-facing proof. Every
-claim below is scoped to that.
+### 7.1 Composition probe — actually executed, not merely reasoned about
+
+A throwaway investigation script (not committed, not under `tests/`) built a 3-entity scenario
+(grandparent → parent → grandchild) reusing the exact `V2EntityBuilder`/`Kernel` technique the two
+repo tests use.
+
+**Tick 0 — real, composed inheritance, succeeded**: one real `kernel.tick_once()` produced, read
+directly from `kernel.state` afterward: the grandparent inactive with `death_reason="OLD_AGE"`; the
+parent's inventory gaining the grandparent's item alongside its own; the parent acquiring an
+`inherited_nemesis_99` blocker (severity halved per `LifecycleSystem`'s own multiplier); and a real
+dying-wish `NamedIntention` seeded with `source_entity_id=1`. This confirms the single hop is real
+and reproducible, exactly as the two repo tests already established — nothing new here.
+
+**Extending to a second, later-tick hop — a confirmed defect, not an unknown**: composing a *second*
+hop (the parent later dying through **ordinary, ungimmicked per-tick aging** rather than the
+"already past max_age" staging trick both repo tests use) surfaced a real, reproducible defect,
+verified empirically by running 5 real ticks and reading `kernel.state` after each one:
+
+```
+tick= 1 subject.age_ticks=1 active=True  death_reason=None  heir.inventory=[]
+tick= 2 subject.age_ticks=2 active=True  death_reason=None  heir.inventory=[]
+tick= 3 subject.age_ticks=3 active=False death_reason=None  heir.inventory=[]
+tick= 4 subject.age_ticks=4 active=False death_reason=None  heir.inventory=[]
+tick= 5 subject.age_ticks=5 active=False death_reason=None  heir.inventory=[]
+```
+
+The subject goes inactive at tick 3 and **stays that way forever with `death_reason=None`** —
+`LifecycleSystem.resolve_lifecycle`'s own OLD_AGE branch never fires, and no succession/heirloom/
+feud/dying-wish dispatch happens at all. **Root cause**: `resolve_lifecycle`'s own OLD_AGE check
+(`src/systems/lifecycle_systems/lifecycle.py:193-194`) reads `age_ticks` as persisted at the *end of
+the prior tick*; `ApplyPath._compute_entity_changes` (`src/engine/apply.py:94-99`) independently
+computes `new_age = age_ticks + 1` and commits `active=False` **one tick ahead**, with no
+`death_reason` and no heir dispatch, in the *same* tick's commit. Next tick, `resolve_lifecycle`'s
+own `if not entity.lifecycle.active: continue` guard finds the entity already inactive and skips it
+— succession never runs. **Why the two existing repo tests never hit this**: both stage `age_ticks`
+already massively past `max_age_ticks` from the tick-0 starting snapshot, so `resolve_lifecycle`'s
+check fires immediately in the very first tick, before the passive branch ever gets a chance to race
+ahead on some later tick. The race only exists for a death arriving gradually, in the ordinary run
+of the simulation — exactly the case a longer, composed lineage sequence would need.
+
+**This is the same defect class §3.1's bounded audit exists to catch** — a dual-writer race on a
+durable field (`entity.lifecycle.active`), no declared precedence rule — found here independently,
+by running code rather than reading it. **Narrowest confirmed blocker, stated exactly**: this is not
+a scenario-setup problem, not a missing runtime integration, and not a missing evidence-production
+gap — it is a real, reproducible simulation defect. (A combat-triggered second death was not tried as
+an alternative path this round; a static read suggests it does not share this specific age-based
+race, but that is untried, out of this probe's bound.)
+
+### 7.2 Minimal provisional observer position + evidence packet (design check only)
+
+**Not** a real player-observation exercise — `PLAYER-EXPERIENCED` is not claimed for anything below.
+
+**Position**: a townsperson NPC with an existing `SocialComponent.bonds` entry to the deceased or
+heir, co-located at the death site. **Early clue**: the heir is visibly carrying an item never seen
+on them before, shortly after a nearby death — a legitimate in-world trace (inventory/equipment
+state), not a developer log. **Reasonable hypothesis available from that clue alone**: "this person
+is the deceased's heir" — true in this run, but the clue alone can't prove it (the fallback heir
+selector picks the highest-bond candidate, not necessarily a *socially designated* heir; mere item
+possession can't distinguish heir from opportunistic looter). **Later clue that could revise the
+hypothesis**: the heir observed acting on the inherited grudge or dying wish would strengthen the
+hypothesis toward confirmed — but **nothing in the current code path produces that observable
+action** (see negative check below), so this confirming clue cannot occur today without further work.
+
+**Negative check 1 (no discoverable trace)**: the inherited nemesis blocker and dying wish are pure
+cognition/strategic internal state — `LifecycleSystem._seed_dying_wish`'s own docstring states
+plainly that nothing in this codebase reads `NamedIntentionBundle.status` to force an action. No
+system converts either into any player-observable signal today. If the product ever expects a player
+to notice "this NPC now secretly resents someone," there is currently **zero** discoverable trace —
+exactly the failure case §5's evaluation criterion warns against (this may be a fine, intentional
+private-hook state for now — just not yet exposed, not evidence against the mechanism itself).
+
+**Negative check 2 (a named leak-risk)**: any future biography/HUD projection rendering
+`EntityState.cognition.motivation.named_intention` or `EntityState.strategic.blockers` verbatim to
+the player would leak literal internal world-truth as if it were ordinary public knowledge — the
+same discipline `KnowledgeModelService`'s "hidden world truth is never injected" invariant already
+enforces for NPCs. These two fields are named precisely as the leak surface for future projection
+work to guard against.
+
+### 7.3 Gate question table
 
 | Gate question | Lineage | Economy/wealth (comparison) |
 |---|---|---|
-| **1. Consequential sequence from real state/history, no invented events?** | **Partial.** The two single-tick transitions themselves are real, not fabricated: death→heir-inventory-transfer (`test_heir_inventory_transfer_corpus.py`) and death→feud-blocker-transfer+dying-wish together (`test_lineage_dispatch_deterministic_kernel_tick.py`), both through one real `Kernel.tick_once()`. **Not answered**: whether they *compose* into a longer sequence (the heir themselves later aging, dying, and transferring again) — no such run exists. Stays `partial`, not `passed`. | `BLOCKED` — no mechanism entry for `protection`/`patronage`/wealth-conversion exists in `registries/mechanisms.yaml` at all (checked directly, 2026-09-27); `PROTECTION` contracts are confirmed constructed only in `src/certification/scenarios.py`, zero production call sites (Part B). No sequence exists to seed a run against without inventing the mechanism first. |
-| **2. Player-plausible traces / legitimate unknowns?** | `UNKNOWN` — not investigated; a product-projection question, not a code-running one. | `UNKNOWN`, moot until question 1's blocker clears. |
-| **3. Identity/chronology/causal continuity over the relevant period?** | `UNKNOWN` — the two tests proven this round are single-tick proofs of a transition firing correctly, not a multi-tick chronology check. Foundational Rule content (identity-continuity-as-default, Batch 01) is suggestive, not a direct empirical check of this case at scale. | `UNKNOWN`, moot for the same reason as Q2. |
-| **4. Projection/integration alone, or a missing simulation edge?** | **Partial, precisely scoped**: no missing simulation edge was identified **for the two tested transitions specifically** — both are real, `verified: observed`-tier mechanisms today. This does **not** establish that evidence-production and projection (surfacing the transition to an observer as a legible trace) are themselves feasible — that stays a separate, unchecked question from "does the mechanism exist." | **A missing simulation edge, confirmed** — no registered mechanism exists to project from at all. |
-| **5. Comparison** | Limited, not conclusive. Economy's `BLOCKED` status is evidence *economy* has a gap, not evidence that *lineage* has the clearest player experience. No second comparison candidate with equivalent registered-mechanism, history-composing evidence was found this round — checked directly against `registries/mechanisms.yaml`'s other `state: done`/`verified: observed` entries (combat resolution, movement legality, interaction, entity-apply, skill-scaling, species/personality traits, entity-level XP/evolution) and all are single-tick or non-historical, not comparable trajectory candidates. Stated as a limitation, not resolved by asserting lineage wins. | Same limitation from the other side — its only inspected comparison is lineage. |
+| **1. Consequential sequence from real state/history, no invented events?** | **Partial, with a confirmed blocker on composition.** The single hop is real, not fabricated (§7.1). Composing a *second*, ordinary-aging hop is not merely unchecked — it is **`BLOCKED` by a confirmed defect** (§7.1's dual-writer race). This is stronger information than "unknown": the blocker is named and reproducible, not just untried. | `BLOCKED` — no mechanism entry for `protection`/`patronage`/wealth-conversion exists in `registries/mechanisms.yaml` at all; `PROTECTION` contracts are confirmed constructed only in `src/certification/scenarios.py`, zero production call sites (Part B). |
+| **2. Player-plausible traces / legitimate unknowns?** | **Partial** — a concrete observer position and evidence packet were sketched and checked this round (§7.2): one legitimate early clue exists, one reasonable-but-unprovable hypothesis, and two named negative-check failures (no trace for the inherited grudge/dying wish; two named leak-risk fields). This is real design-check evidence, not a code run, and not yet a real player-observation exercise. | `UNKNOWN`, moot until question 1's blocker clears. |
+| **3. Identity/chronology/causal continuity over the relevant period?** | **`BLOCKED`, not merely unknown** — the same composition defect that blocks Q1's second hop blocks any multi-tick chronology check by construction; there is no longer sequence to check continuity over until §7.1's defect is addressed. | `UNKNOWN`, moot for the same reason as Q2. |
+| **4. Projection/integration alone, or a missing simulation edge? (three separate sub-answers, per the finalize instruction)** | **(a) Does the tested transition need another simulation edge?** No — the single hop is real and correct as tested. **(b) Does its evidence production exist?** No — confirmed absent by direct inspection (§7.2's negative check 1); no provenance/evidence producer exists for an inheritance event at all. **(c) Could a situated projection be built from it?** Only for the single, already-proven hop, and only once an evidence producer exists — a projection across a *second* hop is blocked by §7.1's confirmed defect, not by unstarted projection-design work. This three-way split is itself new information the probe surfaced; the roadmap's prior single "partial" answer conflated these. | **A missing simulation edge, confirmed** — no registered mechanism exists to project from at all. |
+| **5. Comparison** | See §7.4 — no second candidate qualified at lineage's evidence tier; comparison stays limited, not conclusive in lineage's favor. | Same limitation from the other side. |
 
-**Short status summary** (passed / partial / unknown / blocked, per question):
+### 7.4 Candidate comparison — bounded search, no artificial winner
 
-| Question | Lineage | Economy/wealth |
-|---|---|---|
-| 1 — real sequence, no invented events | partial | blocked |
-| 2 — player-plausible traces | unknown | unknown |
-| 3 — identity/chronology/continuity | unknown | unknown |
-| 4 — projection-only vs. missing edge | partial | blocked |
-| 5 — comparison | limited | limited |
+Beyond economy/wealth, this round searched (bounded keyword sweep of `registries/mechanisms.yaml`,
+not a full repo sweep) for a second, genuinely-independent candidate:
 
-**Gate verdict, stated precisely**: no question above is `passed`, for either candidate. Lineage
-sits at `partial` on questions 1 and 4 (real evidence for the tested transition, not the composed
-sequence and not the projection question), `unknown` on 2 and 3, `limited` on 5. Economy/wealth is
-`blocked` on 1 and 4, `unknown` on 2 and 3 (moot), `limited` on 5. **This is a feasibility exercise
-in progress, not a completed gate and not a player-facing proof** (adopted directly from the third
-external review round; §8 renames its lineage half accordingly).
+- **Environmental threat/calamity** (`regional_trauma`, `calamity_intensity`) — **disqualified,
+  and in worse shape than economy**: both are `state: done`, but both carry
+  `verified: {instrument: corpus_run, verdict: contradicted}` — a real run was executed and it
+  disproved the mechanism firing (`TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`,
+  `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`, both already-open). Economy simply has no
+  mechanism registered; this domain has one that was built, wired, and then directly falsified.
+- **Displaced family/feud** — **not independent**: no `displacement`/`feud` mechanism id exists
+  separately; the roadmap already treats these as part of the *same* `succession`/`aging_death`
+  family as lineage. Choosing it as a "second candidate" would be a lineage variant, not a
+  contrasting causal shape.
+- **Institutional/office consequences** (`IP-S17`) — **disqualified, reconfirmed**: no
+  `institutional_standing`/`office` mechanism id exists; the one institution-adjacent entry
+  (`belief_institution`) is `state: partial` with a confirmed dead half (no general assimilation
+  writer). `IP-S17`'s prior `MISSING` finding stands.
 
-**This does not promote lineage to a proven product proof** — the two individually-verified
-transitions are real evidence for exactly what they test, and no more. The specific remaining
-unknowns (Q2, Q3, the longer-sequence half of Q1, and the projection-feasibility half of Q4) are
-named rather than assumed away.
+**Result, stated honestly**: no second candidate qualifies at lineage's evidence tier (`state: done`,
+`verified: observed`, a real passing test through a real game tick, a genuinely different causal
+domain) after this bounded search. **Comparative experiential clarity: `UNKNOWN`, bounded search
+exhausted** — scope was the three candidate families above, checked in one registry file, not a
+full sweep. Lineage remains the only candidate with a real single-hop mechanism proof; economy is
+`BLOCKED` on a missing mechanism, and environmental/calamity is *worse* — `contradicted` by a real
+run, not merely missing.
+
+### 7.5 Gate verdict, stated precisely
+
+No question is fully `passed`, for any candidate. Lineage is `partial` on Q1 (real single hop;
+composition `BLOCKED`), `partial` on Q2 (a real design-check sketch exists, not yet a player test),
+`BLOCKED` on Q3 (moot until Q1's defect clears), and split three ways on Q4 (mechanism: yes;
+evidence-production: no; projection: blocked-by-Q1, not by unstarted design work). Economy/wealth is
+`BLOCKED` on Q1/Q4, `UNKNOWN`/moot on Q2/Q3. Q5 stays limited for both — no qualifying second
+candidate was found. **This is a feasibility exercise with one genuinely new, load-bearing finding
+this round (§7.1's confirmed composition defect), not a completed gate and not a player-facing
+proof.**
+
+**This does not promote lineage to a proven product proof, and it does not disqualify lineage
+either** — the single hop remains the strongest mechanism-level evidence of any candidate checked
+across two rounds now. What changed this round is that "whether composition needs more simulation
+work" moved from `UNKNOWN` to **confirmed yes, with a named root cause** — genuinely new information,
+not an assumption resolved either optimistically or pessimistically.
 
 ## 8. Recommended first wave — a recommendation pending §7's outstanding checks, not a selected delivery wave (revised 2026-09-27, third external review round)
 
@@ -485,25 +617,32 @@ exercise, in parallel.**
   each with an explicit state (fixed, confirmed-fine, or a new `UNKNOWN` with a named reason) —
   never "swept the whole engine." **Costs/risks `UNKNOWN`**: how many such boundaries actually exist
   to check — not yet scoped.
-- **Feasibility exercise (lineage), not yet a proof**: attempt to resolve gate questions 2 and 3
-  specifically — a small, scoped design exercise (not full UI/renderer work) checking whether a
-  single death→heir transition can be presented with identity and immediate causal continuity
-  intact, using the already-`verified: observed` mechanisms as substrate. **This stays a
-  feasibility exercise, not a player-facing proof, until a situated observer — given only the
-  legitimate traces the exercise produces — can actually form a reasonable hypothesis** (§5's
-  player-side inference check); the exercise existing as a design sketch is not itself that
-  evidence. **Trajectory scope**: the single death→heir transition vignette only, explicitly not
-  the longer multi-generation arc and explicitly not yet a durable changed-life-trajectory proof
-  (§5's closed-loop distinction) — composing multiple transitions is a separate, larger question
-  this exercise does not attempt to answer. **Rule/registry evidence**: `succession`/`aging_death`
-  mechanism entries, both `verified: observed`, re-confirmed this round — evidence the underlying
-  transition is real, not evidence the projection is legible. **Prerequisites**: none new.
-  **Parallel work**: independent of the causal-authority half above. **Finite exit evidence**: gate
-  questions 2 and 3 each answered from a real design check with an actual observer test (not just
-  narrated), or reclassified `BLOCKED` with a named reason. **Costs/risks `UNKNOWN`**: whether the
-  longer-arc question (does this compose across generations) turns out to need real new simulation
-  work once the single-transition exercise is actually attempted; whether the observer test itself
-  surfaces a legibility problem no one has looked for yet.
+- **Feasibility exercise (lineage), not yet a proof — scope narrowed to the single hop, per the
+  fourth round's own confirmed finding (§7.1)**: attempt to fully resolve gate question 2 (a design
+  sketch already exists, §7.2 — turn it into a real observer test) for the single death→heir
+  transition specifically, using the already-`verified: observed` mechanisms as substrate. **This
+  stays a feasibility exercise, not a player-facing proof, until a situated observer — given only
+  the legitimate traces the exercise produces — can actually form a reasonable hypothesis** (§5's
+  player-side inference check). **Trajectory scope**: the single death→heir transition vignette
+  only — explicitly **not** the longer multi-generation arc (§7.1 confirmed that composition is
+  `BLOCKED` on a real defect, not merely design-unproven) and explicitly not yet a durable
+  changed-life-trajectory proof (§5's closed-loop distinction). **Rule/registry evidence**:
+  `succession`/`aging_death` mechanism entries, both `verified: observed` — evidence the underlying
+  transition is real, not evidence the projection is legible or that composition works. **New
+  prerequisite, confirmed this round**: the multi-hop/longer-arc half of this exercise is now
+  explicitly gated on fixing §7.1's dual-writer race (`ApplyPath` vs. `LifecycleSystem.
+  resolve_lifecycle` on `entity.lifecycle.active`) — this is no longer an open risk, it is a named,
+  confirmed blocker with a root cause, and belongs in the first-wave plan as its own tracked item
+  (see the separate first-wave milestone plan), not fixed under this planning-only pass. **Parallel
+  work**: independent of the causal-authority half above (though note both halves now touch the
+  same defect *class* — dual-writer races on durable fields — so findings from one may inform
+  precedence-rule design for the other). **Finite exit evidence**: gate question 2 answered from a
+  real observer test (not just narrated), or reclassified `BLOCKED` with a named reason; the
+  multi-hop half stays explicitly out of this exercise's scope until the defect is fixed. **Costs/
+  risks, now confirmed rather than `UNKNOWN`**: the longer-arc question does need real new
+  simulation work — specifically, a declared precedence rule between the two writers of
+  `entity.lifecycle.active` — not merely "more projection work"; whether the observer test itself
+  surfaces a legibility problem stays genuinely open.
 
 **Option B — an alternative, not recommended over A but evidence-consistent**: defer the feasibility
 exercise entirely and run only the causal/authority audit first, on the reasoning that a foundation
@@ -576,6 +715,107 @@ confirmed real, not a misreading on the reviewer's part.
 directly actionable; the extra table cell and the stale section reference the review implicitly
 flagged were both confirmed real slips in this document, not disagreements with the review's own
 reading.
+
+## 11. Evidence workflow — existing registry/Semantic Control Plane tooling (added 2026-09-27, fourth round)
+
+Per the finalize instruction's §1: real commands run against the current repo, not invented ones.
+Smallest incremental improvement only — explicitly not a second registry, a universal ontology, or
+an early Stage-F Context Compiler.
+
+**Q1 — given a Rule/domain capability, which formal mapping/mechanism/classification/evidence
+exist?** No general-purpose query tool exists.
+`tools/semantic_control_plane/generate_territory_control_view.py` is hardcoded to exactly two
+domains (Territory, Combat) — no `--rule` argument for an arbitrary Rule ID. The real recipe today:
+
+```python
+import yaml
+edges = yaml.safe_load(open('registries/rule_mechanism_edges.yaml'))['edges']
+len(edges)                                      # -> 18
+sorted(set(e['rule_id'] for e in edges))         # -> 14 distinct Rule IDs, everything else UNKNOWN
+```
+
+**Named gap**: no CLI/function does this lookup — a hand-rolled YAML filter every time.
+
+**Q2 — given a mechanism/changed path, which mapped Rules/downstream relationships/scenario checks
+need revalidation?** `tools/semantic_control_plane/registry.py` has real, working `consumers_of()`/
+`producers_for()` — but only over `mechanism_causal_edges.yaml` (mechanism→mechanism chains). **No
+equivalent reverse lookup exists from `mechanism_id` → citing `rule_id`** in
+`rule_mechanism_edges.yaml`. Verified directly: `succession`/`aging_death` both return zero SCP
+edges — consistent with "not SCP-mapped," but confirming it took a manual scan, not a query.
+
+**Q3 — what's formally mapped vs. Catalog-prose-only vs. no evidence yet?** Already answered
+structurally by Q1's 18-edge/14-Rule-ID count. `registries/rule_classifications.yaml`'s own header
+is explicit that `UNKNOWN` must never be conflated with `MISSING` — real, working, already-documented
+discipline, not a gap.
+
+**Q4 — which paths/evidence have drifted since last verification?** Real, working tool, actually run
+against current HEAD:
+
+```
+$ python3 tools/semantic_control_plane/mapping_drift_check.py
+Mapping drift check (report-only, never fails): 0 cited-code drift finding(s), 0 verdict drift finding(s)
+$ python3 tools/semantic_control_plane/registry.py
+OK: rule_mechanism_edges.yaml, mechanism_causal_edges.yaml, rule_classifications.yaml valid
+```
+
+No gap here.
+
+**Recommended smallest incremental improvement**: one pure function in
+`tools/semantic_control_plane/registry.py`, mirroring the existing `consumers_of`/`producers_for`
+shape exactly —
+
+```python
+def rules_for(mechanism_id: str, edges: list[dict]) -> list[str]:
+    """Every rule_id that cites this mechanism_id -- reverse of the forward Rule->edges lookup."""
+    return [e["rule_id"] for e in edges if e.get("mechanism_id") == mechanism_id]
+```
+
+A ~10-line reverse-index reusing an already-proven pattern, closing Q2's one concrete gap without
+touching schema, validation, or the two-domain view generator. Everything else asked in §1 already
+has a real, working answer today. A broader general-purpose multi-Rule query CLI is a larger design
+decision than "smallest increment" and is left out of scope here, for whoever next scopes that work.
+
+## 12. Response to the finalize instruction (fourth external review round), 2026-09-27
+
+1. **Bounded cross-domain authority audit actually run** (§3.1) — 5 named boundaries, classified
+   (2 `DEFECT_CONFIRMED`, 3 `UNKNOWN_WITH_REASON`, 1 `CONFIRMED_FINE_WITHIN_SCOPE`), with a named
+   deliberately-not-checked list. One of the two confirmed defects (region-ownership/`FAC-010`) was
+   already known and tracked; the other is new (below).
+2. **Lineage composition probe actually executed, not just reasoned about** (§7.1) — surfaced a
+   genuinely new, load-bearing finding: composing a second lineage hop through ordinary per-tick
+   aging is `BLOCKED` by a real, reproducible dual-writer race on `entity.lifecycle.active`
+   (`ApplyPath`'s passive-decay branch vs. `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE
+   dispatch) — the same defect *class* §3.1's audit exists to catch, found here independently by
+   running code. This is documented and escalated per the instruction's own boundary — **no
+   production code was changed** to fix it; it is flagged for a future ticket, not fixed under this
+   planning-only pass.
+3. **Observer/evidence-packet design check actually built** (§7.2) — a minimal provisional observer
+   position, one early clue, one reasonable-but-unprovable hypothesis, and two named negative
+   checks (no discoverable trace for the inherited grudge/dying wish; two named leak-risk fields for
+   future projection work to guard against). Not claimed as a real player-observation exercise.
+4. **Gate question 4 split into three separate sub-answers**, per the instruction's own requirement
+   — mechanism exists / evidence-production exists / projection-is-buildable are no longer
+   conflated into one "partial" (§7.3).
+5. **Bounded second-candidate search completed** (§7.4) — environmental/calamity checked and
+   disqualified (`contradicted` by real corpus runs, worse than economy's `BLOCKED`); displaced-
+   family/feud checked and found not independent of lineage; institutional/office reconfirmed
+   `MISSING`. Comparative clarity stated as `UNKNOWN, bounded search exhausted`, not resolved by
+   assertion.
+6. **Registry/SCP tooling query recipes documented with real command output** (§11), plus one
+   concrete, minimal incremental-improvement recommendation (a ~10-line reverse-index function) —
+   explicitly not a second registry or new governance system.
+7. **§8's recommended first wave re-scoped** to the single hop only, with the multi-hop half
+   explicitly gated on fixing §7.1's newly-confirmed defect — a real prerequisite now, not an
+   `UNKNOWN` cost.
+8. **A separate `PROPOSED / FOR REVIEW` first-wave milestone plan drafted** at
+   `docs/plans/systemic_world_first_wave_plan.md`, per the instruction's own request to keep this
+   roadmap a capability/dependency map rather than a milestone transcript.
+
+**External-review concerns rejected on repository evidence: none.** Every requested investigation
+was run for real (composition probe, observer sketch, bounded audit, bounded candidate search,
+tooling recipes) rather than narrated; the one genuinely new finding (§7.1's defect) was not
+anticipated by either this document or the external review, and is reported exactly as severe as
+the evidence shows — no more, no less.
 
 ---
 
