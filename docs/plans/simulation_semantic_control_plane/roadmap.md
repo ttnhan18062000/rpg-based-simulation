@@ -19,10 +19,21 @@ roadmap stops at **M4** — a second slice proves the model generalizes and a re
 exists. Everything past that is Stage D/E/F of `rollout_plan.md`: ongoing maintenance, not a
 completion target.
 
-**Status (2026-09-23).** Design fully written (`architecture.md`, `agent_operating_model.md`,
-`rollout_plan.md`). No milestone below has started. No ticket has been opened for any of them yet
-— per this project's own Workflow Rule, opening `tickets/inprogress/{ticket_id}.md` is the first
-step of actually starting M0, not something this roadmap does on its own.
+**Status (corrected 2026-09-27 — this paragraph had gone stale relative to the sections below it,
+caught by an external review while using this document; see each milestone's own section for the
+authoritative detail).** M0-M4 are all complete: M0's three schemas/validator are real
+(`registries/rule_mechanism_edges.yaml`, `mechanism_causal_edges.yaml`, `rule_classifications.yaml`);
+M1 (Territory) shipped; M2 (drift detection) shipped 2026-09-24; M3's narrow Territory+Combat
+triage bar was met 2026-09-24 (M3 itself has no "complete" state by design — it continues as an
+ongoing stream); M4 (Combat/Conflict second slice + first cross-domain view) shipped 2026-09-24,
+closing this roadmap's own bounded M0-M4 proof-of-generalization goal. Past M4, `rollout_plan.md`'s
+Stages D/E/F continue indefinitely and are not tracked here. **Only Territory/Control's and
+Combat/Conflict's own Rule families are actually mapped** (`registries/rule_classifications.yaml`'s
+14 rows: `TERR-*` plus Combat's 10 inherited-from IDs — `AGENCY`/`BODY`/`CAP`/`KNOW`/`LIFE`/`OWN`/
+`PERC`). Every other Rule family — including all of lineage (`SOC`/`FAM`/`LIN`), institutions
+(`ORG`/`INST`/`POL`/`LAW`), economy (`OBJ`/`PROP`/`RES`/`PROD`/`EXCH`), and magic (`MAG`/`SUP`/etc.)
+— stays `UNKNOWN` from this Control Plane's own formal-mapping perspective until a ticket touches
+it, per M3's own explicit design (Stage D, organic, never a full-catalog backfill target).
 
 **What this roadmap deliberately leaves open**, per `rollout_plan.md`'s own Stage A discipline —
 do not design the final ontology up front: the exact mapping file's path, field names, and

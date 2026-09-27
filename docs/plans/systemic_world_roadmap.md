@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-09-26"
+last_verified: "2026-09-27"
 ---
 
 # Systemic World Roadmap — PROPOSED / FOR REVIEW
@@ -108,12 +108,16 @@ had), review ownership/authority at those specific boundaries, and exercise repr
 integration scenarios for each. Report the scope actually covered and name what remains `UNKNOWN`
 outside that scope — never claim the absence of a defect outside the boundary actually checked.
 
-**Open**: whether a shared *semantic obligation* holds cross-domain — restated precisely per
-external review: **every persistent fact has a canonical authority, and a world effect must not
-commit from stale assumptions without a declared resolution rule.** This does **not** imply one
-physical code writer per fact, or one universal `revalidate()` API for every domain action and world
-process — reservations, multistage actions, ongoing processes, and environmental effects may each
-have a different, equally legitimate way of honoring the same obligation.
+**The semantic obligation itself is already supported, within investigated scope — corrected per
+external review, 2026-09-27**: every persistent fact has a canonical authority, and a world effect
+must not commit from stale assumptions without a declared resolution rule. This is not itself an
+open question. **What remains open is how to verify and enforce that obligation across
+consequential cross-domain boundaries** — the regional-sovereignty case shows a real violation can
+exist even where the obligation is accepted in principle, so open means "what checking discipline
+catches this class of defect," not "does the obligation hold." This does **not** imply one physical
+code writer per fact, or one universal `revalidate()` API for every domain action and world process
+— reservations, multistage actions, ongoing processes, and environmental effects may each have a
+different, equally legitimate way of honoring the same obligation.
 
 ### 3.2 Autonomous world dynamics
 
@@ -369,6 +373,127 @@ mechanism or projection looks from source alone.
 
 ---
 
+## 6. Decision bridge — Catalog × Semantic Control Plane × Systemic Roadmap (added 2026-09-27)
+
+**Keeping the three authorities distinct, per external review**: the World Rule Catalog specifies
+target semantics. The Semantic Control Plane (SCP) records Rule↔Mechanism relationships,
+classifications, and evidence — **currently, only for Territory/Control (`TERR-*`) and Combat/
+Conflict's 10 inherited-from IDs** (`registries/rule_classifications.yaml`, 14 rows total,
+re-verified 2026-09-27; every other family is `UNKNOWN` from the SCP's own formal-mapping
+perspective, per its own corrected status above — not because those Rules are unmapped-and-
+therefore-broken, but because M0-M4 never touched them by design). The systemic roadmap (this
+document) identifies capabilities the *engine* still needs. **Mapping coverage does not dictate
+product priority, and full-Catalog mapping is not a gate on anything below.**
+
+Three levels kept separate per capability area: **semantic target** (what the Rules specify),
+**realization/integration** (what the engine does, per Parts A/B and this round's own direct
+registry/test checks), **player observation** (which legitimate traces a player could encounter).
+
+| Area | Related Rules (SCP-mapped only where noted) | Realization/integration evidence | Consequential gaps | Missing evidence | Player-facing-proof potential |
+|---|---|---|---|---|---|
+| 3.1 World substrate | Milestone A (`ID-*`/`TIME-*`/`AUTH-*`/etc.) — **not SCP-mapped**, Catalog-level only | `TCK-20260401-ACTION-CONVERGENCE`'s replay-determinism law, verified. Regional-sovereignty dual-writer bug confirmed live (verified current, this session, 2026-09-23/24). | Cross-domain integration unverified outside the one checked case. | Whether the dual-writer pattern recurs elsewhere — `UNKNOWN`, bounded audit not yet run (§3.1). | Indirect only — a player never sees this layer directly. |
+| 3.2 Autonomous world dynamics (lineage slice) | `SOC-01` (Batch 09) — **not SCP-mapped** | **Directly re-verified this round**: `succession` mechanism, `registries/mechanisms.yaml`, `state: done`, `verified: {instrument: scenario, verdict: observed}` — the strongest evidence tier this repo uses, not code-trace. Two real, passing tests confirm it: `tests/simulation_quality/test_heir_inventory_transfer_corpus.py` (heir inventory transfer) and `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py` (feud-blocker transfer + dying-wish, together, one real `Kernel.tick_once()`). Both **re-run and confirmed passing, 2026-09-27.** | Whether these individual, proven transitions compose into a *longer*, multi-generation observable sequence — no test found running this at that timescale. | Chronology-over-a-real-period, identity continuity across many ticks — `UNKNOWN`, not fabricated (§7). | Verified current | High on current mechanism evidence; product feasibility still gated (§7). |
+| 3.3 Situated agency | `AGENCY-*`/`PERC-01`/`KNOW-01` — **SCP-mapped, all `PARTIAL`** (`registries/rule_classifications.yaml`, re-verified 2026-09-27) | Part A's own direct trace: Combat/Harvest/Quest-reward dispatch real; intent→payload edge `UNKNOWN`. | Shared upstream edge untraced across all three families. | Same. | Indirect — substrate beneath any future lens. |
+| 3.4 History and feedback (recognition) | `SOC-01`/`HP-*` — **not SCP-mapped** for the recognition-specific finding (the mapped `AGENCY`/`PERC`/`KNOW` rows above are Combat's own citations, not this area's) | Part B's own direct trace: `bonds`/`trust_history` real for direct participation; no producer for witnessed/hearsay. | The confirmed narrowest bottleneck in the whole arc. | Three-way primitive split still `OPEN` (§3.4). | Requires §3.4's own work to exist at all first. |
+| 3.5 Observation/player delivery | None — explicitly outside Catalog scope | Epistemic principle (§2) only; no gameplay lens chosen. | Everything — genuinely new area. | Everything not yet designed. | This *is* the delivery layer once built. |
+| 3.6 Evaluation | None — infrastructure, not a Rule area | SimQ/corpus-tier/M3 all real, live, unrelated to this roadmap's own scope. | None new; this roadmap's job is feeding it findings. | N/A | Indirect (regression-catching). |
+
+**Discipline honored**: `UNKNOWN` is reported as `UNKNOWN`, not inferred as `MISSING`, for every
+family the SCP hasn't formally mapped — the Catalog's own prose Repository Findings (e.g. `ME-S12`,
+`IP-S17`, cited earlier this arc) remain valid Catalog-level evidence in their own right; they are
+simply a different evidentiary tier than an SCP-registered classification, and this table doesn't
+conflate the two. No full-Catalog sweep was run to produce this table — only the Rules and
+mechanisms needed for the candidates actually under consideration in §7 were inspected.
+
+## 7. Feasibility gate results — lineage vs. economy/wealth (run 2026-09-27)
+
+**Comparison candidate chosen**: economy/wealth (a genuinely different domain and causal path from
+lineage, per the instruction's own requirement) — not treated as ready; its own conversion edges
+are independently confirmed `MISSING` (`ME-S12`, Part B), which is itself informative for question 5.
+
+| Gate question | Lineage | Economy/wealth (comparison) |
+|---|---|---|
+| **1. Consequential sequence from real state/history, no invented events?** | **Partially answered with real evidence, not fabricated.** Two individual transition links re-run and confirmed passing 2026-09-27: death→heir-inventory-transfer (`test_heir_inventory_transfer_corpus.py`) and death→feud-blocker-transfer+dying-wish together (`test_lineage_dispatch_deterministic_kernel_tick.py`), both through one real `Kernel.tick_once()`. **What's still `UNKNOWN`**: whether these compose into a *longer* sequence (the heir themselves later aging, dying, and transferring again) — no such run found or executed this round. | `UNKNOWN`/`BLOCKED` — no mechanism entry for `protection`/`patronage`/wealth-conversion exists in `registries/mechanisms.yaml` at all (checked directly, 2026-09-27); `PROTECTION` contracts are confirmed constructed only in `src/certification/scenarios.py`, zero production call sites (Part B). There is no sequence to seed a run against without inventing the mechanism first — this is a genuine `BLOCKED`, not an unrun-but-runnable case. |
+| **2. Player-plausible traces / legitimate unknowns?** | `UNKNOWN` — not investigated; a product-projection question, not a code-running one. | `UNKNOWN` for the same reason, moot until question 1's blocker clears. |
+| **3. Identity/chronology/causal continuity over the relevant period?** | `UNKNOWN` — the two tests proven this round are single-tick proofs of a transition firing correctly, not a multi-tick chronology check. Foundational Rule content (identity-continuity-as-default, Batch 01) is suggestive, not a direct empirical check of this case at scale. | `UNKNOWN`, moot for the same reason as Q2. |
+| **4. Projection/integration alone, or a missing simulation edge?** | **Projection/integration alone, for the single-transition vignette specifically** — both key links are the strongest evidence tier this repo has (`state: done`, `verified: scenario, verdict: observed`), re-confirmed passing this round. Whether a *longer* arc needs more simulation work is `UNKNOWN`, not assumed either way. | **A missing simulation edge, confirmed** — no registered mechanism exists to project from at all. |
+| **5. Comparison** | Stronger on every axis checked this round. | Weaker specifically because its own conversion edge doesn't exist yet, not because of any product-delivery limitation — a fair, evidence-grounded contrast, not a dismissal of the domain's eventual value. |
+
+**Gate verdict, stated precisely**: lineage clears questions 1 and 4 for the *single-transition*
+case with real, re-confirmed, strong-tier evidence — stronger than the prior round's claim, because
+this round actually re-ran the tests rather than citing them secondhand. Questions 2 and 3 remain
+genuinely `UNKNOWN`, not resolved by this pass, because they require product-projection design work
+this investigation doesn't do. **No `BLOCKED` condition exists for lineage** — the environment can
+and did run the relevant scenarios. Economy/wealth is `BLOCKED` on question 1 specifically: no
+mechanism exists to seed a run against, a materially different and worse position than lineage's.
+
+**This does not promote lineage to a proven product proof** — per the instruction's own explicit
+warning against exactly that move. It sharpens the prior `OPEN` verdict with real evidence: lineage
+remains the leading candidate, now for a more precisely evidenced reason, and the specific remaining
+unknowns (Q2, Q3, and the longer-sequence half of Q1) are named rather than assumed away.
+
+## 8. Recommended first wave (added 2026-09-27)
+
+**Option A — recommended: pair one bounded causal/authority check with the lineage single-
+transition proof, in parallel.**
+
+- **Causal/authority strengthening**: run §3.1's own bounded audit (not a full sweep) against the
+  most consequential cross-domain mutation paths analogous to the regional-sovereignty case —
+  durable ownership/control fields writable from more than one system. **Trajectory proof**: none
+  needed for this half; it's foundation hardening. **Rule/registry evidence**: the regional-
+  sovereignty pattern itself, already fully diagnosed. **Prerequisites**: none. **Parallel work**:
+  fully independent of the lineage half. **Finite exit evidence**: the named boundaries reviewed,
+  each with an explicit state (fixed, confirmed-fine, or a new `UNKNOWN` with a named reason) —
+  never "swept the whole engine." **Costs/risks `UNKNOWN`**: how many such boundaries actually exist
+  to check — not yet scoped.
+- **Player-facing proof (lineage)**: resolve gate questions 2 and 3 specifically — a small,
+  scoped design exercise (not full UI/renderer work) checking whether a single death→heir
+  transition can be presented with identity and immediate causal continuity intact, using the
+  already-`verified: observed` mechanism as its substrate. **Trajectory proof**: the single-
+  transition vignette, explicitly not yet the longer multi-generation arc. **Rule/registry
+  evidence**: `succession`/`aging_death` mechanism entries, both `verified: observed`, re-confirmed
+  this round. **Prerequisites**: none new. **Parallel work**: independent of the causal-authority
+  half above. **Finite exit evidence**: gate questions 2 and 3 each answered from a real design
+  check (not just narrated), or reclassified `BLOCKED` with a named reason. **Costs/risks
+  `UNKNOWN`**: whether the longer-arc question (does this compose across generations) turns out to
+  need real new simulation work once the single-transition vignette is actually attempted.
+
+**Option B — an alternative, not recommended over A but evidence-consistent**: defer the player-
+facing proof entirely and run only the causal/authority audit first, on the reasoning that a
+foundation defect (if one exists elsewhere) would undercut confidence in *any* later player-facing
+proof, lineage included. **Tradeoff against A**: slower to any player-visible result, but avoids
+building a proof on ground not yet checked for the regional-sovereignty class of defect. Not
+recommended, because that defect class was found via one specific incident, not a systemic pattern
+with evidence of recurrence — deferring all player-visible work on a single incident would overcorrect.
+
+**Neither option is forced into one module or a fixed sequence** — both halves of Option A are
+explicitly parallel-safe, and Option B differs from A only in sequencing, not in scope.
+
+## 9. Response to the second external review round (2026-09-27)
+
+1. **Two small roadmap corrections applied**: §3.1's semantic obligation restated as already-
+   supported (not open), with what's open narrowed to cross-domain verification/enforcement
+   discipline; the Owner Decision List's feasibility-gate item downgraded from an owner decision to
+   a recommended default for local investigation.
+2. **Decision bridge added** (§6) — a compact, three-level table per capability area, citing SCP
+   mapping status precisely (`UNKNOWN` where the SCP hasn't touched a family, never inferred as
+   `MISSING`), with no full-Catalog sweep run.
+3. **Feasibility gate actually run** (§7) — real tests re-executed 2026-09-27, not cited
+   secondhand; economy/wealth checked as the comparison candidate and found genuinely `BLOCKED` on
+   its own missing mechanism, not assumed weaker without evidence.
+4. **First wave recommended** (§8) — one primary option pairing bounded foundation-hardening with
+   the lineage single-transition proof in parallel, plus a non-recommended alternative, each with
+   finite exit evidence and named `UNKNOWN` costs.
+5. **The Semantic Control Plane roadmap's own opening status was stale** (claimed "no milestone has
+   started" while M0-M4 were all already complete per its own later sections) — corrected directly,
+   since this round's work required citing its current state precisely.
+
+**External-review concerns rejected on repository evidence: none.** Every requested action was
+directly actionable and evidence-supported; the stale-status discrepancy the review flagged was
+confirmed real, not a misreading on the reviewer's part.
+
+---
+
 ## Change summary — what changed from the prior five-phase draft, and why
 
 The prior document (`tmp/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s original
@@ -455,11 +580,12 @@ review, not a fourth conceptual decision competing with the real ones.
    evidence that it's *meant* to be public knowledge — that's exactly the kind of silent-leak risk
    §2's epistemic principle warns about. Do not decide retain-vs-retire until this meaning, and its
    information provenance/scope, is established.
-4. **The real near-term product choice: which candidate trajectory should the feasibility gate (§5)
-   be run against first?** Lineage is the leading candidate on current evidence, but the gate itself
-   is `OPEN` until actually run (§5) — this is the owner's genuinely open choice right now, not this
-   document's own promotion path (that's a review-sequencing step, not a conceptual decision, and is
-   not listed as a numbered item here).
+4. **Which candidate trajectory the feasibility gate runs against first is a recommended default for
+   local investigation, not an owner decision — corrected per external review, 2026-09-27.** Lineage
+   leads on mechanism-level evidence (§6 below now runs the gate directly); proceeding with it is a
+   default, escalated to the owner only if the gate itself surfaces a genuine tradeoff evidence
+   can't settle. Final proof selection stays `OPEN` until the gate produces real evidence, which §6
+   now provides in part.
 
 **Confirmed explicitly not owner-level, per the instruction's own boundary**: which existing class
 to extend for any new record type, whether to retire or adopt the dead `ActionProposal` model,
