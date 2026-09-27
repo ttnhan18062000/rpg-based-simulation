@@ -1,7 +1,7 @@
 """
 E52G — Sovereignty shift WorldEvent emission.
 
-When a region's influence crosses ±100, a SOVEREIGNTY_SHIFT WorldEvent is emitted
+When a region's influence crosses ±50, a SOVEREIGNTY_SHIFT WorldEvent is emitted
 into StateUpdate.world_events_add, making it observable via recent_world_events.
 
 Ticket: TCK-20260628-E52G-SOVEREIGNTY-EVENTS
@@ -87,7 +87,7 @@ def test_sovereignty_shift_event_emitted_on_monster_takeover():
 
 
 def test_no_sovereignty_event_when_influence_below_threshold():
-    region = _region("meadow", influence=50.0)
+    region = _region("meadow", influence=30.0)
     state = _state({"meadow": region})
     upd = _run_step22(state)
 
@@ -110,3 +110,32 @@ def test_sovereignty_event_payload_contains_influence():
     assert len(sv_events) == 1
     assert "influence" in sv_events[0].payload
     assert sv_events[0].payload["influence"] == pytest.approx(120.0)
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT: WorldDynamicsSystem's
+# ownership threshold must share FactionInfluenceService's own constants, never
+# a second, independently-hardcoded value.
+# ---------------------------------------------------------------------------
+
+def test_world_dynamics_ownership_threshold_uses_shared_constants():
+    import inspect
+    from src.engine import world_dynamics
+
+    source = inspect.getsource(world_dynamics)
+    assert "FactionInfluenceService.LIBERATION_THRESHOLD" in source
+    assert "FactionInfluenceService.CONQUEST_THRESHOLD" in source
+    assert "current_influence >= 100.0" not in source
+    assert "current_influence <= -100.0" not in source
+
+
+def test_world_dynamics_flips_ownership_at_shared_threshold_boundary():
+    from src.core.enums import Faction
+
+    region_hero = _region("borderland", influence=50.0, owner_faction_id=None)
+    upd_hero = _run_step22(_state({"borderland": region_hero}, tick=1))
+    assert upd_hero.world_updates["borderland"].owner_faction_id_set == Faction.HERO_GUILD
+
+    region_monster = _region("darkwood", influence=-50.0, owner_faction_id=None)
+    upd_monster = _run_step22(_state({"darkwood": region_monster}, tick=1))
+    assert upd_monster.world_updates["darkwood"].owner_faction_id_set == Faction.MONSTER_HORDE

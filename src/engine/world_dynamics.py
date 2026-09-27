@@ -60,7 +60,7 @@ class WorldDynamicsSystem:
                         )
 
         # 2.2 Ownership & Calamity Progression
-        from src.world.influence import _region_owner_faction_id_str
+        from src.world.influence import _region_owner_faction_id_str, FactionInfluenceService
         from src.content_semantics.faction import get_faction_semantics_service as _get_sem
         from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
         _sem = _get_sem()
@@ -77,13 +77,14 @@ class WorldDynamicsSystem:
 
             owner_fid = _region_owner_faction_id_str(region.owner_faction_id)
 
-            # Ownership Law: Threshold of 100/-100 for control
+            # Ownership Law: shared threshold with FactionInfluenceService (src/world/influence.py)
+            # -- see TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT
             new_owner = None
-            if current_influence >= 100.0 and (owner_fid is None or not _sem.is_protector(owner_fid)):
+            if current_influence >= FactionInfluenceService.LIBERATION_THRESHOLD and (owner_fid is None or not _sem.is_protector(owner_fid)):
                 world_upd = replace(world_upd, owner_faction_id_set=Faction.HERO_GUILD)
                 new_owner = "HERO_GUILD"
                 changed = True
-            elif current_influence <= -100.0 and (owner_fid is None or not _sem.is_invader(owner_fid)):
+            elif current_influence <= FactionInfluenceService.CONQUEST_THRESHOLD and (owner_fid is None or not _sem.is_invader(owner_fid)):
                 world_upd = replace(world_upd, owner_faction_id_set=Faction.MONSTER_HORDE)
                 new_owner = "MONSTER_HORDE"
                 changed = True

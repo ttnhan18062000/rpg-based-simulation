@@ -50,15 +50,15 @@ Generated from `registries/rule_mechanism_edges.yaml` + `registries/rule_classif
 
 ## Comparison
 
-Territory is `0/4` verified (every mapped mechanism is `code_trace`-only) with a classification
-breakdown of 2 `CONFLICTING`, 2 `PARTIAL`. Combat is `10/10` verified **at the Rule level** (every
-mapped Rule has at least one runtime-verified mechanism among its own mapped set) with a
-classification breakdown of 10 `PARTIAL`, 2 `UNKNOWN` -- but this is not uniform at the
-*mechanism* level: `combat_resolution` (`scenario`), `tactical_decision` (`corpus_run`), and
-`combat_engagement` (`scenario`) all carry a runtime instrument, while `movement` -- cited
-alongside `combat_resolution` on both `LIFE-01` and `LIFE-02` -- is `code_trace`-only. Every one
-of Combat's mapped Rules still clears the Rule-level bar only because `movement` is never a Rule's
-*sole* mapped mechanism.
+Territory is `0/4` verified (every mapped mechanism is
+`code_trace`-only) with a classification breakdown of 2 `PARTIAL`, 2 `CONFLICTING`. Combat is
+`10/12` verified **at the Rule level** (every mapped Rule has at
+least one runtime-verified mechanism among its own mapped set) with a classification breakdown of
+10 `PARTIAL`, 2 `UNKNOWN` -- but this is not uniform at the *mechanism* level: `combat_resolution`
+(`scenario`), `tactical_decision` (`corpus_run`), and `combat_engagement` (`scenario`) all carry a
+runtime instrument, while `movement` -- cited alongside `combat_resolution` on both `LIFE-01` and
+`LIFE-02` -- is `code_trace`-only. Every one of Combat's mapped Rules still clears the Rule-level
+bar only because `movement` is never a Rule's *sole* mapped mechanism.
 
 **The inconvenient part, stated plainly**: Combat's much higher Rule-level verified-count is not
 evidence Combat is "more done" than Territory. `tactical_decision` -- the mechanism most of

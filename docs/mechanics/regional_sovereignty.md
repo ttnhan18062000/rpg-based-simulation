@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P0
 audience: developer
-last_verified: 2026-06-06
+last_verified: 2026-09-25
 ---
 
 # Regional Sovereignty & Governance
@@ -19,8 +19,8 @@ Influence is shifted through death-triggered events within a region:
 
 ### 1.2 Ownership Thresholds
 A region flips ownership when influence crosses specific boundaries:
-- **Hero Guild Control**: Influence > 100.0.
-- **Monster Horde Control**: Influence < -100.0.
+- **Hero Guild Control**: Influence >= 50.0.
+- **Monster Horde Control**: Influence <= -50.0.
 - **Contested**: Between -50.0 and 50.0.
 
 ### 1.3 Territorial Effects

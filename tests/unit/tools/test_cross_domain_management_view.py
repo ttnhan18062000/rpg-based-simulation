@@ -83,6 +83,38 @@ def test_combat_mixed_realization_is_not_smoothed_into_a_clean_result():
     )
 
 
+def test_comparison_counts_match_the_computed_banner():
+    """TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT AC8: the '## Comparison'
+    section's own verified-count prose must match the per-domain banner's own computed
+    verified/total figures -- a real, mechanical guard against `_render_comparison()` (or a future
+    edit to it) reverting to a hardcoded literal that silently drifts from what the banner actually
+    computes. `test_real_cross_domain_view_is_up_to_date` cannot catch this: a stale hardcoded
+    literal regenerates byte-for-byte identical to itself every time."""
+    content = _real_content()
+
+    territory_section = content.split("## Territory / Control", 1)[1].split("## Combat", 1)[0]
+    combat_section = content.split("## Combat / Conflict", 1)[1].split("## Comparison", 1)[0]
+    comparison_section = content.split("## Comparison", 1)[1]
+
+    territory_banner_verified = re.search(r"Verified / unverified\*\*: (\d+)/(\d+)", territory_section)
+    combat_banner_verified = re.search(r"Verified / unverified\*\*: (\d+)/(\d+)", combat_section)
+    assert territory_banner_verified and combat_banner_verified
+
+    territory_comparison_verified = re.search(r"Territory is\s+`(\d+)/(\d+)`\s+verified", comparison_section)
+    combat_comparison_verified = re.search(r"Combat is\s+`(\d+)/(\d+)`\s+verified", comparison_section)
+    assert territory_comparison_verified, "Comparison prose must state Territory's verified count"
+    assert combat_comparison_verified, "Comparison prose must state Combat's verified count"
+
+    assert territory_comparison_verified.groups() == territory_banner_verified.groups(), (
+        f"Comparison prose {territory_comparison_verified.groups()} disagrees with Territory's "
+        f"own banner {territory_banner_verified.groups()}"
+    )
+    assert combat_comparison_verified.groups() == combat_banner_verified.groups(), (
+        f"Comparison prose {combat_comparison_verified.groups()} disagrees with Combat's own "
+        f"banner {combat_banner_verified.groups()}"
+    )
+
+
 def test_real_cross_domain_view_is_up_to_date():
     """Load-bearing regression check: the committed file must match a fresh render, not just have
     been correct at generation time."""
