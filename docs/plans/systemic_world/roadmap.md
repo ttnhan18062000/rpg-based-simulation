@@ -12,14 +12,31 @@ last_verified: "2026-09-27"
 **Status: `PROPOSED / FOR REVIEW`. Not owner-approved. Does not supersede any existing canonical
 roadmap.** Produced by the local repository-aware investigator per a five-stage investigation arc
 (Pass 1/2, Recognition/Standing synthesis, Parts A/B/C, the foundational synthesis, this document).
-Supporting evidence lives in `tmp/rpg-core-investigation-*.md` and
-`tmp/rpg-core-foundational-synthesis-and-roadmap-revision.md` — this document stays high-level and
-cites them by pointer rather than repeating code-level traces.
+This document stays high-level and cites supporting evidence by pointer, rather than repeating
+code-level traces. All paths below are relative to this folder:
+- **Investigation arc**: `evidence/rpg-core-investigation-*.md` (Pass 1/2, the Recognition/Standing
+  synthesis, Parts A/B/C) and `evidence/rpg-core-foundational-synthesis-and-roadmap-revision.md`.
+- **2026-09-27 probe reports**:
+  - §3.1 audit → `evidence/2026-09-27-authority-boundary-audit-findings.md`
+  - §7.1 composition probe → `evidence/2026-09-27-lineage-composition-probe-findings.md`
+  - §7.2 observer encounter → `evidence/2026-09-27-inheritance-observer-encounter-findings.md`
+  - §7.4 candidate search → `evidence/2026-09-27-candidate-trajectory-search-findings.md`
+  - §9 tooling → `evidence/2026-09-27-registry-scp-tooling-findings.md`
+
+  Some of these reports were written under instructions that were later superseded, and they carry
+  milestone or ticket labels that no longer exist. Where they differ from this roadmap, the roadmap
+  is authoritative.
+- **Review instructions received**: `review_history/`.
 
 **What this is not**: an implementation plan, a ticket list, or a claim that any part of it is
-approved. Engineering decisions (record types, class reuse, symbol retirement) are explicitly left
-to local engineering investigation once a semantic boundary is set — see the Owner Decision List at
-the end for the short list of things this document cannot decide for itself.
+approved. Engineering decisions (record types, class reuse, symbol retirement, test design) belong to
+the downstream ticket planner and implementation agents.
+
+**Metadata note.** The frontmatter `status: active` is the repository's "live working document"
+value. The frontmatter schema offers only `authoritative`, `active`, `historical` and `archive`,
+with no "proposed" value. `active` does **not** record owner approval; the visible status above is
+the review state of record. `authoritative` would be the approval-bearing value. Adding a `proposed`
+value is a separate schema correction, not done here.
 
 ---
 
@@ -33,21 +50,21 @@ the end for the short list of things this document cannot decide for itself.
 | `docs/plans/long_term_development_roadmap.md` | Engine-infrastructure phases (CI, determinism, corpus tooling) | **Independent axis.** A different kind of health entirely — this document assumes that infrastructure exists and builds capability on top of it, not instead of it. |
 | `docs/plans/render_and_art_program_roadmap.md`, `hud_delivery_roadmap.md`, `live_map_scaling_roadmap.md` | Presentation-layer programs | **Explicitly unrelated axis**, per this investigation's own repeated instruction not to confuse the two. Section 5's "Observation and player delivery" area is deliberately about *what* a gameplay lens may expose, never *how* it renders — those documents own the how. |
 
-**This document's own proposed home**: itself, at `docs/plans/systemic_world/roadmap.md` — a new,
-standalone location, not appended to any of the above. Marked `PROPOSED / FOR REVIEW` throughout;
-promotion to `active` status is the owner's call, not decided here.
+**This document's own proposed home**: `docs/plans/systemic_world/roadmap.md`, a standalone
+location not appended to any of the above. It is `PROPOSED / FOR REVIEW` until the owner accepts
+its direction.
 
-**Companion document**:
-`docs/plans/systemic_world/first_wave_plan.md` holds the concrete milestone plan (entry/exit
-evidence, domain ownership, a decision gate) for the first wave this roadmap's §7/§8 recommend —
-kept separate so this document stays a capability/dependency map rather than a milestone transcript,
-per the finalize instruction's own request.
+**Companion documents** (same folder, same review status):
+- `first_wave_plan.md` — the epic-level first-wave plan: epics, boundaries, gates, and failure
+  branches.
+- `ticket_planner_handoff.md` — one card per first-wave epic, for the downstream ticket planner.
+- `owner_decision_memo.md` — the only home for owner-level choices.
 
 ---
 
 ## 1. Product north star
 
-*(Full statement in `tmp/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s own "Product
+*(Full statement in `evidence/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s own "Product
 north star" section — summarized here.)*
 
 The engine simulates a persistent world; a gameplay lens defines a player's relationship to it, and
@@ -89,6 +106,12 @@ Six perspectives, each showing: the outcome it enables, its semantic foundation,
 (`DESIGNED` / `REALIZED` / `VERIFIED` / `INTEGRATED` / `PLAYER-EXPERIENCED`, kept separate rather than
 collapsed to one percentage), a meaningful cross-domain proof, and what stays open.
 
+**Name clash, recorded rather than resolved.** This roadmap's `DESIGNED` is an evidence-maturity
+axis: are the target semantics specified? It shares its name, but not its meaning, with the
+reserved mechanism-status vocabulary term `DESIGNED` in `docs/brainstorm/core_rpg_design_direction.md`
+(status note at line 480). Read the two independently. Renaming either one is deferred and is not a
+mid-review change.
+
 ### 3.1 World substrate and causal governance
 
 **Outcome**: persistent identity, time, space, authoritative state, provenance, cost/resource
@@ -123,7 +146,7 @@ finite set of 5 boundaries, each with an explicit outcome, not "swept the whole 
 | 2 | Entity death: `alive_set` written from `combat.py` (5 sites) and `world_dynamics.py` (hazard damage) | `UNKNOWN_WITH_REASON` — explicit cross-system precedence comments exist (`groups.py:99`, `clan_lifecycle.py:19`), suggesting deliberate ordering, but no scenario test exercises a same-tick hazard-kill + combat-kill collision to verify it. |
 | 3 | Faction diplomacy: `diplomatic_relations_set` from the autonomous state machine and the auto-alliance handler, same tick, same pipeline phase | `UNKNOWN_WITH_REASON` — ordering is fixed and looks intentional (transitions computed, then alliance layered after, `pipeline.py:255-283`), but no test asserts the same-pair-same-tick collision case. |
 | 4 | Quest status: `QuestUpdate.status_set` from 4 files across distinct pipeline phases | `CONFIRMED_FINE_WITHIN_SCOPE` — a strict forward state machine; matches Part A's own prior finding that quest reward is the cleanest single-writer-per-stage pattern found anywhere. |
-| 5 | Public reputation: `SocialComponent.reputation` (`reputation_set`) from `social_memory.py` and `orchestrator.py` | `UNKNOWN_WITH_REASON` — two real writer call sites for the same durable field; phase ordering and same-tick-same-entity collision not checked this round. Separate from the roadmap's already-flagged *semantic* question of what `public_reputation` means (Owner Decision List item 3) — this is a mechanical dual-writer check only. |
+| 5 | Public reputation: `SocialComponent.reputation` (`reputation_set`) from `social_memory.py` and `orchestrator.py` | `UNKNOWN_WITH_REASON` — two real writer call sites for the same durable field; phase ordering and same-tick-same-entity collision not checked this round. Separate from the roadmap's already-flagged *semantic* question of what `public_reputation` means (owner memo decision 4). This is a mechanical dual-writer check only. |
 
 **A sixth, unplanned finding surfaced independently** (not part of this 5-boundary set, found instead
 while investigating the lineage feasibility gate, §7): `entity.lifecycle.active` is raced between
@@ -239,7 +262,8 @@ craftsperson/wealth trajectory (proceeds independently of any of the above, per 
 **Open**: the three-way split between direct-participation, direct-witnessing, and secondhand-
 hearsay primitives (not assumed to share one shape); whether individual and institutional standing
 share a record shape; whether reputation-sensitive opportunity belongs at generation-time or
-filter-time. See Owner Decision List.
+filter-time. Owner-level parts are in `owner_decision_memo.md`; the rest belongs to the epic that
+takes this work on (portfolio epics D and E, §8).
 
 ### 3.5 Observation and player delivery
 
@@ -261,14 +285,15 @@ frozen Catalog by design, not by oversight.
 | `INTEGRATED` | N/A |
 | `PLAYER-EXPERIENCED` | N/A — this is the area with the least existing evidence of any of the six, entirely appropriately, since the product direction was only just clarified. |
 
-**Cross-domain proof**: not yet definable in general, but not uniformly blocked either — reconciled
-with §4's own path split (external review correction, third round, 2026-09-27): the
-*recognition-specific* candidate (Path 1) genuinely needs §3.4's propagation gap closed before any
-projection is possible. The *lineage* candidate (Path 2) does **not** — its underlying mechanisms
-(`aging_death`, `succession`) are already `verified: observed` today, so this area's nearest
-tractable first job is attempting a projection of the already-proven lineage transition (§7's
-feasibility exercise, §8), not waiting on §3.4's recognition work. This line states only that
-lineage does not share recognition's dependency — it does not claim the projection question itself
+**Cross-domain proof**: not yet definable in general, but not uniformly blocked either (§4's
+paths).
+- The recognition-dependent path needs §3.4's propagation gap closed before any projection is
+  possible.
+- The lineage probe does not. However, no in-world carrier or provenance signal exists for it today
+  (§7.2). So this area's nearest tractable job is the evidence-path and observer-contract design in
+  portfolio Epic B (§8), not a projection of an already-encounterable clue.
+
+This says only that lineage does not share recognition's dependency. It does not claim the projection question itself
 is answered; see §7 for exactly what remains open there.
 
 **Open**: essentially everything — this is a genuinely new capability area, not a realization gap
@@ -305,35 +330,37 @@ player-observation requirement stays unmet by existing tooling alone, not merely
 
 ---
 
-## 4. Dependency paths (a sample, not an exhaustive graph)
+## 4. Dependency paths through the epic portfolio (a sample, not an exhaustive graph)
 
-At least one path deliberately requires no social recognition at all, per the instruction's own
-explicit requirement:
+Epic letters refer to the portfolio in §8. Each dependency below is a semantic or evidentiary
+necessity, not a universal phase order.
 
 ```text
-Path 1 (recognition-dependent — the hunter/shopkeeper thread this investigation traced deepest):
-  World substrate (3.1) → Situated agency (3.3) → History/feedback, recognition half (3.4)
-  → Observation/delivery (3.5)
+Path 1 — no recognition propagation (lineage probe):
+  C authority boundaries (parallel, reusable)
+  A life/death continuity  ──>  [world-side proof complete on its own]
+  B observer contract (design) ──> B route built (future) ──> player inference on the probe (future)
+                                                          ──> closed-loop trajectory (future)
 
-Path 2 (NOT recognition-dependent — no new capability *area* needed; real engineering work still
-  required within it, per §7.1's confirmed defect):
-  World substrate (3.1) → Autonomous world dynamics, lineage (3.2) → History/feedback,
-  already-proven loop (3.4) → Observation/delivery (3.5)
+Path 2 — recognition-dependent (individual history):
+  A/C foundations ──> D witness/hearsay propagation (world side)
+                  ──> B's observer contract applied to D ──> recognition inference proof (future)
 
-Path 3 (NOT recognition-dependent — a second, different domain owner):
-  World substrate (3.1) → Autonomous world dynamics, economy (3.2) → History/feedback,
-  independent wealth/office edges (3.4) → Observation/delivery (3.5)
+Path 3 — no recognition, different owner (wealth/office):
+  F declared conversion edges (independent of D) ──> B's contract where observer value is intended
 ```
 
-**Reusable foundation work** (§3.1's own recurrence check) benefits all three paths equally.
-**Independent domain work** (§3.2's economy/institutions realization gaps) can proceed in parallel,
-owned by their own domains, without waiting on §3.4's recognition-specific work. **Integration
-proofs** are §3.4's own cross-domain scenarios, once built. **Later breadth work** is §3.6's ongoing
-job across whichever domains next prove worth deepening — not scheduled here.
+**Reusable foundations**:
+- C: the authority-boundary discipline.
+- B: the observer contract.
 
-**Nothing in this roadmap gates all future development on completing every Rule mapping or every
-domain** — Path 2 and Path 3 are proof that meaningful product value doesn't require §3.4's
-recognition work to land first.
+Both serve every path.
+
+**Independent domain work**: E (institutions), F (wealth/office) and G (ecology/settlement) can
+proceed without D's recognition work.
+
+**No world-side epic waits on an observer or inference outcome.** Nothing gates future development
+on completing every Rule mapping or every domain.
 
 ---
 
@@ -377,16 +404,17 @@ different contract as a result of standing, *accepts it*, and the acceptance pro
 change (new location, new relationship, new resource) a player can later observe as a consequence of
 the earlier recognition — chaining §3.3→3.4→3.4-opportunity→3.3 again, not one isolated reaction.
 
-**Contrasting-domain proof, required per the instruction**: the lineage proof above already *is*
-one — a non-recognition, non-combat domain, evidenced today. A second contrasting proof, once
-§3.2's economy gaps close: a craftsperson's wealth converting into a concrete leverage outcome
-(protection, patronage), independent of any recognition work.
+**Contrasting-domain proofs.** Lineage is a non-recognition, non-combat trajectory. It has
+mechanism-level evidence for a single hop only; its world-side composition and its player-side proof
+are both still open (§7). A second contrasting trajectory is available once §3.2's economy gaps
+close: a craftsperson's wealth converting into a concrete leverage outcome (protection, patronage),
+independent of any recognition work. That is portfolio Epic F.
 
 **Evidence table**:
 
 | Proof | Currently evidenced | Requires engineering | Evidence needed to claim delivery |
 |---|---|---|---|
-| Lineage (working default, gate partially run — §7) | Mechanism: yes, for the single death→heir hop (`PROVEN CURRENT`, re-confirmed 2026-09-27). Composition: `BLOCKED` on a confirmed defect (§7.1). Observer encounter: `BLOCKED` — no in-world carrier exists today (§7.2) | World side: fix the defect (ticket `TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`), then a composed run. Player side: design a minimal evidence-production + carrier path; the current observer sketch cannot yet be tested | World side: a real two-hop run through ordinary aging. Player side: an encounterable clue, *then* a blinded-human inference exercise per the calibrated criterion below |
+| Lineage (working default, gate partially run — §7) | Mechanism: yes, for the single death→heir hop (`PROVEN CURRENT`, re-confirmed 2026-09-27). Composition: `BLOCKED` on a confirmed defect (§7.1). Observer encounter: `BLOCKED` — no in-world carrier exists today (§7.2) | World side: Epic A, which resolves the defect and then runs a composed sequence. Player side: Epic B, which designs a minimal evidence-production and carrier path; the current observer sketch cannot be tested yet | World side: a real two-hop run through ordinary aging. Player side: an encounterable clue, *then* a blinded-human inference exercise per the calibrated criterion below |
 | Recognition (later) | Partial — direct-interaction case only | §3.4's propagation gap, §3.5's projection | Scenario-runtime evidence: a seeded scenario where two observers diverge, sourced from real propagation, not a global-scalar read |
 | Closed-loop (later still) | No | §3.4 opportunity-feedback + a later-decision trace | Scenario-runtime evidence spanning two decision points, not one |
 | Economy (contrasting) | No | §3.2's wealth-conversion edge | Scenario-runtime evidence for one concrete declared edge |
@@ -608,35 +636,37 @@ world-side (§7.1's defect) and one player-side (no encounter path, §7.2) — n
 not a player-facing proof.** It does not disqualify lineage: the single hop is still the strongest
 mechanism evidence of any candidate checked.
 
-## 8. Recommended first wave
+## 8. Epic portfolio and first-wave selection
 
-**A recommendation for owner review, not a started wave.** The bounded authority audit (§3.1), the
-lineage composition probe (§7.1), and the observer-encounter inspection (§7.2) have already been
-run; this section builds on their results. The wave starts only after the owner reviews its scope.
-Milestone detail lives in `docs/plans/systemic_world/first_wave_plan.md`.
+The portfolio is outcome-based. It is not one epic per capability area: an epic may cross areas,
+and an area may need several epics. Lineage is one probe, not the organizing axis.
 
-**Three independent tracks:**
+**How to read the evidence column.** "Inherited" means cited from earlier investigation (Parts A/B,
+Catalog batch findings) and not rechecked in this pass. "Verified 09-27" means checked in the
+current repository this week.
 
-- **World-side correctness (M1, then M4a)**: M1 fixes the confirmed `entity.lifecycle.active`
-  dual-writer race (§7.1). Its ticket is drafted as `TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`.
-  M4a then verifies a real composed two-hop sequence through ordinary per-tick aging. **This track
-  never waits on, and is never paused by, any observer finding.**
-- **Player-side evidence path (M2)**: the observer's encounter check is already answered `BLOCKED`.
-  No in-world carrier and no inheritance-origin signal exist (§7.2). M2 is therefore a finite design
-  milestone: choose the minimum evidence-production and carrier path, name its owning domain, and
-  draft its ticket. Two domain-appropriate options exist:
-  - viewpoint-scoped visible equipment in perception, which needs `PerceptionUpdatePhase` wired
-    into production first;
-  - a witness-scoped local inheritance event, owned by lifecycle/lineage.
+| Epic | Capability area(s) | Domain owner(s) | Rule support | Current evidence maturity | World outcome | Observer value | Independent prerequisites | Wave |
+|---|---|---|---|---|---|---|---|---|
+| **A** Life/death and cross-tick continuity | 3.1, 3.2, 3.4 | engine apply; lifecycle/lineage | `SOC-01`, `HP-*` (Catalog; not SCP-mapped; inherited) | Single hop verified (staged); natural-aging defect reproduced (verified 09-27) | Deaths recorded with cause; lineage persists over ticks | Indirect, via B | None | **First wave** |
+| **B** Situated evidence and observer contract | 3.5, 3.4 | perception/observation plus the probe event's domain | None (observation is outside Catalog scope by design) | Encounter `BLOCKED`, provenance `ABSENT` (verified 09-27) | — (design) | Enables every later player-inference proof | Owner memo decision 2 (probe event) | **First wave (design)** |
+| **C** Authority-boundary verification program | 3.1 | one per boundary | `AUTH-*` (Catalog; not SCP-mapped) | 5-boundary audit run; 3 `UNKNOWN_WITH_REASON` (verified 09-27) | Declared resolution at named boundaries | None directly | None | **First wave** |
+| **D** Individual history propagation (witness/hearsay) | 3.4 | social memory / cognition | `SOC-01`, `HP-*` (inherited) | Direct-participation history real; witness/hearsay producer `MISSING` (inherited, Part B) | Uninvolved witnesses and hearsay recipients form subject-specific beliefs | High (the recognition proof) | For a player proof: B's contract. World side: none | Later |
+| **E** Institutional judgment and authority | 3.2, 3.4 | institutions | `IP-S17`, `INST-03` (inherited) | No per-(institution, individual) standing mechanism (registry checked 09-27) | Institutions hold judgments distinct from personal ones | Medium | Owner memo decision 3 | Later |
+| **F** Wealth/office conversion through declared edges | 3.2, 3.4 | economy; institutions | `ME-S12` (inherited) | No conversion mechanism registered (verified 09-27) | Wealth converts to leverage only through declared paths | Medium | None (independent of D) | Later |
+| **G** Ecology/settlement dynamics | 3.2 | world dynamics / ecology | Batch 05 (inherited) | `regional_trauma`, `calamity_intensity` contradicted by corpus runs; open tickets exist (verified 09-27) | Environmental pressure actually changes the world | Medium | Existing open repair tickets first | Later |
+| **H** Agency across action and non-action processes | 3.3 | action dispatch / agency | `AGENCY-*` (SCP-mapped, `PARTIAL`) | 3 dispatch paths; intent→payload edge `UNKNOWN` (inherited, Part A) | Coherent attempt semantics, including world processes | Indirect | None | Parked (`UNKNOWN`) |
+| **I** Magic and culture breadth | 3.2 | magic; culture | Batches 11B/12 (inherited) | Weakest realization; the magic perception channel is inert (inherited) | — | Later | — | Parked |
 
-  Neither is a global history feed. Player-facing status stays `BLOCKED` until a clue is
-  encounterable, then `PENDING` until a blinded-human exercise runs.
-- **Remaining authority boundaries (M3a/M3b/M3c)**: three separately schedulable scenario checks
-  (entity-death `alive_set`, faction-diplomacy `diplomatic_relations_set`, public-reputation
-  `reputation_set`). Each ends `CONFIRMED_FINE_WITHIN_SCOPE`, `DEFECT_CONFIRMED`, or
-  `BLOCKED_WITH_REASON`.
+**First-wave selection: A + B + C.** The detail and tradeoffs are in `first_wave_plan.md`. This is
+a proposed selection, not a delivered proof. The first wave:
+- establishes world correctness for life/death continuity (A) and for the named boundaries (C);
+- establishes a design-level evidence path (B);
+- only prepares player inference;
+- leaves changed-life-trajectory proofs to the future.
 
-None of these tracks blocks another; the only gate in the wave is M1 → M4a.
+The only choice in this selection that evidence cannot rank is product scope: owner memo
+decision 2, which changes only B's probe event. Region ownership (FAC-010) stays on its own
+track.
 
 **Not recommended, evidence-consistent alternative**: defer the observer check and the remaining
 boundary audits entirely, fixing only the lifecycle-active defect first. Not recommended because
@@ -697,46 +727,18 @@ belongs in the existing SCP registry API, next to its existing mechanism-edge qu
 registry or a general query CLI is not needed for this gap, and neither is proposed. Every other
 question above already has a working answer today.
 
-## 10. Owner Decision List
+## 10. Owner decisions
 
-Only genuinely unresolved world-semantic or product-scope questions — items downgraded or removed
-across prior rounds (implementation questions mistaken for semantic ones, governance steps mistaken
-for conceptual decisions, and now an already-settled default) are recorded in the Appendix's
-per-round history, not repeated here.
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has four
+entries:
+1. the first-wave epic set;
+2. whether inheritance is meant to be player-understandable;
+3. whether individual and institutional standing are distinct concepts;
+4. what `public_reputation` means.
 
-1. **Are individual subjective relations and institutional judgments distinct world concepts, with
-   different authority, evidence, and update rules — or one concept at two scales?** This is the
-   real semantic question underneath the prior "one record shape or two" framing, which wrongly
-   pitched it as an implementation choice. **Recommended semantic default, from the frozen Rules
-   themselves**: yes, distinct — `SOC-01` already separates structural relation from subjective
-   attitude at individual scale, and `INST-03` already treats institutional authority/capability/
-   power/legitimacy as its own, correlated-but-not-substitutable cluster; nothing in either Rule
-   suggests collapsing the two scales into one concept. The exact record types implementing that
-   semantic default stay with local engineering investigation.
-2. **Institutional standing's domain ownership — not an owner-level decision unless a real conflict
-   surfaces.** `IP-S17` and Batch 10's own Rule content already support the institutions domain as
-   the semantic home; propose that as the default directly rather than presenting it as open. Escalate
-   to the owner only if a genuine, unresolved cross-domain authority conflict with the social/
-   relationship domain is found — none has been, this arc.
-3. **`public_reputation`'s intended world meaning — state this as the open semantic question itself,
-   not a retain-or-retire choice.** Is it meant to be a genuinely publicly-knowable fact, a narrow
-   declared-scope claim, a derived projection, or a technical fallback? A global scalar that
-   `appraisal.py` currently uses only as a last resort for total strangers is not automatically
-   evidence that it's *meant* to be public knowledge — that's exactly the kind of silent-leak risk
-   §2's epistemic principle warns about. Do not decide retain-vs-retire until this meaning, and its
-   information provenance/scope, is established.
-
-**Removed 2026-09-27**: the prior item 4 ("which candidate trajectory runs first") is no
-longer listed — it is resolved, not merely defaulted. §7.4's bounded search found no second
-candidate qualifying at lineage's evidence tier (economy `BLOCKED`, environmental/calamity
-`contradicted`, feud/displacement not independent, institutional/office `MISSING`); lineage is the
-only candidate with a real mechanism proof to run the gate against, and §7 has already run it in
-part. There is no remaining tradeoff for the owner to weigh here.
-
-**Confirmed explicitly not owner-level, per the instruction's own boundary**: which existing class
-to extend for any new record type, whether to retire or adopt the dead `ActionProposal` model,
-exact field layouts. These belong to whoever scopes the first real ticket under an accepted
-capability area.
+Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
+field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
+not to the owner or to this roadmap.
 
 ---
 
@@ -750,7 +752,7 @@ inline rather than silently left to look current.
 
 ### Round 1 response, 2026-09-26
 
-Responding to `tmp/external-ai-review-systemic-world-roadmap-instruction.md`, mapped to its five
+Responding to `review_history/external-ai-review-systemic-world-roadmap-instruction.md`, mapped to its five
 required-change areas:
 
 1. **Lineage reclassified** from committed first proof to leading candidate, gated by a five-
@@ -777,7 +779,7 @@ required-change areas:
 
 ### Change summary — five-phase draft to capability map, 2026-09-26
 
-The prior document (`tmp/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s original
+The prior document (`evidence/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s original
 "Revised capability areas") organized around a five-*phase* sequence, scoped only to the Action-
 Recognition-Opportunity loop this investigation traced most deeply. This document:
 
