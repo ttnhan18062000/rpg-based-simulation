@@ -51,6 +51,7 @@ from writer import write_lines  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import consolidate_pending_rows  # noqa: E402
+from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "agent-monitoring" / "data"
 JSONL_KINDS = ("runs", "events", "tools")
@@ -61,7 +62,12 @@ def consolidate_jsonl_kind(week_dir: Path, kind: str) -> int:
     Returns the count of per-ticket files consolidated (0 if none found or the canonical write
     failed -- in the failure case, every per-ticket file is left in place for a future retry)."""
     canonical = week_dir / f"{kind}.jsonl"
-    per_ticket_files = sorted(week_dir.glob(f"*.{kind}.jsonl"))
+    # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: delegates to the shared
+    # monitoring_shard_paths.per_identifier_shard_paths() resolver -- not the general read-
+    # widening shard_paths() (this glob is deliberately per-identifier-only; it must never also
+    # match the canonical file it folds INTO). Migrated for proliferation reasons, not because it
+    # was broken: this was already correctly narrow by design.
+    per_ticket_files = per_identifier_shard_paths(week_dir, kind)
     if not per_ticket_files:
         return 0
 

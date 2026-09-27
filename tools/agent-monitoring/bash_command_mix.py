@@ -51,6 +51,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_jsonl_with_line_count  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_DATA_DIR = REPO_ROOT / "agent-monitoring" / "data"
@@ -68,12 +69,12 @@ def week_shards(
     since_week: "str | None" = None, through_week: "str | None" = None,
 ) -> list:
     """Sorted shard paths under data_dir/*/source.jsonl (bare) or data_dir/*/*.source.jsonl
-    (per-identifier -- TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP), optionally bounded to an
-    inclusive ISO week range. String comparison is correct for "YYYY-Wnn" labels (matches
-    iso_week() / week_range()'s own convention in generate_retro.py). None on either side means
-    unbounded."""
+    (per-identifier), via the shared `monitoring_shard_paths.shard_paths()` resolver
+    (TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION), optionally bounded to an inclusive ISO
+    week range. String comparison is correct for "YYYY-Wnn" labels (matches iso_week() /
+    week_range()'s own convention in generate_retro.py). None on either side means unbounded."""
     shards = []
-    all_shards = sorted(data_dir.glob(f"*/{source}.jsonl")) + sorted(data_dir.glob(f"*/*.{source}.jsonl"))
+    all_shards = shard_paths(data_dir, source)
     for shard in sorted(all_shards):
         week = shard.parent.name
         if since_week and week < since_week:

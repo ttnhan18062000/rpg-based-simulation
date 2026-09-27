@@ -60,6 +60,7 @@ if str(_MONITORING_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_DIR))
 
 from verify_temporal_week_consistency import compute_temporal_week_consistency_report  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -109,11 +110,15 @@ def _jsonl_rows_for_run_id_across_weeks(data_root: Path, filename: str, run_id: 
     (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX)
     — confirmed by direct execution that `check_monitoring_write_recorded()` (this function's own
     caller) silently FAILed for a real ticket closed under the per-PR scheme before this fix,
-    without this glob widening."""
+    without this glob widening.
+
+    TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery itself now delegates to
+    `monitoring_shard_paths.shard_paths()`, the shared resolver replacing this and 8 other
+    independent copies of the same widening — this function's own row-filtering behavior is
+    unchanged."""
     source = filename.removesuffix(".jsonl")
-    shard_paths = sorted(data_root.glob(f"*/{filename}")) + sorted(data_root.glob(f"*/*.{source}.jsonl"))
     rows: list[dict] = []
-    for path in sorted(shard_paths):
+    for path in shard_paths(data_root, source):
         rows.extend(_jsonl_rows_for_run_id(path, run_id))
     return rows
 

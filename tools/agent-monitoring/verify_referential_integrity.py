@@ -42,6 +42,8 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from monitoring_shard_paths import shard_paths  # noqa: E402
+
 DEFAULT_DATA_DIR = Path("agent-monitoring/data")
 
 RETRIEVAL_EVENT_PREFIX = "RETRIEVAL-EVENT-"
@@ -66,10 +68,13 @@ def load_all_weeks(data_dir: Path, source: str) -> list[tuple[dict, str]]:
     line, since writer.py's write_line() never mutates already-written bytes).
     """
     records: list[tuple[dict, str]] = []
-    # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
-    # (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
-    shard_paths = sorted(data_dir.glob(f"*/{source}.jsonl")) + sorted(data_dir.glob(f"*/*.{source}.jsonl"))
-    for path in sorted(shard_paths):
+    # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery delegates to the shared
+    # resolver (also globs the per-identifier shape -- per-ticket, historically, and per-PR/branch
+    # since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX). Previously an independent, drifted copy
+    # of validate.py::load_data_glob_with_line_count()'s own logic, despite that function's own
+    # docstring listing this file as a caller of it -- it never actually was one.
+    matched_paths = shard_paths(data_dir, source)
+    for path in sorted(matched_paths):
         week_folder = path.parent.name
         for i, line in enumerate(path.read_text().splitlines(), 1):
             if not line:

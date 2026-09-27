@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tag_registry import load_registry  # noqa: E402
 from tag_report import categorize_tag, collect_completed_tickets  # noqa: E402
 from monitoring_consolidation import consolidate_all  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 from validate_frontmatter import (  # noqa: E402
     TAG_TAXONOMY_EFFECTIVE_DATE,
     _ticket_id_effective_date,
@@ -80,12 +81,13 @@ def _load_source(path, source):
 def _source_mtime(path, source_name):
     """Newest relevant mtime for one source: max mtime across
     agent-monitoring/data/*/<source_name>.jsonl AND the per-identifier-shaped
-    agent-monitoring/data/*/*.<source_name>.jsonl (TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP)
-    if path is the data-dir root (a directory), else the literal file's own mtime if it exists,
-    else None."""
+    agent-monitoring/data/*/*.<source_name>.jsonl, via the shared
+    `monitoring_shard_paths.shard_paths()` resolver (TCK-20260926-MONITORING-READ-PATH-
+    CONSOLIDATION) if path is the data-dir root (a directory), else the literal file's own mtime
+    if it exists, else None."""
     if path.is_dir():
-        shard_paths = list(path.glob(f"*/{source_name}.jsonl")) + list(path.glob(f"*/*.{source_name}.jsonl"))
-        mtimes = [f.stat().st_mtime for f in shard_paths]
+        matched_paths = shard_paths(path, source_name)
+        mtimes = [f.stat().st_mtime for f in matched_paths]
         return max(mtimes) if mtimes else None
     if path.exists():
         return path.stat().st_mtime
