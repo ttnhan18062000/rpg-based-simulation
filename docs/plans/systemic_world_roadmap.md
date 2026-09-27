@@ -103,7 +103,7 @@ domain, not just the ones under active development.
 | `DESIGNED` | Fully, within the frozen Catalog's current scope — Milestone A is complete for the cases it addresses; this is not a claim that every future world case is designed. |
 | `REALIZED` | Strong for the domains this investigation traced (Combat, Harvest, Quest reward — Part A). |
 | `VERIFIED` | Partial — `TCK-20260401-ACTION-CONVERGENCE`'s bit-identical-replay acceptance criterion is real, checked evidence for the authoritative-apply/replay-determinism law specifically; not every domain's own state-authority pattern has been individually checked. |
-| `INTEGRATED` | **Confirmed fragile even where individually verified — and confirmed recurring, not a one-off.** The regional-sovereignty dual-authority bug (two systems independently writing the same field, at different thresholds) was found in an already-shipped, already-tested domain during unrelated work this arc. The bounded audit run this round (below) found a **second, independent instance of the same defect class**: `entity.lifecycle.active` is raced between `ApplyPath`'s passive-decay branch and `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE dispatch (§7) — this one directly breaks the lineage trajectory's own natural-aging path, not a hypothetical elsewhere. Two independent, confirmed instances in one investigation arc is stronger evidence for this row's own concern than either instance alone. |
+| `INTEGRATED` | **Confirmed fragile even where individually verified.** The regional-sovereignty bug (two systems writing two *different* representations of region ownership — `owner_faction_id` vs. `FactionState.territory` — with no reconciliation between them) was found in an already-shipped, already-tested domain during unrelated work this arc. This round's audit (below) found a **second confirmed violation of the same underlying invariant** — canonical authority + a declared resolution rule (§3.1's own semantic obligation) — but **the concrete mechanism is different, not identical, and should not be assumed the same without further evidence**: the lifecycle-active case (§7) is a same-tick evaluation-*order* race between one branch that reads a stale, prior-tick-persisted value and another that computes one tick ahead, not two systems disagreeing about which field represents the truth. Two confirmed violations of the same invariant, via two distinct mechanisms, is evidence the invariant needs a real enforcement discipline (§3.1's own audit exists for exactly this) — it is not yet evidence of one recurring bug pattern. |
 | `PLAYER-EXPERIENCED` | Not directly surfaced as its own player-visible layer — but experienced indirectly, whenever a player encounters a coherent consequence that depends on this substrate holding (e.g. a region's ownership actually changing consistently). Not yet evaluated for that indirect effect specifically. |
 
 **Cross-domain proof, revised to a bounded target (external review correction, 2026-09-26)**: an
@@ -128,9 +128,14 @@ finite set of 5 boundaries, each with an explicit outcome, not "swept the whole 
 **A sixth, unplanned finding surfaced independently** (not part of this 5-boundary set, found instead
 while investigating the lineage feasibility gate, §7): `entity.lifecycle.active` is raced between
 `ApplyPath`'s passive-decay branch and `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE dispatch —
-a confirmed, reproducible `DEFECT_CONFIRMED` of the exact same class, found by running code rather
-than reading it. See §7 for the full account; it directly blocks natural-aging succession, not a
-hypothetical case.
+a confirmed, reproducible `DEFECT_CONFIRMED`, found by running code rather than reading it. **This
+violates the same authority invariant as boundary 1 (region ownership) — a persistent fact must not
+be committed from a stale assumption without a declared resolution rule — but the concrete mechanism
+differs**: boundary 1 is two systems writing two different *representations* of ownership with no
+reconciliation; this one is a same-tick *evaluation-order* race (a stale prior-tick read racing a
+one-tick-ahead write), not a representation mismatch. Treat them as two separate confirmed defects
+under one shared invariant, not as the same bug recurring. See §7 for the full account; it directly
+blocks natural-aging succession, not a hypothetical case.
 
 **Exit condition, stated exactly**: this is a named set of 5 (+1 unplanned) boundaries with explicit
 outcomes — 2 `DEFECT_CONFIRMED`, 3 `UNKNOWN_WITH_REASON`, 1 `CONFIRMED_FINE_WITHIN_SCOPE`. It does
@@ -506,9 +511,12 @@ check fires immediately in the very first tick, before the passive branch ever g
 ahead on some later tick. The race only exists for a death arriving gradually, in the ordinary run
 of the simulation — exactly the case a longer, composed lineage sequence would need.
 
-**This is the same defect class §3.1's bounded audit exists to catch** — a dual-writer race on a
-durable field (`entity.lifecycle.active`), no declared precedence rule — found here independently,
-by running code rather than reading it. **Narrowest confirmed blocker, stated exactly**: this is not
+**This violates the same authority invariant §3.1's bounded audit exists to check** — a durable
+field (`entity.lifecycle.active`) committed without a declared precedence rule between its two
+writers — found here independently, by running code rather than reading it. **Its concrete mechanism
+is a same-tick evaluation-order race (a stale prior-tick read vs. a one-tick-ahead write), distinct
+from boundary 1's dual-representation mismatch (§3.1)** — the same invariant, a different bug, not
+assumed identical. **Narrowest confirmed blocker, stated exactly**: this is not
 a scenario-setup problem, not a missing runtime integration, and not a missing evidence-production
 gap — it is a real, reproducible simulation defect. (A combat-triggered second death was not tried as
 an alternative path this round; a static read suggests it does not share this specific age-based
@@ -599,124 +607,56 @@ across two rounds now. What changed this round is that "whether composition need
 work" moved from `UNKNOWN` to **confirmed yes, with a named root cause** — genuinely new information,
 not an assumption resolved either optimistically or pessimistically.
 
-## 8. Recommended first wave — a recommendation pending §7's outstanding checks, not a selected delivery wave (revised 2026-09-27, third external review round)
+## 8. Recommended first wave — synchronized with the audit already run and the confirmed lifecycle-active defect (revised 2026-09-27, fifth review round)
 
-**This is a recommendation for where to look next, not a committed delivery wave.** §7 leaves
-questions 2 and 3, and part of 1 and 4, open for lineage; economy/wealth is `BLOCKED`. Both halves
-below exist to make progress on those specific unknowns, not to declare either one delivered.
+**This is a recommendation, not a committed delivery wave.** The bounded causal/authority audit
+(§3.1) and the lineage composition probe (§7.1/§7.2) have both **already been run this arc** — this
+section reflects their actual results, not a plan to go run them. Full milestone detail (entry/exit
+evidence, owners, a decision gate) lives in the separate first-wave plan
+(`docs/plans/systemic_world_first_wave_plan.md`); this section stays a short recommendation.
 
-**Option A — recommended: pair one bounded causal/authority check with the lineage feasibility
-exercise, in parallel.**
+**Recommended: three independently-schedulable tracks, not one sequenced pair.**
 
-- **Causal/authority strengthening**: run §3.1's own bounded audit (not a full sweep) against the
-  most consequential cross-domain mutation paths analogous to the regional-sovereignty case —
-  durable ownership/control fields writable from more than one system. **Trajectory proof**: none
-  needed for this half; it's foundation hardening. **Rule/registry evidence**: the regional-
-  sovereignty pattern itself, already fully diagnosed. **Prerequisites**: none. **Parallel work**:
-  fully independent of the lineage half. **Finite exit evidence**: the named boundaries reviewed,
-  each with an explicit state (fixed, confirmed-fine, or a new `UNKNOWN` with a named reason) —
-  never "swept the whole engine." **Costs/risks `UNKNOWN`**: how many such boundaries actually exist
-  to check — not yet scoped.
-- **Feasibility exercise (lineage), not yet a proof — scope narrowed to the single hop, per the
-  fourth round's own confirmed finding (§7.1)**: attempt to fully resolve gate question 2 (a design
-  sketch already exists, §7.2 — turn it into a real observer test) for the single death→heir
-  transition specifically, using the already-`verified: observed` mechanisms as substrate. **This
-  stays a feasibility exercise, not a player-facing proof, until a situated observer — given only
-  the legitimate traces the exercise produces — can actually form a reasonable hypothesis** (§5's
-  player-side inference check). **Trajectory scope**: the single death→heir transition vignette
-  only — explicitly **not** the longer multi-generation arc (§7.1 confirmed that composition is
-  `BLOCKED` on a real defect, not merely design-unproven) and explicitly not yet a durable
-  changed-life-trajectory proof (§5's closed-loop distinction). **Rule/registry evidence**:
-  `succession`/`aging_death` mechanism entries, both `verified: observed` — evidence the underlying
-  transition is real, not evidence the projection is legible or that composition works. **New
-  prerequisite, confirmed this round**: the multi-hop/longer-arc half of this exercise is now
-  explicitly gated on fixing §7.1's dual-writer race (`ApplyPath` vs. `LifecycleSystem.
-  resolve_lifecycle` on `entity.lifecycle.active`) — this is no longer an open risk, it is a named,
-  confirmed blocker with a root cause, and belongs in the first-wave plan as its own tracked item
-  (see the separate first-wave milestone plan), not fixed under this planning-only pass. **Parallel
-  work**: independent of the causal-authority half above (though note both halves now touch the
-  same defect *class* — dual-writer races on durable fields — so findings from one may inform
-  precedence-rule design for the other). **Finite exit evidence**: gate question 2 answered from a
-  real observer test (not just narrated), or reclassified `BLOCKED` with a named reason; the
-  multi-hop half stays explicitly out of this exercise's scope until the defect is fixed. **Costs/
-  risks, now confirmed rather than `UNKNOWN`**: the longer-arc question does need real new
-  simulation work — specifically, a declared precedence rule between the two writers of
-  `entity.lifecycle.active` — not merely "more projection work"; whether the observer test itself
-  surfaces a legibility problem stays genuinely open.
+- **World-side correctness (M1 in the first-wave plan)**: fix, or explicitly re-scope, the
+  confirmed `entity.lifecycle.active` dual-writer race (§7.1) so natural-aging succession fires
+  correctly, then verify a real composed two-hop sequence. **This track does not depend on, and is
+  not paused by, any player-side/observer finding** — world correctness and product legibility are
+  separate concerns with separate exit evidence (external review correction, fifth round): even if
+  the observer exercise below finds the available clue too weak, fixing the defect and verifying
+  composition remains worthwhile world-side work in its own right. **Rule/registry evidence**:
+  `succession`/`aging_death`, both `verified: observed` for the single hop; the defect itself,
+  already fully diagnosed with a root cause (§7.1). **Finite exit evidence**: a real two-hop run
+  through ordinary per-tick aging, identity/chronology preserved across both hops.
+- **Single-hop observer/evidence check (M2 in the first-wave plan)**: turn §7.2's design sketch into
+  a real check of state → evidence → encounter → inference, in that explicit order — the inventory
+  transfer is already a real state change; what's unverified is whether the specified observer can
+  *encounter* it (viewpoint access, timing, non-leakage — scriptable), separately from whether an
+  inheritance-*provenance* signal exists (confirmed absent, §7.2), separately again from whether a
+  human observer can draw a reasonable *inference* from it (requires a real blinded-human exercise —
+  a scripted test validates provenance/timing/access/non-leakage but cannot substitute for this last
+  step). **If no human exercise is run, `PLAYER-EXPERIENCED` stays `pending`**, not resolved either
+  way. **Finite exit evidence**: each of the four sub-checks answered from a real check, with
+  inference specifically left `pending` if unrun.
+- **Remaining causal/authority boundaries (M3 in the first-wave plan)**: the audit already produced
+  3 `UNKNOWN_WITH_REASON` boundaries (entity-death `alive_set`, faction-diplomacy
+  `diplomatic_relations_set`, public reputation) — each is **separately schedulable**, not one
+  atomic milestone, and each may resolve to `CONFIRMED_FINE_WITHIN_SCOPE`, `DEFECT_CONFIRMED`, *or*
+  `BLOCKED_WITH_REASON` if a representative scenario genuinely cannot be executed — never a forced
+  fine/defect verdict where the real answer is "couldn't test it."
 
-**Option B — an alternative, not recommended over A but evidence-consistent**: defer the feasibility
-exercise entirely and run only the causal/authority audit first, on the reasoning that a foundation
-defect (if one exists elsewhere) would undercut confidence in *any* later player-facing proof,
-lineage included. **Tradeoff against A**: slower to any player-visible result, but avoids building
-toward a proof on ground not yet checked for the regional-sovereignty class of defect. Not
-recommended, because that defect class was found via one specific incident, not a systemic pattern
-with evidence of recurrence — deferring all player-visible work on a single incident would overcorrect.
+**All three tracks are parallel-safe** — none blocks another. The world-side composition check does
+not wait on the observer check; the remaining boundary audits do not wait on either.
 
-**Neither option is forced into one module or a fixed sequence** — both halves of Option A are
-explicitly parallel-safe, and Option B differs from A only in sequencing, not in scope.
+**Not recommended, evidence-consistent alternative**: defer the observer check and the remaining
+boundary audits entirely, fixing only the lifecycle-active defect first. Not recommended because
+nothing here actually requires that sequencing — all three tracks are independent, so deferring two
+of them would only slow total progress without reducing any real risk. (Two confirmed violations of
+the authority invariant now exist in this investigation arc — §3.1's INTEGRATED row — which is
+evidence the invariant needs a real enforcement discipline, not yet evidence of one recurring bug
+pattern; either way, nothing about that count changes whether these three tracks can run in
+parallel.)
 
-## 9. Response to the second external review round (2026-09-27)
-
-1. **Two small roadmap corrections applied**: §3.1's semantic obligation restated as already-
-   supported (not open), with what's open narrowed to cross-domain verification/enforcement
-   discipline; the Owner Decision List's feasibility-gate item downgraded from an owner decision to
-   a recommended default for local investigation.
-2. **Decision bridge added** (§6) — a compact, three-level table per capability area, citing SCP
-   mapping status precisely (`UNKNOWN` where the SCP hasn't touched a family, never inferred as
-   `MISSING`), with no full-Catalog sweep run.
-3. **Feasibility gate actually run** (§7) — real tests re-executed 2026-09-27, not cited
-   secondhand; economy/wealth checked as the comparison candidate and found genuinely `BLOCKED` on
-   its own missing mechanism, not assumed weaker without evidence.
-4. **First wave recommended** (§8) — one primary option pairing bounded foundation-hardening with
-   the lineage single-transition proof in parallel, plus a non-recommended alternative, each with
-   finite exit evidence and named `UNKNOWN` costs.
-5. **The Semantic Control Plane roadmap's own opening status was stale** (claimed "no milestone has
-   started" while M0-M4 were all already complete per its own later sections) — corrected directly,
-   since this round's work required citing its current state precisely.
-
-**External-review concerns rejected on repository evidence: none.** Every requested action was
-directly actionable and evidence-supported; the stale-status discrepancy the review flagged was
-confirmed real, not a misreading on the reviewer's part.
-
-## 10. Response to the third external review round (2026-09-27)
-
-1. **Reclassified the two passing tests** — they are evidence for two specific death-to-heir
-   transitions (§7), never a completed five-question gate and never a player-facing proof. Q1 stays
-   `partial` (single-tick transitions real; longer-sequence composition unchecked); Q4 restated to
-   say only that no missing simulation edge was found *for the tested transition* — evidence
-   production and projection feasibility remain unchecked, not resolved by the mechanism existing.
-2. **§8's lineage half renamed** from "player-facing proof" to a **feasibility exercise**, explicitly
-   not a proof until a situated observer, given only the exercise's legitimate traces, can form a
-   reasonable hypothesis (§5's player-side inference check) — and explicitly distinguished from the
-   longer, durable changed-life-trajectory proof (§5's closed-loop distinction), which this exercise
-   does not attempt.
-3. **§3.5 reconciled with §4's path split** — the recognition candidate (Path 1) genuinely needs
-   §3.4's propagation gap closed; the lineage candidate (Path 2) does not, so §3.5's own nearest
-   tractable job is projecting from lineage's already-proven mechanisms, not waiting on recognition
-   work. Stated directly rather than left implicit.
-4. **Economy comparison reframed** (§7, Q5) — treated as evidence of economy's own missing
-   conversion edge, not as evidence lineage has the clearest player experience. Checked directly
-   against `registries/mechanisms.yaml`'s other `state: done`/`verified: observed` entries for a
-   second viable comparison candidate; found none with equivalent registered, history-composing
-   evidence this round (combat resolution, movement legality, interaction, entity-apply,
-   skill-scaling, species/personality traits, and entity-level XP/evolution entries are all
-   single-tick or non-historical) — comparison stated as limited, not resolved by assertion.
-5. **§3.6 corrected** — existing SimQ/corpus-tier/M3 infrastructure does not establish §5's
-   player-side inference check; that evaluation is unbuilt, not merely unrun.
-6. **§5, §7, §8, and the Owner Decision List synchronized** — §5's pre-run narration now points to
-   §7 as authoritative instead of restating superseded claims; §6's lineage row's stray extra cell
-   removed and its claims softened to match; the Owner Decision List's stale "§6 below" reference to
-   the gate corrected to "§7".
-7. **A short passed/partial/unknown/blocked evidence table added** (§7) covering both candidates
-   across all five gate questions.
-8. **§8 reframed as a recommendation pending §7's outstanding checks**, not a selected delivery wave.
-
-**External-review concerns rejected on repository evidence: none.** Every requested correction was
-directly actionable; the extra table cell and the stale section reference the review implicitly
-flagged were both confirmed real slips in this document, not disagreements with the review's own
-reading.
-
-## 11. Evidence workflow — existing registry/Semantic Control Plane tooling (added 2026-09-27, fourth round)
+## 9. Evidence workflow — existing registry/Semantic Control Plane tooling (added 2026-09-27, fourth round)
 
 Per the finalize instruction's §1: real commands run against the current repo, not invented ones.
 Smallest incremental improvement only — explicitly not a second registry, a universal ontology, or
@@ -775,109 +715,7 @@ touching schema, validation, or the two-domain view generator. Everything else a
 has a real, working answer today. A broader general-purpose multi-Rule query CLI is a larger design
 decision than "smallest increment" and is left out of scope here, for whoever next scopes that work.
 
-## 12. Response to the finalize instruction (fourth external review round), 2026-09-27
-
-1. **Bounded cross-domain authority audit actually run** (§3.1) — 5 named boundaries, classified
-   (2 `DEFECT_CONFIRMED`, 3 `UNKNOWN_WITH_REASON`, 1 `CONFIRMED_FINE_WITHIN_SCOPE`), with a named
-   deliberately-not-checked list. One of the two confirmed defects (region-ownership/`FAC-010`) was
-   already known and tracked; the other is new (below).
-2. **Lineage composition probe actually executed, not just reasoned about** (§7.1) — surfaced a
-   genuinely new, load-bearing finding: composing a second lineage hop through ordinary per-tick
-   aging is `BLOCKED` by a real, reproducible dual-writer race on `entity.lifecycle.active`
-   (`ApplyPath`'s passive-decay branch vs. `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE
-   dispatch) — the same defect *class* §3.1's audit exists to catch, found here independently by
-   running code. This is documented and escalated per the instruction's own boundary — **no
-   production code was changed** to fix it; it is flagged for a future ticket, not fixed under this
-   planning-only pass.
-3. **Observer/evidence-packet design check actually built** (§7.2) — a minimal provisional observer
-   position, one early clue, one reasonable-but-unprovable hypothesis, and two named negative
-   checks (no discoverable trace for the inherited grudge/dying wish; two named leak-risk fields for
-   future projection work to guard against). Not claimed as a real player-observation exercise.
-4. **Gate question 4 split into three separate sub-answers**, per the instruction's own requirement
-   — mechanism exists / evidence-production exists / projection-is-buildable are no longer
-   conflated into one "partial" (§7.3).
-5. **Bounded second-candidate search completed** (§7.4) — environmental/calamity checked and
-   disqualified (`contradicted` by real corpus runs, worse than economy's `BLOCKED`); displaced-
-   family/feud checked and found not independent of lineage; institutional/office reconfirmed
-   `MISSING`. Comparative clarity stated as `UNKNOWN, bounded search exhausted`, not resolved by
-   assertion.
-6. **Registry/SCP tooling query recipes documented with real command output** (§11), plus one
-   concrete, minimal incremental-improvement recommendation (a ~10-line reverse-index function) —
-   explicitly not a second registry or new governance system.
-7. **§8's recommended first wave re-scoped** to the single hop only, with the multi-hop half
-   explicitly gated on fixing §7.1's newly-confirmed defect — a real prerequisite now, not an
-   `UNKNOWN` cost.
-8. **A separate `PROPOSED / FOR REVIEW` first-wave milestone plan drafted** at
-   `docs/plans/systemic_world_first_wave_plan.md`, per the instruction's own request to keep this
-   roadmap a capability/dependency map rather than a milestone transcript.
-
-**External-review concerns rejected on repository evidence: none.** Every requested investigation
-was run for real (composition probe, observer sketch, bounded audit, bounded candidate search,
-tooling recipes) rather than narrated; the one genuinely new finding (§7.1's defect) was not
-anticipated by either this document or the external review, and is reported exactly as severe as
-the evidence shows — no more, no less.
-
----
-
-## Change summary — what changed from the prior five-phase draft, and why
-
-The prior document (`tmp/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s original
-"Revised capability areas") organized around a five-*phase* sequence, scoped only to the Action-
-Recognition-Opportunity loop this investigation traced most deeply. This document:
-
-1. **Widens scope to the whole engine** — the recognition loop is now one thread (Path 1) among
-   several, not the organizing principle.
-2. **Replaces phase-sequence framing with a capability-map framing** — dependency is stated per-path
-   (§4), not assumed universal; Paths 2 and 3 need none of Path 1's recognition work.
-3. **Adds the product north star and epistemic-delivery principle** (§1-2) — new content reflecting
-   the owner's newly clarified product direction, not present in any prior document this arc.
-4. **Applies the four corrections** the instruction identified in the foundational synthesis
-   directly (state-authority vs. attempt-correctness separated; individual standing claim narrowed
-   to a three-way split; the World Rule conclusion explicitly bounded to investigated cases; the
-   capability areas restated as a map, not a pipeline) — detailed in the foundational synthesis
-   document itself, referenced here rather than repeated.
-5. **Adds a genuinely new capability area** (§3.5, Observation and player delivery) that the prior
-   five-phase draft didn't separate out as its own area at all — the epistemic principle now has an
-   explicit home in the capability map, not folded into "recognition."
-6. **States an initial product proof that requires zero new capability-area work** (lineage,
-   §5) — the prior draft's only proposed proof (the hunter/shopkeeper scenario) required the least-
-   evidenced capability area (§3.4's propagation gap) to land first; this document front-loads the
-   cheapest real proof instead.
-
----
-
-## External review response, 2026-09-26
-
-Responding to `tmp/external-ai-review-systemic-world-roadmap-instruction.md`, mapped to its five
-required-change areas:
-
-1. **Lineage reclassified** from committed first proof to leading candidate, gated by a five-
-   question feasibility check (§5) — the check has not been run; selection is `OPEN`.
-2. **Player-understanding criterion split** into a world-side truth check and a player-side
-   inference check (§5), with explicit failure cases and an "unknown ≠ defect" clarification added.
-3. **Broad status claims narrowed** throughout §3 — `DESIGNED`/"no Rule needed" now scoped to "within
-   the frozen Catalog's current scope"/"the cases investigated," never an implied claim about the
-   whole future engine; `PLAYER-EXPERIENCED: N/A` replaced with "not directly surfaced"/"experienced
-   indirectly, not yet evaluated" for world substrate, agency, and evaluation; §3.4's wording no
-   longer implies `bonds`/`trust_history` is the decided destination for witnessed/hearsay evidence.
-4. **§3.1's foundation verification bounded** — replaced the unfalsifiable "absence of recurrence"
-   framing with a stated, finite scope (most consequential cross-domain mutation paths, reviewed at
-   their boundaries, with named remaining `UNKNOWN`s), and restated the semantic obligation precisely
-   (canonical authority + a declared resolution rule, not one writer or one universal `revalidate()`).
-5. **Owner Decision List reframed** — item 1 restated as the real semantic question (are individual
-   and institutional standing distinct concepts, not just different record shapes) with a Rule-
-   sourced default; item 2 downgraded from open decision to a proposed default, escalated only on a
-   real conflict; item 3 reframed as "define the meaning first," not a retain/retire choice; item 4
-   (promotion path) removed as a numbered item and replaced with the real near-term choice — which
-   candidate the feasibility gate runs against first.
-
-**External-review concerns rejected on repository evidence: none.** Every requested correction is
-directly supported by evidence already gathered this arc (Part A/B's own citations, the frozen
-Catalog's own Rule text) — no counter-evidence was found against any of the five points.
-
----
-
-## Owner Decision List (refined per external review, 2026-09-26)
+## 10. Owner Decision List (refined per external review, 2026-09-26)
 
 Only genuinely unresolved world-semantic or product-scope questions. Two items from the prior
 version were downgraded here on external review: item 1 was mostly an implementation/modeling
@@ -916,3 +754,175 @@ review, not a fourth conceptual decision competing with the real ones.
 to extend for any new record type, whether to retire or adopt the dead `ActionProposal` model,
 exact field layouts. These belong to whoever scopes the first real ticket under an accepted
 capability area.
+
+---
+
+## Appendix: External review response log (historical)
+
+Moved out of the decision-bearing body per the fifth external review round's own request, so the
+capability map (§0-§7) and current decision evidence (§8-§10) stay easy to read. These are **dated
+records of what changed and why at the time**, not current status — current status always lives in
+the numbered sections above; where a historical entry below has been superseded, it is marked so
+inline rather than silently left to look current.
+
+### Round 1 response, 2026-09-26
+
+Responding to `tmp/external-ai-review-systemic-world-roadmap-instruction.md`, mapped to its five
+required-change areas:
+
+1. **Lineage reclassified** from committed first proof to leading candidate, gated by a five-
+   question feasibility check (§5) — the check has not been run; selection is `OPEN`.
+2. **Player-understanding criterion split** into a world-side truth check and a player-side
+   inference check (§5), with explicit failure cases and an "unknown ≠ defect" clarification added.
+3. **Broad status claims narrowed** throughout §3 — `DESIGNED`/"no Rule needed" now scoped to "within
+   the frozen Catalog's current scope"/"the cases investigated," never an implied claim about the
+   whole future engine; `PLAYER-EXPERIENCED: N/A` replaced with "not directly surfaced"/"experienced
+   indirectly, not yet evaluated" for world substrate, agency, and evaluation; §3.4's wording no
+   longer implies `bonds`/`trust_history` is the decided destination for witnessed/hearsay evidence.
+4. **§3.1's foundation verification bounded** — replaced the unfalsifiable "absence of recurrence"
+   framing with a stated, finite scope (most consequential cross-domain mutation paths, reviewed at
+   their boundaries, with named remaining `UNKNOWN`s), and restated the semantic obligation precisely
+   (canonical authority + a declared resolution rule, not one writer or one universal `revalidate()`).
+5. **Owner Decision List reframed** — item 1 restated as the real semantic question (are individual
+   and institutional standing distinct concepts, not just different record shapes) with a Rule-
+   sourced default; item 2 downgraded from open decision to a proposed default, escalated only on a
+   real conflict; item 3 reframed as "define the meaning first," not a retain/retire choice; item 4
+   (promotion path) removed as a numbered item and replaced with the real near-term choice — which
+   candidate the feasibility gate runs against first.
+
+**External-review concerns rejected on repository evidence: none.**
+
+### Change summary — five-phase draft to capability map, 2026-09-26
+
+The prior document (`tmp/rpg-core-foundational-synthesis-and-roadmap-revision.md`'s original
+"Revised capability areas") organized around a five-*phase* sequence, scoped only to the Action-
+Recognition-Opportunity loop this investigation traced most deeply. This document:
+
+1. **Widens scope to the whole engine** — the recognition loop is now one thread (Path 1) among
+   several, not the organizing principle.
+2. **Replaces phase-sequence framing with a capability-map framing** — dependency is stated per-path
+   (§4), not assumed universal; Paths 2 and 3 need none of Path 1's recognition work.
+3. **Adds the product north star and epistemic-delivery principle** (§1-2) — new content reflecting
+   the owner's newly clarified product direction, not present in any prior document this arc.
+4. **Applies the four corrections** the instruction identified in the foundational synthesis
+   directly (state-authority vs. attempt-correctness separated; individual standing claim narrowed
+   to a three-way split; the World Rule conclusion explicitly bounded to investigated cases; the
+   capability areas restated as a map, not a pipeline) — detailed in the foundational synthesis
+   document itself, referenced here rather than repeated.
+5. **Adds a genuinely new capability area** (§3.5, Observation and player delivery) that the prior
+   five-phase draft didn't separate out as its own area at all — the epistemic principle now has an
+   explicit home in the capability map, not folded into "recognition."
+6. **States an initial product proof that requires no *new capability area*** (lineage, §5) — the
+   prior draft's only proposed proof (the hunter/shopkeeper scenario) required the least-evidenced
+   capability area (§3.4's propagation gap) to land first; this document front-loads lineage instead,
+   since its capability area (§3.2) needs no new area of work to exist. **Superseded, 2026-09-27**:
+   this was never a claim that lineage needs *no engineering work at all* — §7.1's confirmed
+   dual-writer defect shows real engineering work is still required within that existing capability
+   area. "No new capability area" and "cheap to deliver" are not the same claim; current status is
+   in §7/§8, not here.
+
+### Round 2 response, 2026-09-27
+
+1. **Two small roadmap corrections applied**: §3.1's semantic obligation restated as already-
+   supported (not open), with what's open narrowed to cross-domain verification/enforcement
+   discipline; the Owner Decision List's feasibility-gate item downgraded from an owner decision to
+   a recommended default for local investigation.
+2. **Decision bridge added** (§6) — a compact, three-level table per capability area, citing SCP
+   mapping status precisely (`UNKNOWN` where the SCP hasn't touched a family, never inferred as
+   `MISSING`), with no full-Catalog sweep run.
+3. **Feasibility gate actually run** (§7) — real tests re-executed 2026-09-27, not cited
+   secondhand; economy/wealth checked as the comparison candidate and found genuinely `BLOCKED` on
+   its own missing mechanism, not assumed weaker without evidence.
+4. **First wave recommended** (§8, since revised further — see Round 4/5) — one primary option
+   pairing bounded foundation-hardening with the lineage single-transition proof in parallel, plus a
+   non-recommended alternative, each with finite exit evidence and named `UNKNOWN` costs.
+5. **The Semantic Control Plane roadmap's own opening status was stale** (claimed "no milestone has
+   started" while M0-M4 were all already complete per its own later sections) — corrected directly,
+   since this round's work required citing its current state precisely.
+
+**External-review concerns rejected on repository evidence: none.**
+
+### Round 3 response, 2026-09-27
+
+1. **Reclassified the two passing tests** — they are evidence for two specific death-to-heir
+   transitions (§7), never a completed five-question gate and never a player-facing proof.
+2. **§8's lineage half renamed** from "player-facing proof" to a **feasibility exercise** (since
+   further refined in Round 4/5 — see §8), explicitly not a proof until a situated observer, given
+   only the exercise's legitimate traces, can form a reasonable hypothesis (§5's player-side
+   inference check) — and explicitly distinguished from the longer, durable changed-life-trajectory
+   proof (§5's closed-loop distinction), which this exercise does not attempt.
+3. **§3.5 reconciled with §4's path split** — the recognition candidate (Path 1) genuinely needs
+   §3.4's propagation gap closed; the lineage candidate (Path 2) does not.
+4. **Economy comparison reframed** (§7, Q5) — treated as evidence of economy's own missing
+   conversion edge, not as evidence lineage has the clearest player experience.
+5. **§3.6 corrected** — existing SimQ/corpus-tier/M3 infrastructure does not establish §5's
+   player-side inference check; that evaluation is unbuilt, not merely unrun.
+6. **§5, §7, §8, and the Owner Decision List synchronized**; a stray extra table cell and a stale
+   section reference were fixed.
+7. **A short passed/partial/unknown/blocked evidence table added** (§7).
+8. **§8 reframed as a recommendation pending §7's outstanding checks**, not a selected delivery wave.
+
+**External-review concerns rejected on repository evidence: none.**
+
+### Round 4 (finalize instruction) response, 2026-09-27
+
+1. **Bounded cross-domain authority audit actually run** (§3.1) — 5 named boundaries, classified
+   (2 `DEFECT_CONFIRMED`, 3 `UNKNOWN_WITH_REASON`, 1 `CONFIRMED_FINE_WITHIN_SCOPE`), with a named
+   deliberately-not-checked list.
+2. **Lineage composition probe actually executed, not just reasoned about** (§7.1) — surfaced a
+   genuinely new, load-bearing finding: composing a second lineage hop through ordinary per-tick
+   aging is `BLOCKED` by a real, reproducible dual-writer race on `entity.lifecycle.active`. This is
+   documented and escalated per the instruction's own boundary — **no production code was changed**
+   to fix it; it is flagged for a future ticket, not fixed under this planning-only pass. **Note,
+   Round 5**: this entry originally described the region-ownership and lifecycle-active defects as
+   "the same defect class" — corrected in §3.1/§7.1 to state the shared invariant precisely while
+   naming the two distinct mechanisms; see those sections, not this historical entry, for the
+   accurate framing.
+3. **Observer/evidence-packet design check actually built** (§7.2) — a minimal provisional observer
+   position, one early clue, one reasonable-but-unprovable hypothesis, and two named negative checks.
+4. **Gate question 4 split into three separate sub-answers** — mechanism exists / evidence-
+   production exists / projection-is-buildable are no longer conflated into one "partial" (§7.3).
+5. **Bounded second-candidate search completed** (§7.4) — environmental/calamity checked and
+   disqualified (`contradicted` by real corpus runs, worse than economy's `BLOCKED`); displaced-
+   family/feud found not independent of lineage; institutional/office reconfirmed `MISSING`.
+6. **Registry/SCP tooling query recipes documented with real command output** (§9), plus one
+   concrete, minimal incremental-improvement recommendation.
+7. **§8's recommended first wave re-scoped to the single hop** (since further split in Round 5 —
+   see §8's current world-side/player-side separation).
+8. **A separate `PROPOSED / FOR REVIEW` first-wave milestone plan drafted** at
+   `docs/plans/systemic_world_first_wave_plan.md`.
+
+**External-review concerns rejected on repository evidence: none.**
+
+### Round 5 response, 2026-09-27
+
+Responding to the fifth external review round's architectural-consistency pass:
+
+1. **World correctness separated from product legibility** — §8 and the first-wave plan's M4 no
+   longer pause the lineage defect fix or composed-sequence verification on M2's player-side
+   outcome; world-side and player-side tracks now have separate gates and separate exit claims
+   throughout (§8, first-wave plan §3/§4).
+2. **State/evidence/encounter/inference separated in M2** (first-wave plan) — the real inventory-
+   transfer state change, whether the specified observer can *encounter* it (scriptable: viewpoint
+   access, timing, non-leakage), the separately-confirmed-missing provenance signal, and the human-
+   only inference step are now four distinct sub-checks, not one. A scripted test cannot substitute
+   for a blinded human observer on the inference step; `PLAYER-EXPERIENCED` stays `pending` if that
+   step is not run.
+3. **§8 synchronized with the audit and defect already found** — no longer phrased as "run the
+   audit"; reflects the 5 real boundary results and the confirmed defect directly.
+4. **"One incident," "zero new capability-area work," and "cheapest real proof" claims corrected or
+   removed from current recommendations** — §8's alternative-option reasoning no longer says "one
+   specific incident" (two confirmed invariant violations now exist, via distinct mechanisms, per
+   §3.1/§7.1's corrected framing); the Change summary's item 6 above is marked superseded rather than
+   left to read as current.
+5. **Region-ownership and lifecycle-active defects clarified as distinct mechanisms under one shared
+   invariant**, not assumed identical (§3.1, §7.1).
+6. **Historical review-response logs moved to this appendix**, keeping §0-§10 as the current
+   capability map and decision evidence.
+7. **First-wave plan's M3 made explicitly separately-schedulable per boundary, with
+   `BLOCKED_WITH_REASON`** added as a legitimate third outcome alongside `CONFIRMED_FINE_WITHIN_SCOPE`
+   and `DEFECT_CONFIRMED`, so a boundary that genuinely cannot be scenario-tested is never forced
+   into a false fine/defect verdict.
+
+**External-review concerns rejected on repository evidence: none.** Every requested correction was
+directly actionable; no counter-evidence was found against any of the five architectural points.
