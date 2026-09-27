@@ -1172,6 +1172,35 @@ const TEST_SCHEMA = {
   },
 }
 
+// ─── Pre-agent required-directory floor (TCK-20260927-PHASE-PROMPTS-OMIT-GATE-PRECONDITIONS) ──
+// The post-agent test_scope_coverage_static.py check below (testScopeGaps) already computes the
+// exact set of required bare test directories from files_changed via expected_test_dirs_for() —
+// but only AFTER the agent has already guessed a pytest_command, so a cherry-picked-files rejection
+// costs a full re-scope round-trip. Computing the same list HERE, before the agent() call, and
+// stating it in the prompt as a floor, lets the agent get it right the first time. Reuses the
+// same Python function via bash() rather than porting the mapping to JS (Scope item 1) — this is
+// the identical shell-out shape the post-agent check already uses (see testScopeCheckOutput below).
+// Placed BEFORE captureTs()/writeSidecar(), never between them and agent() — mirrors
+// resolveScopeTicketLocation's own placement rule (test_step1c_orphan_bash_precedes_capturets),
+// which keeps test_step0_ts_orchestrator.py's exact captureTs()->writeSidecar()->agent() literal-
+// adjacency assertion for this phase intact.
+const filesChangedArgsForExpectedDirs = implementation.files_changed.map(f => `"${f}"`).join(' ')
+const expectedTestDirsOutput = await bash(
+  `python3 -c "
+import sys, json
+sys.path.insert(0, 'tools')
+from gate_checks.test_scope_coverage_static import expected_test_dirs_for
+dirs = sorted({d for d in (expected_test_dirs_for(p) for p in sys.argv[1:]) if d})
+print('EXPECTED_TEST_DIRS_JSON:' + json.dumps(dirs))
+" ${filesChangedArgsForExpectedDirs}`
+)
+let expectedTestDirs = []
+const expectedDirsMarkerIndex = expectedTestDirsOutput.indexOf('EXPECTED_TEST_DIRS_JSON:')
+if (expectedDirsMarkerIndex !== -1) {
+  try { expectedTestDirs = JSON.parse(expectedTestDirsOutput.slice(expectedDirsMarkerIndex + 'EXPECTED_TEST_DIRS_JSON:'.length).trim()) }
+  catch (e) { expectedTestDirs = [] }
+}
+
 const testTs = await captureTs()
 await writeSidecar(events.length + 1 + seqOffset, 'Test', 'test-scoper')
 const testResult = await agent(
@@ -1186,12 +1215,18 @@ performance-motivated change is frequently outside src/perf/ itself (e.g. a hot-
 in src/engine/ or src/world/), so the naming-convention mapping in Step 1 alone would miss the real
 regression-gate check (PerfRegressionGate, docs/performance/perf_baseline_policy.md §3) this tag
 exists to trigger.` : ''}
+${expectedTestDirs.length > 0 ? `
+Computed floor (from tools/gate_checks/test_scope_coverage_static.py's own expected_test_dirs_for(),
+the exact function the post-agent gate re-checks this command against): the scoped pytest command
+below MUST reference every one of these as a bare, whole directory path — never a specific file
+within one of them — ${expectedTestDirs.join(', ')}. Omitting any of these, or naming only
+individual files inside one, will be rejected by the gate after you return.` : ''}
 
-Step 1 — Map each changed src/ file to its tests/unit/ counterpart, AND each changed tools/ file to its tests/tools/ (or same-name tests/<subdir>/ mirror) counterpart per .claude/agents/test-scoper.md's Test Directory Map — tools/ is a second, equally-real source tree, not a special case of src/. For changes to src/core/, src/systems/, src/engine/, or any flat tools/*.py file, also find transitive test dependents via grep across the whole tests/ tree.
+Step 1 — Map each changed src/ file to its tests/unit/ counterpart DIRECTORY (not a specific file inside it), AND each changed tools/ file to its tests/tools/ (or same-name tests/<subdir>/ mirror) counterpart DIRECTORY per .claude/agents/test-scoper.md's Test Directory Map — tools/ is a second, equally-real source tree, not a special case of src/. For changes to src/core/, src/systems/, src/engine/, or any flat tools/*.py file, also find transitive test dependents via grep across the whole tests/ tree.
 
 Step 2 — ${tier !== 'hotfix' ? `Check staging_artifacts/${tid}/test_plan.md: are all required new tests present? List any missing.` : 'For a hotfix, confirm the targeted behavior is tested. No formal test_plan.md required.'}
 
-Step 3 — Build the scoped pytest command. Never use bare "pytest tests/".
+Step 3 — Build the scoped pytest command as bare directory paths, including every directory from the computed floor above (never individual files from within one). Never use bare "pytest tests/".
 
 Step 4 — Run the command via Bash. Capture stdout/stderr.
 
@@ -1633,6 +1668,12 @@ Context from this run:
 - Parity updated: yes
 - Behavior changed: ${implementation.behavior_changed}
 - Coverage gaps: ${testResult.coverage_gaps.join(', ') || 'none'}
+${ticketInfo.todos_source_path ? `
+Condition 9 (repo state is consistent) note: "${ticketInfo.todos_source_path}" still exists on
+disk right now, as a duplicate of this ticket. This is EXPECTED, not a repo-consistency failure —
+Scope deliberately copied this ticket from tickets/todos/ to tickets/inprogress/ and left that
+exact original in place; Finalize step 3 deletes it AFTER this check passes. Do not flag this
+declared path. Any OTHER tickets/todos/ duplicate is still a real finding.` : ''}
 
 Tier-specific N/A rules:
 - If tier is 'hotfix': mark Condition 4 (staging artifacts) as N/A — no investigation.md / plan.md / test_plan.md required.
