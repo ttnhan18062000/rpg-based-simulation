@@ -315,7 +315,8 @@ Path 1 (recognition-dependent — the hunter/shopkeeper thread this investigatio
   World substrate (3.1) → Situated agency (3.3) → History/feedback, recognition half (3.4)
   → Observation/delivery (3.5)
 
-Path 2 (NOT recognition-dependent — already working today, zero new capability work):
+Path 2 (NOT recognition-dependent — no new capability *area* needed; real engineering work still
+  required within it, per §7.1's confirmed defect — corrected, fifth review round):
   World substrate (3.1) → Autonomous world dynamics, lineage (3.2) → History/feedback,
   already-proven loop (3.4) → Observation/delivery (3.5)
 
@@ -715,12 +716,12 @@ touching schema, validation, or the two-domain view generator. Everything else a
 has a real, working answer today. A broader general-purpose multi-Rule query CLI is a larger design
 decision than "smallest increment" and is left out of scope here, for whoever next scopes that work.
 
-## 10. Owner Decision List (refined per external review, 2026-09-26)
+## 10. Owner Decision List (refined per external review, 2026-09-26; trajectory-order item removed as already-resolved, fifth review round)
 
-Only genuinely unresolved world-semantic or product-scope questions. Two items from the prior
-version were downgraded here on external review: item 1 was mostly an implementation/modeling
-question restated as if it were semantic; item 4 (roadmap promotion) is a governance step after
-review, not a fourth conceptual decision competing with the real ones.
+Only genuinely unresolved world-semantic or product-scope questions — items downgraded or removed
+across prior rounds (implementation questions mistaken for semantic ones, governance steps mistaken
+for conceptual decisions, and now an already-settled default) are recorded in the Appendix's
+per-round history, not repeated here.
 
 1. **Are individual subjective relations and institutional judgments distinct world concepts, with
    different authority, evidence, and update rules — or one concept at two scales?** This is the
@@ -743,12 +744,13 @@ review, not a fourth conceptual decision competing with the real ones.
    evidence that it's *meant* to be public knowledge — that's exactly the kind of silent-leak risk
    §2's epistemic principle warns about. Do not decide retain-vs-retire until this meaning, and its
    information provenance/scope, is established.
-4. **Which candidate trajectory the feasibility gate runs against first is a recommended default for
-   local investigation, not an owner decision — corrected per external review, 2026-09-27.** Lineage
-   leads on mechanism-level evidence (§7 runs the gate directly); proceeding with it is a default,
-   escalated to the owner only if the gate itself surfaces a genuine tradeoff evidence can't settle.
-   Final proof selection stays `OPEN` until the gate produces real evidence, which §7 now provides
-   in part — two of five questions, not all five (third external review round correction).
+
+**Removed, fifth review round**: the prior item 4 ("which candidate trajectory runs first") is no
+longer listed — it is resolved, not merely defaulted. §7.4's bounded search found no second
+candidate qualifying at lineage's evidence tier (economy `BLOCKED`, environmental/calamity
+`contradicted`, feud/displacement not independent, institutional/office `MISSING`); lineage is the
+only candidate with a real mechanism proof to run the gate against, and §7 has already run it in
+part. There is no remaining tradeoff for the owner to weigh here.
 
 **Confirmed explicitly not owner-level, per the instruction's own boundary**: which existing class
 to extend for any new record type, whether to retire or adopt the dead `ActionProposal` model,

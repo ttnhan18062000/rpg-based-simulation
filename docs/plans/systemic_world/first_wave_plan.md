@@ -22,8 +22,9 @@ round's investigation surfaced a real, load-bearing defect.
 **World correctness and product legibility are separate tracks with separate gates (fifth external
 review round correction)**: fixing M1's defect and verifying a composed world-side sequence (M4a)
 is worthwhile regardless of what the observer check (M2) finds — a weak or negative M2 result does
-not pause M4a. Only the *optional* observer/projection follow-on on the composed sequence (M4b)
-depends on M2's own findings. Do not read this plan as one linear M1→M2→M4 chain.
+not pause M4a. A further, optional observer/projection follow-on on the composed sequence stays a
+future-scoping note (§3, end), not a milestone of this wave, and would depend on M2's own findings
+only once it is actually scoped. Do not read this plan as one linear M1→M2→M4 chain.
 
 ---
 
@@ -54,20 +55,21 @@ observation/delivery are three separate owners below, not one team or one deploy
 
 ## 2. Milestones — dependency order, domain ownership, parallel paths (revised, fifth review round)
 
+**This wave has 6 milestones, all with finite exit evidence — M1, M2, M3a, M3b, M3c, M4a.** A
+further follow-on beyond the composed sequence (previously drafted here as "M4b") is **not** one of
+this wave's milestones — it has no finite deliverable this wave can commit to, so it is recorded
+separately as a "Future follow-on" note (end of §3) instead of being numbered as if it were scoped
+(fifth review round correction).
+
 ```text
 M1 (world-substrate/authority) ──> Gate A ──> M4a (world-side composed sequence)
-                                                  │
-                                                  └──> Gate B (needs M4a + a real
-                                                       evidence-production signal,
-                                                       NOT gated on M2's own result) ──> M4b
-                                                       (optional observer/projection
-                                                       follow-on on the composed sequence)
 
-M2 (lineage + observation/delivery) ── independent of M1/M4a/M4b; feeds Gate B only
+M2 (lineage + observation/delivery) ── independent of M1/M4a; completes on its own
+                                        4 sub-checks (see M2 detail) regardless of M4a
 
 M3a (combat + world-dynamics)     ── independently schedulable
 M3b (faction)                     ── independently schedulable   } all three parallel to
-M3c (social)                      ── independently schedulable   } M1, M2, M4a, M4b
+M3c (social)                      ── independently schedulable   } M1, M2, M4a
 ```
 
 | Milestone | Domain owner | Depends on | Parallel with |
@@ -78,7 +80,6 @@ M3c (social)                      ── independently schedulable   } M1, M2, M
 | M3b — Resolve faction-diplomacy `diplomatic_relations_set` boundary | Faction | Nothing new | M1, M2, M3a, M3c |
 | M3c — Resolve public-reputation `reputation_set` boundary | Social | Nothing new | M1, M2, M3a, M3b |
 | M4a — Composed multi-hop world-side sequence | Lineage | M1 only (Gate A) — **not gated on M2** | M2, M3a, M3b, M3c |
-| M4b — Optional observer/projection follow-on on the composed sequence | Lineage + Observation/delivery | M4a + a real evidence-production signal (Gate B) | — |
 
 ---
 
@@ -120,7 +121,8 @@ let this milestone grow into a general `ApplyPath` audit.
 **Entry evidence**: roadmap §7.2 — a design-check sketch already exists (observer position, one
 early legitimate clue, one reasonable-but-unprovable hypothesis, two named negative checks). The
 underlying mechanisms are `verified: observed` today; this milestone does not wait on M1, and its
-result does not gate M4a (only the optional M4b follow-on — see §4 below).
+result does not gate M4a at all — it only informs whether/how the future follow-on note (§3, end)
+could later be scoped.
 
 **Deliverable, as four explicit, separately-answerable sub-checks — not one bundled test**:
 
@@ -144,10 +146,19 @@ result does not gate M4a (only the optional M4b follow-on — see §4 below).
    "reasonable" hypothesis would be.
 
 **Finite exit evidence**: #1 and #3 already answered (cited, no new work). #2 answered from a real
-scripted test — pass/fail on timing, viewpoint access, and non-leakage, each individually. #4
-answered from a real blinded-human exercise, **or left explicitly `pending` if no such exercise is
-run** — `PLAYER-EXPERIENCED` is never marked resolved on script output alone (roadmap §5's own
-evidence-level distinction).
+scripted test — pass/fail on timing, viewpoint access, and non-leakage, each individually. **M2 as a
+milestone is complete once #1-#3 are answered — #4 is not required for M2 itself to close out**
+(fifth review round clarification): the first-wave's overall player-facing outcome can still remain
+`pending` while M2's own technical checks are all done.
+
+**#4's own status depends on what #2 found, not just on whether the human exercise was run**:
+- If #2 confirms the clue *is* encounterable: #4 is answered from a real blinded-human exercise, or
+  left explicitly **`pending`** if no such exercise is run yet — `PLAYER-EXPERIENCED` is never marked
+  resolved on script output alone (roadmap §5's own evidence-level distinction).
+- If #2 finds *no* clue is actually encounterable (a viewpoint-access or timing failure): #4 is
+  **`BLOCKED`**, not `pending` — there is nothing to run inference against, so the human exercise
+  would have nothing to evaluate. `pending` means "not yet run"; `BLOCKED` means "cannot meaningfully
+  be run against this clue as it stands." Do not conflate the two.
 
 **Relevant Rules/mechanisms/scenarios**: `succession`/`aging_death`; the epistemic principle (roadmap
 §2); `KnowledgeModelService`'s existing hidden-world-truth-not-injected invariant as the negative
@@ -213,29 +224,34 @@ says nothing about whether the sequence is legible to any observer.
 a second, different defect surfaces), report the new blocker with the same precision as §7.1 and
 return to Gate A (§4) rather than silently extending this milestone's scope.
 
-### M4b — Optional observer/projection follow-on on the composed sequence (gated on M4a + a real evidence-production signal)
+### Future follow-on (not a milestone of this wave, fifth review round correction)
 
-**Entry evidence**: M4a complete, **and** a real inheritance-provenance signal exists (M2's
-sub-check #3, or a follow-up item if M2 found it insufficient) — **not gated on M2's inference
-sub-check #4 passing**; a `pending` inference result does not block attempting this milestone, since
-this milestone exists to make legibility better, not to wait for it to already be proven.
+A closed-loop-proof groundwork item, building on M4a's composed sequence, was previously drafted
+here as milestone "M4b" — removed as a numbered milestone because it had no finite deliverable or
+exit criterion this wave could actually commit to ("begin but do not complete" is not a finite exit
+claim). It remains a real, named future item, to be scoped as its own milestone in a later wave once
+its own precondition is met:
 
-**Deliverable**: begin — but do not complete within this wave — the groundwork for a closed-loop
-proof (a later decision/opportunity producing a durable, player-observable outcome, per roadmap
-§5's evidence ladder's final rung), building on the now-composed two-hop sequence.
+**Precondition to scope it**: a legitimate, encounterable evidence path exists that is **sufficient
+for the specific claim being made** at that time — not prescribing in advance that this must be a
+dedicated inheritance-provenance record. If M2's existing inventory-transfer signal (sub-check #2)
+turns out sufficient on its own for whatever legibility claim is being attempted, that satisfies the
+precondition; a dedicated provenance record is one possible way to satisfy it, not the only one.
 
-**Finite exit evidence**: explicitly out of this wave's completion scope (§1) — this milestone
-produces groundwork/scoping only, not a finished closed-loop proof.
+**Not gated on M2's inference sub-check #4**: a `pending` or even a negative inference result does
+not block scoping this future work — its own purpose would be to improve legibility, not to wait
+for legibility to already be proven elsewhere first.
 
-**Failure/blocked branch**: if no evidence-production signal exists by the time M4a completes, this
-milestone stays unscheduled — report it as a real, named prerequisite gap, not silently skipped.
+This item is deliberately left as a future-scoping note, not a milestone, per this wave's own rule
+that every real milestone here has a finite exit claim (§1).
 
 ---
 
-## 4. Decision gates (revised, fifth review round — world-side and player-side kept separate)
+## 4. Decision gate (revised, fifth review round — world-side and player-side kept separate; the second gate moved to the future-follow-on note since it no longer gates a milestone of this wave)
 
-**Gate A (before M4a)** — world-side only: M1's exit evidence is real (natural-aging succession
-fires correctly through ordinary per-tick aging). **M2's result is not part of Gate A in any form.**
+**Gate A (before M4a)** — the only gate within this wave's own milestones, world-side only: M1's
+exit evidence is real (natural-aging succession fires correctly through ordinary per-tick aging).
+**M2's result is not part of Gate A in any form.**
 
 - **If M1 passes**: M4a proceeds — still only a single additional hop, not a full multi-generation
   arc, and still a world-side claim only.
@@ -243,14 +259,9 @@ fires correctly through ordinary per-tick aging). **M2's result is not part of G
   indicate the dual-writer-race pattern is broader than the two instances found so far, which would
   be new information for the roadmap itself, not just this plan.
 
-**Gate B (before M4b)** — the optional follow-on only: M4a complete, **and** a real
-inheritance-provenance signal exists (M2 sub-check #3). M2's inference sub-check #4 (the blinded-
-human exercise) is **not** part of Gate B either — a `pending` inference result does not block
-attempting M4b, since M4b's own purpose is improving legibility, not confirming it first.
-
-- **If Gate B's provenance condition isn't met**: M4b stays unscheduled, reported as a named
-  prerequisite gap (M4b's own failure/blocked branch, §3) — this does not affect M4a, M3a/b/c, or M1
-  in any way; they proceed and complete independently of Gate B.
+M2 and M3a/M3b/M3c have no gate — each proceeds and completes independently, on its own entry
+evidence (§3). The future follow-on's own precondition (a sufficient, legitimate encounterable
+evidence path) lives with that note (§3), not here, since it is not a milestone this wave commits to.
 
 ---
 
@@ -262,14 +273,15 @@ pipeline with a declared precedence rule — never a stale-assumption commit. Th
 `Kernel.tick_once()` runs and scenario tests, not by code inspection alone. **This track's
 milestones (M1, M4a) complete on their own evidence, independent of the player-side track below.**
 
-**Player-side (M2's four sub-checks, and M4b)**: given only the legitimate clues a specified
-observer position can encounter, can a reasonable (possibly wrong) hypothesis be formed, and would a
-later clue be able to revise it? Sub-checks #1-#3 (state, evidence/encounter, provenance) are
-scriptable; sub-check #4 (inference) requires a real blinded-human exercise and stays `pending` if
-unrun. **A world-side pass does not imply a player-side pass, and a pending/weak player-side result
+**Player-side (M2's four sub-checks)**: given only the legitimate clues a specified observer
+position can encounter, can a reasonable (possibly wrong) hypothesis be formed, and would a later
+clue be able to revise it? Sub-checks #1-#3 (state, evidence/encounter, provenance) are scriptable
+and complete M2 on their own; sub-check #4 (inference) requires a real blinded-human exercise and
+stays `pending` if unrun, or `BLOCKED` if #2 found no clue is actually encounterable to infer from.
+**A world-side pass does not imply a player-side pass, and a pending/weak/blocked player-side result
 does not block or pause the world-side track** — M1/M4a succeeding only re-enables composition; it
-says nothing about whether that composition is legible to an observer, which stays M2/M4b's own
-separate, non-blocking question.
+says nothing about whether that composition is legible to an observer, which stays M2's own separate,
+non-blocking question (and, later, the future follow-on note's, §3).
 
 ---
 
@@ -283,9 +295,10 @@ Reuses existing infrastructure only — no new registry, no new governance syste
 - **Mechanism registry**: `succession`/`aging_death`'s existing entries get a dated addendum note
   once M1 lands (matching this registry's own established convention of appending dated notes
   rather than rewriting history) — done through whatever ticket implements M1, not this document.
-- **Semantic Control Plane**: no new mapping required for M1/M2/M3a-c (none of the touched fields
-  are currently SCP-mapped); if M4a/M4b's eventual work touches a mapped Rule, record it through the
-  SCP's normal evidence process (roadmap §9's tooling), not a new parallel process.
+- **Semantic Control Plane**: no new mapping required for M1/M2/M3a-c/M4a (none of the touched
+  fields are currently SCP-mapped); if the future follow-on's eventual work touches a mapped Rule,
+  record it through the SCP's normal evidence process (roadmap §9's tooling), not a new parallel
+  process.
 - **No "full Catalog complete" gate anywhere in this plan.**
 
 ---
@@ -313,8 +326,8 @@ None of the roadmap's Owner Decision List items block this wave:
   (`SocialComponent.reputation` is M3c, a *mechanical* dual-writer check only — this
   wave does not decide or depend on what `public_reputation` is supposed to mean semantically).
   Stays visible, not blocking.
-- **Which candidate trajectory runs first** (item 4): already resolved as a recommended default for
-  this wave specifically — lineage, per the roadmap's own gate results (§7).
+- **Which candidate trajectory runs first**: no longer a listed Owner Decision List item as of the
+  fifth review round — resolved, not merely defaulted (roadmap §10). Lineage runs, per §7.
 
 **Genuinely new item this wave surfaces**: whether the `entity.lifecycle.active` fix (M1) should be
 scoped narrowly (OLD_AGE case only) or broadened into a general `ApplyPath` dual-writer review is an
@@ -330,18 +343,18 @@ without touching the broader branch.
   via a dated addendum — the roadmap is the capability map of record; this plan does not become a
   second source of truth for that finding once it resolves.
 - **M2's result** updates roadmap §7.3's gate-question table (Q2's status) — each of the four
-  sub-checks recorded individually, with sub-check #4 recorded as `pending` if unrun rather than
-  silently omitted.
+  sub-checks recorded individually: #4 recorded as `pending` if unrun, or `BLOCKED` if #2 found no
+  encounterable clue — never silently omitted or conflated.
 - **M3a/M3b/M3c's reclassifications** update roadmap §3.1's audit table directly, each converting
   its own `UNKNOWN_WITH_REASON` to its real outcome (including `BLOCKED_WITH_REASON` where that is
   the honest result) — independently, as each completes.
 - **M4a's result** updates roadmap §5's evidence table (lineage row) and §7's gate questions 1/3 as
-  soon as it completes, regardless of M4b/M2's status. **M4b's result, if scheduled**, may re-open
-  the closed-loop-proof question as its own, later, separately-scoped item — this plan does not
-  commit to scoping that follow-on work now.
+  soon as it completes, regardless of M2's status. **If the future follow-on note is later scoped
+  and completed**, its result may re-open the closed-loop-proof question as its own, later,
+  separately-scoped item — this plan does not commit to scoping that follow-on work now.
 - **No mapping claim from this wave is asserted as `SUPPORTED` in the Semantic Control Plane** unless
   it goes through the SCP's own established validation process (roadmap §9) — this plan's own
   findings are Catalog-level/mechanism-registry-level evidence, not a substitute for that process.
 
 This plan stays `PROPOSED / FOR REVIEW` until the owner explicitly approves it; nothing in it
-authorizes starting M1, M2, M3a-c, M4a, or M4b without that approval.
+authorizes starting M1, M2, M3a-c, or M4a without that approval.
