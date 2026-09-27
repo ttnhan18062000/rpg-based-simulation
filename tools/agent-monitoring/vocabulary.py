@@ -23,11 +23,26 @@ WORKFLOW_PHASES = {
         "Document-Update", "Test", "Parity", "Security-Review", "Verify", "Finalize",
     },
     "create-tickets": {"Comprehend", "Investigate", "Structure", "Write", "Link"},
-    "implement-epic": {"Implement"},
+    # "Discover"/"Report" added by TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK, grep-
+    # confirmed at implement-epic.js:137 (writeSidecar(-1, 'Discover', 'discover')) and :484
+    # (writeSidecar(-4, 'Report', 'tracking-doc-update')) -- real phase literals this workflow
+    # already emits, simply missing from this registry until now.
+    "implement-epic": {"Implement", "Discover", "Report"},
     "simq-audit": {
         "Recalibrate", "Classify Drift", "Update Anchors", "Sync Docs",
         "Parity Check", "Verify", "Report",
     },
+    # The 7 blocks below were entirely unkeyed before TCK-20260924-WORKFLOW-AGENT-LITERAL-
+    # VOCABULARY-CHECK -- these files are phase()-only (no writeSidecar/agent: call sites), each
+    # grep-confirmed via that ticket's own vocab_scan.py reproduction script against every
+    # phase(...)/pushEvent(...) call site in the named file.
+    "compact-simulation-result": {"Archive", "Compact", "Scan"},
+    "generate-simulation-setup": {"Draft", "Scan", "Validate"},
+    "investigate-simulation-result": {"Analyze", "Load", "Report"},
+    "prepare-simulation-execution": {"Estimate", "Generate", "Resolve"},
+    "propose-simulation-enhancements": {"Hypothesize", "Propose", "Read"},
+    "register-simulation-result": {"Index", "Score", "Validate"},
+    "update-knowledge-store": {"Commit", "Synthesize", "Verify"},
 }
 
 # Keyed by workflow name. Includes both .claude/agents/*.md subagent filenames
@@ -112,6 +127,13 @@ WORKFLOW_AGENTS = {
         # writeSidecar call sites named in docs/agent-monitoring/schema.md (comprehend, structure,
         # write-sequence, link-epic). A real, intentional label, not drift.
         "write-sequence",
+        # "comprehend": create-tickets.js's Comprehend-phase writeSidecar/agent label, grep-
+        # confirmed at create-tickets.js:200 (writeSidecar(events.length + 1, 'Comprehend',
+        # 'comprehend')) and :237 ({ label: 'comprehend', ... }). One of the 4 real writeSidecar
+        # call sites docs/agent-monitoring/schema.md already documents by name -- a pure
+        # bookkeeping gap, not an anomaly. Registered by
+        # TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK.
+        "comprehend",
     },
     "implement-epic": {
         "implement-ticket",
@@ -119,6 +141,21 @@ WORKFLOW_AGENTS = {
         # "implement-epic" -- the same self-referential workflow-name-as-agent-label pattern
         # registered for "implement-ticket" above, just for this workflow's own batch/epic runs.
         "implement-epic",
+        # The 5 entries below are implement-epic.js's own top-level agent()-call labels, all
+        # grep-confirmed via writeSidecar's 3rd-arg or a { label: ... } call site, registered by
+        # TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK:
+        # discover: writeSidecar(-1, 'Discover', 'discover') at implement-epic.js:137.
+        "discover",
+        # batch-monitoring-write: writeSidecar(-2, 'Implement', 'batch-monitoring-write') at
+        # implement-epic.js:371.
+        "batch-monitoring-write",
+        # folder-cleanup: writeSidecar(-3, 'Implement', 'folder-cleanup') at implement-epic.js:407.
+        "folder-cleanup",
+        # tracking-doc-update: writeSidecar(-4, 'Report', 'tracking-doc-update') at
+        # implement-epic.js:484.
+        "tracking-doc-update",
+        # epic-close: writeSidecar(-5, 'Implement', 'epic-close') at implement-epic.js:439.
+        "epic-close",
     },
     "simq-audit": {
         "workflow", "drift-classifier", "anchor-updater", "doc-syncer",
@@ -144,6 +181,19 @@ def is_known_agent(workflow: str, agent: str) -> bool:
     if agent in WORKFLOW_AGENTS.get(workflow, set()):
         return True
     return any(agent.startswith(prefix) for prefix in WORKFLOW_AGENT_PREFIXES.get(workflow, ()))
+
+
+def is_known_phase(workflow: str, phase: str) -> bool:
+    """True if `phase` is a recognized literal for `workflow`.
+
+    Mirrors `is_known_agent()`'s signature and role, added by
+    TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK so callers (e.g.
+    tools/gate_checks/workflow_vocabulary_check.py) test phase membership through an accessor
+    rather than reaching into WORKFLOW_PHASES directly, the same reason is_known_agent() exists
+    instead of raw set-membership checks at call sites. No prefix-family equivalent exists for
+    phases today, so this is pure set membership.
+    """
+    return phase in WORKFLOW_PHASES.get(workflow, set())
 
 
 def infer_workflow(run_id: str) -> str | None:
