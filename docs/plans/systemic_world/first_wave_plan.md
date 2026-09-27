@@ -16,10 +16,15 @@ rather than a milestone transcript. Produced from the actual
 feasibility-gate run, composition probe, observer-evidence sketch, and bounded authority audit in
 the roadmap's §7/§3.1 (2026-09-27) — every claim below cites that evidence rather than repeating it.
 
-**This is a plan for owner review, not a started wave.** No milestone below begins until the
-owner has reviewed this scope. M1's implementation ticket is drafted
-(`tickets/todos/TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE.md`); no other milestone ticket
-exists yet.
+**This is a plan for owner review, not a started wave.** No milestone below begins until the owner
+has reviewed this scope.
+
+**Division of work.** Every milestone has an implementation-ready brief in
+`tickets/todos/systemic-world-first-wave/` (see its `SEQUENCE.md`). Each brief states a semantic
+contract, the observed problem, bounded scope, acceptance evidence, and unresolved risks.
+- **Implementation agents** own the technical resolution and regression design.
+- **The planning agent** integrates their verified results back into the roadmap and the registry
+  process. This plan does not prescribe code changes.
 
 **World correctness and product legibility are separate tracks with separate gates.** Fixing M1's
 defect and verifying a composed world-side sequence (M4a) is worthwhile whatever M2 finds; a weak,
@@ -89,47 +94,36 @@ M3c (social)                      ── independently schedulable   } M1, M2, M
 
 ## 3. Milestone detail
 
-### M1 — Fix or explicitly re-scope the `entity.lifecycle.active` dual-writer race
+### M1 — Natural-aging death records its cause and dispatches succession
 
-**Entry evidence**: roadmap §7.1 describes a real, reproducible defect.
-`ApplyPath._compute_entity_changes` (`src/engine/apply.py:106-109`) commits `active=False` one tick
-ahead of `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE check
-(`src/systems/lifecycle_systems/lifecycle.py:193-194`). This happens for any death that arrives
-through ordinary per-tick aging, as opposed to the artificially staged case both existing repo tests
-use. It was verified at runtime twice, not just traced:
-- a 5-tick probe, printing per-tick state;
-- a regression scenario (seed 42), which failed 3/3 against current code. It is kept on the
-  unmerged local branch `natural-aging-old-age-dispatch-fix-unreviewed`, not on this branch.
+**Brief**: `TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`.
 
-**Ticket**: `tickets/todos/TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE.md` (drafted, not
-started). It carries the full reproduction, the acceptance criteria, and two open questions to
-settle before merge:
-- whether `initial_active=False` spawns currently rely on the passive branch to activate them;
-- a sibling starvation/sleep-debt silent-death gap, which is a separate ticket.
+**Semantic contract**: old-age death has one declared authority. Whenever it happens, the cause and
+tick are recorded and lineage consequences follow (roadmap §3.1, §3.2).
 
-**Deliverable**: a declared precedence rule between the two writers of `entity.lifecycle.active` —
-consistent with the roadmap's own §3.1 semantic obligation ("every persistent fact has a canonical
-authority... a world effect must not commit from stale assumptions without a declared resolution
-rule"). This does not have to mean one physical writer; it can mean `ApplyPath`'s passive branch
-defers to `resolve_lifecycle`'s own dispatch when both would fire in the same tick, or an equivalent
-explicit ordering — a real engineering ticket's own job to design, not decided here.
+**Entry evidence**: scenario runtime, roadmap §7.1. An entity reaching its maximum age through
+ordinary ticks is deactivated with no cause and no succession, and never recovers. Two code paths
+both decide old-age deactivation, and the one that records nothing acts first.
 
-**Finite exit evidence**: the 5-tick natural-aging probe (or an equivalent regression test) shows
-`death_reason="OLD_AGE"` set and succession/heirloom/dying-wish dispatch firing on the tick where
-`age_ticks` first reaches `max_age_ticks`, through ordinary per-tick aging — no manual mid-run state
-staging. Existing tests (`test_heir_inventory_transfer_corpus.py`,
-`test_lineage_dispatch_deterministic_kernel_tick.py`, `test_aging_death_value_differential.py`)
-continue to pass unmodified.
+**Finite exit evidence**:
+- natural aging to the maximum age yields a recorded OLD_AGE death and heir effects, with no silent
+  inactive tick;
+- the death timing is pinned and documented;
+- existing death and inheritance tests pass unmodified;
+- verified and unverified death paths are named.
 
-**Relevant Rules/mechanisms/scenarios**: `aging_death`, `succession` (`registries/mechanisms.yaml`);
-no Catalog Rule change — this is an implementation-correctness fix, not a semantic one.
+**Bounded**: other death causes are only regression-checked. A general apply-path redesign is out.
 
-**Failure/blocked branch**: if the fix requires touching `ApplyPath`'s passive-decay branch in a way
-that risks other entities' `active` semantics (combat death, hazard death), scope the fix narrowly
-to the OLD_AGE case first and flag the broader `ApplyPath` review as a separate, later item — do not
-let this milestone grow into a general `ApplyPath` audit.
+**Known risks carried in the brief**:
+- spawns created inactive may depend on today's behaviour;
+- a possible starvation silent-death sibling gap.
+
+**Prototype**: an unreviewed prototype exists on local branch
+`natural-aging-old-age-dispatch-fix-unreviewed`. It is evidence for the implementer, not a fix.
 
 ### M2 — Choose the minimum evidence-production and carrier path for a single inheritance
+
+**Brief**: `TCK-20260927-INHERITANCE-EVIDENCE-PATH-DESIGN`.
 
 **Entry evidence**: roadmap §7.2 records a read-only code inspection (2026-09-27) of the single
 tick-0 inheritance. It answers the four observer-side checks as follows:
@@ -144,19 +138,12 @@ tick-0 inheritance. It answers the four observer-side checks as follows:
 Non-leakage of `cognition.motivation.named_intention` / `strategic.blockers` is vacuously true for
 in-world channels today and untestable until a carrier exists.
 
-**Deliverable (finite, design only)**: a short design note choosing the minimum path that would
-make a single inheritance legitimately encounterable. It names the owning domain and viewpoint
-scope and drafts the implementation ticket. Two domain-appropriate candidates are known:
-- **A. Viewpoint-scoped visible equipment in perception.** Coarse equipped slots only; never
-  inventory contents or cognition. Owner: the perception domain. It first requires wiring
-  `PerceptionUpdatePhase` into production. On its own it yields only the ambiguous clue "now
-  carries X".
-- **B. A witness-scoped local inheritance event.** Perceivable only by co-located or bonded
-  entities, keeping direct participation, uninvolved witnessing, and hearsay distinct (roadmap
-  §3.4). Owner: the lifecycle/lineage domain. It makes an inheritance-origin clue possible.
-
-The note may choose A, B, both, or another path it justifies by domain meaning, authority, and
-viewpoint scope. A dedicated provenance record is not mandated, and a global history feed is out.
+**Deliverable (finite, design only, owned by the design/implementation agent)**: a short design
+note choosing the minimum path that would make a single inheritance legitimately encounterable. It
+states the viewpoint scope, the authority, what stays hidden, and the owning domain, and it drafts
+the implementation ticket. The brief lists two directions surfaced by inspection as non-binding
+examples: a perception-side signal and a witness-scoped event. The choice belongs to the design
+owner. A dedicated provenance record is not mandated, and a global history feed is out.
 
 **Finite exit evidence**: the design note and its drafted ticket exist and have been reviewed. The
 player-facing status is recorded explicitly:
@@ -179,40 +166,51 @@ cannot stage the same-tick collision deterministically, or the relevant systems 
 triggerable in a test). **Never force a fine/defect verdict where the honest answer is "couldn't
 test it."**
 
-**M3a — Entity death**: `alive_set` written from `combat.py` (5 sites) and `world_dynamics.py`
-(hazard damage). Entry evidence: precedence comments exist (`groups.py:99`, `clan_lifecycle.py:19`)
-suggesting deliberate ordering, unverified by scenario. Deliverable: one same-tick hazard-kill +
-combat-kill collision scenario. Owner: Combat + World dynamics.
+**M3a — Entity death** (brief `TCK-20260927-SAME-TICK-DEATH-AUTHORITY-CHECK`):
+- Fact: `alive_set`, written from `combat.py` (5 sites) and `world_dynamics.py` (hazard damage).
+- Entry evidence: precedence comments exist (`groups.py:99`, `clan_lifecycle.py:19`), suggesting
+  deliberate ordering, but no scenario verifies them.
+- Deliverable: one representative same-tick hazard-kill + combat-kill collision scenario.
+- Owner: Combat + World dynamics.
 
-**M3b — Faction diplomacy**: `diplomatic_relations_set` from the autonomous state machine and the
-auto-alliance handler, same tick, same pipeline phase. Entry evidence: ordering looks intentional
-(`pipeline.py:255-283`), unverified by scenario. Deliverable: one same-pair-same-tick collision
-scenario. Owner: Faction.
+**M3b — Faction diplomacy** (brief `TCK-20260927-SAME-TICK-DIPLOMACY-AUTHORITY-CHECK`):
+- Fact: `diplomatic_relations_set`, written by the autonomous state machine and by the auto-alliance
+  handler, in the same tick and the same pipeline phase.
+- Entry evidence: the ordering looks intentional (`pipeline.py:255-283`), but no scenario verifies
+  it.
+- Deliverable: one same-pair, same-tick collision scenario.
+- Owner: Faction.
 
-**M3c — Public reputation**: `SocialComponent.reputation` (`reputation_set`) from `social_memory.py`
-and `orchestrator.py`. Entry evidence: two real writer call sites, phase ordering unchecked.
-Deliverable: one same-tick-same-entity collision scenario. Owner: Social. (Separate from — and does
-not touch — the roadmap's own open *semantic* question of what `public_reputation` means, Owner
-Decision List item 3; this is a mechanical dual-writer check only.)
+**M3c — Public reputation** (brief `TCK-20260927-SAME-TICK-REPUTATION-AUTHORITY-CHECK`):
+- Fact: `SocialComponent.reputation` (`reputation_set`), written from `social_memory.py` and from
+  `orchestrator.py`.
+- Entry evidence: two real writer call sites; phase ordering is unchecked.
+- Deliverable: one same-tick, same-entity collision scenario.
+- Owner: Social.
+- This is a mechanical dual-writer check only. It does not touch the roadmap's open semantic
+  question of what `public_reputation` means (Owner Decision List item 3).
 
 **Finite exit evidence, each**: one scenario result with an explicit classification (including
 `BLOCKED_WITH_REASON` where applicable) and citation, recorded back into the roadmap's §3.1 audit
 table as its own dated addendum — not a new document, and not bundled with the other two.
 
-**Failure/blocked branch, each**: a `DEFECT_CONFIRMED` result is documented and escalated via a real
-ticket, same discipline as M1 — not fixed inside this milestone's own scope unless trivially the
-same shape as M1's fix. A `BLOCKED_WITH_REASON` result is reported as exactly that — a named
-harness/scenario limitation, not silently reclassified to force a verdict.
+**Failure/blocked branch, each**:
+- A `DEFECT_CONFIRMED` result is documented and routed to its own ticket. It is not fixed inside
+  the check.
+- A `BLOCKED_WITH_REASON` result is reported as exactly that: a named harness or scenario
+  limitation, not reclassified to force a verdict.
 
 ### M4a — Composed multi-hop world-side sequence (gated on M1 only)
+
+**Brief**: `TCK-20260927-LINEAGE-TWO-HOP-NATURAL-COMPOSITION`.
 
 **Entry evidence**: M1 complete and its exit evidence verified. **Not gated on M2 in any form.**
 World-side correctness and product legibility are separate concerns with separate exit evidence, so
 a weak, blocked, or pending M2 result never pauses this milestone.
 
-**Deliverable**: repeat the composition probe (roadmap §7.1's second attempt) using ordinary
-per-tick aging now that the race is fixed; confirm the heir's own eventual death correctly cascades
-succession a second time.
+**Deliverable**: one bounded, reproducible run through ordinary ticks in which the heir's own later
+death carries succession forward a second time. It records the seed, the identities, the
+authoritative state changes, and the provenance of each causal link.
 
 **Finite exit evidence**: a real two-hop composed run (grandparent → parent → grandchild, both hops
 through ordinary aging) with identity and chronology preserved across both hops — answers gate
@@ -221,9 +219,9 @@ says nothing about whether the sequence is legible to any observer.
 
 **Relevant Rules/mechanisms/scenarios**: `succession`/`aging_death`, post-M1.
 
-**Failure/blocked branch**: if M1's fix does not actually enable natural two-hop composition (e.g.,
-a second, different defect surfaces), report the new blocker with the same precision as §7.1 and
-return to Gate A (§4) rather than silently extending this milestone's scope.
+**Failure/blocked branch**: if natural two-hop composition still fails after M1 (for example, a
+second, different defect surfaces), close `BLOCKED_WITH_REASON`. Record the blocker with the same
+precision as §7.1 and return to Gate A (§4), rather than extending this milestone's scope.
 
 ### Future follow-ons (not milestones of this wave)
 
@@ -287,11 +285,9 @@ world-side track.** M1/M4a succeeding re-enables composition but says nothing ab
 ## 6. Bounded evidence and regression strategy
 
 Reuses existing infrastructure only — no new registry, no new governance system:
-- **Scenario/corpus tests**: the existing `tests/simulation_quality/` and
-  `tests/integration/campaigns/` conventions, extended with the natural-aging regression test (M1),
-  the composed two-hop scenario (M4a), and one collision scenario per M3 boundary. These are new test
-  files, not a new test framework. M2 adds no tests in this wave: there is nothing encounterable to
-  test yet.
+- **Scenario/corpus tests**: regression evidence for M1, M4a, and M3a/b/c is designed by the
+  implementation agents within the repo's existing scenario and corpus test conventions. There is
+  no new test framework. M2 adds no tests in this wave: there is nothing encounterable to test yet.
 - **Mechanism registry**: `succession`/`aging_death`'s existing entries get a dated addendum note
   once M1 lands (matching this registry's own established convention of appending dated notes
   rather than rewriting history) — done through whatever ticket implements M1, not this document.

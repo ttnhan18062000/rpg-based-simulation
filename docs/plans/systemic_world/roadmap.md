@@ -691,20 +691,11 @@ OK: rule_mechanism_edges.yaml, mechanism_causal_edges.yaml, rule_classifications
 
 No gap here.
 
-**Recommended smallest incremental improvement**: one pure function in
-`tools/semantic_control_plane/registry.py`, mirroring the existing `consumers_of`/`producers_for`
-shape exactly —
-
-```python
-def rules_for(mechanism_id: str, edges: list[dict]) -> list[str]:
-    """Every rule_id that cites this mechanism_id -- reverse of the forward Rule->edges lookup."""
-    return [e["rule_id"] for e in edges if e.get("mechanism_id") == mechanism_id]
-```
-
-A ~10-line reverse-index reusing an already-proven pattern, closing Q2's one concrete gap without
-touching schema, validation, or the two-domain view generator. Everything else asked in §1 already
-has a real, working answer today. A broader general-purpose multi-Rule query CLI is a larger design
-decision than "smallest increment" and is left out of scope here, for whoever next scopes that work.
+**Tooling follow-up (not scheduled; implementation belongs to whoever owns SCP tooling).** The one
+concrete query gap is a reverse lookup: from a mechanism, find the Rules that cite it. It
+belongs in the existing SCP registry API, next to its existing mechanism-edge queries. A second
+registry or a general query CLI is not needed for this gap, and neither is proposed. Every other
+question above already has a working answer today.
 
 ## 10. Owner Decision List
 
