@@ -16,9 +16,18 @@ itself, and `src/api/agent_ops_dashboard/`, which already reaches across into `t
 this reason) -- a new, narrowly-scoped sibling module matches that existing precedent rather than
 deepening `monitoring_batch_identifier.py`'s own more specific responsibility.
 
-`data_root`/`week_dir` must always be a real, resolvable `Path` -- never assume the caller's
-current working directory is the repo root (see `record_events.py`'s own historical `Path(".")`
-hazard, fixed by migrating onto this module rather than ported forward).
+`data_root`/`week_dir` is supplied by the caller and used as-is -- this module does not itself
+resolve a relative root against the repo, so a CWD-relative `data_root` behaves exactly as CWD-
+relative as it always would, silently returning `[]` from an unexpected CWD. Some real call sites
+(`manifest.py`, `bash_command_mix.py`, `ingest.py`) anchor their own default to
+`Path(__file__).resolve()...`; others (`record_events.py`, `done_checker_static.py`'s own several
+`data_root: Path = Path("agent-monitoring/data")` defaults) deliberately stay CWD-relative, matching
+this project's established convention that every real entry point (hooks, CLI scripts, pytest) runs
+with CWD already at the repo root -- and, for `record_events.py` specifically, matching that
+file's own test suite's `monkeypatch.chdir(tmp_path)`-based isolation strategy, which a `__file__`-
+anchored absolute root would break. An earlier version of the `record_events.py` migration wrongly
+claimed switching its literal from `Path(".").glob(...)` to `Path("agent-monitoring/data")` fixed
+CWD-independence; it didn't (the two are behaviorally identical) -- corrected after review.
 """
 from __future__ import annotations
 
@@ -37,9 +46,11 @@ def shard_paths(data_root: Path, kind: str) -> list[Path]:
     """Every path that could hold real `<kind>` data across every week directory under
     `data_root`: the bare per-week canonical file (`<week>/<kind>.jsonl`) and every per-identifier
     file (`<week>/<id>.<kind>.jsonl`, via `per_identifier_shard_paths()` -- one glob call, not a
-    second independent expression). Sorted for determinism. Returns an empty list if `data_root`
-    doesn't exist; never raises."""
-    if not data_root.exists():
+    second independent expression). Deterministic order -- canonical files first (sorted), then
+    per-identifier files by week then filename -- not a single global sort across both groups, so
+    a consumer that needs "canonical file last" or similar must not assume this is one flat sorted
+    list. Returns an empty list if `data_root` doesn't exist or isn't a directory; never raises."""
+    if not data_root.is_dir():
         return []
     return sorted(data_root.glob(f"*/{kind}.jsonl")) + [
         path

@@ -62,6 +62,14 @@ def test_shard_paths_missing_data_root_returns_empty(tmp_path):
     assert shard_paths(tmp_path / "does-not-exist", "tools") == []
 
 
+def test_shard_paths_data_root_is_a_regular_file_returns_empty_not_raise(tmp_path):
+    """Design-peer review finding: `.exists()` passes for a regular file, and `.iterdir()` on one
+    raises `NotADirectoryError` -- `.is_dir()` correctly returns False for this case instead."""
+    not_a_dir = tmp_path / "some_file"
+    not_a_dir.write_text("not a directory")
+    assert shard_paths(not_a_dir, "tools") == []
+
+
 def test_per_identifier_shard_paths_excludes_bare_canonical(tmp_path):
     week_dir = tmp_path / "2026-W01"
     week_dir.mkdir()

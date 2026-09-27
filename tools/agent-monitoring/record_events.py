@@ -99,9 +99,15 @@ def compute_tool_stats(
     # this SAME run's own tool-call rows for the events being written right now would be invisible
     # until a future retro consolidation folds them into the canonical file.
     # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery delegates to the shared
-    # monitoring_shard_paths.shard_paths() resolver, which also fixes this site's own prior
-    # Path(".")-relative root (silently resolved nothing from a non-repo-root CWD) by taking a
-    # real, explicit root instead.
+    # monitoring_shard_paths.shard_paths() resolver. Root stays CWD-relative
+    # (Path("agent-monitoring/data"), the same shape as done_checker_static.py's/
+    # check_monitoring_write_recorded's own defaults) -- this is a spelling simplification of the
+    # old Path(".")-prefixed glob, NOT a CWD-independence fix; a first version of this migration
+    # claimed it was a fix and it wasn't (caught in review), and a follow-up attempt to make it
+    # genuinely CWD-independent via a __file__-anchored absolute root broke 7 of this file's own
+    # tests, which rely on `monkeypatch.chdir(tmp_path)` for isolation -- confirming CWD-relative
+    # is this function's actual, tested design (every real caller already runs with CWD=repo root,
+    # matching this project's own established convention), not an oversight to fix.
     tools_paths = shard_paths(Path("agent-monitoring/data"), "tools")
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
     for tools_path in tools_paths:
