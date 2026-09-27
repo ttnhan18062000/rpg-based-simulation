@@ -44,7 +44,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 try:
     from tools.validate_frontmatter import extract_frontmatter
@@ -64,6 +64,16 @@ except ImportError:
 
 _TICKET_ID_RE = re.compile(r"TCK-[0-9]{8}-[A-Z0-9-]+")
 _REVIEW_NOTES_PLACEHOLDER = "<!-- UNFILLED: write review notes by hand before opening the PR -->"
+# TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION: an intentional exclusion of a commit-
+# subject-discovered ticket (e.g. one named only as context in a bookkeeping commit, already
+# closed on a prior PR) is recorded as an HTML comment in the rendered body itself, never a
+# git-committed file — a committed file would land on `main` at squash-merge and accumulate across
+# every PR that ever used it (see this ticket's own investigation.md for the retracted first-pass
+# design and why). Same "invisible in GitHub's rendered view, present in raw body text" convention
+# `_REVIEW_NOTES_PLACEHOLDER` above already uses.
+_EXCLUSION_COMMENT_RE = re.compile(
+    r'<!--\s*pr-render:exclude\s+(TCK-[0-9]{8}-[A-Z0-9-]+)\s+reason="([^"]*)"\s*-->'
+)
 _DEFAULT_SPEC_PATH = Path("tools/delivery/pr_template_spec.json")
 _DEFAULT_TICKETS_ROOT = Path("tickets")
 _DEFAULT_LAYER_REGISTRY = Path("registries/layer_registry.jsonl")
@@ -120,14 +130,36 @@ def load_ticket(path: Path) -> dict:
     }
 
 
+def render_exclusion_comment(ticket_id: str, reason: str) -> str:
+    """Formats one `pr-render:exclude` HTML comment line -- the single place the literal comment
+    shape is written, so `_EXCLUSION_COMMENT_RE` above always matches what this emits."""
+    return f'<!-- pr-render:exclude {ticket_id} reason="{reason}" -->'
+
+
+def extract_recorded_exclusions(body: str) -> Dict[str, str]:
+    """Returns {ticket_id: reason} for every `pr-render:exclude` comment found in `body`. `{}`
+    (never raises) if none are present -- the common case, every PR that has never needed one."""
+    return dict(_EXCLUSION_COMMENT_RE.findall(body))
+
+
 def discover_tickets(
     run_command=default_run_command,
     tickets_root: Path = _DEFAULT_TICKETS_ROOT,
     base_ref: str = "origin/main",
+    exclusions: Optional[Dict[str, str]] = None,
 ):
     """Returns (tickets, warnings). `tickets` follows commit-subject discovery order (the primary
-    signal); `warnings` names any mismatch against the changed-files signal, and any commit-subject
-    ID with no matching ticket file anywhere under `tickets_root`."""
+    signal), minus any ID present in `exclusions`; `warnings` names any mismatch against the
+    changed-files signal, any commit-subject ID with no matching ticket file anywhere under
+    `tickets_root`, and any excluded ID that was never in the discovered commit-subject set to
+    begin with (an exclusion recorded for a ticket that isn't there does nothing, and that fact is
+    reported rather than silently ignored).
+
+    The mismatch warning below is computed from the full, unexcluded `commit_ids`/`changed_ids`
+    sets -- recording an exclusion changes what gets *rendered*, never whether the underlying
+    commit-subject/changed-file disagreement gets *reported* (TCK-20260927-PR-RENDER-NO-RECORDED-
+    TICKET-EXCLUSION AC5)."""
+    exclusions = exclusions or {}
     commit_ids = discover_commit_ticket_ids(run_command, base_ref)
     changed_ids = discover_changed_ticket_ids(run_command, base_ref)
 
@@ -143,8 +175,17 @@ def discover_tickets(
             parts.append(f"changed ticket file but no commit-subject mention: {only_changed}")
         warnings.append("commit-subject/changed-file ticket ID mismatch — " + "; ".join(parts))
 
+    for excluded_id in sorted(exclusions):
+        if excluded_id not in commit_set:
+            warnings.append(
+                f"{excluded_id}: excluded but not in the discovered commit-subject set — "
+                f"exclusion had no effect"
+            )
+
     tickets = []
     for ticket_id in commit_ids:
+        if ticket_id in exclusions:
+            continue
         path = find_ticket_file(ticket_id, tickets_root)
         if path is None:
             warnings.append(f"{ticket_id}: no ticket file found under {tickets_root}/")
@@ -279,7 +320,7 @@ def _render_section(heading: str, tickets: list, warnings: list) -> str:
     return ""
 
 
-def render_body(tickets: list, spec: dict, warnings: list) -> str:
+def render_body(tickets: list, spec: dict, warnings: list, exclusions: Optional[Dict[str, str]] = None) -> str:
     parts = []
     for section in spec["sections"]:
         heading = section["heading"]
@@ -290,6 +331,9 @@ def render_body(tickets: list, spec: dict, warnings: list) -> str:
         parts.append("")
     ids = ", ".join(t["ticket_id"] for t in tickets)
     parts.append(f"Closes: {ids}")
+    if exclusions:
+        for ticket_id in sorted(exclusions):
+            parts.append(render_exclusion_comment(ticket_id, exclusions[ticket_id]))
     return "\n".join(parts).strip() + "\n"
 
 
@@ -300,8 +344,9 @@ def render(
     spec_path: Path = _DEFAULT_SPEC_PATH,
     layer_registry_path: Path = _DEFAULT_LAYER_REGISTRY,
     run_command=default_run_command,
+    exclusions: Optional[Dict[str, str]] = None,
 ) -> dict:
-    tickets, warnings = discover_tickets(run_command, tickets_root, base_ref)
+    tickets, warnings = discover_tickets(run_command, tickets_root, base_ref, exclusions=exclusions)
     if not tickets:
         return {"title": None, "body": None, "warnings": warnings + ["no tickets discovered"]}
 
@@ -312,7 +357,7 @@ def render(
 
     spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
     title = render_title(tickets, scope, theme)
-    body = render_body(tickets, spec, warnings)
+    body = render_body(tickets, spec, warnings, exclusions=exclusions)
     return {"title": title, "body": body, "warnings": warnings}
 
 
@@ -414,6 +459,16 @@ def check_against_live(pr: Optional[str] = None, run_command=default_run_command
     except (ValueError, TypeError):
         return {"matches": None, "error": "gh pr view returned unparseable output"}
 
+    # AC2/AC3 (TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION): the exclusion set is read
+    # from the live body itself, not from any caller-supplied argument -- so a --check run with
+    # no operator-supplied flags reproduces whatever was already recorded, and the comparison
+    # target is built with the SAME exclusions the live body claims to reflect. `setdefault` means
+    # an explicit caller-supplied `exclusions` kwarg is used as-is instead (a caller checking a
+    # hypothetical body before any comment exists yet); the common case passes none and gets
+    # whatever the live body itself records.
+    recorded_exclusions = extract_recorded_exclusions(live.get("body") or "")
+    render_kwargs.setdefault("exclusions", recorded_exclusions or None)
+
     rendered = render(run_command=run_command, **render_kwargs)
     title_diff = None if live.get("title") == rendered["title"] else (live.get("title"), rendered["title"])
 
@@ -441,13 +496,32 @@ def main(argv=None) -> int:
     parser.add_argument("--base-ref", default="origin/main")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument(
+        "--exclude-ticket", action="append", default=[], metavar="TICKET_ID",
+        help="Exclude a commit-subject-discovered ticket ID from the rendered body (repeatable). "
+             "Ignored by --check, which reads exclusions back from the live PR body instead. "
+             "Requires --exclude-reason for each one, in the same order.",
+    )
+    parser.add_argument(
+        "--exclude-reason", action="append", default=[], metavar="TEXT",
+        help="Reason text for the corresponding --exclude-ticket, same order, one per exclusion.",
+    )
     args = parser.parse_args(argv)
+
+    if len(args.exclude_ticket) != len(args.exclude_reason):
+        print(
+            "INTERNAL ERROR: --exclude-ticket and --exclude-reason must be given the same "
+            f"number of times ({len(args.exclude_ticket)} vs {len(args.exclude_reason)})",
+            file=sys.stderr,
+        )
+        return 1
+    exclusions = dict(zip(args.exclude_ticket, args.exclude_reason)) or None
 
     try:
         if args.check:
             result = check_against_live(pr=args.pr, theme=args.theme, base_ref=args.base_ref)
         else:
-            result = render(theme=args.theme, base_ref=args.base_ref)
+            result = render(theme=args.theme, base_ref=args.base_ref, exclusions=exclusions)
     except Exception as exc:  # noqa: BLE001 - the one deliberate non-zero-exit path
         print(f"INTERNAL ERROR: {exc}", file=sys.stderr)
         return 1

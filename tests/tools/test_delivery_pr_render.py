@@ -557,3 +557,204 @@ def test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on(tmp_
     assert len(known_gap_bullets) == 2
     for line in known_gap_bullets:
         assert "scan_a" not in line or "scan_b" not in line
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION
+# ---------------------------------------------------------------------------
+
+def _three_ticket_fixture(tmp_path, subdir="tickets"):
+    """Three discovered tickets, one of which (B) is the 'phantom' shape from the real PR #251
+    finding: named in a commit subject but never changed on the branch (its file still exists,
+    e.g. already merged in a prior PR)."""
+    tickets_root = tmp_path / subdir
+    tickets_root.mkdir(exist_ok=True)
+    _write_ticket(tickets_root, "TCK-20260924-A", "ai", "First thing")
+    _write_ticket(tickets_root, "TCK-20260924-B", "ai", "Phantom thing, already closed elsewhere")
+    _write_ticket(tickets_root, "TCK-20260924-C", "ai", "Third thing")
+    runner = FakeRunner([
+        _git_log_rule([
+            "TCK-20260924-A: x", "TCK-20260924-B: mentioned as context", "TCK-20260924-C: z",
+        ]),
+        # B's file exists (found by find_ticket_file) but was never actually changed on this
+        # branch -- the real PR #251 shape.
+        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-C.md"]),
+    ])
+    return tickets_root, runner
+
+
+def test_ac1_excluded_ticket_omitted_from_title_and_all_five_sections(tmp_path):
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=runner,
+        exclusions={"TCK-20260924-B": "already closed in a prior PR"},
+    )
+    body = result["body"]
+    assert "(2 tickets)" in result["title"]
+    # No per-ticket content bullet for the excluded ticket (the AC5 mismatch warning and the
+    # exclusion comment itself both legitimately still name it elsewhere in the body).
+    assert "- TCK-20260924-B:" not in body
+    assert "- TCK-20260924-B Tests:" not in body
+    assert "TCK-20260924-A" in body and "TCK-20260924-C" in body
+    assert "Closes: TCK-20260924-A, TCK-20260924-C" in body
+    # The exclusion itself is recorded in the body as a comment, for --check to read back later.
+    assert pr_render.render_exclusion_comment(
+        "TCK-20260924-B", "already closed in a prior PR"
+    ) in body
+
+
+def test_ac1_isolated_diff_shape_matches_the_bug_that_found_this(tmp_path):
+    """Same isolated-diff method that found the original bug: compare a fully-excluded render
+    against the untouched full render and confirm exactly the expected sections differ (because
+    the ticket count genuinely changed), not more and not fewer."""
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    full = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    excluded = pr_render.render(
+        tickets_root=tickets_root, run_command=runner,
+        exclusions={"TCK-20260924-B": "already closed in a prior PR"},
+    )
+    spec = json.loads(pr_render._DEFAULT_SPEC_PATH.read_text())
+    comparison = pr_render.compare_generated_body(excluded["body"], full["body"], spec)
+    assert set(comparison["differing_sections"]) == {
+        "## What landed", "## Tickets", "## Why", "## Verification", "Closes:",
+    }
+
+
+def test_ac2_check_matches_when_live_body_already_reflects_its_own_recorded_exclusion(tmp_path):
+    tickets_root, runner_for_render = _three_ticket_fixture(tmp_path)
+    rendered_with_exclusion = pr_render.render(
+        tickets_root=tickets_root, run_command=runner_for_render,
+        exclusions={"TCK-20260924-B": "already closed in a prior PR"},
+    )
+    # Live body = exactly what an operator would have gotten from the first render above, with
+    # Review notes hand-filled (the real shape of every live PR).
+    live_body = rendered_with_exclusion["body"].replace(
+        pr_render._REVIEW_NOTES_PLACEHOLDER, "Checked the exclusion by hand; looks right.",
+    )
+    tickets_root2, runner_for_check = _three_ticket_fixture(tmp_path)
+    check_runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({
+             "title": rendered_with_exclusion["title"], "body": live_body,
+         }), "")),
+        *runner_for_check.rules,
+    ])
+    result = pr_render.check_against_live(run_command=check_runner, tickets_root=tickets_root2)
+    assert result["matches"] is True
+    assert result["differing_sections"] == []
+    assert result["review_notes_hand_filled"] is True
+
+
+def test_ac3_check_with_no_operator_flags_reproduces_recorded_exclusion_from_live_body_alone(tmp_path):
+    """No `exclusions` kwarg passed to check_against_live() at all -- the exclusion is read
+    purely from the fetched live body, proving the record doesn't depend on any caller-remembered
+    state."""
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    exclusions = {"TCK-20260924-B": "already closed in a prior PR"}
+    rendered_with_exclusion = pr_render.render(
+        tickets_root=tickets_root, run_command=runner, exclusions=exclusions,
+    )
+    live_body = rendered_with_exclusion["body"].replace(
+        pr_render._REVIEW_NOTES_PLACEHOLDER, "Reviewed.",
+    )
+    tickets_root2, runner2 = _three_ticket_fixture(tmp_path)
+    check_runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({
+             "title": rendered_with_exclusion["title"], "body": live_body,
+         }), "")),
+        *runner2.rules,
+    ])
+    # No `exclusions=` kwarg here at all.
+    result = pr_render.check_against_live(run_command=check_runner, tickets_root=tickets_root2)
+    assert result["matches"] is True
+
+
+def test_ac4_excluding_a_ticket_not_in_the_discovered_set_is_reported(tmp_path):
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=runner,
+        exclusions={"TCK-99999999-NOT-DISCOVERED": "typo'd id"},
+    )
+    assert any(
+        "TCK-99999999-NOT-DISCOVERED" in w and "no effect" in w for w in result["warnings"]
+    )
+    # Real 3 tickets still render, unaffected.
+    assert "(3 tickets)" in result["title"]
+
+
+def test_ac5_mismatch_warning_still_fires_with_an_exclusion_recorded_for_it(tmp_path):
+    """Recording an exclusion for the exact ticket causing the commit-subject/changed-file
+    mismatch must not suppress the underlying disagreement diagnostic -- it's a presentation
+    choice, not a resolution of the diagnostic."""
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=runner,
+        exclusions={"TCK-20260924-B": "already closed in a prior PR"},
+    )
+    assert any(
+        "mismatch" in w and "TCK-20260924-B" in w for w in result["warnings"]
+    )
+
+
+def test_ac6_no_exclusions_output_byte_identical_to_before_this_ticket(tmp_path):
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    with_default = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    tickets_root2, runner2 = _three_ticket_fixture(tmp_path)
+    with_explicit_none = pr_render.render(
+        tickets_root=tickets_root2, run_command=runner2, exclusions=None,
+    )
+    assert with_default["body"] == with_explicit_none["body"]
+    assert "pr-render:exclude" not in with_default["body"]
+
+
+def test_ac7_two_or_more_discovered_tickets_one_excluded_all_sections_agree(tmp_path):
+    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=runner,
+        exclusions={"TCK-20260924-B": "already closed in a prior PR"},
+    )
+    body = result["body"]
+
+    # No per-ticket content bullet/row for the excluded ticket in any of the four content
+    # sections. The excluded ticket's ID CAN legitimately still appear inside "## Verification"'s
+    # own "Discovery warnings" line (AC5: the underlying commit-subject/changed-file mismatch
+    # diagnostic must still fire and name it) -- that is a required exception, not a leak.
+    assert "- TCK-20260924-B:" not in body
+    assert "TCK-20260924-B:" not in body.split("## Tickets")[1].split("## Why")[0]
+    assert "**TCK-20260924-B**" not in body
+    assert "- TCK-20260924-B Tests:" not in body
+    verification_section = body.split("## Verification")[1].split("## Review notes")[0]
+    assert "TCK-20260924-B" in verification_section  # required: the AC5 mismatch warning
+    assert "- TCK-20260924-B Tests:" not in verification_section  # but no per-ticket test bullet
+    assert "TCK-20260924-B" not in body.split("Closes:")[1].split("\n")[0]
+    assert "(2 tickets)" in result["title"]
+
+
+def test_extract_recorded_exclusions_round_trip_with_punctuation_in_reason():
+    comment = pr_render.render_exclusion_comment(
+        "TCK-20260924-A", "closed in #250 - named only as context, not a real change"
+    )
+    parsed = pr_render.extract_recorded_exclusions(comment)
+    assert parsed == {"TCK-20260924-A": "closed in #250 - named only as context, not a real change"}
+
+
+def test_extract_recorded_exclusions_finds_multiple():
+    body = "\n".join([
+        pr_render.render_exclusion_comment("TCK-20260924-A", "reason one"),
+        "some other body text",
+        pr_render.render_exclusion_comment("TCK-20260924-B", "reason two"),
+    ])
+    parsed = pr_render.extract_recorded_exclusions(body)
+    assert parsed == {"TCK-20260924-A": "reason one", "TCK-20260924-B": "reason two"}
+
+
+def test_extract_recorded_exclusions_empty_on_body_with_no_comments():
+    assert pr_render.extract_recorded_exclusions("just a normal PR body\nwith no markers") == {}
+
+
+def test_cli_exclude_ticket_and_reason_must_pair_up(capsys):
+    """The length mismatch is caught before any git/gh call is ever made."""
+    exit_code = pr_render.main(["--exclude-ticket", "TCK-20260924-A"])
+    assert exit_code == 1
+    assert "same number of times" in capsys.readouterr().err
