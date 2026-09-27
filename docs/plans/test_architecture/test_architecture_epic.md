@@ -270,7 +270,7 @@ authored today (measured from `.claude/workflows/implement-ticket.js` and `.clau
 hygiene) on a small surface. Strategic is the natural second pilot, to validate the rules on the
 over-engineering side.
 
-**Decision (pilot domain):**
+**Decision (pilot domain):** Progression (user decision, 2026-09-28). Strategic stays the candidate second pilot.
 
 **Decision (D9 overall):**
 
@@ -299,4 +299,4 @@ over-engineering side.
 2. Should the scorecard extend `codebase-health-scorecard` or be a separate `make` target?
 3. Is D7's re-tier acceptable, given it will visibly demote ~1,400 entries?
 4. Mutation tool preference (`mutmut` vs `cosmic-ray`); `mutmut` is the more common default.
-5. D9 pilot domain: progression or strategic?
+5. ~~D9 pilot domain~~ Resolved 2026-09-28: progression.
