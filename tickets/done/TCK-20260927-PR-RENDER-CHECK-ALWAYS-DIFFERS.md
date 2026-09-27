@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260927-PR-RENDER-CHECK-ALWAYS-DIFFERS
-phase: open
+phase: done
 date: 2026-09-27
 tags: [delivery, ai]
 ---
@@ -19,7 +19,7 @@ completely stale.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -141,17 +141,52 @@ None yet.
   recreate the present always-differs problem in a new place.
 
 ## Implementation Notes
+Confirmed root cause by direct source read (`check_against_live()`'s whole-body string equality
+against `render_body()`'s permanently-placeholder `## Review notes`) before writing any code —
+see `staging_artifacts/.../investigation.md`.
 
-_To be filled during implementation._
+`pr_template_spec.json` is the single source parsed for both the heading list AND which sections
+are `rendered: false` (i.e. never generated) — `## Review notes` is identified structurally, not
+by a second hardcoded string literal.
 
 ## Test Summary
-
-_To be filled during implementation._
+- `python3 -m pytest tests/tools/test_delivery_pr_render.py -v` — **26 passed** (19 pre-existing +
+  7 new, none removed): AC1 (`test_check_ac1_matches_despite_hand_filled_review_notes`), AC2
+  (`test_check_ac2_names_the_differing_section`), AC3
+  (`test_check_ac3_result_shape_distinguishes_pass_from_real_drift`), AC4/no-write
+  (`test_check_still_exits_zero_and_writes_nothing_on_a_real_difference`), AC5 (existing
+  `test_check_reports_no_difference_when_identical`/`test_check_reports_difference_when_changed`
+  re-run unmodified, zero regressions), AC6
+  (`test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on`), plus two
+  Open-Question regression tests (unexpected live section not a failure, missing live section
+  reported not crashed).
+- `python3 -m pytest tests/tools/test_delivery_ci_triage_classifier.py tests/tools/test_delivery_cost_measurement.py tests/tools/test_delivery_pre_push_advisory.py tests/tools/test_delivery_pr_status.py tests/tools/test_delivery_templates.py tests/tools/test_delivery_pr_render.py` (every sibling delivery-lane test module) — 108 passed.
+- `pytest tests/tools/ -m "not slow"` (full scoped regression) — **3111 passed, 25 skipped, 28
+  deselected, 1 xfailed, 0 failed.**
+- Confirmed no other module reads the removed `body_diff` field (`grep -rn "body_diff"` — only
+  this module's own now-updated code and this ticket's docstrings match).
 
 ## Files Changed
-
-_To be filled during implementation._
+- `tools/delivery/pr_render.py` — added `parse_generated_sections()`, `_extract_closes_line()`,
+  `find_unexpected_sections()`, `compare_generated_body()`; rewrote `check_against_live()` to use
+  them instead of whole-body string equality; updated `main()`'s `--check` print branch; fixed
+  `_render_section()`'s `## Verification`/"Known gaps" run-on-line defect.
+- `tests/tools/test_delivery_pr_render.py` — 7 new tests.
+- `tickets/done/TCK-20260924-DELIVERY-PR-RENDERER.md` — addendum to Implementation Notes
+  recording the AC5/AC8 tension (AC7).
+- `staging_artifacts/TCK-20260927-PR-RENDER-CHECK-ALWAYS-DIFFERS/` —
+  `investigation.md`/`plan.md`/`test_plan.md`.
 
 ## Completion Summary
-
-_To be filled during implementation._
+Made `--check`'s body comparison section-aware, driven off `pr_template_spec.json`'s own heading
+list rather than a second hardcoded set: `## Review notes` (or any future `rendered: false`
+section) is parsed out and reported as a separate `review_notes_hand_filled` fact, never compared
+— so a real PR's inevitable hand-filled Review notes no longer makes every `--check` invocation
+report "differs" regardless of whether the generated content actually drifted. A genuinely
+drifted generated section is now named in `differing_sections`; a hand-edited live body with a
+missing or reordered section degrades to a clear per-section difference rather than a crash or a
+silent pass; an unrecognized extra section is reported for visibility without affecting `matches`.
+Also fixed the "Known gaps" run-on-line defect found in the same dogfooding pass: each gap is now
+its own bullet, tagged with its owning ticket ID, rather than joined into one undifferentiated
+semicolon-separated line across tickets. Recorded the AC5/AC8 tension back onto the already-closed
+`TCK-20260924-DELIVERY-PR-RENDERER` per this ticket's own AC7.

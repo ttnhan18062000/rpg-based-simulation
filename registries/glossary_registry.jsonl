@@ -55,3 +55,21 @@
 {"added_date": "2026-07-20", "category": "phase", "description": "Updates docs/parity_ledger entries flagged by the SimQ audit gap scan, using the same verified/divergent/missing rules as implement-ticket's own Parity phase.", "term": "Parity Check"}
 {"added_date": "2026-07-20", "category": "phase", "description": "Reports the audit's final verdict, either suggesting a no-regression chore commit or handing off a pre-seeded ticket for a real regression or design-acknowledgment decision.", "term": "Report"}
 {"added_date": "2026-08-03", "category": "phase", "description": "Doc-updater agent updates the docs flagged by Investigate's Docs Requiring Update section (or, for hotfix tier, judged against the ticket's own Scope), specializing documentation edits the way parity-updater specializes parity-ledger edits.", "term": "Document-Update"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Reads telemetry/event logs or existing indexes and specs as the first step of a simulation-lab workflow (compact-simulation-result, generate-simulation-setup).", "term": "Scan"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Filters simulation events and writes the compact JSON summary (compact-simulation-result).", "term": "Compact"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Archives raw simulation payloads after compaction (compact-simulation-result).", "term": "Archive"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Generates world, scenario, and experiment specs (generate-simulation-setup).", "term": "Draft"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Runs validators against generated specs or completed-run schema/outputs and writes the review pack (generate-simulation-setup, register-simulation-result).", "term": "Validate"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Reads run reports and scorecards as the first step of investigating a simulation result (investigate-simulation-result).", "term": "Load"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Detects anomalies and compares against historical runs (investigate-simulation-result).", "term": "Analyze"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Resolves specs and runs validators as the first step of preparing a simulation execution (prepare-simulation-execution).", "term": "Resolve"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Estimates budgets and execution parameters for a prepared simulation run (prepare-simulation-execution).", "term": "Estimate"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Generates the execution command and readiness report for a simulation run (prepare-simulation-execution).", "term": "Generate"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Loads investigation reports and anomaly findings as the first step of proposing simulation enhancements (propose-simulation-enhancements).", "term": "Read"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Formulates ranked hypotheses for each detected anomaly (propose-simulation-enhancements).", "term": "Hypothesize"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Generates patches and next-experiment drafts from ranked hypotheses (propose-simulation-enhancements).", "term": "Propose"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Builds the simulation lab's run manifest and indexes (register-simulation-result).", "term": "Index"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Generates the diagnostic scorecard for a completed simulation run (register-simulation-result).", "term": "Score"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Extracts validated insights and rules from an approved enhancement proposal (update-knowledge-store).", "term": "Synthesize"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Updates the knowledge graph and writes the audit log for a synthesized insight (update-knowledge-store).", "term": "Commit"}
+{"added_date": "2026-09-27", "category": "phase", "description": "Finds every ticket an epic batch run needs to implement, skipping ones already done (implement-epic).", "term": "Discover"}

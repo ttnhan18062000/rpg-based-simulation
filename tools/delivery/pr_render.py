@@ -260,8 +260,17 @@ def _render_section(heading: str, tickets: list, warnings: list) -> str:
         lines = []
         for t in tickets:
             lines.append(f"- {t['ticket_id']} Tests: {t['test_summary'] or '(none recorded)'}")
-        gaps = [gap for t in tickets for gap in extract_known_gaps(t)]
-        lines.append(f"- Known gaps: {'; '.join(gaps) if gaps else 'none stated'}")
+        gaps_by_ticket = [(t["ticket_id"], gap) for t in tickets for gap in extract_known_gaps(t)]
+        if not gaps_by_ticket:
+            lines.append("- Known gaps: none stated")
+        else:
+            # One bullet per gap, tagged with its owning ticket -- a single semicolon-joined line
+            # across tickets left a reader unable to tell where one ticket's gap ended and
+            # another's began, or distinguish "one ticket, two gaps" from "two tickets, one gap
+            # each" (TCK-20260927-PR-RENDER-CHECK-ALWAYS-DIFFERS).
+            lines.append("- Known gaps:")
+            for ticket_id, gap in gaps_by_ticket:
+                lines.append(f"  - {ticket_id}: {gap}")
         if warnings:
             lines.append(f"- Discovery warnings: {'; '.join(warnings)}")
         return "\n".join(lines)
@@ -307,6 +316,92 @@ def render(
     return {"title": title, "body": body, "warnings": warnings}
 
 
+_CLOSES_RE = re.compile(r"^Closes:\s*(.*)$", re.MULTILINE)
+_ANY_H2_RE = re.compile(r"^##\s.+$", re.MULTILINE)
+
+
+def _extract_closes_line(body: str) -> Optional[str]:
+    match = _CLOSES_RE.search(body)
+    return match.group(1).strip() if match else None
+
+
+def parse_generated_sections(body: str, spec: dict) -> dict:
+    """Splits `body` back into {heading: content_or_None} for every `##`-prefixed heading in
+    `spec["sections"]` (both `rendered: true` and `rendered: false` entries -- callers decide
+    which to compare). The structural inverse of `render_body()`'s own construction (heading line,
+    then content, then a blank line before the next heading or the trailing `Closes:` line), so
+    parsing is exact for anything this renderer itself produced. A heading absent from `body` maps
+    to `None` rather than raising, so a hand-edited live body with a missing/reordered section
+    degrades to a reportable difference instead of a crash."""
+    known_headings = [s["heading"] for s in spec["sections"] if s["heading"].startswith("##")]
+    sections = {h: None for h in known_headings}
+    current = None
+    buffer: list = []
+
+    def flush():
+        if current is not None:
+            sections[current] = "\n".join(buffer).strip()
+
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped in sections:
+            flush()
+            current = stripped
+            buffer = []
+            continue
+        if stripped.startswith("Closes:"):
+            flush()
+            current = None
+            buffer = []
+            continue
+        if current is not None:
+            buffer.append(line)
+    flush()
+    return sections
+
+
+def find_unexpected_sections(body: str, spec: dict) -> list:
+    """Every `## ...` heading line in `body` that is not one of `spec`'s known headings --
+    reported for visibility, never counted as a difference (a human adding a section to a live PR
+    body is normal, not drift; see investigation.md's Open Question 2)."""
+    known_headings = {s["heading"] for s in spec["sections"] if s["heading"].startswith("##")}
+    return [
+        line.strip() for line in _ANY_H2_RE.findall(body)
+        if line.strip() not in known_headings
+    ]
+
+
+def compare_generated_body(live_body: str, rendered_body: str, spec: dict) -> dict:
+    """Section-aware comparison replacing whole-body string equality (TCK-20260927-PR-RENDER-
+    CHECK-ALWAYS-DIFFERS): `## Review notes` (or any `rendered: false` spec section) is never
+    compared, since it is permanently, deliberately hand-authored and would otherwise make every
+    real PR report a difference regardless of whether the *generated* content had drifted."""
+    live_sections = parse_generated_sections(live_body, spec)
+    rendered_sections = parse_generated_sections(rendered_body, spec)
+
+    generated_headings = [s["heading"] for s in spec["sections"] if s.get("rendered") and s["heading"].startswith("##")]
+    differing = [
+        heading for heading in generated_headings
+        if _collapse_whitespace(live_sections.get(heading) or "")
+        != _collapse_whitespace(rendered_sections.get(heading) or "")
+    ]
+
+    live_closes = _extract_closes_line(live_body)
+    rendered_closes = _extract_closes_line(rendered_body)
+    if _collapse_whitespace(live_closes or "") != _collapse_whitespace(rendered_closes or ""):
+        differing.append("Closes:")
+
+    review_heading = next((s["heading"] for s in spec["sections"] if not s.get("rendered")), None)
+    live_review = live_sections.get(review_heading) if review_heading else None
+    review_notes_hand_filled = bool(live_review) and live_review.strip() != _REVIEW_NOTES_PLACEHOLDER
+
+    return {
+        "differing_sections": differing,
+        "review_notes_hand_filled": review_notes_hand_filled,
+        "unexpected_sections": find_unexpected_sections(live_body, spec),
+    }
+
+
 def check_against_live(pr: Optional[str] = None, run_command=default_run_command, **render_kwargs) -> dict:
     pr_args = ["pr", "view", "--json", "title,body"]
     if pr:
@@ -321,8 +416,19 @@ def check_against_live(pr: Optional[str] = None, run_command=default_run_command
 
     rendered = render(run_command=run_command, **render_kwargs)
     title_diff = None if live.get("title") == rendered["title"] else (live.get("title"), rendered["title"])
-    body_diff = None if live.get("body") == rendered["body"] else "body differs"
-    return {"matches": title_diff is None and body_diff is None, "title_diff": title_diff, "body_diff": body_diff}
+
+    spec_path = render_kwargs.get("spec_path", _DEFAULT_SPEC_PATH)
+    spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
+    comparison = compare_generated_body(live.get("body") or "", rendered["body"] or "", spec)
+
+    matches = title_diff is None and not comparison["differing_sections"]
+    return {
+        "matches": matches,
+        "title_diff": title_diff,
+        "differing_sections": comparison["differing_sections"],
+        "review_notes_hand_filled": comparison["review_notes_hand_filled"],
+        "unexpected_sections": comparison["unexpected_sections"],
+    }
 
 
 def main(argv=None) -> int:
@@ -352,8 +458,15 @@ def main(argv=None) -> int:
         print(f"matches: {result['matches']}")
         if result.get("title_diff"):
             print(f"title differs: live={result['title_diff'][0]!r} rendered={result['title_diff'][1]!r}")
-        if result.get("body_diff"):
-            print("body differs")
+        if "differing_sections" in result:
+            if result["differing_sections"]:
+                print(f"generated sections differ: {result['differing_sections']}")
+            else:
+                print("generated sections match")
+            if result.get("review_notes_hand_filled"):
+                print("(## Review notes is hand-filled, as expected -- not compared)")
+            if result.get("unexpected_sections"):
+                print(f"unexpected sections in live body (not a failure): {result['unexpected_sections']}")
         if result.get("error"):
             print(f"error: {result['error']}")
     else:
