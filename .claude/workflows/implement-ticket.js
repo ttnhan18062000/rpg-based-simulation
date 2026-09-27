@@ -416,7 +416,8 @@ Step 2 — build and write events:
   overwritten by "execution_id"/"provider"/"ticket_id" or vice versa. If "ts" is null or missing,
   set "ts" to END_TS.
   Do NOT compute or set "tool_call_count"/"cost_proxy_score" yourself — record_events.py now
-  computes both deterministically from agent-monitoring/data/YYYY-Www/tools.jsonl ground truth at write time
+  computes both deterministically from the real per-branch tools shard
+  (agent-monitoring/data/YYYY-Www/<branch>.tools.jsonl) ground truth at write time
   and always overrides whatever you pass, so omit both keys entirely from each event object.
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
@@ -594,7 +595,7 @@ Write both files. Then return: docs_to_update (array of the exact docs/ paths fr
   //
   // seq: computed as a monotonic NEGATIVE counter, entirely independent of this file's
   // `events.length`/`seqOffset` — NEVER reuse the `events.length + 1 + seqOffset` idiom here.
-  // This write goes directly to agent-monitoring/events.jsonl via emit_retrieval_event(),
+  // This write goes directly to the real per-branch events shard via emit_retrieval_event(),
   // bypassing the JS `events` array entirely, so `events.length` never advances because of it;
   // reusing that expression silently aliases onto whatever the next real phase's own
   // pushEvent/writeSidecar independently computes from the same, unchanged `events.length` —
@@ -624,11 +625,16 @@ sys.path.insert(0, 'tools')
 sys.path.insert(0, 'tools/agent-monitoring')
 from retrieval_events import wrap_context_packet_assembly
 from validate import load_jsonl
-import record_events
+from monitoring_batch_identifier import resolve_write_target
 try:
     run_id = sys.argv[1]
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: was 'record_events.EVENTS_FILE', an
+    # attribute TCK-20260903-MONITORING-DATA-WRITE-PATH-UNIFY removed before this line was ever
+    # written -- silently raised AttributeError into the try/except below on every invocation,
+    # a dead branch since before this epic started. Now reads the same per-PR/batch file every
+    # other monitoring write site uses.
     prior_shadow_count = sum(
-        1 for e in load_jsonl(record_events.EVENTS_FILE)
+        1 for e in load_jsonl(resolve_write_target('events'))
         if e.get('run_id') == run_id and e.get('agent') == 'context-packet-wrapper'
     )
     shadow_seq = -(1 + prior_shadow_count)
@@ -1940,6 +1946,6 @@ return {
   parity_updated: implementation.behavior_changed,
   artifacts: tier !== 'hotfix' ? `stored_artifacts/${tid}` : 'none (hotfix)',
   message: monitoringWarning
-    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-monitoring/data/YYYY-Www/runs.jsonl and events.jsonl manually.`
+    ? `WARNING: agent-monitoring write for this run could not be verified (${monitoringWarning}). Ticket is otherwise complete — investigate agent-monitoring/data/YYYY-Www/<branch>.runs.jsonl and <branch>.events.jsonl manually.`
     : undefined,
 }

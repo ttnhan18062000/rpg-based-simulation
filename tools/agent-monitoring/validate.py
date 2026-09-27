@@ -28,6 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from vocabulary import CANONICAL_TIERS, WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 LOG_FILE = Path("tickets/working_log.csv")
 # Only validate working_log entries on or after this date (ISO prefix match)
@@ -304,10 +305,24 @@ def load_jsonl(path):
 def load_data_glob_with_line_count(data_dir: Path, source: str) -> "tuple[list, int]":
     """Same shard-glob concatenation as load_data_glob, but also returns the total non-blank
     line count across all shards, derived from the same per-shard reads (see
-    load_jsonl_with_line_count's own docstring for why this matters)."""
+    load_jsonl_with_line_count's own docstring for why this matters).
+
+    Path discovery delegates to the shared `monitoring_shard_paths.shard_paths()` resolver
+    (TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION), globbing both the bare
+    `<week>/<source>.jsonl` shape and the per-identifier `<week>/<id>.<source>.jsonl` shape
+    (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-
+    FIX) -- confirmed by direct execution that the bare-only glob silently loaded 0 records for a
+    real per-branch file before `TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP` first widened
+    this, affecting every one of this function's many consumers (`done_checker_static.py`,
+    `monitoring_anomaly_validator.py`, `duplicate_run_record_check.py`,
+    `tool_call_count_mismatch_check.py`, and others). NOTE: despite this docstring's own prior
+    claim, `verify_referential_integrity.py` never actually called this function -- it carried its
+    own independent, drifted copy of the same widened glob (migrated onto the shared resolver
+    separately, same ticket)."""
     records = []
     total_lines = 0
-    for shard in sorted(data_dir.glob(f"*/{source}.jsonl")):
+    shards = shard_paths(data_dir, source)
+    for shard in shards:
         shard_records, shard_lines = load_jsonl_with_line_count(shard)
         records.extend(shard_records)
         total_lines += shard_lines

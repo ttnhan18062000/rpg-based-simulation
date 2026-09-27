@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""Folds per-ticket `<TCK-ID>.{runs,events,tools}.jsonl` shard files back into the canonical
+per-week `runs.jsonl`/`events.jsonl`/`tools.jsonl` shape every existing reader (`validate.py`,
+`query.py`, `generate_retro.py`'s own aggregation, `tools/gate_checks/*`) already expects
+(TCK-20260924-MONITORING-SHARD-SQUASH-MERGE-CONFLICT-AVOIDANCE).
+
+Per-ticket files exist so two different tickets closing on two different branches can never
+collide on a git diff hunk, even under a GitHub squash-merge (the one gap `.gitattributes`'
+`merge=union` doesn't cover — it only engages for a real git merge). Consolidation is the sync
+point that keeps every consumer's read contract unchanged: nothing downstream needs to know
+per-ticket files exist at all.
+
+**Idempotent by delete, not by a tracked manifest.** A per-ticket file's lines are appended to the
+canonical file, and the per-ticket file is deleted only *after* that append succeeds — so a second
+run finds nothing left to reprocess. A manifest file recording "already consolidated" would itself
+be new, non-append-only state with its own merge-conflict exposure, reintroducing at a smaller
+scale the exact problem this module exists to remove. The disclosed residual risk (see this
+ticket's own investigation.md) is a crash between a successful canonical write and the delete,
+which could fold one file's lines in twice on the next run — tolerable for `tools.jsonl` (an
+advisory-only row-count signal) and already covered for `runs.jsonl`/`events.jsonl` by the
+existing `duplicate_run_record_check.py`/`event_seq_integrity_check.py` anomaly detectors, which
+exist precisely to surface this class of issue rather than let it corrupt silently.
+
+**Update (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET): `tickets/working_log.csv` IS now
+consolidated here too**, closing the scope reduction above. The synchronous done-checker
+dependency that motivated leaving it out is solved on the *read* side instead — the two callers
+that need a just-closed ticket's row without waiting for consolidation
+(`check_working_log_no_row_yet`/`check_working_log_exactly_one_row` in `done_checker_static.py`,
+and `record_hand_orchestrated_closure.py`'s own double-write guard) now also read the pending
+per-batch shards directly (`working_log_parser.parse_pending_working_log_shards()`), so
+consolidation timing never blocks or races either check. `consolidate_pending_rows()` (the
+function that actually opens `tickets/working_log.csv`) lives in `tools/working_log_writer.py`
+itself, not here — `working_log_writer.py`'s own AST guard
+(`tests/tools/test_working_log_writer.py::test_working_log_csv_has_exactly_one_writer`) asserts it
+is the *only* file that ever opens that CSV in write mode, and this module calling into it rather
+than opening the file itself is what keeps that invariant true.
+
+Never raises to its own caller — `main()`'s only failure mode is a genuine internal error, matching
+every other tool in this module's fail-open convention (monitoring write/consolidation failure
+must never fail the workflow it's measuring).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from writer import write_lines  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from working_log_writer import consolidate_pending_rows  # noqa: E402
+from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
+
+DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "agent-monitoring" / "data"
+JSONL_KINDS = ("runs", "events", "tools")
+
+
+def consolidate_jsonl_kind(week_dir: Path, kind: str) -> int:
+    """Folds every `<TCK-ID>.<kind>.jsonl` in `week_dir` into the canonical `<kind>.jsonl`.
+    Returns the count of per-ticket files consolidated (0 if none found or the canonical write
+    failed -- in the failure case, every per-ticket file is left in place for a future retry)."""
+    canonical = week_dir / f"{kind}.jsonl"
+    # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: delegates to the shared
+    # monitoring_shard_paths.per_identifier_shard_paths() resolver -- not the general read-
+    # widening shard_paths() (this glob is deliberately per-identifier-only; it must never also
+    # match the canonical file it folds INTO). Migrated for proliferation reasons, not because it
+    # was broken: this was already correctly narrow by design.
+    per_ticket_files = per_identifier_shard_paths(week_dir, kind)
+    if not per_ticket_files:
+        return 0
+
+    new_lines = []
+    for f in per_ticket_files:
+        lines = [line for line in f.read_text(encoding="utf-8").splitlines() if line.strip()]
+        new_lines.extend(lines)
+
+    if new_lines:
+        ok = write_lines(canonical, new_lines)
+        if not ok:
+            return 0  # leave every per-ticket file in place; nothing consolidated this run
+
+    for f in per_ticket_files:
+        f.unlink()
+    return len(per_ticket_files)
+
+
+def consolidate_week(week_dir: Path) -> dict:
+    return {kind: consolidate_jsonl_kind(week_dir, kind) for kind in JSONL_KINDS}
+
+
+def consolidate_all(data_dir: Path = DEFAULT_DATA_DIR) -> dict:
+    if not data_dir.exists():
+        return {}
+    results = {}
+    for week_dir in sorted(p for p in data_dir.iterdir() if p.is_dir()):
+        week_result = consolidate_week(week_dir)
+        if any(week_result.values()):
+            results[week_dir.name] = week_result
+
+    # working_log.csv is a single flat file, not week-sharded like runs/events/tools -- one call
+    # across the whole data_dir, not per-week (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET).
+    working_log_result = consolidate_pending_rows(data_root=data_dir)
+    if working_log_result["consolidated_rows"]:
+        results["working_log"] = working_log_result
+
+    return results
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Fold per-ticket agent-monitoring shard files into the canonical per-week "
+        "runs.jsonl/events.jsonl/tools.jsonl. Read-only for the working tree except appending to "
+        "and deleting already-folded-in per-ticket files; never touches consumer read contracts."
+    )
+    parser.add_argument("--data-dir", default=None, help="Override agent-monitoring/data/ (mainly for testing).")
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+
+    try:
+        data_dir = Path(args.data_dir) if args.data_dir else DEFAULT_DATA_DIR
+        result = consolidate_all(data_dir)
+    except Exception as exc:  # noqa: BLE001 - the one deliberate non-zero-exit path
+        print(f"INTERNAL ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    if args.json:
+        print(json.dumps(result, indent=2, sort_keys=True))
+    else:
+        if not result:
+            print("Nothing to consolidate.")
+        for week, counts in result.items():
+            if week == "working_log":
+                print(
+                    f"working_log: folded {counts['shard_files']} shard file(s) "
+                    f"({counts['consolidated_rows']} row(s)) into tickets/working_log.csv"
+                )
+                continue
+            total = sum(counts.values())
+            print(f"{week}: consolidated {total} per-ticket file(s) ({counts})")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

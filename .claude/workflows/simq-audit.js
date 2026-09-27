@@ -58,13 +58,15 @@ Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
   Save result as END_TS. Replace every literal <END_TS> in the commands below with this value.
 
-Step 2 — compute tool_call_count per agent seq from tools.jsonl:
+Step 2 — compute tool_call_count per agent seq from the real per-branch tools shard:
   Run via Bash:
     python3 -c "
+import sys
+sys.path.insert(0, 'tools/agent-monitoring')
 import json
-from pathlib import Path
 from collections import Counter
-f = Path('agent-monitoring/tools.jsonl')
+from monitoring_batch_identifier import resolve_write_target
+f = resolve_write_target('tools')
 counts = Counter()
 if f.exists():
     for line in f.read_text().splitlines():

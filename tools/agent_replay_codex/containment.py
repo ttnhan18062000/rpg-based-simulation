@@ -8,7 +8,7 @@ it at a disposable tmp_path git repo instead of the real one.
 
 `snapshot_monitoring_lines`/`assert_monitoring_prefix_preserved` are thin wrappers around
 tools/agent-monitoring/manifest.py's existing `capture_lines`/`assert_prefix_preserved` — imported
-and reused unmodified, not reimplemented, for the narrower agent-monitoring/*.jsonl-only
+and reused unmodified, not reimplemented, for the narrower agent-monitoring/data/*.jsonl-only
 append-only check.
 """
 from __future__ import annotations
@@ -23,10 +23,15 @@ from .errors import ContainmentViolationError
 
 _WATCHED_GIT_PATHSPECS = [
     "tickets/",
-    "agent-monitoring/runs.jsonl",
-    "agent-monitoring/events.jsonl",
-    "agent-monitoring/tools.jsonl",
+    "agent-monitoring/data/",
 ]
+# TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: the three flat filenames this list previously
+# named have not existed since TCK-20260902-MONITORING-SHARD-WRITE-PATH's sharding migration --
+# this containment mechanism was silently watching nothing real for agent-monitoring writes the
+# whole time (git status on a nonexistent pathspec is not an error, just always empty). A
+# directory pathspec covers the real sharded tree regardless of the per-week/per-identifier
+# filename shape underneath it, so it does not need updating again the next time that shape
+# changes (as it already has twice: per-ticket, then per-PR/branch).
 
 
 @dataclass(frozen=True)
@@ -48,7 +53,7 @@ def _porcelain_snapshot(repo_root: Path) -> str:
 
 def _watched_files(repo_root: Path) -> list[Path]:
     files = [f for f in sorted((repo_root / "tickets").rglob("*")) if f.is_file()]
-    files += sorted((repo_root / "agent-monitoring").glob("*.jsonl"))
+    files += sorted((repo_root / "agent-monitoring" / "data").rglob("*.jsonl"))
     return files
 
 
@@ -73,7 +78,7 @@ def assert_no_diff(pre: ContainmentSnapshot, post: ContainmentSnapshot) -> None:
     if pre.porcelain == "":
         if post.porcelain != "":
             raise ContainmentViolationError(
-                "containment violation: tickets/ or agent-monitoring/*.jsonl was clean before "
+                "containment violation: tickets/ or agent-monitoring/data/ was clean before "
                 f"and dirty after: {post.porcelain!r}"
             )
         return
@@ -81,7 +86,7 @@ def assert_no_diff(pre: ContainmentSnapshot, post: ContainmentSnapshot) -> None:
     if pre.content_hash != post.content_hash:
         raise ContainmentViolationError(
             "containment violation: content of one or more watched files under tickets/ or "
-            "agent-monitoring/*.jsonl changed (pre-existing dirty state's content hash differs "
+            "agent-monitoring/data/ changed (pre-existing dirty state's content hash differs "
             "before vs. after)"
         )
 

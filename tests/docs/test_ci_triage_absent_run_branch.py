@@ -1,24 +1,27 @@
-"""Doc-content tests for CLAUDE.md's "CI Failure Triage" absent-run branch
+"""Doc-content tests for the "CI Failure Triage" absent-run branch
 (TCK-20260915-CI-TRIAGE-HAS-NO-ABSENT-RUN-BRANCH).
 
-Pins each of the ticket's own Acceptance Criteria as a real, reproducible content check against
-CLAUDE.md itself, rather than trusting the prose was written as intended.
+Pins each of the ticket's own Acceptance Criteria as a real, reproducible content check.
+Originally asserted against CLAUDE.md directly; retargeted to docs/guides/delivery_process.md by
+TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES, which relocated CLAUDE.md's "CI Failure Triage"
+section there verbatim (CLAUDE.md now carries only a pointer) -- the section heading text itself is
+unchanged, so only the file path here changed, not the assertions.
 """
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_CLAUDE_MD = _REPO_ROOT / "CLAUDE.md"
+_DELIVERY_GUIDE = _REPO_ROOT / "docs" / "guides" / "delivery_process.md"
 
 
 def _ci_triage_section() -> str:
-    text = _CLAUDE_MD.read_text(encoding="utf-8")
+    text = _DELIVERY_GUIDE.read_text(encoding="utf-8")
     start = text.index("### CI Failure Triage")
     end = text.index("### PR Lifecycle", start)
     return text[start:end]
 
 
 def test_ci_triage_section_exists():
-    assert "### CI Failure Triage" in _CLAUDE_MD.read_text(encoding="utf-8")
+    assert "### CI Failure Triage" in _DELIVERY_GUIDE.read_text(encoding="utf-8")
 
 
 def test_absent_run_branch_covers_the_mergeable_check():

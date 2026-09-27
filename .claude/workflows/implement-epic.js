@@ -380,8 +380,14 @@ Step 2 — write batch events (add run_id="${batchRunId}" and ts=END_TS to each)
   Events: ${JSON.stringify(batchEvents)}
   Run: python3 tools/agent-monitoring/record_events.py --data '<JSON array with run_id and ts=END_TS added>'
 
-Step 2b — verify: after Step 2, run:
-  grep -c "\"run_id\":\"${batchRunId}\"" agent-monitoring/events.jsonl
+Step 2b — verify: after Step 2, run via Bash:
+  python3 -c "
+import sys
+sys.path.insert(0, 'tools/agent-monitoring')
+from monitoring_batch_identifier import resolve_write_target
+f = resolve_write_target('events')
+print(sum(1 for line in f.read_text().splitlines() if '\"run_id\":\"${batchRunId}\"' in line) if f.exists() else 0)
+"
 Confirm the count is >= ${batchEvents.length}. If it is lower, retry Step 2 once.
 If still short after retry, proceed to Step 3 anyway (per the "do NOT raise" rule below)
 but prefix the WARNING in Step 3's failure message with "EVENTS-MISSING: " so a future

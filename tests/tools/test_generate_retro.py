@@ -1068,6 +1068,29 @@ def test_generate_retro_rebuilds_stale_index_not_just_missing_index(tmp_path, mo
     assert {r["run_id"] for r in runs} == {"TCK-STALE-BEFORE", "TCK-STALE-AFTER"}
 
 
+def test_source_mtime_includes_per_identifier_shaped_shards(tmp_path):
+    """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: a per-ticket/per-branch shaped shard's
+    mtime must count toward staleness detection too, not just the bare-named file's."""
+    import os
+    import time
+
+    week = tmp_path / "2026-W01"
+    week.mkdir()
+    bare = week / "runs.jsonl"
+    bare.write_text('{"run_id":"TCK-BARE"}\n')
+    bare_mtime = generate_retro._source_mtime(tmp_path, "runs")
+    assert bare_mtime is not None
+
+    time.sleep(0.05)
+    per_branch = week / "some-branch.runs.jsonl"
+    per_branch.write_text('{"run_id":"TCK-BRANCH"}\n')
+
+    newest_mtime = generate_retro._source_mtime(tmp_path, "runs")
+    assert newest_mtime is not None
+    assert newest_mtime > bare_mtime
+    assert newest_mtime == os.path.getmtime(per_branch)
+
+
 def test_index_is_stale_false_when_index_newer_than_all_sources(tmp_path, monkeypatch):
     runs_file = tmp_path / "runs.jsonl"
     events_file = tmp_path / "events.jsonl"

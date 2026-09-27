@@ -1,17 +1,20 @@
-"""Doc-content tests for CLAUDE.md's "CI Failure Triage" step-conclusion diagnostic
+"""Doc-content tests for the "CI Failure Triage" step-conclusion diagnostic
 (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS).
 
-Pins the ticket's own CLAUDE.md acceptance criterion as a real, reproducible content check
-against CLAUDE.md itself, rather than trusting the prose was written as intended.
+Pins the ticket's own acceptance criterion as a real, reproducible content check. Originally
+asserted against CLAUDE.md directly; retargeted to docs/guides/delivery_process.md by
+TCK-20260924-DELIVERY-CONTRACT-AND-TEMPLATES, which relocated CLAUDE.md's "CI Failure Triage"
+section there verbatim (CLAUDE.md now carries only a pointer) -- the section heading text itself is
+unchanged, so only the file path here changed, not the assertions.
 """
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_CLAUDE_MD = _REPO_ROOT / "CLAUDE.md"
+_DELIVERY_GUIDE = _REPO_ROOT / "docs" / "guides" / "delivery_process.md"
 
 
 def _ci_triage_section() -> str:
-    text = _CLAUDE_MD.read_text(encoding="utf-8")
+    text = _DELIVERY_GUIDE.read_text(encoding="utf-8")
     start = text.index("### CI Failure Triage")
     end = text.index("### PR Lifecycle", start)
     return text[start:end]

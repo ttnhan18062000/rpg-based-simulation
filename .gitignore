@@ -294,6 +294,7 @@ website/.docusaurus/
 .claude/.current_session_id
 .claude/current_run
 .claude/current_run.*
+.claude/current_batch
 .claude/.retro_nudge_state.json
 # TCK-20260914-MONITORING-SURFACE-DEAD-MECHANISMS item 4: same shape as .retro_nudge_state.json
 # above -- a debounce cache ({session_id, ts}) written and read only by

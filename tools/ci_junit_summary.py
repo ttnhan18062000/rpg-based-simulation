@@ -18,6 +18,18 @@ pytest's default `xunit2` JUnit writer (confirmed: no `junit_family` override in
 `<testsuite>` element, optionally wrapped in a `<testsuites>` root when there is more than one
 suite. `passed` has no XML attribute of its own -- it is derived as
 `total - failed - errors - skipped`.
+
+Also emits a GitHub Actions `::error::` workflow-command annotation per failed/error testcase,
+naming the exact test ID and its concise failure message -- built for
+TCK-20260925-CI-JUNIT-FAILURE-ANNOTATIONS after this sandbox's TLS interception on
+`*.blob.core.windows.net` blocked both raw log fetch and JUnit-XML artifact download for a real
+CI failure, leaving only job/step-level `conclusion` metadata (a directory name, not a test
+name) available. The `check-runs/{id}/annotations` endpoint is the one channel proven to survive
+that block -- it is how the generic "Process completed with exit code 1" message was read at
+all -- so routing failures through it, instead of only through logs/artifacts, gets the exact
+failing test name and message on the very next CI run. These lines are printed to stderr, not
+stdout: this script's stdout is redirected into `$GITHUB_STEP_SUMMARY` (a plain file) by every
+call site in `test.yml`, and a workflow command written into a file is never seen by the runner.
 """
 
 from __future__ import annotations
@@ -102,6 +114,7 @@ def parse_junit_xml(path: Path) -> JUnitSummary:
 class TestCaseRecord:
     test_id: str
     status: str  # "passed" | "failed" | "error" | "skipped"
+    message: str = ""  # failure/error `message` attribute; "" for passed/skipped
 
 
 def _testcase_status(testcase: ET.Element) -> str:
@@ -114,11 +127,24 @@ def _testcase_status(testcase: ET.Element) -> str:
     return "passed"
 
 
+def _testcase_message(testcase: ET.Element) -> str:
+    """Extract the concise one-line `message` attribute off a `<failure>`/`<error>` child,
+    if present -- deliberately not the full `text` body (a multi-line traceback), which is
+    too long for a single GitHub annotation line. Passed/skipped testcases have no
+    failure/error child and resolve to ""."""
+    outcome = testcase.find("failure")
+    if outcome is None:
+        outcome = testcase.find("error")
+    if outcome is None:
+        return ""
+    return outcome.get("message", "")
+
+
 def parse_testcase_records(path: Path) -> list[TestCaseRecord]:
-    """Parse per-testcase (classname+name, status) pairs out of a pytest-emitted JUnit XML
-    file. Never raises -- mirrors `parse_junit_xml`'s defensive shape, but returns an empty
-    list instead of a sentinel dataclass since there is no meaningful "parse_ok" concept for
-    a list of records."""
+    """Parse per-testcase (classname+name, status, message) records out of a pytest-emitted
+    JUnit XML file. Never raises -- mirrors `parse_junit_xml`'s defensive shape, but returns
+    an empty list instead of a sentinel dataclass since there is no meaningful "parse_ok"
+    concept for a list of records."""
     try:
         tree = ET.parse(path)
     except (ET.ParseError, FileNotFoundError, OSError):
@@ -136,7 +162,13 @@ def parse_testcase_records(path: Path) -> list[TestCaseRecord]:
     for suite in suites:
         for testcase in suite.findall("testcase"):
             test_id = f"{testcase.get('classname', '')}::{testcase.get('name', '')}"
-            records.append(TestCaseRecord(test_id=test_id, status=_testcase_status(testcase)))
+            records.append(
+                TestCaseRecord(
+                    test_id=test_id,
+                    status=_testcase_status(testcase),
+                    message=_testcase_message(testcase),
+                )
+            )
     return records
 
 
@@ -256,6 +288,34 @@ def render_markdown_table(
     )
 
 
+_ANNOTATION_LABEL = {"failed": "FAILED", "error": "ERROR"}
+
+
+def _escape_annotation_message(message: str) -> str:
+    """Escape a string for use as a GitHub Actions workflow-command message
+    (`::error::<message>`), per the documented escaping order: `%` first (so the sequences
+    this function inserts are never themselves re-escaped), then CR, then LF."""
+    return message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def format_failure_annotations(records: list[TestCaseRecord]) -> list[str]:
+    """Render one GitHub Actions `::error::` workflow-command line per failed/error testcase,
+    carrying the exact test ID and its concise failure message. Passed/skipped records are
+    skipped. Callers must print these to stderr (or otherwise outside a stdout redirect) --
+    `$GITHUB_STEP_SUMMARY` is a plain file, not the console log the runner scans for workflow
+    commands, so a line destined to become a real annotation must never be redirected into it."""
+    lines = []
+    for record in records:
+        label = _ANNOTATION_LABEL.get(record.status)
+        if label is None:
+            continue
+        detail = f"{label} {record.test_id}"
+        if record.message:
+            detail += f" - {record.message}"
+        lines.append(f"::error::{_escape_annotation_message(detail)}")
+    return lines
+
+
 def main(argv: list[str]) -> int:
     try:
         parser = argparse.ArgumentParser(description=__doc__)
@@ -284,6 +344,13 @@ def main(argv: list[str]) -> int:
 
         breakdown = classify_new_vs_existing(head_records, base_ids)
         print(render_markdown_table(summary, args.job_name, breakdown))
+
+        # Printed to stderr, deliberately: this step's stdout is redirected into
+        # $GITHUB_STEP_SUMMARY (a plain file), which the runner does not scan for workflow
+        # commands. stderr is not redirected, so it reaches the console log the runner does
+        # scan -- the same channel `gh api .../check-runs/{id}/annotations` reads back.
+        for line in format_failure_annotations(head_records):
+            print(line, file=sys.stderr)
     except Exception as exc:  # never let an unexpected error become a second CI failure gate
         print(f"### CI job summary\n\nFailed to render job summary: {exc}\n")
     return 0

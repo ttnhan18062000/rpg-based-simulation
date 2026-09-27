@@ -96,6 +96,26 @@ def _write_runs_events_tools(
 
 
 # ---------------------------------------------------------------------------
+# TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP — dashboard must see per-identifier shards
+# ---------------------------------------------------------------------------
+
+
+def test_week_shard_paths_picks_up_bare_and_per_identifier_shaped_shards(tmp_path):
+    week_dir = tmp_path / "2026-W01"
+    week_dir.mkdir(parents=True)
+    bare = week_dir / "runs.jsonl"
+    per_ticket = week_dir / "TCK-SOME-TICKET.runs.jsonl"
+    per_branch = week_dir / "some-branch.runs.jsonl"
+    bare.write_text('{"run_id": "TCK-BARE"}\n')
+    per_ticket.write_text('{"run_id": "TCK-PER-TICKET"}\n')
+    per_branch.write_text('{"run_id": "TCK-PER-BRANCH"}\n')
+
+    paths = ingest._week_shard_paths(tmp_path, "runs.jsonl")
+
+    assert set(paths) == {bare, per_ticket, per_branch}
+
+
+# ---------------------------------------------------------------------------
 # AC #3 — reuse, not reimplementation
 # ---------------------------------------------------------------------------
 

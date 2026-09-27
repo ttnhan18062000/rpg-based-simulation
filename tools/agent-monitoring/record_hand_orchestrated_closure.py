@@ -63,34 +63,45 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import record_events  # noqa: E402
 import record_run  # noqa: E402
 from vocabulary import CANONICAL_TIERS  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
-from working_log_parser import parse_working_log  # noqa: E402
+from working_log_parser import parse_working_log, parse_pending_working_log_shards  # noqa: E402
 
 
-def _existing_row_for(csv_path: Path, ticket_id: str, title: str) -> dict | None:
+def _existing_row_for(
+    csv_path: Path, ticket_id: str, title: str, data_root: Path = Path("agent-monitoring/data")
+) -> dict | None:
     """Read-only lookup: the first kept (non-ambiguous) row matching (ticket_id, title) in
-    csv_path, else None. Uses the tolerant parser (working_log_parser.parse_working_log), not a
-    raw csv.reader -- a naive reader can misclassify known-malformed historical rows, and this
-    lookup must never produce a false negative (missing a real duplicate) or a false positive (an
-    ambiguous/malformed row wrongly read as a match) because of that.
+    csv_path OR still-pending in a per-batch working_log shard under data_root, else None.
+
+    TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: `append_working_log_row()` now stages to a
+    shard rather than writing csv_path directly, so a prior direct call for this exact ticket is
+    invisible to a CSV-only scan -- checking only csv_path would silently blind this double-write
+    guard the same way it was designed to catch. Uses the tolerant parser
+    (working_log_parser.parse_working_log) for the CSV side, not a raw csv.reader -- a naive
+    reader can misclassify known-malformed historical rows, and this lookup must never produce a
+    false negative (missing a real duplicate) or a false positive (an ambiguous/malformed row
+    wrongly read as a match) because of that.
 
     Does not open csv_path in a write/append mode, so it is invisible to
     tests/tools/test_working_log_writer.py's sole-writer AST guard -- that guard scans for
     write-mode opens against tickets/working_log.csv, and this function only reads.
     """
-    if not csv_path.exists():
-        return None
-    result = parse_working_log(csv_path)
-    for parsed in result.rows:
-        if parsed.record is None:
-            continue
-        if (
-            parsed.record.get("ticket_id", "").strip() == ticket_id
-            and parsed.record.get("title", "").strip() == title
-        ):
-            return parsed.record
+    if csv_path.exists():
+        result = parse_working_log(csv_path)
+        for parsed in result.rows:
+            if parsed.record is None:
+                continue
+            if (
+                parsed.record.get("ticket_id", "").strip() == ticket_id
+                and parsed.record.get("title", "").strip() == title
+            ):
+                return parsed.record
+    for row in parse_pending_working_log_shards(data_root):
+        if row.get("ticket_id", "").strip() == ticket_id and row.get("title", "").strip() == title:
+            return row
     return None
 
 
@@ -318,9 +329,16 @@ def main() -> None:
             tool_call_count, cost_proxy_score = tool_stats[key]
             event_records[i] = {**record, "tool_call_count": tool_call_count, "cost_proxy_score": cost_proxy_score}
 
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: this was the headline bug -- this wrapper
+    # (the one CLAUDE.md instructs every hand-orchestrated close to use) hardcoded the shared
+    # paths here, never adopting TCK-20260924's per-identifier write target at all, so every
+    # hand-orchestrated closure's run/event records landed in the shared files regardless of what
+    # record_run.py/record_events.py's own (correctly per-identifier) write functions did when
+    # called directly. Now delegates to the one shared resolver instead of re-deriving (a fourth
+    # time) a formula that has already drifted once.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = Path("agent-monitoring/data") / iso_week / "runs.jsonl"
-    events_file = Path("agent-monitoring/data") / iso_week / "events.jsonl"
+    runs_file = resolve_write_target("runs", iso_week=iso_week)
+    events_file = resolve_write_target("events", iso_week=iso_week)
     runs_file.parent.mkdir(parents=True, exist_ok=True)
 
     from writer import write_line, write_lines  # noqa: E402

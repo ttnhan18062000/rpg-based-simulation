@@ -8,6 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_line  # noqa: E402
+from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
 REQUIRED = {"run_id", "start_ts", "workflow", "tier", "final_status", "agent_count"}
 
@@ -82,14 +83,16 @@ def main():
 
     record["duration_s"] = compute_duration_s(record)
 
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: per-PR/batch write target (superseding the
+    # prior per-ticket key) -- see monitoring_batch_identifier.py for the full rationale.
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    runs_file = Path("agent-monitoring/data") / iso_week / "runs.jsonl"
+    runs_file = resolve_write_target("runs", iso_week=iso_week)
     runs_file.parent.mkdir(parents=True, exist_ok=True)
     ok = write_line(runs_file, json.dumps(record, separators=(",", ":")))
     if not ok:
         print(
             f"WARNING: append failed for run_id={record['run_id']}, "
-            f"see agent-monitoring/data/{iso_week}/.writer_health.jsonl",
+            f"see {runs_file.parent}/.writer_health.jsonl",
             file=sys.stderr,
         )
 

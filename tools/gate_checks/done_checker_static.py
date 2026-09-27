@@ -5,11 +5,15 @@ and Finalize (after its own migration steps) both currently rely entirely on LLM
 conditions that are actually machine-checkable. This module gives both call sites a deterministic
 verifier for that subset:
 
-- Part A (`run_static_precheck`): the 5 pre-Finalize conditions `done-checker` can check before
+- Part A (`run_static_precheck`): the pre-Finalize conditions `done-checker` can check before
   Finalize has run (staging artifacts complete, data/runs+release_proof clean, ticket still in
-  tickets/inprogress/, no working_log row yet, frontmatter valid). Called from the Verify-phase
-  agent prompt in `.claude/workflows/implement-ticket.js`; a static FAIL downgrades to the
-  existing `DOD_BLOCKED` status — no new status vocabulary here.
+  tickets/inprogress/, no working_log row yet, frontmatter valid, and more added since). Called
+  from the Verify-phase agent prompt in `.claude/workflows/implement-ticket.js`; a static FAIL
+  downgrades to the existing `DOD_BLOCKED` status. Not FAIL-or-PASS-only: `NA` (a condition that
+  doesn't apply to this tier) and, since TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS,
+  `INDETERMINATE` (a condition that couldn't be measured at all) both exist alongside PASS/FAIL —
+  every real consumer of this contract branches only on the literal string `"FAIL"`, never on an
+  assumption that only two values exist.
 - Part B (`run_finalize_selfcheck`): the 4 post-Finalize conditions confirming Finalize's own
   migration actually landed (stored_artifacts/ complete and staging_artifacts/ gone, ticket moved
   to tickets/done/, exactly one working_log row, and — as of TCK-20260709-REGISTRY-REGEN-ON-CLOSE
@@ -49,12 +53,14 @@ from generate_registry import generate_registry, parse_body_section, _strip_fron
 from ticket_field_values import check_ticket_field_values, TIER_VALUES, WORKFLOW_STATUS_VALUES  # noqa: E402
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
+from working_log_parser import parse_pending_working_log_shards, HEADER_FIELDS  # noqa: E402
 
 _MONITORING_DIR = _TOOLS_DIR / "agent-monitoring"
 if str(_MONITORING_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_DIR))
 
 from verify_temporal_week_consistency import compute_temporal_week_consistency_report  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -98,9 +104,21 @@ def _jsonl_rows_for_run_id_across_weeks(data_root: Path, filename: str, run_id: 
     `sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl"))` precedent).
     A data_root that doesn't exist, or exists with no matching week folders,
     yields an empty glob and returns [] — matching the old single-file
-    ".exists() -> []" precedent, not an error."""
+    ".exists() -> []" precedent, not an error.
+
+    TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
+    (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX)
+    — confirmed by direct execution that `check_monitoring_write_recorded()` (this function's own
+    caller) silently FAILed for a real ticket closed under the per-PR scheme before this fix,
+    without this glob widening.
+
+    TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery itself now delegates to
+    `monitoring_shard_paths.shard_paths()`, the shared resolver replacing this and 8 other
+    independent copies of the same widening — this function's own row-filtering behavior is
+    unchanged."""
+    source = filename.removesuffix(".jsonl")
     rows: list[dict] = []
-    for path in sorted(data_root.glob(f"*/{filename}")):
+    for path in shard_paths(data_root, source):
         rows.extend(_jsonl_rows_for_run_id(path, run_id))
     return rows
 
@@ -126,40 +144,53 @@ def _extract_section_text(ticket_text: str, heading: str) -> str:
     return ticket_text[body_start:end].strip()
 
 
-def _count_rows_for_ticket(csv_path: Path, ticket_id: str) -> int:
-    """Count rows in csv_path that contain ticket_id in ANY column.
+def _pending_rows_for_ticket_as_lists(ticket_id: str, data_root: Path) -> list:
+    """`parse_pending_working_log_shards()`'s dicts (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-
+    TARGET), converted to the same raw 6-cell list shape `csv.reader` produces, filtered to
+    `ticket_id`, so a just-staged, not-yet-consolidated row is visible to the same
+    "ticket_id in row" / status-extraction logic every CSV-sourced row already goes through —
+    no separate matching rule for the two sources."""
+    rows = []
+    for row in parse_pending_working_log_shards(data_root):
+        if row.get("ticket_id") == ticket_id:
+            rows.append([row.get(field, "") for field in HEADER_FIELDS])
+    return rows
+
+
+def _count_rows_for_ticket(
+    csv_path: Path, ticket_id: str, data_root: Path = Path("agent-monitoring/data")
+) -> int:
+    """Count rows in csv_path (plus any still-pending working_log shard under data_root) that
+    contain ticket_id in ANY column.
 
     Deliberately does not use `csv.DictReader` keyed on the header — a confirmed historical bug
     class (`TCK-20260705-WORKING-LOG-BACKFILL`) has rows with `ticket_id` shifted to column 1
     instead of column 2. Scanning every column of every row is the only way to not silently miss
     those malformed rows.
     """
-    if not csv_path.exists():
-        return 0
-    count = 0
-    with csv_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # header row
-        for row in reader:
-            if ticket_id in row:
-                count += 1
-    return count
+    return len(_rows_for_ticket(csv_path, ticket_id, data_root))
 
 
-def _rows_for_ticket(csv_path: Path, ticket_id: str) -> list:
-    """Same matching rule and same column-shift tolerance as `_count_rows_for_ticket` (scans
-    every column, never assumes a fixed column index), but returns the matching rows themselves
-    rather than just a count — needed by `check_working_log_exactly_one_row` to distinguish a
-    legitimate reopen from a real duplicate, which requires looking at each row's own status."""
-    if not csv_path.exists():
-        return []
+def _rows_for_ticket(
+    csv_path: Path, ticket_id: str, data_root: Path = Path("agent-monitoring/data")
+) -> list:
+    """Same matching rule and same column-shift tolerance as before (scans every column, never
+    assumes a fixed column index), but also includes any row still staged in a pending
+    working_log shard under data_root (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET) — needed
+    so `check_working_log_no_row_yet`/`check_working_log_exactly_one_row` see a just-closed
+    ticket's own row at Verify time without depending on a later consolidation run having
+    happened. Returns the matching rows themselves — needed by `check_working_log_exactly_one_row`
+    to distinguish a legitimate reopen from a real duplicate, which requires looking at each row's
+    own status."""
     rows = []
-    with csv_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        next(reader, None)  # header row
-        for row in reader:
-            if ticket_id in row:
-                rows.append(row)
+    if csv_path.exists():
+        with csv_path.open(newline="", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            next(reader, None)  # header row
+            for row in reader:
+                if ticket_id in row:
+                    rows.append(row)
+    rows.extend(_pending_rows_for_ticket_as_lists(ticket_id, data_root))
     return rows
 
 
@@ -231,9 +262,61 @@ def _find_flagged_data_run_files(
 
 def check_data_runs_clean(
     start_ts: str | None,
+    ticket_id: str | None = None,
     runs_dir: Path = Path("data/runs"),
     proof_dir: Path = Path("reports/release_proof"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
+    """`start_ts` given (whether it parses or not) is unchanged, existing behavior (AC4) — an
+    explicit-but-unparsable value still flags every file, the pipeline path's fail-closed rule.
+
+    When `start_ts` is absent (the hand-orchestrated CLI path, which has never had a source for
+    it), falls back to this ticket's own run record in `agent-monitoring/data/*/runs.jsonl`
+    (`run_id == ticket_id`, the same shape `check_monitoring_write_recorded` already reads via
+    `_jsonl_rows_for_run_id_across_weeks`) — but that value is only as reliable as whatever the
+    closer passed to `record_hand_orchestrated_closure.py`'s own `--start-ts`; if that was also
+    omitted, it defaults to closure time, not true session start (see this ticket's
+    investigation.md), so the evidence string discloses the source and its caveat rather than
+    presenting a resolved value as unconditionally trustworthy.
+
+    If neither source resolves, returns `INDETERMINATE` (TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-
+    NO-START-TS) — never `FAIL` purely for lack of a start point (that was the bug: "unparsable start_ts
+    is not evidence of cleanliness" correctly means "don't call it PASS," not "call it FAIL and read
+    identically to a real dirty-repo finding")."""
+    if not start_ts and ticket_id:
+        run_rows = _jsonl_rows_for_run_id_across_weeks(data_root, "runs.jsonl", ticket_id)
+        resolved = run_rows[0].get("start_ts") if run_rows else None
+        if resolved:
+            flagged = _find_flagged_data_run_files(resolved, runs_dir, proof_dir)
+            source = (
+                f"this ticket's own run record in {data_root}/*/runs.jsonl (start_ts={resolved!r}) "
+                "-- caveat: reliable only if the closer passed a real --start-ts to "
+                "record_hand_orchestrated_closure.py; if that was also omitted this defaults to "
+                "closure time, not true session start, so a PASS here is weaker evidence than an "
+                "explicit --start-ts would give"
+            )
+            if flagged:
+                return (
+                    "FAIL",
+                    f"File(s) at/after start_ts (source: {source}): "
+                    f"{', '.join(str(f) for f in flagged)}",
+                )
+            return ("PASS", f"{runs_dir} and {proof_dir} clean of this session's artifacts (source: {source})")
+        return (
+            "INDETERMINATE",
+            f"no --start-ts given and no run record for {ticket_id} found under "
+            f"{data_root}/*/runs.jsonl -- data_runs_clean cannot be measured for this invocation; "
+            "pass --start-ts <ISO-8601> reflecting when this ticket's own work began for a real "
+            "determination",
+        )
+    if not start_ts:
+        return (
+            "INDETERMINATE",
+            "no --start-ts given and no ticket_id supplied to look up a run record -- "
+            "data_runs_clean cannot be measured for this invocation; pass --start-ts <ISO-8601> "
+            "reflecting when this ticket's own work began for a real determination",
+        )
+
     flagged = _find_flagged_data_run_files(start_ts, runs_dir, proof_dir)
     if flagged:
         return (
@@ -305,15 +388,17 @@ def check_ticket_location(
 
 
 def check_working_log_no_row_yet(
-    ticket_id: str, csv_path: Path = Path("tickets/working_log.csv")
+    ticket_id: str,
+    csv_path: Path = Path("tickets/working_log.csv"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
-    count = _count_rows_for_ticket(csv_path, ticket_id)
+    count = _count_rows_for_ticket(csv_path, ticket_id, data_root)
     if count == 0:
-        return ("PASS", f"No existing row for {ticket_id} in {csv_path}")
+        return ("PASS", f"No existing row for {ticket_id} in {csv_path} or a pending shard")
     return (
         "FAIL",
-        f"Found {count} row(s) for {ticket_id} in {csv_path} — a pre-existing row at Verify "
-        "time — possible duplicate/re-run",
+        f"Found {count} row(s) for {ticket_id} in {csv_path} or a pending working_log shard — a "
+        "pre-existing row at Verify time — possible duplicate/re-run",
     )
 
 
@@ -796,7 +881,7 @@ def run_static_precheck(ticket_id: str, tier: str, start_ts: str | None) -> list
     """
     checks = (
         ("staging_artifacts_complete", check_staging_artifacts_complete(ticket_id, tier)),
-        ("data_runs_clean", check_data_runs_clean(start_ts)),
+        ("data_runs_clean", check_data_runs_clean(start_ts, ticket_id)),
         ("ticket_location", check_ticket_location(ticket_id)),
         ("working_log_no_row_yet", check_working_log_no_row_yet(ticket_id)),
         ("frontmatter_valid", check_frontmatter_valid(ticket_id, tier)),
@@ -955,7 +1040,9 @@ def check_ticket_finalized(ticket_id: str) -> tuple[str, str]:
 
 
 def check_working_log_exactly_one_row(
-    ticket_id: str, csv_path: Path = Path("tickets/working_log.csv")
+    ticket_id: str,
+    csv_path: Path = Path("tickets/working_log.csv"),
+    data_root: Path = Path("agent-monitoring/data"),
 ) -> tuple[str, str]:
     """PASS iff there is at most one working_log row per *(ticket_id, status)* pair for this
     ticket, not at most one row per ticket_id overall (TCK-20260913-DONE-CHECKER-WORKING-LOG-
@@ -975,7 +1062,7 @@ def check_working_log_exactly_one_row(
     a metric that moves on every ordinary ticket close/open corpus-wide, not for a per-ticket
     write-count invariant that only ever moves when a real duplicate write happens.
     """
-    rows = _rows_for_ticket(csv_path, ticket_id)
+    rows = _rows_for_ticket(csv_path, ticket_id, data_root)
     if not rows:
         return ("FAIL", "no working_log row found — Finalize did not append")
 

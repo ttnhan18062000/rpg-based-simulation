@@ -1,5 +1,5 @@
 r"""Detect stale `## Status` body text in `tickets/done/*.md` and lowercase `final_status` values
-in `agent-monitoring/runs.jsonl`.
+in the `agent-monitoring/data/<week>/*runs.jsonl` corpus.
 
 Built for TCK-20260718-STATUS-DRIFT-REPAIR: 71 files in `tickets/done/` had a body `## Status`
 section reading something other than `DONE` (mostly `OPEN`/`INPROGRESS`) despite frontmatter
@@ -44,9 +44,12 @@ detect-and-fix-real-drift precedent from its two prior rounds.
 
 Mirrors `doc_staleness_check.py`'s and `workflow_meta_conformance.py`'s shape: aggregate
 `check_*()` functions returning `List[dict]` (`{"status": "PASS"|"FAIL", "evidence": "..."}`), a
-`MARKER:` + `json.dumps(result)` stdout contract in `__main__`. Ships unwired — no `Makefile`
-target, no `.claude/workflows/*.js` invocation added in this ticket; a future ticket decides
-where/whether to call it, matching this directory's own stated precedent.
+`MARKER:` + `json.dumps(result)` stdout contract in `__main__`. Wired into a report-only
+`make status-drift-check` Makefile target since `TCK-20260810-STATUS-DRIFT-CHECK-WIRING`
+(this paragraph's earlier "ships unwired" claim was stale, found and fixed alongside the
+`TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP` read-path fix above — nothing had actually run
+`make status-drift-check` end-to-end since the sharding migration retired its flat-file default,
+which is exactly how the resulting crash went unnoticed).
 """
 
 import json
@@ -56,13 +59,16 @@ from pathlib import Path
 from typing import List
 
 DEFAULT_DONE_DIR = Path("tickets/done")
-DEFAULT_RUNS_PATH = Path("agent-monitoring/runs.jsonl")
+DEFAULT_DATA_DIR = Path("agent-monitoring/data")
 
 _TOOLS_DIR = Path(__file__).parent.parent
-if str(_TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(_TOOLS_DIR))
+_MONITORING_TOOLS_DIR = _TOOLS_DIR / "agent-monitoring"
+for _dir in (str(_TOOLS_DIR), str(_MONITORING_TOOLS_DIR)):
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
 
 from generate_registry import parse_body_section, _strip_frontmatter  # noqa: E402
+from validate import load_data_glob  # noqa: E402
 
 # Local fallback for the same-line colon-suffixed `## Status: X` shape `parse_body_section` does
 # not match (see module docstring). Deliberately narrow: only the heading line's own value, not
@@ -141,18 +147,23 @@ def check_ticket_status_drift(done_dir: Path = DEFAULT_DONE_DIR) -> List[dict]:
     return findings
 
 
-def check_runs_jsonl_final_status_drift(runs_path: Path = DEFAULT_RUNS_PATH) -> List[dict]:
+def check_runs_jsonl_final_status_drift(data_dir: Path = DEFAULT_DATA_DIR) -> List[dict]:
     """Flag `runs.jsonl` records whose `final_status` value is not its own uppercase form.
 
     Skips (does not evaluate) any record lacking a `final_status` key — the legacy
     `status`/`started_at` schema is a different shape entirely, out of this check's scope by
     design, not a parsing failure.
+
+    TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: previously read a single hardcoded
+    `agent-monitoring/runs.jsonl` — a flat file that has not existed since
+    TCK-20260902-MONITORING-SHARD-WRITE-PATH's sharding migration, confirmed by direct execution
+    to crash with `FileNotFoundError` when invoked with no override (its only real wiring, via
+    `make status-drift-check`). Now reads the real corpus-wide, multi-week, multi-identifier-shape
+    glob via `validate.load_data_glob()` — the same widened glob every other consumer of that
+    function now shares.
     """
     findings = []
-    for line in runs_path.read_text().splitlines():
-        if not line:
-            continue
-        record = json.loads(line)
+    for record in load_data_glob(data_dir, "runs"):
         final_status = record.get("final_status")
         if final_status is None:
             continue
@@ -166,22 +177,22 @@ def check_runs_jsonl_final_status_drift(runs_path: Path = DEFAULT_RUNS_PATH) -> 
     if not findings:
         return [{
             "status": "PASS",
-            "evidence": f"no lowercase final_status drift found in {runs_path}",
+            "evidence": f"no lowercase final_status drift found in {data_dir}",
         }]
     return findings
 
 
 def check_status_drift(
-    done_dir: Path = DEFAULT_DONE_DIR, runs_path: Path = DEFAULT_RUNS_PATH
+    done_dir: Path = DEFAULT_DONE_DIR, data_dir: Path = DEFAULT_DATA_DIR
 ) -> List[dict]:
     """Aggregate entry point combining both scans' results."""
-    return check_ticket_status_drift(done_dir) + check_runs_jsonl_final_status_drift(runs_path)
+    return check_ticket_status_drift(done_dir) + check_runs_jsonl_final_status_drift(data_dir)
 
 
 if __name__ == "__main__":
     done_dir_arg = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DONE_DIR
-    runs_path_arg = Path(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_RUNS_PATH
-    result = check_status_drift(done_dir_arg, runs_path_arg)
+    data_dir_arg = Path(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_DATA_DIR
+    result = check_status_drift(done_dir_arg, data_dir_arg)
     print("MARKER:" + json.dumps(result))
     if any(r["status"] == "FAIL" for r in result):
         sys.exit(1)

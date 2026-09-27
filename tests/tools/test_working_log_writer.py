@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ast
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -32,8 +33,12 @@ _TOOLS_DIR = str(_REPO_ROOT / "tools")
 if _TOOLS_DIR not in sys.path:
     sys.path.insert(0, _TOOLS_DIR)
 
-from working_log_writer import append_working_log_row, main  # noqa: E402
-from working_log_parser import HEADER_FIELDS, parse_working_log  # noqa: E402
+from working_log_writer import append_working_log_row, consolidate_pending_rows, main  # noqa: E402
+from working_log_parser import (  # noqa: E402
+    HEADER_FIELDS,
+    parse_working_log,
+    parse_pending_working_log_shards,
+)
 
 _TARGET = "tickets/working_log.csv"
 _WRITE_MODES = {"a", "w", "a+", "w+", "x"}
@@ -426,3 +431,175 @@ def test_cli_reads_data_file_and_appends(tmp_path):
     assert len(result.rows) == 1
     assert result.rows[0].record["title"] == data["title"]
     assert result.rows[0].record["summary"] == _TRICKY_SUMMARY
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: staging + consolidation
+# ---------------------------------------------------------------------------
+
+
+def test_append_working_log_row_stages_without_touching_canonical_csv(tmp_path, monkeypatch):
+    """No `path` given (the only way a real caller invokes it) -- stages to a per-batch shard
+    under agent-monitoring/data/, never touches tickets/working_log.csv directly."""
+    monkeypatch.chdir(tmp_path)
+    append_working_log_row(
+        "2026-09-25T00:00:00Z", "TCK-STAGE", "A title", "DONE", "A summary.", "none"
+    )
+    assert not (tmp_path / "tickets" / "working_log.csv").exists()
+    pending = parse_pending_working_log_shards(tmp_path / "agent-monitoring" / "data")
+    assert len(pending) == 1
+    assert pending[0]["ticket_id"] == "TCK-STAGE"
+
+
+def test_consolidate_pending_rows_orders_by_timestamp_across_multiple_shards(tmp_path):
+    """AC4: a consolidation run that sees several different batches' shards at once reconstructs
+    true chronological order from each row's own timestamp, not file-glob order."""
+    data_root = tmp_path / "agent-monitoring" / "data"
+    csv_path = tmp_path / "working_log.csv"
+    csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
+
+    # Deliberately name the "later" batch's file so it sorts BEFORE the "earlier" one
+    # alphabetically -- proves ordering comes from the timestamp field, not the glob.
+    (data_root / "2026-W01").mkdir(parents=True)
+    (data_root / "2026-W01" / "aaa-later-batch.working_log.jsonl").write_text(
+        json.dumps({
+            "timestamp": "2026-09-25T12:00:00Z", "ticket_id": "TCK-LATER", "title": "Later",
+            "status": "DONE", "summary": "s", "artifacts_path": "none",
+        }) + "\n",
+        encoding="utf-8",
+    )
+    (data_root / "2026-W01" / "zzz-earlier-batch.working_log.jsonl").write_text(
+        json.dumps({
+            "timestamp": "2026-09-25T08:00:00Z", "ticket_id": "TCK-EARLIER", "title": "Earlier",
+            "status": "DONE", "summary": "s", "artifacts_path": "none",
+        }) + "\n",
+        encoding="utf-8",
+    )
+
+    result = consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
+    assert result == {"consolidated_rows": 2, "shard_files": 2}
+
+    lines = csv_path.read_text(encoding="utf-8").splitlines()
+    assert "TCK-EARLIER" in lines[1]  # earlier timestamp lands first, despite the filename sort
+    assert "TCK-LATER" in lines[2]
+
+
+def test_consolidate_pending_rows_is_idempotent(tmp_path):
+    data_root = tmp_path / "agent-monitoring" / "data"
+    csv_path = tmp_path / "working_log.csv"
+    csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
+    (data_root / "2026-W01").mkdir(parents=True)
+    (data_root / "2026-W01" / "batch-a.working_log.jsonl").write_text(
+        json.dumps({
+            "timestamp": "2026-09-25T00:00:00Z", "ticket_id": "TCK-A", "title": "A",
+            "status": "DONE", "summary": "s", "artifacts_path": "none",
+        }) + "\n",
+        encoding="utf-8",
+    )
+
+    first = consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
+    assert first == {"consolidated_rows": 1, "shard_files": 1}
+    second = consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
+    assert second == {"consolidated_rows": 0, "shard_files": 0}
+
+    lines = csv_path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2  # header + exactly one row, not duplicated
+
+
+def test_consolidate_pending_rows_merges_with_pre_existing_canonical_content(tmp_path):
+    data_root = tmp_path / "agent-monitoring" / "data"
+    csv_path = tmp_path / "working_log.csv"
+    csv_path.write_text(
+        ",".join(HEADER_FIELDS) + "\n2026-09-01T00:00:00Z,TCK-OLD,Old,DONE,s,none\n",
+        encoding="utf-8",
+    )
+    (data_root / "2026-W01").mkdir(parents=True)
+    (data_root / "2026-W01" / "batch-a.working_log.jsonl").write_text(
+        json.dumps({
+            "timestamp": "2026-09-25T00:00:00Z", "ticket_id": "TCK-NEW", "title": "New",
+            "status": "DONE", "summary": "s", "artifacts_path": "none",
+        }) + "\n",
+        encoding="utf-8",
+    )
+
+    consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
+    lines = csv_path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 3
+    assert "TCK-OLD" in lines[1]
+    assert "TCK-NEW" in lines[2]
+
+
+def test_consolidate_pending_rows_no_shards_is_a_no_op(tmp_path):
+    data_root = tmp_path / "agent-monitoring" / "data"
+    csv_path = tmp_path / "working_log.csv"
+    csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
+    result = consolidate_pending_rows(data_root=data_root, csv_path=csv_path)
+    assert result == {"consolidated_rows": 0, "shard_files": 0}
+    assert csv_path.read_text(encoding="utf-8").splitlines() == [",".join(HEADER_FIELDS)]
+
+
+def test_consolidate_pending_rows_missing_data_root_is_a_no_op(tmp_path):
+    csv_path = tmp_path / "working_log.csv"
+    csv_path.write_text(",".join(HEADER_FIELDS) + "\n", encoding="utf-8")
+    result = consolidate_pending_rows(data_root=tmp_path / "does-not-exist", csv_path=csv_path)
+    assert result == {"consolidated_rows": 0, "shard_files": 0}
+
+
+# ---------------------------------------------------------------------------
+# AC1 — real throwaway git repo: two working_log shards can never conflict, even under a
+# simulated GitHub squash-merge. Mirrors test_monitoring_consolidation.py's own
+# test_two_per_ticket_files_never_conflict_under_sequential_squash_merges exactly, for the
+# working_log shard shape (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET's own AC1).
+# ---------------------------------------------------------------------------
+
+
+def _git(repo, *args):
+    return subprocess.run(["git", "-C", str(repo)] + list(args), capture_output=True, text=True, check=True)
+
+
+def _init_repo(repo):
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "Test")
+    (repo / "README.md").write_text("base\n")
+    _git(repo, "add", "README.md")
+    _git(repo, "commit", "-q", "-m", "init")
+    _git(repo, "branch", "-M", "main")
+
+
+def test_two_working_log_shards_never_conflict_under_sequential_squash_merges(tmp_path):
+    repo = tmp_path / "repo"
+    _init_repo(repo)
+    week_dir = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir.mkdir(parents=True)
+
+    _git(repo, "checkout", "-q", "-b", "ticket-a")
+    (week_dir / "ticket-a.working_log.jsonl").write_text(
+        json.dumps({"timestamp": "t", "ticket_id": "TCK-A", "title": "A", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"
+    )
+    _git(repo, "add", "agent-monitoring")
+    _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard")
+
+    _git(repo, "checkout", "-q", "main")
+    _git(repo, "checkout", "-q", "ticket-a", "--", "agent-monitoring")
+    _git(repo, "add", "agent-monitoring")
+    _git(repo, "commit", "-q", "-m", "TCK-A: add working_log shard (squashed) (#1)")
+
+    _git(repo, "checkout", "-q", "-b", "ticket-b", "main~1")
+    week_dir_b = repo / "agent-monitoring" / "data" / "2026-W01"
+    week_dir_b.mkdir(parents=True)
+    (week_dir_b / "ticket-b.working_log.jsonl").write_text(
+        json.dumps({"timestamp": "t", "ticket_id": "TCK-B", "title": "B", "status": "DONE", "summary": "s", "artifacts_path": "none"}) + "\n"
+    )
+    _git(repo, "add", "agent-monitoring")
+    _git(repo, "commit", "-q", "-m", "TCK-B: add working_log shard")
+
+    _git(repo, "checkout", "-q", "main")
+    merge = subprocess.run(
+        ["git", "-C", str(repo), "merge", "--no-ff", "-m", "merge ticket-b", "ticket-b"],
+        capture_output=True, text=True,
+    )
+    assert merge.returncode == 0, f"expected a clean merge, got a conflict:\n{merge.stdout}\n{merge.stderr}"
+    assert (week_dir / "ticket-a.working_log.jsonl").exists()
+    assert (week_dir / "ticket-b.working_log.jsonl").exists()

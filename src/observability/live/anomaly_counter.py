@@ -49,7 +49,17 @@ class LiveAnomalyCounter(LiveEventSubscriber):
         self._counter_lock = threading.Lock()
 
     def push(self, event: Any) -> bool:
-        """Process simulation event live and thread-safely increment rolling counters."""
+        """Process simulation event live and thread-safely increment rolling counters.
+
+        This is a single process-wide singleton (`get_instance()`): a live engine's own tick
+        telemetry (routed here via `InProcessEventStreamAdapter` when that's the active stream
+        backend) and any other caller that publishes directly through `LiveEventPublisher` share
+        the same counters and the same reset-on-run_id-change behavior below. A caller that needs
+        to assert exact counter values (e.g. a test injecting its own anomalies) must ensure no
+        other event source with a different `run_id` is concurrently feeding this same instance,
+        or its own increments can be silently wiped by an intervening reset — see
+        TCK-20260926-LIVE-HEALTH-COUNTER-SHARED-SINGLETON.
+        """
         with self._counter_lock:
             # Detect new simulation run to auto-reset counters
             if event.run_id and event.run_id != self.current_run_id:

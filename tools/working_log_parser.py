@@ -32,6 +32,7 @@ evidence trail (exact line numbers, root causes, false-positive sweeps) behind b
 from __future__ import annotations
 
 import csv
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -330,6 +331,31 @@ def parse_working_log(path: Path) -> ParseResult:
         duplicate_row_count=duplicate_row_count,
         embedded_header_duplicate_count=embedded_header_duplicate_count,
     )
+
+
+def parse_pending_working_log_shards(data_root: Path = Path("agent-monitoring/data")) -> list:
+    """Read-only: every row still staged in a `<batch-id>.working_log.jsonl` shard under
+    `data_root`, not yet folded into the canonical CSV by
+    `working_log_writer.consolidate_pending_rows()` (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-
+    TARGET). Each returned dict already has the 6 `HEADER_FIELDS` keys -- callers that need a
+    just-staged row visible at a ticket's own close (without waiting for consolidation) combine
+    this with `parse_working_log()`'s own rows rather than reading the CSV alone.
+
+    Never raises on a malformed line -- a shard this module itself never wrote to should not
+    exist, but a corrupt line degrades to being skipped rather than crashing every caller that
+    needs a real answer at Verify time."""
+    if not data_root.exists():
+        return []
+    rows = []
+    for f in sorted(data_root.glob("*/*.working_log.jsonl")):
+        for line in f.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                rows.append(json.loads(line))
+            except (ValueError, TypeError):
+                continue
+    return rows
 
 
 if __name__ == "__main__":

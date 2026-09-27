@@ -33,8 +33,14 @@ def _write_ticket(tmp_path, name, status_body, blank_line=False):
     )
 
 
-def _write_runs_jsonl(tmp_path, records, filename="runs.jsonl"):
-    path = tmp_path / filename
+def _write_runs_jsonl(tmp_path, records, week="2026-W01", filename="runs.jsonl"):
+    """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: writes into a week-sharded subfolder
+    (`<data_dir>/<week>/<filename>`), matching the real corpus layout `load_data_glob()` reads --
+    the checker no longer takes a single flat file path, it takes the data_dir to glob across.
+    Returns the written file's own path (for read-only-guard assertions) -- callers pass
+    `tmp_path` itself (the data_dir) to the check functions, not this return value."""
+    path = tmp_path / week / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(json.dumps(r) for r in records) + ("\n" if records else ""))
     return path
 
@@ -120,31 +126,51 @@ def test_same_line_colon_status_format_done_passes(tmp_path):
 
 
 def test_lowercase_final_status_flagged(tmp_path):
-    runs_path = _write_runs_jsonl(tmp_path, [
+    _write_runs_jsonl(tmp_path, [
         {"run_id": "TCK-FIXTURE-1", "final_status": "done"},
     ])
-    results = check_runs_jsonl_final_status_drift(runs_path)
+    results = check_runs_jsonl_final_status_drift(tmp_path)
     assert len(results) == 1
     assert results[0]["status"] == "FAIL"
     assert "TCK-FIXTURE-1" in results[0]["evidence"]
 
 
 def test_legacy_runs_jsonl_shape_ignored(tmp_path):
-    runs_path = _write_runs_jsonl(tmp_path, [
+    _write_runs_jsonl(tmp_path, [
         {"run_id": "LEGACY-1", "status": "done", "started_at": "2026-01-01T00:00:00Z"},
     ])
-    results = check_runs_jsonl_final_status_drift(runs_path)
+    results = check_runs_jsonl_final_status_drift(tmp_path)
     assert len(results) == 1
     assert results[0]["status"] == "PASS"
 
 
 def test_runs_jsonl_clean_uppercase_passes(tmp_path):
-    runs_path = _write_runs_jsonl(tmp_path, [
+    _write_runs_jsonl(tmp_path, [
         {"run_id": "TCK-FIXTURE-2", "final_status": "DONE"},
     ])
-    results = check_runs_jsonl_final_status_drift(runs_path)
+    results = check_runs_jsonl_final_status_drift(tmp_path)
     assert len(results) == 1
     assert results[0]["status"] == "PASS"
+
+
+def test_runs_jsonl_picks_up_per_identifier_shaped_shards_too(tmp_path):
+    """TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP's own headline fix: a per-branch/per-ticket
+    shaped shard (e.g. `<week>/some-branch.runs.jsonl`) must be scanned too, not just the bare
+    `<week>/runs.jsonl` name -- this is exactly the shape the real corpus produces since
+    TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX."""
+    _write_runs_jsonl(tmp_path, [
+        {"run_id": "TCK-BARE-SHARD", "final_status": "done"},
+    ])
+    _write_runs_jsonl(
+        tmp_path, [{"run_id": "TCK-BRANCH-SHARD", "final_status": "done"}],
+        filename="some-branch-name.runs.jsonl",
+    )
+    results = check_runs_jsonl_final_status_drift(tmp_path)
+    assert len(results) == 2
+    assert {r["status"] for r in results} == {"FAIL"}
+    evidence_blob = " ".join(r["evidence"] for r in results)
+    assert "TCK-BARE-SHARD" in evidence_blob
+    assert "TCK-BRANCH-SHARD" in evidence_blob
 
 
 # ---------------------------------------------------------------------------
@@ -153,11 +179,14 @@ def test_runs_jsonl_clean_uppercase_passes(tmp_path):
 
 
 def test_check_status_drift_aggregates_both_scans(tmp_path):
-    _write_ticket(tmp_path, "TCK-20260101-STALE.md", "OPEN")
-    runs_path = _write_runs_jsonl(tmp_path, [
+    done_dir = tmp_path / "done"
+    done_dir.mkdir()
+    data_dir = tmp_path / "data"
+    _write_ticket(done_dir, "TCK-20260101-STALE.md", "OPEN")
+    _write_runs_jsonl(data_dir, [
         {"run_id": "TCK-FIXTURE-1", "final_status": "done"},
     ])
-    results = check_status_drift(tmp_path, runs_path)
+    results = check_status_drift(done_dir, data_dir)
     statuses = {r["status"] for r in results}
     assert statuses == {"FAIL"}
     assert len(results) == 2
@@ -169,17 +198,20 @@ def test_check_status_drift_aggregates_both_scans(tmp_path):
 
 
 def test_check_is_read_only(tmp_path):
-    _write_ticket(tmp_path, "TCK-20260101-STALE.md", "OPEN")
-    runs_path = _write_runs_jsonl(tmp_path, [
+    done_dir = tmp_path / "done"
+    done_dir.mkdir()
+    data_dir = tmp_path / "data"
+    _write_ticket(done_dir, "TCK-20260101-STALE.md", "OPEN")
+    runs_path = _write_runs_jsonl(data_dir, [
         {"run_id": "TCK-FIXTURE-1", "final_status": "done"},
     ])
-    ticket_path = tmp_path / "TCK-20260101-STALE.md"
+    ticket_path = done_dir / "TCK-20260101-STALE.md"
     before_ticket = ticket_path.read_bytes()
     before_ticket_mtime = os.path.getmtime(ticket_path)
     before_runs = runs_path.read_bytes()
     before_runs_mtime = os.path.getmtime(runs_path)
 
-    check_status_drift(tmp_path, runs_path)
+    check_status_drift(done_dir, data_dir)
 
     assert ticket_path.read_bytes() == before_ticket
     assert os.path.getmtime(ticket_path) == before_ticket_mtime
@@ -193,11 +225,14 @@ def test_check_is_read_only(tmp_path):
 
 
 def test_marker_json_output_contract(tmp_path):
-    _write_ticket(tmp_path, "TCK-20260101-CLEAN.md", "DONE")
-    runs_path = _write_runs_jsonl(tmp_path, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
+    done_dir = tmp_path / "done"
+    done_dir.mkdir()
+    data_dir = tmp_path / "data"
+    _write_ticket(done_dir, "TCK-20260101-CLEAN.md", "DONE")
+    _write_runs_jsonl(data_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
 
     proc = subprocess.run(
-        [sys.executable, str(_MODULE_PATH), str(tmp_path), str(runs_path)],
+        [sys.executable, str(_MODULE_PATH), str(done_dir), str(data_dir)],
         capture_output=True, text=True, check=True,
     )
     output_line = proc.stdout.strip()
@@ -210,24 +245,26 @@ def test_marker_json_output_contract(tmp_path):
 
 
 def test_exit_code_nonzero_on_any_fail_zero_on_clean(tmp_path):
-    clean_dir = tmp_path / "clean"
-    clean_dir.mkdir()
-    _write_ticket(clean_dir, "TCK-20260101-CLEAN.md", "DONE")
-    clean_runs = _write_runs_jsonl(clean_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
+    clean_done_dir = tmp_path / "clean" / "done"
+    clean_done_dir.mkdir(parents=True)
+    clean_data_dir = tmp_path / "clean" / "data"
+    _write_ticket(clean_done_dir, "TCK-20260101-CLEAN.md", "DONE")
+    _write_runs_jsonl(clean_data_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
 
     clean_proc = subprocess.run(
-        [sys.executable, str(_MODULE_PATH), str(clean_dir), str(clean_runs)],
+        [sys.executable, str(_MODULE_PATH), str(clean_done_dir), str(clean_data_dir)],
         capture_output=True, text=True,
     )
     assert clean_proc.returncode == 0
 
-    stale_dir = tmp_path / "stale"
-    stale_dir.mkdir()
-    _write_ticket(stale_dir, "TCK-20260101-STALE.md", "OPEN")
-    stale_runs = _write_runs_jsonl(stale_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
+    stale_done_dir = tmp_path / "stale" / "done"
+    stale_done_dir.mkdir(parents=True)
+    stale_data_dir = tmp_path / "stale" / "data"
+    _write_ticket(stale_done_dir, "TCK-20260101-STALE.md", "OPEN")
+    _write_runs_jsonl(stale_data_dir, [{"run_id": "TCK-FIXTURE-1", "final_status": "DONE"}])
 
     stale_proc = subprocess.run(
-        [sys.executable, str(_MODULE_PATH), str(stale_dir), str(stale_runs)],
+        [sys.executable, str(_MODULE_PATH), str(stale_done_dir), str(stale_data_dir)],
         capture_output=True, text=True,
     )
     assert stale_proc.returncode != 0

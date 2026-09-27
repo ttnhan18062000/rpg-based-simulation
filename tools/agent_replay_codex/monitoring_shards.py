@@ -21,7 +21,13 @@ migration's own convention (tools/agent-monitoring/manifest.py, generate_retro.p
 from __future__ import annotations
 
 import hashlib
+import sys
 from pathlib import Path
+
+_MONITORING_TOOLS_DIR = Path(__file__).resolve().parent.parent / "agent-monitoring"
+if str(_MONITORING_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 _DATA_DIR_NAME = "data"
 _TREE_DATA_DIR_PREFIX = "agent-monitoring/data/"
@@ -39,7 +45,10 @@ def source_paths(agent_monitoring_dir: Path, source: str) -> list[Path]:
     """
     data_dir = agent_monitoring_dir / _DATA_DIR_NAME
     if data_dir.is_dir():
-        return sorted(data_dir.glob(f"*/{source}"))
+        # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery delegates to the
+        # shared resolver (also globs the per-identifier shape -- per-ticket, historically, and
+        # per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
+        return shard_paths(data_dir, source.removesuffix(".jsonl"))
     single = agent_monitoring_dir / source
     return [single] if single.exists() else []
 

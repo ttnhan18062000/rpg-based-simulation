@@ -34,6 +34,20 @@ def _freeze_now(monkeypatch, frozen_iso):
 
     monkeypatch.setattr(record_events, "datetime", _FrozenDatetime)
 
+
+_TEST_BRANCH = "test-branch"
+
+
+def _init_git_repo_on_test_branch(path: Path) -> None:
+    """TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the write target now keys off the current
+    git branch, not run_id -- a real repo on a known branch name gives these tests a stable,
+    predictable filename to assert against."""
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.email", "test@example.com"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.name", "Test"], check=True)
+    subprocess.run(["git", "-C", str(path), "checkout", "-q", "-b", _TEST_BRANCH], check=True)
+
+
 _VALID_EVENT = {
     "run_id": "TCK-FAKE-RUN",
     "seq": 1,
@@ -163,6 +177,7 @@ class TestVocabularyWarning:
         # and still write the record — warn, never reject. Runs with cwd=tmp_path
         # so the relative "agent-monitoring/events.jsonl" write target lands in a
         # throwaway directory, never touching the repo's real events.jsonl.
+        _init_git_repo_on_test_branch(tmp_path)
         result = subprocess.run(
             [sys.executable, str(_RECORD_PATH), "--data", json.dumps({
                 **_VALID_EVENT,
@@ -177,7 +192,7 @@ class TestVocabularyWarning:
         assert "WARNING" in result.stderr
         assert "TotallyMadeUpPhase" in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        written = (tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl").read_text()
+        written = (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl").read_text()
         assert "TCK-VOCAB-WARN-TEST" in written
 
 
@@ -214,6 +229,7 @@ def test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not
     }
     assert validate_record(record) == []
 
+    _init_git_repo_on_test_branch(tmp_path)
     result = subprocess.run(
         [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
         capture_output=True,
@@ -222,7 +238,7 @@ def test_cost_proxy_score_and_tool_call_count_computed_from_real_tools_jsonl_not
     )
     assert result.returncode == 0
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["cost_proxy_score"] == 3.0
     assert written["tool_call_count"] == 3
@@ -233,6 +249,7 @@ def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
     # and an implement-ticket record with genuinely zero recorded tool calls gets 0, not a stale
     # caller-supplied value.
     record = {**_VALID_EVENT, "run_id": "TCK-NO-TOOLS-FILE", "seq": 1}
+    _init_git_repo_on_test_branch(tmp_path)
     result = subprocess.run(
         [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
         capture_output=True,
@@ -241,7 +258,7 @@ def test_cost_proxy_score_absent_when_no_tools_jsonl_exists(tmp_path):
     )
     assert result.returncode == 0
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["cost_proxy_score"] == 0.0
     assert written["tool_call_count"] == 0
@@ -411,20 +428,23 @@ def test_omit_when_unattributed_true_still_computes_real_matches(tmp_path, monke
 
 
 def test_writes_to_unified_week_folder(tmp_path, monkeypatch):
+    _init_git_repo_on_test_branch(tmp_path)
     monkeypatch.chdir(tmp_path)
     _freeze_now(monkeypatch, "2026-08-31T12:00:00+00:00")
     monkeypatch.setattr(sys, "argv", ["record_events.py", "--data", json.dumps([dict(_VALID_EVENT)])])
 
     record_events.main()
 
-    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl"
+    written_path = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.events.jsonl"
     assert written_path.exists()
     written = json.loads(written_path.read_text().strip())
     assert written["run_id"] == "TCK-FAKE-RUN"
     assert not (tmp_path / "agent-monitoring" / "events.jsonl").exists()
+    assert not (tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl").exists()
 
 
 def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, monkeypatch):
+    _init_git_repo_on_test_branch(tmp_path)
     monkeypatch.chdir(tmp_path)
 
     _freeze_now(monkeypatch, "2026-08-31T12:00:00+00:00")
@@ -441,8 +461,8 @@ def test_two_different_iso_weeks_write_to_two_distinct_week_folders(tmp_path, mo
     )
     record_events.main()
 
-    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / "events.jsonl"
-    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / "events.jsonl"
+    week_36 = tmp_path / "agent-monitoring" / "data" / "2026-W36" / f"{_TEST_BRANCH}.events.jsonl"
+    week_37 = tmp_path / "agent-monitoring" / "data" / "2026-W37" / f"{_TEST_BRANCH}.events.jsonl"
     assert week_36.exists()
     assert week_37.exists()
     assert json.loads(week_36.read_text().strip())["run_id"] == "TCK-WEEK-36"
@@ -464,6 +484,7 @@ def test_tool_call_count_correct_for_tool_rows_in_a_non_current_week_folder(tmp_
     ], week="2026-W21")
 
     record = {**_VALID_EVENT, "run_id": "TCK-CROSS-WEEK-TEST", "seq": 4}
+    _init_git_repo_on_test_branch(tmp_path)
     result = subprocess.run(
         [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
         capture_output=True,
@@ -472,7 +493,7 @@ def test_tool_call_count_correct_for_tool_rows_in_a_non_current_week_folder(tmp_
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["tool_call_count"] == 2
     assert written["cost_proxy_score"] > 0.0
@@ -489,6 +510,7 @@ def test_tool_call_count_sums_rows_across_multiple_weeks_for_same_key(tmp_path):
     ], week="2026-W16")
 
     record = {**_VALID_EVENT, "run_id": "TCK-MULTI-WEEK-SAME-KEY", "seq": 2}
+    _init_git_repo_on_test_branch(tmp_path)
     result = subprocess.run(
         [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
         capture_output=True,
@@ -497,7 +519,7 @@ def test_tool_call_count_sums_rows_across_multiple_weeks_for_same_key(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["tool_call_count"] == 2
 
@@ -514,6 +536,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
         "provider": "claude",
         "ticket_id": "TCK-FAKE-RUN",
     }
+    _init_git_repo_on_test_branch(tmp_path)
     result = subprocess.run(
         [sys.executable, str(_RECORD_PATH), "--data", json.dumps([record])],
         capture_output=True,
@@ -522,7 +545,7 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     written = json.loads(events_file.read_text().strip())
     assert written["execution_id"] == "claude-TCK-FAKE-RUN-1234567890-abcd1234"
     assert written["provider"] == "claude"
@@ -551,8 +574,12 @@ def test_batch_write_holds_contiguous_lines_under_concurrent_writer(tmp_path):
     # calls targeting the same file.
     import threading
 
+    _init_git_repo_on_test_branch(tmp_path)
     iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / "events.jsonl"
+    # TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX: the subprocess batch below now writes to the
+    # per-branch file (superseding the prior per-run_id key) -- the concurrent single-line writer
+    # below must race against that same actual target.
+    events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
     events_file.parent.mkdir(parents=True, exist_ok=True)
 
     batch_size = 5

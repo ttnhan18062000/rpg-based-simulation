@@ -58,10 +58,11 @@ def test_new_bash_secret_scan_hook_entry_registered():
         entry for entry in settings["hooks"]["PreToolUse"] if entry["matcher"] == "Bash"
     ]
     # The existing grep-nudge Bash entry (PreToolUse[1]), the secret-scan Bash entry
-    # (PreToolUse[4]), and the cd-prefix advisory Bash entry (PreToolUse[5], added by
-    # TCK-20260923-CD-PREFIX-ADVISORY-HOOK) must all coexist -- this ticket is purely additive,
-    # and so was that later one.
-    assert len(bash_entries) == 3
+    # (PreToolUse[4]), the cd-prefix advisory Bash entry (PreToolUse[5], added by
+    # TCK-20260923-CD-PREFIX-ADVISORY-HOOK), and the pre-push advisory Bash entry
+    # (PreToolUse[6], added by TCK-20260924-DELIVERY-PRE-PUSH-ADVISORY) must all coexist -- this
+    # ticket is purely additive, and so were both later ones.
+    assert len(bash_entries) == 4
 
     commands = [entry["hooks"][0]["command"] for entry in bash_entries]
     secret_scan_commands = [c for c in commands if "scan_for_secrets" in c or "write_path_guard" in c]

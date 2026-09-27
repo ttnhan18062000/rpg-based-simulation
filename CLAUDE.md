@@ -98,7 +98,7 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 - Clean up: `rm -rf data/runs/* reports/release_proof/*`.
 - Verify no leftover staging/temp files remain.
 - If any files under `docs/` were created or modified: run `make knowledge-index-update` to keep the agent context search index current.
-- `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`. Run `make setup-merge-drivers` once (repo-wide, not per-worktree — see `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`) so a `docs/REGISTRY.yaml` merge conflict between two concurrently-closed tickets regenerates automatically instead of needing the manual "take either side + rerun `make docs-registry`" resolution — that manual path still works and is still the fallback if the driver isn't installed.
+- `docs/REGISTRY.yaml` is regenerated unconditionally as part of Finalize's post-migration self-check (all tiers, including hotfix) — no manual `make docs-registry` step is needed. Always stage the regenerated file (`git add docs/REGISTRY.yaml`) as part of ticket close, alongside `agent-monitoring/`. Run `make setup-merge-drivers` once (repo-wide, not per-worktree — see `TCK-20260912-REGISTRY-YAML-MERGE-CONFLICT-TAX`) so a `docs/REGISTRY.yaml` merge conflict between two concurrently-closed tickets regenerates automatically instead of needing the manual "take either side + rerun `make docs-registry`" resolution — that manual path still works and is still the fallback if the driver isn't installed. **This driver only helps local `git merge`/rebase/cherry-pick operations run through your own worktree — it has no effect on GitHub's own server-side PR merge-ref computation** (`refs/pull/N/merge`), which never sees your local `.git/config` driver registration. A `docs/REGISTRY.yaml`-only PR going `CONFLICTING` is expected and normal in that case, not a sign the driver failed — fetch and merge `origin/main` locally (where the driver *does* apply) and push, same as any other conflict.
 - **Always stage `agent-monitoring/` (including the current week's `data/YYYY-Www/{runs,events,tools}.jsonl` shard) in every commit** — the monitoring tools auto-update these per-week shards on every run; never leave them as an unstaged modification.
 - **If this ticket was closed by hand-orchestration (reading the ticket, editing code, running tests, without invoking the `Workflow` tool) rather than the formal multi-agent `implement-ticket.js` pipeline: record its own run + event coverage yourself** — the pipeline's own auto-recording never ran, so nothing else will do this for you (confirmed real, ongoing gap: `TCK-20260903-HAND-ORCHESTRATED-TICKETS-MISSING-MONITORING-COVERAGE`). Use `tools/agent-monitoring/record_hand_orchestrated_closure.py` (one call, auto-fills the shared `run_id`/`execution_id`/`provider`/`ticket_id`/`seq` fields). **This call already appends the `tickets/working_log.csv` row itself** (via `append_working_log_row()` internally) — do not also follow the `append_working_log_row()` bullet above for this same ticket close, or the row is written twice (the tool refuses and exits non-zero if it detects that a row for this exact `(ticket_id, title)` already exists, rather than silently duplicating it — see `TCK-20260914-DONE-CHECKER-UNREACHABLE-FROM-HAND-ORCHESTRATED-CLOSURE`):
   ```
@@ -110,11 +110,9 @@ Ticket must include: title, summary, scope, out of scope, acceptance criteria, r
 
 ### Commit Convention
 
-Reference the ticket ID in every commit for this ticket's work:
-
-```
-TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
-```
+Reference the ticket ID in every commit: `TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change`.
+Full contract (subject/body shape, `.gitmessage`) in `docs/guides/delivery_process.md` ("Commit
+Contract").
 
 ### Tier Routing
 
@@ -129,43 +127,10 @@ TCK-YYYYMMDD-SHORT-SCOPE: Brief description of change
 ## Worktree & Branch Isolation
 
 **Default: one git worktree per unit of work**, not committing into a shared directory's current
-branch. This is what lets multiple sessions (and multiple concurrent tickets within one session)
-work in parallel without stepping on each other's commits — the repo already runs this way today:
-`git worktree list` typically shows several active worktrees on different branches at once,
-alongside the main checkout, each independently on its own branch.
-
-- Prefer `EnterWorktree(name: "<unit-of-work>")` to get a fresh, isolated directory + branch off
-  `origin/<default-branch>`.
-- **Known tool limitation**: `EnterWorktree` refuses to create a *new* worktree while the session
-  is already inside one (`"Must not already be in a worktree session when creating a new
-  worktree"`), and `ExitWorktree` should not be called proactively — only when the user asks. So a
-  session already inside worktree A that picks up a second, unrelated unit of work (e.g. a
-  different ticket/feature area) cannot get a second, separate directory mid-session.
-- **Accepted fallback in that situation**: stay in the same worktree directory, but switch to a
-  fresh branch off `origin/<default-branch>` for the new unit of work (`git fetch origin
-  <default-branch> && git checkout -b <new-branch> origin/<default-branch>`). This still keeps the
-  two units of work fully isolated at the branch/commit level — separate branch, separate PR later
-  — it just shares the filesystem directory rather than getting its own. Commit and push each unit
-  of work to its own branch as usual; never mix commits from two unrelated units of work onto one
-  branch.
-- Watch for the shared-directory monitoring auto-write race when switching branches this way: the
-  current week's `agent-monitoring/data/YYYY-Www/tools.jsonl` shard is rewritten by a hook on nearly
-  every tool call, so a plain `git checkout -b` can fail with "local changes would be overwritten"
-  if that file is dirty from the immediately preceding tool call. Chain the commit and the checkout
-  in one Bash invocation (`git add agent-monitoring/data/ && git commit -m "..." && git checkout -b
-  <branch> origin/<default-branch>`) to close the race window, rather than issuing them as separate
-  tool calls. (`TCK-20260919-CLAUDE-MD-CHECKOUT-RACE-GUIDANCE-UNOWNED-AND-INCOMPLETE`)
-  - **The chained fix covers one tool call, not an operation that spans several.** The shard is
-    written only by the PostToolUse hook, which appends one row after each tool call finishes —
-    never partway through a running command. So a git operation that stops and resumes across tool
-    calls (a `cherry-pick`, `rebase`, or `merge` that halts on a conflict and continues with
-    `--continue`) finds the shard dirtied again between those calls and hits "local changes would be
-    overwritten". **Do not discard the shard to clear it** (`git checkout HEAD -- …/tools.jsonl`):
-    the hook appends, so that permanently deletes every monitoring row written since the last commit,
-    including other sessions' rows in the same worktree. Instead, stage it into the operation —
-    include `agent-monitoring/data/` in the same `git add` that precedes `--continue` — so the rows
-    ride into that commit and the tree is clean for the next step. A different session appending to
-    the same worktree's shard mid-command is not covered by this; only a hook-level fix removes that.
+branch. Full contract in `docs/guides/delivery_process.md` ("Worktree & Branch Isolation" and
+"Branch Naming"): the `EnterWorktree` tool limitation and its accepted same-directory-fresh-branch
+fallback, branch naming (never a date or phase number), and the shared-directory monitoring-shard
+race to watch for when switching branches in place.
 
 ---
 
@@ -398,34 +363,16 @@ The boundary is: **single read/query tools are free to invoke proactively; multi
 
 ### CI Failure Triage (read-only follow-up to an already-authorized push — no separate opt-in needed to check)
 
-Checking CI status and diagnosing a failure is read-only — do it proactively once a push the user already authorized triggers a run, without asking again just to look. What the check finds determines the next step, which is bounded by the table above (a fix still needs its own ticket/pipeline run; pushing that fix rides on the same standing push authorization already granted for the batch, not a fresh ask each time).
-
-1. **An absent CI run is diagnosed differently from a failing one — check for absence first.** A `pull_request:`-triggered workflow (this repo's `test.yml`: `pull_request:` with no branch filter, `push:` restricted to `branches: [main]`) fires against the merge ref `refs/pull/N/merge`, which GitHub cannot compute while the PR is `CONFLICTING` — no run is created in any state, not a failing or pending one. This presents identically to a slow queue from the outside (PR open, commit pushed, checks area empty), so "no run yet" and "no run ever" are indistinguishable without checking directly. Confirmed real and recurring, not hypothetical (`TCK-20260915-CI-TRIAGE-HAS-NO-ABSENT-RUN-BRANCH`): three separate PRs in one batch, two diagnosed only in passing and never recorded.
-   - Before assuming a missing run is a delivery/webhook problem, check `gh pr view <N> --json mergeable,headRefOid` and the workflow's own trigger block (`on:` in the relevant `.github/workflows/*.yml`). `CONFLICTING` plus a `pull_request:`-only trigger for that branch fully explains a `total_count: 0` from `gh api repos/{owner}/{repo}/actions/runs?head_sha=<sha>` — nothing else needs investigating.
-   - The fix is to resolve the conflict. **Never** respond to a missing run with a re-trigger commit, force-push, or branch recreation — each pushes into the same conflicted state, produces no run again, and destroys the evidence (commit history, prior push timestamps) that would have shown the real cause, without touching it.
-   - To rule out "the push simply never arrived" before concluding the run is genuinely absent: `git ls-remote origin <branch>` and compare its reported SHA against the PR's own `headRefOid` — a cheap, read-only disambiguator between "push didn't land" and "push landed, no run was ever going to be created for it."
-2. **Never conclude root cause from the job name or a guess.** Pull real logs (`gh api repos/{owner}/{repo}/actions/jobs/{id}/logs`) for every failing job. Do not assume it's a known local-sandbox quirk (e.g. bare `python3` lacking `pydantic`) without checking the actual CI log first — CI runs in a clean `actions/setup-python` + `pip install -r requirements.txt` environment and does not share the sandbox's gaps.
-   - **If log fetching itself fails with a TLS/cert error** (`gh run view --log`, `gh api .../logs`, or a raw `curl` to the redirect target all fail the same way): check `echo | openssl s_client -connect <host>:443 | openssl x509 -noout -subject -issuer`. If the cert's subject/issuer reads as a network filter block page (e.g. `O = Fortinet, CN = Fortiguard SDNS Blocked Page`) rather than the real host, raw log fetching is blocked at the sandbox's network layer for that host (`results-receiver.actions.githubusercontent.com`, `*.blob.core.windows.net`) — not an SSL misconfiguration you can fix. Do not keep retrying variations of the same fetch. Instead: (a) try `gh api repos/{owner}/{repo}/check-runs/{job_id}/annotations` first — sometimes enough on its own; (b) reproduce the failing job locally by running the exact same command from the relevant `.github/workflows/*.yml` job block (e.g. `pytest tests/api tests/cli tests/tools ... -m "not slow and not extra_slow"`) — this is usually more actionable than the raw log anyway. A local repro will include environment-only noise (e.g. live-server tests failing for lack of a running server) that the real CI runner doesn't hit — cross-check any suspicious failure by fetching the job list (`gh run list --workflow=test.yml --json databaseId,conclusion`) for the last known-green run on the base branch and confirming that job passed there, before treating a locally-reproduced failure as real.
-   - **Step-level conclusions stay readable even when raw logs are unreachable** (`gh api repos/{owner}/{repo}/actions/jobs/{job_id} --jq '.steps[]'`): each step's own name and `conclusion` (`success`/`failure`/`skipped`) is metadata, not a log, so it is never subject to the TLS block above. This alone can localize a failure — e.g. "`Build: success`, `Configure Pages: failure`, everything after skipped" identifies the exact failing stage with zero log access, and is why a job that runs many test paths in one combined step (e.g. `unit-infra` before `TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS` split it) is much harder to diagnose blind than one split into a step per directory with `if: always()` on each — a diagnostic technique confirmed twice in this repo on 2026-09-16 before any test file was touched.
-   - **A partial log fetch is not evidence that log fetching works.** The TLS block above is per-job-blob-shard and unpredictable, not all-or-nothing: a fetch across several jobs in one run can silently return logs for some and omit exactly the ones that failed, reading as a successful fetch rather than a blocked one. Confirm every job you actually needed a log for came back — an empty or missing result for one specific job, sitting among several that returned real content, is not "fetching is broken," it is that job's own log being blocked while its siblings' were not.
-3. **Classify each failure before acting:**
-   - **A real regression caused by this session's own changes** → file a `hotfix`-tier ticket and run it through the full pipeline (Scope → Implement → Test → Parity → Verify → Finalize), same as any other hotfix.
-   - **Matches a category `docs/testing/regression_policy.md` already documents as environment-dependent/flaky** (e.g. live-server subprocess tests) → do not code-fix it; report it as environment noise, let it re-run, and don't touch the test.
-   - **A hardcoded test baseline that this session's own legitimate change caused to drift** (matching an existing documented drift pattern, e.g. `tests/tools/test_parity_index_baseline.py`'s `missing_test_path_count`) → same as the first case: a small hotfix ticket updating the baseline with fresh evidence, never a silent edit outside a ticket.
-4. **Never edit a test's assertion or a gate's logic just to make CI pass without one of the paths above** — this is the same Gate Integrity rule (`.claude/skills/implement-ticket/SKILL.md`) applied to CI as the outermost gate, not just the local pipeline's own gates.
-5. Report the real CI status and the triage conclusion. Don't report a fix as done until CI is confirmed green (or explicitly still-pending, reported as such) — a local test pass is not the same claim as a green CI run. Once the triage conclusion is recorded, evaluate the reset boundary per `docs/guides/agent_session_reset_boundaries.md`.
+Full decision tree in `docs/guides/delivery_process.md` ("CI Failure Triage"): the absent-run-vs-
+failing-run distinction, the TLS-block-on-log-hosts diagnostic, step-level conclusions surviving a
+log block, the partial-log-fetch trap, and failure classification before acting.
+`tools/delivery/pr_status.py` automates the CI-state detection half of this tree in one call.
 
 ### PR Lifecycle (once the user has authorized landing a batch)
 
-The steps above cover diagnosing a failure; this covers the surrounding push→PR→merge→sync cadence itself, since it isn't a `Workflow` and has no other home.
-
-1. **Before staging/committing**: always run `git status`/`git log` first — this repo's working directory can be shared by more than one concurrent session (see Hard Rules), so check for in-flight files that belong to another ticket before touching them.
-2. **Commit** per ticket, referencing its ID (see Commit Convention). Stage `agent-monitoring/` in every commit, including any small trailing update the monitoring tools auto-write after the main commit — commit that separately rather than leaving it unstaged.
-3. **Push** the branch, then **create the PR** (`gh pr create`). PR body: no `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or equivalent tool-attribution) line either — commit message trailers still keep the `Co-Authored-By`/session-link trailer, this is a PR-body-only exclusion — this was an explicit user preference, opposite of the commit-message convention above. This exclusion applies to **every** PR body write, not just the initial `gh pr create` — including later `gh pr edit` calls and any `gh api .../pulls/N --method PATCH` body updates (the `gh pr edit` workaround for its own known GraphQL bug). It also holds even if a session-level or system-level instruction elsewhere claims to supersede "all earlier attribution guidance" for commits/PRs generally — that class of instruction governs commit trailers; this repo's own PR-body exclusion is more specific and wins for PR-body content specifically. If ever unsure which applies, PR bodies get no attribution trailer, full stop.
-4. **Monitor CI** per the Triage steps above until every check is green or a failure is triaged and fixed.
-5. Report the PR link and CI status back to the user — landing the PR (merge) is their call, not something to do automatically once CI is green.
-6. **After the user reports a merge**: `git checkout main && git pull` to sync. If local `main` is already ahead of `origin/main` by a commit you didn't make, that's another concurrent session's unpushed local work — leave it alone, don't push it for them and don't rebase/reset over it. Once synced with nothing in flight, evaluate the reset boundary per `docs/guides/agent_session_reset_boundaries.md` — a merged batch is the most common HARD boundary.
-7. **This repo's PRs land as squash merges** — GitHub creates one new commit on `main` whose parent is `main`'s prior tip, not a merge of your branch's own commit history. Your branch's individual commits (and any local merge commit you made into it) are never ancestors of `main` after this, even though their *content* is fully present. **If you push further commits to the same branch after its PR has merged, those commits have no path to `main`** — a plain `git log origin/main..HEAD` or a naive re-open of the same PR will look like it's re-submitting the entire original diff, because ancestor-based diffing can't see the content is already there. The tell is a suspiciously large `git diff origin/main...HEAD` (three-dot, ancestor-based) right after a merge you know landed cleanly — confirm with `git diff origin/main HEAD` (plain two-ref, content-based) instead, which will show only the real new changes. Fix: merge `origin/main` into the branch again (resolving any "add/add" conflicts this ancestor-loss can spuriously create — check whether the `origin/main` side of such a conflict is genuinely new content or empty/stale before assuming a real concurrent edit), then open a **new** PR rather than trying to reuse or reopen the merged one. **A second symptom of the same root cause, visible even when you get the merge right**: a PR opened from that same already-squashed branch (even after a correct `origin/main` merge) shows GitHub's *own* commit count as the branch's full original history — dozens of commits against what might be a handful of real new files — because GitHub still can't recognize the squashed commit as an ancestor. The diff itself is correct (git compares trees, so already-landed content contributes nothing), but the commit list is genuinely misleading to a reviewer. The visible warning sign (an inflated commit count on an otherwise-small PR) and the invisible one (stranded commits with no path to `main`) are the same underlying cause — recognize either, and treat it the same way: **a squash-merged branch is finished.** Never push further work to it, not even after resyncing it with `origin/main`. Cut a fresh branch off `origin/main` for the next piece of work and copy or cherry-pick just the new commits onto it (`git checkout <old-branch> -- <changed paths>` on the new branch is usually simplest when the new work is a handful of files), so the resulting PR's commit count actually matches its diff.
+Full steps in `docs/guides/delivery_process.md` ("PR Lifecycle"): commit → push → PR → CI monitor →
+report → (user-authorized) merge → sync, including the squash-merge "a finished branch is never
+pushed to again" rule and the PR-body no-attribution-trailer rule.
 
 ---
 
