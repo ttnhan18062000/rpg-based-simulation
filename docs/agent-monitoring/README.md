@@ -10,7 +10,7 @@ tags: [agent-monitoring, observability]
 
 Observability layer for the Claude Code AI agent workflow. Tracks workflow runs and per-agent actions for weekly retrospectives.
 
-**Scope:** Claude Code agents only (implement-ticket workflow, etc.). Not the RPG simulation engine's Grafana/Loki/Prometheus stack.
+**Scope:** Claude Code agents only (implement-ticket workflow, etc.). Not the RPG simulation engine's Grafana/Loki/Prometheus stack. Only the 4 ticket-delivery-pipeline workflows instrument this system — `create-tickets.js`, `implement-ticket.js`, `implement-epic.js`, `simq-audit.js`; the 7 simulation-lab workflows (`compact-simulation-result.js`, `generate-simulation-setup.js`, `investigate-simulation-result.js`, `prepare-simulation-execution.js`, `propose-simulation-enhancements.js`, `register-simulation-result.js`, `update-knowledge-store.js`) deliberately don't — they run the simulation-research lifecycle, not the agent-orchestration delivery pipeline this system measures.
 
 ## What It Captures
 
