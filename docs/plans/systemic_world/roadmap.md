@@ -33,12 +33,12 @@ the end for the short list of things this document cannot decide for itself.
 | `docs/plans/long_term_development_roadmap.md` | Engine-infrastructure phases (CI, determinism, corpus tooling) | **Independent axis.** A different kind of health entirely — this document assumes that infrastructure exists and builds capability on top of it, not instead of it. |
 | `docs/plans/render_and_art_program_roadmap.md`, `hud_delivery_roadmap.md`, `live_map_scaling_roadmap.md` | Presentation-layer programs | **Explicitly unrelated axis**, per this investigation's own repeated instruction not to confuse the two. Section 5's "Observation and player delivery" area is deliberately about *what* a gameplay lens may expose, never *how* it renders — those documents own the how. |
 
-**This document's own proposed home**: itself, at `docs/plans/systemic_world_roadmap.md` — a new,
+**This document's own proposed home**: itself, at `docs/plans/systemic_world/roadmap.md` — a new,
 standalone location, not appended to any of the above. Marked `PROPOSED / FOR REVIEW` throughout;
 promotion to `active` status is the owner's call, not decided here.
 
 **Companion document, added 2026-09-27 (fourth review round)**:
-`docs/plans/systemic_world_first_wave_plan.md` holds the concrete milestone plan (entry/exit
+`docs/plans/systemic_world/first_wave_plan.md` holds the concrete milestone plan (entry/exit
 evidence, domain ownership, a decision gate) for the first wave this roadmap's §7/§8 recommend —
 kept separate so this document stays a capability/dependency map rather than a milestone transcript,
 per the finalize instruction's own request.
@@ -613,7 +613,7 @@ not an assumption resolved either optimistically or pessimistically.
 (§3.1) and the lineage composition probe (§7.1/§7.2) have both **already been run this arc** — this
 section reflects their actual results, not a plan to go run them. Full milestone detail (entry/exit
 evidence, owners, a decision gate) lives in the separate first-wave plan
-(`docs/plans/systemic_world_first_wave_plan.md`); this section stays a short recommendation.
+(`docs/plans/systemic_world/first_wave_plan.md`); this section stays a short recommendation.
 
 **Recommended: three independently-schedulable tracks, not one sequenced pair.**
 
@@ -890,7 +890,7 @@ Recognition-Opportunity loop this investigation traced most deeply. This documen
 7. **§8's recommended first wave re-scoped to the single hop** (since further split in Round 5 —
    see §8's current world-side/player-side separation).
 8. **A separate `PROPOSED / FOR REVIEW` first-wave milestone plan drafted** at
-   `docs/plans/systemic_world_first_wave_plan.md`.
+   `docs/plans/systemic_world/first_wave_plan.md`.
 
 **External-review concerns rejected on repository evidence: none.**
 

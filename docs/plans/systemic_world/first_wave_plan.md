@@ -10,7 +10,7 @@ last_verified: "2026-09-27"
 # Systemic World First-Wave Milestone Plan — PROPOSED / FOR REVIEW
 
 **Status: `PROPOSED / FOR REVIEW`. Not owner-approved.** Companion document to
-`docs/plans/systemic_world_roadmap.md` (the capability/dependency map) — this document is the
+`docs/plans/systemic_world/roadmap.md` (the capability/dependency map) — this document is the
 separate, concrete milestone plan the roadmap's §8 and the fourth external review round both ask
 for, so the roadmap itself stays a map rather than a milestone transcript. Produced from the actual
 feasibility-gate run, composition probe, observer-evidence sketch, and bounded authority audit in
