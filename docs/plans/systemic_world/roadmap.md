@@ -656,26 +656,18 @@ current repository this week.
 | **G** Ecology/settlement dynamics | 3.2 | world dynamics / ecology | Batch 05 (inherited) | `regional_trauma`, `calamity_intensity` contradicted by corpus runs; open tickets exist (verified 09-27) | Environmental pressure actually changes the world | Medium | Existing open repair tickets first | Later |
 | **H** Agency across action and non-action processes | 3.3 | action dispatch / agency | `AGENCY-*` (SCP-mapped, `PARTIAL`) | 3 dispatch paths; intent→payload edge `UNKNOWN` (inherited, Part A) | Coherent attempt semantics, including world processes | Indirect | None | Parked (`UNKNOWN`) |
 | **I** Magic and culture breadth | 3.2 | magic; culture | Batches 11B/12 (inherited) | Weakest realization; the magic perception channel is inert (inherited) | — | Later | — | Parked |
+| **J** Mechanism reachability program | all | the domain that owns each mechanism | per mechanism | Several mechanisms marked `state: done` do not fire in ordinary runs. Examples: `calamity_intensity` and `regional_trauma` are contradicted by corpus runs; natural-aging succession fires only when ages are staged. The full extent is `UNKNOWN` (§11 item 5) | Mechanisms the registry calls "done" actually act in normal runs, or are re-labelled honestly | Indirect but broad: a livelier world | None | **Candidate** — owner memo decision 1(b) |
 
-**First-wave selection: A + B + C.** The detail and tradeoffs are in `first_wave_plan.md`. This is
-a proposed selection, not a delivered proof. The first wave:
-- establishes world correctness for life/death continuity (A) and for the named boundaries (C);
-- establishes a design-level evidence path (B);
-- only prepares player inference;
-- leaves changed-life-trajectory proofs to the future.
+**First-wave selection — open (owner memo decision 1).** `first_wave_plan.md` details option (a),
+A + B + C. The planner's revised lean (2026-09-28) is option (b), reachability-first: J, plus
+verifying whether situated perception is live, plus C. The reasons are in §11.
 
-The only choice in this selection that evidence cannot rank is product scope: owner memo
-decision 2, which changes only B's probe event. Region ownership (FAC-010) stays on its own
-track.
+Under either option, the first wave is a proposed selection, not a delivered proof:
+- it establishes world correctness for its chosen scope;
+- it at most prepares player inference;
+- it leaves changed-life-trajectory proofs to the future.
 
-**Not recommended, evidence-consistent alternative**: defer the observer check and the remaining
-boundary audits entirely, fixing only the lifecycle-active defect first. Not recommended because
-nothing here actually requires that sequencing — all three tracks are independent, so deferring two
-of them would only slow total progress without reducing any real risk. (Two confirmed violations of
-the authority invariant now exist in this investigation arc — §3.1's INTEGRATED row — which is
-evidence the invariant needs a real enforcement discipline, not yet evidence of one recurring bug
-pattern; either way, nothing about that count changes whether these three tracks can run in
-parallel.)
+Region ownership (FAC-010) stays on its own track.
 
 ## 9. Evidence workflow — existing registry/Semantic Control Plane tooling
 
@@ -729,16 +721,82 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has four
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has six
 entries:
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
-4. what `public_reputation` means.
+4. what `public_reputation` means;
+5. how world time scale relates to feasible run length;
+6. where player-inference evidence will come from.
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
 not to the owner or to this roadmap.
+
+## 11. Open strategic questions and risks (raised 2026-09-28)
+
+These are points the roadmap has not settled. Each names its owner or decision point.
+Implementation detail is deliberately left out.
+
+1. **The first wave has no visible payoff.**
+   - Epic A's defect only fires at the default lifespan, about 20M ticks; corpus runs are 1k–5k
+     ticks. Epic C only verifies. Epic B only designs.
+   - As planned, typical runs would behave the same after the wave, and no player-side claim would
+     move.
+   - Several review rounds have produced documents, while the one real defect found so far came
+     from running code.
+
+   *Decision point*: owner memo decision 1.
+
+2. **Time scale versus run length is unaddressed.**
+   - Lineage is the roadmap's main probe for persistent history. Yet natural generational succession
+     does not happen in any run we can afford, so today it can only be shown with staged ages.
+   - This affects every long-horizon claim: lineage, institutions, ecology.
+
+   *Decision point*: owner memo decision 5. Until then, lineage proofs are staged-only.
+
+3. **Situated perception may be an engine gap, not a presentation gap. `UNKNOWN`, needs
+   verification.**
+   - A grep-level check found no production caller for the perception update phase (§7.2).
+   - Other knowledge flows found so far are paid information facts or location-independent reads:
+     the grief trigger, and `public_reputation` used as a global fallback.
+   - If this is confirmed at runtime, NPCs are also not situated observers. That would make situated
+     perception a core foundation affecting every domain, and it would re-rank Epic B above lineage
+     work.
+   - Perception could run through another path that a grep does not reveal, so this is not yet a
+     finding.
+
+   *Owner*: a verification item for the first wave under memo decision 1(b); otherwise the Epic B
+   design owner.
+
+4. **There is no route to player-inference evidence.**
+   - `PLAYER-EXPERIENCED` requires a blinded human, and the only human involved knows the answers.
+   - Without a sourcing decision, every player-side claim in this roadmap stays `PENDING`
+     permanently.
+
+   *Decision point*: owner memo decision 6.
+
+5. **Registry maturity may be overstated across the engine. Extent `UNKNOWN`.**
+   - Three independent cases this arc: two mechanisms contradicted by corpus runs, and succession
+     that fires only when ages are staged.
+   - All are `state: done` mechanisms that don't act in ordinary runs, and the observer clue this
+     roadmap first planned around turned out not to be encounterable.
+   - A bounded reachability program (portfolio Epic J) may deliver more world liveliness per unit of
+     work than new capability.
+   - Three cases do not measure the scale.
+
+   *Decision point*: owner memo decision 1(b).
+
+6. **Governance overhead.** This track spans several authorities: the Catalog, the SCP, the mechanism
+   registry, the parity ledger, this roadmap and its companions, and multiple planning sessions.
+   - Each keeps its own status vocabulary, and some state is summarized in more than one of them.
+     For example, gate results appear in §7 here and in the plan.
+   - Risk: drift between documents, and review cycles consuming effort better spent on runs.
+   - Proposal: once the direction is accepted, stop revising these documents except to record
+     verified results.
+
+   *Owner*: this planning session, subject to the owner's acceptance of the direction.
 
 ---
 

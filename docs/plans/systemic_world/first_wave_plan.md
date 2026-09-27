@@ -210,9 +210,14 @@ Future: Epic B's route built  ──> human inference exercise (claim 3)
     also need Epic B's observer contract, so it sits later.
   - Wealth/office conversion lacks its declared conversion edges entirely (`ME-S12`), which makes
     it a realization program rather than a first proof.
-- **The first-wave choice can be ranked on current evidence.** The only remaining choice is product
-  scope: whether inheritance is intended to be understandable (owner memo, decision 2), which only
-  changes Epic B's probe event.
+- **The first-wave choice is open (owner memo decision 1).** This plan details option (a).
+  - Since it was written, the planner has leaned towards option (b), reachability-first. The reasons
+    are roadmap §11 items 1, 3 and 5: no visible payoff, a possible engine-level perception gap, and
+    "done" mechanisms that don't fire.
+  - If (b) is chosen, this plan is revised: Epic C stays, perception verification moves in, and
+    Epics A and B move later.
+  - Separately, Epic B's probe event depends on memo decision 2, and whether lineage can ever be
+    shown unstaged depends on decision 5.
 
 ---
 
