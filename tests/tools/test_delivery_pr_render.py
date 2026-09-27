@@ -414,3 +414,146 @@ def test_no_write_side_effect(tmp_path):
     pr_render.render(tickets_root=tickets_root, run_command=runner)
     after = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
     assert before == after
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260927-PR-RENDER-CHECK-ALWAYS-DIFFERS — section-aware --check + Known-gaps run-on fix
+# ---------------------------------------------------------------------------
+
+def _rendered_and_hand_filled_live(tmp_path, run_command_rules):
+    """Renders once, then returns a live body with `## Review notes` hand-filled -- the shape
+    every real PR has (AC1's premise)."""
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
+    runner = FakeRunner(run_command_rules)
+    rendered = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    live_body = rendered["body"].replace(
+        pr_render._REVIEW_NOTES_PLACEHOLDER,
+        "Looked closely at the edge case; nothing else to flag.",
+    )
+    return tickets_root, rendered, live_body
+
+
+def test_check_ac1_matches_despite_hand_filled_review_notes(tmp_path):
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
+    assert live_body != rendered["body"]  # sanity: genuinely different strings
+
+    runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": rendered["title"], "body": live_body}), "")),
+        *rules,
+    ])
+    result = pr_render.check_against_live(run_command=runner, tickets_root=tickets_root)
+    assert result["matches"] is True
+    assert result["differing_sections"] == []
+    assert result["review_notes_hand_filled"] is True
+
+
+def test_check_ac2_names_the_differing_section(tmp_path):
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
+    # Simulate drift: a ticket closed since the live body's ## Tickets table was written.
+    drifted_live_body = live_body.replace("| standard |", "| hotfix |")
+    assert drifted_live_body != live_body
+
+    runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": rendered["title"], "body": drifted_live_body}), "")),
+        *rules,
+    ])
+    result = pr_render.check_against_live(run_command=runner, tickets_root=tickets_root)
+    assert result["matches"] is False
+    assert "## Tickets" in result["differing_sections"]
+    # AC3: distinguishable from Review notes' expected, non-failing difference.
+    assert result["review_notes_hand_filled"] is True
+
+
+def test_check_ac3_result_shape_distinguishes_pass_from_real_drift():
+    """Both outcomes are readable from the result dict alone -- no diff-text parsing needed."""
+    pass_result = {"matches": True, "differing_sections": [], "review_notes_hand_filled": True,
+                    "unexpected_sections": []}
+    drift_result = {"matches": False, "differing_sections": ["## Tickets"],
+                     "review_notes_hand_filled": True, "unexpected_sections": []}
+    assert pass_result["matches"] and not pass_result["differing_sections"]
+    assert not drift_result["matches"] and drift_result["differing_sections"]
+
+
+def test_check_unexpected_live_section_not_a_failure(tmp_path):
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
+    live_body_with_extra = live_body + "\n\n## Extra thoughts\nSomething the author added by hand.\n"
+
+    runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": rendered["title"], "body": live_body_with_extra}), "")),
+        *rules,
+    ])
+    result = pr_render.check_against_live(run_command=runner, tickets_root=tickets_root)
+    assert result["matches"] is True
+    assert "## Extra thoughts" in result["unexpected_sections"]
+
+
+def test_check_missing_live_section_reported_not_crashed(tmp_path):
+    rules = [_git_log_rule(["TCK-20260924-A: x"]), _git_diff_rule(["tickets/TCK-20260924-A.md"])]
+    tickets_root, rendered, live_body = _rendered_and_hand_filled_live(tmp_path, rules)
+    lines = live_body.splitlines()
+    why_start = next(i for i, l in enumerate(lines) if l.strip() == "## Why")
+    verification_start = next(i for i, l in enumerate(lines) if l.strip() == "## Verification")
+    live_body_missing_why = "\n".join(lines[:why_start] + lines[verification_start:])
+
+    runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": rendered["title"], "body": live_body_missing_why}), "")),
+        *rules,
+    ])
+    result = pr_render.check_against_live(run_command=runner, tickets_root=tickets_root)
+    assert result["matches"] is False
+    assert "## Why" in result["differing_sections"]
+
+
+def test_check_still_exits_zero_and_writes_nothing_on_a_real_difference(tmp_path, monkeypatch):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    _write_ticket(tickets_root, "TCK-20260924-A", "ai", "Thing")
+    runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": "different", "body": "different"}), "")),
+        _git_log_rule(["TCK-20260924-A: x"]),
+        _git_diff_rule(["tickets/TCK-20260924-A.md"]),
+    ])
+    monkeypatch.setattr(pr_render, "default_run_command", runner)
+    monkeypatch.setattr(pr_render, "_DEFAULT_TICKETS_ROOT", tickets_root)
+    before = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
+    exit_code = pr_render.main(["--check", "--json"])
+    after = subprocess.run(["git", "status", "--short"], capture_output=True, text=True).stdout
+    assert exit_code == 0
+    assert before == after
+
+
+def test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    _write_ticket(
+        tickets_root, "TCK-20260924-A", "ai", "First thing",
+        test_summary="`scan_a` FAIL — narrow reason for ticket A.",
+    )
+    _write_ticket(
+        tickets_root, "TCK-20260924-B", "ai", "Second thing",
+        test_summary="`scan_b` FAIL — unrelated narrow reason for ticket B.",
+    )
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
+        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+    ])
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    body = result["body"]
+
+    assert "  - TCK-20260924-A: `scan_a` FAIL — narrow reason for ticket A." in body
+    assert "  - TCK-20260924-B: `scan_b` FAIL — unrelated narrow reason for ticket B." in body
+    # Never glued into one semicolon-joined run-on line: each ticket's gap is its own bullet.
+    known_gap_bullets = [l for l in body.splitlines() if l.startswith("  - TCK-")]
+    assert len(known_gap_bullets) == 2
+    for line in known_gap_bullets:
+        assert "scan_a" not in line or "scan_b" not in line

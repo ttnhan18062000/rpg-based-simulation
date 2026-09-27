@@ -168,6 +168,19 @@ Plan §3.5 contains three real worked examples (PRs #240, #237, #229, today vs p
 test fixtures — they are real strings from this repo's own history, which is better evidence than an
 invented example.
 
+**Addendum (2026-09-27, recorded by `TCK-20260927-PR-RENDER-CHECK-ALWAYS-DIFFERS`'s AC7):** AC5
+("`## Review notes` is emitted as an unfilled placeholder") and AC8 ("`--check` against an
+identical live body reports no difference") were each verified in isolation, but their
+interaction was not: AC8's own test fixture (`test_check_reports_no_difference_when_identical`)
+compares a rendered body against *itself*, so the placeholder is present on both sides and the
+whole-body string comparison trivially matches. On a real PR, `## Review notes` is always
+hand-filled (AC5's whole point), so `live.body != rendered.body` **always**, permanently — AC8's
+"identical live body" premise is only ever satisfiable by a fixture, never a real PR. Found by
+dogfooding on PR #250, the renderer's first real use; fixed by making `--check`'s comparison
+section-aware (compares only the generated sections against the template spec, reports which
+section differs by name, and reports whether `## Review notes` is hand-filled as a separate,
+non-failing fact) rather than whole-body string equality.
+
 ## Test Summary
 - `python3 -m pytest tests/tools/test_delivery_pr_render.py -v` (repo venv): **18 passed** — one per
   Acceptance Criterion (AC1–AC10) plus regression-prone-path coverage (cross-directory ticket

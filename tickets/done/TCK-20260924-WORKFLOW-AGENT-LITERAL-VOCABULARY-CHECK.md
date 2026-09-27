@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK
-phase: open
+phase: done
 date: 2026-09-24
 tags: [agent-monitoring, workflows, data-quality]
 ---
@@ -17,7 +17,7 @@ Static check that every agent **and phase** literal in `.claude/workflows/*.js` 
 and registering the 29 literals that are already unregistered today
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -284,10 +284,49 @@ long-running, self-describing convention rather than drift, each with an inline 
 reasoning. Match that standard, one comment per addition.
 
 ## Test Summary
-To be completed during implementation.
+Independent re-derivation (`vocab_scan.py`, `staging_artifacts/.../investigation.md`) confirmed
+the Request Summary's 6/23/29 figures exactly before making any change — no AC correction was
+needed.
+
+New: `tests/tools/test_workflow_vocabulary_check.py` (20 tests, all pass), covering AC1-AC9
+individually per the acceptance criteria (unkeyed-file loud failure, pre-fix 6/23 snapshot,
+post-fix zero findings, comment exclusion, writeSidecar argument-position independence,
+cross-workflow literal misattribution, `investigate:` prefix family, exit-code-0-with-findings,
+additive-only registry diff).
+
+Also caught and fixed a real side effect: adding 21 new phase literals broke
+`tests/tools/test_glossary_registry.py::test_real_seeded_registry_covers_every_workflow_phase`
+(18 of them had no glossary entry; `Report`/`Verify` already did). Fixed via
+`python3 tools/glossary_registry.py add <term> --category phase --description "..."` for the 18
+missing terms (append-only, no existing entries touched).
+
+Commands run:
+- `python3 -m pytest tests/tools/test_workflow_vocabulary_check.py -v` — 20 passed
+- `python3 -m pytest tests/tools/test_build_index.py tests/tools/test_doc_staleness_gate_wiring.py tests/tools/test_generate_retro.py tests/tools/test_glossary_registry.py tests/tools/test_monitoring_anomaly_validator.py tests/tools/test_record_events.py tests/tools/test_registry_query.py tests/tools/test_retrieval_events.py tests/tools/test_simq_dev_skill_content.py tests/tools/test_validate_agent_monitoring.py tests/tools/test_validate_working_log.py tests/tools/test_workflow_meta_conformance.py tests/tools/test_workflow_vocabulary_check.py` (every module directly importing/testing `vocabulary.py`) — 419 passed, 1 xfailed
+- `pytest tests/tools/ -m "not slow"` (full scoped regression, AC10) — 3104 passed, 25 skipped, 28 deselected, 1 xfailed, 0 failed
+
+`monitoring_anomaly_validator.py`/`AGENT_DRIFT_CEILING` confirmed unmodified (`git diff --stat`
+shows zero changes to that file). `vocabulary.py`'s diff confirmed additive-only by direct read
+(one line widened from `{"Implement"}` to `{"Implement", "Discover", "Report"}`, everything else
+pure addition, no removed/renamed entries) (AC9).
 
 ## Files Changed
-To be completed during implementation.
+- `tools/agent-monitoring/vocabulary.py` — added `is_known_phase()`; registered the 6 agent + 23
+  phase literals (7 newly-keyed workflows in `WORKFLOW_PHASES`, `implement-epic` widened, 6 new
+  `WORKFLOW_AGENTS` entries under `create-tickets`/`implement-epic`), each with a justifying
+  comment.
+- `tools/gate_checks/workflow_vocabulary_check.py` (new) — the production static check.
+- `tests/tools/test_workflow_vocabulary_check.py` (new) — 20 tests.
+- `registries/glossary_registry.jsonl` — 18 new `phase`-category terms (side effect fix, see Test
+  Summary).
+- `staging_artifacts/TCK-20260924-WORKFLOW-AGENT-LITERAL-VOCABULARY-CHECK/` — `investigation.md`
+  (incl. re-derivation), `plan.md`, `test_plan.md`, `vocab_scan.py` (frozen repro script).
 
 ## Completion Summary
-Open.
+Built the static check exactly as scoped: two literal families, five call-site shapes, one
+directory, additive-only registry fix, pytest-only (no pipeline wiring, per Resolved Open
+Question 3). Independently re-derived and confirmed the ticket's own 6/23/29 figures before
+touching anything, so no correction to AC2 was needed and the design peer was not notified of a
+discrepancy (there wasn't one). Caught a real, unscoped-but-necessary side effect (glossary
+registry gap from the new phase literals) and fixed it minimally via the existing append-only CLI,
+not by expanding this ticket's own scope.

@@ -25,7 +25,7 @@ from pathlib import Path
 _TOOLS_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_TOOLS_DIR))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tag_registry import load_registry  # noqa: E402
+from tag_registry import load_registry, get_skill_mapping  # noqa: E402
 from tag_report import categorize_tag, collect_completed_tickets  # noqa: E402
 from monitoring_consolidation import consolidate_all  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
@@ -502,20 +502,67 @@ def build_skill_usage_section(tools: list) -> dict:
     }
 
 
+def _skill_alternate_channels(root: Path | str | None = None) -> dict:
+    """{bare_skill_name: channel_description} for every skill named as a tag's `triggers_skill`
+    mapping (`tag_registry.py::get_skill_mapping()`) — the durable, already-recorded source for
+    "this skill's capability is also delivered outside the `Skill` tool" (TCK-20260927-RETRO-
+    SKILL-FLAG-BLIND-TO-OTHER-CHANNELS).
+
+    `get_skill_mapping()`'s `skill` values are `/`-prefixed (`"/security-review"`) since they
+    name a slash-invocable capability, not necessarily a literal `.claude/skills/<name>/`
+    directory — `/security-review` has no such directory at all today (confirmed by investigation:
+    no `.claude/skills/security-review/` has ever existed in this repo), which is exactly why the
+    zero-invocation catalog scan below can never even consider it today. The leading `/` is
+    stripped here so this dict's keys match `skills_dir.iterdir()`'s bare directory names for the
+    3 mapped skills that DO have a catalog entry (`api-design-principles`, `debugging-strategies`,
+    `python-performance-optimization`) — a name with no matching catalog entry (`security-review`)
+    simply never gets looked up by the caller, which is correct: this dict does not claim a skill
+    exists, only what channel covers it if it does.
+
+    Deliberately does NOT read any new per-skill `SKILL.md` frontmatter field — `get_skill_mapping()`
+    already durably covers every skill this ticket's own investigation named (the tag registry is
+    the single source `TCK-20260805-SKILL-GATE-CONVERSION-DECISION`'s outcomes are already recorded
+    against), so adding a second, parallel annotation surface would duplicate a fact this repo
+    already defines once (see [[feedback_define_information_once_never_repeat]]).
+    """
+    channels = {}
+    for tag, entry in get_skill_mapping(root).items():
+        skill_name = entry.get("skill") or ""
+        bare_name = skill_name.lstrip("/")
+        if bare_name:
+            channels[bare_name] = (
+                f"tag-driven routing via tag {tag!r} (tag_registry.py::get_skill_mapping())"
+            )
+    return channels
+
+
 def compute_zero_invocation_skill_flags(
     tools: list, skills_dir: Path | None = None, today: date | None = None
 ) -> dict:
     """All-time (never period-scoped) cross-reference of the real `.claude/skills/*/SKILL.md`
     catalog against `build_skill_usage_section(tools)`'s per_skill counts — flags any skill with
-    zero invocations, split into two non-conflated buckets rather than one undifferentiated list:
+    zero invocations, split into three non-conflated buckets rather than one undifferentiated list:
 
+    - `covered_by_other_channel`: a real, durable non-`Skill`-tool delivery channel is on record
+      for this skill (`_skill_alternate_channels()`, sourced from `tag_registry.py::
+      get_skill_mapping()`) — zero `Skill`-tool invocations here proves nothing about disuse, so
+      this is reported separately and NEVER counted in `flagged_stale`/`flagged_unknown_age`
+      (TCK-20260927-RETRO-SKILL-FLAG-BLIND-TO-OTHER-CHANNELS, AC1). Checked first, before either
+      of the two flagging buckets below, so a covered skill never also lands in one of them.
     - `flagged_stale`: a real, parseable `date_added` older than the grace period, zero
-      invocations. A confirmed-age signal.
+      invocations, no known alternate channel. A confirmed-age signal.
     - `flagged_unknown_age`: no `date_added` (missing, unparseable frontmatter, or unparseable
-      date string), zero invocations. A fail-open, lower-certainty signal — cannot prove the
-      skill is genuinely stale, but there is no recorded authorship date and no invocation either.
-      This fail-open choice is what makes `backend-testing`'s real pre-TCK-20260805-COMMUNITY-
-      SKILL-SWAP-UNDISCLOSED state (no `date_added` at all) correctly flaggable.
+      date string), zero invocations, no known alternate channel. A fail-open, lower-certainty
+      signal — cannot prove the skill is genuinely stale, but there is no recorded authorship date
+      and no invocation either. This fail-open choice is what makes `backend-testing`'s real
+      pre-TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED state (no `date_added` at all) correctly
+      flaggable.
+
+    A skill with a known alternate channel that ALSO has zero real Skill-tool invocations for a
+    genuinely different reason is still only ever reported once, in `covered_by_other_channel` —
+    this function makes no claim about whether that skill is otherwise healthy, only that a zero
+    count here does not mean what it would for an uncovered skill (AC3's "state what a zero does
+    and does not imply").
 
     `skills_dir`/`today` default to the real on-disk catalog / real wall-clock date only when the
     caller omits them — accepting both as parameters (rather than reading them internally by
@@ -524,17 +571,20 @@ def compute_zero_invocation_skill_flags(
     caller explicitly supplied `all_tools` — callers that have not opted in never trigger a real
     `.claude/skills/` scan as a side effect.
 
-    Read-only: only ever calls `skills_dir.iterdir()` and `skill_md.read_text()`. Never writes
-    to `.claude/skills/` or anywhere else.
+    Read-only: only ever calls `skills_dir.iterdir()`, `skill_md.read_text()`, and
+    `get_skill_mapping()` (itself read-only). Never writes to `.claude/skills/`,
+    `registries/tag_registry.jsonl`, or anywhere else.
     """
     skills_dir = skills_dir or _DEFAULT_SKILLS_DIR
     today = today or datetime.now(timezone.utc).date()
 
     per_skill = build_skill_usage_section(tools)["per_skill"]
+    alternate_channels = _skill_alternate_channels()
 
     flagged_stale = []
     flagged_unknown_age = []
     catalog_parse_errors = []
+    covered_by_other_channel = []
 
     for skill_path in sorted(skills_dir.iterdir()):
         skill_md = skill_path / "SKILL.md"
@@ -542,6 +592,11 @@ def compute_zero_invocation_skill_flags(
             continue
         name = skill_path.name
         if per_skill.get(name, 0) > 0:
+            continue
+
+        channel = alternate_channels.get(name)
+        if channel is not None:
+            covered_by_other_channel.append({"skill": name, "channel": channel})
             continue
 
         try:
@@ -569,19 +624,27 @@ def compute_zero_invocation_skill_flags(
         "grace_period_days": SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS,
         "flagged_stale": sorted(flagged_stale),
         "flagged_unknown_age": sorted(flagged_unknown_age),
+        "covered_by_other_channel": sorted(covered_by_other_channel, key=lambda row: row["skill"]),
         "catalog_parse_errors": sorted(catalog_parse_errors),
         "derivation": (
             "All-time (never period-scoped) cross-reference of the real .claude/skills/*/SKILL.md "
             "catalog against build_skill_usage_section(tools)'s per_skill counts. A skill with "
-            "any nonzero invocation count is never flagged, regardless of age. Of the remaining "
-            "zero-invocation skills: `flagged_stale` requires a real, parseable `date_added` "
-            f"older than the {SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS}-day grace period — a "
-            "confirmed-age signal. `flagged_unknown_age` covers skills with no (or unparseable) "
-            "`date_added` and zero invocations — an honest, lower-certainty signal, not proof of "
-            "staleness, since no authorship date can be established. This fail-open policy on "
-            "missing date_added is deliberate: it is what makes backend-testing's real pre-"
-            "TCK-20260805-COMMUNITY-SKILL-SWAP-UNDISCLOSED state (no date_added field at all) "
-            "correctly flaggable, per TCK-20260810-SKILL-USAGE-RETRO-TRACKING's AC2."
+            "any nonzero invocation count is never flagged, regardless of age. A zero count here "
+            "means only 'not invoked as a Skill tool call' -- it does NOT mean unused: a skill "
+            "named in tag_registry.py::get_skill_mapping() (tag-driven routing) is reported "
+            "separately as `covered_by_other_channel`, with the covering channel named, and is "
+            "never counted toward either flag below -- a capability delivered by agent dispatch, "
+            "phase-prompt enrichment, or an unconditional test guard reads as zero forever under "
+            "this tool-only count, so flagging it as stale/unused would be wrong regardless of "
+            "age. Of the remaining, genuinely-uncovered zero-invocation skills: `flagged_stale` "
+            "requires a real, parseable `date_added` older than the "
+            f"{SKILL_ZERO_INVOCATION_GRACE_PERIOD_DAYS}-day grace period — a confirmed-age signal. "
+            "`flagged_unknown_age` covers skills with no (or unparseable) `date_added` and zero "
+            "invocations — an honest, lower-certainty signal, not proof of staleness, since no "
+            "authorship date can be established. This fail-open policy on missing date_added is "
+            "deliberate: it is what makes backend-testing's real pre-TCK-20260805-COMMUNITY-"
+            "SKILL-SWAP-UNDISCLOSED state (no date_added field at all) correctly flaggable, per "
+            "TCK-20260810-SKILL-USAGE-RETRO-TRACKING's AC2."
         ),
     }
 
@@ -1845,7 +1908,9 @@ def generate(
     # when the caller explicitly supplied all_tools — see `zif` above). The whole heading is
     # omitted (not rendered empty) when neither subsection has anything to show.
     if su["total_skill_invocations"] > 0 or (
-        zif is not None and (zif["flagged_stale"] or zif["flagged_unknown_age"])
+        zif is not None and (
+            zif["flagged_stale"] or zif["flagged_unknown_age"] or zif["covered_by_other_channel"]
+        )
     ):
         lines.append("## Skill Usage")
         lines.append("")
@@ -1863,11 +1928,21 @@ def generate(
             lines.append(f"_{su['derivation']}_")
             lines.append("")
 
-        if zif is not None and (zif["flagged_stale"] or zif["flagged_unknown_age"]):
+        if zif is not None and (
+            zif["flagged_stale"] or zif["flagged_unknown_age"] or zif["covered_by_other_channel"]
+        ):
             lines.append(
                 f"### Zero-Invocation Flags (All-Time, {zif['grace_period_days']}-Day Grace Period)"
             )
             lines.append("")
+            if zif["covered_by_other_channel"]:
+                lines.append(
+                    "**Covered by another channel (zero `Skill`-tool calls does not mean "
+                    "unused):**"
+                )
+                for row in zif["covered_by_other_channel"]:
+                    lines.append(f"- `{row['skill']}` — {row['channel']}")
+                lines.append("")
             if zif["flagged_stale"]:
                 lines.append("**Flagged (confirmed age past grace period):** " + ", ".join(zif["flagged_stale"]))
             else:
