@@ -33,6 +33,29 @@ Sovereignty has three runtime effects:
 
 ---
 
+## Two independent ownership writers (deliberate, deferred consolidation)
+
+`owner_faction_id` is written by two separate code paths, not one:
+
+- `FactionInfluenceService.process_influence_shift()` (`src/world/influence.py`) — triggered only
+  when a death occurred this tick (`src/systems/lifecycle_systems/lifecycle.py:272`, gated on
+  `if recent_deaths:`).
+- `WorldDynamicsSystem.resolve_dynamics()`'s own ownership block (`src/engine/world_dynamics.py`)
+  — an unconditional sweep over every region, every tick, against final settled influence
+  regardless of cause, running earlier in the same tick's pipeline
+  (`world_dynamics` phase precedes `lifecycle`).
+
+As of `TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT`, both paths read the same
+`CONQUEST_THRESHOLD`/`LIBERATION_THRESHOLD` constants from `src/world/influence.py`, so they can no
+longer disagree numerically. **Consolidating onto one writer was investigated and deliberately
+deferred** — the two paths differ in trigger and phase position, not just implementation, and
+naively consolidating would delay death-driven flips by one tick (a determinism/ordering change
+requiring its own investigation). Tracked separately:
+`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`. Do not assume this is an oversight —
+it is a scoped, documented decision.
+
+---
+
 ## Taxation — `regional_sovereignty.py`
 
 Taxation runs every **100 ticks**.

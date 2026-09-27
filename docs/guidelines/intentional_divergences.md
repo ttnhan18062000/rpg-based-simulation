@@ -1892,6 +1892,44 @@ untouched by §2.57's fix (out of that ticket's scope).
   frequency is recognized as a tuning-pass question, not treated as a new defect.
 - **Status**: RATIFIED
 
+### 2.58 Regional Sovereignty Ownership Threshold Unified to ±50; `WorldDynamicsSystem`'s Independent ±100 Retired (TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT)
+- **Subsystem**: World Evolution / Regional Sovereignty
+- **Old Behavior**: Two live, independent ownership-transfer paths disagreed on threshold —
+  `FactionInfluenceService.process_influence_shift()` (death-gated) flipped ownership at ±50;
+  `WorldDynamicsSystem.resolve_dynamics()`'s own unconditional per-tick sweep flipped ownership at
+  ±100. `docs/mechanics/regional_sovereignty.md` (the Mechanics Bible chapter) stated ±100 as
+  canonical — itself an unreachable comparison (`> 100.0` against the `[-100, 100]` clamp at
+  `influence.py:59`) — while a second, newer Bible chapter (`05_world_evolution.md`, dated
+  2026-09-02) explicitly rebutted ±100 as merely the clamp bound, not a real trigger tier, and both
+  `docs/world/regional_sovereignty_runtime_contract.md` and
+  `docs/world/threat_and_consequences_contract.md` already stated ±50. The Bible was split against
+  itself, and the observable rule a region actually followed depended on which of the two live
+  code paths reached it first in a given tick.
+- **New Behavior**: `WorldDynamicsSystem`'s ownership block now imports and compares against the
+  same `FactionInfluenceService.CONQUEST_THRESHOLD`/`LIBERATION_THRESHOLD` constants (`-50.0`/
+  `50.0`) instead of its own hardcoded `±100.0` literals. `docs/mechanics/regional_sovereignty.md`
+  corrected to ±50 with reachable comparisons. Both writers remain (see the runtime contract doc's
+  new "Two independent ownership writers" section) — the fix resolves the *numeric* disagreement,
+  not the plurality of writers, which is deliberately deferred to
+  `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`.
+- **This is not behavior-neutral.** `WorldDynamicsSystem`'s own unconditional per-tick sweep now
+  triggers at half its former magnitude — ownership flips via that path occur sooner and more
+  often than before, for both conquest and liberation. This was unavoidable: any single direction
+  that made all four sources agree necessarily changed at least one live path's actual threshold.
+- **Rationale**: **Unified** — reconciling two independently-evolved, disagreeing thresholds into
+  one, following the newer, code-cited, deliberately-corrective Mechanics Bible chapter
+  (`05_world_evolution.md`, 2026-09-02) over the older, unreachable one
+  (`regional_sovereignty.md`, 2026-05-18, from "Resource V2 Implementation").
+- **Verification**: `tests/unit/world/test_sovereignty_events.py::test_world_dynamics_ownership_threshold_uses_shared_constants`
+  and `::test_world_dynamics_flips_ownership_at_shared_threshold_boundary` (new).
+  `tests/unit/world/test_influence.py::test_conquest_and_liberation_thresholds` (existing,
+  confirmed unaffected — `FactionInfluenceService` itself was never touched).
+- **Deferred, not fixed here**: consolidating onto a single ownership writer
+  (`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`) — the two paths differ in trigger and
+  phase position, and naive consolidation risks a one-tick determinism/ordering change that needs
+  its own investigation.
+- **Status**: RATIFIED
+
 ---
 
 ## 3. Unsupported / Retired Behavior

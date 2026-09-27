@@ -218,18 +218,44 @@ def build_cross_domain_view(
     }
 
 
-_COMPARISON_TEXT = """\
+def _classification_breakdown_prose(classification_counts: Dict[str, int]) -> str:
+    """Render only the non-zero classification counts as prose (e.g. '2 `CONFLICTING`, 2
+    `PARTIAL`'), computed from the same classification_counts dict the banner already renders --
+    never a second, independently hand-typed literal (TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-
+    DISAGREEMENT AC8)."""
+    return ", ".join(
+        f"{classification_counts[c]} `{c}`"
+        for c in ("SUPPORTED", "PARTIAL", "CONFLICTING", "MISSING", "INERT-OFF", "UNKNOWN")
+        if classification_counts.get(c, 0) > 0
+    )
+
+
+def _render_comparison(view: dict) -> str:
+    """The honest written comparison (architecture.md §8, AC7) -- counts computed directly from
+    `view` (the same dict the banner and per-domain sections already render from), never a second
+    hardcoded literal duplicating what the banner already computes
+    (TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT AC8). The qualitative,
+    judgment-call prose below the counts is intentionally still hand-written -- AC8's own scope is
+    the counts only, not a rewrite of the analysis itself."""
+    territory = view["territory"]
+    combat = view["combat"]
+    territory_total = len(territory["rows"])
+    combat_total = len(combat["rows"])
+    territory_breakdown = _classification_breakdown_prose(territory["classification_counts"])
+    combat_breakdown = _classification_breakdown_prose(combat["classification_counts"])
+
+    return f"""\
 ## Comparison
 
-Territory is `0/4` verified (every mapped mechanism is `code_trace`-only) with a classification
-breakdown of 2 `CONFLICTING`, 2 `PARTIAL`. Combat is `10/10` verified **at the Rule level** (every
-mapped Rule has at least one runtime-verified mechanism among its own mapped set) with a
-classification breakdown of 10 `PARTIAL`, 2 `UNKNOWN` -- but this is not uniform at the
-*mechanism* level: `combat_resolution` (`scenario`), `tactical_decision` (`corpus_run`), and
-`combat_engagement` (`scenario`) all carry a runtime instrument, while `movement` -- cited
-alongside `combat_resolution` on both `LIFE-01` and `LIFE-02` -- is `code_trace`-only. Every one
-of Combat's mapped Rules still clears the Rule-level bar only because `movement` is never a Rule's
-*sole* mapped mechanism.
+Territory is `{territory['verified']}/{territory_total}` verified (every mapped mechanism is
+`code_trace`-only) with a classification breakdown of {territory_breakdown}. Combat is
+`{combat['verified']}/{combat_total}` verified **at the Rule level** (every mapped Rule has at
+least one runtime-verified mechanism among its own mapped set) with a classification breakdown of
+{combat_breakdown} -- but this is not uniform at the *mechanism* level: `combat_resolution`
+(`scenario`), `tactical_decision` (`corpus_run`), and `combat_engagement` (`scenario`) all carry a
+runtime instrument, while `movement` -- cited alongside `combat_resolution` on both `LIFE-01` and
+`LIFE-02` -- is `code_trace`-only. Every one of Combat's mapped Rules still clears the Rule-level
+bar only because `movement` is never a Rule's *sole* mapped mechanism.
 
 **The inconvenient part, stated plainly**: Combat's much higher Rule-level verified-count is not
 evidence Combat is "more done" than Territory. `tactical_decision` -- the mechanism most of
@@ -369,7 +395,7 @@ def render_cross_domain(
         view["combat"],
     )
 
-    lines.append(_COMPARISON_TEXT)
+    lines.append(_render_comparison(view))
     return "\n".join(lines)
 
 
