@@ -21,9 +21,19 @@ advisory-only row-count signal) and already covered for `runs.jsonl`/`events.jso
 existing `duplicate_run_record_check.py`/`event_seq_integrity_check.py` anomaly detectors, which
 exist precisely to surface this class of issue rather than let it corrupt silently.
 
-**Scope note**: `tickets/working_log.csv` is NOT consolidated here — a disclosed scope reduction,
-not an oversight. See this ticket's own investigation.md for why (a synchronous done-checker
-dependency this ticket does not touch).
+**Update (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET): `tickets/working_log.csv` IS now
+consolidated here too**, closing the scope reduction above. The synchronous done-checker
+dependency that motivated leaving it out is solved on the *read* side instead — the two callers
+that need a just-closed ticket's row without waiting for consolidation
+(`check_working_log_no_row_yet`/`check_working_log_exactly_one_row` in `done_checker_static.py`,
+and `record_hand_orchestrated_closure.py`'s own double-write guard) now also read the pending
+per-batch shards directly (`working_log_parser.parse_pending_working_log_shards()`), so
+consolidation timing never blocks or races either check. `consolidate_pending_rows()` (the
+function that actually opens `tickets/working_log.csv`) lives in `tools/working_log_writer.py`
+itself, not here — `working_log_writer.py`'s own AST guard
+(`tests/tools/test_working_log_writer.py::test_working_log_csv_has_exactly_one_writer`) asserts it
+is the *only* file that ever opens that CSV in write mode, and this module calling into it rather
+than opening the file itself is what keeps that invariant true.
 
 Never raises to its own caller — `main()`'s only failure mode is a genuine internal error, matching
 every other tool in this module's fail-open convention (monitoring write/consolidation failure
@@ -39,6 +49,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from writer import write_lines  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from working_log_writer import consolidate_pending_rows  # noqa: E402
+from monitoring_shard_paths import per_identifier_shard_paths  # noqa: E402
+
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "agent-monitoring" / "data"
 JSONL_KINDS = ("runs", "events", "tools")
 
@@ -48,7 +62,12 @@ def consolidate_jsonl_kind(week_dir: Path, kind: str) -> int:
     Returns the count of per-ticket files consolidated (0 if none found or the canonical write
     failed -- in the failure case, every per-ticket file is left in place for a future retry)."""
     canonical = week_dir / f"{kind}.jsonl"
-    per_ticket_files = sorted(week_dir.glob(f"*.{kind}.jsonl"))
+    # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: delegates to the shared
+    # monitoring_shard_paths.per_identifier_shard_paths() resolver -- not the general read-
+    # widening shard_paths() (this glob is deliberately per-identifier-only; it must never also
+    # match the canonical file it folds INTO). Migrated for proliferation reasons, not because it
+    # was broken: this was already correctly narrow by design.
+    per_ticket_files = per_identifier_shard_paths(week_dir, kind)
     if not per_ticket_files:
         return 0
 
@@ -79,6 +98,13 @@ def consolidate_all(data_dir: Path = DEFAULT_DATA_DIR) -> dict:
         week_result = consolidate_week(week_dir)
         if any(week_result.values()):
             results[week_dir.name] = week_result
+
+    # working_log.csv is a single flat file, not week-sharded like runs/events/tools -- one call
+    # across the whole data_dir, not per-week (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET).
+    working_log_result = consolidate_pending_rows(data_root=data_dir)
+    if working_log_result["consolidated_rows"]:
+        results["working_log"] = working_log_result
+
     return results
 
 
@@ -105,6 +131,12 @@ def main(argv=None) -> int:
         if not result:
             print("Nothing to consolidate.")
         for week, counts in result.items():
+            if week == "working_log":
+                print(
+                    f"working_log: folded {counts['shard_files']} shard file(s) "
+                    f"({counts['consolidated_rows']} row(s)) into tickets/working_log.csv"
+                )
+                continue
             total = sum(counts.values())
             print(f"{week}: consolidated {total} per-ticket file(s) ({counts})")
     return 0

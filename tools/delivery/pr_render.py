@@ -223,14 +223,33 @@ def _first_paragraph(text: str) -> str:
     return text.split("\n\n", 1)[0].strip()
 
 
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _collapse_whitespace(text: str) -> str:
+    """Collapses all whitespace (including embedded newlines from a ticket's own multi-line `##
+    Title` prose) to single spaces, so a value that legitimately wraps across several lines in the
+    ticket source still renders as exactly one line wherever one line is required (a table row, a
+    bullet)."""
+    return _WHITESPACE_RE.sub(" ", text).strip()
+
+
+def _render_table_cell(text: str) -> str:
+    """Collapses whitespace (see `_collapse_whitespace`) and escapes a literal `|`, which would
+    otherwise be read as an extra column separator by a markdown table."""
+    return _collapse_whitespace(text).replace("|", "\\|")
+
+
 def _render_section(heading: str, tickets: list, warnings: list) -> str:
     if heading == "## What landed":
         if len(tickets) == 1:
             return _first_paragraph(tickets[0]["request_summary"])
-        return "\n".join(f"- {t['ticket_id']}: {t['title']}" for t in tickets)
+        return "\n".join(f"- {t['ticket_id']}: {_collapse_whitespace(t['title'])}" for t in tickets)
     if heading == "## Tickets":
         rows = "\n".join(
-            f"| {t['ticket_id']} | {t['tier']} | {t['title']} |" for t in tickets
+            f"| {_render_table_cell(t['ticket_id'])} | {_render_table_cell(t['tier'])} | "
+            f"{_render_table_cell(t['title'])} |"
+            for t in tickets
         )
         return "| ticket | tier | title |\n|---|---|---|\n" + rows
     if heading == "## Why":

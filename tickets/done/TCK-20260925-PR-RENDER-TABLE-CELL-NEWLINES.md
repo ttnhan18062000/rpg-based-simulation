@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260925-PR-RENDER-TABLE-CELL-NEWLINES
-phase: open
+phase: done
 date: 2026-09-25
 tags: [delivery, testing]
 ---
@@ -108,21 +108,57 @@ format cannot contain newlines.
 
 1. Whether to collapse at the point of reading a ticket's `## Title` or at the point of rendering a
    cell. **Rendering is the right place** — `## Why` legitimately wants the multi-line form, so
-   normalizing at read time would damage a section that is currently correct. Confirm against the
-   module's structure rather than taking this on faith.
+   normalizing at read time would damage a section that is currently correct. Confirmed against the
+   module's actual structure, not taken on faith: `load_ticket()` reads `title`/`request_summary`
+   raw and unmodified; `_render_section()` is the only place that shapes a value differently per
+   heading (`## Why` already calls `_first_paragraph()` there, distinct from `## Tickets`/`## What
+   landed`'s own formatting). Collapsing in `_render_table_cell()`/`_collapse_whitespace()`, called
+   only from the `## Tickets` and multi-ticket `## What landed` branches, leaves `## Why`'s
+   multi-line `_first_paragraph()` output completely untouched.
 
 ## Implementation Notes
 
-_To be filled during implementation._
+Added `_collapse_whitespace()` (all whitespace, including embedded newlines, collapsed to single
+spaces) and `_render_table_cell()` (collapse + escape a literal `|` as `\|`) in
+`tools/delivery/pr_render.py`. Applied to all three `## Tickets` table cells (ticket_id/tier/title)
+per the ticket's literal Scope wording ("any value rendered into a `## Tickets` table cell"), and to
+title only in the multi-ticket `## What landed` bullet branch (the single-ticket `## What landed`
+path renders `_first_paragraph(request_summary)` as prose, not a one-line-per-item list, and is
+correctly out of scope — a wrapped paragraph is not broken markdown the way a table cell or list
+item is).
+
+`## Why`'s own rendering path (`_first_paragraph()`) is untouched, confirming the Open-Questions
+answer above by direct inspection rather than assumption.
 
 ## Test Summary
 
-_To be filled during implementation._
+- `tests/tools/test_delivery_pr_render.py` — added
+  `test_multiline_title_with_pipe_collapses_to_one_row`: two tickets, one with a title spanning two
+  lines and containing a literal `|`. Asserts exactly one table row per ticket, that splitting each
+  row on markdown-unescaped pipes (`re.split(r"(?<!\\)\|", row)`) yields exactly 5 segments (3 real
+  cells), that every word from the original multi-line title survives (AC4: nothing truncated), and
+  that the multi-ticket `## What landed` list also emits exactly one line for that ticket.
+  `/home/u24desktop/Working/rpg-based-simulation/.venv/bin/python3 -m pytest
+  tests/tools/test_delivery_pr_render.py -q` — **19 passed** (18 existing + 1 new).
+- Full delivery-tooling regression:
+  `tests/tools/test_delivery_pr_render.py tests/tools/test_delivery_ci_triage_classifier.py
+  tests/tools/test_delivery_cost_measurement.py tests/tools/test_delivery_pre_push_advisory.py
+  tests/tools/test_delivery_pr_status.py tests/tools/test_delivery_templates.py` — **101 passed**,
+  0 failed.
 
 ## Files Changed
 
-_To be filled during implementation._
+- `tools/delivery/pr_render.py` — `_collapse_whitespace()`/`_render_table_cell()` added;
+  `_render_section()`'s `## Tickets` and multi-ticket `## What landed` branches use them.
+- `tests/tools/test_delivery_pr_render.py` — 1 new regression test, `re` import added.
+- `docs/REGISTRY.yaml` — regenerated as part of ticket close (routine, unconditional per the
+  Finalize rule).
 
 ## Completion Summary
 
-_To be filled during implementation._
+Fixed the renderer, not the tickets: a ticket's multi-line `## Title` (or one containing a literal
+`|`) no longer breaks the `## Tickets` markdown table or the multi-ticket `## What landed` bullet
+list. Confirmed the fix belongs at render time by reading the module's structure directly (`## Why`
+already uses a different, correct rendering path unaffected by this change) rather than assuming.
+No content lost — only whitespace collapsed and `|` escaped, exactly as scoped. Full delivery-
+tooling regression stayed green throughout. No known material gap.

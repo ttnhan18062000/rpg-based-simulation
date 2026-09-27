@@ -31,6 +31,9 @@ walks through the retrospective process so the findings actually get acted on.
    - **Slow Runs** — runs over 30 minutes, and which phase caused it.
 3. Fills in the `## Notes` section of the report with concrete findings and one
    proposed action per issue found, then leaves the report ready to commit.
+4. Reads `docs/agent-monitoring/README.md`'s `## Measurement Watchlist` table. For any row whose
+   "Check when" condition is now met, records a verdict in that row (or notes it is still not yet
+   checkable) — then, once a verdict is recorded, deletes the row per the table's own preamble.
 
 **Regenerating an existing report preserves its `## Notes` content by default** (TCK-20260915-RETRO-CLI-OVERWRITES-HAND-AUTHORED-NOTES): re-running the generator against a report that
 already has hand-authored notes splices that exact `## Notes` section back onto the freshly

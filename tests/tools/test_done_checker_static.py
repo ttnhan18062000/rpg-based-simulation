@@ -6,6 +6,7 @@ happy path.
 """
 
 import csv
+import json
 import os
 import subprocess
 import sys
@@ -188,7 +189,10 @@ def test_data_runs_clean_file_at_or_after_start_ts_fails_naming_path(tmp_path):
     assert str(leaked) in evidence
 
 
-def test_data_runs_clean_unparsable_start_ts_flags_any_file(tmp_path):
+def test_data_runs_clean_absent_start_ts_no_ticket_context_is_indeterminate(tmp_path):
+    """TCK-20260924-DONE-CHECKER-DATA-RUNS-CLEAN-NO-START-TS: an absent start_ts with no ticket_id
+    to look up a run record is INDETERMINATE, not FAIL — the hand-orchestrated CLI path's original
+    bug was reading this identically to a real dirty-repo finding."""
     runs_dir = tmp_path / "data" / "runs"
     proof_dir = tmp_path / "reports" / "release_proof"
     runs_dir.mkdir(parents=True)
@@ -199,8 +203,89 @@ def test_data_runs_clean_unparsable_start_ts_flags_any_file(tmp_path):
     old_epoch = time.mktime(time.strptime("2020-01-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
     os.utime(old, (old_epoch, old_epoch))
 
-    status, _ = check_data_runs_clean(None, runs_dir=runs_dir, proof_dir=proof_dir)
+    status, evidence = check_data_runs_clean(None, runs_dir=runs_dir, proof_dir=proof_dir)
+    assert status == "INDETERMINATE"
+    assert "--start-ts" in evidence
+
+
+def test_data_runs_clean_present_garbage_start_ts_still_flags_any_file(tmp_path):
+    """AC4/pipeline fail-closed rule: an explicit-but-unparsable start_ts (not merely absent)
+    still flags every file, unchanged from before this ticket."""
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    old = runs_dir / "old_run.json"
+    old.write_text("{}", encoding="utf-8")
+    old_epoch = time.mktime(time.strptime("2020-01-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(old, (old_epoch, old_epoch))
+
+    status, _ = check_data_runs_clean("not-a-date", runs_dir=runs_dir, proof_dir=proof_dir)
     assert status == "FAIL"
+
+
+def test_data_runs_clean_resolves_start_ts_from_own_run_record_pass(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    data_root = tmp_path / "agent-monitoring" / "data"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leftover = runs_dir / "old_run.json"
+    leftover.write_text("{}", encoding="utf-8")
+    old_epoch = time.mktime(time.strptime("2026-07-01T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leftover, (old_epoch, old_epoch))
+
+    _write_jsonl(
+        data_root / "2026-W27" / "runs.jsonl",
+        [{"run_id": "TCK-FAKE", "start_ts": "2026-07-05T00:00:00Z"}],
+    )
+
+    status, evidence = check_data_runs_clean(
+        None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
+    )
+    assert status == "PASS"
+    assert "run record" in evidence
+
+
+def test_data_runs_clean_resolves_start_ts_from_own_run_record_fail(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    data_root = tmp_path / "agent-monitoring" / "data"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+
+    leaked = runs_dir / "leaked_run.json"
+    leaked.write_text("{}", encoding="utf-8")
+    new_epoch = time.mktime(time.strptime("2026-07-06T00:00:00", "%Y-%m-%dT%H:%M:%S"))
+    os.utime(leaked, (new_epoch, new_epoch))
+
+    _write_jsonl(
+        data_root / "2026-W27" / "runs.jsonl",
+        [{"run_id": "TCK-FAKE", "start_ts": "2026-07-05T00:00:00Z"}],
+    )
+
+    status, evidence = check_data_runs_clean(
+        None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
+    )
+    assert status == "FAIL"
+    assert str(leaked) in evidence
+
+
+def test_data_runs_clean_ticket_id_with_no_matching_run_record_is_indeterminate(tmp_path):
+    runs_dir = tmp_path / "data" / "runs"
+    proof_dir = tmp_path / "reports" / "release_proof"
+    data_root = tmp_path / "agent-monitoring" / "data"
+    runs_dir.mkdir(parents=True)
+    proof_dir.mkdir(parents=True)
+    _write_jsonl(data_root / "2026-W27" / "runs.jsonl", [{"run_id": "TCK-OTHER", "start_ts": "2026-07-05T00:00:00Z"}])
+
+    status, evidence = check_data_runs_clean(
+        None, ticket_id="TCK-FAKE", runs_dir=runs_dir, proof_dir=proof_dir, data_root=data_root
+    )
+    assert status == "INDETERMINATE"
+    assert "--start-ts" in evidence
 
 
 # ---------------------------------------------------------------------------
@@ -460,6 +545,98 @@ def test_working_log_exactly_one_row_three_statuses_no_duplicate_passes(tmp_path
     ])
 
     status, _ = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path)
+    assert status == "PASS"
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: these two checks must see a just-staged,
+# not-yet-consolidated working_log row at a ticket's own close, without depending on a later
+# consolidation run (AC2), and the reopen-vs-duplicate distinction must still hold across a row
+# split between the canonical CSV and a pending shard (AC3).
+# ---------------------------------------------------------------------------
+
+
+def _write_working_log_shard(data_root: Path, batch: str, week: str, row: dict) -> None:
+    path = data_root / week / f"{batch}.working_log.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+
+
+def test_working_log_no_row_yet_fails_when_row_only_pending_in_shard(tmp_path):
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [])
+    data_root = tmp_path / "agent-monitoring" / "data"
+    _write_working_log_shard(data_root, "some-branch", "2026-W27", {
+        "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
+        "status": "DONE", "summary": "x", "artifacts_path": "none",
+    })
+
+    status, evidence = check_working_log_no_row_yet("TCK-FAKE", csv_path=csv_path, data_root=data_root)
+    assert status == "FAIL"
+    assert "pending working_log shard" in evidence
+
+
+def test_working_log_exactly_one_row_passes_via_pending_shard_only(tmp_path):
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [])
+    data_root = tmp_path / "agent-monitoring" / "data"
+    _write_working_log_shard(data_root, "some-branch", "2026-W27", {
+        "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
+        "status": "DONE", "summary": "x", "artifacts_path": "stored_artifacts/TCK-FAKE",
+    })
+
+    status, _ = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path, data_root=data_root)
+    assert status == "PASS"
+
+
+def test_working_log_exactly_one_row_reopen_across_csv_and_pending_shard_passes(tmp_path):
+    """AC3: a legitimate reopen where the FIRST close already consolidated (its row is in the
+    CSV) and the SECOND close is still pending (not yet consolidated) must still read as a
+    reopen, not a duplicate -- the two sources are checked together, not independently."""
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "BLOCKED", "investigation complete", "none"],
+    ])
+    data_root = tmp_path / "agent-monitoring" / "data"
+    _write_working_log_shard(data_root, "some-branch", "2026-W27", {
+        "timestamp": "2026-07-05T00:00:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
+        "status": "DONE", "summary": "reopened and resolved", "artifacts_path": "stored_artifacts/TCK-FAKE",
+    })
+
+    status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path, data_root=data_root)
+    assert status == "PASS"
+    assert "legitimate reopen" in evidence
+
+
+def test_working_log_exactly_one_row_duplicate_across_csv_and_pending_shard_fails(tmp_path):
+    """The dual-writer duplicate class this check exists to catch, now split across the two
+    sources: a DONE row already in the CSV, and a SECOND DONE row for the same ticket still
+    pending in a shard -- must still FAIL, exactly as if both were in the same CSV."""
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [
+        ["2026-07-01T00:00:00Z", "TCK-FAKE", "Fake", "DONE", "First write.", "stored_artifacts/TCK-FAKE"],
+    ])
+    data_root = tmp_path / "agent-monitoring" / "data"
+    _write_working_log_shard(data_root, "some-branch", "2026-W27", {
+        "timestamp": "2026-07-01T00:05:00Z", "ticket_id": "TCK-FAKE", "title": "Fake",
+        "status": "DONE", "summary": "Second write.", "artifacts_path": "stored_artifacts/TCK-FAKE",
+    })
+
+    status, evidence = check_working_log_exactly_one_row("TCK-FAKE", csv_path=csv_path, data_root=data_root)
+    assert status == "FAIL"
+    assert "duplicate Finalize run" in evidence
+
+
+def test_working_log_no_row_yet_ignores_pending_shard_for_a_different_ticket(tmp_path):
+    csv_path = tmp_path / "working_log.csv"
+    _write_csv(csv_path, [])
+    data_root = tmp_path / "agent-monitoring" / "data"
+    _write_working_log_shard(data_root, "some-branch", "2026-W27", {
+        "timestamp": "2026-07-01T00:00:00Z", "ticket_id": "TCK-OTHER", "title": "Other",
+        "status": "DONE", "summary": "x", "artifacts_path": "none",
+    })
+
+    status, _ = check_working_log_no_row_yet("TCK-FAKE", csv_path=csv_path, data_root=data_root)
     assert status == "PASS"
 
 

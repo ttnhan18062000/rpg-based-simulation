@@ -17,6 +17,12 @@ async def test_live_health_api_suite():
     env = os.environ.copy()
     env["SIM_OBS_MODE"] = "DEBUG"
     env["RPG_API_KEY_HASHES"] = f"{_TEST_CLIENT_ID}:{_TEST_KEY_HASH}"
+    # TCK-20260926-LIVE-HEALTH-COUNTER-SHARED-SINGLETON: the live-ticking engine's own telemetry
+    # and this test's manual /test/publish_event anomalies land in the same process-wide
+    # LiveAnomalyCounter singleton. "null" drops the engine's own events before they reach it
+    # (NullEventStreamAdapter), without affecting this test's injections, which call
+    # LiveEventPublisher directly and never go through this backend at all.
+    env["SIM_STREAM_BACKEND"] = "null"
     headers = {"X-API-Key": _TEST_RAW_KEY}
 
     log_file = open("uvicorn_health_obs.log", "w")

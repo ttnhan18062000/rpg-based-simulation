@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION
-phase: open
+phase: done
 date: 2026-09-26
 tags: [agent-monitoring, observability, data-quality]
 ---
@@ -146,27 +146,99 @@ _None yet — not scoped/planned._
 
 ## Assumptions / Open Questions
 
-1. Whether the shared resolver lives in `monitoring_batch_identifier.py` itself (co-locating
-   read/write shard-path logic in one module) or a new sibling module — not decided here, left for
-   whoever scopes the implementation.
-2. Whether every site's fallback nuance is worth preserving as-is, or whether the shape has now
-   stabilized enough (two independent keying schemes deep) that some sites' legacy fallbacks are
-   themselves dead weight worth removing — needs a per-site read before implementation, not a
-   blanket assumption either way.
+1. Whether the shared resolver lives in `monitoring_batch_identifier.py` itself or a new sibling
+   module. — **RESOLVED: new sibling module, `tools/agent-monitoring/monitoring_shard_paths.py`.**
+   `monitoring_batch_identifier.py`'s own scope is narrowly "what identifier does this one write/
+   read belong to" (git-branch/PR resolution with its own detached-HEAD/sidecar fallback chain);
+   this ticket's callers span a much wider footprint (`tools/gate_checks/`,
+   `tools/agent_replay_codex/`, `tools/agent-monitoring/` itself, and `src/api/agent_ops_dashboard/`,
+   which already reaches across into `tools/` for exactly this reason) — a new, narrowly-scoped
+   module matches that existing precedent rather than deepening the write-side module's own more
+   specific responsibility.
+2. Whether every site's fallback nuance is worth preserving. — **RESOLVED per site, see
+   investigation.md's table.** No site's fallback is dropped; every one keeps its own post-glob
+   logic exactly as before (mtime computation, line counting, run_id filtering, the `(dict,
+   source_path)` tuple shape, the scratch/legacy single-file fallback), with only the path-
+   discovery expression itself replaced by a call to the shared resolver.
 
 ## Implementation Notes
 
-_Not implemented — this ticket is filed for future scoping only, per explicit instruction. Left in
-`tickets/todos/`._
+Re-enumerated the read-site list from scratch per explicit instruction rather than trusting the
+ticket's own ~8-site count: found **9** real sites, including one (`verify_referential_
+integrity.py`) named by neither this ticket nor the design peer's own grep — its own comment cited
+the prior sweep ticket as having widened it, but that ticket's Files Changed never named this file;
+it carried an independent, drifted copy rather than calling the shared function its sibling
+(`validate.py::load_data_glob_with_line_count`) docstring claimed it used. Also corrected two false
+"doesn't match my regex" claims from the design peer's own brief (`validate.py`'s and
+`generate_retro.py`'s functions both do contain the idiom; their regex likely anchored on a bare
+`return`-statement shape the intermediate-local-variable form doesn't match) — verified by reading
+the code directly, not by re-running their tool.
+
+Built `tools/agent-monitoring/monitoring_shard_paths.py` (`shard_paths()`, `per_identifier_shard_
+paths()`) and migrated all 9 read-widening sites plus `monitoring_consolidation.py`'s own narrower,
+correctly-scoped-but-independently-hand-rolled per-identifier-only glob (folded in on proliferation
+grounds, not because it was broken — see investigation.md). `record_events.py`'s own `Path(".")`-
+prefixed glob is normalized to a plain relative path via the shared resolver; confirmed by reading
+`pathlib` semantics that `Path(".").glob(x)` and a bare relative `Path(y).glob(z)` are behaviorally
+identical for CWD-relative resolution, so this was a code-cleanliness fix, not a distinct behavioral
+bug the way it initially read.
+
+AC5's static guard exceeds what was asked: rather than "exactly one occurrence, in the shared
+module," the new module eliminates the idiom's fragile textual shape structurally (explicit
+per-week-directory iteration, never a second repo-wide double-glob call), so the guard asserts
+**zero** occurrences anywhere in the repo — confirmed to correctly find all 9 real pre-migration
+sites when run before migration (not merely assumed to work from the regex alone), and zero after.
 
 ## Test Summary
 
-_Not implemented._
+- New `tests/tools/test_monitoring_shard_paths.py` (9 tests): `shard_paths()`/
+  `per_identifier_shard_paths()` correctness across every combination (bare-only, per-identifier-
+  only, both, neither, multi-week, missing data_root), and the AC5 static guard.
+- Each of the 10 migrated files' own existing test suite re-run unmodified: `test_done_checker_
+  static.py` (142), `test_monitoring_shards.py` + `test_monitoring_shards_no_literal_paths.py` (18),
+  `test_bash_command_mix.py` (29), `test_generate_retro.py` (171), `test_validate_agent_
+  monitoring.py` (37), `test_agent_monitoring_manifest.py` (10), `test_verify_referential_
+  integrity.py` (12), `test_agent_ops_dashboard_ingest.py` (49), `test_record_events.py` (31),
+  `test_monitoring_consolidation.py` (14) — all pass, zero edits needed to any of them (AC4).
+- Combined run of all 11 files above: **522 passed**, 0 failed.
+- Full cross-cutting regression: `tests/tools/ tests/agent_replay_codex/ tests/api/ -m "not slow
+  and not extra_slow"` — **3270 passed**, 30 skipped, 28 deselected, 1 xfailed, 0 failed.
 
 ## Files Changed
 
-_Not implemented._
+- `tools/agent-monitoring/monitoring_shard_paths.py` (new) — the shared resolver.
+- `tools/gate_checks/done_checker_static.py` — `_jsonl_rows_for_run_id_across_weeks()` migrated.
+- `tools/agent_replay_codex/monitoring_shards.py` — `source_paths()` migrated.
+- `tools/agent-monitoring/bash_command_mix.py` — `week_shards()` migrated.
+- `tools/agent-monitoring/generate_retro.py` — `_source_mtime()` migrated (local var renamed to
+  avoid shadowing the imported function).
+- `tools/agent-monitoring/validate.py` — `load_data_glob_with_line_count()` migrated; docstring's
+  stale claim about `verify_referential_integrity.py` being a caller corrected.
+- `tools/agent-monitoring/manifest.py` — `_source_paths()` migrated.
+- `tools/agent-monitoring/verify_referential_integrity.py` — its own independent copy migrated.
+- `src/api/agent_ops_dashboard/ingest.py` — `_week_shard_paths()` migrated.
+- `tools/agent-monitoring/record_events.py` — inline glob in `compute_tool_stats()` migrated,
+  `Path(".")` prefix normalized away.
+- `tools/agent-monitoring/monitoring_consolidation.py` — `consolidate_jsonl_kind()`'s own
+  per-identifier-only glob migrated to `per_identifier_shard_paths()`.
+- `tests/tools/test_monitoring_shard_paths.py` (new) — 9 tests.
+- `staging_artifacts/TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION/
+  {investigation,plan,test_plan}.md` (new).
+- `docs/REGISTRY.yaml` — regenerated as part of ticket close (routine, unconditional per the
+  Finalize rule).
 
 ## Completion Summary
 
-_Not implemented._
+Consolidated the ~8 (really 9) independent read-side shard-glob call sites `TCK-20260925-
+MONITORING-STALE-READ-PATH-SWEEP` fixed and explicitly deferred into one shared resolver module,
+mirroring `monitoring_batch_identifier.py`'s own write-side consolidation. Re-enumerated the site
+list from scratch per instruction rather than trusting either this ticket's or the design peer's
+own count, finding a real 9th site and correcting two of the peer's own false negatives — evidence-
+checked, not taken on report. Every site's own fallback/legacy nuance is preserved exactly, per-
+site, with the reasoning recorded (AC3). The AC5 static guard delivers a stronger guarantee than
+asked for: the fragile idiom is structurally eliminated, not merely centralized, so the guard
+asserts zero remaining occurrences rather than exactly one.
+
+No known material gap. `data_runs_clean` is expected to behave properly on this close per T1's own
+fix landing earlier in this batch — if it still misbehaves, that is a T1 regression worth
+reporting, not noise to wave off.

@@ -12,6 +12,7 @@ from cost_proxy import compute_cost_proxy_score  # noqa: E402
 from vocabulary import WORKFLOW_PHASES, infer_workflow, is_known_agent  # noqa: E402
 from writer import write_lines  # noqa: E402
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 REQUIRED = {"run_id", "seq", "ts", "phase", "agent", "summary", "status"}
 VALID_STATUS = {"ok", "failed", "blocked", "skipped"}
@@ -97,9 +98,17 @@ def compute_tool_stats(
     # cost_proxy_score would silently zero out for every ticket using the new write path, since
     # this SAME run's own tool-call rows for the events being written right now would be invisible
     # until a future retro consolidation folds them into the canonical file.
-    tools_paths = sorted(Path(".").glob("agent-monitoring/data/*/tools.jsonl")) + sorted(
-        Path(".").glob("agent-monitoring/data/*/*.tools.jsonl")
-    )
+    # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery delegates to the shared
+    # monitoring_shard_paths.shard_paths() resolver. Root stays CWD-relative
+    # (Path("agent-monitoring/data"), the same shape as done_checker_static.py's/
+    # check_monitoring_write_recorded's own defaults) -- this is a spelling simplification of the
+    # old Path(".")-prefixed glob, NOT a CWD-independence fix; a first version of this migration
+    # claimed it was a fix and it wasn't (caught in review), and a follow-up attempt to make it
+    # genuinely CWD-independent via a __file__-anchored absolute root broke 7 of this file's own
+    # tests, which rely on `monkeypatch.chdir(tmp_path)` for isolation -- confirming CWD-relative
+    # is this function's actual, tested design (every real caller already runs with CWD=repo root,
+    # matching this project's own established convention), not an oversight to fix.
+    tools_paths = shard_paths(Path("agent-monitoring/data"), "tools")
     rows_by_key: dict[tuple, list[dict]] = defaultdict(list)
     for tools_path in tools_paths:
         for line in tools_path.read_text().splitlines():

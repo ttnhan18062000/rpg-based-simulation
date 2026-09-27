@@ -48,17 +48,35 @@ resolution is always authoritative; the sidecar exists purely as a cache for whe
 detached, and is overwritten every time a real branch name is available again.
 
 `detached-<sha>` is a deliberate **last-resort, intentionally-fragmenting** label -- a new file per
-distinct SHA a truly-detached, sidecar-less session visits (confirmed real: a session running
-detached all day and moving HEAD six times would produce six such files). This is accepted as a
-rare degraded mode, not something to "optimize away" by trying to make it stable across detaches
-without a real branch name to anchor to -- the sidecar already covers the common case (a worktree
-that was ever attached to a real branch even once).
+distinct SHA a truly-detached, sidecar-and-reflog-less session visits. This is accepted as a rare
+degraded mode, not something to "optimize away" by trying to make it stable across detaches
+without a real branch name to anchor to.
+
+**TCK-20260927-MONITORING-BATCH-SIDECAR-UNSEEDED-ON-DETACHED-WORKTREE**: the sidecar only covers
+"a worktree in which a monitoring hook ran while attached, at some point after this module
+shipped" -- not "a worktree that was ever attached to a real branch even once," which is what an
+earlier version of this docstring claimed. A worktree sitting on a detached HEAD every time a hook
+has ever run on it never gets a chance to write the sidecar, and stayed in the `detached-<sha>`
+branch permanently rather than rarely (observed live: a worktree attached to 20+ real branches over
+its life, `.claude/current_batch` still absent). Closed by inserting a reflog-recovery step between
+the sidecar and `detached-<sha>`: `<gitdir>/logs/HEAD` is a plain file recording every `checkout:
+moving from ... to <branch>` this worktree has ever done, and its most recent entry names the last
+branch this worktree was validly attached to -- read with the same no-subprocess discipline as
+every other step here, and written to the sidecar on success so the guarantee this docstring states
+now actually holds: any worktree with at least one real branch checkout anywhere in its reflog
+resolves to that branch, not only one seeded by a hook run after this fix landed. Not validated
+against `refs/heads/` -- the sidecar is for attribution, not a live git operation, so a branch
+already squash-merged and deleted is still the correct historical attribution for rows written
+under it.
 """
 from __future__ import annotations
 
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+_REFLOG_CHECKOUT_RE = re.compile(r"checkout: moving from \S+ to (\S+)$")
 
 _HEAD_REF_PREFIX = "ref: refs/heads/"
 
@@ -123,6 +141,38 @@ def _short_sha_from_head_file(cwd: Path) -> str:
     return content[:12] if content else "unknown"
 
 
+_RAW_SHA_RE = re.compile(r"^[0-9a-f]{7,40}$")
+
+
+def _branch_from_reflog(gitdir: Path) -> str | None:
+    """Last-resort recovery for a detached HEAD with no sidecar: the most recent `checkout:
+    moving from ... to <name>` entry in `gitdir/logs/HEAD` whose `<name>` is a real branch name,
+    not a raw SHA -- the last branch this worktree was validly attached to before whatever
+    detached it. Plain file read, no subprocess, matching every other step in this module.
+
+    A detach itself (`git checkout --detach <sha>`) writes its own `checkout: moving from
+    <branch> to <sha>` entry -- the exact shape this function searches for, with the detach
+    target standing in as `<name>`. Skipping any target that looks like a raw hex SHA is not an
+    edge case, it's the common case: the entry immediately preceding "why we're detached right
+    now" is always exactly this shape, and returning it as a "recovered branch" would be worse
+    than the bug this ticket fixes -- silently mislabeling a batch as its own commit SHA.
+
+    Returns None if the file is absent, empty, or has no real-branch checkout-to entry at all
+    (e.g. a fresh worktree, or a reflog pruned by `gc.reflogExpire`). Deliberately not validated
+    against `refs/heads/` beyond the SHA-shape check -- see this module's own docstring: a deleted
+    branch's name is still the correct historical attribution for rows already written under it."""
+    reflog_path = gitdir / "logs" / "HEAD"
+    try:
+        lines = reflog_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    for line in reversed(lines):
+        match = _REFLOG_CHECKOUT_RE.search(line)
+        if match and not _RAW_SHA_RE.match(match.group(1)):
+            return match.group(1)
+    return None
+
+
 _SIDECAR_PATH_NAME = ".claude/current_batch"
 
 
@@ -158,9 +208,15 @@ def resolve_batch_identifier(cwd: Path | None = None) -> str:
     2. If detached (no branch resolvable): the `.claude/current_batch` sidecar, self-healed by
        step 1 whenever it *does* resolve a real branch -- so a later detached call in the same
        worktree recovers the last known real identifier instead of degrading immediately.
-    3. If both are unavailable (a genuinely fresh worktree, never on a named branch, no sidecar
-       yet): a clearly-labeled `detached-<sha>` identifier, with a printed warning. Never returns
-       an empty string or any value that collapses onto the bare shared filename.
+    3. If the sidecar is also empty (TCK-20260927-MONITORING-BATCH-SIDECAR-UNSEEDED-ON-DETACHED-
+       WORKTREE: a worktree that has never had a hook run while attached never gets one written):
+       the worktree's own `logs/HEAD` reflog, whose most recent `checkout: moving to <branch>`
+       entry names the last branch this worktree was validly attached to. Seeds the sidecar on
+       success, same as step 1, so later calls in the same worktree are cheap again.
+    4. If all three are unavailable (a genuinely fresh worktree, never on a named branch, no
+       sidecar, no reflog entry either): a clearly-labeled `detached-<sha>` identifier, with a
+       printed warning. Never returns an empty string or any value that collapses onto the bare
+       shared filename.
     """
     resolved_cwd = cwd if cwd is not None else Path.cwd()
     cache_key = str(resolved_cwd)
@@ -179,12 +235,21 @@ def resolve_batch_identifier(cwd: Path | None = None) -> str:
         _cache[cache_key] = sidecar_value
         return sidecar_value
 
+    gitdir = _real_gitdir(resolved_cwd)
+    reflog_branch = _branch_from_reflog(gitdir) if gitdir is not None else None
+    if reflog_branch:
+        identifier = sanitize_for_filename(reflog_branch)
+        _write_sidecar(resolved_cwd, identifier)
+        _cache[cache_key] = identifier
+        return identifier
+
     short_sha = _short_sha_from_head_file(resolved_cwd)
     identifier = f"detached-{short_sha}"
     print(
-        f"WARNING: monitoring_batch_identifier: HEAD is detached and no {_SIDECAR_PATH_NAME} "
-        f"sidecar exists -- falling back to {identifier!r}. This never collapses to the shared "
-        "monitoring file, but the batch is not identified by its real branch/PR name.",
+        f"WARNING: monitoring_batch_identifier: HEAD is detached, no {_SIDECAR_PATH_NAME} sidecar "
+        "exists, and the reflog has no recoverable branch checkout -- falling back to "
+        f"{identifier!r}. This never collapses to the shared monitoring file, but the batch is "
+        "not identified by its real branch/PR name.",
         file=sys.stderr,
     )
     _cache[cache_key] = identifier

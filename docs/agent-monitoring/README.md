@@ -47,6 +47,19 @@ group under two weight sets and compares the resulting spend-by-phase/spend-by-a
 so a candidate reweighting's real impact is measured before it ships, not discovered after. See
 `make agent-monitoring-weight-check` below.
 
+## Measurement Watchlist
+
+A row here records a one-time measurement commitment: a metric, its baseline value pinned to a real
+ref/SHA, and the condition under which it becomes fair to check again. **Once a row's "Check when"
+condition is met and a verdict is recorded, the row is deleted** — this table is never a permanent
+record of an already-answered question (that is what left the removed Knowledge Gateway MCP section
+below in place for a whole extra ticket to clean up). A durable, standing tool that gets rerun
+indefinitely (the sections after this one) does not belong here at all.
+
+| Ticket | What landed | Metric | Baseline (ref) | Check when | Verdict |
+|---|---|---|---|---|---|
+| `TCK-20260924-DELIVERY-COST-MEASUREMENT` | `gh`-calls-per-PR delivery-cost measurement tool (`tools/delivery/delivery_cost_measurement.py`) | `gh_calls_per_pr` | 16.04 @ `0e0ff8f2172634226b1e8a04338fec8b5972a2c6` (W30–W39, `origin/main`, pre-epic) | After several PRs have been delivered through this epic's own delivery tooling (`gh pr create` via `pr_render.py`, CI polling via `pr_status.py`) in ordinary day-to-day use — **not** from this implementation batch's own corpus, whose `gh`/git traffic reflects building the tooling, not using it, for the identical reason the "before" baseline itself recorded no "after" | _(pending)_ |
+
 ## Baseline Metrics Snapshot (one-off)
 
 `tools/agent-monitoring/retrieval_baseline_metrics.py` is a separate, one-off/periodic
@@ -57,13 +70,6 @@ JSON report over the same `agent-monitoring/data/YYYY-Www/{runs,events,tools}.js
 limits inline via a `derivation`/`disclosure`/`reason` field — never a silent number. See
 `docs/parity_ledger/infrastructure.yaml`'s `INFRA-292` entry for exact source line-range
 provenance of each section.
-
-## Knowledge Gateway MCP Phase 0 Measurement Baseline (one-time, separate from both cadences)
-
-Removed by TCK-20260910-KGMCP-MEASUREMENT-TOOLING-REMOVAL — the corpus module, its runner, and the
-fixture it produced no longer exist. See
-`docs/engine/contracts/knowledge_gateway_mcp/measurement_baseline_contract.md` (status: historical)
-for the retained historical record of what this baseline measured.
 
 **2026-08-14 — `search_count`/`raw_investigation_count` now also feed the recurring cadence**
 (`TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING`). `SEARCH_TOOL_NAMES`,

@@ -16,6 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from legacy_reader import classify_provenance  # noqa: E402
+from monitoring_shard_paths import shard_paths  # noqa: E402
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
@@ -71,10 +72,10 @@ def _source_paths(agent_monitoring_dir: Path, filename: str) -> list[Path]:
     """
     data_dir = agent_monitoring_dir / "data"
     if data_dir.is_dir():
-        # TCK-20260925-MONITORING-STALE-READ-PATH-SWEEP: also globs the per-identifier shape
-        # (per-ticket, historically, and per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
-        source = filename.removesuffix(".jsonl")
-        return sorted(data_dir.glob(f"*/{filename}")) + sorted(data_dir.glob(f"*/*.{source}.jsonl"))
+        # TCK-20260926-MONITORING-READ-PATH-CONSOLIDATION: path discovery delegates to the
+        # shared resolver (also globs the per-identifier shape -- per-ticket, historically, and
+        # per-PR/branch since TCK-20260925-MONITORING-SHARD-PER-PR-KEY-FIX).
+        return shard_paths(data_dir, filename.removesuffix(".jsonl"))
     single = agent_monitoring_dir / filename
     return [single] if single.exists() else []
 
