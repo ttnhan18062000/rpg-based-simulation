@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS
-phase: open
+phase: done
 date: 2026-09-28
 tags: [process-improvement]
 ---
@@ -18,7 +18,7 @@ nothing detects it — the epic-staleness hook then nags a finished epic.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -121,8 +121,64 @@ None.
 
 ## Implementation Notes
 
+- Diffed each of the 7 files against its `tickets/done/` counterpart before deleting (Scope item
+  1). All 7 are pure pre-close snapshots: the only unique `todos/`-side content is stale
+  `status: active`/`phase: open` frontmatter, unchecked-box/placeholder body text, and (for the
+  epic ticket) a paragraph superseded by a later in-place correction already captured in the
+  `done/` copy. No `todos/`-only content was lost.
+- **Correction to Scope item 2's premise**: the item says to put the new detection function
+  "where the existing `_corpus_location_errors` helper's logic lives (`tools/validate_
+  frontmatter.py`)". Checked directly — `_corpus_location_errors` actually lives in
+  `tests/tools/test_validate_frontmatter.py:511`, a test-local helper, not in `tools/validate_
+  frontmatter.py`. Doesn't change the outcome: the item's own explicit target path
+  (`tools/validate_frontmatter.py`) is what a reusable function for `done_checker_static` to call
+  later needs anyway, so `find_closed_ticket_resurrections` was added there regardless, beside
+  `check_ticket_location_consistency`. `_corpus_location_errors` itself was left untouched
+  (out of scope — this ticket adds one new function, not a refactor of the existing one).
+  Confirmed with agent-working-design so the misattribution doesn't harden as fact elsewhere.
+- New function only checks `done` vs `{todos, inprogress}` basename collisions (matches Scope
+  item 2's wording exactly); `todos` vs `inprogress` is not checked, per the ticket's own scope.
+- Not wired into `done_checker_static` (per Scope item 2's explicit "do not" — left for a later
+  ticket to pick up now that the reusable function exists).
+
 ## Test Summary
+
+- `pytest tests/tools/test_validate_frontmatter.py -v` — 106 passed (3 new:
+  `TestClosedTicketResurrectionCorpus`'s real-corpus test, synthetic-resurrection negative test,
+  and synthetic-no-collision test).
+- `pytest tests/tools/` (bare directory, per project rule) — 3145 passed, 25 skipped, 28
+  deselected, 1 xfailed, 2 pre-existing failures unrelated to this change (confirmed present on
+  `origin/main` before this branch): `test_generate_registry.py::TestRealDocsTree::
+  test_check_flag_detects_no_drift_against_real_registry` (resolved below by regenerating
+  `docs/REGISTRY.yaml` at Finalize) and `test_monitoring_integrity_backlog_check.py::
+  test_real_corpus_is_at_or_below_all_five_conditions` (a working_log DONE row with no monitoring
+  run record for `TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION`, already on `origin/main`
+  — unrelated to this ticket's scope, flagged to agent-working-design for awareness since that
+  session is already working an adjacent monitoring-data-quality track).
+- `make agent-monitoring-epic-staleness` — `TCK-20260915-EPIC-MECHANISM-REGISTRY` no longer
+  listed (AC3). Only the genuinely-open `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` remains
+  stale, as expected (Out of Scope).
 
 ## Files Changed
 
+- `tools/validate_frontmatter.py` — new `find_closed_ticket_resurrections()` function.
+- `tests/tools/test_validate_frontmatter.py` — new `TestClosedTicketResurrectionCorpus` class (3
+  tests), new import.
+- Deleted: `tickets/todos/mechanism-registry/` (6 files: `SEQUENCE.md`,
+  `TCK-20260915-EPIC-MECHANISM-REGISTRY.md`, `TCK-20260915-ARTIFACT-STATE-CONVERGENCE.md`,
+  `TCK-20260915-MECHANISM-PRIORITY-DERIVATION.md`, `TCK-20260915-MECHANISM-REGISTRY-FOUNDATION.md`,
+  `TCK-20260915-MECHANISM-VERIFICATION-AXIS.md`) and
+  `tickets/todos/TCK-20260914-VENV-NAMING-CI-PARITY-SWAP.md`.
+- `docs/REGISTRY.yaml` — regenerated (`make docs-registry`) to reflect this ticket's own move and
+  the sibling ticket's tickets/ changes; no manual edits.
+
 ## Completion Summary
+
+All 4 acceptance criteria met. The 7 resurrected closed-ticket files are removed from
+`tickets/todos/`; a new corpus test (`TestClosedTicketResurrectionCorpus`) guards against
+recurrence over the real tree, backed by a reusable pure function
+(`find_closed_ticket_resurrections`) in `tools/validate_frontmatter.py`, deliberately not yet
+wired into `done_checker_static`. The epic-staleness hook no longer nags the already-finished
+`TCK-20260915-EPIC-MECHANISM-REGISTRY`. One premise correction recorded above (the target
+function's stated *current* location was wrong; the *target* location for the new function was
+still correct, so no rework was needed). No known material gap left unstated.

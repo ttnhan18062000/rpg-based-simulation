@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-TEST-SCOPE-MAP-MISSES-TOOLS-SUBPACKAGES
-phase: open
+phase: done
 date: 2026-09-28
 tags: [process-improvement]
 ---
@@ -19,7 +19,7 @@ changes there.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -113,8 +113,56 @@ None.
 
 ## Implementation Notes
 
+- Re-verified each of the four subdirs' sole test owner directly against this branch's tree
+  before committing (Scope item 1's instruction), not just trusting the survey table:
+  `tools/delivery/` → 6 real matches in `tests/tools/`; `tools/mechanism_registry/` and
+  `tools/semantic_control_plane/` → both confirmed sole-owned by `tests/unit/tools/` (several
+  files reference both subdirs, which is fine since they map to the same target); `tools/perf/`
+  → confirmed sole-owned by `tests/static/test_no_hardcoded_venv_interpreter_path.py` (a naive
+  grep for `tools[./]perf` also matched `tests.tools.perf_assertions` imports inside
+  `tests/perf/*.py` — false positives from the unrelated `tests/tools/perf_assertions.py` module;
+  excluded after checking the actual match context).
+- Added `_TOOLS_SUBDIR_EXPLICIT_MAP` in `tools/gate_checks/test_scope_coverage_static.py`,
+  checked before the flat-`tools/*.py`/`agent-monitoring`/`gate_checks` fallback, so none of the
+  four collide with the existing rules.
+- Mirrored the same four lines into `.claude/agents/test-scoper.md`'s Test Directory Map, with an
+  explicit note that its existing same-name-directory fallback does NOT apply to these four (the
+  exact bug Scope item 3 called out: that fallback would have sent `mechanism_registry/` and
+  `semantic_control_plane/` to `tests/tools/`, the wrong owner).
+- Did not change the None-fails-closed policy for unmapped subdirs (Out of Scope item 1) —
+  `tools/eval/`, `tools/search/`, `tools/hooks/` still correctly return `None` (no `.py` modules).
+
 ## Test Summary
+
+- `pytest tests/tools/test_test_scope_coverage_static.py -v` — 21 passed (4 new parametrized
+  cases for the explicit map, 1 new case confirming an unmapped subdir still returns `None`).
+- Direct verification of AC1: `expected_test_dirs_for()` returns the correct owner for a
+  representative path in each of the four subdirs.
+- Direct verification of AC2: `check_test_scope_coverage(["tools/delivery/pr_render.py"],
+  "pytest tests/tools/test_delivery_pr_render.py")` → FAIL;
+  `check_test_scope_coverage(["tools/delivery/pr_render.py"], "pytest tests/tools/")` → PASS.
+- `pytest tests/tools/` (bare directory, per project rule) — 3145 passed, 25 skipped, 28
+  deselected, 1 xfailed, 2 pre-existing failures unrelated to this change and already present on
+  `origin/main` (see the sibling ticket `TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS`'s
+  Test Summary for detail — same batch, same run).
 
 ## Files Changed
 
+- `tools/gate_checks/test_scope_coverage_static.py` — new `_TOOLS_SUBDIR_EXPLICIT_MAP` and lookup
+  in `expected_test_dirs_for()`.
+- `tests/tools/test_test_scope_coverage_static.py` — new parametrized test for the four mappings,
+  new test confirming an unmapped subdir still returns `None`.
+- `.claude/agents/test-scoper.md` — four new lines in the `tools/` Test Directory Map, plus a note
+  that the same-name-directory fallback doesn't apply to them.
+- `docs/REGISTRY.yaml` — regenerated (`make docs-registry`) to reflect this batch's tickets/
+  changes; no manual edits.
+
 ## Completion Summary
+
+All 3 acceptance criteria met. `tools/delivery/`, `tools/mechanism_registry/`,
+`tools/semantic_control_plane/`, and `tools/perf/` now each have a required test directory in the
+static gate check, matching each one's actual sole test owner re-verified directly against this
+branch's tree. `test-scoper.md`'s own map was updated in the same commit so the agent and the
+gate agree — without that, the agent's existing directory-name-guessing fallback would have sent
+two of the four subdirs to the wrong directory, which the new gate rule would then have blocked.
+No known material gap left unstated.

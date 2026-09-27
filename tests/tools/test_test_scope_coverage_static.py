@@ -13,6 +13,8 @@ test_architecture_reviewer_static.py's own convention.
 import sys
 from pathlib import Path
 
+import pytest
+
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
@@ -88,6 +90,31 @@ def test_tools_subpath_with_no_rule_returns_none_not_tests_tools_fallback():
     # that would mask genuinely unmapped directories instead of surfacing them for a future map
     # update.
     assert expected_test_dirs_for("tools/search/some_new_subdir/thing.py") is None
+
+
+@pytest.mark.parametrize(
+    ("path", "expected_dir"),
+    [
+        ("tools/delivery/pr_render.py", "tests/tools/"),
+        ("tools/mechanism_registry/mechanism_registry.py", "tests/unit/tools/"),
+        ("tools/semantic_control_plane/generate_territory_control_view.py", "tests/unit/tools/"),
+        ("tools/perf/live_map_ws_payload_measure.py", "tests/static/"),
+    ],
+)
+def test_explicit_tools_subdir_map_covers_the_four_previously_unmapped_subpackages(
+    path, expected_dir
+):
+    # TCK-20260928-TEST-SCOPE-MAP-MISSES-TOOLS-SUBPACKAGES: found reviewing #252, where
+    # tools/delivery/pr_render.py had no required test directory at all. Each of these four maps
+    # to a single real owning directory that is NOT a same-name mirror of the tools/ subdir name.
+    assert expected_test_dirs_for(path) == expected_dir
+
+
+def test_unmapped_tools_subdir_still_returns_none_after_explicit_map_added():
+    # The None-means-unknown contract must still hold for a tools/<subdir>/ not in
+    # _TOOLS_SUBDIR_EXPLICIT_MAP -- adding the four explicit mappings above must not widen the
+    # match to cover an unrelated new subdirectory.
+    assert expected_test_dirs_for("tools/some_future_subdir/thing.py") is None
 
 
 # ---------------------------------------------------------------------------
