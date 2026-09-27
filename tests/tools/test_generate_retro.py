@@ -2835,6 +2835,103 @@ def test_zero_invocation_flag_current_domain_skills_all_excluded_on_real_corpus(
     )
 
 
+# --- TCK-20260927-RETRO-SKILL-FLAG-BLIND-TO-OTHER-CHANNELS ---
+
+def test_covered_skill_not_flagged_and_names_its_channel(tmp_path):
+    """AC1: a skill whose capability is delivered through a non-Skill channel (here, tag-driven
+    routing via tag_registry.py::get_skill_mapping()'s "security" -> "/security-review" mapping)
+    is not flagged, and the covering channel is named. Demonstrated on "security-review" -- no
+    literal .claude/skills/security-review/ directory exists in this repo today (confirmed by
+    investigation), so this is a fixture, matching how the sibling AC2 fixture below the domain-
+    skill real-corpus check is also fixture-based for the same class of skill."""
+    _write_skill(tmp_path, "security-review", date_added="2026-01-01")  # would be stale otherwise
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "security-review" not in result["flagged_stale"]
+    assert "security-review" not in result["flagged_unknown_age"]
+    covered_names = [row["skill"] for row in result["covered_by_other_channel"]]
+    assert "security-review" in covered_names
+    channel = next(row["channel"] for row in result["covered_by_other_channel"]
+                    if row["skill"] == "security-review")
+    assert "security" in channel and "get_skill_mapping" in channel
+
+
+def test_uncovered_skill_with_no_channel_still_flagged(tmp_path):
+    """AC2: a skill with genuinely no delivery channel and no invocations is still flagged -- the
+    fix must not silence the signal wholesale."""
+    _write_skill(tmp_path, "genuinely-unused-skill", date_added="2026-01-01")
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "genuinely-unused-skill" in result["flagged_stale"]
+    assert "genuinely-unused-skill" not in [
+        row["skill"] for row in result["covered_by_other_channel"]
+    ]
+
+
+def test_covered_skill_never_double_counted_in_a_flag_bucket(tmp_path):
+    """A covered skill must appear in exactly covered_by_other_channel, never additionally in
+    flagged_stale or flagged_unknown_age (checked first, per the function's own docstring order)."""
+    _write_skill(tmp_path, "python-performance-optimization", date_added=None)  # unknown-age shape
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "python-performance-optimization" not in result["flagged_unknown_age"]
+    assert "python-performance-optimization" not in result["flagged_stale"]
+    assert "python-performance-optimization" in [
+        row["skill"] for row in result["covered_by_other_channel"]
+    ]
+
+
+def test_derivation_states_what_a_zero_does_and_does_not_imply(tmp_path):
+    """AC3: the derivation note names the non-Skill channels and states what a zero does/does not
+    imply, not just how the count is computed."""
+    result = compute_zero_invocation_skill_flags([], skills_dir=tmp_path)
+    assert "covered_by_other_channel" in result["derivation"]
+    assert "does not mean" in result["derivation"] or "does NOT mean" in result["derivation"]
+
+
+def test_alternate_channel_source_is_registry_not_hardcoded_names():
+    """AC4: the suppression source is durable and cited (get_skill_mapping()), never a hardcoded
+    list of skill names baked into the generator."""
+    import inspect
+    source = inspect.getsource(generate_retro._skill_alternate_channels)
+    assert "get_skill_mapping" in source
+    for hardcoded in ("'security-review'", '"security-review"',
+                       "'api-design-principles'", '"api-design-principles"'):
+        assert hardcoded not in source
+
+
+def test_nonzero_invocation_skill_never_flagged_regardless_of_channel_coverage(tmp_path):
+    """AC6 (third case): a skill with nonzero Skill-tool invocations is never flagged, unchanged --
+    the new covered_by_other_channel bucket must not alter this pre-existing guarantee."""
+    _write_skill(tmp_path, "api-design-principles", date_added="2026-01-01")
+    tools = [_tool_row(run_id="TCK-A", tool="Skill",
+                        input_summary="{'skill': 'api-design-principles'}")]
+    result = compute_zero_invocation_skill_flags(tools, skills_dir=tmp_path, today=date(2026, 8, 15))
+    assert "api-design-principles" not in result["flagged_stale"]
+    assert "api-design-principles" not in result["flagged_unknown_age"]
+    assert "api-design-principles" not in [
+        row["skill"] for row in result["covered_by_other_channel"]
+    ]
+
+
+def test_real_corpus_api_design_and_performance_covered_not_flagged():
+    """Real-corpus confirmation: api-design-principles and python-performance-optimization (both
+    tag-mapped in tag_registry.py::get_skill_mapping(), both zero-Skill-invocation today per this
+    ticket's own investigation) appear in covered_by_other_channel and never in either flag
+    bucket. If a real invocation is ever recorded for either, they simply leave the zero-count
+    population entirely (build_skill_usage_section's per_skill filter) rather than failing this
+    assertion, so this is a stable structural check, not a corpus-count snapshot."""
+    result = compute_zero_invocation_skill_flags(
+        generate_retro._load_source(generate_retro.DEFAULT_TOOLS_FILE, "tools")
+    )
+    covered_names = {row["skill"] for row in result["covered_by_other_channel"]}
+    for name in ("api-design-principles", "python-performance-optimization"):
+        assert name in covered_names, (
+            f"{name} expected in covered_by_other_channel, found in "
+            f"{sorted(covered_names)!r} (either it now has a real invocation, which is fine and "
+            f"this assertion should be relaxed, or the tag mapping / catalog entry regressed)"
+        )
+        assert name not in result["flagged_stale"]
+        assert name not in result["flagged_unknown_age"]
+
+
 def test_skill_staleness_check_ok_returns_true_no_warning(recwarn):
     assert skill_staleness_check(True, "unused message") is True
     assert len(recwarn) == 0
