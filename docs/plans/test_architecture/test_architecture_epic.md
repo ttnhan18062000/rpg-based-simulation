@@ -99,7 +99,7 @@ What this epic uniquely owns: the **suite-wide measurement model**, **assertion 
 
 ---
 
-## 5 · Directions to decide
+## 5 · Directions to decide (D1–D9)
 
 Each direction lists options and a recommendation. **Decision:** is left blank for review.
 
@@ -229,12 +229,58 @@ converting `test_rest_parity.py` to `TestClient`, and game-view frontend tests.
 
 **Decision:**
 
+### D9 · Test-authoring process (how tests get written), piloted on one narrow domain
+
+D1–D8 treat the suite's symptoms. D9 targets the process that produces them. How tests are
+authored today (measured from `.claude/workflows/implement-ticket.js` and `.claude/agents/`):
+
+| Current behaviour | Pattern it produces |
+|---|---|
+| `investigator` writes `test_plan.md` with categories *unit / integration / architecture guard* only; no scenario, property or outcome category, and no required test size or oracle | Inverted pyramid top; scorer tests built on hand-made `AuthoritativeState` |
+| "One new test per acceptance criterion"; `docs/testing/test_delta_budget.md` "bug fix = 1 regression test" | Per-ticket appendage files (`tests/unit/strategic/test_opportunities.py`, `tests/unit/social/test_social_memory.py`) |
+| `implementer` writes both the code and its tests | Tests confirm the implementation as written rather than the Bible law, so *never fires* defects ship with green unit tests |
+| `test-scoper` selects and runs tests; `test_scope_coverage_static` checks directory mapping | **No phase ever reviews test quality** |
+| Skills `test-driven-development`, `python-testing-patterns`, `backend-testing` exist | No agent or workflow references them |
+
+**Pilot first, change the pipeline second.** Steps, all in one pilot domain:
+
+1. **Review current behaviour (read-only):** classify each test by size (small/medium/large),
+   oracle (hand-picked value / Bible law / real run), and against Beck's Test Desiderata.
+2. **Measure assertion strength:** a mutation run on the domain (shares D4's tooling).
+3. **Defect-escape trace:** for each escaped defect in the domain, record which test should have
+   caught it and which pipeline step failed to ask for that test.
+4. **Derive authoring rules**, then change the pipeline in the cheapest order:
+   - **A.** Extend the `test_plan.md` template with a required size, oracle, and a
+     scenario/property category, and reference the existing test skills. Smallest change.
+   - **B.** Add an **advisory** test-review step after Implement (an existing reviewer agent or
+     a popular community skill, not a bespoke one).
+   - **C.** A separate agent writes the tests before the implementer writes the code (TDD with
+     split roles). Only if mutation scores stay weak after A and B.
+5. **Measure the effect** on the next few tickets in the domain with the D1 scorecard and
+   agent-monitoring.
+
+**Pilot-domain options:**
+
+| Option | Size | Why | Risk |
+|---|---|---|---|
+| **Progression** (`src/progression` + `src/domains/progression`) | 373 src LOC · 103 unit tests plus domain tests | Low in the bottom-up order (ch01 entity anatomy / XP). Shows every symptom: order-dependent failures on `main`, escaped defects (`TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED`, `allocate_ap` unreachable), and the open starvation-chain epic `TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN` | Must not touch the starvation-chain epic's files. The pilot is review-only until step 4 |
+| Strategic (`src/strategy` + `src/ai/goals`, `tests/unit/strategic`) | 299 unit tests across 61 files; 1 runs the kernel | Clearest *over-engineering* case (decision-scoring on hand-built state, ticket appendage) | Higher in the bottom-up order (cognition layer); findings are mostly about pruning, less about escaped defects |
+
+**Recommendation: progression**, because it exercises both halves (gaps and escapes, plus
+hygiene) on a small surface. Strategic is the natural second pilot, to validate the rules on the
+over-engineering side.
+
+**Decision (pilot domain):**
+
+**Decision (D9 overall):**
+
 ---
 
 ## 6 · Proposed sequencing (after decisions)
 
 1. **Measure:** D1 (scorecard + `make test-cov` fix) and D5.1 (isolation leak). Everything
-   after this is judged against the baseline.
+   after this is judged against the baseline. D9 pilot steps 1–3 (review-only) run alongside;
+   they feed D2's shape bands and D9 step 4's pipeline changes.
 2. **Strengthen:** D3 (property tests) and D4 (mutation baseline), which touch different files
    from step 3 and can run in parallel with it.
 3. **Prune:** D6 and D5.2–5.4.
@@ -253,3 +299,4 @@ converting `test_rest_parity.py` to `TestClient`, and game-view frontend tests.
 2. Should the scorecard extend `codebase-health-scorecard` or be a separate `make` target?
 3. Is D7's re-tier acceptable, given it will visibly demote ~1,400 entries?
 4. Mutation tool preference (`mutmut` vs `cosmic-ray`); `mutmut` is the more common default.
+5. D9 pilot domain: progression or strategic?
