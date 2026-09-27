@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: active
 layer: architecture
 authority: P2
 audience: agent
@@ -37,7 +37,7 @@ the end for the short list of things this document cannot decide for itself.
 standalone location, not appended to any of the above. Marked `PROPOSED / FOR REVIEW` throughout;
 promotion to `active` status is the owner's call, not decided here.
 
-**Companion document, added 2026-09-27 (fourth review round)**:
+**Companion document**:
 `docs/plans/systemic_world/first_wave_plan.md` holds the concrete milestone plan (entry/exit
 evidence, domain ownership, a decision gate) for the first wave this roadmap's §7/§8 recommend —
 kept separate so this document stays a capability/dependency map rather than a milestone transcript,
@@ -170,7 +170,7 @@ Milestone A and the Agency/Recognition thread.
 
 | Domain | `DESIGNED` (within current Catalog scope) | `REALIZED` (high-level) |
 |---|---|---|
-| Life/Body/Ecology (Batch 05) | Full, for cases the batch investigated | Uneven — no HP recovery mechanism at all; aggregate population disconnected from individual births/deaths (Batch 05's own finding, not re-verified this arc). **Confirmed this round (fourth review round, checked as a candidate trajectory, §7)**: `regional_trauma`/`calamity_intensity` (environmental-threat/calamity mechanisms) are `state: done` but real corpus runs `contradicted` them outright — built and wired, but the `trauma_score`/`calamity_intensity` values never actually move in real play (already-open tickets `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`, `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`). This is a stronger finding than "uneven" — a mechanism that was tested and found not to fire, not merely untested. |
+| Life/Body/Ecology (Batch 05) | Full, for cases the batch investigated | Uneven — no HP recovery mechanism at all; aggregate population disconnected from individual births/deaths (Batch 05's own finding, not re-verified this arc). **Confirmed 2026-09-27 (checked as a candidate trajectory, §7.4)**: `regional_trauma`/`calamity_intensity` (environmental-threat/calamity mechanisms) are `state: done` but real corpus runs `contradicted` them outright — built and wired, but the `trauma_score`/`calamity_intensity` values never actually move in real play (already-open tickets `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`, `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`). This is a stronger finding than "uneven" — a mechanism that was tested and found not to fire, not merely untested. |
 | Space/Environment (Batch 04) | Full, for cases the batch investigated | Two confirmed repository gaps (no route/portal mechanism; no non-physical movement) at Catalog-freeze time, not re-checked this arc |
 | Material/Economy (Batch 08) | Full, for cases the batch investigated | **Confirmed gaps this arc**: wealth→leverage conversion `MISSING` on three independent paths (`ME-S12`); the heirloom/`"CHEST"` resolver bug, plus a sibling risk in the harvest `"NODE"` resolver path (Part A) |
 | Social/Lineage (Batch 09) | Full, for cases the batch investigated | **Real, evidenced proof of the general shape working, with a confirmed reachability caveat (fourth round, 2026-09-27)** — feud inheritance, dying wishes, displacement, heirloom transfer, and leadership succession are all `PROVEN CURRENT` at the mechanism level *for the artificially-staged already-past-max-age case both repo tests use*. Attempting to compose a second hop through **ordinary, gradual per-tick aging** (no manual staging) surfaced a real, reproducible defect: `ApplyPath`'s passive-decay branch deactivates the entity one tick before `LifecycleSystem.resolve_lifecycle`'s own OLD_AGE check ever runs, so succession/heirloom/dying-wish dispatch **never fires** for a death that arrives gradually rather than pre-staged (§7). Whether this *scales* to a presentable, temporally-continuous player-facing sequence is now blocked on fixing this specific defect, not merely an unchecked design question (§5, §7). |
@@ -316,7 +316,7 @@ Path 1 (recognition-dependent — the hunter/shopkeeper thread this investigatio
   → Observation/delivery (3.5)
 
 Path 2 (NOT recognition-dependent — no new capability *area* needed; real engineering work still
-  required within it, per §7.1's confirmed defect — corrected, fifth review round):
+  required within it, per §7.1's confirmed defect):
   World substrate (3.1) → Autonomous world dynamics, lineage (3.2) → History/feedback,
   already-proven loop (3.4) → Observation/delivery (3.5)
 
@@ -339,13 +339,12 @@ recognition work to land first.
 
 ## 5. Delivery path
 
-**First-proof selection: `OPEN`, with lineage the leading candidate — corrected per external
-review, 2026-09-26.** The earlier draft called lineage the committed first proof because its
-underlying *mechanisms* are `PROVEN CURRENT`. That's true, but it doesn't prove a player-facing
-*projection* of them is feasible — event selection, temporal continuity, viewpoint/scope,
-provenance, and pacing are product-design and integration questions this investigation never
-checked, even though no new simulation mechanism looks necessary. "Few new simulation mechanisms
-needed" is not the same claim as "cheap to deliver."
+**Working default trajectory: lineage.** It is the only candidate with a real mechanism-level proof
+(§7.4); this is a local delivery default, not an owner-level question. **Whether it becomes a
+player-facing proof is not established**: its composition is `BLOCKED` on a confirmed defect (§7.1),
+and today no in-world carrier exists through which an observer could encounter the inheritance at
+all (§7.2). A mechanism being `PROVEN CURRENT` does not make its player-facing projection feasible,
+and "few new simulation mechanisms needed" is not the same claim as "cheap to deliver."
 
 **Feasibility gate to run before committing to any candidate** (five questions, per external
 review):
@@ -360,20 +359,11 @@ review):
 5. How does it compare in feasibility and experiential clarity to at least one other candidate
    trajectory?
 
-**Current state of this gate for lineage — superseded by the real run in §7 (2026-09-27); read that
-section for the authoritative per-question result.** Kept here only as a pointer so this section
-doesn't drift out of sync with §7 again (external review correction, third round): two individual
-death-to-heir transitions were re-run and confirmed passing, which is evidence for those specific
-transitions, **not** a completed five-question gate and **not** a player-facing proof. Composition
-into a longer, multi-generation sequence (the fuller form of question 1, and question 3) remains
-`UNKNOWN`. Question 5's comparison (economy/wealth) came back `BLOCKED` on its own missing
-conversion mechanism — evidence that economy has a gap, not evidence that lineage is the clearest
-player experience; no second comparison candidate with equivalent registered-mechanism evidence was
-found this round (§7), so the comparison stays limited rather than conclusive.
-
-**Recommendation**: lineage remains the leading candidate to run this gate against, but **selection
-stays `OPEN`** — §7's real run answered two of five questions partially, not all five, so this is
-still not a committed first-shipped proof.
+**Current state of this gate for lineage: see §7.3/§7.5, which is authoritative.** In short: the
+single death→heir hop is real; composing a second hop is `BLOCKED` on the natural-aging defect; the
+observer questions are `BLOCKED` on a missing in-world carrier; the comparison is limited because no
+second candidate qualified. None of the five questions is `passed`, so lineage is not a delivered or
+committed product proof.
 
 **The recognition-domain proof** (once §3.4's propagation gap closes): a player notices two
 merchants treat the same character differently, and can reconstruct why from situated context (who
@@ -396,7 +386,7 @@ one — a non-recognition, non-combat domain, evidenced today. A second contrast
 
 | Proof | Currently evidenced | Requires engineering | Evidence needed to claim delivery |
 |---|---|---|---|
-| Lineage (leading candidate, gate partially run — §7) | Mechanism: yes, for the single death-to-heir transition (`PROVEN CURRENT`, re-confirmed 2026-09-27); composition into a longer sequence: `BLOCKED` on a confirmed dual-writer race, not `UNKNOWN` (§7.1); product/player feasibility for the single hop: `partial`, design-check evidence exists (§7.2) | Turn the §7.2 design sketch into a real observer test (feasibility exercise, §8) for the single hop now; the multi-hop half needs §7.1's defect fixed first — a separate, tracked prerequisite, not open-ended projection work | The §7.1 defect fixed, *then* gate questions 1 (full composition) and 3 answered from a real seeded run at the longer timescale, *then* player-observation evidence per the calibrated criterion below |
+| Lineage (working default, gate partially run — §7) | Mechanism: yes, for the single death→heir hop (`PROVEN CURRENT`, re-confirmed 2026-09-27). Composition: `BLOCKED` on a confirmed defect (§7.1). Observer encounter: `BLOCKED` — no in-world carrier exists today (§7.2) | World side: fix the defect (ticket `TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`), then a composed run. Player side: design a minimal evidence-production + carrier path; the current observer sketch cannot yet be tested | World side: a real two-hop run through ordinary aging. Player side: an encounterable clue, *then* a blinded-human inference exercise per the calibrated criterion below |
 | Recognition (later) | Partial — direct-interaction case only | §3.4's propagation gap, §3.5's projection | Scenario-runtime evidence: a seeded scenario where two observers diverge, sourced from real propagation, not a global-scalar read |
 | Closed-loop (later still) | No | §3.4 opportunity-feedback + a later-decision trace | Scenario-runtime evidence spanning two decision points, not one |
 | Economy (contrasting) | No | §3.2's wealth-conversion edge | Scenario-runtime evidence for one concrete declared edge |
@@ -451,8 +441,8 @@ registry/test checks), **player observation** (which legitimate traces a player 
 
 | Area | Related Rules (SCP-mapped only where noted) | Realization/integration evidence | Consequential gaps | Missing evidence | Player-facing-proof potential |
 |---|---|---|---|---|---|
-| 3.1 World substrate | Milestone A (`ID-*`/`TIME-*`/`AUTH-*`/etc.) — **not SCP-mapped**, Catalog-level only | `TCK-20260401-ACTION-CONVERGENCE`'s replay-determinism law, verified. Regional-sovereignty dual-writer bug confirmed live (verified current, this session, 2026-09-23/24). | Cross-domain integration unverified outside the one checked case. | Whether the dual-writer pattern recurs elsewhere — `UNKNOWN`, bounded audit not yet run (§3.1). | Indirect only — a player never sees this layer directly. |
-| 3.2 Autonomous world dynamics (lineage slice) | `SOC-01` (Batch 09) — **not SCP-mapped** | `succession`/`aging_death` mechanisms, `registries/mechanisms.yaml`, `state: done`, `verified: {instrument: scenario, verdict: observed}` — the strongest evidence tier this repo uses. Two individual death-to-heir transitions re-run and confirmed passing 2026-09-27 (`tests/simulation_quality/test_heir_inventory_transfer_corpus.py`, `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py`) — **evidence for those specific (artificially-staged) transitions, not a composed longer sequence**. | Whether individual, proven transitions compose into a *longer*, multi-generation observable sequence — **now `BLOCKED`, not merely untested (fourth round, §7.1)**: a real, reproducible dual-writer race on `entity.lifecycle.active` (`ApplyPath` vs. `LifecycleSystem.resolve_lifecycle`) prevents succession from firing at all for a death that arrives through ordinary per-tick aging rather than pre-staging. | Chronology-over-a-real-period, identity continuity across many ticks — `BLOCKED`, not fabricated, moot until §7.1's defect clears. | High on single-transition mechanism evidence; single-hop player-facing feasibility `partial` (a design-check observer sketch exists, §7.2); composed-sequence feasibility gated on a confirmed defect fix, not open design work (§7.1, §8). |
+| 3.1 World substrate | Milestone A (`ID-*`/`TIME-*`/`AUTH-*`/etc.) — **not SCP-mapped**, Catalog-level only | `TCK-20260401-ACTION-CONVERGENCE`'s replay-determinism law, verified. Regional-sovereignty dual-writer bug confirmed live (verified current, this session, 2026-09-23/24). | Two confirmed authority-invariant violations with distinct mechanisms (region ownership; lifecycle-active race). | Bounded 5-boundary audit run (§3.1): 3 boundaries remain `UNKNOWN_WITH_REASON`; everything outside the named set stays `UNKNOWN`. | Indirect only — a player never sees this layer directly. |
+| 3.2 Autonomous world dynamics (lineage slice) | `SOC-01` (Batch 09) — **not SCP-mapped** | `succession`/`aging_death` mechanisms, `registries/mechanisms.yaml`, `state: done`, `verified: {instrument: scenario, verdict: observed}` — the strongest evidence tier this repo uses. Two individual death-to-heir transitions re-run and confirmed passing 2026-09-27 (`tests/simulation_quality/test_heir_inventory_transfer_corpus.py`, `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py`) — **evidence for those specific (artificially-staged) transitions, not a composed longer sequence**. | Whether individual, proven transitions compose into a *longer*, multi-generation observable sequence — **now `BLOCKED`, not merely untested (fourth round, §7.1)**: a real, reproducible dual-writer race on `entity.lifecycle.active` (`ApplyPath` vs. `LifecycleSystem.resolve_lifecycle`) prevents succession from firing at all for a death that arrives through ordinary per-tick aging rather than pre-staging. | Chronology-over-a-real-period, identity continuity across many ticks — `BLOCKED`, not fabricated, moot until §7.1's defect clears. | High on single-transition mechanism evidence. Single-hop player-facing feasibility is `BLOCKED` until an evidence producer and an in-world carrier exist (§7.2). Composed-sequence feasibility is gated on a confirmed defect fix (§7.1, §8). |
 | 3.3 Situated agency | `AGENCY-*`/`PERC-01`/`KNOW-01` — **SCP-mapped, all `PARTIAL`** (`registries/rule_classifications.yaml`, re-verified 2026-09-27) | Part A's own direct trace: Combat/Harvest/Quest-reward dispatch real; intent→payload edge `UNKNOWN`. | Shared upstream edge untraced across all three families. | Same. | Indirect — substrate beneath any future lens. |
 | 3.4 History and feedback (recognition) | `SOC-01`/`HP-*` — **not SCP-mapped** for the recognition-specific finding (the mapped `AGENCY`/`PERC`/`KNOW` rows above are Combat's own citations, not this area's) | Part B's own direct trace: `bonds`/`trust_history` real for direct participation; no producer for witnessed/hearsay. | The confirmed narrowest bottleneck in the whole arc. | Three-way primitive split still `OPEN` (§3.4). | Requires §3.4's own work to exist at all first. |
 | 3.5 Observation/player delivery | None — explicitly outside Catalog scope | Epistemic principle (§2) only; no gameplay lens chosen. | Everything — genuinely new area. | Everything not yet designed. | This *is* the delivery layer once built. |
@@ -465,7 +455,7 @@ simply a different evidentiary tier than an SCP-registered classification, and t
 conflate the two. No full-Catalog sweep was run to produce this table — only the Rules and
 mechanisms needed for the candidates actually under consideration in §7 were inspected.
 
-## 7. Feasibility gate results — lineage vs. economy/wealth and other candidates (run 2026-09-27; composition probe and observer sketch actually executed, fourth review round, 2026-09-27)
+## 7. Feasibility gate results — lineage vs. economy/wealth and other candidates (2026-09-27)
 
 **Comparison candidates chosen**: economy/wealth (confirmed `BLOCKED` — no conversion mechanism
 registered anywhere), plus a bounded search this round for a second, genuinely-different-shape
@@ -528,15 +518,31 @@ race, but that is untried, out of this probe's bound.)
 **Not** a real player-observation exercise — `PLAYER-EXPERIENCED` is not claimed for anything below.
 
 **Position**: a townsperson NPC with an existing `SocialComponent.bonds` entry to the deceased or
-heir, co-located at the death site. **Early clue**: the heir is visibly carrying an item never seen
-on them before, shortly after a nearby death — a legitimate in-world trace (inventory/equipment
-state), not a developer log. **Reasonable hypothesis available from that clue alone**: "this person
-is the deceased's heir" — true in this run, but the clue alone can't prove it (the fallback heir
-selector picks the highest-bond candidate, not necessarily a *socially designated* heir; mere item
-possession can't distinguish heir from opportunistic looter). **Later clue that could revise the
-hypothesis**: the heir observed acting on the inherited grudge or dying wish would strengthen the
-hypothesis toward confirmed — but **nothing in the current code path produces that observable
-action** (see negative check below), so this confirming clue cannot occur today without further work.
+heir, co-located at the death site. **Candidate early clue**: the heir now carries an item they
+did not carry before, shortly after a nearby death. **This is a potential trace in world state,
+not a clue the observer can currently encounter — corrected 2026-09-27 by a read-only code
+inspection**:
+- No in-world carrier delivers another entity's inventory or equipment to an observer.
+  `PerceivedEntity` (`src/core/cognition.py:28-33`) holds only id, kind, position, salience and
+  confidence.
+- `PerceptionUpdatePhase` (`src/domains/perception/phase.py`) has no production caller outside its
+  own module (verified by grep).
+- `KnowledgeModelService` assimilates only paid information facts (resources, recipes, danger,
+  leads).
+- The one real in-world effect of the death is the grief trigger for trusted allies
+  (`src/observability/event_extractor.py:1722-1762`). It carries the death, not the inheritance.
+  It is trust-scoped and location-independent, which itself deserves a look under the epistemic
+  principle (§2, §3.4).
+
+**No inheritance-origin signal exists either** (`ResourceTransferIntent(source_kind="CHEST")` at
+`lifecycle.py:252-257` carries no provenance). So even with a carrier, the clue would be only
+"this person now carries an item."
+
+**If a carrier existed**, the reasonable hypothesis "this person is the deceased's heir" would be
+plausible but unprovable. The fallback heir selector picks the highest-bond candidate, not a socially
+designated heir, and item possession cannot distinguish an heir from a looter. The confirming later
+clue (the heir acting on the inherited grudge or dying wish) also cannot occur today (negative
+check 1).
 
 **Negative check 1 (no discoverable trace)**: the inherited nemesis blocker and dying wish are pure
 cognition/strategic internal state — `LifecycleSystem._seed_dying_wish`'s own docstring states
@@ -558,9 +564,9 @@ work to guard against.
 | Gate question | Lineage | Economy/wealth (comparison) |
 |---|---|---|
 | **1. Consequential sequence from real state/history, no invented events?** | **Partial, with a confirmed blocker on composition.** The single hop is real, not fabricated (§7.1). Composing a *second*, ordinary-aging hop is not merely unchecked — it is **`BLOCKED` by a confirmed defect** (§7.1's dual-writer race). This is stronger information than "unknown": the blocker is named and reproducible, not just untried. | `BLOCKED` — no mechanism entry for `protection`/`patronage`/wealth-conversion exists in `registries/mechanisms.yaml` at all; `PROTECTION` contracts are confirmed constructed only in `src/certification/scenarios.py`, zero production call sites (Part B). |
-| **2. Player-plausible traces / legitimate unknowns?** | **Partial** — a concrete observer position and evidence packet were sketched and checked this round (§7.2): one legitimate early clue exists, one reasonable-but-unprovable hypothesis, and two named negative-check failures (no trace for the inherited grudge/dying wish; two named leak-risk fields). This is real design-check evidence, not a code run, and not yet a real player-observation exercise. | `UNKNOWN`, moot until question 1's blocker clears. |
+| **2. Player-plausible traces / legitimate unknowns?** | **`BLOCKED`** — the candidate clue exists in world state, but no in-world carrier delivers it to a situated observer, and no inheritance-origin signal exists (§7.2; verified by read-only code inspection 2026-09-27). The design sketch names what a legitimate trace would need; it cannot be tested yet. | `UNKNOWN`, moot until question 1's blocker clears. |
 | **3. Identity/chronology/causal continuity over the relevant period?** | **`BLOCKED`, not merely unknown** — the same composition defect that blocks Q1's second hop blocks any multi-tick chronology check by construction; there is no longer sequence to check continuity over until §7.1's defect is addressed. | `UNKNOWN`, moot for the same reason as Q2. |
-| **4. Projection/integration alone, or a missing simulation edge? (three separate sub-answers, per the finalize instruction)** | **(a) Does the tested transition need another simulation edge?** No — the single hop is real and correct as tested. **(b) Does its evidence production exist?** No — confirmed absent by direct inspection (§7.2's negative check 1); no provenance/evidence producer exists for an inheritance event at all. **(c) Could a situated projection be built from it?** Only for the single, already-proven hop, and only once an evidence producer exists — a projection across a *second* hop is blocked by §7.1's confirmed defect, not by unstarted projection-design work. This three-way split is itself new information the probe surfaced; the roadmap's prior single "partial" answer conflated these. | **A missing simulation edge, confirmed** — no registered mechanism exists to project from at all. |
+| **4. Projection/integration alone, or a missing simulation edge? (three separate sub-answers, per the finalize instruction)** | **(a) Does the tested transition need another simulation edge?** No — the single hop is real and correct as tested. **(b) Does its evidence production exist?** No — confirmed absent by direct inspection (§7.2); no provenance/evidence producer exists for an inheritance event. **(c) Could a situated projection be built from it?** Not today — it needs both an evidence producer and an in-world carrier (§7.2), and a projection across a *second* hop is additionally blocked by §7.1's defect. | **A missing simulation edge, confirmed** — no registered mechanism exists to project from at all. |
 | **5. Comparison** | See §7.4 — no second candidate qualified at lineage's evidence tier; comparison stays limited, not conclusive in lineage's favor. | Same limitation from the other side. |
 
 ### 7.4 Candidate comparison — bounded search, no artificial winner
@@ -593,60 +599,44 @@ run, not merely missing.
 
 ### 7.5 Gate verdict, stated precisely
 
-No question is fully `passed`, for any candidate. Lineage is `partial` on Q1 (real single hop;
-composition `BLOCKED`), `partial` on Q2 (a real design-check sketch exists, not yet a player test),
-`BLOCKED` on Q3 (moot until Q1's defect clears), and split three ways on Q4 (mechanism: yes;
-evidence-production: no; projection: blocked-by-Q1, not by unstarted design work). Economy/wealth is
-`BLOCKED` on Q1/Q4, `UNKNOWN`/moot on Q2/Q3. Q5 stays limited for both — no qualifying second
-candidate was found. **This is a feasibility exercise with one genuinely new, load-bearing finding
-this round (§7.1's confirmed composition defect), not a completed gate and not a player-facing
-proof.**
+No question is `passed`, for any candidate. Lineage is `partial` on Q1 (real single hop;
+composition `BLOCKED`), `BLOCKED` on Q2 (no in-world carrier, no provenance signal), `BLOCKED` on
+Q3 (moot until Q1's defect clears), and split three ways on Q4 (mechanism: yes; evidence production:
+no; projection: not buildable today). Economy/wealth is `BLOCKED` on Q1/Q4, `UNKNOWN`/moot on Q2/Q3.
+Q5 is limited for both. **This is a feasibility result with two load-bearing blockers — one
+world-side (§7.1's defect) and one player-side (no encounter path, §7.2) — not a completed gate and
+not a player-facing proof.** It does not disqualify lineage: the single hop is still the strongest
+mechanism evidence of any candidate checked.
 
-**This does not promote lineage to a proven product proof, and it does not disqualify lineage
-either** — the single hop remains the strongest mechanism-level evidence of any candidate checked
-across two rounds now. What changed this round is that "whether composition needs more simulation
-work" moved from `UNKNOWN` to **confirmed yes, with a named root cause** — genuinely new information,
-not an assumption resolved either optimistically or pessimistically.
+## 8. Recommended first wave
 
-## 8. Recommended first wave — synchronized with the audit already run and the confirmed lifecycle-active defect (revised 2026-09-27, fifth review round)
+**A recommendation for owner review, not a started wave.** The bounded authority audit (§3.1), the
+lineage composition probe (§7.1), and the observer-encounter inspection (§7.2) have already been
+run; this section builds on their results. The wave starts only after the owner reviews its scope.
+Milestone detail lives in `docs/plans/systemic_world/first_wave_plan.md`.
 
-**This is a recommendation, not a committed delivery wave.** The bounded causal/authority audit
-(§3.1) and the lineage composition probe (§7.1/§7.2) have both **already been run this arc** — this
-section reflects their actual results, not a plan to go run them. Full milestone detail (entry/exit
-evidence, owners, a decision gate) lives in the separate first-wave plan
-(`docs/plans/systemic_world/first_wave_plan.md`); this section stays a short recommendation.
+**Three independent tracks:**
 
-**Recommended: three independently-schedulable tracks, not one sequenced pair.**
+- **World-side correctness (M1, then M4a)**: M1 fixes the confirmed `entity.lifecycle.active`
+  dual-writer race (§7.1). Its ticket is drafted as `TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`.
+  M4a then verifies a real composed two-hop sequence through ordinary per-tick aging. **This track
+  never waits on, and is never paused by, any observer finding.**
+- **Player-side evidence path (M2)**: the observer's encounter check is already answered `BLOCKED`.
+  No in-world carrier and no inheritance-origin signal exist (§7.2). M2 is therefore a finite design
+  milestone: choose the minimum evidence-production and carrier path, name its owning domain, and
+  draft its ticket. Two domain-appropriate options exist:
+  - viewpoint-scoped visible equipment in perception, which needs `PerceptionUpdatePhase` wired
+    into production first;
+  - a witness-scoped local inheritance event, owned by lifecycle/lineage.
 
-- **World-side correctness (M1 in the first-wave plan)**: fix, or explicitly re-scope, the
-  confirmed `entity.lifecycle.active` dual-writer race (§7.1) so natural-aging succession fires
-  correctly, then verify a real composed two-hop sequence. **This track does not depend on, and is
-  not paused by, any player-side/observer finding** — world correctness and product legibility are
-  separate concerns with separate exit evidence (external review correction, fifth round): even if
-  the observer exercise below finds the available clue too weak, fixing the defect and verifying
-  composition remains worthwhile world-side work in its own right. **Rule/registry evidence**:
-  `succession`/`aging_death`, both `verified: observed` for the single hop; the defect itself,
-  already fully diagnosed with a root cause (§7.1). **Finite exit evidence**: a real two-hop run
-  through ordinary per-tick aging, identity/chronology preserved across both hops.
-- **Single-hop observer/evidence check (M2 in the first-wave plan)**: turn §7.2's design sketch into
-  a real check of state → evidence → encounter → inference, in that explicit order — the inventory
-  transfer is already a real state change; what's unverified is whether the specified observer can
-  *encounter* it (viewpoint access, timing, non-leakage — scriptable), separately from whether an
-  inheritance-*provenance* signal exists (confirmed absent, §7.2), separately again from whether a
-  human observer can draw a reasonable *inference* from it (requires a real blinded-human exercise —
-  a scripted test validates provenance/timing/access/non-leakage but cannot substitute for this last
-  step). **If no human exercise is run, `PLAYER-EXPERIENCED` stays `pending`**, not resolved either
-  way. **Finite exit evidence**: each of the four sub-checks answered from a real check, with
-  inference specifically left `pending` if unrun.
-- **Remaining causal/authority boundaries (M3 in the first-wave plan)**: the audit already produced
-  3 `UNKNOWN_WITH_REASON` boundaries (entity-death `alive_set`, faction-diplomacy
-  `diplomatic_relations_set`, public reputation) — each is **separately schedulable**, not one
-  atomic milestone, and each may resolve to `CONFIRMED_FINE_WITHIN_SCOPE`, `DEFECT_CONFIRMED`, *or*
-  `BLOCKED_WITH_REASON` if a representative scenario genuinely cannot be executed — never a forced
-  fine/defect verdict where the real answer is "couldn't test it."
+  Neither is a global history feed. Player-facing status stays `BLOCKED` until a clue is
+  encounterable, then `PENDING` until a blinded-human exercise runs.
+- **Remaining authority boundaries (M3a/M3b/M3c)**: three separately schedulable scenario checks
+  (entity-death `alive_set`, faction-diplomacy `diplomatic_relations_set`, public-reputation
+  `reputation_set`). Each ends `CONFIRMED_FINE_WITHIN_SCOPE`, `DEFECT_CONFIRMED`, or
+  `BLOCKED_WITH_REASON`.
 
-**All three tracks are parallel-safe** — none blocks another. The world-side composition check does
-not wait on the observer check; the remaining boundary audits do not wait on either.
+None of these tracks blocks another; the only gate in the wave is M1 → M4a.
 
 **Not recommended, evidence-consistent alternative**: defer the observer check and the remaining
 boundary audits entirely, fixing only the lifecycle-active defect first. Not recommended because
@@ -657,7 +647,7 @@ evidence the invariant needs a real enforcement discipline, not yet evidence of 
 pattern; either way, nothing about that count changes whether these three tracks can run in
 parallel.)
 
-## 9. Evidence workflow — existing registry/Semantic Control Plane tooling (added 2026-09-27, fourth round)
+## 9. Evidence workflow — existing registry/Semantic Control Plane tooling
 
 Per the finalize instruction's §1: real commands run against the current repo, not invented ones.
 Smallest incremental improvement only — explicitly not a second registry, a universal ontology, or
@@ -716,7 +706,7 @@ touching schema, validation, or the two-domain view generator. Everything else a
 has a real, working answer today. A broader general-purpose multi-Rule query CLI is a larger design
 decision than "smallest increment" and is left out of scope here, for whoever next scopes that work.
 
-## 10. Owner Decision List (refined per external review, 2026-09-26; trajectory-order item removed as already-resolved, fifth review round)
+## 10. Owner Decision List
 
 Only genuinely unresolved world-semantic or product-scope questions — items downgraded or removed
 across prior rounds (implementation questions mistaken for semantic ones, governance steps mistaken
@@ -745,7 +735,7 @@ per-round history, not repeated here.
    §2's epistemic principle warns about. Do not decide retain-vs-retire until this meaning, and its
    information provenance/scope, is established.
 
-**Removed, fifth review round**: the prior item 4 ("which candidate trajectory runs first") is no
+**Removed 2026-09-27**: the prior item 4 ("which candidate trajectory runs first") is no
 longer listed — it is resolved, not merely defaulted. §7.4's bounded search found no second
 candidate qualifying at lineage's evidence tier (economy `BLOCKED`, environmental/calamity
 `contradicted`, feud/displacement not independent, institutional/office `MISSING`); lineage is the
