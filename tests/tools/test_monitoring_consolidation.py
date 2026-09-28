@@ -230,9 +230,13 @@ def test_consolidate_pending_rows_default_path_resolves_against_module_not_forei
     """`working_log_writer.consolidate_pending_rows()`'s own defaults (`_WORKING_LOG_PATH`,
     `_DEFAULT_DATA_ROOT`) must resolve against the module's own checkout (`_REPO_ROOT`, anchored
     to `Path(__file__)`), not cwd, mirroring `monitoring_consolidation.DEFAULT_DATA_DIR`'s own
-    anchoring. Must fail on the pre-fix code: pre-fix, `data_root`/`csv_path` were cwd-relative, so
-    `data_root.exists()` (checked against the *foreign* cwd) is False and nothing is consolidated
-    at all -- {"consolidated_rows": 0, "shard_files": 0}, not the 1/1 this test asserts."""
+    anchoring. `_REPO_ROOT` doesn't exist pre-fix, so `monkeypatch.setattr(wlw, "_REPO_ROOT", ...)`
+    below raises `AttributeError` on that code -- this test's real regression coverage for the
+    *behavior* (a foreign cwd stealing rows into its own CSV) is
+    `test_consolidate_all_derives_csv_path_from_data_dir_not_foreign_cwd` above, which fails
+    pre-fix by assertion (the row lands in `foreign_csv`, not `owning_csv`), not by AttributeError.
+    This test instead pins the specific implementation shape the fix landed on: that
+    `consolidate_pending_rows()`'s zero-arg defaults resolve through `_REPO_ROOT`."""
     from tools import working_log_writer as wlw
 
     owning = tmp_path / "owning-checkout"
