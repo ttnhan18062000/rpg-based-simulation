@@ -213,3 +213,18 @@ established "Step 0" sidecar-clear pattern exactly, plus making failures visible
 silent. A third, independently-confirmed defect (write-sequence's missing event) found and fixed
 in the same pass. `TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION`'s `create-tickets` half
 deliberately stays open pending a genuinely new post-fix run. No known material gap left unstated.
+
+**Addendum, same session (agent-working-design review, found immediately after this ticket
+closed): the AC3 claim above was not actually met.** The "Step 0" sidecar-clear this ticket added
+only emptied the shared `.claude/current_run` file — `tools/agent-monitoring/post_tool_hook.py`
+reads exclusively the per-session-scoped `.claude/current_run.<session_id>` file whenever the hook
+payload carries a `session_id` (always, for real hooks; `TCK-20260824-SIDECAR-CROSS-SESSION-
+SCOPE`'s own deliberate no-fallback rule). The fix mirrored `implement-ticket.js`'s own
+established "Step 0" pattern faithfully — but that precedent carried the identical, previously
+unverified defect. So anomaly 3's 4-hour tail was **not** actually fixed by `d1ad0008f`; the real
+fix (a shared `clearSidecar()` helper that dual-writes both files, wired into all three workflows)
+is delivered by `TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE`. See that ticket for the
+real fix, its behavioural (not just text-pin) proof, and the correction to the write-sequence
+comment's own "permanently orphaned" claim above (accurate only when no epic is linked — when one
+is, write-sequence's rows silently counted into Link's own event instead, since the two phases
+shared a seq before this ticket's pushEvent fix separated them).

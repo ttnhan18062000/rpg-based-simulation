@@ -57,6 +57,29 @@ const resolveSeqOffset = async (id) => {
   } catch (e) { return 0 }
 }
 
+// TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: clears BOTH sidecar files the
+// writeSidecar() helper below writes. tools/agent-monitoring/post_tool_hook.py reads ONLY the
+// per-session-scoped file (.claude/current_run.$CLAUDE_CODE_SESSION_ID) whenever the hook
+// payload carries a session_id — which real hooks always do — and never falls back to the
+// shared file (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE's own deliberate no-fallback rule, not
+// touched here). This file's own two pre-existing clears (the `else` branch a few lines below,
+// and writeMonitoring's former agent-prompt "Step 0") each only emptied the shared file — a
+// silent no-op for real attribution. Defined here (ahead of writeSidecar's own definition
+// further down) since the `else` branch a few lines below is this helper's own first use site,
+// and needs to run via bash() on the orchestrator side, not inside an agent() prompt — the
+// dispatched agent's own shell is not guaranteed to see the same $CLAUDE_CODE_SESSION_ID this
+// orchestrator process does.
+const clearSidecar = async () => {
+  const out = await bash(
+    `printf '{}' > .claude/current_run
+if [ -n "$CLAUDE_CODE_SESSION_ID" ]; then printf '{}' > ".claude/current_run.$CLAUDE_CODE_SESSION_ID"; fi
+echo "CLEARSIDECAR_EXIT:$?"`
+  )
+  if (!(out || '').includes('CLEARSIDECAR_EXIT:0')) {
+    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${(out || '').trim()}`)
+  }
+}
+
 let seqOffset = 0
 if (ticketId) {
   seqOffset = await resolveSeqOffset(ticketId)
@@ -72,7 +95,7 @@ if sid:
 " "${ticketId}" "${seqOffset + 1}" 2>/dev/null || true`
   )
 } else {
-  await bash(`printf '{}' > .claude/current_run 2>/dev/null || true`)
+  await clearSidecar()
 }
 
 const TICKET_SCHEMA = {
@@ -389,20 +412,17 @@ const writeMonitoring = async (finalStatus) => {
   // Pre-embed startTs so the agent only substitutes one placeholder (<END_TS>).
   // When startTs is null the run crashed before Scope captured a timestamp — use END_TS for both.
   const startTsLiteral = startTs ? startTs : '<END_TS>'
+  // TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: previously an agent-prompt "Step 0"
+  // instructed the dispatched agent to clear the sidecar itself — but that only ever emptied the
+  // shared .claude/current_run file, which post_tool_hook.py doesn't read once a session_id is
+  // present (always, for real hooks) — a no-op. Calling the shared clearSidecar() helper here,
+  // orchestrator-side, BEFORE dispatching this agent, empties the actual scoped file the hook
+  // reads (TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION's own original concern still
+  // applies — this call's own tool calls must not inflate the prior phase's row count — clearing
+  // first makes them correctly unattributed instead).
+  await clearSidecar()
   const result = await agent(
     `Write agent monitoring records for run "${tid}". This is bookkeeping — do NOT fail if writes error.
-
-Step 0 — clear the tool-tracking sidecar FIRST, before any other command in this call:
-  Run via Bash: printf '{}' > .claude/current_run
-  This must run before Steps 1-3 (not after, as it did previously) — otherwise this call's own
-  Bash/python invocations below get attributed to whatever (run_id, seq) was still active from the
-  last real phase, inflating that phase's tools.jsonl row count beyond its real tool-call footprint
-  (confirmed via empirical audit: TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION). This still
-  matters even though tool_call_count/cost_proxy_score are no longer computed inline in this prompt
-  (TCK-20260719-COST-PROXY-WRITE-PATH moved that into record_events.py) — record_events.py reads
-  the same real tools.jsonl ground truth, so an unattributed clear here is still what keeps this
-  call's own tool calls from inflating the prior phase's count. Clearing first makes every command
-  below correctly unattributed (run_id: null) instead.
 
 Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ

@@ -226,3 +226,55 @@ def test_neither_new_helper_carries_execution_id_or_provider():
         helper_body = helper_match.group(0)
         assert "execution_id" not in helper_body
         assert "provider" not in helper_body
+
+
+# ---------------------------------------------------------------------------
+# 8. TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: implement-epic.js previously had NO
+#    sidecar clear at all on any exit path. Pins that all 3 real exit points (EPIC_CREATED,
+#    NOTHING_TO_DO, and the final DONE/STOPPED return) now call the shared clearSidecar() helper.
+#    (The very first return, INVALID_ARGS, fires before Discover's own writeSidecar() ever runs —
+#    nothing to clear yet — correctly excluded, same reasoning as create-tickets.js's own
+#    INVALID_ARGS exemption.)
+# ---------------------------------------------------------------------------
+
+
+def test_implement_epic_has_a_clear_sidecar_helper():
+    source = _read_epic_source()
+    assert "const clearSidecar = async () => {" in source
+    helper_start = source.index("const clearSidecar = async () => {")
+    helper_end = source.index("\n}", helper_start)
+    helper_body = source[helper_start:helper_end]
+    assert "printf '{}' > .claude/current_run\n" in helper_body
+    assert ".claude/current_run.$CLAUDE_CODE_SESSION_ID" in helper_body
+    assert "CLEARSIDECAR_EXIT" in helper_body
+    assert "log(" in helper_body and "WARNING: clearSidecar failed" in helper_body
+
+
+def test_implement_epic_clears_sidecar_before_epic_created_return():
+    source = _read_epic_source()
+    block_start = source.index("if (discovery.mode === 'request') {")
+    block_end = source.index("status: 'EPIC_CREATED',", block_start)
+    block = source[block_start:block_end]
+    assert "await clearSidecar()" in block
+    assert block.index("await clearSidecar()") < block.index("return {")
+
+
+def test_implement_epic_clears_sidecar_before_nothing_to_do_return():
+    source = _read_epic_source()
+    block_start = source.index("if (ticketIds.length === 0) {")
+    block_end = source.index("status: 'NOTHING_TO_DO',", block_start)
+    block = source[block_start:block_end]
+    assert "await clearSidecar()" in block
+    assert block.index("await clearSidecar()") < block.index("return {")
+
+
+def test_implement_epic_clears_sidecar_before_the_final_return():
+    source = _read_epic_source()
+    final_return_idx = source.rindex("return {\n  status: batchStatus,")
+    tail = source[:final_return_idx]
+    clear_idx = tail.rindex("await clearSidecar()")
+    report_lines_idx = tail.rindex("log(reportLines.join('\\n'))")
+    assert report_lines_idx < clear_idx < final_return_idx, (
+        "the final clearSidecar() call must run after the report is logged and before the "
+        "workflow's own final return"
+    )

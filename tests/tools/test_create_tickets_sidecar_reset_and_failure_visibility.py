@@ -34,19 +34,48 @@ def _read() -> str:
 
 
 def test_write_monitoring_clears_the_sidecar_before_any_other_step():
+    # TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE (agent-working-design review, found
+    # right after this ticket closed): the original fix here was an agent-prompt "Step 0"
+    # instruction that only cleared the SHARED .claude/current_run file -- a no-op, since
+    # post_tool_hook.py reads exclusively the per-session-scoped file whenever a session_id is
+    # present (always, for real hooks; TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE's own deliberate
+    # no-fallback rule). This test originally asserted the broken "Step 0" text was PRESENT --
+    # exactly the shape that let the bug ship with a passing pin. Rewritten to assert the real
+    # fix: an orchestrator-side clearSidecar() call (dual-write, same channel as writeSidecar)
+    # runs before the agent() dispatch, and the old agent-prompt text is gone.
     text = _read()
     monitoring_start = text.index("const writeMonitoring = async")
     label_idx = text.index("{ label: 'monitoring-write' }", monitoring_start)
     region = text[monitoring_start:label_idx]
 
-    step0_idx = region.find("Step 0 — clear the tool-tracking sidecar FIRST")
-    step1_idx = region.find("Step 1 — get current timestamp")
-    assert step0_idx != -1, "writeMonitoring must clear the sidecar as its own first step"
-    assert step1_idx != -1
-    assert step0_idx < step1_idx, "the sidecar clear must run before Step 1/2/3"
-    assert "printf '{}' > .claude/current_run" in region, (
-        "must clear the sidecar the same way implement-ticket.js's own writeMonitoring does"
+    assert "Step 0 — clear the tool-tracking sidecar FIRST" not in region, (
+        "the old agent-prompt Step 0 text must be gone, not left as a redundant no-op"
     )
+    clear_idx = region.index("await clearSidecar()")
+    agent_idx = region.index("const result = await agent(")
+    assert clear_idx < agent_idx, "clearSidecar() must run before the agent() dispatch, not after"
+    assert "printf '{}' > .claude/current_run" not in region, (
+        "no sidecar-clear literal should remain inside the agent prompt itself -- the real clear "
+        "now runs entirely on the orchestrator side"
+    )
+
+
+def test_clear_sidecar_helper_dual_writes_both_sidecar_files():
+    # The real fix: clearSidecar() must write BOTH the shared file AND the per-session-scoped
+    # file, mirroring writeSidecar()'s own dual-write shape -- post_tool_hook.py reads only the
+    # scoped one, so a clear missing it is a no-op for real attribution.
+    text = _read()
+    helper_start = text.index("const clearSidecar = async")
+    helper_end = text.index("\n}", helper_start)
+    region = text[helper_start:helper_end]
+
+    assert "printf '{}' > .claude/current_run\n" in region
+    assert '.claude/current_run.$CLAUDE_CODE_SESSION_ID' in region
+    assert "CLEARSIDECAR_EXIT" in region, (
+        "clearSidecar() must surface its own failure via an explicit exit-code marker, like "
+        "writeSidecar() does, not swallow it"
+    )
+    assert "log(" in region and "WARNING: clearSidecar failed" in region
 
 
 def test_every_return_after_the_first_is_preceded_by_write_monitoring():

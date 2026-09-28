@@ -134,6 +134,27 @@ if sid:
   )
 }
 
+// TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: this file previously had NO clear at
+// all on any exit path — writeSidecar() above only ever sets the sidecar, never empties it, so a
+// finished batch run's own (run_id, seq) kept absorbing later, unrelated tool calls in the same
+// session until the next real writeSidecar() write from any workflow. Mirrors the clearSidecar()
+// helper added to implement-ticket.js/create-tickets.js by the same ticket: dual-writes `{}` to
+// both the shared .claude/current_run and the per-session-scoped
+// .claude/current_run.$CLAUDE_CODE_SESSION_ID file — tools/agent-monitoring/post_tool_hook.py
+// reads ONLY the scoped file whenever a session_id is present (always, for real hooks), so a
+// clear that only empties the shared file (as the other two files' own pre-fix clears did) is a
+// silent no-op for real attribution.
+const clearSidecar = async () => {
+  const out = await bash(
+    `printf '{}' > .claude/current_run
+if [ -n "$CLAUDE_CODE_SESSION_ID" ]; then printf '{}' > ".claude/current_run.$CLAUDE_CODE_SESSION_ID"; fi
+echo "CLEARSIDECAR_EXIT:$?"`
+  )
+  if (!(out || '').includes('CLEARSIDECAR_EXIT:0')) {
+    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${(out || '').trim()}`)
+  }
+}
+
 await writeSidecar(-1, 'Discover', 'discover')
 const discovery = await agent(
   folder
@@ -264,6 +285,7 @@ if (discovery.mode === 'request') {
   await bash(
     `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1}' 2>/dev/null || true`
   )
+  await clearSidecar()
   return {
     status: 'EPIC_CREATED',
     epic_ticket_path: discovery.epic_ticket_path,
@@ -290,6 +312,7 @@ if (ticketIds.length === 0) {
   await bash(
     `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1}' 2>/dev/null || true`
   )
+  await clearSidecar()
   return {
     status: 'NOTHING_TO_DO',
     already_done: discovery.already_done,
@@ -570,6 +593,8 @@ const reportLines = [
 ]
 
 log(reportLines.join('\n'))
+
+await clearSidecar()
 
 return {
   status: batchStatus,

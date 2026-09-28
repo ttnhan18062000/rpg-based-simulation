@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE
-phase: open
+phase: done
 date: 2026-09-28
 tags: [agent-monitoring, data-quality]
 ---
@@ -19,7 +19,7 @@ and a finished run keeps absorbing tool calls.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -141,8 +141,86 @@ is present, so it passes while the clear has no effect.
 
 ## Implementation Notes
 
+- Verified the core claim directly before implementing: read `post_tool_hook.py` lines 112-136 —
+  confirmed `sidecar_path` resolves to the scoped file whenever `session_id` is truthy (both the
+  "exists" and "write null sentinel" branches), and the unscoped file is used only in the
+  defensive "no session_id at all" branch. Confirmed `implement-ticket.js`'s own two pre-existing
+  clears (line ~75, writeMonitoring's former Step 0 ~396) both only touch the shared file.
+- Added one `clearSidecar()` helper per workflow file (no shared module exists between these
+  standalone `.claude/workflows/*.js` files — matches the established `truncateSummary`/
+  `captureTs`-style local-duplicate convention), dual-writing `{}` to both `.claude/current_run`
+  and `.claude/current_run.$CLAUDE_CODE_SESSION_ID`, with the same exit-code-marker failure
+  visibility as `writeSidecar()` (`CLEARSIDECAR_EXIT`, `log()` WARNING on failure, fail-open).
+- `implement-ticket.js`: placed `clearSidecar` right after `resolveSeqOffset` (before its own
+  first use site, the `else` branch — it could not be placed after `writeSidecar`'s own
+  definition further down the file, a temporal-dead-zone `const` ordering bug caught before
+  committing). Replaced both the `else`-branch inline clear and writeMonitoring's own agent-prompt
+  "Step 0" text with `await clearSidecar()`, called orchestrator-side before the `agent()`
+  dispatch in the writeMonitoring case (the ticket's own instruction: never put the clear inside
+  an `agent()` prompt, whose shell isn't guaranteed to see the same `$CLAUDE_CODE_SESSION_ID`).
+- `create-tickets.js`: same replacement for its own writeMonitoring Step 0 (added earlier by
+  `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED`, now corrected).
+- `implement-epic.js`: had no clear at all. Added `clearSidecar()` calls at its 3 real exit
+  points reached after any `writeSidecar()` write — the `EPIC_CREATED` return, the
+  `NOTHING_TO_DO` return, and the final `DONE`/`STOPPED` return. The very first return
+  (`INVALID_ARGS`) is correctly excluded — it fires before Discover's own `writeSidecar()` ever
+  runs.
+- Corrected the `create-tickets.js` write-sequence comment's own "permanently orphaned" claim
+  (from `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED`): before this ticket's own
+  `pushEvent` fix, write-sequence and link-epic shared one `seq` value (no `pushEvent` ran between
+  their two `writeSidecar()` calls), so write-sequence's rows were silently absorbed into Link's
+  own event when an epic was linked, and genuinely orphaned only when it wasn't. Added the same
+  correction as an addendum on the closed ticket itself.
+
 ## Test Summary
+
+- New `tests/tools/test_sidecar_clear_reaches_scoped_file.py` — 5 tests, the real AC1 proof: runs
+  each workflow's own real `clearSidecar()` shell command (extracted textually from the actual
+  `.js` source, not re-implemented) against a `tmp_path` with a pre-populated stale scoped
+  sidecar and `CLAUDE_CODE_SESSION_ID` set, then feeds a synthetic payload through the real
+  `post_tool_hook.py` as a subprocess and asserts `run_id: null`. A parametrized case covers all
+  3 workflows. A second test proves the OLD pre-fix command (shared file only) does **not** clear
+  attribution against the identical setup — the real regression proof this ticket's own AC1 asks
+  for. A third confirms the real command still also empties the shared file (no regression to the
+  one legitimate fallback path).
+- `tests/tools/test_current_run_sidecar_orchestrator.py` — 2 tests corrected: one pin updated
+  (the `else`-branch literal), one rewritten from asserting the *broken* "Step 0" text was present
+  to asserting the real orchestrator-side `clearSidecar()` call precedes the `agent()` dispatch.
+- `tests/tools/test_create_tickets_sidecar_reset_and_failure_visibility.py` — same rewrite for
+  create-tickets.js's own writeMonitoring, plus one new test pinning `clearSidecar()`'s dual-write
+  shape.
+- `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` — 4 new tests: the helper's own
+  shape, and each of implement-epic.js's 3 new call sites (ordering relative to their own return).
+- `node --check` on all 3 workflow files — exit 0.
+- AC4: bare `pytest tests/tools/ -m "not slow and not extra_slow"`, run from the worktree — 3190
+  passed, 25 skipped, 28 deselected, 1 xfailed, 0 failed.
 
 ## Files Changed
 
+- `.claude/workflows/implement-ticket.js` — new `clearSidecar()` helper; both pre-existing
+  shared-only clears replaced with it.
+- `.claude/workflows/create-tickets.js` — new `clearSidecar()` helper; writeMonitoring's Step 0
+  replaced with an orchestrator-side call; write-sequence comment corrected.
+- `.claude/workflows/implement-epic.js` — new `clearSidecar()` helper; 3 new call sites (none
+  existed before).
+- `tests/tools/test_sidecar_clear_reaches_scoped_file.py` — new file, 5 behavioural tests.
+- `tests/tools/test_current_run_sidecar_orchestrator.py` — 2 tests corrected.
+- `tests/tools/test_create_tickets_sidecar_reset_and_failure_visibility.py` — 1 test rewritten, 1
+  new test added.
+- `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` — 4 new tests.
+- `tickets/done/TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED.md` — Completion Summary
+  addendum: AC3 was not actually met by that ticket, delivered here instead.
+- `agent-monitoring/retro/RETRO-2026-W39.md` — regenerated (this ticket touches workflow prompts).
+- `docs/REGISTRY.yaml` — regenerated (`make docs-registry`); no manual edits.
+
 ## Completion Summary
+
+All 4 acceptance criteria met. The real defect — every workflow's sidecar "clear" only emptied
+the file `post_tool_hook.py` doesn't read, a silent no-op inherited from `implement-ticket.js`'s
+own pre-existing (and previously unverified) precedent — is fixed with one shared `clearSidecar()`
+pattern per workflow, dual-writing both files exactly like `writeSidecar()` already does. Proven
+behaviourally, not just by text pin: a real subprocess test runs each workflow's actual shell
+command through the real `post_tool_hook.py` and confirms `run_id: null`, and confirms the old
+command fails the identical test. `implement-epic.js`, which had no clear at all, now has one at
+all 3 of its real exit points. The `CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED` ticket's AC3 claim
+is corrected via addendum rather than silently rewritten. No known material gap left unstated.
