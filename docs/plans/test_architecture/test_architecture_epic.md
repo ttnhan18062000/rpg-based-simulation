@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture: Measurement Model and Direction
 
-**Status, drafted 2026-09-28. ALL DIRECTIONS DECIDED (D1–D10). Core RPG is the first program (§1a). No tickets exist yet.** Each `D#` section below
+**Status, drafted 2026-09-28. D1–D10 decided (several are being re-opened after the reviewer evidence memo, `tmp/test_architecture_evidence_memo.md`); D11 pending. Core RPG is the first program (§1a). No tickets exist yet.** Each `D#` section below
 is a direction that needs a decision. Tickets are cut only after the directions are agreed, one
 child ticket per accepted direction (or per phase of one), under a future
 `tickets/todos/test-architecture/` epic folder.
@@ -73,6 +73,9 @@ invented without one.**
   assertions catch a changed operator or constant?; high coverage with a low mutation score is the
   pseudo-tested-method pattern [R6]), and **defect-escape analysis** (which defect
   classes reached `main` past a green suite).
+- **Oracle as a second classification axis** [R24]: scope/size alone cannot place SimQ, the
+  census, or audits. Every instrument is classified by *scope × oracle × result type × cadence*
+  (D11). Reviews are *static testing*, distinct from executing tests [R25].
 - **Simulation-specific oracles:** property-based tests (Hypothesis [R10]) for laws, metamorphic tests [R11]
   for the kernel (relations between runs, not absolute values), and golden-master tests for
   regression snapshots.
@@ -87,7 +90,7 @@ not** rebuild them; it consumes their outputs as scorecard inputs.
 | `docs/plans/mechanic_verification_scenarios_proposal.md` | Q2 per-mechanic staged scenarios (`tests/mechanic_scenarios/`) | Sets the target *share* of the scenario tier and measures it; does not design scenarios |
 | `docs/plans/simulation_execution_census_initiative.md` (`tools/execution_census.py`) | Reachability in real runs | Consumes the census as the liveness signal; provisional until determinism holds |
 | `docs/plans/mechanism_registry_initiative.md` + `mechanism_claims_as_tests_initiative.md` (epic `TCK-20260915-EPIC-MECHANISM-REGISTRY`) | Per-mechanism verification state | Consumes the verification axis; does not duplicate it |
-| SimQ (`src/simulation_quality/`) | Q3 balance and emergent health | Only relocates misfiled narrow tests out of it (D6) |
+| SimQ (`src/simulation_quality/`, `/simq-audit`) | Pillar scoring logic, anchors, drift classification | Classifies SimQ as the *corpus evaluation* instrument (D11), reports its state in the scorecard, and relocates misfiled narrow tests (D6). Does not change scoring or anchors |
 | Slow-regression determinism (`TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2`) | Kernel determinism root cause | **Parked by user decision.** Out of scope; noted as a precondition for D3's metamorphic half |
 
 What this epic uniquely owns: the **suite-wide measurement model**, **assertion strength**
@@ -96,7 +99,7 @@ What this epic uniquely owns: the **suite-wide measurement model**, **assertion 
 
 ---
 
-## 5 · Directions to decide (D1–D10)
+## 5 · Directions to decide (D1–D11)
 
 Each direction lists options and a recommendation. **Decision:** is left blank for review.
 
@@ -320,6 +323,39 @@ portfolio.
 
 **Decision (2026-09-28): A, domain by domain, bottom-up, starting with progression;** the bold ✗ cells are pulled forward inside their domain batches.
 
+### D11 · Verification instruments beyond the pytest levels (corpus evaluation, measurement, audits)
+
+The level stack (unit → component → kernel integration → mechanic scenario → cross-domain) covers
+only instruments with an *exact* oracle and a pass/fail result. Three more instruments exist and
+answer different questions (as-is facts in
+[overview §4.7](current_test_system_overview.md)):
+
+| Instrument | Scope | Oracle [R24] | Result | Cadence today |
+|---|---|---|---|---|
+| Unit / component / property | code | exact value or law | pass / fail | every PR |
+| Mechanic / cross-domain scenario | small real run | present-vs-absent effect | pass / fail | PR only if path filter matches |
+| **Corpus evaluation (SimQ)** | many real runs over the tiered world corpus | reference grades and bands (statistical) | graded drift → classified | PR subset **silently skips** anchor tests; full run informational on `main` and nightly |
+| Exploratory measurement (census, long-run observation) | real runs | none | report | on demand |
+| Review / static testing (audits, `mechanics-auditor`) | code, docs, design | human or agent judgment | findings → tickets | occasional |
+
+- **A. Adopt this instrument taxonomy in the architecture.** Each core-RPG domain states which
+  question it answers at each instrument; for example, "does combat produce enough XP over 1000t"
+  is a corpus-evaluation question, not a scenario question. The scorecard (D1) reports each
+  instrument as a **separate column with explicit states** (`pass`, `drift-classified`,
+  `skipped-no-data`, `unstable`, `stale`, `not-run`), never blended into coverage. Two concrete
+  asks: make SimQ's skipped anchor tests *visible* (reported as `skipped-no-data`, not silent), and
+  record the date of the last engine-audit review per dimension. SimQ scoring, anchors and
+  drift policy stay owned by SimQ and `/simq-audit`.
+- B. Keep only the pytest levels in this roadmap; treat SimQ, census and audits as external.
+- C. Also re-baseline SimQ anchors and make the drift job blocking.
+
+**Recommendation: A.** B leaves the core-RPG portfolio with no answer to long-horizon balance
+questions (the starvation chain is exactly that class). C overlaps
+`TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS` and `/simq-audit`'s own mandate, and the
+CI comment records why the drift job is deliberately non-blocking.
+
+**Decision:**
+
 ---
 
 ## 6 · Proposed sequencing (core RPG first)
@@ -349,6 +385,7 @@ portfolio.
 4. ~~Mutation tool~~ Resolved 2026-09-28: `mutmut`.
 5. ~~D9 pilot domain~~ Resolved 2026-09-28: progression.
 6. ~~D10 build order~~ Resolved 2026-09-28: domain by domain, starting with progression.
+7. D11: adopt the instrument taxonomy (corpus evaluation / measurement / review) into the architecture?
 
 ## 9 · References
 
@@ -377,3 +414,5 @@ portfolio.
 | R21 | Deterministic simulation testing — Will Wilson, "Testing Distributed Systems w/ Deterministic Simulation", Strange Loop 2014 — https://www.thestrangeloop.com/2014/testing-distributed-systems-w-slash-deterministic-simulation.html · https://antithesis.com/docs/resources/deterministic_simulation_testing/ | Seed sweeps with invariants (D10 T6) |
 | R22 | Rare, "Automated Testing of Gameplay Features in *Sea of Thieves*", GDC 2019 — https://www.gdcvault.com/play/1026042/Automated-Testing-of-Gameplay-Features · "Automated Testing at Scale in Sea of Thieves", Unreal Fest Europe 2019 — https://www.unrealengine.com/events/unreal-fest-europe-2019/automated-testing-at-scale-in-sea-of-thieves | Gameplay tests in minimal worlds (D10 T4/T5) |
 | R23 | Characterization / golden-master tests (Feathers, *Working Effectively with Legacy Code*) — https://en.wikipedia.org/wiki/Characterization_test · https://understandlegacycode.com/blog/characterization-tests-or-approval-tests/ | Canonical-run snapshots (D10 T8) |
+| R24 | Barr, Harman, McMinn, Shahbaz, Yoo, "The Oracle Problem in Software Testing: A Survey", IEEE TSE 41(5) 2015 — https://doi.org/10.1109/TSE.2014.2372785 | Oracle as a classification axis; statistical and implicit oracles (D11) |
+| R25 | ISTQB Glossary, "static testing" — https://glossary.istqb.org/en_US/term/static-testing · ISTQB CTFL ch. 3 — https://astqb.org/3-1-static-testing-basics/ | Audits and reviews as static testing (D11) |

@@ -14,6 +14,10 @@ per-domain verdicts. The *to-be* direction and decisions live in
 [`test_architecture_epic.md`](test_architecture_epic.md); reference IDs `[R#]` point to that
 doc's §9 References.
 
+**Corrections applied 2026-09-28** (from the reviewer evidence memo): the perf verdict (§6.3); the
+mechanic-scenario path filter also misses `tests/mechanic_scenarios/` itself (§3); SimQ and audits
+added (§4.7).
+
 How this was measured: file and LOC counts by script over `tests/`, `src/`, `tools/`; one
 `coverage run --source=src` over the fast tiers; four read-only domain assessments that sampled
 5–10 test files per area (not every test); and a direct read of `.github/workflows/test.yml`,
@@ -212,6 +216,52 @@ execution census, and manual audits, not by the test suite.
 Most unlinked entries carry a recycled narrative `v2_evidence`, not a runnable test. The CLAUDE.md
 rule "P0 entries require a passing `test_path`" is not enforced.
 
+### 4.7 Corpus evaluation (SimQ), exploratory measurement, and audits
+
+These instruments sit **outside** the pytest level stack. They differ in what the result is
+compared against (the *oracle* [R24]), not only in scope.
+
+**World corpus (test input, not a level).** `data/worlds/` holds 23 worlds.
+`config/simulation_quality/corpus_registry.yaml` lists 81 anchor runs (world × seed × ticks: 51 at
+200t, 12 at 500t, 12 at 1000t, 6 at 2000t) and tiers the worlds as unit 5 · end-to-end 8 ·
+stress 6 · regression-baseline 2. The tiering follows
+`docs/simulation_quality/corpus_tier_taxonomy.md`, which applies the test pyramid to *worlds*.
+The corpus is shared input for SimQ, the execution census, and some mechanic scenarios.
+
+**SimQ (`src/simulation_quality/`)** scores runs on 10 pillars (COGNITION, AGENCY, COMBAT,
+FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION, WORLD, NARRATIVE;
+`docs/simulation_quality/quality_scoring_contract.md` §5). It compares grades against committed
+anchors in `tests/simulation_quality/fixtures/grade_anchors.json` (61 fast ≤500t keys and 18 slow
+keys in `tests/simulation_quality/test_grade_regression.py`). The oracle is **statistical**:
+grade bands and drift. The result is not pass/fail. `/simq-audit` classifies each drift as
+`EXPECTED_DRIFT` / `REGRESSION` / `DA_NEEDED` / `NO_ACTION` (`docs/simulation_quality/audit_workflow.md`).
+
+- **PR lane:** `tests/simulation_quality -m "not slow"` runs, but **the anchor-comparison tests
+  `pytest.skip()` silently** because they read `data/calibration/`, which is gitignored and never
+  populated in CI. 61 of 81 anchors drifted from `main` with no signal (`.github/workflows/test.yml`
+  comment at the *SimQ grade-anchor drift* job; `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS`).
+- **Drift lane:** `simq-grade-drift` runs `make simq-full-audit-full` on `main`, nightly, and on
+  manual dispatch. It is `continue-on-error` (informational) by design, so the historical drift
+  backlog does not block.
+- **Known blind spots:** slow (≥1000t) anchors once showed invariant grades for
+  AGENCY/COMBAT/PROGRESSION/WORLD (`TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS`, since closed;
+  current state not re-measured). Effects too small to show at corpus scale are invisible, which is
+  why `mechanic_verification_scenarios_proposal.md` §1 bars citing SimQ for narrow changes. 32 of
+  48 test files are narrow-mechanism corpus tests (§6.3).
+
+**Exploratory measurement (no oracle):** `tools/execution_census.py` (reachability; self-declared
+UNSTABLE); `make simq-long-run-lifecycle-observation` (5000-tick observation);
+`make codebase-health-*`. All three are on demand or report-only.
+
+**Audits:**
+
+| Kind | Examples | Executes the simulation? | Output |
+|---|---|---|---|
+| Engine audit reviews | `docs/audits/D01–D28` (feature impact, system wiring, test coverage, dead code, …; index `docs/audits/audit_dimensions.md`) | No: human/agent review, *static testing* [R25] | Rated findings, then tickets; one-off, not re-run |
+| Agent review | `mechanics-auditor` (Bible ↔ code) | No | PARITY / DIVERGENT / MISSING findings |
+| SimQ audit workflow | `/simq-audit` (`.claude/workflows/simq-audit.js`) | Yes, via `make simq-full-audit*` | Drift classification, anchor updates, optional ticket |
+| CI registry checks | mechanism-registry validate / completeness (`arch-docs` job) | No (static) | Blocking or report-only gates |
+
 ---
 
 ## 5 · How tests are written today (authoring process)
@@ -273,9 +323,9 @@ coverage) · **Misdirected** (volume in the wrong tier or on the wrong target) �
 | Area | Verdict | Evidence |
 |---|---|---|
 | observability | Healthy | Real per-law `HardLawMonitor` tests (`tests/engine/test_hard_law_monitor.py`) |
-| simulation_quality | Misdirected | 32/48 files are narrow-mechanism corpus tests, contrary to SimQ's balance-only role |
+| simulation_quality | Misdirected, and silent on PRs | 32/48 files are narrow-mechanism corpus tests, contrary to SimQ's balance-only role; anchor-comparison tests skip silently on PRs (§4.7) |
 | api | Mostly healthy | `TestClient` throughout except `tests/api/test_rest_parity.py` (subprocess + `sleep(3)`); no schema snapshot or raw-model guard |
-| perf | Healthy | Baseline file + tolerance bands + hardware class |
+| perf | Framework only | `perf_budget` fixture + tolerance bands exist, but `perf_baselines.json` has **0 entries** and only 2 test files use the fixture (which fails without an entry) |
 | certification / arena | Healthy, rarely run | Mostly slow-marked |
 | frontend (game view) | Under-invested | 4 vitest files / 22 sources; e2e never run in CI |
 | dashboard-frontend | Healthy tests, not in CI | 15 vitest files, no CI job |
