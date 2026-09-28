@@ -143,12 +143,18 @@ of writers.
   today and both **stage age past the maximum**, which is exactly why they miss this.
 
 ## Assumptions / Open Questions
-- **Scheduling override, recorded deliberately.** `first_wave_plan.md` §3 states this defect's
-  "confirmed status alone does not give it first-wave priority" and gates it behind three triggers
-  (owner memo decision 5; a proof needing natural deaths; portfolio Epic A scheduled). **None has
-  fired.** It is scheduled here by direct owner instruction on 2026-09-28, overriding that gate.
-  The plan's §3 row should be updated to reflect that it is now scheduled, so the package stays
-  truthful.
+- **Scheduling: legitimate, and no longer an override.** This was filed on 2026-09-28 by direct
+  owner instruction while `first_wave_plan.md` §3 (@ `5442a3d1a`) still gated the defect behind
+  three triggers, none of which had fired — so it was originally recorded here as a deliberate
+  override of that gate. **That is now superseded.** The package was updated the same day
+  (@ `43db4a7fc`, verified against the remote) and §3 gained a fourth trigger, listed first:
+  *"the owner scopes it directly as an independent ticket, which may land ahead of J, B0 and C1."*
+  That is precisely what happened, so this ticket is trigger (i) firing, not a bypass. §3 also now
+  states the fix's **correctness does not depend on owner memo decision 5**, and that this ticket
+  sits **outside** the first wave rather than ahead of it in the same queue. No doc correction is
+  owed any more.
+- **The unreviewed prototype fix is explicitly not prescribed** (§3, `43db4a7fc`). This ticket
+  treats it as optional evidence only — see the last bullet below.
 - **Q1.** Which writer should be the declared authority — should the passive branch stop writing
   `active` entirely and only advance `age_ticks`, leaving deactivation solely to
   `resolve_lifecycle`? Not pre-decided here; it is the implementation's central design choice.
