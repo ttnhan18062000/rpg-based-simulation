@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE
-phase: open
+phase: done
 date: 2026-09-28
 tags: [bug, lifecycle, engine, determinism]
 ---
@@ -16,7 +16,7 @@ An entity that dies of natural aging is deactivated with no death cause and no s
 two systems write `lifecycle.active` one tick apart with no declared precedence
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -336,3 +336,12 @@ False` spawn reactivation side effect was pinned as unchanged and its underlying
 returned to the systemic-world roadmap, per explicit prior instruction not to default it. All nine
 acceptance criteria are met; the full scoped regression surface passes except two long-run tests
 confirmed pre-existing and unrelated to this fix.
+
+The Test gate's first pass reported `TESTS_FAILED` (commit `245a0894b`, events shard seq 8) because
+the scoped command omitted `-m "not slow"`, letting a `@pytest.mark.slow`-marked test run that CI's
+own Integration job already excludes. The pipeline correctly held rather than routing around a
+failing gate. The ticket owner (`rpg-feature-planning`) corrected the diagnosis and directed a
+resumed Test phase with `-m "not slow"` added; that re-run passed clean (330 passed, 1 skipped, 12
+deselected, 0 failed — arithmetic reconciling exactly with the prior run's 343 total), independently
+re-verified again at Finalize. Parity and Verify then completed `ok`/`READY_TO_CLOSE` (events shard
+seq 9-11, commit `937a805e6`). See Test Summary below for the full account.
