@@ -103,7 +103,22 @@ None — hotfix tier.
   letting the ticket sit silently.
 
 ## Implementation Notes
-(filled in during implementation)
+**2026-09-28 partial check (read against `origin/main` @ `9bcae32c5`), recorded without closing:**
+
+- `implement-epic`: **still zero runs** since 2026-09-06. AC1 and AC3 remain unverifiable, so the
+  ticket stays `BLOCKED` on that half, as designed.
+- `create-tickets`: **two real runs exist.** AC2's literal "non-null" is met, but the values are
+  attributed to the wrong events, so AC2 is **not** marked confirmed:
+
+  | run_id | event values (tcc / cps) | tools.jsonl rows by sidecar seq |
+  |---|---|---|
+  | `CREATE-TICKETS-PERF-M0-ARCHITECTURE-GOVERNANCE` (2026-09-13, W37) | seq1 Comprehend 60/174.4; seq2 investigate:C1 **7**; seq3 investigate:C2 **16**; seq4 Structure **0**; Write/Link 0 | seq1 comprehend 60; seq2 "Structure/structure" 7; seq3 "Write/ticket-scoper" 65 |
+  | `CREATE-TICKETS-DOCS-PLANS-SIMULATION-SEMANTIC-CONTROL-PLANE-ROADMAP` (2026-09-23, W39) | seq1 Comprehend 120/394.9; seq2-7 investigate 0; seq8 Structure 28/124.9; seq9 Write 0; seq10 Link **0** | seq1 comprehend 120; seq8 structure **94** (08:47 → 13:05Z); **no rows at seq10** |
+
+  Per this ticket's own Out of Scope ("if the check fails, file a separate fix ticket"), the
+  attribution problem is filed as `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED`.
+  Close the `create-tickets` half of this ticket when that one resolves, or when a new
+  `create-tickets` run comes back clean.
 
 ## Test Summary
 (filled in during implementation)
