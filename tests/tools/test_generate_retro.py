@@ -1278,6 +1278,42 @@ def test_generate_retro_never_writes_to_agent_monitoring_index_db():
     assert '.execute("INSERT' not in source
 
 
+# --- TCK-20260928-MONITORING-LOADER-CWD-RELATIVE-PATHS: constants anchored, not cwd-relative ---
+
+def test_default_path_constants_are_absolute_under_repo_root():
+    # RUNS_FILE/EVENTS_FILE/RETRO_DIR/DEFAULT_TOOLS_FILE (DEFAULT_DB_PATH is excluded here — the
+    # file's autouse _isolate_monitoring_index fixture always monkeypatches it to a tmp_path, so
+    # asserting on it here would test the fixture, not the module default) must be absolute paths
+    # rooted at generate_retro._REPO_ROOT, never a bare relative name like Path("agent-monitoring/
+    # data") that silently re-resolves against whatever the caller's cwd happens to be.
+    for const_name in ("RUNS_FILE", "EVENTS_FILE", "RETRO_DIR", "DEFAULT_TOOLS_FILE"):
+        value = getattr(generate_retro, const_name)
+        assert value.is_absolute(), f"{const_name} is not absolute: {value}"
+        assert str(value).startswith(str(generate_retro._REPO_ROOT)), (
+            f"{const_name} is not anchored under _REPO_ROOT: {value}"
+        )
+
+
+def test_load_runs_and_events_finds_real_data_from_a_foreign_cwd(monkeypatch, tmp_path):
+    # The exact 2026-09-28 reproduction: before TCK-20260928-MONITORING-LOADER-CWD-RELATIVE-PATHS,
+    # RUNS_FILE/EVENTS_FILE/DEFAULT_TOOLS_FILE/DEFAULT_DB_PATH were bare relative Path objects,
+    # which re-resolve against the process's CURRENT working directory at every filesystem call —
+    # not against this module's own location. A caller running this module from a foreign cwd
+    # (e.g. a different checkout) would read (or find nothing under) that foreign cwd's own
+    # agent-monitoring/ tree instead of this repo's. Deliberately does NOT monkeypatch RUNS_FILE/
+    # EVENTS_FILE/DEFAULT_TOOLS_FILE (unlike every other test in this file) -- doing so would
+    # exercise the override path, not the real default this ticket fixes.
+    foreign_cwd = tmp_path / "foreign-checkout-with-no-agent-monitoring-dir"
+    foreign_cwd.mkdir()
+    monkeypatch.chdir(foreign_cwd)
+
+    runs, events = generate_retro._load_runs_and_events()
+
+    # Before the fix: RUNS_FILE/EVENTS_FILE resolved to foreign_cwd/agent-monitoring/data (empty),
+    # and DEFAULT_DB_PATH's on-demand rebuild scanned the same empty tree -- runs would be [].
+    assert runs, "expected the real repo's own run corpus, got none — paths are not anchored"
+
+
 # --- TCK-20260713-MONITORING-RETRO-INDEX-MIGRATE: migration-completeness / output-parity guards ---
 
 def test_main_loads_via_index_not_direct_jsonl_scan():

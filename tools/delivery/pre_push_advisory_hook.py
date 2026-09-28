@@ -30,7 +30,8 @@ defends against):
   monitoring hooks rewrite it on nearly every tool call, so an unstaged shard at push time is the
   default failure mode, not an unusual one.
 - **C — the branch is not a finished, squash-merged one.** Detects the specific shape from
-  `docs/guides/delivery_process.md`'s "PR Lifecycle" step 7: commits exist ahead of `origin/main`
+  `docs/guides/delivery_process.md`'s "PR Lifecycle" step 8 (renumbered from step 7 by
+  TCK-20260928-PR-LIFECYCLE-OMITS-RENDER-AFTER-FOLD-IN's new step 4): commits exist ahead of `origin/main`
   (`git rev-list --count`), `HEAD` is genuinely not an ancestor of `origin/main`
   (`git merge-base --is-ancestor`), the two-ref content diff (`git diff origin/main HEAD`) is
   empty, yet the three-dot ancestor-based diff (`git diff origin/main...HEAD`) is not — the

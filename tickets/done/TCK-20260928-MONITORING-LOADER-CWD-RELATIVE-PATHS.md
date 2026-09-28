@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-MONITORING-LOADER-CWD-RELATIVE-PATHS
-phase: open
+phase: done
 date: 2026-09-28
 tags: [process-improvement]
 ---
@@ -19,7 +19,7 @@ a different checkout therefore compares two different corpora and reports false 
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -137,8 +137,70 @@ None.
 
 ## Implementation Notes
 
+- Anchored `RUNS_FILE`, `EVENTS_FILE`, `RETRO_DIR`, `DEFAULT_DB_PATH`, `DEFAULT_TOOLS_FILE` in
+  `tools/agent-monitoring/generate_retro.py` to a shared `_REPO_ROOT = Path(__file__).resolve()
+  .parent.parent.parent`, computed once above `_DEFAULT_TICKETS_ROOT` (which now aliases it,
+  per Scope item 1's "derive a shared `_REPO_ROOT` rather than computing the root twice").
+- Verified (Scope item 2) `build_index.build()` receives `str(RUNS_FILE)` etc. — now absolute
+  strings — and handles them unchanged (`Path(args.runs_file)` accepts an absolute string
+  transparently; no CLI argparse default anywhere reads these 5 constants, so there was nothing to
+  update there).
+- Checked all 11 `tests/tools/` files that call `monkeypatch.chdir` (Scope item 4) against this
+  cause before changing anything: only `test_validate_agent_monitoring.py` even mentions
+  `generate_retro`/`RUNS_FILE`/`EVENTS_FILE` by name among them, and its own `RUNS_FILE`/
+  `EVENTS_FILE`/`TOOLS_FILE` references are a different module's own constants, not
+  `generate_retro.py`'s. None of the 11 actually depend on these 5 constants resolving relative to
+  a chdir'd `tmp_path` — confirmed by the full bare `pytest tests/tools/` run below, zero failures.
+- Added the Scope item 3 regression test using the file's existing `_isolate_monitoring_index`
+  autouse fixture (which already monkeypatches `DEFAULT_DB_PATH` to a private `tmp_path` for every
+  test in `test_generate_retro.py`) — deliberately did NOT also monkeypatch `RUNS_FILE`/
+  `EVENTS_FILE`/`DEFAULT_TOOLS_FILE` (unlike every other test calling `_load_runs_and_events()` in
+  that file), since doing so would exercise the override path instead of the real default this
+  ticket fixes. Verified the new tests fail pre-fix: stashed the `generate_retro.py` change only,
+  re-ran, both new tests failed (`assert []` — empty run list from the real corpus), then restored
+  the fix and confirmed both pass. Stash discarded after restoring (never left in the shared stack).
+
 ## Test Summary
+
+- `pytest tests/tools/test_generate_retro.py -k "default_path_constants or foreign_cwd"` — 2
+  passed; both confirmed to fail pre-fix (`AssertionError: expected the real repo's own run
+  corpus, got none — paths are not anchored` / `assert []`), confirmed to pass post-fix. Satisfies
+  AC3.
+- `pytest tests/tools/test_generate_retro.py tests/tools/test_monitoring_integrity_backlog_check.py
+  tests/tools/test_duplicate_run_record_check.py tests/tools/test_event_seq_integrity_check.py
+  tests/tools/test_monitoring_anomaly_validator.py tests/tools/test_sidecar_attribution_coverage_check.py
+  tests/tools/test_tool_call_count_mismatch_check.py tests/tools/test_done_ticket_monitoring_coverage.py
+  tests/tools/test_security_gate_firing_check.py tests/tools/test_retrieval_baseline_metrics.py
+  tests/tools/test_read_ranged_baseline.py tests/tools/test_agent_tool_usage_baseline.py
+  tests/tools/test_skill_usage_metric.py` — every direct/indirect consumer of the 5 anchored
+  constants plus `_load_runs_and_events()` (the 6 gate checks plus the `tools/agent-monitoring/`
+  consumers named in Related Code Areas) — 316 passed.
+- AC2, the exact 2026-09-28 reproduction, run from **both** cwds:
+  - From the main checkout's cwd (`cd /home/u24desktop/Working/rpg-based-simulation &&
+    .venv/bin/python3 -m pytest .claude/worktrees/doc-tag-enforcement/tests/tools/
+    test_monitoring_integrity_backlog_check.py::test_real_corpus_is_at_or_below_all_five_conditions`)
+    — PASSED (this is the exact command/cwd combination that produced the original false failure
+    before this fix).
+  - From the worktree's own cwd — PASSED.
+- AC4: bare `pytest tests/tools/ -m "not slow and not extra_slow"`, run from the worktree — 3154
+  passed, 25 skipped, 28 deselected, 1 xfailed, 0 failed (361.83s).
 
 ## Files Changed
 
+- `tools/agent-monitoring/generate_retro.py` — anchored `RUNS_FILE`/`EVENTS_FILE`/`RETRO_DIR`/
+  `DEFAULT_DB_PATH`/`DEFAULT_TOOLS_FILE` to a shared `_REPO_ROOT`; `_DEFAULT_TICKETS_ROOT` now
+  aliases it instead of recomputing.
+- `tests/tools/test_generate_retro.py` — 2 new tests
+  (`test_default_path_constants_are_absolute_under_repo_root`,
+  `test_load_runs_and_events_finds_real_data_from_a_foreign_cwd`).
+- `docs/REGISTRY.yaml` — regenerated (`make docs-registry`); no manual edits.
+
 ## Completion Summary
+
+All 4 acceptance criteria met. `generate_retro.py`'s 5 shared data-loading constants are now
+anchored to the module's own repo root instead of the caller's cwd, closing the exact false
+failure this session hit twice while verifying `ticket-corpus-guard-test-scope-map` (once
+mis-diagnosed as a real gap, corrected after finding the real root cause and filing this ticket).
+Confirmed via the exact original reproduction (main-checkout cwd against the worktree's test),
+a synthetic regression test proven to fail pre-fix, and a full bare `tests/tools/` run with zero
+failures. No known material gap left unstated.
