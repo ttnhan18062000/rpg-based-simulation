@@ -122,6 +122,9 @@ This is observation of current behaviour only.
 entry, correct it through the registry process. Record B0's findings in roadmap §7.2 and §11
 item 3.
 
+**Never** record them against SCP rows `PERC-01`/`KNOW-01`. Those rows map only Combat's
+`tactical_decision`, and observer evidence there would corrupt Combat's mapping.
+
 ---
 
 ## Card C1 — Entity-death authority boundary
@@ -148,6 +151,17 @@ item 3.
 A harness limitation is never reported as fine.
 
 **Registry/SCP follow-through.** Record the outcome as a dated addendum in roadmap §3.1.
+
+**Contract-level risks and sequencing**:
+- C1 is a check. `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` is out of its scope.
+  - That ticket already carries a verified comparison of the two ownership writers; do not
+    re-derive it.
+  - The consolidation is determinism-sensitive: a naive consolidation delays death-driven ownership
+    changes by one tick.
+  - Any fix C1 routes that touches the ordering between world dynamics and lifecycle must be
+    sequenced with it.
+- The SCP rows `LIFE-01`/`LIFE-02` cite `combat_resolution`. Any change that alters who decides
+  alive/dead must be followed by `make semantic-control-plane-drift-check`, a report-only check.
 
 **Background, non-binding.** An incomplete scenario draft from a stopped exploratory agent sits on
 the local branch `natural-aging-old-age-dispatch-fix-unreviewed`. It is not evidence.

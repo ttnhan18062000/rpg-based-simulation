@@ -140,6 +140,12 @@ Three separate answers, each labelled with its evidence level:
 A trace can exist while no one can encounter it. That outcome is valid and must be reported as
 such, not merged into a single "evidence exists" claim.
 
+**Recording constraint (SCP).** Do **not** record B0 findings against the SCP rows `PERC-01` or
+`KNOW-01`. Those rows are mapped only through Combat's `tactical_decision` mechanism (verified in
+`registries/rule_mechanism_edges.yaml`, 2026-09-28). Attaching observer evidence to them would
+silently change what Combat's mapping means. B0's results belong in roadmap §7.2 and §11 item 3,
+and in the registry entry of any perception mechanism whose real state differs.
+
 **Failure branch: perception inactive at runtime.**
 - Record it as an **engine foundation finding**.
 - Close B0 with that result, and propose a **separate perception-foundation epic** to the roadmap,
@@ -166,6 +172,17 @@ resolve under a declared rule (roadmap §3.1).
 **Completion evidence (finite).** One bounded outcome, with its reason and evidence source, recorded
 back in roadmap §3.1. A harness limitation is never reported as fine.
 
+**C1 is a check, not a change.** Two constraints apply to any defect it routes:
+- **Sequencing.** `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` (open, held) is **out of
+  scope for C1**. That ticket consolidates two durable ownership writers whose triggers and phase
+  positions differ: one is death-gated in lifecycle, the other is the world-dynamics sweep that runs
+  before lifecycle. Any fix C1 routes that touches the ordering between world dynamics and lifecycle
+  must be sequenced with that ticket, not done independently. Otherwise two efforts edit the same
+  ordering from different premises.
+- **SCP drift.** The SCP rows `LIFE-01` and `LIFE-02` cite `combat_resolution`. Any change that
+  follows from C1 and alters who decides alive/dead must be followed by the SCP report-only drift
+  check, so a stale mapping does not go unnoticed.
+
 ---
 
 ## 3. Tracked outside the wave, with owners and revisit triggers
@@ -176,6 +193,7 @@ back in roadmap §3.1. A harness limitation is never reported as fine.
 | **Faction-diplomacy boundary** (`diplomatic_relations_set`) | `UNKNOWN_WITH_REASON` | faction | When faction or diplomacy code is next changed, or when an epic starts relying on diplomatic relations as input (e.g. portfolio E). |
 | **Public-reputation boundary** (`reputation_set`) | `UNKNOWN_WITH_REASON` | social | When owner memo decision 4 (`public_reputation`'s meaning) is decided, or when an epic reads or surfaces reputation (portfolio D or E). |
 | **Region ownership / FAC-010** | Known, tracked on its existing track | faction / world | Unchanged by this wave. |
+| **Sovereignty ownership-writer consolidation** (`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`) | Open; held on the SCP planner's track | faction / world (SCP planner track) | Not part of this wave. It must be sequenced with any C1-routed fix touching world-dynamics/lifecycle ordering (§2, Epic C1). |
 
 ---
 
