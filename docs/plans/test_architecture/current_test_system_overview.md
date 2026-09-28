@@ -19,6 +19,9 @@ counts; the SimQ oracle description and the historical status of the drift figur
 change-impact / test-selection as-is (§8), reusable harness inventory (§9), and the workflow stage
 map (§5.1). Relabelled: sampled verdicts and title-based escape counts are **provisional signals**.
 
+**Revision 2026-09-28c** (second review). Added: parity schema-error categories (§4.6) and the
+core-RPG test-classification inventory (§10).
+
 **Evidence labels used here:** **[O]** observed in the repo or command output (path or command
 given) · **[P]** provisional signal (sampled or title-matched, not exhaustive) · **[I]** inference ·
 **[H]** historical statement quoted from a ticket or comment, not re-measured.
@@ -228,7 +231,20 @@ root cause can span several tickets.
 | **Total** | **2,190** | **1,685** | **1,564 (93%)** | **28** |
 
 Most unlinked entries carry a recycled narrative `v2_evidence`, not a runnable test. The CLAUDE.md
-rule "P0 entries require a passing `test_path`" is not enforced.
+rule "P0 entries require a passing `test_path`" is not enforced on the corpus.
+
+**Schema-validation baseline [O]** (planner run of `jsonschema.Draft7Validator` against
+`docs/parity_ledger/schema.json` over all 9 shards, 2026-09-28): **2,867 errors across 1,561
+entries**, in two categories only:
+- **2,842** `type` errors on `test_path`: the value is null where the schema's conditional branches
+  require a string. The P0 / verified branches overlap, so one entry can raise more than one.
+- **25** `enum` errors on `proof_type`.
+
+By shard: substrate 664, combat_movement 514, social_narrative 376, strategic_cognition 340,
+infrastructure 330, town_resource 277, progression 189, world_dynamics 177, faction 0. In the
+schema, `priority` means **importance** and is independent of `status` / `proof_type` / `test_path`.
+The P0 → `test_path` rule dates from `TCK-20260810-PARITY-LEDGER-WRITE-SAFETY-TOOL` and applies on
+writes only (`tools/parity_ledger_writer.py`).
 
 ### 4.7 Corpus evaluation (SimQ), exploratory measurement, and audits
 
@@ -470,3 +486,25 @@ distinguished anywhere [I].
 | Product E2E | `run_src_module()` / `module_cmd()` in `tests/helpers/runtime.py` | **Defined, never called**; no E2E level exists |
 | Scenario runner | `src/testing/` (`ScenarioRunner`, `route_family_classifier`) | Imported only by its own tests and one architecture test; currency unclear [I] |
 | Cleanup | `rm -rf data/runs/*` at ticket close (CLAUDE.md) | No per-test fixture |
+
+---
+
+## 10 · Test-classification inventory for core RPG (as-is) [O]
+
+Planner script over all 1,484 `tests/**/test_*.py` files (AST imports plus path prefixes),
+2026-09-28:
+
+| Population | Files | Rule |
+|---|---|---|
+| Import any core-RPG or substrate module | 724 | imports matching `src.core`, `src.engine.{pipeline,kernel,movement,combat,…}`, `src.{progression,entities,economy,quests}`, `src.domains.{progression,combat_engagement}`, `src.systems.{harvest,craft,market,economy,resource,quest,guild,party}` |
+| …of which import **only** substrate (`src.core` etc.) | 579 | `src.core` is a shared model library imported almost everywhere, so an import of it does not mean the test is *about* the substrate |
+| Core-RPG gameplay by **directory** | 148 | `tests/unit/{combat,movement,progression,resource,economy,quest,entity,entities,tactical}/`, `tests/unit/domains/{combat_engagement,progression}/`, `tests/mechanic_scenarios/`, matching `tests/integration/*` sub-directories |
+| Core-RPG gameplay by **import** | 145 | imports a gameplay module (substrate excluded) |
+| Agree (both) | 89 | — |
+| Directory-only / import-only | 59 / 56 | Disagreements. The import-only files sit in `unit/{domains,engine,strategic,core,world,social}`, `integration/{scenarios,pipeline}` |
+| Union (candidate set) | 204 | — |
+| Import ≥ 2 gameplay domains | 7 | Genuine multi-domain candidates |
+
+**Reading [I]:** neither directory nor imports classifies reliably. About 115 of the 204 candidates
+would be *classification uncertain* without an author declaration, and an import of `src.core` says
+nothing about a test's subject. No test declares domain, level or size today (§2.3).
