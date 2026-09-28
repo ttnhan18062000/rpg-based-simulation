@@ -294,4 +294,19 @@ the epic parent outside its folder, an inline `python3 -c` that collided with an
 and a stale-pre-close-copy gap that would have let a resurrected child copy ride into
 `tickets/done/<folder>/` alongside a genuinely-done flat copy of the same ticket. Final bare
 `pytest tests/tools/` run (after this addendum): 3173 passed, 25 skipped, 28 deselected, 1
-xfailed, 0 failed. No known material gap left unstated.
+xfailed, 0 failed.
+
+**Known non-blocking gap, recorded per final review (agent-working-design), no code change**:
+`epic_folder_status.py` only ever inspects `TCK-*.md` files physically present *inside* the
+folder — it has no way to see a child ticket that lives flat in `tickets/todos/` (or elsewhere)
+while only the epic parent (plus `SEQUENCE.md`) sits in the folder itself, a real layout
+(`tickets/todos/progression-starvation-chain/` is exactly this shape: only its epic ticket and
+`SEQUENCE.md` are in the folder; its children are flat in `tickets/todos/`). For that folder as it
+exists today, this is unreachable in practice: `implement-epic.js` returns `NOTHING_TO_DO` before
+the folder-cleanup block ever runs when Discover finds 0 tickets to implement in the folder, and
+`implement-ticket.js`'s Finalize step 3 only ever inspects its own ticket's own todos-source
+folder. But a **mixed** layout — some children physically in the folder, others outside it — could
+still let folder mode report `all_children_done: true` and close a genuinely-open epic early,
+since the outside children are invisible to this check entirely. No such folder exists on this
+branch today; this is recorded as a known limit, a later ticket only if a mixed-layout folder ever
+actually appears.
