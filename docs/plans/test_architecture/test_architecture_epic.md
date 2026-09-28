@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture: Measurement Model and Direction
 
-**Status, drafted 2026-09-28. DIRECTION REVIEW. No tickets exist yet.** Each `D#` section below
+**Status, drafted 2026-09-28. DIRECTION REVIEW (D1–D4 and D9 decided; D5–D8 pending). No tickets exist yet.** Each `D#` section below
 is a direction that needs a decision. Tickets are cut only after the directions are agreed, one
 child ticket per accepted direction (or per phase of one), under a future
 `tickets/todos/test-architecture/` epic folder.
@@ -64,19 +64,22 @@ Per-domain verdicts from the four domain assessments:
 
 ## 3 · Reference models
 
-The direction uses established models, not a bespoke rubric:
+The direction uses established, cited models, not a bespoke rubric. **Rule for this epic: every
+direction and every child ticket cites at least one external reference from §9. Nothing is
+invented without one.**
 
-- **Test pyramid, with Google test sizes (small / medium / large)** for *shape*: size is decided
+- **Test pyramid [R7][R8], with Google test sizes (small / medium / large) [R1][R2]** for *shape*: size is decided
   by resources used (process, I/O, real kernel ticks), not by directory name.
-- **Marick's agile testing quadrants** for *purpose*: Q1 technology-facing unit tests · Q2
+- **Marick's agile testing quadrants, as extended by Crispin and Gregory [R3],** for *purpose*: Q1 technology-facing unit tests · Q2
   business-facing functional tests (mechanic scenarios) · Q3 exploratory / emergent (SimQ, census)
   · Q4 non-functional (perf, determinism).
-- **Kent Beck's Test Desiderata** for *per-test quality*: behavioural, structure-insensitive,
+- **Kent Beck's Test Desiderata [R9]** and **Meszaros' test smells [R13]** for *per-test quality*: behavioural, structure-insensitive,
   deterministic, isolated, fast, specific.
-- **Effectiveness metrics:** line/branch coverage (does code run?), **mutation score** (do
-  assertions catch a changed operator or constant?), and **defect-escape analysis** (which defect
+- **Effectiveness metrics:** line/branch coverage (does code run?), **mutation score** [R5][R12] (do
+  assertions catch a changed operator or constant?; high coverage with a low mutation score is the
+  pseudo-tested-method pattern [R6]), and **defect-escape analysis** (which defect
   classes reached `main` past a green suite).
-- **Simulation-specific oracles:** property-based tests (Hypothesis) for laws, metamorphic tests
+- **Simulation-specific oracles:** property-based tests (Hypothesis [R10]) for laws, metamorphic tests [R11]
   for the kernel (relations between runs, not absolute values), and golden-master tests for
   regression snapshots.
 
@@ -123,7 +126,7 @@ pattern that caused the escaped defects. It also fixes `make test-cov` so the co
 exists at all. Output location TBD: extend `make codebase-health-scorecard` rather than add a
 parallel report ("define once").
 
-**Decision:**
+**Decision (2026-09-28): A, report-only.** Hosted inside `make codebase-health-scorecard` (not a separate target). Hygiene ratchets are reconsidered only after D5 lands. Basis: Google advises against a mandated coverage threshold as a quality gate [R4]; coverage without assertions is the pseudo-tested-method pattern [R6].
 
 ### D2 · Target shape of the pyramid
 
@@ -136,7 +139,7 @@ parallel report ("define once").
 unit-heavy, while strategic and social need outcome proofs, not more scorers. Pairs with a soft
 rule for strategic/social: new behaviour gets a scenario, not another scorer unit test.
 
-**Decision:**
+**Decision (2026-09-28): A, per-domain bands.** Size is classified by Google test sizes [R1][R2] and purpose by the agile testing quadrants [R3]; the pyramid is the shape reference [R7][R8].
 
 ### D3 · Property-based and metamorphic tests for Mechanics Bible laws
 
@@ -153,7 +156,7 @@ invariance, and same seed twice gives the same hash over generated small worlds.
 **Recommendation: A.** Pure-law properties are cheap, deterministic and fast (small tests).
 Kernel metamorphic tests would fail for the parked reason and add noise.
 
-**Decision:**
+**Decision (2026-09-28): A, pure laws now; kernel metamorphic tests after determinism is unparked.** Tools: Hypothesis [R10]; metamorphic relations per Chen et al. [R11].
 
 ### D4 · Mutation-score baseline
 
@@ -167,14 +170,16 @@ economy conservation path, and the apply pipeline.
 **Recommendation: A.** This is the only direct measure of assertion strength. Full-repo mutation
 is too expensive and not needed to answer "are our core law tests real?"
 
-**Decision:**
+**Decision (2026-09-28): A, one-off baseline on 3 targets (plus progression for the D9 pilot), using `mutmut` [R12].** Diff-scoped, suppression-aware practice follows Google's mutation-testing deployment [R5].
 
 ### D5 · Isolation and lane hygiene
 
 1. Fix the order-dependent leak behind the 7 progression failures (likely registry or global
    state that the other directories' fixtures set).
-2. Add one random-order run (`pytest-randomly` or `-p random_order`) as a scheduled job to surface
-   the rest.
+2. Add one random-order run (`pytest-randomly` [R16]) as a scheduled job to surface the rest.
+   Order dependence is one of the top root causes of flaky tests [R15]. Caveat: `pytest-randomly`
+   also reseeds `random` per test, so check that interaction with the engine's own RNG contract
+   (`tests/unit/core/test_rng_contract.py`) before enabling it.
 3. Move large tests out of unit lanes, starting with the two in `test_mechanism_state_caller_check.py`.
 4. Replace `test_real_registry_findings_pinned` (pins live repo data) with a fixture-backed
    assertion.
@@ -192,7 +197,7 @@ directory split hides them.
 |---|---|---|
 | `agent_codex_*` (7 test dirs + 7 tool dirs) | delete · park (excluded from CI, kept in repo) · keep | **Open: user decision.** Delete if the Codex pilot has no reactivation date; git history keeps it recoverable |
 | SimQ `*_corpus.py` (32 files) | relocate to the owning domain / `mechanic_scenarios` · leave | Relocate; keeps SimQ balance-only |
-| Doc-text and source-grep tests (~243/152 files) | policy + convert-or-delete sweep · policy only | **Policy only first:** a doc-text assertion is allowed only when the doc is itself a machine contract. Sweep opportunistically |
+| Doc-text and source-grep tests (~243/152 files) | policy + convert-or-delete sweep · policy only | Structure-coupled tests violate *structure-insensitive* [R9] and are Meszaros' *Fragile Test* smell [R13]. **Policy only first:** a doc-text assertion is allowed only when the doc is itself a machine contract. Sweep opportunistically |
 | Index-pinned hook tests (`PreToolUse[4]`) | convert to name/matcher lookup | Convert; cheap |
 | agent-monitoring tests (~2.7×) | trim toward ~1.5× · leave | Trim duplicated doc/prose assertions only |
 | Structural clutter: `tests/unit/entity`+`entities`, orphan `tests/observability/`, empty `tests/integration/perf/` and `tests/unit/motivation/`, mis-targeted `tests/unit/config/`, ticket-appendage files | fix · leave | Fix in one mechanical chore ticket |
@@ -210,7 +215,7 @@ directory split hides them.
 - B. Mass-link: backfill `test_path` for all ~1,560 entries.
 - C. Leave as is and document the gap.
 
-**Recommendation: A.** B is weeks of mostly clerical linking with low defect-finding yield.
+**Recommendation: A.** Standard practice is a requirement→test traceability link per verified requirement (ISO/IEC/IEEE 29148 traceability, 29119 test coverage items) [R18]; an unlinked "verified" entry is not traceable. B is weeks of mostly clerical linking with low defect-finding yield.
 Also flagged, but out of this epic's scope: the parity ledger and the mechanism registry now both
 record "is this proven". That duplication should be resolved by the mechanism-registry epic, not
 here.
@@ -219,7 +224,7 @@ here.
 
 ### D8 · API contract and frontend (candidate for deferral)
 
-A schema snapshot of the OpenAPI output, a generic "no route serializes a domain class" test,
+A schema snapshot of the OpenAPI output plus schema-driven contract tests with Schemathesis, which runs in-process against FastAPI on top of Hypothesis [R19], a generic "no route serializes a domain class" test,
 converting `test_rest_parity.py` to `TestClient`, and game-view frontend tests.
 
 - **A. Defer the frontend part until after RPG-core work (HUD sequencing rule); take the two API
@@ -255,7 +260,8 @@ authored today (measured from `.claude/workflows/implement-ticket.js` and `.clau
    - **B.** Add an **advisory** test-review step after Implement (an existing reviewer agent or
      a popular community skill, not a bespoke one).
    - **C.** A separate agent writes the tests before the implementer writes the code (TDD with
-     split roles). Only if mutation scores stay weak after A and B.
+     split roles). Only if mutation scores stay weak after A and B. Industry reference for
+     mutation-guided, agent-written tests: Meta's ACH [R17].
 5. **Measure the effect** on the next few tickets in the domain with the D1 scorecard and
    agent-monitoring.
 
@@ -272,7 +278,7 @@ over-engineering side.
 
 **Decision (pilot domain):** Progression (user decision, 2026-09-28). Strategic stays the candidate second pilot.
 
-**Decision (D9 overall):**
+**Decision (D9 overall, 2026-09-28):** Pilot, then A → B → C. Step B uses an existing popular skill run as an advisory step, not a bespoke agent: the repo already installs `obra/superpowers`' `test-driven-development` skill (`skills-lock.json`), which ships `testing-anti-patterns.md` [R14]. That reference plus Beck's Test Desiderata [R9] and the Meszaros test-smell catalog [R13] form the review rubric.
 
 ---
 
@@ -296,7 +302,31 @@ over-engineering side.
 ## 8 · Open questions for review
 
 1. `agent_codex_*`: delete or park?
-2. Should the scorecard extend `codebase-health-scorecard` or be a separate `make` target?
+2. ~~Scorecard location~~ Resolved 2026-09-28: extend `codebase-health-scorecard`.
 3. Is D7's re-tier acceptable, given it will visibly demote ~1,400 entries?
-4. Mutation tool preference (`mutmut` vs `cosmic-ray`); `mutmut` is the more common default.
+4. ~~Mutation tool~~ Resolved 2026-09-28: `mutmut`.
 5. ~~D9 pilot domain~~ Resolved 2026-09-28: progression.
+
+## 9 · References
+
+| # | Reference | Used for |
+|---|---|---|
+| R1 | Google Testing Blog, "Test Sizes" (2010) — https://testing.googleblog.com/2010/12/test-sizes.html | Small/medium/large classification (D1, D2, D9) |
+| R2 | Winters, Manshreck, Wright, *Software Engineering at Google*, ch. 11 & 14 — https://abseil.io/resources/swe-book/html/ch14.html | Test size and scope, larger tests |
+| R3 | Crispin & Gregory, "The Agile Testing Quadrants" (after Brian Marick) — https://lisacrispin.com/2024/10/11/the-agile-testing-quadrants/ | Test purpose (Q1–Q4) |
+| R4 | Google Testing Blog, "Code Coverage Best Practices" (2020) — https://testing.googleblog.com/2020/08/code-coverage-best-practices.html | Coverage is a signal, not a gate (D1) |
+| R5 | Petrović & Ivanković, "State of Mutation Testing at Google", ICSE-SEIP 2018 — https://research.google/pubs/pub46584/ | Practical, scoped mutation testing (D4) |
+| R6 | Vera-Pérez et al., "A Comprehensive Study of Pseudo-tested Methods", EMSE 2019 — https://arxiv.org/abs/1807.05030 | Covered-but-not-asserted code (§2 main finding) |
+| R7 | Vocke, "The Practical Test Pyramid" (martinfowler.com) — https://martinfowler.com/articles/practical-test-pyramid.html | Pyramid shape (D2) |
+| R8 | Google Testing Blog, "Just Say No to More End-to-End Tests" (2015) — https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html | Balancing tiers (D2) |
+| R9 | Kent Beck, Test Desiderata — https://testdesiderata.com/ | Per-test quality rubric (D6, D9) |
+| R10 | MacIver et al., "Hypothesis: A new approach to property-based testing", JOSS 2019 — https://doi.org/10.21105/joss.01891 | Property tests (D3) |
+| R11 | Chen et al., "Metamorphic Testing: A Review of Challenges and Opportunities", ACM CSUR 51(1) 2018 | Kernel run-relation tests (D3) |
+| R12 | mutmut — https://github.com/boxed/mutmut · https://mutmut.readthedocs.io/ | Mutation tool (D4) |
+| R13 | Meszaros, *xUnit Test Patterns* test smells — http://xunitpatterns.com/Test%20Smells.html · https://testsmells.org/ | Smell catalog (D6, D9) |
+| R14 | obra/superpowers `test-driven-development` skill + `testing-anti-patterns.md` — https://github.com/obra/superpowers (installed locally, `.claude/skills/test-driven-development/`) | Advisory test-review rubric (D9-B) |
+| R15 | Luo, Hariri, Eloussi, Marinov, "An Empirical Analysis of Flaky Tests", FSE 2014 | Order-dependence as a flakiness root cause (D5) |
+| R16 | pytest-randomly — https://github.com/pytest-dev/pytest-randomly | Random-order runs (D5) |
+| R17 | Foster et al., "Mutation-Guided LLM-based Test Generation at Meta" (ACH), FSE 2025 — https://arxiv.org/abs/2501.12862 | Agent-written tests guided by mutants (D9-C) |
+| R18 | Requirements traceability (ISO/IEC/IEEE 29148; test coverage items in ISO/IEC/IEEE 29119) — https://en.wikipedia.org/wiki/Requirements_traceability | Parity-ledger traceability (D7) |
+| R19 | Schemathesis, property-based OpenAPI testing — https://github.com/schemathesis/schemathesis · https://testdriven.io/blog/fastapi-hypothesis/ | API contract tests (D8) |
