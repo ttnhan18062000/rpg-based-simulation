@@ -8,15 +8,20 @@ tags: [testing, architecture, planning]
 
 # Current Test System — Status and Overview
 
-**Snapshot of `origin/main` at `04f911110`, measured 2026-09-27/28.** This is the single home for
+**Snapshot of code at `04f911110` (test, `src/`, CI and agent files unchanged through `origin/main` `9bcae32c5`), measured 2026-09-27/28.** This is the single home for
 the *as-is* state of the test system: layout, lanes, authoring process, measured numbers, and
 per-domain verdicts. The *to-be* direction and decisions live in
 [`test_architecture_epic.md`](test_architecture_epic.md); reference IDs `[R#]` point to that
-doc's §9 References.
+doc's §13 References.
 
-**Corrections applied 2026-09-28** (from the reviewer evidence memo): the perf verdict (§6.3); the
-mechanic-scenario path filter also misses `tests/mechanic_scenarios/` itself (§3); SimQ and audits
-added (§4.7).
+**Revision 2026-09-28b** (after external review). Corrected: perf verdict (§6.3); world and anchor
+counts; the SimQ oracle description and the historical status of the drift figures (§4.7). Added:
+change-impact / test-selection as-is (§8), reusable harness inventory (§9), and the workflow stage
+map (§5.1). Relabelled: sampled verdicts and title-based escape counts are **provisional signals**.
+
+**Evidence labels used here:** **[O]** observed in the repo or command output (path or command
+given) · **[P]** provisional signal (sampled or title-matched, not exhaustive) · **[I]** inference ·
+**[H]** historical statement quoted from a ticket or comment, not re-measured.
 
 How this was measured: file and LOC counts by script over `tests/`, `src/`, `tools/`; one
 `coverage run --source=src` over the fast tiers; four read-only domain assessments that sampled
@@ -30,15 +35,17 @@ before citing any number after this date.
 
 | Area | Status | One-line reason |
 |---|---|---|
-| Execution breadth | 🟢 Good | 88% line coverage of `src/` from the fast tiers alone |
-| Assertion strength | 🔴 Unknown / weak | Never measured (no mutation testing); the escaped-defect record suggests weak |
-| Liveness in real runs | 🔴 Gap | ~30 closed + ~15 open *never fires / never seeded / always empty* defects shipped green |
+| Execution breadth | 🟢 Good | 88% line coverage of `src/`: selected fast tiers only, one run with 8 failures (§4.1) [O] |
+| Assertion strength | ⚪ Unmeasured | No mutation testing exists; the escaped-defect titles *suggest* weak assertions [P] |
+| Liveness in real runs | 🔴 Gap | ~30 closed + ~15 open tickets with *never fires / never seeded / always empty* titles [P] |
 | Shape | 🟠 Top-thin | 44 mechanic-scenario tests against ~5.7k unit tests |
 | Determinism proof | 🟠 Partial | Fast-lane `test_reproducibility` exists; nightly slow lane red (parked by decision) |
 | Isolation | 🟠 Leaking | 7 progression tests are order-dependent; hidden by CI's per-directory split |
 | Traceability | 🔴 Broken | 93% of parity-ledger P0 entries have no `test_path` |
-| Proportionality | 🟠 Skewed | Agent-infra tests are ~25% of all test LOC; dead Codex-pilot suites still in CI |
-| Measurement tooling | 🔴 Missing | `make test-cov` points at non-existent `tests_v2/`/`src_v2/`; no scorecard |
+| Proportionality | 🟠 Skewed | Agent-infra tests are ~25% of all test LOC; Codex-pilot suites for a deferred feature still in CI [O] |
+| Measurement tooling | 🔴 Missing | `make test-cov` points at non-existent `tests_v2/`/`src_v2/` (`Makefile:209-210`); no scorecard [O] |
+| Corpus evaluation | 🟠 Silent on PRs | SimQ anchor-band tests skip when `data/calibration/` is absent, which is every CI PR run (§4.7) [O] |
+| Test selection | 🟠 Agent-judgment | No machine map joins change → domain → tests → CI lane; unmapped files are skipped silently (§8) [O] |
 | Authoring process | 🟠 No quality review | No pipeline phase reviews test quality (§5) |
 
 ---
@@ -139,7 +146,12 @@ only on the post-merge push to `main`.
 
 Run: `tests/{unit,integration,mechanic_scenarios,api,engine,simulation_quality}`,
 `-m "not slow and not extra_slow"` → 7,489 passed · 8 failed · 73 skipped · 122 deselected in
-16m54s. **Total: 88%.**
+16m54s. **Total: 88% line coverage** (not branch). Scope label, to carry wherever the figure is
+quoted: *`src/` only; selected fast tiers; `tools/`, `agent_*`, perf, certification, arena,
+architecture, slow tests and frontend excluded; 8 failing tests were not excluded from the data;
+one local run, no CI job reproduces it* [O]. Command: `coverage run --source=src -m pytest
+tests/{unit,integration,mechanic_scenarios,api,engine,simulation_quality} -m "not slow and not
+extra_slow"`.
 
 | Package | Stmts | Cover | | Package | Stmts | Cover |
 |---|---|---|---|---|---|---|
@@ -154,9 +166,9 @@ Run: `tests/{unit,integration,mechanic_scenarios,api,engine,simulation_quality}`
 Large files under 25%: `src/lab/cli.py` (0%), `src/api/ws/stream.py` (13%),
 `src/perf/bench_harness.py` (19%), `src/perf/scenarios.py` (21%).
 
-**Reading:** coverage is not the bottleneck. High coverage alongside escaped *never fires*
-defects is the pseudo-tested pattern: code runs under tests that would still pass if its effect
-were removed [R6]. Only mutation testing measures that [R5].
+**Reading [I]:** execution breadth is not the bottleneck. High coverage together with escaped
+*never fires* defects is *consistent with* the pseudo-tested pattern [R6], but **no mutation run
+has confirmed it**; that is a hypothesis for the first mutation baseline to test [R5].
 
 ### 4.2 Failures on `main` in a combined run
 
@@ -186,7 +198,7 @@ living in unit directories.
 | Property-based tests (Hypothesis) | 0 | Installed (`requirements.txt`), unused |
 | Positional hook-array pins (`PreToolUse[4]`) | 3 files | Break on hook reorder |
 
-### 4.5 Escaped-defect record (defect-escape analysis)
+### 4.5 Escaped-defect record (defect-escape analysis) [P]
 
 Ticket titles in `tickets/done/` and `tickets/todos/` matching *never fires / never applied /
 never seeded / always empty / never wired / starvation*: about **30 closed** (for example
@@ -196,7 +208,9 @@ never seeded / always empty / never wired / starvation*: about **30 closed** (fo
 `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`,
 `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`,
 `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`). These were found by SimQ runs, the
-execution census, and manual audits, not by the test suite.
+execution census, and manual audits, not by the test suite. **Provisional:** counted by title match
+only; titles were not individually confirmed as defects that tests *should* have caught, and one
+root cause can span several tickets.
 
 ### 4.6 Parity-ledger traceability (`docs/parity_ledger/*.yaml`)
 
@@ -221,9 +235,12 @@ rule "P0 entries require a passing `test_path`" is not enforced.
 These instruments sit **outside** the pytest level stack. They differ in what the result is
 compared against (the *oracle* [R24]), not only in scope.
 
-**World corpus (test input, not a level).** `data/worlds/` holds 23 worlds.
+**World corpus (test input, not a level).** `data/worlds/` holds **24 world directories** [O];
+**21** are tiered in `corpus_registry.yaml` `_worlds`; the 3 untiered are
+`camp_maturity_calibration_pilot`, `unit_information_routing_pilot`, and
+`mechanic_scenario_combat_judgement_withdrawal` (a scenario fixture, not a corpus world).
 `config/simulation_quality/corpus_registry.yaml` lists 81 anchor runs (world × seed × ticks: 51 at
-200t, 12 at 500t, 12 at 1000t, 6 at 2000t) and tiers the worlds as unit 5 · end-to-end 8 ·
+200t, 12 at 500t, 12 at 1000t, 6 at 2000t) and tiers the 21 worlds as unit 5 · end-to-end 8 ·
 stress 6 · regression-baseline 2. The tiering follows
 `docs/simulation_quality/corpus_tier_taxonomy.md`, which applies the test pyramid to *worlds*.
 The corpus is shared input for SimQ, the execution census, and some mechanic scenarios.
@@ -231,18 +248,35 @@ The corpus is shared input for SimQ, the execution census, and some mechanic sce
 **SimQ (`src/simulation_quality/`)** scores runs on 10 pillars (COGNITION, AGENCY, COMBAT,
 FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION, WORLD, NARRATIVE;
 `docs/simulation_quality/quality_scoring_contract.md` §5). It compares grades against committed
-anchors in `tests/simulation_quality/fixtures/grade_anchors.json` (61 fast ≤500t keys and 18 slow
-keys in `tests/simulation_quality/test_grade_regression.py`). The oracle is **statistical**:
-grade bands and drift. The result is not pass/fail. `/simq-audit` classifies each drift as
-`EXPECTED_DRIFT` / `REGRESSION` / `DA_NEEDED` / `NO_ACTION` (`docs/simulation_quality/audit_workflow.md`).
+anchors in `tests/simulation_quality/fixtures/grade_anchors.json`. That file has **81 anchors, the same 81
+run keys as the registry**. `tests/simulation_quality/test_grade_regression.py` parametrizes
+**79** of them (61 fast ≤500t + 18 slow; no overlap). The 2 unreferenced keys are the
+`urban_political_selfmodel_*probe_seed42_200t` anchors [O].
+
+Two separate stages, with different result types [O]:
+
+1. **Anchor-band check (execution level, pass/fail).** For each run key, every pillar must stay within
+   ±1 grade letter of its anchor **and** within `max(0.05, 20% × |anchor score|)` of its score,
+   with evidence-derived per-(run key, pillar) overrides (`SCORE_TOLERANCE_OVERRIDES`,
+   `test_grade_regression.py:59-120, 244-268`). This is a **reference-value (golden) oracle with
+   tolerance bands**, evaluated on **one seed per run key**. It is *not* a statistical test: there is
+   no distribution or hypothesis test. Some bands were widened from observed run-to-run variance.
+2. **Drift classification (human/agent judgment).** `/simq-audit` classifies each flagged drift
+   as `EXPECTED_DRIFT` / `REGRESSION` / `DA_NEEDED` / `NO_ACTION` and may update anchors
+   (`docs/simulation_quality/audit_workflow.md`). This result is a *classification*, not pass/fail.
 
 - **PR lane:** `tests/simulation_quality -m "not slow"` runs, but **the anchor-comparison tests
   `pytest.skip()` silently** because they read `data/calibration/`, which is gitignored and never
-  populated in CI. 61 of 81 anchors drifted from `main` with no signal (`.github/workflows/test.yml`
-  comment at the *SimQ grade-anchor drift* job; `TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS`).
+  populated in CI [O]. **Historical drift figures [H], not re-measured:** a sweep recorded in
+  `tickets/done/TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS.md` (dated 2026-09-03) found
+  61/81 drifted. The same ticket's later fresh re-check found **64/81 failing the band+score check
+  (44/61 fast, 18/18 slow), 17 passing, 2 probe keys not run**. The CI comment quotes the earlier
+  61/81. No current measurement exists; the per-key split between staleness and non-determinism
+  was not triaged.
 - **Drift lane:** `simq-grade-drift` runs `make simq-full-audit-full` on `main`, nightly, and on
   manual dispatch. It is `continue-on-error` (informational) by design, so the historical drift
-  backlog does not block.
+  backlog does not block. **Its job conclusion reads `success` even when drift is found** (e.g. run
+  `36401320085`, 2026-09-28), so the job status is not a drift signal; its log is [O].
 - **Known blind spots:** slow (≥1000t) anchors once showed invariant grades for
   AGENCY/COMBAT/PROGRESSION/WORLD (`TCK-20260707-SIMQ-LONGRUN-HOTPILLAR-ANCHORS`, since closed;
   current state not re-measured). Effects too small to show at corpus scale are invisible, which is
@@ -276,6 +310,28 @@ Measured from `.claude/workflows/implement-ticket.js` and `.claude/agents/`:
 | Test | `test-scoper` maps changed files to tests and runs them; `test_scope_coverage_static` checks directory mapping | Correct selection, but **no phase reviews test quality** |
 | Skills | `test-driven-development` (from `obra/superpowers`, ships `testing-anti-patterns.md` [R14]), `python-testing-patterns`, `backend-testing` are installed | **No agent or workflow references them** |
 
+### 5.1 Workflow stage map (`.claude/workflows/implement-ticket.js`, 1,951 lines) [O]
+
+Scope (`:30`) → Investigate (`:534`, `investigator`: `investigation.md`, `test_plan.md`) → Plan
+(`:658`) → Review (`:726`, `architecture-reviewer`: durable state/API/parity only) → Implement
+(`:795`, code **and** tests, `implementer.md:88`) → Document-Update → Architecture-Verify (`:999`) →
+Test (`:1158`, `test-scoper` + static backstop) → Parity → Security-Review (conditional, `:1473`) →
+Verify (`:1596`, `done-checker`: artifacts present, tests pass, "new behaviour has coverage") →
+Finalize.
+
+- **Decided somewhere:** test *level* only (`test_plan.md` category, `:557-559`).
+- **Decided nowhere:** impact set, oracle, fixture, expected effect, negative/edge cases,
+  non-functional risk.
+- **Gate failures return** and a human re-runs the workflow; there is no retry loop.
+- `implement-epic.js` and `create-tickets.js` contain no test logic. There is **no standalone
+  ticket-investigation workflow**; "investigation" is the `investigator` agent inside
+  implement-ticket.
+- **Installed test skills are never invoked:** 0 references in workflows, agents or hooks, and 0
+  Skill calls across 245,460 logged tool calls in 60 weekly `tools.jsonl` shards.
+- **Monitoring data:** `events.jsonl` has per-phase `tool_call_count` but no tokens. **70% of 400
+  runs have `duration_s: 0`** (hand-orchestrated backfills), so run duration cannot measure a
+  pilot.
+
 Existing policy docs in `docs/testing/`: `test_taxonomy.md` (legacy-parity marker taxonomy),
 `test_delta_budget.md`, `no_duplication_test_policy.md`, `regression_policy.md`,
 `requirement_traceability.md`, `how_to_add_requirement_tests.md`,
@@ -285,7 +341,10 @@ Existing policy docs in `docs/testing/`: `test_taxonomy.md` (legacy-parity marke
 
 ---
 
-## 6 · Per-domain verdicts
+## 6 · Per-domain verdicts [P]
+
+**Provisional:** each verdict comes from counts plus sampling 5–10 files per area, not from an
+exhaustive review or a mutation measurement.
 
 Verdict scale: **Healthy** · **Over-invested** (cost above risk) · **Under-invested** (risk above
 coverage) · **Misdirected** (volume in the wrong tier or on the wrong target) · **Dead weight**
@@ -346,17 +405,68 @@ coverage) · **Misdirected** (volume in the wrong tier or on the wrong target) �
 
 ## 7 · What the models say about this system
 
-Classified with the reference models in the epic's §3:
+Classified with the axes and models in the epic's §2. All readings are **[I]**, built on the
+provisional signals above.
 
-- **Pyramid [R7] and test sizes [R1]:** the base is broad and healthy. The top (medium/large
-  outcome proofs) is thin, and many large real-kernel tests sit in unit directories, so size is
-  not visible from layout.
-- **Quadrants [R3]:** Q1 (technology-facing unit) is saturated. Q2 (business-facing functional,
-  meaning mechanic scenarios) is the thinnest and is where the escaped defects live. Q3
-  (exploratory: SimQ, census) is doing Q2's job, which is why SimQ carries narrow corpus tests.
-  Q4 (perf, determinism) is healthy in the fast lane and parked in the slow lane.
-- **Test Desiderata [R9]:** *structure-insensitive* is the most violated property (doc/source
+- **Pyramid [R7] and test sizes [R1]:** the base is broad. The top (medium/large outcome proofs) is
+  thin, and many large real-kernel tests sit in unit directories, so size is not visible from
+  layout.
+- **Quadrants [R3]:** Q1 (technology-facing unit) is dense. Q2 (business-facing functional, meaning
+  mechanic scenarios) is the thinnest, and the titles of escaped defects point there [P]. Q3
+  (exploratory: SimQ, census) carries narrow corpus tests that belong in Q2. Q4 is mixed:
+  short-run determinism is proven in the fast lane; long-run determinism is parked; perf has a
+  framework but **no calibrated baselines** (§6.3).
+- **Test Desiderata [R9]:** *structure-insensitive* is the most visibly violated property (doc/source
   text tests, positional pins); *isolated* is violated by the progression leak; *predictive* is
-  weak where scorer tests run on hand-built state.
-- **Effectiveness:** coverage 88% (measured); mutation score unmeasured; defect escapes about 45
-  of one class. This is the signature of high coverage with weak oracles [R6].
+  likely weak where scorer tests run on hand-built state [P].
+- **Effectiveness:** line coverage 88% (scope-limited, §4.1); mutation score **unmeasured**; about
+  45 title-matched escapes of one class [P]. This is *consistent with* high execution and weak
+  oracles [R6], and is to be confirmed or refuted by the first mutation baseline, not assumed.
+
+---
+
+## 8 · Change impact and test selection (as-is)
+
+How a changed file becomes a set of tests today [O]:
+
+| Step | Mechanism | Nature | Gap |
+|---|---|---|---|
+| Investigate | `investigator` writes prose `test_plan.md` (`.claude/agents/investigator.md:153-191`) | Agent reading of "Related Code Areas" | No map feeds it; completeness unverifiable |
+| Test phase | `test-scoper` "Test Directory Map" (`.claude/agents/test-scoper.md:11-59`): `src/<x>/` → `tests/unit/<x>/`; for `src/{core,systems,engine,ai}` and flat `tools/*.py` a **manual importer grep** (`:69-104`) | Agent judgment, re-derived per ticket, not persisted | Indirect consumers found only if the grep finds them |
+| Static backstop | `tools/gate_checks/test_scope_coverage_static.py:60-172`: same allowlist; `ai` and `systems` **deliberately excluded** (`:80-103`) | Code | An unmapped file yields **SKIP with no output**; FAIL only for known omissions |
+| Epic | `implement-epic.js:323` calls `implement-ticket` per child | — | No cross-ticket selection |
+| CI | 12 of 15 jobs always run; `frontend`, `perf-cert-arena` (+ `tests/mechanic_scenarios`), `migration-lanes` are path-filtered (`test.yml:620-655`) | Regex over the PR diff | `PERF_RE` omits `src/{systems,progression,entities,economy,quests,town,actions,strategy}/` and `tests/mechanic_scenarios/`; `data/` and `config/` appear in no filter |
+| Fallback | "flag as untested" (`test-scoper.md:112`) | Prose instruction | Nothing checks it was emitted |
+
+**Machine-readable sources and identifiers** [O]:
+
+| Source | Stable id | Links today | Missing link |
+|---|---|---|---|
+| `registries/mechanisms.yaml` | mechanism `id` (93) | → `implemented_by` code (77/93, all paths resolve) | No structured test link (prose in `verified.note` only) |
+| `docs/parity_ledger/*.yaml` | law `id` (2,190) | → `v2_evidence`, `test_path` (596 set; 98 point at missing files) | No join to mechanism id or domain |
+| `docs/REGISTRY.yaml` | ticket id | → free-text `related_code_areas` | Historical, not a live map |
+| `docs/testing/requirement_traceability.md` | 12–14 prose groups | → test files | Hand-maintained, `last_verified: 2026-06-13` |
+| pytest markers | 27 | → speed / proof type | No domain, level, or size axis |
+| CI path regex | — | → 3 jobs | Coarse boolean |
+| graphify import graph | — | code ↔ code | Local-only (`graphify-out/` untracked); unavailable to workflows and CI |
+
+No identifier joins mechanism ↔ law ↔ domain ↔ test level ↔ CI lane; each source is a separate
+two-hop chain [O]. Guidance (tests recommended) and proof (an outcome assertion exists) are not
+distinguished anywhere [I].
+
+---
+
+## 9 · Reusable test infrastructure (as-is)
+
+| Concern | Existing, stable | Notes / gap [O unless marked] |
+|---|---|---|
+| Entities / state | `V2EntityBuilder` (`src/core/builder.py`), `tests/helpers/{entities,presets,resources,domain,assertions}.py` | Used by unit, component and scenario tests |
+| Worlds | `WorldRepository.load_world_with_context`, `WorldCompiler.compile(spec, seed, context)` | **No shared "compile + stage + run + observe" helper**; each scenario open-codes `_compile_world` / `_stage_*` |
+| Seeds / clock | `DeterministicRNG` (`src/platform/rng.py`; contract `tests/unit/core/test_rng_contract.py`) | Stable |
+| Kernel | `Kernel` with `RuntimeProfile` (`src/config/profiles.py`: `PROD_SMALL/DEFAULT/LARGE/STRESS`) | Stable |
+| Observation | `CanonicalStateHasher`, `StateFingerprinter`, `HardLawMonitor`, events | No shared replay-diff helper |
+| Isolation | Registry-reset plumbing in `tests/conftest.py` | Load-bearing; still leaks (§4.2) |
+| Golden / snapshot | `tests/integration/lab_agent/test_golden_run_fixture.py` (`e2e_golden`) | Lab registration only, not gameplay |
+| Product E2E | `run_src_module()` / `module_cmd()` in `tests/helpers/runtime.py` | **Defined, never called**; no E2E level exists |
+| Scenario runner | `src/testing/` (`ScenarioRunner`, `route_family_classifier`) | Imported only by its own tests and one architecture test; currency unclear [I] |
+| Cleanup | `rm -rf data/runs/*` at ticket close (CLAUDE.md) | No per-test fixture |
