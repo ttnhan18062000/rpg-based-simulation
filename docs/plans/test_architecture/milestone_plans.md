@@ -6,417 +6,407 @@ audience: agent
 tags: [testing, architecture, planning]
 ---
 
-# Test Architecture — Detailed Milestone Plans (draft for review)
+# Test Architecture — Detailed Milestone Plans (revision e, for review)
 
-**Status: DRAFT 2026-09-28, for reviewer assessment.** This document derives from
-[`test_architecture_epic.md`](test_architecture_epic.md) (revision d) and
-[`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist.** A
-separate ticket planner turns accepted milestones into tickets; §10 of each plan only *suggests*
-ticket boundaries.
+**Status: DRAFT 2026-09-28e.** Centred on test architecture and operations, following the owner's
+scope clarification: feature teams own mechanic behaviour and feature proofs (epic §1). Derived
+from [`test_architecture_epic.md`](test_architecture_epic.md) and
+[`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist**;
+item 10 of each plan only suggests boundaries for the ticket planner.
 
-**Inspected code:** `04f911110`; unchanged in test, `src/`, CI and agent files through
-`origin/main` `9bcae32c5`. **Labels:** [O] observed · [H] historical · [I] inference (includes
-every proposed location, name and budget below) · [RR] reviewer recommendation · [D] owner
-decision.
+**Inspected code:** `04f911110` (unchanged in test, `src/`, CI and agent files through `origin/main`
+`9bcae32c5`). Every proposed tool name, file location and budget is **[I]**.
 
-**Milestones planned here:** M0a · R1 · R2 · M0b · M1 · M2 · M3a · M3b · G-P.
-**Kept separate (§10 at the end):** R3 (SimQ skip visibility, SimQ-owned) · parity evidence ·
-cleanup · API/UI · replay-dependent techniques · E11.
-
-**Dependency sketch** (behaviour-level; no forced M3a → M3b order):
+**Acceptance philosophy:** milestones close on **operational capabilities observed in use**
+(register, locate, run, review, invalidate, report, route), never on a count of feature proofs. A
+recorded gap is honest output, but it never satisfies a capability criterion.
 
 ```
-M0a ─┬─► M1 (needs the coverage job + import-graph input)
-     ├─► M2 (also needs R1 ≥ provisional)
-     └─► M3a (E2, E3, E4)
-R1 ──┬─► M0b (closes on R1 verified) ◄── R2
-     └─► M2
-R2 ──┴─► M3b (E7, E8, E9; also needs the shared scenario helper, built inside M3b)
-G-P: independent
+M0a ──┬──► MT ──┬──► M1 (+ coverage job from M0a)
+      │         └──► M2 ──┐
+      ├──► MF ────────────┼──► MP (bounded pilot; + R2; M1 optional)
+R1 ───┴──► M0b ◄── R2 ────┘
+G-P independent (may end inconclusive/defer)
 ```
 
 ---
 
 ## M0a · As-is baseline
 
-1. **Outcome and scope.** A reproducible, generated core-RPG report at a pinned SHA that shows the
-   current state *including* failures, skips, missing data and lane gaps. Architecture level only;
-   no test is changed.
+1. **Outcome and scope.** A generated core-RPG test report at a pinned SHA that makes the current
+   state visible: failures, skips, missing data, lane gaps.
 2. **Inputs available today.**
-   - [O] Inventory scripts' rules (OV §2, §10).
-   - CI JUnit per job (`reports/junit/*.xml`, `.github/workflows/test.yml`).
-   - The coverage command and scope (OV §4.1).
-   - The parity schema-error categories (OV §4.6).
-   - Lane path rules (`test.yml:620-655`).
-   - SimQ skip behaviour (OV §4.7).
-   - Behaviour rows E1–E14 (epic §9).
-3. **Deliverables** [I locations]:
-   - a report producer (proposed `tools/test_architecture/core_rpg_report.py`);
-   - its output schema (JSON + rendered markdown) under `reports/test_architecture/<sha>/`;
-   - a standing CI coverage job (nightly: line + branch + coverage contexts) plus a fixed
-     `make test-cov`;
-   - a committed parity-baseline snapshot (input for the separate parity path, produced here
-     because it's cheap).
-4. **Dependencies and owners.** None upstream. Owner: this epic. SimQ state is read, not changed
-   (SimQ owner). Ledger and registry are read-only.
-5. **Work packages (in order).**
-   1. Report schema: layers from epic §8, the state vocabulary, and a denominator field on every
-      count.
-   2. Inventory + classification layer (directory / import signals; no manual labels).
-   3. Lane layer (path rules → which jobs would run for a path category).
-   4. Standing coverage job + `make test-cov` fix; the report ingests its artifact.
-   5. Parity evidence-state derivation (read-only) + baseline snapshot.
-   6. SimQ and census state ingestion (states only).
-   7. Normalization rules for reproducibility (see 7).
-6. **Automated evidence.**
-
-| Layer | Producer | Denominator | Provenance | Missing-data state |
-|---|---|---|---|---|
-| Inventory / classification | report producer | 1,484 test files; 204 core-RPG candidates | SHA | `classification uncertain`, `unclassified` |
-| Package line + branch coverage | coverage job | statements per package | SHA, tier list, failing-test list | `not-run` |
-| Domain coverage | — | — | — | **`not-derived`** (no defensible code → domain map yet) |
-| Lanes | producer over `test.yml` | path categories | SHA | — |
-| Law evidence state | producer over the ledger | 2,190 entries / 1,685 P0 | SHA | — |
-| Behaviour rows E1–E14 | producer (row states, epic §9) | 14 rows | SHA | `not assessed` |
-| SimQ anchors | JUnit | 81 comparisons | run id | `skipped-no-data` |
-| Census | — | — | — | `unstable` |
-| Mutation / hygiene order-dependence | — | — | — | `not-run` |
-
-7. **Acceptance criteria.**
-   - Running the producer twice at the same SHA gives **identical normalized data and
-     classifications**; timestamps, job ids and durations are excluded from the comparison.
-   - Every layer shows either a value with its denominator or an explicit state.
-   - The 8 known failing tests are listed, and any coverage figure carries the scope label.
-   - Domain coverage shows `not-derived` rather than a relabelled package figure.
-   - The progression package is marked `qualified`.
-8. **Failure / blocked / provisional / inconclusive.**
-   - **Failed:** normalized outputs differ between two runs at one SHA.
-   - **Provisional:** the coverage job isn't landed yet, so coverage comes from a documented local
-     run marked `local`.
-   - **Not inconclusive merely because the 7 progression tests fail.** Only their package's figures
-     are `qualified`.
-9. **CI / runtime cost.** The fast-tier coverage run took about 17 min locally on 6 cores (OV §4.1);
-   nightly only. The producer is a static scan, expected under 1 min [I]. **Validate:** time one
-   nightly run and one producer run; record both in the report.
-10. **Ticket-planner handoff.** Suggested boundaries:
-    - (a) report schema + producer skeleton + inventory layer;
-    - (b) coverage job + `make test-cov`;
-    - (c) parity evidence-state + baseline snapshot;
-    - (d) SimQ/census state ingestion.
-
-    Order: a → (b, c, d in parallel).
-
-## R1 · Progression isolation repair
-
-1. **Outcome and scope.** Remove the shared-state leak that makes 7 tests in
-   `tests/unit/domains/progression/` fail in combined runs (OV §4.2).
-2. **Inputs.**
-   - The failing node ids.
-   - Reproduction: pass alone; fail inside the combined command (OV §4.2).
-   - Registry-reset plumbing in `tests/conftest.py`.
-3. **Deliverables.** The fix (test fixture or source), plus a regression guard that runs the 7
-   tests after a representative polluting subset.
-4. **Dependencies and owners.** None. Owner: this epic. Must not touch the starvation-chain epic's
-   files; if the leak's source is in them, coordinate first.
+   - [O] Inventory rules (OV §2, §10); CI JUnit per job; lane rules (`test.yml:620-655`).
+   - The coverage command and its scope (OV §4.1); parity error categories (OV §4.6).
+   - SimQ skip behaviour and anchor populations (OV §4.7).
+3. **Deliverables** [I]:
+   - a report producer (e.g. `tools/test_architecture/core_rpg_report.py`);
+   - its output under `reports/test_architecture/<sha>/`: JSON with a versioned schema, plus
+     markdown;
+   - a standing nightly coverage job (line + branch + contexts) and a fixed `make test-cov`;
+   - a parity baseline snapshot (cheap input for the separate parity path).
+4. **Dependencies / owners.** None. Owner: this roadmap. SimQ, ledger and registry are read-only.
 5. **Work packages.**
-   1. Bisect the polluting test (a standard order-dependency search).
-   2. Identify the leaked state (likely a registry).
-   3. Fix at the source of the leak; don't reorder tests.
+   1. Report schema: the layers and states from epic §6.2, a denominator on every count, and an
+      input-artifact manifest.
+   2. Inventory and classification layer (signals only; `uncertain` preserved).
+   3. Lane layer.
+   4. Coverage job + `make test-cov`; report ingestion.
+   5. Parity evidence derivation + snapshot.
+   6. SimQ/census state ingestion.
+   7. Normalization.
+6. **Automated evidence.** Every layer shows a value with its denominator, or a state: package
+   coverage (`provisional-local` until the CI job exists); domain coverage `not-derived`;
+   classification (`uncertain`, `unclassified`); SimQ `skipped-no-data`; census `unstable`;
+   mutation `not-run`; order-dependence `not-run`. Provenance: SHA + an input-artifact manifest
+   (JUnit / coverage file ids).
+7. **Acceptance criteria.**
+   - Running the producer twice on the **same input artifacts** gives identical normalized data and
+     classifications.
+   - Separate executions keep their own results and run ids.
+   - Failing tests present in the inputs are listed and bound to their run id. **No specific
+     failure count is an acceptance criterion.**
+   - Package coverage is never relabelled as domain coverage.
+8. **Failure / provisional.**
+   - Failed: normalized output differs on identical inputs.
+   - Provisional: coverage comes from a documented local run.
+   - Known test failures only *qualify* the affected package figures; they don't make the
+     baseline inconclusive.
+9. **Cost.** Producer: a static scan, expected under 1 min. Nightly coverage: about 17 min locally
+   on 6 cores for the fast tiers (OV §4.1). **Validate** by recording both runtimes in the report.
+10. **Ticket-planner handoff.**
+    - (a) schema + producer + inventory;
+    - (b) coverage job + `make test-cov`;
+    - (c) parity snapshot;
+    - (d) SimQ/census ingestion.
+
+    Order: a → (b, c, d).
+
+## R1 · Test-isolation repair (progression order dependence)
+
+1. **Outcome.** The shared-state leak behind the 7 order-dependent progression tests (OV §4.2) is
+   removed, and the repair is used to validate C5's order-dependence class.
+2. **Inputs.** Failing node ids; the reproduction (pass alone, fail combined); conftest
+   registry-reset plumbing.
+3. **Deliverables.** The fix; a regression guard; an RNG-contract check for `pytest-randomly`; a
+   triage evidence record in the MF format.
+4. **Dependencies / owners.** None. Owner: this roadmap (test infrastructure). If the leak source
+   is in feature code under rework, route it to the feature team per C5.
+5. **Work packages.**
+   1. Bisect the polluter.
+   2. Identify the leaked state.
+   3. Fix at the source.
    4. Add the guard.
-   5. RNG-contract check for `pytest-randomly` (reseeding vs `DeterministicRNG`,
-      `tests/unit/core/test_rng_contract.py`).
-   6. Random-order run of the directory.
+   5. RNG-contract check.
+   6. Random-order run.
 6. **Evidence.** JUnit for the combined, isolated and random-order runs at one SHA; R1 state in the
    report.
-7. **Acceptance criteria.** `verified` = combined + isolated + random-order all pass at one SHA.
+7. **Acceptance.** `verified` = combined + isolated + random order all pass at one SHA.
 8. **States.**
-   - `provisional`: combined + isolated pass, random order awaits the RNG check.
-   - `blocked`: the leak originates in starvation-epic files pending coordination.
-   - `failed`: any required run fails.
-9. **Cost.** The combined subset reproduces the failure in about 17 min (full fast tier);
-   narrowing by bisection is expected to cut this to minutes [I]. **Validate** by recording the
-   minimal reproducing set's runtime.
-10. **Handoff.** One ticket (bisect + fix + guard), plus one small ticket for the RNG-contract check
-    and random-order run.
+   - `provisional`: combined + isolated pass; random order awaits the RNG check.
+   - `blocked`: the leak source needs a feature-team fix.
+   - `failed`: otherwise.
+9. **Cost.** The first reproduction takes about 17 min; after bisection, minutes. **Validate** by
+   recording the minimal reproducer's runtime.
+10. **Handoff.** One ticket (bisect + fix + guard), plus one small ticket (RNG check + random-order
+    run).
 
-## R2 · Mechanic-scenario PR selection
+## R2 · Scenario lane selection
 
-1. **Outcome and scope.** Mechanic scenarios run on every **relevant** PR (epic §10.3), using the
-   fail-open fallback. This is a lane-rule repair only; the M1 model is separate (epic §5.6).
+1. **Outcome.** Mechanic scenarios run on every **relevant PR** (rule below) at a measured cost.
+   This lane rule is separate from the impact model.
 2. **Inputs.**
-   - `PERF_RE` and the `perf-cert-arena` job (`test.yml:620-696`).
-   - Evidence that the job was skipped on sampled PR runs [O].
-   - Scenario count and runtime (44 tests; up to about 28 s per test in local `--durations`, OV §4.3).
-3. **Deliverables** [I]: either a dedicated `mechanic-scenarios` job or a widened filter, whose
-   trigger is the §10.3 categories plus the fail-open rule; plus a lane-rule test (fixture diffs →
-   expected trigger).
-4. **Dependencies and owners.** Owner: **this epic** (lane contract, [RR]); delivered as a CI change
-   through the normal delivery process. The scenario initiative owns scenario content.
+   - `PERF_RE` and `perf-cert-arena` (`test.yml:620-696`).
+   - Skipped-lane evidence [O].
+   - Local per-test durations (OV §4.3).
+3. **Deliverables.**
+   - A dedicated scenario job, or a widened filter.
+   - A lane-rule fixture test.
+   - A cost record.
+4. **Relevant-PR rule.** Any changed path in:
+   - `src/**` (fail-open: any `src` path counts);
+   - `tests/mechanic_scenarios/**`, `tests/helpers/**`, `tests/conftest.py`;
+   - `data/worlds/**`, `config/**`;
+   - `requirements*.txt`, `pyproject.toml`, `.github/workflows/test.yml`.
+
+   A PR is not relevant only if it touches exclusively `docs/`, `tickets/`, `agent-monitoring/`,
+   `tools/`, `frontend*/`, `dashboard-frontend/` or `tmp/`.
+
+   Owner: this roadmap (lane contract) [RR], delivered through the normal CI change process.
 5. **Work packages.**
-   1. Encode the path categories.
-   2. Choose between a dedicated job and a widened filter (a dedicated job avoids running
-      perf/cert on core-RPG PRs).
-   3. Lane-rule fixture test.
+   1. Encode the rule.
+   2. Choose a dedicated job over reusing `perf-cert-arena`, which avoids pulling perf/cert into
+      core PRs.
+   3. Fixture test.
    4. Observe it on real PRs.
-6. **Evidence.** Per PR: the path category matched, whether the job triggered, and scenario JUnit.
-   Report layer: "relevant PRs, and scenarios ran on m / n".
-7. **Acceptance criteria.**
-   - The fixture test passes: `src/progression/**`, `src/entities/**`, `src/systems/**`,
-     `tests/mechanic_scenarios/**` and `data/worlds/**` trigger; docs/tickets-only diffs don't.
-   - On real PRs over the observation window, every relevant PR ran the scenarios (m = n).
+6. **Evidence.** Per PR: rule category matched, lane triggered, lane executed, JUnit, **lane wall
+   time**. Report: relevant PRs *n*, triggered *m*, executed *k*.
+7. **Acceptance.**
+   - The fixture test passes (e.g. `src/progression/**` and `tests/mechanic_scenarios/**` trigger;
+     docs-only doesn't).
+   - Over the observation window, every relevant PR triggered and executed the lane (m = k = n).
+   - The measured cost is reported.
 8. **States.**
-   - `provisional`: the fixture test passes but no relevant PR has occurred yet.
-   - `failed`: any relevant PR skipped.
-9. **Cost.** Scenario lane wall time roughly 1–3 min per PR [I, from per-test durations]; PR wall
-   time today is 7–9 min with parallel jobs [O]. **Validate** by recording the lane duration over
-   the first 10 PRs.
-10. **Handoff.** One ticket: rule + job + fixture test.
+   - `provisional`: the fixture passes but no relevant PR has been observed yet.
+   - `failed`: any relevant PR is not triggered.
+9. **Cost.** Assumed 1–3 min of lane wall time [I]; today's PR wall time is 7–9 min [O].
+   **Validate:** actual lane durations over the first 10 relevant PRs. If the median exceeds 5 min,
+   revisit the job split.
+10. **Handoff.** One ticket.
 
 ## M0b · Post-repair baseline
 
-1. **Outcome and scope.** The M0a measures re-run after R1 and R2, with every difference explained.
-2. **Inputs.** The M0a report and the R1/R2 results.
-3. **Deliverables.** The M0b report plus a diff note (scope changes, e.g. the scenario lane now
-   triggered).
-4. **Dependencies.** R2 done; **closes only when R1 is `verified`**. R3 is **not** a prerequisite.
-   A *provisional post-R2 report* may be produced earlier, labelled `provisional`.
-5. **Work packages.** Re-run the producer at the post-repair SHA; explain the diff line by line.
-6. **Evidence.** The same layers as M0a; progression is no longer `qualified` if R1 is `verified`.
-7. **Acceptance criteria.** Every M0a → M0b difference is attributed to a repair, a scope change or
-   code drift. There is no unexplained change.
-8. **States.**
-   - `provisional`: R1 is still `provisional`.
-   - `blocked`: R1 is `blocked`.
-9. **Cost.** Same as M0a.
-10. **Handoff.** Folded into the M0a producer ticket's follow-up, or one small ticket.
+1. **Outcome.** The M0a measures after R1 and R2, with every difference explained.
+2. **Inputs.** The M0a report and input manifest; the R1 and R2 results.
+3. **Deliverables.** The M0b report plus a diff note. A **provisional post-R2 report** may be issued
+   earlier, labelled as such.
+4. **Dependencies.** R2 done; **closes only when R1 is `verified`**. R3 is not required.
+5. **Work packages.** Re-run on new input artifacts; attribute each difference.
+6. **Evidence.** Same layers as M0a; the scenario-lane layer is now populated.
+7. **Acceptance.** Every difference is attributed to a repair, a scope change or code drift.
+8. **States.** `provisional` (R1 provisional) · `blocked` (R1 blocked).
+9. **Cost.** As M0a.
+10. **Handoff.** A small follow-up to M0a (a).
 
-## M1 · Change-impact model v0
+## MT · Test taxonomy and structure (C1)
 
-1. **Outcome and scope.** The impact report (epic §5.2) with reasons, `impact-unknown` and the four
-   status columns, validated by the seeded-fault protocol (epic §5.3) on the 5 sample changes
-   (§5.4). Component → domain granularity; the mechanism tier is deferred.
-2. **Inputs.**
-   - The declared domain map (epic §4.1).
-   - The static import graph. **Dependency:** a CI-generated graph. **Fallback:** a local graph
-     committed with its source SHA and marked `stale` when behind.
-   - Coverage contexts (who-tests-what) from the M0a nightly job [R26][R28].
-   - The content rules (§5.1).
+1. **Outcome.** Agents and feature teams have written, reusable conventions: level contracts,
+   ownership map, placement, metadata, shared harness patterns, and conventions for new tests.
+2. **Inputs.** Epic §3; the OV §9 harness inventory; the OV §10 classification inventory; existing
+   `docs/testing/*.md` (the taxonomy there is stale and legacy-parity oriented).
 3. **Deliverables** [I]:
-   - a producer (proposed `tools/test_architecture/impact.py`) with a JSON output per changed-path
-     set;
-   - an agent-readable rendering for `investigator` and `test-scoper`;
-   - an evaluation harness applying the §5.3 protocol;
-   - an evaluation record per fault.
-4. **Dependencies and owners.** M0a (coverage contexts, classification). Mechanism ids come from the
-   registry epic when available. Owner: this epic.
+   - a replacement for `docs/testing/test_taxonomy.md`: level contracts, technique criteria,
+     placement, ownership map;
+   - registered metadata markers + an advisory consistency check;
+   - pattern library entries, each with **one worked example on a stable or synthetic behaviour**:
+     property test, stateful property test, mechanic-outcome scenario via the shared helper,
+     cross-domain chain, characterization;
+   - the shared scenario helper and the replay-diff helper;
+   - a `data/runs` cleanup fixture;
+   - the S1 metadata rule, plus S2 proposal tooling.
+4. **Dependencies / owners.** M0a (inventory). Owner: this roadmap. Scenario families remain with
+   the scenario initiative; the helper follows its harness pattern.
 5. **Work packages.**
-   1. Rule model (paths → components → domains).
-   2. Import-graph input + staleness state.
+   1. Taxonomy doc.
+   2. Markers + check.
+   3. Shared helpers.
+   4. Pattern examples.
+   5. S1 rule.
+   6. S2 proposal tooling (labels proposed, not applied).
+6. **Evidence.** Report classification layer: declared / proposed / uncertain / unclassified counts
+   over the stated denominators; the pattern examples run in their lanes.
+7. **Acceptance (operational).**
+   - A new test written with the markers is located and classified by the report.
+   - The consistency check flags a deliberately mismatched test.
+   - Each pattern example runs green in its declared lane.
+   - The helper is used by ≥ 1 pattern example.
+   - **The staged migration is not required to be finished.**
+8. **States.** `provisional` if the consistency check is advisory only; `failed` if a marked test
+   isn't located by the report.
+9. **Cost.** Pattern examples: under 30 s each [I]. **Validate** with in-lane durations.
+10. **Handoff.**
+    - (a) taxonomy doc;
+    - (b) markers + check;
+    - (c) shared helpers;
+    - (d) pattern examples (one ticket per pattern);
+    - (e) S2 proposal tooling.
+
+    Order: a → b → c → d; e after b.
+
+## M1 · Change-impact model v0 (C2)
+
+1. **Outcome.** An impact report with reasons, `impact-unknown`, and **separate** selected /
+   lane-triggered / executed facts.
+2. **Inputs.**
+   - The ownership map and domain ids (MT).
+   - Import graph: CI-generated; interim fallback committed with its SHA and marked `stale`.
+   - Coverage contexts (M0a job).
+   - Content/config rules.
+3. **Deliverables** [I]:
+   - an impact producer + JSON contract;
+   - an agent-readable rendering;
+   - the seeded-fault evaluation harness;
+   - evaluation records.
+4. **Dependencies / owners.** M0a, MT. The mechanism tier waits on the registry epic.
+5. **Work packages.**
+   1. Rule model.
+   2. Import-graph input + staleness.
    3. Coverage-context input.
-   4. Content/config rules.
-   5. Output contract incl. `impact-unknown`.
-   6. Seeded-fault harness (clean baseline → one fault per isolated revision → reference run →
-      classify).
-   7. Evaluate the 5 changes.
-   8. Lane trigger vs selection report (§5.6).
-6. **Evidence.** Per fault: class (usable / equivalent / invalid / timed-out / unreachable /
-   undetected), expected set, selected set, triggered lanes. Aggregates: test recall, lane recall,
-   over-selection cost, unknown count, number of usable faults.
-7. **Acceptance criteria.**
-   - Change 5 (party, unmapped) yields `impact-unknown` and the full core-RPG lane recommendation.
-   - For changes 1–4, **lane recall = 100% on usable faults**, with test recall reported.
-   - Changes 3 and 4 (cross-domain, content activation) are found by a rule or by coverage
-     contexts, not by chance.
-   - At least one usable fault per change 1–4.
-   - `undetected` faults are listed as *possible* proof gaps, not counted as test gaps.
+   4. Content rules.
+   5. Output contract.
+   6. Seeded-fault harness.
+   7. Evaluate the 5 sample categories.
+   8. Wire the rendering into the `investigator` and `test-scoper` prompts, **after** the
+      evaluation.
+6. **Evidence.** Per fault: class, expected set, selected set, triggered lanes, executed lanes.
+   Aggregates: test recall, lane recall, over-selection cost, unknown count, usable faults. Every
+   figure is labelled a **sample validation**.
+7. **Acceptance.**
+   - The unmapped sample yields `impact-unknown` plus the full core-RPG fallback.
+   - Lane recall is 100% on usable faults for the other four categories.
+   - Test recall is reported.
+   - Cross-domain and content samples are found by a rule or by contexts.
+   - Selected-not-triggered cases are reported separately.
 8. **States.**
-   - `provisional`: the import graph comes from the committed fallback.
-   - `inconclusive`: fewer than 4 usable faults across changes 1–4.
-   - `failed`: lane recall < 100% on a usable fault, or change 5 not flagged.
-9. **Cost.** Each fault needs a reference run of the fast tier (about 17 min locally) → 5–10 faults
-   ≈ 1.5–3 h per evaluation [I]. Run on demand, not per PR. **Validate** by timing the first
-   fault; consider restricting the reference population to core-RPG lanes if cost dominates, and
-   record that restriction.
-10. **Handoff.** Suggested order:
-    - (a) rule model + output contract;
-    - (b) import graph + coverage-context inputs;
+   - `provisional`: the fallback import graph is in use.
+   - `inconclusive`: fewer than 4 usable faults.
+   - `failed`: lane recall below 100%, or the unmapped sample not flagged.
+9. **Cost.** About 17 min per fault reference run → 1.5–3 h per evaluation; run on demand.
+   **Validate** by timing the first fault. A narrower reference population is allowed if recorded.
+10. **Handoff.**
+    - (a) rules + contract;
+    - (b) graph + contexts;
     - (c) content rules;
-    - (d) seeded-fault harness + evaluation;
-    - (e) agent rendering wired into `investigator` / `test-scoper` prompts, **after** (d) passes.
+    - (d) evaluation harness + evaluation;
+    - (e) prompt wiring.
 
-## M2 · AI-first workflow pilot (progression)
+## M2 · AI-first authoring workflow (C3)
 
-1. **Outcome and scope.** Test the extended `test_plan.md` fields and the reviewer checklist on
-   eligible progression tickets (epic §7.2), then decide keep / revise / inconclusive with a
-   qualitative review. No new phase or agent.
-2. **Inputs.**
-   - The baseline pool: 42 `tickets/done/` files mention the progression paths [O]; their
-     `stored_artifacts/*/test_plan.md`.
-   - `events.jsonl` `tool_call_count`.
-   - The Architecture-Verify stage (`implement-ticket.js:999`).
+1. **Outcome.** The authoring workflow of epic §5 is written into the existing agents and
+   templates: mandatory/optional `test_plan.md` fields, the oracle/spec review step, the reviewer
+   checklist, and epic coordination rules.
+2. **Inputs.** The OV §5.1 stage map; `investigator.md:153-191`; `architecture-reviewer.md`;
+   `implement-ticket.js:999`; `implement-epic.js`.
+3. **Deliverables.**
+   - Template field changes.
+   - The oracle/spec review step: a recorded approval by the feature/spec owner when an AC adds or
+     changes an expectation.
+   - The reviewer checklist (advisory, diff-scoped).
+   - Epic coordination notes.
+   - Review-record fields (epic §6.3), stored in a location proposed pending the registry epic.
+4. **Dependencies / owners.** MT (contracts, proof kinds). Owner: this roadmap. Agent-file changes go
+   through their own tickets. The feature teams are the approvers.
+5. **Work packages.**
+   1. Template.
+   2. Oracle/spec review step.
+   3. Checklist.
+   4. Review-record format + mechanical validator.
+   5. Epic rules.
+6. **Evidence.** Per ticket: mandatory-field completeness; substantive findings and the action
+   taken; review records created and validated; `tool_call_count` per phase (pipeline runs only).
+7. **Acceptance (operational).** On ≥ 2 real or synthetic tickets:
+   - mandatory fields are present;
+   - an oracle approval is recorded and mechanically validated;
+   - a checklist finding (if any) is acted on or declined with a reason; a clean review is valid;
+   - a review record correctly turns `stale` after a deliberate oracle-hash change.
+8. **States.**
+   - `provisional`: exercised only on synthetic tickets.
+   - `failed`: the validator can't detect staleness.
+9. **Cost.** Bounded by the MP measurements; `tool_call_count` is a coarse proxy.
+10. **Handoff.**
+    - (a) template;
+    - (b) oracle review step + review-record validator;
+    - (c) checklist;
+    - (d) epic rules.
+
+## MF · Failure-triage and test-maintenance workflow (C5)
+
+1. **Outcome.** The unified triage workflow (epic §7) as the single authoritative procedure: the
+   evidence record, the 8 classes, roles, closure, the prohibitions, and bounded quarantine.
+2. **Inputs.** `docs/testing/regression_policy.md` §4–7; the `delivery_process.md` CI Failure
+   Triage section; CLAUDE.md gate integrity; the R1 repair as a live case.
 3. **Deliverables** [I]:
-   - the template field change (investigator prompt, `investigator.md:153-191`);
-   - the reviewer checklist text (in `architecture-reviewer.md`, applied to changed tests, advisory);
-   - a pilot record per ticket;
-   - a final pilot report.
-4. **Dependencies and owners.**
-   - **R1 ≥ `provisional`**, so test signals are trustworthy. M0a supplies the baseline report.
-   - M1 is **not** required; the impact report is used if it exists.
-   - Owner: this epic. Agent/workflow files change only through the pilot's own ticket.
+   - the workflow merged into `regression_policy.md`, with the other docs linking to it;
+   - an evidence-record template;
+   - a quarantine marker and policy (owner, ticket, expiry, `quarantined` report state);
+   - report support for `quarantined`;
+   - a feature-team handoff template for defects found by tests.
+4. **Dependencies / owners.** M0a (report states). Owner: this roadmap. The feature/spec owners
+   approve expectation changes. The quarantine-policy change to §6 needs an owner decision.
 5. **Work packages.**
-   1. Freeze eligibility rules and the baseline set.
-   2. Score the baseline tickets with the checklist.
-   3. Land the template + checklist; record the intervention commit.
-   4. Run the window.
-   5. Record per ticket.
-   6. Final decision with a qualitative review.
-6. **Evidence.** Per ticket:
-   - mandatory-field completeness;
-   - optional fields present;
-   - substantive findings and whether each was acted on or declined with a reason;
-   - `tool_call_count` per phase (pipeline runs only; backfills flagged);
-   - proofs registered.
-7. **Acceptance criteria.** The pilot **completes** when a keep / revise / inconclusive decision is
-   recorded with its measurements and qualitative review. The decision is directional (3–5
-   tickets), and no causal claim is made.
+   1. Class table + evidence record.
+   2. Reconcile the three existing documents.
+   3. Quarantine policy + marker.
+   4. Report state.
+   5. Handoff template.
+   6. Drill: apply it to R1's case and to one synthetic failure per class that has a cheap
+      synthetic.
+6. **Evidence.** Evidence records from the drills; the report shows `quarantined` with owner and
+   expiry.
+7. **Acceptance (operational).**
+   - The drills classify correctly and route to the right role.
+   - A quarantined test shows its owner and expiry, and fails the report check after expiry.
+   - An attempted expectation change without a recorded approval is caught by the review-record
+     validator (M2).
+8. **States.** `blocked` if the quarantine-policy decision is pending (the rest proceeds);
+   `provisional` if the drills are synthetic only.
+9. **Cost.** Documentation and small tooling; the drills are local runs.
+10. **Handoff.**
+    - (a) unified doc + evidence template;
+    - (b) quarantine marker + report state;
+    - (c) handoff template;
+    - (d) drill.
+
+## MP · Bounded core-RPG pilot (C6)
+
+1. **Outcome.** A demonstration that an agent can perform all six pilot capabilities (epic §8) on
+   core RPG. It replaces the earlier progression workflow pilot and the M3a/M3b proof batches.
+2. **Inputs.** One or two **stable changes selected with the feature agents**. If none is
+   available: an existing stable behaviour (candidates: E1 authoritative-write guard; E4
+   conservation if the feature agents confirm it is stable), or a **synthetic, labelled** exercise.
+3. **Deliverables.** A pilot record per exercise, covering capabilities 1–6 with artifacts; a final
+   pilot report with a qualitative review and a keep / revise / inconclusive decision per
+   intervention.
+4. **Dependencies / owners.**
+   - M2, MF and R2 are required.
+   - M1 if available; otherwise a manual impact analysis with reasons, recorded as such.
+   - Owner: this roadmap. The feature agents choose the surface and approve oracles.
+   - It must not block on a feature redesign.
+5. **Work packages.**
+   1. Choose the surface with the feature agents.
+   2. Run the exercise through C2 → C3 → C1 → C4.
+   3. Inject or observe one failure and triage it (C5).
+   4. Register evidence; deliberately invalidate it (change the oracle hash); confirm the report
+      shows `stale`.
+   5. Write up.
+6. **Evidence.**
+   - Impact report or manual impact.
+   - `test_plan.md` with the approved oracle.
+   - Test file with metadata.
+   - Lane runs (local + CI) with run ids.
+   - Triage record.
+   - Review record and the report before/after invalidation.
+7. **Acceptance.** All six capabilities are observed at least once, each with an artifact. A
+   capability that fails is recorded as a finding and triggers a revise decision, **not a pass**.
 8. **States.**
-   - `inconclusive`: fewer than 3 eligible tickets after the extension, or most baseline artifacts
-     are missing.
-   - Paused: the starvation epic overlaps the surface.
-   - `blocked`: R1 `blocked`.
-9. **Cost.** The added Investigate effort is bounded by the +20% `tool_call_count` criterion.
-   `tool_call_count` is a coarse proxy, not elapsed time or tokens. **Validate** by comparing
-   per-phase calls on the baseline vs treatment tickets that have real event data.
-10. **Handoff.** Two tickets:
-    - (a) baseline scoring + eligibility freeze (read-only);
-    - (b) template + checklist change (the intervention).
+   - `provisional`: synthetic-only exercise.
+   - `inconclusive`: a capability couldn't be exercised for lack of a surface, with the reason
+     recorded.
+   - `failed`: a capability was attempted and didn't work.
+9. **Cost.** The size of a normal small ticket per exercise, plus reporting. `tool_call_count` is
+   recorded as a coarse proxy. **Validate** by comparing it with typical small tickets.
+10. **Handoff.**
+    - (a) surface selection note, jointly with the feature agents;
+    - (b) exercise ticket(s);
+    - (c) pilot report.
 
-    The pilot record and decision are process outputs, not tickets.
+## G-P · Party ownership assessment
 
-## M3a · Pure-law and invariant evidence
-
-1. **Outcome and scope.** New law evidence for E2 (damage-law bounds/monotonicity, ch02), E3
-   (XP-curve monotonicity, ch01) and E4 (conservation per transaction and over action sequences,
-   ch03).
-2. **Inputs.**
-   - Bible chapters 01–03.
-   - The existing example tests (e.g. `tests/unit/resource/`,
-     `tests/integration/kernel/test_resource_conservation.py`).
-   - Hypothesis, installed but unused [O].
-3. **Deliverables.**
-   - Property tests (E2, E3) and a stateful property test (E4) with in-file metadata and review
-     records (epic §10.1).
-   - A narrow progression mutation baseline (`mutmut`) with a provenance record, as **supporting
-     evidence only** (not a pilot measure, not a close criterion).
-4. **Dependencies and owners.** M0a, for reporting and metadata. **Independent of M3b, R2 and
-   combat real-run evidence.** Owner: this epic. The spec owner approves oracle interpretations.
-5. **Work packages.**
-   1. Law statements extracted with Bible section ids.
-   2. E2 property test.
-   3. E3 property test.
-   4. E4 stateful machine (action vocabulary: harvest / craft / trade / consume).
-   5. Review records.
-   6. Supporting mutation baseline.
-6. **Evidence.** Proof states by kind (law/property for E2 and E3; stateful invariant for E4) in the
-   effect-asserted layer; the mutation record (target, tests, SHA, date, runtime, killed / survived
-   / timeout / equivalent).
-7. **Acceptance criteria (close).**
-   - **E2, E3 and E4 are each `proven`**: a passing test in the `Unit · gameplay` lane plus a
-     current, approved review record of the correct proof kind.
-   - A recorded gap does **not** close M3a.
-   - The mutation baseline exists with provenance (a supporting deliverable; no score threshold).
-8. **States.**
-   - `blocked`: a law is ambiguous in the Bible → spec-owner decision.
-   - `provisional`: tests pass but the review is pending.
-   - `failed`: the property finds a real law violation. That's a valuable finding: it becomes a
-     defect ticket, and the row stays `gap` until fixed.
-9. **Cost.** Property tests are small (< 1 s each, a bounded Hypothesis example count) [I];
-   stateful tests up to about 10 s. Mutation on narrow progression modules: minutes to an hour [I].
-   **Validate** by recording the Hypothesis settings and actual runtimes; cap examples if the unit
-   lane budget is exceeded.
-10. **Handoff.** Three independent proof tickets (E2, E3, E4) plus one supporting mutation ticket;
-    no mutual ordering.
-
-## M3b · Real-run outcome and chain evidence
-
-1. **Outcome and scope.** New outcome proofs for E7 (pursuit → opportunity attack: occurrence plus
-   the non-lethal damage effect), E8 (harvest → inventory → market chain) and E9 (quest completion
-   → reward chain), plus the shared scenario helper (epic §6.4 gap 1).
-2. **Inputs.**
-   - Existing scenario patterns (`tests/mechanic_scenarios/test_combat_resolution_damage_value_differential.py`,
-     proposal §3.3).
-   - Call sites `src/engine/movement.py:240-242` and `src/engine/combat.py`.
-   - Economy/quest code paths (epic §4.1).
-3. **Deliverables.**
-   - The shared helper (compile → stage → run N ticks → observe; optional control arm).
-   - Three proofs: E7 **mechanic outcome**; E8 and E9 **cross-domain chain**, with review records.
-4. **Dependencies and owners.**
-   - **R2**, so the proofs run on relevant PRs.
-   - The helper is built inside M3b first.
-   - E7, E8 and E9 are **mutually independent**, and **independent of M3a**.
-   - The scenario initiative owns families; this epic uses its harness pattern.
-   - E11 is excluded: no proof may approve the discarded `COMBAT_ENGAGE` behaviour.
-5. **Work packages.**
-   1. Shared helper.
-   2. E7 scenario, with a control only if the claim needs one (e.g. no opportunity attack without
-      disengagement).
-   3. E8 chain, with an observation at each hop.
-   4. E9 chain.
-   5. Review records.
-6. **Evidence.** Proof states (mechanic outcome, chain); scenario-lane JUnit per relevant PR.
-7. **Acceptance criteria (close).**
-   - **E7, E8 and E9 each `proven`**: passing in the relevant-PR scenario lane, with a current
-     approved review record of the correct kind.
-   - Each chain proof observes every hop, not only the endpoint.
-   - A recorded gap does not close M3b.
-8. **States.**
-   - `blocked`: the Bible's opportunity-attack or economy rule is ambiguous → spec owner; or R2 not
-     done.
-   - `provisional`: review pending.
-   - `failed`: the scenario shows the behaviour does not occur. That becomes a defect ticket, and
-     the row stays `gap`.
-9. **Cost.** Each scenario is bounded at < 30 s (chains < 60 s) per epic §6.1 [I]. Three proofs add
-   roughly 1–2 min to the scenario lane. **Validate** by measuring in the lane; move a chain to
-   nightly if it exceeds the budget, and record the move.
-10. **Handoff.** Order: helper first; then E7, E8 and E9 as three independent tickets.
-
-## G-P · Party selection gate
-
-1. **Outcome and scope.** An **assessment** of party/group, plus an owner go/no-go on whether it
-   enters an evidence batch. No implementation maturity is presumed.
-2. **Inputs.** `src/systems/party.py`, `src/systems/social_systems/party*.py`,
-   `group_service.py` [O]; any Bible or plan references to party (to be searched).
-3. **Deliverables.** An assessment note:
-   - runtime entry points (kernel phase / pipeline phase);
-   - spec source (or its absence);
-   - active / partial / planned / deferred maturity, with evidence;
-   - existing tests;
-   - dependencies on other domains;
-   - a recommended E13 row.
-4. **Dependencies.** None. Owner: this epic (assessment); the owner decides go/no-go.
-5. **Work packages.**
-   1. `search_docs` + registry lookup.
-   2. Trace the entry points.
-   3. Check for real-run activity using existing evidence (census reports, if any).
-   4. Write up the assessment.
-   5. Owner decision.
-6. **Evidence.** The filled E13 row, with evidence labels.
-7. **Acceptance criteria.** The assessment covers every field in item 3, and the owner decision is
-   recorded (go / no-go / defer).
-8. **States.** `inconclusive` if the entry points can't be traced without runtime instrumentation.
-   That is recorded, with the instrumentation need stated.
-9. **Cost.** Read-only investigation; no CI cost.
+1. **Outcome.** Party/group placed in the ownership map (spec, owner, components, runtime entry),
+   or documented as `inconclusive/defer`. No implementation maturity is presumed.
+2. **Inputs.** `src/systems/party.py`, `src/systems/social_systems/party*.py`, `group_service.py`
+   [O].
+3. **Deliverables.** An assessment note and a map row, or a documented `inconclusive/defer` with the
+   investigation needed.
+4. **Dependencies.** None. Owner: this roadmap (assessment); the owner decides go / no-go / defer.
+5. **Work packages.** `search_docs` + registry lookup; trace entry points; write up.
+6. **Evidence.** The map row with evidence labels.
+7. **Acceptance.** A map row with every field sourced, **or** an `inconclusive/defer` note naming
+   what could not be established and why.
+8. **States.** `inconclusive/defer` is an accepted outcome.
+9. **Cost.** Read-only.
 10. **Handoff.** One investigation ticket.
 
 ---
 
-## 10 · Separate paths (not planned in detail here)
+## Separate paths (not planned in detail)
 
-| Path | Why separate | Next step |
-|---|---|---|
-| **R3 SimQ skip visibility** | SimQ owner; not a core-RPG prerequisite | SimQ owner schedules; this epic only reads its state |
-| **Parity evidence model** | Needs the owner's D7 re-decision | The baseline snapshot is already produced in M0a (cheap); derived state and corpus validation after the decision |
-| **Cleanup** (`agent_codex_*`, `src/testing/`, SimQ narrow tests, doc-text tests, duplicate directories) | Off the core-RPG path | Per-target consumer and CI inventory before any owner deletion decision |
-| **API / UI** | No demonstrated core-RPG dependency | Re-open when a dependency is shown |
-| **Replay-dependent** (metamorphic tests, exact-replay sweeps, E14) | Determinism parked | Wait for the parked ticket |
-| **E11 decision-driven attack** | Core mechanic design decision | Owner decides; no test may encode the current behaviour as correct |
+| Path | Next step |
+|---|---|
+| R3 SimQ skip visibility | SimQ owner; this roadmap only reads the state |
+| Parity evidence model | After the D7 decision; the baseline snapshot comes from M0a |
+| Cleanup | Per-target consumer and CI inventory before any deletion decision |
+| API / UI | Only on a demonstrated core-RPG dependency |
+| Replay-dependent techniques, E14 | After determinism is unparked |
+| Feature proof batches (former E2, E3, E7–E9, E12) | **Feature-owner responsibility**; they use MT patterns, the M2 workflow and C4 reporting |
+| E11 | Feature design decision; outside this roadmap |
