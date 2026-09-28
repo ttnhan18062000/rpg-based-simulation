@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture: Measurement Model and Direction
 
-**Status, drafted 2026-09-28. D1–D9 decided; D10 (core-RPG portfolio) pending. Core RPG is the first program (§1a). No tickets exist yet.** Each `D#` section below
+**Status, drafted 2026-09-28. ALL DIRECTIONS DECIDED (D1–D10). Core RPG is the first program (§1a). No tickets exist yet.** Each `D#` section below
 is a direction that needs a decision. Tickets are cut only after the directions are agreed, one
 child ticket per accepted direction (or per phase of one), under a future
 `tickets/todos/test-architecture/` epic folder.
@@ -318,7 +318,7 @@ reinforce each other), with **C's bold cells pulled forward** inside their domai
 they are the largest gaps. B spreads effort thin and delays any domain reaching a complete
 portfolio.
 
-**Decision:**
+**Decision (2026-09-28): A, domain by domain, bottom-up, starting with progression;** the bold ✗ cells are pulled forward inside their domain batches.
 
 ---
 
@@ -348,7 +348,7 @@ portfolio.
 3. ~~D7 re-tier~~ Resolved 2026-09-28: accepted.
 4. ~~Mutation tool~~ Resolved 2026-09-28: `mutmut`.
 5. ~~D9 pilot domain~~ Resolved 2026-09-28: progression.
-6. D10 build order: domain by domain (recommended), by test type, or gaps only?
+6. ~~D10 build order~~ Resolved 2026-09-28: domain by domain, starting with progression.
 
 ## 9 · References
 
