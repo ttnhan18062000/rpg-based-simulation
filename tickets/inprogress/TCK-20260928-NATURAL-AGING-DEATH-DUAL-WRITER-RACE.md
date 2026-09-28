@@ -16,7 +16,7 @@ An entity that dies of natural aging is deactivated with no death cause and no s
 two systems write `lifecycle.active` one tick apart with no declared precedence
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -169,13 +169,141 @@ of writers.
   approved fix**, was never run against the suite, and does not address Q3. Inspect or discard.
 
 ## Implementation Notes
-_To be completed during implementation._
+
+Implemented exactly per `staging_artifacts/TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE/plan.md`'s
+12 steps, in order. No architectural deviation from the approved plan.
+
+**Q1 (declared authority) — resolved as planned.** `src/engine/apply.py:109`'s passive-branch
+`active=` formula changed from `(new_hp > 0 and new_age < life.max_age_ticks)` to
+`(new_hp > 0 and (life.active or new_age < life.max_age_ticks))`.
+`LifecycleSystem.resolve_lifecycle`'s OLD_AGE branch (`src/systems/lifecycle_systems/
+lifecycle.py:193-195`) is now the sole declared authority for old-age deactivation; the passive
+branch keeps only its immediate `new_hp > 0` HP-death gate. Proven via a pre-fix regression run
+(Step 1's new test file failed 3/3 against unmodified `src/engine/apply.py`, for exactly the
+described reason — `death_reason` stayed `None` — then passed 4/4 after the one-line fix landed).
+No `src/engine/kernel.py` phase-ordering change was needed or made.
+
+**Q3 (`initial_active=False` spawn reactivation) — pinned as unchanged, returned to the
+systemic-world roadmap, not decided here.** The new formula reduces to the pre-fix expression
+whenever `life.active` is already `False`, so the accidental reactivation side effect (a
+construction-time-dormant spawn flips `active=True` the next `is_life_due` tick purely because age
+is below max) is deliberately preserved bit-for-bit, not designed anew.
+`tests/unit/entities/test_archetype_entity_factory.py::
+test_initial_active_false_spawn_is_reactivated_by_ordinary_progression_post_fix` pins this current
+behavior via a real `Kernel.tick_once()` run. Whether an `initial_active=False` spawn should
+require an explicit, intentional activation path instead of this accidental one remains an open
+design question for the systemic-world roadmap — zero production callers exist today
+(`src/worldassembly/entity_spawner.py` hardcodes `initial_active=True`), so nothing live depends on
+either answer.
+
+**AC7 (starvation/sleep-debt silent death) — answered as EMPIRICALLY CONFIRMED AFFECTED, split
+into a follow-up ticket, not fixed in this ticket.** Re-confirmed via
+`tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py::
+test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix`: an entity driven to `hp=0`
+purely by passive hunger/sleep-debt decay still ends with `active=False, death_reason=None` after
+this ticket's fix, because `resolve_lifecycle` has no HP/alive-based detection branch at all (only
+OLD_AGE and COMBAT) — a distinct root cause (a missing detection branch) from the age dual-writer
+race this ticket fixes (a timing race), so the writer-precedence fix cannot and does not touch it.
+Filed `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP` (`tickets/todos/`, standard tier) with
+the drafted scope from `plan.md` Step 7, carrying the concrete fix (a new `resolve_lifecycle`
+HP/alive-based death-detection branch, wired through the existing lineage-dispatch path).
+
+**Vacancy-signal interaction (Step 4), a finding beyond the plan's own framing.**
+`EconomicVacancyService.check_and_emit` is only ever invoked from `resolve_lifecycle`'s own
+`recent_deaths` aggregate — an entity enters that list only on the tick `resolve_lifecycle` itself
+detects `is_dead=True`. Pre-fix, an ordinary-progression old-age death was **never** added to
+`recent_deaths` at all (the entity was skipped forever once the passive branch silently
+deactivated it), so the vacancy signal did not merely fire one tick late for this path — it never
+fired at all. Post-fix, it correctly fires on the tick the OLD_AGE death is recorded, one tick
+after `age_ticks` first reaches `max_age_ticks`. Pinned by a new test in
+`tests/integration/economy/test_economic_vacancy_signal.py`.
+
+**Regression-surface finding (Step 12), pre-existing and unrelated — not touched.**
+`tests/integration/world/test_long_run_stability.py::test_long_run_stability` and
+`tests/integration/kernel/test_long_run_determinism.py::test_1000_tick_determinism` both fail with
+`TimeoutError: Test execution exceeded the resource time limit.` (`tests/conftest.py:68`), tripped
+by a `governance_ecology` phase-cost spike around tick 501 in this environment. Verified this is
+**pre-existing and unrelated to this ticket's fix**, not a regression it caused: reverted
+`src/engine/apply.py` to its pre-fix content, re-ran both tests, and got the byte-identical failure
+(same tick 501 budget overrun, same phase-cost breakdown) before restoring the fix. This matches
+the already-known, owner-parked "slow regression" class of issue (root-caused to `kernel.py`,
+blocked pending engine re-architecture per prior session record) — reported here truthfully per the
+Gate Integrity rule, not edited around. All other tests in every one of `test_plan.md`'s five
+scoped command groups pass.
+
+**AC-by-AC disposition:**
+- AC1 (OLD_AGE death via ordinary progression) — MET. New regression test.
+- AC2 (lineage consequences dispatch) — MET. Heir inventory transfer confirmed in the same test.
+- AC3 (no silent terminal `active=False`/`death_reason=None` tick) — MET. Full-trace assertion.
+- AC4 (death tick pinned and shift documented) — MET. Pinned by test; documented in
+  `docs/guidelines/intentional_divergences.md` §2.59.
+- AC5 (single declared authority documented) — MET. Source guard test +
+  `docs/simulation/lifecycle_systems_contract.md` update.
+- AC6 (regression test fails against pre-fix code, proven by running it) — MET. Ran before and
+  after the fix; failure reason matched the described defect both times it was checked.
+- AC7 (starvation/sleep-debt path answered) — MET as "affected, split out with a written reason"
+  (not `UNKNOWN`, not fixed here). Follow-up: `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`.
+- AC8 (existing tests pass unmodified) — MET for every test in scope, with one disclosed exception:
+  the two long-run tests above fail for a confirmed pre-existing, unrelated reason (not modified,
+  not silently excused — see finding above).
+- AC9 (registry/parity dated evidence notes) — MET. `PROG-030` updated via
+  `tools/parity_ledger_writer.py`; `aging_death`/`succession` entries in
+  `registries/mechanisms.yaml` carry new 2026-09-28-dated addenda.
 
 ## Test Summary
-_To be completed during implementation._
+
+All five `test_plan.md` "Scoped Pytest Commands" groups run, plus the new
+`tests/unit/engine/test_apply.py` guard file (added by this ticket, postdating `test_plan.md`'s own
+authoring) and the demographics/archetype-choice group, for extra confidence:
+
+- Core lifecycle/progression + new mechanic-scenario regression: **87 passed**.
+- Apply-path/apply-plan optimization parity: **21 passed**.
+- Economy vacancy (unit + integration, includes the new tick-shift test): **12 passed**.
+- Group/clan lifecycle: **25 passed**.
+- Long-run integration: **4 passed, 2 failed** (`test_long_run_stability`,
+  `test_1000_tick_determinism` — confirmed pre-existing/environmental, reproduces identically
+  against pre-fix code, see Implementation Notes; not modified).
+- New architecture-guard file, `tests/unit/engine/test_apply.py`: **2 passed**.
+- Demographics/archetype-choice (bonus, not required by `test_plan.md`'s command list): **64
+  passed**.
+
+New tests added by this ticket, all passing post-fix and confirmed failing pre-fix where required:
+- `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py` — 4 tests (3 fail pre-fix per
+  AC6, 1 — the AC7 starvation pin — passes both before and after, since it pins already-broken
+  behavior this ticket does not fix).
+- `tests/unit/engine/test_apply.py` — 2 tests (new file).
+- `tests/integration/economy/test_economic_vacancy_signal.py` — 1 new test (existing 4 unmodified).
+- `tests/unit/entities/test_archetype_entity_factory.py` — 1 new test (existing 16 unmodified).
 
 ## Files Changed
-_To be completed during implementation._
+- `src/engine/apply.py` — the fix (Step 2).
+- `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py` — new (Steps 1, 6).
+- `tests/unit/engine/test_apply.py` — new (Step 3).
+- `tests/integration/economy/test_economic_vacancy_signal.py` — new test added (Step 4).
+- `tests/unit/entities/test_archetype_entity_factory.py` — new test added (Step 5).
+- `tickets/todos/TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP.md` — new follow-up ticket
+  (Step 7).
+- `docs/simulation/lifecycle_systems_contract.md` — declared-authority section, AC7
+  forward-reference (Step 8).
+- `docs/guidelines/intentional_divergences.md` — §2.59 added (Step 9).
+- `docs/parity_ledger/progression.yaml` — `PROG-030` updated via `tools/parity_ledger_writer.py`
+  (Step 10).
+- `registries/mechanisms.yaml` — dated addenda on `aging_death` and `succession` (Step 11).
+- `tickets/inprogress/TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE.md` — this file.
+- `staging_artifacts/TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE/plan.md` — Deviations
+  section added.
 
 ## Completion Summary
-_To be completed during implementation._
+Fixed the dual-writer race on `entity.lifecycle.active`: `ApplyPath._compute_entity_changes`'s
+passive branch no longer independently deactivates an entity for old age once it is already
+active, making `LifecycleSystem.resolve_lifecycle`'s OLD_AGE branch the sole declared authority.
+An ordinary-per-tick-progression old-age death now correctly records `death_reason="OLD_AGE"` and
+dispatches its full succession/heirloom lineage consequences, one tick later than the prior (buggy,
+silent) behavior — a documented, tested, determinism-visible shift. The starvation/sleep-debt
+silent-death path was investigated, empirically confirmed still affected (a distinct, missing-
+detection root cause, not this ticket's timing race), and split into follow-up ticket
+`TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP` rather than fixed here. The `initial_active=
+False` spawn reactivation side effect was pinned as unchanged and its underlying design question
+returned to the systemic-world roadmap, per explicit prior instruction not to default it. All nine
+acceptance criteria are met; the full scoped regression surface passes except two long-run tests
+confirmed pre-existing and unrelated to this fix.

@@ -704,6 +704,22 @@ mechanisms:
         here. `state` unchanged (`done` -- this entry's own dominant OLD_AGE-death claim is
         independently scenario-verified above and unaffected by this addendum). Card desc corrected
         to drop the "nothing calls it" claim and cite this real caller instead.
+
+        **Addendum, 2026-09-28 (TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE)**: resolves the
+        2026-09-20 note's own flag above. `src/engine/apply.py::ApplyPath._compute_entity_changes`'s
+        `new_age < life.max_age_ticks` computation for `entity.lifecycle.active` was confirmed to be
+        unintended duplication, not intentional redundancy: it independently deactivated an entity
+        for old age one tick before `resolve_lifecycle`'s own OLD_AGE check ever ran against the
+        persisted age, so every ordinary-per-tick-progression old-age death was silently recorded
+        with no `death_reason` and no succession dispatch -- only tests staging `age_ticks` past
+        `max_age_ticks` directly (bypassing the race) ever exercised the working path, including
+        this entry's own `test_aging_death_value_differential.py` verification above. Fixed by
+        declaring `resolve_lifecycle`'s OLD_AGE branch the sole authority for old-age deactivation;
+        the passive branch's formula is now `active=(new_hp > 0 and (life.active or new_age <
+        life.max_age_ticks))`, keeping only its immediate HP-death gate. See
+        `docs/guidelines/intentional_divergences.md` §2.59 for the resulting one-tick death-tick
+        shift and `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py` for the new
+        ordinary-per-tick-progression regression coverage this fix required.
   - id: succession
     layer: entity
     systems: [progression]
@@ -743,6 +759,18 @@ mechanisms:
         decides the outcome. Negative control: `last_interaction_tick` (a tie-break field only,
         read after score in the sort key) does not override a decisive score gap. Pure,
         deterministic, no RNG -- immediate, same-tick outcome, no §5.1 horizon concern.
+
+        **Addendum, 2026-09-28 (TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE)**:
+        natural-aging-triggered succession now correctly fires for ordinary per-tick deaths, not
+        only for the staged-age-past-max scenarios this entry's own verification above (and
+        `test_succession_heir_selection_value_differential.py`) used. Before this fix, an
+        old-age death reached through real per-tick progression never entered
+        `resolve_lifecycle`'s death-processing block at all (see the `aging_death` entry's own
+        2026-09-28 addendum for the root cause), so succession/heirloom transfer never dispatched
+        for that path -- a real, previously-uncovered gap in this mechanism's practical
+        reachability, now closed and covered by
+        `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py::
+        test_natural_aging_death_is_recorded_as_old_age_and_dispatches_succession`.
   - id: genetics_aptitude
     layer: entity
     systems: [progression]

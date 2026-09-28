@@ -328,12 +328,22 @@
   support_boundary: null
 - id: PROG-030
   text: '`test_aging_and_death`: Aging and death.'
-  status: legacy_verified
+  status: verified
   priority: P0
   legacy_evidence: null
-  v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
+  v2_evidence: 'TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE: fixed a dual-writer
+    race on entity.lifecycle.active between ApplyPath._compute_entity_changes''s passive
+    branch (src/engine/apply.py:94-110) and LifecycleSystem.resolve_lifecycle''s OLD_AGE
+    branch (src/systems/lifecycle_systems/lifecycle.py:193-195). resolve_lifecycle
+    is now the sole declared authority for old-age deactivation; the passive branch''s
+    active= formula is active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks)),
+    keeping only its immediate HP-death gate. An ordinary-per-tick-progression old-age
+    death now correctly records death_reason=''OLD_AGE'' and dispatches succession/heirloom
+    transfer, one tick later than the passive branch''s own former (buggy, silent)
+    deactivation tick -- a documented, determinism-visible shift (docs/guidelines/intentional_divergences.md
+    Section 2.59).'
   proof_type: parity
-  test_path: null
+  test_path: tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py::test_natural_aging_death_is_recorded_as_old_age_and_dispatches_succession
   divergence_note: null
   support_boundary: null
 - id: PROG-031

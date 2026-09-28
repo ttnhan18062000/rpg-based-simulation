@@ -104,9 +104,9 @@ class ApplyPath:
                     new_hp = max(0, comb.hp - total_passive_dmg)
                     if new_hp != comb.hp:
                         changes["combat"] = replace(comb, hp=new_hp, alive=(new_hp > 0))
-                    changes["lifecycle"] = replace(life, 
+                    changes["lifecycle"] = replace(life,
                         age_ticks=new_age,
-                        active=(new_hp > 0 and new_age < life.max_age_ticks)
+                        active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))
                     )
             
             # Stamina Regen
