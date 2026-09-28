@@ -656,11 +656,19 @@ current repository this week.
 | **G** Ecology/settlement dynamics | 3.2 | world dynamics / ecology | Batch 05 (inherited) | `regional_trauma`, `calamity_intensity` contradicted by corpus runs; open tickets exist (verified 09-27) | Environmental pressure actually changes the world | Medium | Existing open repair tickets first | Later |
 | **H** Agency across action and non-action processes | 3.3 | action dispatch / agency | `AGENCY-*` (SCP-mapped, `PARTIAL`) | 3 dispatch paths; intent→payload edge `UNKNOWN` (inherited, Part A) | Coherent attempt semantics, including world processes | Indirect | None | Parked (`UNKNOWN`) |
 | **I** Magic and culture breadth | 3.2 | magic; culture | Batches 11B/12 (inherited) | Weakest realization; the magic perception channel is inert (inherited) | — | Later | — | Parked |
-| **J** Mechanism reachability program | all | the domain that owns each mechanism | per mechanism | Several mechanisms marked `state: done` do not fire in ordinary runs. Examples: `calamity_intensity` and `regional_trauma` are contradicted by corpus runs; natural-aging succession fires only when ages are staged. The full extent is `UNKNOWN` (§11 item 5) | Mechanisms the registry calls "done" actually act in normal runs, or are re-labelled honestly | Indirect but broad: a livelier world | None | **Candidate** — owner memo decision 1(b) |
+| **J** Bounded mechanism reachability | 3.1, 3.2 | the domain that owns each selected mechanism | per mechanism | A bounded initial set with existing evidence of not acting: `calamity_intensity` and `regional_trauma` (contradicted by corpus runs; open tickets exist) and `aging_death`/`succession` (act only when ages are staged). This is **not** an engine-wide audit (§11 item 5) | Each selected mechanism gets an explicit outcome on four separate levels (§11 item 5) | Indirect | None | **Candidate** — owner memo decision 1(b) |
 
 **First-wave selection — open (owner memo decision 1).** `first_wave_plan.md` details option (a),
-A + B + C. The planner's revised lean (2026-09-28) is option (b), reachability-first: J, plus
-verifying whether situated perception is live, plus C. The reasons are in §11.
+A + B + C. The planner's revised lean (2026-09-28, supported in principle by external review) is
+option (b), a bounded reachability-first wave:
+- Epic J, over its bounded initial set;
+- runtime verification of whether situated perception is live;
+- the natural-aging defect, kept as a confirmed correctness item, with its delivery priority set by
+  owner memo decision 5;
+- from Epic C, only the entity-death boundary (it shares death semantics with the J set). The
+  diplomacy and reputation checks are tracked independently, outside the wave.
+
+The plan and the ticket-planner handoff are revised only after the owner selects.
 
 Under either option, the first wave is a proposed selection, not a delivered proof:
 - it establishes world correctness for its chosen scope;
@@ -750,11 +758,13 @@ Implementation detail is deliberately left out.
    *Decision point*: owner memo decision 1.
 
 2. **Time scale versus run length is unaddressed.**
-   - Lineage is the roadmap's main probe for persistent history. Yet natural generational succession
-     does not happen in any run we can afford, so today it can only be shown with staged ages.
-   - This affects every long-horizon claim: lineage, institutions, ecology.
+   - Lineage is the roadmap's main probe for persistent history.
+   - The current corpus runs do not naturally reach generational succession, so today it can be
+     shown only through chosen initial conditions (staged ages).
+   - Whether other long-horizon domains, such as institutions or ecology, have the same problem is
+     `UNKNOWN`; each needs its own evidence.
 
-   *Decision point*: owner memo decision 5. Until then, lineage proofs are staged-only.
+   *Decision point*: owner memo decision 5. It does not block the bounded reachability work.
 
 3. **Situated perception may be an engine gap, not a presentation gap. `UNKNOWN`, needs
    verification.**
@@ -767,24 +777,40 @@ Implementation detail is deliberately left out.
    - Perception could run through another path that a grep does not reveal, so this is not yet a
      finding.
 
-   *Owner*: a verification item for the first wave under memo decision 1(b); otherwise the Epic B
-   design owner.
+   *Owner*: a runtime verification item inside the first wave under memo decision 1(b); otherwise
+   the Epic B design owner. If perception is confirmed inactive at runtime, record that as an engine
+   foundation finding. Grep alone never establishes it.
 
-4. **There is no route to player-inference evidence.**
-   - `PLAYER-EXPERIENCED` requires a blinded human, and the only human involved knows the answers.
-   - Without a sourcing decision, every player-side claim in this roadmap stays `PENDING`
-     permanently.
+4. **There is no route to player-inference evidence yet.**
+   - A blinded proxy reviewer can give *formative* evidence, which is useful for design and labelled
+     as a proxy.
+   - A `PLAYER-EXPERIENCED` claim requires an appropriately blinded player-observation exercise.
+   - The only human currently involved knows the answers, so neither tier has a source yet.
 
-   *Decision point*: owner memo decision 6.
+   *Decision point*: owner memo decision 6. It does not block the bounded reachability work.
 
 5. **Registry maturity may be overstated across the engine. Extent `UNKNOWN`.**
    - Three independent cases this arc: two mechanisms contradicted by corpus runs, and succession
      that fires only when ages are staged.
    - All are `state: done` mechanisms that don't act in ordinary runs, and the observer clue this
      roadmap first planned around turned out not to be encounterable.
-   - A bounded reachability program (portfolio Epic J) may deliver more world liveliness per unit of
-     work than new capability.
-   - Three cases do not measure the scale.
+   - A bounded reachability epic (portfolio J) may deliver more world liveliness per unit of work
+     than new capability.
+   - Three cases do not measure the scale, and "does not fire in an ordinary run" is not the same as
+     "defective". A rare or conditional mechanism can be correct.
+   - So J is bounded to an initial set of consequential mechanisms with existing evidence (§8). Each
+     selected mechanism gets an outcome on four separate levels:
+     - **trigger reachability**: can its precondition arise in ordinary play?
+     - **feasible run horizon**: does it arise within a run we can afford?
+     - **actual state effects**: when triggered, does it change authoritative state as declared?
+     - **observer evidence**: does any legitimate trace exist? This level is recorded, not required.
+   - Each mechanism's exit claim is one of:
+     - *acts in ordinary runs*;
+     - *legitimately rare or conditional*, with the condition stated;
+     - *defect*, routed to separate work;
+     - *registry label corrected*;
+     - `BLOCKED_WITH_REASON`.
+   - Expanding the set is a separate, later decision; J does not become an engine-wide audit.
 
    *Decision point*: owner memo decision 1(b).
 
