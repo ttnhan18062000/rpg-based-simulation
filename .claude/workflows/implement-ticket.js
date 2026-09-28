@@ -1742,18 +1742,25 @@ ${ticketInfo.todos_source_path ? `
       If it is a subfolder of tickets/todos/ (i.e. the path has the form tickets/todos/FOLDER/TCK-*.md):
       - Run: python3 tools/epic_folder_status.py <parent-dir>
         Prints one JSON object: {"folder", "epic_parent", "epic_parent_ticket_id",
-        "open_children", "all_children_done"}. The epic parent (if any) is identified
-        structurally via its own ## Tier/## Status body fields, never by filename match on
-        "-EPIC-" (TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT).
+        "open_children", "stale_child_copies", "all_children_done"}. The epic parent (if any) is
+        identified structurally via its own ## Tier/## Status body fields, never by filename match
+        on "-EPIC-" (TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT).
       - If "all_children_done" is false: skip — the folder is not complete yet ("open_children"
         lists which tickets are still open).
-      - If "all_children_done" is true and "epic_parent" is null (no epic-tier ticket in this
-        folder): move the whole folder:
+      - If "all_children_done" is true but "stale_child_copies" is non-empty: skip — do NOT move
+        the folder. A non-empty "stale_child_copies" means a non-epic child's file is still
+        physically in this folder even though that same ticket_id is already closed flat in
+        tickets/done/ — a resurrected pre-close copy (the exact shape TCK-20260928-CLOSED-TICKETS-
+        RESURRECTED-INTO-TODOS guards against elsewhere), never a legitimate state. Print:
+          "Folder <FOLDER> has stale pre-close copies of already-done tickets: <stale_child_copies>
+          — delete these stale copies (the tickets/done/ versions are authoritative), then re-run."
+      - If "all_children_done" is true, "stale_child_copies" is empty, and "epic_parent" is null
+        (no epic-tier ticket in this folder): move the whole folder:
         Run: mv <parent-dir>/ tickets/done/<FOLDER>/
         This preserves SEQUENCE.md and any folder-level metadata in the done archive.
-      - If "all_children_done" is true and "epic_parent" is not null: do NOT close or move
-        anything from here — closing another ticket's own lifecycle is not this ticket's Finalize
-        job. Print this advisory instead and leave the folder in place:
+      - If "all_children_done" is true, "stale_child_copies" is empty, and "epic_parent" is not
+        null: do NOT close or move anything from here — closing another ticket's own lifecycle is
+        not this ticket's Finalize job. Print this advisory instead and leave the folder in place:
           "All children of <FOLDER> are done; epic parent <EPIC-ID> remains — close it via
           implement-epic (epic_id mode) or by hand."
         (substitute <FOLDER> for the folder name and <EPIC-ID> for "epic_parent_ticket_id").

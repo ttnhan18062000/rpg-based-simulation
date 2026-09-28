@@ -36,13 +36,13 @@ def test_finalize_step3_detects_epic_parent_structurally_not_by_filename():
     text = _read()
     idx = text.find("Remove the todos source file")
     assert idx != -1
-    step3 = text[idx:idx + 1500]
+    step3 = text[idx:idx + 2200]
     assert "epic_folder_status.py" in step3, (
         "step 3 must call the shared tools/epic_folder_status.py helper, not an inline python3 -c "
         "script (test_finalize_working_log_uses_helper_pin.py's own blanket guard rejects that) "
         "or a filename-based check"
     )
-    assert "never by filename match on" in step3 and "-EPIC-" in step3, (
+    assert "never by filename match" in step3 and "-EPIC-" in step3, (
         "the epic-parent check must identify the remaining ticket via its own ## Tier/## Status "
         "body fields, not a filename convention -- a filename check would miss a real epic ticket "
         "named without '-EPIC-' in its ID and false-positive on a non-epic ticket that happens to "
@@ -54,7 +54,7 @@ def test_finalize_step3_never_closes_the_epic_parent_itself():
     text = _read()
     idx = text.find("Remove the todos source file")
     assert idx != -1
-    step3 = text[idx:idx + 1500]
+    step3 = text[idx:idx + 2200]
     assert "do NOT close or move" in step3, (
         "implement-ticket.js's own Finalize must never close a different ticket's (the epic "
         "parent's) lifecycle from inside this ticket's own Finalize step -- that is "
@@ -88,8 +88,10 @@ def test_finalize_step3_still_moves_a_non_epic_folder_when_no_tck_files_remain()
     text = _read()
     idx = text.find("Remove the todos source file")
     assert idx != -1
-    step3 = text[idx:idx + 1500]
-    assert '"all_children_done" is true and "epic_parent" is null' in step3, (
+    step3 = text[idx:idx + 2200]
+    assert (
+        '"all_children_done" is true, "stale_child_copies" is empty, and "epic_parent" is null'
+    ) in step3, (
         "a folder with no epic-tier ticket must still move once every child is done -- the same "
         "outcome the old ls-based check produced, now driven by epic_folder_status.py's JSON"
     )
@@ -97,3 +99,19 @@ def test_finalize_step3_still_moves_a_non_epic_folder_when_no_tck_files_remain()
     assert '"all_children_done" is false' in step3, (
         "an unfinished (non-epic) folder must still skip, same as before"
     )
+
+
+def test_finalize_step3_skips_and_never_moves_when_stale_child_copies_present():
+    # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT (agent-working-design review, second
+    # pass): a non-empty "stale_child_copies" (a resurrected pre-close copy still physically in
+    # the folder, even though that ticket_id is already closed flat in tickets/done/) must block
+    # the move -- moving anyway would carry the stale copy into tickets/done/<folder>/, duplicating
+    # the basename against the flat tickets/done/<id>.md that is actually authoritative (the exact
+    # shape TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS guards against elsewhere).
+    text = _read()
+    idx = text.find("Remove the todos source file")
+    assert idx != -1
+    step3 = text[idx:idx + 2200]
+    assert '"stale_child_copies" is non-empty: skip' in step3
+    assert "delete these stale copies" in step3
+    assert "the tickets/done/ versions are authoritative" in step3

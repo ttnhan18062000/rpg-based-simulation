@@ -461,12 +461,18 @@ The folder "${folder}" had all non-epic tickets implemented successfully. Move t
 Step 1 — get the folder's status:
   Run: python3 tools/epic_folder_status.py "${folder.replace(/\/$/, '')}"
   Prints one JSON object: {"folder", "epic_parent", "epic_parent_ticket_id", "open_children",
-  "all_children_done"}. The epic parent (if any) is identified structurally via its own
-  ## Tier/## Status body fields, never by filename match on "-EPIC-".
+  "stale_child_copies", "all_children_done"}. The epic parent (if any) is identified structurally
+  via its own ## Tier/## Status body fields, never by filename match on "-EPIC-".
 
-Step 2 — check "all_children_done":
-  If false, print "SKIPPED: unfinished tickets still in folder" (the "open_children" list names
-  which ones) and return "done" without moving or closing anything.
+Step 2 — check "all_children_done" and "stale_child_copies":
+  If "all_children_done" is false, print "SKIPPED: unfinished tickets still in folder" (the
+  "open_children" list names which ones) and return "done" without moving or closing anything.
+  If "stale_child_copies" is non-empty (a non-epic child's file is still physically in this
+  folder even though that same ticket_id is already closed flat in tickets/done/ — a resurrected
+  pre-close copy, the exact shape TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS guards
+  against elsewhere, never a legitimate state), print "SKIPPED: folder has stale pre-close copies
+  of already-done tickets: <stale_child_copies> — delete these stale copies (the tickets/done/
+  versions are authoritative), then re-run" and return "done" without moving or closing anything.
 
 Step 3 — if "epic_parent" is not null and not already under tickets/done/, close it now, exactly as follows (using "epic_parent_ticket_id" and "epic_parent" from Step 1's JSON):
 
@@ -479,7 +485,7 @@ ${buildEpicCloseInstructions(
 
   If "epic_parent" is null, or it is already under tickets/done/, skip this step entirely.
 
-Step 4 — move the whole folder (every file in it is now done):
+Step 4 — move the whole folder (every file in it is now done, and Step 2 confirmed no stale copies remain):
   Run: mv "${folder.replace(/\/$/, '')}" "tickets/done/${folderName}"
   Print "Moved ${folder} → tickets/done/${folderName}/"
 

@@ -216,10 +216,19 @@ None.
   workflow prompts actually call it), and the default `--done-dir` resolution.
 - `node --check .claude/workflows/implement-epic.js` and `node --check
   .claude/workflows/implement-ticket.js` — both exit 0.
-- Bare `pytest tests/tools/ -m "not slow and not extra_slow"`, run from the worktree (final run,
-  after the `epic_folder_status.py` extraction): **3171 passed, 25 skipped, 28 deselected, 1
-  xfailed, 0 failed** (359.30s). `epic_folder_status.py` maps to `tests/tools/` under
-  `expected_test_dirs_for()` (confirmed directly), so this run covers it.
+- Addendum (`stale_child_copies` fix): `pytest tests/tools/test_implement_epic_close_step.py
+  tests/tools/test_finalize_epic_parent_advisory_pin.py tests/tools/test_epic_folder_status.py`
+  — 29 passed (1 new helper test, 1 new prompt-pin test, plus 2 pre-existing tests corrected to
+  stop accidentally modeling the stale-copy anomaly as a happy path). `node --check` on both
+  workflow files re-run, both exit 0.
+- Bare `pytest tests/tools/ -m "not slow and not extra_slow"`, run from the worktree, **after the
+  `stale_child_copies` addendum** (the number that matters — supersedes the pre-addendum run
+  below): **3173 passed, 25 skipped, 28 deselected, 1 xfailed, 0 failed** (352.57s).
+  `tests/tools/test_validate_frontmatter.py` specifically re-run and confirmed clean (the exact
+  test the peer flagged as at risk): 106 passed.
+- Bare `pytest tests/tools/`, pre-addendum (kept for the record; the post-addendum run above is
+  authoritative): 3171 passed, 0 failed (359.30s). `epic_folder_status.py` maps to `tests/tools/`
+  under `expected_test_dirs_for()` (confirmed directly), so both runs cover it.
 
 ## Files Changed
 
@@ -236,9 +245,41 @@ None.
   new tests, re-anchored to the helper-based step text.
 - `tests/tools/test_finalize_epic_parent_advisory_pin.py` — new file, 5 tests.
 - `tests/tools/test_epic_folder_status.py` — new file, 8 tests.
-- `agent-monitoring/retro/RETRO-2026-W39.md` — regenerated per Scope item 5 (twice — once before
-  the `epic_folder_status.py` extraction, once after, to capture the final state).
+- `agent-monitoring/retro/RETRO-2026-W39.md` — regenerated per Scope item 5 (three times — before
+  the `epic_folder_status.py` extraction, after it, and again after the `stale_child_copies`
+  addendum, to capture the final state each time).
 - `docs/REGISTRY.yaml` — regenerated (`make docs-registry`); no manual edits.
+- **Addendum**: `tools/epic_folder_status.py` — new `stale_child_copies` field.
+  `.claude/workflows/implement-epic.js` and `.claude/workflows/implement-ticket.js` — both move
+  branches now also require `stale_child_copies` to be empty, printing an advisory otherwise.
+  `tests/tools/test_epic_folder_status.py` — 1 new test, 2 existing tests corrected to stop
+  modeling the anomaly as a happy path. `tests/tools/test_finalize_epic_parent_advisory_pin.py` —
+  1 new test, existing anchors widened/updated for the reworded step text.
+
+**Addendum, same session (agent-working-design review of the closed ticket, third pass): a real
+regression, fixed.** `get_epic_folder_status()` treated a non-epic child as "done" purely because
+`<done_dir>/<ticket_id>.md` existed, even when that child's `TCK-*.md` was ALSO still physically
+present in the todos folder (a resurrected pre-close copy — exactly the shape
+`TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS` guards against, and exactly what #241
+re-added to `tickets/todos/mechanism-registry/`). The old implement-ticket.js rule ("move only if
+no `TCK-*.md` files remain") would have skipped such a folder; the new `all_children_done`-driven
+rule moved it, carrying the stale copy into `tickets/done/<folder>/` and duplicating the basename
+against the authoritative flat `tickets/done/<id>.md`. Caught before this reached `origin/main` —
+this ticket was still local, unpushed, part of the same review cycle, so fixed in place rather
+than filed as a separate follow-up ticket.
+
+Fix: added a `stale_child_copies` field to `get_epic_folder_status()` — non-epic children present
+in the folder AND already closed in `done_dir` — kept structurally separate from `open_children`
+(an `open_children` entry means "not done, don't move"; a `stale_child_copies` entry means
+"already done elsewhere, delete this copy first" — different remediations, so they must not be
+conflated). `all_children_done`'s own meaning is unchanged (still `open_children` only). Both
+workflows' move branches now additionally require `stale_child_copies` to be empty, printing an
+advisory to delete the stale copies (the `tickets/done/` versions are authoritative) and re-run
+otherwise. Caught in the same pass: my own original happy-path test
+(`test_epic_parent_only_case_reports_all_children_done_and_no_open_children`) had accidentally
+modeled this exact anomaly (a child file left in the folder AND already in `done_dir`) rather than
+the real "child closed, file removed" convention — fixed to match the real convention, and the
+anomalous shape now has its own dedicated test instead.
 
 ## Completion Summary
 
@@ -247,8 +288,10 @@ All 4 acceptance criteria met. Folder mode's own epic-tier parent is now detecte
 -c` or a filename match), closed in place (frontmatter/body, no individual mv), and archived
 correctly inside its folder by the existing folder-level move — matching both real precedents.
 implement-ticket.js's Finalize never closes a different ticket's lifecycle from inside its own
-Finalize; it advises instead. Two real issues were caught in review before shipping and fixed: a
-flat-mv destination that would have stranded the epic parent outside its folder, and an inline
-`python3 -c` that collided with an existing gate meant to prevent exactly that class of prompt
-text — both resolved with the peer's guidance rather than by weakening any existing test. Final
-bare `pytest tests/tools/` run: 3171 passed, 0 failed. No known material gap left unstated.
+Finalize; it advises instead. Three real issues were caught in review before this reached
+`origin/main`, all fixed rather than papered over: a flat-mv destination that would have stranded
+the epic parent outside its folder, an inline `python3 -c` that collided with an existing gate,
+and a stale-pre-close-copy gap that would have let a resurrected child copy ride into
+`tickets/done/<folder>/` alongside a genuinely-done flat copy of the same ticket. Final bare
+`pytest tests/tools/` run (after this addendum): 3173 passed, 25 skipped, 28 deselected, 1
+xfailed, 0 failed. No known material gap left unstated.

@@ -39,21 +39,35 @@ from validate_frontmatter import extract_frontmatter  # noqa: E402
 
 def get_epic_folder_status(folder: Path, done_dir: Path) -> dict:
     """Return `{"folder", "epic_parent", "epic_parent_ticket_id", "open_children",
-    "all_children_done"}` for the `TCK-*.md` files directly under `folder`.
+    "stale_child_copies", "all_children_done"}` for the `TCK-*.md` files directly under `folder`.
 
     `epic_parent`/`epic_parent_ticket_id` are the path/frontmatter `ticket_id` of the one file
     whose `## Tier` reads "epic" or `## Status` reads "EPIC_SCOPED" (`None`/`None` if no such file
     exists in this folder). `open_children` lists the frontmatter `ticket_id` of every OTHER
-    (non-epic) `TCK-*.md` file not yet found as `<done_dir>/<ticket_id>.md` — matching this
-    project's own established archival convention (a folder's non-epic children close flat into
-    `tickets/done/`; only the epic parent and the folder itself move together, later, as one
-    unit). `all_children_done` is `len(open_children) == 0`, independent of the epic parent's own
-    state — a folder with an open epic parent but all real children done is exactly the case this
-    ticket exists to unblock.
+    (non-epic) `TCK-*.md` file not yet found as `<done_dir>/<ticket_id>.md`.
+
+    `stale_child_copies` (TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT, agent-working-
+    design review) lists the frontmatter `ticket_id` of every non-epic `TCK-*.md` file that is
+    BOTH still physically present in `folder` AND already found as `<done_dir>/<ticket_id>.md` —
+    a resurrected pre-close copy (the exact shape this ticket's own batch started with:
+    `tickets/todos/mechanism-registry/`'s 5 child files re-added by an unrelated PR after #209
+    had already archived the real ones flat into `tickets/done/`). Every archived folder on this
+    branch holds at most one `TCK-*.md` (the epic parent) — a physically-present non-epic child
+    is always anomalous, never a legitimate "child closed in place" state, so this is reported
+    separately from `open_children` rather than folded into it: an `open_children` entry means
+    "not done yet, don't move"; a `stale_child_copies` entry means "already done elsewhere, this
+    copy needs deleting before the move" — different fixes, so callers must not conflate them.
+
+    `all_children_done` is `len(open_children) == 0`, independent of `stale_child_copies` and of
+    the epic parent's own state — a folder with an open epic parent but all real children done is
+    exactly the case this ticket exists to unblock. Callers that move the folder must additionally
+    require `stale_child_copies` to be empty (this function does not enforce that itself, since a
+    caller may want to report the anomaly without also deciding the move policy).
     """
     epic_parent = None
     epic_parent_ticket_id = None
     open_children = []
+    stale_child_copies = []
 
     for md_file in sorted(folder.glob("TCK-*.md")):
         text = md_file.read_text(encoding="utf-8")
@@ -75,7 +89,9 @@ def get_epic_folder_status(folder: Path, done_dir: Path) -> dict:
                 open_children.append(ticket_id)
             continue
 
-        if not (done_dir / f"{ticket_id}.md").exists():
+        if (done_dir / f"{ticket_id}.md").exists():
+            stale_child_copies.append(ticket_id)
+        else:
             open_children.append(ticket_id)
 
     return {
@@ -83,6 +99,7 @@ def get_epic_folder_status(folder: Path, done_dir: Path) -> dict:
         "epic_parent": epic_parent,
         "epic_parent_ticket_id": epic_parent_ticket_id,
         "open_children": open_children,
+        "stale_child_copies": stale_child_copies,
         "all_children_done": len(open_children) == 0,
     }
 

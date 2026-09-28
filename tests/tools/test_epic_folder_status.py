@@ -28,20 +28,25 @@ def _write_ticket(path: Path, ticket_id: str, tier: str, status: str) -> Path:
 
 
 def test_epic_parent_only_case_reports_all_children_done_and_no_open_children(tmp_path):
+    # A genuinely-done child's TCK-*.md file is deleted from the todos folder once it closes
+    # (implement-ticket.js Finalize step 3a's own `rm`) -- only the epic parent remains physically
+    # in the folder. A child file that is BOTH still physically present AND already in done_dir is
+    # a different, anomalous case (see test_child_present_in_folder_and_already_in_done_is_a_
+    # stale_copy_not_open below) -- this test must not conflate the two.
     folder = tmp_path / "tickets" / "todos" / "myepic"
     done_dir = tmp_path / "tickets" / "done"
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
 
     _write_ticket(folder / "TCK-1-EPIC.md", "TCK-1-EPIC", "epic", "EPIC_SCOPED")
-    _write_ticket(folder / "TCK-2-CHILD.md", "TCK-2-CHILD", "hotfix", "DONE")
-    (done_dir / "TCK-2-CHILD.md").touch()
+    (done_dir / "TCK-2-CHILD.md").touch()  # closed: only the done/ copy exists, folder copy is gone
 
     result = get_epic_folder_status(folder, done_dir)
 
     assert result["epic_parent"] == str(folder / "TCK-1-EPIC.md")
     assert result["epic_parent_ticket_id"] == "TCK-1-EPIC"
     assert result["open_children"] == []
+    assert result["stale_child_copies"] == []
     assert result["all_children_done"] is True
 
 
@@ -59,7 +64,40 @@ def test_one_open_child_reports_all_children_done_false(tmp_path):
 
     assert result["epic_parent_ticket_id"] == "TCK-1-EPIC"
     assert result["open_children"] == ["TCK-2-CHILD"]
+    assert result["stale_child_copies"] == []
     assert result["all_children_done"] is False
+
+
+def test_child_present_in_folder_and_already_in_done_is_a_stale_copy_not_open(tmp_path):
+    # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT (agent-working-design review): a
+    # non-epic child file that is BOTH still physically in the folder AND already closed flat
+    # into tickets/done/ is a resurrected pre-close copy (the exact shape #241 re-added to
+    # tickets/todos/mechanism-registry/ after #209 had already archived the real files) -- it must
+    # be reported as a distinct anomaly, not silently counted as "done" (which would let a caller
+    # move the whole folder and carry the stale copy into tickets/done/<folder>/, duplicating the
+    # basename against the flat tickets/done/<id>.md that is actually authoritative).
+    folder = tmp_path / "tickets" / "todos" / "myepic"
+    done_dir = tmp_path / "tickets" / "done"
+    folder.mkdir(parents=True)
+    done_dir.mkdir(parents=True)
+
+    _write_ticket(folder / "TCK-1-EPIC.md", "TCK-1-EPIC", "epic", "EPIC_SCOPED")
+    # Stale pre-close copy: still in the folder, frontmatter says active/open, but TCK-2-CHILD is
+    # already closed flat in done_dir.
+    _write_ticket(folder / "TCK-2-CHILD.md", "TCK-2-CHILD", "hotfix", "OPEN")
+    (done_dir / "TCK-2-CHILD.md").touch()
+
+    result = get_epic_folder_status(folder, done_dir)
+
+    assert result["open_children"] == [], (
+        "a stale resurrected copy must not appear in open_children -- it is not 'still open', "
+        "it is a duplicate of an already-closed ticket"
+    )
+    assert result["stale_child_copies"] == ["TCK-2-CHILD"]
+    assert result["all_children_done"] is True, (
+        "all_children_done's own meaning is unchanged by this field -- callers must separately "
+        "require stale_child_copies to be empty before moving the folder"
+    )
 
 
 def test_non_epic_folder_with_no_parent(tmp_path):
@@ -153,9 +191,9 @@ def test_default_done_dir_is_sibling_tickets_done(tmp_path):
     folder.mkdir(parents=True)
     done_dir.mkdir(parents=True)
     _write_ticket(folder / "TCK-1-EPIC.md", "TCK-1-EPIC", "epic", "EPIC_SCOPED")
-    _write_ticket(folder / "TCK-2-CHILD.md", "TCK-2-CHILD", "hotfix", "DONE")
-    (done_dir / "TCK-2-CHILD.md").touch()
+    (done_dir / "TCK-2-CHILD.md").touch()  # closed: only the done/ copy exists
 
     result = get_epic_folder_status(folder, folder.parent.parent / "done")
 
     assert result["all_children_done"] is True
+    assert result["stale_child_copies"] == []
