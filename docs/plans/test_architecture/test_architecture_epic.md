@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture: Measurement Model and Direction
 
-**Status, drafted 2026-09-28. DIRECTION REVIEW (D1–D4 and D9 decided; D5–D8 pending). No tickets exist yet.** Each `D#` section below
+**Status, drafted 2026-09-28. ALL DIRECTIONS DECIDED (D1–D9). No tickets exist yet.** Each `D#` section below
 is a direction that needs a decision. Tickets are cut only after the directions are agreed, one
 child ticket per accepted direction (or per phase of one), under a future
 `tickets/todos/test-architecture/` epic folder.
@@ -189,13 +189,13 @@ is too expensive and not needed to answer "are our core law tests real?"
 **Recommendation: A.** Item 2 is the only way to find the rest of the leaks, because CI's
 directory split hides them.
 
-**Decision:**
+**Decision (2026-09-28): A, all four items.** Random-order runs via `pytest-randomly` [R16] after the RNG-contract interaction check; slow tests leave unit lanes per Google test sizes [R1].
 
 ### D6 · Prune and relocate
 
 | Item | Options | Recommendation |
 |---|---|---|
-| `agent_codex_*` (7 test dirs + 7 tool dirs) | delete · park (excluded from CI, kept in repo) · keep | **Open: user decision.** Delete if the Codex pilot has no reactivation date; git history keeps it recoverable |
+| `agent_codex_*` (7 test dirs + 7 tool dirs) | delete · park (excluded from CI, kept in repo) · keep | **Delete** (decided 2026-09-28); git history keeps it recoverable |
 | SimQ `*_corpus.py` (32 files) | relocate to the owning domain / `mechanic_scenarios` · leave | Relocate; keeps SimQ balance-only |
 | Doc-text and source-grep tests (~243/152 files) | policy + convert-or-delete sweep · policy only | Structure-coupled tests violate *structure-insensitive* [R9] and are Meszaros' *Fragile Test* smell [R13]. **Policy only first:** a doc-text assertion is allowed only when the doc is itself a machine contract. Sweep opportunistically |
 | Index-pinned hook tests (`PreToolUse[4]`) | convert to name/matcher lookup | Convert; cheap |
@@ -203,7 +203,7 @@ directory split hides them.
 | Structural clutter: `tests/unit/entity`+`entities`, orphan `tests/observability/`, empty `tests/integration/perf/` and `tests/unit/motivation/`, mis-targeted `tests/unit/config/`, ticket-appendage files | fix · leave | Fix in one mechanical chore ticket |
 | `pyproject.toml` markers (27 declared, most unused, legacy-parity ones reference `src_legacy`) | prune + update `docs/testing/test_taxonomy.md` · leave | Prune; replace the taxonomy with D2's size/quadrant model |
 
-**Decision:**
+**Decision (2026-09-28): `agent_codex_*` → delete** (tools and tests; git history keeps them recoverable). Other D6 rows follow their recommendations as written, unless revisited when tickets are cut.
 
 ### D7 · Parity-ledger traceability honesty
 
@@ -220,7 +220,7 @@ Also flagged, but out of this epic's scope: the parity ledger and the mechanism 
 record "is this proven". That duplication should be resolved by the mechanism-registry epic, not
 here.
 
-**Decision:**
+**Decision (2026-09-28): A, re-tier.** P0 requires a passing `test_path` or a test-backlog ticket; the rest become P1 with `proof_type: audit` [R18].
 
 ### D8 · API contract and frontend (candidate for deferral)
 
@@ -232,7 +232,7 @@ converting `test_rest_parity.py` to `TestClient`, and game-view frontend tests.
 
 **Recommendation: A.**
 
-**Decision:**
+**Decision (2026-09-28): A, API items now** (OpenAPI snapshot + Schemathesis [R19], raw-domain-model guard, `test_rest_parity.py` → `TestClient`); game-view frontend tests deferred until after RPG-core work.
 
 ### D9 · Test-authoring process (how tests get written), piloted on one narrow domain
 
@@ -301,9 +301,9 @@ over-engineering side.
 
 ## 8 · Open questions for review
 
-1. `agent_codex_*`: delete or park?
+1. ~~`agent_codex_*`~~ Resolved 2026-09-28: delete.
 2. ~~Scorecard location~~ Resolved 2026-09-28: extend `codebase-health-scorecard`.
-3. Is D7's re-tier acceptable, given it will visibly demote ~1,400 entries?
+3. ~~D7 re-tier~~ Resolved 2026-09-28: accepted.
 4. ~~Mutation tool~~ Resolved 2026-09-28: `mutmut`.
 5. ~~D9 pilot domain~~ Resolved 2026-09-28: progression.
 
