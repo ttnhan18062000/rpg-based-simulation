@@ -90,6 +90,22 @@ def consolidate_week(week_dir: Path) -> dict:
     return {kind: consolidate_jsonl_kind(week_dir, kind) for kind in JSONL_KINDS}
 
 
+def _default_csv_path_for(data_dir: Path) -> Path:
+    """Derive `tickets/working_log.csv`'s path from `data_dir`'s own root, so a `--data-dir`
+    override (the real `__file__`-anchored default, or a test's own scratch tree) never writes to
+    a checkout other than the one that owns `data_dir`
+    (TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS). `data_dir`'s real-shape
+    convention is always `"<root>/agent-monitoring/data"` -- when `data_dir` matches that shape,
+    `<root>` is two levels up (matching `DEFAULT_DATA_DIR`'s own construction below); a shallower
+    test-fixture shape (e.g. `tmp_path / "data"`, no `agent-monitoring` parent) falls back to one
+    level up, still fully contained in that fixture's own sandbox rather than escaping it."""
+    if data_dir.parent.name == "agent-monitoring" and data_dir.name == "data":
+        root = data_dir.parent.parent
+    else:
+        root = data_dir.parent
+    return root / "tickets" / "working_log.csv"
+
+
 def consolidate_all(data_dir: Path = DEFAULT_DATA_DIR) -> dict:
     if not data_dir.exists():
         return {}
@@ -101,7 +117,15 @@ def consolidate_all(data_dir: Path = DEFAULT_DATA_DIR) -> dict:
 
     # working_log.csv is a single flat file, not week-sharded like runs/events/tools -- one call
     # across the whole data_dir, not per-week (TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET).
-    working_log_result = consolidate_pending_rows(data_root=data_dir)
+    # TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS: csv_path is derived from
+    # data_dir's own root via _default_csv_path_for(), not left to consolidate_pending_rows()'s own
+    # default. Without this, a test-scratch --data-dir would still fall through to the real
+    # checkout's anchored default CSV instead of staying isolated in the scratch tree, and a
+    # foreign-cwd real run would (pre-fix) have written the real checkout's shard rows into
+    # whatever CSV cwd resolved to.
+    working_log_result = consolidate_pending_rows(
+        data_root=data_dir, csv_path=_default_csv_path_for(data_dir)
+    )
     if working_log_result["consolidated_rows"]:
         results["working_log"] = working_log_result
 

@@ -188,6 +188,79 @@ def test_consolidate_week_and_consolidate_all(tmp_path):
     assert (week_dir / "tools.jsonl").exists()
 
 
+# ---------------------------------------------------------------------------
+# TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS — foreign-cwd regression
+# ---------------------------------------------------------------------------
+
+_CSV_HEADER = "timestamp,ticket_id,title,status,summary,artifacts_path\n"
+
+
+def test_consolidate_all_derives_csv_path_from_data_dir_not_foreign_cwd(tmp_path, monkeypatch):
+    """Pre-fix, `consolidate_all()` passed no `csv_path` to `consolidate_pending_rows()`, which
+    defaulted to a cwd-relative `tickets/working_log.csv` -- so a run with cwd pointed at a
+    *different* checkout (the exact shape that lost 3 real rows off `origin/main`) wrote the
+    pending row into that foreign checkout's CSV instead of the CSV next to `data_dir` (the
+    checkout that actually owns the pending shard). Must fail on the pre-fix code: pre-fix, the
+    row lands in `foreign_csv` and `owning_csv` is left with only its header."""
+    owning = tmp_path / "owning-checkout"
+    week_dir = owning / "agent-monitoring" / "data" / "2026-W01"
+    week_dir.mkdir(parents=True)
+    (owning / "tickets").mkdir(parents=True)
+    owning_csv = owning / "tickets" / "working_log.csv"
+    owning_csv.write_text(_CSV_HEADER, encoding="utf-8")
+    _write_jsonl(week_dir / "TCK-A.working_log.jsonl", [{
+        "timestamp": "2026-09-28T00:00:00Z", "ticket_id": "TCK-FOREIGN-CWD",
+        "title": "t", "status": "DONE", "summary": "s", "artifacts_path": "none",
+    }])
+
+    foreign_cwd = tmp_path / "foreign-checkout"
+    (foreign_cwd / "tickets").mkdir(parents=True)
+    foreign_csv = foreign_cwd / "tickets" / "working_log.csv"
+    foreign_csv.write_text(_CSV_HEADER, encoding="utf-8")
+    monkeypatch.chdir(foreign_cwd)
+
+    result = mc.consolidate_all(owning / "agent-monitoring" / "data")
+
+    assert result["working_log"] == {"consolidated_rows": 1, "shard_files": 1}
+    assert "TCK-FOREIGN-CWD" in owning_csv.read_text(encoding="utf-8")
+    assert foreign_csv.read_text(encoding="utf-8") == _CSV_HEADER  # untouched
+
+
+def test_consolidate_pending_rows_default_path_resolves_against_module_not_foreign_cwd(tmp_path, monkeypatch):
+    """`working_log_writer.consolidate_pending_rows()`'s own defaults (`_WORKING_LOG_PATH`,
+    `_DEFAULT_DATA_ROOT`) must resolve against the module's own checkout (`_REPO_ROOT`, anchored
+    to `Path(__file__)`), not cwd, mirroring `monitoring_consolidation.DEFAULT_DATA_DIR`'s own
+    anchoring. Must fail on the pre-fix code: pre-fix, `data_root`/`csv_path` were cwd-relative, so
+    `data_root.exists()` (checked against the *foreign* cwd) is False and nothing is consolidated
+    at all -- {"consolidated_rows": 0, "shard_files": 0}, not the 1/1 this test asserts."""
+    from tools import working_log_writer as wlw
+
+    owning = tmp_path / "owning-checkout"
+    week_dir = owning / "agent-monitoring" / "data" / "2026-W01"
+    week_dir.mkdir(parents=True)
+    owning_csv = owning / "tickets" / "working_log.csv"
+    owning_csv.parent.mkdir(parents=True)
+    owning_csv.write_text(_CSV_HEADER, encoding="utf-8")
+    _write_jsonl(week_dir / "TCK-B.working_log.jsonl", [{
+        "timestamp": "2026-09-28T00:00:01Z", "ticket_id": "TCK-FOREIGN-CWD-2",
+        "title": "t", "status": "DONE", "summary": "s", "artifacts_path": "none",
+    }])
+
+    foreign_cwd = tmp_path / "foreign-checkout"
+    (foreign_cwd / "tickets").mkdir(parents=True)
+    foreign_csv = foreign_cwd / "tickets" / "working_log.csv"
+    foreign_csv.write_text(_CSV_HEADER, encoding="utf-8")
+
+    monkeypatch.setattr(wlw, "_REPO_ROOT", owning)
+    monkeypatch.chdir(foreign_cwd)
+
+    result = wlw.consolidate_pending_rows()  # no args -- exercises the module's own defaults
+
+    assert result == {"consolidated_rows": 1, "shard_files": 1}
+    assert "TCK-FOREIGN-CWD-2" in owning_csv.read_text(encoding="utf-8")
+    assert foreign_csv.read_text(encoding="utf-8") == _CSV_HEADER  # untouched
+
+
 def test_consolidation_leaves_per_ticket_file_in_place_on_failed_canonical_write(tmp_path, monkeypatch):
     week_dir = tmp_path / "2026-W01"
     week_dir.mkdir()

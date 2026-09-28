@@ -67,8 +67,24 @@ if str(_TOOLS_DIR / "agent-monitoring") not in sys.path:
 
 from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 
+_REPO_ROOT = _TOOLS_DIR.parent
 _WORKING_LOG_PATH = Path("tickets/working_log.csv")
 _DEFAULT_DATA_ROOT = Path("agent-monitoring/data")
+
+
+def _anchored(path: Path) -> Path:
+    """TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS: a relative `path` is
+    resolved against this module's own checkout (`_REPO_ROOT`, from `Path(__file__)`), not cwd --
+    `consolidate_pending_rows()`'s defaults must resolve the same checkout as
+    `monitoring_consolidation.DEFAULT_DATA_DIR`, which is already `__file__`-anchored. A
+    cwd-relative default here is what let a foreign-cwd consolidation run move rows into whatever
+    checkout happened to be cwd instead of the one that owns them. An already-absolute `path`
+    (every real caller that overrides the default, and every test seeding a scratch path) passes
+    through untouched. `_WORKING_LOG_PATH`/`_DEFAULT_DATA_ROOT` stay literal, relative, genuine
+    module-level constants -- not inlined into a function default -- so the AST single-writer
+    guard in tests/tools/test_working_log_writer.py can still resolve the default parameter back
+    to "tickets/working_log.csv"; the anchoring happens at the point of use instead."""
+    return path if path.is_absolute() else _REPO_ROOT / path
 
 
 def _append_csv_row(fields: list, path: Path = _WORKING_LOG_PATH) -> None:
@@ -77,6 +93,7 @@ def _append_csv_row(fields: list, path: Path = _WORKING_LOG_PATH) -> None:
     line-ending bytes). Never truncates, never inserts before the header, always a pure
     bottom-append. Used by `consolidate_pending_rows()`; never called directly by an external
     ticket-closing caller (see module docstring)."""
+    path = _anchored(path)
     with open(path, "a", newline="", encoding="utf-8") as f:
         csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerow(fields)
 
@@ -129,6 +146,8 @@ def consolidate_pending_rows(
     that append succeeds, so a second run finds nothing left to reprocess.
 
     Returns `{"consolidated_rows": N, "shard_files": M}` (both 0 if nothing was pending)."""
+    data_root = _anchored(data_root)
+    csv_path = _anchored(csv_path)
     if not data_root.exists():
         return {"consolidated_rows": 0, "shard_files": 0}
 

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS
-phase: open
+phase: done
 date: 2026-09-28
 tags: [agent-monitoring, data-quality]
 ---
@@ -20,7 +20,7 @@ rows this way, and one ticket in PR #252 did too.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -155,14 +155,99 @@ None.
 - The sweep covered only ticket IDs dated 2026-09-24 onward, since the staging path landed with
   `TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET`. `TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE`
   is not missing: it sits in a pending shard on main
-  (`2026-W40/ticket-corpus-guard-test-scope-map.working_log.jsonl`).
-- `TCK-20260924-EPIC-GITHUB-DELIVERY-PROCESS` (epic tier) also has no row. Confirm whether epic
-  closes are expected to write one before treating it as a fourth loss.
+  (`2026-W40/ticket-corpus-guard-test-scope-map.working_log.jsonl`) — consolidated as part of this
+  ticket's own closure (see Implementation Notes).
+- **RESOLVED**: `TCK-20260924-EPIC-GITHUB-DELIVERY-PROCESS` (epic tier) also has no row. Confirmed
+  this is *not* a fourth instance of the row-loss bug: `.claude/workflows/implement-epic.js`
+  contains zero references to `working_log`, `append_working_log_row`, `done_checker`, or
+  `Finalize` — epic tier's own pipeline never calls the working-log writer or
+  `done_checker_static.py`'s Part B checks at all (consistent with the Tier Routing table: epic is
+  "Scope only — tracks child tickets; no direct implementation" — its children's own rows are the
+  real log entries). No fix needed for this ticket's scope.
 
 ## Implementation Notes
 
+**Fix shape (matches Scope items 1-3; item 2's `record_hand_orchestrated_closure.py` sub-item
+resolved as "safe as-is", documented in place rather than anchored):**
+
+1. `tools/working_log_writer.py`: `_WORKING_LOG_PATH`/`_DEFAULT_DATA_ROOT` stay literal, relative
+   module-level constants (`Path("tickets/working_log.csv")` / `Path("agent-monitoring/data")`) —
+   changing their own assigned value to an `__file__`-derived expression (e.g.
+   `_REPO_ROOT / "tickets" / "working_log.csv"`) would have broken the AST single-writer guard,
+   whose `_literal_value()` resolver only recognizes a bare string constant or `Path("literal")`,
+   not a `BinOp`/path-join chain — confirmed by trying it first and watching
+   `test_working_log_csv_has_exactly_one_writer` drop to 0 hits. Instead, added a new `_anchored()`
+   helper (`_REPO_ROOT = _TOOLS_DIR.parent`, from `Path(__file__)`) that resolves a relative path
+   against the module's own checkout and passes an already-absolute path through untouched; called
+   at the top of `_append_csv_row()` and `consolidate_pending_rows()`. The guard's resolver still
+   sees the literal default-parameter binding unchanged (the runtime reassignment inside the
+   function body isn't a literal, so it doesn't override the resolver's mapping) — guard still
+   finds exactly 1 hit, in `working_log_writer.py`, unchanged.
+2. `tools/agent-monitoring/monitoring_consolidation.py`: `consolidate_all()` now derives an
+   explicit `csv_path` from `data_dir`'s own root (`_default_csv_path_for()`) and passes it to
+   `consolidate_pending_rows()`, instead of leaving `csv_path` to that function's own default. This
+   is what actually closes the cross-checkout gap end-to-end: `DEFAULT_DATA_DIR` was already
+   correctly `__file__`-anchored (per the ticket's own source-verified mechanism write-up); the bug
+   was specifically that nothing derived a matching, equally-anchored `csv_path`.
+3. `tools/agent-monitoring/record_hand_orchestrated_closure.py`: left `data_root`/`working_log_path`
+   cwd-relative, with a documented reason at both sites (`_existing_row_for()`'s docstring, and a
+   short pointer comment at `main()`'s own `working_log_path` assignment). This script's paths are
+   *consistently* cwd-relative together (matching `monitoring_batch_identifier.resolve_write_target()`'s
+   own documented convention that every real call site assumes cwd is the checkout being recorded
+   for) — there's no anchor mismatch here the way there was in `monitoring_consolidation.py` (an
+   `__file__`-anchored data dir paired with a cwd-relative CSV write). Anchoring this script to
+   `__file__` instead would break its real invariant (a hand-orchestrating session always runs it
+   from within the checkout it's closing a ticket in) and its own test suite, which exercises it as
+   a subprocess with `cwd=` a scratch checkout distinct from this file's own location.
+4. Restored the 3 lost rows (Scope item 1) through the sanctioned writer only: staged via
+   `append_working_log_row()` with their original timestamp/title/summary/artifacts values (see
+   this ticket's "Exact bytes" block above — preserved verbatim, no hand edit of the CSV), then
+   consolidated via `python3 tools/agent-monitoring/monitoring_consolidation.py` run from *this*
+   checkout (exercising the fix's own anchoring). That same consolidation run also folded in one
+   *unrelated*, already-legitimately-pending shard left on `origin/main`
+   (`2026-W40/ticket-corpus-guard-test-scope-map.{runs,events,tools,working_log}.jsonl`, for the
+   already-closed `TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE`) — this is the
+   consolidator doing its documented job correctly, not new work; flagging it here for
+   transparency since it lands in the same commit.
+5. New regression tests (Scope item 4, AC3) added to `tests/tools/test_monitoring_consolidation.py`:
+   `test_consolidate_all_derives_csv_path_from_data_dir_not_foreign_cwd` and
+   `test_consolidate_pending_rows_default_path_resolves_against_module_not_foreign_cwd`. Both
+   verified to FAIL on the pre-fix code (temporarily reverted the two source files to `HEAD`,
+   re-ran just these two tests, confirmed failure, restored the fix) and PASS after.
+
 ## Test Summary
+
+- `tests/tools/test_working_log_writer.py` (72 tests incl. the AST single-writer guard),
+  `tests/tools/test_monitoring_consolidation.py` (now 16 tests, +2 new),
+  `tests/tools/test_record_hand_orchestrated_closure.py` (38 tests),
+  `tests/tools/test_done_checker_static.py` — all pass (run via the main checkout's `.venv`
+  interpreter with cwd kept in this worktree, never cwd = the main checkout, per this same
+  ticket's own subject matter).
+- The 2 new regression tests independently confirmed to fail on pre-fix code before being
+  confirmed to pass on the fix (AC3).
+- `python3 tools/gate_checks/done_checker_static.py --ticket-id <ID>` run for all 3 restored
+  tickets: `working_log_exactly_one_row` PASSes for each (AC1). (`working_log_no_row_yet` FAILs as
+  expected — that precheck condition only applies at a ticket's own close time, not to a
+  historical row restoration.)
 
 ## Files Changed
 
+- `tools/working_log_writer.py`
+- `tools/agent-monitoring/monitoring_consolidation.py`
+- `tools/agent-monitoring/record_hand_orchestrated_closure.py` (comments only, no behavior change)
+- `tests/tools/test_monitoring_consolidation.py` (2 new regression tests)
+- `docs/REGISTRY.yaml` (unconditional post-migration regeneration per CLAUDE.md's After Work step,
+  no manual doc edits this ticket)
+- `tickets/working_log.csv` (3 rows restored + 1 unrelated already-pending row consolidated, see
+  Implementation Notes item 4)
+- `agent-monitoring/data/2026-W40/` (per-ticket shards consolidated into the canonical week files)
+
 ## Completion Summary
+
+Anchored `working_log_writer.py`'s CSV/data-root resolution and `monitoring_consolidation.py`'s
+`consolidate_all()`'s CSV target to each script's own checkout instead of cwd, closing the gap that
+let a foreign-cwd consolidation run move rows out of the branch that owned them. Restored the 3
+lost rows through the sanctioned writer with their original values, and resolved the epic-tier open
+question (not a fourth loss — `implement-epic.js` never writes a working_log row). Left
+`record_hand_orchestrated_closure.py`'s cwd-relative paths as-is with a documented rationale, since
+anchoring them would have broken a real invariant its own test suite depends on.
