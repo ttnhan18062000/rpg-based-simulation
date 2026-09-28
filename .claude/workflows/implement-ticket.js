@@ -1740,11 +1740,23 @@ ${ticketInfo.todos_source_path ? `
    a. Run: rm "${ticketInfo.todos_source_path}"
    b. Determine the parent directory (dirname of "${ticketInfo.todos_source_path}").
       If it is a subfolder of tickets/todos/ (i.e. the path has the form tickets/todos/FOLDER/TCK-*.md):
-      - Run: ls <parent-dir>/
-      - If no TCK-*.md files remain (folder is empty or has only SEQUENCE.md / non-ticket files):
+      - Run: python3 tools/epic_folder_status.py <parent-dir>
+        Prints one JSON object: {"folder", "epic_parent", "epic_parent_ticket_id",
+        "open_children", "all_children_done"}. The epic parent (if any) is identified
+        structurally via its own ## Tier/## Status body fields, never by filename match on
+        "-EPIC-" (TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT).
+      - If "all_children_done" is false: skip — the folder is not complete yet ("open_children"
+        lists which tickets are still open).
+      - If "all_children_done" is true and "epic_parent" is null (no epic-tier ticket in this
+        folder): move the whole folder:
         Run: mv <parent-dir>/ tickets/done/<FOLDER>/
         This preserves SEQUENCE.md and any folder-level metadata in the done archive.
-      - If other TCK-*.md files still exist in the folder: skip — the folder is not complete yet.
+      - If "all_children_done" is true and "epic_parent" is not null: do NOT close or move
+        anything from here — closing another ticket's own lifecycle is not this ticket's Finalize
+        job. Print this advisory instead and leave the folder in place:
+          "All children of <FOLDER> are done; epic parent <EPIC-ID> remains — close it via
+          implement-epic (epic_id mode) or by hand."
+        (substitute <FOLDER> for the folder name and <EPIC-ID> for "epic_parent_ticket_id").
       If the source was directly in tickets/todos/ (no subfolder): skip the folder step.` : '   No todos source path recorded — skip.'}
 
 4. Append to tickets/working_log.csv via the sanctioned helper — never hand-roll this write:

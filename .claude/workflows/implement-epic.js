@@ -400,7 +400,55 @@ If any command fails, print "WARNING: batch monitoring write failed: <error>" bu
   { label: 'batch-monitoring-write' }
 )
 
-// ─── Folder cleanup (folder mode, all tickets done) ───────────────────────────
+// ─── Shared epic-close instruction builder ────────────────────────────────────
+// TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT: used by BOTH the epic_id-mode close
+// block below AND folder mode's own epic-parent handling in the folder-cleanup block — one
+// template, not a second hand-written close, per that ticket's Scope item 2. `epicIdValue`/
+// `epicTicketPath`/`childCount` are literal JS values in the epic_id-mode call site (known to the
+// orchestrator from `args.epic_id`/Discover's output); folder mode instead passes descriptive
+// phrases telling the sub-agent what to substitute itself, since only the sub-agent — reading the
+// folder at execution time — knows which file is the epic parent and its real ticket_id.
+//
+// `moveDestination` (a `tickets/done/...` path string, or falsy) controls whether this step moves
+// the file itself: epic_id mode passes a real destination (the epic ticket has no surrounding
+// folder of its own, so this step is the only thing that ever archives it). Folder mode passes
+// falsy — the epic parent must land INSIDE its archived folder
+// (`tickets/done/<folder>/<EPIC-ID>.md`), matching both existing precedents
+// (`tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md`,
+// `tickets/done/world-rendering-core/TCK-20260820-EPIC-WORLD-RENDERING-CORE.md`) and CLAUDE.md's
+// "move the entire folder" rule — a flat individual mv here would strand it directly under
+// tickets/done/ instead, outside the folder the surrounding step is about to archive.
+const buildEpicCloseInstructions = (epicIdValue, epicTicketPath, childCount, moveDestination) => `Close the epic ticket itself now that all its children are done.
+
+The epic "${epicIdValue}" (at "${epicTicketPath}") had all ${childCount} child ticket(s) implemented successfully. Close the epic ticket file itself:
+
+Step 1 — read the epic ticket at "${epicTicketPath}".
+  If the file does not exist (already closed in a prior run), print "SKIPPED: epic ticket file not found" and skip the remaining steps below.
+
+Step 2 — update the file in place:
+  - In the YAML frontmatter block at the top: set \`phase: done\` and \`status: historical\`
+  - Set the body ## Status section to DONE (not EPIC_SCOPED — EPIC_SCOPED is this ticket's own
+    mid-flight scoped-but-not-yet-resolved meaning, not a terminal state for an epic every one of
+    whose children is confirmed done — see TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING
+    investigation.md §4)
+  - If a "## Completion Summary" section exists and is empty, fill it with one sentence noting all ${childCount} child ticket(s) completed via this batch run.
+
+${moveDestination ? `Step 3 — move the file:
+  If the epic ticket is not already under tickets/done/, move it there:
+    Run: mv "${epicTicketPath}" "${moveDestination}"
+  If it is already under tickets/done/ (already closed in a prior run), skip this step.
+
+Step 4 — print "Closed epic ${epicIdValue} -> ${moveDestination}" (or the SKIPPED message from Step 1 if applicable).` : `Step 3 — do NOT move this file by itself. Leave it at "${epicTicketPath}" — a later step moves the whole surrounding folder in one operation, carrying this file with it, matching the existing precedent of an epic parent staying inside its archived folder rather than landing flat in tickets/done/.
+
+Step 4 — print "Closed epic ${epicIdValue} in place (the folder move will archive it)" (or the SKIPPED message from Step 1 if applicable).`}`
+
+// ─── Folder cleanup (folder mode, all non-epic tickets done) ──────────────────
+// TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT: the folder's own epic-tier parent
+// (if it has one) is excluded from the "every TCK-*.md must already be in tickets/done/"
+// requirement below, and closed here (reusing buildEpicCloseInstructions above) before the move
+// — previously this check could never pass for an epic folder, since the epic parent never
+// closes on its own (folder mode's `epic_ticket_path` is always "", so the epic-close block below
+// never ran for it either). A folder with no epic-tier ticket in it behaves exactly as before.
 
 if (batchStatus === 'DONE' && folder) {
   const folderName = folder.replace(/\/$/, '').replace(/^.*\//, '')
@@ -408,18 +456,34 @@ if (batchStatus === 'DONE' && folder) {
   await agent(
     `Move the completed tickets/todos folder to tickets/done/. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
 
-The folder "${folder}" had all tickets implemented successfully. Move the entire folder (including SEQUENCE.md and any non-ticket metadata files) to its done archive:
+The folder "${folder}" had all non-epic tickets implemented successfully. Move the entire folder (including SEQUENCE.md and any non-ticket metadata files) to its done archive, closing the folder's own epic-tier parent ticket first if it has one:
 
-Step 1 — check that all TCK-*.md files in the folder are already in tickets/done/:
-  Run: ls "${folder}"
-  Run: ls tickets/done/
-  If any TCK-*.md file is NOT in tickets/done/ as a matching ticket ID, print "SKIPPED: unfinished tickets still in folder" and return "done" without moving.
+Step 1 — get the folder's status:
+  Run: python3 tools/epic_folder_status.py "${folder.replace(/\/$/, '')}"
+  Prints one JSON object: {"folder", "epic_parent", "epic_parent_ticket_id", "open_children",
+  "all_children_done"}. The epic parent (if any) is identified structurally via its own
+  ## Tier/## Status body fields, never by filename match on "-EPIC-".
 
-Step 2 — if all tickets are done, move the whole folder:
+Step 2 — check "all_children_done":
+  If false, print "SKIPPED: unfinished tickets still in folder" (the "open_children" list names
+  which ones) and return "done" without moving or closing anything.
+
+Step 3 — if "epic_parent" is not null and not already under tickets/done/, close it now, exactly as follows (using "epic_parent_ticket_id" and "epic_parent" from Step 1's JSON):
+
+${buildEpicCloseInstructions(
+      '"epic_parent_ticket_id" from Step 1\'s JSON',
+      '"epic_parent" from Step 1\'s JSON',
+      'this folder\'s own non-epic child count (count the TCK-*.md files in this folder, excluding the epic parent itself)',
+      null
+    )}
+
+  If "epic_parent" is null, or it is already under tickets/done/, skip this step entirely.
+
+Step 4 — move the whole folder (every file in it is now done):
   Run: mv "${folder.replace(/\/$/, '')}" "tickets/done/${folderName}"
   Print "Moved ${folder} → tickets/done/${folderName}/"
 
-Step 3 — if the folder no longer exists (already moved in a prior run), print "SKIPPED: folder not found" and return "done".
+Step 5 — if the folder no longer exists (already moved in a prior run), print "SKIPPED: folder not found" and return "done".
 
 Return "done".`,
     { label: 'folder-cleanup' }
@@ -432,35 +496,16 @@ Return "done".`,
 // batch commit (confirmed in that ticket's investigation.md, citing
 // TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT's own finding of 91.7% frontmatter drift
 // on implement-epic-run epics). Mirrors the folder-cleanup block's own shape and bookkeeping tone
-// — only `epic_id` mode ever has a real epic ticket file to close (folder mode's own
-// epic_ticket_path is always "").
+// — only `epic_id` mode ever has a real epic ticket file at a path known ahead of time to the
+// orchestrator (folder mode's own epic_ticket_path is always "" — see the shared
+// buildEpicCloseInstructions template above for how folder mode closes its own epic parent).
 
 if (batchStatus === 'DONE' && epicId) {
   await writeSidecar(-5, 'Implement', 'epic-close')
   await agent(
-    `Close the epic ticket itself now that all its children are done. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
+    `${buildEpicCloseInstructions(epicId, discovery.epic_ticket_path, ticketIds.length, `tickets/done/${epicId}.md`)}
 
-The epic "${epicId}" (at "${discovery.epic_ticket_path}") had all ${ticketIds.length} child ticket(s) implemented successfully. Close the epic ticket file itself:
-
-Step 1 — read the epic ticket at "${discovery.epic_ticket_path}".
-  If the file does not exist (already closed in a prior run), print "SKIPPED: epic ticket file not found" and return "done".
-
-Step 2 — update the file:
-  - In the YAML frontmatter block at the top: set \`phase: done\` and \`status: historical\`
-  - Set the body ## Status section to DONE (not EPIC_SCOPED — EPIC_SCOPED is this ticket's own
-    mid-flight scoped-but-not-yet-resolved meaning, not a terminal state for an epic every one of
-    whose children is confirmed done — see TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING
-    investigation.md §4)
-  - If a "## Completion Summary" section exists and is empty, fill it with one sentence noting all ${ticketIds.length} child ticket(s) completed via this batch run.
-
-Step 3 — move the file:
-  If the epic ticket is not already under tickets/done/, move it there:
-    Run: mv "${discovery.epic_ticket_path}" "tickets/done/${epicId}.md"
-  If it is already under tickets/done/ (already closed in a prior run), skip this step.
-
-Step 4 — print "Closed epic ${epicId} -> tickets/done/${epicId}.md" (or the SKIPPED message from Step 1/3 if applicable).
-
-Return "done".`,
+This is bookkeeping — do NOT fail the workflow if anything goes wrong. Return "done".`,
     { label: 'epic-close' }
   )
 }
