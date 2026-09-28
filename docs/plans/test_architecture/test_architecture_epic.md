@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture (core RPG first)
 
-**Status: REVISION 2026-09-28c, direction and milestone review.** The plan is organized around five
+**Status: REVISION 2026-09-28d, targeted corrections + detailed milestone plans** (plans in [`milestone_plans.md`](milestone_plans.md)). The plan is organized around five
 deliverables (A–E) and a behaviour-level dependency map (§9). No tickets exist yet. Milestones are
 in §11 as **proposals awaiting reviewer and owner approval**. D1–D11 survive only as a decision
 log (§12) and a mapping appendix.
@@ -154,21 +154,37 @@ Per behaviour, it reports **four separate columns: `selected` · `executed` · `
 
 **Fallback:** `impact-unknown` → run all core-RPG lanes and flag the change. Never a silent skip.
 
-### 5.3 Selection-completeness (validation that can detect misses)
+### 5.3 Fault-revealing test recall on sampled seeded faults
 
-A selected set cannot validate itself. The ground truth is the **fault-revealing tests** for a
-seeded fault, following the safety notion of regression test selection [R27] and the
-failure-recall framing of predictive selection [R29]:
+This metric is **fault-revealing test recall on a sample of seeded faults**. It is **not** a
+project-wide completeness guarantee: a perfect score on the sample says nothing about unsampled
+changes. The ground truth follows the safety notion of regression test selection [R27] and the
+failure-recall framing of predictive selection [R29].
 
-| Term | Definition |
-|---|---|
-| Population | Evaluation changes = (a) the 5 representative changes below, each realised as ≥1 seeded fault (a mutant) at the changed site; (b) later, historical PRs whose CI run had failures |
-| Expected impacted set | Tests that **fail** when the seeded fault is applied and the full fast tier runs (plus lanes containing them). Source: an actual run, not the model |
-| Numerator | Expected-set tests that the model selected |
-| Denominator | Size of the expected set |
-| Lane recall | Lanes containing ≥1 expected test that the model selected / such lanes |
-| Unknowns | A change the model marks `impact-unknown` is counted **separately**, never as a hit. A seeded fault that **no** test detects has an empty expected set: it is reported as a **proof gap**, not as selection success |
-| Precision (secondary) | Selected tests that are in the expected set / selected. Informative only; over-selection is safe |
+**Evaluation protocol:**
+1. **Clean baseline.** Run the reference test population (the fast tier over all lanes) at the
+   pinned SHA; record passes, failures and skips. Pre-existing failures are excluded from all later
+   comparisons.
+2. **One fault at a time.** Apply exactly one declared fault (a mutant at the changed site) on an
+   isolated revision.
+3. **Reference run.** Run the reference population. The tests that newly fail are the *expected
+   set* for that fault.
+4. **Compare.** Compare the model's selected tests with the expected set, and **separately** the
+   CI lanes the path rules would trigger (§5.6).
+5. **Classify each fault** as `usable`, `equivalent`, `invalid` (does not build or import),
+   `timed-out`, `unreachable` (no test executes the site), or `undetected` (executed but no test
+   fails). Only `usable` faults enter the recall figures.
+6. **Report:**
+   - test recall: selected ∩ expected / expected;
+   - lane recall: lanes containing ≥1 expected test that are both selected and triggered / such lanes;
+   - over-selection cost: selected tests not in the expected set, and their runtime;
+   - unknown-impact handling: faults whose change the model marked `impact-unknown`, counted
+     separately and never as hits;
+   - the number of usable faults.
+
+An `undetected` fault is a **possible** proof gap. It may also be an equivalent mutant or sit
+outside the exercised path, so it is not classified as a confirmed test gap without review. The five
+changes in §5.4 are an **initial validation sample** only.
 
 ### 5.4 Representative changes (the evaluation set)
 
@@ -190,6 +206,17 @@ failure-recall framing of predictive selection [R29]:
 - **Indirect consumers:** the declared consumer edges in §4.1, plus import fan-out.
 - **Residual risk:** code executed by no test is invisible to every input. That is reported as a
   proof gap, not assumed covered.
+
+### 5.6 Model selection vs lane trigger vs execution
+
+Three facts are recorded separately for each recommended test:
+1. **selected by the model**;
+2. **its lane triggered by the CI path rules**;
+3. **executed and passed** in that lane.
+
+The model can recommend the right test while a path rule (today: `PERF_RE`) prevents its lane from
+running. That shows up as `selected, not-triggered`, never as a pass. Lane-rule repair (R2) is a
+separate deliverable from the model (M1).
 
 ---
 
@@ -271,12 +298,15 @@ Pipeline/inventory mutation scores say nothing about this pilot.
 | Window | 5 eligible tickets or 6 weeks, whichever first. **< 5 at 6 weeks:** extend once by 4 weeks. **< 3 after that:** `inconclusive`. If the starvation epic starts changing the same files, pause the clock and exclude the overlapping tickets |
 | Size variance | Report per ticket, stratified by tier and files-changed count; no pooled averages |
 | Cost | `tool_call_count` per phase from `events.jsonl`, **only for pipeline runs with real event data**. Hand-orchestrated backfills are flagged and excluded. `duration_s` is not used (70% zeros, OV §5.1) |
-| Quality signals | Field completeness; reviewer checklist findings; findings that led to test changes; new outcome proofs registered (§10.1); title-classified escapes in the following 30 days [P] |
-| **Keep** | Completeness ≥ 80% of required fields **and** Investigate tool calls ≤ +20% vs baseline median **and** ≥ 1 checklist finding led to a test change across the window |
-| **Revise** | Completeness < 80%, or cost > +20%, or checklist findings never change tests (review is overhead) |
+| Fields | **Mandatory** (every AC): impact domains, level, proof kind (§10.1), oracle source, expected effect, selected commands. **Optional** (when applicable): negative/edge cases, fixture choice, non-functional risk |
+| Quality signals | Mandatory-field completeness; substantive reviewer findings and whether each was acted on; new proofs registered (§10.1); title-classified escapes in the following 30 days [P] |
+| **Keep** | **100%** of mandatory fields filled on every treatment ticket; Investigate `tool_call_count` ≤ +20% vs the baseline median; **every substantive finding was acted on or explicitly declined with a reason**. A clean review (no findings) is a valid outcome and counts neither for nor against |
+| **Revise** | Any mandatory field repeatedly missing; or cost > +20%; or substantive findings routinely ignored |
 | **Inconclusive** | < 3 eligible tickets, or baseline artifacts missing for most baseline tickets |
-| Threshold rationale [RR: present for review] | +20% ≈ 4 extra calls on the Investigate median of 18.5 (OV §5.1). 80% completeness allows one optional field. "≥ 1 finding leads to a change" is the minimum evidence that the review is not pure overhead |
-| Escalation | Consider a conditional review phase only if checklist findings are often ignored; consider a split test-writer only if the checklist repeatedly finds oracle defects the implementer does not fix |
+| Threshold rationale [RR: present for review] | Mandatory means mandatory: completeness is 100% on mandatory fields, and optional fields are reported, not thresholded. +20% ≈ 4 extra calls on the Investigate median of 18.5 (OV §5.1). Findings are measured by *action on substantive findings*, not by count, so the reviewer is not pressured to invent findings |
+| Cost-proxy limits | `tool_call_count` counts tool invocations only. It is not elapsed time, not tokens, and not model cost; call sizes vary. Treat it as a coarse relative signal |
+| Interpretation | With 3–5 tickets, results are **directional**: no causal improvement or failure is claimed from the threshold table. Every `keep` / `revise` / `inconclusive` decision carries a short qualitative review (what the checklist caught, what was ignored and why, the author's burden) recorded alongside the measurements |
+| Escalation | Consider a conditional review phase only if substantive findings are often ignored; consider a split test-writer only if the checklist repeatedly finds oracle defects the implementer does not fix |
 
 ---
 
@@ -290,11 +320,12 @@ Pipeline/inventory mutation scores say nothing about this pilot.
 | Code executed | line + branch coverage per package; coverage contexts | covered / statements (`src/`) | standing coverage job (new; `make test-cov` fixed) | SHA, tier list, **failed-test list**; nightly | Execution ≠ assertion. The 2026-09-27 88% is a one-off, fast tiers, 8 failures |
 | Behaviour specified and linked | evidence state per behaviour id | behaviour ids (§10.1) by state | ledger + registry scan | SHA; per PR | Ledger not schema-valid yet (§10.4) |
 | Mechanism reached in real runs | reachability | reached / registered mechanisms | census + registry view | run id, worlds, ticks; on demand | `unstable` |
-| Effect asserted ("proves outcome") | proof state | core-RPG behaviours with a **validated** proof (§10.1) / core-RPG behaviours in scope | proof validator + JUnit | SHA; per PR | First registration needs bounded human review |
+| Effect asserted ("proves outcome") | proof state by proof kind (§10.1) | gameplay behaviours with a **valid, non-stale review record** and a passing proof in their lane / gameplay behaviours in scope. **Architecture guards are reported in a separate architecture-evidence layer** | proof validator (review-record checks) + JUnit | SHA; per PR | A new proof counts only after its bounded first review |
 | Faults detected | mutation score | killed / (killed + survived); timeouts and equivalents listed separately | `mutmut` [R12] on a declared target | **target, selected tests, SHA, date, runtime**; `stale` once the target changes or after 30 days | One-off baselines only |
-| Corpus drift / findings | anchor-band results; drift classes | per run key × pillar (79 parametrized keys) | SimQ tests; `/simq-audit` | calibration run id | PR state `skipped-no-data` today |
+| Corpus drift / findings | anchor-band results; drift classes | per run key × pillar (81 anchor comparisons = 79 parametrized + 2 named probe tests; OV §4.7) | SimQ tests; `/simq-audit` | calibration run id | PR state `skipped-no-data` today |
 | Hygiene | order-dependence; lane fit; skip/xfail | random-order failures; tests over level budget | scheduled random-order job; `--durations` | SHA; weekly | RNG-contract check first |
-| Selection completeness | §5.3 | §5.3 | seeded-fault evaluation | SHA, fault list; per model change | Needs the full fast tier per fault |
+| Fault-revealing test recall (sampled) | §5.3 | usable seeded faults; test recall, lane recall, over-selection cost, unknown count | seeded-fault protocol (§5.3) | SHA, fault list, per-fault class; per model change | A sample, not a project-wide guarantee |
+| Lane trigger | selected-but-not-triggered count | recommended tests whose lane did not run / recommended tests | impact report × CI run | per PR | Separate from model recall (§5.6) |
 
 **Scorecard host:** decided after this dictionary and an example output exist [RR].
 
@@ -307,7 +338,7 @@ honest investigation result; it is **not** a delivered proof.
 
 | # | Behaviour | State now | Next evidence | Level / lane | Prerequisites | Can start | Blocked by / owner |
 |---|---|---|---|---|---|---|---|
-| E1 | Mutation only via typed records | proven | — (monitor) | guard + integration / PR | — | — | this epic |
+| E1 | Mutation only via typed records | proven (**architecture evidence**, not a gameplay effect) | — (monitor) | architecture guard + integration / PR | — | — | this epic |
 | E2 | Damage-law bounds / monotonicity (ch02) | partial (example + value-differential) | property test | component / `Unit · gameplay` | metadata (§10.2) for reporting only | immediately after M0a | — |
 | E3 | XP-curve monotonicity (ch01) | partial | property test | component / `Unit · gameplay` | same | immediately after M0a | — |
 | E4 | Per-transaction and sequence conservation (ch03) | partial (examples) | stateful property | component / `Unit · gameplay` | same | immediately after M0a | — |
@@ -317,7 +348,7 @@ honest investigation result; it is **not** a delivered proof.
 | E8 | Harvest → inventory → market chain | gap | cross-domain scenario | scenario / relevant-PR lane | helper; R2 | after helper (independent of combat) | this epic |
 | E9 | Quest completion → reward | gap | cross-domain scenario | scenario / relevant-PR lane | helper; R2 | after helper (independent of combat) | this epic |
 | E10 | Crafting material predicates isolated | partial (order-dependent) | isolation repair | unit | R1 | with R1 | this epic |
-| E11 | Decision-driven attack in real runs | blocked | none (not test work) | — | owner design decision on the `COMBAT_ENGAGE` dispatch finding (§4.2) | — | **owner [D]** |
+| E11 | Decision-driven attack in real runs | blocked | none: a **core mechanic design decision**, outside this plan | — | the owner's decision on the `COMBAT_ENGAGE` dispatch finding (evidence: `tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md`, 2026-09-19 addendum) | — | **decision owner: the user (mechanic/spec owner)**. **Does not block M0–M3.** No test may approve the current discarded-goal behaviour as correct while the intended behaviour is undecided |
 | E12 | Real-run XP volume | blocked | corpus-level evidence later | broad simulation | starvation epic; E11 | — | starvation epic |
 | E13 | Party / group behaviours | not assessed | selection gate G-P: map entry points, maturity, spec | — | — | any time (investigation only) | this epic |
 | E14 | Replay reliability for sweeps | gap | reliability check | broad simulation | determinism unparked | — | parked ticket |
@@ -330,58 +361,71 @@ owners.
 
 ## 10 · Proof derivation, metadata, and the parity evidence model
 
-### 10.1 How "proves outcome" is derived (reproducibly)
+### 10.1 Proof kinds and how each is validated
 
-- **Behaviour id** = a mechanism id (`registries/mechanisms.yaml`) when one exists, otherwise a
-  parity-ledger law id. No new registry. The canonical behaviour → test link is **owned by the
-  registry epic** [RR]. Until that link exists, the claim is carried by in-test metadata and
-  validated by this epic.
-- **Claim (in the test):** `behaviour id`, `level`, `oracle kind` (exact / law / differential /
-  tolerance), `observed state field(s)`, `arms` (positive / negative), `review_ticket`.
+"Proves outcome" is **not one contract**. Each proof declares a **kind**; the checks depend on the
+kind.
 
-**Automated validation, every run:**
-1. The test node is collected and ran in its declared lane at this SHA (JUnit).
-2. It passed.
-3. The declared level matches its structure (static check: a scenario level uses `WorldCompiler` +
-   `Kernel`; differential tests have both arms).
-4. The behaviour id resolves.
-5. `review_ticket` exists in `tickets/done/`.
+| Proof kind | What the claim must state | Automated on every run | Bounded first-registration review |
+|---|---|---|---|
+| **Law / property** | documented law (Bible section), input domain, assumptions, asserted invariant, generated cases or examples | node collected, ran in its lane, passed; property tests record the generator settings and seed | does the invariant encode the law; is the input domain faithful; are the assumptions acceptable |
+| **Stateful invariant** | action vocabulary, reachable-state description, invariant, failure-reproduction data (shrunk sequence, seed) | same, plus the reproduction data is emitted on failure | are the actions realistic; does the invariant match the law |
+| **Mechanic outcome** | trigger, authoritative effect (state field(s)), and a negative/absence control **only where the claim needs one** (e.g. "fires only when X") | same | does the trigger actually occur (not staged away); is the effect authoritative state, not a log/event; is the control meaningful |
+| **Cross-domain chain** | each required hop: observed transition and its effect | same | is every hop observed, not inferred from the endpoint |
+| **Architecture guard** | the protected boundary and the violation it detects | same | does it detect a real violation (e.g. a seeded bad write) — **reported as architecture evidence, never as a gameplay effect** |
 
-**Optional, periodic:** a seeded fault at the behaviour's `implemented_by` site makes the test fail
-(mutation check).
+**Not claimed:** a static check (e.g. "imports `WorldCompiler` and `Kernel`") establishes only the
+*level*, never semantic correctness. Semantics come from the review record plus, optionally, a
+periodic seeded-fault check at the behaviour's `implemented_by` site.
 
-**Bounded human review (once, at first registration, or when the test or its Bible section
-materially changes):**
-- Does the oracle encode the Bible law?
-- Does the test assert the **effect**, not just occurrence?
-- Is the negative arm reached and declined?
+**Review record.** A done ticket alone is insufficient. Each approval binds:
 
-The review is recorded as the `review_ticket`. Later reports derive `proves outcome` from the
-automated checks plus that record, **without re-reading tests**. A self-declared label or a test
-file's presence alone never counts.
+| Field | Content |
+|---|---|
+| `behaviour_id` | mechanism id or law id |
+| `test_identity` | node id + file path + a stable test name |
+| `test_revision` | content hash of the test function / module at approval |
+| `oracle_revision` | Bible section id + that doc's commit/hash; for tolerance oracles, the anchor file hash |
+| `harness_revision` | hash of the shared helper(s) the test relies on |
+| `path_revision` | the `implemented_by` file hashes of the behaviour at approval |
+| `proof_kind`, `reviewer`, `decision` (approved / rejected / conditional), `date`, `ticket` | — |
 
-### 10.2 Test-metadata migration scope
+**Staleness:** the approval becomes `stale` when any of `test_revision`, `oracle_revision`,
+`harness_revision` or `path_revision` changes materially. A trivial formatting change is excluded
+by hashing normalized AST/text. Later reports validate the record **mechanically**: fields present,
+hashes current, test passing in its lane. They do not re-read the test. A `stale` proof shows as
+`stale`, not `proven`.
 
-Inventory (OV §10): 204 candidate core-RPG gameplay test files; 89 agree across directory and
-imports; about 115 are uncertain; 579 import only substrate; 7 are multi-domain.
+**One authority for the mechanism → test link:**
+- **Now:** the claim lives in in-test metadata, and the review record lives in a planner-proposed
+  location, reported by this epic.
+- **When the registry epic ships its canonical link:**
+  1. a one-time reconciliation maps every in-test claim onto the registry link;
+  2. conflicts are listed for the owner;
+  3. the registry becomes the authority, and in-test metadata is reduced to a reference to the
+     registry entry;
+  4. a consistency check flags any in-test claim that has no matching registry link.
+- Two independent authorities never persist past the reconciliation.
 
-| Option | Scope | Cost / consequence |
+### 10.2 Test-metadata migration scope (staged)
+
+The inventory (OV §10: 204 candidates, 89 agreeing signals, ~115 uncertain, 579 substrate-only, 7
+multi-domain) is a **future implementation inventory**. This planning revision does not inspect
+test files one by one.
+
+| Stage | Scope | Rule |
 |---|---|---|
-| New tests only | future files | Old evidence never appears in reports |
-| Tests touched by the pilot | a handful | Too narrow for a baseline |
-| **All existing core-RPG candidates (204)** — recommended | 204 files | ~89 auto-proposed labels (agreeing signals) to confirm, ~115 to classify |
-| Entire repository | 1,484 files | Out of the core-RPG priority |
-
-**Required metadata [I]:** new or modified core-RPG tests (advisory check), plus a one-off
-classification of the 204 candidates.
-
-**Reported states:** `classified`, `multiple domains`, `out of scope`, `classification uncertain`,
-`unclassified`.
+| S1 | **New and modified** core-RPG tests | Metadata required (advisory check, then blocking once S2 lands) |
+| S2 | Existing core-RPG candidates with agreeing signals (~89) | Auto-*proposed* labels, confirmed in bulk by domain owner review; never inferred silently |
+| S3 | Uncertain candidates (~115) | Classified in domain-sized batches. Anything left unresolved stays `classification uncertain` |
+| S4 | Multi-domain tests (7 by import) | Declare **all** domains plus a primary domain; reported under each declared domain as `multiple domains` |
+| S5 | Substrate-only importers (579) | **Out of scope** for domain metadata unless the test is *about* the substrate (e.g. `tests/unit/core/`, `tests/integration/pipeline/`), which then gets `domain = substrate` |
+| — | Everything else | `out of scope` or `unclassified`; both stay visible in the baseline |
 
 **Consistency:**
-- Metadata lives in the test file (module- or test-level marker), so it moves with the file.
+- Metadata lives in the test file, so it moves with the file.
 - A check compares the declared domain with the file's imports and directory, and flags
-  disagreement for review. It is never inferred.
+  disagreement for review. It is never auto-corrected.
 - An ownership change edits the marker in the same PR.
 
 ### 10.3 Relevant-PR definition for mechanic scenarios
@@ -412,10 +456,10 @@ irrelevant only if it touches exclusively `docs/`, `tickets/`, `agent-monitoring
 | Milestone | Outcome | Dependencies |
 |---|---|---|
 | **M0a As-is baseline** | Reproducible inventory and measurements at a pinned SHA, with failures, skips, missing data and lane gaps visible (validity table below) | none |
-| **R1 Progression isolation repair** | The 7 order-dependent tests pass in combined, isolated and random-order runs | none |
+| **R1 Progression isolation repair** | States: `verified` (combined + isolated + random-order pass) · `provisional` (combined + isolated pass; random order awaits the RNG-contract check) · `blocked/failed` | none |
 | **R2 Mechanic-scenario PR selection** | Scenarios run on every relevant PR (§10.3) | none; owner: this epic (lane contract), delivered via a CI change |
-| **R3 SimQ skip visibility** | Anchor tests report `skipped-no-data` visibly | owner: SimQ; **not on the core-RPG critical path** |
-| **M0b Post-repair baseline** | Same measures after R1 + R2; scope changes documented | R1, R2 (R3 optional) |
+| **R3 SimQ skip visibility** | Anchor tests report `skipped-no-data` visibly | owner: SimQ; **not on the core-RPG critical path**; never a prerequisite for M0a/M0b |
+| **M0b Post-repair baseline** | Same measures after R1 + R2; scope changes documented. A *provisional post-R2 report* may be generated earlier and labelled as such; M0b **closes only when R1 is `verified`** | R1 `verified`, R2 (R3 **not** a prerequisite) |
 | **M1 Impact model v0** | §5 report + seeded-fault evaluation on the 5 changes | M0a; import graph (CI-generated, or the committed fallback); coverage contexts from the standing coverage job |
 | **M2 Workflow pilot** | §7.2 | R1 (trustworthy signals); M0a |
 | **M3a Pure-law evidence** | E2, E3, E4 as property / stateful tests + a narrow progression mutation baseline as supporting evidence | M0a; metadata for reporting |

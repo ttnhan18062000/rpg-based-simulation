@@ -266,8 +266,13 @@ FACTION, ECONOMY, PROGRESSION, SOCIAL, INFORMATION, WORLD, NARRATIVE;
 `docs/simulation_quality/quality_scoring_contract.md` §5). It compares grades against committed
 anchors in `tests/simulation_quality/fixtures/grade_anchors.json`. That file has **81 anchors, the same 81
 run keys as the registry**. `tests/simulation_quality/test_grade_regression.py` parametrizes
-**79** of them (61 fast ≤500t + 18 slow; no overlap). The 2 unreferenced keys are the
-`urban_political_selfmodel_*probe_seed42_200t` anchors [O].
+**79** of them (61 fast ≤500t + 18 slow; no overlap). The remaining 2
+(`urban_political_selfmodel_probe_seed42_200t`, `urban_political_selfmodel_execution_probe_seed42_200t`)
+are compared by **two named, non-parametrized tests** (`test_urban_political_selfmodel_cognition_isolated_grade_anchor`,
+`…_execution_isolated_grade_anchor`, `test_grade_regression.py:437, 479`). So all 81 anchors have
+exactly one comparison test: **81 anchor comparisons = 79 parametrized + 2 named** [O].
+*Correction:* revision b of this overview called the 2 probe keys "unreferenced"; that was
+wrong, because the scan only read the parametrize lists.
 
 Two separate stages, with different result types [O]:
 
@@ -283,12 +288,25 @@ Two separate stages, with different result types [O]:
 
 - **PR lane:** `tests/simulation_quality -m "not slow"` runs, but **the anchor-comparison tests
   `pytest.skip()` silently** because they read `data/calibration/`, which is gitignored and never
-  populated in CI [O]. **Historical drift figures [H], not re-measured:** a sweep recorded in
-  `tickets/done/TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS.md` (dated 2026-09-03) found
-  61/81 drifted. The same ticket's later fresh re-check found **64/81 failing the band+score check
-  (44/61 fast, 18/18 slow), 17 passing, 2 probe keys not run**. The CI comment quotes the earlier
-  61/81. No current measurement exists; the per-key split between staleness and non-determinism
-  was not triaged.
+  populated in CI [O]. **Historical drift figures [H], not re-measured.** Source:
+  `tickets/done/TCK-20260903-WORLD-COMPILE-REPORT-BASELINE-STALENESS.md` (ticket dated 2026-09-03).
+  These are two different measurements, with different denominators:
+
+  | Measurement | Date | Population | Executed | Pass | Fail | Not run | Source lines |
+  |---|---|---|---|---|---|---|---|
+  | A: tool-level sweep (`tools/evaluate_simq.py` per run key) | ≈2026-09-01 (the ticket calls it "2-day-old" at re-check) | 81 run keys | 79 | 18 (matched) | 61 (drifted) | 2 (`RUN_FAILED`: probe keys not resolvable via `--name`) | ticket ~l.66-68 |
+  | B: pytest re-check, **parametrized anchor tests only** | 2026-09-03 | 79 parametrized comparisons (61 fast + 18 slow) | 79 | 17 (fast) | 62 (44 fast + 18 slow) | 0 | ticket Test Summary ~l.199-208 |
+  | B: pytest re-check, **2 named probe tests** | 2026-09-03 | 2 | 2 | 0 | 2 (as reported) | — | same |
+
+  **Unresolved conflict:** the same ticket reports both named probe tests as *failed*, yet also says
+  the 2 probe keys "remain `RUN_FAILED` / out of scope". Those tests `pytest.skip()` when no
+  calibration report exists (`test_grade_regression.py:450-461`), so they must have compared
+  against reports of **unknown provenance**. The ticket's combined "64/81 fail, 17/81 pass" is
+  therefore **not used here**; only the parametrized figure (62/79 fail) is unambiguous. At the
+  file level the same run reported "64 failed, 25 passed" across all tests in
+  `test_grade_regression.py`, which includes non-anchor tests. The CI comment quotes
+  measurement A's 61/81. No current measurement exists; the per-key split between staleness and
+  non-determinism was not triaged.
 - **Drift lane:** `simq-grade-drift` runs `make simq-full-audit-full` on `main`, nightly, and on
   manual dispatch. It is `continue-on-error` (informational) by design, so the historical drift
   backlog does not block. **Its job conclusion reads `success` even when drift is found** (e.g. run
