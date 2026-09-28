@@ -160,8 +160,13 @@ one-tick-ahead write), not a representation mismatch. Treat them as two separate
 under one shared invariant, not as the same bug recurring. See §7 for the full account; it directly
 blocks natural-aging succession, not a hypothetical case.
 
-**Exit condition, stated exactly**: this is a named set of 5 (+1 unplanned) boundaries with explicit
-outcomes — 2 `DEFECT_CONFIRMED`, 3 `UNKNOWN_WITH_REASON`, 1 `CONFIRMED_FINE_WITHIN_SCOPE`. It does
+**Exit condition, stated exactly.** The named set of 5 planned boundaries resolved as:
+- 1 `DEFECT_CONFIRMED` (region ownership, already tracked);
+- 3 `UNKNOWN_WITH_REASON`;
+- 1 `CONFIRMED_FINE_WITHIN_SCOPE`.
+
+The 1 unplanned finding (the lifecycle-active race) is also `DEFECT_CONFIRMED`. That makes 6
+results, 2 of them confirmed defects. The audit does
 **not** claim the regional-sovereignty defect class is absent elsewhere in the engine. **Deliberately
 not checked this round** (named, not silently skipped): market/economy authoritative price or
 inventory fields; combat durability/HP fields across the three known dispatch paths (Part A already
@@ -473,7 +478,7 @@ registry/test checks), **player observation** (which legitimate traces a player 
 
 | Area | Related Rules (SCP-mapped only where noted) | Realization/integration evidence | Consequential gaps | Missing evidence | Player-facing-proof potential |
 |---|---|---|---|---|---|
-| 3.1 World substrate | Milestone A (`ID-*`/`TIME-*`/`AUTH-*`/etc.) — **not SCP-mapped**, Catalog-level only | `TCK-20260401-ACTION-CONVERGENCE`'s replay-determinism law, verified. Regional-sovereignty dual-writer bug confirmed live (verified current, this session, 2026-09-23/24). | Two confirmed authority-invariant violations with distinct mechanisms (region ownership; lifecycle-active race). | Bounded 5-boundary audit run (§3.1): 3 boundaries remain `UNKNOWN_WITH_REASON`; everything outside the named set stays `UNKNOWN`. | Indirect only — a player never sees this layer directly. |
+| 3.1 World substrate | Milestone A (`ID-*`/`TIME-*`/`AUTH-*`/etc.) — **not SCP-mapped**, Catalog-level only | `TCK-20260401-ACTION-CONVERGENCE`'s replay-determinism law, verified. Regional-sovereignty dual-writer bug confirmed live (verified current, this session, 2026-09-23/24). | Two confirmed authority-invariant violations with distinct mechanisms (region ownership; lifecycle-active race). | Bounded audit run (§3.1): 5 planned boundaries (1 defect, 3 `UNKNOWN_WITH_REASON`, 1 fine), plus 1 unplanned defect. Everything outside the named set stays `UNKNOWN`. | Indirect only — a player never sees this layer directly. |
 | 3.2 Autonomous world dynamics (lineage slice) | `SOC-01` (Batch 09) — **not SCP-mapped** | `succession`/`aging_death` mechanisms, `registries/mechanisms.yaml`, `state: done`, `verified: {instrument: scenario, verdict: observed}` — the strongest evidence tier this repo uses. Two individual death-to-heir transitions re-run and confirmed passing 2026-09-27 (`tests/simulation_quality/test_heir_inventory_transfer_corpus.py`, `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py`) — **evidence for those specific (artificially-staged) transitions, not a composed longer sequence**. | Whether individual, proven transitions compose into a *longer*, multi-generation observable sequence — **now `BLOCKED`, not merely untested (fourth round, §7.1)**: a real, reproducible dual-writer race on `entity.lifecycle.active` (`ApplyPath` vs. `LifecycleSystem.resolve_lifecycle`) prevents succession from firing at all for a death that arrives through ordinary per-tick aging rather than pre-staging. | Chronology-over-a-real-period, identity continuity across many ticks — `BLOCKED`, not fabricated, moot until §7.1's defect clears. | High on single-transition mechanism evidence. Single-hop player-facing feasibility is `BLOCKED` until an evidence producer and an in-world carrier exist (§7.2). Composed-sequence feasibility is gated on a confirmed defect fix (§7.1, §8). |
 | 3.3 Situated agency | `AGENCY-*`/`PERC-01`/`KNOW-01` — **SCP-mapped, all `PARTIAL`** (`registries/rule_classifications.yaml`, re-verified 2026-09-27) | Part A's own direct trace: Combat/Harvest/Quest-reward dispatch real; intent→payload edge `UNKNOWN`. | Shared upstream edge untraced across all three families. | Same. | Indirect — substrate beneath any future lens. |
 | 3.4 History and feedback (recognition) | `SOC-01`/`HP-*` — **not SCP-mapped** for the recognition-specific finding (the mapped `AGENCY`/`PERC`/`KNOW` rows above are Combat's own citations, not this area's) | Part B's own direct trace: `bonds`/`trust_history` real for direct participation; no producer for witnessed/hearsay. | The confirmed narrowest bottleneck in the whole arc. | Three-way primitive split still `OPEN` (§3.4). | Requires §3.4's own work to exist at all first. |
@@ -653,7 +658,7 @@ current repository this week.
 |---|---|---|---|---|---|---|---|---|
 | **A** Life/death and cross-tick continuity | 3.1, 3.2, 3.4 | engine apply; lifecycle/lineage | `SOC-01`, `HP-*` (Catalog; not SCP-mapped; inherited) | Single hop verified (staged); natural-aging defect reproduced (verified 09-27) | Deaths recorded with cause; lineage persists over ticks | Indirect, via B | Its natural-aging defect is ready for planning, scheduled by a trigger (plan §3) | Later |
 | **B** Situated evidence and observer contract | 3.5, 3.4 | perception/observation plus the probe event's domain | None (observation is outside Catalog scope by design) | Encounter `BLOCKED`, provenance `ABSENT` (verified 09-27) | — (design) | Enables every later player-inference proof | B0 result; owner memo decision 2 (probe event) | Later — its bounded precursor B0 is first wave |
-| **C** Authority-boundary verification program | 3.1 | one per boundary | `AUTH-*` (Catalog; not SCP-mapped) | 5-boundary audit run; 3 `UNKNOWN_WITH_REASON` (verified 09-27) | Declared resolution at named boundaries | None directly | None | **First wave: C1 (entity death) only.** Diplomacy and reputation are tracked outside the wave, with revisit triggers (plan §3) |
+| **C** Authority-boundary verification program | 3.1 | one per boundary | `AUTH-*` (Catalog; not SCP-mapped) | Audit of 5 planned boundaries run: 1 defect, 3 `UNKNOWN_WITH_REASON`, 1 fine; plus 1 unplanned defect (verified 09-27) | Declared resolution at named boundaries | None directly | None | **First wave: C1 (entity death) only.** Diplomacy and reputation are tracked outside the wave, with revisit triggers (plan §3) |
 | **D** Individual history propagation (witness/hearsay) | 3.4 | social memory / cognition | `SOC-01`, `HP-*` (inherited) | Direct-participation history real; witness/hearsay producer `MISSING` (inherited, Part B) | Uninvolved witnesses and hearsay recipients form subject-specific beliefs | High (the recognition proof) | For a player proof: B's contract. World side: none | Later |
 | **E** Institutional judgment and authority | 3.2, 3.4 | institutions | `IP-S17`, `INST-03` (inherited) | No per-(institution, individual) standing mechanism (registry checked 09-27) | Institutions hold judgments distinct from personal ones | Medium | Owner memo decision 3 | Later |
 | **F** Wealth/office conversion through declared edges | 3.2, 3.4 | economy; institutions | `ME-S12` (inherited) | No conversion mechanism registered (verified 09-27) | Wealth converts to leverage only through declared paths | Medium | None (independent of D) | Later |
@@ -661,13 +666,14 @@ current repository this week.
 | **H** Agency across action and non-action processes | 3.3 | action dispatch / agency | `AGENCY-*` (SCP-mapped, `PARTIAL`) | 3 dispatch paths; intent→payload edge `UNKNOWN` (inherited, Part A) | Coherent attempt semantics, including world processes | Indirect | None | Parked (`UNKNOWN`) |
 | **I** Magic and culture breadth | 3.2 | magic; culture | Batches 11B/12 (inherited) | Weakest realization; the magic perception channel is inert (inherited) | — | Later | — | Parked |
 | **J** Bounded mechanism reachability | 3.1, 3.2 | the domain that owns each selected mechanism | per mechanism | A bounded initial set with existing evidence of not acting: `calamity_intensity` and `regional_trauma` (contradicted by corpus runs; open tickets exist) and `aging_death`/`succession` (act only when ages are staged). This is **not** an engine-wide audit (§11 item 5) | Each of three named mechanisms (J1 `calamity_intensity`, J2 `regional_trauma`, J3 `aging_death`/`succession`) gets an explicit outcome on four levels; J1/J2 link their existing open tickets | Indirect | None | **First wave** |
-| **B0** Situated-observation feasibility check | 3.5 | perception/observation plus the selected event's domain | None (outside Catalog scope) | Perception has no production caller per a grep: `UNKNOWN` at runtime (§11 item 3) | — (feasibility) | Shows whether one ordinary-run event (default: a death) yields a legitimate, encounterable trace. Not a player-experience proof | None | **First wave** |
+| **B0** Situated-observation feasibility check | 3.5 | perception/observation plus the selected event's domain | None (outside Catalog scope) | Perception has no production caller per a grep: `UNKNOWN` at runtime (§11 item 3) | — (feasibility) | Reports separately whether a combat death in an ordinary run leaves a trace, and whether a situated observer can legitimately encounter it. Not a player-experience proof | None | **First wave** |
 
 **Proposed first wave: bounded reachability-first — J + B0 + C1** (owner memo decision 1). The
 detail is in `first_wave_plan.md`. External review supports this direction in principle.
 - **J** answers, for three named mechanisms, whether and how each acts in ordinary runs.
-- **B0** checks at runtime whether perception is live, and whether one ordinary-run event yields a
-  legitimately encounterable trace.
+- **B0** checks at runtime whether perception is live. For one combat death in an ordinary run, it
+  reports separately whether a trace exists and whether a situated observer can legitimately
+  encounter it.
 - **C1** resolves the entity-death authority boundary.
 
 Better behaviour in ordinary runs is a hypothesis this wave tests, not a promised result. The wave

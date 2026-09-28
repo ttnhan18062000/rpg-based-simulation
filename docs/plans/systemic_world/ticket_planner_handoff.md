@@ -7,9 +7,10 @@ tags: [architecture, documentation, roadmap]
 last_verified: "2026-09-28"
 ---
 
-# Systemic World First Wave — Ticket-Planner Handoff — PROPOSED / FOR REVIEW
+# Systemic World First Wave — Ticket-Planner Handoff
 
-**Status: `PROPOSED / FOR REVIEW`.** Usable once the owner accepts `first_wave_plan.md`.
+**Status: ready for ticket planning.** The first-wave scope was accepted on 2026-09-28 (owner memo
+decision 1). That acceptance covers ticket-planning scope only.
 Frontmatter `status: active` means "live working document", not approval.
 
 **Audience.** The ticket planner who decomposes approved epics into tickets for the implementation
@@ -38,7 +39,9 @@ Each ends with one exit claim. No fourth mechanism.
 - J2 `regional_trauma`: `tickets/todos/TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES.md`. This
   ticket already frames the problem as a region that records zero deaths, not a wrong threshold.
   That is a trigger-reachability question, and it may be legitimately conditional.
-- J3 `aging_death`/`succession`: no ticket; see Card R for the defect.
+- J3 `aging_death`/`succession`: no ticket. J3 **assesses reachability and classifies the finding
+  only**. Fixing the known natural-aging defect is outside this wave: see Card R, which is scheduled
+  only by the run-horizon decision or a specific proof dependency.
 
 **Verified evidence (sources):**
 - **Registry:** `registries/mechanisms.yaml` entries for `calamity_intensity`, `regional_trauma`,
@@ -71,15 +74,19 @@ Record each label change in the registry, with its evidence, not only in these d
 
 **Where it is defined:** plan §2, Epic B0.
 
-**Scope.** Two answers, both needed to close B0:
-1. Is perception live in production at runtime?
-2. For one selected consequential event, what legitimate, viewpoint-scoped evidence exists, and who
-   could encounter it?
+**Scope.** Three separately reported answers, all needed to close B0:
+1. **Perception**: is it live in production at runtime?
+2. **Trace existence**: which world-state changes or events does the specified event leave behind?
+3. **Situated encounterability**: can a specified co-located or bonded observer legitimately receive
+   any of those traces, from where, and when?
 
-This is not a player-experience proof.
+A trace that exists but cannot be encountered is a valid, separately reported outcome. This is not
+a player-experience proof.
 
-**Default event.** An ordinary-run death, such as a combat death. You may choose another event if
-it is better evidenced; record why.
+**Specified event.** A combat death in an ordinary corpus run: an entity killed in combat and
+recorded with death reason `COMBAT`. It does not depend on natural aging. If ordinary runs produce no
+combat death, the event question closes `BLOCKED_WITH_REASON`. Do not substitute another event; a
+replacement is a scoping decision returned to the roadmap.
 
 **Verified evidence (sources):**
 - `evidence/2026-09-27-inheritance-observer-encounter-findings.md`. Read-only inspection found:
@@ -95,8 +102,9 @@ it. Perception may run through another path.
 **Questions for the ticket planner / implementers:**
 1. At runtime, does any production path update what entities perceive about each other? If so,
    which one?
-2. For the selected event, what traces exist in world state or events that a co-located or bonded
-   entity could legitimately receive?
+2. Do combat deaths occur in an ordinary corpus run, and which traces does one leave (answer 2)?
+   Separately, which of those traces could a co-located or bonded entity legitimately receive
+   (answer 3)?
 3. Which surfaces are developer-only and must be excluded? Examples: event logs, inspectors, API
    presenters.
 4. Does any existing path leak hidden truth? For example, `cognition.motivation.named_intention`,

@@ -7,9 +7,11 @@ tags: [architecture, documentation, roadmap]
 last_verified: "2026-09-28"
 ---
 
-# Systemic World — First-Wave Epic Plan — PROPOSED / FOR REVIEW
+# Systemic World — First-Wave Epic Plan — SCOPE ACCEPTED FOR TICKET PLANNING
 
-**Status: `PROPOSED / FOR REVIEW`. Not owner-approved.** The frontmatter `status: active` is the
+**Status: scope accepted for ticket planning (owner memo decision 1, 2026-09-28).** This approves the
+wave's scope only. It is not approval of implementation results or of any player-experience proof.
+The whole-engine roadmap stays `PROPOSED / FOR REVIEW`. The frontmatter `status: active` is the
 repository's "live working document" value. The schema has no "proposed" value, and `active` does
 not mean approved. Only the visible status above does.
 
@@ -22,7 +24,7 @@ stays outside the wave. Companion documents in this folder:
 
 **What it is not.** A ticket list, or a prescription of code changes, schemas, tests or APIs. The
 ticket planner decomposes approved epics, and two implementation agents implement and verify them.
-Nothing here starts before the owner accepts this package.
+Ticket planning may start. Implementation follows the ticket planner's normal process.
 
 ---
 
@@ -79,6 +81,12 @@ the world intends, or carry an honest label describing when it does. "Rare" is n
 for them. The ticket planner reconciles their scope with the four-level outcome rather than opening
 new tickets.
 
+**J3 is assessment only.** J3 assesses the reachability of aging death and succession and
+classifies the finding on the four levels. **Fixing the known natural-aging defect is outside this
+wave.** It is scheduled only when the run-horizon decision (owner memo decision 5) or a specific
+proof needing natural aging deaths calls for it (§3). J3's exit claim can be complete while the
+defect is still unfixed.
+
 **Completion evidence (finite).**
 - Three exit claims, each with its four-level record and evidence source.
 - Registry labels corrected where needed, through the registry's normal process.
@@ -91,8 +99,9 @@ record `BLOCKED_WITH_REASON`, and return a scoping decision to the roadmap.
 
 **Outcome.** Two bounded answers:
 1. Is perception live in production at runtime?
-2. Does **one selected consequential event in ordinary runs** produce evidence that a situated
-   observer could legitimately encounter?
+2. For **one specified ordinary-run event**, a combat death (below), does the event leave a trace,
+   and can a situated observer legitimately encounter that trace? These are reported as two
+   separate answers.
 
 This is a feasibility finding, **not a player-experience proof**. It is the bounded precursor to
 portfolio Epic B, the full observer contract.
@@ -102,10 +111,16 @@ omniscient surface; private events may stay private.
 
 **Domain owners.** Perception/observation, plus the selected event's own domain.
 
-**Selected event.** Default: **an ordinary-run death**, such as a combat death. It is consequential,
-occurs within feasible run horizons (unlike old-age death), and already has one in-world effect: the
-location-independent grief trigger (roadmap §7.2). The ticket planner may choose a different
-consequential event if it is better evidenced, and must record why.
+**Specified event: a combat death in an ordinary corpus run.** This is an entity killed in combat
+and recorded with death reason `COMBAT`.
+- **Why this event:**
+  - it is consequential;
+  - it occurs within feasible run horizons;
+  - it does **not** depend on natural aging, whose defect and horizon problem sit outside this wave;
+  - it already has one in-world effect, the location-independent grief trigger (roadmap §7.2).
+- **If ordinary runs don't produce it:** if combat deaths prove not to occur in an ordinary corpus
+  run, B0's event question closes `BLOCKED_WITH_REASON`. The event is not silently substituted.
+  Choosing a replacement event is a scoping decision returned to the roadmap.
 
 **Known evidence.**
 - A grep found no production caller for the perception update phase. That is `UNKNOWN` at runtime
@@ -114,10 +129,16 @@ consequential event if it is better evidenced, and must record why.
   roadmap §7.2).
 
 **Completion evidence (finite).**
-- A runtime answer on perception: live, inactive, or `BLOCKED_WITH_REASON`.
-- For the selected event: the evidence that exists, who could encounter it and from where, what
-  stays hidden, and whether any path leaks hidden truth.
-- Each result labelled with its evidence level.
+Three separate answers, each labelled with its evidence level:
+1. **Perception**: live, inactive, or `BLOCKED_WITH_REASON`, established by a runtime run.
+2. **Trace existence**: which world-state changes or events the combat death leaves behind. This
+   is independent of whether anyone can perceive them.
+3. **Situated encounterability**: whether a specified observer, co-located or bonded, can
+   legitimately receive any of those traces, from where, and when. It also records what stays
+   hidden and whether any path leaks hidden truth.
+
+A trace can exist while no one can encounter it. That outcome is valid and must be reported as
+such, not merged into a single "evidence exists" claim.
 
 **Failure branch: perception inactive at runtime.**
 - Record it as an **engine foundation finding**.
