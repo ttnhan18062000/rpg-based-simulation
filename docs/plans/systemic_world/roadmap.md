@@ -291,7 +291,8 @@ paths).
   possible.
 - The lineage probe does not. However, no in-world carrier or provenance signal exists for it today
   (§7.2). So this area's nearest tractable job is the evidence-path and observer-contract design in
-  portfolio Epic B (§8), not a projection of an already-encounterable clue.
+  portfolio Epic B (§8), preceded by the first wave's feasibility check B0. It is not a projection
+  of an already-encounterable clue.
 
 This says only that lineage does not share recognition's dependency. It does not claim the projection question itself
 is answered; see §7 for exactly what remains open there.
@@ -336,10 +337,13 @@ Epic letters refer to the portfolio in §8. Each dependency below is a semantic 
 necessity, not a universal phase order.
 
 ```text
+Proposed first wave (§8): J reachability · B0 observation feasibility · C1 death boundary
+  B0 finds perception inactive ──> proposal: a perception-foundation epic (precedes B and D)
+
 Path 1 — no recognition propagation (lineage probe):
   C authority boundaries (parallel, reusable)
   A life/death continuity  ──>  [world-side proof complete on its own]
-  B observer contract (design) ──> B route built (future) ──> player inference on the probe (future)
+  B0 feasibility ──> B observer contract (design) ──> B route built ──> player inference on the probe
                                                           ──> closed-loop trajectory (future)
 
 Path 2 — recognition-dependent (individual history):
@@ -647,33 +651,31 @@ current repository this week.
 
 | Epic | Capability area(s) | Domain owner(s) | Rule support | Current evidence maturity | World outcome | Observer value | Independent prerequisites | Wave |
 |---|---|---|---|---|---|---|---|---|
-| **A** Life/death and cross-tick continuity | 3.1, 3.2, 3.4 | engine apply; lifecycle/lineage | `SOC-01`, `HP-*` (Catalog; not SCP-mapped; inherited) | Single hop verified (staged); natural-aging defect reproduced (verified 09-27) | Deaths recorded with cause; lineage persists over ticks | Indirect, via B | None | **First wave** |
-| **B** Situated evidence and observer contract | 3.5, 3.4 | perception/observation plus the probe event's domain | None (observation is outside Catalog scope by design) | Encounter `BLOCKED`, provenance `ABSENT` (verified 09-27) | — (design) | Enables every later player-inference proof | Owner memo decision 2 (probe event) | **First wave (design)** |
-| **C** Authority-boundary verification program | 3.1 | one per boundary | `AUTH-*` (Catalog; not SCP-mapped) | 5-boundary audit run; 3 `UNKNOWN_WITH_REASON` (verified 09-27) | Declared resolution at named boundaries | None directly | None | **First wave** |
+| **A** Life/death and cross-tick continuity | 3.1, 3.2, 3.4 | engine apply; lifecycle/lineage | `SOC-01`, `HP-*` (Catalog; not SCP-mapped; inherited) | Single hop verified (staged); natural-aging defect reproduced (verified 09-27) | Deaths recorded with cause; lineage persists over ticks | Indirect, via B | Its natural-aging defect is ready for planning, scheduled by a trigger (plan §3) | Later |
+| **B** Situated evidence and observer contract | 3.5, 3.4 | perception/observation plus the probe event's domain | None (observation is outside Catalog scope by design) | Encounter `BLOCKED`, provenance `ABSENT` (verified 09-27) | — (design) | Enables every later player-inference proof | B0 result; owner memo decision 2 (probe event) | Later — its bounded precursor B0 is first wave |
+| **C** Authority-boundary verification program | 3.1 | one per boundary | `AUTH-*` (Catalog; not SCP-mapped) | 5-boundary audit run; 3 `UNKNOWN_WITH_REASON` (verified 09-27) | Declared resolution at named boundaries | None directly | None | **First wave: C1 (entity death) only.** Diplomacy and reputation are tracked outside the wave, with revisit triggers (plan §3) |
 | **D** Individual history propagation (witness/hearsay) | 3.4 | social memory / cognition | `SOC-01`, `HP-*` (inherited) | Direct-participation history real; witness/hearsay producer `MISSING` (inherited, Part B) | Uninvolved witnesses and hearsay recipients form subject-specific beliefs | High (the recognition proof) | For a player proof: B's contract. World side: none | Later |
 | **E** Institutional judgment and authority | 3.2, 3.4 | institutions | `IP-S17`, `INST-03` (inherited) | No per-(institution, individual) standing mechanism (registry checked 09-27) | Institutions hold judgments distinct from personal ones | Medium | Owner memo decision 3 | Later |
 | **F** Wealth/office conversion through declared edges | 3.2, 3.4 | economy; institutions | `ME-S12` (inherited) | No conversion mechanism registered (verified 09-27) | Wealth converts to leverage only through declared paths | Medium | None (independent of D) | Later |
 | **G** Ecology/settlement dynamics | 3.2 | world dynamics / ecology | Batch 05 (inherited) | `regional_trauma`, `calamity_intensity` contradicted by corpus runs; open tickets exist (verified 09-27) | Environmental pressure actually changes the world | Medium | Existing open repair tickets first | Later |
 | **H** Agency across action and non-action processes | 3.3 | action dispatch / agency | `AGENCY-*` (SCP-mapped, `PARTIAL`) | 3 dispatch paths; intent→payload edge `UNKNOWN` (inherited, Part A) | Coherent attempt semantics, including world processes | Indirect | None | Parked (`UNKNOWN`) |
 | **I** Magic and culture breadth | 3.2 | magic; culture | Batches 11B/12 (inherited) | Weakest realization; the magic perception channel is inert (inherited) | — | Later | — | Parked |
-| **J** Bounded mechanism reachability | 3.1, 3.2 | the domain that owns each selected mechanism | per mechanism | A bounded initial set with existing evidence of not acting: `calamity_intensity` and `regional_trauma` (contradicted by corpus runs; open tickets exist) and `aging_death`/`succession` (act only when ages are staged). This is **not** an engine-wide audit (§11 item 5) | Each selected mechanism gets an explicit outcome on four separate levels (§11 item 5) | Indirect | None | **Candidate** — owner memo decision 1(b) |
+| **J** Bounded mechanism reachability | 3.1, 3.2 | the domain that owns each selected mechanism | per mechanism | A bounded initial set with existing evidence of not acting: `calamity_intensity` and `regional_trauma` (contradicted by corpus runs; open tickets exist) and `aging_death`/`succession` (act only when ages are staged). This is **not** an engine-wide audit (§11 item 5) | Each of three named mechanisms (J1 `calamity_intensity`, J2 `regional_trauma`, J3 `aging_death`/`succession`) gets an explicit outcome on four levels; J1/J2 link their existing open tickets | Indirect | None | **First wave** |
+| **B0** Situated-observation feasibility check | 3.5 | perception/observation plus the selected event's domain | None (outside Catalog scope) | Perception has no production caller per a grep: `UNKNOWN` at runtime (§11 item 3) | — (feasibility) | Shows whether one ordinary-run event (default: a death) yields a legitimate, encounterable trace. Not a player-experience proof | None | **First wave** |
 
-**First-wave selection — open (owner memo decision 1).** `first_wave_plan.md` details option (a),
-A + B + C. The planner's revised lean (2026-09-28, supported in principle by external review) is
-option (b), a bounded reachability-first wave:
-- Epic J, over its bounded initial set;
-- runtime verification of whether situated perception is live;
-- the natural-aging defect, kept as a confirmed correctness item, with its delivery priority set by
-  owner memo decision 5;
-- from Epic C, only the entity-death boundary (it shares death semantics with the J set). The
-  diplomacy and reputation checks are tracked independently, outside the wave.
+**Proposed first wave: bounded reachability-first — J + B0 + C1** (owner memo decision 1). The
+detail is in `first_wave_plan.md`. External review supports this direction in principle.
+- **J** answers, for three named mechanisms, whether and how each acts in ordinary runs.
+- **B0** checks at runtime whether perception is live, and whether one ordinary-run event yields a
+  legitimately encounterable trace.
+- **C1** resolves the entity-death authority boundary.
 
-The plan and the ticket-planner handoff are revised only after the owner selects.
-
-Under either option, the first wave is a proposed selection, not a delivered proof:
-- it establishes world correctness for its chosen scope;
-- it at most prepares player inference;
-- it leaves changed-life-trajectory proofs to the future.
+Better behaviour in ordinary runs is a hypothesis this wave tests, not a promised result. The wave
+also does not:
+- claim player inference or a changed life trajectory;
+- schedule the natural-aging fix, which waits for a trigger (plan §3);
+- run the diplomacy and reputation checks, which stay outside the wave with owners and revisit
+  triggers.
 
 Region ownership (FAC-010) stays on its own track.
 
@@ -755,7 +757,8 @@ Implementation detail is deliberately left out.
    - Several review rounds have produced documents, while the one real defect found so far came
      from running code.
 
-   *Decision point*: owner memo decision 1.
+   *Decision point*: owner memo decision 1. The proposed reachability-first wave (§8) tests
+   ordinary-run behaviour directly, as a hypothesis rather than a promised visible change.
 
 2. **Time scale versus run length is unaddressed.**
    - Lineage is the roadmap's main probe for persistent history.
@@ -777,9 +780,10 @@ Implementation detail is deliberately left out.
    - Perception could run through another path that a grep does not reveal, so this is not yet a
      finding.
 
-   *Owner*: a runtime verification item inside the first wave under memo decision 1(b); otherwise
-   the Epic B design owner. If perception is confirmed inactive at runtime, record that as an engine
-   foundation finding. Grep alone never establishes it.
+   *Owner*: first-wave Epic B0, the situated-observation feasibility check. If perception is
+   confirmed inactive at runtime, record that as an engine foundation finding, and propose a separate
+   perception-foundation epic with its dependency implications. The wave is not expanded. Grep alone
+   never establishes this finding.
 
 4. **There is no route to player-inference evidence yet.**
    - A blinded proxy reviewer can give *formative* evidence, which is useful for design and labelled
@@ -811,8 +815,10 @@ Implementation detail is deliberately left out.
      - *registry label corrected*;
      - `BLOCKED_WITH_REASON`.
    - Expanding the set is a separate, later decision; J does not become an engine-wide audit.
+   - J's set is exactly J1 `calamity_intensity`, J2 `regional_trauma` and J3 `aging_death`/
+     `succession`. J1 and J2 link their existing open tickets, which are not duplicated.
 
-   *Decision point*: owner memo decision 1(b).
+   *Decision point*: owner memo decision 1.
 
 6. **Governance overhead.** This track spans several authorities: the Catalog, the SCP, the mechanism
    registry, the parity ledger, this roadmap and its companions, and multiple planning sessions.

@@ -4,242 +4,201 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-09-27"
+last_verified: "2026-09-28"
 ---
 
 # Systemic World — First-Wave Epic Plan — PROPOSED / FOR REVIEW
 
 **Status: `PROPOSED / FOR REVIEW`. Not owner-approved.** The frontmatter `status: active` is the
 repository's "live working document" value. The schema has no "proposed" value, and `active` does
-not mean approved; only the visible status above does. A schema correction is proposed separately.
+not mean approved. Only the visible status above does.
 
-**What this document is.** The epic-level plan for the first wave recommended by
-`docs/plans/systemic_world/roadmap.md` §8. It defines epics, their outcomes and boundaries,
-cross-epic dependencies, proof gates, and failure branches.
+**What this document is.** The epic-level first-wave plan for the direction proposed in
+`roadmap.md` §8: a **bounded reachability-first** wave (owner memo decision 1). It defines epics,
+their outcomes and boundaries, cross-epic dependencies, proof gates, failure branches, and what
+stays outside the wave. Companion documents in this folder:
+- `ticket_planner_handoff.md`: one card per item, for the downstream ticket planner;
+- `owner_decision_memo.md`: owner-level choices only.
 
-**What it is not.** It is not a ticket list and prescribes no code change, schema, test file or API.
-A separate ticket planner decomposes approved epics into tickets, and two implementation agents
-implement and verify them. Handoff material is in `ticket_planner_handoff.md`; genuine owner choices
-are in `owner_decision_memo.md` (both in this folder). Nothing here starts before the owner reviews
-this plan.
+**What it is not.** A ticket list, or a prescription of code changes, schemas, tests or APIs. The
+ticket planner decomposes approved epics, and two implementation agents implement and verify them.
+Nothing here starts before the owner accepts this package.
 
 ---
 
-## 1. The four proof claims, and what this wave does with each
+## 1. What the first wave claims
 
-| # | Proof claim | First-wave treatment |
+The roadmap's four proof claims, and what this wave does with each:
+
+| # | Proof claim | This wave |
 |---|---|---|
-| 1 | **World correctness.** Real natural aging and succession, and bounded temporal composition, with no forced player surface. | **Establishes it**, for life/death continuity (Epic A) and for three named authority boundaries (Epic C). |
-| 2 | **Evidence-path design.** A plausible, domain-owned route from a world event to a legitimate, viewpoint-scoped clue. | **Establishes it at design level** (Epic B): a decision and a downstream ticket set, not a built path. |
-| 3 | **Player inference.** A blinded human reasons from only the legitimately encounterable clues. | **Prepares only.** `BLOCKED` today, because no clue is encounterable (roadmap §7.2). It becomes `PENDING` once a path is built, and is resolved only by a real human exercise. |
-| 4 | **Changed life trajectory.** A later opportunity or decision, and a durable outcome. | **Future work.** Not claimable from a death→heir transfer or a differentiated reaction. |
+| 1 | **World correctness.** | **Establishes bounded findings** for three named mechanisms (Epic J) and one authority boundary (Epic C1). Each finding says what does and does not act in ordinary runs, and why. |
+| 2 | **Evidence-path design.** | **Establishes feasibility only** (Epic B0): whether one ordinary-run event yields a trace a situated observer could legitimately encounter, and whether perception is live at runtime. The full observer-contract design stays in portfolio Epic B. |
+| 3 | **Player inference.** | **Not claimed.** At most, B0 identifies a clue a formative blinded-proxy review could later use (owner memo decision 6). |
+| 4 | **Changed life trajectory.** | **Future.** |
 
-A hidden foundation can be complete on world-side evidence without ever being surfaced to a player.
-Fair evidence is required only where player understanding is an intended outcome.
+**Hypothesis, not a promise.** Better behaviour in ordinary runs is a hypothesis this wave *tests*.
+An outcome of "legitimately rare or conditional" is a valid result, not a failure. Where a mechanism
+does act, visible change is a bonus, not an exit requirement.
 
 ---
 
 ## 2. First-wave epics
 
-### Epic A — Authoritative life, death and cross-tick world continuity
+### Epic J — Bounded mechanism reachability
 
-**Outcome.** Every death reached through ordinary world processes is recorded under one declared
-authority, with a cause and a time. Its lineage consequences follow and persist across later ticks.
-This is shown for a bounded two-hop sequence (predecessor → heir → next heir). It advances the north
-star's persistence and history claims: ordinary subjects accumulate consequential history without
-anyone watching.
+**Outcome.** Each of exactly **three named mechanisms** gets a finite, evidence-backed answer about
+whether and how it acts in ordinary runs. No other mechanism is in scope; expanding the set is a
+separate, later decision.
 
-**Semantic contract.** A persistent fact has one canonical authority, and a world effect never
-commits from a stale assumption without a declared resolution rule (roadmap §3.1). Lineage
-consequences are specified in the Mechanics Bible (`05_world_evolution.md`) and in roadmap §3.2.
+**Semantic contract.** A mechanism the registry calls `done` should either act in the conditions
+the world intends, or carry an honest label describing when it does. "Rare" is not "broken".
 
-**Domain owners.** Engine-core authoritative apply; lifecycle/lineage.
+**The four levels answered for each mechanism** (roadmap §11 item 5):
+1. **Trigger reachability**: can the precondition arise in ordinary play?
+2. **Feasible run horizon**: does it arise within a run length we can afford?
+3. **Actual state effects**: when triggered, does it change authoritative state as declared?
+4. **Observer evidence**: recorded if found, never required.
 
-**In scope**:
-- natural-aging death, meaning cause, time, and succession;
-- a regression check of other death causes;
-- one bounded composed two-hop run.
+**Exit claim per mechanism — exactly one of**:
+- acts in ordinary runs;
+- legitimately rare or conditional, with the condition stated;
+- defect (routed to separate work);
+- registry label corrected;
+- `BLOCKED_WITH_REASON`.
 
-**Out of scope**:
-- player surfacing;
-- natural frequency or population-wide emergence;
-- multi-generation arcs;
-- the closed-loop trajectory proof;
-- a general apply-path redesign.
+**The three mechanisms and the finite outcome sought for each:**
 
-**Known evidence** (by roadmap §3 layer):
+| # | Mechanism | Domain owner | Existing evidence | Linked existing ticket (not duplicated) | Outcome sought |
+|---|---|---|---|---|---|
+| J1 | `calamity_intensity` | world dynamics | `verified: {instrument: corpus_run, verdict: contradicted}`. The value stayed 0.0 in every region for a 5000-tick run | `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` (open) | Which level fails: the trigger never arising, the horizon, or the producer effect. Then one exit claim. |
+| J2 | `regional_trauma` | world dynamics | `contradicted`. In the one corpus world with a lair, the lair's region records zero deaths across 5000 ticks. Trauma accrues per death elsewhere | `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (open) | Whether this is a trigger-reachability condition (nobody goes there) that may be legitimately conditional, or a defect. Then one exit claim. |
+| J3 | `aging_death` / `succession` (natural path) | lifecycle / lineage | Acts only when ages are staged. Natural-aging death is recorded silently (runtime-reproduced defect, roadmap §7.1). The default lifespan is about 20M ticks; corpus runs are 1k–5k | None yet. The defect is tracked as a ready-for-planning item, not duplicated (§3) | Level 2: record that it is unreachable within the feasible horizon under current world-time semantics. Level 3: record that its state effect is defective when reached. **Fixing that defect is not part of J3's exit claim** (§3). |
 
-| Finding | Status | Evidence layer |
-|---|---|---|
-| Single death→heir hop works in staged state | Verified | Runtime realization, scenario |
-| Natural-aging death is recorded with no cause and no succession | Defect reproduced (seed 42) | Runtime realization, scenario |
-| Two-hop composition through ordinary aging | `BLOCKED` by the defect above | Cross-domain composition |
-| Starvation/sleep-debt death may be equally silent | `UNKNOWN` (inspection only) | Runtime realization |
-| Spawns created inactive may depend on today's behaviour | `UNKNOWN` (inspection only) | Runtime realization |
+**J1 and J2 are two of the three mechanisms.** Their existing tickets become Epic J's workstreams
+for them. The ticket planner reconciles their scope with the four-level outcome rather than opening
+new tickets.
 
 **Completion evidence (finite).**
-- A bounded run shows natural-aging death with a recorded cause and working succession, with no
-  silent inactive state.
-- A bounded two-hop run through ordinary ticks preserves identity, chronology, and at least one
-  carried-forward effect.
-- Verified and unverified death paths are named.
-- Registry evidence for `aging_death`/`succession` is updated.
+- Three exit claims, each with its four-level record and evidence source.
+- Registry labels corrected where needed, through the registry's normal process.
+- Defects routed to separate work, not fixed inside J.
 
-**Failure branches — return to the roadmap, do not expand scope.**
-- If resolving the defect turns out to require deciding what an inactive-at-spawn entity *means* in
-  the world, that is a semantic question for the roadmap/owner, not an engineering default.
-- If a second, different composition blocker appears, record it `BLOCKED_WITH_REASON` and re-plan.
+**Failure branch.** If a mechanism's investigation grows beyond answering its four levels, stop,
+record `BLOCKED_WITH_REASON`, and return a scoping decision to the roadmap.
 
-**Gate.** Composed-run verification happens only after natural-aging death is correct. That gate is
-internal to Epic A. **Epic A is never gated on Epic B.**
+### Epic B0 — Situated-observation feasibility check
 
-### Epic B — Situated evidence and observer contract (design)
+**Outcome.** Two bounded answers:
+1. Is perception live in production at runtime?
+2. Does **one selected consequential event in ordinary runs** produce evidence that a situated
+   observer could legitimately encounter?
 
-**Outcome.** An agreed, domain-owned route from one world event to a legitimate, viewpoint-scoped
-clue, together with an observer contract:
-- who could encounter the clue, where, and when;
-- what stays hidden;
-- what must never leak.
+This is a feasibility finding, **not a player-experience proof**. It is the bounded precursor to
+portfolio Epic B, the full observer contract.
 
-It is established first on one probe event and written to be reusable by later epics, such as
-individual history propagation. It advances the north star's situated-inference claim without
-claiming player understanding.
+**Semantic contract.** The epistemic principle (roadmap §2): viewpoint-scoped evidence only; no
+omniscient surface; private events may stay private.
 
-**Semantic contract.** The epistemic principle (roadmap §2):
-- every surface is a projection with a viewpoint;
-- no omniscient surface reveals hidden truth;
-- private events may stay private;
-- direct participation, uninvolved witnessing, and hearsay stay distinct (roadmap §3.4).
+**Domain owners.** Perception/observation, plus the selected event's own domain.
 
-**Domain owners.** Perception/observation, and the domain that owns the probe event (lifecycle/
-lineage by default).
+**Selected event.** Default: **an ordinary-run death**, such as a combat death. It is consequential,
+occurs within feasible run horizons (unlike old-age death), and already has one in-world effect: the
+location-independent grief trigger (roadmap §7.2). The ticket planner may choose a different
+consequential event if it is better evidenced, and must record why.
 
-**In scope**:
-- choose the probe event;
-- choose the minimum evidence-production and carrier route;
-- the observer contract;
-- a downstream ticket set for building it.
-
-**Out of scope**:
-- building the route;
-- any player-facing surface or renderer;
-- a permanent gameplay lens;
-- a global history, event or reputation feed;
-- the human exercise itself.
-
-**Known evidence** (roadmap §7.2, read-only inspection 2026-09-27):
-
-| Finding | Status | Evidence layer |
-|---|---|---|
-| The inheritance state change is real | Verified | Runtime realization |
-| No in-world carrier delivers another entity's inventory/equipment to an observer; the perception update phase has no production caller | `BLOCKED` | Situated evidence |
-| No inheritance-origin signal exists | `ABSENT` | Situated evidence |
-| Inference | `BLOCKED` | Player inference |
-| The existing grief trigger reaches trusted allies regardless of location — a possible epistemic-principle conflict | `UNKNOWN`; owner: §3.4 track | Situated evidence |
+**Known evidence.**
+- A grep found no production caller for the perception update phase. That is `UNKNOWN` at runtime
+  and must not be treated as a finding until a run confirms it.
+- For inheritance, no in-world carrier or provenance signal exists (read-only inspection,
+  roadmap §7.2).
 
 **Completion evidence (finite).**
-- A recorded design decision naming the probe event, the route, the owning domains, the viewpoint
-  scope and the non-leak list.
-- A downstream ticket set ready for the ticket planner.
-- An explicit player-side status: `BLOCKED` until the route is built, then `PENDING` until a human
-  exercise runs.
+- A runtime answer on perception: live, inactive, or `BLOCKED_WITH_REASON`.
+- For the selected event: the evidence that exists, who could encounter it and from where, what
+  stays hidden, and whether any path leaks hidden truth.
+- Each result labelled with its evidence level.
 
-**Failure branches.**
-- If the owner decides the default probe event (inheritance) should remain a private world fact
-  (owner memo, decision 2), Epic B re-selects a probe event whose understanding *is* intended. It
-  does not force inheritance to become visible.
-- If no domain-appropriate route is acceptable to its owners, return the objection to the roadmap.
+**Failure branch: perception inactive at runtime.**
+- Record it as an **engine foundation finding**.
+- Close B0 with that result, and propose a **separate perception-foundation epic** to the roadmap,
+  with its dependency implications. It would precede the full Epic B, individual history
+  propagation (D), and any player-inference claim.
+- Do **not** expand this wave.
 
-**Gate.** None inside the wave. Its built route (future) feeds the later player-inference proof.
+### Epic C1 — Entity-death authority boundary check
 
-### Epic C — Authority-boundary verification program (reusable foundation)
+**Outcome.** The entity-death boundary (`alive_set` written by combat and by hazard damage in the
+same tick) resolves to one of:
+- `CONFIRMED_FINE_WITHIN_SCOPE`;
+- `DEFECT_CONFIRMED` (routed separately);
+- `BLOCKED_WITH_REASON`.
 
-**Outcome.** Named cross-domain boundaries each resolve to `CONFIRMED_FINE_WITHIN_SCOPE`,
-`DEFECT_CONFIRMED` (routed separately) or `BLOCKED_WITH_REASON`. Each outcome is bounded and stated,
-never "no such defect exists in the engine."
+**Why this boundary is in the wave.** It shares death semantics with J3 and with B0's default
+event. Knowing whether same-tick deaths resolve under a declared rule keeps those findings honest.
 
-**Semantic contract.** The same authority invariant as Epic A, applied at boundaries where more than
-one producer writes a durable fact.
+**Semantic contract.** A persistent fact has one canonical authority, and concurrent effects
+resolve under a declared rule (roadmap §3.1).
 
-**Domain owners.** One per boundary, each **independently scheduled and independently complete**:
+**Domain owners.** Combat, and world dynamics.
 
-| Boundary | Owner | Current status (roadmap §3.1 audit) |
-|---|---|---|
-| Entity death, `alive_set` (combat vs hazard) | combat + world dynamics | `UNKNOWN_WITH_REASON` |
-| Faction diplomacy, `diplomatic_relations_set` (autonomous transition vs auto-alliance) | faction | `UNKNOWN_WITH_REASON` |
-| Public reputation, `reputation_set` (two producers) | social | `UNKNOWN_WITH_REASON`. A mechanical check only; the world meaning of `public_reputation` stays an open owner question |
-
-**Out of scope**:
-- fixing defects found (routed to separate work);
-- region ownership / FAC-010, which stays on its existing track;
-- boundaries not in the named set.
-
-**Completion evidence (finite).** Each boundary has one bounded outcome and reason, recorded back
-into roadmap §3.1. A harness limitation is never reported as fine. The program does not wait for all
-three before any one completes.
-
-**Gate.** None; no dependency on Epic A or B.
+**Completion evidence (finite).** One bounded outcome, with its reason and evidence source, recorded
+back in roadmap §3.1. A harness limitation is never reported as fine.
 
 ---
 
-## 3. Cross-epic dependencies
+## 3. Tracked outside the wave, with owners and revisit triggers
+
+| Item | Status | Owner | Scheduled when (revisit trigger) |
+|---|---|---|---|
+| **Natural-aging OLD_AGE/succession defect** (roadmap §7.1) | Confirmed at runtime; **ready for ticket planning**; not scheduled | lifecycle/lineage; engine apply | Any one of three triggers: (i) owner memo decision 5 chooses compressed world time, longer runs, or declared initial conditions for lineage claims; (ii) a first-wave or later proof needs natural deaths from aging; (iii) portfolio Epic A is scheduled. Its confirmed status alone does not give it first-wave priority. |
+| **Faction-diplomacy boundary** (`diplomatic_relations_set`) | `UNKNOWN_WITH_REASON` | faction | When faction or diplomacy code is next changed, or when an epic starts relying on diplomatic relations as input (e.g. portfolio E). |
+| **Public-reputation boundary** (`reputation_set`) | `UNKNOWN_WITH_REASON` | social | When owner memo decision 4 (`public_reputation`'s meaning) is decided, or when an epic reads or surfaces reputation (portfolio D or E). |
+| **Region ownership / FAC-010** | Known, tracked on its existing track | faction / world | Unchanged by this wave. |
+
+---
+
+## 4. Cross-epic dependencies
 
 ```text
-Epic A: natural-aging death correct ──internal gate──> composed two-hop run    (world side)
-Epic B: evidence route + observer contract (design)                             (player side, design)
-Epic C: boundary 1 · boundary 2 · boundary 3, each independent                  (foundation)
+Epic J  : J1 · J2 · J3, each independent          (world side: reachability findings)
+Epic B0 : perception runtime check ─┐
+          selected-event evidence  ─┴─ both needed for B0's exit   (player side: feasibility)
+Epic C1 : entity-death boundary                    (foundation)
 
-Hard edges inside the wave: only Epic A's internal gate.
-No world-side work (A, C) waits on Epic B.
-Future: Epic B's route built  ──> human inference exercise (claim 3)
-        Epic A + built route  ──> observer follow-on on the composed sequence
+No hard edges between J, B0 and C1. They can run in any order or in parallel.
+No world-side item waits on B0.
+
+Returned to the roadmap, not expanded in the wave:
+  B0 finds perception inactive    ──> proposal: a perception-foundation epic
+  J finds a defect                ──> routed as separate work
+  decision 5 or a proof trigger   ──> schedules the natural-aging defect (§3)
 ```
 
 ---
 
-## 4. Why these three epics, and the tradeoffs
+## 5. Why this shape, and the tradeoffs
 
-- **Lineage is one probe, not the organizing axis.** It is the only trajectory with a real
-  mechanism-level proof (roadmap §7.4). Two blockers make it useful precisely because each is a
-  general problem: a world-side authority defect (Epic A), and a missing situated-evidence route
-  (Epic B). Solving them produces reusable foundations for other domains.
-- **Epic C is foundation work that serves every domain.** Its three checks are cheap, independent,
-  and directly answer §3.1's open enforcement question.
-- **Alternative first waves considered.**
-  - Individual history propagation (roadmap §3.4's witness/hearsay producer gap) is larger. It would
-    also need Epic B's observer contract, so it sits later.
-  - Wealth/office conversion lacks its declared conversion edges entirely (`ME-S12`), which makes
-    it a realization program rather than a first proof.
-- **The first-wave choice is open (owner memo decision 1).** This plan details option (a).
-  - Since it was written, the planner has leaned towards option (b), reachability-first. The reasons
-    are roadmap §11 items 1, 3 and 5: no visible payoff, a possible engine-level perception gap, and
-    "done" mechanisms that don't fire.
-  - If (b) is chosen, this plan is revised: Epic C stays, perception verification moves in, and
-    Epics A and B move later.
-  - Separately, Epic B's probe event depends on memo decision 2, and whether lineage can ever be
-    shown unstaged depends on decision 5.
-
----
-
-## 5. Candidate workstreams (historical labels, for the ticket planner)
-
-Earlier drafts used milestone labels M1, M4a, M2, and M3a/b/c. They remain useful as candidate
-workstreams, not as a ticket list:
-- M1 and M4a belong to Epic A.
-- M2 belongs to Epic B.
-- M3a/b/c belong to Epic C.
-
-The earlier "M4b" (closed-loop groundwork) is future portfolio work, not a first-wave item. The
-ticket planner decides actual ticket granularity.
+- **It tests the "done but doesn't fire" pattern directly** (roadmap §11 item 5), on a finite set,
+  instead of building new capability on possibly inert mechanisms.
+- **It keeps one situated-observation check in the wave**, so the player-side direction is not
+  silently dropped. It uses an event that occurs in runs we can afford, rather than old-age death.
+- **The costs:**
+  - the lineage story is delayed;
+  - the natural-aging fix waits for a scheduling trigger;
+  - two authority checks move outside the wave, with owners and triggers.
+- **Rejected alternatives:** A + B + C (no visible test of real behaviour), and A + C (no
+  player-side progress at all). Both are recorded in the memo under decision 1.
 
 ---
 
 ## 6. Feeding results back
 
-- Verified epic outcomes are recorded in roadmap §3.1 (the authority audit) and §7 (the gate tables).
-- Mechanism-registry evidence changes go through the registry's normal process.
-- SCP mappings are added only through the SCP's own validation. None of the first-wave fields is
-  currently SCP-mapped, and mapping coverage is not a completion gate.
+- J's exit claims and C1's outcome are recorded in the roadmap: §3.1 (the audit) and §8 (the
+  portfolio evidence column).
+- B0's findings are recorded in §7.2 and §11 item 3.
+- Registry labels change only through the registry's own process. SCP mappings change only through
+  SCP validation.
 
-Unreviewed prototype results are never recorded as fixes. Implementer findings come back through
-the ticket planner.
+After this package is accepted, these documents change for new evidence, new decisions, or material
+corrections, not for further wording passes. Implementer findings arrive through the ticket planner.

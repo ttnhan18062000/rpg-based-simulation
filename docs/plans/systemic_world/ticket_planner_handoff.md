@@ -4,197 +4,221 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-09-27"
+last_verified: "2026-09-28"
 ---
 
 # Systemic World First Wave — Ticket-Planner Handoff — PROPOSED / FOR REVIEW
 
-**Status: `PROPOSED / FOR REVIEW`.** It becomes usable once the owner accepts
-`first_wave_plan.md`. Frontmatter `status: active` means "live working document", not approval;
-see the plan's header note.
+**Status: `PROPOSED / FOR REVIEW`.** Usable once the owner accepts `first_wave_plan.md`.
+Frontmatter `status: active` means "live working document", not approval.
 
 **Audience.** The ticket planner who decomposes approved epics into tickets for the implementation
-agents.
+agents. One card per first-wave item, plus one card for a ready-but-unscheduled item. Outcomes,
+contracts, boundaries and exit claims live in `first_wave_plan.md` §2–§3 and are not repeated here.
 
-**Scope of each card.** One card per first-wave epic. Each card gives the context needed to write
-tickets without re-deriving the architecture. Outcomes, contracts, boundaries and completion
-evidence live in `first_wave_plan.md` §2 and are not repeated here.
-
-**What this handoff does not contain**: classes to edit, data schemas, test filenames, or a chosen
-fix. Ticket granularity, technical investigation, acceptance tests and assignment are yours.
+**What this does not contain.** Classes to edit, schemas, test filenames, or a chosen fix. Ticket
+granularity, technical investigation, acceptance tests and assignment are yours.
 
 ---
 
-## Card A — Authoritative life, death and cross-tick world continuity
+## Card J — Bounded mechanism reachability (J1, J2, J3)
 
-**Where the epic is defined**: plan §2, Epic A.
+**Where it is defined:** plan §2, Epic J.
 
-**Invariant**: a death reached through ordinary world processes is recorded under one declared
-authority, with a cause and a time, and its lineage consequences follow.
+**Scope.** Exactly three mechanisms, each answered on four levels:
+1. trigger reachability;
+2. feasible run horizon;
+3. actual state effects;
+4. observer evidence (recorded, never required).
 
-**Domain owners and interfaces**:
-- engine-core authoritative apply, and lifecycle/lineage;
-- interfaces with every other death cause (combat, hazard, passive decay);
-- interfaces with anything that reads an entity's active/alive state.
+Each ends with one exit claim. No fourth mechanism.
 
-**Verified evidence (sources)**:
-- Natural-aging defect, runtime reproduction, 2026-09-27.
-  - Setup: seed 42, `PROD_SMALL`, two entities; the subject ages from 0 to max age 3 carrying one
-    item, and its heir is designated.
-  - Result: after 6 ordinary kernel ticks the subject is inactive from tick 3 onward, with no death
-    reason and no succession. It never recovers.
-  - Diagnosis: roadmap §7.1.
-- Single hop works when the starting state is staged:
-  - `tests/simulation_quality/test_heir_inventory_transfer_corpus.py`;
-  - `tests/integration/campaigns/test_lineage_dispatch_deterministic_kernel_tick.py`.
+**Existing tickets to adopt, not duplicate:**
+- J1 `calamity_intensity`: `tickets/todos/TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES.md`.
+- J2 `regional_trauma`: `tickets/todos/TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES.md`. This
+  ticket already frames the problem as a region that records zero deaths, not a wrong threshold.
+  That is a trigger-reachability question, and it may be legitimately conditional.
+- J3 `aging_death`/`succession`: no ticket; see Card R for the defect.
 
-  Both passed on 2026-09-27. Both stage age past the maximum, which is why they miss the defect.
-- The engine refuses mid-run state staging (`ReadOnlyError`), so composition evidence must come
-  from ordinary ticks.
+**Verified evidence (sources):**
+- **Registry:** `registries/mechanisms.yaml` entries for `calamity_intensity`, `regional_trauma`,
+  `aging_death` and `succession`. Their `verified` blocks were checked on 2026-09-27; the first two
+  are `contradicted` by corpus runs.
+- **Probe:** `evidence/2026-09-27-candidate-trajectory-search-findings.md`.
+- **J3's horizon arithmetic:** the default lifespan is 70 fantasy years, about 20M ticks
+  (`src/core/state.py:165`). Corpus runs are 1k–5k ticks.
 
-**Known gaps, by evidence level**:
-- Natural-aging silent death: runtime-confirmed.
-- Two-hop composition: `BLOCKED` by the above.
-- Starvation/sleep-debt death may be equally silent: `UNKNOWN`, from code inspection only.
-- Spawns created inactive may currently rely on the same code path to become active: `UNKNOWN`,
-  from code inspection only.
+**Questions for the ticket planner / implementers:**
+1. For J1 and J2, which of the four levels actually fails? Is the answer a condition, a defect, or a
+   mislabel?
+2. How does each linked ticket's existing scope map onto the four levels? Tell us where it doesn't
+   fit.
+3. What is the minimum evidence that answers level 2 (feasible horizon) without an open-ended long
+   run?
+4. For J3, can levels 2 and 3 be recorded from existing evidence plus the reproduction, without
+   fixing the defect?
 
-**Questions for the ticket planner / implementers**:
-1. Which path is the declared authority for old-age deactivation, and what is the resolution rule
-   when two paths disagree?
-2. Does the correction shift the tick on which death is recorded? If so, is that acceptable, and how
-   is it pinned?
-3. Is the inactive-spawn behaviour intended? If answering requires deciding what such an entity
-   means in the world, return it to the roadmap instead of choosing a default.
-4. Is the starvation path really silent at runtime? If so, fix it within Epic A or split it out.
-5. What is the minimum run length that makes the two-hop claim causally sufficient?
+**Contract-level risks.** Re-labelling a mechanism can change what other plans assume is live.
+Record each label change in the registry, with its evidence, not only in these documents.
 
-**Contract-level risks**: any change to how active/alive state is decided can alter:
-- combat and hazard death;
-- dirty-set/passive-decay consumers;
-- group/clan lifecycle phases, which read same-tick deaths;
-- economy vacancy signals, which react to deaths.
-
-Existing tests for these must pass unmodified, or any change must be justified explicitly.
-
-**Registry/SCP follow-through**:
-- add dated evidence notes to the `aging_death` and `succession` registry entries;
-- update the matching parity-ledger entry;
-- no SCP mapping exists for these mechanisms, so none is required.
-
-**Background, non-binding**:
-- The M1 ticket draft is summarized in the Appendix. It is unreviewed, and its framing of the fix is
-  not a roadmap decision.
-- Local branch `natural-aging-old-age-dispatch-fix-unreviewed` (not pushed) holds a prototype
-  change and a natural-aging scenario that failed 3/3 against current code. It was never run
-  against the suite and does not address the inactive-spawn question. Inspect or discard it; it is
-  not an approved fix.
+**Registry/SCP follow-through.**
+- Update each mechanism's `verified` evidence and any corrected label through the registry process.
+- None of the three is SCP-mapped; no SCP change is required.
 
 ---
 
-## Card B — Situated evidence and observer contract (design)
+## Card B0 — Situated-observation feasibility check
 
-**Where the epic is defined**: plan §2, Epic B.
+**Where it is defined:** plan §2, Epic B0.
 
-**Invariant**: players and in-world observers learn only through viewpoint-scoped evidence, and no
-surface leaks hidden world truth.
+**Scope.** Two answers, both needed to close B0:
+1. Is perception live in production at runtime?
+2. For one selected consequential event, what legitimate, viewpoint-scoped evidence exists, and who
+   could encounter it?
 
-**Domain owners and interfaces**:
-- perception/observation;
-- the probe event's own domain, which is lifecycle/lineage by default;
-- interfaces with cognition (beliefs, knowledge), social memory (witness vs hearsay), and any future
-  presentation layer — at contract level only.
+This is not a player-experience proof.
 
-**Verified evidence (sources)**, all read-only inspection on 2026-09-27 (roadmap §7.2):
-- The perceived-entity record carries only id, kind, position, salience and confidence
-  (`src/core/cognition.py:28-33`).
-- The perception update phase has no production caller, confirmed by repo grep.
-- The knowledge model assimilates only paid information facts (resources, recipes, danger, leads).
-- The inheritance transfer carries no origin marker
-  (`src/systems/lifecycle_systems/lifecycle.py:252-257`).
-- The only in-world effect of the death is the grief trigger for trusted allies
-  (`src/observability/event_extractor.py:1722-1762`). It is location-independent and carries the
-  death, not the inheritance.
+**Default event.** An ordinary-run death, such as a combat death. You may choose another event if
+it is better evidenced; record why.
 
-**Known gaps, by evidence level**:
-- Encounter: `BLOCKED` (no carrier).
-- Provenance: `ABSENT`.
-- Inference: `BLOCKED`.
-- Non-leakage: vacuous today; untestable until a carrier exists.
-- Grief-trigger epistemic fit: `UNKNOWN`, owned by the §3.4 track.
+**Verified evidence (sources):**
+- `evidence/2026-09-27-inheritance-observer-encounter-findings.md`. Read-only inspection found:
+  - the perceived-entity record has no item fields;
+  - the perception update phase has no production caller, per a grep;
+  - knowledge assimilates only paid information facts;
+  - the grief trigger is location-independent.
+- Roadmap §7.2.
 
-**Questions for the ticket planner / designers**:
-1. Which probe event? The default is inheritance, pending owner memo decision 2.
-2. What is the minimum domain-owned route from that event to a viewpoint-scoped clue? Inspection
-   surfaced two non-binding directions: a perception-side signal (which would require the perception
-   phase to run in production), and a witness-scoped event.
-3. Is the resulting clue ambiguous or event-specific, and is that sufficient for the claim it
-   supports?
-4. What must never leak? At minimum the private cognition/strategic fields named in roadmap §7.2.
-5. How does the observer contract stay reusable for witness/hearsay work later, without assuming
-   one storage shape for all three cases?
+**Evidence limits.** "Perception not live" comes from a grep and is `UNKNOWN` until a run confirms
+it. Perception may run through another path.
 
-**Contract-level risks**:
-- Wiring perception into production may affect every consumer of perceived state, and performance.
-- Any event route must not become a global feed or an omniscient read.
+**Questions for the ticket planner / implementers:**
+1. At runtime, does any production path update what entities perceive about each other? If so,
+   which one?
+2. For the selected event, what traces exist in world state or events that a co-located or bonded
+   entity could legitimately receive?
+3. Which surfaces are developer-only and must be excluded? Examples: event logs, inspectors, API
+   presenters.
+4. Does any existing path leak hidden truth? For example, `cognition.motivation.named_intention`,
+   `strategic.blockers`, or location-independent reads.
 
-**Registry/SCP follow-through**:
-- If the chosen route creates or activates a mechanism, register it through the normal process with
-  its verified tier.
-- Record the player-side status (`BLOCKED` → `PENDING`) in roadmap §7.3; never record it as a
-  mechanism verdict.
+**If perception is inactive at runtime:**
+- Record it as an engine foundation finding and close B0 with that result.
+- The roadmap then proposes a separate perception-foundation epic.
+- Do not expand B0 into building perception.
+
+**Contract-level risks.** Any runtime check must not turn on or change perception in production.
+This is observation of current behaviour only.
+
+**Registry/SCP follow-through.** If a perception mechanism's real state differs from its registry
+entry, correct it through the registry process. Record B0's findings in roadmap §7.2 and §11
+item 3.
 
 ---
 
-## Card C — Authority-boundary verification program
+## Card C1 — Entity-death authority boundary
 
-**Where the epic is defined**: plan §2, Epic C. Three independent items, each with its own owner and
-its own completion state.
+**Where it is defined:** plan §2, Epic C1.
 
-**Invariant**: a durable fact with more than one producer resolves under a declared rule.
+**Invariant.** Same-tick deaths from combat and hazard damage resolve under a declared rule.
 
-**Verified evidence (sources)**: roadmap §3.1's audit table.
+**Verified evidence (sources):**
+- `evidence/2026-09-27-authority-boundary-audit-findings.md`, boundary 2.
 - Precedence comments at `src/systems/world_systems/groups.py:99` and
   `src/engine/pipeline_phases/clan_lifecycle.py:19`.
-- Same-phase concatenation before one merge at `src/engine/pipeline.py:255-283`.
-- Two reputation producers:
-  - `src/domains/campaigns/social_memory.py:528`;
-  - `src/domains/campaigns/orchestrator.py:928`.
 
-**Known gaps**: all three boundaries are `UNKNOWN_WITH_REASON`. There is a plausible rule or
-ordering in each case, but no scenario exercises the collision.
+**Questions for the ticket planner / implementers:**
+1. Is a same-tick combat + hazard kill on one entity reachable in production, or only in a harness?
+2. What is the committed state and the recorded cause, and is the death processed exactly once?
+3. Does the commented precedence actually hold?
 
-**Questions for the ticket planner / implementers**:
-1. For each boundary, is a same-tick collision reachable in production, or only in a harness?
-2. What does the merge do, and is that a declared rule or incidental ordering?
-3. When a scenario genuinely cannot be staged, the outcome is `BLOCKED_WITH_REASON`, never "fine".
+**Exit.** One of:
+- `CONFIRMED_FINE_WITHIN_SCOPE`;
+- `DEFECT_CONFIRMED` (routed separately);
+- `BLOCKED_WITH_REASON`.
 
-**Contract-level risks**: none from the checks themselves. Any defect found is routed as separate
-work, not fixed inside the check.
+A harness limitation is never reported as fine.
 
-**Registry/SCP follow-through**: record each outcome as a dated addendum in roadmap §3.1. Region
-ownership (FAC-010) stays on its own track.
+**Registry/SCP follow-through.** Record the outcome as a dated addendum in roadmap §3.1.
 
-**Background, non-binding**: incomplete scenario drafts from stopped exploratory agents sit on the
-same local prototype branch. They are not evidence.
+**Background, non-binding.** An incomplete scenario draft from a stopped exploratory agent sits on
+the local branch `natural-aging-old-age-dispatch-fix-unreviewed`. It is not evidence.
+
+---
+
+## Card R — Natural-aging OLD_AGE/succession defect (ready; not scheduled in this wave)
+
+**Status.** Confirmed at runtime. Ready for ticket planning. **Schedule it only when a trigger in
+plan §3 fires:**
+- owner memo decision 5 makes natural aging relevant (compressed world time, longer runs, or
+  declared initial conditions);
+- a proof needs natural aging deaths;
+- portfolio Epic A is scheduled.
+
+**Invariant.** A death reached through ordinary aging is recorded under one declared authority,
+with a cause and a time, and its lineage consequences follow.
+
+**Verified evidence (sources):**
+- `evidence/2026-09-27-lineage-composition-probe-findings.md`.
+- Roadmap §7.1.
+- The runtime reproduction: seed 42, `PROD_SMALL`. The subject ages from 0 to max age 3 with a
+  designated heir. From tick 3 it is inactive, with no death reason and no succession, and it never
+  recovers.
+- The existing lineage tests stage age past the maximum, so they miss the defect.
+
+**Known gaps by evidence level:**
+- Silent natural-aging death: runtime-confirmed.
+- Starvation/sleep-debt death may be equally silent: `UNKNOWN`, inspection only.
+- Spawns created inactive may rely on the same code path to become active: `UNKNOWN`, inspection
+  only.
+
+**Questions for when it is scheduled:**
+1. Which path is the declared authority for old-age deactivation, and what is the resolution rule?
+2. Does the correction shift the tick on which death is recorded? How is that pinned?
+3. Is the inactive-spawn behaviour intended? If answering needs a world-meaning decision, return it
+   to the roadmap.
+4. Is the starvation path silent at runtime?
+
+**Contract-level risks.** Changing how active/alive state is decided can affect:
+- combat and hazard death;
+- passive-decay consumers;
+- group/clan lifecycle phases;
+- economy vacancy signals.
+
+**Registry/SCP follow-through.** Dated evidence notes on `aging_death`/`succession`, and the
+matching parity-ledger entry.
+
+**Background, non-binding.**
+- The M1 ticket draft is summarized in the Appendix. It is unreviewed.
+- Local branch `natural-aging-old-age-dispatch-fix-unreviewed` (not pushed) holds a prototype
+  change and a natural-aging scenario. The scenario failed 3/3 against current code. The prototype
+  was never run against the suite and does not address the inactive-spawn question. Inspect it or
+  discard it; it is not an approved fix.
+
+---
+
+## Outside this wave (tracked, no cards)
+
+The diplomacy and reputation authority checks and region ownership (FAC-010) are listed in plan
+§3, with owners and revisit triggers. They need no ticket-planning work in this wave.
 
 ---
 
 ## Appendix — M1 ticket draft (background only, unreviewed, not binding)
 
-An earlier session drafted an implementation ticket for Epic A's first workstream
-(`TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`). It was withdrawn from `tickets/todos/` because
+An earlier session drafted an implementation ticket for the natural-aging defect,
+`TCK-20260927-NATURAL-AGING-OLD-AGE-DISPATCH-RACE`. It was withdrawn from `tickets/todos/` because
 ticket creation belongs to the ticket planner; it remains in this branch's git history. In summary:
-- **Title**: "An entity that dies of natural aging is deactivated with no recorded cause and no
+- **Title:** "An entity that dies of natural aging is deactivated with no recorded cause and no
   succession."
-- **Tier**: proposed standard, P1.
-- **Acceptance criteria**:
-  1. Natural aging to max age yields an OLD_AGE record and heir effects.
-  2. No silent inactive tick.
-  3. Death timing pinned and documented.
-  4. Existing death, inheritance and passive-decay tests pass unmodified.
-  5. Verified and unverified death paths named.
-  6. Registry and parity evidence updated.
-- **Open questions**: the inactive-spawn behaviour, and the starvation sibling gap.
+- **Proposed classification:** standard tier, P1.
+- **Acceptance criteria:**
+  1. natural aging to max age yields an OLD_AGE record and heir effects;
+  2. no silent inactive tick;
+  3. death timing pinned and documented;
+  4. existing death, inheritance and passive-decay tests pass unmodified;
+  5. verified and unverified death paths are named;
+  6. registry and parity evidence updated.
+- **Open questions:** inactive-spawn behaviour; the starvation sibling gap.
 
-Use it or discard it; it carries no roadmap authority.
+Use it or discard it. It carries no roadmap authority.
