@@ -40,8 +40,9 @@ Each ends with one exit claim. No fourth mechanism.
   ticket already frames the problem as a region that records zero deaths, not a wrong threshold.
   That is a trigger-reachability question, and it may be legitimately conditional.
 - J3 `aging_death`/`succession`: no ticket. J3 **assesses reachability and classifies the finding
-  only**. Fixing the known natural-aging defect is outside this wave: see Card R, which is scheduled
-  only by the run-horizon decision or a specific proof dependency.
+  only**. Fixing the known natural-aging defect is outside this wave: see Card R. Because that fix
+  may land first, J3 findings name the engine commit they were observed on. The level-2 succession
+  claim is limited to default settings and the current corpus.
 
 **Verified evidence (sources):**
 - **Registry:** `registries/mechanisms.yaml` entries for `calamity_intensity`, `regional_trauma`,
@@ -168,11 +169,12 @@ the local branch `natural-aging-old-age-dispatch-fix-unreviewed`. It is not evid
 
 ---
 
-## Card R — Natural-aging OLD_AGE/succession defect (ready; not scheduled in this wave)
+## Card R — Natural-aging OLD_AGE/succession defect (ready; outside the wave)
 
-**Status.** Confirmed at runtime. Ready for ticket planning. **Schedule it only when a trigger in
-plan §3 fires:**
-- owner memo decision 5 makes natural aging relevant (compressed world time, longer runs, or
+**Status.** Confirmed at runtime. Ready for ticket planning. Its correctness does not depend on owner
+memo decision 5. **Schedule it when a trigger in plan §3 fires:**
+- the owner scopes it directly as an independent ticket, which may land ahead of J, B0 and C1;
+- owner memo decision 5 makes natural aging relevant (world-time semantics, run duration, or
   declared initial conditions);
 - a proof needs natural aging deaths;
 - portfolio Epic A is scheduled.

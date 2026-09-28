@@ -75,7 +75,7 @@ the world intends, or carry an honest label describing when it does. "Rare" is n
 |---|---|---|---|---|---|
 | J1 | `calamity_intensity` | world dynamics | `verified: {instrument: corpus_run, verdict: contradicted}`. The value stayed 0.0 in every region for a 5000-tick run | `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` (open) | Which level fails: the trigger never arising, the horizon, or the producer effect. Then one exit claim. |
 | J2 | `regional_trauma` | world dynamics | `contradicted`. In the one corpus world with a lair, the lair's region records zero deaths across 5000 ticks. Trauma accrues per death elsewhere | `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (open) | Whether this is a trigger-reachability condition (nobody goes there) that may be legitimately conditional, or a defect. Then one exit claim. |
-| J3 | `aging_death` / `succession` (natural path) | lifecycle / lineage | Acts only when ages are staged. Natural-aging death is recorded silently (runtime-reproduced defect, roadmap §7.1). The default lifespan is about 20M ticks; corpus runs are 1k–5k | None yet. The defect is tracked as a ready-for-planning item, not duplicated (§3) | Level 2: record that it is unreachable within the feasible horizon under current world-time semantics. Level 3: record that its state effect is defective when reached. **Fixing that defect is not part of J3's exit claim** (§3). |
+| J3 | `aging_death` / `succession` (natural path) | lifecycle / lineage | Acts only when ages are staged. Natural-aging death is recorded silently (runtime-reproduced defect, roadmap §7.1). The default lifespan is about 20M ticks; corpus runs are 1k–5k | None yet. The defect is tracked as a ready-for-planning item, not duplicated (§3) | Level 2: record whether it is reachable within the feasible horizon, a claim limited to default settings and the current corpus. Level 3: record its state effect when reached, as observed on the engine version under test. **Fixing that defect is not part of J3's exit claim** (§3). |
 
 **J1 and J2 are two of the three mechanisms.** Their existing tickets become Epic J's workstreams
 for them. The ticket planner reconciles their scope with the four-level outcome rather than opening
@@ -83,9 +83,10 @@ new tickets.
 
 **J3 is assessment only.** J3 assesses the reachability of aging death and succession and
 classifies the finding on the four levels. **Fixing the known natural-aging defect is outside this
-wave.** It is scheduled only when the run-horizon decision (owner memo decision 5) or a specific
-proof needing natural aging deaths calls for it (§3). J3's exit claim can be complete while the
-defect is still unfixed.
+wave.** Its correctness does not depend on owner memo decision 5, and it may be scoped as an
+independent ticket ahead of J, B0 and C1 (§3). J3's exit claim can be complete whether or not the
+defect has been fixed. J3 findings therefore name the engine commit they were observed on. J3 does
+not prescribe or assume the unreviewed prototype fix.
 
 **Completion evidence (finite).**
 - Three exit claims, each with its four-level record and evidence source.
@@ -189,7 +190,7 @@ back in roadmap §3.1. A harness limitation is never reported as fine.
 
 | Item | Status | Owner | Scheduled when (revisit trigger) |
 |---|---|---|---|
-| **Natural-aging OLD_AGE/succession defect** (roadmap §7.1) | Confirmed at runtime; **ready for ticket planning**; not scheduled | lifecycle/lineage; engine apply | Any one of three triggers: (i) owner memo decision 5 chooses compressed world time, longer runs, or declared initial conditions for lineage claims; (ii) a first-wave or later proof needs natural deaths from aging; (iii) portfolio Epic A is scheduled. Its confirmed status alone does not give it first-wave priority. |
+| **Natural-aging OLD_AGE/succession defect** (roadmap §7.1) | Confirmed at runtime; **ready for ticket planning**; outside the wave | lifecycle/lineage; engine apply | Its correctness does not depend on decision 5. Any one of four triggers schedules it: (i) the owner scopes it directly as an independent ticket, which may land ahead of J, B0 and C1; (ii) owner memo decision 5 chooses a world-time, run-duration or initial-conditions option that makes natural aging relevant; (iii) a first-wave or later proof needs natural deaths from aging; (iv) portfolio Epic A is scheduled. The unreviewed prototype fix is not prescribed. |
 | **Faction-diplomacy boundary** (`diplomatic_relations_set`) | `UNKNOWN_WITH_REASON` | faction | When faction or diplomacy code is next changed, or when an epic starts relying on diplomatic relations as input (e.g. portfolio E). |
 | **Public-reputation boundary** (`reputation_set`) | `UNKNOWN_WITH_REASON` | social | When owner memo decision 4 (`public_reputation`'s meaning) is decided, or when an epic reads or surfaces reputation (portfolio D or E). |
 | **Region ownership / FAC-010** | Known, tracked on its existing track | faction / world | Unchanged by this wave. |
@@ -211,7 +212,7 @@ No world-side item waits on B0.
 Returned to the roadmap, not expanded in the wave:
   B0 finds perception inactive    ──> proposal: a perception-foundation epic
   J finds a defect                ──> routed as separate work
-  decision 5 or a proof trigger   ──> schedules the natural-aging defect (§3)
+  owner, decision 5 or a proof    ──> schedules the natural-aging defect (§3)
 ```
 
 ---
