@@ -70,7 +70,10 @@ _EPIC_COVERED_ADJACENCY = [
 _CREATE_TICKETS_COVERED_ADJACENCY = [
     "await writeSidecar(events.length + 1, 'Comprehend', 'comprehend')\nconst comprehension = await agent(",
     "await writeSidecar(events.length + 1, 'Structure', 'structure')\nconst structured = await agent(",
-    "await writeSidecar(events.length + 1, 'Write', 'write-sequence')\n  await agent(",
+    # TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED: the agent() result is now captured
+    # (seqResult) and fed into a new pushEvent() call right after, closing the gap where
+    # write-sequence's own tool-call rows had no matching event to attribute them to.
+    "await writeSidecar(events.length + 1, 'Write', 'write-sequence')\n  const seqResult = await agent(",
     "await writeSidecar(events.length + 1, 'Link', 'link-epic')\n  const linkResult = await agent(",
 ]
 

@@ -120,6 +120,19 @@ None — hotfix tier.
   Close the `create-tickets` half of this ticket when that one resolves, or when a new
   `create-tickets` run comes back clean.
 
+**2026-09-28, `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED` closed — fix landed, this
+half still stays open.** That ticket's investigation confirmed two real code defects in
+`create-tickets.js` (silent `writeSidecar()` failures + no sidecar reset on any exit path,
+explaining the 09-23 run's stuck-at-seq-8/4-hour-tail symptoms; plus an independent missing
+`pushEvent()` for `write-sequence`) and fixed both. The 09-13 run's own seq/agent mismatch was
+confirmed as the known concurrent-session sidecar-sharing class — recorded, not re-solved, not
+fixable after the fact. **This ticket's own `create-tickets` half is deliberately NOT closed by
+that fix**: the fix cannot retroactively repair the two already-recorded historical runs' rows
+(both stay misattributed, permanently, per that ticket's own Out of Scope), and AC2 requires
+non-null values landing on the *correct* events, which can only be confirmed against a genuinely
+new `create-tickets` run made after the fix. Re-check this ticket the next time `create-tickets`
+actually runs for real.
+
 ## Test Summary
 (filled in during implementation)
 

@@ -150,8 +150,15 @@ const captureTs = async () => {
 // (.claude/current_run.<session_id>), so a writeSidecar()-then-agent() pattern there would let a
 // later fan-out iteration's sidecar write silently overwrite an earlier iteration's
 // still-in-flight attribution — a structural race, not fixable by per-item seq values alone.
+// TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED: previously `2>/dev/null || true`
+// swallowed BOTH the python3 -c script's stderr AND its real exit code unconditionally, so a
+// write failure at any call site (e.g. write-sequence, link-epic) was silently indistinguishable
+// from success -- the sidecar just stayed at its last successfully-written value with no signal
+// anywhere. Still never fails the workflow (the monitoring fail-open rule) -- only the write
+// itself is now checked, via an explicit exit-code marker this JS layer parses, and surfaced as a
+// `log()` WARNING instead of a bash-level `|| true` that discarded the information entirely.
 const writeSidecar = async (seq, phase, agentName) => {
-  await bash(
+  const out = await bash(
     `python3 -c "
 import json, sys, os
 data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]})
@@ -159,8 +166,11 @@ open('.claude/current_run', 'w').write(data)
 sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
 if sid:
     open('.claude/current_run.' + sid, 'w').write(data)
-" "${runId}" "${seq}" "${phase}" "${agentName}" 2>/dev/null || true`
+" "${runId}" "${seq}" "${phase}" "${agentName}" 2>&1; echo "WRITESIDECAR_EXIT:$?"`
   )
+  if (!(out || '').includes('WRITESIDECAR_EXIT:0')) {
+    log(`WARNING: writeSidecar failed for phase "${phase}" (seq ${seq}, agent "${agentName}") — tool-call attribution for this phase may be missing or misattributed to a stale sidecar value: ${(out || '').trim()}`)
+  }
 }
 
 const writeMonitoring = async (finalStatus) => {
@@ -172,8 +182,24 @@ const writeMonitoring = async (finalStatus) => {
   // coverage. Adding one would attribute this bookkeeping call's own tool calls to whatever
   // sidecar state the immediately-preceding phase last set, reintroducing the exact
   // TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION bug class.
+  //
+  // TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED: "no writeSidecar() call" alone does
+  // NOT fully avoid that bug class -- it just leaves the sidecar at whatever the last real phase
+  // set, so this call's own record_events.py/record_run.py invocations below were still silently
+  // inflating that phase's row count. implement-ticket.js's own writeMonitoring prompt (Step 0)
+  // actively CLEARS the sidecar before any of its own commands run, for exactly this reason;
+  // mirrored here with the same wording, this file's own event shape (no execution_id/provider/
+  // ticket_id fields).
   const result = await agent(
     `Write agent monitoring records for run "${runId}". This is bookkeeping — do NOT fail if writes error.
+
+Step 0 — clear the tool-tracking sidecar FIRST, before any other command in this call:
+  Run via Bash: printf '{}' > .claude/current_run
+  This must run before Steps 1-3 — otherwise this call's own Bash/python invocations below get
+  attributed to whatever (run_id, seq) was still active from the last real phase, inflating that
+  phase's tools.jsonl row count beyond its real tool-call footprint (same class as
+  TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION, mirroring implement-ticket.js's own fix).
+  Clearing first makes every command below correctly unattributed (run_id: null) instead.
 
 Step 1 — get current timestamp (run end time):
   Run via Bash: date -u +%Y-%m-%dT%H:%M:%SZ
@@ -850,7 +876,7 @@ if (hasIntraDeps) {
   ].join('\n')
 
   await writeSidecar(events.length + 1, 'Write', 'write-sequence')
-  await agent(
+  const seqResult = await agent(
     `Write the implementation sequence file for this batch.
 
 Run: mkdir -p ${outputFolder}
@@ -863,6 +889,13 @@ ${seqContent}
 Confirm: DONE or ERROR.`,
     { label: 'write-sequence', phase: 'Write' }
   )
+
+  // TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED: this writeSidecar() call above had
+  // no matching pushEvent() anywhere in this block -- write-sequence's own tool-call rows were
+  // permanently orphaned (no event at that seq for compute_tool_stats() to attribute them to),
+  // undercounting cost for every batch with intra-batch dependencies.
+  const seqText = (seqResult || '').toString()
+  pushEvent('Write', 'write-sequence', seqText.includes('ERROR') ? 'failed' : 'ok', seqText || `Wrote ${seqPath}`, null)
 
   log(`SEQUENCE.md written to ${seqPath} (${sortedIds.length} tickets in dependency order)`)
 }

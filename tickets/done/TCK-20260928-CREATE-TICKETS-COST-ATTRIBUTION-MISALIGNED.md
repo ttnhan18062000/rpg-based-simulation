@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED
-phase: open
+phase: done
 date: 2026-09-28
 tags: [agent-monitoring, data-quality]
 ---
@@ -19,7 +19,7 @@ for 4 hours after the workflow ended.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -142,8 +142,74 @@ None.
 
 ## Implementation Notes
 
+See `staging_artifacts/TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED/investigation.md`
+for full findings. Summary:
+
+- **Anomaly 1** (09-13 run): stale-script-version lead ruled out directly (`git diff` between the
+  two commits touching `create-tickets.js` around that date shows only a cosmetic truncation-marker
+  change to the sidecar/event logic). The phantom `"ticket-scoper"` agent literal at seq 3 is
+  unambiguous evidence of a different workflow's sidecar write landing in the same file — confirmed
+  as the class (same-session cross-workflow sidecar sharing, a variant of the same race
+  `create-tickets.js`'s own code already documents for its deliberately-unwired fan-out sites), but
+  the exact mechanism is unconfirmable: the historical sidecar's intermediate states are not
+  durable/logged anywhere. Recorded, not re-solved, per Out of Scope.
+- **Anomalies 2/3** (09-23 run): one real, confirmed code defect. `writeSidecar()`'s
+  `2>/dev/null || true` swallowed every failure unconditionally, and `create-tickets.js` had no
+  equivalent of `implement-ticket.js`'s sidecar-clear (its own comment claiming "mirrors
+  implement-ticket.js's own... exclusion" was incomplete — implement-ticket.js's writeMonitoring
+  actively *clears* the sidecar as "Step 0", not just omits its own writeSidecar call). Together
+  these meant any silent write-sequence/link-epic failure left the sidecar stuck at Structure's own
+  seq, absorbing everything downstream indefinitely (no rows at seq 9/10, 94 rows piled onto seq 8,
+  the 4-hour tail).
+- **Independent third defect found in the same pass**: `write-sequence`'s own `writeSidecar()` call
+  had no matching `pushEvent()` anywhere in its code block — its own tool-call rows were
+  permanently orphaned even when the write succeeded. Fixed alongside the above.
+- Fix: (1) `writeMonitoring()`'s own agent prompt now clears the sidecar as its own "Step 0",
+  mirroring `implement-ticket.js` exactly — since every real exit path already calls
+  `writeMonitoring()` immediately before its own `return`, this one change covers every exit path
+  without needing separate per-return reset logic; (2) `writeSidecar()` now captures an explicit
+  exit-code marker and warns via `log()` on failure instead of silently swallowing it (the shell
+  command itself still always exits 0 — the marker echo is unconditional — so the monitoring
+  fail-open rule holds); (3) `write-sequence` now pushes a matching event.
+- Updated `TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION`'s Implementation Notes: its
+  `create-tickets` half stays open (deliberately not closed by this fix) — the two historical runs'
+  rows can't be retroactively repaired, and AC2 needs a genuinely new post-fix run to confirm.
+
 ## Test Summary
+
+- New `tests/tools/test_create_tickets_sidecar_reset_and_failure_visibility.py` — 7 tests, all
+  confirmed to fail against the pre-fix source (`git stash` of just `create-tickets.js`, 6 of 7
+  failed; the 7th — exit-path coverage — was already true pre-fix and correctly unaffected), then
+  confirmed to pass after restoring the fix.
+- `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` — 1 adjacency-pin literal updated
+  to match the new `const seqResult = await agent(` assignment (mechanical consequence of the
+  write-sequence pushEvent fix, not a logic change).
+- `node --check .claude/workflows/create-tickets.js` — exit 0.
+- Regression check: `test_epic_create_tickets_sidecar_orchestrator.py`,
+  `test_step0_ts_orchestrator.py`, `test_workflow_meta_conformance.py`, `test_record_events.py`,
+  `test_retrieval_event_wrapper_single_source.py` — all pass (77 passed, 1 xfailed).
+- AC4: bare `pytest tests/tools/ -m "not slow and not extra_slow"`, run from the worktree — 3180
+  passed, 25 skipped, 28 deselected, 1 xfailed, 0 failed.
 
 ## Files Changed
 
+- `.claude/workflows/create-tickets.js` — `writeMonitoring()` clears the sidecar as Step 0;
+  `writeSidecar()` surfaces failures via `log()` instead of swallowing them; `write-sequence` now
+  pushes a matching event.
+- `tests/tools/test_create_tickets_sidecar_reset_and_failure_visibility.py` — new file, 7 tests.
+- `tests/tools/test_epic_create_tickets_sidecar_orchestrator.py` — 1 adjacency-pin literal updated.
+- `tickets/todos/TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION.md` — Implementation Notes
+  updated with the outcome; stays in `tickets/todos/`, `create-tickets` half still open.
+- `agent-monitoring/retro/RETRO-2026-W39.md` — regenerated (this ticket touches workflow prompts).
+- `docs/REGISTRY.yaml` — regenerated (`make docs-registry`); no manual edits.
+
 ## Completion Summary
+
+All 4 acceptance criteria met. Anomaly 1 (09-13) confirmed as the known concurrent-session sidecar
+class and recorded, not re-solved (unconfirmable beyond that without durable state that no longer
+exists). Anomalies 2/3 (09-23) confirmed as one real code defect — silent `writeSidecar()` failure
+plus no sidecar reset on any exit path — and fixed by mirroring `implement-ticket.js`'s own
+established "Step 0" sidecar-clear pattern exactly, plus making failures visible instead of
+silent. A third, independently-confirmed defect (write-sequence's missing event) found and fixed
+in the same pass. `TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION`'s `create-tickets` half
+deliberately stays open pending a genuinely new post-fix run. No known material gap left unstated.
