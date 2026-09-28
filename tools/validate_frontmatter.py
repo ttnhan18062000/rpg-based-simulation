@@ -331,6 +331,39 @@ def check_ticket_location_consistency(path, fm: dict) -> list[str]:
     return errors
 
 
+_DUPLICATE_BASENAME_ACTIVE_DIRS = ("todos", "inprogress")
+
+
+def find_closed_ticket_resurrections(tickets_root: Path) -> list[str]:
+    """Flag any real ticket basename (`TCK-YYYYMMDD-*.md`) that exists under both
+    `tickets/done/` and `tickets/todos/` or `tickets/inprogress/` (recursively) -- a closed
+    ticket's pre-close snapshot re-added into an active directory by an unrelated PR (see
+    TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS). Only done-vs-{todos,inprogress} is a
+    conflict; todos-vs-inprogress is not checked here. Returns [] if `tickets_root/done` is
+    absent."""
+    done_dir = tickets_root / "done"
+    if not done_dir.is_dir():
+        return []
+    done_by_name = {
+        md_file.name: md_file
+        for md_file in sorted(done_dir.rglob("*.md"))
+        if _TICKET_ID_DATE_PATTERN.match(md_file.stem)
+    }
+
+    errors = []
+    for active_dir_name in _DUPLICATE_BASENAME_ACTIVE_DIRS:
+        active_dir = tickets_root / active_dir_name
+        if not active_dir.is_dir():
+            continue
+        for md_file in sorted(active_dir.rglob("*.md")):
+            if not _TICKET_ID_DATE_PATTERN.match(md_file.stem):
+                continue
+            done_path = done_by_name.get(md_file.name)
+            if done_path is not None:
+                errors.append(f"{md_file.name}: found under both {done_path} and {md_file}")
+    return errors
+
+
 def validate_file(
     path: Path, content_type_override: str | None = None, registry: dict | None = None
 ) -> list[str]:

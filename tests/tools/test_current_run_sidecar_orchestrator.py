@@ -191,7 +191,12 @@ def test_scope_phase_has_sidecar_coverage():
     assert "if (ticketId) {" in pre_scope_region
     assert "open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))" in pre_scope_region
     assert '"${ticketId}" "${seqOffset + 1}" 2>/dev/null || true' in pre_scope_region
-    assert "printf '{}' > .claude/current_run 2>/dev/null || true" in pre_scope_region
+    # TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: the new-ticket branch's own clear
+    # used to be an inline `printf '{}' > .claude/current_run 2>/dev/null || true` -- shared-file
+    # only, a no-op for real attribution once a session_id is present (post_tool_hook.py never
+    # falls back to the shared file). Replaced with the shared clearSidecar() helper, which
+    # dual-writes to both the shared and the per-session-scoped file.
+    assert "} else {\n  await clearSidecar()\n}" in pre_scope_region
     assert "resolveSeqOffset(" in pre_scope_region
     assert "seqOffset = await resolveSeqOffset(ticketId)" in pre_scope_region
 
@@ -334,16 +339,31 @@ def test_schema_doc_documents_pause_resume_seq_collision_fix():
 # ---------------------------------------------------------------------------
 
 
-def test_writeMonitoring_step0_sidecar_clear_precedes_other_steps():
+def test_writeMonitoring_clears_sidecar_orchestrator_side_before_dispatch():
+    # TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: the former agent-prompt "Step 0"
+    # instruction only ever cleared the shared .claude/current_run file — a no-op for real
+    # attribution, since post_tool_hook.py reads exclusively the per-session-scoped file whenever
+    # a session_id is present (always, for real hooks). Replaced with an orchestrator-side
+    # clearSidecar() call, made via bash() (not inside the agent() prompt, whose own shell isn't
+    # guaranteed to see the same $CLAUDE_CODE_SESSION_ID), immediately before the agent dispatch.
     source = _read_workflow_source()
-    assert "Run via Bash: printf '{}' > .claude/current_run" in source
 
     monitoring_write_start = source.index("const writeMonitoring = async")
-    step0_idx = source.index("Step 0 — clear the tool-tracking sidecar FIRST", monitoring_write_start)
+    monitoring_write_label_idx = source.index("{ label: 'monitoring-write' }", monitoring_write_start)
+    monitoring_region = source[monitoring_write_start:monitoring_write_label_idx]
+
+    assert "Step 0 — clear the tool-tracking sidecar FIRST" not in monitoring_region, (
+        "the old agent-prompt Step 0 text must be gone, not left as a redundant no-op alongside "
+        "the real orchestrator-side clear"
+    )
+    clear_idx = monitoring_region.index("await clearSidecar()")
+    agent_idx = monitoring_region.index("const result = await agent(")
+    assert clear_idx < agent_idx, "clearSidecar() must run before the agent() dispatch, not after"
+
     step1_idx = source.index("Step 1 — get current timestamp", monitoring_write_start)
     step2_idx = source.index("Step 2 — build and write events", monitoring_write_start)
     step3_idx = source.index("Step 3 — write run record", monitoring_write_start)
-    assert step0_idx < step1_idx < step2_idx < step3_idx
+    assert step1_idx < step2_idx < step3_idx
 
     # The old inline TOOL_STATS-compute step is gone — record_events.py computes
     # tool_call_count/cost_proxy_score itself now (TCK-20260719-COST-PROXY-WRITE-PATH).
@@ -351,12 +371,11 @@ def test_writeMonitoring_step0_sidecar_clear_precedes_other_steps():
     assert "compute tool_call_count and cost_proxy_score per agent seq from tools.jsonl" not in source
     assert "Save the JSON dict result as TOOL_STATS" not in source
 
-    # The old trailing "Step 5 — clear..." label is gone — there is exactly one sidecar-clear
-    # instruction in writeMonitoring now, at Step 0, not a duplicate leftover at the end.
+    # The old trailing "Step 5 — clear..." label is gone too.
     assert "Step 5 — clear the tool-tracking sidecar" not in source
-    monitoring_write_label_idx = source.index("{ label: 'monitoring-write' }", monitoring_write_start)
-    monitoring_prompt_region = source[monitoring_write_start:monitoring_write_label_idx]
-    assert monitoring_prompt_region.count("printf '{}' > .claude/current_run") == 1
+    # No sidecar-clear literal remains INSIDE the agent prompt itself — the real clear now runs
+    # entirely on the orchestrator side, before this prompt string is even constructed.
+    assert "printf '{}' > .claude/current_run" not in monitoring_region
 
 
 # ---------------------------------------------------------------------------

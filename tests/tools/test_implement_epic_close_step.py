@@ -58,9 +58,72 @@ def test_epic_close_step_sets_body_status_done_not_epic_scoped():
 
 
 def test_epic_close_step_moves_file_to_tickets_done():
+    # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT: this pin moved from the literal
+    # 'mv "${discovery.epic_ticket_path}" "tickets/done/${epicId}.md"' (the caller-side variable
+    # names) to the shared buildEpicCloseInstructions() function's OWN parameter names, now that
+    # both the epic_id-mode block and folder mode's own epic-parent handling call one shared
+    # function instead of each hand-writing this mv. A function body's own template literal
+    # necessarily uses its own parameter names, not a caller's expression text, so this rename is
+    # a mechanical, unavoidable consequence of that extraction — not a change to what the check
+    # proves (a `mv` into a `tickets/done/...` destination still literally exists in the source).
+    # The two tests below independently confirm each call site still feeds the shared function the
+    # right values, closing the gap this rename alone would otherwise leave.
     text = _read()
-    assert 'mv "${discovery.epic_ticket_path}" "tickets/done/${epicId}.md"' in text, (
-        "epic-close step must physically move the epic ticket file into tickets/done/"
+    assert 'mv "${epicTicketPath}" "${moveDestination}"' in text, (
+        "epic-close step must physically move the epic ticket file into its moveDestination"
+    )
+
+
+def test_epic_id_mode_call_site_passes_a_real_move_destination():
+    # Unlike folder mode (see test_folder_mode_call_site_passes_no_move_destination below),
+    # epic_id mode's epic ticket has no surrounding folder of its own — this call site is the
+    # only thing that ever archives it, so it must pass a real tickets/done/<epicId>.md
+    # destination, not the falsy value folder mode uses to skip an individual mv.
+    text = _read()
+    assert (
+        "buildEpicCloseInstructions(epicId, discovery.epic_ticket_path, ticketIds.length, "
+        "`tickets/done/${epicId}.md`)"
+    ) in text, "epic_id-mode call site must pass a real tickets/done/<epicId>.md moveDestination"
+
+
+def test_folder_mode_call_site_passes_no_move_destination():
+    # TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT (agent-working-design review): if
+    # folder mode passed a real destination here the way epic_id mode does, the epic parent would
+    # land FLAT under tickets/done/ instead of staying inside the folder the very next step
+    # archives — stranding it outside both existing precedents
+    # (tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md,
+    # tickets/done/world-rendering-core/TCK-20260820-EPIC-WORLD-RENDERING-CORE.md) and CLAUDE.md's
+    # own "move the entire folder" rule. Passing a falsy 4th argument is what makes
+    # buildEpicCloseInstructions emit its "do NOT move this file by itself" branch instead.
+    text = _read()
+    idx = text.find('Step 3 — if "epic_parent" is not null')
+    assert idx != -1
+    call_region = text[idx:idx + 700]
+    assert "buildEpicCloseInstructions(" in call_region
+    call_start = call_region.find("buildEpicCloseInstructions(")
+    call_close_idx = call_region.find(")}", call_start)
+    assert call_close_idx != -1, "could not find the end of the folder-mode buildEpicCloseInstructions(...) call"
+    call_text = call_region[call_start:call_close_idx]
+    assert re.search(r",\s*null\s*$", call_text), (
+        "folder mode's call site must pass a falsy (null) moveDestination as its last argument — "
+        f"no flat mv of the parent, got call text: {call_text!r}"
+    )
+
+
+def test_folder_cleanup_closes_epic_parent_before_moving_the_whole_folder():
+    # Ordering proof (best-effort, static-text level — see this file's own module docstring on
+    # the disclosed limit of these pins): the epic-parent close instructions must be textually
+    # positioned, and thus dispatched, before the folder-level mv, since the parent's frontmatter
+    # (phase: done/status: historical) must already be correct by the time the surrounding mv
+    # carries it into tickets/done/<folder>/ — a real agent executing "Step 3... Step 4..." in
+    # order satisfies this; this test cannot itself execute the .js file (no JS runtime here).
+    text = _read()
+    close_call_idx = text.find('Step 3 — if "epic_parent" is not null')
+    folder_mv_idx = text.find('"tickets/done/${folderName}"')
+    assert close_call_idx != -1
+    assert folder_mv_idx != -1
+    assert close_call_idx < folder_mv_idx, (
+        "the epic-parent close step must be textually ordered before the folder-level mv"
     )
 
 
@@ -70,8 +133,13 @@ def test_epic_close_step_is_guarded_on_epic_id_mode():
     assert idx != -1
     guard_region = text[idx:idx + 1000]
     assert "batchStatus === 'DONE' && epicId" in guard_region, (
-        "the epic-close step must be guarded on epicId, not folder -- folder mode has no epic "
-        "ticket file at all (its own epic_ticket_path is always '')"
+        "the epic-close step must be guarded on epicId, not folder -- folder mode's own "
+        "epic_ticket_path is always '' because folder mode never looked for its epic parent, not "
+        "because the folder can't contain one (TCK-20260915-EPIC-MECHANISM-REGISTRY.md sat inside "
+        "tickets/todos/mechanism-registry/ until #209 archived it by hand). Folder mode now closes "
+        "its own epic parent via the folder-cleanup block below instead "
+        "(TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT) -- this guard staying on "
+        "epicId only means epic_id mode's file-known-ahead-of-time close path is a separate one"
     )
 
 
@@ -201,4 +269,52 @@ def test_epic_close_step_target_values_satisfy_the_real_location_validator(tmp_p
     body_match = re.search(r"^## Status\n(\S+)$", dest.read_text(), re.MULTILINE)
     assert body_match is not None and body_match.group(1) == "DONE", (
         "body ## Status must read DONE after the transformation, regardless of the starting value"
+    )
+
+
+def test_folder_mode_epic_parent_target_values_satisfy_the_real_location_validator(tmp_path):
+    """AC1 (TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT): folder mode's own variant
+    of the fixture-level check above -- the epic parent starts INSIDE a tickets/todos/<folder>/,
+    gets closed in place (frontmatter/body only, no individual mv -- Step 3's "do NOT move this
+    file by itself" branch when moveDestination is falsy), then the surrounding folder move
+    (a real `mv <folder> tickets/done/<folder>/`, simulated here) carries it to
+    tickets/done/<folder>/<EPIC-ID>.md. Confirms check_ticket_location_consistency() still passes
+    for that NESTED done/ path, not just the flat tickets/done/<EPIC-ID>.md path the other test
+    above covers -- `_ticket_directory()` only looks at the path segment immediately below
+    `tickets/`, so nesting one level deeper inside an archived folder must not matter, but this is
+    the one test that actually proves it rather than assuming it.
+    """
+    from validate_frontmatter import check_ticket_location_consistency, extract_frontmatter
+
+    todos_folder = tmp_path / "tickets" / "todos" / "synthetic-epic-folder"
+    done_folder = tmp_path / "tickets" / "done" / "synthetic-epic-folder"
+    todos_folder.mkdir(parents=True)
+
+    epic_path = todos_folder / "TCK-20260101-SYNTHETIC-EPIC.md"
+    epic_path.write_text(
+        _SYNTHETIC_EPIC_TEMPLATE.format(fm_status="active", fm_phase="open", body_status="EPIC_SCOPED")
+    )
+
+    # Step 2 of buildEpicCloseInstructions, applied in place (no mv -- moveDestination is falsy
+    # for folder mode's call site, per test_folder_mode_call_site_passes_no_move_destination).
+    text = epic_path.read_text()
+    text = re.sub(r"^status:.*$", "status: historical", text, count=1, flags=re.MULTILINE)
+    text = re.sub(r"^phase:.*$", "phase: done", text, count=1, flags=re.MULTILINE)
+    text = re.sub(r"^## Status\n\S+$", "## Status\nDONE", text, count=1, flags=re.MULTILINE)
+    epic_path.write_text(text)
+
+    # Step 4 of the folder-cleanup prompt: move the WHOLE folder (the epic parent rides along),
+    # not the epic parent individually.
+    done_folder.parent.mkdir(parents=True, exist_ok=True)
+    todos_folder.rename(done_folder)
+    dest = done_folder / "TCK-20260101-SYNTHETIC-EPIC.md"
+    assert dest.exists(), "the epic parent must have moved along with the rest of the folder"
+
+    fm = extract_frontmatter(dest.read_text())
+    assert fm is not None
+    assert fm.get("status") == "historical" and fm.get("phase") == "done"
+    errors = check_ticket_location_consistency(str(dest), fm)
+    assert errors == [], (
+        f"a nested tickets/done/<folder>/<EPIC>.md path must satisfy the real validator just like "
+        f"the flat tickets/done/<EPIC>.md path does, got: {errors}"
     )

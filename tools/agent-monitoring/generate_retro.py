@@ -55,15 +55,21 @@ from retrieval_cache import (  # noqa: E402
     PACKET_CACHE_CATEGORY,
 )
 
-RUNS_FILE = Path("agent-monitoring/data")
-EVENTS_FILE = Path("agent-monitoring/data")
-RETRO_DIR = Path("agent-monitoring/retro")
-DEFAULT_DB_PATH = Path("agent-monitoring-index/monitoring.db")
-DEFAULT_TOOLS_FILE = Path("agent-monitoring/data")
-
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
-_DEFAULT_TICKETS_ROOT = Path(__file__).resolve().parent.parent.parent
+# Anchored (not cwd-relative) so every constant below resolves to THIS checkout's own data
+# regardless of the caller's current directory (TCK-20260928-MONITORING-LOADER-CWD-RELATIVE-
+# PATHS) -- a script invoked with `python3 /path/to/checkout/tools/agent-monitoring/
+# generate_retro.py` from a different checkout's cwd must still read that same checkout's own
+# corpus, not whatever the caller's cwd happens to contain.
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_DEFAULT_TICKETS_ROOT = _REPO_ROOT
 _DEFAULT_SKILLS_DIR = _DEFAULT_TICKETS_ROOT / ".claude" / "skills"
+
+RUNS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
+EVENTS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
+RETRO_DIR = _REPO_ROOT / "agent-monitoring" / "retro"
+DEFAULT_DB_PATH = _REPO_ROOT / "agent-monitoring-index" / "monitoring.db"
+DEFAULT_TOOLS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
 
 
 def load_jsonl(path):

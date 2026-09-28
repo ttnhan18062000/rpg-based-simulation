@@ -42,6 +42,7 @@ detect_content_type = _vfm.detect_content_type
 validate_file = _vfm.validate_file
 validate_directory = _vfm.validate_directory
 check_ticket_location_consistency = _vfm.check_ticket_location_consistency
+find_closed_ticket_resurrections = _vfm.find_closed_ticket_resurrections
 
 STATUS_VALUES = _vfm.STATUS_VALUES
 LAYER_VALUES = _vfm.LAYER_VALUES
@@ -550,6 +551,63 @@ class TestTicketLocationConsistencyCorpus:
 
         errors = _corpus_location_errors(tmp_path / "tickets")
         assert any(str(drifted) in e for e in errors), errors
+
+
+# ---------------------------------------------------------------------------
+# Group 6a3 — Closed-ticket resurrection guard (TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS)
+#
+# A closed ticket's pre-close snapshot has twice been re-added to tickets/todos/ by an unrelated
+# PR (the mechanism-registry epic folder via #241; TCK-20260914-VENV-NAMING-CI-PARITY-SWAP via
+# #231 and #241), which then fires the epic-staleness hook on an already-finished epic. This
+# corpus test fails when any real ticket basename exists both under tickets/done/** and under
+# tickets/todos/** or tickets/inprogress/**. Deliberately not wired into done_checker_static in
+# this ticket -- find_closed_ticket_resurrections lives in validate_frontmatter.py so that can
+# happen later without relocating the function.
+# ---------------------------------------------------------------------------
+
+class TestClosedTicketResurrectionCorpus:
+    def test_real_tickets_tree_has_no_closed_ticket_resurrected_into_active_dirs(self):
+        errors = find_closed_ticket_resurrections(_REPO_ROOT / "tickets")
+        assert errors == [], (
+            f"{len(errors)} ticket basename(s) resurrected into an active tickets/ dir: {errors}"
+        )
+
+    def test_corpus_check_catches_a_resurrected_file(self, tmp_path):
+        # Negative-path proof, synthetic tmp_path corpus only -- never mutate the real tickets/
+        # tree to prove the check can fail.
+        tickets_root = tmp_path / "tickets"
+        done_dir = tickets_root / "done"
+        todos_dir = tickets_root / "todos"
+        done_dir.mkdir(parents=True)
+        todos_dir.mkdir(parents=True)
+        _write(
+            done_dir / "TCK-20260101-CLOSED.md",
+            _ticket_fm(ticket_id="TCK-20260101-CLOSED", status="historical", phase="done"),
+        )
+        resurrected = _write(
+            todos_dir / "TCK-20260101-CLOSED.md",
+            _ticket_fm(ticket_id="TCK-20260101-CLOSED", status="active", phase="open"),
+        )
+
+        errors = find_closed_ticket_resurrections(tickets_root)
+        assert any(str(resurrected) in e for e in errors), errors
+
+    def test_no_collision_when_basenames_differ(self, tmp_path):
+        tickets_root = tmp_path / "tickets"
+        done_dir = tickets_root / "done"
+        todos_dir = tickets_root / "todos"
+        done_dir.mkdir(parents=True)
+        todos_dir.mkdir(parents=True)
+        _write(
+            done_dir / "TCK-20260101-CLOSED.md",
+            _ticket_fm(ticket_id="TCK-20260101-CLOSED", status="historical", phase="done"),
+        )
+        _write(
+            todos_dir / "TCK-20260102-OPEN.md",
+            _ticket_fm(ticket_id="TCK-20260102-OPEN", status="active", phase="open"),
+        )
+
+        assert find_closed_ticket_resurrections(tickets_root) == []
 
 
 # ---------------------------------------------------------------------------

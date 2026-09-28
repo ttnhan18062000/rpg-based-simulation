@@ -150,8 +150,15 @@ const captureTs = async () => {
 // (.claude/current_run.<session_id>), so a writeSidecar()-then-agent() pattern there would let a
 // later fan-out iteration's sidecar write silently overwrite an earlier iteration's
 // still-in-flight attribution — a structural race, not fixable by per-item seq values alone.
+// TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED: previously `2>/dev/null || true`
+// swallowed BOTH the python3 -c script's stderr AND its real exit code unconditionally, so a
+// write failure at any call site (e.g. write-sequence, link-epic) was silently indistinguishable
+// from success -- the sidecar just stayed at its last successfully-written value with no signal
+// anywhere. Still never fails the workflow (the monitoring fail-open rule) -- only the write
+// itself is now checked, via an explicit exit-code marker this JS layer parses, and surfaced as a
+// `log()` WARNING instead of a bash-level `|| true` that discarded the information entirely.
 const writeSidecar = async (seq, phase, agentName) => {
-  await bash(
+  const out = await bash(
     `python3 -c "
 import json, sys, os
 data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]})
@@ -159,8 +166,32 @@ open('.claude/current_run', 'w').write(data)
 sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
 if sid:
     open('.claude/current_run.' + sid, 'w').write(data)
-" "${runId}" "${seq}" "${phase}" "${agentName}" 2>/dev/null || true`
+" "${runId}" "${seq}" "${phase}" "${agentName}" 2>&1; echo "WRITESIDECAR_EXIT:$?"`
   )
+  if (!(out || '').includes('WRITESIDECAR_EXIT:0')) {
+    log(`WARNING: writeSidecar failed for phase "${phase}" (seq ${seq}, agent "${agentName}") — tool-call attribution for this phase may be missing or misattributed to a stale sidecar value: ${(out || '').trim()}`)
+  }
+}
+
+// TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: clears BOTH sidecar files
+// writeSidecar() itself writes. tools/agent-monitoring/post_tool_hook.py reads ONLY the
+// per-session-scoped file (.claude/current_run.$CLAUDE_CODE_SESSION_ID) whenever the hook
+// payload carries a session_id — which real hooks always do — and never falls back to the
+// shared file (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE's own deliberate no-fallback rule, not
+// touched here). A clear that only empties the shared file is a silent no-op for real
+// attribution — the exact defect this ticket fixes (inherited from implement-ticket.js's own two
+// pre-existing shared-only clears, which this ticket also fixes). Runs via bash() on the
+// orchestrator side, not inside an agent() prompt — the dispatched agent's own shell is not
+// guaranteed to see the same $CLAUDE_CODE_SESSION_ID this orchestrator process does.
+const clearSidecar = async () => {
+  const out = await bash(
+    `printf '{}' > .claude/current_run
+if [ -n "$CLAUDE_CODE_SESSION_ID" ]; then printf '{}' > ".claude/current_run.$CLAUDE_CODE_SESSION_ID"; fi
+echo "CLEARSIDECAR_EXIT:$?"`
+  )
+  if (!(out || '').includes('CLEARSIDECAR_EXIT:0')) {
+    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${(out || '').trim()}`)
+  }
 }
 
 const writeMonitoring = async (finalStatus) => {
@@ -172,6 +203,17 @@ const writeMonitoring = async (finalStatus) => {
   // coverage. Adding one would attribute this bookkeeping call's own tool calls to whatever
   // sidecar state the immediately-preceding phase last set, reintroducing the exact
   // TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION bug class.
+  //
+  // TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED / TCK-20260928-SIDECAR-CLEAR-MISSES-
+  // SESSION-SCOPED-FILE: "no writeSidecar() call" alone does NOT fully avoid that bug class -- it
+  // just leaves the sidecar at whatever the last real phase set, so this call's own
+  // record_events.py/record_run.py invocations were still silently inflating that phase's row
+  // count. Calling the shared clearSidecar() helper here, orchestrator-side, BEFORE dispatching
+  // this agent, empties the actual file post_tool_hook.py reads (the earlier attempt at this fix
+  // put an agent-prompt "Step 0" instruction here that only cleared the shared file — a no-op,
+  // since the dispatched agent's own tool calls are attributed via the scoped file exactly like
+  // everything else).
+  await clearSidecar()
   const result = await agent(
     `Write agent monitoring records for run "${runId}". This is bookkeeping — do NOT fail if writes error.
 
@@ -850,7 +892,7 @@ if (hasIntraDeps) {
   ].join('\n')
 
   await writeSidecar(events.length + 1, 'Write', 'write-sequence')
-  await agent(
+  const seqResult = await agent(
     `Write the implementation sequence file for this batch.
 
 Run: mkdir -p ${outputFolder}
@@ -863,6 +905,20 @@ ${seqContent}
 Confirm: DONE or ERROR.`,
     { label: 'write-sequence', phase: 'Write' }
   )
+
+  // TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED: this writeSidecar() call above had
+  // no matching pushEvent() anywhere in this block. Correction (TCK-20260928-SIDECAR-CLEAR-
+  // MISSES-SESSION-SCOPED-FILE review): before this fix, write-sequence's own tool-call rows were
+  // NOT "permanently orphaned" in every batch as first written here -- when an epic_id IS linked,
+  // Link's own writeSidecar('Link', 'link-epic') call computes the SAME events.length + 1 seq
+  // value (no pushEvent ran in between to advance events.length), so the two phases SHARED one
+  // seq, and write-sequence's rows silently counted into the Link/link-epic event's own count
+  // instead. They were genuinely orphaned only in the no-epic-linked case (Link phase never runs,
+  // so nothing ever pushes an event at that shared seq). This pushEvent is still the right fix
+  // either way -- it gives write-sequence its own seq going forward, so it can never again share
+  // (and be silently absorbed into) Link's.
+  const seqText = (seqResult || '').toString()
+  pushEvent('Write', 'write-sequence', seqText.includes('ERROR') ? 'failed' : 'ok', seqText || `Wrote ${seqPath}`, null)
 
   log(`SEQUENCE.md written to ${seqPath} (${sortedIds.length} tickets in dependency order)`)
 }

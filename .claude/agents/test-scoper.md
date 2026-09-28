@@ -54,9 +54,22 @@ tools/agent_codex_<x>/*.py         -> tests/agent_codex_<x>/  (1:1 same-name mir
                                                                  -> tests/agent_codex_live_transport/)
 tools/agent_orchestration*/*.py    -> tests/agent_orchestration*/  (same 1:1 mirror pattern)
 tools/agent_replay*/*.py           -> tests/agent_replay*/     (same 1:1 mirror pattern)
+tools/delivery/*.py                -> tests/tools/            (NOT a same-name mirror)
+tools/mechanism_registry/*.py      -> tests/unit/tools/       (NOT a same-name mirror; the
+                                                                 same-name-directory fallback below
+                                                                 would wrongly send this to
+                                                                 tests/tools/ — there is no
+                                                                 tests/mechanism_registry/)
+tools/semantic_control_plane/*.py  -> tests/unit/tools/       (NOT a same-name mirror; same
+                                                                 fallback trap as mechanism_registry/
+                                                                 above)
+tools/perf/*.py                    -> tests/static/           (NOT a same-name mirror, and NOT
+                                                                 tests/unit/perf/ — that directory
+                                                                 tests src/perf/, a different tree)
 ```
 If a changed `tools/` path doesn't match any pattern above, check for a same-name directory
-under `tests/` before falling back to `tests/tools/`.
+under `tests/` before falling back to `tests/tools/`. This fallback does NOT apply to the four
+`tools/` subdirs listed above with an explicit non-mirror target — check those first.
 
 ## What to Do
 

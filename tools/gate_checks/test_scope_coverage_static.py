@@ -109,6 +109,19 @@ _SRC_UNIT_SUBSYSTEMS = frozenset({
     "worldmodules",
 })
 
+# tools/<subdir>/... -> a non-mirror test directory (checked before the flat-tools fallback below,
+# same as _TOOLS_SUBDIR_MIRROR_PREFIXES). Added by TCK-20260928-TEST-SCOPE-MAP-MISSES-TOOLS-
+# SUBPACKAGES after a real gap found reviewing #252: `tools/delivery/pr_render.py` had no required
+# test directory at all. Each of these four has exactly one owning test directory (surveyed via a
+# text-reference scan of tests/, re-verified directly against this branch's own tree) unlike
+# `_SRC_UNIT_SUBSYSTEMS`'s deliberately-excluded `ai`/`systems` above.
+_TOOLS_SUBDIR_EXPLICIT_MAP = {
+    "tools/delivery/": "tests/tools/",
+    "tools/mechanism_registry/": "tests/unit/tools/",
+    "tools/semantic_control_plane/": "tests/unit/tools/",
+    "tools/perf/": "tests/static/",
+}
+
 
 def expected_test_dirs_for(path: str) -> "str | None":
     """Pure mapping: changed file path -> expected test directory substring, or None if this
@@ -119,6 +132,9 @@ def expected_test_dirs_for(path: str) -> "str | None":
             if path.startswith(prefix):
                 mirror_name = prefix.split("/")[1]
                 return f"tests/{mirror_name}/"
+        for prefix, test_dir in _TOOLS_SUBDIR_EXPLICIT_MAP.items():
+            if path.startswith(prefix):
+                return test_dir
         if path.startswith("tools/agent-monitoring/") or path.startswith("tools/gate_checks/"):
             return "tests/tools/"
         if re.match(r"^tools/[^/]+\.py$", path):
