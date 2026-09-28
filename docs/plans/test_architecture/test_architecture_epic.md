@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture: Measurement Model and Direction
 
-**Status, drafted 2026-09-28. ALL DIRECTIONS DECIDED (D1–D9). No tickets exist yet.** Each `D#` section below
+**Status, drafted 2026-09-28. D1–D9 decided; D10 (core-RPG portfolio) pending. Core RPG is the first program (§1a). No tickets exist yet.** Each `D#` section below
 is a direction that needs a decision. Tickets are cut only after the directions are agreed, one
 child ticket per accepted direction (or per phase of one), under a future
 `tickets/todos/test-architecture/` epic folder.
@@ -28,39 +28,33 @@ and which are thin?
 The evidence below shows the bottleneck is **not how much code the tests run**. It is **what the
 tests assert**, and at which level they assert it.
 
-## 2 · Evidence snapshot (2026-09-27, `04f911110`)
+## 1a · Focus: core RPG first (user direction, 2026-09-28)
 
-| Signal | Value | Reading |
+The epic's first program is **core-RPG testing across many test types** (D10). Everything else
+is sequenced behind it or scoped to serve it. Core RPG follows the bottom-up rule
+(movement / combat / interaction → party / group → cognition) and Mechanics Bible chapters 01–03:
+
+| Core-RPG domain | Bible | Main code |
 |---|---|---|
-| Size | 1,484 test files · 11.1k tests · 252k test LOC vs 135k `src/` + 47k `tools/` LOC | Test code is about 1.4× the code it covers |
-| Shape | ~5.7k unit · ~0.8k integration · **44** `tests/mechanic_scenarios` | Inverted at the top: the tier that catches wiring defects is the thinnest |
-| Line coverage, fast tiers (`coverage run` over unit+integration+mechanic_scenarios+api+engine+simulation_quality, `not slow`) | **88%** of `src/` (domains 96%, engine 91%, core 92%) | Code is *executed*; execution is not the gap |
-| Escaped-defect class | ~30 closed + ~15 open tickets titled *never fires / never seeded / always empty / never wired* | Every one of these shipped with green tests and high coverage |
-| Parity-ledger traceability | **1,564 / 1,685 P0 entries (93%) have no `test_path`**; 28 cite missing files | The CLAUDE.md "P0 requires a passing test_path" rule is not enforced; P0 is 77% of all entries, so it no longer discriminates |
-| Property-based tests | 0 (Hypothesis is installed and unused) | Laws are proven on hand-picked seeds only |
-| Isolation | 7 `tests/unit/domains/progression/` tests fail in a combined run and pass alone | Order-dependent global state, hidden by CI's per-directory job split |
-| Lane fit | 80s and 60s tests in `tests/unit/tools/test_mechanism_state_caller_check.py` | Large tests sitting in the small-test lane |
-| Coverage tooling | `make test-cov` targets `tests_v2/` and `src_v2/`, which don't exist | Coverage has never been routinely measured |
-| Agent-infra share | `tests/tools` + `tests/unit/tools` + `tests/agent_*` ≈ 63k LOC (~25% of all test LOC) | Larger than the gameplay tests; see D6 |
-| Text-matching tests | 243 test files read `.md` docs; 152 match `src/`/`tools/` paths as text; ~38% of `tests/tools` | Structure-sensitive and brittle (Beck's Test Desiderata) |
+| Entity anatomy and derived stats | ch01 | `src/entities/`, `src/domains/progression/` (stats) |
+| Progression / XP / level-up | ch01 | `src/progression/`, `src/domains/progression/` |
+| Movement | ch02 | `src/engine/` (tactical movement), `src/domains/combat_engagement/` (pursuit) |
+| Combat resolution | ch02 | `src/domains/combat_engagement/`, `src/engine/` combat path |
+| Economy: harvest, craft, trade, inventory | ch03 | `src/systems/` (harvest, crafting, market, economy), `src/economy/` |
+| Quests / guild (interaction) | ch03 + buildings/guild doc | `src/systems/quest*`, `guild_system.py`, `src/quests/` |
 
-Per-domain verdicts from the four domain assessments:
+Cognition, social and strategy (ch04) come **after** this program. Of the other directions:
+D3, D4, D5.1 and D9 serve the core-RPG program directly. D1 and D2 are measured for the core-RPG
+domains first. D6, D7 (for non-core ledgers) and D8 follow afterwards.
 
-| Domain | Verdict | Key evidence |
-|---|---|---|
-| engine / core | Healthy | `tests/integration/kernel/test_determinism_suite.py`, `tests/integration/pipeline/test_mutation_boundary.py` prove real contracts |
-| worldassembly | Misdirected | 3.5× test/src ratio, but the weight is `test_corpus_diversity.py`, which is slow-lane only (`regression_policy.md` §12) |
-| config / replay | Under-invested | `tests/unit/config/` tests `feature_flags.py`, not `src/config/`; replay fingerprint is covered only indirectly |
-| combat_engagement / resource | Healthy | Real `WorldCompiler`+`Kernel` outcome proofs; conservation regressions exist |
-| strategic / social | Over-invested, misdirected | ~595 decision-scoring tests on hand-built state; 1 of 61 strategic files runs the kernel; ticket-appendage files (`test_opportunities.py`) |
-| quest / progression cross-domain | Under-invested | combat→XP and harvest→market each have one scenario; guild→quest→reward has none |
-| observability | Healthy | Largest package, tracked by `docs/testing/observability_coverage.md` |
-| simulation_quality | Misdirected | 32 of 48 files are single-mechanism `*_corpus.py` proofs, which contradicts SimQ's balance-only role |
-| api | Mostly healthy | `TestClient` throughout, except `tests/api/test_rest_parity.py` (subprocess + `sleep(3)`); no schema snapshot or raw-model guard |
-| frontend (game view) | Under-invested | 4 test files / 22 source files; `dashboard-frontend` has 15 of 19 |
-| tools: gate_checks, delivery, mechanism_registry | Healthy | 0.75–1.7× ratio on load-bearing gates |
-| tools: agent-monitoring | Over-invested | ~2.7× ratio, against the "proportionate agent-tooling checks" rule |
-| tools/tests: agent_codex_* | Dead weight | ~4.2k test LOC + 3k tool LOC for a pilot its status doc marks deferred and never activated (`docs/plans/archive/agent_infrastructure/current_codex_runtime_status_and_activation_plan.md`) |
+## 2 · Evidence (as-is state)
+
+The measured state of the test system (layout, CI lanes, coverage, failures, smell signals,
+escaped defects, parity traceability, authoring process, per-domain verdicts) lives in
+[`current_test_system_overview.md`](current_test_system_overview.md). The core finding it
+supports: **the suite executes most code (88% line coverage) but asserts weakly on whether core
+mechanics actually happen**. That is the pseudo-tested pattern [R6], visible as ~45 escaped
+*never fires* defects.
 
 ## 3 · Reference models
 
@@ -102,7 +96,7 @@ What this epic uniquely owns: the **suite-wide measurement model**, **assertion 
 
 ---
 
-## 5 · Directions to decide (D1–D9)
+## 5 · Directions to decide (D1–D10)
 
 Each direction lists options and a recommendation. **Decision:** is left blank for review.
 
@@ -236,16 +230,10 @@ converting `test_rest_parity.py` to `TestClient`, and game-view frontend tests.
 
 ### D9 · Test-authoring process (how tests get written), piloted on one narrow domain
 
-D1–D8 treat the suite's symptoms. D9 targets the process that produces them. How tests are
-authored today (measured from `.claude/workflows/implement-ticket.js` and `.claude/agents/`):
-
-| Current behaviour | Pattern it produces |
-|---|---|
-| `investigator` writes `test_plan.md` with categories *unit / integration / architecture guard* only; no scenario, property or outcome category, and no required test size or oracle | Inverted pyramid top; scorer tests built on hand-made `AuthoritativeState` |
-| "One new test per acceptance criterion"; `docs/testing/test_delta_budget.md` "bug fix = 1 regression test" | Per-ticket appendage files (`tests/unit/strategic/test_opportunities.py`, `tests/unit/social/test_social_memory.py`) |
-| `implementer` writes both the code and its tests | Tests confirm the implementation as written rather than the Bible law, so *never fires* defects ship with green unit tests |
-| `test-scoper` selects and runs tests; `test_scope_coverage_static` checks directory mapping | **No phase ever reviews test quality** |
-| Skills `test-driven-development`, `python-testing-patterns`, `backend-testing` exist | No agent or workflow references them |
+D1–D8 treat the suite's symptoms. D9 targets the process that produces them. The current
+authoring process (investigator's `test_plan.md` categories, per-AC and per-bug test budget, the
+implementer writing its own tests, no test-quality review, unused test skills) is described in
+[`current_test_system_overview.md` §5](current_test_system_overview.md#5--how-tests-are-written-today-authoring-process).
 
 **Pilot first, change the pipeline second.** Steps, all in one pilot domain:
 
@@ -280,17 +268,71 @@ over-engineering side.
 
 **Decision (D9 overall, 2026-09-28):** Pilot, then A → B → C. Step B uses an existing popular skill run as an advisory step, not a bespoke agent: the repo already installs `obra/superpowers`' `test-driven-development` skill (`skills-lock.json`), which ships `testing-anti-patterns.md` [R14]. That reference plus Beck's Test Desiderata [R9] and the Meszaros test-smell catalog [R13] form the review rubric.
 
+### D10 · Core-RPG test portfolio (many test types, one matrix)
+
+Each core-RPG domain gets a deliberate portfolio of test types, each chosen for what it proves,
+not for volume. The test types and their references:
+
+| # | Test type | Proves | Size [R1] | Reference |
+|---|---|---|---|---|
+| T1 | Example-based unit | A formula or rule gives the right value for chosen inputs | small | [R7] |
+| T2 | Property-based | A law holds for *all* generated inputs (bounds, monotonicity, conservation) | small | Hypothesis [R10] |
+| T3 | Stateful property | Any generated *sequence* of actions preserves invariants (inventory, gold, HP) | small/medium | Hypothesis `RuleBasedStateMachine` [R20] |
+| T4 | Mechanic scenario | One mechanic fires with the right effect in a minimal real world + kernel | medium/large | repo `tests/mechanic_scenarios/`; Sea of Thieves minimal-map *actor tests* [R22] |
+| T5 | Cross-domain outcome scenario | A chain works end to end (combat → XP → level-up; harvest → market → inventory) | large | [R8][R22] |
+| T6 | Deterministic simulation sweep | Many seeds × short runs with invariant monitors (`HardLawMonitor`) checked every tick; any failure replays exactly from its seed | large | FoundationDB-style DST [R21] |
+| T7 | Metamorphic | Relations between runs hold (same seed → same hash; ID permutation → same outcome) | large | [R11]; **after determinism is unparked** |
+| T8 | Golden master / characterization | A small canonical run's combat or economy log is unchanged unless deliberately re-approved | medium | Feathers characterization tests [R23] |
+| T9 | Mutation run | The tests above actually catch injected faults | tool | [R5][R12] |
+| T10 | Architecture guard | Durable-state writes go only through the authoritative path | small | existing `tests/architecture/` |
+
+**Portfolio matrix: current state → target** (✓ exists · ◐ partial · ✗ none; *current* from the
+overview doc and a scan of `tests/mechanic_scenarios/`):
+
+| Domain | T1 | T2 | T3 | T4 | T5 | T6 | T8 | T9 |
+|---|---|---|---|---|---|---|---|---|
+| Anatomy / derived stats | ✓ | ✗ → ✓ | – | ◐ (1) → ✓ | – | ◐ → ✓ | ✗ → ◐ | ✗ → ✓ |
+| Progression / XP | ✓ (leaky) | ✗ → ✓ | ✗ → ✓ | ✓ (3) | ◐ (1) → ✓ | ◐ → ✓ | ✗ → ◐ | ✗ → ✓ (D9 pilot) |
+| Movement | ✓ | ✗ → ✓ | – | **✗ (0) → ✓** | ◐ → ✓ | ◐ → ✓ | ✗ → ◐ | ✗ |
+| Combat | ✓ | ✗ → ✓ | – | ✓ (4) | ◐ → ✓ | ◐ → ✓ | ✗ → ✓ | ✗ → ✓ |
+| Economy / inventory | ✓ | ✗ → ✓ | **✗ → ✓** | **✗ (0) → ✓** | ◐ (1) → ✓ | ◐ → ✓ | ✗ → ✓ | ✗ → ✓ |
+| Quests / guild | ✓ | – | ✗ → ◐ | ◐ (1) → ✓ | **✗ → ✓** | ◐ → ✓ | ✗ | ✗ |
+
+T7 applies to all domains once determinism is unparked; T10 already exists and is unchanged.
+*T6 current* = the fast-lane `test_reproducibility` (one seed, 10 ticks) plus `HardLawMonitor`
+per-law tests; no multi-seed invariant sweep exists.
+
+**Also required so the portfolio actually runs on PRs:** widen the CI path filter (`PERF_RE` in
+`.github/workflows/test.yml`) or move `tests/mechanic_scenarios` to a job that always runs.
+Today a PR touching only `src/{systems,progression,entities,economy,quests}` skips the mechanic
+scenarios entirely (overview §3).
+
+- **A. Build the portfolio domain by domain in bottom-up order** (anatomy/progression → movement
+  → combat → economy → quests). Each domain batch adds its T2/T3/T4/T5 and one T8, then a T9 run.
+- B. Build by test type across all core domains (all T2 first, then all T4, ...).
+- C. Only fill the ✗ cells marked in bold (economy and movement scenarios, economy stateful,
+  quest chain).
+
+**Recommendation: A, starting with progression** (it is already the D9 pilot, so review and build
+reinforce each other), with **C's bold cells pulled forward** inside their domain batches because
+they are the largest gaps. B spreads effort thin and delays any domain reaching a complete
+portfolio.
+
+**Decision:**
+
 ---
 
-## 6 · Proposed sequencing (after decisions)
+## 6 · Proposed sequencing (core RPG first)
 
-1. **Measure:** D1 (scorecard + `make test-cov` fix) and D5.1 (isolation leak). Everything
-   after this is judged against the baseline. D9 pilot steps 1–3 (review-only) run alongside;
-   they feed D2's shape bands and D9 step 4's pipeline changes.
-2. **Strengthen:** D3 (property tests) and D4 (mutation baseline), which touch different files
-   from step 3 and can run in parallel with it.
-3. **Prune:** D6 and D5.2–5.4.
-4. **Traceability:** D7. **API:** D8's API half.
+1. **Enable:** fix the CI path filter so mechanic scenarios run on core-RPG PRs (D10); fix the
+   progression order leak (D5.1); fix `make test-cov` (D1).
+2. **Core-RPG program, domain by domain (D10, with D3/D4/D9 inside it):**
+   progression (D9 pilot review → template change → portfolio) → anatomy → movement → combat →
+   economy → quests. Each domain closes with a mutation run (D4) and a scorecard reading (D1/D2).
+3. **Then:** scorecard for the remaining domains (D1/D2), hygiene items D5.2–5.4, pruning (D6),
+   parity re-tier (D7), API contracts (D8).
+4. **Later:** cognition / social / strategy portfolios (second pilot: strategic), and T7
+   metamorphic tests once determinism is unparked.
 
 ## 7 · Out of scope
 
@@ -306,6 +348,7 @@ over-engineering side.
 3. ~~D7 re-tier~~ Resolved 2026-09-28: accepted.
 4. ~~Mutation tool~~ Resolved 2026-09-28: `mutmut`.
 5. ~~D9 pilot domain~~ Resolved 2026-09-28: progression.
+6. D10 build order: domain by domain (recommended), by test type, or gaps only?
 
 ## 9 · References
 
@@ -330,3 +373,7 @@ over-engineering side.
 | R17 | Foster et al., "Mutation-Guided LLM-based Test Generation at Meta" (ACH), FSE 2025 — https://arxiv.org/abs/2501.12862 | Agent-written tests guided by mutants (D9-C) |
 | R18 | Requirements traceability (ISO/IEC/IEEE 29148; test coverage items in ISO/IEC/IEEE 29119) — https://en.wikipedia.org/wiki/Requirements_traceability | Parity-ledger traceability (D7) |
 | R19 | Schemathesis, property-based OpenAPI testing — https://github.com/schemathesis/schemathesis · https://testdriven.io/blog/fastapi-hypothesis/ | API contract tests (D8) |
+| R20 | Hypothesis stateful testing (`RuleBasedStateMachine`) — https://hypothesis.readthedocs.io/en/latest/stateful.html · https://hypothesis.works/articles/rule-based-stateful-testing/ | Action-sequence invariants (D10 T3) |
+| R21 | Deterministic simulation testing — Will Wilson, "Testing Distributed Systems w/ Deterministic Simulation", Strange Loop 2014 — https://www.thestrangeloop.com/2014/testing-distributed-systems-w-slash-deterministic-simulation.html · https://antithesis.com/docs/resources/deterministic_simulation_testing/ | Seed sweeps with invariants (D10 T6) |
+| R22 | Rare, "Automated Testing of Gameplay Features in *Sea of Thieves*", GDC 2019 — https://www.gdcvault.com/play/1026042/Automated-Testing-of-Gameplay-Features · "Automated Testing at Scale in Sea of Thieves", Unreal Fest Europe 2019 — https://www.unrealengine.com/events/unreal-fest-europe-2019/automated-testing-at-scale-in-sea-of-thieves | Gameplay tests in minimal worlds (D10 T4/T5) |
+| R23 | Characterization / golden-master tests (Feathers, *Working Effectively with Legacy Code*) — https://en.wikipedia.org/wiki/Characterization_test · https://understandlegacycode.com/blog/characterization-tests-or-approval-tests/ | Canonical-run snapshots (D10 T8) |
