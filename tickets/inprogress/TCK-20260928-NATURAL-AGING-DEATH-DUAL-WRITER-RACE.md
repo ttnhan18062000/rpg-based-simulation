@@ -275,6 +275,35 @@ New tests added by this ticket, all passing post-fix and confirmed failing pre-f
 - `tests/integration/economy/test_economic_vacancy_signal.py` — 1 new test (existing 4 unmodified).
 - `tests/unit/entities/test_archetype_entity_factory.py` — 1 new test (existing 16 unmodified).
 
+**Decision, recorded with owner sign-off (not a self-granted exception).** The first Test-phase run
+of this ticket (scoped without `-m "not slow"`) reported `TESTS_FAILED`: 341 passed, 1 skipped, 1
+failed — `tests/integration/campaigns/test_catalog_entity_spawn_wiring.py::
+test_real_campaign_episode_event_stream_is_plausible_not_degenerate`. That result was reported
+truthfully rather than routed around (commit `245a0894b`, monitoring run
+`TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` `final_status=TESTS_FAILED`, events shard seq 8),
+and the pipeline held for a scope decision rather than deciding unilaterally.
+
+The ticket owner (`rpg-feature-planning`) then corrected the diagnosis: the test carries
+`@pytest.mark.slow` (`tests/integration/campaigns/test_catalog_entity_spawn_wiring.py:104`); CI's own
+Integration job already runs with `-m "not slow and not extra_slow"`, so this test has never run
+there; and the project's Testing Rule directs scoping to the domain or using
+`pytest -m "not slow"`. The prior scoped command's omission of that flag was the actual defect in
+that run, not a real regression — confirmed independently (not merely asserted) by re-running the
+identical scoped directory set with `-m "not slow"` added: **330 passed, 1 skipped, 12 deselected, 0
+failed**, arithmetic reconciling exactly with the prior run's 343 total. The test now correctly falls
+under the project's existing "Slow regression" CI job, which is red on `main` and parked by explicit
+user decision pending an engine re-architecture — a pre-existing, already-tracked state (see
+`docs/architecture/simulation_watchdog.md`/project decision record), not a new finding from this
+ticket. This is the same category, on the same footing, as the two long-run-timeout tests noted
+above.
+
+Because that job is red and parked, there is currently no clean pass/fail signal available for
+slow-marked tests in this area either way; this ticket does not claim the fix is proven safe against
+them, only that the unavailability of that signal predates this ticket and is not caused by it. The
+resumed Test phase (scoped run with `-m "not slow"`) is recorded in the same monitoring run at events
+shard seq 9 (`status: ok`), followed by Parity (seq 10, `ok`) and Verify (seq 11,
+`verdict: READY_TO_CLOSE`, 0 failing items).
+
 ## Files Changed
 - `src/engine/apply.py` — the fix (Step 2).
 - `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py` — new (Steps 1, 6).
