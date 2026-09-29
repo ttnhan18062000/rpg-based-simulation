@@ -402,6 +402,23 @@ def test_multiline_title_with_pipe_collapses_to_one_row(tmp_path):
     assert "\n" not in what_landed_lines[0]
 
 
+def test_render_title_collapses_multiline_title_whitespace():
+    """TCK-20260929-PR-RENDER-TITLE-NOT-WHITESPACE-COLLAPSED: render_title() must collapse a
+    ticket's raw multi-line `## Title` prose the same way _render_table_cell()/`## What landed`
+    already do -- a multi-line string is not a valid `gh pr create --title` value. Fails on the
+    pre-fix code (result contains a literal newline)."""
+    multiline_title = "Working-log consolidation reads pending shards from the script's own\ncheckout but appends the rows to the caller's cwd-relative CSV."
+    title = pr_render.render_title([{"title": multiline_title}], scope="observability")
+    assert "\n" not in title
+    assert title == (
+        "observability: Working-log consolidation reads pending shards from the script's own "
+        "checkout but appends the rows to the caller's cwd-relative CSV. (1 ticket)"
+    )
+    # AC2: no content lost.
+    for word in ("Working-log", "checkout", "CSV."):
+        assert word in title
+
+
 def test_no_write_side_effect(tmp_path):
     tickets_root = tmp_path / "tickets"
     tickets_root.mkdir()
