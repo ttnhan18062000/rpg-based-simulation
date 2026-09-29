@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER
-phase: open
+phase: done
 date: 2026-09-29
 tags: [process-improvement, workflows, create-tickets, ticket-scoper]
 ---
@@ -18,7 +18,7 @@ leads to `create-tickets` or `implement-epic` being offered, and both have almos
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -159,7 +159,8 @@ both workflows keep getting maintenance fixes without any runs.
 
 ## Related Stored Artifacts
 
-None.
+`stored_artifacts/TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER/` (investigation.md,
+plan.md, test_plan.md).
 
 ## Related Code Areas
 
@@ -179,8 +180,80 @@ None.
 
 ## Implementation Notes
 
+See `staging_artifacts/TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER/` (moved to
+`stored_artifacts/` at close) for the full investigation/plan/test_plan. Summary:
+
+- **Scope 1**: `tools/open_ticket_overlap.py`, new. `find_overlapping_open_tickets()` +
+  `main()`, mirroring `tools/epic_folder_status.py`'s shape (pure function, thin CLI, always
+  exits 0, JSON out). Reuses `tools/generate_registry.py::parse_body_section`/
+  `parse_related_code_areas` — no hand-rolled regex. Two signals, either fires a hit: exact
+  code-area path intersection, or >= 2 shared distinctive terms (lowercase, alnum, length >= 5,
+  small stopword list) between title+summary. Threshold justified by the signal-isolation tests
+  (a single shared term does not fire; two does) — chosen loose per this ticket's own Assumptions
+  ("prefer false positives to misses").
+- **Scope 2**: wired into all 3 sites, advisory only (hits never reach `conflicts`/`is_duplicate`):
+  `concern-investigator.md` Step 3 (alongside the existing `working_log.csv` grep),
+  `implement-ticket.js` Scope new-ticket Step 1 (added `tickets/todos/` to the existing tickets/
+  scan sentence), and Scope existing-ticket path (new Step 3c, instructed before the
+  `related_context=` output field; the `conflicts=` line is byte-unchanged, pinned by test).
+  `create-tickets.js` needed no schema change — `concern-investigator`'s existing
+  `related_tickets`/`is_duplicate` output fields already cover it (checked before assuming Related
+  Code Areas item 3 applied; it didn't).
+- **Scope 3**: `docs/ai/ticket-lifecycle.md`'s offer-not-invoke rule added next to the Epic Batch
+  Workflow section heading (~line 630). CLAUDE.md line added **after direct `AskUserQuestion`
+  confirmation of the literal text with the user** (not the peer's relay) — confirmed verbatim,
+  landed exactly as confirmed (`CLAUDE.md:364`, after the existing opt-in-boundary sentence).
+- **Scope 4** (added 2026-09-29 mid-ticket, per peer amendment): CLAUDE.md's PR Lifecycle pointer
+  now names `tools/delivery/pr_render.py` in its arrow-list. Same confirmation gate as Scope 3 —
+  both lines asked and confirmed in one `AskUserQuestion` call. No detail duplicated from
+  `docs/guides/delivery_process.md` (that file already covers `pr_render.py` in full).
+- AC1 fixture: no real `B0` ticket exists anywhere in this repo (confirmed: `git log --all` and a
+  full `tickets/**` search found none) — built
+  `tests/fixtures/open_ticket_overlap/B0-PERCEPTION-UPDATE-WAVE-FIXTURE.md`, a reconstruction (not
+  the real text, which lives only in the planning session's own uncommitted work) citing the real
+  target ticket's own `## Related Code Areas` path (`src/domains/perception/phase.py`) and sharing
+  distinctive terms, per investigation.md.
+- Retro cadence: `agent-monitoring/retro/RETRO-2026-W40.md` was generated and committed
+  (`8d3dff99d`) in this same branch checkout before this ticket's own prompt edits landed, per the
+  design peer's explicit request — not regenerated a second time for this one ticket (the rule is
+  about the retro being current before a prompt change, not once per prompt-changing ticket).
+
 ## Test Summary
+
+- `tests/tools/test_open_ticket_overlap.py` (9 tests): AC1 (real fixture pair), AC2 (unrelated
+  ticket, self-exclusion), AC3 (live-write-then-see), 3 signal-isolation tests (code-area alone,
+  terms alone, single-term-insufficient), plus subfolder-recursion and inprogress-scanning
+  structural tests.
+- `tests/tools/test_concern_investigator_open_ticket_scanner_pin.py` (2 tests) and
+  `tests/tools/test_implement_ticket_open_ticket_scanner_pin.py` (4 tests): AC4, raw-source-text
+  pins mirroring `test_finalize_working_log_uses_helper_pin.py`'s established pattern — including
+  an explicit pin that the existing-ticket `conflicts=` line is byte-unchanged.
+- `tests/tools/test_ticket_lifecycle_offer_rule.py` (1 test): AC5, doc-content check.
+- AC6: full `tests/tools/` suite (3208 passed, 53 skipped, 1 xfailed) run after all wiring
+  changes landed, including the CLAUDE.md edit — no regressions.
+- No automated test for the CLAUDE.md lines' exact text (a policy file, not code) — both
+  confirmed via direct `AskUserQuestion` with the user before commit, verified to land byte-exact
+  against what was confirmed (see Implementation Notes).
 
 ## Files Changed
 
+- `tools/open_ticket_overlap.py` (new)
+- `tests/tools/test_open_ticket_overlap.py` (new)
+- `tests/fixtures/open_ticket_overlap/B0-PERCEPTION-UPDATE-WAVE-FIXTURE.md` (new)
+- `tests/tools/test_concern_investigator_open_ticket_scanner_pin.py` (new)
+- `tests/tools/test_implement_ticket_open_ticket_scanner_pin.py` (new)
+- `tests/tools/test_ticket_lifecycle_offer_rule.py` (new)
+- `.claude/agents/concern-investigator.md`
+- `.claude/workflows/implement-ticket.js`
+- `docs/ai/ticket-lifecycle.md`
+- `CLAUDE.md`
+
 ## Completion Summary
+
+Closed both gaps: open tickets (`tickets/todos/`, `tickets/inprogress/`) are now scanned for
+overlap at all 3 check sites via a new, live-disk, index-free scanner, advisory only; and a
+standing rule now tells a session to offer (never auto-start) `/create-tickets`/`/implement-epic`
+when the shape calls for it, in both `docs/ai/ticket-lifecycle.md` and CLAUDE.md (the latter only
+after direct user confirmation of its literal text). Also landed the peer-amended Scope item 4
+(CLAUDE.md's PR Lifecycle pointer now names `pr_render.py`) under the same confirmation gate. All
+tests pass, including a full `tests/tools/` regression run.

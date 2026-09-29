@@ -631,6 +631,16 @@ pre-check, `tools/gate_checks/mechanics_auditor_static.py::verify_entry_test_pat
 
 Use `/implement-epic` when you have multiple tickets to implement in sequence.
 
+**Offering is not invoking** (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER): an
+agent can never start `/create-tickets` or `/implement-epic` itself — that stays user opt-in, per
+CLAUDE.md's own "Require explicit user opt-in" rule. But a session that notices the *shape* these
+workflows exist for — a plan or proposal about to become several tickets, or a
+`tickets/todos/<folder>/` sitting ready to dispatch — should **offer** the matching workflow (what
+it would do, rough cost) and let the user decide. This is the gap `/create-tickets` and
+`/implement-epic` both fell to near-zero runs from: nothing ever led to either being offered, so
+neither ever got asked for. Offering costs nothing and changes no opt-in semantics; not offering
+when the shape is right is a missed handoff, not caution.
+
 ```
 /implement-epic folder=tickets/todos/monitoring/
 /implement-epic epic_id=TCK-20260607-MY-EPIC

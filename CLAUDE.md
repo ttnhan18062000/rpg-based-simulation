@@ -361,6 +361,8 @@ Some tools should be invoked automatically based on the task — the user does n
 
 The boundary is: **single read/query tools are free to invoke proactively; multi-agent orchestration and anything that changes shared/remote state requires the user to ask**.
 
+Offering is not invoking: when about to turn a plan into several tickets, or when a `tickets/todos/<folder>/` is ready to dispatch, briefly offer `/create-tickets` or `/implement-epic` (what it would do, rough cost) and let the user choose.
+
 ### CI Failure Triage (read-only follow-up to an already-authorized push — no separate opt-in needed to check)
 
 Full decision tree in `docs/guides/delivery_process.md` ("CI Failure Triage"): the absent-run-vs-
@@ -370,9 +372,10 @@ log block, the partial-log-fetch trap, and failure classification before acting.
 
 ### PR Lifecycle (once the user has authorized landing a batch)
 
-Full steps in `docs/guides/delivery_process.md` ("PR Lifecycle"): commit → push → PR → CI monitor →
-report → (user-authorized) merge → sync, including the squash-merge "a finished branch is never
-pushed to again" rule and the PR-body no-attribution-trailer rule.
+Full steps in `docs/guides/delivery_process.md` ("PR Lifecycle"): commit → push → render the
+title/body with `tools/delivery/pr_render.py` → PR → CI monitor → report → (user-authorized)
+merge → sync, including the squash-merge "a finished branch is never pushed to again" rule and
+the PR-body no-attribution-trailer rule.
 
 ---
 
