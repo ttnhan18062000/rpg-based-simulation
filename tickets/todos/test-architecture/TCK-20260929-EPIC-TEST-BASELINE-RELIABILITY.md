@@ -62,12 +62,25 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
     agent-monitoring shards.
   - It is **never a blocking CI gate** in this epic.
   - It is not required to close the epic.
+- **Test-effectiveness baseline** (roadmap §4.7; a narrowed form of the D4 direction approved
+  2026-09-28):
+  - one local, on-demand `mutmut` run on **one declared target**: the resource-conservation code if
+    the feature team confirms it is stable, otherwise a labelled synthetic target;
+  - recorded with the target, selected tests, SHA, date, runtime and result categories
+    (killed / survived / timeout / equivalent), shown in its own report layer, and `stale` after the
+    target changes or 30 days;
+  - **no CI job**.
+- **Escaped-defect tracking:** register an `escaped-defect` ticket tag (via
+  `tools/tag_registry.py`) for defects that reached `main` past green tests, recorded with a failure
+  class. The report counts them per month.
 - **Post-repair baseline:** the same report after the fixes, with every difference explained and
   remaining unknowns listed.
 
 ## Out of Scope
 
 - Claiming that all order dependence or all test-side writes are gone.
+- Mutation testing beyond one target, or scheduled mutation runs (deferred to the post-pilot
+  review).
 - Any gate or blocking use of the report.
 - **A new CI coverage job.** Later work, only after its runtime is measured and its information
   judged useful (roadmap §5). This is not an owner-decision gate.
@@ -95,7 +108,13 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 4. **Known tracked-file write:** after the fast tiers in a clean checkout,
    `docs/brainstorm/mechanism_verification_view.md` is unchanged. If the optional advisory guard is
    built, it reports a seeded test-caused write and ignores a seeded hook/tool update.
-5. The post-repair baseline lists **remaining unknowns**, e.g. order dependence outside the verified
+5. **Effectiveness:**
+   - a mutation record exists for one declared target, with full provenance, and appears in the
+     report as its own layer. No score threshold; surviving mutants are listed for review, not
+     auto-fixed;
+   - the `escaped-defect` tag is registered, and the report shows its monthly count, including 0 as
+     a real count once the tag exists.
+6. The post-repair baseline lists **remaining unknowns**, e.g. order dependence outside the verified
    set.
 
 ## Related Tickets
