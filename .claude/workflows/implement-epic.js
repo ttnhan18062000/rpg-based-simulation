@@ -35,7 +35,7 @@ if (!folder && !epicId && !request) {
   const invalidTs = (invalidTsRaw || '').trim() || null
   const invalidRunId = `EPIC-INVALID-ARGS-${(invalidTs || '').replace(/[^0-9]/g, '')}`
   await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${invalidRunId}","start_ts":"${invalidTs}","end_ts":"${invalidTs}","workflow":"implement-epic","tier":"epic","final_status":"INVALID_ARGS","agent_count":0}' 2>/dev/null || true`
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${invalidRunId}","start_ts":"${invalidTs}","end_ts":"${invalidTs}","workflow":"implement-epic","tier":"epic","final_status":"INVALID_ARGS","agent_count":0,"execution_mode":"pipeline"}' 2>/dev/null || true`
   )
   return {
     status: 'INVALID_ARGS',
@@ -283,7 +283,7 @@ if (discovery.mode === 'request') {
     `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${epicCreatedRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Epic ticket created; no child tickets yet","ts":"${epicCreatedTs}"}]' 2>/dev/null || true`
   )
   await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1}' 2>/dev/null || true`
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
   )
   await clearSidecar()
   return {
@@ -310,7 +310,7 @@ if (ticketIds.length === 0) {
     `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done, all blocked, or none found)","ts":"${nothingTs}"}]' 2>/dev/null || true`
   )
   await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1}' 2>/dev/null || true`
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
   )
   await clearSidecar()
   return {
@@ -417,7 +417,7 @@ but prefix the WARNING in Step 3's failure message with "EVENTS-MISSING: " so a 
 retro run can distinguish this from an ordinary write failure.
 
 Step 3 — write batch run record (replace <END_TS> with the value from Step 1):
-  python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length}}'
+  python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length},"execution_mode":"pipeline"}'
 
 If any command fails, print "WARNING: batch monitoring write failed: <error>" but do NOT raise. Return "done".`,
   { label: 'batch-monitoring-write' }

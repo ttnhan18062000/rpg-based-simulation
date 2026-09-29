@@ -1388,6 +1388,14 @@ _FIXED_CORPUS_EXPECTED_REPORT = (
     "| Avg agents per run | 3.3 |\n"
     "| Total agent calls | 2 |\n"
     "\n"
+    "**By execution mode**\n"
+    "\n"
+    "| Mode | Runs | DONE | Avg duration |\n"
+    "|---|---|---|---|\n"
+    "| Pipeline | 0 | 0 (0%) | n/a |\n"
+    "| Hand-closed | 0 | 0 (0%) | n/a |\n"
+    "| Unlabelled (pre-field) | 3 | 1 (33%) | 20 min |\n"
+    "\n"
     "## Gate Failure Breakdown\n"
     "\n"
     "| Gate | Count | % of runs |\n"
@@ -3117,3 +3125,94 @@ def test_generate_omits_spend_proxy_coverage_note_when_no_scored_events(tmp_path
     tables."""
     report = generate([_BASE_RUN], [], "test-label", tickets_root=tmp_path)
     assert "Computed over" not in report
+
+
+# ---------------------------------------------------------------------------
+# TCK-20260929-RUN-EXECUTION-MODE-FIELD: execution_mode split in Run Summary
+# ---------------------------------------------------------------------------
+
+
+def _run(run_id, duration_s, execution_mode=None):
+    record = {
+        **_BASE_RUN,
+        "run_id": run_id,
+        "final_status": "DONE",
+        "duration_s": duration_s,
+    }
+    if execution_mode is not None:
+        record["execution_mode"] = execution_mode
+    return record
+
+
+def test_compute_retro_metrics_splits_runs_into_three_execution_mode_groups():
+    runs = [
+        _run("TCK-PIPE", 600, "pipeline"),
+        _run("TCK-HAND", 0, "hand"),
+        _run("TCK-PRE-FIELD", 1200, None),
+        _run("TCK-LEGACY-HAND-ORCHESTRATED-VALUE", 0, None),
+    ]
+    metrics = compute_retro_metrics(runs, [])
+    em = metrics["run_summary"]["execution_mode"]
+    assert em["pipeline"]["count"] == 1
+    assert em["hand"]["count"] == 1
+    assert em["unlabelled"]["count"] == 2
+
+
+def test_pipeline_avg_duration_excludes_hand_and_unlabelled_runs():
+    runs = [
+        _run("TCK-PIPE-1", 600, "pipeline"),
+        _run("TCK-PIPE-2", 1200, "pipeline"),
+        _run("TCK-HAND", 999999, "hand"),
+        _run("TCK-PRE-FIELD", 999999, None),
+    ]
+    metrics = compute_retro_metrics(runs, [])
+    em = metrics["run_summary"]["execution_mode"]
+    # (600 + 1200) / 2 = 900s = 15 min -- the two huge hand/unlabelled durations must not leak in.
+    assert em["pipeline"]["avg_duration_min"] == 15
+    assert em["hand"]["avg_duration_min"] is None or em["hand"]["avg_duration_min"] != 15
+    assert em["unlabelled"]["avg_duration_min"] is None or em["unlabelled"]["avg_duration_min"] != 15
+
+
+def test_legacy_hand_orchestrated_workflow_value_lands_in_unlabelled_not_hand():
+    # A W36-era row with workflow: "hand-orchestrated" and no execution_mode field must land in
+    # "unlabelled", not be inferred as "hand" from its workflow value -- this ticket's whole point
+    # is that execution_mode is a separate, non-inferred field (Out of Scope: "Inferring 'hand'
+    # for legacy rows from the zero-duration / empty-tool-stats signature... is not built here").
+    runs = [{**_BASE_RUN, "run_id": "TCK-LEGACY", "workflow": "hand-orchestrated", "final_status": "DONE"}]
+    metrics = compute_retro_metrics(runs, [])
+    em = metrics["run_summary"]["execution_mode"]
+    assert em["hand"]["count"] == 0
+    assert em["unlabelled"]["count"] == 1
+
+
+def test_generate_renders_execution_mode_table_with_three_groups(tmp_path):
+    runs = [
+        _run("TCK-PIPE", 600, "pipeline"),
+        _run("TCK-HAND", 0, "hand"),
+        _run("TCK-PRE-FIELD", 1200, None),
+    ]
+    report = generate(runs, [], "test-label", tickets_root=tmp_path)
+    assert "**By execution mode**" in report
+    assert "| Pipeline | 1 |" in report
+    assert "| Hand-closed | 1 |" in report
+    assert "| Unlabelled (pre-field) | 1 |" in report
+
+
+def test_generate_execution_mode_table_zero_count_group_shows_zero_percent(tmp_path):
+    """fmt_pct's own zero-division guard must not crash when a group (e.g. "hand") has zero
+    runs in this window -- must render "0%", never raise."""
+    runs = [_run("TCK-PIPE", 600, "pipeline")]
+    report = generate(runs, [], "test-label", tickets_root=tmp_path)
+    assert "| Hand-closed | 0 | 0 (0%) | n/a |" in report
+
+
+def test_generate_over_real_corpus_including_legacy_hand_orchestrated_rows_is_deterministic():
+    # Real corpus includes 20 W36 rows with workflow: "hand-orchestrated" (two spacing variants)
+    # -- must not crash on them, and two runs over the identical input must produce byte-identical
+    # output.
+    real_runs = generate_retro._load_source(generate_retro.RUNS_FILE, "runs")
+    real_events = generate_retro._load_source(generate_retro.EVENTS_FILE, "events")
+    first = generate(real_runs, real_events, "real-corpus-label")
+    second = generate(real_runs, real_events, "real-corpus-label")
+    assert first == second
+    assert "**By execution mode**" in first

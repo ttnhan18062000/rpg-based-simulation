@@ -799,6 +799,33 @@ def compute_retro_metrics(
     agent_counts = [r.get("agent_count", 0) for r in runs if r.get("agent_count")]
     avg_agents = round(sum(agent_counts) / len(agent_counts), 1) if agent_counts else 0
 
+    # Execution-mode split (TCK-20260929-RUN-EXECUTION-MODE-FIELD): a run's `workflow` field
+    # (e.g. "implement-ticket") is shared by both a real pipeline execution and a hand-
+    # orchestrated closure recorded via record_hand_orchestrated_closure.py — since ~2026-09-06,
+    # per RETRO-2026-W40's own Notes, most "implement-ticket" runs are hand closures, not pipeline
+    # runs, so every metric keyed on `workflow` alone silently blends two different populations.
+    # `execution_mode` ("pipeline"/"hand") is a separate, additive field with no meaning tied to
+    # `workflow` — a row with neither value (pre-field, or a legacy `workflow: "hand-orchestrated"`
+    # row that predates this ticket) is its own third group, "unlabelled", never folded into
+    # either real group and never silently dropped.
+    execution_mode_runs = defaultdict(list)
+    for r in runs:
+        mode = r.get("execution_mode")
+        execution_mode_runs[mode if mode in ("pipeline", "hand") else "unlabelled"].append(r)
+
+    execution_mode_summary = {}
+    for mode in ("pipeline", "hand", "unlabelled"):
+        group = execution_mode_runs.get(mode, [])
+        group_durations = [r["duration_s"] for r in group if r.get("duration_s")]
+        execution_mode_summary[mode] = {
+            "count": len(group),
+            "done_count": sum(1 for r in group if _resolve_status(r) == "DONE"),
+            "avg_duration_min": (
+                (int(sum(group_durations) / len(group_durations)) // 60)
+                if group_durations else None
+            ),
+        }
+
     # Gate failure breakdown
     gate_counter = Counter(_resolve_status(r) for r in gate_fails)
 
@@ -1033,6 +1060,7 @@ def compute_retro_metrics(
             "avg_duration_min": avg_dur_min,
             "avg_agents": avg_agents,
             "total_agent_calls": len(events),
+            "execution_mode": execution_mode_summary,
         },
         "gate_failure_breakdown": dict(gate_counter),
         "reason_code_breakdown": dict(reason_counter),
@@ -1406,6 +1434,25 @@ def generate(
     lines.append(f"| Avg agents per run | {rs['avg_agents']} |")
     lines.append(f"| Total agent calls | {rs['total_agent_calls']} |")
     lines.append("")
+
+    # Execution-mode split (TCK-20260929-RUN-EXECUTION-MODE-FIELD): pipeline vs. hand-orchestrated
+    # vs. unlabelled (pre-field or legacy). The "Avg duration" above blends all three; this table
+    # is where pipeline's own real avg duration lives, uncontaminated by hand closures' degenerate
+    # zero/identical-start-end durations.
+    em = rs.get("execution_mode", {})
+    lines.append("**By execution mode**")
+    lines.append("")
+    lines.append("| Mode | Runs | DONE | Avg duration |")
+    lines.append("|---|---|---|---|")
+    for mode, label_text in (("pipeline", "Pipeline"), ("hand", "Hand-closed"), ("unlabelled", "Unlabelled (pre-field)")):
+        group = em.get(mode, {"count": 0, "done_count": 0, "avg_duration_min": None})
+        avg_dur_text = f"{group['avg_duration_min']} min" if group["avg_duration_min"] is not None else "n/a"
+        lines.append(
+            f"| {label_text} | {group['count']} | "
+            f"{group['done_count']} ({fmt_pct(group['done_count'], group['count'])}) | {avg_dur_text} |"
+        )
+    lines.append("")
+
     if raw_run_count is not None and deduped_run_count is not None and raw_run_count != deduped_run_count:
         lines.append(
             f"_Note: {raw_run_count} raw `runs.jsonl` rows in this window collapsed to "

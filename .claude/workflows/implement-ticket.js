@@ -226,7 +226,7 @@ if (!ticketInfo || !ticketInfo.ticket_id) {
     `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${fallbackRunId}","seq":1,"phase":"Scope","agent":"ticket-scoper","status":"failed","summary":"Scope agent returned null or malformed output (no ticket_id)","ts":"${failTs}"}]' 2>/dev/null || true`
   )
   await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${fallbackRunId}","start_ts":"${failTs}","end_ts":"${failTs}","workflow":"implement-ticket","tier":"${tierOverride || 'standard'}","final_status":"SCOPE_AGENT_FAILED","agent_count":1}' 2>/dev/null || true`
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${fallbackRunId}","start_ts":"${failTs}","end_ts":"${failTs}","workflow":"implement-ticket","tier":"${tierOverride || 'standard'}","final_status":"SCOPE_AGENT_FAILED","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
   )
   return {
     status: 'SCOPE_AGENT_FAILED',
@@ -444,7 +444,7 @@ Step 2 — build and write events:
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount}}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,

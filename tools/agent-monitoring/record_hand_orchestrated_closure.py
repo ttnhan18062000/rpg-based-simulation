@@ -35,6 +35,13 @@ for a given (run_id, seq) -- a hand-orchestrating session never has a live per-p
 during the actual work, so an unattributed phase correctly gets no such keys at all (never a
 false `0`/`0.0`).
 
+The run record's `workflow` field stays `implement-ticket` by default (see `--workflow` below,
+TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP's recorded rationale) so existing
+`workflow`-keyed consumers keep working unchanged, but every record from this wrapper always
+carries `"execution_mode": "hand"` (TCK-20260929-RUN-EXECUTION-MODE-FIELD) -- a separate field,
+never inferred, so `generate_retro.py`'s Run Summary can split real pipeline runs from hand
+closures without changing what `workflow` means to anyone already reading it.
+
 This call also appends one row to `tickets/working_log.csv` (`--title`/`--log-summary` plus
 `--artifacts-path`, which defaults to `stored_artifacts/<ticket-id>` for standard/epic tier or
 "none (hotfix — no staging artifacts)" for hotfix) -- do not append that row by hand separately
@@ -147,6 +154,7 @@ def build_records(
         "tier": tier,
         "final_status": final_status,
         "agent_count": len(events),
+        "execution_mode": "hand",
     }
 
     event_records = [
