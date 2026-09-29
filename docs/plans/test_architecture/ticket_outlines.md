@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Test Architecture — Ticket Outlines for the Ticket Planner (revision f)
 
-**Status: PROPOSAL, 2026-09-29 (revision g). No tickets have been created.** Full drafts of TA-R1-1, TA-MT-1 and TA-M0a-1 are in the review package; baselines were re-checked at `origin/main` `5d4e4a237`. Identifiers below (`TA-…`) are
+**Status: PROPOSAL, 2026-09-29 (revision h; decisions PENDING). No tickets have been created.** Full drafts of TA-R1-1, TA-MT-1 and TA-M0a-1 are in the review package; baselines were re-checked at `origin/main` `5d4e4a237`. Identifiers below (`TA-…`) are
 placeholders, not ticket IDs; the ticket planner assigns real `TCK-YYYYMMDD-…` ids. Sources:
 [`test_architecture_epic.md`](test_architecture_epic.md) (revision f),
 [`milestone_plans.md`](milestone_plans.md), and
@@ -42,7 +42,7 @@ immediately.
 
 | Placeholder | Title | Tier | Scope | Out of scope | Acceptance | Depends on |
 |---|---|---|---|---|---|---|
-| **TA-M0a-1** | Core-RPG test report: schema, producer, inventory and lane layers | standard | Versioned report schema (layers + state vocabulary + denominators + input-artifact manifest, epic §6.2); a producer script; the classification layer (directory/import signals; `uncertain` and `unclassified` preserved; evidence-classification rules for example / characterization / broad-simulation tests); a lane layer derived from `test.yml` rules | coverage ingestion, SimQ/census/parity layers, any metadata markers | Two runs on the **same input artifacts** give identical normalized output. Every layer shows a value with its denominator, or a state. Failing tests present in the inputs are listed with their run id; **no fixed failure count** | — |
+| **TA-M0a-1** | Core-RPG test report v0: schema, producer, classification and lane layers | standard | Versioned schema (layers, states, denominators, input manifest); producer; classification layer (signals only; `uncertain`/`unclassified` kept); lane layer from `test.yml`; an execution layer from **supplied** JUnit that distinguishes **`no-junit-artifact`** (no JUnit supplied for that lane or run) from **`not-run`** (the lane or node was absent from a supplied run: skipped lane, deselected, not collected) from **`pass`/`fail`/`skipped`** (the node's recorded outcome) | coverage, SimQ/census/parity layers, markers, CI changes | Two runs on the same input artifacts are identical after normalization; every count has a denominator; the three execution states never collapse into each other; failing nodes are listed with their run id; **no failure-count target**. v0 limits stated in the report header | — |
 | **TA-M0a-2** | Standing coverage job + `make test-cov` repair | standard | Fix `make test-cov` (`Makefile:209-210` points at `tests_v2`/`src_v2`); add a nightly, informational CI job producing line + branch coverage (**no per-test contexts**; those are in Part 3); the report ingests its artifact with its scope label | making coverage a gate | The job produces an artifact with SHA, tier list and failed-test list; the report shows package coverage and domain coverage `not-derived` | TA-M0a-1 |
 | **TA-M0a-3** | Parity evidence-state derivation + committed baseline snapshot | hotfix or standard | Read-only derived evidence state (`test_linked` / `audit_only` / `legacy` / `missing`); a committed snapshot of the categorized schema errors (OV §4.6) | changing ledger entries or priority semantics (D7 is a separate path) | Snapshot reproduces the 2,842 + 25 / 1,561 categorization at its SHA, or explains the difference | TA-M0a-1 |
 | **TA-M0a-4** | SimQ and census state ingestion | hotfix | Report states `skipped-no-data` (with the 81-comparison denominator = 79 + 2) and `unstable` | fixing the SimQ skip (R3, SimQ owner) | States appear with provenance; no silent zero | TA-M0a-1 |
@@ -51,8 +51,8 @@ immediately.
 
 | Placeholder | Title | Tier | Scope | Acceptance | Depends on |
 |---|---|---|---|---|---|
-| **TA-R1-1** | Fix progression order-dependent test failures | standard (hotfix if the leak is trivial) | Bisect the polluting test for the 7 nodes (OV §4.2); fix at the source of the leaked state; add a regression guard; record a C5-format evidence record. If the source lies in feature code under rework → route to the feature team (C5) and mark `blocked` | Combined + isolated runs pass at one SHA → R1 `provisional` | — |
-| **TA-R1-2** | RNG-contract check + random-order verification | standard | Check that a random-order plugin's reseeding (e.g. `pytest-randomly` resets `random.seed`) does not conflict with `DeterministicRNG` / `tests/unit/core/test_rng_contract.py`; add the plugin (a dev-dependency change) or an equivalent, **scoped to an opt-in job**, not default runs; run the directory in random order | Random-order run passes → R1 `verified` | TA-R1-1 |
+| **TA-R1-1** | Fix the registry/content-mode state leak behind 7 progression failures | standard | Reproduce against the 8 identified polluter files; fix the leaked state at its source; add a regression guard; record a C5 evidence record. If the source is feature code under rework → route to the feature team, `blocked` | **Bounded verification at one SHA:** each polluter + 3-file reproducer passes; `tests/unit` and the combined fast-tier command show 0 failures in the 7 nodes; `tests/unit/domains` alone still passes → R1 `provisional` (random order in TA-R1-2) | — |
+| **TA-R1-2** | RNG-contract check + random-order verification at the same SHA as TA-R1-1's final runs | standard | Check that a random-order plugin's reseeding (e.g. `pytest-randomly` resets `random.seed`) does not conflict with `DeterministicRNG` / `tests/unit/core/test_rng_contract.py`; add the plugin (a dev-dependency change) or an equivalent, **scoped to an opt-in job**, not default runs; run the directory in random order | Random-order run passes → R1 `verified` | TA-R1-1 |
 
 ### MT · Documentation and metadata portion
 
@@ -132,4 +132,20 @@ follow after TA-MT-2, per milestone_plans MT.)*
 | TA-M1-SF | Seeded-fault evaluation harness (fault-revealing recall) | Before the impact model is used to **skip** any test or lane, **or** the first recorded "CI selection failure" triage case |
 | TA-M0a-CTX | Per-test coverage contexts (who-tests-what) | A recorded CI selection failure where the static inputs missed a dynamic dependency |
 | TA-MF-Q1 | Quarantine marker, collection hook, required expiry check, report states | The first real case that needs quarantine (the nondeterminism class) |
-| TA-M0a-ART | Upload JUnit artifacts from every CI job, for automatic report ingestion | When M0a-1's manual input step becomes the recurring bottleneck (today only `api-tools` uploads JUnit) |
+| TA-M0a-ART | Upload JUnit artifacts from every CI job (today only `api-tools` uploads), for automatic report ingestion | When M0a-1's manual input step becomes the recurring bottleneck (today only `api-tools` uploads JUnit) |
+
+## Part 4 · Test-hygiene finding (separate from R1)
+
+**Finding [O], 2026-09-29.** Running the fast test tiers in a clean detached checkout of
+`5d4e4a237` modified the tracked file `docs/brainstorm/mechanism_verification_view.md` (2 lines).
+Its generator is `tools/mechanism_registry/generate_mechanism_verification_view.py` (default
+output: that file). The two tests that invoke it (`tests/unit/tools/test_mechanism_registry.py:1024,
+1039`) use `--check` or a `tmp_path` output, so **the actual writer is not yet identified**.
+
+**Determination: it needs its own ticket.** A test that rewrites a tracked file breaks run
+reproducibility and can put unrelated diffs into PRs. It is a different defect from R1's state
+leak (environment/fixture class, epic §7.2).
+
+| Placeholder | Title | Tier | Scope | Acceptance |
+|---|---|---|---|---|
+| **TA-HYG-1** | Find and stop the test run that rewrites `docs/brainstorm/mechanism_verification_view.md` | hotfix | Identify the writer (bisect the fast tiers with `git status` after each directory); redirect its output to `tmp_path` or make it `--check`-only; add a guard that fails if a test run leaves tracked files modified (e.g. `git status --porcelain` check in the test job, advisory first) | A clean checkout shows no tracked-file changes after the fast tiers; the guard catches a seeded write |

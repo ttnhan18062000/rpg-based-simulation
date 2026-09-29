@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture (core RPG as first application)
 
-**Status: REVISION 2026-09-29g, prepared for ticket planning** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: [`ticket_outlines.md`](ticket_outlines.md). This roadmap owns **how
+**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: [`ticket_outlines.md`](ticket_outlines.md). This roadmap owns **how
 tests are planned, written, selected, organized, executed, measured, reviewed, maintained and
 repaired**. It does **not** own the design or schedule of RPG mechanics; another group of agents
 is reworking those. Core RPG is the **first application and validation scope**, not a feature
@@ -158,8 +158,8 @@ These are delivered as **reusable patterns**. The rules for worked examples:
 - Each example uses either a **synthetic** behaviour (a clearly labelled test-only toy, placed apart
   from feature tests) or a behaviour **confirmed stable** with the feature agents.
 - Current status (`rpg-feature-planning`, 2026-09-29):
-  - **resource conservation (ch03)** is not in their first wave, so it is usable, though no stability
-    window is guaranteed;
+  - **resource conservation (ch03)** is a **candidate** only: it is not in their first wave, but no
+    stability window is guaranteed. It is confirmed or dropped when MP starts;
   - the **authoritative-write boundary is actively changing** (PR #254 edited `src/engine/apply.py`;
     `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK` and
     `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` target it) and is **excluded**.
@@ -298,11 +298,14 @@ the approval stays current. If the same change also edits the assertion region o
 triggers (2) or (4) apply. Harness refactors without a contract-version bump → rerun only.
 - Later reports validate records mechanically, without re-reading tests.
 - A static check establishes only the *level*, never semantic correctness.
-- **No second authoritative proof-status registry** (owner direction, 2026-09-29). Proof status is
-  authoritative only in the **mechanism registry** (its future mechanism → test link, registry epic)
-  and the **parity ledger** (law evidence). This roadmap *reports* and *validates* against them.
-  Review records, when built, are non-authoritative annotations that reference a registry or ledger
-  entry; they never hold status of their own.
+- **No new authoritative proof-status record** (owner direction, 2026-09-29).
+  - The **Bible/contract document is the behaviour source**; the **parity ledger is its evidence
+    link**.
+  - The mechanism registry keeps its existing role (mechanism labels; a future mechanism → test link
+    owned by the registry epic).
+  - This roadmap only *reports* and *validates* against these.
+  - Review records, if ever built, are non-authoritative annotations referencing a ledger or registry
+    entry; they never hold status of their own.
 - **Deferred, evidence-triggered:** the review-record validator is built only when a feature team
   first asks to register a proof, or when the registry epic ships its test link (ticket_outlines
   Part 3).
@@ -400,7 +403,7 @@ This unifies and extends the existing rules rather than replacing them in parall
 
 ## 8 · Capability C6: Bounded core-RPG pilot
 
-**Purpose:** show that the architecture works, not complete a portfolio. It uses **one or two
+**Purpose:** show that the architecture works, not complete a portfolio. **Surface rule:** resource conservation (ch03) is a *candidate*. If the feature team cannot confirm a stable window when MP starts, MP uses a **clearly labelled synthetic exercise**. It uses **one or two
 suitably stable changes selected with the feature agents**. If none is available, it uses an
 existing stable behaviour, or a **synthetic, clearly labelled exercise**. The roadmap never
 blocks on a feature redesign.
@@ -464,7 +467,7 @@ obsolete as feature teams rework mechanics.
 | M2 Authoring workflow | C3 | MT (contracts, proof kinds) |
 | MF Failure-triage and maintenance workflow | C5 | M0a |
 | MP Bounded core-RPG pilot | C6 | M2, MF, R2; M1 if available (otherwise manual impact with reasons) |
-| G-P Party ownership assessment | C1 map | — (may end `inconclusive/defer`) |
+| G-P Party ownership assessment | C1 map | **Deferred** while party's oracle and owner are unknown (decision pending) |
 
 ## 12 · Decision log
 
@@ -513,7 +516,7 @@ obsolete as feature teams rework mechanics.
 | E1 authoritative-write guard | **architecture evidence only; excluded from the pilot** (surface actively changing, 2026-09-29) | An existing stable behaviour, suitable for the MP evidence-registration/invalidation drill (as architecture evidence) |
 | E2 damage law | **feature-owner responsibility** | Combat under rework |
 | E3 XP curve | **feature-owner responsibility** | Progression under rework |
-| E4 conservation | **pilot surface (confirmed usable 2026-09-29, no stability window)** | A substrate law (ch03). A candidate stable surface for MP if the feature agents confirm stability; otherwise feature owner |
+| E4 conservation | **candidate pilot surface** (not in the feature first wave; no stability window; confirm at MP start, else a synthetic exercise) | A substrate law (ch03). A candidate stable surface for MP if the feature agents confirm stability; otherwise feature owner |
 | E5, E6 scenarios not selected on PRs | **architecture: absorbed into R2** | A lane problem, not a feature proof |
 | E7 pursuit → opportunity attack | **feature-owner responsibility** | — |
 | E8 harvest → market chain | **feature-owner responsibility** | — |
@@ -521,7 +524,7 @@ obsolete as feature teams rework mechanics.
 | E10 crafting-predicate isolation | **architecture: absorbed into R1** | A test-isolation defect |
 | E11 decision-driven attack | **removed** from this roadmap | A feature design decision (owner: the user / feature team) |
 | E12 real-run XP volume | **feature-owner responsibility** | Starvation epic |
-| E13 party | **G-P** (ownership assessment only) | May end `inconclusive/defer` |
+| E13 party | **deferred** (G-P) | Oracle and owner unknown; pending owner decision |
 | E14 replay reliability | **deferred** | Determinism parked |
 
 ## Appendix B · Parity evidence model (separate path)

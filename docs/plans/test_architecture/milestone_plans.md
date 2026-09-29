@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Test Architecture — Detailed Milestone Plans (revision e, for review)
 
-**Status: DRAFT 2026-09-29g** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). Centred on test architecture and operations, following the owner's
+**Status: DRAFT 2026-09-29h, reviewable; decisions PENDING** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). Centred on test architecture and operations, following the owner's
 scope clarification: feature teams own mechanic behaviour and feature proofs (epic §1). Derived
 from [`test_architecture_epic.md`](test_architecture_epic.md) and
 [`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist**;
@@ -26,7 +26,7 @@ M0a ──┬──► MT ──┬──► M1 (+ coverage job from M0a)
       │         └──► M2 ──┐
       ├──► MF ────────────┼──► MP (bounded pilot; + R2; M1 optional)
 R1 ───┴──► M0b ◄── R2 ────┘
-G-P independent (may end inconclusive/defer)
+G-P deferred (party oracle and owner unknown)
 ```
 
 ---
@@ -201,7 +201,7 @@ G-P independent (may end inconclusive/defer)
      placement, ownership map;
    - registered metadata markers + an advisory consistency check;
    - pattern library entries, each with **one worked example that is synthetic (a labelled test-only
-     toy) or confirmed stable with the feature agents** (today: resource conservation, ch03; the
+     toy) or confirmed stable with the feature agents** (candidate: resource conservation, ch03; the
      authoritative-write boundary is excluded as actively changing): property test, stateful property test, mechanic-outcome scenario via the shared
      helper, cross-domain chain, characterization. **No feature-specific proof commitments**;
    - the shared scenario helper;
@@ -381,9 +381,12 @@ G-P independent (may end inconclusive/defer)
 
 1. **Outcome.** A demonstration that an agent can perform all six pilot capabilities (epic §8) on
    core RPG. It replaces the earlier progression workflow pilot and the M3a/M3b proof batches.
-2. **Inputs.** One or two **stable changes selected with the feature agents**. If none is
-   available: an existing stable behaviour (**resource conservation, ch03**, confirmed usable by `rpg-feature-planning` 2026-09-29; the authoritative-write guard is **excluded** as actively changing; E4
-   conservation if the feature agents confirm it is stable), or a **synthetic, labelled** exercise.
+2. **Inputs.**
+   - **Candidate surface:** resource conservation (ch03). It is not in the feature team's first wave
+     (`rpg-feature-planning`, 2026-09-29), but no stability window is promised.
+   - **At MP start**, the feature team is asked to confirm a stable window. If they can't, MP uses a
+     **clearly labelled synthetic exercise**.
+   - The authoritative-write boundary is excluded (actively changing).
 3. **Deliverables.** A pilot record per exercise, covering capabilities 1–6 with artifacts; a final
    pilot report with a qualitative review and a keep / revise / inconclusive decision per
    intervention.
@@ -420,22 +423,13 @@ G-P independent (may end inconclusive/defer)
     - (b) exercise ticket(s);
     - (c) pilot report.
 
-## G-P · Party ownership assessment
+## G-P · Party ownership assessment (DEFERRED)
 
-1. **Outcome.** Party/group placed in the ownership map (spec, owner, components, runtime entry),
-   or documented as `inconclusive/defer`. No implementation maturity is presumed.
-2. **Inputs.** `src/systems/party.py`, `src/systems/social_systems/party*.py`, `group_service.py`
-   [O].
-3. **Deliverables.** An assessment note and a map row, or a documented `inconclusive/defer` with the
-   investigation needed.
-4. **Dependencies.** None. Owner: this roadmap (assessment); the owner decides go / no-go / defer.
-5. **Work packages.** `search_docs` + registry lookup; trace entry points; write up.
-6. **Evidence.** The map row with evidence labels.
-7. **Acceptance.** A map row with every field sourced, **or** an `inconclusive/defer` note naming
-   what could not be established and why.
-8. **States.** `inconclusive/defer` is an accepted outcome.
-9. **Cost.** Read-only.
-10. **Handoff.** One investigation ticket.
+**Deferred while party's oracle and owner are unknown.** No Bible chapter covers party/group
+composition (`rpg-feature-planning`, 2026-09-29). Re-open when the owner assigns an oracle document
+and an owner for party, or decides to bring party into core RPG. Until then, `src/systems/party*.py`
+and `src/systems/social_systems/party*.py` are listed as **unmapped** in C2, so a change there
+yields `impact-unknown` and the conservative fallback.
 
 ---
 
