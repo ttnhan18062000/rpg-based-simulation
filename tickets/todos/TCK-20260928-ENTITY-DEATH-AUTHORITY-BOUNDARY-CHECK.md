@@ -75,11 +75,26 @@ Implements Card C1 of `docs/plans/systemic_world/ticket_planner_handoff.md` (bra
 8. Findings are routed back to the systemic-world roadmap track (`world-rule-catalog-design`).
 
 ## Related Tickets
-- `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — **in flight**, same field
-  (`entity.lifecycle.active`), different writers and different cause. Its fix makes
-  `resolve_lifecycle` sole authority for **old-age** deactivation. Coordinate: this check must name
-  the engine commit it observed, since that fix may land mid-flight.
+- `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — **merged 2026-09-29 as `5d4e4a237`
+  (PR #254); no longer in flight.** Same field (`entity.lifecycle.active`), different writers and
+  different cause. Its landed fix makes `resolve_lifecycle` sole authority for **old-age**
+  deactivation via `src/engine/apply.py:109`. This check must still name the engine commit it
+  observed, but the coordination risk is now closed — observe at or after `5d4e4a237`.
 - `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` — held; sequencing constraint, see AC6.
+
+## Placement Note
+**Deliberately filed at `tickets/todos/` top level, not in the
+`tickets/todos/systemic-world-first-wave/` folder**, by owner decision 2026-09-29. It remains Card C1
+of the systemic-world first wave and its scope is unchanged — only its dispatch grouping differs, so
+that `/implement-epic` over the wave folder does not pull it in alongside J and B0.
+
+Reason: this ticket touches the entity-death authority boundary, which is the same field PR #254 just
+changed and the same subject as the held, determinism-sensitive
+`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`. It carries a real sequencing dependency
+that J and B0 do not. `tools/open_ticket_overlap.py` independently ranks the sovereignty ticket as
+this ticket's #3 overlap (score 30.9). Dispatch it on its own, after the sovereignty ticket's hold is
+resolved — see AC6, which already requires escalation before any fix touching world-dynamics /
+lifecycle ordering is written.
 - `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP` — split out of the natural-aging ticket;
   `resolve_lifecycle` has no HP/alive-based death branch at all, and only `OLD_AGE`/`COMBAT` exist as
   `death_reason` literals repo-wide. **Directly relevant**: a hazard death may have no death-reason

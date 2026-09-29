@@ -92,8 +92,11 @@ which is already owned; see Scope.
   question 1.** Explicitly framed as a scope-of-concept decision for the roadmap session, and
   deliberately reframed by peer review *away from* "just wire it up". Do not undo that framing.
 - `TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING` — parallel wave item, independent.
-- `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK` — parallel wave item; also concerns combat
-  death, but at the authority/ordering level rather than the trace level.
+- `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK` — Card C1; also concerns combat death, but at
+  the authority/ordering level rather than the trace level. **Moved out of this folder to
+  `tickets/todos/` top level 2026-09-29 and dispatched separately** (see its own Placement Note) —
+  it carries a sequencing dependency on the held sovereignty-consolidation ticket that this ticket
+  does not. Still independent of this one; do not wait on it.
 
 ## Related Docs
 - `docs/plans/systemic_world/ticket_planner_handoff.md` — Card B0 (@ `43db4a7fc`).

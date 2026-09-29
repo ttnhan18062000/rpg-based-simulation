@@ -68,6 +68,15 @@ Implements Card J of `docs/plans/systemic_world/ticket_planner_handoff.md`
 - The `pressure-propagation-economy` epic folder, whose first ticket
   (`TCK-20260822-CALAMITY-AFTERMATH-SIGNAL`) touches the same calamity area. Excluded **whole**, per
   the project's epic all-or-nothing rule; do not cherry-pick from it.
+- **Writing J1's `calamity_intensity` label into `registries/mechanisms.yaml`.** That entry's `state`
+  reconciliation is already owned by `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`
+  (open, `tickets/todos/`), whose Request Summary names `calamity_intensity` as its item 1 and whose
+  Related Code Areas include the same registry file. J still assesses J1's reachability at all four
+  levels and still states its exit claim in the ticket, but **a `registry label corrected` exit
+  claim for J1 is recorded as a recommendation to that ticket, not applied to the registry here** —
+  two tickets must not write the same mechanism entry. J2 and J3 are unaffected and may write their
+  own labels normally. Surfaced by `tools/open_ticket_overlap.py` (top hit, score 40.0,
+  `has_code_area_match` on `registries/mechanisms.yaml`).
 
 ## Acceptance Criteria
 1. Each of the three mechanisms has an answer at all four levels, or a level explicitly recorded as
@@ -88,8 +97,14 @@ Implements Card J of `docs/plans/systemic_world/ticket_planner_handoff.md`
 ## Related Tickets
 - `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` — **adopted as J1.**
 - `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` — **adopted as J2.**
-- `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — the natural-aging fix, in flight on branch
-  `natural-aging-death-dual-writer-race`. J3 assesses; it does not fix. This is why AC5 exists.
+- `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — the natural-aging fix. **Merged 2026-09-29
+  as `5d4e4a237` (PR #254); no longer in flight.** `src/engine/apply.py:109` now reads
+  `active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))`, making
+  `LifecycleSystem.resolve_lifecycle` the sole declared authority for old-age deactivation. J3
+  assesses against this landed state; it does not fix. This is why AC5 exists.
+- `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION` — open, owns the `calamity_intensity`
+  entry's `state` reconciliation in `registries/mechanisms.yaml`. See Out of Scope: J1 recommends,
+  that ticket writes.
 - `TCK-20260914-CALAMITY-RANDOM-CHANCE-UNUSED-CONSTANT`,
   `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` — same family, deliberately out of scope.
 
