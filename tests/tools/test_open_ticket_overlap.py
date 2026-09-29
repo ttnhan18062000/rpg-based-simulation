@@ -5,6 +5,7 @@ tickets/todos/tickets/inprogress-shaped subtrees under tmp_path, no mocking of t
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -12,7 +13,7 @@ _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from open_ticket_overlap import find_overlapping_open_tickets  # noqa: E402
+from open_ticket_overlap import find_overlapping_open_tickets, main  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _FIXTURE_DIR = _REPO_ROOT / "tests" / "fixtures" / "open_ticket_overlap"
@@ -81,6 +82,10 @@ def test_finds_overlap_with_real_target_ticket_via_fixture(tmp_path):
     assert "TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED" in hit_ids
     target_hit = next(h for h in hits if h["ticket_id"] == "TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED")
     assert target_hit["matched_code_areas"], "expected at least one matched code area"
+    assert target_hit["score"] > 0
+    # AC1 (peer review round 2): the real corpus test below (test_open_ticket_overlap_real_corpus.py)
+    # is where rank-#1 against the full real tree is actually proven -- this test only proves the
+    # pair scores/hits at all in an isolated 2-candidate fixture.
 
 
 # ---------------------------------------------------------------------------
@@ -193,7 +198,21 @@ def test_code_area_signal_alone_triggers_a_hit(tmp_path):
 
 
 def test_term_overlap_signal_alone_triggers_a_hit(tmp_path):
+    # Filler candidates give the corpus a realistic size so IDF can actually discriminate --
+    # with only one candidate in the whole corpus, every term's IDF collapses to
+    # ln(1/1)=0 by definition (a real corpus-size effect, not a bug); see
+    # test_common_corpus_word_alone_scores_too_low_to_surface below for that same fact used
+    # deliberately, and this ticket's own peer review round 2 for why a raw shared-term COUNT
+    # (with no corpus-size-aware weighting at all) was replaced.
     todos = tmp_path / "tickets" / "todos"
+    for i in range(4):
+        _write_ticket(
+            todos / f"TCK-FILLER-{i}.md",
+            f"TCK-FILLER-{i}",
+            f"Combat durability decay formula issue number {i}",
+            f"Rounds down instead of nearest during combat resolution, variant {i}.",
+            [f"src/domains/combat_engagement/resolution_{i}.py"],
+        )
     _write_ticket(
         todos / "TCK-TERMS-ONLY.md",
         "TCK-TERMS-ONLY",
@@ -211,13 +230,27 @@ def test_term_overlap_signal_alone_triggers_a_hit(tmp_path):
         inprogress_root=tmp_path / "tickets" / "inprogress",
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-TERMS-ONLY"}
+    assert hits[0]["score"] > 0
 
 
-def test_single_shared_term_is_not_enough(tmp_path):
+def test_common_corpus_word_alone_scores_too_low_to_surface(tmp_path):
+    # "combat" appears in every candidate here, so its IDF collapses to exactly 0 (ln(n_docs /
+    # n_docs)) -- sharing only this ubiquitous word must not be enough to surface a hit. This is
+    # the exact class of noise this ticket's peer review round 2 found against the real corpus: a
+    # plain shared-term-count check couldn't tell "combat" (in 26/82 real open tickets) apart from
+    # a genuinely rare term.
     todos = tmp_path / "tickets" / "todos"
+    for i in range(5):
+        _write_ticket(
+            todos / f"TCK-COMBAT-FILLER-{i}.md",
+            f"TCK-COMBAT-FILLER-{i}",
+            f"Combat balance issue variant {i}",
+            f"Combat resolution detail, iteration {i}.",
+            [f"src/domains/combat_engagement/variant_{i}.py"],
+        )
     _write_ticket(
-        todos / "TCK-ONE-TERM.md",
-        "TCK-ONE-TERM",
+        todos / "TCK-ONE-COMMON-TERM.md",
+        "TCK-ONE-COMMON-TERM",
         "Combat durability decay formula wrong",
         "Rounds down instead of nearest during combat resolution.",
         ["src/domains/combat_engagement/resolution.py"],
@@ -279,3 +312,37 @@ def test_scans_inprogress_too(tmp_path):
         inprogress_root=inprogress,
     )
     assert {h["ticket_id"] for h in hits} == {"TCK-INPROGRESS"}
+
+
+# ---------------------------------------------------------------------------
+# Fail-open on a bad --ticket-path (peer review round 2, BLOCKING 2): a missing, empty-string, or
+# directory path previously raised (FileNotFoundError / IsADirectoryError) uncaught, breaking the
+# "always exits 0" contract this tool is documented to hold.
+# ---------------------------------------------------------------------------
+
+
+def test_cli_ticket_path_empty_string_exits_0_with_empty_result(capsys):
+    # A missing/failed --ticket-path short-circuits before any todos/inprogress scan happens, so
+    # this deliberately doesn't override --todos-root/--inprogress-root -- the real corpus is
+    # never touched, only the failure path is exercised.
+    exit_code = main(["--ticket-path", ""])
+    assert exit_code == 0
+    assert json_loads_stdout(capsys) == []
+
+
+def test_cli_ticket_path_nonexistent_exits_0_with_empty_result(tmp_path, capsys):
+    exit_code = main(["--ticket-path", str(tmp_path / "does-not-exist.md")])
+    assert exit_code == 0
+    assert json_loads_stdout(capsys) == []
+
+
+def test_cli_ticket_path_is_a_directory_exits_0_with_empty_result(tmp_path, capsys):
+    a_directory = tmp_path / "some_directory"
+    a_directory.mkdir()
+    exit_code = main(["--ticket-path", str(a_directory)])
+    assert exit_code == 0
+    assert json_loads_stdout(capsys) == []
+
+
+def json_loads_stdout(capsys):
+    return json.loads(capsys.readouterr().out)

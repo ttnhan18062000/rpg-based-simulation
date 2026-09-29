@@ -218,27 +218,64 @@ See `staging_artifacts/TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFE
   design peer's explicit request — not regenerated a second time for this one ticket (the rule is
   about the retro being current before a prompt change, not once per prompt-changing ticket).
 
+**Peer review round 2 (post-`9cca52abf`) — 2 blocking findings, both fixed:**
+
+- **BLOCKING 1 — the term-overlap signal generated noise, not signal.** Peer measured the
+  original plain "either signal fires" boolean directly against the real 82-ticket open corpus:
+  average 70.9/81 possible hits per query, zero tickets with zero hits, shared-term counts up to
+  15 on pure noise (`actually`/`confirmed`/`different`, ordinary prose). Replaced the boolean with
+  a weighted, ranked score: code-area path matches get a heavy fixed weight (10.0 per path, the
+  strongest deterministic signal); term overlap is weighted by IDF computed fresh each call over
+  the *candidate corpus itself* (`ln(n_docs / doc_freq)`) — a term in nearly every open ticket
+  scores near 0, a term unique to a handful scores high, with no hand-tuned stopword expansion on
+  top (IDF already suppresses generic vocabulary proportionally; the real-corpus test below
+  confirms this is sufficient without further tuning). Results are ranked by score and capped to
+  `top_n` (default 5) — the cap, not an absolute score threshold, bounds output size, since score
+  distributions are corpus/query-dependent and a fixed cutoff isn't robust across different
+  queries. New `tests/tools/test_open_ticket_overlap_real_corpus.py` (3 tests, read-only against
+  the real tree) directly measures what the peer asked for: the B0 fixture ranks the real
+  `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED` ticket #1 both with code areas and in
+  the harder title/summary-only shape (the actual concern-investigator call shape), and the median
+  hit count per real ticket (queried against all 81 others) is ≤ 5.
+- **BLOCKING 2 — the tool didn't always exit 0.** `--ticket-path ""` resolves to `.`, a directory
+  → uncaught `IsADirectoryError`, exit 1. `--ticket-path null` (or any nonexistent path) →
+  uncaught `FileNotFoundError`, exit 1. Both are exactly the shape `implement-ticket.js`'s
+  existing-ticket Scope Step 3c renders when `scopeOrphanInfo.ticket_path` is `""`/`null`/
+  `undefined` (the ticket-file-not-found case the Scope prompt already handles one level up).
+  Fixed by wrapping `_load_ticket()`'s `path.read_text()` in `try/except OSError` — a stderr
+  warning plus `return None`, which `main()`'s existing `if loaded is None: print([]); return 0`
+  branch already handled correctly once the crash itself was removed. 3 new tests
+  (`tests/tools/test_open_ticket_overlap.py`) reproduce the peer's exact repro shapes: empty
+  string, a nonexistent path, and a real directory — all now exit 0 with `[]`.
+
 ## Test Summary
 
-- `tests/tools/test_open_ticket_overlap.py` (9 tests): AC1 (real fixture pair), AC2 (unrelated
-  ticket, self-exclusion), AC3 (live-write-then-see), 3 signal-isolation tests (code-area alone,
-  terms alone, single-term-insufficient), plus subfolder-recursion and inprogress-scanning
-  structural tests.
+- `tests/tools/test_open_ticket_overlap.py` (12 tests, round 2): AC1 (real fixture pair), AC2
+  (unrelated ticket, self-exclusion), AC3 (live-write-then-see), signal-isolation tests (code-area
+  alone, terms alone with a realistic multi-candidate corpus, a common corpus word alone scoring
+  too low to surface), subfolder-recursion and inprogress-scanning structural tests, and 3
+  fail-open CLI tests (empty string / nonexistent path / a directory, BLOCKING 2).
+- `tests/tools/test_open_ticket_overlap_real_corpus.py` (3 tests, new in round 2, read-only
+  against the real tree): B0 fixture ranks the real target ticket #1 with code areas and in the
+  title/summary-only shape; median hit count per real ticket ≤ 5 — the concrete evidence for
+  BLOCKING 1's fix (peer's own follow-up review re-ran the same corpus measurement independently).
 - `tests/tools/test_concern_investigator_open_ticket_scanner_pin.py` (2 tests) and
   `tests/tools/test_implement_ticket_open_ticket_scanner_pin.py` (4 tests): AC4, raw-source-text
   pins mirroring `test_finalize_working_log_uses_helper_pin.py`'s established pattern — including
   an explicit pin that the existing-ticket `conflicts=` line is byte-unchanged.
 - `tests/tools/test_ticket_lifecycle_offer_rule.py` (1 test): AC5, doc-content check.
-- AC6: full `tests/tools/` suite (3208 passed, 53 skipped, 1 xfailed) run after all wiring
-  changes landed, including the CLAUDE.md edit — no regressions.
+- AC6: full `tests/tools/` suite run after round 1's wiring changes (3208 passed, 53 skipped, 1
+  xfailed) and again after round 2's scoring rewrite — no regressions either time.
 - No automated test for the CLAUDE.md lines' exact text (a policy file, not code) — both
   confirmed via direct `AskUserQuestion` with the user before commit, verified to land byte-exact
   against what was confirmed (see Implementation Notes).
 
 ## Files Changed
 
-- `tools/open_ticket_overlap.py` (new)
-- `tests/tools/test_open_ticket_overlap.py` (new)
+- `tools/open_ticket_overlap.py` (new; scoring rewritten in round 2)
+- `tests/tools/test_open_ticket_overlap.py` (new; updated in round 2 for the new scoring API and
+  fail-open behavior)
+- `tests/tools/test_open_ticket_overlap_real_corpus.py` (new in round 2)
 - `tests/fixtures/open_ticket_overlap/B0-PERCEPTION-UPDATE-WAVE-FIXTURE.md` (new)
 - `tests/tools/test_concern_investigator_open_ticket_scanner_pin.py` (new)
 - `tests/tools/test_implement_ticket_open_ticket_scanner_pin.py` (new)
