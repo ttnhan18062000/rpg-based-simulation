@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-WIRING-MAP-LIFECYCLE-ARC-MERMAID-PARSE-ERROR
-phase: open
+phase: done
 date: 2026-09-29
 tags: [process-improvement]
 ---
@@ -18,7 +18,7 @@ square-bracket node label, so it renders as a mermaid error banner.
 
 ## Status
 
-OPEN
+DONE
 
 ## Tier
 
@@ -105,8 +105,39 @@ None.
 
 ## Implementation Notes
 
+Quoted the SC label exactly as the ticket's own example proposed:
+`SC["Scarred — NOT BUILT, heal_wound() deleted; wounds decided permanent, DEV-005"]` (converted
+the `&#40;&#41;` entities to literal `()` directly, since a browser already decodes them to `()`
+for display either way — visually identical, AC2). Checked for any other unquoted `NODE[...]`
+label containing a literal or entity-escaped paren across both `docs/brainstorm/*.html` files
+(regex sweep, then eyeballed every paren-containing label line): none — `SC` was the only
+instance. Added a small Python-only regex regression guard
+(`tests/tools/test_wiring_map_mermaid_label_quoting.py`) against the same defect class recurring,
+proportionate to the fix's own size (no new Node/mermaid npm dependency committed).
+
 ## Test Summary
+
+AC1: re-ran `mermaid.parse()` (v10.9.1, Node/jsdom, identical harness to
+TCK-20260916-BRAINSTORM-HTML-MERMAID-NEVER-RENDERS) against all 7 real diagrams extracted from
+both files. All 7 now return `VALID ... parse() returned true` (previously 6/7, with the wiring
+map's 3rd diagram failing "Parse error on line 9"). AC2: label's decoded/visible text unchanged,
+confirmed by inspection (entity-decoded original === new literal text, byte-for-byte). AC3:
+`python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py --check` still `OK`
+(unaffected — `SC` isn't in that tool's `OPERATING_LOOP_NODE_TO_MECHANISM_ID` mapping). New guard
+test (4 tests) confirmed to fail on the pre-fix content (revert/rerun/restore method) and pass
+after. `tests/unit/tools/test_mechanism_wiring_map_classdef.py` (15 tests) unaffected, still pass.
 
 ## Files Changed
 
+- `docs/brainstorm/rpg_simulation_wiring_map.html`
+- `tests/tools/test_wiring_map_mermaid_label_quoting.py` (new)
+
 ## Completion Summary
+
+Quoted the one unquoted mermaid node label containing parens (real file line 614), the exact
+shape that broke `mermaid.parse()` for the wiring map's Entity Lifecycle Arc diagram. Verified all
+7 real diagrams across both `docs/brainstorm/*.html` files now parse (previously 6/7), confirmed
+no visible content changed, confirmed the mechanism-registry drift check is unaffected, and added
+a lightweight regression guard against the same defect class. Left the label's stale-sounding
+content ("wounds decided permanent") untouched per Out of Scope — a content question for whoever
+owns the wiring map, not this syntax fix.
