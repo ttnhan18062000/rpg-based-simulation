@@ -89,6 +89,61 @@ def test_finds_overlap_with_real_target_ticket_via_fixture(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# has_code_area_match field (peer review round 3, recommended)
+# ---------------------------------------------------------------------------
+
+
+def test_has_code_area_match_true_when_a_code_area_matched(tmp_path):
+    todos = tmp_path / "tickets" / "todos"
+    _write_ticket(
+        todos / "TCK-CODEAREA-ONLY.md",
+        "TCK-CODEAREA-ONLY",
+        "Totally different subject about crafting recipes",
+        "Nothing to do with the query's own wording at all, distinct domain entirely.",
+        ["src/domains/perception/phase.py"],
+    )
+    hits = find_overlapping_open_tickets(
+        query_title="Unrelated title wording here",
+        query_summary="Also unrelated wording, no shared vocabulary intended.",
+        query_code_areas=["src/domains/perception/phase.py"],
+        query_ticket_id=None,
+        todos_root=todos,
+        inprogress_root=tmp_path / "tickets" / "inprogress",
+    )
+    assert len(hits) == 1
+    assert hits[0]["has_code_area_match"] is True
+
+
+def test_has_code_area_match_false_when_only_terms_matched(tmp_path):
+    todos = tmp_path / "tickets" / "todos"
+    for i in range(4):
+        _write_ticket(
+            todos / f"TCK-FILLER-{i}.md",
+            f"TCK-FILLER-{i}",
+            f"Combat durability decay formula issue number {i}",
+            f"Rounds down instead of nearest during combat resolution, variant {i}.",
+            [f"src/domains/combat_engagement/resolution_{i}.py"],
+        )
+    _write_ticket(
+        todos / "TCK-TERMS-ONLY.md",
+        "TCK-TERMS-ONLY",
+        "Perception pipeline strategic cognition wiring gap",
+        "Concerns perception and strategic cognition wiring.",
+        ["src/completely/unrelated/path.py"],
+    )
+    hits = find_overlapping_open_tickets(
+        query_title="Perception pipeline strategic cognition investigation",
+        query_summary="Also about perception and strategic cognition.",
+        query_code_areas=["src/domains/perception/phase.py"],
+        query_ticket_id=None,
+        todos_root=todos,
+        inprogress_root=tmp_path / "tickets" / "inprogress",
+    )
+    assert {h["ticket_id"] for h in hits} == {"TCK-TERMS-ONLY"}
+    assert hits[0]["has_code_area_match"] is False
+
+
+# ---------------------------------------------------------------------------
 # AC2 -- negative controls
 # ---------------------------------------------------------------------------
 

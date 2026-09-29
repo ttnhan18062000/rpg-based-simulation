@@ -12,7 +12,6 @@ Read-only: never writes to tickets/todos/ or tickets/inprogress/.
 """
 from __future__ import annotations
 
-import statistics
 import sys
 from pathlib import Path
 
@@ -20,7 +19,7 @@ _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
-from open_ticket_overlap import _load_ticket, find_overlapping_open_tickets  # noqa: E402
+from open_ticket_overlap import find_overlapping_open_tickets  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _TODOS_ROOT = _REPO_ROOT / "tickets" / "todos"
@@ -43,12 +42,14 @@ _B0_CODE_AREAS = [
 ]
 
 
-def _real_open_ticket_paths() -> list:
-    paths = []
-    for root in (_TODOS_ROOT, _INPROGRESS_ROOT):
-        if root.exists():
-            paths.extend(sorted(root.rglob("TCK-*.md")))
-    return paths
+# A previous "median hit count <= 5" test here was found vacuous by peer review round 3: with
+# top_n=5 and min_score=0.0, `find_overlapping_open_tickets()` caps output at 5 by construction,
+# so that assertion could never fail regardless of scoring quality -- it re-proved the cap exists,
+# not that the cap is doing anything meaningful. Removed in favor of the margin assertions below,
+# which the cap does NOT bound: a real-corpus regression here (e.g. scoring reverting toward the
+# old undifferentiated-boolean shape) would show up as the margin collapsing toward 1.0, something
+# the vacuous test could never have caught.
+_MIN_MARGIN = 1.3  # conservative floor; real measured margins are ~1.9-2x (see docstrings below)
 
 
 def test_b0_fixture_ranks_the_real_target_ticket_first_with_code_areas():
@@ -60,10 +61,15 @@ def test_b0_fixture_ranks_the_real_target_ticket_first_with_code_areas():
         todos_root=_TODOS_ROOT,
         inprogress_root=_INPROGRESS_ROOT,
     )
-    assert hits, "expected at least one hit against the real corpus"
+    assert len(hits) >= 2, "expected at least 2 hits against the real corpus to measure a margin"
     assert hits[0]["ticket_id"] == _TARGET_TICKET_ID, (
         f"expected {_TARGET_TICKET_ID} ranked #1 against the real corpus, got {hits[0]['ticket_id']} "
         f"(score {hits[0]['score']}) -- full top results: {[(h['ticket_id'], h['score']) for h in hits]}"
+    )
+    margin = hits[0]["score"] / hits[1]["score"]
+    assert margin >= _MIN_MARGIN, (
+        f"rank-1 score {hits[0]['score']} is only {margin:.2f}x rank-2 score {hits[1]['score']} "
+        f"({hits[1]['ticket_id']}) -- expected a real, not marginal, separation"
     )
 
 
@@ -80,39 +86,14 @@ def test_b0_fixture_ranks_the_real_target_ticket_first_title_summary_only():
         todos_root=_TODOS_ROOT,
         inprogress_root=_INPROGRESS_ROOT,
     )
-    assert hits, "expected at least one hit against the real corpus (title/summary only)"
+    assert len(hits) >= 2, "expected at least 2 hits against the real corpus to measure a margin"
     assert hits[0]["ticket_id"] == _TARGET_TICKET_ID, (
         f"expected {_TARGET_TICKET_ID} ranked #1 (title/summary only) against the real corpus, "
         f"got {hits[0]['ticket_id']} (score {hits[0]['score']}) -- "
         f"full top results: {[(h['ticket_id'], h['score']) for h in hits]}"
     )
-
-
-def test_median_hit_count_per_real_ticket_stays_small():
-    """Each real open ticket, queried against every OTHER real open ticket, must not flood the
-    output. Pre-fix (peer measurement): average 70.9/81 possible hits, zero tickets with zero
-    hits -- an advisory nobody reads. Post-fix: capped at top_n (5 by default), so this is really
-    asserting the cap works end-to-end, not a new empirical claim -- but it's the AC the peer
-    review asked for, and it's cheap to prove directly rather than trust the cap in isolation."""
-    real_tickets = []
-    for path in _real_open_ticket_paths():
-        loaded = _load_ticket(path)
-        if loaded is not None:
-            real_tickets.append(loaded)
-
-    assert len(real_tickets) >= 10, "expected a real, non-trivial open-ticket corpus to measure against"
-
-    hit_counts = []
-    for query in real_tickets:
-        hits = find_overlapping_open_tickets(
-            query_title=query["title"],
-            query_summary=query["summary"],
-            query_code_areas=query["code_areas"],
-            query_ticket_id=query["ticket_id"],
-            todos_root=_TODOS_ROOT,
-            inprogress_root=_INPROGRESS_ROOT,
-        )
-        hit_counts.append(len(hits))
-
-    median = statistics.median(hit_counts)
-    assert median <= 5, f"median hit count per real ticket is {median}, expected <= 5 (counts: {hit_counts})"
+    margin = hits[0]["score"] / hits[1]["score"]
+    assert margin >= _MIN_MARGIN, (
+        f"rank-1 score {hits[0]['score']} is only {margin:.2f}x rank-2 score {hits[1]['score']} "
+        f"({hits[1]['ticket_id']}) -- expected a real, not marginal, separation"
+    )

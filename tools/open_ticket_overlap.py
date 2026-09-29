@@ -164,11 +164,16 @@ def find_overlapping_open_tickets(
     top_n: int = _DEFAULT_TOP_N,
     min_score: float = _DEFAULT_MIN_SCORE,
 ) -> list:
-    """Returns up to `top_n` `{ticket_id, path, score, matched_code_areas, matched_terms}` dicts,
-    ranked by `score` descending, for open tickets under `todos_root`/`inprogress_root` (recursive
-    -- covers `tickets/todos/<folder>/` epics) that score above `min_score`. Excludes any
-    candidate whose own `ticket_id` equals `query_ticket_id`. See module docstring for the scoring
-    formula and why it replaced a plain boolean "either signal fires" check."""
+    """Returns up to `top_n` `{ticket_id, path, score, has_code_area_match, matched_code_areas,
+    matched_terms}` dicts, ranked by `score` descending, for open tickets under
+    `todos_root`/`inprogress_root` (recursive -- covers `tickets/todos/<folder>/` epics) that
+    score above `min_score`. `has_code_area_match` (peer review round 3: raw scores aren't
+    comparable across different queries -- a query with no real overlap can still return `top_n`
+    low-score hits, and a long, term-rich unrelated ticket's own top hit can outscore a short
+    genuinely-related one) lets a caller weigh a terms-only hit lower than one backed by the
+    strongest, most deterministic signal, without depending on the score's absolute magnitude.
+    Excludes any candidate whose own `ticket_id` equals `query_ticket_id`. See module docstring
+    for the scoring formula and why it replaced a plain boolean "either signal fires" check."""
     query_terms = _distinctive_terms(f"{query_title} {query_summary}")
     query_code_area_set = set(query_code_areas)
 
@@ -202,6 +207,7 @@ def find_overlapping_open_tickets(
                 "ticket_id": cand["ticket_id"],
                 "path": cand["path"],
                 "score": round(total_score, 3),
+                "has_code_area_match": bool(matched_code_areas),
                 "matched_code_areas": matched_code_areas,
                 "matched_terms": matched_terms,
             })

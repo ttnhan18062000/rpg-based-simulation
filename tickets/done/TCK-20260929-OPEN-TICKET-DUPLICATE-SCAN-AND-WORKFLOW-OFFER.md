@@ -248,17 +248,39 @@ See `staging_artifacts/TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFE
   (`tests/tools/test_open_ticket_overlap.py`) reproduce the peer's exact repro shapes: empty
   string, a nonexistent path, and a real directory — all now exit 0 with `[]`.
 
+**Peer review round 3 (post-`5d2163fb3`) — approved pending one required test fix, plus a
+recommended (non-blocking) improvement, both done:**
+
+- **REQUIRED — `test_median_hit_count_per_real_ticket_stays_small` was vacuous.** With
+  `top_n=5`/`min_score=0.0`, `find_overlapping_open_tickets()` caps output at 5 *by construction*
+  — the assertion could never fail regardless of scoring quality; it re-proved the cap exists, not
+  that ranking is meaningful. Removed. Replaced with a margin assertion added to each of the two
+  existing rank-#1 tests: `hits[0]["score"] / hits[1]["score"] >= 1.3` (a conservative floor —
+  real measured margins are ~1.9-2x, both in my own re-run and the peer's independent
+  re-measurement, `58.29` vs `31.15`). A future regression toward the old undifferentiated-boolean
+  shape would show up as this margin collapsing toward 1.0, which the vacuous test could never
+  have caught.
+- **RECOMMENDED (done, not skipped) — added `has_code_area_match: bool` to every hit.** Peer's own
+  measurement: raw scores aren't comparable across different queries (an unrelated, term-rich
+  query's own top hit can outscore a genuinely-related short one), so a query with zero real
+  overlap can still return up to `top_n` low-score hits. `has_code_area_match` lets a caller weigh
+  a terms-only hit lower than one backed by the strongest, most deterministic signal (an exact
+  code-area path match), without depending on the score's absolute magnitude. 2 new tests confirm
+  `True`/`False` in the expected scenarios.
+
 ## Test Summary
 
-- `tests/tools/test_open_ticket_overlap.py` (12 tests, round 2): AC1 (real fixture pair), AC2
+- `tests/tools/test_open_ticket_overlap.py` (14 tests, round 3): AC1 (real fixture pair), AC2
   (unrelated ticket, self-exclusion), AC3 (live-write-then-see), signal-isolation tests (code-area
   alone, terms alone with a realistic multi-candidate corpus, a common corpus word alone scoring
-  too low to surface), subfolder-recursion and inprogress-scanning structural tests, and 3
-  fail-open CLI tests (empty string / nonexistent path / a directory, BLOCKING 2).
-- `tests/tools/test_open_ticket_overlap_real_corpus.py` (3 tests, new in round 2, read-only
-  against the real tree): B0 fixture ranks the real target ticket #1 with code areas and in the
-  title/summary-only shape; median hit count per real ticket ≤ 5 — the concrete evidence for
-  BLOCKING 1's fix (peer's own follow-up review re-ran the same corpus measurement independently).
+  too low to surface), subfolder-recursion and inprogress-scanning structural tests, 3 fail-open
+  CLI tests (empty string / nonexistent path / a directory, BLOCKING 2), and 2
+  `has_code_area_match` field tests (round 3 recommended item).
+- `tests/tools/test_open_ticket_overlap_real_corpus.py` (2 tests, round 3, read-only against the
+  real tree): B0 fixture ranks the real target ticket #1 with code areas and in the title/summary-
+  only shape, each with an explicit margin assertion (`>= 1.3x` rank-2) — the concrete,
+  non-vacuous evidence for BLOCKING 1's fix. A third test (median hit count) was removed in round
+  3 as vacuous per peer review — see Implementation Notes.
 - `tests/tools/test_concern_investigator_open_ticket_scanner_pin.py` (2 tests) and
   `tests/tools/test_implement_ticket_open_ticket_scanner_pin.py` (4 tests): AC4, raw-source-text
   pins mirroring `test_finalize_working_log_uses_helper_pin.py`'s established pattern — including
