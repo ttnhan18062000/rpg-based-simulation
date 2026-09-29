@@ -58,7 +58,10 @@ recurrence — not a single mechanical fix.
 - [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
 
 ## Related Tickets
-None — this epic originates from live session investigation, not the D23/D24 audit tree
+- TCK-20260929-RETIRE-SCRIPTS-DIR
+- TCK-20260929-TOOLS-ORPHAN-FILE-CHECK
+
+Child tickets created by create-tickets on 2026-09-29; order in SEQUENCE.md. Otherwise this epic originates from live session investigation, not the D23/D24 audit tree
 (`TCK-20260817-CODEBASE-HEALTH-RESILIENCE-EPIC` and its sub-epics), so it stands independently.
 
 ## Related Docs
