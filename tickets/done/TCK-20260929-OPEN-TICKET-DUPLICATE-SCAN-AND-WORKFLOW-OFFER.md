@@ -286,6 +286,21 @@ recommended (non-blocking) improvement, both done:**
   re-verified passing against the frozen snapshot (identical results, since the snapshot was taken
   at the exact commit the live tree was previously measured against).
 
+**User decision (relayed directly by the design peer, round 5) — shrink the frozen corpus, done:**
+copying the whole 82-ticket `todos/`+`inprogress/` tree was more than the test needed and cost
+something real: it polluted a repo-wide `grep` for any of those 82 ticket IDs with a second,
+non-live hit, and duplicated content this project's own "define information once" preference
+argues against. Shrunk to ~21 files: the real target, its 4 measured close runners-up
+(`RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, `MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`,
+`INFORMATION-TRUST-DECEPTION-VERDICT-QUESTIONED`, `REGION-DANGER-SEEN-TWO-DEAD-PRECONDITIONS`), and
+~15 ordinary unrelated tickets from mixed layers (combat, economy, world, HUD, CI, observability,
+governance) kept for a realistic IDF base — not hand-picked to inflate the margin. Re-measured
+directly rather than assuming: margins on the shrunk corpus are actually slightly *better* than on
+the full 82-ticket set (2.199x and 2.412x vs the earlier 1.87-2.04x range), both comfortably above
+the `1.3` floor. Both real-corpus tests re-verified passing; full `tests/tools/` suite re-run clean.
+Corpus README and the real-corpus test file's own docstring updated to describe the subset and why
+it exists (not the full tree).
+
 ## Test Summary
 
 - `tests/tools/test_open_ticket_overlap.py` (14 tests, round 3): AC1 (real fixture pair), AC2

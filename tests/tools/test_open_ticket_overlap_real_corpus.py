@@ -14,9 +14,12 @@ will eventually close and leave the open corpus, and any new open ticket touchin
 areas could become a close runner-up and collapse the measured margin, both failing an unrelated
 future PR for a reason that has nothing to do with this tool (the same defect class as
 TCK-20260929-RUN-DEDUP-BASELINE-PINS-GROWING-CORPUS: an exact assertion over a corpus that keeps
-changing). `tests/fixtures/open_ticket_overlap/corpus/` is a frozen snapshot of the real
-`tickets/todos/`+`tickets/inprogress/` trees (82 real tickets, source commit SHA in that
-directory's own README.md) -- still a real, messy, non-synthetic corpus, just a stable one.
+changing). `tests/fixtures/open_ticket_overlap/corpus/` is a frozen snapshot of a subset of the
+real `tickets/todos/`+`tickets/inprogress/` trees (~21 real tickets -- the target, its measured
+runners-up, and ~15 ordinary unrelated ones for a realistic IDF base; trimmed down from an initial
+full 82-ticket copy in peer review round 5, since that many real-looking ticket copies polluted a
+repo-wide grep and duplicated content unnecessarily -- source commit SHA and the full rationale in
+that directory's own README.md) -- still real, unedited ticket content, just a small, stable set.
 Deliberately NOT a skip-if-absent/skip-if-target-missing guard: that would silently turn the only
 real-quality proof this tool has into a no-op; see the corpus README for the reasoning.
 
@@ -62,7 +65,7 @@ _B0_CODE_AREAS = [
 # which the cap does NOT bound: a real-corpus regression here (e.g. scoring reverting toward the
 # old undifferentiated-boolean shape) would show up as the margin collapsing toward 1.0, something
 # the vacuous test could never have caught.
-_MIN_MARGIN = 1.3  # conservative floor; real measured margins are ~1.9-2x (see docstrings below)
+_MIN_MARGIN = 1.3  # conservative floor; measured margins on the frozen corpus are ~2.2-2.4x
 
 
 def test_b0_fixture_ranks_the_real_target_ticket_first_with_code_areas():
