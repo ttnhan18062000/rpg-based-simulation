@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-TOOLS-ORPHAN-FILE-CHECK
-phase: open
+phase: done
 date: 2026-09-29
 tags: [process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [process-improvement]
 Add an on-demand report-only orphan-file check over all of tools/
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -96,9 +96,52 @@ None.
 - The exact module name (tools_orphan_check.py) and Makefile target name are recommendations.
 
 ## Implementation Notes
+- New module `tools/gate_checks/tools_orphan_check.py`: `check_tools_orphans()` (injectable
+  `repo_root`/`tracked_files` for tests), `build_token_index()` (one-pass, whole-corpus,
+  word-boundary `IDENT_RE` tokens), `_classify()` (LIVE > TEST_ONLY > DOC_ONLY > NO_REFERENCES —
+  not explicitly stated as a priority order in the ticket, but required since every file lands
+  in exactly one bucket, and directly implied by the investigation's own "doc mentions hide real
+  orphans" finding).
+- Caught during implementation (not part of the original scope bullets, but required by the Out
+  of Scope line "scanning the codex subtrees' contents beyond listing them as excluded"): the
+  first pass excluded Codex subtree files from *classification* but still read their *content*
+  into the token index as a reference source for other files. Fixed so `build_token_index` skips
+  Codex subtree files entirely — their content never contributes evidence either way.
+- Makefile: new `tools-orphan-check` target + `.PHONY` entry, following the
+  `codebase-health-*`/`agent-monitoring-index`/`parity-index` on-demand-only precedent exactly
+  (`(on-demand only — not CI)` phrasing).
+- 14 new tests in `tests/tools/test_tools_orphan_check.py`: the 5 required tmp_path cases (one
+  split into two for the two entrypoint kinds in case (e) — Makefile and `.claude/settings.json`
+  — 6 total), determinism/no-side-effects, `__init__.py`/`__pycache__`/Codex-exclusion structural
+  test, Makefile-wiring (pure text), no-`.github/workflows`-reference, real-corpus
+  structure-only test (60s guard), and a parametrized `is_codex_subtree` exactness check
+  (confirms `tools/agent_replay/` itself, without a trailing `_<x>` suffix, is NOT excluded —
+  only `tools/agent_replay_<x>/` is, per the real corpus's own `tools/agent_replay/run_pilot.py`
+  which is genuinely TEST_ONLY, not excluded).
 
 ## Test Summary
+- `tests/tools/test_tools_orphan_check.py`: 14 passed.
+- Direct invocation timing: ~2 seconds against the real corpus (268 tracked `tools/` files
+  post-`TCK-20260929-RETIRE-SCRIPTS-DIR`), well under the 300s per-tool-regex-scan failure mode
+  this design avoids and the test's own 60s guard.
+- Real-corpus measurement (informational, not an acceptance target — see Assumptions): 189 LIVE,
+  63 excluded (Codex subtrees), 7 TEST_ONLY, 7 DOC_ONLY, 2 NO_REFERENCES
+  (`tools/hooks/post-commit-reindex.sh`, `tools/search/docker-compose.yml`).
+- `make tools-orphan-check` invoked directly: exit 0, single `MARKER:` line.
+- Two consecutive invocations produced byte-identical JSON; working tree confirmed unmodified
+  (`git status --short` before/after showed no diff attributable to the check itself).
 
 ## Files Changed
+- `tools/gate_checks/tools_orphan_check.py` (new)
+- `tests/tools/test_tools_orphan_check.py` (new)
+- `Makefile` (new `tools-orphan-check` target + `.PHONY` entry)
 
 ## Completion Summary
+New on-demand, report-only orphan-file check over all of `tools/` (recursive), following this
+ticket's exact specified module shape and precedents. One real gap found and fixed beyond the
+initial pass — Codex-subtree content was contributing to other files' evidence despite being
+excluded from classification — caught by re-reading the ticket's own Out of Scope line before
+calling it done, not left as a silent inconsistency. All stated acceptance criteria verified via
+tests or direct invocation. The 2 no-reference and 2x7 doc/test-only files found in the first
+real post-retirement run are left as-is per this ticket's explicit scope (dispositions are a
+separate human decision, not this ticket's job) — worth a human look, not acted on here.

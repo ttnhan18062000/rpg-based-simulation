@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260820-SCRIPTS-TOOLS-GOVERNANCE-EPIC
-phase: open
+phase: done
 date: 2026-08-20
 tags: [ai, process-improvement]
 ---
@@ -53,9 +53,12 @@ recurrence — not a single mechanical fix.
   under `TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC` (currently blocked), not folded in here.
 
 ## Acceptance Criteria
-- [ ] `docs/plans/scripts_tools_governance_epic.md` is reviewed and its scope confirmed accurate.
-- [ ] Child tickets are created via `create-tickets` once this epic is chosen for action.
-- [ ] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+- [x] `docs/plans/scripts_tools_governance_epic.md` is reviewed and its scope confirmed accurate.
+- [x] Child tickets are created via `create-tickets` once this epic is chosen for action.
+- [x] This epic is not closed until its child tickets (once created) reach `tickets/done/`.
+  Both `TCK-20260929-RETIRE-SCRIPTS-DIR` and `TCK-20260929-TOOLS-ORPHAN-FILE-CHECK` are in
+  `tickets/done/` as of 2026-09-29 (confirmed via `tools/epic_folder_status.py`:
+  `all_children_done: true`).
 
 ## Related Tickets
 - TCK-20260929-RETIRE-SCRIPTS-DIR
@@ -68,7 +71,7 @@ Child tickets created by create-tickets on 2026-09-29; order in SEQUENCE.md. Oth
 - docs/plans/scripts_tools_governance_epic.md
 
 ## Related Stored Artifacts
-staging_artifacts/TCK-20260820-SCRIPTS-TOOLS-GOVERNANCE-EPIC/
+stored_artifacts/TCK-20260820-SCRIPTS-TOOLS-GOVERNANCE-EPIC/
 
 ## Related Code Areas
 - scripts/
@@ -83,13 +86,21 @@ staging_artifacts/TCK-20260820-SCRIPTS-TOOLS-GOVERNANCE-EPIC/
   deletion) is left to that same judgment call, per file.
 
 ## Implementation Notes
-(pending — scope-only epic)
+Scoped into 2 child tickets via `create-tickets` on 2026-09-29, both implemented and closed the
+same day. See each child ticket's own Implementation Notes for the real work (scripts/
+retirement into tools/perf, tools/release, tools/maintenance plus a 9th orphan found live and a
+deeper turbo_run.py defect chain beyond what the investigation anticipated; the new on-demand
+tools/gate_checks/tools_orphan_check.py orphan-check mechanism).
 
 ## Test Summary
-(pending — no direct tests; each future child ticket will carry its own)
+No direct tests of its own (scope-only epic) — each child ticket carried its own, both green.
 
 ## Files Changed
-(pending)
+None directly (scope-only epic) — see each child ticket's own Files Changed.
 
 ## Completion Summary
-(pending)
+Both scoped child tickets closed 2026-09-29: `TCK-20260929-RETIRE-SCRIPTS-DIR` (scripts/
+retired entirely, its live files moved into new tools/ subpackages, 13 dead/orphaned files
+deleted) and `TCK-20260929-TOOLS-ORPHAN-FILE-CHECK` (new on-demand, report-only orphan-file
+check covering all of tools/). All 3 acceptance criteria met. This epic's full remit —
+documented rule, orphan cleanup, and a lasting prevention mechanism — is now delivered.
