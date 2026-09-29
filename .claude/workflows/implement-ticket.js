@@ -146,6 +146,8 @@ filter or transform it — this is the ground-truth list the Security-Review gat
 
 Step 3b — check for a security mis-tag: if the ticket's "Related Code Areas" section contains any path or filename matching one of: \`credential\`, \`secret\`, \`password\`, \`api_key\`, \`private_key\`, \`.env\`, \`oauth\`, \`jwt\` (case-insensitive substring match; do NOT match \`auth\`, \`cert\`, \`key\`, \`token\`, or \`session\` bare — those collide with this codebase's own \`AuthoritativeState\`/\`authoritative_pipeline\`/\`certification\`/\`LabSessionStore\` vocabulary), AND the ticket's tags do NOT include \`security\` — set mistag_warning=true. Otherwise mistag_warning=false.
 
+Step 3c — run \`python3 tools/open_ticket_overlap.py --ticket-path "${scopeOrphanInfo && scopeOrphanInfo.ticket_path}"\` (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER — always exits 0, prints a JSON array of other open tickets that overlap this one). Fold any hits into related_context below — never into conflicts; this does not change what conflicts means.
+
 conflicts vs. related_context: conflicts is ONLY for a genuine blocking duplicate/contradictory-work finding that should stop the pipeline for human review before proceeding (e.g. the ticket-file-not-found case below). related_context is for any other informational finding worth surfacing (e.g. a related prior ticket that is not duplicate work) that must NOT block the pipeline — empty array if none, never omit the field.
 
 Return: ticket_id="${ticketId}", ticket_path=(the ticket_path value stated above),
@@ -168,7 +170,7 @@ Step 0b (context warm-start — REQUIRED before any file reads):
 Request: ${request}
 
 Steps:
-1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts. A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as related_context (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a conflicts entry.
+1. Scan tickets/ (inprogress/, done/, and backlogs/) for overlapping scope or prior attempts, and tickets/todos/ via \`python3 tools/open_ticket_overlap.py --title "..." --summary "..."\` (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER — always exits 0, prints a JSON array, informational only). A hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned — flag it as related_context (non-blocking) rather than re-scoping from scratch, unless it is a genuine blocking duplicate of this exact request, in which case flag it as a conflicts entry. A tickets/todos/ scanner hit always goes to related_context, never conflicts — it is a report, not a duplicate judgment.
 2. Scan docs/ (mechanics Bible chapters, engine contracts) for constraints on the request.
 3. Scan stored_artifacts/ for prior investigations in the same area.
 4. Read relevant source files to understand current state.

@@ -18,10 +18,19 @@ itself a separately seeded mechanism) -- excluded from the mapping and left with
 hand-assigned class, not derived, since there is nothing in the registry to derive it from.
 
 Usage:
-  python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py         # report drift, exit 1 if any found
+  python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py               # writes the real file
+  python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py --check        # exit 1 if drift exists, writes nothing
+  python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py --path PATH    # target a different wiring map file (tests)
+  python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py --registry PATH  # target a different registry (tests)
+
+TCK-20260919-MECHANISM-WIRING-MAP-CLASSDEF-REGENERATE-MODE-GAP: default-write / `--check`-reports-
+only, mirroring `mechanism_atlas_regenerate.py`'s own CLI shape exactly -- this tool previously had
+no write mode at all, so every state correction touching this diagram needed a hand `Edit`.
 """
 from __future__ import annotations
 
+import argparse
+import re
 import sys
 from pathlib import Path
 from typing import Dict
@@ -75,11 +84,6 @@ STATE_TO_CLASSDEF: Dict[str, str] = {
 }
 
 
-def _load_registry() -> dict:
-    with open(_REGISTRY_PATH, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
-
-
 def compute_expected_classdef(registry: dict) -> Dict[str, str]:
     """node abbreviation -> the classDef it should carry, derived from the real registry state."""
     states = {m["id"]: m["state"] for m in registry.get("mechanisms", []) or []}
@@ -127,20 +131,88 @@ def find_drift(registry: dict, wiring_map_text: str) -> Dict[str, dict]:
     return drift
 
 
-def main() -> int:
-    registry = _load_registry()
-    text = _WIRING_MAP_PATH.read_text(encoding="utf-8")
+_CLASS_LIVE_LINE_RE = re.compile(r"^(\s*)class ([A-Za-z0-9_,]+) live$")
+
+
+def _remove_node_from_class_live_lines(text: str, node: str) -> str:
+    """Removes `node` from any trailing `class A,B,C,... live` line it's currently a member of,
+    dropping the whole line if `node` was its only member. A no-op if `node` isn't in any such
+    line (already inline-overridden, or never colored at all)."""
+    out_lines = []
+    for line in text.split("\n"):
+        m = _CLASS_LIVE_LINE_RE.match(line)
+        if m:
+            indent, node_list_str = m.group(1), m.group(2)
+            node_list = node_list_str.split(",")
+            if node in node_list:
+                node_list = [n for n in node_list if n != node]
+                if node_list:
+                    out_lines.append(f"{indent}class {','.join(node_list)} live")
+                continue  # replaced above, or dropped entirely if now empty
+        out_lines.append(line)
+    return "\n".join(out_lines)
+
+
+def _apply_inline_override(text: str, node: str, expected: str) -> str:
+    """Sets `node`'s classDef to an inline `:::expected` override immediately after its own `]`
+    bracket close -- replacing an existing inline override if present (mirrors `find_drift()`'s
+    own "immediately after this node's own bracketed label closes" parsing), otherwise inserting
+    a new one."""
+    inline = f'{node}["'
+    idx = text.find(inline)
+    if idx == -1:
+        raise ValueError(f"node {node!r} not found in wiring map text")
+    close_idx = text.find("]", idx)
+    if close_idx == -1:
+        raise ValueError(f"unterminated label for node {node!r}")
+    after_bracket = close_idx + 1
+    override_match = re.match(r":::[A-Za-z0-9_]*", text[after_bracket:])
+    end = after_bracket + override_match.end() if override_match else after_bracket
+    return text[:after_bracket] + f":::{expected}" + text[end:]
+
+
+def apply_classdef_fix(text: str, node: str, expected: str) -> str:
+    """Surgically sets `node`'s classDef to `expected`: first removes it from any `class A,B,C,...
+    live` line it currently sits in (so it's never simultaneously inline-overridden AND
+    class-line-assigned -- mermaid applies the class-line assignment last, which would silently
+    shadow the inline override), then applies the inline `:::expected` override."""
+    text = _remove_node_from_class_live_lines(text, node)
+    return _apply_inline_override(text, node, expected)
+
+
+def render(check: bool, wiring_map_path: Path, registry_path: Path) -> int:
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
+    text = wiring_map_path.read_text(encoding="utf-8")
     drift = find_drift(registry, text)
-    if drift:
-        print(f"DRIFT: {len(drift)} node(s) in the Entity Operating Loop diagram disagree with "
-              f"the registry's real state:")
-        for node, d in sorted(drift.items()):
-            mech_id = OPERATING_LOOP_NODE_TO_MECHANISM_ID[node]
-            print(f"  {node} ({mech_id}): diagram shows '{d['current']}', registry state says "
-                  f"'{d['expected']}'")
+
+    if not drift:
+        print("OK: Entity Operating Loop diagram's classDef assignments match the registry.")
+        return 0
+
+    print(f"{'DRIFT' if check else 'FIXING'}: {len(drift)} node(s) in the Entity Operating Loop "
+          f"diagram disagree with the registry's real state:")
+    for node, d in sorted(drift.items()):
+        mech_id = OPERATING_LOOP_NODE_TO_MECHANISM_ID[node]
+        print(f"  {node} ({mech_id}): diagram shows '{d['current']}', registry state says "
+              f"'{d['expected']}'")
+
+    if check:
         return 1
-    print("OK: Entity Operating Loop diagram's classDef assignments match the registry.")
+
+    for node, d in drift.items():
+        text = apply_classdef_fix(text, node, d["expected"])
+    wiring_map_path.write_text(text, encoding="utf-8")
+    print(f"Wrote {len(drift)} classDef fix(es) to {wiring_map_path}.")
     return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Report drift, write nothing, exit 1 if any.")
+    parser.add_argument("--path", type=Path, default=_WIRING_MAP_PATH, help="Wiring map HTML path.")
+    parser.add_argument("--registry", type=Path, default=_REGISTRY_PATH, help="Registry YAML path.")
+    args = parser.parse_args()
+    return render(check=args.check, wiring_map_path=args.path, registry_path=args.registry)
 
 
 if __name__ == "__main__":

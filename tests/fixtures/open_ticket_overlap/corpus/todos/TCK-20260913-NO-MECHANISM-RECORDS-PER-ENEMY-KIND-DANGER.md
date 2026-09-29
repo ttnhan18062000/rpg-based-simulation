@@ -1,0 +1,182 @@
+---
+status: active
+layer: strategy
+authority: P1
+audience: agent
+ticket_id: TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER
+phase: open
+date: 2026-09-13
+tags: [cognition, combat]
+---
+
+# TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER
+
+> **Moved back to the backlog, 2026-09-20, at the user's direct instruction.** This is a
+> **lifecycle correction only** — the ticket had sat in `tickets/inprogress/` with no further
+> content change since 2026-09-14 (verified via `git log --follow`, not file mtime), and its
+> presence there was firing this repo's sidecar-check hook on every `Edit`/`Write` in every
+> concurrent session on this machine. **Nothing about the ticket's own substance was
+> investigated, debugged, or re-scoped as part of this move** — its prior `BLOCKED` reasoning
+> (a real user-level decision from 2026-09-13, quoted in full immediately below) is preserved
+> as-is, not acted on; `Status` is reset to `OPEN` only as part of this lifecycle correction, not
+> a signal that the underlying decision changed.
+>
+> **A concrete pointer for whoever re-validates this, not a vague "check if things changed"**:
+> this ticket sits in territory the runtime-evidence program has been actively revising
+> conclusions about this same week. Specifically, `perception` was confirmed dormant and its own
+> tracked state corrected from `done` to `orphan` **two days after** this ticket was last
+> touched. This ticket's own stated premises may already be invalid as a result — re-check against
+> the runtime-evidence program's current findings before resuming, rather than assuming the
+> picture below still holds.
+
+## Title
+No entity can learn that one kind of creature is more dangerous than another — nothing in the simulation ties a danger assessment to an enemy *kind*, so every combat capability estimate falls back to the same hardcoded table regardless of what an entity has actually fought
+
+## Status
+OPEN — **previously BLOCKED on a user-level decision, 2026-09-13.** Ran the declared-intent check before building
+anything, per instruction: checked the Mechanics Bible, parity ledger,
+`docs/cognition/capability_and_knowledge_contract.md`, and Epic 4.2's own scope. **Nothing declares
+that entities should learn per-enemy-kind danger from combat experience.** See Implementation Notes
+for the full evidence. Stopping here rather than designing or building a learning mechanism nobody
+specified — reported for a decision rather than proceeding.
+
+## Tier
+standard
+
+## Type
+feature
+
+## Priority
+P2
+
+## Request Summary
+Found while investigating `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`'s own
+`enemy_data` field, once its own blocking chain was finally unblocked by this batch's earlier
+tickets. That investigation's original framing was "`enemy_data` is unpopulated" — a field-level
+finding. The real finding underneath it is a gameplay gap, not a wiring gap: **nothing in the
+simulation records that a kind of creature is dangerous.**
+
+`CapabilityContext.enemy_data` (`src/cognition/capability_estimate.py:44`,
+`{enemy_id: {level, danger_rating}}`) is read at real combat-capability-estimate decision time
+(`capability_estimate.py:124`), and its absence is why every entity's own capability estimate for
+every enemy kind silently falls back to a hardcoded module-level table
+(`_ENEMY_DANGER = {"rat": 0.1, "wolf": 0.4, "goblin": 0.5, ...}`, `capability_estimate.py:59-66`) —
+the same fixed numbers for every entity, regardless of what that specific entity has actually
+encountered, survived, or been defeated by. An entity that has fought and nearly died to three
+goblins assesses the next goblin identically to an entity that has never seen one.
+
+**Confirmed exhaustively, not assumed**: grepped every real (non-test) `BeliefEntry` construction
+site in the codebase (`src/systems/strategic_systems/belief.py:148` — rumor beliefs, `subject` is
+the rumor's own subject, e.g. a resource name, never an enemy kind; `belief.py:181` — observation
+beliefs, same shape; `src/domains/combat_engagement/phase.py:68` — `combat_risk`, a single
+per-actor scalar belief, `subject="combat_risk"` fixed, not per-enemy-kind). None of the three real
+belief-producing mechanisms in the entire codebase captures which specific enemy *kind* was
+encountered or how dangerous it turned out to be. This is not "the connecting call was never
+written" (this arc's usual finding) — it's that **no producer of this data exists at all**, on
+either side.
+
+**`KnowledgeFact`'s own `"danger_rating"` `fact_type`** (`src/core/self_model.py:49-61`,
+`subject: str`, `fact_type: str`, `details: Dict[str, Any]`) would fit `enemy_data`'s exact shape —
+`subject` as the enemy kind, `details={"level": ..., "danger_rating": ...}` — making it a real
+candidate answer, not a redesign. But it is confirmed, independently, at zero real writes anywhere
+in the codebase (`TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION`), so it
+is not currently a *reachable* candidate either — building toward it here would need that
+investigation's own gap resolved first, or a different producer altogether.
+
+## Scope
+- Determine whether a real, live combat-outcome-tracking mechanism should be built (an entity's own
+  subjective record of "I fought a `<kind>` and here's what happened" — win/loss, damage taken,
+  survival margin), and if so, what shape it should take: a new `BeliefEntry`-family write from
+  real combat resolution, a `KnowledgeFact` write path (once/if that write-side gap is separately
+  resolved), or something else. This is a real design question — not resolved here.
+- If a mechanism is built: wire `enemy_data` to read from it, with real test coverage proving a
+  populated dict measurably changes a real capability-confidence estimate for a specific enemy kind
+  an entity has genuinely encountered before.
+- If no mechanism is judged worth building now: document `enemy_data`'s current always-empty state
+  and the hardcoded-table fallback plainly in `docs/cognition/capability_and_knowledge_contract.md`
+  as the accepted current behavior, rather than leaving it silently undocumented.
+
+## Out of Scope
+- `region_data`/`travel_regions` — tracked in `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-
+  ALWAYS-EMPTY`, which stays `BLOCKED` independently (a different problem: a real belief-derivable
+  source for region danger DOES exist via the guild-lead-confirmation path, but `travel_regions`
+  itself has no real caller and the one route family that would naturally provide one,
+  `RouteFamily.SCOUT_LOCATION`, is itself never generated by any real code path — see that
+  ticket's own Completion Summary for the full evidence).
+- Resolving `KnowledgeFact`'s own zero-writes gap
+  (`TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION`) — a separate,
+  already-closed (document-don't-build) finding; this ticket may end up depending on it if
+  `KnowledgeFact` is chosen as the producer, but does not reopen or duplicate it.
+
+## Acceptance Criteria
+- [ ] A real design decision on whether and how to build a per-enemy-kind danger-tracking
+      mechanism, brought to peer/user review before implementation.
+- [ ] If built: real test coverage proving `enemy_data` changes a real capability estimate for a
+      genuinely-encountered enemy kind, distinct from the hardcoded-table fallback.
+- [ ] If not built: `docs/cognition/capability_and_knowledge_contract.md` updated to document the
+      current always-empty/hardcoded-fallback state plainly.
+- [ ] No implementation without the design decision above.
+
+## Related Tickets
+- `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` (done — the ticket whose own
+  investigation surfaced this deeper finding, once its blocking chain resolved this batch)
+- `TCK-20260911-KNOWLEDGE-FACT-STORE-NO-DECISION-TIME-READER-INVESTIGATION` (done — the zero-writes
+  finding for `KnowledgeFact`, the one shape-matching candidate producer)
+- `TCK-20260909-LEAD-CAPACITY-ENFORCEMENT-DUAL-MECHANISM-PREEMPTION`,
+  `TCK-20260912-KNOWLEDGE-INVESTIGATION-LAYER-INERT-NO-FACTS-NO-LEADS` (done — the broader
+  knowledge/investigation-layer initiative this finding is one more instance of the same shape
+  within, though a distinct gap from any of theirs)
+
+## Related Docs
+- `docs/cognition/capability_and_knowledge_contract.md` (the contract this ticket's disposition may
+  need to update either way)
+
+## Related Stored Artifacts
+None yet — standard tier, staging artifacts created when picked up.
+
+## Related Code Areas
+- `src/cognition/capability_estimate.py` (`CapabilityContext.enemy_data`, `_ENEMY_DANGER` hardcoded
+  fallback table, `CapabilityEstimateService.estimate()`'s combat-estimate branch)
+- `src/systems/strategic_systems/belief.py` (`BeliefEntry`, `process_rumor()`, `process_observation()`
+  — confirmed, neither captures per-enemy-kind data)
+- `src/domains/combat_engagement/phase.py` (`build_combat_risk_belief()` — confirmed, single scalar,
+  not per-kind)
+- `src/core/self_model.py` (`KnowledgeFact`, the shape-matching but currently-unreachable candidate)
+
+## Assumptions / Open Questions
+- Whether combat resolution itself is the right place to produce this data (an entity naturally
+  "learns" an enemy kind's danger by surviving or losing to it) versus some other mechanism — not
+  decided here.
+
+## Implementation Notes
+Ran the declared-intent check before writing any code, per explicit instruction. Full evidence in
+`staging_artifacts/.../investigation.md`; summarized here:
+
+- **Mechanics Bible**: `02_combat_laws.md` has zero mentions of per-enemy-kind danger/learning.
+  `04_strategic_cognition.md` §6.12 is the Bible's own section for `CapabilityEstimateService`, but
+  documents only the resource/recipe (`GATHER_RESOURCE`/`CRAFT_UPGRADE`) use — the real combat use
+  (`TacticalDecisionSystem.target_score()`) has no Mechanics Bible section at all.
+- **Parity ledger**: zero matches in `strategic_cognition.yaml`/`combat_movement.yaml`.
+- **`capability_and_knowledge_contract.md`**: documents the current absence (`entity.self_model.
+  capabilities` stays empty in production either way), not an intent to fill it from combat.
+  Also surfaced a second, genuinely distinct `KnowledgeFact`-writing path
+  (`KnowledgeModelService.assimilate()`, called from `SelfModelUpdatePhase.run()` on
+  `InformationResponse` events, gated `ENABLE_SELF_MODEL_COGNITION` — confirmed a different
+  mechanism from `InformationAssimilationService`, not a duplicate finding, checked carefully given
+  the similar naming) — but that path is (a) also unreachable (`ENABLE_SELF_MODEL_COGNITION`
+  defaults `OFF`, no corpus override) and (b) about being **told** a fact by a provider, not
+  **learning from combat experience** — a different mechanism even if it were live.
+- **Epic 4.2**: entirely about resource-location leads via paid information providers
+  (MERCHANT/GUILD_MASTER/ELDER) — nothing about enemy-kind danger or combat-outcome learning.
+
+**Conclusion: nothing declares this.** Reported to peer for a user-level decision rather than
+designing or building a learning mechanism nobody specified.
+
+## Test Summary
+_(pending)_
+
+## Files Changed
+_(pending)_
+
+## Completion Summary
+_(pending)_

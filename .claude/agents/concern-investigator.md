@@ -89,8 +89,16 @@ Search ticket history for each keyword:
 grep -i "<keyword>" tickets/working_log.csv
 ```
 
+`working_log.csv` only covers closed tickets. Also run the open-ticket overlap scanner, which
+reads `tickets/todos/`/`tickets/inprogress/` live from disk (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER):
+```
+python3 tools/open_ticket_overlap.py --title "<concern title>" --summary "<concern description>"
+```
+It always exits 0 and prints a JSON array — a report, not a gate. Fold any hits into the same "up
+to 3 matching prior tickets" pool below.
+
 For up to 3 matching prior tickets, check if `stored_artifacts/<ticket_id>/investigation.md` exists. If it does, read it — prior investigations in the same area often surface the same constraints and risks.
-Determine if any prior ticket FULLY covers this concern (`is_duplicate=true`) or partially overlaps (`related_ticket`).
+Determine if any prior ticket FULLY covers this concern (`is_duplicate=true`) or partially overlaps (`related_ticket`). A scanner hit is informational only — it can support a `related_ticket` finding, but never sets `is_duplicate=true` on its own; that call still requires you to actually read the candidate ticket and judge real overlap.
 
 ─── Step 4: Code files ────────────────────────────────────────────────────────
 

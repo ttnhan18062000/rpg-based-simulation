@@ -280,9 +280,10 @@ def render_title(tickets: list, scope: str, theme: Optional[str] = None) -> str:
     if theme is not None:
         text = theme
     elif n == 1:
-        text = tickets[0]["title"]
+        text = _collapse_whitespace(tickets[0]["title"])
     else:
-        text = tickets[0]["title"]  # stated default (investigation.md #6) — not real synthesis
+        # stated default (investigation.md #6) — not real synthesis
+        text = _collapse_whitespace(tickets[0]["title"])
     return f"{scope}: {text} ({n} {unit})"
 
 

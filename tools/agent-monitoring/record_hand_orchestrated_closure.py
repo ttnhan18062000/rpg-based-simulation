@@ -76,6 +76,19 @@ def _existing_row_for(
     """Read-only lookup: the first kept (non-ambiguous) row matching (ticket_id, title) in
     csv_path OR still-pending in a per-batch working_log shard under data_root, else None.
 
+    TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS: `data_root`'s cwd-relative
+    default is deliberately left as-is (not anchored to `Path(__file__)`), unlike
+    `working_log_writer._WORKING_LOG_PATH`/`_DEFAULT_DATA_ROOT`. This script and its cwd-relative
+    `working_log_path` at `main()`'s call site (below) are always resolved against the *same* cwd,
+    matching `monitoring_batch_identifier.resolve_write_target()`'s own documented convention that
+    every real call site assumes cwd is the checkout it's recording for -- there is no anchor
+    mismatch to cause cross-checkout drift here, unlike the bug in `monitoring_consolidation.py`
+    (an `__file__`-anchored `data_dir` paired with a cwd-relative CSV write). Anchoring this script
+    to `Path(__file__)` instead would break the real invariant it depends on: a hand-orchestrating
+    session always runs this script from within the checkout it's closing a ticket in, and
+    `tests/tools/test_record_hand_orchestrated_closure.py` exercises exactly that by invoking it as
+    a subprocess with `cwd=` a scratch checkout distinct from this file's own location.
+
     TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: `append_working_log_row()` now stages to a
     shard rather than writing csv_path directly, so a prior direct call for this exact ticket is
     invisible to a CSV-only scan -- checking only csv_path would silently blind this double-write
@@ -360,6 +373,8 @@ def main() -> None:
             else f"stored_artifacts/{args.ticket_id}"
         )
 
+    # Cwd-relative by design -- see _existing_row_for()'s docstring
+    # (TCK-20260928-WORKING-LOG-CONSOLIDATION-CROSS-CHECKOUT-ROW-LOSS) for why this is safe here.
     working_log_path = Path("tickets/working_log.csv")
     existing = _existing_row_for(working_log_path, args.ticket_id, args.title)
     if existing is not None:
