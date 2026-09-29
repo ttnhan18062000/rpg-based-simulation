@@ -2,13 +2,25 @@
 (TCK-20260929-OPEN-TICKET-DUPLICATE-SCAN-AND-WORKFLOW-OFFER, peer review round 2).
 
 The synthetic-fixture tests in test_open_ticket_overlap.py prove the scoring mechanism works in
-isolation; they cannot prove it stays usable against the real, messy ~82-ticket open corpus. Peer
-review measured the pre-fix boolean-OR design directly against that corpus and found it unusable
+isolation; they cannot prove it stays usable against a real, messy open-ticket corpus. Peer review
+measured the pre-fix boolean-OR design directly against the real corpus and found it unusable
 (average 70.9/81 possible hits per query, shared-term counts up to 15 on pure noise like
 "actually"/"confirmed"). This file re-measures the IDF-weighted, ranked, capped replacement the
-same way, against the same real tree, so the claim "this is now usable" is evidence, not assertion.
+same way, so the claim "this is now usable" is evidence, not assertion.
 
-Read-only: never writes to tickets/todos/ or tickets/inprogress/.
+**Frozen corpus, not the live tree (peer review round 4)**: the live `tickets/todos/`/
+`tickets/inprogress/` tree changes on every merge -- the target ticket these assertions depend on
+will eventually close and leave the open corpus, and any new open ticket touching the same code
+areas could become a close runner-up and collapse the measured margin, both failing an unrelated
+future PR for a reason that has nothing to do with this tool (the same defect class as
+TCK-20260929-RUN-DEDUP-BASELINE-PINS-GROWING-CORPUS: an exact assertion over a corpus that keeps
+changing). `tests/fixtures/open_ticket_overlap/corpus/` is a frozen snapshot of the real
+`tickets/todos/`+`tickets/inprogress/` trees (82 real tickets, source commit SHA in that
+directory's own README.md) -- still a real, messy, non-synthetic corpus, just a stable one.
+Deliberately NOT a skip-if-absent/skip-if-target-missing guard: that would silently turn the only
+real-quality proof this tool has into a no-op; see the corpus README for the reasoning.
+
+Read-only: never writes to the frozen fixture corpus.
 """
 from __future__ import annotations
 
@@ -22,9 +34,10 @@ if str(_TOOLS_DIR) not in sys.path:
 from open_ticket_overlap import find_overlapping_open_tickets  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_TODOS_ROOT = _REPO_ROOT / "tickets" / "todos"
-_INPROGRESS_ROOT = _REPO_ROOT / "tickets" / "inprogress"
 _FIXTURE_DIR = _REPO_ROOT / "tests" / "fixtures" / "open_ticket_overlap"
+_FROZEN_CORPUS_DIR = _FIXTURE_DIR / "corpus"
+_TODOS_ROOT = _FROZEN_CORPUS_DIR / "todos"
+_INPROGRESS_ROOT = _FROZEN_CORPUS_DIR / "inprogress"
 _TARGET_TICKET_ID = "TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED"
 
 _B0_TITLE = (

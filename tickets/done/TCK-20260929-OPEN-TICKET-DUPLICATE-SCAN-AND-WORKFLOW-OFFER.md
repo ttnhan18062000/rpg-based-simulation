@@ -268,6 +268,24 @@ recommended (non-blocking) improvement, both done:**
   code-area path match), without depending on the score's absolute magnitude. 2 new tests confirm
   `True`/`False` in the expected scenarios.
 
+**Peer review round 4 (post-`c4a887d60`) — one required change, done:**
+
+- **REQUIRED — the real-corpus test queried the live `tickets/todos/`/`tickets/inprogress/` tree,
+  which changes on every merge.** Same defect class as
+  `TCK-20260929-RUN-DEDUP-BASELINE-PINS-GROWING-CORPUS` (an exact assertion over a corpus that
+  keeps changing). Two concrete failure modes: the target ticket
+  (`TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`) closing and leaving the open corpus
+  would fail the rank-#1 assertion for a reason unrelated to this tool; a new open ticket touching
+  the same code areas could push the measured margin under `1.3` and fail an unrelated future PR.
+  Fixed by freezing the corpus: `tests/fixtures/open_ticket_overlap/corpus/{todos,inprogress}/` is
+  a snapshot of the real trees at commit `25be81b396e9b7fbe6c43df5d559831dc7381684` (82 real open
+  tickets, full directory structure preserved, source SHA documented in that directory's own
+  `README.md`), and the real-corpus test now points at that frozen directory instead of the live
+  one. Deliberately not a skip-if-absent guard — that would silently turn the only real-quality
+  proof this tool has into a no-op; the corpus README explains why. Both real-corpus tests
+  re-verified passing against the frozen snapshot (identical results, since the snapshot was taken
+  at the exact commit the live tree was previously measured against).
+
 ## Test Summary
 
 - `tests/tools/test_open_ticket_overlap.py` (14 tests, round 3): AC1 (real fixture pair), AC2
@@ -297,8 +315,12 @@ recommended (non-blocking) improvement, both done:**
 - `tools/open_ticket_overlap.py` (new; scoring rewritten in round 2)
 - `tests/tools/test_open_ticket_overlap.py` (new; updated in round 2 for the new scoring API and
   fail-open behavior)
-- `tests/tools/test_open_ticket_overlap_real_corpus.py` (new in round 2)
+- `tests/tools/test_open_ticket_overlap_real_corpus.py` (new in round 2; points at the frozen
+  corpus as of round 4)
 - `tests/fixtures/open_ticket_overlap/B0-PERCEPTION-UPDATE-WAVE-FIXTURE.md` (new)
+- `tests/fixtures/open_ticket_overlap/corpus/{todos,inprogress}/` (new in round 4 — frozen
+  snapshot, 82 real open tickets)
+- `tests/fixtures/open_ticket_overlap/corpus/README.md` (new in round 4 — snapshot source SHA)
 - `tests/tools/test_concern_investigator_open_ticket_scanner_pin.py` (new)
 - `tests/tools/test_implement_ticket_open_ticket_scanner_pin.py` (new)
 - `tests/tools/test_ticket_lifecycle_offer_rule.py` (new)
