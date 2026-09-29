@@ -117,16 +117,29 @@ it — here, "does this diagram actually render for a real reader" was never che
 - **New finding, out of this ticket's scope (content/topology changes excluded):** the wiring
   map's 3rd diagram (`rpg_simulation_wiring_map.html`'s "Entity detail: the lifecycle arc" —
   `flowchart LR`) has a genuine pre-existing mermaid syntax error, independent of this ticket's
-  fix. Its `SC[...]` node label reads `Scarred — NOT BUILT, heal_wound&#40;&#41; deleted; wounds
-  decided permanent, DEV-005` — the literal `()` after `heal_wound` (which a browser's own HTML
-  parsing decodes from those `&#40;&#41;` entities before mermaid ever sees the text, so the
-  entity-escaping doesn't protect against mermaid's own grammar) is ambiguous with mermaid's
-  round-node syntax inside a square-bracket label. Confirmed via `mermaid.parse()` (the library's
-  own real parser, v10.9.1, run under Node/jsdom, no browser needed): rejects with "Parse error on
-  line 9" — while the other 6 real diagrams across both files (all 4 atlas diagrams, the wiring
-  map's Layer Model and Entity Operating Loop) all parse as valid. This means the fix in this
-  ticket makes 6 of 7 diagrams render correctly and turns the 7th from silently-invisible-as-raw-
-  text into a visibly-broken mermaid parse-error banner — a real improvement (the defect is no
+  fix. Its `SC[...]` node, **real file line 614**:
+  ```
+  SC[Scarred — NOT BUILT, heal_wound&#40;&#41; deleted; wounds decided permanent, DEV-005]
+  ```
+  — the literal `()` after `heal_wound` (which a browser's own HTML parsing decodes from those
+  `&#40;&#41;` entities before mermaid ever sees the text, so the entity-escaping doesn't protect
+  against mermaid's own grammar) is ambiguous with mermaid's round-node syntax inside a square-
+  bracket label. Confirmed via `mermaid.parse()` (the library's own real parser, v10.9.1, run
+  under Node/jsdom, no browser needed) against the extracted diagram source; exact output:
+  ```
+  Parse error on line 9:
+  ...OT BUILT, heal_wound() deleted; wounds d
+  -----------------------^
+  Expecting 'SQE', 'DOUBLECIRCLEEND', 'PE', '-)', 'STADIUMEND', 'SUBROUTINEEND', 'PIPE',
+  'CYLINDEREND', 'DIAMOND_STOP', 'TAGEND', 'TRAPEND', 'INVTRAPEND', 'UNICODE_TEXT', 'TEXT',
+  'TAGSTART', got 'PS'
+  ```
+  (mermaid's own "line 9" counts from `flowchart LR` as line 1 within the extracted diagram
+  source, not the real file's line numbering — real file line 614 is the authoritative location.)
+  The other 6 real diagrams across both files (all 4 atlas diagrams, the wiring map's Layer Model
+  and Entity Operating Loop) all parse as valid. This means the fix in this ticket makes 6 of 7
+  diagrams render correctly and turns the 7th from silently-invisible-as-raw-text into a visibly-
+  broken mermaid parse-error banner — a real improvement (the defect is no
   longer silent) but not a full fix for that one diagram. Worth a follow-up ticket; not filed here
   to keep this ticket's own scope from growing past what was asked.
 
