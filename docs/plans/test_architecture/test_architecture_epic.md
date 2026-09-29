@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture (core RPG as first application)
 
-**Status: REVISION 2026-09-28e, scope correction before ticket planning.** This roadmap owns **how
+**Status: REVISION 2026-09-29f, prepared for ticket planning** (revision f changes: §3.5, §6.2, §6.3, §7.3; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). This roadmap owns **how
 tests are planned, written, selected, organized, executed, measured, reviewed, maintained and
 repaired**. It does **not** own the design or schedule of RPG mechanics; another group of agents
 is reworking those. Core RPG is the **first application and validation scope**, not a feature
@@ -136,12 +136,28 @@ artifacts. Where the answer lives:
 
 The framework gaps (OV §9) are:
 - a shared scenario helper (compile → stage → run → observe, optional control arm);
-- a shared replay-diff helper;
+- a **replay-diff helper, limited to the verified reproducibility scope** (below);
 - a per-test `data/runs` cleanup fixture;
 - [D] adopting or retiring `src/testing/` and the unused CLI helpers.
 
-These are delivered as **reusable patterns with a worked example each**, not as a batch of feature
-proofs.
+These are delivered as **reusable patterns**. The rules for worked examples:
+- Each example uses either a **synthetic** behaviour (a clearly labelled test-only toy, placed apart
+  from feature tests) or a behaviour **confirmed stable** by its owner. The only currently eligible
+  confirmed-stable candidate is the authoritative-write boundary (architecture evidence); anything
+  else needs feature-agent confirmation.
+- **No feature-specific proof commitments.**
+
+**Replay-diff helper scope** [O for the evidence, I for the design]. Reproducibility is verified
+only for:
+- hand-built `AuthoritativeState` + `Kernel` with a fixed seed, **≤ 10 ticks**, the
+  `RuntimeProfile` used by `tests/integration/kernel/test_determinism_suite.py::test_reproducibility`
+  (10 runs × 10 ticks, seed 42);
+- sequential vs concurrent executor equivalence over 5 ticks (`test_local_vs_concurrent_equivalence`).
+
+The helper records seed, profile, executor, tick count and world source. For inputs **outside** that
+envelope — compiled worlds, longer runs, other profiles — it returns `outside-verified-scope`, not
+pass/fail. The envelope widens only when a new reproducibility test proves the wider scope.
+Long-run determinism is parked (§6.4).
 
 ## 4 · Capability C2: Change-impact and test selection
 
@@ -219,6 +235,20 @@ shortcomings [RR].
 - **Reproducibility:** normalized data derived from the **same input artifacts** must match.
   Separate executions keep their own results and run ids.
 
+**How tests without an approved gameplay-proof claim appear.** Every collected test node appears
+in the *classification* layer (level × technique × domain) and the *lane execution* layer (ran /
+passed / failed / skipped, per lane). Only nodes with a claim **and** a valid review record appear
+in a proof layer.
+
+| Test type | Without an approved claim | With an approved claim |
+|---|---|---|
+| Example | `executed evidence (example)`: counted by level and domain, with lane results; **not** in any proof layer | Law evidence (law/property kind accepts examples), or gameplay proof per its kind |
+| Property / stateful | `unreviewed claim` if a claim exists without review; otherwise executed evidence | Law or stateful-invariant proof |
+| Characterization / golden | `change-detection evidence`: a pass means *unchanged since baseline `<hash>` approved `<date>`*. **Never counted as correctness proof**; re-baselining follows the C5 "stale baseline" class | Still change-detection evidence; a claim cannot upgrade a golden test to correctness proof |
+| Broad simulation (long runs, certification, monitors) | `system-health evidence`: per-run invariant-monitor pass/fail and stability, **not** gameplay proof | Only a separately reviewed invariant claim may enter the law-evidence layer |
+| SimQ anchors, census | own instrument layers (unchanged) | — |
+| Architecture guard | architecture evidence | architecture evidence |
+
 ### 6.3 Proof kinds, review records, staleness
 
 | Proof kind | Claim fields | Automated each run | Bounded first review |
@@ -229,15 +259,27 @@ shortcomings [RR].
 | Cross-domain chain | transition and effect per hop | same | every hop observed |
 | Architecture guard | protected boundary, detected violation | same | detects a real violation; **reported as architecture evidence** |
 
-- **Review record** binds: behaviour id, test identity, test / oracle(spec) / harness / behaviour-path
-  revisions (normalized hashes), reviewer, decision, date and ticket.
-- **Staleness:** the approval goes `stale` on a material change to any bound revision. A change to
-  the spec made by a feature team therefore flips affected proofs to `stale` automatically.
+- **Review record** binds: behaviour id, test identity, proof kind, the approval fingerprints below,
+  reviewer, decision, date and ticket.
+
+**Freshness has two independent parts.**
+
+| | **Rerun required** (machine only) | **Human re-approval required** |
+|---|---|---|
+| Meaning | The proof must pass again at the new SHA before it counts as current | The *oracle* may have changed meaning, so a human must re-confirm it |
+| Triggers (machine-checkable) | Any change to: the test file; **behaviour-path code** (`implemented_by` files + files in the test's coverage context); the harness; fixtures, worlds or config the test loads; the dependency lock | (1) **Oracle source** changed: normalized hash of the cited spec section (heading-anchored Bible/contract text). (2) **Assertion region** changed: normalized AST hash of the test's asserts, expected literals, tolerances and expected-value parametrize data (not the whole file). (3) **Claim fields** changed (behaviour id, proof kind, observed fields). (4) **Reference data** changed (golden files, anchors, baselines the test compares against). (5) **Harness observation contract** changed: a declared contract version in the helper, bumped only when observation semantics change |
+| State while pending | `unverified-at-sha` until a passing run in the proof's lane | `stale-approval` (reported, excluded from the proof count) |
+| Cleared by | a passing run at the current SHA | a new review record |
+
+**A behaviour-path code change alone triggers a rerun only, never re-approval.** If the rerun passes,
+the approval stays current. If the same change also edits the assertion region or reference data,
+triggers (2) or (4) apply. Harness refactors without a contract-version bump → rerun only.
 - Later reports validate records mechanically, without re-reading tests.
 - A static check establishes only the *level*, never semantic correctness.
 - **Single authority:** in-test claims are interim. When the registry epic ships the canonical
   mechanism → test link, a one-time reconciliation moves claims there, conflicts are listed for the
   owner, and the in-test metadata becomes a reference.
+- **Spec changes by feature teams** flip affected approvals to `stale-approval` via trigger (1).
 
 ### 6.4 Replay reliability
 
@@ -286,12 +328,37 @@ This unifies and extends the existing rules rather than replacing them in parall
   broad `skip`/`xfail`, or changing expected values. An expectation change needs the **feature/spec
   owner's approval plus a recorded reason** (reinforces CLAUDE.md gate integrity).
 - **Quarantine policy** [I]: permitted only for the order-dependence / nondeterminism class.
-  - Requirements: a named owner, a tracking ticket, `xfail(strict=True)` or a dedicated quarantine
-    marker, a scope limited to the specific test node, and an **expiry**. On expiry, the test
-    returns to the lane or escalates.
-  - Quarantined tests are reported as `quarantined`, never as `pass`.
-  - This **tightens** `regression_policy.md` §6's current `xfail(strict=False)` rule, which has no
-    owner or expiry. The conflict is to be resolved in that document [D].
+
+  **Observed pytest 9.0.2 behaviour** (scratch experiment, 2026-09-29):
+  - `xfail(strict=True)`: a failing test → `XFAIL` (the run stays green); a **passing** test →
+    `FAILED [XPASS(strict)]`.
+  - `xfail(strict=False)`: a passing test → `XPASS`, which does **not** fail the run and so hides
+    fixes.
+  - `raises=<Exc>`: any other exception → `FAILED`.
+  - Neither mode ever expires on its own.
+
+  **Mechanism:**
+  - A dedicated marker, `@pytest.mark.quarantine(owner=..., ticket=..., expires="YYYY-MM-DD",
+    reason=..., raises=<optional>)`, registered in `pyproject.toml`.
+  - A `tests/conftest.py` collection hook enforces it:
+    - **Exact node:** the marker must be on the test function itself (checked via
+      `item.own_markers`); a class-level or module-level quarantine is a collection error.
+    - **Fields:** all present; `ticket` must exist in `tickets/todos|inprogress` (not done); expiry
+      at most N days after the marker is added (N [D], proposed 14).
+    - **Active** (UTC date ≤ `expires`): the hook adds `xfail(strict=True, raises=<declared or
+      AssertionError>)`. A fixed test therefore fails as `XPASS(strict)`, forcing quarantine
+      removal. An unexpected exception type still fails.
+    - **Expired:** no `xfail` is added, so the test runs normally, **and** the hook records an
+      expiry error.
+  - A **required check**: a static script (proposed `tools/test_architecture/quarantine_check.py`)
+    runs in an always-on CI job without `continue-on-error`. It fails on any expired, malformed,
+    class/module-level or closed-ticket quarantine, independent of whether the test happens to
+    pass that day. A `QUARANTINE_TODAY` override exists only for testing the checker itself.
+  - **Reporting:** the hook writes `quarantine_owner`, `ticket`, `expires` and `days_left` into
+    JUnit `user_properties`. The report shows `quarantined` (with owner, ticket and expiry) or
+    `quarantine-expired` (fails), never `pass`.
+  - Replaces `regression_policy.md` §6's unbounded `xfail(strict=False)` rule. The replacement
+    itself is an owner decision [D].
 - **Defects found by new tests** are handed to the **feature-owning team** (ticket + evidence
   record). This roadmap does not expand into feature implementation.
 - Nothing here may approve behaviour whose intended design is undecided (e.g. E11).

@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Test Architecture — Detailed Milestone Plans (revision e, for review)
 
-**Status: DRAFT 2026-09-28e.** Centred on test architecture and operations, following the owner's
+**Status: DRAFT 2026-09-29f** (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). Centred on test architecture and operations, following the owner's
 scope clarification: feature teams own mechanic behaviour and feature proofs (epic §1). Derived
 from [`test_architecture_epic.md`](test_architecture_epic.md) and
 [`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist**;
@@ -123,14 +123,30 @@ G-P independent (may end inconclusive/defer)
    - A dedicated scenario job, or a widened filter.
    - A lane-rule fixture test.
    - A cost record.
-4. **Relevant-PR rule.** Any changed path in:
-   - `src/**` (fail-open: any `src` path counts);
-   - `tests/mechanic_scenarios/**`, `tests/helpers/**`, `tests/conftest.py`;
-   - `data/worlds/**`, `config/**`;
-   - `requirements*.txt`, `pyproject.toml`, `.github/workflows/test.yml`.
+4. **Relevant-PR rule.** Every changed path is classified into one of three outcomes:
 
-   A PR is not relevant only if it touches exclusively `docs/`, `tickets/`, `agent-monitoring/`,
-   `tools/`, `frontend*/`, `dashboard-frontend/` or `tmp/`.
+   | Outcome | Paths |
+   |---|---|
+   | **relevant** (scenario lane runs) | `src/**`; `tests/mechanic_scenarios/**`, `tests/helpers/**`, `tests/conftest.py`; `data/**` (incl. `data/worlds/**`); `config/**`; `requirements*.txt`, `pyproject.toml`, `.github/workflows/test.yml`; **`tools/` paths mapped as scenario-input producers** |
+   | **not relevant** | `docs/**`, `tickets/**`, `agent-monitoring/**`, `frontend/**`, `dashboard-frontend/**`, `tmp/**`; **`tools/` paths mapped as scenario-irrelevant** |
+   | **impact-unknown → conservative fallback: run the lane** | any path not matched above, including **unmapped `tools/` paths** |
+
+   **`tools/` mapping** [O evidence, 2026-09-29; I design]:
+   - `src/**` imports nothing from `tools/`; `tests/mechanic_scenarios/**`, `tests/helpers/**` and
+     `tests/conftest.py` import nothing from `tools/` (the conftest imports `tests.tools`, a
+     different package). **No `tools/` code executes inside the scenario lane today.**
+   - `tools/` can still affect scenario **inputs**: about 13 root-level scripts generate committed
+     files under `config/` or `data/` (e.g. `tools/generate_corpus_registry.py` →
+     `config/simulation_quality/corpus_registry.yaml`; `tools/evaluate_simq.py`,
+     `tools/calibrate_simq.py` → calibration data). These are mapped **relevant**.
+   - Subdirectories with no import or write path into scenario inputs (e.g. `tools/agent-monitoring/`,
+     `tools/delivery/`, `tools/gate_checks/`, `tools/mechanism_registry/`, `tools/agent_*`,
+     `tools/hooks/`, `tools/search/`) are mapped **not relevant**. Each mapping line carries a
+     one-line justification.
+   - **Mapping honesty check** (required, cheap): a static scan fails if any `tools/` path mapped
+     *not relevant* becomes importable by `src/`, the scenario tests, helpers or conftest, or gains
+     a write to `data/` / `config/`. Any new `tools/` path is unmapped, and therefore
+     `impact-unknown`, until classified.
 
    Owner: this roadmap (lane contract) [RR], delivered through the normal CI change process.
 5. **Work packages.**
@@ -139,11 +155,16 @@ G-P independent (may end inconclusive/defer)
       core PRs.
    3. Fixture test.
    4. Observe it on real PRs.
-6. **Evidence.** Per PR: rule category matched, lane triggered, lane executed, JUnit, **lane wall
-   time**. Report: relevant PRs *n*, triggered *m*, executed *k*.
+6. **Evidence.** Per PR: classification outcome per changed path (relevant / not relevant /
+   impact-unknown), lane triggered, lane executed, JUnit, **lane wall time**. Report: PRs *n* by
+   outcome; triggered *m*; executed *k*; **fallback-triggered count** (the cost of unknowns); median
+   and p90 lane wall time.
 7. **Acceptance.**
-   - The fixture test passes (e.g. `src/progression/**` and `tests/mechanic_scenarios/**` trigger;
-     docs-only doesn't).
+   - The fixture test passes: `src/progression/**`, `tests/mechanic_scenarios/**`, `data/worlds/**`
+     and `tools/generate_corpus_registry.py` trigger; `tools/agent-monitoring/**` and docs-only
+     don't; a new unmapped `tools/x.py` triggers via the fallback and is reported as
+     `impact-unknown`.
+   - The mapping honesty check fails on a seeded violation.
    - Over the observation window, every relevant PR triggered and executed the lane (m = k = n).
    - The measured cost is reported.
 8. **States.**
@@ -178,10 +199,14 @@ G-P independent (may end inconclusive/defer)
    - a replacement for `docs/testing/test_taxonomy.md`: level contracts, technique criteria,
      placement, ownership map;
    - registered metadata markers + an advisory consistency check;
-   - pattern library entries, each with **one worked example on a stable or synthetic behaviour**:
-     property test, stateful property test, mechanic-outcome scenario via the shared helper,
-     cross-domain chain, characterization;
-   - the shared scenario helper and the replay-diff helper;
+   - pattern library entries, each with **one worked example that is synthetic (a labelled test-only
+     toy) or confirmed stable by its owner** (today only the authoritative-write boundary
+     qualifies): property test, stateful property test, mechanic-outcome scenario via the shared
+     helper, cross-domain chain, characterization. **No feature-specific proof commitments**;
+   - the shared scenario helper;
+   - the replay-diff helper, **restricted to the verified reproducibility envelope** (epic §3.5:
+     hand-built state, fixed seed, ≤ 10 ticks, the determinism-suite profile; sequential vs
+     concurrent over 5 ticks). It returns `outside-verified-scope` for anything else;
    - a `data/runs` cleanup fixture;
    - the S1 metadata rule, plus S2 proposal tooling.
 4. **Dependencies / owners.** M0a (inventory). Owner: this roadmap. Scenario families remain with
@@ -198,7 +223,10 @@ G-P independent (may end inconclusive/defer)
 7. **Acceptance (operational).**
    - A new test written with the markers is located and classified by the report.
    - The consistency check flags a deliberately mismatched test.
-   - Each pattern example runs green in its declared lane.
+   - Each pattern example runs green in its declared lane and is labelled synthetic or
+     confirmed-stable.
+   - The replay-diff helper returns `outside-verified-scope` for a compiled-world or >10-tick input
+     (a negative test).
    - The helper is used by ≥ 1 pattern example.
    - **The staged migration is not required to be finished.**
 8. **States.** `provisional` if the consistency check is advisory only; `failed` if a marked test
@@ -308,7 +336,10 @@ G-P independent (may end inconclusive/defer)
 3. **Deliverables** [I]:
    - the workflow merged into `regression_policy.md`, with the other docs linking to it;
    - an evidence-record template;
-   - a quarantine marker and policy (owner, ticket, expiry, `quarantined` report state);
+   - the quarantine mechanism of epic §7.3: a registered `quarantine` marker; a conftest collection
+     hook enforcing node-level scope, required fields and an open ticket, adding `xfail(strict=True,
+     raises=…)` while active; a required static `quarantine_check` in an always-on job; JUnit
+     `user_properties`; report states `quarantined` / `quarantine-expired`;
    - report support for `quarantined`;
    - a feature-team handoff template for defects found by tests.
 4. **Dependencies / owners.** M0a (report states). Owner: this roadmap. The feature/spec owners
@@ -325,7 +356,10 @@ G-P independent (may end inconclusive/defer)
    expiry.
 7. **Acceptance (operational).**
    - The drills classify correctly and route to the right role.
-   - A quarantined test shows its owner and expiry, and fails the report check after expiry.
+   - A quarantined test shows its owner, ticket and expiry in JUnit and in the report.
+   - With `QUARANTINE_TODAY` set past expiry, the required check fails.
+   - A class-level quarantine is rejected at collection.
+   - A quarantined test that starts passing fails as `XPASS(strict)`.
    - An attempted expectation change without a recorded approval is caught by the review-record
      validator (M2).
 8. **States.** `blocked` if the quarantine-policy decision is pending (the rest proceeds);
