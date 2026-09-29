@@ -299,8 +299,8 @@ Relevant original source files:
 - [x] PERF-012: Spatial neighbor views are calculated in parallel within worker threads using read-only shared world state. <!-- ID: PERF-012 SOURCE: src/engine/worker_logic.py TEST: tests/perf/bench_worker_throughput.py PROOF: benchmark -->
 - [x] PERF-013: Worker task dispatch uses adaptive chunking (up to 50 entities per task) to minimize executor submission overhead and lock contention. <!-- ID: PERF-013 SOURCE: src/engine/worker_manager.py TEST: tests/unit/kernel/test_worker_adaptation.py PROOF: unit -->
 - [x] PERF-014: Workers utilize pre-computed spatial and regional caches passed from the main thread to ensure O(1) lookup parity without redundant recalculation. <!-- ID: PERF-014 SOURCE: src/engine/executor.py TEST: tests/integration/kernel/test_worker_determinism.py PROOF: integration -->
-- [x] PERF-015: Performance benchmarks generate standardized JSON reports to enable automated regression tracking. <!-- ID: PERF-015 SOURCE: tests/perf/bench_worker_throughput.py TEST: scripts/perf_baseline.py PROOF: unit -->
-- [x] PERF-016: CI/CD pipeline enforces a 15% performance regression threshold on core simulation throughput. <!-- ID: PERF-016 SOURCE: scripts/check_perf_regression.py TEST: scripts/check_perf_regression.py PROOF: unit -->
+- [x] PERF-015: Performance benchmarks generate standardized JSON reports to enable automated regression tracking. <!-- ID: PERF-015 SOURCE: tests/perf/bench_worker_throughput.py TEST: tools/perf/perf_baseline.py PROOF: unit -->
+- [x] PERF-016: CI/CD pipeline enforces a 15% performance regression threshold on core simulation throughput. <!-- ID: PERF-016 SOURCE: tools/perf/check_perf_regression.py TEST: tools/perf/check_perf_regression.py PROOF: unit -->
 - [x] PERF-017: Simulation kernel employs adaptive Level of Detail (LOD) to spatially gate entity execution frequency (1/1 to 1/10) based on proximity to focus points. <!-- ID: PERF-017 SOURCE: src/engine/lod.py TEST: tests/perf/test_lod.py PROOF: benchmark -->
 - [x] PERF-018: Authoritative ApplyPath uses no-op detection and state compaction to bypass redundant processing for inactive entities, minimizing allocation churn. <!-- ID: PERF-018 SOURCE: src/engine/apply.py TEST: tests/perf/bench_apply_path.py PROOF: benchmark -->
 
@@ -3288,14 +3288,14 @@ These items are appended rather than replacing existing checklist items. They ar
 - [x] CAP-408: Transaction buffer management ensures that only unique IDs are added to the rolling set. [apply.py:410](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/apply.py#L410)
     - Prevents duplicates within the rolling window from bloating the buffer.
     - TEST: `scratch/test_growth.py`
-- [x] CAP-410: Production Profile Certification (PROD_DEFAULT verified against 2GB RAM budget). [verify_production_profiles.py:10](file:///home/vboxuser/Work/rpg-based-simulation/scripts/verify_production_profiles.py#L10)
+- [x] CAP-410: Production Profile Certification (PROD_DEFAULT verified against 2GB RAM budget). `tools/release/verify_production_profiles.py:10`
 - [x] CAP-411: Tick Latency Budget (p95 < 50ms for active entities within certified capacity). [profiles.py:67](file:///home/vboxuser/Work/rpg-based-simulation/src/config/profiles.py#L67)
 - [x] CAP-412: Redundant Immutability Suppression (Shared world state pre-freezing). [executor.py:238](file:///home/vboxuser/Work/rpg-based-simulation/src/engine/executor.py#L238)
 
 ---
 #### CAP-410: Production Profile Certification
 - **Law**: The engine must provide a certified `PROD_DEFAULT` profile that guarantees stability within a defined resource envelope.
-- **Verification**: Verified via `scripts/verify_production_profiles.py` against 2GB RAM budget.
+- **Verification**: Verified via `tools/release/verify_production_profiles.py` against 2GB RAM budget.
 - **ID**: CAP-410
 
 #### CAP-411: Tick Latency Budget

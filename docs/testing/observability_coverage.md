@@ -95,4 +95,4 @@ These tests and infrastructure guard against observability worker thread accumul
   - `_observability_worker_thread_sentinel` autouse fixture in `tests/conftest.py` counts `QueueDrainWorker` threads at session start and end; `pytest.fail()` if count grows. Catches any future test that starts a worker without teardown.
   - Location: `tests/conftest.py`
 - **Standalone Diagnostic Script**:
-  - `scripts/memory_probe.py` — run with `--flamegraph` to produce an HTML memray allocation flamegraph, or default mode for RSS + tracemalloc report. `--simulate-leak` demonstrates the accumulation pattern.
+  - `tools/perf/memory_probe.py` — run with `--flamegraph` to produce an HTML memray allocation flamegraph, or default mode for RSS + tracemalloc report. `--simulate-leak` demonstrates the accumulation pattern.

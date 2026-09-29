@@ -1,4 +1,4 @@
-"""Tests for scripts/profile_memory.py (TCK-20260614-CERT-MEMRAY-BUDGET).
+"""Tests for tools/perf/profile_memory.py (TCK-20260614-CERT-MEMRAY-BUDGET).
 
 Covers:
   TC-1  Script exits cleanly with error message when memray is absent
@@ -20,7 +20,7 @@ import pytest
 import importlib.util
 import types
 
-_SCRIPT = Path(__file__).parent.parent.parent.parent / "scripts" / "profile_memory.py"
+_SCRIPT = Path(__file__).parent.parent.parent.parent / "tools" / "perf" / "profile_memory.py"
 
 
 def _load_script() -> types.ModuleType:

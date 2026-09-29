@@ -77,6 +77,7 @@ One record per workflow invocation.
 | `final_status` | string | No | Outcome of the run. See values below. |
 | `agent_count` | int | No | Total number of agent calls that produced events. |
 | `duration_s` | int | Yes | Wall-clock seconds from start to end. `null` for crashed runs. |
+| `execution_mode` | string | Yes (optional, not in `record_run.py`'s `REQUIRED` set) | `pipeline` (written by every real `.claude/workflows/*.js` run-writer) or `hand` (written exclusively by `tools/agent-monitoring/record_hand_orchestrated_closure.py`). A separate field from `workflow` — `workflow` values are unchanged by this field's existence, so anything already reading `workflow` sees no change in meaning. A row with no `execution_mode` key (every row from before `TCK-20260929-RUN-EXECUTION-MODE-FIELD`, and any legacy row that instead used a non-canonical `workflow` value like `"hand-orchestrated"`, W36) is not backfilled or inferred — treat its absence as "unlabelled: predates this field," never as "must be pipeline." `generate_retro.py`'s Run Summary reports these as three distinct groups for exactly this reason. |
 
 ### What is not recorded
 

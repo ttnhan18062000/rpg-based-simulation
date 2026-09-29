@@ -97,11 +97,11 @@ def test_real_release_proof_is_valid():
     """
     release_report = os.path.join(REAL_PROOF_DIR, "release_report.md")
     if not os.path.isdir(REAL_PROOF_DIR) or not os.path.exists(release_report):
-        pytest.skip("Release proof artifacts not present — run scripts/generate_release_proof.py first.")
+        pytest.skip("Release proof artifacts not present — run tools/release/generate_release_proof.py first.")
 
     # Execute the standalone gate script
     result = subprocess.run(
-        ["python3", "scripts/release_gate.py"],
+        ["python3", "tools/release/release_gate.py"],
         capture_output=True,
         text=True
     )

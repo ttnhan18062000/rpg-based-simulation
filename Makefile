@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check
 
 # Default
 help: ## Show available commands
@@ -252,20 +252,11 @@ gate-expansion: ## Content expansion readiness gate — must pass before horizon
 
 # ── Profiling ────────────────────────────────────────────
 
-profile: ## Run automated performance profile (500 ticks, prints report)
-	python3 scripts/profile_simulation.py --ticks 500 --seed 42
-
-profile-full: ## Run extended profile (2000 ticks, saves flamegraph-ready output)
-	python3 scripts/profile_simulation.py --ticks 2000 --seed 42 --cprofile profile_output.prof
-
-profile-memory: ## Run memory profiling (500 ticks)
-	python3 scripts/profile_simulation.py --ticks 500 --seed 42 --memory
-
 profile-api: ## Measure API payload sizes (map, static, state endpoints)
-	python3 scripts/profile_api_payload.py --ticks 10 --seed 42
+	python3 tools/perf/profile_api_payload.py --ticks 10 --seed 42
 
 memray-profile: ## Run certification suite under Memray (disables RLIMIT_AS; requires: pip install memray)
-	python3 scripts/profile_memory.py --suite certification --memray
+	python3 tools/perf/profile_memory.py --suite certification --memray
 
 # ── Quality ──────────────────────────────────────────────
 
@@ -453,6 +444,9 @@ agent-monitoring-index: ## Rebuild the derived read-only SQLite index over agent
 
 parity-index: ## Rebuild the derived read-only SQLite index over docs/parity_ledger/*.yaml (on-demand only — not CI)
 	python3 tools/parity_index.py build
+
+tools-orphan-check: ## Report tools/ files with no live cross-reference (report-only) (on-demand only — not CI)
+	python3 tools/gate_checks/tools_orphan_check.py
 
 parity-index-check: ## Report whether parity-index/parity.db is stale relative to live docs/parity_ledger/*.yaml
 	python3 tools/parity_index.py check-staleness

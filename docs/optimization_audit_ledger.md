@@ -27,7 +27,7 @@ This ledger tracks performance issues, optimizations, and proofs for the RPG Eng
 | OPT-009 | WorldIndexService dirty-domain spatial indexes | `src/engine/world_index.py` | `tests/unit/domains/optimization/test_world_index_service.py` | PROVEN | Unit / Regression |
 | OPT-010 | CacheInvalidationPolicy centralized rules | `src/engine/world_index.py` | `tests/unit/domains/optimization/test_cache_invalidation_policy.py` | PROVEN | Unit / Regression |
 | OPT-011 | StrategicWorkQueue bounded cognition | `src/systems/strategic_systems/work_queue.py` | `tests/unit/domains/optimization/test_strategic_work_queue.py` | PROVEN | Unit / Regression |
-| OPT-012 | Profiling Harness isolation modes & traceability | `scripts/profile_engine.py` | `tests/unit/perf/test_profiling_harness_modes.py` | PROVEN | Unit / End-to-End |
+| OPT-012 | Profiling Harness isolation modes & traceability | `tools/perf/profile_engine.py` | `tests/unit/perf/test_profiling_harness_modes.py` | PROVEN | Unit / End-to-End |
 | OPT-013 | PerfRegressionGate automated CI baseline gate | `src/perf/regression_gate.py` | `tests/unit/perf/test_perf_regression_gate.py` | PROVEN | Unit / CI Gate |
 
 ## Audit Log

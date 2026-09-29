@@ -252,6 +252,41 @@ def test_execution_identity_fields_pass_through_unchanged(tmp_path):
     assert written["ticket_id"] == "TCK-FAKE-RUN"
 
 
+def test_execution_mode_pipeline_passes_through_unchanged(tmp_path):
+    # TCK-20260929-RUN-EXECUTION-MODE-FIELD: optional, not in REQUIRED -- record_run.py has no
+    # schema restricting extra fields, so this already worked before this ticket; pinned here so
+    # a future refactor introducing a strict schema doesn't silently drop it.
+    _init_git_repo_on_test_branch(tmp_path)
+    record = {**_VALID_RECORD, "execution_mode": "pipeline"}
+    result = subprocess.run(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0, result.stderr
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+    written = json.loads(runs_file.read_text().strip())
+    assert written["execution_mode"] == "pipeline"
+
+
+def test_record_without_execution_mode_still_accepted(tmp_path):
+    # A record omitting execution_mode entirely (every pre-this-ticket historical row, and any
+    # future writer that doesn't set it) must still be accepted -- it is deliberately not in
+    # REQUIRED.
+    _init_git_repo_on_test_branch(tmp_path)
+    record = dict(_VALID_RECORD)
+    assert "execution_mode" not in record
+    result = subprocess.run(
+        [sys.executable, str(_RECORD_PATH), "--data", json.dumps(record)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_append_failure_is_non_blocking(tmp_path, monkeypatch, capsys):
     # An append-layer failure (post-validation) must not sys.exit(1) — that
     # code path is reserved for validation failures, which happen before

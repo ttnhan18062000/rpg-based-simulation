@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import pytest
 
-from scripts.generate_optimization_proof import run_proof
+from tools.release.generate_optimization_proof import run_proof
 
 _BASELINE = Path("reports/perf/baseline.json")
 
@@ -17,7 +17,7 @@ def test_generate_optimization_proof_report() -> None:
     calculates empirical speedups, and produces valid JSON/MD artifacts.
     """
     if not _BASELINE.exists():
-        pytest.skip("reports/perf/baseline.json not present — run scripts/generate_optimization_proof.py first")
+        pytest.skip("reports/perf/baseline.json not present — run tools/release/generate_optimization_proof.py first")
     results = run_proof(quick_test=True)
     
     assert "metadata" in results

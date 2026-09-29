@@ -32,16 +32,12 @@ The `HeadlessRunner` (`src/testing/headless_regression_runner.py`) is the author
 
 ## 2. Using the Test Harness
 
-The `scripts/test_harness.py` provides a CLI interface for the regression runner.
+There is no standalone CLI test-harness script in this repo (a prior citation here referenced
+`test_harness.py`, once in the now-retired `scripts` directory, deleted back in commit
+`34845b1c8` on 2026-04-13 and never replaced). Regression runs go through pytest directly.
 
 ### Common Commands
 ```bash
-# Run a basic 200-tick regression test
-python scripts/test_harness.py --seed 42 --ticks 200
-
-# Run with custom entity counts and multiple threads
-python scripts/test_harness.py --seed 777 --ticks 500 --entities 20 --workers 8
-
 # Run the specific strategic regression suite
 export PYTHONPATH=.
 pytest tests/e2e/strategy/test_strategic_regression.py
@@ -113,7 +109,7 @@ To protect the system from memory leaks and execution deadlocks, the test infras
 2.  **SIGKILL Hang Watchdog**: A background daemon monitors the wall-clock duration of every test. If a test exceeds its timeout (Default: **300s**, `@pytest.mark.slow`: **600s**), the entire process is immediately terminated via `SIGKILL`.
 3.  **Process Cleanup Utility**: If orphaned test workers are suspected, run the following to safely terminate them:
     ```bash
-    python3 scripts/cleanup_tests.py
+    python3 tools/maintenance/cleanup_tests.py
     ```
 
 ### Execution

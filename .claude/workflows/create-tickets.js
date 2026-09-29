@@ -227,7 +227,7 @@ Step 2 — build and write events:
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runId}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"create-tickets","tier":"n/a","final_status":"${finalStatus}","agent_count":${eventsCount}}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runId}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"create-tickets","tier":"n/a","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,

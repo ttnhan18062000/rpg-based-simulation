@@ -42,7 +42,7 @@ Add an in-memory, bounded ring buffer of recent decision intentions that strateg
 - Social memory decision_context attachment (separate ticket TCK-20260822-SOCIAL-MEMORY-DECISION-CONTEXT)
 - Cross-entity intention visibility -- self-entity-only buffer for this ticket; cross-entity visibility is an unresolved design question with materially different durable-state implications, not decided here
 - Extending or reusing DecisionTraceWriter's _latest_goal_scores cache as the storage mechanism -- explicitly rejected per the Durable State Rule
-- Locking N=20 without first running scripts/memory_probe.py to check ring-buffer-size x N-entities memory cost at scale
+- Locking N=20 without first running tools/perf/memory_probe.py to check ring-buffer-size x N-entities memory cost at scale
 
 ## Acceptance Criteria
 - [ ] New typed bounded field StrategicComponent.recent_intentions (capped tuple, N=20 default) is threaded through StrategicPatch.apply(), StateFingerprinter._strategic_identity(), and CapacityEnforcementPhase's order-preserving trim -- matching the committed_intentions precedent exactly -- so it participates in deterministic replay; this is durable typed state per CLAUDE.md's Durable State Rule, explicitly not an extension of DecisionTraceWriter's cache
@@ -77,7 +77,7 @@ None.
 - src/api/routes/decisions.py
 
 ## Assumptions / Open Questions
-- Ring buffer size x N entities memory cost at scale is unmeasured; must be checked with scripts/memory_probe.py before locking N=20
+- Ring buffer size x N entities memory cost at scale is unmeasured; must be checked with tools/perf/memory_probe.py before locking N=20
 - Self-only vs cross-entity intention visibility is unresolved and has materially different durable-state design implications; must be decided before implementation but is not this ticket's default
 - SimQ's 25-anchor calibration corpus lock requires re-verification and will likely shift pillar grades -- treated as mandatory, not optional
 - AdventureGoalScorer.score() is reached unconditionally every tick for every eligible entity, so buffer-write logic must stay allocation-cheap (append+trim, no per-write IO)
