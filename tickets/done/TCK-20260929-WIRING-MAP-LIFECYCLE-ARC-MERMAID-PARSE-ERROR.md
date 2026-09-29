@@ -115,6 +115,18 @@ instance. Added a small Python-only regex regression guard
 (`tests/tools/test_wiring_map_mermaid_label_quoting.py`) against the same defect class recurring,
 proportionate to the fix's own size (no new Node/mermaid npm dependency committed).
 
+**Peer review round 2 (post-`4ddd6fd06`) — one required change, done:** the guard's first version
+ran the label regex over each *entire* HTML file, not just mermaid source — prose cards, embedded
+JSON, and `<script>` blocks were all in scope. `rpg_feature_atlas.html` is a pinned living page
+other sessions edit often; ordinary prose like `[see TCK-1 (P1)]` or JS like `a[f(x)]` share the
+same `\bWORD[...(...]` shape and would fail an unrelated atlas-edit PR, even though mermaid
+parsing is unaffected outside a real mermaid block (confirmed no such pattern exists in the real
+files *today* — this was a preventive fix for a future edit, not an active false positive). Fixed
+by extracting `<pre class="mermaid">...</pre>` block contents first (the same extraction shape
+this ticket's own `mermaid.parse()` verification script used) and applying the label regex only to
+those. Added a negative test proving a paren-in-brackets string *outside* a mermaid block doesn't
+trigger the guard.
+
 ## Test Summary
 
 AC1: re-ran `mermaid.parse()` (v10.9.1, Node/jsdom, identical harness to
@@ -124,13 +136,15 @@ map's 3rd diagram failing "Parse error on line 9"). AC2: label's decoded/visible
 confirmed by inspection (entity-decoded original === new literal text, byte-for-byte). AC3:
 `python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py --check` still `OK`
 (unaffected — `SC` isn't in that tool's `OPERATING_LOOP_NODE_TO_MECHANISM_ID` mapping). New guard
-test (4 tests) confirmed to fail on the pre-fix content (revert/rerun/restore method) and pass
-after. `tests/unit/tools/test_mechanism_wiring_map_classdef.py` (15 tests) unaffected, still pass.
+test (now 5 tests, round 2) confirmed to fail on the pre-fix content (revert/rerun/restore method)
+and pass after; the block-scoping negative test confirms a false-positive-shaped prose/JS string
+outside a mermaid block is correctly ignored. `tests/unit/tools/test_mechanism_wiring_map_classdef.py`
+(15 tests) unaffected, still pass.
 
 ## Files Changed
 
 - `docs/brainstorm/rpg_simulation_wiring_map.html`
-- `tests/tools/test_wiring_map_mermaid_label_quoting.py` (new)
+- `tests/tools/test_wiring_map_mermaid_label_quoting.py` (new; block-scoped in round 2)
 
 ## Completion Summary
 
