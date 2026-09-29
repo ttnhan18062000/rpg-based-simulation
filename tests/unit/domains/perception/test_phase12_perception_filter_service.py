@@ -1,5 +1,8 @@
+import dataclasses
+
 import pytest
 from src.core.state import EntityState
+from src.core.cognition import PerceivedEntity
 from src.domains.perception.salience import WorldSignal
 from src.domains.perception.filter import PerceptionFilterService, PerceptionBudget
 
@@ -36,3 +39,14 @@ def test_filter_drops_low_salience_signals_when_capacity_full():
     assert len(update.ignored_signals) == 1
     assert update.ignored_signals[0].signal_id == "sig_3"
     assert update.ignored_signals[0].reason == "capacity_limit"
+
+def test_perceived_entity_has_no_item_or_event_fields():
+    """Architecture guard (TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-ENCOUNTERABILITY, Answer 3):
+    PerceivedEntity's field set stays narrow -- entity_id, kind, position, salience, confidence
+    only. Even a fully-wired PerceptionUpdatePhase could not carry combat-death, inheritance, or
+    any other item/event content today without a schema change. Guards against a future ticket
+    silently widening this record to smuggle in that content without a conscious design
+    decision -- not building perception capability itself, per this ticket's Out of Scope.
+    """
+    field_names = {f.name for f in dataclasses.fields(PerceivedEntity)}
+    assert field_names == {"entity_id", "kind", "position", "salience", "confidence"}

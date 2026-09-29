@@ -48,7 +48,10 @@ not asserted here, only assembled:**
 2. **Why** the decision-driven path essentially never fires is `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`'s
    own question (P0) — four candidate causes (sticky tasks, the `hostiles` gate, task
    emission-vs-dispatch divergence, objectives never reaching `DEFEAT_ENEMY`), each to be confirmed
-   or ruled out by measurement, not reasoning. This is the same underlying fact `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION`
+   or ruled out by measurement, not reasoning. **Answered 2026-09-29: that ticket is closed, and the
+   cause is the fourth candidate in its sharpest form — objectives never reach `DEFEAT_ENEMY`
+   because `COMBAT_ENGAGE` wins the goal competition and is then discarded at dispatch. The chain's
+   root cause is in goal dispatch, not in progression.** This is the same underlying fact `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION`
    independently sighted in August for an unrelated reason — three separate investigations, the
    same fact, never connected until this ticket's own path-split measurement named it directly.
 3. A newly-built posture-veto gate (`TCK-20260915-COMBAT-ENGAGEMENT-POSTURE-NEVER-WIRED-TO-EXECUTION`,
@@ -83,8 +86,11 @@ only job is making the chain visible and stating two constraints that already ex
 individual tickets but weren't visible from outside them.
 
 ### Order (see `SEQUENCE.md`)
-1. `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (P0, open)
-2. `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (P1, paused — resume with (1)'s findings)
+1. `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (P0, **done** — closed to
+   `tickets/done/`; verdict: the decision layer chooses combat and the choice is discarded at
+   dispatch. Status corrected 2026-09-29, previously recorded here as "open".)
+2. `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (P1, **unblocked** — (1) has landed;
+   re-read against its verdict before fresh measurement)
 3. `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` (P2, open — boss-gate half
    only; faction-chain half already resolved)
 4. `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` (done — referenced for
@@ -113,9 +119,11 @@ individual tickets but weren't visible from outside them.
    only.
 
 ## Related Tickets
-- `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` — child, P0, open
-- `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` — child, P1, paused (not closed — the
-  investigation that started this chain and produced the path-split measurement child 1 continues)
+- `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` — child, P0, **done**
+  (`tickets/done/`). Answered the chain's root question; see `SEQUENCE.md` item 1 for the verdict.
+- `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` — child, P1, **unblocked** (not closed —
+  the investigation that started this chain and produced the path-split measurement child 1
+  continued; child 1 has now landed, so this one's blocking dependency is satisfied)
 - `TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE` — child, P2, open
   (boss-gate half only)
 - `TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS` — child, done
