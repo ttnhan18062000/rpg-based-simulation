@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-CATALOG-REGISTRY-TEST-LEAK
-phase: open
+phase: done
 date: 2026-09-29
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Restore the Enemy/Recipe/Service/Region registries between tests, closing the progression order leak
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 hotfix
@@ -80,10 +80,23 @@ None.
 See Request Summary for the measured cause.
 
 ## Test Summary
-(Filled at close.)
+All at SHA `720347c44` (before the closing commit; only agent-monitoring shards differ).
+- Each of the 8 polluters + `tests/unit/domains/progression/`: 0 failures (34-49 passed each).
+- `tests/unit/domains` alone: 1059 passed.
+- Random order (private seeded `random.Random`, scratch plugin outside `src/`, so no global/simulation
+  RNG touched, consistent with the DeterministicRNG contract in `docs/engine/contracts/simulation_kernel_contract.md` §7):
+  affected set (8 polluters + guard + progression, 80 tests), seeds 1-10: 80 passed each.
+- Combined fast suite `pytest tests/ -m "not slow and not extra_slow"`: 11606 passed, 10 failed, 1 error
+  (16m57s). None of the 7 progression nodes fail. The same 10 failures + 1 error occur on an untouched
+  `origin/main` (`1b05a5c9c`, clean detached worktree, 17 failed + 1 error incl. the 7 progression
+  nodes, 18m03s), and all 11 pass in isolation under both conftests. So the fix removes exactly the 7
+  and adds none; the other 11 are pre-existing combined-run failures, not fixed here.
+- Guard: fails on `origin/main`'s conftest, passes on the fixed one; passes under 10 shuffle seeds.
+- Fixture cost: `tests/unit/domains` + `tests/unit/core` 33.3-33.9 s old vs 33.5-33.7 s new (3
+  alternating pairs) - not measurable.
 
 ## Files Changed
-(Filled at close.)
+`tests/conftest.py`; `tests/unit/core/test_catalog_registry_isolation.py`.
 
 ## Completion Summary
-(Open.)
+Fixed at the source (tests/conftest.py autouse reset for the four un-reset registries), with a guard that fails on the old conftest. Verified at SHA 720347c44: polluters+progression, domains alone, 10 random-order seeds, combined fast suite (same 10 failures+1 error as clean origin/main, none new). Not fixed and reported: those 11 pre-existing combined-run failures.
