@@ -8,9 +8,17 @@ tags: [testing, architecture, planning]
 
 # Test Architecture — Detailed Milestone Plans (revision e, for review)
 
-**Status: DRAFT 2026-09-29h, reviewable; decisions PENDING** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). Centred on test architecture and operations, following the owner's
+> **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
+> for the detail planner and implementer agents. The **binding** plan is
+> [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
+> `tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
+> suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
+> otherwise.
+
+
+**Status: DRAFT 2026-09-29h, reviewable; decisions PENDING** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in (ticket outlines removed; see ../../../../tickets/todos/test-architecture/)). Centred on test architecture and operations, following the owner's
 scope clarification: feature teams own mechanic behaviour and feature proofs (epic §1). Derived
-from [`test_architecture_epic.md`](test_architecture_epic.md) and
+from [`architecture_design_notes.md`](architecture_design_notes.md) and
 [`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist**;
 item 10 of each plan only suggests boundaries for the ticket planner.
 
@@ -249,7 +257,7 @@ G-P deferred (party oracle and owner unknown)
 2. **Inputs.**
    - The ownership map and domain ids (MT).
    - Import graph: CI-generated; interim fallback committed with its SHA and marked `stale`.
-   - Coverage contexts: **deferred, evidence-triggered** (ticket_outlines Part 3). v0 uses the
+   - Coverage contexts: **deferred, evidence-triggered** (deferred triggers now listed in the epic tickets). v0 uses the
      ownership map, the import graph and the content rules only.
    - Content/config rules.
 3. **Deliverables** [I]:

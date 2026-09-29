@@ -8,12 +8,20 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture (core RPG as first application)
 
-**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: [`ticket_outlines.md`](ticket_outlines.md). This roadmap owns **how
+> **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
+> for the detail planner and implementer agents. The **binding** plan is
+> [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
+> `tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
+> suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
+> otherwise.
+
+
+**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: (ticket outlines removed; see ../../../../tickets/todos/test-architecture/). This roadmap owns **how
 tests are planned, written, selected, organized, executed, measured, reviewed, maintained and
 repaired**. It does **not** own the design or schedule of RPG mechanics; another group of agents
 is reworking those. Core RPG is the **first application and validation scope**, not a feature
 portfolio commitment. No tickets exist yet. Detailed plans are in
-[`milestone_plans.md`](milestone_plans.md); as-is facts are in
+[`milestone_design_notes.md`](milestone_design_notes.md); as-is facts are in
 [`current_test_system_overview.md`](current_test_system_overview.md) (cited as *OV §n*).
 
 **Inspected code:** `04f911110`; test, `src/`, CI and agent files are unchanged through
@@ -307,7 +315,7 @@ triggers (2) or (4) apply. Harness refactors without a contract-version bump →
   - Review records, if ever built, are non-authoritative annotations referencing a ledger or registry
     entry; they never hold status of their own.
 - **Deferred, evidence-triggered:** the review-record validator is built only when a feature team
-  first asks to register a proof, or when the registry epic ships its test link (ticket_outlines
+  first asks to register a proof, or when the registry epic ships its test link (the epic tickets;
   Part 3).
 - **Spec changes by feature teams** flip affected approvals to `stale-approval` via trigger (1).
 
@@ -358,7 +366,7 @@ This unifies and extends the existing rules rather than replacing them in parall
   broad `skip`/`xfail`, or changing expected values. An expectation change needs the **feature/spec
   owner's approval plus a recorded reason** (reinforces CLAUDE.md gate integrity).
 - **Quarantine policy: bounded quarantine is the proposed policy (owner direction, 2026-09-29).
-  The enforcement tooling below is DEFERRED until a real case needs quarantine** (ticket_outlines
+  The enforcement tooling below is DEFERRED until a real case needs quarantine** (the epic tickets;
   Part 3).
   - Until then, **no test is quarantined, and existing failures stay visible** as failures. The 7
     order-dependent progression tests are fixed by R1, never `xfail`ed.
@@ -454,7 +462,7 @@ obsolete as feature teams rework mechanics.
 | Determinism ticket (BLOCKED) | long-run determinism | replay reliability as a condition (§6.4) |
 | Parity ledger | law records | derived evidence state proposal (Appendix B) |
 
-## 11 · Milestones (summary; detail in `milestone_plans.md`)
+## 11 · Milestones (summary; detail in `milestone_design_notes.md`)
 
 | Milestone | Capability | Depends on |
 |---|---|---|

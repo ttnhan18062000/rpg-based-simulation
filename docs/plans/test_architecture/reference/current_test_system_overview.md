@@ -8,10 +8,18 @@ tags: [testing, architecture, planning]
 
 # Current Test System — Status and Overview
 
+> **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
+> for the detail planner and implementer agents. The **binding** plan is
+> [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
+> `tickets/todos/test-architecture/`. Where this document is more specific than those, treat it as a
+> suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
+> otherwise.
+
+
 **Snapshot of code at `04f911110` (test, `src/`, CI and agent files unchanged through `origin/main` `9bcae32c5`), measured 2026-09-27/28.** This is the single home for
 the *as-is* state of the test system: layout, lanes, authoring process, measured numbers, and
 per-domain verdicts. The *to-be* direction and decisions live in
-[`test_architecture_epic.md`](test_architecture_epic.md); reference IDs `[R#]` point to that
+[`architecture_design_notes.md`](architecture_design_notes.md); reference IDs `[R#]` point to that
 doc's §13 References.
 
 **Revision 2026-09-28b** (after external review). Corrected: perf verdict (§6.3); world and anchor
