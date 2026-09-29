@@ -10,10 +10,10 @@ It rewrites only builder chains that are proven to be rooted at:
 It does NOT globally replace method names like .items(), .position(), .inventory(), etc.
 
 Dry-run:
-    python scripts/migrate_v2_builder_chains.py tests
+    python tools/maintenance/auto_convert_builder_usage.py tests
 
 Write:
-    python scripts/migrate_v2_builder_chains.py tests --write --backup
+    python tools/maintenance/auto_convert_builder_usage.py tests --write --backup
 """
 
 from __future__ import annotations

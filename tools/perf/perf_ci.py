@@ -15,7 +15,7 @@ def run_ci_gate():
     # 1. Run Smoke Benchmarks
     logger.info("Step 1: Running smoke benchmark matrix...")
     try:
-        subprocess.run([sys.executable, "scripts/run_benchmarks.py", "--smoke"], check=True)
+        subprocess.run([sys.executable, "tools/perf/run_benchmarks.py", "--smoke"], check=True)
     except subprocess.CalledProcessError:
         logger.error("Benchmark execution failed.")
         return False
@@ -23,7 +23,7 @@ def run_ci_gate():
     # 2. Run Regression Check
     logger.info("Step 2: Checking for performance regressions...")
     try:
-        subprocess.run([sys.executable, "scripts/check_perf_regression.py"], check=True)
+        subprocess.run([sys.executable, "tools/perf/check_perf_regression.py"], check=True)
     except subprocess.CalledProcessError:
         logger.error("Performance regression check failed.")
         return False

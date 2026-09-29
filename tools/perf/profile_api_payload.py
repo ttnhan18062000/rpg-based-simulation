@@ -2,8 +2,8 @@
 """API payload size profiler.
 
 Usage:
-    python scripts/profile_api_payload.py
-    python scripts/profile_api_payload.py --ticks 20 --seed 42
+    python tools/perf/profile_api_payload.py
+    python tools/perf/profile_api_payload.py --ticks 20 --seed 42
 
 Reports:
     - Per-endpoint JSON payload sizes (bytes/KB)
@@ -16,12 +16,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
+from pathlib import Path
 
 # Ensure project root is on path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.api.engine_manager import EngineManager
 from src.api.routes.state import (

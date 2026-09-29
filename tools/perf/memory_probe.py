@@ -3,11 +3,11 @@
 memory_probe.py — memory and resource debugging tool for the RPG simulation engine.
 
 Usage:
-    python scripts/memory_probe.py                          # lightweight inline report
-    python scripts/memory_probe.py --output report.json    # also write JSON
-    python scripts/memory_probe.py --simulate-leak         # demonstrate worker thread leak
-    python scripts/memory_probe.py --flamegraph            # memray HTML flamegraph (requires memray)
-    python scripts/memory_probe.py --flamegraph --simulate-leak --output reports/leak.html
+    python tools/perf/memory_probe.py                          # lightweight inline report
+    python tools/perf/memory_probe.py --output report.json    # also write JSON
+    python tools/perf/memory_probe.py --simulate-leak         # demonstrate worker thread leak
+    python tools/perf/memory_probe.py --flamegraph            # memray HTML flamegraph (requires memray)
+    python tools/perf/memory_probe.py --flamegraph --simulate-leak --output reports/leak.html
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ import tempfile
 from pathlib import Path
 
 # Ensure project root is importable
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tests.tools.memory_probe import (
     MemoryReport,

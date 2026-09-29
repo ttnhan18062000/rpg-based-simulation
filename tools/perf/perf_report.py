@@ -14,7 +14,7 @@ def generate_report():
         # Try to find individual JSONs if matrix_full is missing
         json_files = list(input_dir.glob("*.json"))
         if not json_files or (len(json_files) == 1 and json_files[0].name == "baseline.json"):
-            print(f"Error: No matrix results found in {input_dir}. Run scripts/run_benchmarks.py first.")
+            print(f"Error: No matrix results found in {input_dir}. Run tools/perf/run_benchmarks.py first.")
             return
         results = []
         for jf in json_files:

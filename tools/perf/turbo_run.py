@@ -2,19 +2,24 @@ import os
 import sys
 import time
 import logging
+from pathlib import Path
 
-from pythonjsonlogger import jsonlogger
-from src.config import SimulationConfig
-from src.api.engine_manager import EngineManager
-from src_legacy.utils.logging import StructuredJsonFormatter, ContextFilter
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from src.config.profiles import PROD_LARGE
+from src.api.engine_manager import V2EngineManager
+from src.logging.formatter import JsonFormatter, ContextFilter
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def setup_turbo_logging(log_file: str):
     """Bypass Docker Loki routing and dump JSON directly to a flat file."""
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
-    
+
     handler = logging.FileHandler(log_file, mode='w', encoding='utf-8')
     handler.setLevel(logging.DEBUG)
-    handler.setFormatter(StructuredJsonFormatter('%(message)s'))
+    handler.setFormatter(JsonFormatter('%(message)s'))
     handler.addFilter(ContextFilter())
 
     root = logging.getLogger()
@@ -32,30 +37,23 @@ def run_turbo():
     os.environ["DISABLE_KAFKA"] = "1"
     os.environ["REDIS_URL"] = "redis://localhost:6379/1"
     
-    log_path = os.path.join(os.path.dirname(__file__), "..", "logs", "stress_test.jsonl")
-    log_path = os.path.abspath(log_path)
+    log_path = str(REPO_ROOT / "logs" / "stress_test.jsonl")
     setup_turbo_logging(log_path)
     
+    target_ticks = 5000
     print(f"--- TURBO RUN INITIALIZED ---")
-    print(f"Targeting 5000 ticks with 1 inline FastWorker...")
-    
+    print(f"Targeting {target_ticks} ticks with an inline headless kernel...")
+
     # 2. Configure headless
-    config = SimulationConfig(
-        num_workers=1,
-        max_ticks=5000,
-        initial_entity_count=25, 
-        world_seed=111,
-        chaos_enabled=False 
-    )
-    
-    mgr = EngineManager(config)
-    loop = mgr._loop
-    
+    mgr = V2EngineManager(PROD_LARGE, seed=111, entities_count=25, world_id="dungeon_crawl")
+    kernel = mgr.kernel
+
     start_time = time.time()
     ticks_completed = 0
-    
+
     try:
-        while loop.tick_once():
+        for _ in range(target_ticks):
+            kernel.tick_once()
             ticks_completed += 1
             if ticks_completed % 1000 == 0:
                 print(f"[{time.time()-start_time:.2f}s] Processed {ticks_completed} ticks...")
@@ -72,7 +70,7 @@ def run_turbo():
     print(f"Time Elapsed: {duration:.2f} seconds")
     print(f"Throughput: {tps:.2f} TPS")
     print(f"Audit Log: {log_path}")
-    print(f"Now run: python scripts/audit_logs.py logs/stress_test.jsonl")
+    print(f"Now run: python tools/maintenance/audit_logs.py logs/stress_test.jsonl")
 
 if __name__ == "__main__":
     run_turbo()

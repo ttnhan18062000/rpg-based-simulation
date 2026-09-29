@@ -252,20 +252,11 @@ gate-expansion: ## Content expansion readiness gate — must pass before horizon
 
 # ── Profiling ────────────────────────────────────────────
 
-profile: ## Run automated performance profile (500 ticks, prints report)
-	python3 scripts/profile_simulation.py --ticks 500 --seed 42
-
-profile-full: ## Run extended profile (2000 ticks, saves flamegraph-ready output)
-	python3 scripts/profile_simulation.py --ticks 2000 --seed 42 --cprofile profile_output.prof
-
-profile-memory: ## Run memory profiling (500 ticks)
-	python3 scripts/profile_simulation.py --ticks 500 --seed 42 --memory
-
 profile-api: ## Measure API payload sizes (map, static, state endpoints)
-	python3 scripts/profile_api_payload.py --ticks 10 --seed 42
+	python3 tools/perf/profile_api_payload.py --ticks 10 --seed 42
 
 memray-profile: ## Run certification suite under Memray (disables RLIMIT_AS; requires: pip install memray)
-	python3 scripts/profile_memory.py --suite certification --memray
+	python3 tools/perf/profile_memory.py --suite certification --memray
 
 # ── Quality ──────────────────────────────────────────────
 

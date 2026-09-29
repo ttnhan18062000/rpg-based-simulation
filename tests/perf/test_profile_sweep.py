@@ -1,5 +1,5 @@
 """
-Unit tests for scripts/profile_sweep.py's pure analysis functions.
+Unit tests for tools/perf/profile_sweep.py's pure analysis functions.
 
 Deliberately does not run a full sweep (cProfile over real Kernel ticks across scenarios/tiers)
 in this file — that's a slow, manually-invoked dev diagnostic, not a CI-tier unit test. These
@@ -8,15 +8,11 @@ those are the parts a future contributor is most likely to need to change or tru
 """
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts"))
-
-from profile_sweep import (
+from tools.perf.profile_sweep import (
     extract_top_hotspots,
     classify_cross_scenario,
     compute_tick_timing,

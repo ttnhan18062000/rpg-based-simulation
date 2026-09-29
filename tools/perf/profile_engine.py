@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Dict, List, Any
 
 # Ensure project root is on path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.config.profiles import PROD_LARGE, RuntimeProfile
 from src.core.state import AuthoritativeState

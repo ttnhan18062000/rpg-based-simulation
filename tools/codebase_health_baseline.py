@@ -47,10 +47,15 @@ dead; nothing produced by ordinary `python -m compileall` on live source counts.
 "Declared-but-unused core dependencies" mirrors D23's own methodology exactly
 (`docs/audits/D23_architecture_resilience.md` line 87): a repo-wide grep (not
 scoped to `src/`) for `import <name>` / `from <name>`, over every git-tracked
-`.py` file, not just `src/`'s — D23 found `pika`/`confluent-kafka` this way, and
-this tool's own live run found `python-json-logger`'s only user lives in
-`scripts/turbo_run.py`, outside `src/` — confirming a `src/`-only scope would
-have produced a false positive.
+`.py` file, not just `src/`'s — D23 found `pika`/`confluent-kafka` this way. This
+tool's own live run previously found `python-json-logger`'s only user was
+`turbo_run.py`, then in the now-retired `scripts` directory, outside `src/`
+(confirming a `src/`-only scope would have produced a false positive);
+`TCK-20260929-RETIRE-SCRIPTS-DIR` removed that dead import (it was never
+actually used — `pythonjsonlogger` was imported but unreferenced) while moving
+the file to `tools/perf/turbo_run.py`, so `python-json-logger` now has zero live
+users repo-wide. Whether to drop it from `pyproject.toml` is left as an open
+follow-up, not done in that ticket.
 """
 
 import argparse

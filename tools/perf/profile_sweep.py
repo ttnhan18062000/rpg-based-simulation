@@ -2,7 +2,7 @@
 """
 Profiling sweep tool for the V2 simulation engine.
 
-Wraps the same Kernel/SCENARIO_BUILDERS construction pattern scripts/profile_engine.py
+Wraps the same Kernel/SCENARIO_BUILDERS construction pattern tools/perf/profile_engine.py
 uses for a single run, but sweeps across every scenario and multiple entity-count tiers
 in one invocation, then exports structured, cross-comparable hotspot data instead of one
 scenario's human-readable pstats text.
@@ -26,11 +26,11 @@ Covers two distinct workload sources, not just one:
     density, not a synthetic approximation of it. Included by default; skip with --no-corpus.
 
 Usage:
-    python3 scripts/profile_sweep.py
-    python3 scripts/profile_sweep.py --scenarios movement combat --tiers light heavy
-    python3 scripts/profile_sweep.py --ticks 200 --top-n 50
-    python3 scripts/profile_sweep.py --no-synthetic --corpus-worlds frontier_extended dungeon_crawl
-    python3 scripts/profile_sweep.py --no-corpus                      # synthetic scenarios only
+    python3 tools/perf/profile_sweep.py
+    python3 tools/perf/profile_sweep.py --scenarios movement combat --tiers light heavy
+    python3 tools/perf/profile_sweep.py --ticks 200 --top-n 50
+    python3 tools/perf/profile_sweep.py --no-synthetic --corpus-worlds frontier_extended dungeon_crawl
+    python3 tools/perf/profile_sweep.py --no-corpus                      # synthetic scenarios only
 """
 
 from __future__ import annotations
@@ -46,8 +46,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, List, Any, Tuple
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))  # for calibrate_simq._load_world_state
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))  # for calibrate_simq._load_world_state
 
 from src.config.profiles import PROD_LARGE, RuntimeProfile
 from src.core.state import AuthoritativeState

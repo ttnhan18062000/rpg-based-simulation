@@ -1,9 +1,9 @@
 """Memory profiling runner for rpg-based-simulation.
 
 Usage:
-    python3 scripts/profile_memory.py --suite certification
-    python3 scripts/profile_memory.py --suite certification --memray
-    python3 scripts/profile_memory.py --suite certification --save-baseline
+    python3 tools/perf/profile_memory.py --suite certification
+    python3 tools/perf/profile_memory.py --suite certification --memray
+    python3 tools/perf/profile_memory.py --suite certification --save-baseline
 """
 from __future__ import annotations
 

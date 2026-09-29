@@ -24,6 +24,6 @@ if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $null) {
 Write-Host "--- Simulation Complete. Running Semantic Audit ---" -ForegroundColor Cyan
 
 # 3. Run Audit Script
-python scripts/audit_logs.py $LogFile
+python tools/maintenance/audit_logs.py $LogFile
 
 Write-Host "--- Diagnostic Cycle Finished ---" -ForegroundColor Green

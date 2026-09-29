@@ -90,7 +90,7 @@ def main():
     # 1. Checklist Validation
     print("Validating Logic Checklist...")
     try:
-        subprocess.check_call([sys.executable, "scripts/archive/ledger_validator.py"])
+        subprocess.check_call([sys.executable, "tools/release/ledger_validator.py"])
         print("[PASS] Checklist is valid.")
     except subprocess.CalledProcessError:
         print("[FAILURE] Logic checklist validation failed.")
@@ -99,7 +99,7 @@ def main():
     # 2. Bundle Validation
     if not os.path.isdir(REAL_PROOF_DIR):
         print(f"[FAIL] Release proof directory '{REAL_PROOF_DIR}' is missing.")
-        print("Run 'scripts/generate_release_proof.py' first.")
+        print("Run 'tools/release/generate_release_proof.py' first.")
         sys.exit(1)
         
     passed, message = validate_bundle(MANIFEST_PATH, REAL_PROOF_DIR)

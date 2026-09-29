@@ -115,11 +115,42 @@ _SRC_UNIT_SUBSYSTEMS = frozenset({
 # test directory at all. Each of these four has exactly one owning test directory (surveyed via a
 # text-reference scan of tests/, re-verified directly against this branch's own tree) unlike
 # `_SRC_UNIT_SUBSYSTEMS`'s deliberately-excluded `ai`/`systems` above.
+#
+# `tools/perf/` and `tools/release/` are each genuinely multi-owner (TCK-20260929-RETIRE-SCRIPTS-
+# DIR moved the former `scripts/` perf/release/certification tooling here) — most files in each
+# have no single dedicated test directory, so this flat entry is the fallback default; the
+# per-basename overrides below (`_TOOLS_PERF_BASENAME_MAP`, `_TOOLS_RELEASE_BASENAME_MAP`) take the
+# genuinely-known owners out of that default before it applies.
 _TOOLS_SUBDIR_EXPLICIT_MAP = {
     "tools/delivery/": "tests/tools/",
     "tools/mechanism_registry/": "tests/unit/tools/",
     "tools/semantic_control_plane/": "tests/unit/tools/",
     "tools/perf/": "tests/static/",
+    "tools/release/": "tests/certification/",
+    "tools/maintenance/": "tests/tools/",
+}
+
+# tools/perf/<basename>.py -> its real owning test directory, surveyed directly against this
+# branch's tree (the 3 test files that import a specific tools/perf/ module by name). Anything
+# under tools/perf/ NOT listed here (including tools/perf/live_map_ws_payload_measure.py, which
+# has no dedicated functional test) falls through to the `tools/perf/` default above
+# (`tests/static/`, the corpus-wide static check that covers every tools/ file generically).
+_TOOLS_PERF_BASENAME_MAP = {
+    "profile_engine.py": "tests/unit/perf/",
+    "profile_sweep.py": "tests/perf/",
+    "profile_memory.py": "tests/unit/cli/",
+}
+
+# tools/release/<basename>.py -> its real owning test directory, same survey method as
+# `_TOOLS_PERF_BASENAME_MAP`. Everything else under tools/release/ (release_gate.py,
+# generate_release_proof.py, behavior_observability_rollout_gate.py,
+# phase10_enhanced_rollout_gate.py, verify_production_profiles.py, ledger_validator.py) falls
+# through to the `tools/release/` default above (`tests/certification/`) — release_gate.py and
+# generate_release_proof.py are both directly exercised by tests/certification/test_final_gate.py,
+# and the rollout gates by their own tests/certification/test_phase*.py files, so the default is
+# the real owner for those, not just a placeholder.
+_TOOLS_RELEASE_BASENAME_MAP = {
+    "generate_optimization_proof.py": "tests/perf/",
 }
 
 
@@ -132,6 +163,14 @@ def expected_test_dirs_for(path: str) -> "str | None":
             if path.startswith(prefix):
                 mirror_name = prefix.split("/")[1]
                 return f"tests/{mirror_name}/"
+        if path.startswith("tools/perf/"):
+            basename = path.split("/")[-1]
+            if basename in _TOOLS_PERF_BASENAME_MAP:
+                return _TOOLS_PERF_BASENAME_MAP[basename]
+        if path.startswith("tools/release/"):
+            basename = path.split("/")[-1]
+            if basename in _TOOLS_RELEASE_BASENAME_MAP:
+                return _TOOLS_RELEASE_BASENAME_MAP[basename]
         for prefix, test_dir in _TOOLS_SUBDIR_EXPLICIT_MAP.items():
             if path.startswith(prefix):
                 return test_dir

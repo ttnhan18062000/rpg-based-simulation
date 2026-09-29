@@ -1,6 +1,6 @@
 import json
 import pytest
-from scripts.behavior_observability_rollout_gate import BehaviorObservabilityRolloutGate
+from tools.release.behavior_observability_rollout_gate import BehaviorObservabilityRolloutGate
 
 @pytest.fixture
 def temp_report_file(tmp_path):
