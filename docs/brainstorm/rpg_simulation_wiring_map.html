@@ -693,3 +693,10 @@ flowchart LR
 </footer>
 </div>
 
+<!-- TCK-20260916-BRAINSTORM-HTML-MERMAID-NEVER-RENDERS: self-contained mermaid.js include so the
+     3 diagrams above render as diagrams (not raw text) when this file is opened directly in a
+     browser -- this repo's own doc pipeline (make docs-serve/docs-build) never picks up
+     docs/brainstorm/*.html at all, so there is no other rendering path to hook into. -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true });</script>
+

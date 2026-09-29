@@ -3164,4 +3164,17 @@ if (revisionsEl) {
 }
 </script>
 
+<!-- TCK-20260916-BRAINSTORM-HTML-MERMAID-NEVER-RENDERS: self-contained mermaid.js include so the
+     4 diagrams above render as diagrams (not raw text) when this file is opened directly in a
+     browser -- this repo's own doc pipeline (make docs-serve/docs-build) never picks up
+     docs/brainstorm/*.html at all, so there is no other rendering path to hook into. Placed after
+     the card-rendering script above (not before): the 4 mermaid blocks are static content in
+     their own <div class="diagram-card"> wrappers, never inside a [data-section] container that
+     script replaces via innerHTML, so there's no DOM-replacement race either way -- ordering here
+     only matters for readability, matching this file's own existing script order. Additive only,
+     no change to card content/prose per this file's living-page status (mirrored to
+     simulation_capabilities.html). -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true });</script>
+
 </div>
