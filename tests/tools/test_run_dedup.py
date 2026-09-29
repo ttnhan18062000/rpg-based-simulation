@@ -5,6 +5,7 @@ produced and was corrected for), latest-record selection, and a real-corpus pin 
 duplicate classification.
 """
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
@@ -106,19 +107,70 @@ def test_classify_duplicate_groups_shapes():
     assert len(result["identical_outcome"]) == 1
 
 
+_MEASUREMENT_CUTOFF_DATE = "2026-09-15"
+
+
+def _start_ts_date(run: dict) -> str | None:
+    """The `YYYY-MM-DD` date `run["start_ts"]` falls on, or `None` if it can't be determined.
+
+    Handles two shapes found in the real corpus: the current ISO-8601 string schema
+    (`"2026-09-15T12:00:00Z"` -- first 10 characters are the date), and a handful of pre-schema-
+    unification legacy records (`TCK-20260619-E53D*` and one `FOLDER-*` batch record) that carry
+    `start_ts` as a raw Unix epoch number instead. A record with no `start_ts` at all, or one that
+    is neither a string nor a number, returns `None` -- see the test below for why treating these
+    as "excluded" rather than crashing or guessing is safe here."""
+    ts = run.get("start_ts")
+    if not ts:
+        return None
+    if isinstance(ts, str):
+        return ts[:10]
+    if isinstance(ts, (int, float)):
+        try:
+            return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+        except (OverflowError, OSError, ValueError):
+            return None
+    return None
+
+
 def test_real_corpus_duplicate_classification_matches_measured_baseline():
-    """Pins the exact 2026-09-15 measurement from investigation.md. All-time counts on
-    runs.jsonl's own history before this date are a closed, non-growing count (unlike a live
-    ratchet) -- an exact match is the correct assertion here, not a >= ceiling."""
+    """Pins the 2026-09-15 measurement from the ticket that introduced this test
+    (TCK-20260915-DUPLICATE-RUN-RECORDS), re-measured and corrected by
+    TCK-20260929-RUN-DEDUP-BASELINE-PINS-GROWING-CORPUS.
+
+    All-time counts over runs.jsonl's *entire* history are not a closed, non-growing count --
+    every legitimate re-dispatch of any ticket (a gate failure fixed and re-run, exactly what
+    TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE did) adds a new "progressive" duplicate
+    group and would break an unscoped exact-equality assertion forever. What IS closed and
+    non-growing is the population of runs whose `start_ts` falls **on or before the 2026-09-15
+    measurement date** (inclusive of the whole day) -- that slice of history cannot change no
+    matter how many new runs are recorded afterward. Scoping to it, then asserting exact equality
+    against it, is what makes exact equality the right assertion shape here rather than a >=
+    ceiling.
+
+    A run whose `start_ts` can't be dated (missing entirely, or an unparseable type) is excluded
+    from the scoped window rather than guessed at, and this is provably safe: `execution_key()`
+    (see run_dedup.py) already treats any record with a falsy `start_ts` as its own forced
+    singleton group (keyed by its list position), so such a record can never be part of a
+    duplicate group -- whether it's included or excluded from this date filter has zero effect on
+    the counts below. Measured directly: as of the 2026-09-15 cutoff, 105 of the corpus's 1761
+    runs have no determinable `start_ts`; including or excluding them from the scoped population
+    yields identical classification results.
+    """
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
     from generate_retro import _load_runs_and_events
 
     all_runs, _ = _load_runs_and_events()
-    result = classify_duplicate_groups(all_runs)
+    scoped_runs = [
+        r for r in all_runs
+        if (date := _start_ts_date(r)) is not None and date <= _MEASUREMENT_CUTOFF_DATE
+    ]
+    result = classify_duplicate_groups(scoped_runs)
     assert result["total_duplicate_groups"] == 66, (
-        f"expected 66 duplicate groups (measured 2026-09-15), got "
-        f"{result['total_duplicate_groups']} -- if new legitimate runs were added since, "
-        f"re-measure and update this pin with the new number and date, don't just raise it blindly"
+        f"expected 66 duplicate groups among runs with start_ts <= {_MEASUREMENT_CUTOFF_DATE} "
+        f"(measured 2026-09-15), got {result['total_duplicate_groups']} -- this window is closed "
+        f"and must never grow on its own; if it moved, something re-dated a historical run or "
+        f"changed classify_duplicate_groups()'s own logic -- re-measure and investigate why "
+        f"before touching this pin, don't just raise it blindly"
     )
     assert len(result["progressive"]) == 63
     assert len(result["same_status_diff_end"]) == 2

@@ -1,8 +1,12 @@
 import pytest
 
+from src.config.profiles import PROD_SMALL
 from src.core.enums import EntityRole, Faction
+from src.core.state import AuthoritativeState
+from src.engine.kernel import Kernel
 from src.entities.runtime_contract import ResolvedEntityRuntimeContract
 from src.entities.archetype_factory import ArchetypeEntityFactory, EntitySpawnContext
+from src.platform.rng import DeterministicRNG
 
 
 def _contract(**overrides) -> ResolvedEntityRuntimeContract:
@@ -164,6 +168,44 @@ def test_spawn_initial_active_false():
     c = _contract()
     entity = FACTORY.build_entity(10, c, _spawn(initial_active=False))
     assert entity.lifecycle.active is False
+
+
+def test_initial_active_false_spawn_is_reactivated_by_ordinary_progression_post_fix():
+    """TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE, Step 5 (Q3 behavior pin, not a design
+    decision). `initial_active=False` has exactly one caller anywhere in the repo -- this test
+    module's own construction-only `test_spawn_initial_active_false` above -- no production spawn
+    path uses it today (src/worldassembly/entity_spawner.py hardcodes initial_active=True). The
+    passive branch's reactivation of such a spawn on its next is_life_due tick is almost certainly
+    an accidental side effect of its formula, not a designed "spawn dormant, wake later"
+    mechanism, but this ticket's own fix must not silently change it either way: the new formula
+    `active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))` still reduces to the
+    original `(new_hp > 0 and new_age < life.max_age_ticks)` whenever `life.active` is False, so
+    this accidental reactivation path is deliberately preserved bit-for-bit. This test pins that
+    *current* (post-fix, unchanged) behavior so a future formula change does not silently remove or
+    alter it without this guard catching it. Q3's real design question -- whether an
+    initial_active=False spawn should require an explicit, intentional activation path instead --
+    is correctly left open and returned to the systemic-world roadmap; this test does not answer
+    it.
+    """
+    c = _contract()
+    entity = FACTORY.build_entity(10, c, _spawn(initial_active=False, position=(5.0, 5.0)))
+    assert entity.lifecycle.active is False
+    assert entity.combat.hp > 0
+    assert entity.lifecycle.age_ticks < entity.lifecycle.max_age_ticks
+
+    state = AuthoritativeState(tick=0, seed=42, entities={10: entity})
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    try:
+        kernel.tick_once()
+        after_one_tick = kernel.state.entities[10]
+    finally:
+        kernel.shutdown()
+
+    assert after_one_tick.lifecycle.active is True, (
+        "an initial_active=False spawn with hp>0 and age well below max_age_ticks must still be "
+        "reactivated by the passive branch's next is_life_due tick -- this accidental "
+        "reactivation path is unchanged by this ticket's Writer-1/Writer-2 precedence fix"
+    )
 
 
 def test_profile_ids_stored_in_properties():
