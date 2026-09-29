@@ -15,8 +15,14 @@ Everything in [`reference/`](reference/) is non-binding investigation and design
 detail planner and implementer agents. Child tickets are **not** created here; they are the detail
 planner's job.
 
-**Evidence base:** `04f911110`, with the progression leak re-checked at `origin/main` `5d4e4a237`.
-Figures below are dated; epics re-measure before acting.
+**Evidence base:** `04f911110`, with the progression leak re-checked at `5d4e4a237`. Main has since
+moved substantially (about +6,200 lines by `e176e277e`), so **figures are dated, and every epic
+re-measures before acting**.
+
+**Domain map scope:** the ownership map (reference §3.1) covers the core-RPG domains **and** maps
+strategic cognition, world dynamics and social/narrative at ownership level only, so the impact
+model can route changes there. Mapping them is not a commitment to test them in the first
+program. The RPG-feature facts were reviewed by `rpg-feature-planning` on 2026-09-29.
 
 ---
 
@@ -27,7 +33,7 @@ Detail is in `reference/current_test_system_overview.md`.
 
 | # | Finding | Evidence | Consequence |
 |---|---|---|---|
-| F1 | **High execution, unmeasured assertion strength** | 88% line coverage of `src/` (selected fast tiers, one local run); **0** mutation data; about 45 closed and open tickets titled *never fires / never applied / always empty* [provisional: title-matched] | Green tests do not tell us whether behaviour is actually checked |
+| F1 | **High execution, unmeasured assertion strength** | 88% line coverage of `src/` (selected fast tiers, one local run); **0** mutation data; a recurring class of *never fires / never applied / always empty* tickets that shipped past green tests. The count depends on the matching method (exact title phrases gave 8 closed / 9 open on 2026-09-29; broader patterns give more), so it is **provisional**, and §4.7's escaped-defect tag replaces it | Green tests do not tell us whether behaviour is actually checked |
 | F2 | **Test selection is agent judgement** | Test directories are mapped by prose; importers are found by a per-ticket grep; the static backstop silently skips unmapped files; mechanic scenarios are skipped on PRs touching several core-RPG paths (`PERF_RE`) | Relevant tests can be missed without anyone knowing |
 | F3 | **Test planning and review are shallow in the agent workflow** | Only the test *level* is decided in `test_plan.md`; the implementer writes both code and tests; no phase reviews test quality; the installed test skills are never invoked | Test design quality depends on luck |
 | F4 | **Hidden reliability defects** | 7 progression tests fail after any of 8 registry/catalog tests (CI hides it by splitting directories); a test run rewrites a tracked doc; `perf_baselines.json` has 0 entries; long-run determinism is parked | Combined measurements and perf claims are untrustworthy |
@@ -300,7 +306,7 @@ The assessment found cost without matching protection (F5). Pruning by line-coun
 
 | Id | Decision | Recommendation | Gates |
 |---|---|---|---|
-| D-R2 | Scenario-lane rule: `src/**` + known scenario dependencies trigger; known-irrelevant paths listed; unknown/new paths run the lane and are named in the job summary; a dedicated job; no rule change until lane cost is measured | approve | the CI rule change in B |
+| D-R2 | Scenario-lane rule: `src/**` + known scenario dependencies trigger; known-irrelevant paths listed; unknown/new paths run the lane and are named in the job summary; a dedicated job; no rule change until lane cost is measured, **and the measured cost is shared with the feature teams (who pay it on every PR) before the rule is promoted** | approve | the CI rule change in B |
 | D-MF | Bounded quarantine replaces `regression_policy.md` §6's unbounded `xfail(strict=False)` (nondeterminism only; node-level strict xfail; owner, ticket, expiry ≤ 14 days, one renewal); tooling waits for a real case | approve | the quarantine policy in C |
 | D-M2 | Oracle model as in §3.1–3.2; oracle review advisory during the pilot | approve | the oracle-review step in C |
 | D-P | Party: no oracle document or owner | keep deferred | nothing in A–D |

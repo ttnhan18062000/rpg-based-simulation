@@ -53,6 +53,12 @@ step, quarantine policy.
 - If they can't, run a **clearly labelled synthetic exercise**. That result is **`provisional`**:
   it does **not** establish that the workflow works on a real RPG change.
 - The authoritative-write boundary is excluded (actively changing).
+- **Notes on the candidate** (`rpg-feature-planning` review, 2026-09-29):
+  - The nearest economy work, the `pressure-propagation-economy` epic, is all-or-nothing and touches
+    `src/economy/` and shared state. Name it explicitly when asking for stability confirmation.
+  - Economy paths **do not trigger the scenario lane today** (F2). The pilot either runs after the
+    lane rule (B, `HOLD — pending D-R2`) or records a manual lane run and states that CI would not
+    have run it. That makes the lane gap part of what the pilot demonstrates.
 
 **Per exercise, demonstrate that an agent can:**
 1. identify the impacted domains and levels;

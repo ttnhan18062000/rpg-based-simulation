@@ -82,7 +82,7 @@ start, until the owner approves that decision.** Unmarked items are independentl
    envelope.
 4. **`HOLD — pending D-R2`.** A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
    does not. An unknown path runs them and appears in the job summary. Lane wall time is recorded for
-   the first ~10 relevant PRs.
+   the first ~10 relevant PRs. The measured cost is shared with the feature teams before any rule promotion.
 5. The impact report, run on sample changes (local rule, shared substrate, cross-domain,
    content/config, unmapped), gives the expected domains and lanes with reasons, and flags the
    unmapped sample as `impact-unknown`.

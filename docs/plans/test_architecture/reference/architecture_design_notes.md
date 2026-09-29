@@ -24,8 +24,10 @@ portfolio commitment. No tickets exist yet. Detailed plans are in
 [`milestone_design_notes.md`](milestone_design_notes.md); as-is facts are in
 [`current_test_system_overview.md`](current_test_system_overview.md) (cited as *OV §n*).
 
-**Inspected code:** `04f911110`; test, `src/`, CI and agent files are unchanged through
-`origin/main` `9bcae32c5` (2026-09-28).
+**Inspected code:** `04f911110`; unchanged in test, `src/`, CI and agent files through `9bcae32c5`
+(2026-09-28). **Main has since moved substantially** (about 53 files / +6,200 lines through
+`e176e277e`, 2026-09-29), so line references here are dated, and epics must re-measure before
+acting.
 **Labels:** **[O]** observed · **[P]** provisional signal · **[I]** inference or proposal · **[H]**
 historical · **[U]** unknown · **[D]** owner decision · **[RR]** reviewer recommendation, not
 owner-approved · `[R#]` reference (§14).
@@ -89,9 +91,12 @@ dated evidence* (§9), not commitments.
 | Movement | `src/engine/movement.py`, tactical navigation | Bible ch02 + `docs/combat/combat_movement_overhaul_spec.md` | `combat_movement.yaml` |
 | Combat | `src/engine/combat.py`, `src/engine/domain/combat_actions.py`, `src/domains/combat_engagement/` | Bible ch02 | `combat_movement.yaml` |
 | Progression / anatomy | `src/progression/`, `src/domains/progression/`, `src/entities/` | Bible ch01 | `progression.yaml` |
-| Economy | `src/systems/` (harvest, crafting, market, economy), `src/economy/` | Bible ch03 | `town_resource.yaml` |
+| Economy | `src/systems/{economy,market,crafting,harvest}*`, `src/economy/` (not the whole `src/systems/` package, which quests/guild and party also live in) | Bible ch03 | `town_resource.yaml` |
 | Quests / guild | `src/systems/quest*`, `guild_system.py`, `src/quests/`, quest pipeline phases | Bible ch03 + buildings/guild/quest technical doc | `town_resource.yaml` |
 | Party / group | `src/systems/party.py`, `src/systems/social_systems/party*.py` | **none**: no Bible chapter covers party/group composition (ch04 is goal hierarchy) → **escalate to the user** [D] | none |
+| *Strategic cognition* (mapped, outside the first program) | `src/cognition/`, `src/strategy/`, `src/ai/goals/`, `src/systems/strategic_systems/` | Bible ch04 | `strategic_cognition.yaml` |
+| *World dynamics* (mapped, outside the first program) | world-evolution / calamity / ecology code (roots to be confirmed by the impact-model work) | Bible ch05–06 | `world_dynamics.yaml` |
+| *Social / narrative* (mapped, outside the first program) | social systems (roots to be confirmed by the impact-model work) | social/narrative contracts | `social_narrative.yaml` |
 
 **Oracle authority (per `rpg-feature-planning` consultation, 2026-09-29, and CLAUDE.md's
 Authoritative Mechanics Rule):**
@@ -228,7 +233,7 @@ content/runtime activation, and unmapped.
 | **Oracle / spec review** | the test plan cites the **oracle document section** (Bible/contract) and its parity-ledger entry *before* tests are written. If an AC changes or adds an expectation, the oracle document and ledger change first (plus a divergence entry if intentional); a silent document, missing owner, cross-domain dispute or intra-Bible conflict → **escalate to the user** | approval recorded (§6.3 fields) |
 | Tests written | Implement / `implementer`, using the level contracts and patterns | files changed |
 | Commands selected | Test / `test-scoper` | command + reason |
-| Test-quality review | existing `architecture-reviewer` at Architecture-Verify (`implement-ticket.js:999`), plus an explicit, diff-scoped, advisory checklist [R9][R13][R14] | substantive findings + action taken |
+| Test-quality review | existing `architecture-reviewer` at Architecture-Verify (Architecture-Verify phase of `implement-ticket.js`; line numbers drift, so locate it by phase name), plus an explicit, diff-scoped, advisory checklist [R9][R13][R14] | substantive findings + action taken |
 | Completion | `done-checker`: mandatory fields present | DoD line |
 | **Epic coordination** | `implement-epic.js`: children follow the above; the epic records shared fixtures/patterns it introduces and routes cross-child impact through the impact report | epic notes |
 
@@ -411,9 +416,10 @@ This unifies and extends the existing rules rather than replacing them in parall
 
 ## 8 · Capability C6: Bounded core-RPG pilot
 
-**Purpose:** show that the architecture works, not complete a portfolio. **Surface rule:** resource conservation (ch03) is a *candidate*. If the feature team cannot confirm a stable window when MP starts, MP uses a **clearly labelled synthetic exercise**. It uses **one or two
-suitably stable changes selected with the feature agents**. If none is available, it uses an
-existing stable behaviour, or a **synthetic, clearly labelled exercise**. The roadmap never
+**Purpose:** show that the architecture works, not complete a portfolio. It uses one or two
+suitably stable changes selected with the feature agents. The candidate is resource conservation
+(ch03). If the feature team cannot confirm a stable window when MP starts, MP uses a **clearly
+labelled synthetic exercise**. The roadmap never
 blocks on a feature redesign.
 
 **The pilot must demonstrate that an agent can:**
@@ -441,10 +447,12 @@ obsolete as feature teams rework mechanics.
   - `resolve_multi_attack()` is called only from `src/engine/movement.py:240`, with `is_lethal=False`;
   - the decision path goes through `src/engine/domain/combat_actions.py:65`;
   - a 3-world, 1000-tick measurement [H] (`tickets/todos/TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION.md:455-470`)
-    found most combat on the movement path.
-- **`COMBAT_ENGAGE` dispatch finding** [H]
-  (`tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md`, 2026-09-19
-  addendum): a **feature-owner design decision**, outside this roadmap.
+    found most combat on the movement path. **Superseded, needs re-measurement:** a later fix (`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS`) changed real combat volume substantially, so no combat-volume figure here should be reused (per `rpg-feature-planning`, 2026-09-29).
+- **`COMBAT_ENGAGE` dispatch finding: still live** (re-confirmed by `rpg-feature-planning`,
+  2026-09-29): the goal is scored and registered but has no dispatch consumer. Source:
+  `tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md`, 2026-09-19
+  addendum. A **feature-owner design decision**, outside this roadmap. It lives in
+  strategic-cognition code (now mapped in §3.1).
 - **Scenario PR gap** [O]: `PERF_RE` omits several core-RPG paths (OV §3). This one is an
   architecture concern, addressed by R2.
 - **Progression order-dependent tests** [O] (OV §4.2): a test-infrastructure concern, addressed by R1.
