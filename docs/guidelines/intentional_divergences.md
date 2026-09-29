@@ -1932,6 +1932,69 @@ untouched by §2.57's fix (out of that ticket's scope).
 
 ---
 
+### 2.59 Old-Age Death Now Recorded One Tick Later; `resolve_lifecycle` Declared Sole Authority for `lifecycle.active` Age Deactivation (TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE)
+- **Subsystem**: Progression / Lifecycle (Aging and Death)
+- **Old Behavior**: Two independent writers touched `entity.lifecycle.active` on the tick an
+  entity's age reached `max_age_ticks`, disagreeing by exactly one tick, with no declared
+  precedence. `ApplyPath._compute_entity_changes`'s passive branch (`src/engine/apply.py:94-110`)
+  computed `active=(new_hp > 0 and new_age < life.max_age_ticks)` every `is_life_due` tick,
+  independently of `LifecycleSystem.resolve_lifecycle`. `resolve_lifecycle`'s own OLD_AGE branch
+  (`src/systems/lifecycle_systems/lifecycle.py:193-195`) checks `age_ticks >= max_age_ticks`
+  against the pre-tick snapshot — one tick behind the passive branch's own increment. On the exact
+  tick `age_ticks` first reached `max_age_ticks`, the passive branch silently deactivated the
+  entity (`active=False`, no `death_reason`) a tick before `resolve_lifecycle` could ever observe
+  the persisted age; `resolve_lifecycle`'s own `if not entity.lifecycle.active: continue` loop
+  guard then skipped the entity forever. The death was never recorded and no lineage consequence
+  (heir/heirloom transfer, nemesis-feud transfer, dying-wish seeding, economic-vacancy detection)
+  ever dispatched for a death reached through ordinary per-tick progression — only tests that
+  staged `age_ticks` past `max_age_ticks` directly (bypassing the race entirely) exercised the
+  working path.
+- **New Behavior**: The passive branch's formula changed to
+  `active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))`.
+  `resolve_lifecycle`'s OLD_AGE branch is now the sole declared authority for old-age
+  deactivation; the passive branch keeps only its immediate `new_hp > 0` HP-death gate (unchanged,
+  still deactivates promptly on passive/combat-adjacent HP loss to zero). When `life.active` is
+  already `False` (a dead entity, or a construction-time `initial_active=False` spawn not yet
+  reactivated), the formula reduces to exactly the pre-fix expression — that path is unaffected.
+- **This is not behavior-neutral.** An old-age death through ordinary per-tick progression is now
+  recorded exactly **one tick later** than the tick the passive branch used to (silently, buglessly
+  per its own logic) deactivate the entity on — the tick `resolve_lifecycle` next runs against the
+  persisted post-increment age, not the tick `age_ticks` itself first reaches `max_age_ticks`. The
+  entity remains `active=True` for that one additional tick. Downstream consumers reading
+  `lifecycle.active`/`combat.alive` directly (e.g. `src/economy/vacancy.py`'s sole-occupant vacancy
+  check) observe their own signal one tick later for this path accordingly — confirmed by this
+  ticket's own regression test, not merely inferred. This shift is unavoidable: it is the direct
+  and necessary consequence of making `resolve_lifecycle` the sole authority, which is what fixes
+  the silent-death defect in the first place.
+- **Rationale**: **Bug Fix** — the prior dual-writer race left every ordinary-progression old-age
+  death permanently silent (no `death_reason`, no lineage dispatch, no economic-vacancy signal).
+  Declaring one sole authority, with `resolve_lifecycle` chosen because it already owns the full
+  death-processing sequence (succession, heirlooms, influence shift, conquest evaluation), closes
+  the gap without any kernel phase-ordering change.
+- **Verification**:
+  `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py::
+  test_natural_aging_death_is_recorded_as_old_age_and_dispatches_succession`,
+  `::test_no_tick_leaves_the_subject_inactive_without_a_death_reason`,
+  `::test_old_age_death_tick_is_pinned_one_tick_after_age_first_reaches_max` (all new; confirmed
+  failing 3/3 against pre-fix code, passing post-fix). Source-level guard:
+  `tests/unit/engine/test_apply.py::
+  test_passive_branch_does_not_deactivate_an_active_entity_the_tick_its_age_reaches_max` (new).
+  Vacancy-signal tick shift:
+  `tests/integration/economy/test_economic_vacancy_signal.py::
+  test_ordinary_progression_old_age_death_fires_vacancy_one_tick_after_age_reaches_max` (new).
+  `initial_active=False` reactivation path pinned unchanged:
+  `tests/unit/entities/test_archetype_entity_factory.py::
+  test_initial_active_false_spawn_is_reactivated_by_ordinary_progression_post_fix` (new).
+- **Deferred, not fixed here**: the starvation/sleep-debt passive-decay death path remains silent
+  (`resolve_lifecycle` has no HP/alive-based detection branch at all — a distinct root cause, a
+  missing branch rather than a timing race) — tracked by
+  `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`. Whether an `initial_active=False`
+  construction-time spawn should require an explicit, intentional activation path instead of the
+  accidental one this fix deliberately preserves is also deferred, to the systemic-world roadmap.
+- **Status**: RATIFIED
+
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

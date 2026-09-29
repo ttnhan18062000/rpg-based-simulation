@@ -9,8 +9,11 @@ from src.core.state import AuthoritativeState, RegionState
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole
+from src.config.profiles import PROD_SMALL
 from src.engine.apply import ApplyPath
+from src.engine.kernel import Kernel
 from src.engine.town_resolution import TownResolutionSystem
+from src.platform.rng import DeterministicRNG
 from src.systems.lifecycle import LifecycleSystem
 from src.domains.world_emergence.schema import WorldEvent, WorldEventCategory
 
@@ -160,3 +163,56 @@ def test_single_production_entity_town_regression_vacancy_detection_delta():
 
     assert control_total == 0
     assert treatment_total > 0
+
+
+def test_ordinary_progression_old_age_death_fires_vacancy_one_tick_after_age_reaches_max():
+    """TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE, Step 4 (AC4/AC8 interaction).
+
+    EconomicVacancyService.check_and_emit is only ever invoked from LifecycleSystem
+    .resolve_lifecycle's own `recent_deaths` aggregate (lifecycle.py:268-278) -- an entity only
+    enters that list on the tick resolve_lifecycle itself detects `is_dead=True`. Pre-fix, an
+    ordinary-progression old-age death was NEVER added to recent_deaths at all (the passive branch
+    silently deactivated it a tick before resolve_lifecycle could ever observe the persisted age,
+    and resolve_lifecycle's own `if not entity.lifecycle.active: continue` guard then skipped it
+    forever) -- so the vacancy signal was not merely late, it never fired for this path. Post-fix,
+    resolve_lifecycle is the sole authority for old-age deactivation, so the vacancy event now
+    fires correctly, on the exact tick the OLD_AGE death is recorded -- one tick after age_ticks
+    first reaches max_age_ticks, per this ticket's own declared and documented tick shift
+    (docs/guidelines/intentional_divergences.md §2.59) -- not on the tick age_ticks reaches max
+    itself, and not never, as it would have been observed pre-fix.
+    """
+    MAX_AGE_TICKS = 3
+    sole_shopkeeper = (
+        V2EntityBuilder(1)
+        .kind("HERO")
+        .location(10.0, 10.0)
+        .identity(role=EntityRole.SHOPKEEPER)
+        .lifecycle(active=True, age_ticks=0, max_age_ticks=MAX_AGE_TICKS)
+        .build()
+    )
+    state = AuthoritativeState(
+        tick=0, seed=42, entities={1: sole_shopkeeper}, regions={"region_01": _region()}
+    )
+    kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
+    vacancy_tick = None
+    age_reaches_max_tick = None
+    try:
+        for _ in range(6):
+            kernel.tick_once()
+            life = kernel.state.entities[1].lifecycle
+            if age_reaches_max_tick is None and life.age_ticks >= MAX_AGE_TICKS:
+                age_reaches_max_tick = kernel.state.tick
+            vacancy_events = [
+                e for e in kernel.state.recent_world_events
+                if e.category == WorldEventCategory.PRODUCTION_ROLE_VACATED
+            ]
+            if vacancy_tick is None and vacancy_events:
+                vacancy_tick = kernel.state.tick
+    finally:
+        kernel.shutdown()
+
+    assert age_reaches_max_tick == 3
+    assert vacancy_tick == age_reaches_max_tick + 1, (
+        "expected the vacancy signal to fire exactly one tick after age_ticks first reached "
+        f"max_age_ticks (world tick {age_reaches_max_tick + 1}), got {vacancy_tick}"
+    )

@@ -3,7 +3,7 @@ status: active
 layer: simulation
 authority: P1
 audience: agent
-last_verified: 2026-09-11
+last_verified: 2026-09-28
 ---
 
 # Lifecycle Systems Contract
@@ -46,6 +46,31 @@ On death:
 5. Succession processing (if `heir_entity_id` is set)
 6. Influence shift processing (via `FactionInfluenceService.process_influence_shift()`)
 7. Conquest lifecycle evaluation (stronghold spawn/removal)
+
+### Declared authority for `lifecycle.active` (TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE)
+
+Two writers touch `entity.lifecycle.active` each tick: `resolve_lifecycle`'s OLD_AGE branch above,
+and `ApplyPath._compute_entity_changes`'s passive branch (`src/engine/apply.py:94-110`), which
+increments `age_ticks` and recomputes `active` every `is_life_due` tick as part of the same passive
+decay pass that also drains HP from hunger/sleep-debt. Before this ticket, the passive branch
+independently computed `active=(new_hp > 0 and new_age < life.max_age_ticks)`, so on the exact tick
+an entity's `age_ticks` first reached `max_age_ticks`, the passive branch deactivated it a tick
+*before* `resolve_lifecycle` (which runs against the pre-tick snapshot) ever got a chance to record
+`death_reason="OLD_AGE"` — and once `active` was `False`, `resolve_lifecycle`'s own
+`if not entity.lifecycle.active: continue` guard skipped the entity forever, so the death was never
+observed and no lineage consequence ever dispatched.
+
+**Resolution rule: `resolve_lifecycle`'s OLD_AGE branch is the sole declared authority for
+old-age deactivation.** The passive branch's formula is now
+`active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))` — it may still deactivate
+an entity *immediately* via its own `new_hp > 0` HP-death gate (combat-adjacent or passive HP loss
+to zero must still deactivate promptly), but it can no longer independently flip an already-active
+entity to inactive purely because its age reached the maximum; that is `resolve_lifecycle`'s job
+alone, one tick later. This is a real, documented, determinism-visible one-tick shift in when an
+old-age death is recorded — see `docs/guidelines/intentional_divergences.md` §2.59. When
+`life.active` is already `False` (a dead entity, or an `initial_active=False` construction-time
+spawn that has not yet been reactivated), the formula reduces to exactly the pre-fix expression, so
+that path is unchanged.
 
 ### Succession and heirlooms
 
@@ -92,6 +117,16 @@ Per Mechanics Bible [`01_entity_anatomy.md` §4](../mechanics/01_entity_anatomy.
 | Sleep debt | `+0.05 * cadence.biological` | `sleep_debt >= 98.0` → HP −1 per lifecycle tick (exhaustion) |
 
 Both pressures accumulate monotonically until the entity eats (resets hunger) or rests (resets sleep_debt). There is no passive decay of the pressures themselves — only of HP once a threshold is crossed.
+
+**Known gap (still open as of TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE):** when this
+passive HP loss drives an entity's `combat.hp` to 0, the passive branch sets
+`combat.alive=False, lifecycle.active=False` directly, with no corresponding `EntityUpdate` for
+`resolve_lifecycle` to observe. `resolve_lifecycle` has no HP/alive-based death-detection branch —
+only the OLD_AGE and COMBAT branches documented above — so a starvation/sleep-debt-caused death
+currently produces **no `death_reason` and no lineage dispatch**; it is empirically confirmed
+still silent, distinct from (and not fixed by) the OLD_AGE dual-writer race resolution above, since
+it is a missing detection branch rather than a timing race. Tracked by the follow-up ticket
+`TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`.
 
 ### Output
 
