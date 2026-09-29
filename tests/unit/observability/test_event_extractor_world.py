@@ -185,6 +185,26 @@ def test_combat_kill_not_emitted_for_hazard_caused_death():
     assert "combat_kill" not in _types(events)
 
 
+def test_combat_kill_not_emitted_for_old_age_death():
+    """TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING (Card J, J3): an OLD_AGE death
+    (LifecycleSystem.resolve_lifecycle's own death_reason="OLD_AGE" branch,
+    src/systems/lifecycle_systems/lifecycle.py:193-195) hits the exact same
+    death_reason == "COMBAT" gate as test_combat_kill_not_emitted_for_hazard_caused_death above --
+    that test covers the gate generically via death_reason=None, this one names the specific
+    literal J3's Level-4 observer-evidence finding depends on, so a future refactor of the gate's
+    literal set can't silently start crediting old-age deaths as combat kills without a named
+    test noticing."""
+    prior = _entity(1)
+    prior.lifecycle.active = True
+    curr = _entity(1)
+    curr.lifecycle.active = False
+    curr.lifecycle.death_reason = "OLD_AGE"
+    prior_state = _state({1: prior})
+    curr_state = _state({1: curr})
+    events = EventExtractor.extract(prior_state, curr_state, _dying_update(1, "OLD_AGE"), ObservabilityMode.NORMAL)
+    assert "combat_kill" not in _types(events)
+
+
 def test_combat_kill_emitted_for_genuine_combat_death():
     """Regression guard: a real combat-caused death (death_reason=="COMBAT", the value
     LifecycleSystem.resolve_lifecycle() assigns on ent_upd.combat.outcome_kind=="KILL") must

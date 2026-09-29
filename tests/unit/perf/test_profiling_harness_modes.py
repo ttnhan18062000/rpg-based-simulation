@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import pytest
 
-from scripts.profile_engine import ProfilingHarness
+from tools.perf.profile_engine import ProfilingHarness
 from src.config.profiles import PROD_SMALL
 
 

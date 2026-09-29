@@ -85,7 +85,7 @@ Step 3 — build and write events:
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
 Step 4 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runIdLiteral}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"simq-audit","tier":"standard","final_status":"${finalStatus}","agent_count":${eventsCount}}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runIdLiteral}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"simq-audit","tier":"standard","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'
 
 Step 5 — clear the tool-tracking sidecar:
   Run via Bash: printf '{}' > .claude/current_run

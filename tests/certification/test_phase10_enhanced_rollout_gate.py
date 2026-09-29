@@ -2,7 +2,7 @@
 import pytest
 import os
 import json
-from scripts.phase10_enhanced_rollout_gate import RolloutGate
+from tools.release.phase10_enhanced_rollout_gate import RolloutGate
 
 @pytest.fixture
 def temp_report_file(tmp_path):

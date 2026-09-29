@@ -61,6 +61,46 @@ mechanism catching files that stop being used. Investigated via direct cross-ref
 - Decide and document whether the new orphan-check is CI-wired or on-demand-only, consistent with
   this session's finding that several sibling tools in this family are Makefile-only by design.
 
+## Decision (2026-09-29, user)
+
+The open question in the scope above is resolved as option (b), with structure: **retire
+`scripts/` entirely and move its live files into domain subpackages under `tools/`**. Moving
+them flat into the top level of `tools/` was considered and rejected.
+
+- Target layout for the files coming from `scripts/` (final per-file assignment is the
+  investigation's call, grounded in what each file actually does):
+  - `tools/perf/` (already exists): profiling, benchmarks, perf baselines/regression checks,
+    memory probes, turbo runs (`profile_*`, `perf_*`, `run_benchmarks`, `run_perf_baseline`,
+    `memory_probe`, `check_perf_regression`, `turbo_run*`).
+  - `tools/release/`: release/certification gates and proof generation (`release_gate`,
+    `generate_release_proof`, `generate_optimization_proof`, `verify_production_profiles`,
+    `*_rollout_gate`).
+  - `tools/maintenance/`: one-off repo maintenance utilities (`audit_logs`, `cleanup_tests`,
+    `auto_convert_builder_usage`, `protocol_validator`).
+  - `scripts/archive/*`: deleted, except the still-live `ledger_validator.py`, which
+    `release_gate.py` calls and which moves to `tools/release/` (see follow-up decisions).
+- The 8 confirmed-orphaned files (re-verified still unreferenced on origin/main `e176e277e`
+  on 2026-09-29) are deleted, not moved into a live subpackage.
+- Follow-up decisions (2026-09-29, user, after investigation):
+  - **Delete, don't archive.** The 8 orphans and the 4 dead `scripts/archive/*` files are
+    deleted outright, and no `tools/archive/` is recreated. The last one was temporary and was
+    hard-deleted by `TCK-20260908-KGMCP-DELETE-ARCHIVED-GATEWAY`. Version control keeps the
+    deleted files, and each ticket's disposition table is the only record.
+  - `tools/test_docker.py` is deleted, not renamed and kept.
+  - `scripts/turbo_run.py` imports the removed `src_legacy/`. It moves to `tools/perf/` with
+    that import fixed and a smoke run proving it works, keeping the turbo_run → audit_logs
+    pair usable.
+- Every live reference to a moved file (Makefile, `.github/`, tests, `.claude/` workflows and
+  skills, docs) is updated in the same change, and `scripts/` no longer exists afterwards.
+- The documented rule: `tools/` is the only home for repo tooling, and a new tool goes into a
+  domain subpackage (the `tools/gate_checks/` / `tools/mechanism_registry/` precedent from
+  `TCK-20260916-MECHANISM-REGISTRY-TOOLS-PACKAGE`), not the flat top level.
+- **Out of scope for this epic:** regrouping the ~70 existing flat top-level `tools/` files.
+  They stay where they are and move later, one domain at a time.
+- The orphan check covers `tools/` (all of it, recursively), since `scripts/` will be gone.
+  It stays on-demand via a Makefile target, not a CI gate, because checks over agent tooling
+  should stay proportionate.
+
 ## Out of scope
 
 - Retroactively auditing every individual file's *content* quality (dead code inside a file that

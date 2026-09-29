@@ -6,13 +6,21 @@ acceptance criteria unchanged.
 
 ## Order
 
-1. `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (P0, open, no deps in this batch) —
-   the sharpest, most actionable open question in the chain: why the decision-driven `ATTACK` path
-   fires 0-2 times per 1000-2000 ticks while the incidental opportunity-attack mechanic fires
-   181-2177. Investigate and report only; four candidate causes to confirm or rule out by
-   measurement.
-2. `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (P1, paused — resume with (1)'s
-   findings) — the older, broader investigation that first found combat to be incidental rather than
+1. `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION` (P0, **done** — closed to
+   `tickets/done/`; status corrected here 2026-09-29, this file previously said "open") — asked why
+   the decision-driven `ATTACK` path fires 0-2 times per 1000-2000 ticks while the incidental
+   opportunity-attack mechanic fires 181-2177. All four candidates confirmed or ruled out by direct
+   per-world measurement through a real `Kernel.tick_once()` loop.
+   **Verdict, from its own 2026-09-19 addendum: the decision layer does not fail to choose combat —
+   it chooses combat and the choice is discarded at dispatch.** `GoalKind.COMBAT_ENGAGE` wins the
+   goal competition, then `intelligence.py`'s winner-consumption code falls into a generic branch
+   that hardcodes the objective kind to `"reach_location"`, never derived from the winning goal.
+   `ObjectiveKind.DEFEAT_ENEMY` is created only through an unrelated scorer. A dead branch by
+   construction. Re-verified still live in `src/` on 2026-09-29
+   (`src/systems/strategic_systems/intelligence.py:1711`; scorer now at `src/ai/goals/scorers.py:101`,
+   which the closed ticket cites as `:108` — that citation has drifted 7 lines).
+2. `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (P1, **unblocked** — (1) has landed;
+   resume with its findings, above) — the older, broader investigation that first found combat to be incidental rather than
    decisional, and whose own 2026-09-17 addendum reframed its remaining open question into exactly
    what (1) investigates. Its own one unresolved lead (a static region-overlap comparison between
    `crowded_frontier` and `frontier_living_world`, not yet verified live) may or may not still need
@@ -35,11 +43,16 @@ acceptance criteria unchanged.
 ## Why This Order Matters
 
 **The root of the chain is a mechanism question, not a tuning question, and mechanism questions come
-first.** (1) is the most sharply scoped, most actionable, and highest-priority (P0) open link — it
-asks a single, well-instrumented question (why does the decision path never fire) with four
-concrete candidates already identified and a clear measurement plan. Resolving it is likely to
-directly inform, and possibly close, (2)'s own long-paused broader investigation, since (2)'s own
-final addendum already reframed its remaining question into (1)'s exact scope.
+first.** (1) was the most sharply scoped, most actionable, and highest-priority (P0) link — it asked
+a single, well-instrumented question (why does the decision path never fire) with four concrete
+candidates and a clear measurement plan. **It has now landed, and it answered the chain's root
+question**: the dispatch discard, not perception, scoring or tuning. (2)'s own final addendum had
+already reframed its remaining question into (1)'s exact scope, so (2) should be re-read against
+(1)'s verdict before any fresh measurement — a good part of it may already be answered.
+
+**Note the chain's centre of gravity has moved.** The root cause now sits in the goal-dispatch path
+(`src/ai/goals/`, `src/systems/strategic_systems/`), not in progression or combat resolution. Any
+fix routed from this chain lands there, which is worth knowing before picking up (2) or (3).
 
 **(3)'s boss-gate half is real but lower-stakes and less coupled to the rest of the chain** — it
 checks whether an already-confirmed-correct gate further starves a different, unrelated downstream

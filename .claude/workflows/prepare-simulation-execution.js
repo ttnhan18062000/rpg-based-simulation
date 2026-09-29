@@ -83,7 +83,7 @@ ${specResolution}
 Budget estimate:
 ${budgetEstimate}
 
-Read the Makefile and any run scripts (src/, scripts/) to determine the correct invocation pattern. Generate:
+Read the Makefile and any run scripts (src/, tools/) to determine the correct invocation pattern. Generate:
 1. The exact shell command the user should run
 2. Any environment variables that must be set first
 3. Any pre-run steps (e.g. clearing data/runs/, checking disk space)

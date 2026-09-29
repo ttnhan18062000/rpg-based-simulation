@@ -117,6 +117,46 @@ def test_unmapped_tools_subdir_still_returns_none_after_explicit_map_added():
     assert expected_test_dirs_for("tools/some_future_subdir/thing.py") is None
 
 
+@pytest.mark.parametrize(
+    ("path", "expected_dir"),
+    [
+        ("tools/release/release_gate.py", "tests/certification/"),
+        ("tools/maintenance/cleanup_tests.py", "tests/tools/"),
+    ],
+)
+def test_tools_release_and_maintenance_map_after_scripts_retirement(path, expected_dir):
+    # TCK-20260929-RETIRE-SCRIPTS-DIR: tools/release/ and tools/maintenance/ are new subpackages
+    # (the former scripts/ perf/release/maintenance tooling moved here). Pins the acceptance
+    # criterion that expected_test_dirs_for returns non-None for both.
+    assert expected_test_dirs_for(path) == expected_dir
+
+
+@pytest.mark.parametrize(
+    ("path", "expected_dir"),
+    [
+        ("tools/perf/profile_engine.py", "tests/unit/perf/"),
+        ("tools/perf/profile_sweep.py", "tests/perf/"),
+        ("tools/perf/profile_memory.py", "tests/unit/cli/"),
+        ("tools/perf/live_map_ws_payload_measure.py", "tests/static/"),
+        ("tools/perf/turbo_run.py", "tests/static/"),
+    ],
+)
+def test_tools_perf_basename_overrides_take_priority_over_default(path, expected_dir):
+    # TCK-20260929-RETIRE-SCRIPTS-DIR widened tools/perf/'s single tests/static/ mapping: 3 moved
+    # files have their own real owning test directory (surveyed directly against this branch's
+    # tree) and must NOT fall through to the tests/static/ default; everything else under
+    # tools/perf/ (live_map_ws_payload_measure.py, and any file with no dedicated test, e.g. the
+    # newly-moved turbo_run.py) still falls through to that default.
+    assert expected_test_dirs_for(path) == expected_dir
+
+
+def test_tools_release_basename_override_takes_priority_over_default():
+    # generate_optimization_proof.py's real owner is tests/perf/, not the tools/release/ default
+    # of tests/certification/ (it is exercised by tests/perf/test_optimization_proof_report.py,
+    # not test_final_gate.py).
+    assert expected_test_dirs_for("tools/release/generate_optimization_proof.py") == "tests/perf/"
+
+
 # ---------------------------------------------------------------------------
 # check_test_scope_coverage — the real incident reproduction
 # ---------------------------------------------------------------------------

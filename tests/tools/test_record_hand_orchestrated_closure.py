@@ -125,6 +125,19 @@ def test_build_records_explicit_start_end_ts_passed_through():
     assert run_record["end_ts"] == "2026-09-04T10:05:00Z"
 
 
+def test_build_records_sets_execution_mode_hand_and_keeps_workflow_default():
+    # TCK-20260929-RUN-EXECUTION-MODE-FIELD: every run this wrapper produces is a hand closure,
+    # so execution_mode is always "hand" -- a separate field from workflow, which stays whatever
+    # the caller passed (default "implement-ticket" at the CLI layer) so existing workflow-keyed
+    # consumers see no change in what workflow means.
+    run_record, _ = build_records(
+        "TCK-FAKE", "hotfix", "DONE", _MINIMAL_EVENTS,
+        None, None, "implement-ticket", "claude", "claude",
+    )
+    assert run_record["execution_mode"] == "hand"
+    assert run_record["workflow"] == "implement-ticket"
+
+
 def test_build_records_output_passes_the_real_underlying_validators():
     """The whole point of this wrapper is byte-compatible output with record_run.py/
     record_events.py's own contract — confirm both real validators accept it unchanged."""

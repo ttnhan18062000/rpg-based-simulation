@@ -596,6 +596,51 @@ same discipline `KnowledgeModelService`'s "hidden world truth is never injected"
 enforces for NPCs. These two fields are named precisely as the leak surface for future projection
 work to guard against.
 
+### 7.2.1 Combat-death trace findings (Epic B0, TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-ENCOUNTERABILITY)
+
+A sibling check to §7.2's aging-death case, run against a combat death instead: an entity killed
+in combat and recorded with `death_reason == "COMBAT"`, rather than natural aging.
+
+**Q1, empirically confirmed, not `BLOCKED_WITH_REASON`**: a real, deterministic
+`Kernel.tick_once()` forced-attack scenario (goblin vs orc,
+`mechanic_scenario_combat_judgement_withdrawal`) produced `lifecycle.active == False` and
+`lifecycle.death_reason == "COMBAT"` in the same tick, through the real
+`CombatResolutionSystem.resolve_attack()` -> `LifecycleSystem.resolve_lifecycle()` path. Combat
+deaths are real and structurally correct when they occur. Caveat carried from `registries/
+mechanisms.yaml`'s `tactical_decision` entry (`verified: corpus_run, verdict: contradicted`): real
+unscripted `ATTACK` dispatch is rare in ordinary corpus play (0-2 per 1000-2000 ticks) -- both
+facts recorded, not merged.
+
+**Answer 2 (trace existence, kept separate from Answer 3)**: the same tick a combat death
+resolves also produces lifecycle deactivation/classification, heir dying-wish/inherited-feud
+writes, heirloom/inventory transfer with no provenance marker (the identical finding §7.2 already
+records for the aging-death lineage case -- this is the same transfer mechanism regardless of
+`death_reason`), faction influence shift, conquest/stronghold lifecycle, an economic vacancy
+signal, the grief trigger for trusted allies, and a set of developer-only observability surfaces
+(`CombatDamageEvent`/`CombatKillEvent`/`hero_death_unrecorded`, `event_shapers.py::CombatShaper`,
+`GriefUrgencyTriggeredEvent`/`NemesisRelationFormedEvent`, `src/observability/live/*`,
+`src/api/presenters/*`, the `REFINED_UPDATE` replay stream). `docs/mechanics/
+04_strategic_cognition.md` §13's "witnessing combat" third tier (§13.7) does not exist as a
+runtime mechanism -- the whole section is headed "Status: declared, not yet implemented," and
+parity ledger `STRAT-273` (`status: missing`) independently confirms it.
+
+**Answer 3 (situated encounterability, kept strictly separate from Answer 2)**: the grief trigger
+(`src/observability/event_extractor.py:1722-1762`) is the ONLY real trace any runtime consumer
+legitimately receives from a combat death, and only for a bonded observer
+(`trust_history >= ALLY_TRUST_THRESHOLD`, 0.30) -- never for a co-located-but-unbonded observer,
+since the path carries zero proximity/perception check anywhere. This is a legitimate encounter
+for the bonded category specifically (a real authoritative `StrategicUpdate`, not a
+developer-only surface); it is location-independent, which is a named tension with the epistemic
+principle (§2, §3.4), not resolved here. All other traces (inheritance, faction, conquest,
+economy) exist but are not encounterable by any observer today, for the same reasons already
+established in §7.2: `PerceivedEntity` (`src/core/cognition.py:28-33`) has no item/event field,
+and `PerceptionUpdatePhase` has zero production call sites.
+
+This closes the combat-specific half of §11 item 3's Epic B0 owner note -- the aging-death
+lineage case (§7.2) and this combat-death case are sibling findings, reaching the same
+"perception inactive, one location-independent trust-keyed exception" conclusion from two
+independent runtime checks.
+
 ### 7.3 Gate question table
 
 | Gate question | Lineage | Economy/wealth (comparison) |
@@ -791,6 +836,18 @@ Implementation detail is deliberately left out.
    perception-foundation epic with its dependency implications. The wave is not expanded. Grep alone
    never establishes this finding.
 
+   - **Resolved for the combat-death path (TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-
+     ENCOUNTERABILITY, 2026-09-29)**: the perception update phase is confirmed still inactive at
+     runtime -- consistent with, not new evidence beyond,
+     `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`'s own finding. The one new finding
+     this ticket adds beyond that ticket is the grief trigger's location-independence as a live,
+     real (non-perception) trace path with no distance or channel constraint -- named as worth a
+     future look under the epistemic principle, not remediated here. This does NOT re-rank Epic B
+     above lineage work per this item's own decision criterion: the grief trigger is a real,
+     working, bonded-only trace path, not evidence that NPCs are non-situated observers across the
+     board. The broader perception-is-an-engine-gap question remains owned by
+     `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`, unchanged.
+
 4. **There is no route to player-inference evidence yet.**
    - A blinded proxy reviewer can give *formative* evidence, which is useful for design and labelled
      as a proxy.
@@ -825,6 +882,36 @@ Implementation detail is deliberately left out.
      `succession`. J1 and J2 link their existing open tickets, which are not duplicated.
 
    *Decision point*: owner memo decision 1.
+
+   - **Resolved for Card J (TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING,
+     2026-09-29)**: all three of J's mechanisms received a four-level assessment, re-verified
+     against current worktree HEAD (`702c3af83`), not merely cited from the adopted tickets.
+     - **J1 `calamity_intensity`** maps to *defect, routed to separate work* — a grep-level
+       confirmation found `CalamityService.apply_calamity_consequences()` has zero real callers
+       anywhere under `src/`, a deeper finding than the adopted ticket's original composition-gap
+       framing (Level 1 fails structurally, before the trigger condition is even reachable). The
+       registry write for this label is a **recommendation only**, routed to
+       `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which already owns
+       `calamity_intensity`'s registry `state` reconciliation — two tickets must not write the same
+       entry.
+     - **J2 `regional_trauma`** and **J3 `aging_death`/`succession`** both map to *legitimately
+       rare or conditional, with the condition stated* — neither needs a registry write, since
+       each mechanism's current registry label already states its condition accurately. J2:
+       `generated_frontier_3_42`'s `moon_cave` region is spatially isolated from every hostile
+       faction (confirmed by a real 5000-tick `Kernel.tick_once()` run recording
+       `trauma_score == 0.0` throughout), a fixed geometric fact of the world's composition, not a
+       wrong threshold or broken accrual code. J3: the default lifespan (20,160,000 ticks) is
+       ~4,032x–20,160x longer than any real corpus run this repo's evidence cites — the mechanism
+       is proven correct via staged-scenario technique (the already-merged
+       `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` fix, `5d4e4a237`), but natural aging
+       death by ordinary accumulation remains unobserved in any real corpus run.
+     - **Shared-root-cause hypothesis, checked, not confirmed.** J2's spatial-isolation cause and
+       the out-of-scope `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`'s zero-effect symptom
+       are, on inspection, opposite causes: J2 has no entities co-located to fight; the other
+       ticket's sampled region has entities correctly co-located and genuinely dying, but
+       `resolve_lifecycle()`'s own death-outcome-kind filter is missing `"DEFEAT"` (only checks
+       `"KILL"`/`"PERMADEATH"`) — a code-level filter gap, not a composition condition. Stated
+       here, per this ticket's own instruction; not absorbed into this ticket's scope.
 
 6. **Governance overhead.** This track spans several authorities: the Catalog, the SCP, the mechanism
    registry, the parity ledger, this roadmap and its companions, and multiple planning sessions.

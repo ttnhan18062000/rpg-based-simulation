@@ -63,12 +63,30 @@ tools/mechanism_registry/*.py      -> tests/unit/tools/       (NOT a same-name m
 tools/semantic_control_plane/*.py  -> tests/unit/tools/       (NOT a same-name mirror; same
                                                                  fallback trap as mechanism_registry/
                                                                  above)
-tools/perf/*.py                    -> tests/static/           (NOT a same-name mirror, and NOT
+tools/perf/*.py                    -> tests/static/           (default fallback for this subdir;
+                                                                 NOT a same-name mirror, and NOT
                                                                  tests/unit/perf/ — that directory
-                                                                 tests src/perf/, a different tree)
+                                                                 tests src/perf/, a different tree.
+                                                                 3 basenames have their own real
+                                                                 owner instead of this default:
+                                                                 profile_engine.py -> tests/unit/perf/,
+                                                                 profile_sweep.py -> tests/perf/,
+                                                                 profile_memory.py -> tests/unit/cli/)
+tools/release/*.py                 -> tests/certification/    (default fallback for this subdir;
+                                                                 release_gate.py and
+                                                                 generate_release_proof.py are both
+                                                                 exercised by
+                                                                 tests/certification/test_final_gate.py,
+                                                                 the rollout gates by their own
+                                                                 tests/certification/test_phase*.py.
+                                                                 One basename differs:
+                                                                 generate_optimization_proof.py ->
+                                                                 tests/perf/)
+tools/maintenance/*.py             -> tests/tools/            (NOT a same-name mirror; no
+                                                                 tests/maintenance/ directory exists)
 ```
 If a changed `tools/` path doesn't match any pattern above, check for a same-name directory
-under `tests/` before falling back to `tests/tools/`. This fallback does NOT apply to the four
+under `tests/` before falling back to `tests/tools/`. This fallback does NOT apply to the six
 `tools/` subdirs listed above with an explicit non-mirror target — check those first.
 
 ## What to Do
