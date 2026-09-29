@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260919-MECHANISM-WIRING-MAP-CLASSDEF-REGENERATE-MODE-GAP
-phase: open
+phase: done
 date: 2026-09-19
 tags: [architecture, schema]
 ---
@@ -16,7 +16,7 @@ tags: [architecture, schema]
 Operating Loop diagram needs a hand-edit, unlike its atlas/capabilities siblings
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -84,14 +84,43 @@ precedent to copy the write-mode shape from.
 None — self-evident chore, mirroring an already-proven pattern in the same tool family.
 
 ## Implementation Notes
-Not yet started.
+Added `apply_classdef_fix(text, node, expected)`, mirroring `mechanism_atlas_regenerate.py`'s
+`apply_diffs()` role: surgically sets one node's classDef, removing it from any `class A,B,C,...
+live` line it currently sits in (dropping the whole line if it becomes empty) before applying an
+inline `:::expected` override — a node is never left simultaneously inline-overridden AND
+class-line-assigned, since mermaid applies the class-line assignment last and would silently
+shadow the inline override otherwise. `render(check, wiring_map_path, registry_path)` mirrors
+`mechanism_atlas_regenerate.py`'s `render()` exactly: default-write, `--check` reports only and
+writes nothing, `--path`/`--registry` overrides for tests (full CLI shape parity, not just the
+`--check` flag). `main()` gained matching argparse. Removed `_load_registry()` (dead code once
+`render()` inlines its own path-parameterized yaml load).
+
+No live drift existed on `origin/main` at the time of this fix (the earlier `TRM` correction that
+motivated this ticket was already hand-applied and committed), so there was nothing real to
+regenerate — verified via unit tests with a fully-covered synthetic registry/wiring-map fixture
+instead (`_full_coverage_fixture()` in the test file, since `find_drift()`/`render()` iterate the
+*entire* real `OPERATING_LOOP_NODE_TO_MECHANISM_ID` mapping regardless of what a minimal fixture
+registry defines — a partial fixture reports spurious drift, and a naive write attempt crashes,
+for every node the fixture didn't think to cover).
 
 ## Test Summary
-Not yet started.
+8 new tests added to `tests/unit/tools/test_mechanism_wiring_map_classdef.py`: 5 for
+`apply_classdef_fix()` (insert, replace, remove-from-class-line, drop-now-empty-class-line,
+leaves-other-nodes-untouched) and 3 for `render()` (default-write fixes real drift, `--check`
+reports and writes nothing, no-drift writes nothing). Confirmed to fail on the pre-fix code
+(`ImportError: cannot import name 'apply_classdef_fix'` — the capability itself doesn't exist
+pre-fix) via the revert/rerun/restore method, then pass after (AC3). Full suite (15 tests) plus
+the sibling `test_mechanism_atlas_regenerate.py`/`test_mechanism_artifact_convergence.py` (28
+tests total) pass. `python3 tools/mechanism_registry/mechanism_wiring_map_classdef.py --check`
+against the real file: still `OK`, no drift (unaffected, since there was none to begin with).
 
 ## Files Changed
-None yet (this ticket file only).
+- `tools/mechanism_registry/mechanism_wiring_map_classdef.py`
+- `tests/unit/tools/test_mechanism_wiring_map_classdef.py`
 
 ## Completion Summary
-Open. Filed 2026-09-19 per peer review after a hand-edit was needed to close
-TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-RESOLUTION's own `trauma` state correction.
+Added the default-write / `--check`-reports-only mode `mechanism_atlas_regenerate.py` and
+`mechanism_capabilities_regenerate.py` already had, closing the parity gap: a future Entity
+Operating Loop `classDef` correction no longer needs a manual `Edit` to the diagram's mermaid
+source. No live drift existed to fix at implementation time; correctness verified via a
+full-coverage synthetic fixture instead of the real file.
