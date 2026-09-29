@@ -54,10 +54,10 @@ failures to the right owner. The number of feature behaviours proven is **not** 
 
 | Epic | Outcome | Depends on | Gated parts (pending decision) |
 |---|---|---|---|
-| **A. Test baseline and reliability** (`TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY`) | A reproducible core-RPG test report with honest states. The **known** progression order leak and the known tracked-file write by the test run are fixed. Remaining unknowns are reported, not claimed away | — | none |
-| **B. Test structure and selection** (`TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION`) | Written test-level conventions and metadata. Scenario tests run on relevant PRs. A first impact report that adds reasons and `impact-unknown` flags and never removes lanes | A (report v0, for reporting only) | **D-R2** gates only the CI scenario-lane rule change |
-| **C. Test workflow and failure handling** (`TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING`) | Test-plan fields and an advisory test-quality checklist in the existing workflow; one unified failure-triage procedure | B (conventions) | **D-M2** gates only the oracle-review step; **D-MF** gates only the quarantine-policy change |
-| **D. Bounded core-RPG pilot** (`TCK-20260929-EPIC-CORE-RPG-TEST-PILOT`) | One or two exercises demonstrating that the workflow works end to end | The **minimum usable workflow** (below), not every part of A–C | surface confirmation at start |
+| **A. Test baseline and reliability** (`TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY`) | A reproducible core-RPG test report that works with the **available** artifacts (`no-junit-artifact` / `no-coverage-artifact` where absent). The **known** progression order leak is fixed, and the known write to `docs/brainstorm/mechanism_verification_view.md` is stopped. Any general tracked-file guard is advisory, distinguishes test-caused from tool/hook writes, and is never a blocking gate. Remaining unknowns are reported. **No new CI job** | — | none |
+| **B. Test structure and selection** (`TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION`) | Written test-level conventions and metadata. Scenario tests run on relevant PRs. A first impact report that adds reasons and `impact-unknown` flags and never removes lanes | A (report v0, for reporting only) | CI scenario-lane rule: **`HOLD — pending D-R2`** |
+| **C. Test workflow and failure handling** (`TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING`) | Test-plan fields and an advisory test-quality checklist in the existing workflow; one unified failure-triage procedure | B (conventions) | oracle-review step: **`HOLD — pending D-M2`**; quarantine policy: **`HOLD — pending D-MF`** |
+| **D. Bounded core-RPG pilot** (`TCK-20260929-EPIC-CORE-RPG-TEST-PILOT`) | One or two exercises. The pilot report **lists which capabilities were actually demonstrated**. Approved-oracle review is claimable only if the D-M2 step was approved and exercised | The **minimum usable workflow** (below), not every part of A–C | surface confirmation at start (resource conservation is a **candidate** until confirmed) |
 
 **Minimum usable workflow for D:**
 - A's report v0;
@@ -71,6 +71,10 @@ they are ready.
 
 **A synthetic-only pilot is `provisional`.** It does not establish that the workflow works on a real
 RPG change.
+
+**Hold rule.** Work marked `HOLD — pending D-x` may be *described* by detail planners, but no
+implementation child ticket for it may be activated, and no gated work may start, until the owner
+approves that decision. Ungated work is independently startable.
 
 ## 4 · Pending owner decisions
 
@@ -91,6 +95,7 @@ RPG change.
 | Per-test coverage contexts | A recorded selection failure where static inputs missed a dynamic dependency |
 | Quarantine enforcement tooling | The first real case needing quarantine |
 | JUnit upload from every CI job | When manual JUnit input to the report becomes the recurring bottleneck (today only `api-tools` uploads) |
+| CI coverage job | After its runtime is measured and its information is judged useful (not an owner-decision gate) |
 | Party ownership assessment | The owner assigns party an oracle document and owner (D-P) |
 | Parity evidence model, cleanup/pruning, API/UI tests, replay-dependent techniques | Their own decisions or dependencies; outside this roadmap's first program |
 

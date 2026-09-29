@@ -48,13 +48,20 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
   - test classification (heuristic, with `uncertain` kept);
   - CI lanes;
   - execution from supplied JUnit, with **`no-junit-artifact` ≠ `not-run` ≠ outcome**;
-  - package-level coverage from a fixed `make test-cov` and a nightly informational coverage job;
+  - package-level coverage **only from an available coverage artifact**, if one is supplied (e.g. a
+    local run via a repaired `make test-cov`); otherwise the report shows `no-coverage-artifact`;
   - read-only states for SimQ (`skipped-no-data`), census (`unstable`) and parity evidence.
 - **Known progression leak:** fix at the source; add a regression guard; verify against the
   identified polluters, the combined fast suite, and a random-order run of the affected set at one
   SHA (after checking random ordering against the RNG contract).
-- **Known tracked-file write:** identify the writer; stop it writing tracked files; add a guard that
-  flags tracked-file changes after a test run (advisory first).
+- **Known tracked-file write (scoped repair):** find the test that rewrites the **observed** tracked
+  file `docs/brainstorm/mechanism_verification_view.md`, and stop it writing that file (e.g. use
+  `tmp_path` or check-only mode).
+- **Optional general guard, advisory only:** report tracked-file changes after a test run.
+  - It must distinguish test-caused writes from legitimate tool or hook updates, such as
+    agent-monitoring shards.
+  - It is **never a blocking CI gate** in this epic.
+  - It is not required to close the epic.
 - **Post-repair baseline:** the same report after the fixes, with every difference explained and
   remaining unknowns listed.
 
@@ -62,6 +69,9 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 
 - Claiming that all order dependence or all test-side writes are gone.
 - Any gate or blocking use of the report.
+- **A new CI coverage job.** Later work, only after its runtime is measured and its information
+  judged useful (roadmap §5). This is not an owner-decision gate.
+- A repository-wide cleanliness check as a blocking CI gate.
 - Proof layers, review records, metadata markers (Epic B), and CI rule changes (Epic B).
 - Fixing SimQ's silent anchor skip (SimQ owner).
 - Product-code fixes. If the leak source is feature code under rework, route it to the feature team
@@ -70,8 +80,9 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 ## Acceptance Criteria
 
 1. The report regenerates identically from the **same input artifacts**. Every count shows its
-   denominator; missing data shows an explicit state, never 0. A fixture proves the three execution
-   states are distinct.
+   denominator; missing data shows an explicit state, never 0. A fixture proves that the execution
+   states `no-junit-artifact`, `not-run` and outcome are distinct, and that coverage shows
+   `no-coverage-artifact` when none is supplied.
 2. The report states its v0 limits, e.g. only `api-tools` uploads JUnit in CI.
 3. **Known leak:**
    - each identified polluter + the 3 progression files → 0 failures in the 7 nodes;
@@ -81,8 +92,9 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 
    If random ordering is blocked by the RNG-contract check, this part closes as `provisional`, and
    says so.
-4. **Known tracked-file write:** a clean checkout shows no tracked-file changes after the fast tiers,
-   and the guard catches a seeded write.
+4. **Known tracked-file write:** after the fast tiers in a clean checkout,
+   `docs/brainstorm/mechanism_verification_view.md` is unchanged. If the optional advisory guard is
+   built, it reports a seeded test-caused write and ignores a seeded hook/tool update.
 5. The post-repair baseline lists **remaining unknowns**, e.g. order dependence outside the verified
    set.
 
@@ -102,7 +114,7 @@ None.
 ## Related Code Areas
 `tests/conftest.py`; `tests/unit/{content,core}/` (polluters); `tests/unit/domains/progression/`;
 `tools/mechanism_registry/generate_mechanism_verification_view.py`; `Makefile` (`test-cov`);
-`.github/workflows/test.yml` (read-only for the report; one nightly job added).
+`.github/workflows/test.yml` (read-only for the report; **no CI job added** by this epic).
 
 ## Assumptions / Open Questions
 
@@ -115,7 +127,8 @@ Local costs observed at `5d4e4a237` (6 cores):
 - polluter reproducer under 1 s;
 - `tests/unit` 263 s;
 - combined fast suite 563 s;
-- fast-tier coverage run about 17 min.
+- a fast-tier coverage run took about 17 min at `04f911110`, which is relevant only if a coverage job
+  is later considered.
 
 ## Test Summary
 Defined by child tickets.

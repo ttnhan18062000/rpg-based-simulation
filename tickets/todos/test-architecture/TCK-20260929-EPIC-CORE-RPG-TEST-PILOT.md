@@ -46,7 +46,8 @@ Optional parts are used if ready: impact report, pattern library, scenario-lane 
 step, quarantine policy.
 
 **Surface:**
-- **Candidate: resource conservation (Bible ch03)**. It is not in the feature team's first wave
+- **Candidate only: resource conservation (Bible ch03)**. It stays a candidate until the feature team
+  confirms it is stable. It is not in the feature team's first wave
   (`rpg-feature-planning`, 2026-09-29), but no stability window is promised.
 - At start, ask the feature team to confirm a stable window.
 - If they can't, run a **clearly labelled synthetic exercise**. That result is **`provisional`**:
@@ -55,7 +56,9 @@ step, quarantine policy.
 
 **Per exercise, demonstrate that an agent can:**
 1. identify the impacted domains and levels;
-2. produce a test plan citing the oracle (Bible/contract + parity ledger);
+2. produce a test plan citing the oracle source (Bible/contract + parity ledger). **Approved-oracle
+   review** is a separate capability (2b). It can be claimed only if the oracle-review step (Epic C
+   part 5, `HOLD — pending D-M2`) is approved and was actually exercised;
 3. choose or create the test using a documented pattern;
 4. run the correct local and CI lanes;
 5. interpret a real or injected failure and route it per the triage procedure;
@@ -71,21 +74,25 @@ step, quarantine policy.
 
 ## Acceptance Criteria
 
-1. Each of the six capabilities is observed at least once, with an artifact:
+1. The pilot report **lists which capabilities each exercise actually demonstrated** (1, 2, 2b, 3–6),
+   each with its artifact. Nothing is claimed that was not exercised. Each of capabilities 1–6 is
+   observed at least once, with an artifact:
    - impact output or a manual impact analysis;
    - `test_plan.md`;
    - the test with metadata;
    - lane runs with run ids;
    - a triage record;
    - the report before and after invalidation.
-2. **Result classification:**
+2. **Capability 2b (approved-oracle review):** if the oracle-review step is on HOLD or absent, the
+   report states "not demonstrated", and the pilot makes **no** claim about approved-oracle review.
+3. **Result classification:**
    - `established` only if at least one exercise uses a **confirmed real** surface;
    - `provisional` if synthetic-only;
    - `inconclusive` if a capability could not be exercised, with the reason recorded;
    - `failed` if a capability was attempted and did not work.
-3. A short pilot report records, per workflow intervention, keep / revise / inconclusive with
+4. A short pilot report records, per workflow intervention, keep / revise / inconclusive with
    measurements and a qualitative review. It is directional; no causal claim is made.
-4. Capabilities that failed produce revise items for Epics A–C, not a pass.
+5. Capabilities that failed produce revise items for Epics A–C, not a pass.
 
 ## Related Tickets
 - Depends on the minimum usable workflow from Epics A, B, C.
@@ -102,8 +109,9 @@ None.
 Depends on the chosen surface. Candidate: economy conservation code and its tests.
 
 ## Assumptions / Open Questions
-- The surface is confirmed at start. D-M2 pending: if it's still pending, the pilot cites oracles but
-  records no approval step.
+- The surface is confirmed at start; otherwise the pilot uses the synthetic exercise (a
+  `provisional` result, which cannot establish that the workflow works on a real RPG change).
+- D-M2 pending: capability 2b is not claimable while the oracle-review step is on HOLD.
 
 ## Implementation Notes
 Cost: about one small ticket per exercise, plus reporting.

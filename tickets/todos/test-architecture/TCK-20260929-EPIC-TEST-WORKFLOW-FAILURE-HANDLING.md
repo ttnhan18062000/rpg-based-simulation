@@ -45,6 +45,10 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §2–3.
 
 ## Scope
 
+**Hold rule (pending owner decisions).** Items marked `HOLD — pending D-x` may be *described* by
+the detail planner. **No implementation child ticket for them may be activated, and no gated work may
+start, until the owner approves that decision.** Unmarked items are independently startable.
+
 1. **Test-plan fields** (existing `investigator`):
    - mandatory: proof kind, oracle source (Bible/contract section + parity-ledger id), expected
      effect, selected commands;
@@ -60,10 +64,10 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §2–3.
    - failure classes, each with a role, an immediate action and a closure condition;
    - the prohibitions of roadmap §2.5;
    - defects found by tests handed to the feature team.
-5. **Oracle-review step — gated by D-M2 (only this part):** when an acceptance criterion adds or
+5. **`HOLD — pending D-M2`. Oracle-review step:** when an acceptance criterion adds or
    changes an expectation, the Bible/contract and parity ledger change first. Silence, missing
    ownership, disputes and intra-Bible conflicts escalate to the user. Advisory during the pilot.
-6. **Bounded-quarantine policy text — gated by D-MF (only this part):** replaces §6's unbounded rule.
+6. **`HOLD — pending D-MF`. Bounded-quarantine policy text:** replaces §6's unbounded rule.
    **Enforcement tooling is deferred until a real case needs quarantine.** Existing failures stay
    visible.
 
@@ -83,9 +87,9 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §2–3.
    reason.
 3. The triage procedure is one document, and the other sources link to it. A drill classifies at
    least one real case (the Epic A leak) and one synthetic case, and routes each to the right role.
-4. **(After D-M2)** A ticket that changes an expectation shows the document and ledger change before
+4. **`HOLD — pending D-M2`.** A ticket that changes an expectation shows the document and ledger change before
    the test change, or an escalation record.
-5. **(After D-MF)** §6 states the bounded policy. No existing failure is quarantined.
+5. **`HOLD — pending D-MF`.** §6 states the bounded policy. No existing failure is quarantined.
 
 ## Related Tickets
 - Depends on Epic B (taxonomy doc) for the field vocabulary.
@@ -106,7 +110,7 @@ None.
 `docs/testing/regression_policy.md`.
 
 ## Assumptions / Open Questions
-- **D-M2, D-MF pending:** parts 1–4 proceed without them.
+- **D-M2, D-MF pending:** parts 1–4 are startable now. Parts 5–6 and criteria 4–5 are on HOLD.
 - The installed `obra/superpowers` `testing-anti-patterns.md` is the checklist basis.
 
 ## Implementation Notes

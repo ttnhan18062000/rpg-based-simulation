@@ -42,7 +42,11 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 
 ## Scope
 
-1. **Conventions:**
+**Hold rule (pending owner decisions).** Items marked `HOLD — pending D-x` may be *described* by
+the detail planner. **No implementation child ticket for them may be activated, and no gated work may
+start, until the owner approves that decision.** Unmarked items are independently startable.
+
+1. **Conventions** (ungated):
    - rewrite `docs/testing/test_taxonomy.md` **in place** with level contracts, technique criteria,
      evidence classification, placement and the oracle principle (keeping its valid worldassembly
      and performance sections);
@@ -52,10 +56,10 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
    - worked examples that are **synthetic or confirmed stable** with the feature team;
    - replay-diff helper limited to the **verified reproducibility envelope** (hand-built state, fixed
      seed, ≤ 10 ticks, the determinism-suite profile).
-2. **Scenario-lane CI rule — gated by D-R2 (only this part):** scenario tests run on relevant PRs;
+2. **`HOLD — pending D-R2`. Scenario-lane CI rule** (the only gated part of this epic): scenario tests run on relevant PRs;
    unknown/new paths run the lane and are named in the job summary; lane cost is measured before any
    further rule change.
-3. **Impact report v0:** changed paths → components/domains → recommended levels, tests and lanes,
+3. **Impact report v0** (ungated): changed paths → components/domains → recommended levels, tests and lanes,
    with reasons and an explicit `impact-unknown` list. It **never removes a lane**. It reports
    selected / triggered / executed separately.
 
@@ -76,7 +80,7 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 3. Each worked example runs green in its declared lane and is labelled synthetic or
    confirmed-stable. The replay-diff helper returns `outside-verified-scope` for inputs outside the
    envelope.
-4. **(After D-R2)** A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
+4. **`HOLD — pending D-R2`.** A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
    does not. An unknown path runs them and appears in the job summary. Lane wall time is recorded for
    the first ~10 relevant PRs.
 5. The impact report, run on sample changes (local rule, shared substrate, cross-domain,
@@ -100,7 +104,7 @@ None.
 `.github/workflows/test.yml` (gated part only).
 
 ## Assumptions / Open Questions
-- **D-R2 pending:** parts 1 and 3 proceed without it.
+- **D-R2 pending:** parts 1 and 3 are startable now. Part 2 and criterion 4 are on HOLD.
 
 ## Implementation Notes
 Scenario-lane cost is assumed at 1–3 min per relevant PR; measured under criterion 4.
