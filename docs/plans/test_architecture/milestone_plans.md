@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Test Architecture — Detailed Milestone Plans (revision e, for review)
 
-**Status: DRAFT 2026-09-29f** (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). Centred on test architecture and operations, following the owner's
+**Status: DRAFT 2026-09-29g** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). Centred on test architecture and operations, following the owner's
 scope clarification: feature teams own mechanic behaviour and feature proofs (epic §1). Derived
 from [`test_architecture_epic.md`](test_architecture_epic.md) and
 [`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist**;
@@ -43,7 +43,8 @@ G-P independent (may end inconclusive/defer)
    - a report producer (e.g. `tools/test_architecture/core_rpg_report.py`);
    - its output under `reports/test_architecture/<sha>/`: JSON with a versioned schema, plus
      markdown;
-   - a standing nightly coverage job (line + branch + contexts) and a fixed `make test-cov`;
+   - a standing nightly coverage job (line + branch; **per-test contexts deferred**) and a fixed
+     `make test-cov`;
    - a parity baseline snapshot (cheap input for the separate parity path).
 4. **Dependencies / owners.** None. Owner: this roadmap. SimQ, ledger and registry are read-only.
 5. **Work packages.**
@@ -200,8 +201,8 @@ G-P independent (may end inconclusive/defer)
      placement, ownership map;
    - registered metadata markers + an advisory consistency check;
    - pattern library entries, each with **one worked example that is synthetic (a labelled test-only
-     toy) or confirmed stable by its owner** (today only the authoritative-write boundary
-     qualifies): property test, stateful property test, mechanic-outcome scenario via the shared
+     toy) or confirmed stable with the feature agents** (today: resource conservation, ch03; the
+     authoritative-write boundary is excluded as actively changing): property test, stateful property test, mechanic-outcome scenario via the shared
      helper, cross-domain chain, characterization. **No feature-specific proof commitments**;
    - the shared scenario helper;
    - the replay-diff helper, **restricted to the verified reproducibility envelope** (epic §3.5:
@@ -248,13 +249,14 @@ G-P independent (may end inconclusive/defer)
 2. **Inputs.**
    - The ownership map and domain ids (MT).
    - Import graph: CI-generated; interim fallback committed with its SHA and marked `stale`.
-   - Coverage contexts (M0a job).
+   - Coverage contexts: **deferred, evidence-triggered** (ticket_outlines Part 3). v0 uses the
+     ownership map, the import graph and the content rules only.
    - Content/config rules.
 3. **Deliverables** [I]:
    - an impact producer + JSON contract;
-   - an agent-readable rendering;
-   - the seeded-fault evaluation harness;
-   - evaluation records.
+   - an agent-readable rendering.
+   - The seeded-fault evaluation harness is **deferred, evidence-triggered**. v0 never removes a lane;
+     it only adds reasons and `impact-unknown` flags.
 4. **Dependencies / owners.** M0a, MT. The mechanism tier waits on the registry epic.
 5. **Work packages.**
    1. Rule model.
@@ -271,8 +273,9 @@ G-P independent (may end inconclusive/defer)
    figure is labelled a **sample validation**.
 7. **Acceptance.**
    - The unmapped sample yields `impact-unknown` plus the full core-RPG fallback.
-   - Lane recall is 100% on usable faults for the other four categories.
-   - Test recall is reported.
+   - The other four categories produce the expected domains and lanes with reasons, checked against
+     a hand-written expectation per sample.
+   - Recall measurement waits for the seeded-fault trigger.
    - Cross-domain and content samples are found by a rule or by contexts.
    - Selected-not-triggered cases are reported separately.
 8. **States.**
@@ -297,11 +300,14 @@ G-P independent (may end inconclusive/defer)
    `implement-ticket.js:999`; `implement-epic.js`.
 3. **Deliverables.**
    - Template field changes.
-   - The oracle/spec review step: a recorded approval by the feature/spec owner when an AC adds or
-     changes an expectation.
+   - The oracle/spec review step: the plan cites the oracle document section + parity-ledger entry.
+     A changed expectation changes those documents first. Escalation to the user on silence,
+     dispute or intra-Bible conflict.
    - The reviewer checklist (advisory, diff-scoped).
    - Epic coordination notes.
-   - Review-record fields (epic §6.3), stored in a location proposed pending the registry epic.
+   - Review-record fields (epic §6.3). **No separate store and no validator yet**: the approval is
+     recorded in the ticket, referencing the registry/ledger entry. The validator is
+     evidence-triggered.
 4. **Dependencies / owners.** MT (contracts, proof kinds). Owner: this roadmap. Agent-file changes go
    through their own tickets. The feature teams are the approvers.
 5. **Work packages.**
@@ -316,7 +322,8 @@ G-P independent (may end inconclusive/defer)
    - mandatory fields are present;
    - an oracle approval is recorded and mechanically validated;
    - a checklist finding (if any) is acted on or declined with a reason; a clean review is valid;
-   - a review record correctly turns `stale` after a deliberate oracle-hash change.
+   - (deferred until the validator trigger fires) a review record turns `stale-approval` after a
+     deliberate oracle change.
 8. **States.**
    - `provisional`: exercised only on synthetic tickets.
    - `failed`: the validator can't detect staleness.
@@ -336,13 +343,12 @@ G-P independent (may end inconclusive/defer)
 3. **Deliverables** [I]:
    - the workflow merged into `regression_policy.md`, with the other docs linking to it;
    - an evidence-record template;
-   - the quarantine mechanism of epic §7.3: a registered `quarantine` marker; a conftest collection
-     hook enforcing node-level scope, required fields and an open ticket, adding `xfail(strict=True,
-     raises=…)` while active; a required static `quarantine_check` in an always-on job; JUnit
-     `user_properties`; report states `quarantined` / `quarantine-expired`;
+   - the bounded-quarantine **policy text** of epic §7.3, incl. the interim manual rule. The
+     enforcement **tooling** (marker, hook, required check, report states) is **deferred until a
+     real case needs quarantine**;
    - report support for `quarantined`;
    - a feature-team handoff template for defects found by tests.
-4. **Dependencies / owners.** M0a (report states). Owner: this roadmap. The feature/spec owners
+4. **Dependencies / owners.** M0a (report states). Owner: this roadmap. Oracle documents and the ledger (escalation: the user)
    approve expectation changes. The quarantine-policy change to §6 needs an owner decision.
 5. **Work packages.**
    1. Class table + evidence record.
@@ -356,10 +362,10 @@ G-P independent (may end inconclusive/defer)
    expiry.
 7. **Acceptance (operational).**
    - The drills classify correctly and route to the right role.
-   - A quarantined test shows its owner, ticket and expiry in JUnit and in the report.
-   - With `QUARANTINE_TODAY` set past expiry, the required check fails.
-   - A class-level quarantine is rejected at collection.
-   - A quarantined test that starts passing fails as `XPASS(strict)`.
+   - The policy is published and `regression_policy.md` §6 updated (after D-MF approval).
+   - No existing failure is quarantined or hidden.
+   - The tooling criteria (JUnit fields, expiry fails a required check, class-level rejected,
+     `XPASS(strict)`) apply only when the deferred tooling ticket is triggered.
    - An attempted expectation change without a recorded approval is caught by the review-record
      validator (M2).
 8. **States.** `blocked` if the quarantine-policy decision is pending (the rest proceeds);
@@ -376,7 +382,7 @@ G-P independent (may end inconclusive/defer)
 1. **Outcome.** A demonstration that an agent can perform all six pilot capabilities (epic §8) on
    core RPG. It replaces the earlier progression workflow pilot and the M3a/M3b proof batches.
 2. **Inputs.** One or two **stable changes selected with the feature agents**. If none is
-   available: an existing stable behaviour (candidates: E1 authoritative-write guard; E4
+   available: an existing stable behaviour (**resource conservation, ch03**, confirmed usable by `rpg-feature-planning` 2026-09-29; the authoritative-write guard is **excluded** as actively changing; E4
    conservation if the feature agents confirm it is stable), or a **synthetic, labelled** exercise.
 3. **Deliverables.** A pilot record per exercise, covering capabilities 1–6 with artifacts; a final
    pilot report with a qualitative review and a keep / revise / inconclusive decision per

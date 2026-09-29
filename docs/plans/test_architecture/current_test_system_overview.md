@@ -175,11 +175,21 @@ has confirmed it**; that is a hypothesis for the first mutation baseline to test
 
 ### 4.2 Failures on `main` in a combined run
 
-- 7 in `tests/unit/domains/progression/` (`test_material_possession_predicate.py`,
-  `test_phase6_growth_gap_evaluator.py`, `test_phase6_possession_understanding_service.py`). All
-  18 tests in those files **pass when run alone**, so this is order-dependent shared state [R15].
-- `tests/unit/tools/test_mechanism_state_caller_check.py::test_real_registry_findings_pinned`:
-  pins live repository data, so it fails as the repo changes.
+- **At `04f911110` (2026-09-27):** 7 in `tests/unit/domains/progression/`, plus
+  `test_real_registry_findings_pinned` (pins live repo data).
+- **Re-checked at `5d4e4a237` (2026-09-29):** the **same 7** fail in the combined run (7,498
+  passed; 563 s) and in `tests/unit` alone (263 s). All 18 tests in their files pass alone. **CI's
+  `Run: tests/unit/domains` step is green** (run `36522228787`), because it runs that directory on
+  its own, so the failures are invisible in CI [O].
+- **Polluters:** 8 files, each sufficient on its own:
+  - `tests/unit/content/test_adapter_heuristic_reporting.py`, `test_runtime_content_mode.py`;
+  - `tests/unit/core/test_catalog_fallback.py`, `test_catalog_smoke_simulation.py`,
+    `test_hardcoded_regression_guard.py`, `test_registry_adapters.py`,
+    `test_registry_cross_reference.py`, `test_registry_parity.py`.
+
+  All exercise catalog/registry/content-mode switching [O]; a shared registry state is the
+  suspected cause [I].
+- `test_real_registry_findings_pinned` no longer fails at `5d4e4a237`.
 
 ### 4.3 Slowest fast-lane tests
 

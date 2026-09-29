@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Plan — Test Architecture (core RPG as first application)
 
-**Status: REVISION 2026-09-29f, prepared for ticket planning** (revision f changes: §3.5, §6.2, §6.3, §7.3; ticket outlines in [`ticket_outlines.md`](ticket_outlines.md)). This roadmap owns **how
+**Status: REVISION 2026-09-29g, prepared for ticket planning** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: [`ticket_outlines.md`](ticket_outlines.md). This roadmap owns **how
 tests are planned, written, selected, organized, executed, measured, reviewed, maintained and
 repaired**. It does **not** own the design or schedule of RPG mechanics; another group of agents
 is reworking those. Core RPG is the **first application and validation scope**, not a feature
@@ -75,15 +75,29 @@ Two cautions:
 This map exists for **ownership, change impact and selection**. Mechanic details are *illustrative,
 dated evidence* (§9), not commitments.
 
-| Domain | Components (code roots) | Spec location | Behaviour owner / approver |
+| Domain | Components (code roots) | Oracle document (authoritative expected behaviour) | Parity ledger |
 |---|---|---|---|
-| Shared substrate | `src/core/` (incl. `inventory.py`), `src/engine/pipeline*.py`, `src/engine/kernel*.py`, `src/platform/` | `docs/engine/kernel.md`, `authoritative_mutation_pipeline_contract.md`, `docs/core/state.md` | owner [D] (default: the user) |
-| Movement | `src/engine/movement.py`, tactical navigation | Bible ch02 | feature team for movement/combat |
-| Combat | `src/engine/combat.py`, `src/engine/domain/combat_actions.py`, `src/domains/combat_engagement/` | Bible ch02 | feature team |
-| Progression / anatomy | `src/progression/`, `src/domains/progression/`, `src/entities/` | Bible ch01 | feature team |
-| Economy | `src/systems/` (harvest, crafting, market, economy), `src/economy/` | Bible ch03 | feature team |
-| Quests / guild | `src/systems/quest*`, `guild_system.py`, `src/quests/`, quest pipeline phases | Bible ch03 + buildings/guild doc | feature team |
-| Party / group | `src/systems/party.py`, `src/systems/social_systems/party*.py` | [U] | [U], assessed by G-P |
+| Shared substrate | `src/core/` (incl. `inventory.py`), `src/engine/pipeline*.py`, `src/engine/kernel*.py`, `src/platform/` | `docs/engine/kernel.md`, `authoritative_mutation_pipeline_contract.md`, `docs/core/state.md` | `substrate.yaml` |
+| Movement | `src/engine/movement.py`, tactical navigation | Bible ch02 + `docs/combat/combat_movement_overhaul_spec.md` | `combat_movement.yaml` |
+| Combat | `src/engine/combat.py`, `src/engine/domain/combat_actions.py`, `src/domains/combat_engagement/` | Bible ch02 | `combat_movement.yaml` |
+| Progression / anatomy | `src/progression/`, `src/domains/progression/`, `src/entities/` | Bible ch01 | `progression.yaml` |
+| Economy | `src/systems/` (harvest, crafting, market, economy), `src/economy/` | Bible ch03 | `town_resource.yaml` |
+| Quests / guild | `src/systems/quest*`, `guild_system.py`, `src/quests/`, quest pipeline phases | Bible ch03 + buildings/guild/quest technical doc | `town_resource.yaml` |
+| Party / group | `src/systems/party.py`, `src/systems/social_systems/party*.py` | **none**: no Bible chapter covers party/group composition (ch04 is goal hierarchy) → **escalate to the user** [D] | none |
+
+**Oracle authority (per `rpg-feature-planning` consultation, 2026-09-29, and CLAUDE.md's
+Authoritative Mechanics Rule):**
+- **The oracle is a document, not a session.** The Mechanics Bible (`docs/mechanics/`) and the
+  Engine Contracts (`docs/engine/`) define expected behaviour, with the frozen World Rule Catalog
+  (`docs/world_rules/`) upstream of both for target semantics.
+- **Changing an expected behaviour** means changing the oracle document **and** its parity-ledger
+  entry in the same session, plus a `docs/guidelines/intentional_divergences.md` entry for an
+  intentional departure. No session approves an oracle by fiat.
+- **Escalate to the user** when the document is silent (e.g. party), when ownership is missing, for
+  cross-domain disputes, and when **two Bible/contract sections disagree**. Precedence cannot resolve
+  a split inside the Bible: date the competing sections and take it to the user.
+- Investigation addenda, e.g. `docs/plans/systemic_world/roadmap.md` §3.1, are **not** proof
+  sources.
 
 For any feature under active redesign, the architecture must answer six questions from these
 artifacts. Where the answer lives:
@@ -91,7 +105,7 @@ artifacts. Where the answer lives:
 | Question | Source |
 |---|---|
 | Where is its current spec? | map above + Bible / contract |
-| Who owns and approves expected behaviour? | map above + review records (§6.3) |
+| What defines and who changes expected behaviour? | oracle document + parity ledger (map above); the user on escalation |
 | Which component and domain own its runtime path? | map above + impact model (C2) |
 | Which level and harness fit? | level contracts (§3.2) + technique criteria (§3.3) |
 | What proof is available, missing, stale or blocked? | generated report (C4) |
@@ -142,9 +156,13 @@ The framework gaps (OV §9) are:
 
 These are delivered as **reusable patterns**. The rules for worked examples:
 - Each example uses either a **synthetic** behaviour (a clearly labelled test-only toy, placed apart
-  from feature tests) or a behaviour **confirmed stable** by its owner. The only currently eligible
-  confirmed-stable candidate is the authoritative-write boundary (architecture evidence); anything
-  else needs feature-agent confirmation.
+  from feature tests) or a behaviour **confirmed stable** with the feature agents.
+- Current status (`rpg-feature-planning`, 2026-09-29):
+  - **resource conservation (ch03)** is not in their first wave, so it is usable, though no stability
+    window is guaranteed;
+  - the **authoritative-write boundary is actively changing** (PR #254 edited `src/engine/apply.py`;
+    `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK` and
+    `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` target it) and is **excluded**.
 - **No feature-specific proof commitments.**
 
 **Replay-diff helper scope** [O for the evidence, I for the design]. Reproducibility is verified
@@ -164,7 +182,8 @@ Long-run determinism is parked (§6.4).
 **Inputs** (none alone is complete):
 - declared ownership map (§3.1);
 - static import graph: CI-generated; interim fallback is committed with its SHA and marked `stale`;
-- coverage contexts, i.e. who-tests-what [R26][R28];
+- coverage contexts, i.e. who-tests-what [R26][R28]: **deferred, evidence-triggered** (built when a
+  recorded CI selection failure shows the static inputs missed a dynamic dependency);
 - content/config rules for `data/worlds/**`, `config/**` and content-activated state (Pattern 6);
 - behaviour ids.
 
@@ -176,7 +195,10 @@ Long-run determinism is parked (§6.4).
 - per recommended test, **three separate facts: selected by the model · lane triggered by CI rules
   · executed and passed**.
 
-**Validation:** **fault-revealing test recall on sampled seeded faults** [R27][R29].
+**Validation:** **fault-revealing test recall on sampled seeded faults** [R27][R29]. The harness is
+**deferred, evidence-triggered**: it is built before the impact model is ever used to *skip* tests,
+or after the first recorded CI selection failure. Until then the model only *adds* reasons and
+flags; it never removes a lane.
 1. Clean baseline at a pinned SHA.
 2. One declared fault per isolated revision.
 3. Reference run.
@@ -195,7 +217,7 @@ content/runtime activation, and unmapped.
 |---|---|---|
 | Impact set | Investigate / `investigator` (+ impact report) | domains and reasons, `impact-unknown` |
 | Level, technique, proof kind, oracle source, expected effect, commands (**mandatory**); negative cases, fixtures, non-functional risk (**optional**) | Investigate / `investigator`, extended `test_plan.md` | one row per AC |
-| **Oracle / spec review** | the feature owner confirms the expected behaviour and its spec source *before* tests are written, when the AC changes or adds an expectation | approval recorded (§6.3 fields) |
+| **Oracle / spec review** | the test plan cites the **oracle document section** (Bible/contract) and its parity-ledger entry *before* tests are written. If an AC changes or adds an expectation, the oracle document and ledger change first (plus a divergence entry if intentional); a silent document, missing owner, cross-domain dispute or intra-Bible conflict → **escalate to the user** | approval recorded (§6.3 fields) |
 | Tests written | Implement / `implementer`, using the level contracts and patterns | files changed |
 | Commands selected | Test / `test-scoper` | command + reason |
 | Test-quality review | existing `architecture-reviewer` at Architecture-Verify (`implement-ticket.js:999`), plus an explicit, diff-scoped, advisory checklist [R9][R13][R14] | substantive findings + action taken |
@@ -276,9 +298,14 @@ the approval stays current. If the same change also edits the assertion region o
 triggers (2) or (4) apply. Harness refactors without a contract-version bump → rerun only.
 - Later reports validate records mechanically, without re-reading tests.
 - A static check establishes only the *level*, never semantic correctness.
-- **Single authority:** in-test claims are interim. When the registry epic ships the canonical
-  mechanism → test link, a one-time reconciliation moves claims there, conflicts are listed for the
-  owner, and the in-test metadata becomes a reference.
+- **No second authoritative proof-status registry** (owner direction, 2026-09-29). Proof status is
+  authoritative only in the **mechanism registry** (its future mechanism → test link, registry epic)
+  and the **parity ledger** (law evidence). This roadmap *reports* and *validates* against them.
+  Review records, when built, are non-authoritative annotations that reference a registry or ledger
+  entry; they never hold status of their own.
+- **Deferred, evidence-triggered:** the review-record validator is built only when a feature team
+  first asks to register a proof, or when the registry epic ships its test link (ticket_outlines
+  Part 3).
 - **Spec changes by feature teams** flip affected approvals to `stale-approval` via trigger (1).
 
 ### 6.4 Replay reliability
@@ -315,7 +342,7 @@ This unifies and extends the existing rules rather than replacing them in parall
 |---|---|---|---|---|
 | **Product regression** | Reproduces on rerun and in isolation; a recent change touches the behaviour path; the spec is unchanged | author of the change → **feature team** for feature code | Fix the code, not the test (`regression_policy.md` §4) | Fix merged; the failing test passes in its lane; a regression test exists |
 | **Test defect / wrong oracle** | Oracle contradicts the spec, or asserts an implementation detail | test author; the spec owner confirms the oracle | Fix the test **and** keep an equivalent-or-stronger assertion; never delete a requirement test without a replacement | Reviewed fix; review record renewed |
-| **Intentional spec change** | Feature team changed the behaviour on purpose | **feature/spec owner** approves | Record the reason (divergence log or spec change), then update the expectation | Approval recorded; affected proofs re-reviewed (they went `stale` automatically) |
+| **Intentional spec change** | Feature team changed the behaviour on purpose | the **oracle document + parity ledger (+ divergence log)** are changed first; the user resolves disputes | Record the reason (divergence log or spec change), then update the expectation | Approval recorded; affected proofs re-reviewed (they went `stale` automatically) |
 | **Order dependence / nondeterminism** | Passes alone, fails combined; or rerun differs at the same SHA | test-infra owner (this roadmap) | Diagnose by bisection / random order; **bounded quarantine** only if needed (§7.3) | Root cause fixed; combined + isolated + random order pass |
 | **Environment / fixture failure** | Fails only in one environment; missing tool, network, TLS, resource budget | CI / infra owner | Fix the environment or fixture; don't touch assertions | Green in the affected environment |
 | **Stale baseline / missing data** | Reference data absent or older than the code (e.g. SimQ `data/calibration/`, anchors, perf baselines) | baseline owner (SimQ owner for anchors) | Report as `stale` / `skipped-no-data`; regenerate only via the owner's approved process (`/simq-audit` for anchors) | Baseline regenerated with a recorded reason, or the state stays visible |
@@ -327,7 +354,15 @@ This unifies and extends the existing rules rather than replacing them in parall
 - **Never make red green** by silently updating snapshots or anchors, weakening assertions, adding
   broad `skip`/`xfail`, or changing expected values. An expectation change needs the **feature/spec
   owner's approval plus a recorded reason** (reinforces CLAUDE.md gate integrity).
-- **Quarantine policy** [I]: permitted only for the order-dependence / nondeterminism class.
+- **Quarantine policy: bounded quarantine is the proposed policy (owner direction, 2026-09-29).
+  The enforcement tooling below is DEFERRED until a real case needs quarantine** (ticket_outlines
+  Part 3).
+  - Until then, **no test is quarantined, and existing failures stay visible** as failures. The 7
+    order-dependent progression tests are fixed by R1, never `xfail`ed.
+  - If a real case appears before the tooling exists, the interim rule applies: node-level
+    `xfail(strict=True, raises=…)`, with the owner, ticket and expiry recorded in the tracking
+    ticket and the `reason=` string. The case itself becomes the trigger to build the tooling.
+  - Permitted only for the order-dependence / nondeterminism class.
 
   **Observed pytest 9.0.2 behaviour** (scratch experiment, 2026-09-29):
   - `xfail(strict=True)`: a failing test → `XFAIL` (the run stays green); a **passing** test →
@@ -337,7 +372,7 @@ This unifies and extends the existing rules rather than replacing them in parall
   - `raises=<Exc>`: any other exception → `FAILED`.
   - Neither mode ever expires on its own.
 
-  **Mechanism:**
+  **Mechanism (to build when triggered):**
   - A dedicated marker, `@pytest.mark.quarantine(owner=..., ticket=..., expires="YYYY-MM-DD",
     reason=..., raises=<optional>)`, registered in `pyproject.toml`.
   - A `tests/conftest.py` collection hook enforces it:
@@ -446,7 +481,7 @@ obsolete as feature teams rework mechanics.
 | Workflow pilot (D9) | yes (progression) | Folded into MP; surface chosen with the feature agents | Re-scoped |
 | Instruments (D11) | — | Separate layers [RR] | Default adopt |
 | Test review insertion | — | Existing reviewer + checklist [RR] | Default |
-| Changed expectations | — | Feature/spec owner approves; agents cannot re-approve [RR] | Default |
+| Changed expectations | — | Oracle = Bible/contract document + parity ledger; change the documents first; the user resolves silence, disputes and intra-Bible conflicts; agents cannot re-approve (consultation 2026-09-29) | **[D-M2]** |
 | Quarantine rule vs `regression_policy.md` §6 | — | Bounded quarantine with owner and expiry | **[D]** |
 
 ## 13 · Separate paths and out of scope
@@ -475,10 +510,10 @@ obsolete as feature teams rework mechanics.
 |---|---|---|
 | M3a (fixed E2–E4 proof batch) | **Replaced** | Property/stateful *patterns* delivered in MT with worked examples; feature law proofs → feature owners |
 | M3b (fixed E7–E9 proof batch) | **Replaced** | The shared scenario helper stays as an MT framework deliverable; feature outcome proofs → feature owners |
-| E1 authoritative-write guard | **pilot example** | An existing stable behaviour, suitable for the MP evidence-registration/invalidation drill (as architecture evidence) |
+| E1 authoritative-write guard | **architecture evidence only; excluded from the pilot** (surface actively changing, 2026-09-29) | An existing stable behaviour, suitable for the MP evidence-registration/invalidation drill (as architecture evidence) |
 | E2 damage law | **feature-owner responsibility** | Combat under rework |
 | E3 XP curve | **feature-owner responsibility** | Progression under rework |
-| E4 conservation | **pilot example (candidate)** / feature owner | A substrate law (ch03). A candidate stable surface for MP if the feature agents confirm stability; otherwise feature owner |
+| E4 conservation | **pilot surface (confirmed usable 2026-09-29, no stability window)** | A substrate law (ch03). A candidate stable surface for MP if the feature agents confirm stability; otherwise feature owner |
 | E5, E6 scenarios not selected on PRs | **architecture: absorbed into R2** | A lane problem, not a feature proof |
 | E7 pursuit → opportunity attack | **feature-owner responsibility** | — |
 | E8 harvest → market chain | **feature-owner responsibility** | — |

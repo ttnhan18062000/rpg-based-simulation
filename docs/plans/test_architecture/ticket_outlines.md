@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Test Architecture — Ticket Outlines for the Ticket Planner (revision f)
 
-**Status: PROPOSAL, 2026-09-29. No tickets have been created.** Identifiers below (`TA-…`) are
+**Status: PROPOSAL, 2026-09-29 (revision g). No tickets have been created.** Full drafts of TA-R1-1, TA-MT-1 and TA-M0a-1 are in the review package; baselines were re-checked at `origin/main` `5d4e4a237`. Identifiers below (`TA-…`) are
 placeholders, not ticket IDs; the ticket planner assigns real `TCK-YYYYMMDD-…` ids. Sources:
 [`test_architecture_epic.md`](test_architecture_epic.md) (revision f),
 [`milestone_plans.md`](milestone_plans.md), and
@@ -43,7 +43,7 @@ immediately.
 | Placeholder | Title | Tier | Scope | Out of scope | Acceptance | Depends on |
 |---|---|---|---|---|---|---|
 | **TA-M0a-1** | Core-RPG test report: schema, producer, inventory and lane layers | standard | Versioned report schema (layers + state vocabulary + denominators + input-artifact manifest, epic §6.2); a producer script; the classification layer (directory/import signals; `uncertain` and `unclassified` preserved; evidence-classification rules for example / characterization / broad-simulation tests); a lane layer derived from `test.yml` rules | coverage ingestion, SimQ/census/parity layers, any metadata markers | Two runs on the **same input artifacts** give identical normalized output. Every layer shows a value with its denominator, or a state. Failing tests present in the inputs are listed with their run id; **no fixed failure count** | — |
-| **TA-M0a-2** | Standing coverage job + `make test-cov` repair | standard | Fix `make test-cov` (`Makefile:209-210` points at `tests_v2`/`src_v2`); add a nightly, informational CI job producing line + branch coverage with contexts; the report ingests its artifact with its scope label | making coverage a gate | The job produces an artifact with SHA, tier list and failed-test list; the report shows package coverage and domain coverage `not-derived` | TA-M0a-1 |
+| **TA-M0a-2** | Standing coverage job + `make test-cov` repair | standard | Fix `make test-cov` (`Makefile:209-210` points at `tests_v2`/`src_v2`); add a nightly, informational CI job producing line + branch coverage (**no per-test contexts**; those are in Part 3); the report ingests its artifact with its scope label | making coverage a gate | The job produces an artifact with SHA, tier list and failed-test list; the report shows package coverage and domain coverage `not-derived` | TA-M0a-1 |
 | **TA-M0a-3** | Parity evidence-state derivation + committed baseline snapshot | hotfix or standard | Read-only derived evidence state (`test_linked` / `audit_only` / `legacy` / `missing`); a committed snapshot of the categorized schema errors (OV §4.6) | changing ledger entries or priority semantics (D7 is a separate path) | Snapshot reproduces the 2,842 + 25 / 1,561 categorization at its SHA, or explains the difference | TA-M0a-1 |
 | **TA-M0a-4** | SimQ and census state ingestion | hotfix | Report states `skipped-no-data` (with the 81-comparison denominator = 79 + 2) and `unstable` | fixing the SimQ skip (R3, SimQ owner) | States appear with provenance; no silent zero | TA-M0a-1 |
 
@@ -67,62 +67,69 @@ follow after TA-MT-2, per milestone_plans MT.)*
 
 ---
 
-## Part 2 · Draft outlines that need an owner decision first
+## Part 2 · Decision-gated drafts
 
-### R2 · Scenario lane selection
+### R2 · Scenario lane selection (draft for D-R2)
 
-- **Decision required [D-R2]:**
-  - (a) accept the three-outcome relevant-PR rule, including the **`tools/` mapping** (producers
-    relevant, listed subdirectories not relevant, unmapped → impact-unknown → the lane runs);
-  - (b) confirm that this roadmap owns the CI lane change;
-  - (c) choose a dedicated scenario job (recommended) or a widened `PERF_RE`.
-- **Draft TA-R2-1: Scenario lane selection rule + mapping honesty check** (standard).
-  - Scope: the classifier over changed paths; the `tools/` mapping file with a justification per
-    line; the dedicated job; the fixture test; the mapping-honesty static check; per-PR recording
-    of outcome, trigger, execution and wall time.
-  - Acceptance: see milestone_plans R2 item 7.
-  - Depends on: D-R2 only.
-- **Draft TA-R2-2: Lane cost observation** (hotfix). Record the median/p90 lane time and the
-  fallback-triggered count over the first 10 relevant PRs, and revisit the split if the median
-  exceeds 5 min. Depends on: TA-R2-1.
+**Rule (phase 1, minimal):**
 
-### MF · Quarantine mechanism
+| Outcome | Paths |
+|---|---|
+| **Trigger the scenario lane** | `src/**`; known scenario dependencies: `tests/mechanic_scenarios/**`, `tests/helpers/**`, `tests/conftest.py`, `data/worlds/**`, `config/**`, `requirements*.txt`, `pyproject.toml`, `.github/workflows/test.yml`, and the known input-generator scripts (`tools/generate_corpus_registry.py`, `tools/evaluate_simq.py`, `tools/calibrate_simq.py`; the list is kept in the rule file) |
+| **Known irrelevant** | `docs/**`, `tickets/**`, `agent-monitoring/**`, `tmp/**`, `frontend/**`, `dashboard-frontend/**` |
+| **Unknown → conservative fallback: the lane runs** | everything else, including other `tools/**` and any newly added top-level path. **Listed by name in the job summary** as "fallback-triggered by: …" |
 
-- **Decision required [D-MF]:**
-  - (a) replace `docs/testing/regression_policy.md` §6's `xfail(strict=False)` rule with the bounded
-    quarantine;
-  - (b) the maximum expiry window N (proposed 14 days) and the renewal rule (proposed: one renewal,
-    a second needs the owner);
-  - (c) which always-on job hosts the required `quarantine_check` (proposed: `arch-docs`).
-- **Draft TA-MF-Q1: Quarantine marker, collection hook and required check** (standard).
-  - Scope: register the marker; a conftest hook that enforces node-level scope, required fields
-    and an open ticket, and adds `xfail(strict=True, raises=…)` while active (behaviour observed
-    with pytest 9.0.2, epic §7.3); JUnit `user_properties`; a static `quarantine_check` with a
-    `QUARANTINE_TODAY` override for its own tests; report states `quarantined` /
-    `quarantine-expired`.
-  - Acceptance: see milestone_plans MF item 7.
-  - Depends on: D-MF, TA-M0a-1 (report state).
-- **Draft TA-MF-Q2: Update `regression_policy.md` §6 and link the unified triage workflow**
-  (standard, doc). Depends on: D-MF (a).
+- **Draft TA-R2-1: Dedicated scenario lane + phase-1 rule** (standard).
+  - Scope: the classifier; a dedicated job running `tests/mechanic_scenarios`; the job summary
+    listing matched and fallback paths; a fixture test for the classifier; per-run recording of
+    outcome, trigger and wall time (JUnit + summary).
+  - Acceptance: fixture cases pass (`src/progression/x.py` → trigger; `docs/x.md` → skip;
+    `tools/new_thing.py` → trigger via fallback, and named in the summary).
+  - Cost: one extra parallel job per relevant PR.
+- **Draft TA-R2-2: Measure actual lane cost** (hotfix). Record lane wall time and the
+  fallback-triggered count over the first 10 relevant PRs. **The rule is not expanded or narrowed
+  (e.g. by mapping `tools/` subdirectories as irrelevant) until this measurement exists.**
+- **Requires [D-R2]:** approval of the phase-1 rule table and fallback, the dedicated job, and this
+  roadmap as owner of the CI change.
 
-### M2 · Oracle / spec review step
+### MF · Bounded quarantine (policy now, tooling later)
 
-- **Decision required [D-M2]:**
-  - (a) who approves oracles and expectation changes per core-RPG domain while the features are
-    being reworked (the user, or a named feature-team lead per domain);
-  - (b) whether oracle approval **blocks** Implement for ACs that add or change an expectation, or
-    is advisory during the pilot (recommended: advisory in the pilot, blocking after the MP
-    keep decision);
-  - (c) the interim storage location for review records until the registry epic's link exists.
-- **Draft TA-M2-O1: Review-record format + mechanical validator** (standard).
-  - Scope: record fields (epic §6.3); the **two-part freshness** computation (rerun triggers →
-    `unverified-at-sha`; approval triggers 1–5 → `stale-approval`; a behaviour-path-only change →
-    rerun only); a validator used by the report.
-  - Acceptance: a behaviour-path-only change yields `unverified-at-sha` and no re-approval; a spec
-    section edit yields `stale-approval`; an assertion-literal edit yields `stale-approval`.
-  - Depends on: D-M2 (c), TA-MT-2.
-- **Draft TA-M2-O2: Oracle-review step in the ticket workflow** (standard; agent prompt change).
-  - Scope: `investigator` `test_plan.md` mandatory fields (proof kind, oracle source, expected
-    effect); a recorded approval by the D-M2 (a) approver when an AC adds or changes an
-    expectation; the `done-checker` presence check.
-  - Depends on: D-M2 (a, b), TA-M2-O1.
+- **Draft TA-MF-Q2: Publish the bounded-quarantine policy** (standard, doc).
+  - Scope: update `docs/testing/regression_policy.md` §6 from unbounded `xfail(strict=False)` to
+    bounded quarantine (nondeterminism class only; node-level `xfail(strict=True, raises=…)`; owner,
+    ticket and expiry recorded; existing failures never quarantined to make a suite green). Add the
+    interim manual rule and the triage-class table (epic §7.2).
+  - Acceptance: the doc is updated, cross-links from `delivery_process.md` CI triage are added, and
+    no test changes.
+- **Enforcement tooling (TA-MF-Q1)** → Part 3, trigger: the first real quarantine need.
+- **Requires [D-MF]:** approval of the policy text replacing §6, and of the maximum expiry
+  (proposed 14 days) and renewal rule (proposed: one renewal, then the owner decides).
+
+### M2 · Oracle / spec review
+
+- **Draft TA-M2-O2: Oracle-review step in the ticket workflow** (standard; agent-prompt change).
+  - Scope: add mandatory `test_plan.md` fields to the `investigator` (proof kind, oracle source,
+    expected effect, **oracle document section + parity-ledger id**). The oracle is the
+    Bible/contract document. When an AC adds or changes an expectation, the plan requires the
+    document and parity-ledger change first (plus a divergence entry if intentional), per CLAUDE.md's
+    Authoritative Mechanics Rule; **no new status store**. A silent document (e.g. party), missing
+    ownership, a cross-domain dispute or an intra-Bible conflict → escalate to the user.
+    `done-checker` checks the fields are present.
+  - Mode: advisory during the pilot.
+  - Depends on: TA-MT-1. `rpg-feature-planning` answered on 2026-09-29: the oracle is a document;
+    escalation goes to the user; no change to ledger/registry authority.
+- **Requires [D-M2]:** approval of the oracle model (Bible/contract document + parity ledger, with
+  the user as escalation point for silence, disputes and intra-Bible conflicts); advisory mode
+  during the pilot; and **a decision on party**, which has no oracle document.
+
+---
+
+## Part 3 · Deferred, evidence-triggered tickets (not to be cut until the trigger fires)
+
+| Placeholder | What | Trigger |
+|---|---|---|
+| TA-M2-O1 | Review-record format + mechanical validator (two-part freshness) | A feature team first asks to register a proof, **or** the registry epic ships its mechanism → test link |
+| TA-M1-SF | Seeded-fault evaluation harness (fault-revealing recall) | Before the impact model is used to **skip** any test or lane, **or** the first recorded "CI selection failure" triage case |
+| TA-M0a-CTX | Per-test coverage contexts (who-tests-what) | A recorded CI selection failure where the static inputs missed a dynamic dependency |
+| TA-MF-Q1 | Quarantine marker, collection hook, required expiry check, report states | The first real case that needs quarantine (the nondeterminism class) |
+| TA-M0a-ART | Upload JUnit artifacts from every CI job, for automatic report ingestion | When M0a-1's manual input step becomes the recurring bottleneck (today only `api-tools` uploads JUnit) |
