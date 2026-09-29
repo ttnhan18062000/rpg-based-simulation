@@ -1,5 +1,5 @@
 import pytest
-from dataclasses import replace
+from dataclasses import fields, replace
 from src.core.state import EntityState, LifecycleComponent, AuthoritativeState, CombatComponent, LifeStage, RegionState
 from src.core.updates import StateUpdate, EntityUpdate, CombatUpdate, InventoryUpdate, LifecycleUpdate
 from src.systems.lifecycle import LifecycleSystem
@@ -110,6 +110,52 @@ def test_succession_and_heirloom_transfer():
     # Logic ID: SOC-042
 
     # Logic ID: SOC-042
+
+def test_inheritance_transfer_carries_no_provenance_marker():
+    """Answer 2 item 3 (TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-ENCOUNTERABILITY): the
+    heirloom/inventory ResourceTransferIntent built by resolve_lifecycle()'s succession branch
+    (lifecycle.py:252-263) carries no field identifying it as inheritance-derived -- an observer
+    who somehow saw the heir's new item could not distinguish it from any other CHEST-sourced
+    transfer (the identical source_kind src/systems/economy_systems/chests.py uses for an
+    ordinary chest-opening transfer). This is a named gap, not a bug -- pinned here so a future
+    change to the intent's shape is a conscious decision, not silent drift.
+    """
+    parent = (V2EntityBuilder(1)
+              .location(0.0, 0.0)
+              .build())
+    parent_life = LifecycleComponent(
+        age_ticks=100, max_age_ticks=100,
+        heir_entity_id=2,
+        heirlooms=["Excalibur"]
+    )
+    parent = replace(parent, lifecycle=parent_life)
+
+    heir = (V2EntityBuilder(2)
+            .location(1.0, 1.0)
+            .build())
+
+    state = AuthoritativeState(tick=100, seed=42, entities={1: parent, 2: heir})
+
+    update = StateUpdate()
+    refined = LifecycleSystem.resolve_lifecycle(state, update)
+
+    heir_upd = refined.entity_updates[2]
+    transfer = heir_upd.resource_transfers[0]
+
+    provenance_markers = {"origin", "provenance", "inherited_from", "death_id", "source_entity_id"}
+    transfer_field_names = {f.name for f in fields(transfer)}
+    found = provenance_markers & transfer_field_names
+    assert not found, (
+        f"ResourceTransferIntent gained a provenance-marker field ({found}) -- if this is "
+        "intentional, it is a deliberate scope change, not silent drift; update this test's "
+        "expectation consciously rather than deleting it."
+    )
+    assert transfer.source_kind == "CHEST", (
+        "regression pin: inheritance transfers use the same generic 'CHEST' source_kind as an "
+        "ordinary chest-opening transfer (src/systems/economy_systems/chests.py) -- no dedicated "
+        "inheritance source_kind exists, so an observer could not distinguish the two by "
+        "source_kind either."
+    )
 
 def test_manual_heir_entity_id_transfers_even_if_heir_inactive():
     """The pre-existing manual-heir-transfer liveness check only tests existence, not

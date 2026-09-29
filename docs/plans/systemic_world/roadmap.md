@@ -596,6 +596,51 @@ same discipline `KnowledgeModelService`'s "hidden world truth is never injected"
 enforces for NPCs. These two fields are named precisely as the leak surface for future projection
 work to guard against.
 
+### 7.2.1 Combat-death trace findings (Epic B0, TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-ENCOUNTERABILITY)
+
+A sibling check to §7.2's aging-death case, run against a combat death instead: an entity killed
+in combat and recorded with `death_reason == "COMBAT"`, rather than natural aging.
+
+**Q1, empirically confirmed, not `BLOCKED_WITH_REASON`**: a real, deterministic
+`Kernel.tick_once()` forced-attack scenario (goblin vs orc,
+`mechanic_scenario_combat_judgement_withdrawal`) produced `lifecycle.active == False` and
+`lifecycle.death_reason == "COMBAT"` in the same tick, through the real
+`CombatResolutionSystem.resolve_attack()` -> `LifecycleSystem.resolve_lifecycle()` path. Combat
+deaths are real and structurally correct when they occur. Caveat carried from `registries/
+mechanisms.yaml`'s `tactical_decision` entry (`verified: corpus_run, verdict: contradicted`): real
+unscripted `ATTACK` dispatch is rare in ordinary corpus play (0-2 per 1000-2000 ticks) -- both
+facts recorded, not merged.
+
+**Answer 2 (trace existence, kept separate from Answer 3)**: the same tick a combat death
+resolves also produces lifecycle deactivation/classification, heir dying-wish/inherited-feud
+writes, heirloom/inventory transfer with no provenance marker (the identical finding §7.2 already
+records for the aging-death lineage case -- this is the same transfer mechanism regardless of
+`death_reason`), faction influence shift, conquest/stronghold lifecycle, an economic vacancy
+signal, the grief trigger for trusted allies, and a set of developer-only observability surfaces
+(`CombatDamageEvent`/`CombatKillEvent`/`hero_death_unrecorded`, `event_shapers.py::CombatShaper`,
+`GriefUrgencyTriggeredEvent`/`NemesisRelationFormedEvent`, `src/observability/live/*`,
+`src/api/presenters/*`, the `REFINED_UPDATE` replay stream). `docs/mechanics/
+04_strategic_cognition.md` §13's "witnessing combat" third tier (§13.7) does not exist as a
+runtime mechanism -- the whole section is headed "Status: declared, not yet implemented," and
+parity ledger `STRAT-273` (`status: missing`) independently confirms it.
+
+**Answer 3 (situated encounterability, kept strictly separate from Answer 2)**: the grief trigger
+(`src/observability/event_extractor.py:1722-1762`) is the ONLY real trace any runtime consumer
+legitimately receives from a combat death, and only for a bonded observer
+(`trust_history >= ALLY_TRUST_THRESHOLD`, 0.30) -- never for a co-located-but-unbonded observer,
+since the path carries zero proximity/perception check anywhere. This is a legitimate encounter
+for the bonded category specifically (a real authoritative `StrategicUpdate`, not a
+developer-only surface); it is location-independent, which is a named tension with the epistemic
+principle (§2, §3.4), not resolved here. All other traces (inheritance, faction, conquest,
+economy) exist but are not encounterable by any observer today, for the same reasons already
+established in §7.2: `PerceivedEntity` (`src/core/cognition.py:28-33`) has no item/event field,
+and `PerceptionUpdatePhase` has zero production call sites.
+
+This closes the combat-specific half of §11 item 3's Epic B0 owner note -- the aging-death
+lineage case (§7.2) and this combat-death case are sibling findings, reaching the same
+"perception inactive, one location-independent trust-keyed exception" conclusion from two
+independent runtime checks.
+
 ### 7.3 Gate question table
 
 | Gate question | Lineage | Economy/wealth (comparison) |
@@ -790,6 +835,18 @@ Implementation detail is deliberately left out.
    confirmed inactive at runtime, record that as an engine foundation finding, and propose a separate
    perception-foundation epic with its dependency implications. The wave is not expanded. Grep alone
    never establishes this finding.
+
+   - **Resolved for the combat-death path (TCK-20260928-COMBAT-DEATH-TRACE-SITUATED-
+     ENCOUNTERABILITY, 2026-09-29)**: the perception update phase is confirmed still inactive at
+     runtime -- consistent with, not new evidence beyond,
+     `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`'s own finding. The one new finding
+     this ticket adds beyond that ticket is the grief trigger's location-independence as a live,
+     real (non-perception) trace path with no distance or channel constraint -- named as worth a
+     future look under the epistemic principle, not remediated here. This does NOT re-rank Epic B
+     above lineage work per this item's own decision criterion: the grief trigger is a real,
+     working, bonded-only trace path, not evidence that NPCs are non-situated observers across the
+     board. The broader perception-is-an-engine-gap question remains owned by
+     `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`, unchanged.
 
 4. **There is no route to player-inference evidence yet.**
    - A blinded proxy reviewer can give *formative* evidence, which is useful for design and labelled
