@@ -70,4 +70,4 @@ Tag registered and listed; frontmatter validator run on the new tickets.
 `registries/tag_registry.jsonl`; `docs/guides/ticket_tagging.md`.
 
 ## Completion Summary
-Tag registered append-only; guide section added without duplicating the failure-class definitions. Monthly count is built by the report in Epic A batch 2.
+Tag registered append-only; guide section added without duplicating the failure-class definitions. Monthly count is built by the report in Epic A batch 2. Gate note: the bare done_checker_static CLI reports [precheck] and docs_to_update_coverage FAILs after closure; these are known false positives tracked in TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS. `--part finalize` passes.

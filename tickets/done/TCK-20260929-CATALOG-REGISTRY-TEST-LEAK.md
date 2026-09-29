@@ -99,4 +99,4 @@ All at SHA `720347c44` (before the closing commit; only agent-monitoring shards 
 `tests/conftest.py`; `tests/unit/core/test_catalog_registry_isolation.py`.
 
 ## Completion Summary
-Fixed at the source (tests/conftest.py autouse reset for the four un-reset registries), with a guard that fails on the old conftest. Verified at SHA 720347c44: polluters+progression, domains alone, 10 random-order seeds, combined fast suite (same 10 failures+1 error as clean origin/main, none new). Not fixed and reported: those 11 pre-existing combined-run failures.
+Fixed at the source (tests/conftest.py autouse reset for the four un-reset registries), with a guard that fails on the old conftest. Verified at SHA 720347c44: polluters+progression, domains alone, 10 random-order seeds, combined fast suite (same 10 failures+1 error as clean origin/main, none new). Not fixed and reported: those 11 pre-existing combined-run failures. Gate note: the bare done_checker_static CLI reports [precheck] and docs_to_update_coverage FAILs after closure; these are known false positives tracked in TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS. `--part finalize` passes.
