@@ -883,6 +883,36 @@ Implementation detail is deliberately left out.
 
    *Decision point*: owner memo decision 1.
 
+   - **Resolved for Card J (TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING,
+     2026-09-29)**: all three of J's mechanisms received a four-level assessment, re-verified
+     against current worktree HEAD (`702c3af83`), not merely cited from the adopted tickets.
+     - **J1 `calamity_intensity`** maps to *defect, routed to separate work* — a grep-level
+       confirmation found `CalamityService.apply_calamity_consequences()` has zero real callers
+       anywhere under `src/`, a deeper finding than the adopted ticket's original composition-gap
+       framing (Level 1 fails structurally, before the trigger condition is even reachable). The
+       registry write for this label is a **recommendation only**, routed to
+       `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which already owns
+       `calamity_intensity`'s registry `state` reconciliation — two tickets must not write the same
+       entry.
+     - **J2 `regional_trauma`** and **J3 `aging_death`/`succession`** both map to *legitimately
+       rare or conditional, with the condition stated* — neither needs a registry write, since
+       each mechanism's current registry label already states its condition accurately. J2:
+       `generated_frontier_3_42`'s `moon_cave` region is spatially isolated from every hostile
+       faction (confirmed by a real 5000-tick `Kernel.tick_once()` run recording
+       `trauma_score == 0.0` throughout), a fixed geometric fact of the world's composition, not a
+       wrong threshold or broken accrual code. J3: the default lifespan (20,160,000 ticks) is
+       ~4,032x–20,160x longer than any real corpus run this repo's evidence cites — the mechanism
+       is proven correct via staged-scenario technique (the already-merged
+       `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` fix, `5d4e4a237`), but natural aging
+       death by ordinary accumulation remains unobserved in any real corpus run.
+     - **Shared-root-cause hypothesis, checked, not confirmed.** J2's spatial-isolation cause and
+       the out-of-scope `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`'s zero-effect symptom
+       are, on inspection, opposite causes: J2 has no entities co-located to fight; the other
+       ticket's sampled region has entities correctly co-located and genuinely dying, but
+       `resolve_lifecycle()`'s own death-outcome-kind filter is missing `"DEFEAT"` (only checks
+       `"KILL"`/`"PERMADEATH"`) — a code-level filter gap, not a composition condition. Stated
+       here, per this ticket's own instruction; not absorbed into this ticket's scope.
+
 6. **Governance overhead.** This track spans several authorities: the Catalog, the SCP, the mechanism
    registry, the parity ledger, this roadmap and its companions, and multiple planning sessions.
    - Each keeps its own status vocabulary, and some state is summarized in more than one of them.
