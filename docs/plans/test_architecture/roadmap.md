@@ -143,7 +143,11 @@ Tests without an approved claim appear only as *executed evidence*:
   `impact-unknown` list.
 - **Rules:**
   - the impact report **never removes a lane**;
-  - unknown impact means running all core-RPG lanes;
+  - unknown impact triggers the **PR-eligible fallback**: every always-on PR job that holds core-RPG
+    tests, plus the path-filtered core-RPG lanes forced on (the scenario lane, today inside
+    `perf-cert-arena`, and `migration-lanes`). Jobs that CI runs only on `main`, nightly or by
+    manual dispatch (`slow`, `simq-grade-drift`) are **not** part of the PR fallback. Their results
+    are reported separately as nightly evidence, never as PR evidence;
   - it reports *selected*, *lane-triggered* and *executed* as three separate facts.
 
 ### 4.4 Authoring workflow (C3)
@@ -191,9 +195,12 @@ Every failure starts with an evidence record:
 Coverage says code ran; it doesn't say faults would be caught. Two lightweight measures, both in
 Epic A:
 
-1. **Mutation baseline on one declared, stable target** (`mutmut`). The candidate is the
-   resource-conservation code (Bible ch03), confirmed stable with the feature team, otherwise a
-   synthetic target. Recorded with the target, selected tests, SHA, date, runtime and result
+1. **Mutation baseline on one declared target** (`mutmut`).
+   - **Candidate:** the resource-conservation code (Bible ch03), used **only if the feature team
+     confirms a stable window**. `rpg-feature-planning` (2026-09-29) said it is not in their first
+     wave, with no stability window promised.
+   - **Otherwise** a synthetic target, reported as a **tooling exercise**: it shows the mutation
+     workflow works, **not** how strong the core-RPG tests are. Recorded with the target, selected tests, SHA, date, runtime and result
    categories (killed / survived / timeout / equivalent). It becomes `stale` when the target changes
    or after 30 days. **Local and on demand; no CI job.** This is a narrowed form of the D4 direction
    approved on 2026-09-28.
@@ -215,8 +222,12 @@ Neither is a gate. Both feed the post-pilot review (§6).
 3. **Write.** The implementer uses the level contract and a documented pattern (e.g. a stateful
    property for conservation) and marks the test with domain and level metadata.
 4. **Review.** The architecture reviewer runs the test-quality checklist on the changed tests.
-5. **Run.** The test-scoper runs the recommended commands. The scenario lane runs on the PR because
-   the path matches the rule.
+5. **Run.** The test-scoper runs the recommended commands locally.
+   - **Once D-R2 is approved and implemented,** the scenario lane runs on the PR because the path
+     matches the rule.
+   - **Until then** (D-R2 pending), a `src/systems/…` change does **not** trigger the scenario lane
+     in CI. The agent runs the scenario tests locally and the report records the lane as
+     `not-run` in CI.
 6. **Report.** The report shows the new test classified, executed and passed in its lane.
 7. **Fail** (if it fails). The failure gets an evidence record and a class, and goes to its owner. A
    product defect goes to the feature team.
@@ -268,7 +279,7 @@ approves that decision. Ungated work is independently startable.
 | Performance | `tests/perf` framework exists; `perf_baselines.json` has **0 entries**; only 2 test files use the fixture | performance owner [D: unassigned] | The report shows perf as `no-baseline`; calibrating core-RPG perf baselines is deferred with a trigger (§11) |
 | CI cost | PR wall time about 7–9 min; the scenario lane adds an estimated 1–3 min | this roadmap | Measured before any rule expansion (D-R2) |
 | Content/config compatibility | migration lanes are path-filtered; `data/worlds/**` changes have no selection rule | this roadmap | Content/config rules in the impact report (Epic B) |
-| SimQ anchor drift | anchor tests skip silently on PRs; historical drift 61/81 → 62/79 (2026-09) | SimQ owner | The report shows `skipped-no-data`; the repair belongs to SimQ |
+| SimQ anchor drift | Anchor tests skip silently on PRs. Two historical measurements with different populations, **not a trend**: (a) about 2026-09-01, tool-level sweep: 61 drifted of 81 run keys (79 executed, 2 not run); (b) 2026-09-03, pytest re-check: 62 failed of the 79 parametrized comparisons. No current measurement | SimQ owner | The report shows `skipped-no-data`; the repair belongs to SimQ |
 
 ## 9 · Test-suite health and cleanup (addresses F5)
 

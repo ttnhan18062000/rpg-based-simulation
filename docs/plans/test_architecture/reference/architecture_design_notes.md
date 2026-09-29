@@ -203,7 +203,7 @@ Long-run determinism is parked (§6.4).
 **Output contract:**
 - per change: impacted domains and components with **reasons**, recommended tests by level, and
   lanes;
-- an explicit **`impact-unknown`** list, whose fallback is to run all core-RPG lanes and flag the
+- an explicit **`impact-unknown`** list, whose fallback is the PR-eligible lane set defined in roadmap §4.3 (nightly-only jobs reported separately) and flag the
   change;
 - per recommended test, **three separate facts: selected by the model · lane triggered by CI rules
   · executed and passed**.

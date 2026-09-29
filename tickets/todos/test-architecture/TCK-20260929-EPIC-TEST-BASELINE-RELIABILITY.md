@@ -65,7 +65,8 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 - **Test-effectiveness baseline** (roadmap §4.7; a narrowed form of the D4 direction approved
   2026-09-28):
   - one local, on-demand `mutmut` run on **one declared target**: the resource-conservation code if
-    the feature team confirms it is stable, otherwise a labelled synthetic target;
+    the feature team confirms a stable window, otherwise a labelled synthetic target. A synthetic
+    run is reported as a **tooling exercise**, not as evidence of core-RPG test strength;
   - recorded with the target, selected tests, SHA, date, runtime and result categories
     (killed / survived / timeout / equivalent), shown in its own report layer, and `stale` after the
     target changes or 30 days;
