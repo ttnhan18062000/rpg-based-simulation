@@ -1007,17 +1007,21 @@ def test_reader_get_verification_known_and_unknown(registry):
 
 
 def test_make_target_generates_verification_view():
+    # `make -n` prints the recipe without running it: the real target writes the tracked
+    # docs/brainstorm/mechanism_verification_view.md, and running it here both dirtied a clean
+    # checkout and made the --check below vacuous (it can only pass right after a regeneration).
     result = subprocess.run(
-        ["make", "mechanism-verification-view"],
+        ["make", "-n", "mechanism-verification-view"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         timeout=60,
     )
     assert result.returncode == 0, (
-        f"make mechanism-verification-view failed:\nstdout: {result.stdout}\n"
+        f"make -n mechanism-verification-view failed:\nstdout: {result.stdout}\n"
         f"stderr: {result.stderr}"
     )
+    assert "generate_mechanism_verification_view.py" in result.stdout
     # The real committed output must already be in sync with the real registry -- run the
     # script's own --check mode against the real files, never hand-diff.
     check = subprocess.run(

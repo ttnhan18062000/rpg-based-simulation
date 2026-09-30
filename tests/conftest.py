@@ -41,6 +41,28 @@ _CANONICAL_RESOURCES: dict = dict(ResourceRegistry._resources)
 from src.core.registries import ItemRegistry as RegistriesItemRegistry
 _CANONICAL_REGISTRIES_ITEMS: dict = dict(RegistriesItemRegistry._items)
 
+# EnemyRegistry / RecipeRegistry / ServiceRegistry / RegionRegistry have the same hazard as the
+# registries above: catalog-mode and content-mode tests (tests/unit/core/test_registry_*.py,
+# test_catalog_*.py, tests/unit/content/test_runtime_content_mode.py, ...) call their .bootstrap()
+# with the legacy 3-recipe set, or an empty/partial one, and nothing restored them. Later tests
+# then saw e.g. RecipeRegistry with 3 entries instead of the 46 the catalog bootstrap loads, which
+# failed 7 tests in tests/unit/domains/progression/ whenever they ran after any of those files.
+from src.core.registries import (
+    EnemyRegistry,
+    RecipeRegistry,
+    RegionRegistry,
+    ServiceRegistry,
+)
+_CANONICAL_CATALOG_REGISTRY_STATE: tuple = tuple(
+    (cls, attr, dict(getattr(cls, attr)))
+    for cls, attr in (
+        (EnemyRegistry, "_enemies"),
+        (RecipeRegistry, "_recipes"),
+        (ServiceRegistry, "_services"),
+        (RegionRegistry, "_regions"),
+    )
+)
+
 try:
     import resource
 except ImportError:
@@ -201,6 +223,23 @@ def _reset_registries_item_registry():
     RegistriesItemRegistry._items = dict(_CANONICAL_REGISTRIES_ITEMS)
     yield
     RegistriesItemRegistry._items = dict(_CANONICAL_REGISTRIES_ITEMS)
+
+
+def _restore_catalog_registries() -> None:
+    for cls, attr, canonical in _CANONICAL_CATALOG_REGISTRY_STATE:
+        setattr(cls, attr, dict(canonical))
+
+
+@pytest.fixture(autouse=True)
+def _reset_catalog_registries():
+    """Restore Enemy/Recipe/Service/Region registries to canonical test state before/after each test.
+
+    Same pattern as the item and resource registry fixtures above; see the module-level comment
+    on _CANONICAL_CATALOG_REGISTRY_STATE for the leak this closes.
+    """
+    _restore_catalog_registries()
+    yield
+    _restore_catalog_registries()
 
 
 @pytest.fixture(scope="session", autouse=True)
