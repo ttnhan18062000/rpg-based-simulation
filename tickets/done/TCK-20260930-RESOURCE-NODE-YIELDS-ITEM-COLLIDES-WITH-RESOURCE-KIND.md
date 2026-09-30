@@ -133,10 +133,19 @@ re-run, one is a per-test TimeoutError, one (`frontier_marches` population) is n
 - Scoped non-slow run (`worldbuilding worldassembly resource engine core docs world` + `tests/integrity`,
   `-m "not slow and not extra_slow"`): 1294 passed, 3 skipped, 1 xfailed.
 - Slow tier (`test_corpus_diversity.py`) vs untouched origin/main: see Implementation Notes.
+- CI caught a gap in the first scoped run: the gating `Simulation quality` job
+  (`pytest tests/simulation_quality -m "not slow and not extra_slow"`) failed on
+  `test_place_tied_resource_availability_corpus.py::test_frost_shard_cluster_compiles_into_a_real_resource_node`,
+  which asserted `yields_item == "frost_shard_cluster"` (the resource kind) and stated in its docstring that no
+  `frost_shard` item exists. That test pinned the very kind/item collision this ticket fixes; the catalog item is
+  `frost_shard`. The assertion was corrected to `frost_shard` plus a registered-item check, and the docstring's false
+  premise was rewritten (not a gate relaxation: the new assertion is stricter). The job then passes locally
+  (504 passed, 64 skipped). Lesson: the initial scoped run did not include `tests/simulation_quality`.
 
 ## Files Changed
 - `src/worldassembly/models.py`, `src/worldassembly/resolver.py`, `src/worldbuilding/compiler.py`
 - `tests/unit/worldbuilding/test_compiled_node_yields_item.py` (new)
+- `tests/simulation_quality/test_place_tied_resource_availability_corpus.py` (assertion and docstring corrected: pinned the collision)
 - `docs/guidelines/intentional_divergences.md` (section 2.60), `docs/parity_ledger/town_resource.yaml` (TOWN-194)
 - Same batch, documentation only, no ticket of its own: `docs/simulation/domains/perception_contract.md` relabeled
   (`status: active -> historical`, `authority: P1 -> P2`, plus a "designed, not in effect" header note; nothing deleted;
