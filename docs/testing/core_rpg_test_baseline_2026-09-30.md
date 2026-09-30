@@ -27,7 +27,8 @@ repeated here.
 | Report as-of | 2026-09-30 | 2026-09-30 |
 
 Each run was one execution in a clean, detached worktree at a real path, run sequentially. The post-repair
-SHA is the PR head, not merged `main`. Both reports regenerate byte-identically from these inputs. The
+SHA is the PR head, not merged `main`. Both reports regenerate byte-identically from these inputs and record
+`worktree_dirty: false`: the suite's tracked-file writes touched only paths the report does not scan. The
 producer takes about 5 s. A first attempt at these runs was killed when a session closed; both runs were
 redone from a clean reset, and the figures here are from the redone runs only.
 
@@ -38,8 +39,9 @@ redone from a clean reset, and the figures here are from the redone runs only.
 | JUnit testcases | 11773 | 11778 |
 | passed / failed / errors / skipped (incl. xfail) | 11641 / 17 / 1 / 114 | 11649 / 14 / 1 / 114 |
 | Test files scanned | 1503 | 1505 |
-| Core-RPG candidate files (classified 104 + uncertain 222) | 326 | 326 |
-| Candidate files: pass / fail / skipped / not-run (of 326) | 304 / 8 / 0 / 14 | 307 / 5 / 0 / 14 |
+| Classification: classified / uncertain / unowned-domain / not-core-rpg | 69 / 114 / 7 / 1313 | 69 / 114 / 7 / 1315 |
+| Core-RPG candidate files (classified + uncertain) | 183 | 183 |
+| Candidate files: pass / fail / skipped / not-run (of 183) | 175 / 4 / 0 / 4 | 178 / 1 / 0 / 4 |
 | Package coverage | `no-coverage-artifact` | `provisional-local`: 88.21% of 55877 statements (18674 branches) |
 | Mutation layer | `not-run` | `recorded`, `fresh` |
 | Escaped defects | `tag-not-registered` | `counting`: 2026-09 = 0 (a real count) |
@@ -57,7 +59,7 @@ systems 89.82. This is package coverage. It is not domain coverage, which stays 
 | Difference | Cause | Kind |
 |---|---|---|
 | 7 nodes in 3 files under `tests/unit/domains/progression/` go from fail to pass | The registry reset fixture from `TCK-20260929-CATALOG-REGISTRY-TEST-LEAK` | Batch 1 effect |
-| +5 testcases, +2 test files, `not-core-rpg` 1177 → 1179 | The 2 new test files from batch 1: the registry guard (2 tests) and the mutation record shape test (3 tests) | Batch 1 effect |
+| +5 testcases, +2 test files, `not-core-rpg` 1313 → 1315 | The 2 new test files from batch 1: the registry guard (2 tests) and the mutation record shape test (3 tests) | Batch 1 effect |
 | 17 → 14 failures | 7 fixed, 4 new (below); the other 10 are carried over unchanged | Net of the two rows |
 | 4 new failures, post-repair only | Coverage overhead, see below; not a batch 1 effect | Input difference |
 | Coverage `no-coverage-artifact` → `provisional-local` | Coverage was supplied only for the post-repair run; the pre-repair run was not instrumented | Input difference |
@@ -103,12 +105,18 @@ has to allow for the per-test time budget.
 3. **Tracked-file writers still present.** Both full runs rewrote `docs/REGISTRY.yaml` and
    `tickets/working_log.csv` and touched agent-monitoring shards. Attributed at file level to
    `tests/tools/test_done_checker_static.py`; tracked as `TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES`.
-4. **14 candidate files (21 tests) never ran.** The fast marker filter deselects every test in them
-   (`no tests collected (21 deselected)`); they run only in the slow lane. Their outcome is unknown.
-5. **Classification is uncertain for 222 of 326 candidate files.** Directory and import signals disagree
-   or only one is present; no test declares its domain, level or size. The 326 candidates are more than the
-   planner's 204 (2026-09-28) because the v0 import rule lists more gameplay prefixes than the planner's
-   ellipsised list.
+4. **4 candidate files (4 tests) never ran.** The fast marker filter deselects every test in them
+   (`no tests collected (4 deselected)`): `tests/integration/optimization/test_cache_memory_bounds.py` and three
+   `tests/perf/` budget files. They run only in the slow lane, so their outcome is unknown.
+5. **Classification is uncertain for 114 of 183 candidate files.** Directory and import signals disagree or
+   only one is present (79 directory-only, 35 import-only); no test declares its domain, level or size. The v0
+   import rule takes its component roots from the ownership map (`architecture_design_notes.md` §3.1): pipeline,
+   kernel and platform are shared substrate, so importing them is not a gameplay signal (626 files import only
+   substrate), and party/group has no oracle or owner, so the 7 files that only import it are `unowned-domain`
+   and outside the candidate set. The result, 183, is below the planner's 204 (2026-09-28; 89 files with both
+   signals against 69 here). The two rules differ (the planner's import list ended in an ellipsis and included
+   party, its directory rule for integration tests is not fully specified, and the tree now has 21 more test
+   files). The rule was not tuned toward 204.
 6. **Coverage is local and provisional,** from one run that also changed which tests pass (above). There is
    no CI coverage job.
 7. **Mutation evidence covers one target** (`src/core/conservation.py`); 117 of 177 mutants survived and none

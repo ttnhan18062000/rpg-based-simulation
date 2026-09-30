@@ -66,7 +66,7 @@ unknowns.
 See the staging plan.
 
 ## Test Summary
-Two real full fast-suite runs (pre 35806b1ed: 11641 passed, 17 failed, 1 error; post 7e250faf7 under coverage: 11649 passed, 14 failed, 1 error). Both reports regenerate byte-identically. The 4 failures that appear only under coverage pass without it (4 passed in 147 s). The 14 not-run candidate files (21 tests) were confirmed fully deselected by the fast marker filter.
+Two real full fast-suite runs (pre 35806b1ed: 11641 passed, 17 failed, 1 error; post 7e250faf7 under coverage: 11649 passed, 14 failed, 1 error). Both reports regenerate byte-identically. The 4 failures that appear only under coverage pass without it (4 passed in 147 s). The 4 not-run candidate files (4 tests) were confirmed fully deselected by the fast marker filter.
 
 ## Files Changed
 `docs/testing/core_rpg_test_baseline_2026-09-30.md`.

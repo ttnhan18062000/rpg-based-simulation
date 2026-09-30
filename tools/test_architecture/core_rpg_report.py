@@ -33,7 +33,9 @@ import yaml
 
 SCHEMA_VERSION = 1
 
-# ── classification rules (v0 heuristics, from the overview's §10 inventory) ─────────────────────
+# ── classification rules (v0 heuristics) ────────────────────────────────────────────────────────
+# Directory signal: the planner's directory list, docs/plans/test_architecture/reference/
+# current_test_system_overview.md §10.
 _CORE_RPG_UNIT_DIRS = (
     "combat", "movement", "progression", "resource", "economy", "quest", "entity", "entities", "tactical",
 )
@@ -45,14 +47,25 @@ _CORE_RPG_PREFIXES = (
     *(f"tests/unit/domains/{d}/" for d in _CORE_RPG_DOMAIN_DIRS),
     *(f"tests/integration/{d}/" for d in _CORE_RPG_INTEGRATION_DIRS),
 )
-_GAMEPLAY_IMPORT_PREFIXES = (
-    "src.progression", "src.entities", "src.economy", "src.quests",
-    "src.domains.progression", "src.domains.combat_engagement",
-    "src.engine.pipeline", "src.engine.kernel", "src.engine.movement", "src.engine.combat",
-    "src.systems.harvest", "src.systems.craft", "src.systems.market", "src.systems.economy",
-    "src.systems.resource", "src.systems.quest", "src.systems.guild", "src.systems.party",
+
+# Import signals: the component roots of the ownership map, docs/plans/test_architecture/reference/
+# architecture_design_notes.md §3.1 -- the single source for these three tuples. A trailing `*` is a
+# module-name stem wildcard (`src.systems.crafting*` matches src.systems.crafting and
+# src.systems.crafting_x); any other entry matches that module and everything beneath it.
+_SUBSTRATE_IMPORT_PREFIXES = (  # "Shared substrate" row: not gameplay, so never a core-RPG signal
+    "src.core", "src.engine.pipeline*", "src.engine.kernel*", "src.platform",
 )
-_SUBSTRATE_IMPORT_PREFIXES = ("src.core",)
+_GAMEPLAY_IMPORT_PREFIXES = (
+    "src.engine.movement*",                                                     # Movement
+    "src.engine.combat*", "src.engine.domain.combat_actions", "src.domains.combat_engagement",  # Combat
+    "src.progression", "src.domains.progression", "src.entities",              # Progression / anatomy
+    "src.systems.economy*", "src.systems.market*", "src.systems.crafting*",    # Economy
+    "src.systems.harvest*", "src.economy",
+    "src.systems.quest*", "src.systems.guild_system*", "src.quests",           # Quests / guild
+)
+_UNOWNED_DOMAIN_IMPORT_PREFIXES = (  # "Party / group" row: no oracle and no owner (decision D-P, deferred)
+    "src.systems.party*", "src.systems.social_systems.party*",
+)
 
 V0_LIMITS = (
     "Execution data is a supplied input: in CI only the `api-tools` job uploads JUnit, so most lanes have no "
@@ -62,13 +75,19 @@ V0_LIMITS = (
     "Package coverage is not domain coverage. Domain coverage stays `not-derived` until a defensible mapping exists.",
     "Classification is heuristic (directory and import signals); no test declares domain, level or size yet. "
     "Disagreeing signals stay `uncertain`.",
+    "Import signals follow the ownership map in architecture_design_notes.md §3.1; party/group code has no "
+    "oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the "
+    "core-RPG candidate set.",
+    "The manifest hashes the supplied artifacts, the workflow, the tag registry and the mutation records; the "
+    "scanned tests/, tickets/ and parity ledger are covered only by the `worktree_dirty` flag, which needs a git checkout.",
     "Lane triggers and path filters are not derived; the lane layer records which pytest steps list which paths.",
     "Mutation evidence covers one declared target. `mutmut` is not a project dependency, so the run is not "
     "reproducible from a clean install.",
     "Equivalent mutants are not classified (`equivalent: not-classified`); every survivor is unreviewed.",
     "`mutmut` 3.x cannot run in this repo: its trampoline rejects modules whose import path starts with `src.`.",
     "SimQ and census states are fixed read-only states in v0; the parity layer counts ledger statuses and is not proof.",
-    "Escaped defects depend on tagging discipline (`escaped-defect`); history before the tag was registered is not backfilled.",
+    "Escaped defects depend on tagging discipline (`escaped-defect`); history before the tag was registered is not "
+    "backfilled. A defect's month is its ticket's creation date, and open tickets (todos/, inprogress/) are counted.",
     "The report never runs tests and is not a gate.",
 )
 
@@ -106,8 +125,14 @@ def _imports_of(path: Path) -> Optional[List[str]]:
     return found
 
 
+def _matches(name: str, pattern: str) -> bool:
+    if pattern.endswith("*"):
+        return name.startswith(pattern[:-1])
+    return name == pattern or name.startswith(pattern + ".")
+
+
 def _has_prefix(names: Iterable[str], prefixes: Sequence[str]) -> bool:
-    return any(n == p or n.startswith(p + ".") for n in names for p in prefixes)
+    return any(_matches(n, p) for n in names for p in prefixes)
 
 
 def classify_file(rel_path: str, imports: Optional[List[str]]) -> Dict[str, Any]:
@@ -121,6 +146,8 @@ def classify_file(rel_path: str, imports: Optional[List[str]]) -> Dict[str, Any]
         cls = "classified"
     elif dir_signal or import_signal:
         cls = "uncertain"
+    elif _has_prefix(imports, _UNOWNED_DOMAIN_IMPORT_PREFIXES):
+        cls = "unowned-domain"
     else:
         cls = "not-core-rpg"
     return {"file": rel_path, "class": cls, "directory_signal": dir_signal,
@@ -135,7 +162,7 @@ def scan_tests(repo_root: Path) -> List[Dict[str, Any]]:
 
 def classification_layer(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     total = len(records)
-    counts = {k: 0 for k in ("classified", "uncertain", "not-core-rpg", "parse-error")}
+    counts = {k: 0 for k in ("classified", "uncertain", "unowned-domain", "not-core-rpg", "parse-error")}
     for r in records:
         counts[r["class"]] += 1
     directory_only = sum(1 for r in records if r["directory_signal"] and r["import_signal"] is False)
@@ -149,6 +176,7 @@ def classification_layer(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "rules": {
             "classified": "directory signal and gameplay-import signal both present",
             "uncertain": "exactly one of the two signals present",
+            "unowned-domain": "neither signal present, but imports party/group code, which has no oracle or owner",
             "not-core-rpg": "neither signal present",
         },
     }
@@ -401,35 +429,42 @@ def mutation_layer(repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
         return {"state": "not-run", "records": []}
     rows = []
     for path in records:
-        rec = json.loads(path.read_text(encoding="utf-8"))
-        target = repo_root / rec["target"]["path"]
-        reasons: List[str] = []
-        current_sha = _sha256_file(target) if target.is_file() else None
-        if current_sha is None:
-            reasons.append("target-missing")
-        elif current_sha != rec["target"]["sha256"]:
-            reasons.append("target-changed")
-        started = dt.date.fromisoformat(rec["run"]["started_utc"][:10])
-        age_days = (as_of - started).days
-        if age_days > int(rec["stale_after"]["days"]):
-            reasons.append("older-than-stale-after-days")
-        counts = rec["counts"]
-        rows.append({
-            "record": path.name,
-            "target": rec["target"]["path"],
-            "state": "stale" if reasons else "fresh",
-            "stale_reasons": reasons,
-            "age_days": age_days,
-            "run_kind": rec["run"]["kind"],
-            "source_sha": rec["run"]["source_sha"],
-            "tool": f"{rec['tool']['name']} {rec['tool']['version']}",
-            "tests": {"files": len(rec["tests"]["files"]), "count": rec["tests"]["count"]},
-            "denominator": {"mutants": counts["total"]},
-            "counts": {k: counts[k] for k in ("killed", "survived", "timeout", "suspicious", "equivalent")},
-            "survivors_listed": len(rec["survivors"]),
-            "material_survivors": sum(1 for s in rec["survivors"] if s.get("material_sample")),
-        })
+        try:
+            rows.append(_mutation_row(path, repo_root, as_of))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            rows.append({"record": path.name, "state": "unreadable", "reason": type(exc).__name__})
     return {"state": "recorded", "records": rows}
+
+
+def _mutation_row(path: Path, repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
+    rec = json.loads(path.read_text(encoding="utf-8"))
+    target = repo_root / rec["target"]["path"]
+    reasons: List[str] = []
+    current_sha = _sha256_file(target) if target.is_file() else None
+    if current_sha is None:
+        reasons.append("target-missing")
+    elif current_sha != rec["target"]["sha256"]:
+        reasons.append("target-changed")
+    started = dt.date.fromisoformat(rec["run"]["started_utc"][:10])
+    age_days = (as_of - started).days
+    if age_days > int(rec["stale_after"]["days"]):
+        reasons.append("older-than-stale-after-days")
+    counts = rec["counts"]
+    return {
+        "record": path.name,
+        "target": rec["target"]["path"],
+        "state": "stale" if reasons else "fresh",
+        "stale_reasons": reasons,
+        "age_days": age_days,
+        "run_kind": rec["run"]["kind"],
+        "source_sha": rec["run"]["source_sha"],
+        "tool": f"{rec['tool']['name']} {rec['tool']['version']}",
+        "tests": {"files": len(rec["tests"]["files"]), "count": rec["tests"]["count"]},
+        "denominator": {"mutants": counts["total"]},
+        "counts": {k: counts[k] for k in ("killed", "survived", "timeout", "suspicious", "equivalent")},
+        "survivors_listed": len(rec["survivors"]),
+        "material_survivors": sum(1 for s in rec["survivors"] if s.get("material_sample")),
+    }
 
 
 # ── layer 9: escaped defects ────────────────────────────────────────────────────────────────────
@@ -485,6 +520,7 @@ def escaped_defects_layer(repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
     return {
         "state": "counting",
         "tag_registered": added.isoformat(),
+        "month_basis": "ticket creation date (frontmatter `date`); includes open tickets under todos/ and inprogress/",
         "denominator": {"tickets_scanned": scanned},
         "months": months,
         "total_in_window": sum(months.values()),
@@ -501,6 +537,26 @@ def _git_sha(repo_root: Path) -> str:
         return out.stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return "unknown"
+
+
+_SCANNED_PREFIXES = ("tests/", "docs/parity_ledger/", "registries/tag_registry.jsonl", ".github/workflows/test.yml")
+
+
+def _dirty_inputs(repo_root: Path, target_paths: Sequence[str]) -> Any:
+    """Uncommitted changes under the paths the report scans: a list of paths, or "unknown" without git."""
+    try:
+        out = subprocess.run(["git", "-C", str(repo_root), "status", "--porcelain"], capture_output=True,
+                             text=True, check=True, timeout=60).stdout
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+    dirty = set()
+    for line in out.splitlines():
+        path = line[3:].split(" -> ")[-1].strip().strip('"')
+        scanned = path.startswith(_SCANNED_PREFIXES) or path in target_paths or (
+            path.startswith("tickets/") and path.endswith(".md"))
+        if scanned:
+            dirty.add(path)
+    return sorted(dirty)
 
 
 def build_report(repo_root: Path, sha: str, as_of: dt.date, junit_paths: Sequence[Path] = (),
@@ -522,12 +578,20 @@ def build_report(repo_root: Path, sha: str, as_of: dt.date, junit_paths: Sequenc
     for path in sorted(baselines.glob("*.json")) if baselines.is_dir() else []:
         inputs.append({"kind": "mutation-record", "artifact": _rel(path, repo_root), "sha256": _sha256_file(path)})
     inputs.sort(key=lambda i: (i["kind"], i["artifact"], i["sha256"]))
+    mutation_targets = []
+    for path in sorted(baselines.glob("*.json")) if baselines.is_dir() else []:
+        try:
+            mutation_targets.append(json.loads(path.read_text(encoding="utf-8"))["target"]["path"])
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    dirty = _dirty_inputs(repo_root, mutation_targets)
 
     return {
         "schema_version": SCHEMA_VERSION,
         "report": "core-rpg-test-report-v0",
         "manifest": {"sha": sha, "as_of": as_of.isoformat(), "inputs": inputs,
-                     "test_files_scanned": len(records)},
+                     "test_files_scanned": len(records), "dirty_input_paths": dirty,
+                     "worktree_dirty": dirty if dirty == "unknown" else bool(dirty)},
         "layers": {
             "classification": classification_layer(records),
             "lanes": lanes_layer(lanes, candidates),
@@ -551,7 +615,10 @@ def render_markdown(report: Dict[str, Any]) -> str:
     m, layers = report["manifest"], report["layers"]
     out: List[str] = [f"# Core-RPG test report v0", "",
                       f"- SHA: `{m['sha']}`", f"- As of: {m['as_of']}",
-                      f"- Test files scanned: {m['test_files_scanned']}", "", "## Inputs", ""]
+                      f"- Test files scanned: {m['test_files_scanned']}",
+                      f"- Uncommitted changes under scanned inputs: {m['worktree_dirty']}"
+                      + (f" ({', '.join(m['dirty_input_paths'])})" if m["dirty_input_paths"] not in ("unknown", []) else ""),
+                      "", "## Inputs", ""]
     out += [f"- {i['kind']}: `{i['artifact']}` (sha256 `{i['sha256'][:12]}`)" for i in m["inputs"]] or ["- none"]
 
     c = layers["classification"]
@@ -604,6 +671,9 @@ def render_markdown(report: Dict[str, Any]) -> str:
     mu = layers["mutation"]
     out += ["", "## Mutation evidence", "", f"State: **{mu['state']}**.", ""]
     for r in mu["records"]:
+        if r["state"] == "unreadable":
+            out.append(f"- `{r['record']}`: **unreadable** ({r['reason']})")
+            continue
         c2 = r["counts"]
         out.append(f"- `{r['target']}`: **{r['state']}** {r['stale_reasons'] or ''} (age {r['age_days']} d, "
                    f"{r['run_kind']}, {r['tool']}); killed {c2['killed']}, survived {c2['survived']}, "
@@ -613,7 +683,8 @@ def render_markdown(report: Dict[str, Any]) -> str:
     ed = layers["escaped_defects"]
     out += ["", "## Escaped defects", "", f"State: **{ed['state']}**."]
     if ed["state"] == "counting":
-        out += [f"Tag registered {ed['tag_registered']}; {ed['denominator']['tickets_scanned']} tickets scanned.", ""]
+        out += [f"Tag registered {ed['tag_registered']}; {ed['denominator']['tickets_scanned']} tickets scanned. "
+                f"Month = {ed['month_basis']}.", ""]
         out += [f"- {month}: {count}" for month, count in ed["months"].items()]
         out += [f"- tagged outside the window: {ed['tagged_outside_window']}"]
 

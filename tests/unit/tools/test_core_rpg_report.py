@@ -105,9 +105,49 @@ def test_output_contains_no_absolute_paths(repo, tmp_path):
 def test_classification_states_and_denominators(repo):
     layer = _build(repo)["layers"]["classification"]
     assert layer["denominator"] == {"test_files": 4}
-    assert layer["counts"] == {"classified": 1, "uncertain": 2, "not-core-rpg": 1, "parse-error": 0}
+    assert layer["counts"] == {"classified": 1, "uncertain": 2, "unowned-domain": 0, "not-core-rpg": 1,
+                               "parse-error": 0}
     assert layer["signal_disagreement"] == {"directory_only": 1, "import_only": 1}
     assert layer["substrate_only_import_files"] == 1
+
+
+@pytest.mark.parametrize("import_line", [
+    "from src.engine.pipeline import run",          # shared substrate (ownership map, section 3.1)
+    "from src.engine.kernel import Kernel",
+    "from src.engine.pipeline_phases.x import y",   # pipeline* stem
+    "import src.platform.config",
+])
+def test_substrate_imports_are_not_a_gameplay_signal(repo, import_line):
+    _write(repo / "tests/unit/misc/test_sub.py", import_line + "\n")
+    rec = next(r for r in report.scan_tests(repo) if r["file"].endswith("test_sub.py"))
+    assert rec["import_signal"] is False
+    assert rec["class"] == "not-core-rpg"
+
+
+@pytest.mark.parametrize("import_line", [
+    "from src.systems.crafting import x",            # module name is `crafting`, not `craft`
+    "from src.systems.harvest_system import x",      # `harvest_system` matches the `harvest*` stem
+    "from src.systems.guild_system import x",
+    "from src.systems.economy_systems.economy import x",
+    "from src.engine.movement import x",
+    "from src.domains.combat_engagement.x import y",
+])
+def test_gameplay_component_roots_match_by_module_stem(repo, import_line):
+    _write(repo / "tests/unit/misc/test_gp.py", import_line + "\n")
+    rec = next(r for r in report.scan_tests(repo) if r["file"].endswith("test_gp.py"))
+    assert rec["import_signal"] is True
+    assert rec["class"] == "uncertain"  # import signal only: no directory signal
+
+
+def test_party_only_imports_are_unowned_domain_not_a_candidate(repo):
+    _write(repo / "tests/unit/misc/test_party.py", "from src.systems.party import Party\n")
+    layer = _build(repo)["layers"]
+    assert layer["classification"]["counts"]["unowned-domain"] == 1
+    assert "tests/unit/misc/test_party.py" not in {f["file"] for f in layer["execution"]["files"]}
+    # party plus a real gameplay import is still judged on the gameplay signal
+    _write(repo / "tests/unit/misc/test_both.py", "from src.systems.party import P\nfrom src.economy import e\n")
+    rec = next(r for r in report.scan_tests(repo) if r["file"].endswith("test_both.py"))
+    assert rec["class"] == "uncertain"
 
 
 def test_unparseable_test_file_is_reported_not_dropped(repo):
@@ -262,6 +302,41 @@ def test_tag_not_registered_is_a_state_not_a_zero(repo):
     assert layer["months"] == {}
 
 
+def test_unreadable_mutation_record_is_a_state_not_an_exception(repo):
+    _write(repo / "tests/mutation/baselines/bad.json", "{not json")
+    layer = _build(repo)["layers"]["mutation"]
+    assert layer["state"] == "recorded"
+    assert layer["records"][0]["state"] == "unreadable"
+
+
+def test_escaped_defect_month_basis_is_stated(repo):
+    assert "creation date" in _build(repo)["layers"]["escaped_defects"]["month_basis"]
+
+
+# ── manifest: worktree_dirty ──
+def _git(repo, *args):
+    import subprocess
+    subprocess.run(["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+                   check=True, capture_output=True)
+
+
+def test_worktree_dirty_is_unknown_outside_git(repo):
+    manifest = _build(repo)["manifest"]
+    assert manifest["worktree_dirty"] == "unknown"
+
+
+def test_worktree_dirty_flags_uncommitted_scanned_inputs_only(repo):
+    _git(repo, "init", "-q")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "init")
+    assert _build(repo)["manifest"]["worktree_dirty"] is False
+    _write(repo / "tests/unit/other/test_d.py", "import os\n")            # a scanned input
+    _write(repo / "tickets/working_log.csv", "x\n")                        # not a scanned input (not .md)
+    manifest = _build(repo)["manifest"]
+    assert manifest["worktree_dirty"] is True
+    assert manifest["dirty_input_paths"] == ["tests/unit/other/test_d.py"]
+
+
 # ── parity, fixed states, limits ──
 def test_parity_is_read_only_with_denominator(repo):
     layer = _build(repo)["layers"]["parity"]
@@ -275,7 +350,7 @@ def test_fixed_states_and_required_limits(repo):
     assert built["layers"]["census"]["state"] == "unstable"
     limits = " ".join(built["limits"])
     for required in ("api-tools", "not a project dependency", "Equivalent mutants are not classified",
-                     "`mutmut` 3.x", "not a gate"):
+                     "`mutmut` 3.x", "not a gate", "unowned-domain", "worktree_dirty", "creation date"):
         assert required in limits
 
 
