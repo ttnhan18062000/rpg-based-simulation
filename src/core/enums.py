@@ -95,6 +95,7 @@ class ReasonCode(str, Enum):
     ACTION_EXHAUSTION = "exhaustion"
     INTERACTION_REJECTED = "interaction_rejected"
     INTERACTION_INTERRUPTED = "interaction_interrupted"
+    UNKNOWN_ITEM = "unknown_item"
     ENGAGED = "engaged"
     
     # Combat Legality Matrix (Hardening)

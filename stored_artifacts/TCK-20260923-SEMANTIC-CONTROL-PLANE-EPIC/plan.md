@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent

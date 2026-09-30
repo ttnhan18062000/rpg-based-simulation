@@ -2347,3 +2347,34 @@
   test_path: '`tests/integration/economy/test_economic_vacancy_signal.py`'
   divergence_note: null
   support_boundary: null
+- id: TOWN-194
+  text: A resource node compiled from a world module yields the catalog item of its
+    resource kind (herb_patch -> herb, wood_node -> wood, iron_vein -> iron_ore), not the
+    module's resource-kind string. The item is resolved by the assembly context (catalog
+    `runtime_kind or resource_type`, the same rule `CatalogToResourceRegistryAdapter` and
+    ecology use), falling back to `ResourceRegistry`, and only to the declared string for a
+    kind with no catalog definition.
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: '`src/worldassembly/resolver.py` (resource profile `yield_item`), `src/worldassembly/models.py`
+    (`ResolvedResourceProfile.yield_item`), `src/worldbuilding/compiler.py` (step 4, compile resources)'
+  proof_type: parity
+  test_path: '`tests/unit/worldbuilding/test_compiled_node_yields_item.py`'
+  divergence_note: See intentional_divergences.md section 2.60.
+  support_boundary: null
+- id: TOWN-195
+  text: An interaction rejected because its target would yield an item id `ItemRegistry`
+    does not know stays a non-fatal interaction reset, and is additionally recorded through
+    the authoritative rejection audit (`rejections_delta["INTERACTION_UNKNOWN_ITEM"]`
+    plus a typed `RejectionEvent` with `ReasonCode.UNKNOWN_ITEM`). A capacity rejection is
+    not recorded as unknown-item.
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: '`src/engine/interaction.py` (`InteractionSystem.enforce`, `UNKNOWN_ITEM_REJECTION_KEY`),
+    `src/core/inventory.py` (`InventoryService.unknown_item_ids`), `src/core/enums.py` (`ReasonCode.UNKNOWN_ITEM`)'
+  proof_type: parity
+  test_path: '`tests/unit/engine/test_interaction_unknown_item_diagnostic.py`'
+  divergence_note: null
+  support_boundary: 'Covers the interaction call site (`can_add_items` via `InteractionSystem.enforce`) only. The other `src.core.items` consumers (equipment, shop, leveling, possession) still return None silently on an unknown id.'
