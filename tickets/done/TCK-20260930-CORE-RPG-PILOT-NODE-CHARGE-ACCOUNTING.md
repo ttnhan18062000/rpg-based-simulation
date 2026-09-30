@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTING
-phase: open
+phase: done
 date: 2026-09-30
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 Core-RPG test pilot D1 (real surface): node-charge accounting tests for parity TOWN-122, run through the whole test workflow
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -71,13 +71,17 @@ None.
 - The mutation baseline `tests/mutation/baselines/src_core_conservation.json` (recorded 2026-09-29, `stale_after` 30 days) has 117 survivors of 177, including the `accepted=False` to `True` family. That is an assertion gap in existing tests, not a live product bug.
 
 ## Implementation Notes
-(In progress.)
+- Real surface (resource conservation, ch03 §3/§1, `TOWN-122`); stability confirmed at scope level only (see the pilot report caveats).
+- Reviewer-directed changes: kernel-level cross-actor test added so `TOWN-122` is proven end to end (not resolver-only); the injected fault is a drill (nothing filed); report invalidation used copies (tracked baseline untouched); PR CI is the fast-lane evidence.
+- `marker_check` flagged a level-placement mismatch on the first draft; the kernel test moved to `tests/integration/kernel/`.
+- `TOWN-123` (corpse loot) is not covered; stated in the ledger `support_boundary`.
 
-## Test Summary
-(Open.)
+Scoped: 54 passed (5 new). Manual scenario lane: 53 passed. Parity and ledger readers: `tests/tools/test_parity_index_baseline.py`, `tests/integration/content/test_resource_region_coverage_corpus.py`, `tests/tools/test_done_checker_static.py` pass. Drill: 2 of 5 new tests fail on the injected fault, as expected.
 
 ## Files Changed
-(Open.)
+- `tests/unit/resource/test_node_charge_accounting.py`, `tests/integration/kernel/test_node_charge_cross_actor.py`
+- `docs/parity_ledger/town_resource.yaml` (`TOWN-122` test_path)
+- `docs/testing/core_rpg_test_pilot_2026-09-30.md`
+- pilot evidence under `stored_artifacts/<ticket>/pilot/`
 
-## Completion Summary
-(Open.)
+One tests-only exercise on a real conservation surface; capabilities 1 (partly), 2, 3, 4, 5, 6 demonstrated with artifacts, 2b not demonstrated. Result `established` with scope-level stability caveat.

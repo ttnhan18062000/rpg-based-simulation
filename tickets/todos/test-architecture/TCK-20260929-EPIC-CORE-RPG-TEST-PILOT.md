@@ -103,13 +103,15 @@ step, quarantine policy.
 ## Related Tickets
 - Depends on the minimum usable workflow from Epics A, B, C.
 - Coordinates with `rpg-feature-planning` for the surface.
+- Child: `TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTING` (D1, real surface, done).
 
 ## Related Docs
 - `docs/plans/test_architecture/roadmap.md`
 - `docs/plans/test_architecture/reference/milestone_design_notes.md` (MP; non-binding)
 
 ## Related Stored Artifacts
-None.
+- `stored_artifacts/TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTING/pilot/` (evidence)
+- `docs/testing/core_rpg_test_pilot_2026-09-30.md` (pilot report)
 
 ## Related Code Areas
 Depends on the chosen surface. Candidate: economy conservation code and its tests.
@@ -128,5 +130,10 @@ Defined by child tickets.
 ## Files Changed
 (Child tickets.)
 
-## Completion Summary
-(Open.)
+Acceptance criteria met by the pilot report (2026-09-30):
+1. Capabilities 1 (partly, reason stated), 2, 3, 4, 5, 6 each have an artifact.
+2. Capability 2b stated as not demonstrated; no claim made.
+3. Result `established`, on a real surface whose stability was confirmed at scope level only (caveats in the report).
+4. Keep / revise / inconclusive per intervention recorded, directional.
+5. The shortfalls (impact report domain/level on tests-only changes; report classification vs declared markers; parity layer not showing test_path) are revise items for Epics A and B.
+No D2 synthetic exercise was needed.

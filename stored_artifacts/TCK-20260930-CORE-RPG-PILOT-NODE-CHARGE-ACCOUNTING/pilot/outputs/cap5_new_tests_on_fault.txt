@@ -1,0 +1,12 @@
+    
+        yields = [u for u in refined.entity_updates.values() if u.inventory is not None]
+        assert len(yields) == 1
+>       assert refined.node_updates[_NODE_ID].charges_delta == -1
+E       assert -2 == -1
+E        +  where -2 = ResourceNodeUpdate(node_id=101, charges_delta=-2, cooldown_set=None).charges_delta
+
+tests/integration/kernel/test_node_charge_cross_actor.py:48: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/resource/test_node_charge_accounting.py::test_regular_node_loses_exactly_one_charge_per_harvest
+FAILED tests/integration/kernel/test_node_charge_cross_actor.py::test_two_actors_on_the_last_charge_yield_exactly_once
+2 failed, 3 passed in 1.00s
