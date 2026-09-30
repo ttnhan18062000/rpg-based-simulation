@@ -197,6 +197,63 @@ meaning in free-form metadata, and that dict is exactly that.
 Either way this is **not** a parameter pass-through, which is how the ticket's Scope step 2 reads
 ("wire it through"). Both shapes need a real decision first, and B is an architecture change.
 
+### 2026-09-30 — RUNTIME MEASUREMENT: the erosion never fires. Severity is wrong.
+
+The ticket's central severity claim — that this "silently invalidates every combat-balance
+observation anyone has ever measured" — was a reasoned inference from the code path. **Measured, it
+is false.**
+
+Probe: production loader (`WorldRepository.load_world_with_context`, the path real runs use — not
+the content-catalog path, per `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`), real
+`Kernel` ticks under `PROD_SMALL`, seed 42, counting every `SkillScalingService.
+get_effective_stats` call.
+
+| world | ticks | entities | **`stats_dirty` firings** | deaths | entities whose stats moved |
+|---|---|---|---|---|---|
+| `frontier_living_world` | 600 | 49 | **0** | 21 | 8 |
+| `crowded_frontier` | 400 | 38 | **0** | 13 | 10 |
+| `quest_dense_frontier` | 400 | 6 | **0** | 6 | 6 |
+
+**Zero firings in all three worlds, across 40 deaths.** So the generic-baseline substitution at
+`apply.py:616-623` is real in code but **unreached at ordinary corpus run lengths**. No entity's
+species stats were eroded, because the recalc never ran.
+
+**The zero is trustworthy** — a monkeypatch returning zero is meaningless without a positive
+control, so the probe asserts one: it calls through `apply.py`'s own resolved name
+(`apply_mod.SkillScalingService is rpg_depth.SkillScalingService`, then invokes it) and requires
+the counter to increment by exactly 1 before the run starts. It did. Combat also genuinely
+occurred (40 deaths), so this is not "nothing happened".
+
+**Why stats still moved: there is a second, additive writer, and it is the one actually in use.**
+`CombatUpdate.max_hp_delta` (`src/core/updates.py:111`, merged additively at `:145`) plus
+`LevelingService`'s own `max_hp += …` at `leveling.py:123,147`. Observed increments were
+`+5/+10/+15/+20` on `max_hp` only, with `atk`/`def` never moving — consistent with level-up HP
+grants, not with a full recalc.
+
+**This is the architecturally important finding.** The codebase already has a delta path for
+combat stats that **preserves species bases by construction**, running alongside a full-recalc
+path that **destroys them**. The live path is the safe one. So the question is less "how do we
+feed the recalc a correct base" and more "should this recalc path exist at all, given a working
+additive path already carries the load."
+
+**Consequences for the decision:**
+- **No SimQ re-baseline is implied** — not because the fix is conservative, but because the code
+  being fixed does not execute. This resolves the open question raised in review; it was the right
+  question and the answer is empirical, not assumed.
+- **The `commoner_base` behaviour change does not arise in practice.** Village Workers keep
+  `100/10/0` today because the recalc never runs on them. Worth declaring anyway, but it is not a
+  live regression risk.
+- **P0 is the wrong severity.** This is a latent defect in an unreached path — the same
+  "unreachable mechanism" shape as the corpus this session has been working through all day. It
+  should be re-rated and re-sequenced against defects that do execute.
+
+**Bounds, stated plainly:** three worlds, one seed, 400–600 ticks. It does **not** prove the path
+is unreachable in principle — only that nothing in an ordinary corpus run triggers it. A longer
+run, an equipment-heavy scenario, or any future code that sets `update.attributes` /
+`update.equipment` / `wound_update` would reach it immediately. The defect should still be fixed;
+it should not be fixed *first*, and it should not be described as having corrupted past
+measurements.
+
 ### Sequencing note
 
 The ticket's own claim that this invalidates prior combat-balance observations is plausible and
