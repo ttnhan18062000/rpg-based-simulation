@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE
-phase: open
+phase: done
 date: 2026-09-30
 tags: [data-quality, process-improvement]
 ---
@@ -15,7 +15,7 @@ tags: [data-quality, process-improvement]
 Mechanism-registry absence verdicts made by code reading are wrong; re-verify them and require runtime evidence
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -89,7 +89,7 @@ false. The others haven't been checked.
 2. The validator rejects a new `contradicted` runtime-absence verdict whose instrument is
    `code_trace`. It's tested with a planted fixture, and the full real registry passes.
 3. The ticket-filing guidance carries the rule exactly once.
-4. Both premise-false tickets are closed STALE-PREMISE by rpg-feature-planning, and the closure SHA is cited here.
+4. Both premise-false tickets are closed STALE-PREMISE by rpg-feature-planning, and the closure SHA is cited here: `791e6bf6b` on `rpg-planning-post-258` (groundwork `f70f58706`).
 5. All generated registry views pass `--check` after the update.
 
 ## Related Tickets
@@ -111,7 +111,7 @@ false. The others haven't been checked.
 - `docs/plans/world_composition_precondition_gap_finding.md` (cited by the `camp` verdict)
 
 ## Related Stored Artifacts
-- None yet.
+- `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/` (investigation.md, plan.md, test_plan.md, runtime_probe.py + output, compile_census.py + output)
 
 ## Related Code Areas
 - `registries/mechanisms.yaml`
@@ -126,13 +126,42 @@ false. The others haven't been checked.
   over ticks may need `scenario`. Decide per entry.
 
 ## Implementation Notes
-_(pending)_
+- **Scope 1:** counting probe over all 21 corpus worlds x 300 ticks (seed 42). All 7 entries now
+  carry `corpus_run`/`2026-09-30`: 6 `observed`, 1 `contradicted` (`demographic_cohort_cycle`). The 2
+  world-data claims (`camp`, `demographic_cohort_cycle`) had false premises; the 5 static
+  call/construction claims were confirmed. `camp` is fully live (19 camps in 14/21 worlds, all
+  changed state). `demographic_cohort_cycle` is seeded in 21/21 worlds but 0 birth/death events
+  ever fire. Views regenerated through their generators; 1 capabilities-page tier (`camp`) moved
+  `built` -> `live` via `make mechanism-capabilities-regenerate`. Details: investigation.md.
+- **Scope 2:** validator invariant 12 (`contradicted` + static instrument is an error), keyed on
+  verdict + instrument, because the registry header already defined `contradicted` as runtime-only.
+  No `claim:` field. Make-target description updated.
+- **Scope 3:** one new Mandatory Scan item in `.claude/agents/ticket-scoper.md`; once-only test.
+- **Scope 4:** cites `791e6bf6b`; those tickets are not re-annotated.
+- **Standing-rule follow-up check:** the "file a follow-up if a pattern shows in the observed
+  direction" clause: Scope 1 found no such pattern (5/5 static claims confirmed), so nothing filed.
+- **Probe correction:** the first run mis-tallied 30 `POPULATION_MIGRATION` events as births/deaths;
+  rpg-feature-planning caught it and the probe now counts exact categories. The corrected data
+  agrees with their `TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` (0 birth/death
+  events, largest bracket 8).
+- `mechanism-state-caller-check` still flags `chronicle` `orphan_with_callers` (pre-existing,
+  report-only, state field untouched here).
 
 ## Test Summary
-_(pending)_
+184 passed across the nine mechanism-registry unit-test files plus
+`tests/tools/test_ticket_scoper_relevance_check.py` (incl. 5 new tests). `make
+mechanism-registry-validate`, `mechanism-registry-html-check`, `mechanism-atlas-check`,
+`mechanism-capabilities-check`, `mechanism-wiring-map-classdef-check` all OK after regeneration.
 
 ## Files Changed
-_(pending)_
+- `registries/mechanisms.yaml` (7 verified blocks)
+- `tools/mechanism_registry/registry.py`, `Makefile`
+- `tests/unit/tools/test_mechanism_registry.py`, `tests/tools/test_ticket_scoper_relevance_check.py`
+- `.claude/agents/ticket-scoper.md`
+- `docs/brainstorm/mechanism_verification_view.md`, `mechanism_registry_view.md`,
+  `mechanism_system_rollup_view.md`, `mechanism_registry.html`, `simulation_capabilities.html`
+- `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/`
 
 ## Completion Summary
-_(pending)_
+All 7 absence verdicts now rest on a runtime run; the validator rejects a static-instrument
+`contradicted` verdict; the ticket scoper must name a quoted verdict's instrument and date.

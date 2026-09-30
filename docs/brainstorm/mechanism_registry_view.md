@@ -6,7 +6,7 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**24 runtime-verified, 59 static (`code_trace`)-verified, 10 unverified** — of 93 total.
+**31 runtime-verified, 52 static (`code_trace`)-verified, 10 unverified** — of 93 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -32,20 +32,20 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `adventure_routing` | entity | done | static | observed | 0 | 0 |
 | `affection_relationship_bonds` | entity | done | static | inconclusive | 0 | 0 |
 | `belief_institution` | world | partial | static | observed | 0 | 0 |
-| `betrayal_siege_war` | faction | partial | static | contradicted | 0 | 0 |
-| `breakthrough_bonuses` | entity | partial | static | contradicted | 0 | 0 |
+| `betrayal_siege_war` | faction | partial | runtime | observed | 0 | 0 |
+| `breakthrough_bonuses` | entity | partial | runtime | observed | 0 | 0 |
 | `build_diversity` | entity | partial | static | observed | 0 | 0 |
 | `building_sabotage` | world | done | static | observed | 0 | 0 |
 | `calamity_intensity` | world | done | runtime | contradicted | 0 | 0 |
-| `camp` | region | done | static | contradicted | 0 | 0 |
+| `camp` | region | done | runtime | observed | 0 | 0 |
 | `causal_spatial_memory` | entity | gated | runtime | observed | 0 | 0 |
-| `chronicle` | world | orphan | static | contradicted | 0 | 0 |
+| `chronicle` | world | orphan | runtime | observed | 0 | 0 |
 | `city` | region | partial | static | observed | 0 | 0 |
 | `clan` | faction | gap | unverified | unverified | 0 | 0 |
 | `class_assignment` | entity | partial | static | observed | 0 | 0 |
 | `cognition_capacity_fatigue` | entity | done | runtime | observed | 0 | 0 |
 | `combat_engagement` | entity | done | runtime | observed | 0 | 0 |
-| `commitment_betrayal` | entity | orphan | static | contradicted | 0 | 0 |
+| `commitment_betrayal` | entity | orphan | runtime | observed | 0 | 0 |
 | `commitment_pressure_consequences` | entity | partial | static | observed | 0 | 0 |
 | `committed_intentions` | entity | orphan | static | observed | 0 | 0 |
 | `concern_intake` | entity | done | static | observed | 0 | 0 |
@@ -57,11 +57,11 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `cross_episode_social_consequences` | faction | done | static | observed | 0 | 0 |
 | `cultural_drift` | world | done | static | observed | 0 | 0 |
 | `declared_cognition_schema` | entity | orphan | static | observed | 0 | 0 |
-| `demographic_cohort_cycle` | region | done | static | contradicted | 0 | 0 |
+| `demographic_cohort_cycle` | region | done | runtime | contradicted | 0 | 0 |
 | `derived_stats` | entity | done | runtime | observed | 0 | 0 |
 | `emotion` | entity | done | runtime | observed | 0 | 0 |
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
-| `equipment_scoring` | world | orphan | static | contradicted | 0 | 0 |
+| `equipment_scoring` | world | orphan | runtime | observed | 0 | 0 |
 | `event_interpretation` | region | done | static | observed | 0 | 0 |
 | `evolution` | entity | done | runtime | observed | 0 | 0 |
 | `fame` | world | done | static | observed | 0 | 0 |

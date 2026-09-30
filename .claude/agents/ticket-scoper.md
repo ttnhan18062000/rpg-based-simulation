@@ -15,6 +15,7 @@ You are a pre-work scoping subagent for the rpg-based-simulation project. Given 
 3. **`stored_artifacts/`** — look for prior investigations or plans covering the same area.
 4. **Relevant source files** — read the affected code to understand current behavior.
 5. **Parity ledger** (`docs/parity_ledger/`) — identify any entries that overlap with the proposed change.
+6. **Registry-verdict premise** — if the request's premise quotes a `registries/mechanisms.yaml` `verified` verdict (for example "no world seeds X" or "never fires"), the ticket's Request Summary must name that verdict's `instrument` and `date`. A `code_trace` verdict asserting runtime or world-data absence is not evidence of absence (reading code cannot prove data is missing; `camp` and `demographic_cohort_cycle` were both `code_trace`/`contradicted` and false the day they were written): re-check it with a real world compile or run before quoting it, and if you cannot, record it under Assumptions / Open Questions as unverified rather than stating it as fact.
 
 Stop and report if you find: duplicate work in progress, conflicting requirements, or an architectural mismatch that would make the proposed scope impossible.
 
