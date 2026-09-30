@@ -1,5 +1,5 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
@@ -7,6 +7,104 @@ tags: [world, architecture]
 ---
 
 # Finding — Mechanics Whose Preconditions Depend on Unvalidated World Composition
+
+> **SUPERSEDED 2026-09-30. Do not cite this document as evidence for anything.**
+>
+> Filed 2026-09-15. It claimed a general pattern resting on "five confirmed instances" — its own
+> body only ever marked four, and `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`
+> (PR #260) subsequently found that **none of the four survives as an instance of this pattern.**
+> Its thesis is not supported. It is retained for the method lesson below, not for its findings.
+>
+> The text that follows the status block is the original 2026-09-15 document, unedited. **Every
+> claim in it must be read through the status block first.**
+
+## Status of each section, as of 2026-09-30
+
+| § | Mechanic | Claimed | Actual — see the cited owner, not this document |
+|---|---|---|---|
+| 1 | Lair-occupant spawning | confirmed instance | **Open, per J2.** Owned by `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` = workstream J2 of `docs/plans/systemic_world/first_wave_plan.md`. Whether it is a content condition or a routing/pathing defect is **J2's own open question** — this document's guess must not pre-empt it. |
+| 2 | Calamity-intensity production | confirmed instance, "doubly so" | **`DEFECT` — not a composition gap.** `CalamityService.apply_calamity_consequences` (`src/world/calamity.py:80`) has zero production callers; the only other `src/` hit is a comment at `displacement.py:27`. The mechanic is never entered, so composition was never what stopped it. |
+| 3 | Cross-faction combat volume | explicitly *not* confirmed | **Unchanged** — still a sibling lead, still never verified by a live run. Correctly not counted when filed. |
+| 4 | Regional influence shift | the checked exception | **Confirmed `DEFECT`, unchanged.** `lifecycle.py:202` accepts `("KILL","PERMADEATH")`; combat (`src/engine/combat.py:172,273,383`) emits `"DEFEAT"`. 59 deaths, 0 influence-shift calls in 1,500 ticks. |
+| 5 | Camp-object placement | confirmed instance | **Premise false.** A real compile of `frontier_living_world` yields 2 `CampState`. Content shipped `cb0b23b07` (**2026-09-08**), twelve days before the ticket was filed. |
+| 6 | Demographic cohort cycling | confirmed instance | **Premise false.** Same compile: 6 of 7 regions seed non-empty cohorts. Seeding shipped **2026-08-31**, three weeks before the ticket was filed. |
+
+Verdicts, evidence and evidence-strength caveats for all 14 corpus tickets live in
+`docs/plans/unreachable_mechanism_classification.md`. They are not restated here.
+
+**Two figures in the original §1 are also wrong.** It cites the lair spawn gate as
+`state.maturity >= 50.0` and `trauma_score >= 20.0` (repeated from a stale comment in
+`moon_cult_ruins.yaml`). The live values are `BOSS_SPAWN_THRESHOLD = 2.0` and
+`BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0` (`src/world/boss.py:26-27`), lowered from 50.0/20.0 as a
+reachability fix in `b1ab4cc92` (**2026-09-15**, PR #198) and recorded as provisional in
+`docs/plans/deferred_tuning_decisions_register.md` D-05. That change landed *after* §1's
+5,000-tick measurement was taken, which is a further reason §1 is unsettled rather than confirmed.
+
+## Why it was wrong — the only part worth carrying forward
+
+**Premises were taken from reading content and registry verdicts, not from compiling the world and
+looking.** §5 and §6 both quoted `registries/mechanisms.yaml` verdicts dated 2026-09-16 that were
+already contradicted by code and content shipped on 2026-08-31 and 2026-09-08. Those verdicts were
+`instrument: code_trace` — reading code — while the claim they made was about the *absence* of
+runtime world data, which reading code cannot establish. Neither ticket named the instrument, so
+nothing downstream could weigh the claim. A single real compile falsified both, and one grep for
+production callers falsified §2. None of the three needed a long run or new instrumentation.
+
+**Grouping by symptom shape produced the candidates and then had to be corrected by the
+classification.** Every entry was collected because it presented as "a mechanic that is silent" —
+a symptom common to dead code, unreached guards, unmet runtime conditions and genuine composition
+gaps alike. Once a composition-shaped hypothesis is in hand, composition-shaped evidence is
+available for *every* silent mechanic, because a silent mechanic always has some unmet
+precondition somewhere. §2 is the clean demonstration: the composition facts cited were true and
+none of them mattered. The classification epic reached the same conclusion independently — only
+two of its fourteen tickets matched the shape the grouping assumed, and both of those were false.
+
+Establishing that a mechanic is actually *reached* — its producer has a production caller, its
+guard is actually evaluated at runtime — has to come before attributing its silence to anything.
+
+**Runtime reachability evidence, not a compile-time checker, is the right instrument.** The
+original document implied a composition-validation layer in the world-compile path. That case is
+not supported: three of four instances were not composition gaps, and the fourth would not be
+caught by such a layer — spatial isolation is legal, internally consistent content, and whether
+participants meet depends on runtime routing and gates. The one compile-time check with real value
+is reference existence (§3's `trade_road` dangling reference), which belongs to the existing
+resolve/integrity validation of Mechanics ch.06, not to a new layer.
+
+## Open items this document leaves behind
+
+- `TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` and
+  `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED` are still `OPEN` on false
+  premises. Re-scoping or closing them belongs to the RPG side.
+- `registries/mechanisms.yaml`'s `camp` and `demographic_cohort_cycle` entries still carry the
+  2026-09-16 verdicts shown false above. Both the process fix and these two data corrections are
+  owned by `TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE` — **written but not yet
+  committed** as of 2026-09-30, so treat it as forthcoming rather than filed.
+  `docs/brainstorm/mechanism_verification_view.md` mirrors both entries but is generated
+  (`make mechanism-verification-view`) and must not be hand-edited; it corrects itself when the
+  registry does.
+- `registries/mechanisms.yaml`'s `calamity_intensity` entry (`done` + `contradicted`) carries a
+  2026-09-20 note that it is zero-caller and "closer to `orphan`", matching §2's `DEFECT` finding.
+  It is **outside** the above ticket's instrument filter (it is a `corpus_run` verdict, not
+  `code_trace`) and so is unowned — it belongs with the roadmap side.
+- `moon_cult_ruins.yaml`'s comment still cites the pre-2026-09-15 50.0/20.0 thresholds.
+
+## Related
+
+- `docs/plans/unreachable_mechanism_classification.md` — the classification that superseded this
+- `docs/plans/systemic_world/first_wave_plan.md` — J2 owns §1's open question
+- `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` (§1, = J2)
+- `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` (§2 — `DEFECT`)
+- `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION` (§3 — unverified lead)
+- `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES` (§4 — confirmed `DEFECT`)
+- `TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` (§5 — `STALE-PREMISE`)
+- `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED` (§6 — `STALE-PREMISE`)
+- `TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE`
+- `TCK-20260915-WORLDBUILDING-DANGLING-REGION-REFERENCE-SILENT-FALLTHROUGH` (surfaced by §3)
+- `TCK-20260915-WORLDBUILDING-DUPLICATE-REGION-ID-ACROSS-MODULES` (surfaced by §3)
+
+---
+
+<!-- ORIGINAL DOCUMENT, 2026-09-15, UNEDITED BELOW THIS LINE. Read the status block above first. -->
 
 **Filed 2026-09-15.** This is a finding, not a plan — it states what was found and checked, not
 what to do about it. No fix is proposed here; that is a real design decision for the user, put to
