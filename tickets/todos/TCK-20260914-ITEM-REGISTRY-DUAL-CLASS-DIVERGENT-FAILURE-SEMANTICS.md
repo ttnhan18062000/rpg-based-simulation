@@ -160,6 +160,36 @@ this week, and the answer is not obvious:
 
 Recommend measuring how often an unknown id is actually requested in a corpus run before choosing —
 same discipline that reduced the `stats_dirty` P0 from "invalidates everything" to "never fires".
+
+### 2026-09-30 — Measured; decision: option 3 (user-approved)
+
+**Measurement** (production loader `WorldRepository.load_world_with_context`, real `Kernel` ticks,
+`PROD_SMALL`, seed 42; both `ItemRegistry.get` wrapped, positive control passed — a bogus id
+incremented both counters before reset; both registries held 37 items after compile):
+
+| world | ticks | entities | `None`-class lookups | misses | `KeyError`-class lookups |
+|---|---|---|---|---|---|
+| `frontier_living_world` | 600 | 49 | 109 | 109 (all `herb_patch`) | 0 |
+| `crowded_frontier` | 400 | 38 | 45 | 45 (all `herb_patch`) | 0 |
+| `quest_dense_frontier` | 400 | 6 | 0 | 0 | 0 |
+
+All misses come from `inventory.py:73` (`can_add_items`) via `interaction.py:127`. The `KeyError`
+class was never reached in these worlds (its four callers are static-only findings here).
+
+**Consequence:** "raise" is priced out — it would throw on the authoritative apply path on the first
+herb interaction in two corpus worlds. **Decision: keep the non-fatal `None` on the apply path and
+add a loud diagnostic**, so silence becomes visible without being fatal. The same probe found a real
+live defect, tracked in `TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND`.
+
+**Open design point, to be reviewed before any code:** the diagnostic's shape — a hard-law check
+versus an observability event. It lands on the authoritative apply path, so it must read state and
+emit typed records only, and must not itself mutate durable state or break determinism. Also decide
+whether the diagnostic lives at the `items.py` `get` boundary or at the consuming call sites
+(`can_add_items` returns False for two different reasons today: unknown id and capacity).
+
+**Scope after this decision:** consolidation is no longer the goal — in catalog mode both
+registries already hold the same data, with one bootstrap authority. Remaining work: the
+diagnostic, and documenting which class governs which call sites.
 _(not started)_
 
 ## Test Summary
