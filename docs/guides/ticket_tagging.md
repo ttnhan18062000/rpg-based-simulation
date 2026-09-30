@@ -40,6 +40,13 @@ can't rename or repurpose an existing tag, only add a new one) and refuses a non
 your intended tag already exists under a different spelling (e.g. `calibration` instead of
 `calibrate`) — the whole point of the registry is to catch that before it duplicates.
 
+## The `escaped-defect` Tag
+
+Use `escaped-defect` on a ticket that fixes a defect which reached `main` while the tests were
+green. Give the ticket body a line `Failure class: <class>`, using a class from
+`docs/plans/test_architecture/roadmap.md` §4.5 (the classes are defined there, not here). The
+core-RPG test report counts tagged tickets per month.
+
 ## Registering a New Category
 
 The 5 categories table above is backed by its own append-only registry,

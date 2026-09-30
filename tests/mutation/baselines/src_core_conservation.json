@@ -1,0 +1,766 @@
+{
+  "schema_version": 1,
+  "kind": "mutation_baseline",
+  "target": {
+    "path": "src/core/conservation.py",
+    "sha256": "bb5484ebbed8621841b868b4f9d1da1cdc36d80815715f342664a7c7ac52e99d",
+    "lines": 334
+  },
+  "run": {
+    "kind": "real-target",
+    "started_utc": "2026-09-29T16:07:35Z",
+    "runtime_seconds": 341,
+    "source_sha": "defe2342e758376863385466cc6d3dcc62dc015b",
+    "target_last_changed_commit": "6e25d4f28"
+  },
+  "tool": {
+    "name": "mutmut",
+    "version": "2.5.1",
+    "install": "pip --target in a private scratchpad directory (not a project dependency, shared venv untouched); run from a scratch copy of the tree",
+    "why_not_3x": "mutmut 3.x trampoline rejects modules whose import path starts with 'src.'"
+  },
+  "tests": {
+    "files": [
+      "tests/integration/domains/adventure/test_harvest_to_event.py",
+      "tests/integration/pipeline/test_transaction_completion.py",
+      "tests/unit/combat/test_combat_matrix.py",
+      "tests/unit/content/test_resolvers.py",
+      "tests/unit/domains/adventure/test_craft_upgrade_execution.py",
+      "tests/unit/economy/test_gold_sink.py",
+      "tests/unit/quest/test_quest_rewards.py",
+      "tests/unit/resource/test_durability_repair.py"
+    ],
+    "count": 165
+  },
+  "counts": {
+    "total": 177,
+    "killed": 60,
+    "survived": 117,
+    "timeout": 0,
+    "suspicious": 0,
+    "equivalent": "not-classified"
+  },
+  "target_selection": {
+    "confirmed_by": "rpg-feature-planning",
+    "confirmed_on": "2026-09-29",
+    "reason": "atomic conservation law lives here (ResourceTransactionResolver.resolve); no commits touching it since 2026-07-02 and no open ticket names it",
+    "excluded": [
+      {
+        "path": "src/systems/economy.py, market.py, crafting.py, harvest_system.py",
+        "why": "2-3 line re-export shims; a run there would be near-vacuous"
+      },
+      {
+        "path": "src/core/inventory.py",
+        "why": "open P1 TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS names it as a consumer to change"
+      }
+    ]
+  },
+  "stale_after": {
+    "target_sha256_changes": true,
+    "days": 30
+  },
+  "survivors": [
+    {
+      "id": 1,
+      "location": "src/core/conservation.py:16",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -13,7 +13,7 @@\n     from src.core.state import AuthoritativeState, EntityState, InventoryComponent\n     from src.core.updates import ResourceTransferIntent\n \n-@dataclass(frozen=True, slots=True)\n+@dataclass(frozen=False, slots=True)\n class TransactionResult:\n     \"\"\"Outcome of a resource transfer resolution.\"\"\"\n     accepted: bool",
+      "material_sample": null
+    },
+    {
+      "id": 2,
+      "location": "src/core/conservation.py:16",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -13,7 +13,7 @@\n     from src.core.state import AuthoritativeState, EntityState, InventoryComponent\n     from src.core.updates import ResourceTransferIntent\n \n-@dataclass(frozen=True, slots=True)\n+@dataclass(frozen=True, slots=False)\n class TransactionResult:\n     \"\"\"Outcome of a resource transfer resolution.\"\"\"\n     accepted: bool",
+      "material_sample": null
+    },
+    {
+      "id": 4,
+      "location": "src/core/conservation.py:20",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -17,7 +17,7 @@\n class TransactionResult:\n     \"\"\"Outcome of a resource transfer resolution.\"\"\"\n     accepted: bool\n-    inventory_update: Optional[InventoryUpdate] = None\n+    inventory_update: Optional[InventoryUpdate] = \"\"\n     node_update: Optional[ResourceNodeUpdate] = None\n     identity_update: Optional[IdentityUpdate] = None\n     biological_update: Optional[BiologicalUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 5,
+      "location": "src/core/conservation.py:21",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -18,7 +18,7 @@\n     \"\"\"Outcome of a resource transfer resolution.\"\"\"\n     accepted: bool\n     inventory_update: Optional[InventoryUpdate] = None\n-    node_update: Optional[ResourceNodeUpdate] = None\n+    node_update: Optional[ResourceNodeUpdate] = \"\"\n     identity_update: Optional[IdentityUpdate] = None\n     biological_update: Optional[BiologicalUpdate] = None\n     attributes_update: Optional[AttributeUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 6,
+      "location": "src/core/conservation.py:22",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -19,7 +19,7 @@\n     accepted: bool\n     inventory_update: Optional[InventoryUpdate] = None\n     node_update: Optional[ResourceNodeUpdate] = None\n-    identity_update: Optional[IdentityUpdate] = None\n+    identity_update: Optional[IdentityUpdate] = \"\"\n     biological_update: Optional[BiologicalUpdate] = None\n     attributes_update: Optional[AttributeUpdate] = None\n     combat_update: Optional[CombatUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 7,
+      "location": "src/core/conservation.py:23",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -20,7 +20,7 @@\n     inventory_update: Optional[InventoryUpdate] = None\n     node_update: Optional[ResourceNodeUpdate] = None\n     identity_update: Optional[IdentityUpdate] = None\n-    biological_update: Optional[BiologicalUpdate] = None\n+    biological_update: Optional[BiologicalUpdate] = \"\"\n     attributes_update: Optional[AttributeUpdate] = None\n     combat_update: Optional[CombatUpdate] = None\n     strategic_update: Optional[StrategicUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 8,
+      "location": "src/core/conservation.py:24",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -21,7 +21,7 @@\n     node_update: Optional[ResourceNodeUpdate] = None\n     identity_update: Optional[IdentityUpdate] = None\n     biological_update: Optional[BiologicalUpdate] = None\n-    attributes_update: Optional[AttributeUpdate] = None\n+    attributes_update: Optional[AttributeUpdate] = \"\"\n     combat_update: Optional[CombatUpdate] = None\n     strategic_update: Optional[StrategicUpdate] = None\n     equipment_update: Optional[EquipmentUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 9,
+      "location": "src/core/conservation.py:25",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -22,7 +22,7 @@\n     identity_update: Optional[IdentityUpdate] = None\n     biological_update: Optional[BiologicalUpdate] = None\n     attributes_update: Optional[AttributeUpdate] = None\n-    combat_update: Optional[CombatUpdate] = None\n+    combat_update: Optional[CombatUpdate] = \"\"\n     strategic_update: Optional[StrategicUpdate] = None\n     equipment_update: Optional[EquipmentUpdate] = None\n     reward_update: Optional[RewardUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 10,
+      "location": "src/core/conservation.py:26",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -23,7 +23,7 @@\n     biological_update: Optional[BiologicalUpdate] = None\n     attributes_update: Optional[AttributeUpdate] = None\n     combat_update: Optional[CombatUpdate] = None\n-    strategic_update: Optional[StrategicUpdate] = None\n+    strategic_update: Optional[StrategicUpdate] = \"\"\n     equipment_update: Optional[EquipmentUpdate] = None\n     reward_update: Optional[RewardUpdate] = None\n     quest_update: Optional[QuestUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 11,
+      "location": "src/core/conservation.py:27",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -24,7 +24,7 @@\n     attributes_update: Optional[AttributeUpdate] = None\n     combat_update: Optional[CombatUpdate] = None\n     strategic_update: Optional[StrategicUpdate] = None\n-    equipment_update: Optional[EquipmentUpdate] = None\n+    equipment_update: Optional[EquipmentUpdate] = \"\"\n     reward_update: Optional[RewardUpdate] = None\n     quest_update: Optional[QuestUpdate] = None\n     home_storage_update: Optional[InventoryUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 12,
+      "location": "src/core/conservation.py:28",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -25,7 +25,7 @@\n     combat_update: Optional[CombatUpdate] = None\n     strategic_update: Optional[StrategicUpdate] = None\n     equipment_update: Optional[EquipmentUpdate] = None\n-    reward_update: Optional[RewardUpdate] = None\n+    reward_update: Optional[RewardUpdate] = \"\"\n     quest_update: Optional[QuestUpdate] = None\n     home_storage_update: Optional[InventoryUpdate] = None\n     building_update: Optional[BuildingUpdate] = None",
+      "material_sample": null
+    },
+    {
+      "id": 13,
+      "location": "src/core/conservation.py:29",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -26,7 +26,7 @@\n     strategic_update: Optional[StrategicUpdate] = None\n     equipment_update: Optional[EquipmentUpdate] = None\n     reward_update: Optional[RewardUpdate] = None\n-    quest_update: Optional[QuestUpdate] = None\n+    quest_update: Optional[QuestUpdate] = \"\"\n     home_storage_update: Optional[InventoryUpdate] = None\n     building_update: Optional[BuildingUpdate] = None\n     ground_item_remove: Optional[int] = None",
+      "material_sample": null
+    },
+    {
+      "id": 14,
+      "location": "src/core/conservation.py:30",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -27,7 +27,7 @@\n     equipment_update: Optional[EquipmentUpdate] = None\n     reward_update: Optional[RewardUpdate] = None\n     quest_update: Optional[QuestUpdate] = None\n-    home_storage_update: Optional[InventoryUpdate] = None\n+    home_storage_update: Optional[InventoryUpdate] = \"\"\n     building_update: Optional[BuildingUpdate] = None\n     ground_item_remove: Optional[int] = None\n     corpse_remove: Optional[int] = None",
+      "material_sample": null
+    },
+    {
+      "id": 15,
+      "location": "src/core/conservation.py:31",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -28,7 +28,7 @@\n     reward_update: Optional[RewardUpdate] = None\n     quest_update: Optional[QuestUpdate] = None\n     home_storage_update: Optional[InventoryUpdate] = None\n-    building_update: Optional[BuildingUpdate] = None\n+    building_update: Optional[BuildingUpdate] = \"\"\n     ground_item_remove: Optional[int] = None\n     corpse_remove: Optional[int] = None\n     reason: ReasonCode = ReasonCode.UNKNOWN",
+      "material_sample": null
+    },
+    {
+      "id": 16,
+      "location": "src/core/conservation.py:32",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -29,7 +29,7 @@\n     quest_update: Optional[QuestUpdate] = None\n     home_storage_update: Optional[InventoryUpdate] = None\n     building_update: Optional[BuildingUpdate] = None\n-    ground_item_remove: Optional[int] = None\n+    ground_item_remove: Optional[int] = \"\"\n     corpse_remove: Optional[int] = None\n     reason: ReasonCode = ReasonCode.UNKNOWN",
+      "material_sample": null
+    },
+    {
+      "id": 17,
+      "location": "src/core/conservation.py:33",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -30,7 +30,7 @@\n     home_storage_update: Optional[InventoryUpdate] = None\n     building_update: Optional[BuildingUpdate] = None\n     ground_item_remove: Optional[int] = None\n-    corpse_remove: Optional[int] = None\n+    corpse_remove: Optional[int] = \"\"\n     reason: ReasonCode = ReasonCode.UNKNOWN\n \n class ResourceTransactionResolver:",
+      "material_sample": null
+    },
+    {
+      "id": 18,
+      "location": "src/core/conservation.py:34",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -31,7 +31,7 @@\n     building_update: Optional[BuildingUpdate] = None\n     ground_item_remove: Optional[int] = None\n     corpse_remove: Optional[int] = None\n-    reason: ReasonCode = ReasonCode.UNKNOWN\n+    reason: ReasonCode = None\n \n class ResourceTransactionResolver:\n     \"\"\"",
+      "material_sample": null
+    },
+    {
+      "id": 19,
+      "location": "src/core/conservation.py:44",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -41,7 +41,6 @@\n     VERIFIED v2: atomic_conservation_law\n     \"\"\"\n \n-    @staticmethod\n     def resolve(\n         state: AuthoritativeState, \n         entity: EntityState,",
+      "material_sample": null
+    },
+    {
+      "id": 22,
+      "location": "src/core/conservation.py:59",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -56,7 +56,7 @@\n         # Phase E5.3: Exactly-Once Idempotency check\n         # Law: A transaction with a specific ID must only succeed once across simulation time.\n         if intent.transaction_id and intent.transaction_id in state.processed_transaction_ids:\n-            return TransactionResult(accepted=False, reason=ReasonCode.IDEMPOTENCY_VIOLATION)\n+            return TransactionResult(accepted=True, reason=ReasonCode.IDEMPOTENCY_VIOLATION)\n \n         target_inventory = inventory_override if inventory_override is not None else entity.inventory",
+      "material_sample": null
+    },
+    {
+      "id": 32,
+      "location": "src/core/conservation.py:77",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -74,7 +74,7 @@\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n             node = state.resource_nodes.get(intent.source_id)\n             if not node:\n-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n+                return TransactionResult(accepted=True, reason=ReasonCode.TARGET_INVALID)\n             \n             # Milestone 13 Fix: Account for sliding updates in the same tick\n             remaining = node.remaining_charges",
+      "material_sample": null
+    },
+    {
+      "id": 36,
+      "location": "src/core/conservation.py:82",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -79,7 +79,7 @@\n             # Milestone 13 Fix: Account for sliding updates in the same tick\n             remaining = node.remaining_charges\n             if node_overrides and intent.source_id in node_overrides:\n-                remaining += node_overrides[intent.source_id].charges_delta\n+                remaining = node_overrides[intent.source_id].charges_delta\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations:",
+      "material_sample": null
+    },
+    {
+      "id": 37,
+      "location": "src/core/conservation.py:82",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -79,7 +79,7 @@\n             # Milestone 13 Fix: Account for sliding updates in the same tick\n             remaining = node.remaining_charges\n             if node_overrides and intent.source_id in node_overrides:\n-                remaining += node_overrides[intent.source_id].charges_delta\n+                remaining -= node_overrides[intent.source_id].charges_delta\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations:",
+      "material_sample": null
+    },
+    {
+      "id": 38,
+      "location": "src/core/conservation.py:86",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -83,7 +83,7 @@\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations:\n-                remaining -= reservations.get((\"NODE\", intent.source_id), 0)\n+                remaining = reservations.get((\"NODE\", intent.source_id), 0)\n                 \n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)",
+      "material_sample": null
+    },
+    {
+      "id": 39,
+      "location": "src/core/conservation.py:86",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -83,7 +83,7 @@\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations:\n-                remaining -= reservations.get((\"NODE\", intent.source_id), 0)\n+                remaining += reservations.get((\"NODE\", intent.source_id), 0)\n                 \n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)",
+      "material_sample": null
+    },
+    {
+      "id": 40,
+      "location": "src/core/conservation.py:86",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -83,7 +83,7 @@\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations:\n-                remaining -= reservations.get((\"NODE\", intent.source_id), 0)\n+                remaining -= reservations.get((\"XXNODEXX\", intent.source_id), 0)\n                 \n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)",
+      "material_sample": null
+    },
+    {
+      "id": 41,
+      "location": "src/core/conservation.py:86",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -83,7 +83,7 @@\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations:\n-                remaining -= reservations.get((\"NODE\", intent.source_id), 0)\n+                remaining -= reservations.get((\"NODE\", intent.source_id), 1)\n                 \n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)",
+      "material_sample": null
+    },
+    {
+      "id": 43,
+      "location": "src/core/conservation.py:88",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -85,7 +85,7 @@\n             if reservations:\n                 remaining -= reservations.get((\"NODE\", intent.source_id), 0)\n                 \n-            if remaining <= 0:\n+            if remaining <= 1:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)\n             \n             delta = -node.remaining_charges if node.kind == \"LOOT\" else -1",
+      "material_sample": null
+    },
+    {
+      "id": 45,
+      "location": "src/core/conservation.py:91",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -88,7 +88,7 @@\n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)\n             \n-            delta = -node.remaining_charges if node.kind == \"LOOT\" else -1\n+            delta = +node.remaining_charges if node.kind == \"LOOT\" else -1\n             return TransactionResult(\n                 accepted=True,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),",
+      "material_sample": "LOOT depletion delta sign"
+    },
+    {
+      "id": 46,
+      "location": "src/core/conservation.py:91",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -88,7 +88,7 @@\n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)\n             \n-            delta = -node.remaining_charges if node.kind == \"LOOT\" else -1\n+            delta = -node.remaining_charges if node.kind != \"LOOT\" else -1\n             return TransactionResult(\n                 accepted=True,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),",
+      "material_sample": null
+    },
+    {
+      "id": 47,
+      "location": "src/core/conservation.py:91",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -88,7 +88,7 @@\n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)\n             \n-            delta = -node.remaining_charges if node.kind == \"LOOT\" else -1\n+            delta = -node.remaining_charges if node.kind == \"XXLOOTXX\" else -1\n             return TransactionResult(\n                 accepted=True,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),",
+      "material_sample": null
+    },
+    {
+      "id": 48,
+      "location": "src/core/conservation.py:91",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -88,7 +88,7 @@\n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)\n             \n-            delta = -node.remaining_charges if node.kind == \"LOOT\" else -1\n+            delta = -node.remaining_charges if node.kind == \"LOOT\" else +1\n             return TransactionResult(\n                 accepted=True,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),",
+      "material_sample": null
+    },
+    {
+      "id": 49,
+      "location": "src/core/conservation.py:91",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -88,7 +88,7 @@\n             if remaining <= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_DEPLETED)\n             \n-            delta = -node.remaining_charges if node.kind == \"LOOT\" else -1\n+            delta = -node.remaining_charges if node.kind == \"LOOT\" else -2\n             return TransactionResult(\n                 accepted=True,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),",
+      "material_sample": null
+    },
+    {
+      "id": 53,
+      "location": "src/core/conservation.py:99",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -96,7 +96,7 @@\n             )\n             # VERIFIED v2: loot_harvest_side_effects\n \n-        elif intent.source_kind == \"GROUND_ITEM\":\n+        elif intent.source_kind == \"XXGROUND_ITEMXX\":\n             if inventory_full:\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n             ground_item = state.ground_items.get(intent.source_id)",
+      "material_sample": null
+    },
+    {
+      "id": 54,
+      "location": "src/core/conservation.py:101",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -98,7 +98,7 @@\n \n         elif intent.source_kind == \"GROUND_ITEM\":\n             if inventory_full:\n-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n+                 return TransactionResult(accepted=True, reason=ReasonCode.INVENTORY_FULL)\n             ground_item = state.ground_items.get(intent.source_id)\n             if not ground_item:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)",
+      "material_sample": null
+    },
+    {
+      "id": 55,
+      "location": "src/core/conservation.py:102",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -99,7 +99,7 @@\n         elif intent.source_kind == \"GROUND_ITEM\":\n             if inventory_full:\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n-            ground_item = state.ground_items.get(intent.source_id)\n+            ground_item = None\n             if not ground_item:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)",
+      "material_sample": null
+    },
+    {
+      "id": 56,
+      "location": "src/core/conservation.py:103",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -100,7 +100,7 @@\n             if inventory_full:\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n             ground_item = state.ground_items.get(intent.source_id)\n-            if not ground_item:\n+            if  ground_item:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations",
+      "material_sample": null
+    },
+    {
+      "id": 57,
+      "location": "src/core/conservation.py:104",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -101,7 +101,7 @@\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n             ground_item = state.ground_items.get(intent.source_id)\n             if not ground_item:\n-                return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n+                return TransactionResult(accepted=True, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:",
+      "material_sample": null
+    },
+    {
+      "id": 58,
+      "location": "src/core/conservation.py:107",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -104,7 +104,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"XXGROUND_ITEMXX\", intent.source_id), 0) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 59,
+      "location": "src/core/conservation.py:107",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -104,7 +104,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 1) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 60,
+      "location": "src/core/conservation.py:107",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -104,7 +104,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) >= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 61,
+      "location": "src/core/conservation.py:107",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -104,7 +104,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 1:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 62,
+      "location": "src/core/conservation.py:107",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -104,7 +104,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n+            if reservations or reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 63,
+      "location": "src/core/conservation.py:108",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -105,7 +105,7 @@\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations and reservations.get((\"GROUND_ITEM\", intent.source_id), 0) > 0:\n-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n+                return TransactionResult(accepted=True, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(\n                 accepted=True,",
+      "material_sample": "OUT_OF_STOCK / TARGET_LOCKED accepted flag"
+    },
+    {
+      "id": 64,
+      "location": "src/core/conservation.py:111",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -108,7 +108,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(\n-                accepted=True,\n+                accepted=False,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),\n                 ground_item_remove=intent.source_id\n             )",
+      "material_sample": null
+    },
+    {
+      "id": 67,
+      "location": "src/core/conservation.py:118",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -115,7 +115,7 @@\n \n         elif intent.source_kind == \"CORPSE\":\n             if inventory_full:\n-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n+                 return TransactionResult(accepted=True, reason=ReasonCode.INVENTORY_FULL)\n             corpse = state.corpses.get(intent.source_id)\n             if not corpse:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)",
+      "material_sample": null
+    },
+    {
+      "id": 68,
+      "location": "src/core/conservation.py:119",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -116,7 +116,7 @@\n         elif intent.source_kind == \"CORPSE\":\n             if inventory_full:\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n-            corpse = state.corpses.get(intent.source_id)\n+            corpse = None\n             if not corpse:\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)",
+      "material_sample": null
+    },
+    {
+      "id": 71,
+      "location": "src/core/conservation.py:124",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -121,7 +121,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"XXCORPSEXX\", intent.source_id), 0) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": "CORPSE reservation key"
+    },
+    {
+      "id": 72,
+      "location": "src/core/conservation.py:124",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -121,7 +121,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"CORPSE\", intent.source_id), 1) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 73,
+      "location": "src/core/conservation.py:124",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -121,7 +121,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) >= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 74,
+      "location": "src/core/conservation.py:124",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -121,7 +121,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 1:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 75,
+      "location": "src/core/conservation.py:124",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -121,7 +121,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.SOURCE_MISSING)\n             \n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n+            if reservations or reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 76,
+      "location": "src/core/conservation.py:125",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -122,7 +122,7 @@\n             \n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations and reservations.get((\"CORPSE\", intent.source_id), 0) > 0:\n-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n+                return TransactionResult(accepted=True, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(\n                 accepted=True,",
+      "material_sample": "OUT_OF_STOCK / TARGET_LOCKED accepted flag"
+    },
+    {
+      "id": 77,
+      "location": "src/core/conservation.py:128",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -125,7 +125,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n             \n             return TransactionResult(\n-                accepted=True,\n+                accepted=False,\n                 inventory_update=InventoryUpdate(items_add=intent.items_add),\n                 corpse_remove=intent.source_id\n             )",
+      "material_sample": null
+    },
+    {
+      "id": 80,
+      "location": "src/core/conservation.py:136",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -133,7 +133,7 @@\n         elif intent.source_kind == \"CRAFTING\":\n             # RPG-RES-200: Conversion must account for removals\n             if inventory_full:\n-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n+                 return TransactionResult(accepted=True, reason=ReasonCode.INVENTORY_FULL)\n             # RPG-ECON-008\n             if target_inventory.gold < intent.gold_cost:\n                 return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_GOLD)",
+      "material_sample": null
+    },
+    {
+      "id": 82,
+      "location": "src/core/conservation.py:139",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -136,7 +136,7 @@\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n             # RPG-ECON-008\n             if target_inventory.gold < intent.gold_cost:\n-                return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_GOLD)\n+                return TransactionResult(accepted=True, reason=ReasonCode.INSUFFICIENT_GOLD)\n             \n             for mat in intent.items_remove:\n                 have = sum(s.quantity for s in target_inventory.items if s.item_id == mat.item_id)",
+      "material_sample": null
+    },
+    {
+      "id": 86,
+      "location": "src/core/conservation.py:144",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -141,7 +141,7 @@\n             for mat in intent.items_remove:\n                 have = sum(s.quantity for s in target_inventory.items if s.item_id == mat.item_id)\n                 if have < mat.quantity:\n-                    return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)\n+                    return TransactionResult(accepted=True, reason=ReasonCode.INSUFFICIENT_RESOURCES)\n             \n             return TransactionResult(\n                 accepted=True,",
+      "material_sample": null
+    },
+    {
+      "id": 88,
+      "location": "src/core/conservation.py:151",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -148,7 +148,7 @@\n                 inventory_update=InventoryUpdate(\n                     items_add=intent.items_add,\n                     items_remove=intent.items_remove,\n-                    gold_delta=-intent.gold_cost\n+                    gold_delta=+intent.gold_cost\n                 )\n             )",
+      "material_sample": null
+    },
+    {
+      "id": 91,
+      "location": "src/core/conservation.py:158",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -155,7 +155,7 @@\n         elif intent.source_kind == \"SHOP_BUY\":\n             # RPG-RES-119, RPG-ECON-200\n             if inventory_full:\n-                 return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n+                 return TransactionResult(accepted=True, reason=ReasonCode.INVENTORY_FULL)\n             \n             building = state.buildings.get(intent.source_id)\n             if not building or not building.functional:",
+      "material_sample": null
+    },
+    {
+      "id": 95,
+      "location": "src/core/conservation.py:161",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -158,7 +158,7 @@\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n             \n             building = state.buildings.get(intent.source_id)\n-            if not building or not building.functional:\n+            if not building and not building.functional:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n \n             # 1. Capacity/Stock Check",
+      "material_sample": null
+    },
+    {
+      "id": 96,
+      "location": "src/core/conservation.py:162",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -159,7 +159,7 @@\n             \n             building = state.buildings.get(intent.source_id)\n             if not building or not building.functional:\n-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n+                return TransactionResult(accepted=True, reason=ReasonCode.TARGET_INVALID)\n \n             # 1. Capacity/Stock Check\n             # RPG-ECON-200",
+      "material_sample": null
+    },
+    {
+      "id": 100,
+      "location": "src/core/conservation.py:169",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -166,7 +166,7 @@\n             for item in intent.items_add:\n                 have = sum(s.quantity for s in building.inventory.items if s.item_id == item.item_id)\n                 if have < item.quantity:\n-                    return TransactionResult(accepted=False, reason=ReasonCode.OUT_OF_STOCK)\n+                    return TransactionResult(accepted=True, reason=ReasonCode.OUT_OF_STOCK)\n             \n             # 2. Gold Check\n             # RPG-ECON-004, RPG-ECON-200",
+      "material_sample": "OUT_OF_STOCK / TARGET_LOCKED accepted flag"
+    },
+    {
+      "id": 101,
+      "location": "src/core/conservation.py:173",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -170,7 +170,7 @@\n             \n             # 2. Gold Check\n             # RPG-ECON-004, RPG-ECON-200\n-            if target_inventory.gold < intent.gold_cost:\n+            if target_inventory.gold <= intent.gold_cost:\n                 return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_GOLD)\n             \n             from src.core.updates import BuildingUpdate",
+      "material_sample": null
+    },
+    {
+      "id": 103,
+      "location": "src/core/conservation.py:178",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -175,7 +175,7 @@\n             \n             from src.core.updates import BuildingUpdate\n             return TransactionResult(\n-                accepted=True,\n+                accepted=False,\n                 inventory_update=InventoryUpdate(\n                     items_add=intent.items_add,\n                     gold_delta=-intent.gold_cost",
+      "material_sample": null
+    },
+    {
+      "id": 104,
+      "location": "src/core/conservation.py:181",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -178,7 +178,7 @@\n                 accepted=True,\n                 inventory_update=InventoryUpdate(\n                     items_add=intent.items_add,\n-                    gold_delta=-intent.gold_cost\n+                    gold_delta=+intent.gold_cost\n                 ),\n                 building_update=BuildingUpdate(\n                     building_id=intent.source_id,",
+      "material_sample": null
+    },
+    {
+      "id": 106,
+      "location": "src/core/conservation.py:192",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -189,7 +189,7 @@\n                 )\n             )\n \n-        elif intent.source_kind == \"SHOP_SELL\":\n+        elif intent.source_kind == \"XXSHOP_SELLXX\":\n             # RPG-ECON-201: Shop liquidity check\n             # Selling doesn't need capacity check for entity (it removes items)\n             # But shop needs enough gold",
+      "material_sample": null
+    },
+    {
+      "id": 107,
+      "location": "src/core/conservation.py:196",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -193,7 +193,7 @@\n             # RPG-ECON-201: Shop liquidity check\n             # Selling doesn't need capacity check for entity (it removes items)\n             # But shop needs enough gold\n-            building = state.buildings.get(intent.source_id)\n+            building = None\n             if not building or not building.functional:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)",
+      "material_sample": null
+    },
+    {
+      "id": 108,
+      "location": "src/core/conservation.py:197",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -194,7 +194,7 @@\n             # Selling doesn't need capacity check for entity (it removes items)\n             # But shop needs enough gold\n             building = state.buildings.get(intent.source_id)\n-            if not building or not building.functional:\n+            if  building or not building.functional:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n \n             if building.inventory.gold < intent.gold_delta:",
+      "material_sample": null
+    },
+    {
+      "id": 109,
+      "location": "src/core/conservation.py:197",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -194,7 +194,7 @@\n             # Selling doesn't need capacity check for entity (it removes items)\n             # But shop needs enough gold\n             building = state.buildings.get(intent.source_id)\n-            if not building or not building.functional:\n+            if not building or  building.functional:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n \n             if building.inventory.gold < intent.gold_delta:",
+      "material_sample": null
+    },
+    {
+      "id": 110,
+      "location": "src/core/conservation.py:197",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -194,7 +194,7 @@\n             # Selling doesn't need capacity check for entity (it removes items)\n             # But shop needs enough gold\n             building = state.buildings.get(intent.source_id)\n-            if not building or not building.functional:\n+            if not building and not building.functional:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n \n             if building.inventory.gold < intent.gold_delta:",
+      "material_sample": null
+    },
+    {
+      "id": 111,
+      "location": "src/core/conservation.py:198",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -195,7 +195,7 @@\n             # But shop needs enough gold\n             building = state.buildings.get(intent.source_id)\n             if not building or not building.functional:\n-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n+                return TransactionResult(accepted=True, reason=ReasonCode.TARGET_INVALID)\n \n             if building.inventory.gold < intent.gold_delta:\n                 return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)",
+      "material_sample": null
+    },
+    {
+      "id": 112,
+      "location": "src/core/conservation.py:200",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -197,7 +197,7 @@\n             if not building or not building.functional:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n \n-            if building.inventory.gold < intent.gold_delta:\n+            if building.inventory.gold <= intent.gold_delta:\n                 return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)\n \n             for item in intent.items_remove:",
+      "material_sample": null
+    },
+    {
+      "id": 113,
+      "location": "src/core/conservation.py:201",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -198,7 +198,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_INVALID)\n \n             if building.inventory.gold < intent.gold_delta:\n-                return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)\n+                return TransactionResult(accepted=True, reason=ReasonCode.LIQUIDITY_EXHAUSTED)\n \n             for item in intent.items_remove:\n                 have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)",
+      "material_sample": null
+    },
+    {
+      "id": 114,
+      "location": "src/core/conservation.py:204",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -201,7 +201,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)\n \n             for item in intent.items_remove:\n-                have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n+                have = sum(s.quantity for s in target_inventory.items if s.item_id != item.item_id)\n                 if have < item.quantity:\n                     return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)",
+      "material_sample": null
+    },
+    {
+      "id": 115,
+      "location": "src/core/conservation.py:204",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -201,7 +201,7 @@\n                 return TransactionResult(accepted=False, reason=ReasonCode.LIQUIDITY_EXHAUSTED)\n \n             for item in intent.items_remove:\n-                have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n+                have = None\n                 if have < item.quantity:\n                     return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)",
+      "material_sample": null
+    },
+    {
+      "id": 116,
+      "location": "src/core/conservation.py:205",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -202,7 +202,7 @@\n \n             for item in intent.items_remove:\n                 have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n-                if have < item.quantity:\n+                if have <= item.quantity:\n                     return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)\n             \n             from src.core.updates import BuildingUpdate",
+      "material_sample": null
+    },
+    {
+      "id": 117,
+      "location": "src/core/conservation.py:206",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -203,7 +203,7 @@\n             for item in intent.items_remove:\n                 have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n                 if have < item.quantity:\n-                    return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_RESOURCES)\n+                    return TransactionResult(accepted=True, reason=ReasonCode.INSUFFICIENT_RESOURCES)\n             \n             from src.core.updates import BuildingUpdate\n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 118,
+      "location": "src/core/conservation.py:210",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -207,7 +207,7 @@\n             \n             from src.core.updates import BuildingUpdate\n             return TransactionResult(\n-                accepted=True,\n+                accepted=False,\n                 inventory_update=InventoryUpdate(\n                     items_remove=intent.items_remove,\n                     gold_delta=intent.gold_delta",
+      "material_sample": null
+    },
+    {
+      "id": 119,
+      "location": "src/core/conservation.py:219",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -216,7 +216,7 @@\n                     building_id=intent.source_id,\n                     inventory=InventoryUpdate(\n                         items_add=intent.items_remove,\n-                        gold_delta=-intent.gold_delta\n+                        gold_delta=+intent.gold_delta\n                     )\n                 )\n             )",
+      "material_sample": null
+    },
+    {
+      "id": 122,
+      "location": "src/core/conservation.py:227",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -224,7 +224,7 @@\n         elif intent.source_kind == \"COMBAT\":\n             # Progression Rule: XP/Gold is granted only if items (if any) fit.\n             # Law: If it has items, it must fit.\n-            if intent.items_add and inventory_full:\n+            if intent.items_add or inventory_full:\n                  return TransactionResult(accepted=False, reason=ReasonCode.INVENTORY_FULL)\n \n             return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 127,
+      "location": "src/core/conservation.py:239",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -236,7 +236,7 @@\n \n         elif intent.source_kind == \"QUEST\":\n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"QUEST\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"XXQUESTXX\", intent.source_id), 0) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n             # Law: If it has items, it must fit.",
+      "material_sample": null
+    },
+    {
+      "id": 128,
+      "location": "src/core/conservation.py:239",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -236,7 +236,7 @@\n \n         elif intent.source_kind == \"QUEST\":\n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"QUEST\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"QUEST\", intent.source_id), 1) > 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n             # Law: If it has items, it must fit.",
+      "material_sample": null
+    },
+    {
+      "id": 129,
+      "location": "src/core/conservation.py:239",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -236,7 +236,7 @@\n \n         elif intent.source_kind == \"QUEST\":\n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"QUEST\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"QUEST\", intent.source_id), 0) >= 0:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n             # Law: If it has items, it must fit.",
+      "material_sample": null
+    },
+    {
+      "id": 130,
+      "location": "src/core/conservation.py:239",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -236,7 +236,7 @@\n \n         elif intent.source_kind == \"QUEST\":\n             # P0.2 Refinement: Account for in-tick reservations\n-            if reservations and reservations.get((\"QUEST\", intent.source_id), 0) > 0:\n+            if reservations and reservations.get((\"QUEST\", intent.source_id), 0) > 1:\n                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n             # Law: If it has items, it must fit.",
+      "material_sample": null
+    },
+    {
+      "id": 132,
+      "location": "src/core/conservation.py:240",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -237,7 +237,7 @@\n         elif intent.source_kind == \"QUEST\":\n             # P0.2 Refinement: Account for in-tick reservations\n             if reservations and reservations.get((\"QUEST\", intent.source_id), 0) > 0:\n-                return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n+                return TransactionResult(accepted=True, reason=ReasonCode.TARGET_LOCKED)\n \n             # Law: If it has items, it must fit.\n             if intent.items_add and inventory_full:",
+      "material_sample": "OUT_OF_STOCK / TARGET_LOCKED accepted flag"
+    },
+    {
+      "id": 137,
+      "location": "src/core/conservation.py:255",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -252,7 +252,7 @@\n             )\n \n         # VERIFIED v2: authoritative_side_effects\n-        if intent.source_kind in (\"TOWN_SERVICE\", \"TAX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"INFORMATION_PURCHASE\"):\n+        if intent.source_kind in (\"XXTOWN_SERVICEXX\", \"TAX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"INFORMATION_PURCHASE\"):\n              if target_inventory.gold < intent.gold_cost:\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 138,
+      "location": "src/core/conservation.py:255",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -252,7 +252,7 @@\n             )\n \n         # VERIFIED v2: authoritative_side_effects\n-        if intent.source_kind in (\"TOWN_SERVICE\", \"TAX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"INFORMATION_PURCHASE\"):\n+        if intent.source_kind in (\"TOWN_SERVICE\", \"XXTAXXX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"INFORMATION_PURCHASE\"):\n              if target_inventory.gold < intent.gold_cost:\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 141,
+      "location": "src/core/conservation.py:255",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -252,7 +252,7 @@\n             )\n \n         # VERIFIED v2: authoritative_side_effects\n-        if intent.source_kind in (\"TOWN_SERVICE\", \"TAX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"INFORMATION_PURCHASE\"):\n+        if intent.source_kind in (\"TOWN_SERVICE\", \"TAX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"XXINFORMATION_PURCHASEXX\"):\n              if target_inventory.gold < intent.gold_cost:\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 142,
+      "location": "src/core/conservation.py:256",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -253,7 +253,7 @@\n \n         # VERIFIED v2: authoritative_side_effects\n         if intent.source_kind in (\"TOWN_SERVICE\", \"TAX\", \"REPAIR_FEE\", \"SERVICE_FEE\", \"INFORMATION_PURCHASE\"):\n-             if target_inventory.gold < intent.gold_cost:\n+             if target_inventory.gold <= intent.gold_cost:\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n                  \n              return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 147,
+      "location": "src/core/conservation.py:274",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -271,7 +271,7 @@\n                  reward_update=intent.reward_upd\n              )\n         \n-        elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n+        elif intent.source_kind in (\"XXRECRUITXX\", \"CHEST\"):\n              # P0.1 Refinement: Source-level locks for world sources\n              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)",
+      "material_sample": null
+    },
+    {
+      "id": 148,
+      "location": "src/core/conservation.py:274",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -271,7 +271,7 @@\n                  reward_update=intent.reward_upd\n              )\n         \n-        elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n+        elif intent.source_kind in (\"RECRUIT\", \"XXCHESTXX\"):\n              # P0.1 Refinement: Source-level locks for world sources\n              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)",
+      "material_sample": null
+    },
+    {
+      "id": 149,
+      "location": "src/core/conservation.py:276",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -273,7 +273,7 @@\n         \n         elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n              # P0.1 Refinement: Source-level locks for world sources\n-             if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n+             if reservations and reservations.get((intent.source_kind, intent.source_id), 1) > 0:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n              if target_inventory.gold < intent.gold_cost:",
+      "material_sample": null
+    },
+    {
+      "id": 150,
+      "location": "src/core/conservation.py:276",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -273,7 +273,7 @@\n         \n         elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n              # P0.1 Refinement: Source-level locks for world sources\n-             if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n+             if reservations and reservations.get((intent.source_kind, intent.source_id), 0) >= 0:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n              if target_inventory.gold < intent.gold_cost:",
+      "material_sample": null
+    },
+    {
+      "id": 151,
+      "location": "src/core/conservation.py:276",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -273,7 +273,7 @@\n         \n         elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n              # P0.1 Refinement: Source-level locks for world sources\n-             if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n+             if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 1:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n              if target_inventory.gold < intent.gold_cost:",
+      "material_sample": null
+    },
+    {
+      "id": 152,
+      "location": "src/core/conservation.py:276",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -273,7 +273,7 @@\n         \n         elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n              # P0.1 Refinement: Source-level locks for world sources\n-             if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n+             if reservations or reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n              if target_inventory.gold < intent.gold_cost:",
+      "material_sample": null
+    },
+    {
+      "id": 153,
+      "location": "src/core/conservation.py:277",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -274,7 +274,7 @@\n         elif intent.source_kind in (\"RECRUIT\", \"CHEST\"):\n              # P0.1 Refinement: Source-level locks for world sources\n              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n-                 return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n+                 return TransactionResult(accepted=True, reason=ReasonCode.TARGET_LOCKED)\n \n              if target_inventory.gold < intent.gold_cost:\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": "OUT_OF_STOCK / TARGET_LOCKED accepted flag"
+    },
+    {
+      "id": 154,
+      "location": "src/core/conservation.py:279",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -276,7 +276,7 @@\n              if reservations and reservations.get((intent.source_kind, intent.source_id), 0) > 0:\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n-             if target_inventory.gold < intent.gold_cost:\n+             if target_inventory.gold <= intent.gold_cost:\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n                  \n              return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 155,
+      "location": "src/core/conservation.py:280",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -277,7 +277,7 @@\n                  return TransactionResult(accepted=False, reason=ReasonCode.TARGET_LOCKED)\n \n              if target_inventory.gold < intent.gold_cost:\n-                 return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n+                 return TransactionResult(accepted=True, reason=ReasonCode.ACTION_EXHAUSTION)\n                  \n              return TransactionResult(\n                  accepted=True,",
+      "material_sample": null
+    },
+    {
+      "id": 156,
+      "location": "src/core/conservation.py:283",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -280,7 +280,7 @@\n                  return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n                  \n              return TransactionResult(\n-                 accepted=True,\n+                 accepted=False,\n                  inventory_update=InventoryUpdate(\n                       items_add=intent.items_add,\n                       gold_delta=intent.gold_delta - intent.gold_cost",
+      "material_sample": null
+    },
+    {
+      "id": 157,
+      "location": "src/core/conservation.py:286",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -283,7 +283,7 @@\n                  accepted=True,\n                  inventory_update=InventoryUpdate(\n                       items_add=intent.items_add,\n-                      gold_delta=intent.gold_delta - intent.gold_cost\n+                      gold_delta=intent.gold_delta + intent.gold_cost\n                  ),\n                  identity_update=intent.identity_upd,\n                  biological_update=intent.biological_upd,",
+      "material_sample": null
+    },
+    {
+      "id": 159,
+      "location": "src/core/conservation.py:297",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -294,7 +294,7 @@\n                  reward_update=intent.reward_upd\n              )\n         \n-        elif intent.source_kind == \"HOME_STORAGE\":\n+        elif intent.source_kind == \"XXHOME_STORAGEXX\":\n              # Transfer between Entity and their private storage\n              storage_id = entity.id\n              storage = state.home_storage.get(storage_id)",
+      "material_sample": null
+    },
+    {
+      "id": 160,
+      "location": "src/core/conservation.py:299",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -296,7 +296,7 @@\n         \n         elif intent.source_kind == \"HOME_STORAGE\":\n              # Transfer between Entity and their private storage\n-             storage_id = entity.id\n+             storage_id = None\n              storage = state.home_storage.get(storage_id)\n              if not storage:\n                   from src.core.state import InventoryComponent",
+      "material_sample": null
+    },
+    {
+      "id": 161,
+      "location": "src/core/conservation.py:300",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -297,7 +297,7 @@\n         elif intent.source_kind == \"HOME_STORAGE\":\n              # Transfer between Entity and their private storage\n              storage_id = entity.id\n-             storage = state.home_storage.get(storage_id)\n+             storage = None\n              if not storage:\n                   from src.core.state import InventoryComponent\n                   storage = InventoryComponent(max_slots=32, max_weight=200.0)",
+      "material_sample": null
+    },
+    {
+      "id": 162,
+      "location": "src/core/conservation.py:301",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -298,7 +298,7 @@\n              # Transfer between Entity and their private storage\n              storage_id = entity.id\n              storage = state.home_storage.get(storage_id)\n-             if not storage:\n+             if  storage:\n                   from src.core.state import InventoryComponent\n                   storage = InventoryComponent(max_slots=32, max_weight=200.0)",
+      "material_sample": null
+    },
+    {
+      "id": 163,
+      "location": "src/core/conservation.py:303",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -300,7 +300,7 @@\n              storage = state.home_storage.get(storage_id)\n              if not storage:\n                   from src.core.state import InventoryComponent\n-                  storage = InventoryComponent(max_slots=32, max_weight=200.0)\n+                  storage = InventoryComponent(max_slots=33, max_weight=200.0)\n              \n              # Validation: If Entity is Gaining (Withdraw), Storage must have items\n              for item in intent.items_add:",
+      "material_sample": null
+    },
+    {
+      "id": 164,
+      "location": "src/core/conservation.py:303",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -300,7 +300,7 @@\n              storage = state.home_storage.get(storage_id)\n              if not storage:\n                   from src.core.state import InventoryComponent\n-                  storage = InventoryComponent(max_slots=32, max_weight=200.0)\n+                  storage = InventoryComponent(max_slots=32, max_weight=201.0)\n              \n              # Validation: If Entity is Gaining (Withdraw), Storage must have items\n              for item in intent.items_add:",
+      "material_sample": null
+    },
+    {
+      "id": 165,
+      "location": "src/core/conservation.py:303",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -300,7 +300,7 @@\n              storage = state.home_storage.get(storage_id)\n              if not storage:\n                   from src.core.state import InventoryComponent\n-                  storage = InventoryComponent(max_slots=32, max_weight=200.0)\n+                  storage = None\n              \n              # Validation: If Entity is Gaining (Withdraw), Storage must have items\n              for item in intent.items_add:",
+      "material_sample": null
+    },
+    {
+      "id": 166,
+      "location": "src/core/conservation.py:307",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -304,7 +304,7 @@\n              \n              # Validation: If Entity is Gaining (Withdraw), Storage must have items\n              for item in intent.items_add:\n-                  have = sum(s.quantity for s in storage.items if s.item_id == item.item_id)\n+                  have = sum(s.quantity for s in storage.items if s.item_id != item.item_id)\n                   if have < item.quantity:\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 167,
+      "location": "src/core/conservation.py:307",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -304,7 +304,7 @@\n              \n              # Validation: If Entity is Gaining (Withdraw), Storage must have items\n              for item in intent.items_add:\n-                  have = sum(s.quantity for s in storage.items if s.item_id == item.item_id)\n+                  have = None\n                   if have < item.quantity:\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 168,
+      "location": "src/core/conservation.py:308",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -305,7 +305,7 @@\n              # Validation: If Entity is Gaining (Withdraw), Storage must have items\n              for item in intent.items_add:\n                   have = sum(s.quantity for s in storage.items if s.item_id == item.item_id)\n-                  if have < item.quantity:\n+                  if have <= item.quantity:\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n              \n              # Validation: If Entity is Giving (Deposit), Storage must have capacity",
+      "material_sample": null
+    },
+    {
+      "id": 169,
+      "location": "src/core/conservation.py:309",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -306,7 +306,7 @@\n              for item in intent.items_add:\n                   have = sum(s.quantity for s in storage.items if s.item_id == item.item_id)\n                   if have < item.quantity:\n-                       return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n+                       return TransactionResult(accepted=True, reason=ReasonCode.ACTION_EXHAUSTION)\n              \n              # Validation: If Entity is Giving (Deposit), Storage must have capacity\n              if intent.items_remove:",
+      "material_sample": null
+    },
+    {
+      "id": 170,
+      "location": "src/core/conservation.py:313",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -310,7 +310,7 @@\n              \n              # Validation: If Entity is Giving (Deposit), Storage must have capacity\n              if intent.items_remove:\n-                  if not InventoryService.can_add_items(storage, intent.items_remove):\n+                  if  InventoryService.can_add_items(storage, intent.items_remove):\n                        return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_CAPACITY)\n              \n              # Validation: If Entity is Giving (Deposit), Entity must have items",
+      "material_sample": null
+    },
+    {
+      "id": 171,
+      "location": "src/core/conservation.py:314",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -311,7 +311,7 @@\n              # Validation: If Entity is Giving (Deposit), Storage must have capacity\n              if intent.items_remove:\n                   if not InventoryService.can_add_items(storage, intent.items_remove):\n-                       return TransactionResult(accepted=False, reason=ReasonCode.INSUFFICIENT_CAPACITY)\n+                       return TransactionResult(accepted=True, reason=ReasonCode.INSUFFICIENT_CAPACITY)\n              \n              # Validation: If Entity is Giving (Deposit), Entity must have items\n              for item in intent.items_remove:",
+      "material_sample": null
+    },
+    {
+      "id": 172,
+      "location": "src/core/conservation.py:318",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -315,7 +315,7 @@\n              \n              # Validation: If Entity is Giving (Deposit), Entity must have items\n              for item in intent.items_remove:\n-                  have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n+                  have = sum(s.quantity for s in target_inventory.items if s.item_id != item.item_id)\n                   if have < item.quantity:\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 173,
+      "location": "src/core/conservation.py:318",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -315,7 +315,7 @@\n              \n              # Validation: If Entity is Giving (Deposit), Entity must have items\n              for item in intent.items_remove:\n-                  have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n+                  have = None\n                   if have < item.quantity:\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)",
+      "material_sample": null
+    },
+    {
+      "id": 174,
+      "location": "src/core/conservation.py:319",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -316,7 +316,7 @@\n              # Validation: If Entity is Giving (Deposit), Entity must have items\n              for item in intent.items_remove:\n                   have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n-                  if have < item.quantity:\n+                  if have <= item.quantity:\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n \n              return TransactionResult(",
+      "material_sample": null
+    },
+    {
+      "id": 175,
+      "location": "src/core/conservation.py:320",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -317,7 +317,7 @@\n              for item in intent.items_remove:\n                   have = sum(s.quantity for s in target_inventory.items if s.item_id == item.item_id)\n                   if have < item.quantity:\n-                       return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n+                       return TransactionResult(accepted=True, reason=ReasonCode.ACTION_EXHAUSTION)\n \n              return TransactionResult(\n                  accepted=True,",
+      "material_sample": null
+    },
+    {
+      "id": 176,
+      "location": "src/core/conservation.py:323",
+      "diff": "--- src/core/conservation.py\n+++ src/core/conservation.py\n@@ -320,7 +320,7 @@\n                        return TransactionResult(accepted=False, reason=ReasonCode.ACTION_EXHAUSTION)\n \n              return TransactionResult(\n-                 accepted=True,\n+                 accepted=False,\n                  inventory_update=InventoryUpdate(\n                       items_add=intent.items_add,\n                       items_remove=intent.items_remove",
+      "material_sample": null
+    }
+  ]
+}
