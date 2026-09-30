@@ -11,6 +11,29 @@ tags: [world, architecture]
 
 # TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS
 
+> **⚠️ DUPLICATE — recommended for closure, 2026-09-30, same day it was filed.**
+>
+> `TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION` already owns this, filed 2026-09-09 and
+> refined 2026-09-12. It reports **8 of 9 pairs divergent** (a wider comparison than this ticket's
+> 5 of 7, which compared module sets only), cites the same `frontier_living_world` /
+> `trading_company_hub` and `dungeon_crawl` / `danger_scale` examples, and — critically — the
+> question this ticket files as open (AC-1, "which location is authoritative") **is already
+> answered** by an `ACCEPTED` ADR: `docs/architecture/world_repository_layout.md` names
+> `data/worlds/` as the unified repository root and `data/content/world_compositions/` as the
+> anomaly to retire.
+>
+> **Why this was filed anyway:** the context scan for it checked `docs/` and code but never
+> grepped `tickets/todos/` for existing coverage — CLAUDE.md's Context Scan step 4. A single
+> `grep -l "world_composition" tickets/todos/` would have found it.
+>
+> **The one thing here that is not in the 2026-09-09 ticket, and should be folded into it rather
+> than lost:** the *measurement-validity* framing. That ticket scopes this as ADR compliance and
+> content consolidation. This ticket's finding is that the divergence silently invalidates
+> measurements — a probe run through `WorldAssemblyResolver.assemble()` describes a world that
+> never runs, while production uses `WorldRepository.load_world_with_context`. That affects the
+> evidence base of any reachability work, including the systemic-world first wave's Epic J. It
+> also re-confirms at 2026-09-30 that the divergence is still unfixed.
+
 ## Title
 Five corpus `world_id`s have two divergent definitions — `data/worlds/<id>/world.yaml` (what
 production runs) and `data/content/world_compositions/<id>.yaml` (what the catalog declares) — so
