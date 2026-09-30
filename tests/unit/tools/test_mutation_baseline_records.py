@@ -1,5 +1,9 @@
 """Shape and internal-consistency checks for the tracked mutation baseline records.
 
+The records live in tests/mutation/baselines/ (data only). This check sits in tests/unit/tools/
+because that directory has a CI lane (.github/workflows/test.yml, "Run: tests/unit/tools"); no lane
+runs tests/mutation/.
+
 Staleness (target contents changed, or older than the record's own `stale_after.days`) is
 deliberately NOT asserted here: a stale record is a state the test report shows, not a test failure.
 """
@@ -9,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-BASELINES = sorted((Path(__file__).parent / "baselines").glob("*.json"))
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
+BASELINES = sorted((REPO_ROOT / "tests" / "mutation" / "baselines").glob("*.json"))
 
 REQUIRED_KEYS = {
     "schema_version", "kind", "target", "run", "tool", "tests", "counts",
