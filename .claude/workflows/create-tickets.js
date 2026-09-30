@@ -12,6 +12,9 @@ export const meta = {
 
 // Args:
 //   source    — path to the source markdown document (required)
+//   start_ts  — ISO timestamp (e.g. from `date -u +%Y-%m-%dT%H:%M:%SZ`) marking run start
+//               (required). The invoking skill supplies this — the Workflow runtime has no
+//               Date.now()/new Date() (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT).
 //   structure — path to a ticket plan structure / template doc (optional)
 //               Guides concern granularity and scope conventions.
 //   output    — output folder override (optional, e.g. "tickets/todos/phase29-repair/")
@@ -19,6 +22,7 @@ export const meta = {
 //   epic_id   — existing epic ticket ID to link created tickets to (optional)
 
 const source = (args && args.source) || ''
+const startTsArg = (args && args.start_ts) || ''
 const structureDoc = (args && args.structure) || ''
 const outputOverride = (args && args.output) || ''
 const epicId = (args && args.epic_id) || ''
@@ -27,6 +31,13 @@ if (!source) {
   return {
     status: 'INVALID_ARGS',
     message: 'Provide source=<path to markdown document>. Example: /create-tickets source=docs/plans/proposal.md',
+  }
+}
+
+if (!startTsArg) {
+  return {
+    status: 'INVALID_ARGS',
+    message: 'Provide start_ts=<ISO timestamp>, e.g. start_ts=2026-09-30T00:00:00Z (run `date -u +%Y-%m-%dT%H:%M:%SZ` first — the Workflow runtime has no Date.now()/new Date()).',
   }
 }
 
@@ -121,15 +132,50 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, reasonCode) => {
   })
 }
 
-let startTs = null
+// Run start time (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT): comes in via
+// args.start_ts, validated at the top of this file — replaces the former captureTs()/bash('date
+// ...') helper (itself a replacement for a "Step 0: run `date -u ...`" agent-prompt-text
+// instruction, TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). The native Workflow runtime has no
+// bash() and no Date.now()/new Date(), so the orchestrator can no longer capture this itself.
+const startTs = startTsArg
 
-// Orchestrator-side ts capture — replaces the former "Step 0: run `date -u ...`"
-// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). This file has no
-// writeSidecar mechanism, so it gets its own local helper, called immediately before the
-// Comprehend `agent()` call.
-const captureTs = async () => {
-  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
-  return (out || '').trim() || null
+// Narrow command-runner (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT): the native Workflow
+// runtime has no bash() — every remaining shell step below dispatches one low-effort agent() that
+// is told to run the given command verbatim via its own Bash tool and report back
+// {exit_code, stdout} with no interpretation. The existing marker-parsing (WRITESIDECAR_EXIT:,
+// CLEARSIDECAR_EXIT:, TAG_CHECK_JSON:) and fail-open WARNING behavior at each call site are
+// unchanged — only the executor moved from the orchestrator's own shell to a subagent's. That is
+// a real trade-off, not a neutral swap: gate-style checks in this codebase run orchestrator-side
+// ON PURPOSE so an agent can never itself report "gate passed" (see implement-ticket.js's gate
+// layer). The exposure here is small — sidecar bookkeeping and one tag check, not a gate — but
+// the pilot's own recommendation (stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-
+// PILOT/pilot_measurement.md) must treat this as the central decision for implement-ticket.js,
+// not assume this file's small exposure generalizes there.
+const RUN_COMMAND_SCHEMA = {
+  type: 'object',
+  required: ['exit_code', 'stdout'],
+  properties: {
+    exit_code: { type: 'integer', description: "The command's real exit code" },
+    stdout: {
+      type: 'string',
+      description: 'The command\'s raw combined stdout+stderr, verbatim, including any trailing marker line',
+    },
+  },
+}
+
+const runCommand = async (cmd, label) => {
+  return agent(
+    `Run the following command exactly as given, using your Bash tool. Do not interpret, modify,
+explain, or summarize it — execute it verbatim in one Bash call and report the raw result.
+
+Command:
+${cmd}
+
+Return exit_code (the command's real exit code, as an integer) and stdout (the command's raw
+combined stdout+stderr, byte-for-byte, including any trailing marker line such as
+"SOMETHING_EXIT:0" or "SOMETHING_JSON:[...]" — do not trim, reformat, or paraphrase it).`,
+    { label, schema: RUN_COMMAND_SCHEMA, effort: 'low' }
+  )
 }
 
 // Orchestrator-side dual-write sidecar helper (TCK-20260904-COST-PROXY-EPIC-TICKETS) — mirrors
@@ -158,8 +204,7 @@ const captureTs = async () => {
 // itself is now checked, via an explicit exit-code marker this JS layer parses, and surfaced as a
 // `log()` WARNING instead of a bash-level `|| true` that discarded the information entirely.
 const writeSidecar = async (seq, phase, agentName) => {
-  const out = await bash(
-    `python3 -c "
+  const cmd = `python3 -c "
 import json, sys, os
 data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]})
 open('.claude/current_run', 'w').write(data)
@@ -167,9 +212,10 @@ sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
 if sid:
     open('.claude/current_run.' + sid, 'w').write(data)
 " "${runId}" "${seq}" "${phase}" "${agentName}" 2>&1; echo "WRITESIDECAR_EXIT:$?"`
-  )
-  if (!(out || '').includes('WRITESIDECAR_EXIT:0')) {
-    log(`WARNING: writeSidecar failed for phase "${phase}" (seq ${seq}, agent "${agentName}") — tool-call attribution for this phase may be missing or misattributed to a stale sidecar value: ${(out || '').trim()}`)
+  const result = await runCommand(cmd, `writeSidecar:${phase}`)
+  const out = (result && result.stdout) || ''
+  if (!out.includes('WRITESIDECAR_EXIT:0')) {
+    log(`WARNING: writeSidecar failed for phase "${phase}" (seq ${seq}, agent "${agentName}") — tool-call attribution for this phase may be missing or misattributed to a stale sidecar value: ${out.trim()}`)
   }
 }
 
@@ -180,17 +226,22 @@ if sid:
 // shared file (TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE's own deliberate no-fallback rule, not
 // touched here). A clear that only empties the shared file is a silent no-op for real
 // attribution — the exact defect this ticket fixes (inherited from implement-ticket.js's own two
-// pre-existing shared-only clears, which this ticket also fixes). Runs via bash() on the
-// orchestrator side, not inside an agent() prompt — the dispatched agent's own shell is not
-// guaranteed to see the same $CLAUDE_CODE_SESSION_ID this orchestrator process does.
+// pre-existing shared-only clears, which this ticket also fixes).
+// TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT: this used to run via bash() directly on the
+// orchestrator side specifically BECAUSE a dispatched agent's own shell was not guaranteed to see
+// the same $CLAUDE_CODE_SESSION_ID this orchestrator process does. The native runtime removes
+// that option — there is no orchestrator-side bash() any more — so this now runs through the
+// same runCommand() agent as everything else here. Whether a workflow subagent's shell actually
+// gets the same $CLAUDE_CODE_SESSION_ID value is exactly the "Sidecar session scope" open
+// question this ticket's Assumptions section flags for the pilot measurement to check, not assume.
 const clearSidecar = async () => {
-  const out = await bash(
-    `printf '{}' > .claude/current_run
+  const cmd = `printf '{}' > .claude/current_run
 if [ -n "$CLAUDE_CODE_SESSION_ID" ]; then printf '{}' > ".claude/current_run.$CLAUDE_CODE_SESSION_ID"; fi
 echo "CLEARSIDECAR_EXIT:$?"`
-  )
-  if (!(out || '').includes('CLEARSIDECAR_EXIT:0')) {
-    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${(out || '').trim()}`)
+  const result = await runCommand(cmd, 'clearSidecar')
+  const out = (result && result.stdout) || ''
+  if (!out.includes('CLEARSIDECAR_EXIT:0')) {
+    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${out.trim()}`)
   }
 }
 
@@ -227,7 +278,7 @@ Step 2 — build and write events:
   Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
 
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
-  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runId}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"create-tickets","tier":"n/a","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'
+  Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${runId}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"create-tickets","tier":"n/a","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"workflow"}'
 
 If any command fails, print "WARNING: monitoring write failed: <error>" and continue — do NOT raise.
 Return "monitoring written" or "monitoring write failed: <reason>".`,
@@ -238,7 +289,6 @@ Return "monitoring written" or "monitoring write failed: <reason>".`,
   }
 }
 
-const comprehendTs = await captureTs()
 await writeSidecar(events.length + 1, 'Comprehend', 'comprehend')
 const comprehension = await agent(
   `Read a proposal document and extract the discrete concerns the author is describing.
@@ -278,8 +328,6 @@ Step 3 — extract discrete concerns:
 Return: concerns[], summary (one sentence: N concerns extracted).`,
   { label: 'comprehend', schema: COMPREHEND_SCHEMA }
 )
-
-startTs = comprehendTs || null
 
 log(`Comprehend: ${comprehension.summary}`)
 pushEvent('Comprehend', 'create-tickets', 'ok', comprehension.summary, startTs)
@@ -610,7 +658,7 @@ Step 4 — produce ticket tasks using these strict rules:
 
   tag_relevance_flags:
   - For each tag assigned above, briefly self-check: does this tag's own registered note/category
-    (see `python3 tools/tag_registry.py list`) plausibly match this concern's title, scope, and
+    (see \`python3 tools/tag_registry.py list\`) plausibly match this concern's title, scope, and
     files_found/related_code_areas? This is additive to the files_found-evidence guardrail above —
     it does not replace or weaken it. If a tag does not clearly fit, add one string
     "<tag>: <one-line reason>". Empty array if every tag clearly fits or no tags were assigned.
@@ -676,14 +724,18 @@ if (droppedScopes.length > 0) {
 // batch, rather than aborting all N tickets over one task's tag.
 const allBatchTags = [...new Set(dedupedTasks.flatMap(t => t.tags || []))]
 const tagsArgs = allBatchTags.map(t => `"${t}"`).join(' ')
-const tagCheckOutput = tagsArgs ? await bash(
-  `python3 -c "
+const tagCheckResult = tagsArgs
+  ? await runCommand(
+      `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
 from tag_registry import check_tags_registered
 print('TAG_CHECK_JSON:' + json.dumps(check_tags_registered(sys.argv[1:])))
-" ${tagsArgs}`
-) : 'TAG_CHECK_JSON:[]'
+" ${tagsArgs}`,
+      'tag-registry-check'
+    )
+  : null
+const tagCheckOutput = tagsArgs ? ((tagCheckResult && tagCheckResult.stdout) || '') : 'TAG_CHECK_JSON:[]'
 let unregisteredBatchTags = []
 const tagCheckMarkerIndex = tagCheckOutput.indexOf('TAG_CHECK_JSON:')
 if (tagCheckMarkerIndex !== -1) {
@@ -775,7 +827,7 @@ Steps:
    Frontmatter block (substitute actual values):
    ---
    status: active
-   layer: <infer from task.related_code_areas and task.title — registered in registries/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
+   layer: <infer from task.related_code_areas and task.title — registered in registries/layer_registry.jsonl, \`python3 tools/layer_registry.py list\` to see valid values>
    authority: P1
    audience: agent
    ticket_id: ${ticketId}

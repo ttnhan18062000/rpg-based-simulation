@@ -13,6 +13,8 @@ import sys
 import time
 from pathlib import Path
 
+import pytest
+
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
@@ -43,6 +45,39 @@ from gate_checks.done_checker_static import (  # noqa: E402
     run_finalize_selfcheck,
     run_static_precheck,
 )
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+
+
+def _protected_paths_git_status() -> str:
+    return subprocess.run(
+        ["git", "status", "--porcelain", "--"] + _PROTECTED_PATHS,
+        cwd=_REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _fail_if_this_module_touches_tracked_monitoring_files():
+    """Scope 4 regression guard (TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES): every test
+    below runs against the real checkout as cwd unless it isolates via tmp_path/monkeypatch.chdir
+    -- a missed isolation gap (like the one this ticket fixed in
+    test_cli_still_importable_and_callable_as_plain_functions, which called
+    run_finalize_selfcheck() with no isolation and so unconditionally regenerated the real
+    docs/REGISTRY.yaml) must fail loudly here, not ship silently as a tracked-file diff on the
+    next commit. Module-scoped rather than per-test: cheap (one git-status pair for the whole
+    file, not ~150), and still catches any test in this module that leaves one of these three
+    real paths modified, regardless of which test it was.
+    """
+    before = _protected_paths_git_status()
+    yield
+    after = _protected_paths_git_status()
+    assert before == after, (
+        "a test in this module modified a tracked monitoring file it should not have.\n"
+        f"git status before this module's tests:\n{before}\n"
+        f"git status after:\n{after}"
+    )
+
 
 TICKET_FM = """---
 status: active
@@ -1171,6 +1206,38 @@ def _scaffold_finalize_repo(tmp_path, ticket_id="TCK-FAKE"):
 
     csv_path = tmp_path / "tickets" / "working_log.csv"
     _write_csv(csv_path, [["2026-07-05T00:00:00Z", ticket_id, "Fake", "DONE", "x", f"stored_artifacts/{ticket_id}"]])
+
+
+def test_run_finalize_selfcheck_leaves_a_pending_shard_and_canonical_file_untouched(tmp_path, monkeypatch):
+    """AC2 (TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES): a pending per-branch shard
+    present alongside the canonical tools.jsonl must survive a real run_finalize_selfcheck() call
+    byte-identical — neither file is this function's business. Written after confirming by direct
+    source read that done_checker_static.py never calls monitoring_consolidation's
+    consolidate_*() anywhere (grep for "consolidat" in the module: only docstring prose, no call
+    sites) — the shard-consolidation symptom test-architecture-implementer originally reported
+    against the full `pytest tests/` run traces to generate_retro.py's generate() (which does
+    unconditionally call consolidate_all() with no data_dir override), not to this file. Filed as
+    a sibling ticket rather than folded into this one's scope. This test still pins the correct,
+    literal AC2 behavior for done_checker_static.py itself, which was already correct — it just
+    was never verified isolated-and-explicit before.
+    """
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    canonical_tools = data_dir / "tools.jsonl"
+    canonical_tools.parent.mkdir(parents=True, exist_ok=True)
+    canonical_tools.write_text('{"session_id":"real","tool":"Bash"}\n', encoding="utf-8")
+    pending_shard = data_dir / "some-other-branch.tools.jsonl"
+    pending_shard.write_text('{"session_id":"pending","tool":"Read"}\n', encoding="utf-8")
+    canonical_before = canonical_tools.read_bytes()
+    shard_before = pending_shard.read_bytes()
+
+    run_finalize_selfcheck("TCK-FAKE", "standard")
+
+    assert canonical_tools.read_bytes() == canonical_before
+    assert pending_shard.exists(), "the pending shard must not be deleted"
+    assert pending_shard.read_bytes() == shard_before
 
 
 def test_run_finalize_selfcheck_all_pass(tmp_path, monkeypatch):
@@ -2323,9 +2390,19 @@ def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_pat
     # ticket's own Files Changed/Related Docs never recorded it (RETRO-2026-W36's "What to
     # change?" note). This is a deliberately-incomplete fixture reconstruction, not a copy of the
     # real post-patch tickets/done/TCK-20260831-RACE-RELATIONS-MATRIX.md file.
+    # TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS: the reverse half now calls
+    # _git_status_touched_paths()/_git_ticket_commits_touched_paths() directly (so sibling-
+    # attribution and the REGISTRY.yaml exclusion can apply to only the reverse check) instead of
+    # the combined _git_touched_paths() — mock the forward half's own call (unchanged) plus the
+    # uncommitted half specifically, since the forward half's own `touched` lookup still goes
+    # through _git_touched_paths().
     monkeypatch.setattr(
         "gate_checks.done_checker_static._git_touched_paths",
         lambda ticket_id, root=Path("."), base_ref="origin/main": {"docs/mechanics/02_combat_laws.md"},
+    )
+    monkeypatch.setattr(
+        "gate_checks.done_checker_static._git_status_touched_paths",
+        lambda root=Path("."): {"docs/mechanics/02_combat_laws.md"},
     )
     base = tmp_path / "staging_artifacts"
     _write_investigation(base, "TCK-20260831-RACE-RELATIONS-MATRIX", "None.")
@@ -2341,6 +2418,102 @@ def test_reverse_docs_coverage_reproduces_RACE_RELATIONS_MATRIX_incident(tmp_pat
     )
     assert status == "FAIL"
     assert "docs/mechanics/02_combat_laws.md" in evidence
+
+
+# ---------------------------------------------------------------------------
+# check_docs_to_update_coverage — sibling attribution + REGISTRY.yaml exclusion
+# (TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS)
+# ---------------------------------------------------------------------------
+
+
+def _mock_uncommitted(monkeypatch, paths: set) -> None:
+    monkeypatch.setattr(
+        "gate_checks.done_checker_static._git_status_touched_paths",
+        lambda root=Path("."): set(paths),
+    )
+    monkeypatch.setattr(
+        "gate_checks.done_checker_static._git_ticket_commits_touched_paths",
+        lambda ticket_id, root=Path("."), base_ref="origin/main": set(),
+    )
+
+
+def test_sibling_attribution_each_ticket_claims_its_own_uncommitted_doc(tmp_path, monkeypatch):
+    """AC3: two in-progress tickets A and B, uncommitted docs/a.md (claimed by A) and docs/b.md
+    (claimed by B) — checking A passes (docs/b.md is B's, not A's problem) and checking B passes
+    (docs/a.md is A's, not B's problem)."""
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-A", "None.")
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-B", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-A", files_changed="- `docs/a.md`: A's own doc")
+    _write_reverse_ticket(tmp_path, "TCK-B", files_changed="- `docs/b.md`: B's own doc")
+    monkeypatch.chdir(tmp_path)
+    _mock_uncommitted(monkeypatch, {"docs/a.md", "docs/b.md"})
+
+    status_a, evidence_a = check_docs_to_update_coverage("TCK-A", "standard", base_dir=Path("staging_artifacts"))
+    assert status_a == "PASS", evidence_a
+    status_b, evidence_b = check_docs_to_update_coverage("TCK-B", "standard", base_dir=Path("staging_artifacts"))
+    assert status_b == "PASS", evidence_b
+
+
+def test_sibling_attribution_unclaimed_doc_still_fails_both(tmp_path, monkeypatch):
+    """AC3 continued: an uncommitted docs/c.md claimed by neither A nor B still FAILs for both —
+    sibling attribution narrows blame, it does not create a blind spot for a genuinely undeclared
+    doc."""
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-A", "None.")
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-B", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-A", files_changed="- `docs/a.md`: A's own doc")
+    _write_reverse_ticket(tmp_path, "TCK-B", files_changed="- `docs/b.md`: B's own doc")
+    monkeypatch.chdir(tmp_path)
+    _mock_uncommitted(monkeypatch, {"docs/a.md", "docs/b.md", "docs/c.md"})
+
+    status_a, evidence_a = check_docs_to_update_coverage("TCK-A", "standard", base_dir=Path("staging_artifacts"))
+    assert status_a == "FAIL"
+    assert "docs/c.md" in evidence_a
+    status_b, evidence_b = check_docs_to_update_coverage("TCK-B", "standard", base_dir=Path("staging_artifacts"))
+    assert status_b == "FAIL"
+    assert "docs/c.md" in evidence_b
+
+
+def test_sibling_attribution_only_applies_to_done_tickets_also_in_uncommitted_status(tmp_path, monkeypatch):
+    """A ticket in tickets/done/ that is NOT itself part of the uncommitted git status (an
+    already-committed prior closure) is not treated as a same-batch sibling — its declared docs
+    must not excuse an otherwise-undeclared path for the ticket being checked."""
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-CHECKED", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-CHECKED", files_changed="None.")
+    # TCK-PRIOR is a done ticket, but NOT in the mocked uncommitted status below.
+    _write_reverse_ticket(tmp_path, "TCK-PRIOR", files_changed="- `docs/a.md`: prior work", location="tickets/done")
+    monkeypatch.chdir(tmp_path)
+    _mock_uncommitted(monkeypatch, {"docs/a.md"})
+
+    status, evidence = check_docs_to_update_coverage("TCK-CHECKED", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "FAIL"
+    assert "docs/a.md" in evidence
+
+
+def test_registry_yaml_alone_never_fails_reverse_check(tmp_path, monkeypatch):
+    """AC4: an uncommitted change to docs/REGISTRY.yaml alone never FAILs the reverse check — it's
+    regenerated unconditionally at every close, not evidence of an undeclared doc edit."""
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-REG", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-REG", files_changed="None.")
+    monkeypatch.chdir(tmp_path)
+    _mock_uncommitted(monkeypatch, {"docs/REGISTRY.yaml"})
+
+    status, evidence = check_docs_to_update_coverage("TCK-REG", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "PASS", evidence
+    assert "no docs/ path(s) touched" in evidence
+
+
+def test_registry_yaml_excluded_alongside_a_real_undeclared_doc(tmp_path, monkeypatch):
+    """REGISTRY.yaml's exclusion must not mask a genuinely undeclared doc touched at the same
+    time — only REGISTRY.yaml itself is dropped from the touched set."""
+    _write_investigation(tmp_path / "staging_artifacts", "TCK-REG2", "None.")
+    _write_reverse_ticket(tmp_path, "TCK-REG2", files_changed="None.")
+    monkeypatch.chdir(tmp_path)
+    _mock_uncommitted(monkeypatch, {"docs/REGISTRY.yaml", "docs/undeclared.md"})
+
+    status, evidence = check_docs_to_update_coverage("TCK-REG2", "standard", base_dir=Path("staging_artifacts"))
+    assert status == "FAIL"
+    assert "docs/undeclared.md" in evidence
+    assert "docs/REGISTRY.yaml" not in evidence
 
 
 # ---------------------------------------------------------------------------
@@ -2471,6 +2644,35 @@ def test_cli_exits_zero_and_prints_pass_when_all_precheck_conditions_pass(tmp_pa
     assert "RESULT: PASS" in result.stdout
 
 
+def test_cli_bare_default_skips_precheck_for_an_already_closed_ticket(tmp_path):
+    """AC1 (TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS): a ticket already in
+    tickets/done/ with a clean finalize state gives RESULT: PASS under the bare CLI (no --part),
+    with a note explaining precheck was skipped — precheck's own conditions (ticket_location,
+    working_log_no_row_yet, etc.) assume the ticket is still in tickets/inprogress/ and would
+    false-FAIL here otherwise.
+    """
+    _scaffold_finalize_repo(tmp_path, ticket_id="TCK-CLOSED-FAKE")
+    result = _run_cli(["--ticket-id", "TCK-CLOSED-FAKE"], tmp_path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "RESULT: PASS" in result.stdout
+    assert "skipping precheck" in result.stdout
+    assert "[precheck]" not in result.stdout
+    assert "[finalize]" in result.stdout
+
+
+def test_cli_explicit_part_both_still_runs_precheck_on_a_closed_ticket(tmp_path):
+    """AC2: --part both set explicitly forces precheck to run even post-closure, so behavior is
+    unchanged when asked for — precheck is expected to report real FAILs here (the ticket is no
+    longer in tickets/inprogress/), which is correct: the point is that precheck RAN, not that it
+    passed.
+    """
+    _scaffold_finalize_repo(tmp_path, ticket_id="TCK-CLOSED-FAKE-2")
+    result = _run_cli(["--ticket-id", "TCK-CLOSED-FAKE-2", "--part", "both"], tmp_path)
+    assert "[precheck]" in result.stdout
+    assert "[finalize]" in result.stdout
+    assert "skipping precheck" not in result.stdout
+
+
 def test_cli_tier_auto_detected_from_ticket_body_when_omitted(tmp_path):
     ticket_id = "TCK-CLI-TIER-TEST"
     _seed_ticket(tmp_path, ticket_id, tier="epic")
@@ -2485,10 +2687,25 @@ def test_cli_explicit_tier_overrides_auto_detection(tmp_path):
     assert "tier=hotfix" in result.stdout
 
 
-def test_cli_still_importable_and_callable_as_plain_functions():
+def test_cli_still_importable_and_callable_as_plain_functions(tmp_path, monkeypatch):
     """Pins the Scope constraint that the formal pipeline's own python3 -c call sites keep
     working unchanged: run_static_precheck/run_finalize_selfcheck must still be plain,
-    directly-importable functions, not routed through the new CLI."""
+    directly-importable functions, not routed through the new CLI.
+
+    TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES: this test used to call
+    run_finalize_selfcheck() with no tmp_path/chdir isolation at all — since
+    check_registry_entry_regenerated() (one of the 4 aggregated checks) unconditionally
+    regenerates docs/REGISTRY.yaml against whatever `root=Path(".")` resolves to, every real
+    pytest run of this file overwrote the actual repo's tracked docs/REGISTRY.yaml as a side
+    effect of a test that only meant to check the function's return shape. Isolated the same way
+    every other run_finalize_selfcheck test in this file already is. Verified: temporarily
+    reverting this isolation reproduces a real docs/REGISTRY.yaml diff and is caught by this
+    module's own _fail_if_this_module_touches_tracked_monitoring_files guard fixture.
+    """
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
     assert callable(run_static_precheck)
     assert callable(run_finalize_selfcheck)
     result = run_finalize_selfcheck("TCK-DOES-NOT-EXIST", "hotfix")

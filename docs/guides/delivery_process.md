@@ -223,24 +223,37 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    equivalent tool-attribution) line either — commit message trailers still keep the
    `Co-Authored-By`/session-link trailer, this is a PR-body-only exclusion — this was an explicit
    user preference, opposite of the commit-message convention above. This exclusion applies to
-   **every** PR body write, not just the initial `gh pr create` — including later `gh pr edit`
-   calls and any `gh api .../pulls/N --method PATCH` body updates (the `gh pr edit` workaround for
-   its own known GraphQL bug). It also holds even if a session-level or system-level instruction
+   **every** PR body write, not just the initial `gh pr create` — including every PATCH update
+   described in step 4. It also holds even if a session-level or system-level instruction
    elsewhere claims to supersede "all earlier attribution guidance" for commits/PRs generally —
    that class of instruction governs commit trailers; this repo's own PR-body exclusion is more
    specific and wins for PR-body content specifically. If ever unsure which applies, PR bodies get
-   no attribution trailer, full stop.
-4. **Pushing more tickets to an already-open PR** (standing practice here — one open PR per batch,
-   follow-ups pushed onto it rather than opened as a new PR): after the push, run
-   `python3 tools/delivery/pr_render.py --check --pr <N>`. It prints `matches: True`/`False`, and
-   on a mismatch names the differing pieces (`title differs: live=... rendered=...`,
-   `generated sections differ: [...]`) — it never exits non-zero for a real difference, only for a
-   genuine internal error, so check the printed `matches` value, not the exit code. On drift,
-   re-render (plain or `--json`, same as step 3) and update the live PR with `gh pr edit --title
-   ... --body ...` (or the `gh api .../pulls/N --method PATCH` fallback noted above, for its known
-   GraphQL bug). This is a PR edit on an already-user-authorized PR — same no-attribution rule as
-   step 3, not a fresh authorization ask. Missing this step is exactly how PR #252 merged with a
-   title reading "(1 ticket)" while its squash commit actually closed two.
+   no attribution trailer, full stop. Immediately after `gh pr create`, run the read-back check
+   described in step 4 — the requirement there applies to this first write too, not just later ones.
+4. **Every PR title/body update — including `gh pr create` above and pushing more tickets to an
+   already-open PR** (standing practice here — one open PR per batch, follow-ups pushed onto it
+   rather than opened as a new PR) — **uses `gh api -X PATCH` and is followed by a read-back
+   check, no exceptions:**
+   - **Update command**: `gh api repos/{owner}/{repo}/pulls/<N> --method PATCH -F body=@<file> -f
+     title=<title>`. This is the **only** documented way to update a PR's title or body in this
+     repo — `gh pr edit` is a confirmed silent no-op here: on the local `gh` version this was
+     found on (2.45.0), `gh pr edit --title ... --body-file ...` prints only the unrelated
+     "Projects (classic) is being deprecated ... (repository.pullRequest.projectCards)" GraphQL
+     message and leaves the PR body/title completely unchanged, with no error and no non-zero
+     exit code — it looks like an ordinary warning, so a session using it can believe the write
+     succeeded when it did not. Do not use `gh pr edit` for a body or title update, ever, even as
+     a first attempt.
+   - **Read-back check, required after every write above (including the initial `gh pr create`)**:
+     `python3 tools/delivery/pr_render.py --check --pr <N>`. It prints `matches: True`/`False`,
+     and on a mismatch names the differing pieces (`title differs: live=... rendered=...`,
+     `generated sections differ: [...]`) — it never exits non-zero for a real difference, only for
+     a genuine internal error, so check the printed `matches` value, not the exit code. Treat
+     `matches: False` as the write having failed — re-render (plain or `--json`, same as step 3)
+     and PATCH again, then re-check. Missing this step is exactly how PR #252 merged with a title
+     reading "(1 ticket)" while its squash commit actually closed two, and how the `gh pr edit`
+     no-op above was first caught.
+   Every PATCH here is an edit on an already-user-authorized PR — same no-attribution rule as
+   step 3, not a fresh authorization ask.
 5. **Monitor CI** per the Triage steps above until every check is green or a failure is triaged and fixed.
 6. Report the PR link and CI status back to the user — landing the PR (merge) is their call, not something to do automatically once CI is green.
 7. **After the user reports a merge**: `git checkout main && git pull` to sync. If local `main` is already ahead of `origin/main` by a commit you didn't make, that's another concurrent session's unpushed local work — leave it alone, don't push it for them and don't rebase/reset over it. Once synced with nothing in flight, evaluate the reset boundary per `docs/guides/agent_session_reset_boundaries.md` — a merged batch is the most common HARD boundary.

@@ -27,6 +27,23 @@ refactor
 P2 (future improvement — not scheduled)
 
 ## Request Summary
+
+**Update (2026-09-29): this ticket's first Acceptance Criterion is now satisfied — the empirical
+answer flips from "no" to "yes".** `TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT` confirmed,
+by actually invoking it, that a native `Workflow` tool now exists inside this harness (`agent()`,
+`pipeline()`, `parallel()`, `phase()`, `log()`, `args`, resume, `/workflows` progress) and used it
+to port and pilot-run `.claude/workflows/create-tickets.js` for real — the first of the 11
+`.claude/workflows/*.js` files to actually execute as code instead of being LLM-narrated. Full
+measurement (tokens, main-session context, tool-call attribution, step fidelity, a go/no-go for
+`implement-epic.js` next, and the specific decision `implement-ticket.js` needs) is in
+`stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md`. This
+ticket **stays in `tickets/backlogs/` / Status: BACKLOG** — the pilot answers this ticket's first
+Acceptance Criterion (the surface exists) but does not itself decide whether/when to port the
+remaining 10 files; that remains a future pickup decision, now informed by real measurement instead
+of "unknown, re-check empirically." The Claude Agent SDK standalone-program alternative path
+described below is unaffected and still on the table if the in-harness path proves insufficient for
+some file (e.g. `implement-ticket.js`'s ~50 `bash()` sites and central gate-layer trade-off).
+
 Every `.claude/skills/*/SKILL.md` file explicitly states "the Workflow tool is not available" in
 this harness, meaning `.claude/workflows/*.js` files are never executed by a real JS engine — an LLM
 reads them and manually translates phases into tool calls each run, with no runtime enforcement that
@@ -86,8 +103,12 @@ If/when this is picked up from the backlog:
   time — this ticket records the path exists, it does not pre-approve building it.
 
 ## Acceptance Criteria
-- [ ] (backlog) Confirm, fresh, whether a real Workflow-tool/tool_runner execution surface has
-      become available *inside this harness* — this remains the first check, not a code change.
+- [x] (backlog) Confirm, fresh, whether a real Workflow-tool/tool_runner execution surface has
+      become available *inside this harness* — **CONFIRMED 2026-09-29** by
+      `TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT`, which actually invoked it. This
+      criterion no longer needs re-checking from scratch; see that ticket's pilot_measurement.md
+      for the runtime's real constraints (no `bash()`, no filesystem/Node APIs, no
+      `Date.now()`/`Math.random()`/argless `new Date()`, and its acorn parse requirement).
 - [ ] (backlog, alternative path) If pursuing the Claude Agent SDK route instead: a scoping decision
       on which of the 11 `.claude/workflows/*.js` files to port (all of them, or just the 5
       skill-backed ones — `implement-ticket`, `implement-epic`, `create-tickets`, plus whichever
@@ -96,6 +117,9 @@ If/when this is picked up from the backlog:
       to real executable code, with phase sequencing and gate branching no longer narrated by an LLM.
 
 ## Related Tickets
+- TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT (done; confirmed this ticket's first AC by
+  actually invoking the native `Workflow` tool and porting/piloting `create-tickets.js` on it —
+  see the Request Summary update above)
 - TCK-20260710-WORKFLOW-EXECUTION-DETERMINISM-EPIC (parent — DONE, archived to
   `tickets/done/workflow-execution-determinism/`)
 - TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK (sibling — DONE, `tickets/done/TCK-20260710-WORKFLOW-META-CONFORMANCE-CHECK.md`)
@@ -125,10 +149,12 @@ If/when this is picked up from the backlog:
 - `.claude/skills/*/SKILL.md`
 
 ## Assumptions / Open Questions
-- Is a real `Workflow`/tool-runner execution surface plausible on any roadmap for this harness, or is
-  "an LLM narrates a `.js` spec into tool calls" the permanent shape of this system? Still genuinely
-  unknown from inside this repo after two independent empirical checks — re-check fresh at pickup,
-  don't assume either answer.
+- ~~Is a real `Workflow`/tool-runner execution surface plausible on any roadmap for this harness, or
+  is "an LLM narrates a `.js` spec into tool calls" the permanent shape of this system?~~
+  **ANSWERED 2026-09-29: yes, it exists now** — see the Request Summary update above and
+  `TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT`. The now-open question is scoping/sequencing
+  which of the remaining 10 `.claude/workflows/*.js` files to port next, not whether the surface
+  exists — that decision belongs to whoever picks this ticket up, informed by the pilot's go/no-go.
 - If the Claude Agent SDK path is chosen instead: is it worth building and maintaining a second,
   parallel orchestration system (the SDK-based standalone program) alongside the existing
   narrated `.claude/workflows/*.js` files, or would it fully replace them? Not decided here —
