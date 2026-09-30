@@ -167,3 +167,11 @@ harvests now complete (0 -> 5 harvested, matching inventory). wood/iron are fixe
 statically, not observed completing. One slow-tier SimQ anchor moves because of this and is named with a follow-up
 ticket (not edited here). Not checked-clean-by-omission: nothing is left as "statically the same shape, unmeasured".
 
+**Blast radius, stated in its own right.** The harvest-miss counts (104 / 72 / 0 in three sampled worlds) measured
+*reach*, not incidence: a broken node only produced a miss if an entity also reached and interacted with it inside the
+sampled tick window. The kind-to-item law test (`test_compiled_nodes_obey_the_registry_kind_to_item_law`), run against
+unfixed origin/main, fails in **23 of 24 corpus worlds**: the collision was present in nearly every world, not just the
+two where harvesting was observed to fail. This also strengthens the choice to fix at the compiler: patching module
+content would have meant patching 23 worlds and leaving the collision for the next author. wood_node / iron_vein are
+now proven correct across the whole corpus by that invariant, with no need to observe them harvested.
+

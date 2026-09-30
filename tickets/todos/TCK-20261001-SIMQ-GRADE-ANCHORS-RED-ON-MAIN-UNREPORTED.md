@@ -52,6 +52,19 @@ That is precisely the cost paid in PR #269 — a real fix produced 16 red tests 
 spend a full control run establishing that 11 of them were not its fault. **Every future batch
 touching ECONOMY/NARRATIVE/SOCIAL pays that same tax until this is resolved.**
 
+> **The contrast with the gating lane, observed the same day, in the same PR.** PR #269's gating CI
+> caught a real defect on its first run — a `tests/simulation_quality/` test that had pinned the
+> exact collision the PR was fixing, asserting `yields_item == 'frost_shard_cluster'` with a
+> docstring claiming no `frost_shard` item existed when the catalog defines one. One run, real
+> signal, acted on immediately. In the same repository on the same day, 11 grade anchors had been
+> failing on `main` for an unknown period with no signal reaching anyone, because `@slow` is
+> excluded from the gating lane. **The difference is not test quality — it is whether anything
+> reads the result.** An unread assertion and an absent assertion are the same thing operationally,
+> and the anchors have been in the first category for long enough that nobody knows when it
+> started. This is the concrete case for the reporting-path requirement in Scope, and it is why
+> visibility (not gating) is the minimum bar: the gating lane's value here came from someone being
+> *told*, within minutes, by a mechanism that does not depend on anyone choosing to look.
+
 **Provenance and verification status — read before acting.** The 11-of-16 measurement was made by
 `rpg-implementer (2)` during PR #269's control run, not by this ticket's author, and **has not been
 independently re-verified**. It is recorded here because it was load-bearing for that PR's merge
