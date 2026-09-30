@@ -60,8 +60,13 @@ DOMAIN_IMPORT_PREFIXES = {
     "movement": ("src.engine.movement*",),
     "combat": ("src.engine.combat*", "src.engine.domain.combat_actions", "src.domains.combat_engagement"),
     "progression": ("src.progression", "src.domains.progression", "src.entities"),
+    # `src.core.conservation` and `src.core.inventory` sit under the substrate root `src/core/` but ARE the
+    # ch03 economic laws (§1 Atomic Conservation; §2 Inventory & Logistics, parity TOWN-011/012 in
+    # town_resource.yaml). Evidence: the core-RPG pilot mapped a conservation change to substrate only and
+    # recommended no scenario level (docs/testing/core_rpg_test_pilot_2026-09-30.md). They stay substrate
+    # too: the impact report names both owners.
     "economy": ("src.systems.economy*", "src.systems.market*", "src.systems.crafting*",
-                "src.systems.harvest*", "src.economy"),
+                "src.systems.harvest*", "src.economy", "src.core.conservation*", "src.core.inventory*"),
     "quests_guild": ("src.systems.quest*", "src.systems.guild_system*", "src.quests"),
 }
 _GAMEPLAY_IMPORT_PREFIXES = tuple(p for prefixes in DOMAIN_IMPORT_PREFIXES.values() for p in prefixes)
@@ -87,7 +92,8 @@ V0_LIMITS = (
     "reproducible from a clean install.",
     "Equivalent mutants are not classified (`equivalent: not-classified`); every survivor is unreviewed.",
     "`mutmut` 3.x cannot run in this repo: its trampoline rejects modules whose import path starts with `src.`.",
-    "SimQ and census states are fixed read-only states in v0; the parity layer counts ledger statuses and is not proof.",
+    "SimQ and census states are fixed read-only states in v0; the parity layer counts ledger statuses and "
+    "`test_path` presence (a recorded path, not a passing test) and is not proof.",
     "Escaped defects depend on tagging discipline (`escaped-defect`); history before the tag was registered is not "
     "backfilled. A defect's month is its ticket's creation date, and open tickets (todos/, inprogress/) are counted.",
     "The report never runs tests and is not a gate.",
@@ -427,6 +433,8 @@ def parity_layer(repo_root: Path) -> Dict[str, Any]:
         return {"state": "no-ledger-found", "denominator": {"entries": 0}, "counts": {}}
     by_status: Dict[str, int] = {}
     per_file: Dict[str, int] = {}
+    tp_counts = {"P0": {"with": 0, "without": 0}, "other": {"with": 0, "without": 0}}
+    p0_without: Dict[str, List[str]] = {}
     unreadable: List[str] = []
     for path in sorted(directory.glob("*.yaml")):
         try:
@@ -439,14 +447,27 @@ def parity_layer(repo_root: Path) -> Dict[str, Any]:
             continue
         per_file[path.name] = len(entries)
         for entry in entries:
-            status = str((entry or {}).get("status", "unknown"))
+            entry = entry or {}
+            status = str(entry.get("status", "unknown"))
             by_status[status] = by_status.get(status, 0) + 1
+            tp = entry.get("test_path")
+            has_tp = isinstance(tp, str) and tp.strip() not in ("", "null", "None")
+            bucket = "P0" if entry.get("priority") == "P0" else "other"
+            tp_counts[bucket]["with" if has_tp else "without"] += 1
+            if bucket == "P0" and not has_tp:
+                p0_without.setdefault(path.name, []).append(str(entry.get("id", "?")))
     return {
         "state": "read-only",
         "note": "ledger statuses as recorded; not proof and not re-derived here",
         "denominator": {"entries": sum(per_file.values())},
         "counts": dict(sorted(by_status.items())),
         "entries_per_file": per_file,
+        "test_path": {
+            "note": "a test_path is a recorded path, not evidence that the test exists or passes",
+            "p0": tp_counts["P0"],
+            "other_priorities": tp_counts["other"],
+            "p0_without_test_path": {name: sorted(ids) for name, ids in sorted(p0_without.items())},
+        },
         "unreadable_files": unreadable,
     }
 
@@ -703,6 +724,11 @@ def render_markdown(report: Dict[str, Any]) -> str:
     p = layers["parity"]
     out += ["", "## Parity ledger (read-only)", "", f"Denominator: {p['denominator']['entries']} entries."]
     out += [f"- {k}: {v}" for k, v in p["counts"].items()]
+    tp = p["test_path"]
+    out += ["", f"`test_path` presence: P0 with {tp['p0']['with']} / without {tp['p0']['without']}; "
+                f"other priorities with {tp['other_priorities']['with']} / without {tp['other_priorities']['without']}. "
+                "P0 entries without a `test_path` (ids in the JSON report), by file:"]
+    out += [f"- {name}: {len(ids)}" for name, ids in tp["p0_without_test_path"].items()]
 
     out += ["", "## SimQ and census", "", f"- SimQ: {layers['simq']['state']} ({layers['simq']['reason']})",
             f"- census: {layers['census']['state']} ({layers['census']['reason']})"]

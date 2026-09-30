@@ -25,6 +25,7 @@ You receive a ticket ID. Read:
 - Every source file listed in "Related Code Areas" (read the actual code, not just the path) —
   see `docs/guidelines/retrieval_preference.md` for when a targeted range is enough versus when
   the file needs a full read
+- If the ticket is a child of an epic: the epic ticket's `### Shared test fixtures and patterns` subsection (under its `## Implementation Notes`), if present — reuse those fixtures in the Proof Plan's `fixtures` field instead of proposing new ones
 - Every doc listed in "Related Docs" — especially the relevant `docs/mechanics/` chapter(s) and any `docs/engine/` contracts
 - `docs/parity_ledger/` — find entries whose `text` overlaps with the ticket scope
 
@@ -180,6 +181,26 @@ Per acceptance criteria — one entry per required new test:
   - Category (unit / integration / architecture guard)
   - What it verifies
   - Where it should live (file path)
+
+## Proof Plan
+One row per acceptance criterion (a table or a `### AC<n>` block; either is fine, but every
+field name below must appear literally). Level and marker vocabulary: `docs/testing/test_taxonomy.md` §10.
+
+Mandatory per criterion:
+- **level** — the test level that proves it.
+- **proof kind** — what kind of evidence (e.g. invariant, golden/anchor, differential, regression, architecture guard).
+- **oracle source** — the Mechanics Bible / Engine Contract section **and** the parity-ledger entry id
+  that define the expected behavior. This only *cites* them. If the document is silent or two
+  sections disagree, write `oracle: unresolved` and list it under Risks and Open Questions in
+  `investigation.md` — do not invent or approve an expectation yourself.
+- **expected effect** — what observable result the test asserts.
+- **selected commands** — the scoped pytest command(s) that exercise it.
+
+Optional (omit the field when it does not apply; do not write filler): **negative cases**,
+**fixtures**, **non-functional risk**.
+
+The whole section is advisory during the pilot: a ticket with no testable acceptance criterion
+(pure docs/agent-prose) states that in one line instead of a table.
 
 ## Scoped Pytest Commands
 The scoped command(s) to run for regression verification.

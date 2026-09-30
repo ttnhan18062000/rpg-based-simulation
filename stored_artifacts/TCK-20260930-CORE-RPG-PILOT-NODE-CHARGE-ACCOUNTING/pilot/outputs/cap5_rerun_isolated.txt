@@ -1,0 +1,3 @@
+=========================== short test summary info ============================
+FAILED tests/unit/resource/test_node_charge_accounting.py::test_regular_node_loses_exactly_one_charge_per_harvest
+1 failed in 0.25s

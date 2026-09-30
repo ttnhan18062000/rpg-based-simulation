@@ -3,7 +3,7 @@ status: active
 layer: testing
 authority: P1
 audience: agent
-last_verified: 2026-08-30
+last_verified: 2026-09-30
 ---
 
 # Regression Policy
@@ -135,6 +135,8 @@ When a hard gate test fails, follow these steps in order:
 | Test has been flaky (non-deterministic failures) for more than one session | File a P1 issue, mark the test `@pytest.mark.xfail(strict=False, reason="flaky: <ticket>")`, and investigate root cause before removing the xfail. |
 | Test was written for a feature that has been removed | Move the test to `tests/scratch/` or delete with a comment in the commit message. Never silently delete a P0 test. |
 
+**Note (pending owner decision):** the flaky-test row above is under review for a bounded-quarantine replacement. It stays as written until that decision is made. For triage of any failure, start at §13.
+
 ---
 
 ## 7. Authority to Update a P0 Test
@@ -228,3 +230,53 @@ follows for re-baseline evidence. Whether the right structural fix is a schedule
 open question this entry deliberately does not resolve — flagged here so the next person considering
 CI cadence changes has this concrete cost (a crash invisible for an unknown but likely multi-week
 span) as real evidence, not a hypothetical.
+
+---
+
+## 13. Failure-Triage Procedure
+
+The single entry point for any test or gate failure. §4 (decision tree), §5 (gate-test checklist) and §7 (P0 authority) stay the detailed rules; the CI-specific steps (absent vs failing runs, real logs, blocked log hosts) stay in `docs/guides/delivery_process.md` "CI Failure Triage". Both link here. This section defines the record, the classes and the prohibitions once; other documents cite it and do not restate it.
+
+### 13.1 Evidence record
+
+Every failure starts with a record. Put it in the ticket (or the PR comment for a CI failure) before changing any code or test.
+
+| Field | Content |
+|---|---|
+| Source | local · PR CI · nightly · corpus evaluation (SimQ / census) · generated report |
+| Identity | test node id (or report layer / anchor key), lane, run id, commit SHA, artifact ids |
+| Reproduction | exact command; seed, world, profile/config where relevant |
+| Expected vs observed | assertion message, or the measured value against the reference |
+| Rerun result | same SHA rerun: same failure / passes / different failure; in isolation vs combined |
+| Recent changes | commits touching the impacted components |
+
+### 13.2 Failure classes
+
+Classify from the evidence, never from the test name or a guess. If no row fits, the class is **Unknown**.
+
+| Class | Distinguishing evidence | Who acts | Immediate action | Closure condition |
+|---|---|---|---|---|
+| Product regression | Reproduces on rerun and in isolation; a recent change touches the behaviour path; the spec is unchanged | change author; feature team for feature code | Fix the code, not the test (§4) | Fix merged; the failing test passes in its lane; a regression test exists |
+| Test defect / wrong oracle | The oracle contradicts the spec, or asserts an implementation detail | test author; the spec owner confirms the oracle | Fix the test and keep an equivalent-or-stronger assertion; never delete a requirement test without a replacement (§4) | Reviewed fix in the ticket |
+| Intentional spec change | The feature team changed the behaviour on purpose | the oracle document + parity ledger (+ `intentional_divergences.md`) change first; the user resolves disputes | Record the reason, then update the expectation (§7 for P0 tests) | Documents and ledger changed before the test |
+| Order dependence / nondeterminism | Passes alone, fails combined; or a rerun at the same SHA differs | test infrastructure | Diagnose by bisection or random order; fix the root cause | Root cause fixed; combined, isolated and random-order runs pass |
+| Environment / fixture | Fails in one environment only: missing tool, network, TLS, resource budget | CI / infrastructure | Fix the environment or fixture; do not touch assertions | Green in the affected environment |
+| Stale baseline / missing data | Reference data absent or older than the code (calibration data, anchors, perf baselines) | the baseline's owner | Report `stale` / `no-data`; regenerate only through the owner's approved process | Baseline regenerated with a recorded reason, or the state stays visible |
+| CI selection failure | A relevant test did not run (lane not triggered, or selected but not run) | test-architecture owner | Run the missed lane; record a selection failure | Rule fixed; the missed lane re-run |
+| Unknown | None of the above established | whoever found it, then the triage owner | Keep the evidence record; escalate; change nothing | Reclassified into a known class |
+
+The Unknown row is the default. A failure is not reclassified out of it by guessing.
+
+### 13.3 Prohibitions
+
+Never make red green by any of these:
+- silently updating a snapshot or anchor;
+- weakening an assertion;
+- adding a broad `skip` or `xfail`;
+- changing an expected value without the oracle document (and ledger) changing first.
+
+An expectation change needs the spec owner's approval plus a recorded reason. Existing failures stay visible as failures. This applies at every level of delegation, including sub-agents. §6's `xfail` row is under owner review; see the note under §6.
+
+### 13.4 Defects found by tests
+
+A defect a test finds in feature code goes to the feature-owning team as a ticket carrying the §13.1 evidence record. The test author does not fix feature behaviour as part of the test change, and no test here approves behaviour whose intended design is undecided.
