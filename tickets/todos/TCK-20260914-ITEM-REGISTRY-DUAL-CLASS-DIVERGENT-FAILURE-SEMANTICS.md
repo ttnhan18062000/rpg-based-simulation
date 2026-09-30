@@ -103,6 +103,63 @@ None yet — standard tier, staging artifacts created when picked up.
   the central open question for whoever picks this up.
 
 ## Implementation Notes
+
+### 2026-09-30 — Premise re-verified, and the consumer map is wider than filed
+
+Re-verified before scoping, per the standing rule (today's sample produced two premise-false
+closures, one duplicate, and one P0 whose severity claim didn't survive measurement).
+**The premise holds exactly**, and unlike that P0 this one needed no runtime probe — the hazard is
+static, and it has already produced one real silent failure (`ancient_core` loot).
+
+Both classes exist, both are live, and their failure semantics diverge as described:
+- `src/core/items.py:17` — `ItemRegistry.get()` at `:96-97` is `return cls._items.get(item_id)`.
+  Returns `None` for an unknown id. **Never raises.**
+- `src/core/registries.py:63` — `ItemRegistry.get()` at `:71-73` does
+  `if item_id not in cls._items: raise KeyError(...)`. **Always raises.**
+
+**Consumer split — 9 call sites, not the 4 the Request Summary lists.** The gameplay side is
+larger than filed:
+
+| importing | consumers |
+|---|---|
+| `src.core.items` (returns `None`) | `src/core/inventory.py:9`, `src/core/equipment.py:5`, `src/town/shop.py:6`, `src/progression/leveling.py:95`, `src/domains/progression/possession.py:98` |
+| `src.core.registries` (raises `KeyError`) | `src/world/providers/services.py:7`, `information.py:6`, `resources.py:5`, `src/engine/intent/action_intent.py:9` |
+
+`shop.py`, `leveling.py` and `possession.py` were not named in the ticket. The finding is
+unchanged but broader: **five** real gameplay paths silently no-op on an unknown item id.
+
+### A cross-link the ticket does not mention, and it changes the fix
+
+`registries.py` **bootstraps the other registry**, in two places:
+- `:616-617` (catalog mode) — `CoreItemRegistry.bootstrap(catalog_repo.items)`, seeding
+  `items.py` with the **full catalog**.
+- `:729-730` (legacy fallback) — `CoreItemRegistry.bootstrap({})`.
+
+Checked what the empty-dict call does, because it looked like a wipe: it is not.
+`items.py:100-105`'s `bootstrap` treats falsy `data` as "restore", assigning
+`cls._items = dict(cls._backup_items)` — the ~10 hardcoded items. So legacy mode degrades to the
+hardcoded set rather than emptying the registry.
+
+**Consequence for scoping: in catalog mode the two registries hold the same data.** The divergence
+is then purely in *failure semantics* for genuinely-unknown ids, not in coverage. That makes
+consolidation cheaper than the ticket implies — there is already a single bootstrap authority — and
+it relocates the real decision to **which semantics should win**, not which class should survive.
+
+### The real decision, not yet made
+
+Raise or return `None`? This is the same shape as the two-readers-disagreeing family catalogued
+this week, and the answer is not obvious:
+- **Raise** surfaces unregistered-content bugs loudly (it is why `ancient_core` should have
+  crashed instead of silently vanishing), but converts today's silent no-ops on five gameplay
+  paths into live exceptions — including `inventory.py` and `equipment.py`, on the authoritative
+  apply path. Blast radius needs measuring before choosing it.
+- **Return `None`** keeps current behaviour and requires every call site to check, which is what
+  already failed.
+- A third option: keep `None` on the apply path but add a loud diagnostic (a hard-law check or
+  observability event) so the silence is visible without being fatal.
+
+Recommend measuring how often an unknown id is actually requested in a corpus run before choosing —
+same discipline that reduced the `stats_dirty` P0 from "invalidates everything" to "never fires".
 _(not started)_
 
 ## Test Summary

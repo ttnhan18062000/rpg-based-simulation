@@ -26,7 +26,7 @@ standard
 bug
 
 ## Priority
-P0
+P2
 
 ## Request Summary
 **Read this as a world-integrity finding, not a progression-subsystem defect that happens to
@@ -196,6 +196,13 @@ meaning in free-form metadata, and that dict is exactly that.
 
 Either way this is **not** a parameter pass-through, which is how the ticket's Scope step 2 reads
 ("wire it through"). Both shapes need a real decision first, and B is an architecture change.
+
+### 2026-09-30 — Re-rated P0 → P2 (user-authorised)
+
+On the runtime evidence immediately below: the affected path fired **zero** times across three
+corpus worlds and 40 deaths. The defect is real but latent. **Re-raise immediately** if any change
+starts setting `update.attributes`, `update.equipment` or `wound_update` on a routine path — that
+would make it live at once.
 
 ### 2026-09-30 — RUNTIME MEASUREMENT: the erosion never fires. Severity is wrong.
 
