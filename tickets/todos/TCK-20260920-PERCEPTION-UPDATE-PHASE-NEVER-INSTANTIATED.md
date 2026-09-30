@@ -121,6 +121,51 @@ all directly confirmed, not assumed. The open question is purely the design call
 ## Implementation Notes
 (none yet — not started; awaiting the design decision this ticket exists to request)
 
+### 2026-09-30 — classified via `TCK-20260930-UNREACHABLE-CLASSIFY-PERCEPTION-AUTHORITY` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T05`): verdict `UNDECLARED` (confirmed); the decision needs a human and is not made here
+
+**Facts re-checked at branch tip `d96abd0d5`; nothing has changed since filing** (no commit to `src/domains/perception`,
+`src/world/perception` or `pipeline.py` since 2026-09-20).
+- `PerceptionUpdatePhase` has no reference in `src/` outside its own file; `tests/mechanic_scenarios/test_perception_pipeline_wiring.py` — 2 passed.
+- No reader of any `PerceptionModel` field exists outside `src/domains/perception/` and the dataclass itself (`src/core/cognition.py:75-93`).
+- **A second missing piece the ticket did not name:** the phase's input, `world_signals`, has no production producer either. The
+  only `WorldSignal` constructor outside the domain is `LegendFactService.to_world_signal` (`src/domains/fame/legend.py:76-92`), which
+  has no production caller (two unit tests only). Wiring the phase alone would still feed it nothing.
+- Thing #2 is `intelligence.py:144` (`nearby_entities(..., radius=10.0)`); thing #3 is consumed by `tactical.py:198-202` as a
+  per-target detection test whose exceptions fall through permissively (`except Exception: pass`).
+
+**The ticket's premise is partly wrong: things *are* declared — twice, and the declarations conflict.**
+
+| Source | Authority / date | What it says perception is |
+|---|---|---|
+| `docs/mechanics/04_strategic_cognition.md` §5 | Certified Level 1; section last changed 2026-07-02 | a `10.0`-unit radius neighbor view; the "Salience Filter" is "within the perception radius"; cites `domain_logic.py`, `view.py`, `intelligence.py` — thing #2 |
+| parity `STRAT-238` | `verified`, P1, `test_path: null` | pins the `10.0` radius in those files — thing #2 |
+| `docs/simulation/domains/perception_contract.md` | `status: active`, P1; created 2026-06-13, `last_verified` 2026-09-01 | each entity's budget-clamped `PerceptionModel`, produced by the Perception Update stage after `PerceptionGate`; "downstream consumers (adventure routing, strategy) act on the populated `PerceptionModel`" — thing #1 (+ #3 as an upstream prerequisite). Its own header admits zero call sites; it never mentions thing #2 |
+| `docs/world/opportunity_providers_contract.md` | active | the gate "runs before the perception domain's own attention/salience step" |
+| parity `STRAT-261` | `verified`, P2 | verifies the attention-focus read by a test that calls it directly, while stating its only pipeline caller has zero call sites |
+| registry `perception` | `orphan` / `contradicted`, 2026-09-20 | thing #1 is dead |
+
+The contract's stated flow — gate -> `world_signals` -> Perception Update -> downstream consumers — does not exist: the gate's real
+consumer is tactical targeting, there is no signal producer, and there are no consumers. The Bible describes a different system that
+does run. So the gap is a *reconciliation* between two authoritative descriptions, not a missing first declaration. A fourth thing
+carries the same word: a stat, `perception: int = 5` (`src/core/state.py:557,572`), not investigated here.
+
+**Precedence not applied.** The project rule that the Mechanics Bible wins would mechanically make thing #2 canonical and #1 removable.
+That rule settles legacy-vs-Bible ambiguity; this is a Bible-vs-domain-contract split, and applying it would silently make the design
+decision. It is recorded as a decision, not resolved by rule.
+
+**What the declaration would have to say** (five questions, none answered here):
+1. What is "the entity's perception" — the radius view (#2), the budgeted `PerceptionModel` (#1), or a declared layering of the gate (#3) under one of them?
+2. What consumes it? Today strategy consumes the raw radius query, tactics consume the gate, and nothing consumes `PerceptionModel`.
+3. Where does it sit in the tick pipeline, and in what order relative to the gate?
+4. What happens to the non-canonical pieces — remove, repurpose, or explicitly scope apart with a registry note?
+5. Which document is authoritative (Bible §5 or the contract), and which of `STRAT-238` / `STRAT-261` / the registry `perception` entry change with it?
+
+**What a decider should know:** choosing #1 means building three things, not one — instantiating the phase in the pipeline, a producer
+of `world_signals`, and at least one consumer of the model — plus a determinism and state-hash review (whether `PerceptionModel` is in
+the hash surface was not checked). Choosing #2 means removing code, the contract, `STRAT-261`'s subject and the registry entry, with
+nothing else reading them. A "coexist" answer has to give #1 a job that #2 does not do. **No option is chosen here; the decision needs
+the user or the roadmap owner.**
+
 ## Test Summary
 (none yet)
 
@@ -129,3 +174,5 @@ all directly confirmed, not assumed. The open question is purely the design call
 
 ## Completion Summary
 (none yet)
+
+**Verdict as of 2026-09-30: `UNDECLARED` (confirmed)** — but two authoritative declarations exist and conflict (Bible §5 vs the perception contract); reconciliation needs a human decision, not made here. See Implementation Notes. Still `OPEN`.
