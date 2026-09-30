@@ -1,12 +1,19 @@
 ---
-status: idea
+status: historical
 layer: ai
 authority: P2
 audience: developer
-maturity: idea
+maturity: shipped
+archived: 2026-09-30
 date: 2026-09-29
 tags: [idea, documentation, process-improvement]
 ---
+
+> **Shipped 2026-09-30** as `TCK-20260930-PLANNING-DOC-STALENESS-DETECTOR`: a periodic sweep
+> (`make planning-doc-staleness-check`), not a close-time prompt. Resolution convention adopted: a
+> fully shipped idea doc moves to `docs/plans/archive/` with `status: historical`; a shipped item
+> inside an active doc gets an inline dated note. This doc is the first application of it. See
+> `docs/ai/ticket-lifecycle.md`.
 
 # Idea: Planning Docs Keep Claiming "idea"/"ready" Status After Their Own Item Already Shipped
 

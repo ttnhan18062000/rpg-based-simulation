@@ -179,8 +179,8 @@ individual tickets but weren't visible from outside them.
 - `src/engine/movement.py` — `resolve_multi_attack()`, the dominant real combat path
 - `src/engine/domain/action_router.py` — the posture-veto gate
 - `src/engine/evolution.py`, `src/progression/leveling.py` — the confirmed-correct XP/level-up chain
-- `registries/mechanisms.yaml` — `tactical_decision`, `combat_resolution`, `movement`, `xp_leveling`,
-  `evolution`
+- `registries/mechanisms.yaml` — `tactical_decision`, `combat_resolution`, `movement`,
+  `evolution` (`xp_leveling` was merged into `evolution` on 2026-09-30)
 
 ## Assumptions / Open Questions
 - Whether `TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`'s own findings will let

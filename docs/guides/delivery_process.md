@@ -95,6 +95,12 @@ The CLI is a read-only gate: it never writes a tracked file. The registry check 
 rewriting it. The Finalize step that does regenerate it is `--regenerate-registry` on the CLI
 (or `make docs-registry`); the formal pipeline's own call regenerates by default.
 
+The CLI also prints `[advisory]` lines from `run_advisory_checks()`, currently one:
+`test_plan_proof_fields` (`OK`/`WARN`/`NA`), which lists the mandatory `## Proof Plan` fields
+(defined in `.claude/agents/investigator.md`) missing from a standard ticket's `test_plan.md`.
+Advisories never affect the `RESULT:` line or the exit code, and are not part of
+`run_static_precheck()`'s PASS/FAIL/NA list.
+
 ---
 
 ## Branch Naming

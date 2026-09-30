@@ -368,6 +368,8 @@ def test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross
         {**_VALID_EVENT, "run_id": run_id, "seq": -1},
         {**_VALID_EVENT, "run_id": run_id, "seq": -2},
     ]
+    # (agent stays "investigator" here, so seq=2 is not an epic child batch row and keeps its
+    # confirmed-zero (0, 0.0); the child-row omission is pinned by the test below.)
     stats = compute_tool_stats(records)
 
     # (run_id, 1): only its own 1 row, not seq=-1's 2 rows or seq=-2's 1 row.
@@ -385,6 +387,28 @@ def test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross
     assert stats[(run_id, -2)] == (1, compute_cost_proxy_score([
         {"run_id": run_id, "seq": -2, "tool": "Bash", "duration_ms": 200},
     ]))
+
+
+def test_epic_child_batch_rows_without_tool_rows_are_omitted_not_false_zero(tmp_path, monkeypatch):
+    # TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION: real run FOLDER-tickets-todos-systemic-
+    # world-first-wave recorded 0 / 0.0 for both child rows although the children made real tool
+    # calls (under their own run ids). Child batch rows never have a sidecar, so no rows => null.
+    monkeypatch.chdir(tmp_path)
+    run_id = "FOLDER-tickets-todos-child-rows"
+    _write_tools_jsonl(tmp_path, [
+        {"run_id": run_id, "seq": -1, "tool": "Bash", "duration_ms": 500},
+        {"run_id": run_id, "seq": -2, "tool": "Bash", "duration_ms": 200},
+    ])
+    child = {**_VALID_EVENT, "run_id": run_id, "agent": "implement-ticket", "phase": "Implement"}
+    records = [{**child, "seq": 1}, {**child, "seq": 2}]
+    assert compute_tool_stats(records) == {}
+    # A child row that DOES have tool rows at its own key keeps its real value.
+    _write_tools_jsonl(tmp_path, [{"run_id": run_id, "seq": 1, "tool": "Edit", "duration_ms": 1}])
+    stats = compute_tool_stats(records)
+    assert stats[(run_id, 1)][0] == 1 and (run_id, 2) not in stats
+    # Only implement-epic batch rows are affected: a non-epic implement-ticket row keeps (0, 0.0).
+    plain = {**child, "run_id": "TCK-PLAIN-RUN", "seq": 1}
+    assert compute_tool_stats([plain]) == {("TCK-PLAIN-RUN", 1): (0, 0.0)}
 
 
 # ---------------------------------------------------------------------------

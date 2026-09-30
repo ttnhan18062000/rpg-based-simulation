@@ -22,6 +22,8 @@ import yaml
 
 from tools.mechanism_registry.mechanism_registry_completeness_check import (
     EXCLUSIONS,
+    WIDER_EXCLUSIONS,
+    WIDER_PENDING,
     build_report,
     enumerate_targets,
 )
@@ -129,10 +131,78 @@ def test_real_registry_enumeration_and_binding_counts_pinned():
     re-check (a real finding, not a false positive -- see
     `test_mechanism_state_caller_check.py::test_real_registry_findings_pinned`'s own note), so it
     contributes no target here. `mechanisms_with_binding` (76) again moved by more than `bound` did,
-    same divergence as every prior batch."""
+    same divergence as every prior batch.
+
+    2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): `bound` 33 -> 36,
+    `unbound` 28 -> 25. New targets: `domains/information` (`information_trust_deception` bound to
+    `SourceTrustUpdateService`), `systems/social_systems/memory` (`social_memory`),
+    `systems/social_systems/relationships` (`affection_relationship_bonds`)."""
     data = _real_registry_data()
     report = build_report(data)
     assert report.total_targets == 64
-    assert len(report.bound) == 33
+    assert len(report.bound) == 36
     assert len(report.excluded) == 3
-    assert len(report.unbound) == 28
+    assert len(report.unbound) == 25
+
+
+# --- state: gap is not a coverage hole (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION) ---
+
+
+def test_gap_mechanisms_are_reported_separately_and_never_counted_as_unbound():
+    data = _real_registry_data()
+    report = build_report(data)
+    gap_ids = sorted(m["id"] for m in data["mechanisms"] if m.get("state") == "gap")
+    assert report.gap_mechanisms == gap_ids
+    assert not set(report.gap_mechanisms) & set(report.unbound_real_state)
+    assert set(report.unbound_real_state) == {
+        m["id"] for m in data["mechanisms"] if m.get("state") != "gap" and not m.get("implemented_by")
+    }
+
+
+def test_real_registry_has_no_non_gap_mechanism_without_implemented_by():
+    """[Load-bearing] After the residue resolution every mechanism with a real state has a code
+    binding; a new non-gap mechanism registered without one shows up here."""
+    assert build_report(_real_registry_data()).unbound_real_state == []
+
+
+def test_gap_rule_on_a_synthetic_registry():
+    data = {"mechanisms": [
+        {"id": "g", "state": "gap"},
+        {"id": "done_bound", "state": "done", "implemented_by": ["src/engine/evolution.py::EvolutionSystem"]},
+        {"id": "done_unbound", "state": "done"},
+    ]}
+    report = build_report(data)
+    assert report.gap_mechanisms == ["g"]
+    assert report.unbound_real_state == ["done_unbound"]
+
+
+# --- wider-scope tier (TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP) ---
+
+
+def test_wider_scope_every_wired_candidate_has_a_recorded_disposition():
+    """[Load-bearing] A new wired, unbound, mechanism-shaped class outside domains/systems fails
+    here until it is bound, excluded with a reason, or recorded as pending an identity decision."""
+    report = build_report(_real_registry_data())
+    assert report.wider_unresolved == []
+
+
+def test_wider_scope_numbers_pinned():
+    wider = build_report(_real_registry_data()).wider
+    assert wider["scope_files"] == 295
+    assert wider["unbound_files"] == 233  # files no implemented_by entry names
+    assert wider["candidates"] == 74  # unbound mechanism-shaped classes, wired or not
+    assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package
+    assert len(WIDER_EXCLUSIONS) == 18 and len(WIDER_PENDING) == 3
+
+
+def test_wider_exclusions_and_pending_all_point_to_real_wired_candidates():
+    report = build_report(_real_registry_data())
+    wired = {c.id for c in report.wider["wired"]}
+    for cid in list(WIDER_EXCLUSIONS) + list(WIDER_PENDING):
+        assert cid in wired, f"{cid!r} is recorded but is no longer a wired, unbound candidate"
+    assert not set(WIDER_EXCLUSIONS) & set(WIDER_PENDING)
+
+
+def test_wider_exclusions_and_pending_each_have_a_real_reason():
+    for cid, reason in {**WIDER_EXCLUSIONS, **WIDER_PENDING}.items():
+        assert isinstance(reason, str) and len(reason) > 30, cid

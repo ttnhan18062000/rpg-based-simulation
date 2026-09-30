@@ -258,4 +258,11 @@ def test_real_registry_findings_pinned():
         ("goal_hierarchy", "state_with_zero_callers"),
         ("commitment_betrayal", "orphan_with_callers"),
         ("perception", "orphan_with_callers"),
+        # 2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): `social_memory` was
+        # bound and moved skeleton -> orphan. The tool counts `src/engine/apply.py`'s bare
+        # `from ... import SocialMemoryService` as a caller, but nothing ever calls it: a
+        # positive-controlled runtime counter recorded 0 calls to either method over 5 corpus
+        # worlds x 2000 ticks. Same understood blind spot as `perception` / `chronicle` above (an
+        # import is not a call); the runtime probe, not this static count, is the evidence.
+        ("social_memory", "orphan_with_callers"),
     }

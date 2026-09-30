@@ -67,6 +67,7 @@ if str(_MONITORING_DIR) not in sys.path:
 
 from verify_temporal_week_consistency import compute_temporal_week_consistency_report  # noqa: E402
 from monitoring_shard_paths import shard_paths  # noqa: E402
+from gate_checks.proof_plan_advisory import check_proof_plan_fields  # noqa: E402
 
 REQUIRED_ARTIFACT_FILES = ("plan.md", "investigation.md", "test_plan.md")
 
@@ -1368,6 +1369,18 @@ def check_registry_entry_regenerated(
     )
 
 
+def run_advisory_checks(ticket_id: str, tier: str) -> list[dict]:
+    """Report-only advisories (TCK-20260930-DONE-CHECKER-PROOF-PLAN-ADVISORY). Deliberately NOT
+    part of `run_static_precheck()`: statuses here are OK/WARN/NA, never PASS/FAIL, so no existing
+    consumer of the precheck list (implement-ticket.js, the done-checker `DONE_SCHEMA.checklist`)
+    sees a new status value, and nothing here can change a close verdict."""
+    checks = (("test_plan_proof_fields", check_proof_plan_fields(ticket_id, tier)),)
+    return [
+        {"condition": name, "status": status, "evidence": evidence}
+        for name, (status, evidence) in checks
+    ]
+
+
 def run_finalize_selfcheck(ticket_id: str, tier: str, regenerate_registry: bool = True) -> list[dict]:
     """Aggregate all 4 Part B checks. Same return shape as `run_static_precheck`.
 
@@ -1487,6 +1500,10 @@ def main(argv=None) -> int:
             "finalize",
             run_finalize_selfcheck(args.ticket_id, tier, regenerate_registry=args.regenerate_registry),
         ) or any_fail
+
+    # Advisories print but never feed any_fail / the exit code.
+    for r in run_advisory_checks(args.ticket_id, tier):
+        print(f"[advisory] {r['condition']}: {r['status']} — {r['evidence']}")
 
     print(f"RESULT: {'FAIL' if any_fail else 'PASS'} for {args.ticket_id} (tier={tier})")
     return 1 if any_fail else 0

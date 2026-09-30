@@ -62,6 +62,15 @@ valid values" for those two fields is no longer a judgment call, it's a cited sc
 Type` (bug/feature/refactor/chore/repair) has no equivalent canonical enum or static check as of
 this ticket — still pure LLM judgment for that one field.
 
+**Step 0c — Proof Plan advisory (report only, never a condition).** For a `standard` ticket, also
+run `python3 -c "import sys; sys.path.insert(0,'.'); from tools.gate_checks.done_checker_static import run_advisory_checks; import json; print(json.dumps(run_advisory_checks('<ticket_id>', '<tier>')))"`.
+It returns `test_plan_proof_fields` with status `OK`/`WARN`/`NA`; a `WARN` lists the mandatory
+`## Proof Plan` fields (level, proof kind, oracle source, expected effect, selected commands)
+missing from `test_plan.md`. Copy any `WARN` into your `summary`/notes so the implementer sees it,
+but it is **not** a checklist condition: it never makes a condition `FAIL`, never blocks READY TO
+CLOSE, and stays out of `verified_by`'s pass/fail accounting. The Proof Plan is advisory during the
+test-architecture pilot.
+
 Use the script's `status`/`evidence` verbatim for these 6 conditions in the checklist table (except
 condition 10 if Step 0a already set it `FAIL`). Conditions 1, 2, 5, 6, 8, 9, 11 remain pure LLM
 judgment calls — the script does not touch them. Condition 13 stays pre-marked PASS per its own rule

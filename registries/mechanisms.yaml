@@ -191,7 +191,9 @@ mechanisms:
     systems: [combat]
     depends_on: []
     state: done
-    implemented_by: [src/engine/tactical.py::TacticalDecisionSystem]
+    implemented_by:
+      - src/engine/tactical.py::TacticalDecisionSystem
+      - src/world/motivation/pressure_resolver.py::MotivationPressureResolver
     verified:
       instrument: corpus_run
       verdict: contradicted
@@ -354,7 +356,7 @@ mechanisms:
         COMB-318 gap. Root-caused 2026-09-17
         (`TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS`): content-
         composition/pacing, not a wiring gap -- the combat-XP-to-level-up chain is directly
-        confirmed correct and reachable (see `xp_leveling`'s own verified block), it just never
+        confirmed correct and reachable (see `evolution`'s own verified block), it just never
         accumulates enough real combat volume to cross a single level threshold within any tested
         1000-tick corpus window. `verdict: contradicted` because the implicit "this scales with
         agility in play" claim does not hold in any tested corpus world, even though the formula
@@ -603,7 +605,7 @@ mechanisms:
         `updates.py`'s own generic plumbing, never in a production AI/decision producer, matching
         DEV-006's own "Scope note"). So: the consumer is real, live, and called every tick; the
         producer that would make it do anything doesn't exist. `partial` matches
-        `xp_leveling`/`skill_unlocks`'s own "real, tested, wired code, defeated by an unmet
+        `evolution`/`skill_unlocks`'s own "real, tested, wired code, defeated by an unmet
         production precondition" shape more precisely than either `gap` (no code) or `orphan` (zero
         callers) would.
 
@@ -620,7 +622,7 @@ mechanisms:
         RUNTIME comment above. Using `contradicted` here would misapply the vocabulary on both axes
         at once, not just one. If a future runtime instrument (a real corpus/scenario run) confirms
         `class_id_set` is genuinely never set across real play, the right move is not changing this
-        `verdict` to `contradicted` -- it's re-deriving `state` itself against `xp_leveling`'s own
+        `verdict` to `contradicted` -- it's re-deriving `state` itself against `evolution`'s own
         precedent (a `partial` mechanism that stays `partial` under runtime confirmation, since the
         code is real and correct, just precondition-starved) or reconsidering whether `partial` even
         applies to code with zero real-world triggers yet. Not decided here; this is evidence for
@@ -638,6 +640,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/systems/lifecycle_systems/lifecycle.py::LifecycleSystem::resolve_lifecycle
+      - src/ai/life_stage.py::LifeStageService
     verified:
       instrument: scenario
       verdict: observed
@@ -791,7 +794,7 @@ mechanisms:
     layer: entity
     systems: [progression]
     depends_on: []
-    state: done
+    state: partial
     implemented_by: [src/engine/evolution.py::EvolutionSystem]
     verified:
       instrument: scenario
@@ -808,8 +811,8 @@ mechanisms:
         wrongly read "no level-up" as a wiring defect -- it bypassed this exact phase, which only
         runs inside the real pipeline. Corrected before reporting; see
         TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS's own addendum for the
-        full trace. This mechanism's own code is confirmed correct; see `xp_leveling` for why it
-        still doesn't fire in real corpus play.
+        full trace. This mechanism's own code is confirmed correct; see the merged corpus-volume note at
+        the end of this entry for why it still doesn't fire in real corpus play.
         **Value-differential added 2026-09-21** (TCK-20260921-MECHANISM-PROGRESSION-VALUE-
         DIFFERENTIAL-INSTRUMENT, applying the new axis to this mechanism's own `xp_reward=
         defender.identity.evolution_level*10` formula, `src/engine/combat.py:510`):
@@ -822,11 +825,24 @@ mechanisms:
         before staging (see the test file's own docstring and this ticket's investigation.md):
         `calculate_damage()` and `recalculate_combat_stats()` never read `identity.evolution_level`
         or `evolution_points`, so the fight itself (and any RNG it might consume) is byte-identical
-        across all three arms -- only the post-kill reward differs. This confirms `xp_leveling`'s
-        own merged claim (the reward's SIZE has real purchase on the outcome) as a distinct finding
+        across all three arms -- only the post-kill reward differs. This confirms the merged
+        `xp_leveling` claim (the reward's SIZE has real purchase on the outcome) as a distinct finding
         from `evolution`'s existing reachability-shaped positive control above (which showed the
         chain fires correctly for one fixed reward size, not that varying the reward's own input
         matters).
+        **Merged 2026-09-30 from `xp_leveling`** (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-
+        RESOLUTION executing the Merge verdict recorded in
+        `docs/plans/mechanism_identity_and_change_taxonomy.md` §8, signed off by rpg-feature-planning;
+        one undivided `EvolutionSystem.evaluate()` implementation, no evidence the two ids could
+        succeed or fail independently). State moves `done` -> `partial` because the merged entry keeps
+        the retired `xp_leveling` entry's `partial`, which was a corpus-volume caveat and not a code
+        defect: the level-up
+        chain is correct and reachable, but real corpus play (crowded_frontier, quest_dense_frontier,
+        hero_guild_routing; seed 42; 1000 ticks each) sees only 0-10 kills per world, each granting
+        defender.identity.evolution_level*10 XP (10 XP for a level-1 kill) against a 100-XP level-2
+        threshold, and the busiest entity in any tested world accumulated 5 kills (50 XP). Same
+        family as `camp`: correct, wired code defeated by real-world volume. Follow-up (filed, not
+        fixed): TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME.
   - id: skill_unlocks
     layer: entity
     systems: [combat]
@@ -852,53 +868,6 @@ mechanisms:
         existed. State stays `partial`, not re-verified upward to `done` here (out of scope for a
         binding-only pass) -- this confirms the code exists and is wired, not that its real-world
         outcome is fully verified.
-  - id: xp_leveling
-    layer: entity
-    systems: [progression]
-    depends_on: []
-    state: partial
-    verified:
-      instrument: scenario
-      verdict: observed
-      date: "2026-09-17"
-      note: >-
-        Filed while resolving TCK-20260916-DERIVED-COMBAT-STAT-RECALCULATION-UNOBSERVED-IN-CORPUS's
-        own discriminating measurement. The threshold-evaluation chain (kill ->
-        ResourceTransferIntent.xp_reward -> conservation.py COMBAT branch ->
-        IdentityUpdate.evolution_points_delta -> EvolutionSystem.evaluate() ->
-        _execute_level_up()) is directly confirmed correct via a real Kernel-tick positive control
-        (see `evolution`'s own verified block) -- state stays out of `gap`/`orphan` territory, the
-        code is not broken. state moves done -> partial because real corpus play never actually
-        crosses a threshold: instrumented across the same 3 real corpus worlds (crowded_frontier,
-        quest_dense_frontier, hero_guild_routing; seed 42; 1000 ticks each), only 0-10 kills occur
-        per world, each granting defender.identity.evolution_level*10 XP (10 XP for the
-        overwhelmingly common level-1 monster kill) against a 100-XP level-2 threshold -- ~10 kills
-        needed, the busiest single entity in any tested world accumulated 5 kills (50 XP). Same
-        family as `camp` (docs/plans/world_composition_precondition_gap_finding.md): correct, wired
-        code, defeated by real-world volume rather than a code defect. Likely downstream of the
-        already-ticketed TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION (low cross-faction
-        combat volume generally), not independently re-investigated here. Follow-up:
-        TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME (filed, not fixed).
-        **Left unbound 2026-09-20** (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION):
-        this entry's own positive-control scenario (the goblin-kills-orc, evolution_points=95 case)
-        is the *identical* scenario already cited in the `evolution` mechanism's own verified block,
-        which is already bound to `src/engine/evolution.py::EvolutionSystem`. Binding `xp_leveling`
-        to the same class would double-attribute one implementation to two registry ids. This looks
-        like a real identity question (are `xp_leveling` and `evolution` the same mechanism under
-        two names, per this registry's own Merge criterion in
-        `docs/plans/mechanism_identity_and_change_taxonomy.md` §2?) rather than a binding gap --
-        genuinely ambiguous, not resolved here, flagged for the roadmap session rather than merged
-        unilaterally in a binding-only pass.
-        **Deliberate verdict recorded 2026-09-20** (`docs/plans/mechanism_identity_and_change_
-        taxonomy.md` §8, the identity rule's first live Merge application, its own dedicated piece
-        of work): Merge, `xp_leveling` into `evolution` -- `EvolutionSystem.evaluate()`'s own
-        level-up-and-stat-growth behavior (this entry's own claim) and its separate
-        species-kind-transformation behavior at milestone thresholds 10/25/50 (`evolution`'s own
-        name) are structurally nested, share one undivided method, and no evidence from either entry
-        shows them currently able to succeed or fail independently -- `evolution`'s own cited
-        positive control tests the former, never the latter. Verdict recorded, not executed: a
-        merge's own blast radius (which id every future citation should use) needs real review, same
-        restraint as this session's own `commitment_betrayal` non-merge, opposite direction.
   - id: breakthrough_bonuses
     layer: entity
     systems: [progression]
@@ -1095,6 +1064,7 @@ mechanisms:
     state: gated
     implemented_by:
       - src/cognition/self_model_phase.py::SelfModelUpdatePhase
+      - src/cognition/capability_estimate.py::CapabilityEstimateService
     verified:
       instrument: scenario
       verdict: observed
@@ -1212,7 +1182,9 @@ mechanisms:
     systems: [cognition]
     depends_on: []
     state: done
-    implemented_by: [src/domains/emotion/emotion_service.py::EmotionUpdateService]
+    implemented_by:
+      - src/domains/emotion/emotion_service.py::EmotionUpdateService
+      - src/engine/cognition.py::AppraisalSystem
     verified:
       instrument: scenario
       verdict: observed
@@ -1246,11 +1218,30 @@ mechanisms:
     systems: [social]
     depends_on: []
     state: done
+    implemented_by: [src/systems/social_systems/relationships.py::RelationshipService]
     verified:
-      instrument: code_trace
-      verdict: inconclusive
-      date: "2026-09-20"
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
       note: >-
+        **2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): bound, and the
+        place_attachment addendum below is corrected.** Bound to `RelationshipService`, the
+        authoritative write path for `SocialComponent` bonds, sentiment, trust and grudge
+        (`process_update`), which runs for real: 411 calls in a 2-world x 1000-tick probe and
+        340 / 2 / 626 / 980 / 488 over 2000 ticks in crowded_frontier / quest_dense_frontier /
+        hero_guild_routing / frontier_living_world / generated_frontier_3_42 (positive-controlled
+        counter). Real callers: `src/engine/patches.py`, `src/domains/campaigns/orchestrator.py`,
+        `src/domains/campaigns/social_memory.py`; real reader: `SocialAppraisalSystem` (sentiment
+        gates trust and hard-cancel). Rejected as bindings: `RelationshipModel`
+        (`src/core/cognition.py`, never constructed) and `MarriageState` (a contract action, not a
+        bond strength). **Correction to the 2026-09-23 addendum below**, which said
+        `place_attachment` "accumulates for real (+0.001/tick)": its only producer,
+        `SocialMemoryService.tick_place_attachment`, is imported in `src/engine/apply.py` but never
+        called (0 calls over the 5-world x 2000-tick probe; see `social_memory`), so the field is
+        not accumulated in live runs. It is a dead producer, not merely a write-only field. The
+        atlas card's "accumulates" wording is a claim made without a runtime instrument. Probe
+        output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
+        ---- earlier record, kept ----
         TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION. Investigated, left unbound
         -- genuinely ambiguous. Zero literal matches for "affection" anywhere in `src/` (a
         concept-name-not-a-symbol case). Checked the plausible real candidates: `RelationshipModel`
@@ -1489,26 +1480,26 @@ mechanisms:
     layer: entity
     systems: [cognition]
     depends_on: []
-    state: gated
+    state: orphan
+    implemented_by: [src/domains/information/trust.py::SourceTrustUpdateService]
     verified:
-      instrument: code_trace
+      instrument: corpus_run
       verdict: observed
-      date: "2026-09-16"
+      date: "2026-09-30"
       note: >-
-        Code read confirms the mechanism is correctly built; currently flag-gated off (see state).
-        **Investigated, left unbound 2026-09-20**
-        (TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-RESOLUTION): the most plausible named
-        candidate, `SourceTrustUpdateService.update()` (`src/domains/information/trust.py`), has
-        ZERO real callers anywhere in `src/` -- not flag-gated-off, simply never invoked, a
-        different shape than this note's own "flag-gated" framing describes.
-        `InformationBeliefPhase.apply()` (`src/domains/information/phase.py`, gated behind
-        `ENABLE_BELIEF_ASSIMILATION`) is a real, wired candidate but its own concern (observation
-        routing/belief assimilation) reads closer to `belief_cycle`'s own scope than to
-        trust/deception specifically, and misattributing it here risks the same error class as the
-        `trauma` incident. Genuinely ambiguous without the original 2026-09-16 investigator's own
-        working notes (not found in `stored_artifacts/`) -- left unbound rather than guessed;
-        flagged for the roadmap session as worth a closer look, since the discrepancy between this
-        note's "flag-gated" framing and the zero-caller candidate found here is itself notable.
+        TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION (dependency
+        TCK-20260920-INFORMATION-TRUST-DECEPTION-VERDICT-QUESTIONED). Corrects the 2026-09-16
+        "flag-gated off" reading. `SourceTrustUpdateService.update()` (including the
+        DECEPTIVE_DETECTED -0.25 case) has no caller in `src/`; a positive-controlled per-method
+        counter recorded 0 calls over crowded_frontier, quest_dense_frontier, hero_guild_routing, frontier_living_world and generated_frontier_3_42, seed 42, 2000 ticks each. It is not flag-gated: `InformationBeliefPhase`
+        (`src/engine/pipeline.py`) runs with ENABLE_BELIEF_ASSIMILATION default ON, was called
+        2000 times per world in the same runs, and sets `source_trust_update=None`
+        (`src/domains/information/assimilation.py`), so it never updates trust. The other trust
+        writer, `SocialAppraisalSystem.recalibrate_source_trust`, also recorded 0 calls. Source
+        trust therefore stays at its defaults in production. State moves `gated` -> `orphan`. The
+        identity taxonomy's KEEP verdict (`docs/plans/mechanism_identity_and_change_taxonomy.md`)
+        stands: `SourceTrustUpdateService` is the mechanism and "deception" is descriptive flavour.
+        `InformationBeliefPhase` belongs to `belief_cycle`, not here. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
   - id: knowledge_model
     layer: entity
     systems: [cognition]
@@ -1635,6 +1626,8 @@ mechanisms:
     state: done
     implemented_by:
       - src/systems/strategic_systems/intelligence.py::StrategicIntelligenceSystem::fused_strategic_pass
+      - src/engine/domain/lead_routing.py::LeadRoutingSystem
+      - src/ai/score_modifiers.py::ScoreModifierSystem
     verified:
       instrument: scenario
       verdict: observed
@@ -1695,6 +1688,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/engine/pipeline_phases/capacity_enforcement.py::CapacityEnforcementPhase
+      - src/strategy/capacity.py::CapacityService
     verified:
       instrument: scenario
       verdict: observed
@@ -1881,11 +1875,28 @@ mechanisms:
     layer: faction
     systems: [faction]
     depends_on: []
-    state: skeleton
+    state: orphan
+    implemented_by: [src/systems/social_systems/memory.py::SocialMemoryService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION. First `verified` block for this
+        entry (it had none). Its atlas card (faction-layer#4) names `systems/social_systems/memory.py`,
+        whose only content is `SocialMemoryService.tick_place_attachment` and
+        `check_nemesis_promotion` (no witnessed-events logic). The class is imported in
+        `src/engine/apply.py` and never called: a positive-controlled per-method counter recorded
+        0 calls for both methods over crowded_frontier, quest_dense_frontier, hero_guild_routing, frontier_living_world and generated_frontier_3_42, seed 42, 2000 ticks each. State moves `skeleton` -> `orphan`. Not to be
+        confused with `src/domains/campaigns/social_memory.py` (SocialMemoryRecord, importer),
+        which is live and belongs to `cross_episode_social_consequences` /
+        `cross_episode_grief_nemesis`; note the existing `depends_on: [social_memory]` on
+        `cross_episode_social_consequences` points at this entry although that mechanism uses the
+        campaigns module, and was left unchanged pending a decision. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
   - id: cross_episode_social_consequences
     layer: faction
     systems: [faction]
-    depends_on: [social_memory]
+    depends_on: []
     state: done
     implemented_by: [src/systems/social_systems/consequence_events.py::evaluate_social_consequence]
     verified:
@@ -1897,6 +1908,16 @@ mechanisms:
         feature-flag check, gated only on the scenario-recorder infra being present) from
         domains/campaigns/orchestrator.py at episode-entity-spawn time, so `orphan` (zero callers)
         was factually wrong. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
+        **`depends_on: [social_memory]` removed 2026-09-30** (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION,
+        found by rpg-feature-planning). It was a homonym, not a dependency: `evaluate_social_consequence`
+        reads `campaign_state.faction_social_memories` (`consequence_events.py`) and never imports or
+        references `SocialMemoryService`, the class the `social_memory` entry binds. The edge most
+        likely came from the module comment "Design constraints (mirrors social_memory.py)", which
+        means parallel structure (no engine imports, duck-typed, pure function), deliberately not
+        coupling. Not measured: whether `faction_social_memories` is populated at runtime (its
+        producer is `src/domains/campaigns/social_memory.py`, which runs only in multi-episode
+        campaign runs, outside a single-Kernel probe); the `code_trace` verdict above is unchanged.
+
   - id: cross_episode_grief_nemesis
     layer: faction
     systems: [faction]
@@ -1963,6 +1984,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/world/consequences.py::RegionalConsequenceService
+      - src/world/threat.py::ThreatService
     verified:
       instrument: corpus_run
       verdict: contradicted
@@ -2135,35 +2157,27 @@ mechanisms:
     layer: world
     systems: [world]
     depends_on: []
-    state: done
+    state: orphan
+    implemented_by: [src/world/calamity.py::CalamityService::apply_calamity_consequences]
     verified:
       instrument: corpus_run
-      verdict: contradicted
-      date: "2026-09-17"
+      verdict: observed
+      date: "2026-09-30"
       note: >-
-        `CalamityService.apply_calamity_consequences()` is real, non-dead code -- the sole real
-        producer of `region.calamity_intensity` (+0.05 per hero death inside a
-        `region.hazard_level > 0.5` region). A real, instrumented 5000-tick `Kernel.tick_once()`
-        run against `frontier_living_world` found `calamity_intensity` never left `0.0` in any
-        region for the entire run -- not "never crossed the spawn-gate threshold," never changed
-        at all. Same family as `camp`: correct, wired code, defeated by real-world data never
-        meeting its trigger precondition. See `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`
-        (still open -- the code-level finding stands regardless of whether/when a fix lands).
-        **Left unbound 2026-09-20, contradicting evidence found**
-        (TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION): attempted to
-        bind `apply_calamity_consequences()`, then `mechanism_state_caller_check.py` flagged zero
-        real callers -- re-checked directly rather than trusted, and confirmed: `grep -rn
-        "apply_calamity_consequences" src/` finds only its own definition and one unrelated
-        *comment* in `displacement.py`, never a real call. `CalamityService.process_world_dynamics()`
-        (the method actually called, from `world_dynamics.py:133`) only *reads*
-        `region.calamity_intensity` for boss-spawn region selection, never writes it. This is a
-        stronger finding than this entry's own 2026-09-17 note describes: not "correct, wired code
-        defeated by real-world data never meeting its trigger precondition" (implying the code path
-        is reachable, just data-starved) but code that is never called under any circumstances --
-        closer to `orphan` than `done`+`contradicted`. Not corrected unilaterally here (this
-        entry's own `verified` block predates this batch and this batch's own rule is not to
-        re-verify already-verified entries) -- flagged for the roadmap session to reconcile against
-        `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`'s own framing.
+        TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION. Reconciles the 2026-09-17
+        `done` + `contradicted` reading with the 2026-09-20 zero-caller finding and the
+        2026-09-28 DEFECT classification (TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING).
+        `CalamityService.apply_calamity_consequences()` is the sole producer of
+        `region.calamity_intensity` and is never invoked: a per-method call counter, positive-
+        controlled (the wrapper was proven able to increment), recorded 0 calls over crowded_frontier, quest_dense_frontier, hero_guild_routing, frontier_living_world and generated_frontier_3_42, seed 42, 2000 ticks each
+        (10,000 ticks), while `InformationBeliefPhase.apply` in the same runs was called 2000 times
+        per world, so the loop and the counter both work. `CalamityService.process_world_dynamics`
+        is live and only reads the field. State moves `done` -> `orphan`; the earlier
+        `contradicted` verdict is superseded (it described a world-data absence; the runtime
+        evidence shows the producer is never reached). Bound at method level to the producer, since
+        the class's other method is live and binding the class would read as a live mechanism. The
+        fix stays with TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES. Consumer of the dead
+        input: `refugee_displacement`. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/
   - id: world_boss_spawn
     layer: world
     systems: [world]
@@ -2191,6 +2205,9 @@ mechanisms:
     state: done
     implemented_by:
       - src/worldbuilding/compiler.py::WorldCompiler
+      - src/worldassembly/resolver.py::WorldAssemblyResolver
+      - src/worldassembly/resolver.py::CompileProfileResolver
+      - src/worldmodules/evaluator.py::ModuleParameterEvaluator
     verified:
       instrument: code_trace
       verdict: observed
@@ -2237,6 +2254,7 @@ mechanisms:
     state: done
     implemented_by:
       - src/core/conservation.py::ResourceTransactionResolver
+      - src/core/inventory.py::InventoryService
     verified:
       instrument: code_trace
       verdict: observed
@@ -2244,7 +2262,7 @@ mechanisms:
       note: >-
         TCK-20260920-MECHANISM-WORLD-FACTION-REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION.
         `ResourceTransactionResolver.resolve()` is real and live, called from
-        `src/engine/economy.py:96,179` -- the same class `xp_leveling`'s own verified note
+        `src/engine/economy.py:96,179` -- the same class `evolution`'s own verified note
         (entity-layer batch) already cites as "conservation.py COMBAT branch." This mechanism's own
         claim is the resolver's general atomic-conservation law, not any one branch.
   - id: crafting
@@ -2306,6 +2324,7 @@ mechanisms:
     implemented_by:
       - src/engine/shop.py::ShopSystem
       - src/engine/blacksmith.py::BlacksmithSystem
+      - src/town/shop.py::ShopService
     verified:
       instrument: code_trace
       verdict: observed
@@ -2376,6 +2395,8 @@ mechanisms:
     state: done
     implemented_by:
       - src/core/state.py::CampState
+      - src/world/camp.py::CampService
+      - src/world/creature_territory.py::CreatureTerritoryService
     verified:
       instrument: corpus_run
       verdict: observed
@@ -2496,16 +2517,16 @@ mechanisms:
     # wired system (PossessionUnderstandingService, GrowthGapEvaluator, RewardLedgerComponent,
     # RewardInterpretationService, ConversionOptionGenerator, ConversionDecisionService,
     # ConversionIntentResolver) -- distinct from src/progression/ (top-level package, already cited
-    # under xp_leveling/breakthrough_bonuses); a real namespace collision, not the same thing.
+    # under evolution/breakthrough_bonuses); a real namespace collision, not the same thing.
     verified:
       instrument: code_trace
       verdict: observed
       date: "2026-09-17"
       note: >-
         Confirmed gate is real and correctly documented (DEV-003/DEV-004,
-        docs/guidelines/intentional_divergences.md) while investigating `xp_leveling`. Noted for
+        docs/guidelines/intentional_divergences.md) while investigating `evolution`. Noted for
         whoever flips ENABLE_PROGRESSION_EVOLUTION on: its ALLOCATE_AP conversion branch spends
-        unspent_ap, which combat-driven level-ups grant (+5 per level) -- since `xp_leveling` is
+        unspent_ap, which combat-driven level-ups grant (+5 per level) -- since `evolution` is
         itself corpus-pacing-starved (see that entry), unspent_ap from combat will be similarly
         scarce even once this gate opens, on top of the flag being off today.
   - id: resource_harvesting
@@ -2759,6 +2780,174 @@ mechanisms:
         `observability/event_extractor.py` respectively; `pressure.py`/`impact.py` are confirmed
         zero-caller. `state: partial` accurately represents the mixed disposition. `mechanism_
         state_caller_check.py`'s own full-registry run raises no contradiction for this entry.
+
+  - id: regional_monster_spawn
+    layer: region
+    systems: [world]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/spawn.py::SpawnService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `SpawnService.process_spawns` was called 30 times (its per-region cadence) across the three worlds. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Regional monster replenishment and density management (cadence in spawn_config.py). Distinct from `world_boss_spawn` (BossService) and from camp-anchored spawns (`camp`).
+
+  - id: resource_ecology_regrowth
+    layer: world
+    systems: [world, economy]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/ecology.py::ResourceEcologyService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `ResourceEcologyService.process_ecology` was called 30 times. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Regional resource-node and chest replenishment with a density modifier. The extraction side is `resource_harvesting` (HarvestSystem), a separate mechanism.
+
+  - id: regional_transformation
+    layer: region
+    systems: [world]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/transformation.py::TransformationService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `TransformationService.get_potential_transformation` was evaluated 15000 times; whether any region actually changed kind was not measured. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Shifts RegionState.kind by biome thresholds (atlas idea 48). `world_generation` is compile-time only.
+
+  - id: production_role_vacancy
+    layer: region
+    systems: [world, economy]
+    depends_on: []
+    state: done
+    implemented_by: [src/economy/vacancy.py::EconomicVacancyService]
+    verified:
+      instrument: corpus_run
+      verdict: inconclusive
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. `EconomicVacancyService.check_and_emit` fires only when a death leaves a region with no living holder of a production role. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Emits a PRODUCTION_ROLE_VACATED world event from the lifecycle death path (`aging_death` covers the death check, not the economic consequence).
+
+  - id: veterancy_rank
+    layer: entity
+    systems: [progression]
+    depends_on: [evolution]
+    state: done
+    implemented_by: [src/progression/veterancy.py::VeterancyService]
+    verified:
+      instrument: corpus_run
+      verdict: inconclusive
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. `process_points` is called from IdentityPatch.apply; `get_stat_multiplier` has no caller in src (tracked by TCK-20260912-VETERANCY-STAT-MULTIPLIER-NEVER-APPLIED). Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Veterancy points and rank-ups (+5% per rank multiplier); distinct from level thresholds (`evolution`) and class tiers (`build_diversity`).
+
+  - id: quest_lifecycle_resolution
+    layer: world
+    systems: [world, economy]
+    depends_on: [quest_generation_sourcing]
+    state: done
+    implemented_by: [src/quests/service.py::QuestService]
+    verified:
+      instrument: corpus_run
+      verdict: inconclusive
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Quest progress and completion state transitions (`add_progress`, `mark_rewarded`) driven by `QuestResolutionSystem`, which emits reward transfers. `quest_generation_sourcing` generates quests; `quest_reward_distribution` binds only the group split.
+
+  - id: intent_requirement_gating
+    layer: entity
+    systems: [cognition, economy]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/providers/requirements.py::RequirementEvaluator]
+    verified:
+      instrument: corpus_run
+      verdict: inconclusive
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls in the probe window, so the runtime verdict is inconclusive: the code has a real caller, but the probe horizon did not exercise it and no absence is claimed. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Pure evaluator of action preconditions (has_gold, has_item, inventory_space, near_service, ...); a failed check yields a blocker kind plus resolution tags for detours. `action_pacing_readiness` covers readiness only.
+
+  - id: regional_hazard_drain
+    layer: region
+    systems: [world]
+    depends_on: []
+    state: done
+    implemented_by: [src/world/environment.py::EnvironmentService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `EnvironmentService.calculate_hazard_drain` was called 42604 times, `get_weather_multipliers` 89941 and `get_aura_multipliers` 20596. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Drains HP and Readiness by region hazard_level and calamity_intensity. Kept separate from `regional_trauma` (a different cause and lifecycle: trauma_score).
+
+  - id: humanoid_reproduction
+    layer: entity
+    systems: [world]
+    depends_on: []
+    state: gated
+    implemented_by: [src/world/reproduction_humanoid.py::HumanoidReproductionService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls, consistent with the gate: ENABLE_REPRODUCTION_HUMANOID_PATH is FeatureMode.OFF in src/domains/optimization/feature_flags.py, and the probe ran the default PROD_SMALL profile. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Pairs existing adults into a tracked-parent birth (atlas idea 32). `aging_death`/`succession` are lifecycle exits; `demographic_cohort_cycle` is aggregate.
+
+  - id: role_model_imitation
+    layer: entity
+    systems: [cognition]
+    depends_on: []
+    state: gated
+    implemented_by: [src/strategy/role_model_phase.py::RoleModelSelectionPhase]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. 0 calls, consistent with the gate: ENABLE_ROLE_MODEL_IMITATION is FeatureMode.OFF in src/domains/optimization/feature_flags.py (ticket TCK-20260831-ROLE-MODEL-IMITATION), and the probe ran the default PROD_SMALL profile. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Per-tick writer for watching and choosing a role model. Not `personality`, `emotion` or `self_model`.
+
+  - id: faction_raid
+    layer: faction
+    systems: [faction, world]
+    depends_on: [camp]
+    state: done
+    implemented_by: [src/world/raid.py::RaidService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `RaidService.check_for_raid` was called 30 times and `spawn_raid` 3 times. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        A faction action against a place, launched from camp maturity or its own 500-tick cadence. Kept separate from `camp` (a place, not an action).
+
+  - id: refugee_displacement
+    layer: region
+    systems: [world]
+    depends_on: [calamity_intensity]
+    state: partial
+    implemented_by: [src/world/displacement.py::DisplacementService]
+    verified:
+      instrument: corpus_run
+      verdict: observed
+      date: "2026-09-30"
+      note: >-
+        TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: registered from the wider-scope completeness sweep (identity call: rpg-feature-planning 2026-09-30). Runtime probe: a positive-controlled per-method call counter wrapped around every method of the class, Kernel.tick_once() over crowded_frontier, quest_dense_frontier and frontier_living_world, seed 42, 1000 ticks each. `DisplacementService.compute_displacement` was called 30 times. Probe output: stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/. Reachability at runtime only; effect size was not measured.
+        Moves population out of regions with calamity_intensity >= DISPLACEMENT_THRESHOLD (src/world/displacement.py) and writes each entity's home region (atlas idea 65). **Its only input is `calamity_intensity`, whose sole producer is never invoked (see that entry), so it cannot activate in the current build**; state `partial` records wired-but-input-starved. It becomes live if the producer is fixed (TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES).
 
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 # UNAUDITED DEPENDS_ON EDGES (TCK-20260917-MECHANISM-DEPENDS-ON-EDGE-SEMANTICS-AUDIT, 2026-09-18)

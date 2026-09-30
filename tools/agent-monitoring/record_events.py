@@ -60,7 +60,9 @@ def compute_tool_stats(
       using a disjoint negative seq range (-1..-4) — these deliberately have no matching
       events.jsonl row of their own (see implement-epic.js), so they compute but are never
       looked up via `wanted` in practice. The pre-existing per-child-ticket `batchEvents`
-      rows (seq=1..N) are the ones this filter widening actually makes non-null for.
+      rows (seq=1..N) never get a sidecar of their own (the child's work runs under its own
+      run_id), so an agent="implement-ticket" batch row with no matching tools.jsonl row is
+      omitted (null), not a false 0/0.0 (TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION).
     - 'create-tickets': 4 of its 7 real agent() call sites register a sidecar write
       (comprehend, structure, write-sequence, link-epic). 3 sites are permanently excluded:
       writeMonitoring's own agent() call (mirrors implement-ticket.js's own writeMonitoring
@@ -119,10 +121,25 @@ def compute_tool_stats(
             if key in wanted:
                 rows_by_key[key].append(row)
 
+    # TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION: an implement-epic batch event for a
+    # child ticket (agent "implement-ticket", seq 1..N under the epic's run_id) never has a sidecar
+    # of its own -- the child's real work runs under its own run_id, and the epic's own top-level
+    # sidecar sites use the disjoint negative seq range. Real run FOLDER-tickets-todos-systemic-
+    # world-first-wave (2026-09-29) recorded 0 / 0.0 for both of its child events, a false zero
+    # for work that genuinely made tool calls. Treat them as unattributed (omitted -> null) exactly
+    # like a hand-orchestrated closure's events.
+    epic_child_keys = {
+        (r.get("run_id"), r.get("seq"))
+        for r in records
+        if infer_workflow(r.get("run_id", "")) == "implement-epic"
+        and r.get("agent") == "implement-ticket"
+        and isinstance(r.get("seq"), int)
+        and r.get("seq") > 0
+    }
     return {
         key: (len(rows_by_key[key]), compute_cost_proxy_score(rows_by_key[key]))
         for key in wanted
-        if not omit_when_unattributed or rows_by_key[key]
+        if rows_by_key[key] or not (omit_when_unattributed or key in epic_child_keys)
     }
 
 
