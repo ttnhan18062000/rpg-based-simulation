@@ -94,17 +94,58 @@ gap (no placement RULE exists at all, even for authors who wanted to place one) 
 question — not yet distinguished.
 
 ## Implementation Notes
-Not yet started. Filed to give this finding the same dedicated tracking its two sibling instances
-already have, per `registries/mechanisms.yaml`'s own `camp` entry (`verified.verdict: contradicted`,
-dated 2026-09-16) never having one.
+**2026-09-30 — verdict recorded via `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED` (epic `T02`,
+`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`): `STALE-PREMISE` (AC-7 fifth outcome, same
+label and shape as `demographic_cohort_cycle`'s own verdict this pass, not forced into `CONDITION`
+or `MISLABEL`).**
+
+This ticket's own premise — "no compiled or procedurally-generated world today seeds any
+`state.camps`" — is **false as of today**, contradicted by executing (not reading)
+`WorldCompiler.compile()` against the same real, in-corpus composition used for the cohort check
+(`data/content/world_compositions/frontier_living_world.yaml`). Result: **`state.camps` had 2 real
+entries** — `goblin_camp_place` (`kind='goblin'`) and `wolf_den_nest` (`kind='wolf'`) — both fully
+constructed `CampState` instances with real positions, not placeholders.
+
+**Root cause, verified directly:** two of this composition's constituent world modules
+(`data/content/world_modules/goblin_camp_conflict.yaml`, `wolf_den_near_forest.yaml`) already
+declare `creature_kind` on a `CAMP`/`NEST`-kind `PlaceSpec` — the exact opt-in field
+`WorldCompiler.compile()`'s `TCK-20260904-CAMPSTATE-PLACE-BRIDGE` construction path
+(`compiler.py`'s camp-construction block, cited in `docs/world/raid_boss_camp_contract.md` §"World-gen
+construction") reads to build a companion `CampState`. `git log --follow` on both content files
+shows the `creature_kind` declarations landed in commit `cb0b23b07` (2026-09-08) — **8 days before**
+`registries/mechanisms.yaml`'s own `camp` verdict (`verdict: contradicted`, dated 2026-09-16) and
+**12 days before** this ticket's own filing (2026-09-20).
+
+**`docs/world/raid_boss_camp_contract.md` (Certified/authoritative, `last_verified: 2026-09-04`) is
+itself stale on this exact point** — its own §"World-gen construction" text still reads "No content
+on disk sets it today (including `hero_guild_routing`'s `goblin_camp_place`), so `state.camps`
+remains `{}` for every currently-compiled world," which was true as of its 2026-09-04 verification
+date but has been false since the 2026-09-08 content commit. Flagging for whoever owns that doc's
+next update — not corrected here, per this epic's own out-of-scope guard against fixing anything.
+
+**Ticket-provenance finding (not a mechanism verdict, same shape as `demographic_cohort_cycle`'s):**
+both the registry verdict (2026-09-16) and this ticket (2026-09-20) were authored after real content
+already produced non-empty `state.camps` in a world composition already part of this repo's own test
+corpus. Routed to `agent-working-design` as a second instance of the same registry/ticket-filing-
+staleness class, per this pass's earlier `demographic_cohort_cycle` finding.
+
+Full experiment output: `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED`'s own Implementation Notes
+(this ticket's classifying parent).
 
 ## Test Summary
-_(not started)_
+_(not started — classification-only pass; no repo test authored or run beyond an ad hoc
+verification script, see the classifying parent ticket)_
 
 ## Files Changed
-_(not started)_
+_(none — read-only verification; `registries/mechanisms.yaml` confirmed byte-for-byte unchanged
+against `origin/main`)_
 
 ## Completion Summary
-Open. Filed 2026-09-20 to close a real tracking gap found while resolving `camp`'s own
-unbound-claims entry — a confirmed, contradicted finding that had lived in the registry and a
-shared pattern doc for 4 days with no dedicated ticket of its own, unlike its two siblings.
+Filed 2026-09-20 to close a real tracking gap found while resolving `camp`'s own unbound-claims
+entry — a confirmed, contradicted finding that had lived in the registry and a shared pattern doc
+for 4 days with no dedicated ticket of its own, unlike its two siblings. **Verdict as of
+2026-09-30: `STALE-PREMISE`** — the premise this ticket exists to track no longer holds against real
+content, and has not held since 2026-09-08. Still `OPEN` pending whoever owns the
+`registries/mechanisms.yaml` `camp` entry correction, `docs/world/raid_boss_camp_contract.md`'s
+stale construction-note update, and this ticket's own closure — out of scope for the classifying
+pass itself (no registry edits, no doc fixes, per the epic's scope guard).

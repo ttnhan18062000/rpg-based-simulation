@@ -173,6 +173,35 @@ death for influence-shift purposes, or route influence-shift off `alive_set is F
 mean the same thing for regional sovereignty as a lethal "KILL"?), left for review rather than
 assumed and built.
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-DEAD-GUARD` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T03`): verdict `DEFECT`
+
+**Known cause recorded, not re-investigated; confirmed still true at HEAD.** The cause is this ticket's own
+2026-09-15 finding above (also the wave's, which explicitly tested and rejected a shared root cause with
+`LAIR-REGION-TRAUMA-NEVER-ACCUMULATES`): `resolve_lifecycle()` counts a death only when
+`outcome_kind in ("KILL", "PERMADEATH")`, while `world_dynamics.py` counts `alive_set is False`, and combat resolves
+a non-lethal kill as `"DEFEAT"`. Checked at branch tip `3dbdff48a`:
+- `src/systems/lifecycle_systems/lifecycle.py:202` — filter unchanged: `("KILL", "PERMADEATH")`.
+- `src/engine/world_dynamics.py:47` — still `alive_set is False`.
+- `src/engine/combat.py:172,273` — `outcome = "KILL" if is_lethal else "DEFEAT"` (line numbers moved from the ticket's
+  `499-500`; behaviour is the same).
+- The cited files have no commit that touches this path since filing apart from `6dd2ccd12` on the filing day
+  (2026-09-14), which predates the 2026-09-15 investigation.
+
+**Fresh runtime confirmation, one extra check.** Real `Kernel.tick_once()`, `frontier_living_world`, seed 42,
+`PROD_SMALL`, 1,500 ticks, with `FactionInfluenceService.process_influence_shift` wrapped to count calls:
+**59 alive->dead transitions, 0 calls to `process_influence_shift`, no region influence ever off `0.0`/`100.0`.**
+The call is guarded by `if recent_deaths:` in `resolve_lifecycle()`, so zero calls means the filter saw none of
+the 59 deaths. (The 59 include non-combat deaths, so this does not itself show they were `DEFEAT`; the
+`DEFEAT`-vs-`KILL` mechanism rests on the code reads above and the ticket's own 20/20 instrumentation.)
+
+**Verdict `DEFECT`, not `CONDITION`.** The reader is wired and correct for the inputs it recognises; a real
+filter divergence between two readers of the same event keeps it from ever running. No content or run-length
+change fixes it. The consequence worth naming: `RegionState.influence` has never
+moved in this codebase's history, so the threshold unification in the sovereignty-threshold ticket
+(`TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT`) tuned constants on a path that this ticket keeps from
+firing. Whether a non-lethal `DEFEAT` should count as a sovereignty-relevant death is the fix's open design
+question, left where the ticket parked it.
+
 ## Test Summary
 _(not started)_
 
@@ -196,3 +225,5 @@ decision, given the investment cap on this cluster, was to record the finding an
 now — this ticket's own root cause is exactly as complete and actionable as the other two in this
 cluster, just a different class of cause (a code-level classification divergence, not a
 composition/geometry gap).
+
+**Verdict as of 2026-09-30: `DEFECT`** — death-outcome-kind filter divergence, re-confirmed at HEAD and by a 1,500-tick run (59 deaths, 0 influence-shift calls); see Implementation Notes. Still `OPEN`.

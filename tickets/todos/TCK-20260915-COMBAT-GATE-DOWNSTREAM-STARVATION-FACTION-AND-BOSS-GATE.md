@@ -133,6 +133,40 @@ _(none yet — filed as a finding, not yet investigated)_
 `TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s own 2026-09-17 addendum for the full
 measurement. Boss-gate chain (the other half) not touched — still open.
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-WAVE-CONFIRM` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T04`): boss-gate half `CONDITION` (corpus run length); faction-chain half untouched
+
+**Scope of this note.** Only the still-open boss-gate half. The faction-chain half is already resolved by
+`TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION`'s 2026-09-17 addendum and is not re-litigated. No
+combat-volume number is cited or re-derived here — the reduction figures in this ticket's own Request Summary
+are not relied on, because that measurement has moved twice since.
+
+**Re-measured, not cited.** Real `Kernel.tick_once()` runs, `frontier_living_world`, seed 42, `PROD_SMALL`,
+3,000 ticks each, same canonical harness as `LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY`'s proof, differing only
+in `ENABLE_COMBAT_ENGAGEMENT` (the flag that carries the posture gate):
+
+| `ENABLE_COMBAT_ENGAGEMENT` | first `world_boss` tick | peak region `trauma_score` | final `state.maturity` |
+|---|---|---|---|
+| `ON` (the default; confirmed `ON` in `state.feature_flags` after one tick) | **2101** | 21.26 (`goblin_camp`) | 2 |
+| `OFF` | **2101** | 21.26 (`goblin_camp`) | 2 |
+
+The boss spawns on the same tick, with the same peak trauma, with the gate on and off — and 2101 is also the
+tick the earlier proof recorded before the gate existed. **In this world the posture gate does not touch the
+boss-gate chain at all**, which is what the faction-chain addendum would predict (combat here runs largely
+through the incidental opportunity-attack path the gate does not cover). The ticket's stated risk — that the
+gate starves the boss chain "into practical unreachability" — is **not observed**.
+
+**Why `CONDITION`, and of what kind.** The gate is correct, wired and reached. What decides whether a run ever
+sees it is horizon: `state.maturity` gains 1 per `MATURITY_INTERVAL = 1000` ticks
+(`calamity.py:17,31`) and `BOSS_SPAWN_THRESHOLD = 2.0` (`boss.py:26`), so the **earliest possible spawn is tick
+2000**; the trauma side (`BOSS_SPAWN_TRAUMA_THRESHOLD = 8.0`, `boss.py:27`) was satisfied by 21.26 in this world.
+A run shorter than ~2,000 ticks can never spawn a world boss; the corpus spans 1,000-5,000. That makes it a
+**corpus-run-length** condition, not a world-content one.
+
+**Owner (AC-6 split), proposed not decided:** the corpus run-length side belongs with the SimQ corpus scope
+(`TCK-20260915-SIMQ-CORPUS-BLIND-TO-SCALE-DEPENDENT-BEHAVIOR`, open) — the epic explicitly leaves that call to
+`T06`. Limits of this measurement: one world, one seed, 3,000 ticks; other worlds and the trauma side elsewhere
+were not sampled.
+
 ## Test Summary
 _(none yet — no code changed for the faction-chain half; boss-gate half not started)_
 
@@ -141,3 +175,5 @@ _(none yet)_
 
 ## Completion Summary
 _(not started)_
+
+**Boss-gate half, verdict as of 2026-09-30: `CONDITION` (corpus run length)** — gate reached at tick 2101 with the posture gate ON and OFF alike; risk not observed; see Implementation Notes. Faction-chain half unchanged. Still `OPEN`.

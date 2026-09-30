@@ -83,16 +83,70 @@ None yet — standard tier, staging artifacts created when picked up.
 Whether the gap is purely content-authoring or a deeper world-gen gap is not yet distinguished.
 
 ## Implementation Notes
-Not yet started. Filed to give this finding the same dedicated tracking its sibling instances
-already have.
+**2026-09-30 — verdict recorded via `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED` (epic `T02`,
+`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`): `STALE-PREMISE` (AC-7 fifth outcome, not
+forced into `CONDITION` or `MISLABEL`).**
+
+This ticket's own premise — "no compiled or procedurally-generated world today ever seeds
+`population_cohorts`" — is **false as of today**, contradicted directly by executing (not reading)
+`WorldCompiler.compile()` against a real, in-corpus world composition
+(`data/content/world_compositions/frontier_living_world.yaml`, resolved via
+`WorldAssemblyResolver.assemble()`, `tests/integration/worldassembly/test_real_content_world_
+compositions.py`'s own fixture path). Result: **6 of 7 regions received non-empty
+`population_cohorts`** (`hometown`, `bandit_road`, `goblin_camp`, `old_mine`,
+`haunted_battlefield`, `wolf_den` — e.g. `hometown` → `{young: 4, adult: 6, elder: 3}` from a
+declared population of 13, split by the documented 30/50/20 ratio). The seventh, `near_forest`, got
+`{}` correctly — it has **zero** `PopulationSpec` entries with `spawn_region="near_forest"` in this
+composition, which is `_seed_population_cohorts`'s own documented `declared_population == 0` → `{}`
+behavior, not a seeding failure.
+
+**The decisive fork (identified by `rpg-feature-planning`'s independent cross-check, 2026-09-30) is
+resolved: `spawn_region` and `RegionSpec.id` do NOT diverge for real content.** Every
+`PopulationSpec.spawn_region` value in this composition (`hometown`, `bandit_road`, `goblin_camp`,
+`old_mine`, `haunted_battlefield`, `wolf_den`) matches a real `RegionSpec.id` exactly. There is no
+key-space mismatch bug — `region_declared_population.get(r_spec.id, 0)` (`compiler.py:449`) finds
+the entry every time a region has any declared population at all.
+
+**Ticket-provenance finding (not a mechanism verdict — do not fold into future work on this
+mechanism):** this ticket was filed 2026-09-20, three weeks after `TCK-20260831-POPULATION-COHORT-
+SEEDING` closed `DONE` on 2026-08-31 and shipped the exact seeding code that contradicts this
+ticket's premise. Per its own Request Summary, it was filed on the strength of a
+`registries/mechanisms.yaml` `demographic_cohort_cycle` entry dated 2026-09-16 — itself six weeks
+after the fix shipped — that was apparently never re-checked against the compiler's actual code
+before this ticket copied its verdict forward. Routed to `agent-working-design` as a registry/
+ticket-filing-staleness process finding, per the epic's own T02 scoping.
+
+**Full experiment output, code, and reasoning:** `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED`'s
+own Implementation Notes (this ticket's classifying parent).
+
+**Independently reproduced by `rpg-feature-planning`, 2026-09-30**, from a separate worktree run of
+the same composition — identical per-region cohort figures, and explicit confirmation that no
+`spawn_region` value lacks a matching `RegionSpec.id` in this content. `STALE-PREMISE` is
+independently reproduced, not a single-run finding.
+
+**What this verdict does NOT establish, flagged by that same independent check so it isn't lost:**
+`STALE-PREMISE` retires the *seeding* claim only — that `population_cohorts` starts non-empty. It
+says nothing about whether `DemographicCycleService.process_demographics`'s per-200-tick birth/death
+math (`birth_rate=0.02`, `mortality_rate=0.01`, `cohort.py:41-42`) produces any *observable* change
+over a real corpus run length (~25 cycles at 5,000 ticks, applied to seeded counts of 5–13 — a 2%
+rate may round to zero every cycle). That is a distinct, unmeasured, open question — not claimed
+either way here, and deliberately not folded into the `STALE-PREMISE` verdict above. Whether it
+warrants its own ticket is left for after this epic's other classification passes finish, not
+decided by this pass.
 
 ## Test Summary
-_(not started)_
+_(not started — this pass is classification-only; no test authored or run beyond the ad hoc
+verification script above)_
 
 ## Files Changed
-_(not started)_
+_(none — read-only verification; `registries/mechanisms.yaml` confirmed unchanged against
+`origin/main`)_
 
 ## Completion Summary
-Open. Filed 2026-09-20 alongside `TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` to
-close a real tracking gap for a confirmed, contradicted finding that had lived in the registry
-since 2026-09-16 with no dedicated ticket of its own.
+Filed 2026-09-20 alongside `TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` to close a
+real tracking gap for a confirmed, contradicted finding that had lived in the registry since
+2026-09-16 with no dedicated ticket of its own. **Verdict as of 2026-09-30: `STALE-PREMISE`** — the
+premise this ticket exists to track no longer holds against real content; see Implementation Notes.
+Still `OPEN` pending whoever owns the `registries/mechanisms.yaml` `demographic_cohort_cycle` entry
+correction and this ticket's own closure — out of scope for the classifying pass itself
+(`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`'s own scope guard: no registry edits).
