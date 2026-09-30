@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION
-phase: open
+phase: done
 date: 2026-09-20
 tags: [world]
 ---
@@ -17,7 +17,7 @@ no compiled or procedurally-generated world today seeds any `state.camps`, so it
 no-op in every real run
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -137,15 +137,19 @@ _(not started — classification-only pass; no repo test authored or run beyond 
 verification script, see the classifying parent ticket)_
 
 ## Files Changed
-_(none — read-only verification; `registries/mechanisms.yaml` confirmed byte-for-byte unchanged
-against `origin/main`)_
+_(none — disposition-only closure; nothing under `src/` changed)_
 
 ## Completion Summary
-Filed 2026-09-20 to close a real tracking gap found while resolving `camp`'s own unbound-claims
-entry — a confirmed, contradicted finding that had lived in the registry and a shared pattern doc
-for 4 days with no dedicated ticket of its own, unlike its two siblings. **Verdict as of
-2026-09-30: `STALE-PREMISE`** — the premise this ticket exists to track no longer holds against real
-content, and has not held since 2026-09-08. Still `OPEN` pending whoever owns the
-`registries/mechanisms.yaml` `camp` entry correction, `docs/world/raid_boss_camp_contract.md`'s
-stale construction-note update, and this ticket's own closure — out of scope for the classifying
-pass itself (no registry edits, no doc fixes, per the epic's scope guard).
+Closed 2026-09-30 as **STALE-PREMISE**; no code change. The premise that no compiled or procgen world
+seeds `state.camps` is false. `goblin_camp_conflict.yaml:29` and `wolf_den_near_forest.yaml:66` declare
+`creature_kind` on a CAMP/NEST `PlaceSpec` (content shipped `cb0b23b07`, 2026-09-08, 12 days before this
+ticket was filed). Both are composed into `frontier_living_world` (`frontier_living_world.yaml:8-9`), and a
+real compile yields 2 `CampState` (`goblin_camp_place`, `wolf_den_nest`). Verified independently twice.
+
+**AC-1 and AC-2 are void** (there is no gap to explain or fix). **AC-3 is void, not met:**
+`docs/plans/world_composition_precondition_gap_finding.md` is retired (`f70f58706`) and camp was never a
+real instance of that pattern.
+
+The stale claim in `docs/world/raid_boss_camp_contract.md` was corrected in `f70f58706`. The
+`registries/mechanisms.yaml` `camp` verdict correction is owned by
+`TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE`, not this closure.

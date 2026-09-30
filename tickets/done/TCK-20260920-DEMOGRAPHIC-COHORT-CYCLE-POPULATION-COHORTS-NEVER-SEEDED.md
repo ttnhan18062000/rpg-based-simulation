@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: world
 authority: P1
 audience: agent
 ticket_id: TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED
-phase: open
+phase: done
 date: 2026-09-20
 tags: [world]
 ---
@@ -17,7 +17,7 @@ tags: [world]
 seeds `population_cohorts`, so the call is a permanent no-op in every real run
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -139,14 +139,22 @@ _(not started — this pass is classification-only; no test authored or run beyo
 verification script above)_
 
 ## Files Changed
-_(none — read-only verification; `registries/mechanisms.yaml` confirmed unchanged against
-`origin/main`)_
+_(none — disposition-only closure; nothing under `src/` changed)_
 
 ## Completion Summary
-Filed 2026-09-20 alongside `TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` to close a
-real tracking gap for a confirmed, contradicted finding that had lived in the registry since
-2026-09-16 with no dedicated ticket of its own. **Verdict as of 2026-09-30: `STALE-PREMISE`** — the
-premise this ticket exists to track no longer holds against real content; see Implementation Notes.
-Still `OPEN` pending whoever owns the `registries/mechanisms.yaml` `demographic_cohort_cycle` entry
-correction and this ticket's own closure — out of scope for the classifying pass itself
-(`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`'s own scope guard: no registry edits).
+Closed 2026-09-30 as **STALE-PREMISE**; no code change. The premise that no world seeds
+`population_cohorts` is false: 6 of 7 regions seed non-empty cohorts (`hometown` declares 13 →
+`{young:4, adult:6, elder:3}`, exact 30/50/20); the 7th correctly gets `{}` for having zero
+`PopulationSpec`. Seeding shipped 2026-08-31. Reproduced from two worktrees with identical figures.
+
+**Closing this does NOT mean the demographic cycle works.** The open question in Implementation Notes
+resolved badly: `cohort.py:377-381` computes `net = int(count * 0.01)`, which needs `count >= 100` to be
+non-zero, against seeded brackets of 3–6. The cycle therefore never changes a count and never emits a
+`POPULATION_BIRTH`/`DEATH` event. That defect is tracked as
+`TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` (P1, open) — that ticket, not this closure,
+is the status of the mechanism.
+
+AC-1 and AC-2 are void (no gap to explain or fix). AC-3 is void, not met: the finding doc is retired
+(`f70f58706`) and cohorts were never an instance. The `registries/mechanisms.yaml`
+`demographic_cohort_cycle` verdict correction is owned by
+`TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE`.
