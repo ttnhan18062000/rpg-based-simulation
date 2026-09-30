@@ -142,7 +142,12 @@ def test_ts_capture_bash_precedes_each_covered_agent_call():
     # Captured values are wired downstream, not discarded.
     assert "const startTs = scopeTs || null" in it_source
     assert "const batchStartTs = discoverTs || null" in ie_source
-    assert "startTs = comprehendTs || null" in ct_source
+    # create-tickets.js is the exception (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT):
+    # its captureTs()/bash('date ...') helper was removed entirely — the native Workflow runtime
+    # this file now runs on has no bash() — and startTs comes in via args.start_ts instead, wired
+    # in once as a const rather than captured-then-reassigned. See
+    # test_ts_orchestrator_run_start_time_comes_from_args_start_ts below for the replacement.
+    assert "startTs = comprehendTs || null" not in ct_source
 
 
 # ---------------------------------------------------------------------------
@@ -224,9 +229,31 @@ def test_captureTs_helper_defined_once_after_writeSidecar():
     classify_idx = it_source.index("const classifyChecklistFailure")
     assert write_sidecar_idx < capture_ts_idx < classify_idx
 
-    # implement-epic.js and create-tickets.js each define their own local equivalent (no shared
-    # module scope with implement-ticket.js).
+    # implement-epic.js still defines its own local equivalent (no shared module scope with
+    # implement-ticket.js). create-tickets.js does not any more (TCK-20260929-CREATE-TICKETS-
+    # WORKFLOW-RUNTIME-PILOT) — it was the one file ported to the native Workflow runtime, which
+    # has no bash(), so its captureTs() helper was removed rather than kept as dead code.
     ie_source = _read_implement_epic()
     ct_source = _read_create_tickets()
     assert ie_source.count("const captureTs = async ()") == 1
-    assert ct_source.count("const captureTs = async ()") == 1
+    assert ct_source.count("const captureTs = async ()") == 0
+
+
+# ---------------------------------------------------------------------------
+# 7. create-tickets.js only: startTs comes from args.start_ts, not captureTs()
+#    (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT — the native Workflow runtime has no
+#    bash(), Date.now(), Math.random(), or argless new Date()).
+# ---------------------------------------------------------------------------
+
+
+def test_ts_orchestrator_run_start_time_comes_from_args_start_ts():
+    ct_source = _read_create_tickets()
+    assert "const startTs = startTsArg" in ct_source
+    assert "const startTsArg = (args && args.start_ts) || ''" in ct_source
+    assert "bash('date -u +%Y-%m-%dT%H:%M:%SZ')" not in ct_source
+    # A missing start_ts must be a structured INVALID_ARGS result, not a throw — mirrors the
+    # pre-existing `source` check immediately above it.
+    invalid_args_idx = ct_source.index("if (!startTsArg) {")
+    block_end = ct_source.index("\n}", invalid_args_idx)
+    block = ct_source[invalid_args_idx:block_end]
+    assert "status: 'INVALID_ARGS'" in block

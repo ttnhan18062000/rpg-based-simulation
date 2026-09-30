@@ -16,23 +16,53 @@ Skills are slash commands that trigger focused, session-scoped task patterns. Th
 ## Skills vs. Workflows — How Invocation Works
 
 **Skills** are the user-facing slash commands. Type `/skill-name args` in the prompt. Claude reads
-the skill's `SKILL.md`, which instructs it to read the corresponding `.claude/workflows/*.js` file
-directly and translate its phase/agent/bash constructs into tool calls by hand — **there is no
-`Workflow` tool in this harness** to invoke instead. Every project workflow-shortcut `SKILL.md`
-states this explicitly in its own Action section (e.g. "Do not call the Workflow tool — it is not
-available").
+the skill's `SKILL.md`, which tells it how to run the corresponding `.claude/workflows/*.js` file.
 
-**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not**
-directly slash-commandable on their own — only workflows with a corresponding `.claude/skills/*/
-SKILL.md` wrapper (below) are reachable via a slash command at all. `/workflow implement-ticket` is
-not a valid command — it will fail with "Unknown command: /workflow". The correct form, for a
-workflow that has a skill wrapper, is `/implement-ticket`.
+The Claude Code `Workflow` tool **is available in this harness** (confirmed
+`TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT`, 2026-09-29 — reversing this doc's prior
+"not available" claim, itself corrected by `TCK-20260708-SKILL-CREATE-TICKETS-WORKFLOW-TOOL-STALE`
+after an earlier stale-doc pass). It runs a script with `agent()`/`pipeline()`/`parallel()`/
+`phase()`/`log()`, `args`, resume, and `/workflows` progress — but it is a **separate runtime**
+from a normal Claude Code turn: no `bash()`, no filesystem or Node.js APIs, and no
+`Date.now()`/`Math.random()`/argless `new Date()` (they would break resume). A `.claude/workflows/
+*.js` file has to be written against those constraints to run on it at all, and it also has to
+parse under acorn with `sourceType: 'module'`, `allowReturnOutsideFunction: true`,
+`allowAwaitOutsideFunction: true` — an unescaped backtick nested inside an outer template-literal
+prompt string breaks that silently (no file/line pointer), which is exactly what blocked
+`create-tickets.js` until the pilot ticket fixed it.
+
+Only one script — `create-tickets.js` — has actually been ported and piloted so far. Its
+`SKILL.md` now invokes the native tool as the primary path:
+
+```
+/create-tickets ...  →  Workflow({ scriptPath: '.claude/workflows/create-tickets.js',
+                                    args: { source, structure, output, epic_id, start_ts } })
+```
+
+`scriptPath` is used deliberately instead of `name` — the named-lookup form
+(`Workflow({name:'create-tickets'})`) reads the **main checkout's** copy of the script, not the
+current worktree's, so it would silently run a stale version whenever the two differ. Hand-
+translation (reading the JS and manually issuing the equivalent tool calls) is kept as a
+documented **fallback only**, for when the tool call itself errors.
+
+The other three scripts (`implement-ticket.js`, `implement-epic.js`, `simq-audit.js`) are **not**
+ported yet — `implement-ticket.js` and `simq-audit.js` still fail the acorn parse outright (same
+nested-backtick defect class, unfixed — out of this pilot's scope, see
+`stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md` for the
+full parse-status list and the go/no-go on porting them). Their skills still hand-translate only,
+same as before this pilot:
 
 ```
 You type:                Claude does:
 /implement-ticket ...  →  Reads .claude/workflows/implement-ticket.js and manually executes its
                            phases via Agent/Bash/etc. tool calls — no Workflow tool involved.
 ```
+
+**Workflows** (`.claude/workflows/*.js`) are Claude-internal multi-agent scripts. They are **not**
+directly slash-commandable on their own — only workflows with a corresponding `.claude/skills/*/
+SKILL.md` wrapper (above) are reachable via a slash command at all. `/workflow implement-ticket` is
+not a valid command — it will fail with "Unknown command: /workflow". The correct form, for a
+workflow that has a skill wrapper, is `/implement-ticket`.
 
 ---
 

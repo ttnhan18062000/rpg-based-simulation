@@ -20,6 +20,36 @@ if str(_MONITORING_TOOLS_DIR) not in sys.path:
 import monitoring_consolidation as mc  # noqa: E402
 import writer  # noqa: E402
 
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+
+
+def _protected_paths_git_status() -> str:
+    return subprocess.run(
+        ["git", "status", "--porcelain", "--"] + _PROTECTED_PATHS,
+        cwd=_REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _fail_if_this_module_touches_tracked_monitoring_files():
+    """Scope 4 regression guard (TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES): mirrors the
+    identical fixture in test_done_checker_static.py. This module's own real-repo writer was
+    test_done_checker_static_suite_still_passes, an indirect trigger that ran the (then-unisolated)
+    done_checker_static suite in a cwd-inheriting subprocess -- removed as part of this ticket
+    since it duplicated CI's own direct run of that file for no independent coverage. Every test
+    below uses tmp_path for its own git repos, so this should stay a pure guard, not something
+    expected to ever fire.
+    """
+    before = _protected_paths_git_status()
+    yield
+    after = _protected_paths_git_status()
+    assert before == after, (
+        "a test in this module modified a tracked monitoring file it should not have.\n"
+        f"git status before this module's tests:\n{before}\n"
+        f"git status after:\n{after}"
+    )
+
 
 def _write_jsonl(path: Path, rows: list) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -296,15 +326,6 @@ def test_working_log_writer_untouched_by_this_ticket():
     source = Path(working_log_writer.__file__).read_text(encoding="utf-8")
     assert "def append_working_log_row(" in source
     assert "def write_pending_working_log_row(" not in source
-
-
-def test_done_checker_static_suite_still_passes():
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest",
-         "tests/tools/test_done_checker_static.py", "-q"],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
 
 
 # ---------------------------------------------------------------------------

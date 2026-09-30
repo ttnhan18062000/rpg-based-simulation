@@ -720,6 +720,63 @@ def _touched_docs_paths_uncovered(touched: set[str], declared: set[str]) -> list
     return sorted(t for t in touched if not any(_path_touched(d, {t}) for d in declared))
 
 
+# TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS: docs/REGISTRY.yaml is regenerated
+# unconditionally at every ticket close (all tiers, including hotfix — see "After Work" /
+# TCK-20260709-REGISTRY-REGEN-ON-CLOSE) -- an uncommitted change to it is expected Finalize noise
+# from the regen itself, never evidence of an undeclared doc edit. Excluded from the reverse
+# check's touched set unconditionally, not just when it happens to be the only touched doc.
+_GENERATED_DOCS_EXCLUDED_FROM_REVERSE_CHECK = {"docs/REGISTRY.yaml"}
+
+
+def _sibling_declared_docs_paths(exclude_ticket_id: str, status_touched: set[str]) -> set[str]:
+    """docs/ paths declared in ANOTHER ticket's own '## Files Changed'/'## Related Docs' text —
+    used to drop sibling-claimed paths from the reverse check's UNCOMMITTED half only
+    (TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS). When a batch closes several tickets
+    before one shared commit, every uncommitted docs/ path in the tree was previously required in
+    *each* checked ticket's own Files Changed/Related Docs — so each ticket got falsely blamed for
+    its siblings' own declared docs.
+
+    "Another ticket" means one of:
+    - any ticket currently in `tickets/inprogress/` (still open, so definitely not this ticket's
+      own commits), or
+    - a ticket in `tickets/done/` that is ITSELF present in `status_touched` (i.e. closed in this
+      same uncommitted batch — its own move-to-done is part of the uncommitted diff too).
+
+    A ticket in `tickets/done/` that is NOT in `status_touched` is an already-committed prior
+    closure, not a same-batch sibling — its own declared docs are irrelevant here (it can't have
+    caused an *uncommitted* docs/ change). `exclude_ticket_id` is the ticket currently being
+    checked, so its own declarations are never treated as a "sibling."
+
+    Only the committed half's own attribution (already scoped correctly per-ticket by
+    `_git_ticket_commits_touched_paths`) is left untouched — this function's result is applied to
+    the uncommitted half alone, so an undeclared docs/ path with no claimant anywhere still FAILs
+    for every ticket that touches it, same as before (no new blind spot).
+    """
+    sibling_ticket_paths: list[Path] = []
+
+    inprogress_dir = Path("tickets/inprogress")
+    if inprogress_dir.exists():
+        sibling_ticket_paths.extend(sorted(inprogress_dir.glob("*.md")))
+
+    done_dir = Path("tickets/done")
+    if done_dir.exists():
+        for p in sorted(done_dir.glob("*.md")):
+            if str(p) in status_touched:
+                sibling_ticket_paths.append(p)
+
+    declared: set[str] = set()
+    for ticket_path in sibling_ticket_paths:
+        if ticket_path.stem == exclude_ticket_id:
+            continue
+        try:
+            text = ticket_path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        declared |= _prose_docs_paths(_extract_section_text(text, "Files Changed"))
+        declared |= _prose_docs_paths(_extract_section_text(text, "Related Docs"))
+    return declared
+
+
 def _resolve_ticket_body_path(ticket_id: str) -> Path:
     """Resolve the closing ticket's own body-text file the same way `check_tag_drift` does — a
     small private helper of its own, not extracted into a shared function, so `check_tag_drift`'s
@@ -816,7 +873,17 @@ def check_docs_to_update_coverage(
         else:
             forward_evidence = "no docs/ paths flagged as requiring update"
 
-    touched_docs = {t for t in touched if t.startswith("docs/")}
+    # Reverse-direction touched set (TCK-20260929-DONE-CHECKER-POST-CLOSURE-FALSE-FAILS): computed
+    # separately from `touched` above (which the forward half already used, unchanged) so sibling-
+    # attribution and the REGISTRY.yaml exclusion apply only to the reverse check, per Out of Scope.
+    status_touched = _git_status_touched_paths()
+    committed_touched = _git_ticket_commits_touched_paths(ticket_id)
+    sibling_declared = _sibling_declared_docs_paths(ticket_id, status_touched)
+    status_touched_docs = {t for t in status_touched if t.startswith("docs/")} - sibling_declared
+    committed_touched_docs = {t for t in committed_touched if t.startswith("docs/")}
+    touched_docs = (
+        status_touched_docs | committed_touched_docs
+    ) - _GENERATED_DOCS_EXCLUDED_FROM_REVERSE_CHECK
     if not touched_docs:
         return ("PASS", f"{forward_evidence}; reverse: no docs/ path(s) touched")
 
@@ -1291,10 +1358,14 @@ def main(argv=None) -> int:
         help="Auto-detected from the ticket's own '## Tier' body field if omitted.",
     )
     parser.add_argument(
-        "--part", choices=["precheck", "finalize", "both"], default="both",
+        "--part", choices=["precheck", "finalize", "both"], default=None,
         help="precheck = Part A (pre-Finalize, Verify-phase conditions); "
         "finalize = Part B (post-Finalize migration self-check, includes "
-        "working_log_exactly_one_row); both = run both aggregates (default).",
+        "working_log_exactly_one_row); both = run both aggregates. If omitted: 'both', unless "
+        "the ticket already resolves under tickets/done/ (TCK-20260929-DONE-CHECKER-POST-"
+        "CLOSURE-FALSE-FAILS), in which case precheck's own conditions assume the ticket is "
+        "still in tickets/inprogress/ and would false-FAIL post-closure, so only 'finalize' "
+        "runs. Pass --part both explicitly to force precheck to run anyway.",
     )
     parser.add_argument(
         "--start-ts", default=None,
@@ -1303,12 +1374,26 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     tier = _resolve_tier(args.ticket_id, args.tier)
+
+    part = args.part
+    if part is None:
+        already_closed = check_ticket_finalized(args.ticket_id)[0] == "PASS"
+        if already_closed:
+            part = "finalize"
+            print(
+                f"NOTE: {args.ticket_id} already resolves under tickets/done/ — skipping "
+                "precheck (its conditions assume tickets/inprogress/ and would false-FAIL here). "
+                "Pass --part both to run it anyway."
+            )
+        else:
+            part = "both"
+
     any_fail = False
-    if args.part in ("precheck", "both"):
+    if part in ("precheck", "both"):
         any_fail = _render_results(
             "precheck", run_static_precheck(args.ticket_id, tier, args.start_ts)
         ) or any_fail
-    if args.part in ("finalize", "both"):
+    if part in ("finalize", "both"):
         any_fail = _render_results(
             "finalize", run_finalize_selfcheck(args.ticket_id, tier)
         ) or any_fail
