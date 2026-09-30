@@ -51,11 +51,11 @@ only the epic ticket + this file). T05/T06 remain uncreated, blocked on their pr
    `CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` appears in both T01's corpus group (by shape) and T04's
    scope (by wave-assessment status) — T04 owns its actual disposition (recording the DEFECT verdict
    from PR #258); T01 covers it only as a corpus-grouping entry, not a duplicate classification pass.
-5. `T05` — Perception-authority design decision (`TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`,
+5. `T05` = `TCK-20260930-UNREACHABLE-CLASSIFY-PERCEPTION-AUTHORITY` — **`DONE`, closed to `tickets/done/`, 2026-09-30:** `PERCEPTION-UPDATE-PHASE` = `UNDECLARED` confirmed; the decision needs a human and is not made. Original scoping: Perception-authority design decision (`TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`,
    strongly pre-indicated `UNDECLARED`; confirm, don't re-derive). **Prereq: `T03`** — the epic scopes
    this as an `UNDECLARED` case only after the dead-guard pass in T03 has run, since T03's tickets
    share the strategic-cognition code area this decision touches.
-6. `T06` — Ranked fix order for the `DEFECT` subset + corpus-run-length-vs-world-content owner split
+6. `T06` = `TCK-20260930-UNREACHABLE-CLASSIFY-ROLLUP` — **`DONE`, closed to `tickets/done/`, 2026-09-30:** the shared document is `docs/plans/unreachable_mechanism_classification.md`. Original scoping: Ranked fix order for the `DEFECT` subset + corpus-run-length-vs-world-content owner split
    for the `CONDITION` subset. **Prereq: `T01`–`T04`** — cannot rank or split before every ticket in
    those four passes carries a verdict.
 
@@ -81,3 +81,7 @@ arithmetic), not assume it from the corpus grouping alone.
 child: that file must stay byte-for-byte unchanged across the whole epic, same as the wave's own
 guard. `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION` owns that registry's
 `implemented_by` residue and is adjacent, not merged into, this epic.
+
+## Epic status
+
+All six children are done and the 14 corpus tickets carry verdicts (`docs/plans/unreachable_mechanism_classification.md`). **The epic ticket itself has not been closed**: epic-tier closure (staging artifacts, working-log row, moving this folder to `tickets/done/`) was left for the planner, since the corpus tickets it classifies remain open by design and landing the batch is the user's call.
