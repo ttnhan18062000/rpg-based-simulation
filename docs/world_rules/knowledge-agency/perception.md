@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-09-30"
 ---
 
 # World Rule Family: Perception
@@ -60,17 +60,21 @@ binary filter over 7 sense channels (`vision`, `hearing`, `smell`, `magic_sense`
 `vibration`, `social_reading`), a detection threshold (score ≥ 0.2 on any channel), and a score
 formula (`sense_strength × signal_strength × distance_factor × terrain_mod × (0.5 + alertness ×
 0.5)`) — one legitimate way to declare the bound, not evidence that every future mechanism must
-combine the same four dimensions. Only signals clearing this gate ever reach the downstream
-salience/attention/budget pipeline (`AttentionFocusService` → `SignalSalienceEvaluator` →
+combine the same four dimensions. By design (per
+`docs/simulation/domains/perception_contract.md`), only signals clearing this gate would reach
+the downstream salience/attention/budget pipeline (`AttentionFocusService` → `SignalSalienceEvaluator` →
 `PerceptionFilterService`, which further partitions cleared signals into perceived /
 recorded-ignored / silently-dropped under a hard budget of `max_perceived=10`,
 `max_ignored_to_record=5`). **Checked directly: `PerceptionUpdatePhase` — the stage that runs
 this downstream pipeline and writes `entity.cognition.subjective.perception` — has zero call
 sites in `AuthoritativeApplyPipeline.refine()` and does not run in any production tick today**
 (confirmed via `docs/simulation/domains/perception_contract.md`'s own explicit note, citing
-`TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION`). Only `PerceptionGate` itself (the binary
-channel/distance filter) is confirmed live; the richer salience/attention/budget layer this Rule
-also describes is real, deterministic, and tested, but wired-dead in production (**INERT/OFF**,
+`TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION`). `PerceptionGate` itself is live in production
+only as a per-target combat-targeting filter (`src/engine/tactical.py:199`, its sole production
+call site; verified 2026-09-30), not in the general perception-pipeline role described above.
+General runtime awareness is the 10.0-unit radius query of Mechanics Bible 04 §5; the richer
+salience/attention/budget layer this Rule also describes is real, deterministic, and tested, but
+wired-dead in production (**INERT/OFF**,
 not CONFLICTING — nothing actively violates the Rule here, the richer layer simply never runs).
 
 **Scenarios:** [KA-S01](../scenarios/knowledge-agency-batch-06.md#ka-s01) (see it, know
