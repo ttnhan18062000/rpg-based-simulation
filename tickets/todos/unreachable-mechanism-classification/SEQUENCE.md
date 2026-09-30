@@ -15,7 +15,7 @@ only the epic ticket + this file). T05/T06 remain uncreated, blocked on their pr
    `TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS`,
    `TCK-20260929-PROFILE-API-PAYLOAD-DEAD-API-REFS`). `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-
    NEVER-FIRES` is cited but excluded from classification here — its DEFECT verdict is T04's to
-   record. No unmet prereq. Created, committed.
+   record. No unmet prereq. **`DONE`, closed to `tickets/done/`, 2026-09-30:** `CALAMITY-RANDOM-CHANCE` = fifth outcome `NO-MECHANISM` (AC-7), `REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN` = `UNDECLARED` (live `TownResolutionSystem` duplicate), `PROFILE-API-PAYLOAD` = `DEFECT` (executed).
 2. `T02` = `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED` — Classification pass over the 4
    never-seeded-precondition tickets (`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`,
    `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED`,
@@ -41,13 +41,13 @@ only the epic ticket + this file). T05/T06 remain uncreated, blocked on their pr
    dead-guard/filter tickets (`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`,
    `TCK-20260914-REGION-DANGER-SEEN-TWO-DEAD-PRECONDITIONS`,
    `TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`). No unmet prereq.
-   Created, committed.
+   **`DONE`, closed to `tickets/done/`, 2026-09-30:** `REGIONAL-INFLUENCE-SHIFT` = `DEFECT`, `REGION-DANGER-SEEN` = `DEFECT`, `COGNITION-CAPACITY-ENFORCEMENT` = `UNDECLARED`. Unblocks `T05`.
 4. `T04` = `TCK-20260929-UNREACHABLE-CLASSIFY-WAVE-CONFIRM` — Confirm the 2 wave-assessed verdicts
    (`TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` = record, do not re-investigate;
    `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` = record, do
    not re-investigate) plus the 1 remaining scale/content ticket
    (`TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE`, boss-gate half only). No
-   unmet prereq. Created, committed. Note:
+   unmet prereq. **`DONE`, closed to `tickets/done/`, 2026-09-30:** `CALAMITY-INTENSITY` = `DEFECT` and `LAIR-REGION-TRAUMA` = `CONDITION` (world-content), both recorded from PR #258; `COMBAT-GATE` boss-gate half = `CONDITION` (corpus run length; first `world_boss` tick 2101 with the posture flag ON and OFF). Note:
    `CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` appears in both T01's corpus group (by shape) and T04's
    scope (by wave-assessment status) — T04 owns its actual disposition (recording the DEFECT verdict
    from PR #258); T01 covers it only as a corpus-grouping entry, not a duplicate classification pass.
