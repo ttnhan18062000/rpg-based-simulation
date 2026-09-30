@@ -84,4 +84,4 @@ guard. `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION` owns that regi
 
 ## Epic status
 
-All six children are done and the 14 corpus tickets carry verdicts (`docs/plans/unreachable_mechanism_classification.md`). **The epic ticket itself has not been closed**: epic-tier closure (staging artifacts, working-log row, moving this folder to `tickets/done/`) was left for the planner, since the corpus tickets it classifies remain open by design and landing the batch is the user's call.
+All six children are done and the 14 corpus tickets carry verdicts (`docs/plans/unreachable_mechanism_classification.md`). **The epic ticket was closed on 2026-09-30** and this folder moved to `tickets/done/` with it. The 14 corpus tickets it classified remain open by design; the epic classified them, it did not fix them.
