@@ -213,6 +213,23 @@ presented as universal.
 implication — moved out of this ticket into its own standalone document, since the finding has
 outgrown living inside one ticket's notes**: `docs/plans/world_composition_precondition_gap_finding.md`.
 
+### 2026-09-30 — verdict recorded via `TCK-20260929-UNREACHABLE-CLASSIFY-WAVE-CONFIRM` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T04`): `CONDITION`, from PR #258 — recorded, not re-investigated
+
+**Source of the verdict.** `TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING` (`J2`), merged in PR #258
+(`35806b1ed`), which adopted this ticket: exit claim `CONDITION` (`investigation.md` line 101). The accrual/decay
+code is correct and wired; `moon_cave` — the region holding the corpus's only `LAIR`-kind Place — is spatially
+isolated from every hostile faction, so no combat death ever occurs there and the input never arrives. Confirmed
+by the wave on a fresh 5,000-tick `Kernel.tick_once()` run (`moon_cave.trauma_score == 0.0`).
+
+**Corpus-run-length vs world-content split (epic AC-6).** This is a **world-content** condition, not a
+run-length one: the wave's run already spans 5,000 ticks with zero deaths in the region, so more ticks do not
+open the gate — the world's geometry has to change. Named owner: the world-content owner of the module that
+defines `moon_cave` and its neighbours (no session or person is named by the corpus; `T06` assigns).
+
+This also settles this ticket's own open framing (its Title): the threshold is not the problem. The wave
+explicitly tested and rejected a shared root cause with `TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`
+(a death-outcome-kind filter, `T03`); the two share a symptom, not a cause.
+
 ## Test Summary
 _(not started)_
 
@@ -229,3 +246,5 @@ cap on this cluster, was to record the finding and not build a fix now — "we k
 doesn't fire and chose not to fix it now" is the accurate state, distinct from "this doesn't fire
 and we don't know why." See `docs/plans/world_composition_precondition_gap_finding.md` for the
 durable record of this finding alongside its two sibling instances.
+
+**Verdict as of 2026-09-30: `CONDITION` — world-content (spatial isolation), not run length** (from PR #258, recorded not re-investigated); see Implementation Notes. Still `OPEN`.
