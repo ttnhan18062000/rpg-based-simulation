@@ -70,6 +70,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import functools
 import re
 import sys
 from dataclasses import dataclass, field
@@ -122,9 +123,18 @@ def _real_source_files() -> List[Path]:
     return [p for p in _SRC_DIR.rglob("*.py") if "__pycache__" not in p.parts]
 
 
+@functools.lru_cache(maxsize=None)
+def _read_text(path: Path) -> str:
+    """Per-process cache of a source file's text. The check scans every `src/` file once per
+    symbol per mechanism (104 mechanisms); uncached, that read the tree ~100x and took ~55 s, which
+    hit the CI per-test 60 s limit once the registry grew past ~90 bound mechanisms."""
+    return path.read_text(encoding="utf-8")
+
+
+@functools.lru_cache(maxsize=None)
 def _is_shim_file(path: Path) -> bool:
     try:
-        lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        lines = [l for l in _read_text(path).splitlines() if l.strip()]
     except OSError:
         return False
     lines = [l for l in lines if not l.strip().startswith("#")]
@@ -137,7 +147,7 @@ def _symbol_names(path: Path) -> List[str]:
     """Top-level classes and module-level (non-underscore-prefixed) functions -- a mechanism's
     real entry point is sometimes a free function, not a class (see module docstring)."""
     try:
-        text = path.read_text(encoding="utf-8")
+        text = _read_text(path)
     except OSError:
         return []
     classes = _CLASS_RE.findall(text)
@@ -175,9 +185,12 @@ def _real_callers(symbol: str, defining_file: Path, source_files: List[Path]) ->
         if _is_shim_file(path):
             continue
         try:
-            lines = path.read_text(encoding="utf-8").splitlines()
+            text = _read_text(path)
         except OSError:
             continue
+        if symbol not in text:  # the word-boundary regex below cannot match without the substring
+            continue
+        lines = text.splitlines()
         in_docstring = False
         for line in lines:
             stripped = line.strip()
@@ -197,7 +210,7 @@ def _flag_context_near_callers(symbol: str, caller_files: List[Path]) -> bool:
     pattern = re.compile(rf"\b{re.escape(symbol)}\b")
     for path in caller_files:
         try:
-            lines = path.read_text(encoding="utf-8").splitlines()
+            lines = _read_text(path).splitlines()
         except OSError:
             continue
         for i, line in enumerate(lines):

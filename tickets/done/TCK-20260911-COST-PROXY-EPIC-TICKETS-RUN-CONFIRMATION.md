@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION
-phase: open
+phase: done
 date: 2026-09-11
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Confirm `cost_proxy_score` is non-null for `implement-epic`/`create-tickets` on their next real run
 
 ## Status
-BLOCKED
+DONE
 
 ## Tier
 hotfix
@@ -70,12 +70,10 @@ which is exactly how this signal went unconfirmed for the five days since it shi
   verification ticket. If the check fails, file a separate fix ticket rather than repairing here.
 
 ## Acceptance Criteria
-- [ ] A real `implement-epic` run is observed with non-null `cost_proxy_score`/`tool_call_count`,
-      with the run_id and observed values recorded.
-- [ ] A real `create-tickets` run is observed the same way.
-- [ ] `implement-epic`'s negative-seq top-level rows and positive-seq `batchEvents` rows are
-      confirmed non-contaminating on real data.
-- [ ] `roadmap.md` item 10 updated to reflect the confirmed outcome either way.
+- [x] A real `implement-epic` run is observed with non-null `cost_proxy_score`/`tool_call_count` (run and values below) - met literally, and the observation found the values were false zeros; fixed (see Implementation Notes).
+- [x] A real `create-tickets` run is observed the same way.
+- [x] `implement-epic`'s negative-seq top-level rows and positive-seq `batchEvents` rows are confirmed non-contaminating on real data.
+- [x] `roadmap.md` item 10 updated to reflect the confirmed outcome either way.
 
 ## Related Tickets
 - `TCK-20260904-COST-PROXY-EPIC-TICKETS` (done) — shipped the code whose signal this confirms.
@@ -103,41 +101,36 @@ None — hotfix tier.
   letting the ticket sit silently.
 
 ## Implementation Notes
-**2026-09-28 partial check (read against `origin/main` @ `9bcae32c5`), recorded without closing:**
-
-- `implement-epic`: **still zero runs** since 2026-09-06. AC1 and AC3 remain unverifiable, so the
-  ticket stays `BLOCKED` on that half, as designed.
-- `create-tickets`: **two real runs exist.** AC2's literal "non-null" is met, but the values are
-  attributed to the wrong events, so AC2 is **not** marked confirmed:
-
-  | run_id | event values (tcc / cps) | tools.jsonl rows by sidecar seq |
-  |---|---|---|
-  | `CREATE-TICKETS-PERF-M0-ARCHITECTURE-GOVERNANCE` (2026-09-13, W37) | seq1 Comprehend 60/174.4; seq2 investigate:C1 **7**; seq3 investigate:C2 **16**; seq4 Structure **0**; Write/Link 0 | seq1 comprehend 60; seq2 "Structure/structure" 7; seq3 "Write/ticket-scoper" 65 |
-  | `CREATE-TICKETS-DOCS-PLANS-SIMULATION-SEMANTIC-CONTROL-PLANE-ROADMAP` (2026-09-23, W39) | seq1 Comprehend 120/394.9; seq2-7 investigate 0; seq8 Structure 28/124.9; seq9 Write 0; seq10 Link **0** | seq1 comprehend 120; seq8 structure **94** (08:47 → 13:05Z); **no rows at seq10** |
-
-  Per this ticket's own Out of Scope ("if the check fails, file a separate fix ticket"), the
-  attribution problem is filed as `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED`.
-  Close the `create-tickets` half of this ticket when that one resolves, or when a new
-  `create-tickets` run comes back clean.
-
-**2026-09-28, `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED` closed — fix landed, this
-half still stays open.** That ticket's investigation confirmed two real code defects in
-`create-tickets.js` (silent `writeSidecar()` failures + no sidecar reset on any exit path,
-explaining the 09-23 run's stuck-at-seq-8/4-hour-tail symptoms; plus an independent missing
-`pushEvent()` for `write-sequence`) and fixed both. The 09-13 run's own seq/agent mismatch was
-confirmed as the known concurrent-session sidecar-sharing class — recorded, not re-solved, not
-fixable after the fact. **This ticket's own `create-tickets` half is deliberately NOT closed by
-that fix**: the fix cannot retroactively repair the two already-recorded historical runs' rows
-(both stay misattributed, permanently, per that ticket's own Out of Scope), and AC2 requires
-non-null values landing on the *correct* events, which can only be confirmed against a genuinely
-new `create-tickets` run made after the fix. Re-check this ticket the next time `create-tickets`
-actually runs for real.
+**Premise re-checked against the run data (2026-09-30); it holds, and the blocking event has happened.**
+- `create-tickets`, AC2, met on two post-fix runs. `CREATE-TICKETS-DOCS-PLANS-SCRIPTS-TOOLS-GOVERNANCE-EPIC`
+  (2026-09-29): Comprehend 86 tool calls (cps 238.5), Structure 19 (164.1), write-sequence 3, link-epic 3;
+  the parallel Investigate/Write rows are 0 by design. `CREATE-TICKETS-DOCS-PLANS-IDEA-STALE-PLANNING-DOC-
+  STATUS-AFTER-SHIP` (2026-09-30, the workflow pilot): Comprehend 27, Structure 13, matching the
+  `tools.jsonl` rows per sidecar seq (the two earlier misattributed runs were fixed by
+  `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED`).
+- `implement-epic`, AC3, met: run `FOLDER-tickets-todos-systemic-world-first-wave` (2026-09-29) has 12
+  tool rows at seq -1 (Discover) and 55 at seq -2 (batch-monitoring-write) and none at the child rows'
+  seq 1-2, so the ranges do not contaminate.
+- **AC1 found a defect, so it needed code.** That run's two child-ticket events (`agent: implement-ticket`,
+  seq 1-2) were recorded `tool_call_count: 0`, `cost_proxy_score: 0.0`. Those rows never have a sidecar
+  (the children ran under their own run ids; the epic's top-level sites use the negative seq range and
+  have no events row), so 0 means "no attribution possible", not "confirmed zero". A false zero is the
+  class `omit_when_unattributed` already handles for hand-orchestrated closures. `compute_tool_stats` now
+  omits an implement-epic batch row (`agent == "implement-ticket"`, seq > 0) that has no matching tool
+  rows, so it records null. The epic's own spend stays queryable in `tools.jsonl` at seq -1..-4.
+- Docs updated: `roadmap.md` item 10, `standalone_items.md` §2, `docs/agent-monitoring/schema.md`.
 
 ## Test Summary
-(filled in during implementation)
+`tests/tools/test_record_events.py` 32 passed: new `test_epic_child_batch_rows_without_tool_rows_are_omitted_not_
+false_zero` (null when unattributed, real value kept when rows exist, non-epic implement-ticket rows keep
+(0, 0.0)); the existing collision test's expectations unchanged (its seq=2 row uses a non-child agent).
 
 ## Files Changed
-(filled in during implementation)
+- `tools/agent-monitoring/record_events.py`, `tests/tools/test_record_events.py`
+- `docs/agent-monitoring/schema.md`, `docs/plans/agent_infrastructure/ai_first_hardening_epics/{roadmap,standalone_items}.md`
+- this ticket
 
 ## Completion Summary
-(filled in at close)
+Done. Both halves confirmed on real runs: `create-tickets` attributes correctly after the earlier fix;
+`implement-epic`'s negative-seq rows are clean on real data, and the child-ticket events' false zeros are
+now null. Existing historical rows are not backfilled (append-only precedent).

@@ -61,7 +61,7 @@ OPERATING_LOOP_NODE_TO_MECHANISM_ID: Dict[str, str] = {
     "CNV": "conversation",
     "TRD": "entity_trade",
     "TUP": "team_up",
-    "XP": "xp_leveling",
+    "XP": "evolution",
     "BRK": "breakthrough_bonuses",
     "REL": "affection_relationship_bonds",
     "REP": "reputation",

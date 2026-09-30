@@ -121,7 +121,7 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
 # (section, card_index) -> [mechanism id for badge[0], mechanism id for badge[1]]
 SPLIT_CARD_MECHANISMS: Dict[Tuple[str, int], list] = {
     ("entity-profile", 6): ["aging_death", "succession"],
-    ("entity-profile", 10): ["xp_leveling", "breakthrough_bonuses"],
+    ("entity-profile", 10): ["evolution", "breakthrough_bonuses"],
 }
 
 # (section, card_index) -> {badge_index: mechanism_id} for cards where only SOME badges

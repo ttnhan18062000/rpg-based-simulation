@@ -319,13 +319,36 @@ the checker's own real scope plainly wherever the registry's coverage is asserte
 `src/domains/` and `src/systems/`, with other source trees not yet swept, not "the codebase"; (2)
 treat any "N mechanisms" count as bounded by what has been swept, not as a claim about the whole
 system, until the checker's own scope is genuinely widened. `TCK-20260920-MECHANISM-COMPLETENESS-
-CHECK-SCOPE-GAP` tracks widening it; this section exists so the claim stops overstating in the
-meantime. The 14-candidate number is a **floor**, not a firm count — the suffix heuristic used to
+CHECK-SCOPE-GAP` widened it (2026-09-30, below); this section exists so the claim stops overstating. The 14-candidate number is a **floor**, not a firm count — the suffix heuristic used to
 find them (`Service`/`System`/`Gate`/`Phase`/`Evaluator`/`Resolver`/`Manager`) misses other real
 naming conventions (`Classifier`/`Filter`/`Builder`), and "unbound" here carries the same
 established caveat as it does for the domains/systems check itself: not yet checkable is not the
 same claim as confirmed missing, since some of the 14 likely already belong to an existing
 mechanism's own multi-file implementation, just not cited by path yet.
+
+**Update, 2026-09-30 (`TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP`): the sweep is now a
+repeatable check.** `mechanism_registry_completeness_check.py` has a second, wider tier with an
+explicit rule (scope = every non-infra `src/**/*.py` outside `domains/`, `systems/`; candidate = a
+top-level class ending `Service`/`System`/`Gate`/`Phase`/`Evaluator`/`Resolver`/`Manager`; unbound = no
+`implemented_by` names the file, or names this class; wired = the class name appears in a file under a
+*different* top-level package). Re-derived against the code at the start of this batch it found 295
+files in scope, 260 cited by no `implemented_by`, 102 unbound mechanism-shaped classes, 49 of them
+wired. **The ticket's own figure of 14 does not reproduce under any explicit rule tried** -- the
+one-off sizing did not record its rule, which is the point of this section. Every one of the 49 now has
+a recorded disposition, and a paired test fails on any new one: bound to an existing mechanism (a
+class-level `implemented_by`, 16 of them), registered as a new mechanism (12, on the RPG planner's
+identity calls), excluded as infrastructure with a reason (18), or pending an identity decision (3,
+reason recorded in the checker). After the bindings the check reads 233 files uncited, 74 unbound
+classes, 21 wired (the 18 exclusions and 3 pending). The count is still a floor: other naming conventions (`Classifier`, `Filter`,
+`Builder`, `Detector`) are not swept, and a bare name match can over-count.
+
+**Coverage denominators: `state: gap` means `implemented_by` does not apply**
+(`TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`). A `gap` mechanism has, by definition, no
+implementing code, so it can never carry an `implemented_by` and was never a coverage hole. The
+completeness check reports `gap` mechanisms under their own heading and computes binding coverage over
+the non-gap mechanisms only ("77 of 82"), and lists any non-gap mechanism still without an
+`implemented_by` by id. Before this rule, 16 of 93 read as "unbound" when 11 of those were gaps; the
+real residue was 5, all now resolved.
 
 Source: peer review of `TCK-20260920-MECHANISM-COGNITION-DIFFERENTIAL-RUNTIME-VERIFICATION`,
 2026-09-20.

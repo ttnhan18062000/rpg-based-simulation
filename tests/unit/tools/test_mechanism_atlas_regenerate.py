@@ -88,7 +88,12 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
     town_services; action_pacing_readiness kept its id for the gate) -- the mapped-card count of
     73 is unchanged, and the other half of each split (regional_trauma, calamity_intensity,
     buildings, readiness_speed_scaling) joins the unmapped set, same as any other mechanism found
-    by direct code investigation rather than an atlas card."""
+    by direct code investigation rather than an atlas card.
+
+    2026-09-30 (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION): `xp_leveling` merged
+    into `evolution`, so 73 mapped mechanism ids became 72 (both atlas cards stay mapped; the name
+    of this test is kept because historical tickets cite it). The 12 mechanisms registered from the
+    wider-scope completeness sweep join the unmapped set."""
     real_ids = set(_real_registry_states().keys())
     positions = all_mechanism_card_badge_positions()
     mapped = set(positions.keys())
@@ -99,8 +104,14 @@ def test_mapping_covers_exactly_73_of_the_atlas_carded_mechanisms():
         "strategic_redirection", "concern_intake", "event_interpretation", "narrative_memory",
         "group_coordination", "quest_reward_distribution", "commitment_pressure_consequences",
         "regional_trauma", "calamity_intensity", "buildings", "readiness_speed_scaling",
-    }, f"expected exactly these 20 to be unmapped (no atlas card), got {unmapped}"
-    assert len(mapped) == 73
+        # TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP: 12 mechanisms registered from the
+        # wider-scope completeness sweep, found in code, none has an atlas card (same as above).
+        "regional_monster_spawn", "resource_ecology_regrowth", "regional_transformation",
+        "production_role_vacancy", "veterancy_rank", "quest_lifecycle_resolution",
+        "intent_requirement_gating", "regional_hazard_drain", "humanoid_reproduction",
+        "role_model_imitation", "faction_raid", "refugee_displacement",
+    }, f"expected exactly these 32 to be unmapped (no atlas card), got {unmapped}"
+    assert len(mapped) == 72  # 73 until `xp_leveling` merged into `evolution` (two cards, one id)
 
 
 # --- compute_diffs on a synthetic fixture ------------------------------------------------------

@@ -2,11 +2,11 @@
 
 Generated from `registries/mechanisms.yaml` — regenerate with `make mechanism-registry-view`. Do not hand-edit.
 
-All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive dependent-count`) descending. Deliberately not truncated — see `docs/brainstorm/mechanism_priority_view.md` for the focused, unverified-only, top-25 "verify next" ranking, and `docs/brainstorm/mechanism_verification_view.md` for the full verification ledger with notes. This view exists to answer a third, different question: what matters most, and do we know it works, in a single read.
+All 104 mechanisms, one row each, sorted by priority (`layer weight × transitive dependent-count`) descending. Deliberately not truncated — see `docs/brainstorm/mechanism_priority_view.md` for the focused, unverified-only, top-25 "verify next" ranking, and `docs/brainstorm/mechanism_verification_view.md` for the full verification ledger with notes. This view exists to answer a third, different question: what matters most, and do we know it works, in a single read.
 
 **Node-set note**: this is the first view generated after `TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS` confirmed the registry's own node set was incomplete (75 mechanisms, atlas-only seed) and registered 11 real mechanisms the original seed never carded (now 86, for `src/domains/`/`src/systems/` — `src/engine/`/`src/core/`/`src/ai/` remain out of that pass's scope). Any earlier figure computed against the 75-mechanism set — the prior unverified count, priority ranking, or dependency-hub count — was computed against a node set later found to be missing 11 real mechanisms and should be treated as superseded by this view.
 
-**31 runtime-verified, 52 static (`code_trace`)-verified, 10 unverified** — of 93 total.
+**45 runtime-verified, 50 static (`code_trace`)-verified, 9 unverified** — of 104 total.
 
 | Mechanism | Layer | State | Evidence | Verdict | Priority | Transitive Dependents |
 |---|---|---|---|---|---|---|
@@ -15,29 +15,30 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `movement` | entity | done | static | observed | 15 | 3 |
 | `personality` | entity | done | static | observed | 10 | 2 |
 | `status_effects` | entity | orphan | static | observed | 10 | 2 |
+| `regional_trauma` | region | done | runtime | contradicted | 6 | 3 |
 | `aging_death` | entity | done | runtime | observed | 5 | 1 |
 | `attributes_biology` | entity | done | static | observed | 5 | 1 |
 | `combat_resolution` | entity | done | runtime | observed | 5 | 1 |
+| `evolution` | entity | partial | runtime | observed | 5 | 1 |
 | `goal_hierarchy` | entity | done | runtime | observed | 5 | 1 |
+| `quest_generation_sourcing` | entity | orphan | runtime | contradicted | 5 | 1 |
 | `race_archetype` | entity | done | static | observed | 5 | 1 |
-| `regional_trauma` | region | done | runtime | contradicted | 4 | 2 |
 | `campaigns` | world | done | static | observed | 3 | 3 |
 | `diplomacy` | faction | done | static | observed | 3 | 1 |
-| `social_memory` | faction | skeleton | unverified | unverified | 3 | 1 |
 | `buildings` | world | done | static | observed | 2 | 2 |
+| `camp` | region | done | runtime | observed | 2 | 1 |
 | `inventory_trade_conservation` | world | done | static | observed | 2 | 2 |
 | `regional_sovereignty` | region | done | static | observed | 2 | 1 |
 | `world_generation` | world | done | static | observed | 2 | 2 |
+| `calamity_intensity` | world | orphan | runtime | observed | 1 | 1 |
 | `action_pacing_readiness` | entity | done | runtime | observed | 0 | 0 |
 | `adventure_routing` | entity | done | static | observed | 0 | 0 |
-| `affection_relationship_bonds` | entity | done | static | inconclusive | 0 | 0 |
+| `affection_relationship_bonds` | entity | done | runtime | observed | 0 | 0 |
 | `belief_institution` | world | partial | static | observed | 0 | 0 |
 | `betrayal_siege_war` | faction | partial | runtime | observed | 0 | 0 |
 | `breakthrough_bonuses` | entity | partial | runtime | observed | 0 | 0 |
 | `build_diversity` | entity | partial | static | observed | 0 | 0 |
 | `building_sabotage` | world | done | static | observed | 0 | 0 |
-| `calamity_intensity` | world | done | runtime | contradicted | 0 | 0 |
-| `camp` | region | done | runtime | observed | 0 | 0 |
 | `causal_spatial_memory` | entity | gated | runtime | observed | 0 | 0 |
 | `chronicle` | world | orphan | runtime | observed | 0 | 0 |
 | `city` | region | partial | static | observed | 0 | 0 |
@@ -63,14 +64,16 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `entity_trade` | entity | gap | unverified | unverified | 0 | 0 |
 | `equipment_scoring` | world | orphan | runtime | observed | 0 | 0 |
 | `event_interpretation` | region | done | static | observed | 0 | 0 |
-| `evolution` | entity | done | runtime | observed | 0 | 0 |
+| `faction_raid` | faction | done | runtime | observed | 0 | 0 |
 | `fame` | world | done | static | observed | 0 | 0 |
 | `fidelity_drift` | world | done | static | observed | 0 | 0 |
 | `genetics_aptitude` | entity | gated | static | observed | 0 | 0 |
 | `gods_pantheon_blessings` | world | gap | unverified | unverified | 0 | 0 |
 | `group_coordination` | group | orphan | static | observed | 0 | 0 |
 | `guilds` | group | partial | static | observed | 0 | 0 |
-| `information_trust_deception` | entity | gated | static | observed | 0 | 0 |
+| `humanoid_reproduction` | entity | gated | runtime | observed | 0 | 0 |
+| `information_trust_deception` | entity | orphan | runtime | observed | 0 | 0 |
+| `intent_requirement_gating` | entity | done | runtime | inconclusive | 0 | 0 |
 | `interaction_channeling` | entity | done | static | observed | 0 | 0 |
 | `knowledge_model` | entity | gated | runtime | observed | 0 | 0 |
 | `lair` | region | gap | unverified | unverified | 0 | 0 |
@@ -80,18 +83,26 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `opportunity_rumor_seeds` | world | gated | static | observed | 0 | 0 |
 | `party_formation` | group | done | static | observed | 0 | 0 |
 | `perception` | entity | orphan | runtime | contradicted | 0 | 0 |
+| `production_role_vacancy` | region | done | runtime | inconclusive | 0 | 0 |
 | `progression_conversion` | entity | gated | static | observed | 0 | 0 |
-| `quest_generation_sourcing` | entity | orphan | runtime | contradicted | 0 | 0 |
+| `quest_lifecycle_resolution` | world | done | runtime | inconclusive | 0 | 0 |
 | `quest_reward_distribution` | group | orphan | static | observed | 0 | 0 |
 | `race_collective_force` | faction | gap | unverified | unverified | 0 | 0 |
 | `readiness_speed_scaling` | entity | partial | runtime | contradicted | 0 | 0 |
+| `refugee_displacement` | region | partial | runtime | observed | 0 | 0 |
+| `regional_hazard_drain` | region | done | runtime | observed | 0 | 0 |
+| `regional_monster_spawn` | region | done | runtime | observed | 0 | 0 |
+| `regional_transformation` | region | done | runtime | observed | 0 | 0 |
 | `reputation` | faction | done | static | observed | 0 | 0 |
+| `resource_ecology_regrowth` | world | done | runtime | observed | 0 | 0 |
 | `resource_harvesting` | world | orphan | static | observed | 0 | 0 |
+| `role_model_imitation` | entity | gated | runtime | observed | 0 | 0 |
 | `ruins_mines_battlefields` | region | gap | static | observed | 0 | 0 |
 | `self_model` | entity | gated | runtime | observed | 0 | 0 |
 | `settlement_capacity_axis` | faction | gap | unverified | unverified | 0 | 0 |
 | `skill_unlocks` | entity | partial | static | observed | 0 | 0 |
 | `social_contracts` | faction | done | static | observed | 0 | 0 |
+| `social_memory` | faction | orphan | runtime | observed | 0 | 0 |
 | `strategic_intelligence_core` | entity | done | runtime | observed | 0 | 0 |
 | `strategic_learning_bias` | entity | done | static | observed | 0 | 0 |
 | `strategic_redirection` | entity | orphan | static | observed | 0 | 0 |
@@ -101,5 +112,5 @@ All 93 mechanisms, one row each, sorted by priority (`layer weight × transitive
 | `temporal_pressure` | entity | gated | runtime | observed | 0 | 0 |
 | `town_services` | world | done | static | observed | 0 | 0 |
 | `trauma` | entity | done | static | observed | 0 | 0 |
+| `veterancy_rank` | entity | done | runtime | inconclusive | 0 | 0 |
 | `world_boss_spawn` | world | done | static | observed | 0 | 0 |
-| `xp_leveling` | entity | partial | runtime | observed | 0 | 0 |

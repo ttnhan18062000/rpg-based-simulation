@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION
-phase: open
+phase: done
 date: 2026-09-23
 tags: [architecture, investigation, schema, simulation-quality]
 ---
@@ -16,7 +16,7 @@ The five `implemented_by`-unbound mechanisms with a real `state` claim, plus a r
 `state: gap` means `implemented_by` doesn't apply
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -166,17 +166,63 @@ None yet.
   since it changes what future citations point at.
 
 ## Implementation Notes
-Filed 2026-09-23, hand-orchestrated, as the replacement half of a peer-planning-directed batch that
-also closed `TCK-20260917-MECHANISM-IMPLEMENTED-BY-COVERAGE-EXTENSION` and ran the atlas caveat
-audit. Numbers re-verified directly against live `registries/mechanisms.yaml` before filing, not
-taken from the peer's own relayed figures on faith (they matched exactly: 76/93 bound, 13/13 orphan
-bound, 5-mechanism residue with these exact ids).
+**Premise re-verified.** At start: 77 of 93 bound (ticket: 76), 11 `gap` (ticket: 12), residue 5 exactly as
+listed. The three tickets it depends on had moved: the calamity reachability assessment classified
+`calamity_intensity` DEFECT and routed the state correction here; the xp identity investigation had
+recorded the Merge verdict.
+
+**Item 1, gap rule.** The completeness check reports `gap` mechanisms separately, computes coverage over
+non-gap mechanisms ("77 of 82") and lists any non-gap mechanism without `implemented_by`; the rule is
+documented in `docs/plans/mechanism_claims_as_tests_initiative.md`. A test pins that no non-gap
+mechanism is unbound.
+
+**Runtime evidence first.** rpg-feature-planning signed off (merge yes; calamity direction yes but not on a
+static basis, per the repo's own `TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE`). Probe:
+positive-controlled per-method call counters, `Kernel.tick_once()` over crowded_frontier,
+quest_dense_frontier, hero_guild_routing, frontier_living_world, generated_frontier_3_42, seed 42, 2000
+ticks each (10,000 ticks); every wrapper proven able to increment before the run. Result: 0 calls for
+`CalamityService.apply_calamity_consequences`, `SocialMemoryService.tick_place_attachment` and
+`check_nemesis_promotion`, `SourceTrustUpdateService.update`; live contrast in the same runs:
+`InformationBeliefPhase.apply` 2000 per world, `RelationshipService.process_update` 340 / 2 / 626 / 980 /
+488. Scripts and outputs are in `stored_artifacts/<this ticket>/runtime_probe/` (an absent key in the
+named-method output means 0 calls).
+
+**Item 2, dispositions.**
+- `calamity_intensity`: `done`/`contradicted` -> `orphan`/`observed` (corpus_run), method-level bound to the
+  producer. The fix stays with `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`.
+- `xp_leveling`: the recorded Merge verdict executed: entry retired, its corpus-volume caveat folded into
+  `evolution` (state `partial`), prose citations repointed, atlas/capabilities/wiring mappings repointed
+  (the planner's progression-epic citation too). Mapped atlas ids 73 -> 72.
+- `information_trust_deception`: `gated` -> `orphan`, bound to `SourceTrustUpdateService`. It is not
+  flag-gated: `InformationBeliefPhase` runs (flag default ON) and never updates trust.
+- `affection_relationship_bonds`: bound to `RelationshipService` (live), state stays `done`. The 2026-09-23
+  addendum ("place_attachment accumulates for real") is corrected: its only producer is never called.
+- `social_memory`: `skeleton` -> `orphan`, bound to `SocialMemoryService`.
+**Item 3.** `TCK-20260920-INFORMATION-TRUST-DECEPTION-VERDICT-QUESTIONED` closed with this ticket.
+**Item 5.** Propagated to the generated views, `mechanism_registry.html`, three atlas badge classes, mapping
+tables, pinned tests, and the docs above. Also removed `cross_episode_social_consequences.depends_on: [social_memory]`: a homonym found by
+rpg-feature-planning (the mechanism reads `campaign_state.faction_social_memories`, not `SocialMemoryService`; the
+edge likely came from the comment "mirrors social_memory.py"). Whether that campaign store is populated at runtime is
+unmeasured (multi-episode campaign runs, outside a single-Kernel probe); its `code_trace` verdict is unchanged.
+
+**Process finding (for agent-working-design).** The 2026-09-23 place_attachment addendum was a
+runtime-sounding claim made without a runtime instrument; a static trace and the probe agreed here, but
+only the probe made the correction defensible.
 
 ## Test Summary
-Not yet started.
+`.venv/bin/python -m pytest tests/unit/tools -q` -> 438 passed. Registry validator: 104 mechanisms valid.
+`mechanism-atlas-check`, `mechanism-capabilities-check` clean after regeneration. State-caller findings:
+`social_memory` `orphan_with_callers` added to the pinned set with its reason (an import is not a call).
 
 ## Files Changed
-None yet (this ticket file only).
+- `registries/mechanisms.yaml`, `tools/mechanism_registry/{mechanism_registry_completeness_check,mechanism_atlas_card_mapping,mechanism_capabilities_card_mapping,mechanism_wiring_map_classdef}.py`
+- generated views, `docs/brainstorm/mechanism_registry.html`, `rpg_feature_atlas.html` (3 badge classes)
+- `docs/plans/mechanism_claims_as_tests_initiative.md`, `tickets/todos/progression-starvation-chain/TCK-20260918-EPIC-PROGRESSION-STARVATION-CHAIN.md` (one citation)
+- tests as in `TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP`; `stored_artifacts/<this ticket>/runtime_probe/`
 
 ## Completion Summary
-Open.
+Done. AC1: the gap rule is in the doc and the checker's report. AC2: all five residual mechanisms
+have a disposition backed by a runtime instrument (bound, state corrected, or merged). AC3: the information
+trust ticket is closed. AC4: state corrections propagated; the convergence tests and the wiring-map
+drift test pass. Open, handed on: `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` (fix),
+`TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` (corpus volume), the unmeasured campaign-store question above (filed as a fifth same-name instance in `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS`).
