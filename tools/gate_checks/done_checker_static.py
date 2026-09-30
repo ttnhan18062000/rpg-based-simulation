@@ -34,6 +34,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -50,7 +51,12 @@ from validate_frontmatter import (  # noqa: E402
     check_ticket_location_consistency,
 )
 from generate_registry import generate_registry, parse_body_section, _strip_frontmatter  # noqa: E402
-from ticket_field_values import check_ticket_field_values, TIER_VALUES, WORKFLOW_STATUS_VALUES  # noqa: E402
+from ticket_field_values import (  # noqa: E402
+    check_disposition_fields,
+    check_ticket_field_values,
+    TIER_VALUES,
+    WORKFLOW_STATUS_VALUES,
+)
 from tag_registry import load_registry, check_tags_registered  # noqa: E402
 from registry_query import candidate_tags_from_text  # noqa: E402
 from working_log_parser import parse_pending_working_log_shards, HEADER_FIELDS  # noqa: E402
@@ -1042,12 +1048,46 @@ def classify_checklist_failure(
 # ---------------------------------------------------------------------------
 
 
+def _disposition_migration_result(ticket_id: str) -> tuple[str, str] | None:
+    """TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES: a ticket closed as a disposition (nothing
+    implemented) has no staging artifacts to migrate. Returns None when the ticket has no
+    `## Disposition` section (normal closure, caller's existing logic applies). Otherwise PASS only
+    when the value is canonical, `## Disposition Rationale` cites evidence, and no `src/` path is
+    attributed to the ticket (its own commits, plus uncommitted changes -- fail closed, the same
+    convention as the docs-coverage check). Any failure names which requirement failed."""
+    path = _resolve_ticket_body_path(ticket_id)
+    if not path.exists():
+        return None
+    body = _strip_frontmatter(path.read_text(encoding="utf-8"))
+    status, evidence = check_disposition_fields(body)
+    if status == "NA":
+        return None
+    if status == "FAIL":
+        return ("FAIL", f"Disposition present but invalid: {evidence}")
+    src_paths = sorted(p for p in _git_touched_paths(ticket_id) if p.startswith("src/"))
+    if src_paths:
+        return (
+            "FAIL",
+            f"Disposition present but src/ changes are attributed to this ticket: "
+            f"{', '.join(src_paths[:5])}{' ...' if len(src_paths) > 5 else ''}",
+        )
+    value = parse_body_section(body, "Disposition")
+    return (
+        "PASS",
+        f"disposition closure ({value}): no staging artifacts expected; rationale cites evidence; "
+        "no src/ changes attributed",
+    )
+
+
 def check_migration_complete(
     ticket_id: str,
     tier: str,
     staging_dir: Path = None,
     stored_dir: Path = None,
 ) -> tuple[str, str]:
+    disposition_result = _disposition_migration_result(ticket_id)
+    if disposition_result is not None:
+        return disposition_result
     if tier == "hotfix":
         return ("NA", "hotfix tier — no migration expected")
     if tier == "epic":
@@ -1233,19 +1273,26 @@ def check_registry_entry_regenerated(
     ticket_id: str,
     root: Path = Path("."),
     registry_output: Path = Path("docs/REGISTRY.yaml"),
+    regenerate: bool = True,
 ) -> tuple[str, str]:
-    """Regenerate docs/REGISTRY.yaml and confirm the closing ticket's entry landed in it.
+    """Confirm the closing ticket's entry is in docs/REGISTRY.yaml, regenerating it first when
+    `regenerate` is True.
 
     Deliberately has no `tier` parameter — same design choice as
     `check_monitoring_write_recorded`: TCK-20260709-REGISTRY-REGEN-ON-CLOSE's AC #1 requires the
     regen to run "on every ticket close, all tiers including hotfix," so the absence of a
     tier-skip branch is itself the mechanism, not an oversight.
 
-    Unlike every sibling `check_*` function in this file, this one is not read-only — calling it
-    mutates a tracked file (`registry_output`) as a side effect of "checking." This is a
-    deliberate reuse of the existing `run_finalize_selfcheck` call site rather than adding a
-    parallel invocation site (see plan.md's Question 2 resolution): `generate_registry()` is
-    called directly so the regen and the entry-presence check happen atomically together.
+    With `regenerate=True` (the default, what the formal pipeline's `run_finalize_selfcheck` call
+    relies on) this is not read-only — it mutates a tracked file (`registry_output`). That is the
+    deliberate Finalize regeneration step (see plan.md's Question 2 resolution): `generate_
+    registry()` is called directly so the regen and the entry-presence check happen atomically.
+
+    With `regenerate=False` (the CLI default, TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES) a
+    gate check must not write a tracked, shared file: the registry is generated to a temp path
+    and only read, and the on-disk file is checked as-is. A disk file without the ticket's
+    `tickets/done/` entry FAILs with the command that fixes it, rather than being silently
+    rewritten.
 
     `generate_registry()`'s own nonzero return (it writes the YAML unconditionally, then returns
     1 only if some *unrelated* doc elsewhere in docs/ is missing frontmatter — see
@@ -1257,14 +1304,20 @@ def check_registry_entry_regenerated(
     output_path = registry_output if registry_output.is_absolute() else resolved_root / registry_output
 
     regen_note = ""
-    try:
-        exit_code = generate_registry(resolved_root, output_path)
-        if exit_code != 0:
-            regen_note = f"generate_registry() exited {exit_code} (unrelated doc frontmatter gap)"
-    except Exception as exc:  # noqa: BLE001 - regen must never block ticket close
-        regen_note = f"generate_registry() raised: {exc}"
+    if regenerate:
+        try:
+            exit_code = generate_registry(resolved_root, output_path)
+            if exit_code != 0:
+                regen_note = f"generate_registry() exited {exit_code} (unrelated doc frontmatter gap)"
+        except Exception as exc:  # noqa: BLE001 - regen must never block ticket close
+            regen_note = f"generate_registry() raised: {exc}"
+        registry_to_read = output_path
+    else:
+        registry_to_read = output_path
+        if not output_path.exists():
+            return ("FAIL", f"{output_path} does not exist; run `make docs-registry`")
 
-    entries = yaml.safe_load(output_path.read_text(encoding="utf-8")) or []
+    entries = yaml.safe_load(registry_to_read.read_text(encoding="utf-8")) or []
     # TCK-20260913-TICKET-PREMISE-STALENESS-NOT-PROPAGATED-ON-CLOSE (Option A) extended
     # generate_registry.py::collect_tickets() to also index tickets/todos/ and
     # tickets/inprogress/, not only tickets/done/ -- so a ticket_id match alone no longer proves
@@ -1285,20 +1338,50 @@ def check_registry_entry_regenerated(
             f"{output_path} contains a tickets/done/ entry for {ticket_id}"
             + (f" (note: regen exited nonzero: {regen_note})" if regen_note else ""),
         )
+    if not regenerate:
+        fresh_has_entry = False
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_output = Path(tmp) / "REGISTRY.yaml"
+            try:
+                generate_registry(resolved_root, tmp_output)
+                fresh = yaml.safe_load(tmp_output.read_text(encoding="utf-8")) or []
+                fresh_has_entry = any(
+                    isinstance(e, dict)
+                    and e.get("ticket_id") == ticket_id
+                    and e.get("path", "").startswith("tickets/done/")
+                    for e in fresh
+                )
+            except Exception:  # noqa: BLE001 - read-only check stays advisory about why
+                pass
+        if fresh_has_entry:
+            return (
+                "FAIL",
+                f"{output_path} is stale: a fresh registry has a tickets/done/ entry for "
+                f"{ticket_id} but the on-disk file does not (read-only check, nothing written); "
+                "run `make docs-registry` or re-run with --regenerate-registry, then stage it",
+            )
     return (
         "FAIL",
-        f"{output_path} has no tickets/done/ entry for {ticket_id} after regeneration"
+        f"{output_path} has no tickets/done/ entry for {ticket_id}"
+        + (" after regeneration" if regenerate else " (read-only check)")
         + (f" (regen also exited nonzero: {regen_note})" if regen_note else ""),
     )
 
 
-def run_finalize_selfcheck(ticket_id: str, tier: str) -> list[dict]:
-    """Aggregate all 4 Part B checks. Same return shape as `run_static_precheck`."""
+def run_finalize_selfcheck(ticket_id: str, tier: str, regenerate_registry: bool = True) -> list[dict]:
+    """Aggregate all 4 Part B checks. Same return shape as `run_static_precheck`.
+
+    `regenerate_registry` defaults to True: the formal pipeline's Finalize phase relies on this
+    call regenerating docs/REGISTRY.yaml. The CLI passes False unless `--regenerate-registry` is
+    given, so a hand-run gate check never rewrites a tracked file."""
     checks = (
         ("migration_complete", check_migration_complete(ticket_id, tier)),
         ("ticket_finalized", check_ticket_finalized(ticket_id)),
         ("working_log_exactly_one_row", check_working_log_exactly_one_row(ticket_id)),
-        ("registry_entry_regenerated", check_registry_entry_regenerated(ticket_id)),
+        (
+            "registry_entry_regenerated",
+            check_registry_entry_regenerated(ticket_id, regenerate=regenerate_registry),
+        ),
     )
     return [
         {"condition": name, "status": status, "evidence": evidence}
@@ -1371,6 +1454,12 @@ def main(argv=None) -> int:
         "--start-ts", default=None,
         help="Only used by --part precheck/both, for the data_runs_clean condition.",
     )
+    parser.add_argument(
+        "--regenerate-registry", action="store_true",
+        help="Finalize step: regenerate docs/REGISTRY.yaml (a tracked file) before checking the "
+        "closing ticket's entry. Off by default so a gate check never writes a tracked file; "
+        "without it, the registry is generated to a temp path and the on-disk file is only read.",
+    )
     args = parser.parse_args(argv)
 
     tier = _resolve_tier(args.ticket_id, args.tier)
@@ -1395,7 +1484,8 @@ def main(argv=None) -> int:
         ) or any_fail
     if part in ("finalize", "both"):
         any_fail = _render_results(
-            "finalize", run_finalize_selfcheck(args.ticket_id, tier)
+            "finalize",
+            run_finalize_selfcheck(args.ticket_id, tier, regenerate_registry=args.regenerate_registry),
         ) or any_fail
 
     print(f"RESULT: {'FAIL' if any_fail else 'PASS'} for {args.ticket_id} (tier={tier})")

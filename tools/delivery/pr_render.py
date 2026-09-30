@@ -385,7 +385,13 @@ def render(
     spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
     title = render_title(tickets, scope, theme)
     body = render_body(tickets, spec, warnings, exclusions=exclusions)
-    return {"title": title, "body": body, "warnings": warnings}
+    hints = []
+    if theme is None and len(tickets) > 1:
+        hints.append(
+            f"{len(tickets)} tickets rendered without --theme, so the title names the most "
+            "recently closed ticket; pass --theme \"<one-line batch headline>\" (also to --check)."
+        )
+    return {"title": title, "body": body, "warnings": warnings, "hints": hints}
 
 
 _CLOSES_RE = re.compile(r"^Closes:\s*(.*)$", re.MULTILINE)
@@ -575,6 +581,8 @@ def main(argv=None) -> int:
         print(result["body"] or "")
         for w in result["warnings"]:
             print(f"WARNING: {w}", file=sys.stderr)
+        for h in result.get("hints", []):
+            print(f"HINT: {h}", file=sys.stderr)
     return 0
 
 

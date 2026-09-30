@@ -89,6 +89,8 @@ markers = [
     "feature_flag_default: feature flag default value and stability assertions",
     "corpus_flag_guardrail: per-world calibration-profile feature-flag/content-field guardrail assertions",
     "resource_budget_large: forces --resource-budget large (600s/8GB) regardless of the CLI default; for tests inherently >60s (TCK-20260829-SIMQ-PERSISTENCE-BACKPRESSURE-PERF-INVESTIGATION)",
+    "domain(name): gameplay domain a core-RPG test is about; values are defined in docs/testing/test_taxonomy.md section 10",
+    "level(name): test level (unit, kernel_integration, mechanic_scenario, ...); values are defined in docs/testing/test_taxonomy.md section 10",
 ]
 
 [tool.mypy]

@@ -6,7 +6,7 @@ Generated from `registries/rule_mechanism_edges.yaml` + `registries/rule_classif
 
 **Mapped / unmapped (combined)**: 14/16 real Rules mapped across both domains (2 unmapped).
 
-**Verified / unverified (combined)**: 10/16 Rules have at least one mapped mechanism confirmed by a runtime instrument (6 unverified).
+**Verified / unverified (combined)**: 12/16 Rules have at least one mapped mechanism confirmed by a runtime instrument (4 unverified).
 
 **Classification breakdown (combined)**: SUPPORTED: 0, PARTIAL: 12, CONFLICTING: 2, MISSING: 0, INERT-OFF: 0, UNKNOWN: 2.
 
@@ -14,15 +14,15 @@ Generated from `registries/rule_mechanism_edges.yaml` + `registries/rule_classif
 
 **Mapped / unmapped**: 4/4 real Rules mapped (0 unmapped).
 
-**Verified / unverified**: 0/4 Rules have at least one mapped mechanism confirmed by a runtime instrument (4 unverified) -- distinct from the classification breakdown below, never collapsed into it.
+**Verified / unverified**: 2/4 Rules have at least one mapped mechanism confirmed by a runtime instrument (2 unverified) -- distinct from the classification breakdown below, never collapsed into it.
 
 **Classification breakdown**: SUPPORTED: 0, PARTIAL: 2, CONFLICTING: 2, MISSING: 0, INERT-OFF: 0, UNKNOWN: 0.
 
 | Rule | DESIGN | REALIZATION | IMPLEMENTATION | VERIFICATION | INTEGRATION | OBSERVED OUTCOME |
 |---|---|---|---|---|---|---|
-| `TERR-01` | `docs/world_rules/places-culture/territory-control.md` -- frontmatter `status: authoritative`; header "**Status.** Batch 11A (Places/Settlements/Territory), first draft" | CONFLICTING | `betrayal_siege_war` (CONSTRAINED_BY), `regional_sovereignty` (PARTIALLY_REALIZES) | 2/2 code_trace, 0/2 runtime | UNKNOWN -- no `registries/mechanism_causal_edges.yaml` row exists among this Rule's mapped mechanisms; see the schema-friction note in that file's own header | UNKNOWN -- no runtime evidence currently exists |
+| `TERR-01` | `docs/world_rules/places-culture/territory-control.md` -- frontmatter `status: authoritative`; header "**Status.** Batch 11A (Places/Settlements/Territory), first draft" | CONFLICTING | `betrayal_siege_war` (CONSTRAINED_BY), `regional_sovereignty` (PARTIALLY_REALIZES) | 1/2 code_trace, 1/2 runtime | UNKNOWN -- no `registries/mechanism_causal_edges.yaml` row exists among this Rule's mapped mechanisms; see the schema-friction note in that file's own header | UNKNOWN -- no runtime evidence currently exists |
 | `TERR-02` | `docs/world_rules/places-culture/territory-control.md` -- frontmatter `status: authoritative`; header "**Status.** Batch 11A (Places/Settlements/Territory), first draft" | PARTIAL | `regional_sovereignty` (PARTIALLY_REALIZES) | 1/1 code_trace, 0/1 runtime | UNKNOWN -- no `registries/mechanism_causal_edges.yaml` row exists among this Rule's mapped mechanisms; see the schema-friction note in that file's own header | UNKNOWN -- no runtime evidence currently exists |
-| `TERR-03` | `docs/world_rules/places-culture/territory-control.md` -- frontmatter `status: authoritative`; header "**Status.** Batch 11A (Places/Settlements/Territory), first draft" | CONFLICTING | `betrayal_siege_war` (CONSTRAINED_BY), `regional_sovereignty` (PARTIALLY_REALIZES) | 2/2 code_trace, 0/2 runtime | UNKNOWN -- no `registries/mechanism_causal_edges.yaml` row exists among this Rule's mapped mechanisms; see the schema-friction note in that file's own header | UNKNOWN -- no runtime evidence currently exists |
+| `TERR-03` | `docs/world_rules/places-culture/territory-control.md` -- frontmatter `status: authoritative`; header "**Status.** Batch 11A (Places/Settlements/Territory), first draft" | CONFLICTING | `betrayal_siege_war` (CONSTRAINED_BY), `regional_sovereignty` (PARTIALLY_REALIZES) | 1/2 code_trace, 1/2 runtime | UNKNOWN -- no `registries/mechanism_causal_edges.yaml` row exists among this Rule's mapped mechanisms; see the schema-friction note in that file's own header | UNKNOWN -- no runtime evidence currently exists |
 | `TERR-05` | `docs/world_rules/places-culture/territory-control.md` -- frontmatter `status: authoritative`; header "**Status.** Batch 11A (Places/Settlements/Territory), first draft" | PARTIAL | `city` (PARTIALLY_REALIZES) | 1/1 code_trace, 0/1 runtime | UNKNOWN -- no `registries/mechanism_causal_edges.yaml` row exists among this Rule's mapped mechanisms; see the schema-friction note in that file's own header | UNKNOWN -- no runtime evidence currently exists |
 
 ## Combat / Conflict (CONFLICT-01, PERC-01, KNOW-01, AGENCY-01, AGENCY-02, AGENCY-04, LIFE-01, LIFE-02, BODY-07, OWN-02, CAP-01, ECOL-04)
@@ -50,7 +50,7 @@ Generated from `registries/rule_mechanism_edges.yaml` + `registries/rule_classif
 
 ## Comparison
 
-Territory is `0/4` verified (every mapped mechanism is
+Territory is `2/4` verified (every mapped mechanism is
 `code_trace`-only) with a classification breakdown of 2 `PARTIAL`, 2 `CONFLICTING`. Combat is
 `10/12` verified **at the Rule level** (every mapped Rule has at
 least one runtime-verified mechanism among its own mapped set) with a classification breakdown of

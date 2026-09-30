@@ -74,6 +74,27 @@ subdirectory.
 | `standard` | Full 10-phase pipeline (+1 conditional: Security-Review) | Any new feature, refactor, or substantive repair |
 | `epic` | Scope only — tracks child tickets | Large multi-ticket initiative; no direct implementation |
 
+### Closing a ticket with no implementation (`## Disposition`)
+
+A ticket of any tier can turn out to need nothing built (its premise was already false, it is a
+duplicate, and so on). Record that with two body sections instead of fabricating staging
+artifacts: `## Disposition`, holding only one of `STALE-PREMISE`, `NO-MECHANISM`, `DUPLICATE`,
+`SUPERSEDED`, `WONT-DO`, and `## Disposition Rationale`, prose that cites at least one piece of
+evidence (a commit SHA, a `file:line` reference, or a fenced block of pasted run output). With both
+present and valid, and no `src/` change attributed to the ticket (its own commits or anything
+uncommitted), `done_checker_static.py`'s `migration_complete` passes without
+`plan.md`/`investigation.md`/`test_plan.md`; a missing value, missing or empty rationale, an
+uncited rationale, or an attributed `src/` change fails it and names which. Absent `## Disposition`
+means a normal implementation closure. `grep -A1 '^## Disposition$' tickets/done/*.md` lists every
+disposition closure.
+
+### Running `done_checker_static.py` by hand
+
+The CLI is a read-only gate: it never writes a tracked file. The registry check generates
+`docs/REGISTRY.yaml` to a temp path and reads the on-disk file, reporting a stale file rather than
+rewriting it. The Finalize step that does regenerate it is `--regenerate-registry` on the CLI
+(or `make docs-registry`); the formal pipeline's own call regenerates by default.
+
 ---
 
 ## Branch Naming
@@ -217,7 +238,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)
    come from `python3 tools/delivery/pr_render.py` — run it plain for readable stdout
    (`TITLE: ...` then the body) or with `--json` for a single `MARKER:{"title": ..., "body": ...}`
-   line, and pass its output to `gh pr create --title ... --body ...`. Hand-write only
+   line, and pass its output to `gh pr create --title ... --body ...`. A multi-ticket batch PR passes
+   `--theme "<one-line batch headline>"` to the render and the same `--theme` to `--check`;
+   without it the title names the most recently closed ticket (the renderer prints a stderr
+   `HINT:` when it renders more than one ticket with no theme). Hand-write only
    `## Review notes` (the renderer never generates it — see its own module docstring). PR body: no
    `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or
    equivalent tool-attribution) line either — commit message trailers still keep the

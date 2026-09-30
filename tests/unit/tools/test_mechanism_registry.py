@@ -905,7 +905,9 @@ def test_validator_accepts_all_three_verdicts(verdict):
         "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
         "mechanisms": [
             {"id": "foo", "layer": "entity", "depends_on": [], "state": "done",
-             "verified": _valid_verified_block(verdict=verdict)},
+             "verified": _valid_verified_block(
+                 instrument="scenario" if verdict == "contradicted" else "code_trace",
+                 verdict=verdict)},
         ],
     }
     assert validate(fixture) == []
@@ -1150,3 +1152,41 @@ def test_makefile_wires_mechanism_prose_field_drift_check_target():
 def test_ci_wires_mechanism_prose_field_drift_check_as_report_only():
     workflow_text = (REPO_ROOT / ".github" / "workflows" / "test.yml").read_text(encoding="utf-8")
     assert "make mechanism-prose-field-drift-check || true" in workflow_text
+
+
+# ── TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE ────────────────────────────
+
+
+def _one_mechanism_fixture(verified):
+    return {
+        "layers": {"entity": {"cadence": "per_tick", "rank": 1}},
+        "mechanisms": [
+            {"id": "foo", "layer": "entity", "depends_on": [], "state": "done", "verified": verified},
+        ],
+    }
+
+
+def test_validator_rejects_contradicted_verdict_with_code_trace_instrument():
+    errors = validate(_one_mechanism_fixture(_valid_verified_block("code_trace", "contradicted")))
+    assert any("foo" in e and "contradicted" in e and "code_trace" in e for e in errors), errors
+
+
+def test_validator_accepts_contradicted_verdict_with_each_runtime_instrument():
+    for instrument in ("census", "scenario", "corpus_run"):
+        assert validate(_one_mechanism_fixture(_valid_verified_block(instrument, "contradicted"))) == []
+
+
+def test_validator_still_accepts_code_trace_observed_and_inconclusive():
+    for verdict in ("observed", "inconclusive"):
+        assert validate(_one_mechanism_fixture(_valid_verified_block("code_trace", verdict))) == []
+
+
+def test_real_registry_has_no_contradicted_code_trace_entries():
+    import yaml
+    data = yaml.safe_load(open("registries/mechanisms.yaml", encoding="utf-8"))
+    offenders = [
+        m["id"] for m in data["mechanisms"]
+        if (m.get("verified") or {}).get("verdict") == "contradicted"
+        and (m.get("verified") or {}).get("instrument") == "code_trace"
+    ]
+    assert offenders == []

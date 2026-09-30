@@ -58,7 +58,7 @@ indefinitely (the sections after this one) does not belong here at all.
 
 | Ticket | What landed | Metric | Baseline (ref) | Check when | Verdict |
 |---|---|---|---|---|---|
-| `TCK-20260924-DELIVERY-COST-MEASUREMENT` | `gh`-calls-per-PR delivery-cost measurement tool (`tools/delivery/delivery_cost_measurement.py`) | `gh_calls_per_pr` | 16.04 @ `0e0ff8f2172634226b1e8a04338fec8b5972a2c6` (W30–W39, `origin/main`, pre-epic) | After several PRs have been delivered through this epic's own delivery tooling (`gh pr create` via `pr_render.py`, CI polling via `pr_status.py`) in ordinary day-to-day use — **not** from this implementation batch's own corpus, whose `gh`/git traffic reflects building the tooling, not using it, for the identical reason the "before" baseline itself recorded no "after" | _(pending)_ |
+| `TCK-20260924-DELIVERY-COST-MEASUREMENT` | `gh`-calls-per-PR delivery-cost measurement tool (`tools/delivery/delivery_cost_measurement.py`) | `gh_calls_per_pr` | 16.04 @ `0e0ff8f2172634226b1e8a04338fec8b5972a2c6` (W30–W39, `origin/main`, pre-epic) | After several PRs have been delivered through this epic's own delivery tooling (`gh pr create` via `pr_render.py`, CI polling via `pr_status.py`) in ordinary day-to-day use — **not** from this implementation batch's own corpus, whose `gh`/git traffic reflects building the tooling, not using it, for the identical reason the "before" baseline itself recorded no "after" | _(pending — 2026-09-30 check: W40 @ `833b60306` = 6.0 gh calls/PR over only 3 PRs, vs 16.04 baseline; too few PRs and partly tooling-building to call a verdict, recheck after ~10 ordinary PRs)_ |
 
 ## Baseline Metrics Snapshot (one-off)
 
