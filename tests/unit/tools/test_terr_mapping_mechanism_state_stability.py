@@ -33,7 +33,10 @@ _EXPECTED_VERDICT = {
     "city": "observed",
     "regional_trauma": "contradicted",
     "settlement_capacity_axis": None,  # no `verified` block at all -- get_verification() is None
-    "betrayal_siege_war": "contradicted",
+    # Deliberately re-verified, not a mapping side effect: TCK-20260930-MECHANISM-ABSENCE-VERDICTS-
+    # NEED-RUNTIME-EVIDENCE replaced the code_trace/contradicted verdict with a corpus_run/observed
+    # one (runtime probe, 21 worlds x 1000 ticks); the state stays partial.
+    "betrayal_siege_war": "observed",
 }
 
 

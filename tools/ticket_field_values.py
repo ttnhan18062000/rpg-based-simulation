@@ -22,7 +22,7 @@ first-token-only regex went stale twice before being replaced with a direct call
 extraction function).
 
 `check_ticket_field_values` is intentionally narrow: it only validates `## Tier` and `## Priority`
-against `TIER_VALUES`/`PRIORITY_VALUES`. It does NOT re-validate `## Status` — that remains
+against `TIER_VALUES`/`PRIORITY_VALUES` (plus the optional `## Disposition` pair when present). It does NOT re-validate `## Status` — that remains
 `status_drift_check.py`'s job (a detection-only tool today, unwired, per that module's own
 documented precedent), and does NOT touch `layer:` — already enforced by
 `validate_frontmatter.py`/`check_frontmatter_valid`. Wired into
@@ -31,6 +31,7 @@ cannot reach `READY_TO_CLOSE` with a non-canonical `## Tier` or `## Priority` go
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import FrozenSet, List, Tuple
@@ -47,6 +48,61 @@ PRIORITY_VALUES: FrozenSet[str] = frozenset({"P0", "P1", "P2", "P3"})
 WORKFLOW_STATUS_VALUES: FrozenSet[str] = frozenset(
     {"OPEN", "INPROGRESS", "BLOCKED", "DONE", "EPIC_SCOPED"}
 )
+
+# TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES: a ticket closed with no implementation records
+# why in two body sections -- `## Disposition` (this bare value, validated like Tier/Priority) and
+# `## Disposition Rationale` (prose that must cite evidence). Absent `## Disposition` means a
+# normal implementation closure. Two sections rather than one so every body field keeps the same
+# single parsing convention (`parse_body_section` returns a whole section, never a first line).
+DISPOSITION_VALUES: FrozenSet[str] = frozenset(
+    {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"}
+)
+
+_COMMIT_SHA_RE = re.compile(r"\b(?=[0-9a-f]*\d)(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b")
+_FILE_LINE_RE = re.compile(r"[\w./-]+\.\w+:\d+")
+_FENCED_OUTPUT_RE = re.compile(r"```[^\n]*\n\s*\S.*?```", re.DOTALL)
+
+
+def has_body_section(body: str, section: str) -> bool:
+    """True if a `## <section>` heading line exists (even with an empty body)."""
+    return re.search(r"^## " + re.escape(section) + r"\s*$", body, re.MULTILINE) is not None
+
+
+def check_disposition_rationale(body: str) -> Tuple[str, str]:
+    """`## Disposition Rationale` must be present, non-empty and cite at least one piece of
+    evidence: a commit SHA (7-40 hex chars with a digit and a letter), a `file:line` reference, or
+    a fenced block of pasted compile/run output. Callers only invoke this once `## Disposition`
+    is present."""
+    if not has_body_section(body, "Disposition Rationale"):
+        return ("FAIL", "## Disposition Rationale section is missing (required with ## Disposition)")
+    rationale = parse_body_section(body, "Disposition Rationale")
+    if not rationale:
+        return ("FAIL", "## Disposition Rationale is empty")
+    if (
+        _COMMIT_SHA_RE.search(rationale)
+        or _FILE_LINE_RE.search(rationale)
+        or _FENCED_OUTPUT_RE.search(rationale)
+    ):
+        return ("PASS", "## Disposition Rationale cites evidence")
+    return (
+        "FAIL",
+        "## Disposition Rationale cites no evidence "
+        "(need a commit SHA, a file:line reference, or a fenced block of run output)",
+    )
+
+
+def check_disposition_fields(body: str) -> Tuple[str, str]:
+    """Validate `## Disposition` (enum, via `check_body_field_enum` unchanged) and, when it is
+    present, `## Disposition Rationale`. Returns ("NA", ...) when the ticket has no Disposition."""
+    if not has_body_section(body, "Disposition"):
+        return ("NA", "no ## Disposition — normal implementation closure")
+    value = parse_body_section(body, "Disposition")
+    if not value:
+        return ("FAIL", "## Disposition is present but empty")
+    enum_status, enum_evidence = check_body_field_enum(body, "Disposition", DISPOSITION_VALUES)
+    rationale_status, rationale_evidence = check_disposition_rationale(body)
+    status = "PASS" if enum_status == "PASS" and rationale_status == "PASS" else "FAIL"
+    return (status, f"{enum_evidence}; {rationale_evidence}")
 
 
 def check_body_field_enum(body: str, field: str, valid: FrozenSet[str]) -> Tuple[str, str]:
@@ -76,14 +132,19 @@ def check_ticket_field_values(ticket_path: Path) -> List[dict]:
     tier_status, tier_evidence = check_body_field_enum(body, "Tier", TIER_VALUES)
     priority_status, priority_evidence = check_body_field_enum(body, "Priority", PRIORITY_VALUES)
 
-    if tier_status == "FAIL" or priority_status == "FAIL":
+    disposition_status, disposition_evidence = check_disposition_fields(body)
+
+    if "FAIL" in (tier_status, priority_status, disposition_status):
         combined_status = "FAIL"
     else:
         combined_status = "PASS"
 
+    evidence = f"{tier_evidence}; {priority_evidence}"
+    if disposition_status != "NA":
+        evidence += f"; {disposition_evidence}"
     return [{
         "status": combined_status,
-        "evidence": f"{tier_evidence}; {priority_evidence}",
+        "evidence": evidence,
     }]
 
 

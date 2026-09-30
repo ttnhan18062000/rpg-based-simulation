@@ -8,7 +8,7 @@ Pattern imitated from src/engine/capability.py (a working hand-authored-YAML-reg
 validator precedent for a different subject), adapted for this registry's extra invariants
 (depends_on resolution, DAG acyclicity) that capability.py's simpler flat list did not need.
 
-Eleven invariants enforced across validate() and check_duplicate_keys() (the header count was
+Twelve invariants enforced across validate() and check_duplicate_keys() (the header count was
 already stale at "Seven" before a prior edit -- invariant 8 had already been added without
 updating it; fixed then rather than repeated):
   1. every `depends_on` id resolves to a declared mechanism
@@ -41,6 +41,12 @@ updating it; fixed then rather than repeated):
       the dict `yaml.safe_load()` already produced, where the duplicate has no trace left).
       Checked separately from `validate()`'s own ten, against the real file path rather than an
       already-parsed dict, since that is the only point where the duplication is still visible.
+  12. a `contradicted` verdict must carry a runtime instrument (`census`/`scenario`/`corpus_run`),
+      never `code_trace` (TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE) --
+      `contradicted` means a runtime run found the claimed behavior or data absent, and reading
+      code cannot prove world data or runtime behavior is absent (`camp` and
+      `demographic_cohort_cycle` were both `code_trace`/`contradicted` and false the day they were
+      written). A static absence finding on an already-`orphan` mechanism is `observed`.
 
 `validate()` returns a list of human-readable error strings (empty if valid) rather than
 raising/returning a bool, so a caller can report every violation in one run instead of stopping at
@@ -374,6 +380,12 @@ def validate(data: dict) -> List[str]:
             errors.append(
                 f"mechanism '{mid}' verified.verdict is '{verdict}', not one of "
                 f"{sorted(VALID_VERDICTS)}"
+            )
+        elif verdict == "contradicted" and instrument in STATIC_INSTRUMENTS:
+            errors.append(
+                f"mechanism '{mid}' verified.verdict is 'contradicted' with static instrument "
+                f"'{instrument}'; a contradicted verdict asserts runtime or world-data absence, "
+                f"which needs one of {sorted(RUNTIME_INSTRUMENTS)}"
             )
 
     # Invariant 7: a present `implemented_by` is a list of real, existing repo-relative paths,

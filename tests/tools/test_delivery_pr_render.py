@@ -402,6 +402,62 @@ def test_multiline_title_with_pipe_collapses_to_one_row(tmp_path):
     assert "\n" not in what_landed_lines[0]
 
 
+def _two_ticket_runner(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    _write_ticket(tickets_root, "TCK-20260924-A", "ai", "First thing")
+    _write_ticket(tickets_root, "TCK-20260924-B", "ai", "Second thing")
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-B: y"]),
+        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-B.md"]),
+    ])
+    return tickets_root, runner
+
+
+def test_multi_ticket_without_theme_emits_hint_not_in_body(tmp_path):
+    """TCK-20260930-PR-TITLE-THEME-FOR-BATCHES: a multi-ticket render with no --theme names the
+    newest ticket in the title; the renderer says so. The hint is advisory and must not leak into
+    the PR body or the warnings list (which render_body() can include)."""
+    tickets_root, runner = _two_ticket_runner(tmp_path)
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    assert len(result["hints"]) == 1
+    assert "--theme" in result["hints"][0] and "2 tickets" in result["hints"][0]
+    assert "--theme" not in result["body"]
+    assert result["hints"][0] not in result["warnings"]
+
+
+def test_multi_ticket_with_theme_has_no_hint(tmp_path):
+    tickets_root, runner = _two_ticket_runner(tmp_path)
+    result = pr_render.render(theme="Batch headline", tickets_root=tickets_root, run_command=runner)
+    assert result["hints"] == []
+    assert result["title"] == "ai: Batch headline (2 tickets)"
+
+
+def test_single_ticket_has_no_hint(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    _write_ticket(tickets_root, "TCK-20260924-EXAMPLE-ONE", "ai", "Do the example thing")
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-EXAMPLE-ONE: do the thing"]),
+        _git_diff_rule(["tickets/TCK-20260924-EXAMPLE-ONE.md"]),
+    ])
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    assert result["hints"] == []
+
+
+def test_cli_prints_theme_hint_to_stderr_for_multi_ticket_without_theme(tmp_path, monkeypatch, capsys):
+    tickets_root, runner = _two_ticket_runner(tmp_path)
+    real_render = pr_render.render
+    monkeypatch.setattr(
+        pr_render, "render",
+        lambda **kw: real_render(tickets_root=tickets_root, run_command=runner, **kw),
+    )
+    assert pr_render.main([]) == 0
+    captured = capsys.readouterr()
+    assert "HINT:" in captured.err and "--theme" in captured.err
+    assert "HINT:" not in captured.out
+
+
 def test_render_title_collapses_multiline_title_whitespace():
     """TCK-20260929-PR-RENDER-TITLE-NOT-WHITESPACE-COLLAPSED: render_title() must collapse a
     ticket's raw multi-line `## Title` prose the same way _render_table_cell()/`## What landed`

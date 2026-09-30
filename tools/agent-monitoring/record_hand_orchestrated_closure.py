@@ -55,6 +55,12 @@ stderr naming the existing row and exits non-zero -- rather than silently writin
 run/event monitoring writes above still happen either way; only the working-log append is
 guarded. This is a deliberate "fail loudly" choice over a silent idempotent skip -- see that
 ticket's Implementation Notes for the reasoning.
+
+It also regenerates `docs/REGISTRY.yaml` (TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES, Scope 3
+addendum) via `generate_registry()`, the same function the pipeline's Finalize step uses, so a hand
+closure needs no separate `make docs-registry` step. Fail-open like the log write: a failure only
+warns. Precondition: the ticket must already be in `tickets/done/` when this runs (the documented
+closing order), or the regenerated registry will not carry its `tickets/done/` entry.
 """
 from __future__ import annotations
 
@@ -75,6 +81,7 @@ from monitoring_batch_identifier import resolve_write_target  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from working_log_writer import append_working_log_row  # noqa: E402
 from working_log_parser import parse_working_log, parse_pending_working_log_shards  # noqa: E402
+from generate_registry import generate_registry  # noqa: E402
 
 
 def _existing_row_for(
@@ -410,6 +417,11 @@ def main() -> None:
 
     if not log_ok:
         print("WARNING: working_log.csv was not updated — append it manually", file=sys.stderr)
+
+    try:
+        generate_registry(Path(".").resolve(), Path("docs/REGISTRY.yaml").resolve())
+    except Exception as e:  # noqa: BLE001 - registry regeneration must never fail a closure
+        print(f"WARNING: docs/REGISTRY.yaml regeneration failed: {e}", file=sys.stderr)
 
     clear_sidecar_if_matches(args.ticket_id)
 

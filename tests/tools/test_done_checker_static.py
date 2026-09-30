@@ -2652,6 +2652,9 @@ def test_cli_bare_default_skips_precheck_for_an_already_closed_ticket(tmp_path):
     false-FAIL here otherwise.
     """
     _scaffold_finalize_repo(tmp_path, ticket_id="TCK-CLOSED-FAKE")
+    # TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES: the bare CLI no longer regenerates the
+    # tracked registry, so a clean finalize state means the closer already regenerated it.
+    check_registry_entry_regenerated("TCK-CLOSED-FAKE", root=tmp_path)
     result = _run_cli(["--ticket-id", "TCK-CLOSED-FAKE"], tmp_path)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "RESULT: PASS" in result.stdout
@@ -2726,3 +2729,167 @@ def test_no_syntax_warning_under_dash_w_error_on_a_fresh_compile():
         capture_output=True, text=True, cwd=str(_TOOLS_DIR.parent),
     )
     assert result.returncode == 0, result.stderr
+
+
+# ── TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES ────────────────────────────────────────────
+
+_DISPOSITION_TICKET_TAIL = (
+    "\n## Disposition\n{value}\n\n## Disposition Rationale\n{rationale}\n"
+)
+
+
+def _write_disposition_ticket(tmp_path, ticket_id="TCK-DISP", value="STALE-PREMISE",
+                              rationale="Premise false since 791e6bf6b.", with_rationale=True):
+    done = tmp_path / "tickets" / "done"
+    done.mkdir(parents=True, exist_ok=True)
+    text = TICKET_FM.format(ticket_id=ticket_id, tier="standard")
+    if with_rationale:
+        text += _DISPOSITION_TICKET_TAIL.format(value=value, rationale=rationale)
+    else:
+        text += f"\n## Disposition\n{value}\n"
+    (done / f"{ticket_id}.md").write_text(text, encoding="utf-8")
+
+
+def _git(cwd, *args):
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout
+
+
+def _init_repo_with_origin_main(tmp_path):
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "README.md").write_text("base\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "base")
+    _git(tmp_path, "update-ref", "refs/remotes/origin/main", "HEAD")
+
+
+def test_disposition_closure_with_evidence_passes_without_staging_artifacts(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "PASS" and "STALE-PREMISE" in evidence
+
+
+def test_disposition_closure_passes_full_finalize_selfcheck(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path)
+    _write_csv(tmp_path / "tickets" / "working_log.csv",
+               [["2026-09-30T00:00:00Z", "TCK-DISP", "Disposition", "DONE", "x", ""]])
+    monkeypatch.chdir(tmp_path)
+    results = run_finalize_selfcheck("TCK-DISP", "standard")
+    assert all(r["status"] in ("PASS", "NA") for r in results), results
+
+
+def test_disposition_with_uncited_rationale_fails_naming_the_requirement(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, rationale="Trust me, nothing to build here.")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "no evidence" in evidence
+
+
+def test_disposition_with_empty_rationale_fails(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, rationale="")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "empty" in evidence
+
+
+def test_disposition_without_rationale_section_fails(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, with_rationale=False)
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "missing" in evidence
+
+
+def test_disposition_with_unknown_value_fails(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path, value="MAYBE")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "MAYBE" in evidence
+
+
+def test_disposition_with_committed_src_change_fails(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "thing.py").write_text("x = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "TCK-DISP: changed code after all")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-DISP", "standard")
+    assert status == "FAIL" and "src/thing.py" in evidence
+
+
+def test_disposition_ignores_src_change_from_another_tickets_commit(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    _write_disposition_ticket(tmp_path)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "other.py").write_text("x = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "src")
+    _git(tmp_path, "commit", "-q", "-m", "TCK-OTHER: unrelated change")
+    monkeypatch.chdir(tmp_path)
+    assert check_migration_complete("TCK-DISP", "standard")[0] == "PASS"
+
+
+def test_ticket_without_disposition_still_fails_migration_when_artifacts_missing(tmp_path, monkeypatch):
+    _init_repo_with_origin_main(tmp_path)
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-PLAIN.md", "TCK-PLAIN")
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_migration_complete("TCK-PLAIN", "standard")
+    assert status == "FAIL" and "Missing or empty" in evidence
+
+
+def test_registry_check_is_read_only_by_default_and_reports_stale_file(tmp_path, monkeypatch):
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    registry = tmp_path / "docs" / "REGISTRY.yaml"
+    registry.parent.mkdir(parents=True)
+    registry.write_text("# Generated: 2000-01-01\n[]\n", encoding="utf-8")
+    before = registry.read_bytes()
+    monkeypatch.chdir(tmp_path)
+    status, evidence = check_registry_entry_regenerated("TCK-FAKE", regenerate=False)
+    assert status == "FAIL" and "stale" in evidence and "make docs-registry" in evidence
+    assert registry.read_bytes() == before
+
+
+def test_registry_check_read_only_passes_when_disk_file_has_entry(tmp_path, monkeypatch):
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    _write_ticket(tmp_path / "tickets" / "done" / "TCK-FAKE.md", "TCK-FAKE")
+    monkeypatch.chdir(tmp_path)
+    check_registry_entry_regenerated("TCK-FAKE")  # default: regenerates, writes the file
+    before = (tmp_path / "docs" / "REGISTRY.yaml").read_bytes()
+    status, _ = check_registry_entry_regenerated("TCK-FAKE", regenerate=False)
+    assert status == "PASS"
+    assert (tmp_path / "docs" / "REGISTRY.yaml").read_bytes() == before
+
+
+def test_finalize_selfcheck_default_still_regenerates_the_registry(tmp_path, monkeypatch):
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    run_finalize_selfcheck("TCK-FAKE", "standard")
+    assert (tmp_path / "docs" / "REGISTRY.yaml").exists()
+
+
+def test_cli_does_not_write_registry_without_flag_and_does_with_it(tmp_path, monkeypatch, capsys):
+    from gate_checks import done_checker_static as dcs
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    dcs.main(["--ticket-id", "TCK-FAKE", "--part", "finalize"])
+    assert not (tmp_path / "docs" / "REGISTRY.yaml").exists()
+    dcs.main(["--ticket-id", "TCK-FAKE", "--part", "finalize", "--regenerate-registry"])
+    assert (tmp_path / "docs" / "REGISTRY.yaml").exists()
+
+
+def test_delivery_process_guide_carries_disposition_rule_exactly_once():
+    guide = (_REPO_ROOT / "docs" / "guides" / "delivery_process.md").read_text(encoding="utf-8")
+    assert guide.count("### Closing a ticket with no implementation") == 1
+    for value in ("STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"):
+        assert value in guide
+    assert "--regenerate-registry" in guide

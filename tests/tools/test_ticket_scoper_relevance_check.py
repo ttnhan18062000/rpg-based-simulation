@@ -45,3 +45,13 @@ def test_relevance_flag_never_blocks_scope_phase():
     assert log_block, "expected a tasksWithRelevanceFlags log-only wiring block"
     assert "log(" in log_block.group(0)
     assert "pushEvent(" not in log_block.group(0)
+
+
+def test_ticket_scoper_carries_registry_verdict_premise_rule_exactly_once():
+    """TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE: the rule lives in one
+    place (ticket-scoper.md) and is not restated in the batch path's create-tickets.js."""
+    marker = "Registry-verdict premise"
+    scoper = _TICKET_SCOPER_MD.read_text(encoding="utf-8")
+    assert scoper.count(marker) == 1
+    assert "`instrument`" in scoper and "`date`" in scoper
+    assert marker not in _CREATE_TICKETS_JS.read_text(encoding="utf-8")

@@ -157,6 +157,26 @@ class TestCLIWritesRealRecords:
             capture_output=True, text=True, cwd=tmp_path,
         )
 
+    def test_regenerates_registry_with_the_closed_tickets_done_entry(self, tmp_path):
+        """TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES (Scope 3 addendum): a hand closure
+        leaves docs/REGISTRY.yaml regenerated, carrying the ticket's tickets/done/ entry."""
+        _init_git_repo_on_test_branch(tmp_path)
+        done = tmp_path / "tickets" / "done"
+        done.mkdir(parents=True)
+        (done / "TCK-FAKE-REG.md").write_text(
+            "---\nstatus: historical\nlayer: ai\nauthority: P1\naudience: agent\n"
+            "ticket_id: TCK-FAKE-REG\nphase: done\ndate: 2026-09-30\ntags: []\n---\n\n"
+            "# TCK-FAKE-REG\n\n## Title\nFixture\n\n## Tier\nhotfix\n",
+            encoding="utf-8",
+        )
+        result = self._run(
+            ["--ticket-id", "TCK-FAKE-REG", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS), *_TITLE_ARGS],
+            tmp_path,
+        )
+        assert result.returncode == 0, result.stderr
+        registry = (tmp_path / "docs" / "REGISTRY.yaml").read_text(encoding="utf-8")
+        assert "TCK-FAKE-REG" in registry and "tickets/done/TCK-FAKE-REG.md" in registry
+
     def test_writes_one_run_and_n_event_records(self, tmp_path):
         _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
