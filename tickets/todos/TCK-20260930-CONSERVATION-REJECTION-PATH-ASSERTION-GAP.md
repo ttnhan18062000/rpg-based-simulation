@@ -112,6 +112,10 @@ Rule exists for, and it is why this is not deferred behind the other 110 survivo
    in `tests/mutation/baselines/src_core_conservation.json` (or a sibling record), with the
    previous count retained for comparison. **The seven named flag-flip survivors must be killed**;
    a drop in total count that leaves any of them alive does not satisfy this.
+   **Baseline scope note:** the baseline delta excludes `src/core/conservation.py:82-91`; the
+   mutants there were killed by `tests/unit/resource/test_node_charge_accounting.py` from PR #265,
+   not by anything under this ticket. Do not count those kills toward this ticket's survivor
+   reduction, and do not re-count them as survivors.
 7. No artifact produced under this ticket claims or implies that conservation currently has a live
    defect.
 
