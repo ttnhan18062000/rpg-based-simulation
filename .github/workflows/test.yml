@@ -624,6 +624,7 @@ jobs:
       run_perf_cert_arena: ${{ steps.diff.outputs.run_perf_cert_arena }}
       run_migration_lanes: ${{ steps.diff.outputs.run_migration_lanes }}
       run_frontend: ${{ steps.diff.outputs.run_frontend }}
+      run_scenario_lane: ${{ steps.diff.outputs.run_scenario_lane }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -633,6 +634,7 @@ jobs:
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
             echo "run_frontend=true" >> "$GITHUB_OUTPUT"
+            echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           BASE="${{ github.event.pull_request.base.sha }}"
@@ -642,6 +644,7 @@ jobs:
             echo "run_perf_cert_arena=true" >> "$GITHUB_OUTPUT"
             echo "run_migration_lanes=true" >> "$GITHUB_OUTPUT"
             echo "run_frontend=true" >> "$GITHUB_OUTPUT"
+            echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "$CHANGED"
@@ -651,6 +654,17 @@ jobs:
           echo "run_perf_cert_arena=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "run_migration_lanes=$(echo "$CHANGED" | grep -qE "$MIG_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "run_frontend=$(echo "$CHANGED" | grep -qE "$FRONTEND_RE" && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          # D-R2 scenario lane: routing lives in tools/test_architecture/scenario_lane_paths.py (fail open).
+          # perf-cert-arena already runs tests/mechanic_scenarios, so the dedicated job runs only when
+          # perf does not (exactly once per PR). The summary names matched and unknown paths either way.
+          PERF_COVERS=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)
+          if SCEN=$(echo "$CHANGED" | python3 -m tools.test_architecture.scenario_lane_paths --perf-covers "$PERF_COVERS" 2>&1); then
+            echo "$SCEN" | head -n1 >> "$GITHUB_OUTPUT"
+            echo "$SCEN" | tail -n +2 >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::scenario-lane classifier failed — failing open"
+            echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
+          fi
 
   # ── Perf / certification / arena ─────────────────────────────────────────
   perf-cert-arena:
@@ -695,6 +709,34 @@ jobs:
       - name: Job summary
         if: always()
         run: python3 tools/ci_junit_summary.py "reports/junit/perf-cert-arena.xml" "perf-cert-arena" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
+
+  # ── Scenario lane (D-R2; not a merge gate by convention -- main has no branch protection) ──
+  # Runs tests/mechanic_scenarios only when perf-cert-arena does not already cover it, so the lane runs
+  # exactly once per PR. Wall time is written to the job summary from the first run, so lane cost
+  # evidence accumulates per PR (roadmap D-R2: cost is shared with feature teams before promotion).
+  scenario-lane:
+    name: "Scenario lane"
+    runs-on: ubuntu-latest
+    needs: [changed-files]
+    if: ${{ !cancelled() && (needs.changed-files.result != 'success' || (needs.changed-files.outputs.run_scenario_lane == 'true' && needs.changed-files.outputs.run_perf_cert_arena != 'true')) }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      - id: started
+        run: echo "t=$(date +%s)" >> "$GITHUB_OUTPUT"
+      - name: Run
+        run: |
+          pytest tests/mechanic_scenarios \
+                 -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/scenario-lane.xml
+      - name: Job summary
+        if: always()
+        run: |
+          python3 tools/ci_junit_summary.py "reports/junit/scenario-lane.xml" "scenario-lane" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Scenario lane wall time (test step onward): $(( $(date +%s) - ${{ steps.started.outputs.t }} ))s" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Migration lanes + expansion gate ─────────────────────────────────────
   migration-lanes:

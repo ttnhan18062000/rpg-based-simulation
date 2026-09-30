@@ -370,15 +370,20 @@ This unifies and extends the existing rules rather than replacing them in parall
 - **Never make red green** by silently updating snapshots or anchors, weakening assertions, adding
   broad `skip`/`xfail`, or changing expected values. An expectation change needs the **feature/spec
   owner's approval plus a recorded reason** (reinforces CLAUDE.md gate integrity).
-- **Quarantine policy: bounded quarantine is the proposed policy (owner direction, 2026-09-29).
+- **Quarantine policy: bounded quarantine is the approved policy (owner decision D-MF, approved with
+  changes 2026-09-30; policy text is in `regression_policy.md` §6.1).
   The enforcement tooling below is DEFERRED until a real case needs quarantine** (the epic tickets;
   Part 3).
   - Until then, **no test is quarantined, and existing failures stay visible** as failures. The 7
     order-dependent progression tests are fixed by R1, never `xfail`ed.
-  - If a real case appears before the tooling exists, the interim rule applies: node-level
-    `xfail(strict=True, raises=…)`, with the owner, ticket and expiry recorded in the tracking
-    ticket and the `reason=` string. The case itself becomes the trigger to build the tooling.
-  - Permitted only for the order-dependence / nondeterminism class.
+  - **No quarantine is applied until a minimal expiry check exists.** The earlier interim rule (owner,
+    ticket and expiry only in the tracking ticket and the `reason=` string) is withdrawn: a reason string
+    is not enough. The first real case triggers building the check *before* the quarantine is applied.
+  - **The original start date is preserved across the single renewal** (no chaining): the maximum
+    lifetime is the start date plus the expiry window plus one renewal.
+  - **A specific failure signature is recorded**: `raises=` plus a message or node pattern, so an
+    unrelated failure of the same node is not absorbed.
+  - Permitted only for the order-dependence / nondeterminism class; node-level strict `xfail` only.
 
   **Observed pytest 9.0.2 behaviour** (scratch experiment, 2026-09-29):
   - `xfail(strict=True)`: a failing test → `XFAIL` (the run stays green); a **passing** test →
@@ -408,8 +413,8 @@ This unifies and extends the existing rules rather than replacing them in parall
   - **Reporting:** the hook writes `quarantine_owner`, `ticket`, `expires` and `days_left` into
     JUnit `user_properties`. The report shows `quarantined` (with owner, ticket and expiry) or
     `quarantine-expired` (fails), never `pass`.
-  - Replaces `regression_policy.md` §6's unbounded `xfail(strict=False)` rule. The replacement
-    itself is an owner decision [D].
+  - Replaces `regression_policy.md` §6's unbounded `xfail(strict=False)` rule (owner decision D-MF,
+    approved 2026-09-30).
 - **Defects found by new tests** are handed to the **feature-owning team** (ticket + evidence
   record). This roadmap does not expand into feature implementation.
 - Nothing here may approve behaviour whose intended design is undecided (e.g. E11).

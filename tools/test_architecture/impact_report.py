@@ -17,7 +17,7 @@ Inputs (v0):
 
 Three separate facts per recommended test: `selected` (the model chose it), `lane_triggered` (the CI path
 filter in `.github/workflows/test.yml` would run its lane for THIS change; parsed from the workflow) and
-`executed` (from supplied JUnit, otherwise `not-run`). A selected test whose lane is not triggered is
+`executed` (from supplied JUnit: `not-in-supplied-runs` when a run lacks the file, `no-junit-artifact` when no run is supplied). A selected test whose lane is not triggered is
 shown as such, not hidden.
 
 Known gaps (also in output): "tactical navigation" is listed under Movement in the ownership map but has
@@ -265,9 +265,9 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
     rec_tests = []
     for t in sorted(tests)[:MAX_TESTS_LISTED]:
         covering = sorted({_lane_job(ln) for ln in fast if report._lane_covers(ln, t)})
-        executed = "not-run"
+        executed = "no-junit-artifact"
         if runs:
-            executed = {r["run_id"]: (report._file_state(r["per_file"][t]) if t in r["per_file"] else "not-run")
+            executed = {r["run_id"]: (report._file_state(r["per_file"][t]) if t in r["per_file"] else "not-in-supplied-runs")
                         for r in runs}
         rec_tests.append({"file": t, "selected": True, "reasons": sorted(set(tests[t])),
                           "lanes": covering,

@@ -177,7 +177,7 @@ In the current pass, hardware class is **informational only** — it is recorded
 Pick the **lowest level that can observe the behaviour being claimed**. Each level names its executed
 boundary, harness, oracle, placement and cadence. "Reported as" is the level's line in the core-RPG test
 report (`tools/test_architecture/core_rpg_report.py`): a level is reported by its lane execution state
-(`pass`, `fail`, `skipped`, `not-run`, `no-junit-artifact`, ...), never merged with another level.
+(`pass`, `fail`, `skipped`, `not-in-supplied-runs`, `no-junit-artifact`, ...), never merged with another level.
 
 | Level (`level` value) | Executed boundary | Harness | Oracle | Placement | Cadence | Reported as |
 |---|---|---|---|---|---|---|
@@ -219,7 +219,7 @@ What a passing test is evidence **of** — the report keeps these separate and n
 | System-health | broad simulation and SimQ: invariants and tolerance bands held |
 | Architecture evidence | static guards (`architecture` marker): a structural rule holds |
 
-Report states: `pass` · `fail` · `skipped` · `not-run` · `no-junit-artifact` · `no-coverage-artifact` ·
+Report states: `pass` · `fail` · `skipped` · `not-run` (layer not run) · `not-in-supplied-runs` · `no-junit-artifact` · `no-coverage-artifact` ·
 `drift-classified` · `unstable` · `stale` · `unknown` · `quarantined`. Package coverage is not domain
 coverage; domain coverage stays `not-derived` until a defensible mapping exists.
 

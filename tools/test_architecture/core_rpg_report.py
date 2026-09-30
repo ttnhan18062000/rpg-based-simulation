@@ -4,7 +4,7 @@ Reads only what it is given (the repo tree, supplied JUnit XML, a supplied cover
 versioned JSON plus markdown. It never runs tests or mutation, changes no exit code based on what it
 finds, and nothing may use it as a gate (roadmap docs/plans/test_architecture/roadmap.md §3.4, §3.8).
 
-Honest states: missing, skipped, stale, not-run and uncertain data are reported as such, never as 0
+Honest states: missing, skipped, stale, not-in-supplied-runs and uncertain data are reported as such, never as 0
 or pass. Every count carries its denominator. The output regenerates byte-identically from the same
 inputs: no wall clock (`sha` and `as_of` are inputs), no absolute paths, stable ordering.
 
@@ -31,7 +31,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import yaml
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # ── classification rules (v0 heuristics) ────────────────────────────────────────────────────────
 # Directory signal: the planner's directory list, docs/plans/test_architecture/reference/
@@ -86,7 +86,10 @@ V0_LIMITS = (
     "oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the "
     "core-RPG candidate set.",
     "The manifest hashes the supplied artifacts, the workflow, the tag registry and the mutation records; the "
-    "scanned tests/, tickets/ and parity ledger are covered only by the `worktree_dirty` flag, which needs a git checkout.",
+    "scanned tests/, tickets/ and parity ledger are covered only by the `scanned_inputs_dirty` flag, which needs a git checkout. "
+    "That flag covers only those scanned inputs, not the whole repository (renamed from `worktree_dirty` in schema_version 2).",
+    "`not-in-supplied-runs` means a candidate file has no testcase in any supplied JUnit run. It does not mean the file "
+    "was never executed anywhere; with no run supplied at all the state is `no-junit-artifact`.",
     "Lane triggers and path filters are not derived; the lane layer records which pytest steps list which paths.",
     "Mutation evidence covers one declared target. `mutmut` is not a project dependency, so the run is not "
     "reproducible from a clean install.",
@@ -366,13 +369,13 @@ def execution_layer(runs: List[Dict[str, Any]], candidates: List[Dict[str, Any]]
     runs = sorted(runs, key=lambda r: r["run_id"])
     files = []
     summary: Dict[str, Dict[str, int]] = {
-        r["run_id"]: {"pass": 0, "fail": 0, "skipped": 0, "not-run": 0, "denominator": n} for r in runs
+        r["run_id"]: {"pass": 0, "fail": 0, "skipped": 0, "not-in-supplied-runs": 0, "denominator": n} for r in runs
     }
     for c in candidates:
         per_run = {}
         for r in runs:
             counts = r["per_file"].get(c["file"])
-            state = _file_state(counts) if counts else "not-run"
+            state = _file_state(counts) if counts else "not-in-supplied-runs"
             entry: Dict[str, Any] = {"state": state}
             if counts:
                 entry.update(counts)
@@ -651,7 +654,7 @@ def build_report(repo_root: Path, sha: str, as_of: dt.date, junit_paths: Sequenc
         "report": "core-rpg-test-report-v0",
         "manifest": {"sha": sha, "as_of": as_of.isoformat(), "inputs": inputs,
                      "test_files_scanned": len(records), "dirty_input_paths": dirty,
-                     "worktree_dirty": dirty if dirty == "unknown" else bool(dirty)},
+                     "scanned_inputs_dirty": dirty if dirty == "unknown" else bool(dirty)},
         "layers": {
             "classification": classification_layer(records),
             "lanes": lanes_layer(lanes, candidates),
@@ -676,7 +679,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
     out: List[str] = [f"# Core-RPG test report v0", "",
                       f"- SHA: `{m['sha']}`", f"- As of: {m['as_of']}",
                       f"- Test files scanned: {m['test_files_scanned']}",
-                      f"- Uncommitted changes under scanned inputs: {m['worktree_dirty']}"
+                      f"- Uncommitted changes under scanned inputs: {m['scanned_inputs_dirty']}"
                       + (f" ({', '.join(m['dirty_input_paths'])})" if m["dirty_input_paths"] not in ("unknown", []) else ""),
                       "", "## Inputs", ""]
     out += [f"- {i['kind']}: `{i['artifact']}` (sha256 `{i['sha256'][:12]}`)" for i in m["inputs"]] or ["- none"]
@@ -706,7 +709,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
         out.append(f"- run `{run['run_id']}`: {run['testcases']} testcases "
                    f"(passed {o['passed']}, failed {o['failed']}, errors {o['errors']}, skipped {o['skipped']}, "
                    f"unmapped {run['unmapped_testcases']}); candidate files pass {s['pass']}, fail {s['fail']}, "
-                   f"skipped {s['skipped']}, not-run {s['not-run']} / {s['denominator']}")
+                   f"skipped {s['skipped']}, not-in-supplied-runs {s['not-in-supplied-runs']} / {s['denominator']}")
         for nodeid in run["failing_tests"]:
             out.append(f"  - failing: `{nodeid}`")
     if not ex["runs"]:

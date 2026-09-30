@@ -28,7 +28,7 @@ repeated here.
 
 Each run was one execution in a clean, detached worktree at a real path, run sequentially. The post-repair
 SHA is the PR head, not merged `main`. Both reports regenerate byte-identically from these inputs and record
-`worktree_dirty: false`: the suite's tracked-file writes touched only paths the report does not scan. The
+`worktree_dirty: false` (the key was renamed `scanned_inputs_dirty` in the 2026-09-30 decisions batch, report schema_version 2; it covers only the inputs the report scans, not the whole repository. The stored artifacts keep the original key as historical files): the suite's tracked-file writes touched only paths the report does not scan. The
 producer takes about 5 s. A first attempt at these runs was killed when a session closed; both runs were
 redone from a clean reset, and the figures here are from the redone runs only.
 
@@ -41,10 +41,10 @@ redone from a clean reset, and the figures here are from the redone runs only.
 | Test files scanned | 1503 | 1505 |
 | Classification: classified / uncertain / unowned-domain / not-core-rpg | 69 / 114 / 7 / 1313 | 69 / 114 / 7 / 1315 |
 | Core-RPG candidate files (classified + uncertain) | 183 | 183 |
-| Candidate files: pass / fail / skipped / not-run (of 183) | 175 / 4 / 0 / 4 | 178 / 1 / 0 / 4 |
+| Candidate files: pass / fail / skipped / not-run (of 183; `not-run` was renamed `not-in-supplied-runs` in schema_version 2: absent from every supplied JUnit run, not "never executed") | 175 / 4 / 0 / 4 | 178 / 1 / 0 / 4 |
 | Package coverage | `no-coverage-artifact` | `provisional-local`: 88.21% of 55877 statements (18674 branches) |
 | Mutation layer | `not-run` | `recorded`, `fresh` |
-| Escaped defects | `tag-not-registered` | `counting`: 2026-09 = 0 (a real count) |
+| Escaped defects | `tag-not-registered` | `counting`: 2026-09 = 0 tagged records (a count of tagged records, not evidence that no defect escaped) |
 | Lanes, parity, SimQ, census | identical | identical |
 
 pytest's own summary counts one more pass than JUnit does in both runs (11642 and 11650). That is one test
@@ -65,7 +65,7 @@ systems 89.82. This is package coverage. It is not domain coverage, which stays 
 | Coverage `no-coverage-artifact` → `provisional-local` | Coverage was supplied only for the post-repair run; the pre-repair run was not instrumented | Input difference |
 | Runtime 19m13s → 34m34s | Coverage instrumentation, not batch 1 | Input difference |
 | Mutation `not-run` → `recorded` | `TCK-20260929-CONSERVATION-MUTATION-BASELINE` added the record | Batch 1 effect |
-| Escaped defects `tag-not-registered` → `counting` | `TCK-20260929-ESCAPED-DEFECT-TAG` registered the tag; nothing has been tagged yet, so the count is a real 0 | Batch 1 effect |
+| Escaped defects `tag-not-registered` → `counting` | `TCK-20260929-ESCAPED-DEFECT-TAG` registered the tag; nothing has been tagged yet, so the count is 0 tagged records; it does not mean zero escaped defects | Batch 1 effect |
 | The pre-repair suite run modified `docs/brainstorm/mechanism_verification_view.md`; the post-repair run did not | `TCK-20260929-VERIFICATION-VIEW-TEST-TRACKED-WRITE` (A.4), confirmed at full-suite scale | Batch 1 effect |
 
 ### The 4 post-repair-only failures
@@ -120,7 +120,7 @@ has to allow for the per-test time budget.
 6. **Coverage is local and provisional,** from one run that also changed which tests pass (above). There is
    no CI coverage job.
 7. **Mutation evidence covers one target** (`src/core/conservation.py`); 117 of 177 mutants survived and none
-   are classified as equivalent. The survivors are untested guards, not known defects.
+   are classified as equivalent. The mutants **survived under the baseline's selected test set**; that is all this run shows. A repo-wide assertion gap, or an equivalence claim, needs more evidence: the later drill fault was caught by `test_harvest_channeling.py`, which is outside the selection. They are not known defects.
 8. **Run-to-run variance is not measured.** Each SHA was run once for this document (the 11 carried
    failures did repeat across four runs, which is the only variance evidence).
 

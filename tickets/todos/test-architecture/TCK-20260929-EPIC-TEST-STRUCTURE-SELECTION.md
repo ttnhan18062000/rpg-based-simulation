@@ -42,9 +42,7 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 
 ## Scope
 
-**Hold rule (pending owner decisions).** Items marked `HOLD — pending D-x` may be *described* by
-the detail planner. **No implementation child ticket for them may be activated, and no gated work may
-start, until the owner approves that decision.** Unmarked items are independently startable.
+**Decision record (2026-09-30).** D-R2 is approved with changes (roadmap §11); its HOLD is lifted. Approval does not close this epic: part 2 is in progress and criterion 4 is open.
 
 1. **Conventions** (ungated):
    - rewrite `docs/testing/test_taxonomy.md` **in place** with level contracts, technique criteria,
@@ -56,9 +54,11 @@ start, until the owner approves that decision.** Unmarked items are independentl
    - worked examples that are **synthetic or confirmed stable** with the feature team;
    - replay-diff helper limited to the **verified reproducibility envelope** (hand-built state, fixed
      seed, ≤ 10 ticks, the determinism-suite profile).
-2. **`HOLD — pending D-R2`. Scenario-lane CI rule** (the only gated part of this epic): scenario tests run on relevant PRs;
-   unknown/new paths run the lane and are named in the job summary; lane cost is measured before any
-   further rule change.
+2. **Scenario-lane CI rule** (D-R2, approved with changes; in progress): the lane triggers on `src/**`, known scenario
+   dependencies and `tests/mechanic_scenarios/**` (the old `PERF_RE` omitted the last, so a scenario-test-only PR ran
+   no scenario test). Unknown/new paths run the lane and are named in the job summary; known-irrelevant paths are
+   listed with evidence. Dedicated job, **not required** (`main` has no branch protection, so that is by convention),
+   and it never double-runs what `perf-cert-arena` already runs. Lane cost is measured before any further rule change.
 3. **Impact report v0** (ungated): changed paths → components/domains → recommended levels, tests and lanes,
    with reasons and an explicit `impact-unknown` list. It **never removes a lane**. It reports
    selected / triggered / executed separately.
@@ -80,7 +80,7 @@ start, until the owner approves that decision.** Unmarked items are independentl
 3. Each worked example runs green in its declared lane and is labelled synthetic or
    confirmed-stable. The replay-diff helper returns `outside-verified-scope` for inputs outside the
    envelope.
-4. **`HOLD — pending D-R2`.** A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
+4. **Open** (job implemented; the ~10-PR cost record has not started). A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
    does not. An unknown path runs them and appears in the job summary. Lane wall time is recorded for
    the first ~10 relevant PRs. The measured cost is shared with the feature teams before any rule promotion.
 5. The impact report, run on sample changes (local rule, shared substrate, cross-domain,
@@ -105,10 +105,10 @@ None.
 `.github/workflows/test.yml` (gated part only).
 
 ## Assumptions / Open Questions
-- **D-R2 pending:** parts 1 and 3 are startable now. Part 2 and criterion 4 are on HOLD.
+- **D-R2 approved (2026-09-30):** part 2 is in progress; criterion 4 stays open until CI has actually run the lane on real PRs and the cost is recorded and shared.
 
 ## Implementation Notes
-**Progress (2026-09-30):** parts 1 and 3 are DONE via child tickets `TCK-20260930-TEST-TAXONOMY-LEVEL-CONTRACTS`, `TCK-20260930-TEST-DOMAIN-LEVEL-MARKERS-ADVISORY-CHECK`, `TCK-20260930-TEST-SCENARIO-HELPER-AND-REPLAY-DIFF`, `TCK-20260930-TEST-IMPACT-REPORT-V0` (acceptance criteria 1, 2, 3, 5). Part 2 and criterion 4 remain `HOLD — pending D-R2`; this epic stays open in `todos/`.
+**Progress (2026-09-30):** parts 1 and 3 are DONE via child tickets `TCK-20260930-TEST-TAXONOMY-LEVEL-CONTRACTS`, `TCK-20260930-TEST-DOMAIN-LEVEL-MARKERS-ADVISORY-CHECK`, `TCK-20260930-TEST-SCENARIO-HELPER-AND-REPLAY-DIFF`, `TCK-20260930-TEST-IMPACT-REPORT-V0` (acceptance criteria 1, 2, 3, 5). Part 2 (scenario-lane job, `tools/test_architecture/scenario_lane_paths.py`) is **in progress in the 2026-09-30 decisions batch**: implemented and locally tested, **not yet run in CI**. Criterion 4 is **open**. This epic stays open in `todos/`.
 **Gap flagged:** "tactical navigation" has no code root; the impact report lists such paths as `impact-unknown` and invents none.
 
 Scenario-lane cost is assumed at 1–3 min per relevant PR; measured under criterion 4.
