@@ -91,7 +91,7 @@ dated evidence* (§9), not commitments.
 | Movement | `src/engine/movement.py`, tactical navigation | Bible ch02 + `docs/combat/combat_movement_overhaul_spec.md` | `combat_movement.yaml` |
 | Combat | `src/engine/combat.py`, `src/engine/domain/combat_actions.py`, `src/domains/combat_engagement/` | Bible ch02 | `combat_movement.yaml` |
 | Progression / anatomy | `src/progression/`, `src/domains/progression/`, `src/entities/` | Bible ch01 | `progression.yaml` |
-| Economy | `src/systems/{economy,market,crafting,harvest}*`, `src/economy/` (not the whole `src/systems/` package, which quests/guild and party also live in) | Bible ch03 | `town_resource.yaml` |
+| Economy | `src/systems/{economy,market,crafting,harvest}*`, `src/economy/`, and `src/core/conservation.py` and `src/core/inventory.py` (ch03 §1 Atomic Conservation and §2 Inventory & Logistics; these two files are **also** substrate, so a change names both owners; added after the core-RPG pilot, `docs/testing/core_rpg_test_pilot_2026-09-30.md`). Not the whole `src/systems/` package, which quests/guild and party also live in | Bible ch03 | `town_resource.yaml` |
 | Quests / guild | `src/systems/quest*`, `guild_system.py`, `src/quests/`, quest pipeline phases | Bible ch03 + buildings/guild/quest technical doc | `town_resource.yaml` |
 | Party / group | `src/systems/party.py`, `src/systems/social_systems/party*.py` | **none**: no Bible chapter covers party/group composition (ch04 is goal hierarchy) → **escalate to the user** [D] | none |
 | *Strategic cognition* (mapped, outside the first program) | `src/cognition/`, `src/strategy/`, `src/ai/goals/`, `src/systems/strategic_systems/` | Bible ch04 | `strategic_cognition.yaml` |

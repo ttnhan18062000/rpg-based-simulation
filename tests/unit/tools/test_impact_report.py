@@ -157,3 +157,51 @@ def test_unparsed_path_filters_are_reported_as_a_known_gap(repo):
     wf.write_text(wf.read_text(encoding="utf-8").replace("_RE=", "_XX="), encoding="utf-8")
     rep = _report(repo, "src/progression/leveling.py")
     assert any("path filters unparsed" in g for g in rep["known_gaps"])
+
+
+# ── ownership by the law a module implements, and declared markers (core-RPG pilot findings) ──
+def test_conservation_module_maps_to_economy_and_substrate_and_recommends_scenario_level(repo):
+    """Sample case 6: src/core/conservation.py is the ch03 economic law living in a substrate root. The pilot
+    (docs/testing/core_rpg_test_pilot_2026-09-30.md) first saw substrate only, with no scenario level."""
+    _write(repo / "src/core/conservation.py", "X = 1\n")
+    _write(repo / "src/core/inventory.py", "Y = 1\n")
+    _write(repo / "tests/unit/resource/test_conservation.py", "from src.core.conservation import X\n")
+    rep = _report(repo, "src/core/conservation.py")
+    assert {"economy", "substrate"} <= set(rep["domains"])
+    assert rep["changes"][0]["domains"] == ["economy", "substrate"]
+    assert "mechanic_scenario" in [lv["level"] for lv in rep["levels"]]
+    assert [t["file"] for t in rep["recommended_tests"]] == ["tests/unit/resource/test_conservation.py"]
+    inventory = _report(repo, "src/core/inventory.py")
+    assert inventory["changes"][0]["domains"] == ["economy", "substrate"]
+    # a plain substrate module is unchanged: substrate only, no scenario level
+    plain = _report(repo, "src/core/state.py")
+    assert plain["changes"][0]["domains"] == ["substrate"]
+    assert "mechanic_scenario" not in [lv["level"] for lv in plain["levels"]]
+
+
+def test_changed_test_declared_markers_add_domain_and_level_beside_other_rules(repo):
+    _write(repo / "tests/unit/resource/test_marked.py",
+           'import pytest\npytestmark = [pytest.mark.domain("economy"), pytest.mark.level("kernel_integration")]\n')
+    rep = _report(repo, "tests/unit/resource/test_marked.py")
+    assert rep["changes"][0]["rule"] == "changed-test"
+    assert rep["changes"][0]["declared_markers"] == {"domains": ["economy"], "levels": ["kernel_integration"]}
+    assert any("declared-marker" in r for r in rep["domains"]["economy"])
+    assert [lv["level"] for lv in rep["levels"]] == ["kernel_integration"]
+    assert rep["levels"][0]["reason"].startswith("declared-marker:")
+
+
+def test_declared_markers_never_override_or_duplicate_another_rules_result(repo):
+    _write(repo / "src/progression/leveling2.py", "X = 1\n")
+    _write(repo / "tests/unit/progression/test_marked2.py",
+           'import pytest\npytestmark = [pytest.mark.domain("progression"), pytest.mark.level("unit")]\n')
+    rep = _report(repo, "src/progression/leveling2.py", "tests/unit/progression/test_marked2.py")
+    assert [lv["level"] for lv in rep["levels"]].count("unit") == 1
+    unit = next(lv for lv in rep["levels"] if lv["level"] == "unit")
+    assert unit["reason"] == "src component changed"  # the src rule's reason stays
+    assert list(rep["domains"]) == ["progression"]
+
+
+def test_changed_test_without_markers_is_unchanged(repo):
+    rep = _report(repo, "tests/unit/progression/test_leveling.py")
+    assert "declared_markers" not in rep["changes"][0]
+    assert rep["domains"] == {} and rep["levels"] == []

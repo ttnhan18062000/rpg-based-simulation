@@ -119,6 +119,7 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
    set.
 
 ## Related Tickets
+- Child: `TCK-20260930-CORE-RPG-REPORT-PARITY-TEST-PATH-PRESENCE` (report parity layer fix found by the pilot, done).
 - Parent of child tickets to be created by the detail planner.
 - Feeds Epics B, C, D.
 

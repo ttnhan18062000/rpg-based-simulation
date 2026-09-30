@@ -11,6 +11,9 @@ Inputs (v0):
 * a static import graph: which tests import a changed module, and which `src/` modules import it
   (one hop, used only to name dependent domains);
 * content/config rules for `data/worlds/**`, `data/content/**` and `config/**`.
+* the `domain`/`level` markers a changed test file declares (`declared-marker`): added beside every other
+  rule's result, never overriding one. A module may have two owners (`src.core.conservation`: economy and
+  substrate).
 
 Three separate facts per recommended test: `selected` (the model chose it), `lane_triggered` (the CI path
 filter in `.github/workflows/test.yml` would run its lane for THIS change; parsed from the workflow) and
@@ -65,6 +68,15 @@ def _owner_of(module: str) -> Optional[str]:
     if report._has_prefix([module], report._SUBSTRATE_IMPORT_PREFIXES):
         return "substrate"
     return None
+
+
+def _owners_of(module: str) -> List[str]:
+    """Every domain owning `module`: its gameplay domain first (if any), then `substrate` when the module is
+    also under a substrate root (dual ownership, e.g. `src.core.conservation`: economy law in substrate code)."""
+    owners = [d for d, prefixes in report.DOMAIN_IMPORT_PREFIXES.items() if report._has_prefix([module], prefixes)][:1]
+    if report._has_prefix([module], report._SUBSTRATE_IMPORT_PREFIXES):
+        owners.append("substrate")
+    return owners
 
 
 def path_filters(workflow: Path) -> Dict[str, "re.Pattern[str]"]:
@@ -153,6 +165,7 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
     unknown: List[Dict[str, str]] = []
     tests: Dict[str, List[str]] = {}
     scenario_level = False
+    declared_levels: Dict[str, List[str]] = {}
 
     def add_domain(domain: str, reason: str) -> None:
         domains.setdefault(domain, [])
@@ -163,23 +176,32 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
         module = _module_of(path)
         entry: Dict[str, Any] = {"path": path}
         if module is not None:
-            owner = _owner_of(module)
-            if owner is None:
+            owners = _owners_of(module)
+            if not owners:
                 entry.update(status="impact-unknown", rule="unmapped-src-path",
                              reason="src module is in no ownership-map component root")
                 unknown.append({"path": path, "reason": entry["reason"]})
             else:
-                entry.update(status="mapped", rule="ownership-map", domains=[owner],
-                             reason=f"module {module} is under the {owner} component roots")
-                add_domain(owner, f"{path}: {entry['reason']}")
-                for dep in sorted(index.src_dependent_domains(module) - {owner}):
+                entry.update(status="mapped", rule="ownership-map", domains=owners,
+                             reason=f"module {module} is under the {' and '.join(owners)} component roots")
+                for owner in owners:
+                    add_domain(owner, f"{path}: {entry['reason']}")
+                for dep in sorted(index.src_dependent_domains(module) - set(owners)):
                     add_domain(dep, f"{path}: imported by {dep} code (one hop)")
                 for t in index.tests_importing(module):
                     tests.setdefault(t, []).append(f"imports {module}")
-                scenario_level = scenario_level or owner != "substrate"
+                scenario_level = scenario_level or any(o != "substrate" for o in owners)
         elif path.startswith("tests/") and Path(path).name.startswith("test_") and path.endswith(".py"):
             entry.update(status="mapped", rule="changed-test", reason="the test file itself changed")
             tests.setdefault(path, []).append("changed test file")
+            # Declared markers add domains and levels beside every other rule; they never override or remove one.
+            declared = report.declared_markers(repo_root / path)
+            if declared["domains"] or declared["levels"]:
+                entry["declared_markers"] = declared
+                for d in declared["domains"]:
+                    add_domain(d, f"{path}: declared-marker domain({d!r})")
+                for lv in declared["levels"]:
+                    declared_levels.setdefault(lv, []).append(path)
         elif path.startswith(CONTENT_PREFIXES):
             entry.update(status="mapped", rule="content-config", domains=[],
                          reason="content/config change: activated behaviour is not derivable from the path; "
@@ -211,6 +233,9 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
         levels.append({"level": "mechanic_scenario", "reason": "gameplay-domain or content/config change"})
     if cross_domain:
         levels.append({"level": "cross_domain_scenario", "reason": "two or more non-substrate domains impacted"})
+    for lv, files in sorted(declared_levels.items()):
+        if lv not in {x["level"] for x in levels}:
+            levels.append({"level": lv, "reason": f"declared-marker: {', '.join(sorted(set(files)))} declares level({lv!r})"})
 
     fast = [ln for ln in lanes if ln["fast"]]
 

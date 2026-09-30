@@ -94,6 +94,7 @@ start, until the owner approves that decision.** Unmarked items are independentl
 ## Related Tickets
 - Depends on Epic B (taxonomy doc) for the field vocabulary.
 - Feeds Epic D.
+- Child: `TCK-20260930-TEST-PLAN-PROOF-FIELDS-AND-TRIAGE-PROCEDURE` (parts 1–4, done). Parts 5 and 6 remain on HOLD.
 
 ## Related Docs
 - `docs/plans/test_architecture/roadmap.md`

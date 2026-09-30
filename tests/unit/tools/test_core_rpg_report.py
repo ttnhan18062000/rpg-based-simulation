@@ -344,6 +344,27 @@ def test_parity_is_read_only_with_denominator(repo):
     assert layer["counts"] == {"missing": 1, "verified": 1}
 
 
+def test_parity_layer_shows_test_path_presence_for_p0_entries(repo):
+    """A P0 entry gaining a test_path (parity TOWN-122 in the core-RPG pilot) must change the report."""
+    ledger = repo / "docs/parity_ledger/x.yaml"
+    ledger.write_text(
+        "- id: A\n  status: verified\n  priority: P0\n  test_path: null\n"
+        "- id: B\n  status: verified\n  priority: P0\n  test_path: tests/a.py::test_b\n"
+        "- id: C\n  status: verified\n  priority: P1\n  test_path: ''\n"
+        "- id: D\n  status: missing\n  priority: P0\n", encoding="utf-8")
+    before = _build(repo)["layers"]["parity"]["test_path"]
+    assert before["p0"] == {"with": 1, "without": 2}
+    assert before["other_priorities"] == {"with": 0, "without": 1}
+    assert before["p0_without_test_path"] == {"x.yaml": ["A", "D"]}
+    ledger.write_text(ledger.read_text(encoding="utf-8").replace("test_path: null", "test_path: tests/a.py::test_a"),
+                      encoding="utf-8")
+    after = _build(repo)["layers"]["parity"]["test_path"]
+    assert after["p0"] == {"with": 2, "without": 1}
+    assert after["p0_without_test_path"] == {"x.yaml": ["D"]}
+    assert "not evidence that the test exists or passes" in after["note"]
+    assert before["p0_without_test_path"] != after["p0_without_test_path"]
+
+
 def test_fixed_states_and_required_limits(repo):
     built = _build(repo)
     assert built["layers"]["simq"]["state"] == "skipped-no-data"
