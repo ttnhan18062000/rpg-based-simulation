@@ -13,6 +13,8 @@ import sys
 import time
 from pathlib import Path
 
+import pytest
+
 _TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
@@ -43,6 +45,39 @@ from gate_checks.done_checker_static import (  # noqa: E402
     run_finalize_selfcheck,
     run_static_precheck,
 )
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+
+
+def _protected_paths_git_status() -> str:
+    return subprocess.run(
+        ["git", "status", "--porcelain", "--"] + _PROTECTED_PATHS,
+        cwd=_REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _fail_if_this_module_touches_tracked_monitoring_files():
+    """Scope 4 regression guard (TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES): every test
+    below runs against the real checkout as cwd unless it isolates via tmp_path/monkeypatch.chdir
+    -- a missed isolation gap (like the one this ticket fixed in
+    test_cli_still_importable_and_callable_as_plain_functions, which called
+    run_finalize_selfcheck() with no isolation and so unconditionally regenerated the real
+    docs/REGISTRY.yaml) must fail loudly here, not ship silently as a tracked-file diff on the
+    next commit. Module-scoped rather than per-test: cheap (one git-status pair for the whole
+    file, not ~150), and still catches any test in this module that leaves one of these three
+    real paths modified, regardless of which test it was.
+    """
+    before = _protected_paths_git_status()
+    yield
+    after = _protected_paths_git_status()
+    assert before == after, (
+        "a test in this module modified a tracked monitoring file it should not have.\n"
+        f"git status before this module's tests:\n{before}\n"
+        f"git status after:\n{after}"
+    )
+
 
 TICKET_FM = """---
 status: active
@@ -1171,6 +1206,38 @@ def _scaffold_finalize_repo(tmp_path, ticket_id="TCK-FAKE"):
 
     csv_path = tmp_path / "tickets" / "working_log.csv"
     _write_csv(csv_path, [["2026-07-05T00:00:00Z", ticket_id, "Fake", "DONE", "x", f"stored_artifacts/{ticket_id}"]])
+
+
+def test_run_finalize_selfcheck_leaves_a_pending_shard_and_canonical_file_untouched(tmp_path, monkeypatch):
+    """AC2 (TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES): a pending per-branch shard
+    present alongside the canonical tools.jsonl must survive a real run_finalize_selfcheck() call
+    byte-identical — neither file is this function's business. Written after confirming by direct
+    source read that done_checker_static.py never calls monitoring_consolidation's
+    consolidate_*() anywhere (grep for "consolidat" in the module: only docstring prose, no call
+    sites) — the shard-consolidation symptom test-architecture-implementer originally reported
+    against the full `pytest tests/` run traces to generate_retro.py's generate() (which does
+    unconditionally call consolidate_all() with no data_dir override), not to this file. Filed as
+    a sibling ticket rather than folded into this one's scope. This test still pins the correct,
+    literal AC2 behavior for done_checker_static.py itself, which was already correct — it just
+    was never verified isolated-and-explicit before.
+    """
+    _scaffold_finalize_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    canonical_tools = data_dir / "tools.jsonl"
+    canonical_tools.parent.mkdir(parents=True, exist_ok=True)
+    canonical_tools.write_text('{"session_id":"real","tool":"Bash"}\n', encoding="utf-8")
+    pending_shard = data_dir / "some-other-branch.tools.jsonl"
+    pending_shard.write_text('{"session_id":"pending","tool":"Read"}\n', encoding="utf-8")
+    canonical_before = canonical_tools.read_bytes()
+    shard_before = pending_shard.read_bytes()
+
+    run_finalize_selfcheck("TCK-FAKE", "standard")
+
+    assert canonical_tools.read_bytes() == canonical_before
+    assert pending_shard.exists(), "the pending shard must not be deleted"
+    assert pending_shard.read_bytes() == shard_before
 
 
 def test_run_finalize_selfcheck_all_pass(tmp_path, monkeypatch):
@@ -2485,10 +2552,25 @@ def test_cli_explicit_tier_overrides_auto_detection(tmp_path):
     assert "tier=hotfix" in result.stdout
 
 
-def test_cli_still_importable_and_callable_as_plain_functions():
+def test_cli_still_importable_and_callable_as_plain_functions(tmp_path, monkeypatch):
     """Pins the Scope constraint that the formal pipeline's own python3 -c call sites keep
     working unchanged: run_static_precheck/run_finalize_selfcheck must still be plain,
-    directly-importable functions, not routed through the new CLI."""
+    directly-importable functions, not routed through the new CLI.
+
+    TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES: this test used to call
+    run_finalize_selfcheck() with no tmp_path/chdir isolation at all — since
+    check_registry_entry_regenerated() (one of the 4 aggregated checks) unconditionally
+    regenerates docs/REGISTRY.yaml against whatever `root=Path(".")` resolves to, every real
+    pytest run of this file overwrote the actual repo's tracked docs/REGISTRY.yaml as a side
+    effect of a test that only meant to check the function's return shape. Isolated the same way
+    every other run_finalize_selfcheck test in this file already is. Verified: temporarily
+    reverting this isolation reproduces a real docs/REGISTRY.yaml diff and is caught by this
+    module's own _fail_if_this_module_touches_tracked_monitoring_files guard fixture.
+    """
+    (tmp_path / "tickets" / "done").mkdir(parents=True)
+    (tmp_path / "tickets" / "inprogress").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
+
     assert callable(run_static_precheck)
     assert callable(run_finalize_selfcheck)
     result = run_finalize_selfcheck("TCK-DOES-NOT-EXIST", "hotfix")
