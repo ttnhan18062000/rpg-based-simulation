@@ -264,8 +264,74 @@ priorities — it is a separate scope-only assessment pass).
 
 ## Implementation Notes
 
+### `demographic_cohort_cycle` — verdict: `STALE-PREMISE` (AC-7 fifth outcome), 2026-09-30
+
+**Dispatched by `rpg-feature-planning` (user-authorized) to run the decisive experiment rather than
+reason from code.** Ran, did not read to a conclusion.
+
+**Experiment.** Compiled a real, in-corpus world composition end-to-end (no mocks): loaded
+`CatalogRepository`/`WorldModuleRepository`, resolved
+`data/content/world_compositions/frontier_living_world.yaml` via
+`WorldAssemblyResolver.assemble()` (the same fixture path
+`tests/integration/worldassembly/test_real_content_world_compositions.py` already exercises), then
+called `WorldCompiler.compile(bundle.world_spec, seed=42, context=bundle.compile_context)` directly
+— the real function, not a stub. Printed, per region: `RegionSpec.id`, whether it matched a
+`region_declared_population` key (built by summing `PopulationSpec.count` by `pop_spec.
+spawn_region`, mirroring `compiler.py:360-364`), and the resulting `RegionState.population_cohorts`.
+
+**Result:**
+```
+PopulationSpec entries (15 total) span 6 spawn_region values:
+  hometown(13), bandit_road(8), goblin_camp(9), old_mine(5), haunted_battlefield(6), wolf_den(5)
+
+RegionSpec.id values (7 total): hometown, bandit_road, goblin_camp, old_mine,
+  haunted_battlefield, near_forest, wolf_den
+
+Key match: hometown=True, bandit_road=True, goblin_camp=True, old_mine=True,
+  haunted_battlefield=True, near_forest=False (no PopulationSpec targets it), wolf_den=True
+
+population_cohorts after compile():
+  hometown: {young:4, adult:6, elder:3}       (13 total, 30/50/20 split, exact)
+  bandit_road: {young:2, adult:4, elder:2}    (8 total)
+  goblin_camp: {young:3, adult:4, elder:2}    (9 total)
+  old_mine: {young:2, adult:2, elder:1}       (5 total)
+  haunted_battlefield: {young:2, adult:3, elder:1}  (6 total)
+  wolf_den: {young:2, adult:2, elder:1}       (5 total)
+  near_forest: {}                             (0 declared — correct per _seed_population_cohorts'
+                                                own declared_population<=0 -> {} guard, cited in its
+                                                own docstring; NOT a seeding failure)
+```
+
+**Verdict:** `region_declared_population`'s `spawn_region` key space and `RegionSpec.id`'s lookup
+key space **agree** for every region carrying any declared population in this real composition.
+6 of 7 regions seed non-empty cohorts; the seventh's empty result is the documented zero-population
+behavior, not evidence of the "never seeded" defect this ticket's premise claims. **This
+corpus ticket's premise is false today.** Per the epic's AC-7, this is recorded as a fifth outcome,
+not forced into `CONDITION` (there is no world-content gap — the composition *does* declare
+population reaching every non-`near_forest` region) or `MISLABEL` (the registry's own description of
+what the mechanism does is accurate; only its "never seeded" verdict is stale). Labelled
+`STALE-PREMISE`, agreed with `rpg-feature-planning`.
+
+Full verdict, evidence, and the filing-time provenance finding (this ticket was filed 3 weeks after
+the fix that contradicts it shipped) are recorded directly in
+`TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED.md`'s own Implementation
+Notes / Completion Summary, per the epic's Deliverable 2.
+
+**Not yet run:** the remaining 3 tickets this ticket (`T02`) covers — `CAMP-STATE-NEVER-SEEDED`,
+`CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`, `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` —
+were not part of this dispatch's ask (the decisive experiment specifically) and remain open for a
+follow-up pass.
+
 ## Test Summary
+_(classification-only pass; no repo test suite authored or run. Verification was a standalone
+read-only script exercising `WorldCompiler.compile()` against real content — script kept in this
+session's scratchpad, not committed, since it is a one-off diagnostic, not a repo test.)_
 
 ## Files Changed
+_(none — read-only. `registries/mechanisms.yaml` confirmed byte-for-byte unchanged against
+`origin/main` after running the experiment.)_
 
 ## Completion Summary
+_(open — `demographic_cohort_cycle` sub-verdict recorded above; `CAMP-STATE-NEVER-SEEDED`,
+`CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`, and `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-
+DANGER` remain unclassified. This ticket stays `OPEN` until all 4 covered tickets carry a verdict.)_
