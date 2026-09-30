@@ -119,6 +119,21 @@ ticket-filing-staleness process finding, per the epic's own T02 scoping.
 **Full experiment output, code, and reasoning:** `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED`'s
 own Implementation Notes (this ticket's classifying parent).
 
+**Independently reproduced by `rpg-feature-planning`, 2026-09-30**, from a separate worktree run of
+the same composition — identical per-region cohort figures, and explicit confirmation that no
+`spawn_region` value lacks a matching `RegionSpec.id` in this content. `STALE-PREMISE` is
+independently reproduced, not a single-run finding.
+
+**What this verdict does NOT establish, flagged by that same independent check so it isn't lost:**
+`STALE-PREMISE` retires the *seeding* claim only — that `population_cohorts` starts non-empty. It
+says nothing about whether `DemographicCycleService.process_demographics`'s per-200-tick birth/death
+math (`birth_rate=0.02`, `mortality_rate=0.01`, `cohort.py:41-42`) produces any *observable* change
+over a real corpus run length (~25 cycles at 5,000 ticks, applied to seeded counts of 5–13 — a 2%
+rate may round to zero every cycle). That is a distinct, unmeasured, open question — not claimed
+either way here, and deliberately not folded into the `STALE-PREMISE` verdict above. Whether it
+warrants its own ticket is left for after this epic's other classification passes finish, not
+decided by this pass.
+
 ## Test Summary
 _(not started — this pass is classification-only; no test authored or run beyond the ad hoc
 verification script above)_

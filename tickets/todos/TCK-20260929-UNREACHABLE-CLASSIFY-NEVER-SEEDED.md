@@ -317,6 +317,32 @@ the fix that contradicts it shipped) are recorded directly in
 `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED.md`'s own Implementation
 Notes / Completion Summary, per the epic's Deliverable 2.
 
+**Independently reproduced by `rpg-feature-planning`, 2026-09-30, from their own worktree** (a
+separate `WorldCompositionSpec.model_validate` → `WorldAssemblyResolver.assemble()` →
+`WorldCompiler().compile(spec, seed=42, ...)` run against the same composition file): identical
+per-region figures, including the exact `hometown` → `{young:4, adult:6, elder:3}` split; explicit
+confirmation that "keys with no matching region id: `[]`" — the key-mismatch `DEFECT` branch is
+disconfirmed, not merely unconfirmed. Verdict `STALE-PREMISE` is now independently reproduced, not
+resting on one run.
+
+**Caution from that same independent check, load-bearing, do not lose it in a re-read:**
+`STALE-PREMISE` retires only the **seeding** claim — that `population_cohorts` starts non-empty.
+It does **not** establish that `DemographicCycleService.process_demographics` fires *observably* —
+that 200-tick cycles at the dataclass-default rates (`birth_rate=0.02`, `mortality_rate=0.01`,
+`cohort.py:41-42`) actually move any cohort count by a visible amount. A 5,000-tick corpus run gives
+only ~25 cycles; applied to counts of 5–13 (this composition's own seeded values), a 2% birth rate
+per cycle may round to zero movement every single cycle. **This is unmeasured — recorded as an open
+question, not claimed either way, and not something to fold into the `STALE-PREMISE` verdict above.**
+Whether it deserves its own ticket is a scoping call for after this epic's `T01`/`T03`/`T04` finish
+classifying the rest of the corpus, not decided here.
+
+**Methodology note for the remaining 3 tickets in this pass** (from the same independent check):
+several of `CAMP-STATE-NEVER-SEEDED`'s siblings cite `registries/mechanisms.yaml` verdicts dated
+2026-09-16 — the same vintage as the verdict that just proved stale here. Treat a registry verdict
+as **a claim to re-verify against code**, not as evidence, and record both the verdict's date and
+the cited code's own last-commit date side by side. Likely the fastest path through `CAMP-STATE` in
+particular.
+
 **Not yet run:** the remaining 3 tickets this ticket (`T02`) covers — `CAMP-STATE-NEVER-SEEDED`,
 `CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`, `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` —
 were not part of this dispatch's ask (the decisive experiment specifically) and remain open for a
