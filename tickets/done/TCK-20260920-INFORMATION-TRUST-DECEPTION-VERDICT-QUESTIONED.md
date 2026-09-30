@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260920-INFORMATION-TRUST-DECEPTION-VERDICT-QUESTIONED
-phase: open
+phase: done
 date: 2026-09-20
 tags: [architecture, schema]
 ---
@@ -16,7 +16,21 @@ tags: [architecture, schema]
 candidate found — a genuine "which mechanism is this actually?" question, not decided here
 
 ## Status
-OPEN
+DONE
+
+## Disposition
+SUPERSEDED
+
+## Disposition Rationale
+Resolved as item 3 of `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which names this ticket as its dependency; no `src/` file changed and no separate work was done here. The registry edit that answers both acceptance criteria is `registries/mechanisms.yaml` `information_trust_deception` (state `gated` -> `orphan`, `implemented_by: src/domains/information/trust.py::SourceTrustUpdateService`, new `corpus_run` verified block). Runtime evidence, from `stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/runtime_probe/output_named_methods_5worlds_2000ticks.json` (positive control passed before the run; an absent key means 0 calls):
+
+```
+"positive_control_ok": true, "ticks": 2000
+per world: "src.domains.information.phase:InformationBeliefPhase.apply": 2000
+           (no key for src.domains.information.trust:SourceTrustUpdateService.update -> 0 calls, in all five worlds)
+```
+
+`src/domains/information/assimilation.py` sets `source_trust_update=None`, so the phase that does run never updates trust.
 
 ## Tier
 standard
@@ -72,9 +86,9 @@ was actually pointing at.
   `InformationBeliefPhase` was considered as a candidate for this ticket's own mechanism.
 
 ## Acceptance Criteria
-- [ ] A real, cited implementation for `information_trust_deception`, or an explicit,
+- [x] A real, cited implementation for `information_trust_deception`, or an explicit,
       evidence-backed state correction if none exists.
-- [ ] The `verified` block's own "flag-gated" framing either confirmed against a real citation or
+- [x] The `verified` block's own "flag-gated" framing either confirmed against a real citation or
       corrected.
 
 ## Related Tickets
@@ -102,15 +116,24 @@ Whether the 2026-09-16 "code read" was ever accurate for some code that has sinc
 removed, or was never precisely cited in the first place, is not known — no trail exists either way.
 
 ## Implementation Notes
-Not yet started.
+Resolved inside `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION` (its dependency). The
+mechanism is `SourceTrustUpdateService` (`src/domains/information/trust.py`), which the identity taxonomy
+had already decided to KEEP as one mechanism (`docs/plans/mechanism_identity_and_change_taxonomy.md`);
+"deception" is descriptive flavour, so no split. The "flag-gated" reading was wrong: nothing in the
+mechanism is gated. `InformationBeliefPhase` (belongs to `belief_cycle`) runs with
+ENABLE_BELIEF_ASSIMILATION default ON and sets `source_trust_update=None`, so trust is never updated, and
+`SourceTrustUpdateService.update()` has no caller: a positive-controlled counter recorded 0 calls over 5
+corpus worlds x 2000 ticks. The other trust writer, `SocialAppraisalSystem.recalibrate_source_trust`, also
+recorded 0. State `gated` -> `orphan`; bound; new `verified` block. The original 2026-09-16 working notes
+were not recoverable, as the ticket expected.
 
 ## Test Summary
-_(not started)_
+Covered by the residue ticket's run: `tests/unit/tools` 438 passed; registry validator clean.
 
 ## Files Changed
-_(not started)_
+`registries/mechanisms.yaml` and the generated views/atlas badge listed in the residue ticket; this ticket.
 
 ## Completion Summary
-Open. Filed 2026-09-20 per peer-relayed direction, routing a wrong-verdict-shaped finding (a
-`verified` note whose claim doesn't match the best candidate evidence) into its own scoped ticket
-rather than resolving it in passing during an unrelated binding batch.
+Done. AC1: a real cited implementation (`SourceTrustUpdateService`) and an evidence-backed state
+correction (`gated` -> `orphan`). AC2: the "flag-gated" framing is corrected. Wiring the service into a
+production caller is a new piece of work and out of scope here.
