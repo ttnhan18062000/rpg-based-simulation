@@ -55,14 +55,16 @@ _CORE_RPG_PREFIXES = (
 _SUBSTRATE_IMPORT_PREFIXES = (  # "Shared substrate" row: not gameplay, so never a core-RPG signal
     "src.core", "src.engine.pipeline*", "src.engine.kernel*", "src.platform",
 )
-_GAMEPLAY_IMPORT_PREFIXES = (
-    "src.engine.movement*",                                                     # Movement
-    "src.engine.combat*", "src.engine.domain.combat_actions", "src.domains.combat_engagement",  # Combat
-    "src.progression", "src.domains.progression", "src.entities",              # Progression / anatomy
-    "src.systems.economy*", "src.systems.market*", "src.systems.crafting*",    # Economy
-    "src.systems.harvest*", "src.economy",
-    "src.systems.quest*", "src.systems.guild_system*", "src.quests",           # Quests / guild
-)
+# Per-domain roots; the `domain` marker values in docs/testing/test_taxonomy.md §10 use these keys.
+DOMAIN_IMPORT_PREFIXES = {
+    "movement": ("src.engine.movement*",),
+    "combat": ("src.engine.combat*", "src.engine.domain.combat_actions", "src.domains.combat_engagement"),
+    "progression": ("src.progression", "src.domains.progression", "src.entities"),
+    "economy": ("src.systems.economy*", "src.systems.market*", "src.systems.crafting*",
+                "src.systems.harvest*", "src.economy"),
+    "quests_guild": ("src.systems.quest*", "src.systems.guild_system*", "src.quests"),
+}
+_GAMEPLAY_IMPORT_PREFIXES = tuple(p for prefixes in DOMAIN_IMPORT_PREFIXES.values() for p in prefixes)
 _UNOWNED_DOMAIN_IMPORT_PREFIXES = (  # "Party / group" row: no oracle and no owner (decision D-P, deferred)
     "src.systems.party*", "src.systems.social_systems.party*",
 )
@@ -73,8 +75,8 @@ V0_LIMITS = (
     "There is no CI coverage job. Package coverage comes only from a supplied local run (`provisional-local`); "
     "otherwise it shows `no-coverage-artifact`.",
     "Package coverage is not domain coverage. Domain coverage stays `not-derived` until a defensible mapping exists.",
-    "Classification is heuristic (directory and import signals); no test declares domain, level or size yet. "
-    "Disagreeing signals stay `uncertain`.",
+    "Classification is heuristic (directory and import signals). `domain`/`level` markers a file declares are "
+    "listed beside its class and never override it; few tests declare them yet. Disagreeing signals stay `uncertain`.",
     "Import signals follow the ownership map in architecture_design_notes.md §3.1; party/group code has no "
     "oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the "
     "core-RPG candidate set.",
@@ -135,6 +137,25 @@ def _has_prefix(names: Iterable[str], prefixes: Sequence[str]) -> bool:
     return any(_matches(n, p) for n in names for p in prefixes)
 
 
+def declared_markers(path: Path) -> Dict[str, List[str]]:
+    """`domain(...)` / `level(...)` marker arguments a test file declares (module, class or test level)."""
+    out: Dict[str, List[str]] = {"domains": [], "levels": []}
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except (SyntaxError, UnicodeDecodeError, OSError):
+        return out
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                and node.func.attr in ("domain", "level")):
+            continue
+        base = node.func.value  # must be `<x>.mark`, i.e. pytest.mark.domain(...)
+        if not (isinstance(base, ast.Attribute) and base.attr == "mark"):
+            continue
+        key = "domains" if node.func.attr == "domain" else "levels"
+        out[key].extend(a.value for a in node.args if isinstance(a, ast.Constant) and isinstance(a.value, str))
+    return out
+
+
 def classify_file(rel_path: str, imports: Optional[List[str]]) -> Dict[str, Any]:
     dir_signal = any(rel_path.startswith(p) for p in _CORE_RPG_PREFIXES)
     if imports is None:
@@ -157,7 +178,24 @@ def classify_file(rel_path: str, imports: Optional[List[str]]) -> Dict[str, Any]
 def scan_tests(repo_root: Path) -> List[Dict[str, Any]]:
     tests_dir = repo_root / "tests"
     files = sorted(p for p in tests_dir.rglob("test_*.py") if "__pycache__" not in p.parts)
-    return [classify_file(_rel(p, repo_root), _imports_of(p)) for p in files]
+    records = []
+    for p in files:
+        record = classify_file(_rel(p, repo_root), _imports_of(p))
+        record.update({f"declared_{k}": v for k, v in declared_markers(p).items()})
+        records.append(record)
+    return records
+
+
+def _declared_marker_summary(records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Files declaring `domain`/`level` markers, listed by path so a newly marked test is locatable.
+
+    Declared markers are reported next to the heuristic class; they never override it."""
+    marked = [r for r in records if r.get("declared_domains") or r.get("declared_levels")]
+    return {
+        "files": len(marked),
+        "by_file": {r["file"]: {"class": r["class"], "domains": sorted(set(r["declared_domains"])),
+                                "levels": sorted(set(r["declared_levels"]))} for r in marked},
+    }
 
 
 def classification_layer(records: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -173,6 +211,7 @@ def classification_layer(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "counts": counts,
         "signal_disagreement": {"directory_only": directory_only, "import_only": import_only},
         "substrate_only_import_files": sum(1 for r in records if r["substrate_only_import"]),
+        "declared_markers": _declared_marker_summary(records),
         "rules": {
             "classified": "directory signal and gameplay-import signal both present",
             "uncertain": "exactly one of the two signals present",
