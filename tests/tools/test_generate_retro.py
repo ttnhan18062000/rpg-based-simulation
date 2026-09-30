@@ -1394,6 +1394,7 @@ _FIXED_CORPUS_EXPECTED_REPORT = (
     "|---|---|---|---|\n"
     "| Pipeline | 0 | 0 (0%) | n/a |\n"
     "| Hand-closed | 0 | 0 (0%) | n/a |\n"
+    "| Native workflow | 0 | 0 (0%) | n/a |\n"
     "| Unlabelled (pre-field) | 3 | 1 (33%) | 20 min |\n"
     "\n"
     "## Gate Failure Breakdown\n"
@@ -3144,10 +3145,13 @@ def _run(run_id, duration_s, execution_mode=None):
     return record
 
 
-def test_compute_retro_metrics_splits_runs_into_three_execution_mode_groups():
+def test_compute_retro_metrics_splits_runs_into_four_execution_mode_groups():
+    # TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT: "workflow" (a native Workflow-tool run,
+    # first written by create-tickets.js) joins pipeline/hand/unlabelled as a fourth group.
     runs = [
         _run("TCK-PIPE", 600, "pipeline"),
         _run("TCK-HAND", 0, "hand"),
+        _run("TCK-WORKFLOW", 300, "workflow"),
         _run("TCK-PRE-FIELD", 1200, None),
         _run("TCK-LEGACY-HAND-ORCHESTRATED-VALUE", 0, None),
     ]
@@ -3155,21 +3159,24 @@ def test_compute_retro_metrics_splits_runs_into_three_execution_mode_groups():
     em = metrics["run_summary"]["execution_mode"]
     assert em["pipeline"]["count"] == 1
     assert em["hand"]["count"] == 1
+    assert em["workflow"]["count"] == 1
     assert em["unlabelled"]["count"] == 2
 
 
-def test_pipeline_avg_duration_excludes_hand_and_unlabelled_runs():
+def test_pipeline_avg_duration_excludes_hand_workflow_and_unlabelled_runs():
     runs = [
         _run("TCK-PIPE-1", 600, "pipeline"),
         _run("TCK-PIPE-2", 1200, "pipeline"),
         _run("TCK-HAND", 999999, "hand"),
+        _run("TCK-WORKFLOW", 999999, "workflow"),
         _run("TCK-PRE-FIELD", 999999, None),
     ]
     metrics = compute_retro_metrics(runs, [])
     em = metrics["run_summary"]["execution_mode"]
-    # (600 + 1200) / 2 = 900s = 15 min -- the two huge hand/unlabelled durations must not leak in.
+    # (600 + 1200) / 2 = 900s = 15 min -- the huge hand/workflow/unlabelled durations must not leak in.
     assert em["pipeline"]["avg_duration_min"] == 15
     assert em["hand"]["avg_duration_min"] is None or em["hand"]["avg_duration_min"] != 15
+    assert em["workflow"]["avg_duration_min"] is None or em["workflow"]["avg_duration_min"] != 15
     assert em["unlabelled"]["avg_duration_min"] is None or em["unlabelled"]["avg_duration_min"] != 15
 
 
@@ -3185,16 +3192,18 @@ def test_legacy_hand_orchestrated_workflow_value_lands_in_unlabelled_not_hand():
     assert em["unlabelled"]["count"] == 1
 
 
-def test_generate_renders_execution_mode_table_with_three_groups(tmp_path):
+def test_generate_renders_execution_mode_table_with_four_groups(tmp_path):
     runs = [
         _run("TCK-PIPE", 600, "pipeline"),
         _run("TCK-HAND", 0, "hand"),
+        _run("TCK-WORKFLOW", 300, "workflow"),
         _run("TCK-PRE-FIELD", 1200, None),
     ]
     report = generate(runs, [], "test-label", tickets_root=tmp_path)
     assert "**By execution mode**" in report
     assert "| Pipeline | 1 |" in report
     assert "| Hand-closed | 1 |" in report
+    assert "| Native workflow | 1 |" in report
     assert "| Unlabelled (pre-field) | 1 |" in report
 
 
@@ -3204,6 +3213,7 @@ def test_generate_execution_mode_table_zero_count_group_shows_zero_percent(tmp_p
     runs = [_run("TCK-PIPE", 600, "pipeline")]
     report = generate(runs, [], "test-label", tickets_root=tmp_path)
     assert "| Hand-closed | 0 | 0 (0%) | n/a |" in report
+    assert "| Native workflow | 0 | 0 (0%) | n/a |" in report
 
 
 def test_generate_over_real_corpus_including_legacy_hand_orchestrated_rows_is_deterministic():
