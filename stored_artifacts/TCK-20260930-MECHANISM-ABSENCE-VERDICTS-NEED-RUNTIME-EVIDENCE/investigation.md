@@ -54,6 +54,18 @@ confirmed at runtime. So the error is
 specific to world-data absence claims, which the Scope 2 rule and the Scope 3 scoper rule now
 cover. No pattern in `code_trace`+`observed` verdicts was found, so no follow-up is filed.
 
+## Horizon (null-result rule, mechanic_verification_scenarios_proposal.md section 5.1)
+The cohort cycle's cadence is `COHORT_INTERVAL = 200` ticks (`src/domains/demographics/cohort.py:346`),
+gated by `tick % COHORT_INTERVAL != 0` at `cohort.py:363`; `world_dynamics.py:180` invokes it every
+100 ticks, so the 300-tick run contained exactly one gated cycle per world (tick 200). One cycle is
+thin for a negative result, so all verdicts were re-run at 1000 ticks (5 gated cycles per world,
+`runtime_probe_output_1000ticks.jsonl`): still 0 BIRTH/DEATH events, largest bracket 8. The zero
+is also explained by the mechanism, not the horizon: `net = int(births - deaths)` is 0 for any
+bracket under 100 (`cohort.py:377-381`), matching rpg-feature-planning's
+`TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO` (e60b6af71). The registry notes now
+cite the 1000-tick run. The only count that changed versus 300 ticks: `apply_bonuses` was called
+twice (both with an empty set, `dungeon_crawl`), 0 non-empty.
+
 ## Probe validity note
 The probe compiles worlds through `WorldRepository.load_world_with_context` (the production loader,
 same as `tools/execution_census.py`, the CLI and the campaign orchestrator). rpg-feature-planning

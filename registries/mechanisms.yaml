@@ -911,17 +911,18 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
-        ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): BreakthroughService.apply_bonuses was called 0
-        times (0 with a non-empty set) and 0 entities held a non-empty active_breakthroughs at tick
-        300 -- confirms the partial state's own claim: the bonus-application side is wired but never
-        exercised with an acquired breakthrough in real play. Supersedes the 2026-09-20
-        code_trace/contradicted verdict (a grep of construction sites, which cannot show what real
-        play does). Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
-        EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py, same folder). History: state
-        corrected done -> orphan -> partial in TCK-20260920-MECHANISM-ENTITY-LAYER-UNBOUND-CLAIMS-
-        RESOLUTION (apply_bonuses has a real caller at rpg_depth.py:367; acquisition has zero real
-        producers).
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
+        ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): BreakthroughService.apply_bonuses was called only 2
+        times (both with an empty set, in dungeon_crawl; 0 with a non-empty set) and 0 entities held
+        a non-empty active_breakthroughs at tick 300 -- confirms the partial state's own claim: the
+        bonus-application side is wired but never exercised with an acquired breakthrough in real
+        play. Supersedes the 2026-09-20 code_trace/contradicted verdict (a grep of construction
+        sites, which cannot show what real play does). Evidence:
+        stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
+        EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
+        History: state corrected done -> orphan -> partial in TCK-20260920-MECHANISM-ENTITY-LAYER-
+        UNBOUND-CLAIMS- RESOLUTION (apply_bonuses has a real caller at rpg_depth.py:367; acquisition
+        has zero real producers).
   - id: entity_role
     layer: entity
     systems: [progression]
@@ -1325,16 +1326,16 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): BetrayalRecord (src/core/models/social.py) was
         constructed 0 times -- confirms orphan: a real, purpose-built dataclass that nothing
         populates. Supersedes the 2026-09-20 code_trace/contradicted verdict. Evidence:
         stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
-        EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py, same folder). History: the `->
-        combat_resolution` edge was removed (TCK-20260918-MECHANISM-UNCLASSIFIABLE-DEPENDS-ON-EDGES-
-        RESOLUTION #7); the merge-with-commitment_pressure_consequences premise was superseded
-        2026-09-20 when BetrayalRecord was found. The faction-level Betrayal(FactionDirective) is a
-        separate candidate, see betrayal_siege_war.
+        EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
+        History: the `-> combat_resolution` edge was removed (TCK-20260918-MECHANISM-UNCLASSIFIABLE-
+        DEPENDS-ON-EDGES- RESOLUTION #7); the merge-with-commitment_pressure_consequences premise
+        was superseded 2026-09-20 when BetrayalRecord was found. The faction-level
+        Betrayal(FactionDirective) is a separate candidate, see betrayal_siege_war.
   - id: temporal_pressure
     layer: entity
     systems: [cognition]
@@ -1825,15 +1826,15 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): MilitaryConflictPhase.execute ran every tick in all
-        21 worlds (6300 calls), so the siege_war half is reachable; the Betrayal(FactionDirective)
+        21 worlds (21000 calls), so the siege_war half is reachable; the Betrayal(FactionDirective)
         directive (src/engine/faction_decision.py:97) was constructed 0 times -- confirms partial:
         siege_war half wired, betrayal half never triggered. Supersedes the 2026-09-20
         code_trace/contradicted verdict. Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-
-        VERDICTS-NEED-RUNTIME-EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py, same
-        folder). Possible Split candidate per docs/plans/mechanism_identity_and_change_taxonomy.md
-        section 1 -- flagged, not performed.
+        VERDICTS-NEED-RUNTIME-EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe:
+        runtime_probe.py, same folder). Possible Split candidate per
+        docs/plans/mechanism_identity_and_change_taxonomy.md section 1 -- flagged, not performed.
   - id: social_contracts
     layer: faction
     systems: [faction]
@@ -2019,21 +2020,24 @@ mechanisms:
       verdict: contradicted
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): population_cohorts seeded in 21 of 21 worlds at
-        compile and DemographicCycleService.process_demographics ran 3 times per world (63 total),
+        compile and DemographicCycleService.process_demographics was invoked 10 times per world (210
+        total), of which 5 per world passed the tick % 200 gate (ticks 200-1000, cohort.py:346,363),
         so the old 'no world seeds population_cohorts' claim was false (since
         TCK-20260831-POPULATION-COHORT-SEEDING) -- but the cycle's births/deaths still never happen:
         0 POPULATION_BIRTH and 0 POPULATION_DEATH events in any world, with the largest cohort
         bracket ever seen at 8 (net = int(births - deaths) needs a bracket of 100 or more,
-        cohort.py:377-381). The only population events were 30 POPULATION_MIGRATION events in 6
-        worlds; cohort totals also moved in 4 worlds (dungeon_crawl 32 -> 29) through a writer not
-        attributed here. Supersedes the 2026-09-16 code_trace/contradicted verdict, which named the
-        wrong reason; premise-false ticket closed STALE-PREMISE (791e6bf6b). Evidence:
-        stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
-        EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py, same folder). Earlier history:
-        mis-registered orphan; the caller is engine/world_dynamics.py:180 behind the compiler.py:203
-        empty-cohorts guard.
+        cohort.py:377-381; the mechanism itself explains the zero at any horizon, see
+        TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO at e60b6af71, and a 300-tick
+        run, one gated cycle, gave the same result). The only population events were 30
+        POPULATION_MIGRATION events in 6 worlds; cohort totals also moved in 4 worlds (dungeon_crawl
+        32 -> 29) through a writer not attributed here. Supersedes the 2026-09-16
+        code_trace/contradicted verdict, which named the wrong reason; premise-false ticket closed
+        STALE-PREMISE (791e6bf6b). Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-
+        VERDICTS-NEED-RUNTIME- EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe:
+        runtime_probe.py, same folder). Earlier history: mis-registered orphan; the caller is
+        engine/world_dynamics.py:180 behind the compiler.py:203 empty-cohorts guard.
 
   # ── World layer (7, atlas `world-layer`) ────────────────────────────────────────────────────
 
@@ -2067,13 +2071,13 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): ChronicleCompiler was constructed 0 times in tick-
         driven runs -- confirms orphan for simulation-driven use (request-time API use is not
         exercised by a tick run; see TCK-20260912-CAMPAIGN-CHRONICLE-API-REGISTRY-NEVER-POPULATED-
         IN-PRODUCTION for that side). Supersedes the 2026-09-20 code_trace/contradicted verdict.
         Evidence: stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
-        EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py, same folder).
+        EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
   - id: opportunity_rumor_seeds
     layer: world
     systems: [world]
@@ -2219,13 +2223,13 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): no EquipmentService method (get_gear_score,
         rank_item, should_replace, auto_equip, repair_equipment) was called, from inside or outside
         src/core/equipment.py -- confirms orphan: real, well-built code nothing runs. Supersedes the
         2026-09-20 code_trace/contradicted verdict. Evidence:
         stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-
-        EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py, same folder).
+        EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe: runtime_probe.py, same folder).
   - id: inventory_trade_conservation
     layer: world
     systems: [economy]
@@ -2377,7 +2381,7 @@ mechanisms:
       verdict: observed
       date: "2026-09-30"
       note: >-
-        Runtime (corpus_run, all 21 corpus worlds x 300 ticks, seed 42, TCK-20260930-MECHANISM-
+        Runtime (corpus_run, all 21 corpus worlds x 1000 ticks, seed 42, TCK-20260930-MECHANISM-
         ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE): 19 CampState seeded across 14 of 21 worlds at
         compile (frontier_living_world: goblin_camp_place, wolf_den_nest; the creature_kind content
         landed 2026-09-08, cb0b23b07); CampService.process_camps ran in all 21 worlds and all 19
@@ -2386,9 +2390,9 @@ mechanisms:
         2026-09-08 and which reading code could never have proven. Premise-false ticket closed
         STALE-PREMISE by rpg-feature-planning (791e6bf6b). Compile census:
         compile_census_output.txt, same folder. Evidence: stored_artifacts/TCK-20260930-MECHANISM-
-        ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/runtime_probe_output.jsonl (probe: runtime_probe.py,
-        same folder). Bound to CampState itself 2026-09-20 (TCK-20260920-MECHANISM-WORLD-FACTION-
-        REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION).
+        ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/runtime_probe_output_1000ticks.jsonl (probe:
+        runtime_probe.py, same folder). Bound to CampState itself 2026-09-20
+        (TCK-20260920-MECHANISM-WORLD-FACTION- REGION-GROUP-UNBOUND-CLAIMS-RESOLUTION).
   - id: nest
     layer: region
     systems: [world]
