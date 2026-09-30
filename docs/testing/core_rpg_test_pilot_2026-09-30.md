@@ -16,11 +16,21 @@ files are in `stored_artifacts/TCK-20260930-CORE-RPG-PILOT-NODE-CHARGE-ACCOUNTIN
 
 ## Result
 
-**`established`, with a scope-level stability caveat.** The surface is resource conservation
+**`established` for the component demonstrations on a real surface only, with a scope-level stability caveat. Pipeline validation and CI scenario execution are NOT yet demonstrated (see "What ran where").** The surface is resource conservation
 (Mechanics Bible ch03 §3 Node Charges, §1 Atomic Conservation; `src/core/conservation.py`; parity
 `TOWN-122`). `rpg-feature-planning` (2026-09-30, relaying `world-rule-catalog-design`) said the
 `pressure-propagation-economy` epic does not plan to change conservation, harvesting or trade behaviour
 per its declared scope, and has no schedule.
+
+## What ran where
+
+| Question | Answer |
+|---|---|
+| What ran locally | The 5 new tests plus the scoped unit set (54 passed), the manual `tests/mechanic_scenarios` run (53 passed), the report, impact report and `marker_check` runs, the injected-fault drill in a scratch worktree, and the report invalidations (capabilities 1, 3, 4, 5, 6). |
+| What ran in CI | PR #265's ordinary fast lanes. The `Perf / cert / arena` job, the only job that runs `tests/mechanic_scenarios`, was **skipped**, so no scenario test ran in CI for this pilot. |
+| Did the real `implement-ticket` Workflow pipeline run | **No.** The pilot was hand-orchestrated. The `architecture-reviewer` checklist, the `done-checker` test-plan field check (it does not exist yet) and per-phase cost were therefore never exercised. |
+| What this establishes | That the component pieces (impact report, markers and check, test plan fields, triage procedure, report states) work on a real surface. |
+| What it does not establish | That the workflow works end to end through the real pipeline, or that CI runs scenario tests for such a change. Epic D stays open until a real-pipeline exercise and a CI scenario run are recorded. |
 
 **Caveats that apply to every capability below:**
 1. That confirmation is a scope-level read of the epic's tickets and summaries, not a line-by-line audit.
@@ -35,18 +45,19 @@ per its declared scope, and has no schedule.
 |---|---|---|---|---|
 | 1 | Identify impacted domains and levels | **Yes, after two fixes made in this batch** | Before the fixes: `outputs/cap1_impact_d1_actual_paths_before_fix.{md,json}` and `outputs/cap1_impact_whatif_with_conservation_change_before_fix.md`. After: `outputs/cap1_impact_d1_actual_paths.{md,json}` and `outputs/cap1_impact_whatif_with_conservation_change.md` (a labelled what-if: D1's paths plus a change to `src/core/conservation.py`) | **First run (before fix), two shortfalls.** (i) For D1's own paths (two changed tests and a ledger file) the report returned tests, files and lanes but **empty Domains and Levels**. (ii) The what-if mapped `src/core/conservation.py` to **`substrate` only**, with levels `unit` and `kernel_integration` and **no `mechanic_scenario`**, although conservation is the ch03 economic law (this is the known "economy code lives in `src/core`" trap; `src.core` is a substrate root and the scenario level needs a non-substrate owner). So a real change to the economy's central law got no economy domain and no scenario recommendation, and the pilot's own tests declare `domain("economy")`. **After the fixes** (`TCK-20260930-IMPACT-REPORT-ECONOMY-CORE-OWNERSHIP-AND-DECLARED-MARKERS`): the what-if names `economy` and `substrate` and recommends `mechanic_scenario`; D1's changed tests contribute their declared domains and levels as `declared-marker` reasons. It also surfaced a real dependency in both runs: `tests/tools/test_parity_index_baseline.py` and 2 other tests read the changed ledger file, and were run. |
 | 2 | Test plan citing the oracle source | Yes | `stored_artifacts/<D1>/test_plan.md` (Proof Plan: ch03 §3 and §1, `TOWN-122`) | The ledger entry had `test_path: null`, so the plan cites the oracle document and the parity id, not an existing proof. |
-| 2b | Approved-oracle review | **Not demonstrated** | none | HOLD D-M2. No claim is made about approved-oracle review. |
+| 2b | Approved-oracle review | **Not demonstrated** | none | D-M2 was approved on 2026-09-30 (advisory, text only), after this pilot ran; the step was not exercised. No claim is made about approved-oracle review. |
 | 3 | Choose or create a test with a documented pattern | Yes | `tests/unit/resource/test_node_charge_accounting.py` (4 tests), `tests/integration/kernel/test_node_charge_cross_actor.py` (1 test); markers per `docs/testing/test_taxonomy.md` §10; helpers `tests/helpers/{entities,resources}.py` | `marker_check` first flagged a real `level-placement-mismatch` (a `kernel_integration` test under `tests/unit/`); it was fixed by moving the test, and the second run reported 0 findings. |
 | 4 | Run the correct local and CI lanes | Yes, with a gap | `outputs/cap4_scoped_local_run.txt` (54 passed, JUnit sha256 `d46b5826c7e7…`, run 2026-09-30T08:53:23Z); `outputs/cap4_scenario_lane_manual_run.txt` (`tests/mechanic_scenarios -m "not slow and not extra_slow"`, 53 passed, 15 s, JUnit `85a946282cbf…`, 08:53:16Z to 08:53:31Z); both at SHA `54a2198f9de928dc1135f3c04d2ba1744aaa08ed` | **CI would not have run the scenario lane for these paths.** `tests/mechanic_scenarios` runs only in the `Perf / cert / arena` job, gated by `PERF_RE` in `.github/workflows/test.yml`. D1's changed paths match none of it, and on PR #265 that job was `skipped`. The gate does match `src/core/`, so a change to `conservation.py` itself would trigger it; a change under `src/economy/` or `src/systems/` would not (F2). The CI rule is untouched (HOLD D-R2). The fast-lane CI run and job conclusions at the final head are recorded in the PR #265 body. |
 | 5 | Interpret an injected failure and route it | Yes (drill) | `outputs/cap5_triage_record_DRILL.md`, `inputs/cap5_injected_fault.diff`, `outputs/cap5_new_tests_on_fault.txt`, `outputs/cap5_rerun_isolated.txt` | The fault was injected in a scratch detached worktree (removed, confirmed gone), so nothing was filed and nothing was sent to the feature team. Classified `Product regression` per `regression_policy.md` §13.2 with the full §13.1 record; routing stated as "would route to `rpg-feature-planning` per §13.4". |
-| 6 | Report reflects evidence, with a state change after a deliberate invalidation | Yes | `outputs/cap6_before/`, `outputs/cap6_after_junit_dropped/`, `outputs/cap6_after_mutation_record_changed/` (`report.{json,md}`); inputs: `inputs/scoped_junit.xml`, `inputs/scenario_lane_junit.xml`, `inputs/cap6_mutation_record_copy/` | Two invalidations, both on copies. Dropping the scoped JUnit: the D1 unit file's state went from `pass` (4) to `not-run`. A copy of the mutation record with a changed target hash, in a scratch worktree: `fresh` became `stale` with reason `target-changed` (and `worktree_dirty` true). No tracked baseline was edited. |
+| 6 | Report reflects evidence, with a state change after a deliberate invalidation | Yes | `outputs/cap6_before/`, `outputs/cap6_after_junit_dropped/`, `outputs/cap6_after_mutation_record_changed/` (`report.{json,md}`); inputs: `inputs/scoped_junit.xml`, `inputs/scenario_lane_junit.xml`, `inputs/cap6_mutation_record_copy/` | Two invalidations, both on copies. Dropping the scoped JUnit: the D1 unit file's state went from `pass` (4) to `not-run` (renamed `not-in-supplied-runs` in report schema_version 2, 2026-09-30; the stored artifacts keep the original label). A copy of the mutation record with a changed target hash, in a scratch worktree: `fresh` became `stale` with reason `target-changed` (and `worktree_dirty` true; that key was renamed `scanned_inputs_dirty` in schema_version 2 and covers only the inputs the report scans, not the whole repository; stored artifacts keep the original key). No tracked baseline was edited. |
+| 7 | Real `implement-ticket` pipeline; per-phase cost; `architecture-reviewer` checklist; `done-checker` field check | **Not demonstrated** | none | Added 2026-09-30. Pending a real-pipeline exercise on a behaviour-owned ticket named by rpg-feature-planning; its result becomes this row. |
 
 ## Mutation baseline (cited, not changed)
 
 `tests/mutation/baselines/src_core_conservation.json` was recorded 2026-09-29 (177 mutants: 60 killed,
 117 survived) with `stale_after` 30 days, so the report marks it stale from 2026-10-30. Its 117 survivors,
-including 7 `accepted=False` to `True` mutants, are an **assertion gap in existing tests, not a live
-product bug**: production returns `accepted=False` on every path. That gap belongs to
+including 7 `accepted=False` to `True` mutants, survived **under the baseline's selected test set**. They are not a live
+product bug (production returns `accepted=False` on every path), and this report does not claim a repo-wide assertion gap or that the survivors are equivalent mutants. The rejection-path gap in the selected tests belongs to
 `TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP` (owned by `rpg-feature-planning`, not merged),
 which this pilot does not implement. D1 targets only the `NODE` charge-accounting mutants at
 `src/core/conservation.py` lines 82-91, so any re-run of the baseline will show kills on those lines that
@@ -65,14 +76,14 @@ baseline's own selected test set, not an absence of coverage in the repository.
 | Impact report v0 (Epic B) | keep, after two fixes | Found, in the first run, that a conservation change mapped to substrate only with no scenario level, and that a tests-only change named no domain or level. Both fixed in this batch (`TCK-20260930-IMPACT-REPORT-ECONOMY-CORE-OWNERSHIP-AND-DECLARED-MARKERS`; before/after artifacts under capability 1). Agent and workflow files are still `impact-unknown`, by design of v0. |
 | Markers and `marker_check` (Epic B) | keep | Caught a real placement mismatch on the first run. |
 | Core-RPG report v0 (Epic A) | keep, after one fix and one documented decision | State changes on invalidation were accurate and reproducible. Fixed: the parity layer reported ledger status counts only, so `TOWN-122`'s new `test_path` was invisible; it now shows P0 entries with and without a `test_path` and lists the P0 ids without one (`TCK-20260930-CORE-RPG-REPORT-PARITY-TEST-PATH-PRESENCE`; `outputs/cap6b_parity_test_path_visible_after_fix.json`: `TOWN-122` is listed before, not listed after). Decision, not changed: the file classification stays heuristic (directory and import signals), and declared markers are listed beside it and never override it; the ownership fix above changes the class for tests importing the two dual-owned modules but not this rule. |
-| Scenario-lane rule (Epic B, HOLD D-R2) | inconclusive | Not changed. The manual run passed; this report records that CI would not have run it for these paths. |
+| Scenario-lane rule (Epic B, D-R2) | inconclusive | D-R2 was approved 2026-09-30 and the job is implemented, but it had not run in CI for this pilot. Not changed by the pilot. The manual run passed; this report records that CI would not have run it for these paths. |
 
 ## Acceptance criteria of the epic
 
 1. Capabilities 1, 2, 3, 4, 5, 6 each have an artifact above; the table lists what each one actually
    demonstrated. Capability 1 fell short in the first run; the shortfalls and their fixes are stated in its row and in item 5.
 2. Capability 2b is stated as "not demonstrated"; no claim is made about approved-oracle review.
-3. Classification: `established`, on the confirmed real surface with the caveats above.
+3. Classification: `established` for the component demonstrations on the confirmed real surface, with the caveats above. Pipeline validation and CI scenario execution are not demonstrated, and Epic D stays open.
 4. This report records keep / revise / inconclusive per intervention with measurements and a qualitative
    review; it is directional.
 5. Capability 1 fell short in the first run (a conservation change mapped to substrate only with no scenario

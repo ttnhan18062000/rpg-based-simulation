@@ -57,14 +57,14 @@ step, quarantine policy.
   - The nearest economy work, the `pressure-propagation-economy` epic, is all-or-nothing and touches
     `src/economy/` and shared state. Name it explicitly when asking for stability confirmation.
   - Economy paths **do not trigger the scenario lane today** (F2). The pilot either runs after the
-    lane rule (B, `HOLD — pending D-R2`) or records a manual lane run and states that CI would not
+    lane rule (B; D-R2 approved 2026-09-30, job implemented, not yet run in CI) or records a manual lane run and states that CI would not
     have run it. That makes the lane gap part of what the pilot demonstrates.
 
 **Per exercise, demonstrate that an agent can:**
 1. identify the impacted domains and levels;
 2. produce a test plan citing the oracle source (Bible/contract + parity ledger). **Approved-oracle
    review** is a separate capability (2b). It can be claimed only if the oracle-review step (Epic C
-   part 5, `HOLD — pending D-M2`) is approved and was actually exercised;
+   part 5; D-M2 approved 2026-09-30 as advisory text) was actually exercised on a real change;
 3. choose or create the test using a documented pattern;
 4. run the correct local and CI lanes;
 5. interpret a real or injected failure and route it per the triage procedure;
@@ -89,7 +89,7 @@ step, quarantine policy.
    - lane runs with run ids;
    - a triage record;
    - the report before and after invalidation.
-2. **Capability 2b (approved-oracle review):** if the oracle-review step is on HOLD or absent, the
+2. **Capability 2b (approved-oracle review):** if the oracle-review step was not exercised on a real change, the
    report states "not demonstrated", and the pilot makes **no** claim about approved-oracle review.
 3. **Result classification:**
    - `established` only if at least one exercise uses a **confirmed real** surface;
@@ -119,7 +119,7 @@ Depends on the chosen surface. Candidate: economy conservation code and its test
 ## Assumptions / Open Questions
 - The surface is confirmed at start; otherwise the pilot uses the synthetic exercise (a
   `provisional` result, which cannot establish that the workflow works on a real RPG change).
-- D-M2 pending: capability 2b is not claimable while the oracle-review step is on HOLD.
+- D-M2 approved (2026-09-30) as advisory text; capability 2b is claimable only once a real change exercises the oracle-review step.
 
 ## Implementation Notes
 Cost: about one small ticket per exercise, plus reporting.
@@ -130,7 +130,9 @@ Defined by child tickets.
 ## Files Changed
 (Child tickets.)
 
-Acceptance criteria met by the pilot report (2026-09-30):
+**Status (corrected 2026-09-30): OPEN.** The pilot was hand-orchestrated and CI skipped the scenario job. Component demonstrations on a real surface are established. **Not yet demonstrated: the real `implement-ticket` pipeline, and CI scenario execution.** This epic title's "end to end" claim is not met until a real-pipeline exercise (about 8–10 agents, on a small behaviour-owned ticket named by rpg-feature-planning, launched only with the user's own go-ahead) is recorded as a new capability row in the pilot report. That exercise is also what exercises Epic C's checklist and `test_plan.md` field check.
+
+Acceptance criteria as stated by the first pilot report (2026-09-30), with the scope corrected above:
 1. Capabilities 1 (after two fixes made in this batch; before/after artifacts kept), 2, 3, 4, 5, 6 each have an artifact.
 2. Capability 2b stated as not demonstrated; no claim made.
 3. Result `established`, on a real surface whose stability was confirmed at scope level only (caveats in the report).

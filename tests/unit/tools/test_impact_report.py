@@ -107,7 +107,7 @@ def test_selected_lane_triggered_and_executed_are_separate_facts(repo, tmp_path)
     assert set(t["lane_triggered"].values()) <= {"always-on", "triggered", "not-triggered"}
     (run_id, state), = t["executed"].items()
     assert state == "pass"
-    assert _report(repo, "src/progression/leveling.py")["recommended_tests"][0]["executed"] == "not-run"
+    assert _report(repo, "src/progression/leveling.py")["recommended_tests"][0]["executed"] == "no-junit-artifact"
 
 
 def test_report_never_removes_a_lane_and_has_no_skip_field(repo):

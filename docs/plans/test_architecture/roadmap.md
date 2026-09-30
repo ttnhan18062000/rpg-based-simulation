@@ -8,7 +8,7 @@ tags: [testing, architecture, planning]
 
 # Test Architecture Roadmap (core RPG as first application)
 
-**Status: FOR OWNER REVIEW, 2026-09-29. All decisions below are PENDING unless marked otherwise.**
+**Status: owner decisions recorded 2026-09-30 (§11): D-R2, D-MF and D-M2 approved with changes; D-P deferred; D-PERF assigned when its trigger fires; D-PR resolved.** Approval lifts a HOLD; it does not mean the epic is complete. See each epic's own status.
 
 This roadmap and the four epic tickets in `tickets/todos/test-architecture/` are the **binding** plan.
 Everything in [`reference/`](reference/) is non-binding investigation and design material for the
@@ -55,7 +55,7 @@ proven:
 |---|---|---|
 | **Locate**: an agent finds the right domains, levels, tests and lanes for a change | impact report reasons; pilot capability 1 | selection misses recorded and falling |
 | **Run**: relevant tests actually execute on PRs | report: relevant PRs → lane triggered → executed | no relevant PR without its lane |
-| **Report honestly**: no silent zero, no false pass | report states; no-artifact vs not-run vs outcome | every layer has a denominator or a state |
+| **Report honestly**: no silent zero, no false pass | report states; no-artifact vs not-in-supplied-runs vs outcome | every layer has a denominator or a state |
 | **Detect faults**: tests catch injected faults in a baseline target | mutation score on a declared target, with provenance (§4.7) | baseline recorded, then non-decreasing on that target |
 | **Escape less**: fewer defects reach `main` past green tests | `escaped-defect` tag count per month (§4.7) | trend visible, then falling |
 | **Route failures**: failures reach the right owner with evidence | triage records by class | no unowned failure older than its closure condition |
@@ -73,7 +73,7 @@ proven:
    - two Bible or contract sections disagree (date the competing sections first).
 3. **No new authoritative proof-status record.** The parity ledger and mechanism registry keep their
    existing roles; this roadmap reports against them.
-4. **Honest states.** Missing, skipped, stale, unstable and not-run data are reported as such, never
+4. **Honest states.** Missing, skipped, stale, unstable and not-in-supplied-runs data are reported as such, never
    as 0 or pass.
 5. **Never make red green by weakening tests:** no silent snapshot or anchor updates, broad
    skip/xfail, weakened assertions, or changed expected values without the documents changing.
@@ -126,7 +126,7 @@ The report keeps these **separate**:
 - census reachability;
 - hygiene.
 
-States: `pass` · `fail` · `skipped` · `not-run` · `no-junit-artifact` · `no-coverage-artifact` ·
+States: `pass` · `fail` · `skipped` · `not-run` (a layer that was not run) · `not-in-supplied-runs` (a file absent from every supplied JUnit run; not "never executed") · `no-junit-artifact` · `no-coverage-artifact` ·
 `drift-classified` · `unstable` · `stale` · `unknown` · `quarantined`.
 
 Tests without an approved claim appear only as *executed evidence*:
@@ -223,11 +223,12 @@ Neither is a gate. Both feed the post-pilot review (§6).
    property for conservation) and marks the test with domain and level metadata.
 4. **Review.** The architecture reviewer runs the test-quality checklist on the changed tests.
 5. **Run.** The test-scoper runs the recommended commands locally.
-   - **Once D-R2 is approved and implemented,** the scenario lane runs on the PR because the path
-     matches the rule.
-   - **Until then** (D-R2 pending), a `src/systems/…` change does **not** trigger the scenario lane
-     in CI. The agent runs the scenario tests locally and the report records the lane as
-     `not-run` in CI.
+   - **D-R2 (approved with changes, implemented 2026-09-30):** a `src/systems/…` change triggers the
+     scenario lane on the PR, and so does a change to `tests/mechanic_scenarios/**` alone. The lane
+     runs once per PR: inside `perf-cert-arena` when that job's filter matches, otherwise in the
+     dedicated non-required `scenario-lane` job. The job is not a merge gate by convention
+     (`main` has no branch protection).
+   - The agent still runs the scenario tests locally, and the report records what was supplied.
 6. **Report.** The report shows the new test classified, executed and passed in its lane.
 7. **Fail** (if it fails). The failure gets an evidence record and a class, and goes to its owner. A
    product defect goes to the feature team.
@@ -245,12 +246,12 @@ No phase has a date; each starts on its predecessor's decision.
 
 ## 7 · Epics (Phase 1)
 
-| Epic | Outcome | Depends on | Gated parts (pending decision) |
+| Epic | Outcome | Depends on | Parts that were gated (decision recorded 2026-09-30) |
 |---|---|---|---|
 | **A. Test baseline and reliability** (`TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY`) | A reproducible core-RPG test report that works with the **available** artifacts (`no-junit-artifact` / `no-coverage-artifact` where absent). The **known** progression order leak is fixed, and the known write to `docs/brainstorm/mechanism_verification_view.md` is stopped. A mutation baseline and escaped-defect tracking are set up (§4.7). Any general tracked-file guard is advisory. Remaining unknowns are reported. **No new CI job** | — | none |
-| **B. Test structure and selection** (`TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION`) | Written test-level conventions and metadata. Scenario tests run on relevant PRs. A first impact report that adds reasons and `impact-unknown` flags and never removes lanes | A (report v0, for reporting only) | CI scenario-lane rule: **`HOLD — pending D-R2`** |
-| **C. Test workflow and failure handling** (`TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING`) | Test-plan fields and an advisory test-quality checklist in the existing workflow; one unified failure-triage procedure | B (conventions) | oracle-review step: **`HOLD — pending D-M2`**; quarantine policy: **`HOLD — pending D-MF`** |
-| **D. Bounded core-RPG pilot** (`TCK-20260929-EPIC-CORE-RPG-TEST-PILOT`) | One or two exercises. The pilot report **lists which capabilities were actually demonstrated**. Approved-oracle review is claimable only if the D-M2 step was approved and exercised | The **minimum usable workflow** (below), not every part of A–C | surface confirmation at start (resource conservation is a **candidate** until confirmed) |
+| **B. Test structure and selection** (`TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION`) | Written test-level conventions and metadata. Scenario tests run on relevant PRs. A first impact report that adds reasons and `impact-unknown` flags and never removes lanes | A (report v0, for reporting only) | CI scenario-lane rule (D-R2 approved; implemented, job non-required until cost is measured) |
+| **C. Test workflow and failure handling** (`TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING`) | Test-plan fields and an advisory test-quality checklist in the existing workflow; one unified failure-triage procedure | B (conventions) | oracle-review step (D-M2 approved; advisory, text only); quarantine policy (D-MF approved; policy text only, nothing quarantined) |
+| **D. Bounded core-RPG pilot** (`TCK-20260929-EPIC-CORE-RPG-TEST-PILOT`) | One or two exercises. The pilot report **lists which capabilities were actually demonstrated**. Approved-oracle review is claimable only if the D-M2 step was exercised on a real change | The **minimum usable workflow** (below), not every part of A–C | surface confirmation at start (resource conservation is a **candidate** until confirmed) |
 
 **Minimum usable workflow for D:**
 - A's report v0;
@@ -267,7 +268,7 @@ RPG change.
 
 **Hold rule.** Work marked `HOLD — pending D-x` may be *described* by detail planners, but no
 implementation child ticket for it may be activated, and no gated work may start, until the owner
-approves that decision. Ungated work is independently startable.
+approves that decision. Ungated work is independently startable. As of 2026-09-30 no HOLD is open: D-R2, D-MF and D-M2 are approved, and D-P and D-PERF gate nothing in A–D.
 
 ## 8 · Non-functional risk register (addresses F4)
 
@@ -313,15 +314,15 @@ The assessment found cost without matching protection (F5). Pruning by line-coun
 
 ## 11 · Pending owner decisions and deferred items
 
-**Pending decisions:**
+**Owner decisions (recorded 2026-09-30):**
 
-| Id | Decision | Recommendation | Gates |
+| Id | Decision | Status | Gates |
 |---|---|---|---|
-| D-R2 | Scenario-lane rule: `src/**` + known scenario dependencies trigger; known-irrelevant paths listed; unknown/new paths run the lane and are named in the job summary; a dedicated job; no rule change until lane cost is measured, **and the measured cost is shared with the feature teams (who pay it on every PR) before the rule is promoted** | approve | the CI rule change in B |
-| D-MF | Bounded quarantine replaces `regression_policy.md` §6's unbounded `xfail(strict=False)` (nondeterminism only; node-level strict xfail; owner, ticket, expiry ≤ 14 days, one renewal); tooling waits for a real case | approve | the quarantine policy in C |
-| D-M2 | Oracle model as in §3.1–3.2; oracle review advisory during the pilot | approve | the oracle-review step in C |
-| D-P | Party: no oracle document or owner | keep deferred | nothing in A–D |
-| D-PERF | Who owns calibrating core-RPG performance baselines | assign when its trigger fires | nothing in A–D |
+| D-R2 | Scenario-lane rule, approved with changes. The lane triggers on `src/**`, on known scenario dependencies and on `tests/mechanic_scenarios/**` (the old `PERF_RE` omitted that last path, so a PR editing only a scenario test ran no scenario test in CI). Unknown or new paths fail open and are named in the job summary. Known-irrelevant paths are listed explicitly, each with evidence. The job stays non-required until CI run cost is measured over real PRs **and the measured cost is shared with the feature teams (through rpg-feature-planning) before the rule is promoted**. | approved; implemented (job non-required) | the CI rule change in B |
+| D-MF | Bounded quarantine replaces `regression_policy.md` §6's unbounded `xfail(strict=False)`: nondeterminism only; node-level strict xfail; owner, ticket, expiry at most 14 days, one 14-day renewal that keeps the original start date (28 days maximum from the original start); a recorded failure signature (`raises=` plus a message or node pattern). **No quarantine is applied until a minimal expiry check exists**; the first real case triggers building it before the quarantine is applied. Policy text only: no enforcement tooling, and nothing is quarantined. | approved; policy text landed | the quarantine policy in C |
+| D-M2 | Oracle model: the Mechanics Bible / engine contract (behaviour) plus the parity ledger (evidence links); see `reference/architecture_design_notes.md` §3.1–3.2. **An expected value no document states (a balance or emergent threshold) stays an exploratory measurement, not a proof, until the owner or feature team approves a derivation.** Oracle review is advisory during the pilot and never authorizes an agent to change an expectation: an expectation change still needs the oracle document and ledger to change first, or an escalation record. | approved; rule recorded (advisory, text only) | the oracle-review step in C |
+| D-P | Party: no oracle document or owner | deferred | nothing in A–D |
+| D-PERF | Who owns calibrating core-RPG performance baselines | assigned when its trigger fires | nothing in A–D |
 | D-PR | Which PR carries these plan docs | resolved by owner instruction: plan PR #256 | — |
 
 **Deferred items and their triggers:**

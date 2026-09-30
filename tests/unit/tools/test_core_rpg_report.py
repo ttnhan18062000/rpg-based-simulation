@@ -174,13 +174,13 @@ def test_not_run_and_outcome_states_are_distinct(repo, tmp_path):
     assert layer["state"] == "junit-supplied"
     run_id = layer["runs"][0]["run_id"]
     by_file = {f["file"]: f["runs"][run_id]["state"] for f in layer["files"]}
-    # test_a is in the JUnit (outcome), test_b/test_c are candidates absent from it (not-run)
+    # test_a is in the JUnit (outcome), test_b/test_c are candidates absent from it (not-in-supplied-runs)
     assert by_file["tests/unit/combat/test_a.py"] == "fail"
-    assert by_file["tests/unit/quest/test_b.py"] == "not-run"
-    assert by_file["tests/unit/misc/test_c.py"] == "not-run"
-    assert layer["summary"][run_id] == {"pass": 0, "fail": 1, "skipped": 0, "not-run": 2, "denominator": 3}
+    assert by_file["tests/unit/quest/test_b.py"] == "not-in-supplied-runs"
+    assert by_file["tests/unit/misc/test_c.py"] == "not-in-supplied-runs"
+    assert layer["summary"][run_id] == {"pass": 0, "fail": 1, "skipped": 0, "not-in-supplied-runs": 2, "denominator": 3}
     # the three states never collapse into one another
-    assert len({"no-junit-artifact", "not-run", "fail"}) == 3
+    assert len({"no-junit-artifact", "not-in-supplied-runs", "fail"}) == 3
 
 
 def test_separate_runs_keep_their_own_results_and_run_ids(repo, tmp_path):
@@ -313,27 +313,27 @@ def test_escaped_defect_month_basis_is_stated(repo):
     assert "creation date" in _build(repo)["layers"]["escaped_defects"]["month_basis"]
 
 
-# ── manifest: worktree_dirty ──
+# ── manifest: scanned_inputs_dirty ──
 def _git(repo, *args):
     import subprocess
     subprocess.run(["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t", *args],
                    check=True, capture_output=True)
 
 
-def test_worktree_dirty_is_unknown_outside_git(repo):
+def test_scanned_inputs_dirty_is_unknown_outside_git(repo):
     manifest = _build(repo)["manifest"]
-    assert manifest["worktree_dirty"] == "unknown"
+    assert manifest["scanned_inputs_dirty"] == "unknown"
 
 
-def test_worktree_dirty_flags_uncommitted_scanned_inputs_only(repo):
+def test_scanned_inputs_dirty_flags_uncommitted_scanned_inputs_only(repo):
     _git(repo, "init", "-q")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "init")
-    assert _build(repo)["manifest"]["worktree_dirty"] is False
+    assert _build(repo)["manifest"]["scanned_inputs_dirty"] is False
     _write(repo / "tests/unit/other/test_d.py", "import os\n")            # a scanned input
     _write(repo / "tickets/working_log.csv", "x\n")                        # not a scanned input (not .md)
     manifest = _build(repo)["manifest"]
-    assert manifest["worktree_dirty"] is True
+    assert manifest["scanned_inputs_dirty"] is True
     assert manifest["dirty_input_paths"] == ["tests/unit/other/test_d.py"]
 
 
@@ -371,7 +371,7 @@ def test_fixed_states_and_required_limits(repo):
     assert built["layers"]["census"]["state"] == "unstable"
     limits = " ".join(built["limits"])
     for required in ("api-tools", "not a project dependency", "Equivalent mutants are not classified",
-                     "`mutmut` 3.x", "not a gate", "unowned-domain", "worktree_dirty", "creation date"):
+                     "`mutmut` 3.x", "not a gate", "unowned-domain", "scanned_inputs_dirty", "creation date"):
         assert required in limits
 
 
@@ -398,3 +398,25 @@ def test_smoke_on_the_live_repo_has_every_layer_and_a_denominator(tmp_path):
                            "mutation", "escaped_defects"}
     assert layers["classification"]["denominator"]["test_files"] > 0
     assert layers["execution"]["state"] == "no-junit-artifact"
+
+
+# ── state naming: absent-from-supplied-runs is not "never executed" ──
+def test_schema_version_records_the_state_and_key_renames(repo):
+    assert _build(repo)["schema_version"] == 2
+
+
+def test_absent_file_state_says_supplied_runs_not_never_executed(repo, tmp_path):
+    junit = _junit(tmp_path / "a.xml", [("tests.unit.combat.test_a", "t", "")])
+    built = _build(repo, [junit])
+    layer = built["layers"]["execution"]
+    states = {s for f in layer["files"] for r in f["runs"].values() for s in [r["state"]]}
+    assert "not-run" not in states and "not-in-supplied-runs" in states
+    assert "not-run" not in next(iter(layer["summary"].values()))
+    limits = " ".join(built["limits"])
+    assert "not-in-supplied-runs" in limits and "does not mean the file was never executed" in limits
+    assert "not-in-supplied-runs" in report.render_markdown(built)
+
+
+def test_no_supplied_run_stays_no_junit_artifact_not_not_in_supplied_runs(repo):
+    layer = _build(repo)["layers"]["execution"]
+    assert {f["state"] for f in layer["files"]} == {"no-junit-artifact"}

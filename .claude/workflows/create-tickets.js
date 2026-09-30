@@ -852,6 +852,7 @@ Steps:
    - Related Code Areas → task.related_code_areas (one "- item" per line)
    - Assumptions / Open Questions → task.assumptions (one "- item" per line, or "None.")
    - Implementation Notes, Test Summary, Files Changed, Completion Summary → (leave blank)
+   - If task.tier is epic: leave Implementation Notes otherwise blank but seed an empty `### Shared test fixtures and patterns` subsection under it (children record shared fixtures there; `.claude/agents/investigator.md` reads it).
 
 Return: ticket_id="${ticketId}", ticket_path="${ticketPath}", tier="${task.tier}",
 summary (one sentence confirming the file was written, ≤200 chars), ts=TS.`,
