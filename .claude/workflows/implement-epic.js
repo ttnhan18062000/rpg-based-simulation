@@ -244,6 +244,7 @@ Step 1 — create an epic ticket using the ticket-scoper approach:
   - Set Tier: epic, Status: OPEN
   - The ## Related Tickets section should list the child tickets that will need to be created
   - In ## Implementation Notes, instruct the user to: (1) create child tickets, (2) re-run with epic_id=<this ticket id>
+  - In ## Implementation Notes, also add an empty `### Shared test fixtures and patterns` subsection. Children that share test fixtures or patterns record them there; each child's investigator reads it (`.claude/agents/investigator.md`) and reuses them.
 
 Step 2 — return:
   mode="request"

@@ -102,6 +102,30 @@ already loaded before its own edits landed, so its own implementation run procee
 Implement to Test as before. The first ticket to trigger a real second `architecture-reviewer` call
 is a later ticket, not that one.
 
+### Test-quality checklist (advisory)
+
+When `files_changed` includes test files, also run this checklist over **the changed tests only**
+(diff-scoped; do not audit untouched tests). Basis: `.agents/skills/test-driven-development/testing-anti-patterns.md`.
+Check whether a changed test:
+
+- asserts on a mock or on its own setup instead of real behavior;
+- adds test-only methods or hooks to production code;
+- mocks past the boundary that matters, so the assertion can no longer fail for a real reason;
+- uses a partial or incomplete fixture that hides a field the code under test reads;
+- has an assertion that is vacuous or weaker than the oracle it cites (compare against the ticket's
+  `test_plan.md` Proof Plan, when present);
+- changes an expected value, snapshot or anchor without the oracle document changing (report it; the
+  triage rules live in `docs/testing/regression_policy.md` §13).
+
+Rules for this checklist:
+
+- **Advisory only.** It never changes the `APPROVED`/`NEEDS_CHANGES`/`BLOCKED` verdict and is not a
+  new `NEEDS_CHANGES` trigger. Report findings in a separate `test_quality_findings` list.
+- **A clean review is a valid outcome.** If nothing substantive turns up, return an empty list and
+  say so. Do not manufacture findings.
+- Each substantive finding must be acted on by the implementer, or declined with a stated reason.
+  Record which in the ticket's Implementation Notes.
+
 ## Background Commands
 
 Never end your turn while a `run_in_background` Bash command you started is still running. Either run the command in the foreground, or poll for the command's own completion within the same turn before returning control. You are not auto-resumed the way the top-level orchestrator is — an unfinished background command left running when you end your turn stalls the pipeline until it is manually detected and you are re-prompted.
