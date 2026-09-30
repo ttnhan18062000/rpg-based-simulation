@@ -6,35 +6,42 @@ from src.engine.checkpoint import CanonicalStateHasher
 from src.core.builder import V2EntityBuilder
 from src.core.enums import EntityRole
 
+# The verified reproducibility envelope: the single source for tests/helpers/replay_diff.py, which must
+# not restate these bounds. Widen only together with a test that proves the wider scope.
+REPRODUCIBILITY_SEED = 42
+REPRODUCIBILITY_TICKS = 10
+REPRODUCIBILITY_PROFILE = RuntimeProfile(
+    name="det-test",
+    hardware_class=HardwareClass.CLASS_B,
+    max_ram_mb=1024,
+    max_cpu_percent=100.0,
+    max_worker_count=1,
+    max_queue_depth=100,
+    max_replay_buffer_kb=0,
+    max_observability_budget_percent=0.0,
+    max_tick_budget_ms=16.6
+)
+
+
 def test_reproducibility():
     """Seed 42, 10 ticks, must yield identical final hashes across 10 runs."""
     hashes = []
-    
-    profile = RuntimeProfile(
-        name="det-test",
-        hardware_class=HardwareClass.CLASS_B,
-        max_ram_mb=1024,
-        max_cpu_percent=100.0,
-        max_worker_count=1,
-        max_queue_depth=100,
-        max_replay_buffer_kb=0,
-        max_observability_budget_percent=0.0,
-        max_tick_budget_ms=16.6
-    )
+
+    profile = REPRODUCIBILITY_PROFILE
 
     for _ in range(10):
         # Initial state with some entities to increase complexity
         e1 = V2EntityBuilder(1).location(0.0, 0.0).identity(role=EntityRole.HERO).build()
         e2 = V2EntityBuilder(2).location(5.0, 5.0).identity(role=EntityRole.MONSTER).build()
         
-        state = AuthoritativeState(tick=0, seed=42, world_time=0, entities={
+        state = AuthoritativeState(tick=0, seed=REPRODUCIBILITY_SEED, world_time=0, entities={
             1: e1,
             2: e2
         })
-        rng = DeterministicRNG(42)
+        rng = DeterministicRNG(REPRODUCIBILITY_SEED)
         kernel = Kernel(profile, state, rng)
         try:
-            for _ in range(10):
+            for _ in range(REPRODUCIBILITY_TICKS):
                 kernel.tick_once()
             hashes.append(CanonicalStateHasher.get_hash(kernel._state))
         finally:
