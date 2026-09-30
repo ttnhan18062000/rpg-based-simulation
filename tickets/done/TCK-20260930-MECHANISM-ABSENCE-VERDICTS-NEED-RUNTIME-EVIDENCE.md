@@ -148,7 +148,7 @@ false. The others haven't been checked.
   report-only, state field untouched here).
 
 ## Test Summary
-184 passed across the nine mechanism-registry unit-test files plus
+`tests/unit/tools` (the CI lane that failed on the first push): 426 passed after regenerating two more generated views and updating one verdict pin. 184 passed across the nine mechanism-registry unit-test files plus
 `tests/tools/test_ticket_scoper_relevance_check.py` (incl. 5 new tests). `make
 mechanism-registry-validate`, `mechanism-registry-html-check`, `mechanism-atlas-check`,
 `mechanism-capabilities-check`, `mechanism-wiring-map-classdef-check` all OK after regeneration.
@@ -160,6 +160,8 @@ mechanism-registry-validate`, `mechanism-registry-html-check`, `mechanism-atlas-
 - `.claude/agents/ticket-scoper.md`
 - `docs/brainstorm/mechanism_verification_view.md`, `mechanism_registry_view.md`,
   `mechanism_system_rollup_view.md`, `mechanism_registry.html`, `simulation_capabilities.html`
+- `docs/brainstorm/cross_domain_management_view.md`, `docs/brainstorm/territory_control_management_view.md` (generated views that also embed verdicts; found stale by CI, regenerated via `make cross-domain-management-view` / `make territory-control-view`)
+- `tests/unit/tools/test_terr_mapping_mechanism_state_stability.py` (pin for `betrayal_siege_war` updated to the new, deliberately evidenced `observed` verdict)
 - `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/`
 
 ## Completion Summary
