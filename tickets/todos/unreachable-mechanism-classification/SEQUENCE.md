@@ -1,31 +1,44 @@
 # Implementation Sequence — unreachable-mechanism-classification
 
 `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION` is the epic-tier parent and is not
-implemented directly — it groups and sequences the six candidate children below, each of which
-carries its own scope and acceptance criteria once created. Per the epic's own scope-only rule and
-this session's planner/implementer role split, the epic ticket names these children but does not
-create them; creating each child ticket is this (`rpg-implementer`) session's own work.
+implemented directly — it groups and sequences the six candidate children below. Per the epic's own
+scope-only rule and this session's planner/implementer role split, the epic ticket named these
+children but did not create them; T01-T04 were created by this (`rpg-implementer`) session as
+`TCK-20260929-UNREACHABLE-CLASSIFY-{ZERO-CALLER,NEVER-SEEDED,DEAD-GUARD,WAVE-CONFIRM}` respectively
+(flat in `tickets/todos/`, matching this repo's epic-folder precedent — the epic's own folder holds
+only the epic ticket + this file). T05/T06 remain uncreated, blocked on their prereqs below.
 
 ## Order
 
-1. `T01` — Classification pass over the 4 zero-caller / dead-constant tickets
-   (`TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`,
-   `TCK-20260914-CALAMITY-RANDOM-CHANCE-UNUSED-CONSTANT`,
+1. `T01` = `TCK-20260929-UNREACHABLE-CLASSIFY-ZERO-CALLER` — Classification pass over 3 of the 4
+   zero-caller / dead-constant tickets (`TCK-20260914-CALAMITY-RANDOM-CHANCE-UNUSED-CONSTANT`,
    `TCK-20260917-REGIONAL-SOVEREIGNTY-SERVICE-ORPHAN-TAXATION-DEBUFFS`,
-   `TCK-20260929-PROFILE-API-PAYLOAD-DEAD-API-REFS`). No unmet prereq.
-2. `T02` — Classification pass over the 4 never-seeded-precondition tickets
-   (`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`,
+   `TCK-20260929-PROFILE-API-PAYLOAD-DEAD-API-REFS`). `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-
+   NEVER-FIRES` is cited but excluded from classification here — its DEFECT verdict is T04's to
+   record. No unmet prereq. Created, committed.
+2. `T02` = `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED` — Classification pass over the 4
+   never-seeded-precondition tickets (`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`,
    `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED`,
    `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`,
-   `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`). No unmet prereq.
-3. `T03` — Classification pass over the 3 dead-guard/filter tickets
-   (`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`,
+   `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`). No unmet prereq. Created, committed.
+   **Open finding surfaced at scoping time, not yet resolved:** the demographic-cohort ticket's
+   premise ("no world ever seeds `population_cohorts`") may already be contradicted by
+   `TCK-20260831-POPULATION-COHORT-SEEDING` (done, 2026-08-31), which appears to add exactly this
+   seeding logic at `src/worldbuilding/compiler.py:190-208,360-363,449`. T02 itself must reconcile
+   this — either the corpus ticket is stale, or the seeding code is wired but no real world module
+   declares a `PopulationSpec` that reaches it (a content `CONDITION`, not a code defect). Written
+   into T02's own Scope/AC/Assumptions as a required step.
+3. `T03` = `TCK-20260929-UNREACHABLE-CLASSIFY-DEAD-GUARD` — Classification pass over the 3
+   dead-guard/filter tickets (`TCK-20260914-REGIONAL-INFLUENCE-SHIFT-NEVER-FIRES`,
    `TCK-20260914-REGION-DANGER-SEEN-TWO-DEAD-PRECONDITIONS`,
    `TCK-20260921-COGNITION-CAPACITY-ENFORCEMENT-CONDITIONAL-ON-OTHER-UPDATES`). No unmet prereq.
-4. `T04` — Confirm the 2 wave-assessed verdicts (`TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES`
-   = record, do not re-investigate; `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` = record, do
+   Created, committed.
+4. `T04` = `TCK-20260929-UNREACHABLE-CLASSIFY-WAVE-CONFIRM` — Confirm the 2 wave-assessed verdicts
+   (`TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` = record, do not re-investigate;
+   `TCK-20260914-LAIR-REGION-TRAUMA-NEVER-ACCUMULATES` = record, do
    not re-investigate) plus the 1 remaining scale/content ticket
-   (`TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE`). No unmet prereq. Note:
+   (`TCK-20260915-COMBAT-GATE-DOWNSTREAM-STARVATION-FACTION-AND-BOSS-GATE`, boss-gate half only). No
+   unmet prereq. Created, committed. Note:
    `CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` appears in both T01's corpus group (by shape) and T04's
    scope (by wave-assessment status) — T04 owns its actual disposition (recording the DEFECT verdict
    from PR #258); T01 covers it only as a corpus-grouping entry, not a duplicate classification pass.
