@@ -380,7 +380,7 @@ This unifies and extends the existing rules rather than replacing them in parall
     ticket and expiry only in the tracking ticket and the `reason=` string) is withdrawn: a reason string
     is not enough. The first real case triggers building the check *before* the quarantine is applied.
   - **The original start date is preserved across the single renewal** (no chaining): the maximum
-    lifetime is the start date plus the expiry window plus one renewal.
+    lifetime is **28 days from the original start date** (a 14-day expiry window plus one 14-day renewal).
   - **A specific failure signature is recorded**: `raises=` plus a message or node pattern, so an
     unrelated failure of the same node is not absorbed.
   - Permitted only for the order-dependence / nondeterminism class; node-level strict `xfail` only.

@@ -426,7 +426,12 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
     # (`make simq-full-audit-full`) in as a `continue-on-error: true` informational job, mirroring
     # the existing 'typecheck' job's own exempt informational pattern -- not _FASTLANE_JOBS, since
     # it's deliberately non-blocking and has no --junit-xml/base-branch-collect-only wiring either.
+    # 'scenario-lane' (TCK-20260930-TEST-DECISIONS-RECORD-AND-SCENARIO-LANE, owner decision D-R2) is a
+    # deliberate new non-required job: it runs tests/mechanic_scenarios when perf-cert-arena does not, so
+    # a scenario-test-only or src/progression-only PR runs the scenarios in CI.
+    # It writes a JUnit file and job summary but has no base-branch collect-only diff (perf-cert-arena keeps that).
     expected_job_names = set(_FASTLANE_JOBS) | {
+        "scenario-lane",
         "changed-files",
         "perf-cert-arena",
         "migration-lanes",

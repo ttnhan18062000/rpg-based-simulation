@@ -143,8 +143,8 @@ Replaces the earlier unbounded `xfail(strict=False)` row. Nothing is quarantined
 
 - **Class:** nondeterminism / order dependence only (§13.2). A product regression, a wrong oracle or an environment failure is never quarantined.
 - **Form:** node-level `xfail(strict=True, raises=<exception>)` on the single test. Not a module, class or file, and never `strict=False` (a pass would hide the fix).
-- **Recorded:** owner, tracking ticket, an expiry of **at most 14 days** from the start date, and a **failure signature**: `raises=` plus a message or node pattern, so an unrelated failure of the same test is not absorbed.
-- **One renewal.** The renewal keeps the **original start date** (no chaining: the total is bounded by the start date plus one renewal). After it, fix the root cause or remove the test through §7.
+- **Recorded:** owner, tracking ticket, an expiry of **at most 14 days** from the start date (28 in total with the one renewal), and a **failure signature**: `raises=` plus a message or node pattern, so an unrelated failure of the same test is not absorbed.
+- **One renewal of at most 14 days.** The renewal keeps the **original start date** (no chaining). The maximum lifetime is therefore **28 days from the original start date** (14 plus one 14-day renewal). After it, fix the root cause or remove the test through §7.
 - **No quarantine is applied until a minimal expiry check exists.** A reason-string convention is not enough. The first real case triggers building that check, and the quarantine is applied only after it exists. No enforcement tooling is built before a real case.
 
 ---

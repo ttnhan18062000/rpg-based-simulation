@@ -659,8 +659,10 @@ jobs:
           # perf does not (exactly once per PR). The summary names matched and unknown paths either way.
           PERF_COVERS=$(echo "$CHANGED" | grep -qE "$PERF_RE" && echo true || echo false)
           if SCEN=$(echo "$CHANGED" | python3 -m tools.test_architecture.scenario_lane_paths --perf-covers "$PERF_COVERS" 2>&1); then
-            echo "$SCEN" | head -n1 >> "$GITHUB_OUTPUT"
-            echo "$SCEN" | tail -n +2 >> "$GITHUB_STEP_SUMMARY"
+            # Fail open unless the first line is exactly the flag (stderr noise must not corrupt the output file).
+            FLAG=$(echo "$SCEN" | grep -m1 -E '^run_scenario_lane=(true|false)$' || echo "run_scenario_lane=true")
+            echo "$FLAG" >> "$GITHUB_OUTPUT"
+            echo "$SCEN" | grep -vE '^run_scenario_lane=(true|false)$' >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::warning::scenario-lane classifier failed — failing open"
             echo "run_scenario_lane=true" >> "$GITHUB_OUTPUT"
