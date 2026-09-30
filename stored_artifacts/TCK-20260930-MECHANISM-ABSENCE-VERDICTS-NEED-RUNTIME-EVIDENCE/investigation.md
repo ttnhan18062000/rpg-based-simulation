@@ -54,6 +54,14 @@ confirmed at runtime. So the error is
 specific to world-data absence claims, which the Scope 2 rule and the Scope 3 scoper rule now
 cover. No pattern in `code_trace`+`observed` verdicts was found, so no follow-up is filed.
 
+## Probe validity note
+The probe compiles worlds through `WorldRepository.load_world_with_context` (the production loader,
+same as `tools/execution_census.py`, the CLI and the campaign orchestrator). rpg-feature-planning
+found that `data/worlds/<id>/world.yaml` and `data/content/world_compositions/<id>.yaml` define the
+same world id differently for 5 of 7 shared ids (`TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-
+DEFINITIONS`). A runtime instrument must load the world the way production does, or it measures a
+different world; this probe does. The `camp` seeding also holds under either definition.
+
 ## Side findings
 - `make mechanism-state-caller-check` (report-only, unchanged by this ticket) still flags
   `chronicle` as `orphan_with_callers` (3 caller files); the new note limits the runtime claim to

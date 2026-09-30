@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES
-phase: open
+phase: done
 date: 2026-09-30
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Tickets closed as a disposition (no implementation) can never pass done-checker; add an explicit, validated Disposition field
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -75,7 +75,7 @@ Two sections, so every body field keeps one parsing convention and `grep -A1 '^#
 - `docs/guides/delivery_process.md`
 
 ## Related Stored Artifacts
-None yet.
+- `stored_artifacts/TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES/` (investigation.md, plan.md, test_plan.md)
 
 ## Related Code Areas
 - tools/gate_checks/done_checker_static.py
@@ -87,13 +87,41 @@ None yet.
 - None blocking. The value list mirrors the classification epic's vocabulary. If the epic's UNDECLARED outcomes need a value, add one in plan.md with a rationale; don't leave it open.
 
 ## Implementation Notes
-_(pending)_
+- `tools/ticket_field_values.py`: `DISPOSITION_VALUES`, `has_body_section`,
+  `check_disposition_rationale` (SHA with a digit and a letter, `file:line`, or fenced run output),
+  `check_disposition_fields`; `check_ticket_field_values` appends the result only when a
+  `## Disposition` exists, so its single-item return shape is unchanged.
+- `tools/gate_checks/done_checker_static.py`: `check_migration_complete` consults
+  `_disposition_migration_result` first (value, rationale, no attributed `src/` path: own commits
+  plus uncommitted, fail closed). `check_registry_entry_regenerated(regenerate=True)` keeps the
+  pipeline behaviour; `regenerate=False` generates to a temp dir, never writes, and FAILs a stale
+  on-disk file with the fixing command. `run_finalize_selfcheck(regenerate_registry=True)`; the CLI
+  passes False unless `--regenerate-registry`.
+- `docs/guides/delivery_process.md`: one Disposition subsection plus a read-only CLI note.
+- One existing CLI test needed its scaffold to pre-regenerate the registry, because the bare CLI no
+  longer writes it.
+- **CLAUDE.md not edited.** Its After Work text says Finalize regenerates the registry with no manual
+  step; a hand-closer now runs the CLI with `--regenerate-registry`. Flagged to agent-working-design.
+- **Scope 5 result:** extracted both tickets as committed at `f785ad783` on
+  `rpg-planning-post-258` into a scratch repo and ran them through the new code (nothing written on
+  their branch). `ticket_field_values.py`: PASS for both (Disposition STALE-PREMISE canonical,
+  rationale cites evidence). `check_migration_complete`: PASS for both ("disposition closure
+  (STALE-PREMISE): no staging artifacts expected; rationale cites evidence; no src/ changes
+  attributed").
 
 ## Test Summary
-_(pending)_
+513 passed across test_done_checker_audit, test_generate_registry, test_status_drift_check,
+test_ticket_field_values, test_done_checker_static, test_delivery_pr_render, test_generate_retro,
+with one expected exception: `test_generate_registry.py::TestRealDocsTree::test_check_flag_detects_
+no_drift_against_real_registry` reported this ticket's own in-progress file as undrifted-registry
+"added" until the closing regeneration. The tracked-path guard in test_done_checker_static stayed green.
 
 ## Files Changed
-_(pending)_
+- `tools/ticket_field_values.py`, `tools/gate_checks/done_checker_static.py`
+- `tests/tools/test_ticket_field_values.py`, `tests/tools/test_done_checker_static.py`
+- `docs/guides/delivery_process.md`
+- `stored_artifacts/TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES/`
 
 ## Completion Summary
-_(pending)_
+A ticket closed as a disposition now passes the migration check with a validated, evidence-citing
+rationale and no `src/` change; a gate run no longer rewrites `docs/REGISTRY.yaml`.
