@@ -140,6 +140,30 @@ Full detail, including the counter table, in
 ## Implementation Notes
 _(pending — filed, not yet picked up)_
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-DEAD-GUARD` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T03`): verdict `DEFECT`
+
+**Self-derived ticket (no registry verdict cited), so its claims were re-run rather than date-checked.**
+Branch tip `3dbdff48a`:
+- **Defect 1 holds.** `create_battlefield_scar` and `create_raid_scar` (`src/world/consequences.py:58,80`) are
+  referenced nowhere in `src/`, `tests/` or `tools/` beyond their own definitions. `LocalScarState(` is
+  constructed only at `consequences.py:69,87`. Every other use of `local_scars` is a read
+  (`information/phase.py:155`, `lead_contradiction.py:108`), serialization (`checkpoint.py:88`,
+  `fingerprint.py:96`), or the decay copy in `apply_plan.py:101-104,267`. A freshly compiled world therefore
+  cannot get a non-empty `state.local_scars`. Same shape as the wave's `calamity_intensity` finding
+  (`apply_calamity_consequences`, zero real callers, `DEFECT`).
+- **Defect 2 is stale as written.** The ticket says no production blocker carries a subject a location lead
+  could match. That is not accurate at HEAD: `StrategicIntelligenceSystem.generate_crafting_blockers`
+  (`intelligence.py:259-285`) emits `kind="material"` blockers whose `subject` is the real recipe material id
+  (`subject=mat_id`, e.g. an ore), and it has real production callers (`src/engine/blacksmith.py:190,207`).
+  Whether that path is reached in corpus runs, and whether a location lead with the matching subject exists
+  at the same time, was **not measured** here. It does not change the verdict: Defect 1 alone is sufficient
+  to block the `has_active_scar` conjunction, as the ticket itself states.
+- Drift since filing: the cited files changed once (`1e075b807`, 2026-09-14, a 3-line edit to
+  `information/phase.py` on the filing day); no later change.
+
+**Verdict `DEFECT`**: a real, wired consumer (`region_danger_seen` synthesis) is permanently starved by a
+producer that nothing calls. No content or run-length condition can make it fire.
+
 ## Test Summary
 _(pending)_
 
@@ -148,3 +172,5 @@ _(pending)_
 
 ## Completion Summary
 _(pending)_
+
+**Verdict as of 2026-09-30: `DEFECT`** — Defect 1 re-verified, Defect 2 stale as written; see Implementation Notes. Still `OPEN`.

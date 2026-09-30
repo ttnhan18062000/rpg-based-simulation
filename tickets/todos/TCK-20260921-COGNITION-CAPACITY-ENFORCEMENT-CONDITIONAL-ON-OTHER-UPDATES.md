@@ -105,6 +105,29 @@ ticket is picked up.
 ## Implementation Notes
 (none yet — not started; awaiting the design decision this ticket exists to request)
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-DEAD-GUARD` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T03`): verdict `UNDECLARED`
+
+**This is not a "never fires" mechanism, and the title's "dead guard" framing does not fit it.** Branch tip
+`3dbdff48a`, no commit to `capacity_enforcement.py` since filing (2026-09-21):
+- The guard the ticket describes is real (`capacity_enforcement.py:34-35`,
+  `if not ent_upd or not ent_upd.strategic: continue`), and the mechanism fires when its precondition holds:
+  `tests/mechanic_scenarios/test_cognition_capacity_fatigue_lead_trim.py` — 3 passed.
+- **The ticket's claim that the opportunistic behaviour is "undocumented as a design choice" is partly wrong.**
+  The phase's own header declares it: `# Milestone 5 Optimization: Only enforce on strategic-dirty entities`,
+  `Logic ID: PERF-007 (O(Dirty) enforcement)` (`capacity_enforcement.py:23-24`), introduced in `562116889`
+  (2026-05-18). What is undeclared is the *consequence* — an entity pushed over cap by something other than a
+  same-tick strategic update (e.g. a cap that shrinks under fatigue) stays over cap until the next update — and
+  nothing states whether that consequence is accepted.
+- **Measured, not assumed.** A real 1,500-tick `V2EngineManager` run (`frontier_living_world`, seed 42,
+  `PROD_LARGE`, 25 requested entities) checked every living entity at the end of every tick against its own
+  `profile.max_leads / max_concerns / max_active_projects`: **10,916 entity-checks, 0 over-cap
+  observations, 0 ticks with any over-cap entity.** One world, one seed, one horizon — enough to say the gap is
+  not observable there, not enough to say it never occurs.
+
+**Verdict `UNDECLARED`**: the operative test (a design decision is needed before any code change) is exactly
+what the ticket asks for, and the decision is half-declared (PERF-007) rather than absent. A measurable effect
+was not found in the corpus run, which bears on the ticket's `P1` but is not this pass's call.
+
 ## Test Summary
 (none yet)
 
@@ -113,3 +136,5 @@ ticket is picked up.
 
 ## Completion Summary
 (none yet)
+
+**Verdict as of 2026-09-30: `UNDECLARED`** — behaviour is declared as PERF-007 in code but its consequence is not adjudicated; 0 over-cap observations in a measured run; see Implementation Notes. Still `OPEN`.

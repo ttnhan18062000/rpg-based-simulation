@@ -97,8 +97,25 @@ None.
 
 ## Implementation Notes
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-ZERO-CALLER` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T01`): verdict `DEFECT`
+
+**Executed, not read.** At branch tip `3dbdff48a`,
+`python3 tools/perf/profile_api_payload.py --ticks 5 --seed 42` fails at import:
+`ImportError: cannot import name 'EngineManager' from 'src.api.engine_manager'`
+(`profile_api_payload.py:26`). The second dead name is also confirmed: `SimulationConfig` (`:45`) is not
+defined by any class in `src/`, and `V2EngineManager` (`src/api/engine_manager.py:20`) is the only manager
+class. `make profile-api` (`Makefile:255-256`) invokes exactly this file, so the make target is broken too.
+The file has had no change since filing other than the `scripts/` -> `tools/` move (`d431a6edb`), so the
+claim is not stale.
+
+Real wiring defect (imports of names that do not exist), fully covered by the ticket's own fix scope; no
+content or run-length condition is involved. The ticket's suspicion that the `mgr._loop` access is wrong
+is unexecuted (the run dies before reaching it) and stays the fixer's to confirm.
+
 ## Test Summary
 
 ## Files Changed
 
 ## Completion Summary
+
+**Verdict as of 2026-09-30: `DEFECT`** — confirmed by executing the tool (ImportError); see Implementation Notes. Still `OPEN`; fix scope unchanged.

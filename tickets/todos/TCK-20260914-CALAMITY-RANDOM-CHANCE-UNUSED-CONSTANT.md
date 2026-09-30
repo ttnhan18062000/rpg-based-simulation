@@ -84,6 +84,24 @@ None yet — hotfix tier, no staging artifacts required.
 ## Implementation Notes
 _(not started)_
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-ZERO-CALLER` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T01`): fifth outcome `NO-MECHANISM` (AC-7)
+
+**Zero-usage claim re-run at branch tip `3dbdff48a`, not cited.** `grep -rn CALAMITY_RANDOM_CHANCE src tests tools data`
+returns exactly one hit: the declaration at `src/world/calamity.py:19`. No dynamic access exists that a
+plain grep would hide (`getattr(CalamityService, ...)`, `vars(...)`, `__dict__` — none). Only docs mention
+it, and they already call it dead: `docs/world/ecology_and_calamity_contract.md:81` ("defined but is not
+wired into any active code path") and `:176`. `git log -S` finds a single introducing commit,
+`562116889` (2026-05-18) — this answers the ticket's own open question: declared and never connected, not
+wired-then-orphaned. `calamity.py` has no commits since this ticket's filing (2026-09-14).
+
+**Why none of the four verdicts applies.** The axis classifies *mechanisms that do not execute*. There is no
+mechanism here: a constant with no consumer has no code path that could be a `DEFECT` (no wiring bug hides a
+working branch), a `CONDITION` (no input would make it run), or a `MISLABEL` (the contract doc describes it
+accurately). The spawn gate next to it (`calamity.py:36-37`) runs, and is deterministic exactly as this ticket
+says. `UNDECLARED` needs competing implementations; there is one gate. Recorded as a fifth outcome rather than
+forced into the nearest bucket. The residual wire-vs-delete choice is this ticket's own scope option (a)/(b),
+untouched by the classification.
+
 ## Test Summary
 _(not started)_
 
@@ -92,3 +110,5 @@ _(not started)_
 
 ## Completion Summary
 _(not started)_
+
+**Verdict as of 2026-09-30: fifth outcome `NO-MECHANISM` (AC-7)** — a dead constant, not an unreachable mechanism; see Implementation Notes. Still `OPEN`; wire-vs-delete decision unchanged.
