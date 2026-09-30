@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-DONE-CHECKER-PROOF-PLAN-ADVISORY
-phase: open
+phase: done
 date: 2026-09-30
 tags: [testing]
 ---
@@ -15,7 +15,7 @@ tags: [testing]
 done-checker advisory check: list the mandatory Proof Plan fields missing from a standard ticket's test_plan.md (WARN only, never fails the close)
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -104,9 +104,31 @@ of a filled Proof Plan table).
   field name below must appear literally"), and an empty table cell counts as missing.
 
 ## Implementation Notes
+The check lives in `tools/gate_checks/proof_plan_advisory.py`; `done_checker_static.py` gains
+`run_advisory_checks()` (kept out of `run_static_precheck()` so no existing consumer sees a new status
+value) and the CLI prints `[advisory]` lines that never touch `RESULT:` or the exit code. Presence is
+judged textually: a table column with a non-empty cell, or a `name: value` line in a per-criterion
+block; `oracle: unresolved` is a filled value; a one-line "no testable acceptance criterion" statement
+is OK. `MANDATORY_FIELDS` is a single list, pinned by a test against `investigator.md`'s Proof Plan
+prose. The field definition is `investigator.md`, not `regression_policy.md` §13 (see Request Summary).
+Real-file check: `TCK-20260930-TEST-PLAN-PROOF-FIELDS-AND-TRIAGE-PROCEDURE`'s test_plan reports OK.
 
 ## Test Summary
+`tests/tools/test_proof_plan_advisory.py`, 12 test functions (13 cases), and `tests/tools/test_done_checker_static.py`
+(unchanged, 165 pass alongside): complete table OK incl. `oracle: unresolved`; stored_artifacts
+location after migration; missing cell and missing column named per criterion; `### AC<n>` block
+layout; one-line declaration OK; Disposition closure NA; missing section and missing file WARN not raise; hotfix and epic NA;
+read-only; unreadable plan degrades to WARN; advisory absent from precheck/finalize source and CLI
+exit stays 0 with a WARN; field list equals the investigator prose. All pass.
 
 ## Files Changed
+- `tools/gate_checks/proof_plan_advisory.py` (new), `tools/gate_checks/done_checker_static.py`
+- `tests/tools/test_proof_plan_advisory.py` (new)
+- `.claude/agents/done-checker.md` (Step 0c), `docs/guides/delivery_process.md`
+- this ticket and its artifacts; `docs/REGISTRY.yaml`
 
 ## Completion Summary
+Done. Standard-tier tickets now get an advisory list of the mandatory Proof Plan fields missing from
+`test_plan.md`, printed as `WARN` by `done_checker_static.py`, never affecting a close. AC1-AC5 as
+tested above. This supplies the presence check test-architecture Epic C criterion 1 asks
+`done-checker` to perform; whether the Proof Plan becomes required stays the post-pilot decision.
