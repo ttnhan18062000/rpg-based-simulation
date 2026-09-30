@@ -88,7 +88,7 @@ is archived, deregistered, and (after the monitoring window) deleted; `tools/ret
 additional dependency is resolved before `knowledge_gateway_redaction.py` is archived; zero
 regressions in any tool that legitimately depended on the gateway.
 
-## 2. Extend cost_proxy_score to implement-epic.js / create-tickets.js — SHIPPED (code), real-run confirmation outstanding (was: Horizon 2 — ready, schedule later)
+## 2. Extend cost_proxy_score to implement-epic.js / create-tickets.js — SHIPPED and confirmed on real runs 2026-09-30 (was: Horizon 2 — ready, schedule later)
 
 **Priority**: P2 — Preventive Hardening motivation, Level B evidence.
 
@@ -117,11 +117,17 @@ sidecar mechanism itself. `record_events.py::compute_tool_stats()`'s workflow fi
 a membership check covering all three workflows (`simq-audit` stays excluded). Full detail:
 `docs/agent-monitoring/schema.md`'s "How tool calls are attributed to agent events" section.
 
-**Acceptance signal — outstanding**: this item's original acceptance signal (all three workflows
-show non-null `cost_proxy_score` in `runs.jsonl` after their next real run) has not yet been
-independently confirmed by direct `events.jsonl`/`tools.jsonl` inspection of a real
-`implement-epic`/`create-tickets` run — flagged as outstanding by the shipping ticket itself, to be
-checked at the next real invocation of either workflow.
+**Acceptance signal — confirmed 2026-09-30** (`TCK-20260911-COST-PROXY-EPIC-TICKETS-RUN-CONFIRMATION`):
+- `create-tickets`: runs `CREATE-TICKETS-DOCS-PLANS-SCRIPTS-TOOLS-GOVERNANCE-EPIC` (2026-09-29;
+  Comprehend 86 tool calls, Structure 19, write-sequence 3, link-epic 3) and
+  `CREATE-TICKETS-DOCS-PLANS-IDEA-STALE-PLANNING-DOC-STATUS-AFTER-SHIP` (2026-09-30; Comprehend 27,
+  Structure 13) attribute non-null values to the right events (the two earlier runs were
+  misattributed; fixed by `TCK-20260928-CREATE-TICKETS-COST-ATTRIBUTION-MISALIGNED`).
+- `implement-epic`: run `FOLDER-tickets-todos-systemic-world-first-wave` (2026-09-29) wrote tool
+  rows at seq -1 (12, Discover) and seq -2 (55, batch-monitoring-write) and none at the child rows'
+  seq 1-2, so the negative and positive `seq` ranges do not contaminate on real data. The
+  confirmation also found its two child-ticket batch events recorded `0`/`0.0`, a false zero (the
+  children ran under their own run ids); `record_events.py` now records `null` for those rows.
 
 ## 3. working_log.csv parser and cleanup (Horizon 2 — ready, schedule later)
 
