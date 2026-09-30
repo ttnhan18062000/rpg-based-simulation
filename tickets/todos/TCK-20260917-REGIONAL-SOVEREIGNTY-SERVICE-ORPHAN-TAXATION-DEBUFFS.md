@@ -116,6 +116,38 @@ way.
 ## Implementation Notes
 Not yet started.
 
+### 2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-ZERO-CALLER` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T01`): verdict `UNDECLARED`
+
+**The zero-caller claim holds, re-run at branch tip `3dbdff48a`.** `RegionalSovereigntyService`,
+`process_taxation` and `apply_sovereignty_debuffs` have no reference in `src/`, `tests/` or `tools/` outside
+their own definitions (the only other path-string hit is an allowlist entry in
+`tests/architecture/test_legacy_enum_usage_boundaries.py:65`, not a call). No string-keyed or registry-style
+lookup reaches the class. `docs/audits/unreachable_code_inventory.{json,csv}` (an independent earlier audit)
+lists both methods as real and unreached. `src/world/regional_sovereignty.py` has no commits since filing
+(2026-09-17). The ticket cites a `registries/mechanisms.yaml` *binding correction*, not a verdict, and that
+correction is itself what this ticket is a follow-up to; registry-dating does not apply.
+
+**What the ticket did not know: a second, live implementation of the same behaviour exists.**
+`TownResolutionSystem.resolve()` is wired in the real pipeline (`src/engine/pipeline.py:339`,
+`run_phase("town_resolution", ...)`) and implements regional taxation and a conquered-region combat penalty:
+- taxation: `2.0` gold per entity whose faction differs from the region owner, `10.0` per functional building
+  (`town_resolution.py:127-160`) — the same two constants the orphan class declares — but on a different
+  cadence (`state.tick % (cadence.town_resolution * 2)`, i.e. 4-20 ticks depending on profile, not the
+  orphan's fixed `TAX_INTERVAL = 100`) and a different trigger.
+- penalty: when `region.suppression_active`, non-owner entities take atk/def `-20%` and speed `-10%`
+  (`town_resolution.py:140-149`), versus the orphan's `CONQUERED_ATK_DEF_MOD = 0.8` / `CONQUERED_SPD_MOD = 0.9`
+  gated on `owner_faction_id == MONSTER_HORDE`. The orphan's `apply_sovereignty_debuffs` also returns an
+  `EntityUpdate` with no fields populated, so it would be a no-op even if called.
+
+So this is not "a real, separate capability that was built and never wired in": taxation is already live
+elsewhere, and two competing implementations exist with different numbers, triggers and cadence.
+`docs/world/regional_sovereignty_runtime_contract.md` names `regional_sovereignty.py` as the taxation source
+("Taxation — `regional_sovereignty.py`", every 100 ticks) — the dead one — and cites
+`tests/integration/world/test_long_run_stability.py` for "taxation cadence, gold transfer correctness", a file
+in which `grep -ci tax` returns `0`. Nothing declares which implementation is authoritative. Verdict
+`UNDECLARED`; the doc's wrong source attribution is a `MISLABEL`-shaped symptom of the same undeclared state,
+recorded here and not corrected (out of this epic's scope).
+
 ## Test Summary
 Not yet started.
 
@@ -125,3 +157,5 @@ None yet (this ticket file only).
 ## Completion Summary
 Open. Filed per peer review so this finding — caught only as a side effect of an unrelated
 registry-identity ticket — doesn't stay recorded only in that closed ticket's own prose.
+
+**Verdict as of 2026-09-30: `UNDECLARED`** — two competing implementations of taxation/conquered-region penalty (this orphan vs live `TownResolutionSystem`); see Implementation Notes. Still `OPEN`.
