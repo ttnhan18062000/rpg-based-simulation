@@ -137,3 +137,91 @@ def test_cli_still_importable_and_callable_as_plain_function(tmp_path):
     result = check_ticket_field_values(ticket_path)
     assert isinstance(result, list)
     assert result[0]["status"] == "PASS"
+
+
+# ── TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES ────────────────────────────────────────────
+
+from ticket_field_values import (  # noqa: E402
+    DISPOSITION_VALUES,
+    check_disposition_fields,
+    check_disposition_rationale,
+)
+from generate_registry import parse_body_section  # noqa: E402
+
+_DISPOSITION_BODY = (
+    "## Tier\nstandard\n\n## Disposition\n{value}\n\n## Disposition Rationale\n{rationale}\n\n## Files Changed\nNone.\n"
+)
+
+
+def test_disposition_values_are_the_five_documented_ones():
+    assert DISPOSITION_VALUES == {"STALE-PREMISE", "NO-MECHANISM", "DUPLICATE", "SUPERSEDED", "WONT-DO"}
+
+
+def test_disposition_and_rationale_sections_parse_independently():
+    """Pins the two-section shape: `^## Disposition\\s*\\n` must not swallow or match the
+    `## Disposition Rationale` heading, in either direction."""
+    body = _DISPOSITION_BODY.format(value="STALE-PREMISE", rationale="Premise false since 791e6bf6b.")
+    assert parse_body_section(body, "Disposition") == "STALE-PREMISE"
+    assert parse_body_section(body, "Disposition Rationale") == "Premise false since 791e6bf6b."
+
+
+def test_no_disposition_section_is_not_applicable():
+    assert check_disposition_fields("## Tier\nstandard\n")[0] == "NA"
+
+
+def test_valid_disposition_with_each_evidence_form_passes():
+    for rationale in (
+        "Premise false since 791e6bf6b.",
+        "See src/domains/demographics/cohort.py:377 for the arithmetic.",
+        "Compile output:\n```\ncamps=2 regions=8\n```",
+    ):
+        body = _DISPOSITION_BODY.format(value="STALE-PREMISE", rationale=rationale)
+        assert check_disposition_fields(body)[0] == "PASS", rationale
+
+
+def test_unknown_disposition_value_fails():
+    body = _DISPOSITION_BODY.format(value="NOT-A-VALUE", rationale="Premise false since 791e6bf6b.")
+    status, evidence = check_disposition_fields(body)
+    assert status == "FAIL" and "NOT-A-VALUE" in evidence
+
+
+def test_empty_disposition_value_fails():
+    assert check_disposition_fields("## Disposition\n\n## Disposition Rationale\nsee 791e6bf6b\n")[0] == "FAIL"
+
+
+def test_disposition_without_rationale_section_fails():
+    status, evidence = check_disposition_fields("## Disposition\nSTALE-PREMISE\n")
+    assert status == "FAIL" and "missing" in evidence
+
+
+def test_empty_rationale_fails():
+    status, evidence = check_disposition_rationale("## Disposition Rationale\n\n## Files Changed\nNone.\n")
+    assert status == "FAIL" and "empty" in evidence
+
+
+def test_uncited_rationale_fails():
+    body = _DISPOSITION_BODY.format(value="WONT-DO", rationale="It just is not worth doing, trust me.")
+    status, evidence = check_disposition_fields(body)
+    assert status == "FAIL" and "no evidence" in evidence
+
+
+def test_english_word_that_looks_like_hex_is_not_a_sha():
+    body = _DISPOSITION_BODY.format(value="WONT-DO", rationale="We decided this is defaced beyond repair.")
+    assert check_disposition_fields(body)[0] == "FAIL"
+
+
+def test_check_ticket_field_values_rejects_bad_disposition(tmp_path):
+    p = tmp_path / "t.md"
+    p.write_text(
+        "---\nstatus: historical\n---\n\n# t\n\n## Tier\nstandard\n\n## Priority\nP1\n\n"
+        "## Disposition\nBOGUS\n\n## Disposition Rationale\nsee 791e6bf6b\n",
+        encoding="utf-8",
+    )
+    result = check_ticket_field_values(p)
+    assert len(result) == 1 and result[0]["status"] == "FAIL" and "BOGUS" in result[0]["evidence"]
+
+
+def test_check_ticket_field_values_unchanged_without_disposition(tmp_path):
+    _write_ticket(tmp_path, "plain.md")
+    result = check_ticket_field_values(tmp_path / "plain.md")
+    assert result[0]["status"] == "PASS" and "Disposition" not in result[0]["evidence"]
