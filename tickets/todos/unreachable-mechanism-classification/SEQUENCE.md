@@ -20,8 +20,17 @@ only the epic ticket + this file). T05/T06 remain uncreated, blocked on their pr
    never-seeded-precondition tickets (`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`,
    `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED`,
    `TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`,
-   `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`). No unmet prereq. Created, committed.
-   **Open finding surfaced at scoping time, not yet resolved:** the demographic-cohort ticket's
+   `TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER`). No unmet prereq. **`DONE`, closed to
+   `tickets/done/`, 2026-09-30.** All 4 covered tickets carry a verdict:
+   `CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` = `STALE-PREMISE`; `DEMOGRAPHIC-COHORT-CYCLE-
+   POPULATION-COHORTS-NEVER-SEEDED` = `STALE-PREMISE`; `CAPABILITY-CONTEXT-REGION-ENEMY-DATA-
+   ALWAYS-EMPTY` = `UNDECLARED` (split, two root shapes); `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-
+   DANGER` = `UNDECLARED`. No `CONDITION` verdict reached for any of the 4 — see `T02`'s own
+   Completion Summary. The demographic-cohort premise-vs-shipped-code tension noted at scoping time
+   (below) resolved to `STALE-PREMISE`, independently reproduced by `rpg-feature-planning`; the
+   `camp` ticket turned out to share the exact same shape once checked. Full evidence:
+   `stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/`.
+   **Open finding surfaced at scoping time, since resolved:** the demographic-cohort ticket's
    premise ("no world ever seeds `population_cohorts`") may already be contradicted by
    `TCK-20260831-POPULATION-COHORT-SEEDING` (done, 2026-08-31), which appears to add exactly this
    seeding logic at `src/worldbuilding/compiler.py:190-208,360-363,449`. T02 itself must reconcile
