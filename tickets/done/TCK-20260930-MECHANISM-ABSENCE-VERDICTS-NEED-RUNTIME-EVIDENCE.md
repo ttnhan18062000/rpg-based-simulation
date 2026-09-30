@@ -133,6 +133,7 @@ false. The others haven't been checked.
   changed state). `demographic_cohort_cycle` is seeded in 21/21 worlds but 0 birth/death events
   ever fire. Views regenerated through their generators; 1 capabilities-page tier (`camp`) moved
   `built` -> `live` via `make mechanism-capabilities-regenerate`. Details: investigation.md.
+- **Header fix (review on #264):** `registries/mechanisms.yaml` header described `verified` as whether a mechanism was "observed working", contradicting the governing `verdict` paragraph (verdict = evidence vs the entry's own claim), which made an absence verdict read as "the mechanism works". It now says what `verified` records and points to the `verdict` paragraph instead of restating it. No generated view copies that sentence (the historical ticket/plan docs quoting it were left as written).
 - **Scope 2:** validator invariant 12 (`contradicted` + static instrument is an error), keyed on
   verdict + instrument, because the registry header already defined `contradicted` as runtime-only.
   No `claim:` field. Make-target description updated.
@@ -154,7 +155,7 @@ mechanism-registry-validate`, `mechanism-registry-html-check`, `mechanism-atlas-
 `mechanism-capabilities-check`, `mechanism-wiring-map-classdef-check` all OK after regeneration.
 
 ## Files Changed
-- `registries/mechanisms.yaml` (7 verified blocks)
+- `registries/mechanisms.yaml` (7 verified blocks; header wording of `verified`)
 - `tools/mechanism_registry/registry.py`, `Makefile`
 - `tests/unit/tools/test_mechanism_registry.py`, `tests/tools/test_ticket_scoper_relevance_check.py`
 - `.claude/agents/ticket-scoper.md`

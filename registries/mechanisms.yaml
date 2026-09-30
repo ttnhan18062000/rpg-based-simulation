@@ -70,10 +70,10 @@
 # `state` is one of exactly six classes, matching the atlas's own existing vocabulary (no seventh
 # invented): done | partial | gap | orphan | gated | skeleton.
 #
-# `verified` (nullable — TCK-20260915-MECHANISM-VERIFICATION-AXIS) records whether a mechanism
-# has been *observed working*, not just built. Absent or explicit `null` is the ONLY way to
-# represent "unverified" — when present, all 4 sub-fields are required and `instrument` is never
-# itself null inside a present block:
+# `verified` (nullable — TCK-20260915-MECHANISM-VERIFICATION-AXIS) records which instrument checked
+# the mechanism's own claim, when, and the verdict (defined in the `verdict` paragraph below). Absent
+# or explicit `null` is the ONLY way to represent "unverified" — when present, all 4 sub-fields are
+# required and `instrument` is never itself null inside a present block:
 #   verified:
 #     instrument: scenario   # census | scenario | corpus_run | code_trace
 #     verdict: observed      # observed | contradicted | inconclusive
