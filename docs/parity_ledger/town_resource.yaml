@@ -1288,9 +1288,11 @@
   legacy_evidence: null
   v2_evidence: Implementation proven via exhaustive checklist audit Phase 1-11
   proof_type: null
-  test_path: null
+  test_path: tests/integration/kernel/test_node_charge_cross_actor.py::test_two_actors_on_the_last_charge_yield_exactly_once;
+    tests/unit/resource/test_node_charge_accounting.py::test_reserved_last_charge_cannot_be_harvested_again_in_the_same_tick;
+    tests/unit/resource/test_node_charge_accounting.py::test_sliding_charge_delta_from_earlier_update_is_counted_before_yield
   divergence_note: null
-  support_boundary: null
+  support_boundary: 'Proof added by the core-RPG test pilot: NODE-source harvest only (resolver reservation/sliding-delta branches and the two-actor pipeline case). The same-tick corpse-loot sibling (TOWN-123) is not covered here.'
 - id: TOWN-123
   text: Two actors completing the same corpse loot in the same tick cannot duplicate
     corpse rewards.
