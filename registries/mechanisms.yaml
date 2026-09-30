@@ -1896,7 +1896,7 @@ mechanisms:
   - id: cross_episode_social_consequences
     layer: faction
     systems: [faction]
-    depends_on: [social_memory]
+    depends_on: []
     state: done
     implemented_by: [src/systems/social_systems/consequence_events.py::evaluate_social_consequence]
     verified:
@@ -1908,6 +1908,16 @@ mechanisms:
         feature-flag check, gated only on the scenario-recorder infra being present) from
         domains/campaigns/orchestrator.py at episode-entity-spawn time, so `orphan` (zero callers)
         was factually wrong. Found via TCK-20260916-MECHANISM-ORPHAN-STATE-BATCH-VERIFICATION.
+        **`depends_on: [social_memory]` removed 2026-09-30** (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION,
+        found by rpg-feature-planning). It was a homonym, not a dependency: `evaluate_social_consequence`
+        reads `campaign_state.faction_social_memories` (`consequence_events.py`) and never imports or
+        references `SocialMemoryService`, the class the `social_memory` entry binds. The edge most
+        likely came from the module comment "Design constraints (mirrors social_memory.py)", which
+        means parallel structure (no engine imports, duck-typed, pure function), deliberately not
+        coupling. Not measured: whether `faction_social_memories` is populated at runtime (its
+        producer is `src/domains/campaigns/social_memory.py`, which runs only in multi-episode
+        campaign runs, outside a single-Kernel probe); the `code_trace` verdict above is unchanged.
+
   - id: cross_episode_grief_nemesis
     layer: faction
     systems: [faction]

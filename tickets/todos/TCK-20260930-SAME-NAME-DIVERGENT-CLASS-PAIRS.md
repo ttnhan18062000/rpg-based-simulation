@@ -12,7 +12,7 @@ tags: [core, bug]
 # TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS
 
 ## Title
-Four mechanism-shaped classes exist twice under one name in different modules, one copy live and one dead or diverged; the fifth-and-later instances need an audit and a guard
+Same name, different referent: four mechanism-shaped classes exist twice in different modules, and one registry edge pointed at the wrong "social memory"; more instances need an audit and a guard
 
 ## Status
 OPEN
@@ -50,6 +50,16 @@ surviving class may itself be partly dead on that path), `strategy.cognition_cap
 0 calls. Probe output:
 `stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/`.
 
+**Fifth instance, at the concept level (found by rpg-feature-planning, 2026-09-30):** two things are
+called "social memory": `campaign_state.faction_social_memories` (read by
+`evaluate_social_consequence`, produced in `src/domains/campaigns/social_memory.py`) and the
+`SocialMemoryService` class (0 runtime calls). The registry edge
+`cross_episode_social_consequences -> social_memory` linked them; it was most likely written from the
+comment "mirrors social_memory.py" in `consequence_events.py`, which means parallel structure, not
+dependence. The edge is removed in `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`. The
+audit here should therefore cover same-name-different-store as well as same-name-different-class
+(compare the `owner_faction_id` overload).
+
 This is the same "dual-class divergent semantics" family for each pair: the registry does not
 register the dead twin as a mechanism (`WIDER_PENDING` in
 `tools/mechanism_registry/mechanism_registry_completeness_check.py` records the decision), because
@@ -62,7 +72,7 @@ minting a mechanism for dead code is the failure the completeness checker exists
 - For `RecipeRegistry` and `ItemRegistry`, check whether the legacy copy still has readers and align
   failure semantics (the first instance's ticket already covers `ItemRegistry`; coordinate, do not
   duplicate).
-- Audit for further instances beyond the mechanism-shaped suffix list (the scan found 24 names
+- Audit for further same-name-different-referent instances (stores, concepts, registry edges), and beyond the mechanism-shaped suffix list (the scan found 24 names
   defined in more than one module; the other 20 are mostly data records and need only a quick look).
 - Add an architecture guard test that fails when a new mechanism-shaped class name is defined in two
   `src/` modules without an allowlist entry that states why.

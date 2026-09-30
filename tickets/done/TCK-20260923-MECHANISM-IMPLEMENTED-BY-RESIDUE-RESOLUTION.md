@@ -200,8 +200,10 @@ named-method output means 0 calls).
 - `social_memory`: `skeleton` -> `orphan`, bound to `SocialMemoryService`.
 **Item 3.** `TCK-20260920-INFORMATION-TRUST-DECEPTION-VERDICT-QUESTIONED` closed with this ticket.
 **Item 5.** Propagated to the generated views, `mechanism_registry.html`, three atlas badge classes, mapping
-tables, pinned tests, and the docs above. Not changed, flagged: `cross_episode_social_consequences.depends_on:
-[social_memory]` looks wrong (that mechanism uses the campaigns module).
+tables, pinned tests, and the docs above. Also removed `cross_episode_social_consequences.depends_on: [social_memory]`: a homonym found by
+rpg-feature-planning (the mechanism reads `campaign_state.faction_social_memories`, not `SocialMemoryService`; the
+edge likely came from the comment "mirrors social_memory.py"). Whether that campaign store is populated at runtime is
+unmeasured (multi-episode campaign runs, outside a single-Kernel probe); its `code_trace` verdict is unchanged.
 
 **Process finding (for agent-working-design).** The 2026-09-23 place_attachment addendum was a
 runtime-sounding claim made without a runtime instrument; a static trace and the probe agreed here, but
@@ -223,4 +225,4 @@ Done. AC1: the gap rule is in the doc and the checker's report. AC2: all five re
 have a disposition backed by a runtime instrument (bound, state corrected, or merged). AC3: the information
 trust ticket is closed. AC4: state corrections propagated; the convergence tests and the wiring-map
 drift test pass. Open, handed on: `TCK-20260914-CALAMITY-INTENSITY-PRODUCER-NEVER-FIRES` (fix),
-`TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` (corpus volume), the `depends_on` question above.
+`TCK-20260917-XP-LEVEL-UP-THRESHOLD-VS-CORPUS-COMBAT-VOLUME` (corpus volume), the unmeasured campaign-store question above (filed as a fifth same-name instance in `TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS`).

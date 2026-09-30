@@ -25,7 +25,6 @@ All 104 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `race_archetype` | entity | done | static | observed | 5 | 1 |
 | `campaigns` | world | done | static | observed | 3 | 3 |
 | `diplomacy` | faction | done | static | observed | 3 | 1 |
-| `social_memory` | faction | orphan | runtime | observed | 3 | 1 |
 | `buildings` | world | done | static | observed | 2 | 2 |
 | `camp` | region | done | runtime | observed | 2 | 1 |
 | `inventory_trade_conservation` | world | done | static | observed | 2 | 2 |
@@ -103,6 +102,7 @@ All 104 mechanisms, one row each, sorted by priority (`layer weight × transitiv
 | `settlement_capacity_axis` | faction | gap | unverified | unverified | 0 | 0 |
 | `skill_unlocks` | entity | partial | static | observed | 0 | 0 |
 | `social_contracts` | faction | done | static | observed | 0 | 0 |
+| `social_memory` | faction | orphan | runtime | observed | 0 | 0 |
 | `strategic_intelligence_core` | entity | done | runtime | observed | 0 | 0 |
 | `strategic_learning_bias` | entity | done | static | observed | 0 | 0 |
 | `strategic_redirection` | entity | orphan | static | observed | 0 | 0 |
