@@ -130,6 +130,10 @@ has to allow for the per-test time budget.
 Epic B's taxonomy input list so the level and convention document classifies it on purpose. It has not
 been restructured. Its shape check lives in `tests/unit/tools/` because that directory has a CI lane.
 
+The ownership map (`architecture_design_notes.md` §3.1) lists "tactical navigation" under Movement without a code
+root, so no import signal can reach it. The v0 report does not guess one; the root belongs to Epic B's
+impact-model work.
+
 ## Reproduce
 
 ```
