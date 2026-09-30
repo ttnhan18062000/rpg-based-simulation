@@ -174,7 +174,7 @@ CARD_TO_MECHANISM_ID: Dict[Tuple[str, int], str] = {
     ("identity", 8): "genetics_aptitude",
     ("identity", 9): "evolution",
     ("identity", 10): "skill_unlocks",
-    ("identity", 11): "xp_leveling",
+    ("identity", 11): "evolution",
     ("identity", 13): "breakthrough_bonuses",
     ("identity", 14): "entity_role",
     # -- modification (2 cards, both mapped)
