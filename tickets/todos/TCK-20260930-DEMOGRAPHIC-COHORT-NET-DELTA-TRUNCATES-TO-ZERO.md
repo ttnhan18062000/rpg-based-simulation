@@ -56,11 +56,11 @@ giving `net = int(0.06) = 0`.
 `WorldEvent` is emitted by it. There is no accumulator — the truncated fractional remainder is
 discarded each cycle rather than carried, so the shortfall never adds up over time either.
 
-> **⚠️ This paragraph originally read "cohort counts are frozen … for the life of every run,"
-> settled by arithmetic. That is FALSE and was disproven by a runtime probe the same day — counts
-> do move in 4 of 21 worlds and 30 population events were emitted. See Implementation Notes for
-> the correction, what survives, and the unresolved attribution question. Do not act on the
-> paragraph above without reading it.**
+> **⚠️ One narrowing, 2026-09-30.** This paragraph originally also claimed "cohort counts are
+> frozen at their compile-time seed values for the life of every run." **That part is withdrawn** —
+> counts do move in 4 of 21 worlds, via a writer that is *not* this service. Everything else above
+> is confirmed by a 21-world × 300-tick runtime probe: 0 `POPULATION_BIRTH` and 0
+> `POPULATION_DEATH` events anywhere, largest bracket ever observed = 8. See Implementation Notes.
 
 **This is the second, independent reason the demographic cohort cycle does nothing** — behind the
 false "never seeded" premise sat a real defect of a completely different shape. The mechanism is
@@ -155,22 +155,37 @@ None yet — standard tier, staging artifacts created when picked up.
 
 ## Implementation Notes
 
-### 2026-09-30 — CORRECTION: the Request Summary overclaims. Read this before acting on it.
+### 2026-09-30 — CONFIRMED BY RUNTIME EVIDENCE, with one claim narrowed
 
-A runtime probe by `agent-working-implementer` (21 corpus worlds × 300 ticks, seed 42, `origin/main`
-`833b60306`; `cohort.py` byte-identical to this branch) found `process_demographics` ran 63 times,
-**emitted 30 `POPULATION_BIRTH`/`POPULATION_DEATH` events in 6 of 21 worlds, and cohort totals
-changed in 4** (`dungeon_crawl` 32→29, `highland_traverse` 18→19, `simq_scale_stress_seed42` 68→69).
-The other 15 stayed frozen.
+This section records two rounds of correction. The net result: **the defect is confirmed, more
+strongly than when filed** — by runtime measurement rather than by arithmetic alone. One
+subsidiary claim ("counts frozen") was wrong and is withdrawn.
 
-**So this ticket's "never emits an event / counts frozen in every run, settled by arithmetic" is
-false as written.** The error was extrapolating a compile-time fact across a whole run — the very
-single-world overgeneralisation that `docs/plans/world_composition_precondition_gap_finding.md` was
-retired for on the same day. The ticket's own Assumptions section named the two growth paths that
-break the extrapolation and the Request Summary ignored them.
+**Round 1 — a runtime probe appeared to disprove the ticket.** `agent-working-implementer` ran 21
+corpus worlds × 300 ticks (seed 42, `origin/main` `833b60306`; `cohort.py` byte-identical to this
+branch) and reported 30 `POPULATION_BIRTH`/`POPULATION_DEATH` events in 6 worlds plus cohort totals
+changing in 4. I conceded the whole premise.
 
-**What survives, now verified across every world rather than one.** I compiled all 9 loadable
-corpus compositions and read every region's per-bracket counts:
+**Round 2 — that reading was a probe artifact, and the concession was too broad.** The probe's
+event filter matched any category *containing* the substring `POPULATION`, so all 30 events were
+`POPULATION_MIGRATION`. Re-run with exact category names:
+
+> **0 `POPULATION_BIRTH` and 0 `POPULATION_DEATH` events, in every one of the 21 worlds. Largest
+> bracket count ever observed at any point in any run: 8.** 63 `process_demographics` calls, 30
+> `POPULATION_MIGRATION` events in 6 worlds.
+
+So the core claim holds and is now **runtime-verified, not just arithmetic**: no bracket anywhere
+ever approaches 100, `net` is always 0, and the birth/death cycle never fires in any corpus world.
+The registry entry `demographic_cohort_cycle` is accordingly `corpus_run`/**`contradicted`** (seeded
+21/21, births/deaths never fire) — not `observed`.
+
+**What IS withdrawn: "cohort counts are frozen for the life of every run."** Counts do move
+(`dungeon_crawl` 32→29, `highland_traverse` 18→19, `simq_scale_stress_seed42` 68→69). That was a
+real overclaim — it extrapolated a compile-time fact across a whole run and ignored this ticket's
+own Assumptions section, which already named the two other writers. The movement is **not**
+attributed to `process_demographics` and tracing it is this ticket's work (see below).
+
+**Compile-time counts, all 9 loadable corpus compositions, per region per bracket:**
 
 | world | regions | max bracket | total |
 |---|---|---|---|
@@ -184,57 +199,61 @@ corpus compositions and read every region's per-bracket counts:
 | `generated_frontier_3_42` | 6 | 6 | 44 |
 | `simq_scale_stress_seed42` | 13 | 6 | 68 |
 
-**The largest bracket in the entire corpus is 6, and no bracket anywhere reaches 100.** So
-`net = int(count * 0.01) == 0` for every bracket of every world **at compile time**, in all 9
-worlds and not just the one originally checked. The truncation is real and universal at seeding.
-What is *not* established is that it stays that way for a whole run.
+**Largest bracket at compile time is 6; largest ever observed mid-run is 8. Nothing reaches 100.**
+So `net = int(count * 0.01) == 0` for every bracket of every world, at seeding and throughout a
+300-tick run. The truncation is real, universal, and now measured rather than inferred.
 
-### The attribution is not settled, and this is the open question
+### Open: what actually moves the counts
 
-`process_demographics` **cannot decrease a count.** `births = count * 0.02`, `deaths =
-count * 0.01`, so `births - deaths == count * 0.01 >= 0` and `net = int(...) >= 0` always. The
-rates are never overridden anywhere: `_seed_population_cohorts` leaves both at the dataclass
-defaults (`compiler.py:177-205` docstring says so explicitly), and the only `mortality_rate *= 2.0`
-in the tree (`cohort.py:104`) is a docstring describing *entity attribute* modifiers, not a write
-to a cohort field. Confirmed by grep across `src/`.
+`process_demographics` **cannot decrease a count.** `births = count * 0.02`,
+`deaths = count * 0.01`, so `births - deaths == count * 0.01 >= 0` and `net = int(...) >= 0`
+always. The rates are never overridden anywhere: `_seed_population_cohorts` leaves both at the
+dataclass defaults (`compiler.py:177-205` says so explicitly), and the only `mortality_rate *= 2.0`
+in the tree (`cohort.py:104`) is a docstring describing *entity attribute* modifiers, not a cohort
+field write. Verified by grep across `src/`.
 
-**Therefore `dungeon_crawl` 32→29 cannot have come from this service**, and the +1 changes are
-equally consistent with a different writer. Two other paths write cohort counts:
+That impossibility is what exposed the probe artifact: a decrease (`dungeon_crawl` 32→29) could not
+have come from this service, which prompted the re-run that found the substring-filter bug. With
+0 birth/death events confirmed, there is no longer any tension — `cohort.py:388-390` is the only
+emitter of those categories in `src/`, and it never fired.
+
+**So the observed movement has another source, and tracing it is this ticket's first task.** Two
+known writers:
 - `population_young_births_delta` (`apply_plan.py:129-136`, fed from
   `reproduction_humanoid.py:68`) — adds to `young` directly, independent of this cycle.
 - `migrate_cohorts` (`cohort.py:281-302`) — moves population between regions; its
-  `max(1, int(count * 0.30))` has a floor and does **not** truncate to zero.
+  `max(1, int(count * 0.30))` floor means it does **not** truncate to zero. The 30
+  `POPULATION_MIGRATION` events in 6 worlds make this the leading candidate.
 
-Against that, `cohort.py:388-390` is the **only** emitter of `POPULATION_BIRTH`/`POPULATION_DEATH`
-in `src/` (verified by grep), so 30 emitted events do mean `net != 0` fired 30 times — which
-requires some bracket to have reached ≥100 *during* the run, from a seed of ≤6. Both facts are
-solid and they are in tension. Resolving that tension is the first task.
+Migration alone should conserve a world's total, so `dungeon_crawl` 32→29 (a net loss of 3) is the
+most diagnostic case — either migration is not conservative, or a third writer exists.
 
-Note also `dungeon_crawl` compiles to a total of **12** here versus the probe's starting 32. That
-discrepancy is unexplained and should be reconciled before either dataset is trusted — likely a
-parameterised-module difference (`dungeon_crawl` uses `module_refs` with
-`parameters: danger_scale: 2`, unlike the plain `modules:` list other compositions use).
+**Unreconciled measurement discrepancy:** `dungeon_crawl` compiles to 2 regions / total 12 by my
+path (`WorldAssemblyResolver.assemble()` → `WorldCompiler.compile(spec, seed=42)`) but 4 regions /
+total 32 by the probe's (`WorldRepository.load_world_with_context`, the same entry point
+`tools/execution_census.py` uses). Two compile entry points disagree about the same world's region
+count. That is worth its own look regardless of this ticket — it means "the corpus" is a different
+set of worlds depending on which loader you ask.
 
 ### What this changes about the ticket
 
-- **Severity is lower than filed.** Not "the mechanism never does anything" but "the mechanism is
-  inert at seeded scale, and only escapes that when another system inflates a cohort ~17× first."
-  Still a real defect — a rate-driven cycle that cannot act on its own seeded inputs — but P1 may
-  be too high. Re-rate after the attribution question is answered.
-- **First task is now attribution, not fixing.** Determine which writer produced each observed
-  change before designing a fix. A fix aimed at the truncation is wasted if the observed movement
-  came from reproduction.
-- The two candidate directions in Scope are unchanged, but neither should be chosen until the
-  above is resolved.
+- **Severity stands at P1.** The runtime probe strengthened the case: the birth/death cycle is
+  confirmed never to fire in any of 21 worlds, not merely predicted not to.
+- **First task is tracing the count movement**, not fixing the truncation — the two are separate,
+  and the fix direction should be chosen knowing which writer is actually active.
+- The two candidate directions in Scope are unchanged.
 
-Raw probe data: `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/
-runtime_probe_output.jsonl` (pending that batch's commit). Registry entry
-`demographic_cohort_cycle` is now `corpus_run`/`observed` with this nuance.
+Raw probe + script: `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/
+runtime_probe.py` and `runtime_probe_output.jsonl`, committed at `0a96cdd9d` on branch
+`retro-hardening-and-mechanism-verdict-evidence` (local, readable via the shared object store).
 
-**Credit:** the overclaim was caught by `agent-working-implementer`'s runtime probe, not by me. It
-is the correct instrument for an absence claim — exactly the lesson
-`TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE` exists to institutionalise, and I
-had just finished writing that lesson up when I made the same mistake in this ticket.
+**Process note, worth keeping.** The first probe result looked like a clean disproof and I conceded
+the entire premise rather than only the part that was actually contradicted. What recovered it was
+checking one arithmetic invariant — `net` can never be negative — against the reported data, which
+located the filter bug. Two lessons: a runtime probe is the right instrument for an absence claim
+(the reason `TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE` exists), *and* a probe
+is itself an instrument that can be wrong, so a contradicting measurement deserves the same
+scrutiny as the claim it contradicts. Concede exactly what is disproven, not more.
 
 ## Test Summary
 _(not started)_
