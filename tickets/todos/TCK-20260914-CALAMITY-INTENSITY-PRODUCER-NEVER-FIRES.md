@@ -199,6 +199,25 @@ retired/superseded), (2) EXISTING — the composition gap already found and park
 resolved here; both findings are reported for the roadmap session, per the same investment-cap
 discipline already applied to this cluster.
 
+### 2026-09-30 — verdict recorded via `TCK-20260929-UNREACHABLE-CLASSIFY-WAVE-CONFIRM` (epic `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`, child `T04`): `DEFECT`, from PR #258 — recorded, not re-investigated
+
+**Source of the verdict.** `TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING` (`J1`), merged in PR #258
+(`35806b1ed`); exit claim `DEFECT` at `stored_artifacts/TCK-20260928-MECHANISM-REACHABILITY-CALAMITY-TRAUMA-AGING/investigation.md`
+(line 55) and that ticket's Completion Summary: `CalamityService.apply_calamity_consequences()` has zero real
+callers, so the producer of `calamity_intensity` can never run. The wave recorded the exit claim as a
+**recommendation only**; the registry-side write is routed to
+`TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which owns that entry. Nothing in this epic
+touches `registries/mechanisms.yaml`.
+
+**One freshness check, not a re-derivation.** At branch tip `3dbdff48a` the only references to
+`apply_calamity_consequences` are its definition (`src/world/calamity.py:80`), one unit test
+(`tests/unit/world/test_calamity_raid.py:88`) and the wave's own pin
+(`tests/architecture/test_calamity_intensity_producer_unwired.py`), which fails if a production caller appears.
+`calamity.py` has no commit since the wave. The verdict has not drifted.
+
+`T01` lists this ticket by shape (zero-caller group) but does **not** classify it; this note is its single
+disposition.
+
 ## Test Summary
 _(not started)_
 
@@ -221,3 +240,5 @@ alongside its two sibling instances.
 for the producer at all, not merely an unreachable trigger condition) — still parked, not fixed,
 but this ticket's own eventual scope needs to cover both the wiring gap and the composition gap
 when picked up, not the composition gap alone.
+
+**Verdict as of 2026-09-30: `DEFECT`** (from PR #258, recorded not re-investigated); see Implementation Notes. Still `OPEN`.
