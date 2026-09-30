@@ -88,6 +88,7 @@ start, until the owner approves that decision.** Unmarked items are independentl
    unmapped sample as `impact-unknown`.
 
 ## Related Tickets
+- Child: `TCK-20260930-IMPACT-REPORT-ECONOMY-CORE-OWNERSHIP-AND-DECLARED-MARKERS` (impact report fixes found by the pilot, done).
 - Depends on Epic A (report v0) for criterion 2.
 - Feeds Epics C and D.
 

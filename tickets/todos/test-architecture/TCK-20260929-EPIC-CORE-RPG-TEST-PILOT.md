@@ -131,9 +131,9 @@ Defined by child tickets.
 (Child tickets.)
 
 Acceptance criteria met by the pilot report (2026-09-30):
-1. Capabilities 1 (partly, reason stated), 2, 3, 4, 5, 6 each have an artifact.
+1. Capabilities 1 (after two fixes made in this batch; before/after artifacts kept), 2, 3, 4, 5, 6 each have an artifact.
 2. Capability 2b stated as not demonstrated; no claim made.
 3. Result `established`, on a real surface whose stability was confirmed at scope level only (caveats in the report).
 4. Keep / revise / inconclusive per intervention recorded, directional.
-5. The shortfalls (impact report domain/level on tests-only changes; report classification vs declared markers; parity layer not showing test_path) are revise items for Epics A and B.
+5. The shortfalls (conservation mapped to substrate only; no domain/level for a tests-only change; parity layer not showing test_path) were revise items for Epics A and B and are fixed in this batch. The heuristic file classification stays as a documented decision.
 No D2 synthetic exercise was needed.

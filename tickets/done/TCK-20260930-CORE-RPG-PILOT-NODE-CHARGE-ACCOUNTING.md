@@ -74,6 +74,7 @@ None.
 - Real surface (resource conservation, ch03 §3/§1, `TOWN-122`); stability confirmed at scope level only (see the pilot report caveats).
 - Reviewer-directed changes: kernel-level cross-actor test added so `TOWN-122` is proven end to end (not resolver-only); the injected fault is a drill (nothing filed); report invalidation used copies (tracked baseline untouched); PR CI is the fast-lane evidence.
 - `marker_check` flagged a level-placement mismatch on the first draft; the kernel test moved to `tests/integration/kernel/`.
+- Reviewer found the capability 1 shortfall (conservation mapped to substrate only); fixed in this batch by `TCK-20260930-IMPACT-REPORT-ECONOMY-CORE-OWNERSHIP-AND-DECLARED-MARKERS` and `TCK-20260930-CORE-RPG-REPORT-PARITY-TEST-PATH-PRESENCE`. Before-fix cap-1 outputs are kept beside the after-fix ones. Note: `stored_artifacts/**/*.json` is gitignored, so the pilot's JSON evidence files are force-added.
 - `TOWN-123` (corpse loot) is not covered; stated in the ledger `support_boundary`.
 
 Scoped: 54 passed (5 new). Manual scenario lane: 53 passed. Parity and ledger readers: `tests/tools/test_parity_index_baseline.py`, `tests/integration/content/test_resource_region_coverage_corpus.py`, `tests/tools/test_done_checker_static.py` pass. Drill: 2 of 5 new tests fail on the injected fault, as expected.
@@ -84,4 +85,4 @@ Scoped: 54 passed (5 new). Manual scenario lane: 53 passed. Parity and ledger re
 - `docs/testing/core_rpg_test_pilot_2026-09-30.md`
 - pilot evidence under `stored_artifacts/<ticket>/pilot/`
 
-One tests-only exercise on a real conservation surface; capabilities 1 (partly), 2, 3, 4, 5, 6 demonstrated with artifacts, 2b not demonstrated. Result `established` with scope-level stability caveat.
+One tests-only exercise on a real conservation surface; capabilities 1 (after two fixes made in this batch), 2, 3, 4, 5, 6 demonstrated with artifacts, 2b not demonstrated. Result `established` with scope-level stability caveat.

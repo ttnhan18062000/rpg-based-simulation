@@ -1,0 +1,19 @@
+{
+  "note": "parity_layer() run on town_resource.yaml from origin/main (before) and from this branch (after); other ledger files omitted",
+  "result": {
+    "before": {
+      "p0": {
+        "with": 23,
+        "without": 145
+      },
+      "TOWN-122_listed_without_test_path": true
+    },
+    "after": {
+      "p0": {
+        "with": 24,
+        "without": 144
+      },
+      "TOWN-122_listed_without_test_path": false
+    }
+  }
+}

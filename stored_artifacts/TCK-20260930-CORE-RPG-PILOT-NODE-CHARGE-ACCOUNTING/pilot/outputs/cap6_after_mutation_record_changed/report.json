@@ -1,0 +1,4248 @@
+{
+  "layers": {
+    "census": {
+      "reason": "census reachability is not yet a stable input; v0 reports the state only",
+      "state": "unstable"
+    },
+    "classification": {
+      "counts": {
+        "classified": 69,
+        "not-core-rpg": 1324,
+        "parse-error": 0,
+        "uncertain": 116,
+        "unowned-domain": 7
+      },
+      "declared_markers": {
+        "by_file": {
+          "tests/integration/kernel/test_node_charge_cross_actor.py": {
+            "class": "not-core-rpg",
+            "domains": [
+              "economy",
+              "substrate"
+            ],
+            "levels": [
+              "kernel_integration"
+            ]
+          },
+          "tests/mechanic_scenarios/synthetic_examples/test_scenario_helper_examples.py": {
+            "class": "uncertain",
+            "domains": [
+              "substrate"
+            ],
+            "levels": [
+              "mechanic_scenario"
+            ]
+          },
+          "tests/unit/resource/test_node_charge_accounting.py": {
+            "class": "uncertain",
+            "domains": [
+              "economy",
+              "substrate"
+            ],
+            "levels": [
+              "unit"
+            ]
+          }
+        },
+        "files": 3
+      },
+      "denominator": {
+        "test_files": 1516
+      },
+      "rules": {
+        "classified": "directory signal and gameplay-import signal both present",
+        "not-core-rpg": "neither signal present",
+        "uncertain": "exactly one of the two signals present",
+        "unowned-domain": "neither signal present, but imports party/group code, which has no oracle or owner"
+      },
+      "signal_disagreement": {
+        "directory_only": 81,
+        "import_only": 35
+      },
+      "state": "heuristic",
+      "substrate_only_import_files": 631
+    },
+    "coverage": {
+      "domain_coverage": {
+        "reason": "no defensible package-to-domain mapping yet",
+        "state": "not-derived"
+      },
+      "package_coverage": {},
+      "state": "no-coverage-artifact"
+    },
+    "escaped_defects": {
+      "denominator": {
+        "tickets_scanned": 2276
+      },
+      "month_basis": "ticket creation date (frontmatter `date`); includes open tickets under todos/ and inprogress/",
+      "months": {
+        "2026-09": 0
+      },
+      "state": "counting",
+      "tag_registered": "2026-09-29",
+      "tagged_outside_window": 0,
+      "tickets": [],
+      "total_in_window": 0
+    },
+    "execution": {
+      "denominator": {
+        "core_rpg_candidate_files": 185
+      },
+      "files": [
+        {
+          "class": "uncertain",
+          "file": "tests/architecture/test_habit_bias_personality_frozen.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/integration/combat/test_class_tier_win_rate.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/combat/test_relation_combat_integration.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/combat/test_wound_healing_permanence.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/domains/cooperation/test_phase7_cooperation_phase.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/domains/progression/test_phase6_progression_conversion_phase.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/domains/progression/test_recipe_reachability_under_real_kernel_tick.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/economy/test_economic_vacancy_signal.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/integration/entities/test_entity_construction_bridge.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/kernel/test_resource_conservation.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/kernel/test_resource_conservation_v2.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/optimization/test_cache_memory_bounds.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/optimization/test_profile_specific_behavior.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/pipeline/test_combat_legality_matrix.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/pipeline/test_recovery_gaps.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/progression/test_allocate_ap_dormancy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/scenarios/test_macro_economy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/scenarios/test_phase4_combat_engagement_scenarios.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/scenarios/test_phase6_progression_conversion_scenarios.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/integration/worldassembly/test_world_entity_spawner.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/synthetic_examples/test_scenario_helper_examples.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 3,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/mechanic_scenarios/test_action_pacing_readiness_gate.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_aging_death_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_belief_cycle_lead_staleness.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_causal_spatial_memory_gated_visit_tracking.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 3,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_cognition_capacity_fatigue_lead_trim.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 3,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/mechanic_scenarios/test_combat_attributes_real_fight_outcome_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_combat_death_trace_encounterability.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/mechanic_scenarios/test_combat_judgement_withdrawal.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_combat_resolution_damage_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_emotion_near_death_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_entity_role_level_up_branch_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_evolution_xp_reward_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 3,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 4,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_perception_pipeline_wiring.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_quest_generation_sourcing_orphan_calibration.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_readiness_and_derived_stats_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 5,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_self_model_and_knowledge_model_gated_dormancy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 3,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 2,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 3,
+              "skipped": 0,
+              "state": "pass"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/perf/test_phase4_combat_engagement_budget.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/perf/test_phase6_progression_conversion_budget.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/perf/test_phase7_social_cooperation_budget.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/api/test_economy_route.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_anti_stalemate.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_aoe_splash.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_bracketing_bonus.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_capability_driven_targeting.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_combat_ecology.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_combat_legality_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_combat_legality_regression.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_combat_matrix.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_combat_reward_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_combat_reward_trace.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_combat_rewards.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_direct_combat_outcomes.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_engagement_behavior.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_parity_comb_006.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_phase5_combat_legality.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_phase5_negative_cases.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_readiness_regen.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/combat/test_rpg_core_recovery.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_species_relations_legality_wiring.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_species_relations_tactical_wiring.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_tactical_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_tactical_legality.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_tactical_wound_scar_wiring.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/combat/test_target_selection_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/core/test_domain_6_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/core/test_migration_proof.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/core/test_p1_semantic_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/core/test_rpg_math.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_learning_outcome.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_memory_store.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_opponent_model_persistence.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_engagement_boundary.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_engagement_events.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_learning.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_postures.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_reassessment.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_engagement_risk.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_opponent_perception.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_posture_selector.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_posture_to_intent.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_phase4_self_combat_estimate.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_power.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/combat_engagement/test_witnessed_combat.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/domains/cooperation/test_phase7_help_need_evaluator.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/domains/faction/test_faction_decision_phase.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/domains/optimization/test_cache_registry.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/domains/optimization/test_movement_plan_cache.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_material_possession_predicate.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_conversion_decision_service.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_conversion_intent_bridge.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_conversion_option_generator.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_growth_gap_evaluator.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_possession_understanding_service.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_progression_boundary.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_progression_events.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_reward_interpretation_service.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_phase6_reward_ledger_service.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/domains/progression/test_progression_decision_canonical_hash.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/economy/test_economy_alerts.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/economy/test_economy_health_monitor.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/economy/test_gold_sink.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 13,
+              "skipped": 0,
+              "state": "pass"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/economy/test_vacancy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/engine/test_combat_actions_learning_wiring.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/engine/test_combat_relation_projection.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/engine/test_sort_tiebreaker.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/entities/test_archetype_entity_factory.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/entities/test_entity_identity_resolver.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entities/test_lifecycle_horizon_constants.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/entities/test_resolved_entity_runtime_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entity/test_entity_archetypes.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entity/test_entity_initialization.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entity/test_phase11_cognition_model_schema.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entity/test_phase12_perception_model.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entity/test_phase13_temporal_model.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/entity/test_phase2_self_model_components.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/entity/test_phase6_possession_understanding_component.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/entity/test_phase6_reward_ledger_component.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/movement/test_flow_field_navigation.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_mob_leashing.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/movement/test_movement_collision_resolution.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/movement/test_movement_congestion.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/movement/test_movement_spatial_regression.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_navigation_get_next_step.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_occupancy_conflicts.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/movement/test_phase4_movement.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_position_swap.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_pursuit_target_refresh.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_spatial_index.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/movement/test_tactical_movement.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/progression/test_breakthroughs.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_class_tiers.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_classes_loadouts.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/progression/test_evolution.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_genetics.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_leveling.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_leveling_veterancy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_lifecycle.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/progression/test_phase8_progression.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/progression/test_progression_quests.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/progression/test_progression_v2.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/progression/test_rpg_advancement.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/quest/test_progression_lifecycle.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/quest/test_progression_regression.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/quest/test_quest_generation.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/quest/test_quest_lifecycle.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/quest/test_quest_relation_projection.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/quest/test_quest_rewards.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/quest/test_quest_system.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/quest/test_quest_transactions.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/quest/test_transaction_groups.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/resource/test_domain_8_economy.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/resource/test_durability_repair.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 7,
+              "skipped": 0,
+              "state": "pass"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/resource/test_economy_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_equipment_chests_storage.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_equipment_ranking.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "classified",
+          "file": "tests/unit/resource/test_harvest_channeling.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_inventory_hardening.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_inventory_serialization.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_item_instance_history.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_item_inventory_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_loot_channeling.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_node_charge_accounting.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 4,
+              "skipped": 0,
+              "state": "pass"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_resource_conflicts.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_resource_conservation_regression.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_resource_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "errors": 0,
+              "failed": 0,
+              "passed": 8,
+              "skipped": 0,
+              "state": "pass"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_resource_governor_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_resource_intelligence_contract.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_resource_v2_boundary.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/resource/test_transaction_grouping.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/tactical/test_habit_bias_action_style_wiring.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/tactical/test_objective_pursuit_coverage.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/tactical/test_target_stickiness.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/world/test_guild_intel.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/world/test_local_environment_semantics.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/world/test_terrain_weighting.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        },
+        {
+          "class": "uncertain",
+          "file": "tests/unit/worldassembly/test_entity_spawner_legacy_guard.py",
+          "runs": {
+            "scenario_lane_junit-85a946282cbf": {
+              "state": "not-run"
+            },
+            "scoped_junit-d46b5826c7e7": {
+              "state": "not-run"
+            }
+          }
+        }
+      ],
+      "runs": [
+        {
+          "artifact": "scenario_lane_junit.xml",
+          "failing_tests": [],
+          "outcomes": {
+            "errors": 0,
+            "failed": 0,
+            "passed": 53,
+            "skipped": 0
+          },
+          "run_id": "scenario_lane_junit-85a946282cbf",
+          "sha256": "85a946282cbf4699f5e804141cb3abd673936aa3e9bfca497ce984127348b362",
+          "testcases": 53,
+          "unmapped_testcases": 0
+        },
+        {
+          "artifact": "scoped_junit.xml",
+          "failing_tests": [],
+          "outcomes": {
+            "errors": 0,
+            "failed": 0,
+            "passed": 54,
+            "skipped": 0
+          },
+          "run_id": "scoped_junit-d46b5826c7e7",
+          "sha256": "d46b5826c7e71691ea4cd4c731bcabe9a628c9a602775f6b7864c05fd4bcdf74",
+          "testcases": 54,
+          "unmapped_testcases": 0
+        }
+      ],
+      "state": "junit-supplied",
+      "summary": {
+        "scenario_lane_junit-85a946282cbf": {
+          "denominator": 185,
+          "fail": 0,
+          "not-run": 164,
+          "pass": 21,
+          "skipped": 0
+        },
+        "scoped_junit-d46b5826c7e7": {
+          "denominator": 185,
+          "fail": 0,
+          "not-run": 181,
+          "pass": 4,
+          "skipped": 0
+        }
+      }
+    },
+    "lanes": {
+      "counts": {
+        "covered_by_a_fast_lane": 185,
+        "lane_steps_uploading_junit": 6,
+        "no_fast_lane": 0
+      },
+      "denominator": {
+        "core_rpg_candidate_files": 185,
+        "pytest_lane_steps": 31
+      },
+      "files": [
+        {
+          "fast_lanes": [
+            "arch-docs/Run"
+          ],
+          "file": "tests/architecture/test_habit_bias_personality_frozen.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/combat/test_class_tier_win_rate.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/combat/test_relation_combat_integration.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/combat/test_wound_healing_permanence.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/domains/combat_engagement/test_phase4_combat_engagement_phase.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/domains/cooperation/test_phase7_cooperation_phase.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/domains/progression/test_phase6_progression_conversion_phase.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/domains/progression/test_recipe_reachability_under_real_kernel_tick.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/economy/test_economic_vacancy_signal.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/entities/test_entity_construction_bridge.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/kernel/test_resource_conservation.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/kernel/test_resource_conservation_v2.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/optimization/test_cache_memory_bounds.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/optimization/test_profile_specific_behavior.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/pipeline/test_combat_legality_matrix.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/pipeline/test_recovery_gaps.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/progression/test_allocate_ap_dormancy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/scenarios/test_macro_economy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/scenarios/test_phase4_combat_engagement_scenarios.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/scenarios/test_phase6_progression_conversion_scenarios.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/scenarios/test_phase7_social_cooperation_scenarios.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "integration/Run"
+          ],
+          "file": "tests/integration/worldassembly/test_world_entity_spawner.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/synthetic_examples/test_scenario_helper_examples.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_action_pacing_readiness_gate.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_aging_death_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_belief_cycle_lead_staleness.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_causal_spatial_memory_gated_visit_tracking.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_cognition_capacity_fatigue_lead_trim.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_combat_attributes_real_fight_outcome_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_combat_death_trace_encounterability.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_combat_judgement_withdrawal.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_combat_resolution_damage_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_emotion_near_death_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_entity_role_level_up_branch_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_evolution_xp_reward_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_perception_pipeline_wiring.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_quest_generation_sourcing_orphan_calibration.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_readiness_and_derived_stats_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_self_model_and_knowledge_model_gated_dormancy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_strategic_intelligence_detour_resolution.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_succession_heir_selection_value_differential.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/mechanic_scenarios/test_temporal_pressure_gated_dormancy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/perf/test_phase4_combat_engagement_budget.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/perf/test_phase6_progression_conversion_budget.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "perf-cert-arena/Run"
+          ],
+          "file": "tests/perf/test_phase7_social_cooperation_budget.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/api"
+          ],
+          "file": "tests/unit/api/test_economy_route.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_anti_stalemate.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_aoe_splash.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_bracketing_bonus.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_capability_driven_targeting.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_ecology.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_legality_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_legality_regression.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_matrix.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_reward_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_reward_trace.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_combat_rewards.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_direct_combat_outcomes.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_engagement_behavior.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_parity_comb_006.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_phase5_combat_legality.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_phase5_negative_cases.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_readiness_regen.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_rpg_core_recovery.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_species_relations_legality_wiring.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_species_relations_tactical_wiring.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_tactical_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_tactical_legality.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_tactical_wound_scar_wiring.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/combat/test_target_selection_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/core/test_domain_6_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/core/test_migration_proof.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/core/test_p1_semantic_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/core/test_rpg_math.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_combat_engagement_phase_merge.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_combat_risk_belief_producer.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_learning_outcome.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_memory_store.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_opponent_model_persistence.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_engagement_boundary.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_engagement_events.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_learning.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_postures.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_combat_reassessment.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_engagement_risk.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_opponent_perception.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_posture_selector.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_posture_to_intent.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_phase4_self_combat_estimate.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_power.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/combat_engagement/test_witnessed_combat.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/cooperation/test_phase7_help_need_evaluator.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/faction/test_faction_decision_phase.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/optimization/test_cache_registry.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/optimization/test_movement_plan_cache.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_material_possession_predicate.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_conversion_decision_service.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_conversion_intent_bridge.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_conversion_option_generator.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_growth_gap_evaluator.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_possession_understanding_service.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_progression_boundary.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_progression_events.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_reward_interpretation_service.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_phase6_reward_ledger_service.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/domains"
+          ],
+          "file": "tests/unit/domains/progression/test_progression_decision_canonical_hash.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/economy/test_economy_alerts.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/economy/test_economy_health_monitor.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/economy/test_gold_sink.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/economy/test_vacancy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/engine/test_combat_actions_learning_wiring.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/engine/test_combat_relation_projection.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/engine/test_sort_tiebreaker.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entities"
+          ],
+          "file": "tests/unit/entities/test_archetype_entity_factory.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entities"
+          ],
+          "file": "tests/unit/entities/test_entity_identity_resolver.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entities"
+          ],
+          "file": "tests/unit/entities/test_lifecycle_horizon_constants.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entities"
+          ],
+          "file": "tests/unit/entities/test_resolved_entity_runtime_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_entity_archetypes.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_entity_initialization.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_phase11_cognition_model_schema.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_phase12_perception_model.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_phase13_temporal_model.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_phase2_self_model_components.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_phase6_possession_understanding_component.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-infra/Run: tests/unit/entity"
+          ],
+          "file": "tests/unit/entity/test_phase6_reward_ledger_component.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_flow_field_navigation.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_mob_leashing.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_movement_collision_resolution.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_movement_congestion.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_movement_spatial_regression.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_navigation_get_next_step.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_occupancy_conflicts.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_phase4_movement.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_position_swap.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_pursuit_target_refresh.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_spatial_index.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/movement/test_tactical_movement.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_breakthroughs.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_class_tiers.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_classes_loadouts.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_evolution.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_genetics.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_leveling.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_leveling_veterancy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_lifecycle.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_phase8_progression.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_progression_quests.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_progression_v2.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/progression/test_rpg_advancement.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_progression_lifecycle.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_progression_regression.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_quest_generation.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_quest_lifecycle.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_quest_relation_projection.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_quest_rewards.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_quest_system.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_quest_transactions.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/quest/test_transaction_groups.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_domain_8_economy.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_durability_repair.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_economy_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_equipment_chests_storage.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_equipment_ranking.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_harvest_channeling.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_inventory_hardening.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_inventory_serialization.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_item_instance_history.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_item_inventory_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_loot_channeling.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_node_charge_accounting.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_resource_conflicts.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_resource_conservation_regression.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_resource_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_resource_governor_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_resource_intelligence_contract.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_resource_v2_boundary.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/resource/test_transaction_grouping.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/tactical/test_habit_bias_action_style_wiring.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/tactical/test_objective_pursuit_coverage.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-gameplay/Run"
+          ],
+          "file": "tests/unit/tactical/test_target_stickiness.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/world/test_guild_intel.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/world/test_local_environment_semantics.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/world/test_terrain_weighting.py",
+          "state": "covered"
+        },
+        {
+          "fast_lanes": [
+            "unit-core-world/Run"
+          ],
+          "file": "tests/unit/worldassembly/test_entity_spawner_legacy_guard.py",
+          "state": "covered"
+        }
+      ],
+      "lane_steps": [
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/agent-orchestration.xml",
+          "lane": "agent-orchestration/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/agent_codex_live_transport",
+            "tests/agent_codex_pilot_executor",
+            "tests/agent_codex_pilot_guardrails",
+            "tests/agent_codex_pilot_orchestration",
+            "tests/agent_codex_posttool_adapter",
+            "tests/agent_codex_realrepo_pilot_harness",
+            "tests/agent_codex_runtime_shadow",
+            "tests/agent_orchestration",
+            "tests/agent_orchestration_claude_adapter",
+            "tests/agent_orchestration_codex_adapter",
+            "tests/agent_replay",
+            "tests/agent_replay_codex"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": true,
+          "junit_xml": "reports/junit/api-tools-api.xml",
+          "lane": "api-tools/Run: tests/api",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/api"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": true,
+          "junit_xml": "reports/junit/api-tools-cli.xml",
+          "lane": "api-tools/Run: tests/cli",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/cli"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": true,
+          "junit_xml": "reports/junit/api-tools-engine.xml",
+          "lane": "api-tools/Run: tests/engine",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/engine"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": true,
+          "junit_xml": "reports/junit/api-tools-logging.xml",
+          "lane": "api-tools/Run: tests/logging",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/logging"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": true,
+          "junit_xml": "reports/junit/api-tools-observability.xml",
+          "lane": "api-tools/Run: tests/observability",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/observability"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": true,
+          "junit_xml": "reports/junit/api-tools-tools.xml",
+          "lane": "api-tools/Run: tests/tools",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/tools"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/arch-docs.xml",
+          "lane": "arch-docs/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/architecture",
+            "tests/docs",
+            "tests/integrity",
+            "tests/refactor",
+            "tests/static"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/integration.xml",
+          "lane": "integration/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/integration"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/perf-cert-arena.xml",
+          "lane": "perf-cert-arena/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/arena",
+            "tests/certification",
+            "tests/mechanic_scenarios",
+            "tests/perf"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/simulation-quality.xml",
+          "lane": "simulation-quality/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/simulation_quality"
+          ]
+        },
+        {
+          "fast": false,
+          "junit_uploaded": false,
+          "junit_xml": null,
+          "lane": "slow/Slow tests (includes 5k behavioral regression)",
+          "marker_filter": "slow or extra_slow",
+          "paths": [
+            "tests"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-core-world.xml",
+          "lane": "unit-core-world/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/config",
+            "tests/unit/content",
+            "tests/unit/content_semantics",
+            "tests/unit/core",
+            "tests/unit/engine",
+            "tests/unit/kernel",
+            "tests/unit/platform",
+            "tests/unit/replay",
+            "tests/unit/runtime",
+            "tests/unit/test_dirty_refresh.py",
+            "tests/unit/world",
+            "tests/unit/worldassembly",
+            "tests/unit/worldbuilding",
+            "tests/unit/worldgeneration",
+            "tests/unit/worldmodules"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-gameplay.xml",
+          "lane": "unit-gameplay/Run",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/actions",
+            "tests/unit/ai",
+            "tests/unit/combat",
+            "tests/unit/economy",
+            "tests/unit/motivation",
+            "tests/unit/movement",
+            "tests/unit/progression",
+            "tests/unit/quest",
+            "tests/unit/resource",
+            "tests/unit/scenarios",
+            "tests/unit/social",
+            "tests/unit/strategic",
+            "tests/unit/systems",
+            "tests/unit/tactical"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-api.xml",
+          "lane": "unit-infra/Run: tests/unit/api",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/api"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-certification.xml",
+          "lane": "unit-infra/Run: tests/unit/certification",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/certification"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-cli.xml",
+          "lane": "unit-infra/Run: tests/unit/cli",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/cli"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-cognition.xml",
+          "lane": "unit-infra/Run: tests/unit/cognition",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/cognition"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-docs.xml",
+          "lane": "unit-infra/Run: tests/unit/docs",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/docs"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-domains.xml",
+          "lane": "unit-infra/Run: tests/unit/domains",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/domains"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-entities.xml",
+          "lane": "unit-infra/Run: tests/unit/entities",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/entities"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-entity.xml",
+          "lane": "unit-infra/Run: tests/unit/entity",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/entity"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-lab.xml",
+          "lane": "unit-infra/Run: tests/unit/lab",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/lab"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-lab_agent.xml",
+          "lane": "unit-infra/Run: tests/unit/lab_agent",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/lab_agent"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-observability.xml",
+          "lane": "unit-infra/Run: tests/unit/observability",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/observability"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-perf.xml",
+          "lane": "unit-infra/Run: tests/unit/perf",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/perf"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-rendering.xml",
+          "lane": "unit-infra/Run: tests/unit/rendering",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/rendering"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-test_memory_probe.xml",
+          "lane": "unit-infra/Run: tests/unit/test_memory_probe.py",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/test_memory_probe.py"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-test_queue_worker_singleton.xml",
+          "lane": "unit-infra/Run: tests/unit/test_queue_worker_singleton.py",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/test_queue_worker_singleton.py"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-tools.xml",
+          "lane": "unit-infra/Run: tests/unit/tools",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/tools"
+          ]
+        },
+        {
+          "fast": true,
+          "junit_uploaded": false,
+          "junit_xml": "reports/junit/unit-infra-views.xml",
+          "lane": "unit-infra/Run: tests/unit/views",
+          "marker_filter": "not slow and not extra_slow",
+          "paths": [
+            "tests/unit/views"
+          ]
+        }
+      ],
+      "not_derived": [
+        "triggers",
+        "path filters"
+      ],
+      "state": "parsed"
+    },
+    "mutation": {
+      "records": [
+        {
+          "age_days": 1,
+          "counts": {
+            "equivalent": "not-classified",
+            "killed": 60,
+            "survived": 117,
+            "suspicious": 0,
+            "timeout": 0
+          },
+          "denominator": {
+            "mutants": 177
+          },
+          "material_survivors": 7,
+          "record": "src_core_conservation.json",
+          "run_kind": "real-target",
+          "source_sha": "defe2342e758376863385466cc6d3dcc62dc015b",
+          "stale_reasons": [
+            "target-changed"
+          ],
+          "state": "stale",
+          "survivors_listed": 117,
+          "target": "src/core/conservation.py",
+          "tests": {
+            "count": 165,
+            "files": 8
+          },
+          "tool": "mutmut 2.5.1"
+        }
+      ],
+      "state": "recorded"
+    },
+    "parity": {
+      "counts": {
+        "divergent": 15,
+        "legacy_verified": 226,
+        "missing": 28,
+        "unsupported": 33,
+        "verified": 1888
+      },
+      "denominator": {
+        "entries": 2190
+      },
+      "entries_per_file": {
+        "combat_movement.yaml": 323,
+        "faction.yaml": 16,
+        "infrastructure.yaml": 421,
+        "progression.yaml": 125,
+        "social_narrative.yaml": 294,
+        "strategic_cognition.yaml": 274,
+        "substrate.yaml": 405,
+        "town_resource.yaml": 191,
+        "world_dynamics.yaml": 141
+      },
+      "note": "ledger statuses as recorded; not proof and not re-derived here",
+      "state": "read-only",
+      "unreadable_files": []
+    },
+    "simq": {
+      "reason": "SimQ anchor checks skip when no corpus data is present; v0 reads no corpus",
+      "state": "skipped-no-data"
+    }
+  },
+  "limits": [
+    "Execution data is a supplied input: in CI only the `api-tools` job uploads JUnit, so most lanes have no JUnit artifact to supply unless a local run produces one.",
+    "There is no CI coverage job. Package coverage comes only from a supplied local run (`provisional-local`); otherwise it shows `no-coverage-artifact`.",
+    "Package coverage is not domain coverage. Domain coverage stays `not-derived` until a defensible mapping exists.",
+    "Classification is heuristic (directory and import signals). `domain`/`level` markers a file declares are listed beside its class and never override it; few tests declare them yet. Disagreeing signals stay `uncertain`.",
+    "Import signals follow the ownership map in architecture_design_notes.md §3.1; party/group code has no oracle or owner (decision D-P, deferred), so files that only import it are `unowned-domain`, outside the core-RPG candidate set.",
+    "The manifest hashes the supplied artifacts, the workflow, the tag registry and the mutation records; the scanned tests/, tickets/ and parity ledger are covered only by the `worktree_dirty` flag, which needs a git checkout.",
+    "Lane triggers and path filters are not derived; the lane layer records which pytest steps list which paths.",
+    "Mutation evidence covers one declared target. `mutmut` is not a project dependency, so the run is not reproducible from a clean install.",
+    "Equivalent mutants are not classified (`equivalent: not-classified`); every survivor is unreviewed.",
+    "`mutmut` 3.x cannot run in this repo: its trampoline rejects modules whose import path starts with `src.`.",
+    "SimQ and census states are fixed read-only states in v0; the parity layer counts ledger statuses and is not proof.",
+    "Escaped defects depend on tagging discipline (`escaped-defect`); history before the tag was registered is not backfilled. A defect's month is its ticket's creation date, and open tickets (todos/, inprogress/) are counted.",
+    "The report never runs tests and is not a gate."
+  ],
+  "manifest": {
+    "as_of": "2026-09-30",
+    "dirty_input_paths": [
+      "tests/mutation/baselines/src_core_conservation.json"
+    ],
+    "inputs": [
+      {
+        "artifact": "scenario_lane_junit.xml",
+        "kind": "junit",
+        "sha256": "85a946282cbf4699f5e804141cb3abd673936aa3e9bfca497ce984127348b362"
+      },
+      {
+        "artifact": "scoped_junit.xml",
+        "kind": "junit",
+        "sha256": "d46b5826c7e71691ea4cd4c731bcabe9a628c9a602775f6b7864c05fd4bcdf74"
+      },
+      {
+        "artifact": "tests/mutation/baselines/src_core_conservation.json",
+        "kind": "mutation-record",
+        "sha256": "3480492a2913c6446645d3f4df179134c62571becdf5ccc361d9fad4299b76eb"
+      },
+      {
+        "artifact": "registries/tag_registry.jsonl",
+        "kind": "tag-registry",
+        "sha256": "67e77577fefc8be9d2c0388b74bf4d47064d4415f5ab9e6d80a2ad24805bb07b"
+      },
+      {
+        "artifact": ".github/workflows/test.yml",
+        "kind": "workflow",
+        "sha256": "1e819cab679d89f25c45e61550548654753910e9ba90afdfc22934b46033931b"
+      }
+    ],
+    "sha": "54a2198f9de928dc1135f3c04d2ba1744aaa08ed",
+    "test_files_scanned": 1516,
+    "worktree_dirty": true
+  },
+  "report": "core-rpg-test-report-v0",
+  "schema_version": 1
+}

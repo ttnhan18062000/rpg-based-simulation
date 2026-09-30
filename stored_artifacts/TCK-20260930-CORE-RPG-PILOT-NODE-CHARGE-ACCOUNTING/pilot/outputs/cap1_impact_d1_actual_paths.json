@@ -1,0 +1,179 @@
+{
+  "advisory": "Recommendation only. Never use this report to skip, remove or narrow a test or a lane.",
+  "changed_paths": [
+    "docs/parity_ledger/town_resource.yaml",
+    "tests/integration/kernel/test_node_charge_cross_actor.py",
+    "tests/unit/resource/test_node_charge_accounting.py"
+  ],
+  "changes": [
+    {
+      "path": "docs/parity_ledger/town_resource.yaml",
+      "reason": "documentation/ticket/registry path: no runtime code; informational only, CI rules still decide what runs; but 3 test(s) read this path",
+      "rule": "documentation",
+      "status": "no-runtime-impact-rule"
+    },
+    {
+      "declared_markers": {
+        "domains": [
+          "substrate",
+          "economy"
+        ],
+        "levels": [
+          "kernel_integration"
+        ]
+      },
+      "path": "tests/integration/kernel/test_node_charge_cross_actor.py",
+      "reason": "the test file itself changed",
+      "rule": "changed-test",
+      "status": "mapped"
+    },
+    {
+      "declared_markers": {
+        "domains": [
+          "substrate",
+          "economy"
+        ],
+        "levels": [
+          "unit"
+        ]
+      },
+      "path": "tests/unit/resource/test_node_charge_accounting.py",
+      "reason": "the test file itself changed",
+      "rule": "changed-test",
+      "status": "mapped"
+    }
+  ],
+  "cross_domain": false,
+  "domains": {
+    "economy": [
+      "tests/integration/kernel/test_node_charge_cross_actor.py: declared-marker domain('economy')",
+      "tests/unit/resource/test_node_charge_accounting.py: declared-marker domain('economy')"
+    ],
+    "substrate": [
+      "tests/integration/kernel/test_node_charge_cross_actor.py: declared-marker domain('substrate')",
+      "tests/unit/resource/test_node_charge_accounting.py: declared-marker domain('substrate')"
+    ]
+  },
+  "impact_unknown": [],
+  "known_gaps": [
+    "tactical navigation is listed under Movement in the ownership map but has no code root; changed paths that only belong to it cannot be mapped and are reported as impact-unknown",
+    "transitive src dependents are not followed (one hop, domains only)",
+    "tests are matched to docs/registry paths by literal path mention, directly or through an imported tools/src module; a test that builds the path dynamically is missed",
+    "PR-eligible lanes are approximated as the parsed lanes that exclude slow tests"
+  ],
+  "lanes": {
+    "nightly_or_main_only_reported_separately": [
+      "slow"
+    ],
+    "pr_eligible_fallback": [],
+    "recommended": [
+      {
+        "lane": "api-tools",
+        "lane_triggered": "always-on",
+        "reasons": [
+          "2 x covers a selected test"
+        ]
+      },
+      {
+        "lane": "integration",
+        "lane_triggered": "always-on",
+        "reasons": [
+          "2 x covers a selected test"
+        ]
+      },
+      {
+        "lane": "unit-gameplay",
+        "lane_triggered": "always-on",
+        "reasons": [
+          "covers a selected test"
+        ]
+      }
+    ]
+  },
+  "levels": [
+    {
+      "level": "kernel_integration",
+      "reason": "declared-marker: tests/integration/kernel/test_node_charge_cross_actor.py declares level('kernel_integration')"
+    },
+    {
+      "level": "unit",
+      "reason": "declared-marker: tests/unit/resource/test_node_charge_accounting.py declares level('unit')"
+    }
+  ],
+  "recommended_tests": [
+    {
+      "executed": "not-run",
+      "file": "tests/integration/content/test_resource_region_coverage_corpus.py",
+      "lane_triggered": {
+        "integration": "always-on"
+      },
+      "lanes": [
+        "integration"
+      ],
+      "reasons": [
+        "reads docs/parity_ledger/town_resource.yaml"
+      ],
+      "selected": true
+    },
+    {
+      "executed": "not-run",
+      "file": "tests/integration/kernel/test_node_charge_cross_actor.py",
+      "lane_triggered": {
+        "integration": "always-on"
+      },
+      "lanes": [
+        "integration"
+      ],
+      "reasons": [
+        "changed test file"
+      ],
+      "selected": true
+    },
+    {
+      "executed": "not-run",
+      "file": "tests/tools/test_done_checker_static.py",
+      "lane_triggered": {
+        "api-tools": "always-on"
+      },
+      "lanes": [
+        "api-tools"
+      ],
+      "reasons": [
+        "reads docs/parity_ledger/town_resource.yaml"
+      ],
+      "selected": true
+    },
+    {
+      "executed": "not-run",
+      "file": "tests/tools/test_parity_index_baseline.py",
+      "lane_triggered": {
+        "api-tools": "always-on"
+      },
+      "lanes": [
+        "api-tools"
+      ],
+      "reasons": [
+        "reads docs/parity_ledger/town_resource.yaml"
+      ],
+      "selected": true
+    },
+    {
+      "executed": "not-run",
+      "file": "tests/unit/resource/test_node_charge_accounting.py",
+      "lane_triggered": {
+        "unit-gameplay": "always-on"
+      },
+      "lanes": [
+        "unit-gameplay"
+      ],
+      "reasons": [
+        "changed test file"
+      ],
+      "selected": true
+    }
+  ],
+  "recommended_tests_total": 5,
+  "recommended_tests_truncated": 0,
+  "report": "impact-report-v0",
+  "schema_version": 1
+}
