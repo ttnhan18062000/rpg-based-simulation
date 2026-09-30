@@ -98,6 +98,7 @@ Two sections, so every body field keeps one parsing convention and `grep -A1 '^#
   on-disk file with the fixing command. `run_finalize_selfcheck(regenerate_registry=True)`; the CLI
   passes False unless `--regenerate-registry`.
 - `docs/guides/delivery_process.md`: one Disposition subsection plus a read-only CLI note.
+- **Scope 3 addendum (user decision 2026-09-30, via agent-working-design):** `tools/agent-monitoring/record_hand_orchestrated_closure.py` now calls `generate_registry()` next to `append_working_log_row()`, fail-open with a warning, so a hand closure needs no separate registry step and `CLAUDE.md` stays untouched. Precondition (ticket already in `tickets/done/`) stated once in its docstring. The delivery guide's CLI note still documents `--regenerate-registry` for standalone `done_checker_static.py` runs.
 - One existing CLI test needed its scaffold to pre-regenerate the registry, because the bare CLI no
   longer writes it.
 - **CLAUDE.md not edited.** Its After Work text says Finalize regenerates the registry with no manual
@@ -117,10 +118,14 @@ no_drift_against_real_registry` reported this ticket's own in-progress file as u
 "added" until the closing regeneration. The tracked-path guard in test_done_checker_static stayed green.
 
 ## Files Changed
+- `tools/agent-monitoring/record_hand_orchestrated_closure.py`, `tests/tools/test_record_hand_orchestrated_closure.py` (Scope 3 addendum)
 - `tools/ticket_field_values.py`, `tools/gate_checks/done_checker_static.py`
 - `tests/tools/test_ticket_field_values.py`, `tests/tools/test_done_checker_static.py`
 - `docs/guides/delivery_process.md`
 - `stored_artifacts/TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES/`
+
+## Test Summary addendum
+`test_record_hand_orchestrated_closure.py`, `test_done_checker_static.py`, `test_working_log_content_duplicate_check.py`, `test_run_execution_mode_field_wiring.py`: 219 passed, including the new test (registry written with the ticket's `tickets/done/` entry).
 
 ## Completion Summary
 A ticket closed as a disposition now passes the migration check with a validated, evidence-citing
