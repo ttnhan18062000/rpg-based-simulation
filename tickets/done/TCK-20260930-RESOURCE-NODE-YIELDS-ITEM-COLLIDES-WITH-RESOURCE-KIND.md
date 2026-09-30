@@ -132,6 +132,11 @@ re-run, one is a per-test TimeoutError, one (`frontier_marches` population) is n
   every corpus world yields a registered item).
 - Scoped non-slow run (`worldbuilding worldassembly resource engine core docs world` + `tests/integrity`,
   `-m "not slow and not extra_slow"`): 1294 passed, 3 skipped, 1 xfailed.
+- Kind-to-item law over compiled state (suggested by rpg-feature-planning): `test_compiled_nodes_obey_the_registry_kind_to_item_law`
+  asserts `ResourceRegistry.get(node.kind).yield_item == node.yields_item` for every compiler-produced node in every corpus
+  world - the law `tests/unit/world/test_resource_ecology.py` already asserts, but only for ecology-spawned nodes. Positive
+  control: the same test file run against unfixed origin/main fails in 23 of 24 corpus worlds; with the fix it passes in all.
+  It covers wood_node/iron_vein without needing them to be observed harvested.
 - Slow tier (`test_corpus_diversity.py`) vs untouched origin/main: see Implementation Notes.
 - CI caught a gap in the first scoped run: the gating `Simulation quality` job
   (`pytest tests/simulation_quality -m "not slow and not extra_slow"`) failed on

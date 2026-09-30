@@ -70,3 +70,18 @@ def test_every_corpus_node_yields_a_registered_item(world_id):
     for n in state.resource_nodes.values():
         if n.kind in EXPECTED_ITEM_BY_KIND:
             assert n.yields_item == EXPECTED_ITEM_BY_KIND[n.kind]
+
+
+@pytest.mark.parametrize("world_id", CORPUS_WORLDS)
+def test_compiled_nodes_obey_the_registry_kind_to_item_law(world_id):
+    """The law ecology-spawned nodes already obey (test_resource_ecology.py): a node's `yields_item` is
+    its kind's `ResourceRegistry` yield item. Asserted here over every compiler-produced node, so the
+    kind/item collision cannot return for any kind, observed harvested or not."""
+    spec, context = WorldRepository(str(WORLDS_DIR)).load_world_with_context(world_id)
+    state, _ = WorldCompiler.compile(spec, seed=42, context=context)
+    violations = {
+        n.kind: (n.yields_item, ResourceRegistry.get(n.kind).yield_item)
+        for n in state.resource_nodes.values()
+        if ResourceRegistry.contains(n.kind) and ResourceRegistry.get(n.kind).yield_item != n.yields_item
+    }
+    assert not violations, f"{world_id}: kind -> (node yields_item, registry yield_item) {violations}"
