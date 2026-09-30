@@ -69,14 +69,22 @@ priorities — it is a separate scope-only assessment pass).
   `region_declared_population` is built by summing every world module's `PopulationSpec.count` per
   `spawn_region` (`compiler.py:360-363`). This seeding mechanism appears to already be shipped and
   wired, which is in tension with `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE`'s premise that "no
-  compiled or procedurally-generated world today ever seeds `population_cohorts`." State explicitly
-  which of the following is true, with evidence: (a) the premise is stale/already resolved by the
-  08-31 fix (a candidate for the epic's AC-7 "resists classification" / already-fixed outcome,
-  rather than a forced `DEFECT`/`CONDITION`); (b) the seeding code runs but no corpus world module
-  actually declares a `PopulationSpec` targeting any real region, so `region_declared_population`
-  is empty in practice — a genuine `CONDITION` (world-content gap), distinct from "never seeded" as
-  a code-level claim; or (c) something else entirely. Do not assume either without checking a real
-  compiled world's output.
+  compiled or procedurally-generated world today ever seeds `population_cohorts`."
+  **The decisive fork (identified during cross-check by `rpg-feature-planning`, 2026-09-30, code
+  reading confirmed unambiguous):** `region_declared_population` at `compiler.py:360-364` is keyed
+  by **`pop_spec.spawn_region`**; the lookup at `compiler.py:449` uses **`r_spec.id`**, via
+  `.get(r_spec.id, 0)`. If those two identifier spaces disagree for real world content, every
+  lookup silently returns `0`, `_seed_population_cohorts`'s own `if declared_population <= 0: return
+  {}` guard fires, every region gets `{}`, and `DemographicCycleService`'s `if not
+  region.population_cohorts: continue` guard (`cohort.py:349`) no-ops for the whole run — wired
+  code, correct arithmetic, empty result, silent. That is the exact shape this epic exists to
+  classify. **The sharp first experiment:** compile one real world spec and print, per region,
+  `r_spec.id`, the actual `region_declared_population` keys, and the resulting
+  `population_cohorts`. If the keys match and cohorts come out non-empty, the corpus ticket's
+  premise is simply false today (see the AC-7 `STALE-PREMISE` outcome below). If the keys don't
+  match, the ticket was right (cohorts really are always empty) but for a different, more specific
+  and more fixable cause (a key-space mismatch, not "never seeded") — record that as `DEFECT`, not
+  `CONDITION`. **Do not assume which before running the experiment.**
 - For `CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` and `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-
   DANGER`: both already carry extensive, evidence-based investigation in their own bodies (grepped
   every real `CapabilityContext`/`BeliefEntry` construction site; checked the Mechanics Bible, parity
@@ -135,6 +143,23 @@ priorities — it is a separate scope-only assessment pass).
       against `TCK-20260831-POPULATION-COHORT-SEEDING`'s already-shipped compile-time seeding code
       (`src/worldbuilding/compiler.py`), stating clearly whether the "never seeded" premise still
       holds against a real compiled world, is stale, or points to an upstream content gap.
+- [ ] `DEMOGRAPHIC-COHORT-CYCLE`'s reconciliation runs the sharp first experiment above (compile a
+      real world spec, compare `r_spec.id` against `region_declared_population`'s actual keys, check
+      the resulting `population_cohorts`) **before** assigning a verdict — not a code-read guess.
+      **If the keys match and cohorts come out non-empty:** this ticket's premise is false *as of
+      today*, and per the epic's own AC-7 this is recorded as a fifth outcome, not forced into
+      `CONDITION` or `MISLABEL` — label it `STALE-PREMISE` (this pass's own addition to the axis,
+      agreed with `rpg-feature-planning` 2026-09-30) and record alongside it: the ticket was filed
+      2026-09-20, three weeks *after* `TCK-20260831-POPULATION-COHORT-SEEDING` closed on 2026-08-31,
+      apparently on the strength of a `registries/mechanisms.yaml` verdict dated 2026-09-16 that was
+      never re-checked against the shipped compiler code. That is a finding about how the ticket got
+      written, not about the mechanism itself — do not fold it into this pass's mechanism verdicts;
+      if it holds up after the experiment runs, it is process feedback for `agent-working-design`
+      (registry-verdict/ticket-filing staleness), not a finding for `rpg-feature-planning` or
+      `rpg-implementer` to act on directly. **If the keys don't match:** cohorts really are always
+      empty, but the cause is a specific `spawn_region`-vs-`r_spec.id` key-space mismatch — record
+      `DEFECT` (not `CONDITION`) with that exact cause, and note the ticket was right for the wrong
+      reason.
 - [ ] Any `CONDITION` verdict among the 4 is split into corpus-run-length vs. world-content, each
       with a named owner, per the epic's AC-6.
 - [ ] Each verdict is recorded in its own covered ticket's body, and this pass's findings are
@@ -177,7 +202,11 @@ priorities — it is a separate scope-only assessment pass).
 ## Related Code Areas
 - `src/core/state.py` (`CampState`)
 - `src/worldbuilding/compiler.py` (`WorldCompiler.compile()`, `_seed_population_cohorts()`,
-  `region_declared_population` — where the camp/cohort reconciliation evidence lives)
+  `region_declared_population` — where the camp/cohort reconciliation evidence lives; specifically
+  `:360-364` where `region_declared_population` is keyed by `pop_spec.spawn_region`, versus `:449`
+  where the lookup uses `r_spec.id` — the decisive fork for this ticket's sharp first experiment)
+- `src/domains/demographics/cohort.py:349` (`DemographicCycleService`'s `if not
+  region.population_cohorts: continue` guard — where an empty-keyed lookup silently no-ops)
 - `data/content/world/` (camp-kind and `PopulationSpec` content templates, if any)
 - `src/domains/demographics/cohort.py` (`DemographicCycleService`)
 - `src/engine/world_dynamics.py` (`DemographicCycleService`'s real caller)
@@ -205,7 +234,14 @@ priorities — it is a separate scope-only assessment pass).
 - **Open, load-bearing:** whether `TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE`'s premise is still true
   given `TCK-20260831-POPULATION-COHORT-SEEDING`'s already-shipped seeding code — this is the single
   most consequential open question for this pass and is called out twice above (Scope and Acceptance
-  Criteria) so it cannot be silently skipped.
+  Criteria) so it cannot be silently skipped. Resolved to a specific, checkable fork
+  (`spawn_region`-vs-`r_spec.id` key match) by `rpg-feature-planning`'s independent cross-check on
+  2026-09-30 — do not re-derive that fork from scratch, run the experiment it names.
+- **Scope-guard check methodology, carried forward from that same cross-check:** always diff a scope
+  guard (e.g. `registries/mechanisms.yaml` byte-for-byte, or "what changed since this branch's base")
+  against `origin/main`, never a local `main` ref in a long-lived worktree — a stale local `main` can
+  be dozens of merges behind and make an unrelated prior PR's diff look like this ticket's own scope
+  creep.
 - **Open:** whether `CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` and `NO-MECHANISM-RECORDS-
   PER-ENEMY-KIND-DANGER` genuinely belong in the epic's "never-seeded precondition state" grouping at
   all, versus being better described as `UNDECLARED` (no declared producer/consumer relationship) or
