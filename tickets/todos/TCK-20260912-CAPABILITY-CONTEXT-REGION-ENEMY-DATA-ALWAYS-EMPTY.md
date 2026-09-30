@@ -287,3 +287,45 @@ declared, per explicit instruction, rather than ship a populated-but-still-unrea
 the pattern this ticket exists to eliminate. Stays `BLOCKED` on both fields, for corrected reasons,
 with the deeper `enemy_data` gap now named and filed on its own rather than folded silently into
 "the field is empty."
+
+---
+
+**2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED` (epic `T02`,
+`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`). This ticket bundles two independent
+findings under one "always empty" title; each gets its own verdict rather than one forced verdict
+for both.**
+
+**`enemy_data` half — verdict `UNDECLARED`, inherited from `TCK-20260913-NO-MECHANISM-RECORDS-PER-
+ENEMY-KIND-DANGER`, not independently re-derived.** This ticket's own Completion Summary already
+names the causal link explicitly: `enemy_data`'s emptiness "isn't just unwired, no real mechanism
+anywhere in the codebase produces per-enemy-kind danger data at all... not this ticket's own wiring
+problem." Per the classifying pass's own instruction, a symptom does not get a separate verdict from
+its own named cause — see `NO-MECHANISM-RECORDS`'s own Implementation Notes for the full verdict and
+evidence, including the direct confirmation that `_ENEMY_DANGER`'s hardcoded fallback is the live
+path taken on every real combat estimate (not itself dead code) — `CapabilityEstimateService.
+estimate()` fires correctly on every call, just with a coarser data source than `enemy_data`'s own
+field shape was built to accept.
+
+**`region_data` half — verdict `UNDECLARED`, independently derived, different shape from
+`enemy_data`'s.** Re-confirmed directly (not re-read from this ticket's own prose):
+`RouteFamily.SCOUT_LOCATION` (`src/domains/adventure/schema.py:27`) exists in the enum, in
+`mapper.py:41`'s `RouteFamily -> (ProjectKind, ObjectiveKind)` table, and in `scoring.py`'s own
+culture-tag/goal-shaping tables (`:44,179,271`) — three separate places declare its shape and intent
+— but `grep -n "RouteFamily\." src/domains/adventure/generator.py` shows every *other* generatable
+route family explicitly listed (`GATHER_RESOURCE`, `BUY_UPGRADE`, `CRAFT_UPGRADE`, `RECOVER`,
+`ASK_INFORMATION`, `FORM_PARTY`, `DEFER_WITH_REASON`) and **`SCOUT_LOCATION` present in none of
+them.** This is not a guard/filter bug hiding an otherwise-working generation branch (the epic's
+usual `DEFECT` shape) — there is no branch to hide; the feature was scoped into three separate
+type-level tables and never implemented in the one place that actually produces route instances.
+Same operative test as `enemy_data`'s verdict (needs a design decision — build the generator branch,
+or remove the dead scaffolding — before any code changes), hence the same `UNDECLARED` label, but
+recorded as a genuinely different root shape (declared-and-scaffolded-but-unbuilt, vs.
+`enemy_data`'s zero-declared-intent) so a future reader doesn't assume one explains the other.
+
+**No `registries/mechanisms.yaml` entry exists for this mechanism to reconcile against** (verified
+by direct grep for `capability_estimate`/`enemy_data`) — unlike `camp`/`demographic_cohort_cycle`
+this same pass, there is no stale-registry-verdict shape here to route to `agent-working-design`.
+
+**AC-7 note:** neither half resists all four verdicts + `STALE-PREMISE` outright — both land on
+`UNDECLARED` via the "needs a design decision" test — so no new fifth-outcome label was introduced
+for this ticket, unlike `camp`/`demographic_cohort_cycle`'s `STALE-PREMISE`.

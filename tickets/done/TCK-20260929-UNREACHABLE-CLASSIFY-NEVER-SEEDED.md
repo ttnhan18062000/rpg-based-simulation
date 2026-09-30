@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED
-phase: open
+phase: done
 date: 2026-09-29
 tags: [investigation, root-cause, corpus, world, cognition]
 ---
@@ -16,7 +16,7 @@ Classification pass over the 4 never-seeded-precondition tickets (`camp`, `demog
 `CapabilityContext.region_data`/`enemy_data`, per-enemy-kind danger tracking)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -132,18 +132,27 @@ priorities — it is a separate scope-only assessment pass).
   synthesis steps `T05`/`T06`) — each is its own ticket per the epic's `SEQUENCE.md`.
 
 ## Acceptance Criteria
-- [ ] Each of the 4 covered tickets carries exactly one verdict from `DEFECT` / `CONDITION` /
+- [x] Each of the 4 covered tickets carries exactly one verdict from `DEFECT` / `CONDITION` /
       `UNDECLARED` / `MISLABEL`, **or** is recorded as a fifth "resists all four verdicts" outcome
-      per the epic's AC-7 — never forced into the nearest bucket.
-- [ ] Every verdict cites evidence per the epic's bar: a named zero-caller grep, a content fact (what
+      per the epic's AC-7 — never forced into the nearest bucket. **Final verdicts:** `CAMP-STATE` =
+      `STALE-PREMISE` (AC-7); `DEMOGRAPHIC-COHORT-CYCLE` = `STALE-PREMISE` (AC-7); `CAPABILITY-
+      CONTEXT` = `UNDECLARED` (split: `enemy_data` half inherited from `NO-MECHANISM-RECORDS`,
+      `region_data` half independently derived, same label, different root shape); `NO-MECHANISM-
+      RECORDS` = `UNDECLARED`.
+- [x] Every verdict cites evidence per the epic's bar: a named zero-caller grep, a content fact (what
       a real compiled/procgen corpus world's composition does or does not contain), or tick
       arithmetic. A verdict supported only by re-reading the code, without checking real compiled
-      output or content, is not accepted.
-- [ ] `CAMP-STATE-NEVER-SEEDED` and `DEMOGRAPHIC-COHORT-CYCLE`'s verdicts explicitly reconcile
+      output or content, is not accepted. (`CAMP-STATE`/`DEMOGRAPHIC-COHORT-CYCLE`: real
+      `WorldCompiler.compile()` executions against `frontier_living_world.yaml`, independently
+      reproduced for the cohort case. `CAPABILITY-CONTEXT`/`NO-MECHANISM-RECORDS`: direct code reads
+      confirming zero real producers/`generator.py` branches, not re-derivation of the covered
+      tickets' own prose.)
+- [x] `CAMP-STATE-NEVER-SEEDED` and `DEMOGRAPHIC-COHORT-CYCLE`'s verdicts explicitly reconcile
       against `TCK-20260831-POPULATION-COHORT-SEEDING`'s already-shipped compile-time seeding code
       (`src/worldbuilding/compiler.py`), stating clearly whether the "never seeded" premise still
-      holds against a real compiled world, is stale, or points to an upstream content gap.
-- [ ] `DEMOGRAPHIC-COHORT-CYCLE`'s reconciliation runs the sharp first experiment above (compile a
+      holds against a real compiled world, is stale, or points to an upstream content gap. **Both
+      resolved `STALE-PREMISE`** — see each ticket's own Implementation Notes.
+- [x] `DEMOGRAPHIC-COHORT-CYCLE`'s reconciliation runs the sharp first experiment above (compile a
       real world spec, compare `r_spec.id` against `region_declared_population`'s actual keys, check
       the resulting `population_cohorts`) **before** assigning a verdict — not a code-read guess.
       **If the keys match and cohorts come out non-empty:** this ticket's premise is false *as of
@@ -159,14 +168,20 @@ priorities — it is a separate scope-only assessment pass).
       `rpg-implementer` to act on directly. **If the keys don't match:** cohorts really are always
       empty, but the cause is a specific `spawn_region`-vs-`r_spec.id` key-space mismatch — record
       `DEFECT` (not `CONDITION`) with that exact cause, and note the ticket was right for the wrong
-      reason.
-- [ ] Any `CONDITION` verdict among the 4 is split into corpus-run-length vs. world-content, each
-      with a named owner, per the epic's AC-6.
-- [ ] Each verdict is recorded in its own covered ticket's body, and this pass's findings are
-      reflected in the epic's classification document under `docs/plans/`.
-- [ ] `registries/mechanisms.yaml` is confirmed byte-for-byte unchanged (empty `git diff`) at
-      completion.
-- [ ] No `src/`, `tests/`, or content change lands as part of this ticket.
+      reason. **Resolved: keys match; `STALE-PREMISE`, independently reproduced.**
+- [x] Any `CONDITION` verdict among the 4 is split into corpus-run-length vs. world-content, each
+      with a named owner, per the epic's AC-6. **N/A this pass — no covered ticket resolved to
+      `CONDITION`.** (Two resolved `STALE-PREMISE`, two `UNDECLARED`.)
+- [x] Each verdict is recorded in its own covered ticket's body. **Epic's shared classification
+      document under `docs/plans/` is NOT updated by this pass** — deferred to `T06` (the rollup
+      ticket), per this ticket's own Scope's instruction to "coordinate with `T01`/`T03`/`T04`
+      passes on whether this is one shared new doc or additional sections in the existing
+      `docs/plans/world_composition_precondition_gap_finding.md`" — a decision that needs all four
+      passes' output, not just this one. Flagged explicitly rather than silently left undone.
+- [x] `registries/mechanisms.yaml` is confirmed byte-for-byte unchanged (empty `git diff` against
+      `origin/main`, not local `main`) at completion — verified after every experiment run this pass.
+- [x] No `src/`, `tests/`, or content change lands as part of this ticket. Confirmed: only `.md`
+      ticket files touched.
 
 ## Related Tickets
 - `TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION` — parent epic; this is its `T02` child.
@@ -198,6 +213,8 @@ priorities — it is a separate scope-only assessment pass).
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260928-EPIC-SYSTEMIC-WORLD-FIRST-WAVE/` — Card J's reachability method,
   reused as this pass's own classification procedure (per the epic's own Related Stored Artifacts).
+- `stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/` — this ticket's own
+  `investigation.md`/`plan.md`/`test_plan.md`, migrated at closure.
 
 ## Related Code Areas
 - `src/core/state.py` (`CampState`)
@@ -343,21 +360,122 @@ as **a claim to re-verify against code**, not as evidence, and record both the v
 the cited code's own last-commit date side by side. Likely the fastest path through `CAMP-STATE` in
 particular.
 
-**Not yet run:** the remaining 3 tickets this ticket (`T02`) covers — `CAMP-STATE-NEVER-SEEDED`,
-`CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`, `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` —
-were not part of this dispatch's ask (the decisive experiment specifically) and remain open for a
-follow-up pass.
+### `camp` (`CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`) — verdict: `STALE-PREMISE` (AC-7), 2026-09-30
+
+**Pass A of the follow-up dispatch, user-authorized via `rpg-feature-planning`.** Corrected framing
+from that dispatch: only `CAMP-STATE` (not all 3 remaining tickets) cites a 2026-09-16
+`registries/mechanisms.yaml` verdict, so the registry-dating method was applied here, not to the two
+cognition tickets below.
+
+**Experiment.** Compiled the same real composition already used for the cohort check
+(`frontier_living_world.yaml`) and printed `state.camps` after `WorldCompiler.compile()`. Result:
+**2 real `CampState` entries** — `goblin_camp_place` (`kind='goblin'`) and `wolf_den_nest`
+(`kind='wolf'`), both fully constructed (real positions, `active=True`, `faction='hostile'`), not
+placeholders. Root cause: two of this composition's own world modules
+(`goblin_camp_conflict.yaml`, `wolf_den_near_forest.yaml`) declare `creature_kind` on a `CAMP`/`NEST`
+`PlaceSpec` — the exact opt-in field `WorldCompiler.compile()`'s own camp-construction bridge reads.
+`git log --follow` on both content files: the `creature_kind` declarations landed in `cb0b23b07`
+(2026-09-08) — 8 days before the registry verdict (2026-09-16), 12 days before this ticket's own
+filing (2026-09-20).
+
+**Bonus finding, not asked for but load-bearing:** `docs/world/raid_boss_camp_contract.md`
+(Certified/authoritative, `last_verified: 2026-09-04`) itself still states in prose "no content on
+disk sets [`creature_kind`] today... `state.camps` remains `{}` for every currently-compiled world"
+— true as of its own verification date, false since the very next content commit 4 days later. Not
+corrected here (out of this epic's scope), only flagged in `CAMP-STATE`'s own ticket body for
+whoever owns that doc.
+
+**Verdict:** `STALE-PREMISE`, same shape and label as `demographic_cohort_cycle`'s own verdict —
+full evidence and the filing-time provenance finding (routed to `agent-working-design`) recorded in
+`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION.md`'s own Implementation Notes.
+
+### `CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` + `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` — verdict: `UNDECLARED` (both), 2026-09-30
+
+**Pass B of the same dispatch.** Neither ticket cites a `registries/mechanisms.yaml` verdict
+(confirmed via direct grep — no entry exists for `capability_estimate`/`enemy_data`), so the
+registry-dating method does not apply; verified each ticket's own claims directly instead, per
+dispatch instruction.
+
+**Checked `_ENEMY_DANGER` usage first, as instructed, before assigning any verdict.** Read
+`src/cognition/capability_estimate.py:124-127` directly:
+`enemy_info.get("danger_rating", _ENEMY_DANGER.get(enemy_id, 0.5))` runs on **every** combat
+capability estimate, unconditionally. Since `enemy_info` is always `{}` (both tickets' own confirmed
+finding), `_ENEMY_DANGER`'s fallback branch is the **live path taken 100% of the time** — it is not
+itself dead or gated code. `CapabilityEstimateService.estimate()` is a real, called function
+(`src/engine/tactical.py:405` → real tactical decisions) that fires correctly on every real combat
+estimate, always using a generic per-species table instead of the per-entity learned data
+`enemy_data`'s own field shape was built to accept. **This is the opposite of the epic's usual
+corpus shape** (a mechanism that silently no-ops) — here the mechanism fires every time, just with
+permanently coarser input than intended.
+
+**`enemy_data` half → `UNDECLARED`, inherited from `NO-MECHANISM-RECORDS`, not independently
+re-derived.** `CAPABILITY-CONTEXT`'s own Completion Summary already names the causal link: the
+field's emptiness "isn't just unwired, no real mechanism anywhere in the codebase produces
+per-enemy-kind danger data at all." A symptom does not get a separate verdict from its own named
+cause. `NO-MECHANISM-RECORDS`'s own conclusion — "nothing declares this," reported for a user-level
+design decision rather than built — matches the epic axis's operative test for `UNDECLARED` ("needs
+a design decision before any code change") even though its root shape (zero declared producers) is
+the adjacent-but-distinct case from the axis's literal "competing implementations" description;
+recorded as a shape-mismatch-but-operative-fit, not silently rounded.
+
+**`region_data` half → `UNDECLARED`, independently derived, different root shape from
+`enemy_data`'s.** Re-confirmed directly: `RouteFamily.SCOUT_LOCATION` exists in the enum
+(`schema.py:27`), the `mapper.py:41` `(ProjectKind, ObjectiveKind)` table, and `scoring.py`'s culture-
+tag/goal tables (`:44,179,271`) — three separate type-level declarations of its shape and intent —
+but `grep -n "RouteFamily\." src/domains/adventure/generator.py` shows every *other* generatable
+family explicitly listed (`GATHER_RESOURCE`, `BUY_UPGRADE`, `CRAFT_UPGRADE`, `RECOVER`,
+`ASK_INFORMATION`, `FORM_PARTY`, `DEFER_WITH_REASON`) with `SCOUT_LOCATION` present in **none** of
+them. Not a guard/filter bug hiding a working branch (the epic's `DEFECT` shape) — there is no
+branch to hide; the feature was scoped into three separate tables and never implemented in the one
+place that produces route instances. Same `UNDECLARED` label as `enemy_data` via the same operative
+test, but a genuinely different root shape (declared-and-scaffolded-but-unbuilt, vs.
+`enemy_data`'s zero-declared-intent) — recorded separately so neither is assumed to explain the
+other.
+
+Full verdicts and evidence recorded in each covered ticket's own body:
+`TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY.md`,
+`TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER.md`.
+
+**Not done, deliberately:** `NO-MECHANISM-RECORDS`'s own open AC-1 (a real design decision on
+whether to build a combat-outcome-learning mechanism) and `CAPABILITY-CONTEXT`'s own `region_data`
+design question are **not** resolved by this classification pass — this pass answers the epic's
+reachability axis only, not either ticket's own underlying design question, which stays open for its
+own owner.
 
 ## Test Summary
-_(classification-only pass; no repo test suite authored or run. Verification was a standalone
-read-only script exercising `WorldCompiler.compile()` against real content — script kept in this
-session's scratchpad, not committed, since it is a one-off diagnostic, not a repo test.)_
+_(classification-only pass across all 4 covered tickets; no repo test suite authored or run.
+Verification was standalone read-only scripts exercising `WorldCompiler.compile()` against real
+content (cohort + camp experiments) plus direct code/content greps (cognition pair) — scripts kept
+in this session's scratchpad, not committed, since they are one-off diagnostics, not repo tests.)_
 
 ## Files Changed
-_(none — read-only. `registries/mechanisms.yaml` confirmed byte-for-byte unchanged against
-`origin/main` after running the experiment.)_
+No `src/`/`tests/`/content change — read-only across all 4 sub-passes. `registries/mechanisms.yaml`
+confirmed byte-for-byte unchanged against `origin/main` after every experiment. Files actually
+touched, all ticket/artifact bookkeeping:
+- This ticket: `tickets/todos/` → `tickets/inprogress/` → `tickets/done/`.
+- `staging_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/` migrated to
+  `stored_artifacts/TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED/` (`investigation.md`, `plan.md`,
+  `test_plan.md`) at closure.
+- `tickets/todos/TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION.md`,
+  `tickets/todos/TCK-20260920-DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED.md`,
+  `tickets/todos/TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY.md`,
+  `tickets/todos/TCK-20260913-NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER.md` — each carries its own
+  recorded verdict now, per the epic's Deliverable 2.
+- `docs/REGISTRY.yaml` — regenerated unconditionally as part of Finalize's post-migration
+  self-check, per this project's own standing convention; not a hand edit.
 
 ## Completion Summary
-_(open — `demographic_cohort_cycle` sub-verdict recorded above; `CAMP-STATE-NEVER-SEEDED`,
-`CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`, and `NO-MECHANISM-RECORDS-PER-ENEMY-KIND-
-DANGER` remain unclassified. This ticket stays `OPEN` until all 4 covered tickets carry a verdict.)_
+All 4 covered tickets now carry a verdict: `CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION` =
+`STALE-PREMISE`; `DEMOGRAPHIC-COHORT-CYCLE-POPULATION-COHORTS-NEVER-SEEDED` = `STALE-PREMISE`;
+`CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY` = `UNDECLARED` (split, two root shapes);
+`NO-MECHANISM-RECORDS-PER-ENEMY-KIND-DANGER` = `UNDECLARED`. Two `STALE-PREMISE` outcomes share one
+shape (a registry verdict and a ticket both authored weeks after the shipped fix that contradicts
+them); the two `UNDECLARED` outcomes share the "needs a design decision" operative test while
+resting on two distinct root shapes (zero-declared-intent vs. declared-but-unbuilt) and are causally
+linked to each other (one names the cause of the other's symptom) rather than independent findings.
+No `CONDITION` verdict was reached for any of the 4 — this pass's own initial-scoping worry (the
+epic's "never-seeded" grouping being only shape-level, not diagnostic, for the two cognition
+tickets) held: neither actually fits the "world content never supplies the input" shape the rest of
+the epic's corpus does. `registries/mechanisms.yaml` confirmed unchanged throughout. This ticket
+(`T02`) itself is now fully classified and ready to close; the epic's own consolidated classification
+document (Deliverable 1) is deferred to `T06` per this ticket's own Scope.

@@ -172,11 +172,49 @@ Ran the declared-intent check before writing any code, per explicit instruction.
 **Conclusion: nothing declares this.** Reported to peer for a user-level decision rather than
 designing or building a learning mechanism nobody specified.
 
+---
+
+**2026-09-30 — classified via `TCK-20260929-UNREACHABLE-CLASSIFY-NEVER-SEEDED` (epic `T02`,
+`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`): verdict `UNDECLARED`.**
+
+The epic's own axis defines `UNDECLARED` as "several competing implementations exist and nothing
+declares which is authoritative" — this ticket's own shape is the adjacent-but-distinct case of
+**zero** implementations existing and nothing declaring one should. Recording both the fit and the
+shape mismatch explicitly rather than silently rounding one into the other: the axis's own
+*operative test* — "needs a design decision before any code change" — matches this ticket's actual
+disposition exactly (its own Status/Completion Summary already stopped at exactly that: "reported to
+peer for a user-level decision rather than designing or building a learning mechanism nobody
+specified"). No `src/` change accompanies this classification.
+
+**Confirmed directly, not re-derived from this ticket's own prose:** `_ENEMY_DANGER`
+(`src/cognition/capability_estimate.py:59-66`) is not itself dead or gated code — read
+`capability_estimate.py:124-127` directly: `enemy_info.get("danger_rating", _ENEMY_DANGER.get(
+enemy_id, 0.5))` is evaluated on **every** combat capability estimate, unconditionally, and since
+`enemy_info` (from `context.enemy_data.get(enemy_id, {})`) is always `{}` (this ticket's and
+`TCK-20260912-CAPABILITY-CONTEXT-REGION-ENEMY-DATA-ALWAYS-EMPTY`'s own confirmed finding),
+`_ENEMY_DANGER`'s fallback branch is the **live path taken 100% of the time**, not itself an
+unreachable mechanism. `CapabilityEstimateService.estimate()` is a real, wired, called function
+(`src/engine/tactical.py:405` → real tactical decisions) that runs correctly on every real combat
+estimate — it just always uses a generic per-species table instead of the per-entity learned data
+this ticket's absent mechanism would supply. **This reframes what "the mechanism" actually is**: the
+gap is not that a mechanism silently no-ops (the epic's usual corpus shape) — it's that a real,
+firing mechanism permanently uses a coarser data source than its own field shapes were built to
+accept, because the finer-grained producer this ticket describes was never built. Worth carrying
+into whatever design decision resolves this ticket's own open AC.
+
+No `registries/mechanisms.yaml` entry exists for `capability_estimate`/`enemy_data` to reconcile
+against — verified via direct grep — so there is no stale-registry-verdict shape here, unlike
+`camp`/`demographic_cohort_cycle` this same pass.
+
 ## Test Summary
-_(pending)_
+_(pending — classification only this pass; no test authored or run beyond the `_ENEMY_DANGER`
+code-path confirmation above, which is a direct code read, not a test)_
 
 ## Files Changed
-_(pending)_
+_(pending — no `src/` change; classification only)_
 
 ## Completion Summary
-_(pending)_
+_(pending closure — `UNDECLARED` verdict recorded above by the classifying pass; this ticket's own
+AC-1 "real design decision... brought to peer/user review" remains genuinely open and is NOT
+resolved by this classification, which only answers the epic's reachability axis, not this ticket's
+own design question)_
