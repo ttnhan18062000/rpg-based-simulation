@@ -93,11 +93,22 @@ values for them yet.
 set (`{goblin, orc, wolf, spider, troll, slime}`) from
 [docs/mechanics/05_world_evolution.md §6](../mechanics/05_world_evolution.md). It is opt-in: a
 `CAMP`/`NEST`-kind `PlaceSpec` that doesn't set it produces a `PlaceState` with no companion
-`CampState` — the bridge is inert unless content explicitly declares the field. No content on
-disk sets it today (including `hero_guild_routing`'s `goblin_camp_place`), so `state.camps`
-remains `{}` for every currently-compiled world; a future ticket migrating real content to set
-`creature_kind` is the point `CampService`/`CreatureTerritoryService` first receive non-empty
-`state.camps` data in a real compiled world.
+`CampState` — the bridge is inert unless content explicitly declares the field.
+
+**Real content sets it, as of `cb0b23b07` (2026-09-08).** `data/content/world_modules/
+goblin_camp_conflict.yaml:29` and `wolf_den_near_forest.yaml:66` each declare `creature_kind` on a
+`CAMP`/`NEST`-kind `PlaceSpec`, and both modules are composed into `frontier_living_world`
+(`data/content/world_compositions/frontier_living_world.yaml:8-9`). A real
+`WorldCompiler.compile()` of that composition yields **2 fully-constructed `CampState` entries** —
+`goblin_camp_place` (`kind='goblin'`) and `wolf_den_nest` (`kind='wolf'`). So
+`CampService`/`CreatureTerritoryService` do receive non-empty `state.camps` in a real compiled
+world today.
+
+_(Corrected 2026-09-30. This paragraph previously read "No content on disk sets it today … so
+`state.camps` remains `{}` for every currently-compiled world," which was true at this file's
+`last_verified: 2026-09-04` date and has been false since the 2026-09-08 content commit. Found by
+`TCK-20260929-EPIC-UNREACHABLE-MECHANISM-CLASSIFICATION`; see
+`TCK-20260920-CAMP-STATE-NEVER-SEEDED-BY-WORLD-COMPOSITION`.)_
 
 `CampService` and `CreatureTerritoryService` themselves are unchanged by this bridge — both
 already read `state.camps` unconditionally every tick (see "Growth"/"Monster spawning"/"Raid
@@ -124,10 +135,15 @@ same pre-existing overwrite behavior the raid-trigger step already applies to th
 delta; EXPAND_TERRITORY introduces no new hazard here.
 
 **Real-content reachability:** as with the world-gen construction bridge above, `state.camps` is
-`{}` in every currently-compiled real world today (no content sets `creature_kind`), so this
-consumption branch is real and unit-tested (constructing `state.camps` directly, matching this
-file's existing test pattern) but has zero observable effect in any real compiled world today —
-wired but content-gap-inert, not a defect.
+**non-empty in a real compiled world** as of the 2026-09-08 content commit — `frontier_living_world`
+compiles 2 `CampState` entries. This consumption branch is therefore reachable in principle, not
+content-gap-inert. It is unit-tested (constructing `state.camps` directly, matching this file's
+existing test pattern); **whether an `EXPAND_TERRITORY` directive and a matching camp region
+actually co-occur in a real run has not been measured**, so no claim is made here either way.
+
+_(Corrected 2026-09-30, same cause as the world-gen construction note above: this paragraph
+asserted `state.camps == {}` in every compiled world, true at `last_verified: 2026-09-04`, false
+since 2026-09-08.)_
 
 ---
 
