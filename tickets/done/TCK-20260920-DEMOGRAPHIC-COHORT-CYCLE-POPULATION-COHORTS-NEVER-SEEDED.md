@@ -19,6 +19,35 @@ seeds `population_cohorts`, so the call is a permanent no-op in every real run
 ## Status
 DONE
 
+## Disposition
+STALE-PREMISE
+
+## Disposition Rationale
+This ticket's premise — that no compiled or procedurally-generated world seeds any region's
+`population_cohorts`, so the `if not region.population_cohorts` guard
+(`src/worldbuilding/compiler.py:203`) never opens — was already false when the ticket was filed on
+2026-09-20, and had been since 2026-08-31. Closed without implementation in `791e6bf6b`; zero
+`src/` files changed.
+
+Evidence: a real `WorldAssemblyResolver.assemble()` → `WorldCompiler.compile(seed=42)` of
+`frontier_living_world` seeds **non-empty cohorts in 6 of 7 regions** — `hometown` declares a
+population of 13 and yields `{young: 4, adult: 6, elder: 3}`, the exact 30/50/20 split from
+`_seed_population_cohorts` (`src/worldbuilding/compiler.py:190`). The 7th region (`near_forest`)
+correctly receives `{}` because it has zero `PopulationSpec` entries, not because of a key
+mismatch; every `spawn_region` value has a matching `RegionSpec.id`. The seeding code shipped in
+`TCK-20260831-POPULATION-COHORT-SEEDING` on 2026-08-31 — three weeks before this ticket, and
+before the `registries/mechanisms.yaml` verdict it quoted (dated 2026-09-16). Reproduced
+independently from two worktrees with identical per-region figures.
+
+AC-1 through AC-3 are **void rather than met** — each presupposed a seeding gap that does not
+exist.
+
+**This disposition covers the seeding claim only, and closing it does not mean the demographic
+cohort cycle works.** The mechanism's real status now lives in
+`TCK-20260930-DEMOGRAPHIC-COHORT-NET-DELTA-TRUNCATES-TO-ZERO`: cohorts are seeded, the guard does
+open, and the birth/death cycle still never fires, for an unrelated reason. These are separate
+claims on separate evidence — do not let the second weaken the first.
+
 ## Tier
 standard
 

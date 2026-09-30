@@ -19,6 +19,35 @@ no-op in every real run
 ## Status
 DONE
 
+## Disposition
+STALE-PREMISE
+
+## Disposition Rationale
+This ticket's premise — "no compiled or procedurally-generated corpus world today ever populates
+`state.camps`" — was already false when the ticket was filed on 2026-09-20, and had been since
+2026-09-08. Closed without implementation in `791e6bf6b`; zero `src/` files changed.
+
+Evidence: `data/content/world_modules/goblin_camp_conflict.yaml:29` and
+`data/content/world_modules/wolf_den_near_forest.yaml:66` each declare `creature_kind` on a
+`CAMP`/`NEST`-kind `PlaceSpec` — the opt-in field `WorldCompiler`'s `CampState` construction path
+reads. Both modules are composed into `frontier_living_world`. A real
+`WorldAssemblyResolver.assemble()` → `WorldCompiler.compile(seed=42)` yields **2 fully-constructed
+`CampState` entries** (`goblin_camp_place`, `wolf_den_nest`). The `creature_kind` declarations
+landed in commit `cb0b23b07` (2026-09-08) — 8 days before the `registries/mechanisms.yaml` verdict
+this ticket quoted (dated 2026-09-16) and 12 days before the ticket itself.
+
+Verified independently twice, from two worktrees, by two sessions.
+
+AC-1, AC-2 and AC-3 are **void rather than met**: each presupposed a real gap to explain, fix or
+document. AC-3 in particular asked for
+`docs/plans/world_composition_precondition_gap_finding.md` to record `camp` as a confirmed
+instance of its pattern; that document was retired on 2026-09-30 (`f70f58706`) and `camp` was never
+an instance of it.
+
+Note this closure is unaffected by
+`TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS`: both cited modules are present in **both**
+definitions of `frontier_living_world`, so the 2-`CampState` result holds under either loader.
+
 ## Tier
 standard
 
