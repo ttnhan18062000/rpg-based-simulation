@@ -5,7 +5,8 @@ the claim needs one, run the same scenario twice differing only in the precondit
 (`run_with_control`) so a pass cannot come from something unrelated to the mechanism.
 
 The helper owns no gameplay knowledge: it neither knows a mechanic nor mutates state outside the kernel's
-own tick. Staging callables receive a state and return the staged state.
+own tick. Staging callables receive a state and return a NEW staged state (`dataclasses.replace`); they never mutate
+the state they are given, because authoritative state is immutable (docs/core/state.md).
 """
 
 from __future__ import annotations

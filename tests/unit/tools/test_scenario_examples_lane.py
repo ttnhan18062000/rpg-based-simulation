@@ -20,3 +20,10 @@ def test_declared_lane_covers_the_examples_in_ci():
     matching = [lane for lane in lanes if lane["lane"].startswith(examples.LANE + "/")]
     assert matching, f"no CI lane named {examples.LANE!r}"
     assert any(report._lane_covers(lane, EXAMPLE_PATH) for lane in matching)
+
+
+def test_synthetic_examples_pass_the_advisory_marker_check():
+    """The examples are the pattern people copy, so they must be clean under marker_check."""
+    from tools.test_architecture import marker_check
+
+    assert marker_check.run_check(REPO_ROOT, [EXAMPLE_PATH]) == []

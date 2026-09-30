@@ -90,6 +90,7 @@ class _Index:
             if "__pycache__" not in p.parts:
                 self.test_imports[report._rel(p, repo_root)] = report._imports_of(p) or []
         self._src_imports: Optional[Dict[str, List[str]]] = None
+        self._texts: Optional[Dict[str, str]] = None
 
     def tests_importing(self, module: str) -> List[str]:
         return [f for f, imps in self.test_imports.items() if any(i == module or i.startswith(module + ".") for i in imps)]
@@ -103,6 +104,24 @@ class _Index:
             except OSError:
                 pass
         return out
+
+    def tests_reaching_path(self, rel_path: str) -> List[str]:
+        """Tests that read `rel_path`: naming it directly, or importing a tools/ or src/ module that names it."""
+        direct = self.tests_mentioning(rel_path)
+        if self._texts is None:
+            self._texts = {}
+            for top in ("tools", "src"):
+                for p in sorted((self.root / top).rglob("*.py")) if (self.root / top).is_dir() else []:
+                    try:
+                        self._texts[report._rel(p, self.root)] = p.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        pass
+        via = set()
+        for f, text in self._texts.items():
+            module = _module_of(f) if f.startswith("src/") else f[:-3].replace("/", ".")
+            if rel_path in text:
+                via.update(self.tests_importing(module))
+        return sorted(set(direct) | via)
 
     def src_dependent_domains(self, module: str) -> Set[str]:
         if self._src_imports is None:
@@ -171,9 +190,13 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
                 for t in index.tests_mentioning(parts[2]):
                     tests.setdefault(t, []).append(f"references world {parts[2]}")
         elif path.startswith(DOC_PREFIXES):
+            readers = index.tests_reaching_path(path)
             entry.update(status="no-runtime-impact-rule", rule="documentation",
                          reason="documentation/ticket/registry path: no runtime code; informational only, "
-                                "CI rules still decide what runs")
+                                "CI rules still decide what runs"
+                                + (f"; but {len(readers)} test(s) read this path" if readers else ""))
+            for t in readers:
+                tests.setdefault(t, []).append(f"reads {path}")
         else:
             entry.update(status="impact-unknown", rule="no-rule", reason="no impact rule covers this path")
             unknown.append({"path": path, "reason": entry["reason"]})
@@ -226,6 +249,15 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
                           "lane_triggered": {j: trigger_state(j) for j in covering},
                           "executed": executed})
 
+    gaps = [GAP_TACTICAL_NAVIGATION,
+            "transitive src dependents are not followed (one hop, domains only)",
+            "tests are matched to docs/registry paths by literal path mention, directly or through an imported "
+            "tools/src module; a test that builds the path dynamically is missed",
+            "PR-eligible lanes are approximated as the parsed lanes that exclude slow tests"]
+    workflow_text = (repo_root / ".github" / "workflows" / "test.yml")
+    if workflow_text.is_file() and "changed-files" in workflow_text.read_text(encoding="utf-8") and not filters:
+        gaps.append("path filters unparsed; lane_triggered is unreliable (every lane shows always-on)")
+
     return {
         "schema_version": SCHEMA_VERSION,
         "report": "impact-report-v0",
@@ -247,9 +279,7 @@ def build_impact_report(repo_root: Path, changed: Sequence[str], junit_paths: Se
             "nightly_or_main_only_reported_separately": nightly,
         },
         "impact_unknown": unknown,
-        "known_gaps": [GAP_TACTICAL_NAVIGATION,
-                       "transitive src dependents are not followed (one hop, domains only)",
-                       "PR-eligible lanes are approximated as the parsed lanes that exclude slow tests"],
+        "known_gaps": gaps,
     }
 
 

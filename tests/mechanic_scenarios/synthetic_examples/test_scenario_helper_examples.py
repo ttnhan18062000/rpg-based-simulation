@@ -7,6 +7,8 @@ Declared lane: `perf-cert-arena` (its pytest step lists `tests/mechanic_scenario
 tests/unit/tools/test_scenario_examples_lane.py checks that against .github/workflows/test.yml.
 """
 
+from dataclasses import replace
+
 import pytest
 
 from src.core.builder import V2EntityBuilder
@@ -17,7 +19,7 @@ from tests.helpers.scenario import compile_world, run_scenario, run_with_control
 LANE = "perf-cert-arena"
 LABEL = "synthetic"
 
-pytestmark = [pytest.mark.domain("substrate"), pytest.mark.level("kernel_integration")]
+pytestmark = [pytest.mark.domain("substrate"), pytest.mark.level("mechanic_scenario")]
 
 
 def _hand_built_state() -> AuthoritativeState:
@@ -40,8 +42,7 @@ def test_example_occurrence_and_effect_with_a_control_arm():
 def test_example_run_with_control_stages_only_the_treatment_arm():
     """Toy claim: the treatment stage is applied to one arm only; arms share no state."""
     def stage_treatment(state):
-        object.__setattr__(state, "world_time", 999)
-        return state
+        return replace(state, world_time=999)  # a stage returns a NEW state; it never mutates
 
     result = run_with_control(_hand_built_state, ticks=0, observe=lambda s: s.world_time,
                               stage_treatment=stage_treatment)

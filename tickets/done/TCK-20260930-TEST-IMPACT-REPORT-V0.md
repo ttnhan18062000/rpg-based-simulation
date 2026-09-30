@@ -68,6 +68,8 @@ None.
 ## Implementation Notes
 Ownership roots come from `core_rpg_report.DOMAIN_IMPORT_PREFIXES` (not restated). Lane-triggered facts are computed from the `changed-files` path filters parsed from the workflow. Reports selected / lane_triggered / executed separately; docstring states it must never be used to skip. Tactical navigation gap flagged in `known_gaps`.
 
+Review fixes (PR #263): docs/registry paths stay informational but select tests that read them (literal mention, or via an imported tools/src module); an unparsed path-filter set is reported in `known_gaps`.
+
 ## Test Summary
 `pytest tests/unit/tools/test_impact_report.py`: 10 passed (local rule, shared substrate, cross-domain, content/config, unmapped, docs-only, three-fact separation, no-lane-removal, docstring, CLI).
 

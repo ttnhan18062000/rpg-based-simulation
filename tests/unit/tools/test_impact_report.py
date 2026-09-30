@@ -127,3 +127,33 @@ def test_cli_exits_zero_and_emits_json(repo, capsys):
     rc = ir.main(["--repo-root", str(repo), "--paths", "src/progression/leveling.py", "--format", "json"])
     assert rc == 0
     assert json.loads(capsys.readouterr().out)["report"] == "impact-report-v0"
+
+
+def test_doc_read_by_a_test_selects_that_test_though_status_stays_informational(repo):
+    _write(repo / "docs/testing/test_taxonomy.md", "vocabulary\n")
+    _write(repo / "tools/test_architecture/marker_check.py", 'TAXONOMY_DOC = "docs/testing/test_taxonomy.md"\n')
+    _write(repo / "tests/unit/tools/test_marker_vocabulary.py", "from tools.test_architecture import marker_check\n")
+    rep = _report(repo, "docs/testing/test_taxonomy.md")
+    assert rep["changes"][0]["status"] == "no-runtime-impact-rule"
+    assert "test(s) read this path" in rep["changes"][0]["reason"]
+    assert [t["file"] for t in rep["recommended_tests"]] == ["tests/unit/tools/test_marker_vocabulary.py"]
+    assert rep["recommended_tests"][0]["reasons"] == ["reads docs/testing/test_taxonomy.md"]
+    assert rep["impact_unknown"] == []
+
+
+def test_registry_file_named_directly_by_a_test_selects_it(repo):
+    _write(repo / "registries/tag_registry.jsonl", "{}\n")
+    _write(repo / "tests/unit/tools/test_tags.py", 'P = "registries/tag_registry.jsonl"\n')
+    rep = _report(repo, "registries/tag_registry.jsonl")
+    assert [t["file"] for t in rep["recommended_tests"]] == ["tests/unit/tools/test_tags.py"]
+
+
+def test_parsed_path_filters_add_no_unparsed_gap(repo):
+    assert not any("path filters unparsed" in g for g in _report(repo, "src/progression/leveling.py")["known_gaps"])
+
+
+def test_unparsed_path_filters_are_reported_as_a_known_gap(repo):
+    wf = repo / ".github/workflows/test.yml"
+    wf.write_text(wf.read_text(encoding="utf-8").replace("_RE=", "_XX="), encoding="utf-8")
+    rep = _report(repo, "src/progression/leveling.py")
+    assert any("path filters unparsed" in g for g in rep["known_gaps"])

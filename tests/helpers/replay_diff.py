@@ -7,6 +7,9 @@ bound and `RuntimeProfile` used by
 restated here). Outside that envelope -- compiled worlds, other seeds or profiles, longer runs -- the helper does
 not run and returns `outside-verified-scope`, never identical/different. Long-run determinism is parked, so
 the envelope widens only when a new reproducibility test proves a wider scope.
+
+Limit: `world_source` is declared by the caller and the envelope check trusts it; the helper does not inspect
+whether the state was really hand-built.
 """
 
 from __future__ import annotations

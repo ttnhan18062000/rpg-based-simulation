@@ -64,6 +64,8 @@ None.
 ## Implementation Notes
 Envelope bounds now live as module constants in `test_determinism_suite.py` (`REPRODUCIBILITY_SEED/TICKS/PROFILE`, values unchanged) and `replay_diff` imports them. The examples are synthetic, sit under `tests/mechanic_scenarios/synthetic_examples/`, declare lane `perf-cert-arena`, and a test checks that lane's CI step lists `tests/mechanic_scenarios`.
 
+Review fixes (PR #263): examples are `mechanic_scenario` level and clean under `marker_check` (test added); the example stage uses `dataclasses.replace`, and the helper docstring says stages never mutate; replay-diff docstring notes `world_source` is caller-declared.
+
 ## Test Summary
 `pytest tests/mechanic_scenarios -m "not slow and not extra_slow"` (the `perf-cert-arena` step's scenario path): green; replay-diff: 1 in-envelope case + 1 violation per dimension (not hand-built, unseeded, different seed, 11 ticks, different profile); determinism suite still green.
 
