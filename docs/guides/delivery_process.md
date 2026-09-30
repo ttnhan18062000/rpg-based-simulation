@@ -217,7 +217,10 @@ The steps above cover diagnosing a failure; this covers the surrounding push→P
    sections (`## What landed` through `## Verification`/`## Known gaps`, plus the `Closes:` line)
    come from `python3 tools/delivery/pr_render.py` — run it plain for readable stdout
    (`TITLE: ...` then the body) or with `--json` for a single `MARKER:{"title": ..., "body": ...}`
-   line, and pass its output to `gh pr create --title ... --body ...`. Hand-write only
+   line, and pass its output to `gh pr create --title ... --body ...`. A multi-ticket batch PR passes
+   `--theme "<one-line batch headline>"` to the render and the same `--theme` to `--check`;
+   without it the title names the most recently closed ticket (the renderer prints a stderr
+   `HINT:` when it renders more than one ticket with no theme). Hand-write only
    `## Review notes` (the renderer never generates it — see its own module docstring). PR body: no
    `Co-Authored-By`/session-link trailer, and no "🤖 Generated with [Claude Code](...)" (or
    equivalent tool-attribution) line either — commit message trailers still keep the
