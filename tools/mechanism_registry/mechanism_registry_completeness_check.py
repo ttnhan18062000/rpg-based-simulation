@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Recurring completeness check for the mechanism registry's own node set -- against
-`src/domains/` and `src/systems/` ONLY, not the whole codebase (see the scope note below,
-added 2026-09-20).
+`src/domains/` and `src/systems/` (the original tier) plus a wider, rule-based tier over the other
+non-infra `src/` directories (added 2026-09-30, see "Wider-scope tier" below), not "the codebase".
 
 TCK-20260916-MECHANISM-REGISTRY-COMPLETENESS-PASS found the registry's node set incomplete: it
 was seeded from `docs/brainstorm/rpg_feature_atlas.html` alone (75 mechanisms), never from a real
@@ -22,7 +22,8 @@ top-level directories found 14 more candidates clearing the same "real caller ou
 file" bar. This tool's own clean report ("0 drift findings") is honest about what it checked, not
 a claim that nothing else in `src/` is missing -- see
 `docs/plans/mechanism_claims_as_tests_initiative.md` §3.4 and
-`TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP` (the tracked, not-yet-done widening).
+`TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP`, which added the wider tier described below
+(the 2026-09-20 paragraph above records why the original two-root tier alone was not enough).
 
 **This checks against `implemented_by`, not prose.** An earlier draft of this tool regex-searched
 `mechanisms.yaml`'s raw text for path-shaped citations. That failed hard on its first real run: the
@@ -67,9 +68,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -107,6 +109,187 @@ EXCLUSIONS = {
         "tool, not a gameplay mechanism."
     ),
 }
+
+
+# ---------------------------------------------------------------------------
+# Wider-scope tier (TCK-20260920-MECHANISM-COMPLETENESS-CHECK-SCOPE-GAP)
+#
+# The domains/systems enumeration above never looked outside those roots. This tier makes the
+# one-off 2026-09-20 sizing repeatable: mechanism-shaped classes anywhere else in non-infra
+# `src/` that are referenced from a different top-level package but cited by no `implemented_by`.
+#
+# The rule, stated so a number is never mistaken for a fact about the whole codebase:
+#   scope     every `src/**/*.py` except `__init__.py`, tests, top-level files, the two roots the
+#             tier above already covers, and the infrastructure top-level dirs in _WIDER_INFRA_DIRS
+#   candidate a top-level class whose name ends in one of _WIDER_SUFFIXES
+#   unbound   no `implemented_by` entry names the class's file with no symbol, or with this class
+#   wired     the class name appears (ast Name/Attribute) in a file under a *different* top-level
+#             package, `__init__.py` re-export shims excluded
+# The ticket's own 2026-09-20 figure (14 wired candidates) does not reproduce under any explicit
+# rule tried; this rule yields the count pinned in the paired test. It is a floor, not a ceiling:
+# other naming conventions (Classifier/Filter/Builder/Detector) are not swept, and a bare name match
+# can over-count. "Unbound" carries the same caveat as the tier above -- not yet checkable, not
+# asserted to be a gap.
+# ---------------------------------------------------------------------------
+_SRC_DIR = _REPO_ROOT / "src"
+_WIDER_INFRA_DIRS = {
+    "api", "cli", "certification", "config", "logging", "observability", "perf", "platform",
+    "rendering", "replay", "runtime", "testing", "views",
+}
+_WIDER_SUFFIXES = ("Service", "System", "Gate", "Phase", "Evaluator", "Resolver", "Manager")
+
+# "<repo-relative path>::<Class>" -> reason. Confirmed infrastructure, same standard as EXCLUSIONS.
+WIDER_EXCLUSIONS: Dict[str, str] = {
+    "src/content/resolver.py::" + name: (
+        "Catalog resolver: its module docstring says it 'provides validated, deterministic access to "
+        "static catalog data without running any runtime simulation logic'. Content-catalog "
+        "infrastructure, not a mechanism."
+    )
+    for name in (
+        "BiomeResolver", "BuildingResolver", "EcologyResolver", "EntityArchetypeResolver",
+        "PopulationRecipeResolver", "RegionResolver", "RelationshipResolver", "ResourceResolver",
+    )
+}
+WIDER_EXCLUSIONS.update({
+    "src/content/warmup.py::ContentWarmupService": (
+        "Eagerly loads content singletons before the first tick (called once from kernel.py). "
+        "Runtime start-up plumbing, no gameplay rule."
+    ),
+    "src/content_semantics/defaults.py::DefaultSemanticsService": (
+        "Read-only lookup of fallback properties from default compile profiles; "
+        "docs/content/content_semantics_contract.md calls the package advisory, not authoritative "
+        "state. Catalog interpretation, not a mechanism."
+    ),
+    "src/content_semantics/faction.py::FactionSemanticsService": (
+        "Read-only interpretation of faction catalog definitions (hostile/protector/bucket "
+        "queries). Catalog interpretation, not a mechanism."
+    ),
+    "src/content_semantics/relation.py::RelationProjectionService": (
+        "Projects relation labels from catalog definitions; no state change. Catalog projection, "
+        "not a mechanism."
+    ),
+    "src/content_semantics/role.py::RoleSemanticsService": (
+        "Role family / legacy-role mapping / profile lookup over the catalog. Catalog lookup, not a "
+        "mechanism."
+    ),
+    "src/core/cognition.py::PerceivedService": (
+        "A frozen dataclass value record (service_id, position, salience) produced by the perception "
+        "filter, not a service in the behavioural sense; the name suffix is a false positive."
+    ),
+    "src/engine/metrics.py::MetricsService": (
+        "Extracts metrics for certification reports and the engine manager. Observability plumbing."
+    ),
+    "src/engine/scenario_runtime.py::ScenarioRuntimeService": (
+        "Owns a Kernel for one scenario run (start/pause/step) for harnesses and the REST layer; a "
+        "runtime driver. The campaign mechanism it serves is already bound as `campaigns`."
+    ),
+    "src/engine/spatial_query.py::SpatialQueryService": (
+        "Its docstring: 'Optimized spatial queries using cached indices'. Cache and lookup "
+        "infrastructure used by several mechanisms, none of its own."
+    ),
+    "src/entities/identity_resolver.py::EntityIdentityResolver": (
+        "Its docstring: 'Single identity access layer' -- catalog-first read with legacy-enum "
+        "fallback, loads nothing. A pure lookup with no rule of its own."
+    ),
+})
+
+
+
+# "<repo-relative path>::<Class>" -> note. Wired, unbound, and NOT yet dispositioned: the identity
+# question (bind to an existing mechanism, or register a new one) is an RPG-domain call that has not
+# been made. Pinned so the residue stays visible and a new candidate cannot appear silently.
+WIDER_PENDING: Dict[str, str] = {
+    "src/progression/skills.py::SkillScalingService": (
+        "Same-named twin of src/engine/rpg_depth.py::SkillScalingService (bound to `derived_stats`). "
+        "Every caller imports the rpg_depth class; this one has no caller anywhere in src/ and 0 calls "
+        "at runtime. Not registered as a mechanism (rpg-feature-planning 2026-09-30): a dead-code "
+        "duplicate, filed as a defect (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS)."
+    ),
+    "src/strategy/cognition_capacity.py::CapacityService": (
+        "Same-named twin of src/strategy/capacity.py::CapacityService (bound to "
+        "`cognition_capacity_fatigue`, the live one). `cognition_capacity_fatigue`'s own note records "
+        "that this class's only caller is never called; 0 calls at runtime. Bind decision deferred "
+        "with the defect (TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS)."
+    ),
+    "src/world/perception/gate.py::PerceptionGate": (
+        "Wired (engine/behavior_consumers.py), 1872 runtime calls, sole production call is combat "
+        "targeting at engine/tactical.py:199. Proposed `sense_gated_detection` (entity), scoped to "
+        "combat-targeting gating. Held by rpg-feature-planning until their perception-contract "
+        "relabelling lands, so the two records do not contradict on the day they are written."
+    ),
+}
+
+
+@dataclass(frozen=True)
+class WiderCandidate:
+    id: str  # "<repo-relative path>::<Class>"
+    top: str  # top-level src package
+    callers: tuple  # sorted repo-relative paths of files in *other* top-level packages
+
+
+def _wider_top(path: Path) -> str:
+    return path.relative_to(_SRC_DIR).parts[0]
+
+
+def _wider_bound_symbols(mechanisms: List[dict]) -> Dict[str, set]:
+    """repo-relative path -> set of bound symbols; an empty-string member means file-level."""
+    out: Dict[str, set] = {}
+    for m in mechanisms:
+        for entry in m.get("implemented_by") or []:
+            rel, sym = parse_implemented_by_entry(entry)
+            # "Class::method" binds the class for this file-level question.
+            out.setdefault(rel, set()).add(sym.split("::", 1)[0] if sym else "")
+    return out
+
+
+def enumerate_wider_candidates(mechanisms: List[dict]) -> Dict[str, object]:
+    files = sorted(p for p in _SRC_DIR.rglob("*.py") if "tests" not in p.parts)
+    trees = {}
+    for p in files:
+        try:
+            trees[p] = ast.parse(p.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            continue
+    used = {
+        p: {n.id for n in ast.walk(t) if isinstance(n, ast.Name)}
+        | {n.attr for n in ast.walk(t) if isinstance(n, ast.Attribute)}
+        for p, t in trees.items()
+    }
+    skip_tops = _WIDER_INFRA_DIRS | {"domains", "systems"}
+    scope = [
+        p for p in trees
+        if p.name != "__init__.py" and len(p.relative_to(_SRC_DIR).parts) > 1
+        and _wider_top(p) not in skip_tops
+    ]
+    bound_syms = _wider_bound_symbols(mechanisms)
+
+    def _rel(p: Path) -> str:
+        return str(p.relative_to(_REPO_ROOT))
+
+    def _is_bound(p: Path, cls: str) -> bool:
+        syms = bound_syms.get(_rel(p), set())
+        return "" in syms or cls in syms
+
+    unbound_files = [p for p in scope if _rel(p) not in bound_syms]
+    candidates = [
+        (p, n.name) for p in scope for n in trees[p].body
+        if isinstance(n, ast.ClassDef) and n.name.endswith(_WIDER_SUFFIXES)
+        and not _is_bound(p, n.name)
+    ]
+    wired = []
+    for p, cls in candidates:
+        callers = sorted(
+            _rel(q) for q in trees
+            if q != p and q.name != "__init__.py" and cls in used[q] and _wider_top(q) != _wider_top(p)
+        )
+        if callers:
+            wired.append(WiderCandidate(f"{_rel(p)}::{cls}", _wider_top(p), tuple(callers)))
+    return {
+        "scope_files": len(scope),
+        "unbound_files": len(unbound_files),
+        "candidates": len(candidates),
+        "wired": sorted(wired, key=lambda c: c.id),
+    }
 
 
 @dataclass(frozen=True)
@@ -186,6 +369,13 @@ class Report:
     bound: Dict[str, str]  # target id -> mechanism id
     excluded: Dict[str, str]  # target id -> reason
     unbound: List[str]  # target ids neither bound nor excluded -- NOT asserted to be gaps
+    # `state: gap` means no implementing code exists, so `implemented_by` does not apply to it
+    # (TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION). Reported under its own heading
+    # and left out of the "unbound" coverage figure, so a gap never reads as a coverage hole.
+    gap_mechanisms: List[str] = field(default_factory=list)
+    unbound_real_state: List[str] = field(default_factory=list)  # non-gap, no implemented_by
+    wider: Dict[str, object] = field(default_factory=dict)  # enumerate_wider_candidates() result
+    wider_unresolved: List[str] = field(default_factory=list)  # wired, neither excluded nor pending
 
 
 def build_report(registry_data: dict) -> Report:
@@ -205,7 +395,22 @@ def build_report(registry_data: dict) -> Report:
         else:
             unbound.append(target.id)
 
+    gap_mechanisms = sorted(m["id"] for m in mechanisms if m.get("state") == "gap")
+    unbound_real_state = sorted(
+        m["id"] for m in mechanisms if m.get("state") != "gap" and not bindings.get(m["id"])
+    )
+
+    wider = enumerate_wider_candidates(mechanisms)
+    wider_unresolved = sorted(
+        c.id for c in wider["wired"]
+        if c.id not in WIDER_EXCLUSIONS and c.id not in WIDER_PENDING
+    )
+
     return Report(
+        wider=wider,
+        wider_unresolved=wider_unresolved,
+        gap_mechanisms=gap_mechanisms,
+        unbound_real_state=unbound_real_state,
         total_mechanisms=len(mechanisms),
         mechanisms_with_binding=mechanisms_with_binding,
         total_targets=len(targets),
@@ -233,11 +438,29 @@ def main(argv=None) -> int:
             "bound": report.bound,
             "excluded": report.excluded,
             "unbound": report.unbound,
+            "gap_mechanisms": report.gap_mechanisms,
+            "unbound_real_state": report.unbound_real_state,
+            "wider": {
+                "scope_files": report.wider["scope_files"],
+                "unbound_files": report.wider["unbound_files"],
+                "candidates": report.wider["candidates"],
+                "wired": {c.id: list(c.callers) for c in report.wider["wired"]},
+                "excluded": WIDER_EXCLUSIONS,
+                "pending": WIDER_PENDING,
+                "unresolved": report.wider_unresolved,
+            },
         }, indent=2))
         return 0
 
+    applicable = report.total_mechanisms - len(report.gap_mechanisms)
     print(f"{report.mechanisms_with_binding} of {report.total_mechanisms} mechanisms have a real "
           f"implemented_by code binding.")
+    print(f"{len(report.gap_mechanisms)} are state: gap -- no implementing code exists, so "
+          f"implemented_by does not apply; not counted as unbound. Coverage where it applies: "
+          f"{report.mechanisms_with_binding} of {applicable}.")
+    if report.unbound_real_state:
+        print(f"{len(report.unbound_real_state)} non-gap mechanism(s) still without implemented_by: "
+              f"{', '.join(report.unbound_real_state)}")
     print(f"Enumerated {report.total_targets} mechanism-bearing code targets under "
           f"src/domains/ and src/systems/ (real subpackage files, shims resolved).")
     print(f"{len(report.bound)} confirmed bound to a mechanism via implemented_by.")
@@ -249,6 +472,20 @@ def main(argv=None) -> int:
     if report.unbound:
         for t in report.unbound:
             print(f"  - {t}")
+
+    w = report.wider
+    wired_ids = [c.id for c in w["wired"]]
+    print()
+    print(f"Wider scope (non-infra src/ outside domains/ and systems/): {w['scope_files']} files, "
+          f"{w['unbound_files']} cited by no implemented_by, {w['candidates']} unbound "
+          f"mechanism-shaped classes, {len(wired_ids)} of them referenced from another top-level "
+          f"package. A floor, not a ceiling (see the wider-scope note in this file); unbound is "
+          f"not asserted to be a gap.")
+    print(f"  {sum(1 for i in wired_ids if i in WIDER_EXCLUSIONS)} recorded infrastructure "
+          f"exclusion(s), {sum(1 for i in wired_ids if i in WIDER_PENDING)} pending an identity "
+          f"decision, {len(report.wider_unresolved)} undispositioned.")
+    for i in report.wider_unresolved:
+        print(f"  - UNDISPOSITIONED {i}")
 
     # Report-only: never fails the build by itself. Drift enforcement lives in the paired
     # regression test, not here.
