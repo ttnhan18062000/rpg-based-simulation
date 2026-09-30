@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-GENERATE-RETRO-MAIN-CONSOLIDATES-REAL-SHARDS
-phase: open
+phase: done
 date: 2026-09-30
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Three test_generate_retro.py tests calling generate_retro.main() directly trigger a real, unisolated consolidate_all() against the live checkout
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 hotfix
@@ -113,13 +113,24 @@ None yet.
   3 are exhaustive from static reading alone.
 
 ## Implementation Notes
-_(pending)_
+Rather than patching each of the 4 `main()`-calling tests (lines 892, 987, 3077 plus the source-
+inspection test), the fix is one line in the file's existing autouse fixture
+`_isolate_monitoring_index`: `monkeypatch.setattr(generate_retro, "consolidate_all", lambda: None)`.
+That covers every current and future `main()` caller in the module. `generate_retro.main()` itself
+is unchanged, so a real CLI run still consolidates. A module-scoped autouse
+`_fail_if_this_module_touches_tracked_monitoring_files` fixture (same shape as the sibling in
+`test_done_checker_static.py`) guards `docs/REGISTRY.yaml`, `tickets/working_log.csv`,
+`agent-monitoring/data`. Scope 3 was verified with a temporary probe test writing into
+`agent-monitoring/data/` (guard raised `AssertionError`, probe removed) instead of reverting the
+`consolidate_all` patch, because reverting would really fold other sessions' shards.
 
 ## Test Summary
-_(pending)_
+`tests/tools/test_generate_retro.py`: 186 passed; `git status --porcelain` over the three
+protected paths unchanged before/after.
 
 ## Files Changed
-_(pending)_
+- `tests/tools/test_generate_retro.py`
 
 ## Completion Summary
-_(pending)_
+Tests no longer run `consolidate_all()` against the live checkout; guard in place and proven to fail
+on a leak.

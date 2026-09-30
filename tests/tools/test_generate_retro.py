@@ -7,6 +7,7 @@ script (which had no test file before the first of these tickets) — scoped to 
 tickets changed.
 """
 
+import subprocess
 import sys
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
@@ -39,6 +40,33 @@ from generate_retro import (  # noqa: E402
 from tests.tools.skill_staleness_assertions import SkillStalenessWarning, skill_staleness_check
 
 
+_REPO_ROOT = Path(__file__).parent.parent.parent
+_PROTECTED_PATHS = ["docs/REGISTRY.yaml", "tickets/working_log.csv", "agent-monitoring/data"]
+
+
+def _protected_paths_git_status() -> str:
+    return subprocess.run(
+        ["git", "status", "--porcelain", "--"] + _PROTECTED_PATHS,
+        cwd=_REPO_ROOT, capture_output=True, text=True, check=True,
+    ).stdout
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _fail_if_this_module_touches_tracked_monitoring_files():
+    """Regression guard (TCK-20260930-GENERATE-RETRO-MAIN-CONSOLIDATES-REAL-SHARDS): main() calls
+    consolidate_all() against the real checkout unless a test isolates it, which folds other
+    sessions' pending shards into the canonical week files and deletes them. Fail loudly here if
+    any test in this module leaves one of these real paths changed."""
+    before = _protected_paths_git_status()
+    yield
+    after = _protected_paths_git_status()
+    assert before == after, (
+        "a test in this module modified a tracked monitoring file it should not have.\n"
+        f"git status before this module's tests:\n{before}\n"
+        f"git status after:\n{after}"
+    )
+
+
 @pytest.fixture(autouse=True)
 def _isolate_monitoring_index(monkeypatch, tmp_path):
     """Every test in this file drives generate_retro through compute_retro_metrics()/generate()
@@ -50,6 +78,9 @@ def _isolate_monitoring_index(monkeypatch, tmp_path):
     (query.py/validate.py). tmp_path is function-scoped, so this points every test's index at its
     own private, nonexistent-by-default location."""
     monkeypatch.setattr(generate_retro, "DEFAULT_DB_PATH", tmp_path / "monitoring.db")
+    # main() folds pending shards in the real checkout via consolidate_all(); no test here may
+    # trigger that (only a real CLI invocation should).
+    monkeypatch.setattr(generate_retro, "consolidate_all", lambda: None)
 
 
 _BASE_RUN = {
