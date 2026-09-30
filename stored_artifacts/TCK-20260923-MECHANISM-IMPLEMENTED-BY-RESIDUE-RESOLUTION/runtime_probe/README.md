@@ -26,3 +26,14 @@ default `PROD_SMALL` profile), used as the runtime instrument for the absence an
 
 Reachability at runtime, not effect size, is what is measured. A short horizon can miss a rare path, which
 is why zero-call registrations use verdict `inconclusive`.
+
+## Scope limit (stated, not to be rediscovered)
+
+These counters run a single `Kernel.tick_once()` world. They are competent to detect calls on the
+engine path and blind to anything that only runs in multi-episode campaign runs
+(`src/domains/campaigns/`). `registries/mechanisms.yaml` has 9 entries citing `domains/campaigns`;
+for those, 0 calls is what a healthy and a dead mechanism both look like, so the right verdict is
+`inconclusive`, never `orphan`. Every orphan verdict written from this probe (calamity producer,
+`SocialMemoryService`, `SourceTrustUpdateService`) concerns a class outside `domains/campaigns/`, imported
+and reachable from the engine path, which is why those hold (checked by rpg-feature-planning).
+

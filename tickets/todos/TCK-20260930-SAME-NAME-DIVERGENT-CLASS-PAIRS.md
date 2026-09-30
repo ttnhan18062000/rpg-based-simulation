@@ -60,6 +60,14 @@ dependence. The edge is removed in `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDU
 audit here should therefore cover same-name-different-store as well as same-name-different-class
 (compare the `owner_faction_id` overload).
 
+**Sixth instance (also from rpg-feature-planning): three things named "social memory".** (1)
+`src/systems/social_systems/memory.py::SocialMemoryService`, engine path, 0 runtime calls; (2)
+`src/domains/campaigns/social_memory.py`, the `faction_social_memories` producer, campaign-only;
+(3) `src/systems/social_memory.py`, a two-line re-export shim for (1). `from src.systems.social_memory
+import SocialMemoryService` and `from src.systems.social_systems.memory import SocialMemoryService`
+give the same class by different paths, while (2) is something else under a nearly identical module
+name; a reader scanning imports cannot tell them apart.
+
 This is the same "dual-class divergent semantics" family for each pair: the registry does not
 register the dead twin as a mechanism (`WIDER_PENDING` in
 `tools/mechanism_registry/mechanism_registry_completeness_check.py` records the decision), because
