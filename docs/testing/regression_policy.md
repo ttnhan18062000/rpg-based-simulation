@@ -132,10 +132,20 @@ When a hard gate test fails, follow these steps in order:
 | Test checks an implementation detail that was legitimately refactored with no behavior change | Update the test. The assertion should check the same invariant through the new interface. |
 | Test checks a behavior that was intentionally changed and the change is filed in `intentional_divergences.md` | Update the test to assert the new behavior. Update parity ledger entry in the same session. |
 | Test checks a simulation law (P0) and the law was not intentionally changed | **Do not update the test.** Fix the code. |
-| Test has been flaky (non-deterministic failures) for more than one session | File a P1 issue, mark the test `@pytest.mark.xfail(strict=False, reason="flaky: <ticket>")`, and investigate root cause before removing the xfail. |
+| Test fails or passes non-deterministically (order dependence or nondeterminism) and the root cause cannot be fixed in the same change | Bounded quarantine only (§6.1). Any other class of failure is never quarantined. |
 | Test was written for a feature that has been removed | Move the test to `tests/scratch/` or delete with a comment in the commit message. Never silently delete a P0 test. |
 
-**Note (pending owner decision):** the flaky-test row above is under review for a bounded-quarantine replacement. It stays as written until that decision is made. For triage of any failure, start at §13.
+**Precedence.** §4 and §6 say what a test may be updated to. §13 governs the procedure for any failure, and its oracle rule (§13.5) governs any change to an expected value and any documented divergence: where they differ, §13 wins. For triage of any failure, start at §13.
+
+### 6.1 Bounded quarantine (owner decision D-MF, 2026-09-30; policy text only)
+
+Replaces the earlier unbounded `xfail(strict=False)` row. Nothing is quarantined today, and existing failures stay visible as failures.
+
+- **Class:** nondeterminism / order dependence only (§13.2). A product regression, a wrong oracle or an environment failure is never quarantined.
+- **Form:** node-level `xfail(strict=True, raises=<exception>)` on the single test. Not a module, class or file, and never `strict=False` (a pass would hide the fix).
+- **Recorded:** owner, tracking ticket, an expiry of **at most 14 days** from the start date (28 in total with the one renewal), and a **failure signature**: `raises=` plus a message or node pattern, so an unrelated failure of the same test is not absorbed.
+- **One renewal of at most 14 days.** The renewal keeps the **original start date** (no chaining). The maximum lifetime is therefore **28 days from the original start date** (14 plus one 14-day renewal). After it, fix the root cause or remove the test through §7.
+- **No quarantine is applied until a minimal expiry check exists.** A reason-string convention is not enough. The first real case triggers building that check, and the quarantine is applied only after it exists. No enforcement tooling is built before a real case.
 
 ---
 
@@ -275,8 +285,14 @@ Never make red green by any of these:
 - adding a broad `skip` or `xfail`;
 - changing an expected value without the oracle document (and ledger) changing first.
 
-An expectation change needs the spec owner's approval plus a recorded reason. Existing failures stay visible as failures. This applies at every level of delegation, including sub-agents. §6's `xfail` row is under owner review; see the note under §6.
+An expectation change needs the spec owner's approval plus a recorded reason. Existing failures stay visible as failures. This applies at every level of delegation, including sub-agents. Quarantine is only the bounded form in §6.1.
 
 ### 13.4 Defects found by tests
 
 A defect a test finds in feature code goes to the feature-owning team as a ticket carrying the §13.1 evidence record. The test author does not fix feature behaviour as part of the test change, and no test here approves behaviour whose intended design is undecided.
+
+### 13.5 Oracle rule for expected values
+
+- **Oracle:** the Mechanics Bible / engine contract states the behaviour; the parity ledger holds the evidence links.
+- **An expected value that no document states** (a balance or emergent threshold) **stays an exploratory measurement, not a proof,** until the owner or feature team approves a derivation. Label it as a measurement in the test and the test plan.
+- **Oracle review is advisory during the pilot.** It flags an expectation whose oracle document or ledger entry is missing; it never authorizes an agent to change an expectation. An expectation change still needs the oracle document and ledger to change first, or an escalation record (§13.2, intentional spec change).

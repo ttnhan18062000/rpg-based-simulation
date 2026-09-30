@@ -1,21 +1,22 @@
 # Test Architecture — Epic Index
 
-**Status: DRAFT for owner review (2026-09-29).** This folder holds **four epic-tier tickets only**.
+**Status: owner decisions recorded 2026-09-30; epics A–D remain open (see the table).** This folder holds **four epic-tier tickets only**.
 Child tickets are created later by the detail planner, not here. This file is deliberately **not**
 named `SEQUENCE.md`, because `implement-epic` reads that name as a child-ticket order.
 
-Binding plan: `docs/plans/test_architecture/roadmap.md`. All decisions (D-R2, D-MF, D-M2, D-P, D-PR)
-are **pending**.
+Binding plan: `docs/plans/test_architecture/roadmap.md`. Decisions (2026-09-30): D-R2, D-MF and D-M2
+approved with changes; D-P deferred; D-PERF assigned when its trigger fires; D-PR resolved (plan PR #256).
 
-| Order | Epic | Starts when | Gated parts |
+| Order | Epic | Starts when | Status (2026-09-30) |
 |---|---|---|---|
-| 1 | `TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY` (A) | now | none |
-| 2 | `TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION` (B) | now; its report-dependent criterion needs A's report v0 | CI scenario-lane rule: `HOLD — pending D-R2` |
-| 3 | `TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING` (C) | after B's taxonomy doc | oracle-review step: `HOLD — pending D-M2`; quarantine policy: `HOLD — pending D-MF` |
-| 4 | `TCK-20260929-EPIC-CORE-RPG-TEST-PILOT` (D) | minimum usable workflow: A report v0 + A known-leak fix (≥ provisional) + B taxonomy doc + C test-plan fields + C triage procedure | surface confirmation at start |
+| 1 | `TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY` (A) | now | parts done; see the epic |
+| 2 | `TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION` (B) | now; its report-dependent criterion needs A's report v0 | part 2 (CI scenario-lane rule, D-R2 approved): in progress (this batch); criterion 4 open |
+| 3 | `TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING` (C) | after B's taxonomy doc | criteria 1–2 **not met** (done-checker field check and checklist run pending, owned by agent-working-design); criteria 4–5 open (part 5 oracle rule and part 6 quarantine text land in this batch, text only) |
+| 4 | `TCK-20260929-EPIC-CORE-RPG-TEST-PILOT` (D) | minimum usable workflow: A report v0 + A known-leak fix (≥ provisional) + B taxonomy doc + C test-plan fields + C triage procedure | open: real-pipeline exercise and CI scenario execution pending |
 
 A and B can run in parallel. D does not wait for optional parts of A–C.
 
 **Hold rule:** `HOLD` items may be described by detail planners, but no implementation child ticket
 may be activated and no gated work may start until the owner approves the named decision. Ungated
-work is independently startable. **All decisions (D-R2, D-M2, D-MF, D-P, D-PR) remain pending.**
+work is independently startable. **No HOLD is open as of 2026-09-30**; D-P (deferred) and D-PERF
+(trigger-based) gate nothing in A–D. Approval lifts a HOLD; it does not close an epic.

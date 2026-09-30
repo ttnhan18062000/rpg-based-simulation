@@ -81,7 +81,12 @@ def test_delivery_process_links_to_triage_section_instead_of_restating():
     assert "docs/testing/regression_policy.md` §13" in text
 
 
-def test_regression_policy_quarantine_row_unchanged_with_pending_pointer():
+def test_regression_policy_quarantine_row_is_the_bounded_policy():
+    # D-MF (approved 2026-09-30) replaced the unbounded xfail(strict=False) row; the old text must be gone.
     text = _POLICY.read_text()
-    assert 'xfail(strict=False, reason="flaky: <ticket>")' in text
-    assert "under review for a bounded-quarantine replacement" in text
+    assert 'xfail(strict=False, reason="flaky: <ticket>")' not in text
+    assert "under review for a bounded-quarantine replacement" not in text
+    assert "### 6.1 Bounded quarantine" in text
+    for required in ("xfail(strict=True, raises=", "28 days from the original start date", "failure signature",
+                     "No quarantine is applied until a minimal expiry check exists"):
+        assert required in text
