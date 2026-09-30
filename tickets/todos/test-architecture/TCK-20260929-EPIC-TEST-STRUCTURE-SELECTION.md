@@ -107,6 +107,9 @@ None.
 - **D-R2 pending:** parts 1 and 3 are startable now. Part 2 and criterion 4 are on HOLD.
 
 ## Implementation Notes
+**Progress (2026-09-30):** parts 1 and 3 are DONE via child tickets `TCK-20260930-TEST-TAXONOMY-LEVEL-CONTRACTS`, `TCK-20260930-TEST-DOMAIN-LEVEL-MARKERS-ADVISORY-CHECK`, `TCK-20260930-TEST-SCENARIO-HELPER-AND-REPLAY-DIFF`, `TCK-20260930-TEST-IMPACT-REPORT-V0` (acceptance criteria 1, 2, 3, 5). Part 2 and criterion 4 remain `HOLD — pending D-R2`; this epic stays open in `todos/`.
+**Gap flagged:** "tactical navigation" has no code root; the impact report lists such paths as `impact-unknown` and invents none.
+
 Scenario-lane cost is assumed at 1–3 min per relevant PR; measured under criterion 4.
 
 ## Test Summary
