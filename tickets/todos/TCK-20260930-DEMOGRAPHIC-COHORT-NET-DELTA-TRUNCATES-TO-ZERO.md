@@ -13,8 +13,8 @@ tags: [world]
 
 ## Title
 `DemographicCycleService`'s birth/death cycle computes `net = int(count * 0.01)`, which truncates
-to zero for any cohort below 100 — seeded cohorts are 3–6, so the cycle provably never changes a
-count, never emits a `WorldEvent`, and never marks a region changed
+to zero below 100 — the largest seeded bracket in the entire 9-world corpus is 6, so the cycle
+cannot act on its own seeded inputs until another system inflates a cohort ~17×
 
 ## Status
 OPEN
@@ -51,12 +51,16 @@ corpus's largest population, 13, which `_seed_population_cohorts` (`worldbuildin
 splits 30/50/20 into `{young: 4, adult: 6, elder: 3}`. The largest bracket in the corpus is **6**,
 giving `net = int(0.06) = 0`.
 
-**Consequences, all deterministic:** the `continue` fires for every bracket of every region on
-every cycle; `region_changed` is never set; no `WorldUpdate` is produced; **no
-`POPULATION_BIRTH`/`POPULATION_DEATH` `WorldEvent` is ever emitted**; cohort counts are frozen at
-their compile-time seed values for the life of every run. There is no accumulator — the truncated
-fractional remainder is discarded each cycle rather than carried, so the shortfall never adds up
-over time either.
+**Consequences at seeded scale:** the `continue` fires for every bracket of every region; no
+`WorldUpdate` is produced from this service and no `POPULATION_BIRTH`/`POPULATION_DEATH`
+`WorldEvent` is emitted by it. There is no accumulator — the truncated fractional remainder is
+discarded each cycle rather than carried, so the shortfall never adds up over time either.
+
+> **⚠️ This paragraph originally read "cohort counts are frozen … for the life of every run,"
+> settled by arithmetic. That is FALSE and was disproven by a runtime probe the same day — counts
+> do move in 4 of 21 worlds and 30 population events were emitted. See Implementation Notes for
+> the correction, what survives, and the unresolved attribution question. Do not act on the
+> paragraph above without reading it.**
 
 **This is the second, independent reason the demographic cohort cycle does nothing** — behind the
 false "never seeded" premise sat a real defect of a completely different shape. The mechanism is
@@ -150,7 +154,87 @@ None yet — standard tier, staging artifacts created when picked up.
   possibly an `intentional_divergences.md` entry.
 
 ## Implementation Notes
-_(not started)_
+
+### 2026-09-30 — CORRECTION: the Request Summary overclaims. Read this before acting on it.
+
+A runtime probe by `agent-working-implementer` (21 corpus worlds × 300 ticks, seed 42, `origin/main`
+`833b60306`; `cohort.py` byte-identical to this branch) found `process_demographics` ran 63 times,
+**emitted 30 `POPULATION_BIRTH`/`POPULATION_DEATH` events in 6 of 21 worlds, and cohort totals
+changed in 4** (`dungeon_crawl` 32→29, `highland_traverse` 18→19, `simq_scale_stress_seed42` 68→69).
+The other 15 stayed frozen.
+
+**So this ticket's "never emits an event / counts frozen in every run, settled by arithmetic" is
+false as written.** The error was extrapolating a compile-time fact across a whole run — the very
+single-world overgeneralisation that `docs/plans/world_composition_precondition_gap_finding.md` was
+retired for on the same day. The ticket's own Assumptions section named the two growth paths that
+break the extrapolation and the Request Summary ignored them.
+
+**What survives, now verified across every world rather than one.** I compiled all 9 loadable
+corpus compositions and read every region's per-bracket counts:
+
+| world | regions | max bracket | total |
+|---|---|---|---|
+| `dungeon_crawl` | 2 | 3 | 12 |
+| `frontier_extended` | 10 | 6 | 56 |
+| `frontier_living_world` | 7 | 6 | 46 |
+| `highland_traverse` | 5 | 6 | 18 |
+| `swamp_border_world` | 4 | 6 | 26 |
+| `urban_political` | 3 | 6 | 27 |
+| `wilderness_survival` | 4 | 3 | 11 |
+| `generated_frontier_3_42` | 6 | 6 | 44 |
+| `simq_scale_stress_seed42` | 13 | 6 | 68 |
+
+**The largest bracket in the entire corpus is 6, and no bracket anywhere reaches 100.** So
+`net = int(count * 0.01) == 0` for every bracket of every world **at compile time**, in all 9
+worlds and not just the one originally checked. The truncation is real and universal at seeding.
+What is *not* established is that it stays that way for a whole run.
+
+### The attribution is not settled, and this is the open question
+
+`process_demographics` **cannot decrease a count.** `births = count * 0.02`, `deaths =
+count * 0.01`, so `births - deaths == count * 0.01 >= 0` and `net = int(...) >= 0` always. The
+rates are never overridden anywhere: `_seed_population_cohorts` leaves both at the dataclass
+defaults (`compiler.py:177-205` docstring says so explicitly), and the only `mortality_rate *= 2.0`
+in the tree (`cohort.py:104`) is a docstring describing *entity attribute* modifiers, not a write
+to a cohort field. Confirmed by grep across `src/`.
+
+**Therefore `dungeon_crawl` 32→29 cannot have come from this service**, and the +1 changes are
+equally consistent with a different writer. Two other paths write cohort counts:
+- `population_young_births_delta` (`apply_plan.py:129-136`, fed from
+  `reproduction_humanoid.py:68`) — adds to `young` directly, independent of this cycle.
+- `migrate_cohorts` (`cohort.py:281-302`) — moves population between regions; its
+  `max(1, int(count * 0.30))` has a floor and does **not** truncate to zero.
+
+Against that, `cohort.py:388-390` is the **only** emitter of `POPULATION_BIRTH`/`POPULATION_DEATH`
+in `src/` (verified by grep), so 30 emitted events do mean `net != 0` fired 30 times — which
+requires some bracket to have reached ≥100 *during* the run, from a seed of ≤6. Both facts are
+solid and they are in tension. Resolving that tension is the first task.
+
+Note also `dungeon_crawl` compiles to a total of **12** here versus the probe's starting 32. That
+discrepancy is unexplained and should be reconciled before either dataset is trusted — likely a
+parameterised-module difference (`dungeon_crawl` uses `module_refs` with
+`parameters: danger_scale: 2`, unlike the plain `modules:` list other compositions use).
+
+### What this changes about the ticket
+
+- **Severity is lower than filed.** Not "the mechanism never does anything" but "the mechanism is
+  inert at seeded scale, and only escapes that when another system inflates a cohort ~17× first."
+  Still a real defect — a rate-driven cycle that cannot act on its own seeded inputs — but P1 may
+  be too high. Re-rate after the attribution question is answered.
+- **First task is now attribution, not fixing.** Determine which writer produced each observed
+  change before designing a fix. A fix aimed at the truncation is wasted if the observed movement
+  came from reproduction.
+- The two candidate directions in Scope are unchanged, but neither should be chosen until the
+  above is resolved.
+
+Raw probe data: `stored_artifacts/TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE/
+runtime_probe_output.jsonl` (pending that batch's commit). Registry entry
+`demographic_cohort_cycle` is now `corpus_run`/`observed` with this nuance.
+
+**Credit:** the overclaim was caught by `agent-working-implementer`'s runtime probe, not by me. It
+is the correct instrument for an absence claim — exactly the lesson
+`TCK-20260930-MECHANISM-ABSENCE-VERDICTS-NEED-RUNTIME-EVIDENCE` exists to institutionalise, and I
+had just finished writing that lesson up when I made the same mistake in this ticket.
 
 ## Test Summary
 _(not started)_
