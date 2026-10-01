@@ -1,7 +1,4 @@
-# Plan — TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP
+# Plan — TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP (superseded, nothing shipped)
 
-Narrowed to the same-tick HAZARD route (passive bio deaths moved to a follow-up; see the ticket).
-1. `lifecycle.py`: add the same-tick `HAZARD` branch after the `COMBAT` check; reuse the `is_dead` dispatch.
-2. Tests: rewrite the two pinned-defect tests in `test_entity_death_authority_boundary.py`.
-3. Docs: death-trigger table row and open-gap note in `lifecycle_systems_contract.md`; parity entry PROG-126.
-4. Out of scope: passive bio deaths, `apply.py`, DEFEAT/REBIRTH, hazard-overwrites-KILL.
+Built and then rejected: (1) a retroactive passive-death pass, (2) a same-tick `HAZARD` branch. See the ticket's
+Implementation Notes for why; both are sequenced behind persisted-cause work in follow-up tickets.

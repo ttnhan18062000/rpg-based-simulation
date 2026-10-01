@@ -104,13 +104,12 @@ fix lands, and to be rewritten rather than deleted):
 `tests/mechanic_scenarios/test_entity_death_authority_boundary.py`.
 
 ## Scope
-**Narrowed 2026-10-01 (user decision, via rpg-feature-planning): partial delivery.** This ticket ships
-only the same-tick `HAZARD` half. The passive hunger/sleep-debt half moves to
-`TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`, because classifying it needs a
-persisted cause that does not exist today (see Implementation Notes).
-- Add a `resolve_lifecycle` branch that records `death_reason="HAZARD"` for a same-tick hazard-drain death
-  (`outcome_kind == "HAZARD"`, `alive_set is False`) and runs the existing lineage dispatch.
-- Rewrite the two C1 pinned-defect tests to the fixed contract; update the contract and parity ledger.
+**Closed 2026-10-01 with no `src/` change shipped (user decisions, via rpg-feature-planning and peer review).**
+Both halves were split out and sequenced, because neither can be classified without a cause that is
+persisted at the writer:
+- Passive hunger/sleep-debt deaths: `TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`.
+- Same-tick hazard deaths: lands with or after `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`.
+- Defeat/rebirth becoming silent deaths: `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`.
 
 ## Out of Scope
 - `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE`'s own writer-precedence fix (already
@@ -123,16 +122,9 @@ persisted cause that does not exist today (see Implementation Notes).
   pre-decided here.
 
 ## Acceptance Criteria
-1. A hazard-drain death is recorded with `death_reason="HAZARD"` the tick it happens, and dispatches
-   succession/heirloom/feud/dying-wish like `OLD_AGE`/`COMBAT`.
-2. The C1 pinned-defect tests are rewritten to the fixed contract, not deleted; the negative control
-   still passes.
-3. Passive starvation/sleep-debt deaths are explicitly NOT classified here and the gap stays documented
-   as open in `docs/simulation/lifecycle_systems_contract.md`; the follow-up ticket exists.
-4. `DEFEAT` / `REBIRTH` are not classified as deaths (LIFE-02); that defect has its own ticket.
-5. Existing death, inheritance, passive-decay, clan-lifecycle and vacancy tests pass unmodified.
-6. Parity ledger entry PROG-126 added; the contract's death-trigger table gains the `HAZARD` row.
-**Not delivered (moved):** the original AC1-AC4 for passive bio deaths.
+Superseded: the original criteria (a passive death recorded with a real `death_reason`, full lineage dispatch,
+vacancy observation) are carried by the follow-up tickets above. This ticket delivered the investigation
+below and the LIFE-02 evidence correction.
 
 ## Related Tickets
 - `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — parent investigation. Fixed the age
@@ -176,41 +168,35 @@ persisted cause that does not exist today (see Implementation Notes).
   resolve against the real phase-ordering trace, not assumed here.
 
 ## Implementation Notes
-- Design history, recorded because it explains the narrowing. A first version recorded passive deaths
-  retroactively (inactive, combat-dead, unrecorded entity at hunger >= 95 / sleep_debt >= 98 ->
-  `STARVATION`/`SLEEP_DEPRIVATION`, with succession). It was dropped: `outcome_kind` is not persisted,
-  `DEFEAT` can also hit non-HERO entities (opportunity attacks force `is_lethal=False`, `combat.py:251`,
-  `movement.py:241`), so a `DEFEAT` leftover at a threshold would be stamped dead with succession fired.
-  Inferring cause from being at a threshold fabricates provenance (`LIMIT-04`, `CAUSE-01`, `HP-02`,
-  `CAUSE-05`, `LIFE-02`). A role gate does not close the hole.
-- Accepted risk of shipping only `HAZARD`: ALL passive bio deaths stay unrecorded, exactly as today. A
-  known, reversible gap, not new damage.
-- The sound fix records the cause at the writer: when `apply.py`'s passive branch takes HP from positive to
-  zero (`comb.hp > 0 and new_hp == 0`). A `DEFEAT`/`REBIRTH` entity is already at `hp == 0`, so that
-  condition excludes every combat-caused zero with no role or outcome inference. It needs a typed field
-  (Durable State Rule) and an architecture-reviewer pass first; filed as its own ticket.
-- `resolve_lifecycle`: new same-tick `HAZARD` branch after the `COMBAT` check; `is_permadeath_set=True`
-  and the full dispatch are reused unchanged.
-- The combat+hazard collision is now recorded as `HAZARD`, not `COMBAT`: an improvement, not a fix for
-  `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`.
-- Evidence is two-source: a `frontier_marches` probe here reproduced C1's four hazard-death rows
-  (entities 20, 21, 55, 63), now recorded as `HAZARD`.
+Two designs were built and rejected; both are recorded so they are not rebuilt.
+1. **Retroactive passive pass** (inactive, combat-dead, unrecorded entity at hunger >= 95 / sleep_debt >= 98 ->
+   `STARVATION`/`SLEEP_DEPRIVATION` plus succession). Rejected: `outcome_kind` is not persisted, `DEFEAT` also
+   hits non-HERO entities (opportunity attacks force `is_lethal=False`, `combat.py:251`, `movement.py:241`), so
+   a role gate does not close the hole. Inferring cause from being at a threshold fabricates provenance
+   (`LIMIT-04`, `CAUSE-01`, `HP-02`, `CAUSE-05`, `LIFE-02`).
+2. **Same-tick `HAZARD` branch** in `resolve_lifecycle` (`outcome_kind == "HAZARD"` and `alive_set is False`).
+   Rejected in peer review: `world_dynamics.py:39` has already overwritten `DEFEAT`/`REBIRTH` (and `KILL`) with
+   `"HAZARD"`, so a REBIRTH plus same-tick hazard drain was recorded as a `HAZARD` permadeath with succession
+   fired (verified by a single-variable differential on `mechanic_scenario_combat_judgement_withdrawal`).
+   Sequenced behind the hazard-overwrite ticket.
+- The sound passive fix records the cause at the writer when `apply.py`'s passive branch takes HP from positive
+  to zero (`comb.hp > 0 and new_hp == 0`); a `DEFEAT`/`REBIRTH` entity is already at `hp == 0`.
+- Evidence is two-source: a `frontier_marches` probe on the rejected `HAZARD` branch reproduced C1's four
+  hazard-death rows (entities 20, 21, 55, 63).
 
 ## Test Summary
-- `tests/mechanic_scenarios` (incl. the three rewritten/retained death-authority-boundary tests, one slow), `tests/parity`,
-  `tests/docs`, `tests/architecture`: pass. Wider lane run (`simulation_quality`, `integration`, `unit/engine`,
-  `unit/progression`): 2056 passed; `test_bravery_quartile_combat_rate_2x` and `test_long_run_stability` fail
-  identically on the untouched base (control run), so they are not caused by this change.
-- The passive starvation test is unchanged and still pins the open gap.
+No code shipped. Both rejected designs were exercised: targeted mechanic-scenario, parity, docs and architecture
+runs passed on each; two integration tests (`test_bravery_quartile_combat_rate_2x`, `test_long_run_stability`)
+fail identically on the untouched base. The earlier 2056-passed lane run predates the final code and is not
+evidence for what merged (nothing in `src/` merged).
 
 ## Files Changed
-- `src/systems/lifecycle_systems/lifecycle.py`
-- `tests/mechanic_scenarios/test_entity_death_authority_boundary.py`
-- `docs/simulation/lifecycle_systems_contract.md`, `docs/parity_ledger/progression.yaml` (PROG-126)
+- `docs/world_rules/life-body/lifecycle.md` (LIFE-02 evidence note only)
+- Follow-up tickets: `TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`,
+  `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`; note added to
+  `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`.
 
 ## Completion Summary
-Partial delivery by decision (user, via rpg-feature-planning, 2026-10-01): the same-tick `HAZARD` death route is
-recorded with the existing succession dispatch. Passive hunger/sleep-debt deaths remain unrecorded (a known,
-reversible gap); their fix is `TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`, and the
-defeat-becomes-death defect is `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`. LIFE-02's
-evidence note was corrected in `docs/world_rules/life-body/lifecycle.md`.
+Closed as an investigation with no `src/` change. Passive and hazard death classification each need a cause
+persisted at the writer; they are sequenced as the follow-up tickets named in Scope. LIFE-02's evidence note
+was corrected.

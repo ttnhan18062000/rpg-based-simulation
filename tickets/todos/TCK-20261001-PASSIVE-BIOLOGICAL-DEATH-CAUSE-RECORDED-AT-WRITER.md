@@ -30,7 +30,7 @@ P2
 Passive starvation/sleep-debt HP-loss deaths are still silent: `apply.py:98-110` writes
 `combat.alive=False` and `lifecycle.active=False` with no persisted cause, so `resolve_lifecycle` never
 records a `death_reason` or dispatches lineage consequences. `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`
-shipped only the same-tick `HAZARD` half. Its first design inferred the cause from `hunger >= 95` /
+shipped no classification. Its first design inferred the cause from `hunger >= 95` /
 `sleep_debt >= 98`; that was rejected (see that ticket's Implementation Notes): being at a threshold is not
 the cause (`docs/world_rules/foundations/capacity.md` LIMIT-04, ACCEPT), the cause would be fabricated
 (CAUSE-01, HP-02, CAUSE-05), and a `DEFEAT` leftover (non-lethal, LIFE-02) would be mislabelled with

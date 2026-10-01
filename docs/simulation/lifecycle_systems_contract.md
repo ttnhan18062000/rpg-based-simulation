@@ -37,9 +37,6 @@ An inactive entity (`active=False`) is removed from tick processing. Death is pe
 |---|---|---|
 | Old age | `age_ticks >= max_age_ticks` | "OLD_AGE" |
 | Combat death | EntityUpdate with `combat.outcome_kind == "KILL"` | "COMBAT" |
-| Hazard death | EntityUpdate with `combat.outcome_kind == "HAZARD"` and `alive_set is False` (same tick) | "HAZARD" |
-
-`HAZARD` is a same-tick trigger only. `DEFEAT` and `REBIRTH` outcomes are non-lethal (world rule LIFE-02) and are not death triggers. A hazard death that overwrote a same-tick combat `KILL` is recorded as `HAZARD`, not `COMBAT` (`TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`). Consumers must exact-match `death_reason` (e.g. `event_extractor.py`'s `death_reason == "COMBAT"` credit gate).
 
 On death:
 1. `active = False`
@@ -121,14 +118,15 @@ Per Mechanics Bible [`01_entity_anatomy.md` §4](../mechanics/01_entity_anatomy.
 
 Both pressures accumulate monotonically until the entity eats (resets hunger) or rests (resets sleep_debt). There is no passive decay of the pressures themselves — only of HP once a threshold is crossed.
 
-**Known gap (still open; `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP` closed only its `HAZARD` half):**
-when this passive HP loss drives `combat.hp` to 0, the passive branch writes
-`combat.alive=False, lifecycle.active=False` directly, with no `EntityUpdate` and no persisted cause, so
-a starvation/sleep-debt death still produces **no `death_reason` and no lineage dispatch**. Inferring the
-cause from the hunger/sleep thresholds was rejected: being at a threshold is not the cause (`LIMIT-04`,
-`CAUSE-01`), and a `DEFEAT` leftover would be mislabelled and have succession fired. The sound fix
-records the cause at the writer when the passive branch takes HP from positive to zero; that is its own
-ticket (see the ticket's Implementation Notes).
+**Known gap (still open as of TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE):** when this
+passive HP loss drives an entity's `combat.hp` to 0, the passive branch sets
+`combat.alive=False, lifecycle.active=False` directly, with no corresponding `EntityUpdate` for
+`resolve_lifecycle` to observe. `resolve_lifecycle` has no HP/alive-based death-detection branch —
+only the OLD_AGE and COMBAT branches documented above — so a starvation/sleep-debt-caused death
+currently produces **no `death_reason` and no lineage dispatch**; it is empirically confirmed
+still silent, distinct from (and not fixed by) the OLD_AGE dual-writer race resolution above, since
+it is a missing detection branch rather than a timing race. Tracked by the follow-up ticket
+`TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`.
 
 ### Output
 

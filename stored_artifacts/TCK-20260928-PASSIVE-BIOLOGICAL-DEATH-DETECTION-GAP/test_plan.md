@@ -1,7 +1,5 @@
-# Test Plan — TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP
+# Test Plan — TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP (superseded)
 
-- Hazard collision: records `HAZARD` the kill tick, stays recorded, attribution loss pinned, trauma parity.
-- Negative control (immune hazard kind): still records `COMBAT`.
-- Corpus (slow): hazard-only deaths 20/21/55/63 recorded; DEFEAT/REBIRTH leftovers remain unrecorded.
-- Starvation test in `test_natural_aging_old_age_dispatch.py` unchanged: passive bio deaths stay silent.
-- Run: mechanic_scenarios, parity, docs, architecture, simulation_quality, integration, unit/engine.
+No code shipped. Evidence worth keeping for the follow-ups: a single-variable differential (hazard_kind only) on
+`mechanic_scenario_combat_judgement_withdrawal` with a generation-1 HERO defender shows a `REBIRTH` plus hazard
+drain must not be recorded as a `HAZARD` permadeath.

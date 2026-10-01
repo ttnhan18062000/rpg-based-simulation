@@ -202,20 +202,6 @@ class LifecycleSystem:
             if ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind in ("KILL", "PERMADEATH"):
                 is_dead = True
                 death_reason = "COMBAT"
-
-            # Hazard drain death: WorldDynamicsSystem.resolve_dynamics stages alive_set=False with
-            # outcome_kind="HAZARD" before this phase (a same-tick combat KILL on the entity is
-            # overwritten there; see TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND).
-            # Passive hunger/sleep-debt deaths are NOT classified here: their cause is not persisted
-            # and inferring it from bio thresholds would fabricate provenance (LIMIT-04, CAUSE-01).
-            if (
-                not is_dead
-                and ent_upd and ent_upd.combat
-                and ent_upd.combat.outcome_kind == "HAZARD"
-                and ent_upd.combat.alive_set is False
-            ):
-                is_dead = True
-                death_reason = "HAZARD"
             
             if is_dead:
                 ent_upd = ent_upd or EntityUpdate(entity_id=e_id)

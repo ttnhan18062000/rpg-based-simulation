@@ -154,6 +154,18 @@ tick late via `apply.py:109`'s passive HP gate, with no cause.
   one tick was **not** separately verified by C1 — the observed `hp` floors at 0 either way, so the
   arithmetic is not provably correct, only not provably wrong. Worth checking during
   implementation.
+- **Q2 answered 2026-10-01: recording a hazard death must NOT land before this ticket.** An attempt
+  (`TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`'s `HAZARD` branch in `resolve_lifecycle`, keyed on
+  `outcome_kind == "HAZARD"` and `alive_set is False`) was reverted after peer review. `world_dynamics.py:39`
+  overwrites the incoming `outcome_kind` (`KILL`, `DEFEAT` or `REBIRTH`) with `"HAZARD"` before
+  `resolve_lifecycle` reads it, so the branch cannot tell a hazard death from a hazard-overwritten
+  non-lethal outcome. Demonstrated by `rpg-feature-planning` on `mechanic_scenario_combat_judgement_withdrawal`:
+  a HERO defender at `generation=1` takes the `REBIRTH` branch; with an immune `hazard_kind` the result is
+  `gen` 1 to 2, no death record, `is_permadeath=False` (LIFE-02 honoured); with a non-immune kind it is
+  `death_reason='HAZARD'`, `is_permadeath=True`, and the succession dispatch fires. The discriminant exists
+  only before the overwrite, so this ticket (decline to clobber a non-lethal outcome, or carry hazard
+  lethality in a separate field) is the prerequisite; the `HAZARD` classification lands with or after it.
+  The branch is on record in `stored_artifacts/TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP/`.
 - **Reachability is low but nonzero, and this is not a reason to deprioritise below P1.** C1 saw 0
   `KILL`/`PERMADEATH` in 120 unscripted corpus ticks and hazard drain on 0.3% of entity-ticks, so
   the conjunction is rare. The severity is that it silently destroys a durable record when it does

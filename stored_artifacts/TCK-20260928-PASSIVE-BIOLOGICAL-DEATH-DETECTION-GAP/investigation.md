@@ -26,9 +26,8 @@ Non-lethal under world rule LIFE-02 (`docs/world_rules/life-body/lifecycle.md`) 
 classified here. The real defect (a defeated hero silently becomes permanently dead a tick later via
 `apply.py:109`) is a separate ticket.
 
-## Decisions
-- Literal: `HAZARD` only. Passive bio deaths are not classified: inferring cause from bio thresholds was
-  rejected (`outcome_kind` not persisted; DEFEAT also hits non-HERO via opportunity attacks, so a role gate
-  fails; LIMIT-04, CAUSE-01, HP-02, CAUSE-05, LIFE-02).
-- Sound fix (follow-up): record the cause at the writer when `comb.hp > 0 and new_hp == 0` in `apply.py`.
-- `is_permadeath_set=True` and the full dispatch are reused for HAZARD as for COMBAT.
+## Decisions (final)
+- No classification ships here. Passive bio deaths: record the cause at the writer when `comb.hp > 0 and
+  new_hp == 0` (follow-up ticket). Hazard deaths: `world_dynamics.py:39` overwrites `KILL`/`DEFEAT`/`REBIRTH`
+  with `HAZARD`, so a `HAZARD` branch cannot tell them apart; sequenced behind the overwrite ticket.
+- Rejected inference: cause from bio thresholds (LIMIT-04, CAUSE-01, HP-02, CAUSE-05, LIFE-02).

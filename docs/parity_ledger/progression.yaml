@@ -1612,19 +1612,3 @@
     payload when EvolutionSystem genuinely evolves an entity). Does not cover real-corpus
     calibration reachability -- out of this ticket's own scope, disclosed as a known
     gap in docs/simulation_quality/event_type_coverage.md.
-- id: PROG-126
-  text: A hazard-drain death is recorded with death_reason HAZARD and dispatches succession.
-  status: verified
-  priority: P1
-  legacy_evidence: null
-  v2_evidence: 'TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP:
-    LifecycleSystem.resolve_lifecycle (src/systems/lifecycle_systems/lifecycle.py) records
-    death_reason="HAZARD" the same tick for a hazard-drain death staged by
-    WorldDynamicsSystem.resolve_dynamics (outcome_kind HAZARD, alive_set False), reusing the
-    existing succession/heirloom/feud/dying-wish dispatch.'
-  proof_type: regression
-  test_path: tests/mechanic_scenarios/test_entity_death_authority_boundary.py::test_hazard_drain_overwrites_same_tick_combat_kill_attribution_but_records_a_hazard_death
-  divergence_note: null
-  support_boundary: Passive hunger/sleep-debt deaths are still unrecorded (cause not persisted; inferring
-    it from thresholds was rejected under LIMIT-04 and CAUSE-01). A hazard death that overwrote a
-    same-tick combat KILL is recorded as HAZARD, not COMBAT. DEFEAT and REBIRTH are non-lethal (LIFE-02).
