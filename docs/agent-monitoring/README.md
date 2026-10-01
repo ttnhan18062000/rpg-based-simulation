@@ -287,6 +287,18 @@ closed tickets without exactly one working-log row, per-batch shards left for a 
 case), duplicate-run records and event-seq duplicates/gaps. A closed week can still receive late
 shards, so a count is as of that commit. Code: `tools/agent-monitoring/main_integrity_report.py`.
 
+## Delivery rework rate
+
+`python3 tools/delivery/delivery_cost_measurement.py --ref origin/main --since-week 2026-W39 --rework`
+adds a read-only `rework` section for PRs squash-merged into the ref in the week range: first-pass CI
+rate (the first pushed SHA passed with no re-run), failed-then-fixed PRs, pushes after the first green,
+re-run attempts, and failure classes from `ci_triage_classifier` (job/step rules plus the PR's own
+changed files, read from its merge commit). CI history is two `gh api` list calls (`actions/runs` and
+closed `pulls`, matched by branch name because GitHub empties a run's `pull_requests` once the branch
+is deleted) plus job detail for failed runs only, capped at 20. If `gh` cannot be reached the section
+says so rather than reporting zeros. Baseline only: it never presents an "after" claim or judges the
+delivery epic, and it is a snapshot of the ref and SHA named in its output.
+
 ## Navigation
 
 | Doc | Contents |

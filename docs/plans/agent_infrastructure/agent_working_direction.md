@@ -50,7 +50,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 |---|---|---|
 | Cited evidence must be tracked in git | shipped | `TCK-20260930-CITED-EVIDENCE-PATH-GITIGNORE-CHECK` (PR #272), advisory only |
 | Planning-doc staleness sweep, Proof Plan advisory | shipped | PR #268 |
-| Delivery rework rate (first-pass CI, failure class) | next | hygiene batch; extends `tools/delivery/delivery_cost_measurement.py` |
+| Delivery rework rate (first-pass CI, failure class) | shipped | `TCK-20261001-DELIVERY-REWORK-RATE-MEASUREMENT` (PR #274): `delivery_cost_measurement.py --rework`, baseline only |
 | Gate override ledger (verdict, inputs, human stop) | idea | measures gate precision without waiting for a person to notice |
 | Finding-to-ticket-to-merge funnel | held | needs a stable finding-id convention first |
 
