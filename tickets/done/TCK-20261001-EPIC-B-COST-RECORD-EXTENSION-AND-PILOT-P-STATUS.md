@@ -35,6 +35,8 @@ Records only, no product code. Requested through test-architecture-reviewer (pla
 - Pilot report: capability row 8 (pilot P blocked/inconclusive, no settled progression ticket yet, dated planner confirmation) and a cost-record update in the CI addendum.
 - Epic D limit (4) and the INDEX row updated to the 6-PR record, without any claim that all gaps are closed.
 
+- Folded in after review (same PR, per the user's request relayed by the reviewer): a #278 row (earlier head `343a88093`, run 36890190328, both Scenario lane and Perf skipped, only tickets/docs/monitoring paths changed) recorded as the first **docs-only skip**; the record is then 7 PRs and the docs-only skip leaves the unobserved list. The src/progression trigger stays unobserved.
+
 ## Out of Scope
 - Mutation baseline v2 curated additions (the user's call, not asked).
 - Launching pilot P, any product code, any `progression.yaml` id, promoting the lane.
@@ -74,4 +76,4 @@ Text only. Frontmatter and registry checks run after the edit.
 tickets/todos/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md; tickets/todos/test-architecture/TCK-20260929-EPIC-CORE-RPG-TEST-PILOT.md; tickets/todos/test-architecture/INDEX.md; docs/testing/core_rpg_test_pilot_2026-09-30.md; docs/REGISTRY.yaml.
 
 ## Completion Summary
-Cost record is at 6 of about 10 PRs: lane ran and succeeded on four (#271, #272, #273, #275) and was skipped on two because Perf covered the scenario tests (#274, #276). The src/progression trigger and docs-only skip remain unobserved; criterion 4 stays open. Pilot P is recorded as blocked/inconclusive (no settled progression ticket yet; no candidate currently identified); the earlier surface-stability merge gate was satisfied by #276 (`786f9ee9b`). Epic D limits restated with no "all gaps closed" claim.
+Cost record is at 7 of about 10 PRs: lane ran and succeeded on four (#271, #272, #273, #275), was skipped on two because Perf covered the scenario tests (#274, #276), and was skipped on one as a docs-only skip (#278, an earlier head, later heads not enumerated). The src/progression trigger remains unobserved; criterion 4 stays open. Pilot P is recorded as blocked/inconclusive (no settled progression ticket yet; no candidate currently identified); the earlier surface-stability merge gate was satisfied by #276 (`786f9ee9b`). Epic D limits restated with no "all gaps closed" claim.
