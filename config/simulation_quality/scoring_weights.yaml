@@ -103,7 +103,6 @@ PROGRESSION:
   level_cap_reached: -1.0
   # TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE: capability-trend + life-arc coherence.
   capability_growth_stalled: -10.0
-  life_arc_incoherent: -15.0
 
 SOCIAL:
   cooperation_active: 4.0

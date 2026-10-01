@@ -22,17 +22,15 @@ def test_monster_role_classify():
     assert result.xp_multiplier == 10
     assert result.gold_multiplier == 5
     assert result.gold_eligible is True
-    assert result.rebirth_eligible is False
 
 
 def test_hero_role_classify():
-    """Hero role maps to HERO_KILL with correct XP/gold multipliers and rebirth flag."""
+    """Hero role maps to HERO_KILL with correct XP/gold multipliers."""
     result = CombatRewardClassificationService.classify(EntityRole.HERO)
     assert result.category == RewardCategory.HERO_KILL
     assert result.xp_multiplier == 20
     assert result.gold_multiplier == 50
     assert result.gold_eligible is True
-    assert result.rebirth_eligible is True
 
 
 def test_unknown_role_returns_none_category():
@@ -43,8 +41,7 @@ def test_unknown_role_returns_none_category():
         assert result.xp_multiplier == 0
         assert result.gold_multiplier == 0
         assert result.gold_eligible is False
-        assert result.rebirth_eligible is False
-
+    
 
 def test_classification_carries_source_string():
     """Every returned classification must carry a non-empty source string."""
@@ -112,7 +109,6 @@ def test_classify_defeated_target_hero_defender_neutral_attacker_returns_hero_ki
     defender = _make_entity(2, EntityRole.HERO, Faction.HERO_GUILD)
     result = CombatRewardClassificationService.classify_defeated_target(attacker, defender, _STATE)
     assert result.category == RewardCategory.HERO_KILL
-    assert result.rebirth_eligible is True
 
 
 def test_classify_defeated_target_neutral_merchant_returns_none():
@@ -132,7 +128,6 @@ def test_classify_defeated_target_hostile_creature_xp_and_gold_multipliers():
     assert result.xp_multiplier == 10
     assert result.gold_multiplier == 5
     assert result.gold_eligible is True
-    assert result.rebirth_eligible is False
     assert result.source == "relation_projection"
 
 
@@ -140,3 +135,14 @@ def test_classify_is_still_a_valid_compatibility_wrapper():
     """classify(EntityRole) unchanged — legacy callers still get correct results."""
     assert CombatRewardClassificationService.classify(EntityRole.MONSTER).category == RewardCategory.MONSTER_KILL
     assert CombatRewardClassificationService.classify(EntityRole.HERO).category == RewardCategory.HERO_KILL
+
+
+def test_reward_classification_has_no_rebirth_field():
+    """TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION: `rebirth_eligible` is removed outright
+    (it granted a role-exclusive exemption from death with no in-world capability behind it)."""
+    for result in (
+        CombatRewardClassificationService.classify(EntityRole.HERO),
+        CombatRewardClassificationService.classify(EntityRole.MONSTER),
+        CombatRewardClassificationService.classify(EntityRole.CITIZEN),
+    ):
+        assert not hasattr(result, "rebirth_eligible")

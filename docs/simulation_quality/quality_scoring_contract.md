@@ -847,7 +847,7 @@ PP-31 (`near_death_hardening`), PP-33 (`lifecycle`)
 
 **Event types scored:** `xp_granted`, `level_up`, `entity_evolved`, `skill_unlocked`,
 `trait_expressed`, `pillar_trait_unlocked`, `progression_conversion_applied`, `near_death_survival`,
-`progression_plateau_detected`, `capability_growth_stalled`, `life_arc_incoherent`
+`progression_plateau_detected`, `capability_growth_stalled` (`life_arc_incoherent` was retired with hero rebirth)
 
 | Signal | Delta | Tag |
 |---|---|---|
@@ -866,7 +866,6 @@ PP-31 (`near_death_hardening`), PP-33 (`lifecycle`)
 | Trait expression rate = 0 for entire run | −10 | `trait_system_silent` |
 | Level cap reached: entity generates level_up event with no effect | −1 | `level_cap_reached` |
 | Entity's level, skill count, equipped-gear count, and gold all flat for 300+ ticks simultaneously (capability trend, §7.6) | −10 | `capability_growth_stalled` |
-| Entity reaches Hero's Journey generation 2+ (a rebirth already occurred) still at level 1 with zero skills (life-arc coherence, §7.6) | −15 | `life_arc_incoherent` |
 
 **Loop signal:** `progression_frozen` at >80% of entity-ticks in window
 → `loop_detected:progression_stasis`

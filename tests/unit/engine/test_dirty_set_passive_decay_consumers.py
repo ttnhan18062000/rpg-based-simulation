@@ -48,7 +48,7 @@ def _build_already_combat_dead_entity():
 
 
 def _run_real_passive_decay_tick():
-    """Real pipeline + real apply -- hunger passively accrues and lifecycle.active flips, with no
+    """Real pipeline + real apply -- hunger passively accrues and age advances, with no
     EntityUpdate of any domain for this entity."""
     entity = _build_already_combat_dead_entity()
     prior_state = AuthoritativeState(tick=100, seed=42, entities={1: entity})
@@ -60,12 +60,15 @@ def _run_real_passive_decay_tick():
 
 
 def test_passive_decay_only_tick_produces_real_state_change_with_no_entity_update():
-    """Sanity precondition: real, committed state changes (hunger accrues, lifecycle.active
-    flips) with genuinely no EntityUpdate staged for this entity."""
+    """Sanity precondition: real, committed state changes (hunger accrues, age advances) with genuinely no EntityUpdate staged for this entity."""
     prior_state, refined, next_state = _run_real_passive_decay_tick()
 
     assert prior_state.entities[1].lifecycle.active is True
-    assert next_state.entities[1].lifecycle.active is False
+    # Updated by TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER: the passive branch
+    # no longer deactivates (resolve_lifecycle is the sole authority for HP-death deactivation), so
+    # the committed passive changes are hunger accrual and the age tick, not an `active` flip.
+    assert next_state.entities[1].lifecycle.active is True
+    assert next_state.entities[1].lifecycle.age_ticks > prior_state.entities[1].lifecycle.age_ticks
     assert next_state.entities[1].biological.hunger > prior_state.entities[1].biological.hunger
 
     assert 1 not in refined.entity_updates

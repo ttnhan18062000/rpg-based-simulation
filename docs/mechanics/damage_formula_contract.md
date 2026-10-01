@@ -134,10 +134,10 @@ If `new_hp <= 0` → kill/defeat. The `alive` flag drives all reward and lifecyc
 `CombatRewardClassificationService.classify_defeated_target()`:
 
 1. First tries faction relation projection via `FactionSemanticsService.is_hostile_compat()` with `combat_engaged=True`
-2. If hostile by faction: `xp_multiplier=10`, `gold_multiplier=5`, not rebirth eligible
+2. If hostile by faction: `xp_multiplier=10`, `gold_multiplier=5`
 3. Fallback by `EntityRole`:
-   - `MONSTER`: xp×10, gold×5, not rebirth eligible
-   - `HERO`: xp×20, gold×50, rebirth eligible
+   - `MONSTER`: xp×10, gold×5
+   - `HERO`: xp×20, gold×50
    - other: xp×0, gold×0
 
 ```
@@ -145,9 +145,9 @@ xp_gain = defender.identity.evolution_level * classification.xp_multiplier
 gold_gain = defender.identity.evolution_level * classification.gold_multiplier
 ```
 
-Hero rebirth:
-- `generation < 4` → `generation_delta=1`, `outcome="REBIRTH"`
-- `generation >= 4` → `is_permadeath_set=True`, `outcome="PERMADEATH"`
+Outcome: a lethal attack (`is_lethal=True`) is `KILL`; a non-lethal attack (e.g. an opportunity attack) that
+reaches 0 HP is terminal `DEFEAT`. No role is exempt: hero `REBIRTH`/`PERMADEATH` and the `generation`
+counter were retired (`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`).
 
 ---
 
@@ -194,7 +194,7 @@ Damage resolution runs in the kernel's **Resolution** stage. `CombatResolutionSy
 | Defender survives with exactly 1 HP | `alive=True`; wound infliction check still runs based on damage value |
 | Damage exactly equals 25% max HP | `damage > max_hp * 0.25` is strict greater-than; exactly 25% does **not** trigger a wound |
 | AoE hits attacker's ally | Faction check skips ally; ally takes no AoE damage |
-| Hero at generation 4 killed | `is_permadeath_set=True` — no rebirth; `outcome="PERMADEATH"` |
+| Hero killed | ordinary `KILL` (no role exemption): recorded `COMBAT` death with `is_permadeath` set |
 
 ---
 

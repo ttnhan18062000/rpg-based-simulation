@@ -342,12 +342,15 @@ class CombatShaper:
 
             # hazard_drain_applied — colocated per Decision 1, not COMBAT-scored but same
             # typed-record read as everything above.
-            if hp_delta < 0 and getattr(combat_upd, "outcome_kind", None) == "HAZARD":
+            # Keyed on the independent `hazard_damage` signal, not outcome_kind, so it also fires for
+            # an entity combat already resolved this tick (outcome_kind kept as KILL/DEFEAT/...).
+            hazard_damage = getattr(combat_upd, "hazard_damage", 0)
+            if isinstance(hazard_damage, int) and hazard_damage > 0:
                 events.append(SimulationEvent(
                     event_type="hazard_drain_applied", event_category="combat",
                     tick=tick, entity_id=eid, severity="WARNING",
                     source_system="event_shapers", message="",
-                    payload={"damage": int(-hp_delta)},
+                    payload={"damage": int(hazard_damage)},
                 ))
 
         return events

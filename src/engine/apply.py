@@ -38,7 +38,7 @@ from src.core.quests import QuestState, QuestStatus
 from src.core.models.quests import QuestOpportunity, QuestOpportunityStatus
 from src.engine.cadence import SystemCadence, should_run
 from src.core.inventory import InventoryService
-from src.core.enums import EntityRole, Faction, ReasonCode, DiplomaticState
+from src.core.enums import EntityRole, Faction, ReasonCode, DiplomaticState, PassiveDeathCause
 from src.core.movement_modes import MovementMode
 from src.core.updates import StateUpdate, EntityUpdate, SocialUpdate, StrategicUpdate, StaminaUpdate, NavigationUpdate
 from src.engine.legality import LegalityServiceV2
@@ -104,9 +104,34 @@ class ApplyPath:
                     new_hp = max(0, comb.hp - total_passive_dmg)
                     if new_hp != comb.hp:
                         changes["combat"] = replace(comb, hp=new_hp, alive=(new_hp > 0))
+                    # Passive HP-death cause, recorded at the writer on the fatal tick only (never
+                    # inferred later from thresholds/role -- LIMIT-04). Hunger outranks sleep debt
+                    # as a recorded cause (declared precedence, lifecycle_systems_contract.md).
+                    # Skipped for an entity that already carries a final death record.
+                    passive_cause = life.passive_death_cause
+                    passive_cause_tick = life.passive_death_cause_tick
+                    if (comb.hp > 0 and new_hp == 0 and total_passive_dmg > 0
+                            and life.death_reason is None and not life.is_permadeath):
+                        passive_cause = (
+                            PassiveDeathCause.STARVATION if bio.hunger >= 95.0
+                            else PassiveDeathCause.SLEEP_DEPRIVATION
+                        )
+                        passive_cause_tick = tick
+                    # The passive branch never DEACTIVATES: resolve_lifecycle is the sole declared
+                    # authority for HP-death and old-age deactivation (PROG-030). Its one remaining
+                    # `active` write is the construction-time `initial_active=False` spawn
+                    # reactivation (intentional_divergences.md 2.59), which must exclude anything
+                    # with a death record or zero HP -- a bare `life.active or new_age < max_age`
+                    # is True for every dead entity younger than max_age and would resurrect each
+                    # corpse on the next life-due tick.
                     changes["lifecycle"] = replace(life,
                         age_ticks=new_age,
-                        active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))
+                        active=(life.active or (
+                            new_hp > 0 and new_age < life.max_age_ticks
+                            and life.death_reason is None and not life.is_permadeath
+                        )),
+                        passive_death_cause=passive_cause,
+                        passive_death_cause_tick=passive_cause_tick,
                     )
             
             # Stamina Regen

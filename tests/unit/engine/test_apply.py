@@ -43,7 +43,11 @@ def test_passive_branch_does_not_deactivate_an_active_entity_the_tick_its_age_re
     )
 
 
-def test_passive_branch_still_deactivates_immediately_on_hp_loss_to_zero():
+def test_passive_branch_records_hp_death_cause_but_never_deactivates():
+    """Updated by TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER: the passive branch
+    no longer deactivates on HP loss to zero. resolve_lifecycle is the sole authority for HP-death
+    deactivation (as PROG-030 declares for age); the passive branch records the typed cause on the
+    fatal tick and leaves `active` untouched."""
     entity = (
         V2EntityBuilder(1)
         .kind("HERO")
@@ -59,7 +63,18 @@ def test_passive_branch_still_deactivates_immediately_on_hp_loss_to_zero():
 
     new_entity = new_state.entities[1]
     assert new_entity.combat.hp == 0
-    assert new_entity.lifecycle.active is False, (
-        "the immediate new_hp > 0 HP-death gate must remain untouched by this ticket's fix -- "
-        "passive HP loss to zero must still deactivate promptly"
+    assert new_entity.lifecycle.active is True
+    assert new_entity.lifecycle.passive_death_cause is not None
+
+
+def test_passive_branch_never_reactivates_an_inactive_entity_younger_than_max_age():
+    """`active=(life.active or new_age < max_age)` would be True for any dead entity younger than
+    max_age and resurrect every corpse on the next life-due tick; the branch must leave it alone."""
+    entity = (
+        V2EntityBuilder(1).kind("HERO").location(0.0, 0.0).combat(hp=0)
+        .lifecycle(active=False, age_ticks=0, max_age_ticks=100_000)
+        .build()
     )
+    state = AuthoritativeState(tick=0, seed=42, entities={1: entity})
+    new_state = ApplyPath.apply_generation(state, StateUpdate())
+    assert new_state.entities[1].lifecycle.active is False

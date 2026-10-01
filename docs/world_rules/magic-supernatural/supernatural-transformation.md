@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # World Rule Family: Supernatural Transformation
@@ -112,12 +112,7 @@ these processes, but nothing here requires this world to commit to resurrection 
 existing at all, matching the same required-distinctness/permitted-existence split
 `supernatural-ontology.md`'s SUP-02 and this file's own STR-01 already use.
 
-**Repository evidence: MISSING.** No resurrection, undeath, or comparable supernatural
-death-reversal mechanism exists anywhere in this repository — confirmed via direct search.
-This repository's own real death/lifecycle machinery (`LifecycleSystem`, reused from prior
-batches' own evidence) already treats death as a real, permanent, historical event with no
-reversal path at all, which is consistent with — though narrower than — this Rule's own
-target semantics (which permit, but do not require, a declared reversal process to exist).
+**Repository evidence: MISSING (corrected `2026-10-01`).** No declared resurrection, undeath, or comparable death-reversal mechanism exists in this repository. Correction: until `2026-10-01` the repository did contain an *undeclared* one, the hero `REBIRTH` outcome, where the same `entity_id` continued with `generation + 1` after HP reached zero. It recorded no death, had no declared process, and assumed same-identity continuity, so it failed all three of this Rule's requirements. The original search missed it because it was framed as a combat outcome rather than as death reversal. It was retired by `TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`. Death is now a real, permanent, historical event with no reversal path, which is consistent with, though narrower than, this Rule's target semantics (it permits, but does not require, a declared reversal process).
 
 **Scenarios:** [MAG-S22](../scenarios/magic-supernatural-batch-12.md#mag-s22)
 (resurrection), [MAG-S23](../scenarios/magic-supernatural-batch-12.md#mag-s23) (undead new

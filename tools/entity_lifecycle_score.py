@@ -451,11 +451,10 @@ def run_metadata(ticks: int, weights: dict) -> dict:
     return {
         "ticks": ticks,
         "stall_detector_reachable": ticks >= weights["stall_detector_window_ticks"],
-        # life_arc_incoherent requires Hero's Journey generation >= 2, not a fixed tick window --
-        # not derivable from tick count alone. Reported null rather than guessed; none of
-        # TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION's own real runs reached generation 2
-        # either, consistent with this being genuinely rare, not resolved by that ticket.
-        "life_arc_detector_reachable": None,
+        # conclusion_coherence has no incoherent-flag tags defined (the life_arc_incoherent
+        # detector was retired with hero rebirth, TCK-20261001-RETIRE-HERO-REBIRTH-...): it is
+        # structurally always True. Stated here so a reader never takes it as "confirmed coherent".
+        "conclusion_coherence_flagless": True,
         # TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION: dominant_shape_share/distinct_shapes
         # are real but unreliable below this many ticks -- empirically found artificially
         # inflated at short tick-lengths (paths too short to differentiate), stabilizing by

@@ -32,7 +32,7 @@ def _entity(e_id, hp=100, max_hp=100):
 # classify_defender_outcome
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("outcome_kind", ["KILL", "DEFEAT", "PERMADEATH", "REBIRTH"])
+@pytest.mark.parametrize("outcome_kind", ["KILL", "DEFEAT"])
 def test_defeated_defender_learns_lost(outcome_kind):
     assert classify_defender_outcome(outcome_kind) == "LOST"
 

@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # World Rule Family: Capability / Progression
@@ -405,13 +405,13 @@ real trigger, never an unconditional or arbitrary kind edit.
   a declared route family with no live path to ever fire.
 - **MISSING — no capability-improving mechanism exists for most named lived-experience
   categories.** Checked directly against the batch instruction's own §4 list: repeated
-  non-combat success/failure, near-death survival (beyond `REBIRTH`'s own generation increment,
-  which is a lifecycle fact, not a capability grant), environmental exposure, social experience,
+  non-combat success/failure, near-death survival (the former hero `REBIRTH` generation increment, retired 2026-10-01, was a
+  lifecycle fact, not a capability grant), environmental exposure, social experience,
   leadership, and long-term practice all produce no capability change anywhere in this
   repository. Only combat/quest XP and injury/scars durably change capability.
 - **MISSING — no combat outcome beyond kill/defeat/survive/withdrawal exists.** Confirmed real
-  `outcome_kind` values: `KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH`/`SURVIVE`/`REJECTED`
-  (`src/engine/combat.py`), plus a real, separately-produced `FLED` (withdrawal,
+  `outcome_kind` values: `KILL`/`DEFEAT`/`SURVIVE`/`REJECTED` (`src/engine/combat.py`; `REBIRTH`/
+  `PERMADEATH` retired 2026-10-01), plus a real, separately-produced `FLED` (withdrawal,
   `src/engine/movement.py`'s `combat_escape="EVASIVE_SUCCESS"`). No surrender, capture, or
   forced-displacement-as-a-combat-outcome exists. `src/world/displacement.py` exists but is a
   calamity-driven, World-Evolution-domain population-relocation mechanism, unrelated to combat

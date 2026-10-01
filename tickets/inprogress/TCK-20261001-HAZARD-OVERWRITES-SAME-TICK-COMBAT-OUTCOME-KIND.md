@@ -17,7 +17,7 @@ tags: [engine, lifecycle, combat, determinism]
 `resolve_lifecycle` ever reads it
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -75,9 +75,14 @@ tick late via `apply.py:109`'s passive HP gate, with no cause.
 - Regression coverage for the collision, replacing C1's defect-asserting pins.
 
 ## Out of Scope
-- **The missing HP/alive death branch in `resolve_lifecycle`** — that is
-  `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`. The two fixes are complementary, and this
-  ticket must not grow a `death_reason` classification branch of its own.
+- **The HP/alive-keyed death branch in `resolve_lifecycle`** — that is
+  `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP` and its successor
+  `TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`. The two fixes are complementary.
+  **NARROWED 2026-10-01:** this exclusion was aimed at the *HP/alive-keyed* branch and still holds for
+  it. It does **not** exclude an `outcome_kind == "HAZARD"`-keyed branch, which this ticket now does
+  need (AC2 as amended) — that is the same shape as the existing `KILL`/`PERMADEATH` branch, and the
+  ticket's own Q2 answer already placed the `HAZARD` classification "with or after" this fix. R1 turned
+  "with or after" into "with", because "after" now means shipping permanent zombies.
 - `DEFEAT`/`REBIRTH` routes to `alive_set=False` (same sibling ticket).
 - Re-deriving the two ownership writers in
   `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` — it already carries that comparison.
@@ -87,7 +92,16 @@ tick late via `apply.py:109`'s passive HP gate, with no cause.
 1. A same-tick combat kill on an entity also taking nonzero hazard drain records a combat death:
    `death_reason='COMBAT'`, `death_tick` set, `is_permadeath` set, succession dispatched — matching
    the hazard-free control arm.
-2. Hazard-only drain deaths keep their current observable behaviour, and the `"HAZARD"`
+2. **AMENDED 2026-10-01 — the original wording is no longer achievable, see Implementation Notes.**
+   A hazard-only drain death is **recorded and classified**: `death_reason='HAZARD'`, `death_tick` set,
+   `is_permadeath=True`, deactivated by `resolve_lifecycle` as the sole declared authority. Their
+   *previous* observable behaviour — deactivated one tick late and silently by `apply.py`'s HP gate — was
+   removed by R1 in `TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`, so "keep their
+   current observable behaviour" would now mean keeping a permanent zombie. `HAZARD` is a legitimate
+   declared cause of death per BODY-07 / ENV-02 (rule owner, 2026-10-01), **only** where the drain
+   itself took HP from `> 0` to `<= 0`, never inferred from being in a hazardous region (LIMIT-04); an
+   immune subject cannot die of it.
+2b. The `"HAZARD"`
    discriminant that `_NON_COMBAT_OUTCOME_KINDS` and `_real_combat_update` rely on still
    distinguishes hazard drain from a real combat resolution. A fix that makes hazard deaths look
    like combat kills to the event extractor is a regression, not a fix — that exact
@@ -173,10 +187,67 @@ tick late via `apply.py:109`'s passive HP gate, with no cause.
   (`TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED`) means nothing would report it.
 
 ## Implementation Notes
+
+### AC4 joint planning + AC6 escalation — DISCHARGED 2026-10-01 (planner)
+
+Full record in `staging_artifacts/TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND/`.
+
+**Joint premise with `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`** (both tickets concern
+the same `world_dynamics` `pipeline.py:348` → `lifecycle` `:414` ordering): **this fix is
+order-independent and does not move `world_dynamics`.** Reordering was ruled out because **AC3** demands
+a byte-identical state hash for non-collision runs, and moving `world_dynamics` relative to `lifecycle`
+changes hazard timing for *every* hazard-affected entity (hazard drain touches ~0.3% of entity-ticks)
+rather than only colliding ones (0 in 120 corpus ticks). The hazard write (`world_dynamics.py:30-40`)
+and the ownership sweep (`:44+`) are separate blocks in one function, so the sovereignty ticket retains
+all three of its recorded outcomes and is **not** pre-empted. Confirmed sound by the rule owner against
+roadmap §3.1.
+
+**Two findings that invalidate the obvious fixes:**
+1. A plain non-clobbering conditional is **insufficient**. `event_extractor.py:778` emits
+   `hazard_drain_applied` **only** when `outcome_kind == "HAZARD"`, so merely declining to overwrite a
+   `KILL` preserves the combat death but **silently drops the hazard observability event** for exactly
+   the colliding entities — violating AC2. Hazard application must be signalled **independently** of
+   `outcome_kind`.
+2. `alive_set=(new_hp > 0)` at `:39` is written unconditionally and `CombatPatch.apply`
+   (`patches.py:322`) honours `alive_set` over the HP-derived value, so hazard could **resurrect** a
+   defeated entity. Latent, not observed — implement as a guard.
+
+**Q1 answered by the rule owner, 2026-10-01 — and the planner's reasoning was wrong while its answer
+was right.** The planner argued combat wins because it carries more durable information; the ruling is
+**sufficiency plus declared phase order**: a `KILL` means combat damage *alone* was sufficient to take
+the subject from `hp > 0` to `hp <= 0` (`combat.py:163-171`, start-of-tick HP, combat damage only),
+resolved first at `:297`/`:320`. Recording `HAZARD` would assert a causal link that did not exist —
+CAUSE-03 (adjacency ≠ causation), CAUSE-06 (no invented causal relations), LIMIT-04 (pushing HP further
+below zero is not a cause). So the rule is **not** "combat always wins" but "the first sufficient cause
+in phase order wins", which decides the edge cases information-content cannot — notably **a non-lethal
+combat hit plus decisive hazard drain records `HAZARD`**. **No new world-rule Rule ID** is needed (an
+application of CAUSE-03/CAUSE-06/LIMIT-04/BODY-07 — a reference, not a new Rule); the engine-level law
+goes in the Bible, verbatim text in `catalog_edits.md`.
+
+### BLOCKED — no HERO `death_reason` may land yet
+
+The rule owner flagged, and the user escalated back to it, whether **hero rebirth is consistent with the
+world-rule model at all**, given that reproduction/lineage (LIFE-04 / ID-04) already provide continuity
+through a *new* identity while `REBIRTH` provides it through the *same* identity, and that
+`rebirth_eligible` is `True` only for `EntityRole.HERO` (`combat_rewards.py:44-51`, `:106`) with no Rule
+ID granting a role-specific lifecycle exemption. Until that resolves: **do not land a HERO
+`death_reason`** on this path or the death batch's passive path, and do not land `catalog_edits.md`'s
+Bible block (its `REBIRTH` bullet is contingent). Test H11 is directly affected. Note
+`V2EntityBuilder` defaults to role **HERO, gen 1**, so any fixture not explicitly setting
+`.identity(role=...)` is a hero.
 _To be completed during implementation._
 
 ## Test Summary
-_To be completed during implementation._
+New `tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py` (10 scripted tests, H1/H5/H5b/H8-H10/H12/H13,
+HA1, S5 arithmetic, terminal-set equality) and `test_entity_death_authority_boundary.py` (collision arm now equals the
+control arm; slow corpus test tightened so no HP-0 entity stays active/unrecorded). Observability: test doubles mirror the
+real producer (`hazard_damage`), new H4 test in `tests/unit/observability/test_event_shapers.py` proves
+`hazard_drain_applied` also fires for an entity combat already resolved. H11 withdrawn with rebirth.
+Measured (frontier_marches seed 42, 400 ticks, order-of-magnitude): HP-0 active/unrecorded zombies 8 -> 0 hazard-route
+(6 recorded `HAZARD`); the 2 left at that point were `REBIRTH` defenders, closed by the retirement ticket.
+H6: no canonical hash literal is pinned (determinism gates compare two live runs). AC7: `make semantic-control-plane-drift-check`
+output: "0 cited-code drift finding(s), 2 verdict drift finding(s)" (TERR-01, TERR-03 -> betrayal_siege_war,
+`contradicted -> observed`; unrelated to the LIFE rows).
 
 ## Files Changed
 _To be completed during implementation._

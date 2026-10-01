@@ -136,12 +136,11 @@ class TestCapabilityGrowthStalled:
         assert "capability_growth_stalled" in rec.tags
 
 
-class TestLifeArcIncoherent:
-    def test_scores_configured_weight_and_tag(self, scorer: ProgressionScorer, scoring_weights: ScoringWeights) -> None:
-        rec = scorer.score(_env("life_arc_incoherent", payload={"generation": 2, "level": 1}), _ctx())
-        assert rec is not None
-        assert rec.delta == scoring_weights["life_arc_incoherent"]
-        assert "life_arc_incoherent" in rec.tags
+class TestLifeArcIncoherentRetired:
+    def test_retired_event_type_scores_nothing(self, scorer: ProgressionScorer) -> None:
+        # life_arc_incoherent was retired with hero rebirth
+        # (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION).
+        assert scorer.score(_env("life_arc_incoherent", payload={"generation": 2, "level": 1}), _ctx()) is None
 
 
 class TestNullReturn:

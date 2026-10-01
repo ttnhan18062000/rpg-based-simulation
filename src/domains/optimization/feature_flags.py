@@ -26,7 +26,7 @@ class FeatureFlagManager:
             # Default ON (TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER): the deferred
             # TCK-20260826-COMBAT-ENGAGEMENT-FLAG-VALIDATION follow-up is superseded by this
             # ticket's own build -- OpponentModel storage, true_power/apparent_power/gap-driven
-            # uncertainty, witnessed-combat, and combat-learning (KILL/DEFEAT/PERMADEATH/REBIRTH/
+            # uncertainty, witnessed-combat, and combat-learning (KILL/DEFEAT/
             # FLED) are now real, tested, and wired (docs/mechanics/04_strategic_cognition.md Sec
             # 13). Flipped after the full tests/integration/ regression run below.
             "ENABLE_COMBAT_ENGAGEMENT": FeatureMode.ON,

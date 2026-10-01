@@ -194,15 +194,41 @@ class LifecycleSystem:
                 is_dead = True
                 death_reason = "OLD_AGE"
             
-            # Check for combat death -- PERMADEATH (a rebirth-eligible Hero at generation cap,
-            # src/engine/combat.py) is a more final outcome than KILL, not a separate one; it must
-            # route through the same deactivation path or the entity never actually deactivates
-            # and keeps acting despite being narratively permanently dead (TCK-20260826-HOTFIX-
-            # PERMADEATH-LIFECYCLE-FIX).
-            if ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind in ("KILL", "PERMADEATH"):
+            # Check for combat death. Hero rebirth/permadeath outcome kinds were retired
+            # (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION): a lethal hit is an
+            # ordinary KILL. This branch already sets is_permadeath_set=True for every recorded
+            # death (old age included), so the fold changes nothing about its distribution;
+            # `is_permadeath` stays a separately tracked lifecycle fact (LIFE-01) -- currently
+            # uniformly True by design, and the hook a future *declared* resurrection process
+            # would be the only thing permitted to leave False on a recorded death (STR-02).
+            if ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind == "KILL":
                 is_dead = True
                 death_reason = "COMBAT"
-            
+
+            # Terminal DEFEAT (non-lethal zeroing) and a passive biological
+            # zeroing are both final deaths that resolve_lifecycle -- the sole authority for
+            # HP-death deactivation -- classifies from persisted typed facts only: this tick's
+            # `outcome_kind`, or the cause the passive writer recorded at tick N (readable here from
+            # N+1). Never inferred from hunger/sleep_debt thresholds or role (LIMIT-04). One shared
+            # idempotency guard: an entity that already carries a final death record is never
+            # classified again by these branches (cross-tick property, not branch ordering).
+            already_final = entity.lifecycle.death_reason is not None or entity.lifecycle.is_permadeath
+            if not is_dead and not already_final:
+                if ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind == "DEFEAT":
+                    is_dead = True
+                    death_reason = "DEFEAT"
+                elif (ent_upd and ent_upd.combat and ent_upd.combat.outcome_kind == "HAZARD"
+                        and ent_upd.combat.alive_set is False):
+                    # Hazard drain was the decisive producer: WorldDynamicsSystem only leaves
+                    # outcome_kind="HAZARD" when no terminal combat outcome already held the slot,
+                    # and writes alive_set=False only when its own drain reached 0 HP. Both are
+                    # persisted facts of this update -- never inferred from HP, region or role.
+                    is_dead = True
+                    death_reason = "HAZARD"
+                elif entity.lifecycle.passive_death_cause is not None:
+                    is_dead = True
+                    death_reason = entity.lifecycle.passive_death_cause.value
+
             if is_dead:
                 ent_upd = ent_upd or EntityUpdate(entity_id=e_id)
                 recent_deaths.append(entity)

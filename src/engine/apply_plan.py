@@ -337,14 +337,12 @@ class ApplyPlanBuilder:
                 corpse_id = 1000000 + e_id
                 nav = changes.get("navigation", entity.navigation)
                 inv = changes.get("inventory", entity.inventory)
-                life = changes.get("lifecycle", entity.lifecycle)
                 corpse = CorpseState(
                     id=corpse_id,
                     original_entity_id=e_id,
                     position=nav.position,
                     items=list(inv.items),
                     decay_tick=tick + 100,
-                    generation=life.generation
                 )
                 plan.new_corpses.append(corpse)
                 cols.add("corpses")

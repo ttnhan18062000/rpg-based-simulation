@@ -14,7 +14,6 @@ def test_corpse_decay():
         position=(0,0),
         items=[],
         decay_tick=10,
-        generation=1
     )
     
     state = AuthoritativeState(

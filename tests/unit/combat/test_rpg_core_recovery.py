@@ -47,68 +47,36 @@ def test_combat_progression_rewards():
     # Verify Corpse (ID 1000002)
     assert 1000002 in new_state.corpses
 
-def test_hero_mortality_rebirth():
+def test_hero_mortality_is_a_recorded_combat_death():
     """
-    Verifies that a hero death increments generation (rebirth).
+    Verifies that a hero killed in combat dies like any subject (hero rebirth/permadeath were retired,
+    TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION): a recorded COMBAT death, permanent
+    (is_permadeath), deactivated by resolve_lifecycle -- no generation counter, no restore.
     """
     state = build_scenario_state("COMBAT_ARENA_MORTALITY")
     executor = LocalSequentialExecutor()
     rng = DeterministicRNG(base_seed=42)
     profile = ConfigLoader.load_profile()
-    
+
     from src.core.work import WorkItem, WorkClass
     work = [
         WorkItem(work_id="1:3:ENTITY_ACT", work_kind="ENTITY_ACT", owner_id=3, payload={"action": "ATTACK", "target_id": 4}, work_class=WorkClass.CRITICAL)
     ]
-    
+
     results = executor.execute(work, state, rng, profile)
-    
+
     from src.core.updates import StateUpdate
     entity_updates = {res.entity_id: res.update for res in results}
     state_up = StateUpdate(entity_updates=entity_updates)
-    
+
     refined = AuthoritativeApplyPipeline.refine(state, state_up)
     new_state = ApplyPath.apply_generation(state, refined)
-    
-    # Verify Hero (ID 4) state
+
     hero = new_state.entities[4]
     assert not hero.combat.alive
-    # generation was 3, should now be 4
-    assert hero.lifecycle.generation == 4
-
-def test_hero_permadeath():
-    """
-    Verifies that at generation 4, death results in permadeath.
-    """
-    from src.core.state import EntityState, LifecycleComponent, CombatComponent
-    from dataclasses import replace
-    
-    state = build_scenario_state("COMBAT_ARENA_MORTALITY")
-    # Set hero to generation 4
-    hero = state.entities[4]
-    state = replace(state, entities={**state.entities, 4: replace(hero, lifecycle=replace(hero.lifecycle, generation=4))})
-    
-    executor = LocalSequentialExecutor()
-    rng = DeterministicRNG(base_seed=42)
-    profile = ConfigLoader.load_profile()
-    
-    from src.core.work import WorkItem, WorkClass
-    work = [
-        WorkItem(work_id="1:3:ENTITY_ACT", work_kind="ENTITY_ACT", owner_id=3, payload={"action": "ATTACK", "target_id": 4}, work_class=WorkClass.CRITICAL)
-    ]
-    
-    results = executor.execute(work, state, rng, profile)
-    
-    from src.core.updates import StateUpdate
-    entity_updates = {res.entity_id: res.update for res in results}
-    state_up = StateUpdate(entity_updates=entity_updates)
-    
-    refined = AuthoritativeApplyPipeline.refine(state, state_up)
-    new_state = ApplyPath.apply_generation(state, refined)
-    
-    # Verify Hero (ID 4) permadeath
-    hero = new_state.entities[4]
-    assert hero.lifecycle.is_permadeath
+    assert hero.lifecycle.death_reason == "COMBAT"
+    assert hero.lifecycle.is_permadeath is True
+    assert hero.lifecycle.active is False
 
 def test_tactical_modifiers():
     """

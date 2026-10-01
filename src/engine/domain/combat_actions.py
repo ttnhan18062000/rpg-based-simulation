@@ -106,11 +106,6 @@ class CombatActions:
                 social=social_up,
                 strategic=strat_up if strat_up.directives_add_or_update else None,
                 group_id_set=group_dissolve_upd,
-                lifecycle=LifecycleUpdate(
-                    age_delta=0,
-                    generation_delta=combat_up.generation_delta,
-                    is_permadeath_set=combat_up.is_permadeath_set
-                ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
             )
 
             # Stamina drain on attack (Checklist Part 6 Section E)

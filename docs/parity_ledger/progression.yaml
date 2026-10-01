@@ -336,8 +336,10 @@
     branch (src/engine/apply.py:94-110) and LifecycleSystem.resolve_lifecycle''s OLD_AGE
     branch (src/systems/lifecycle_systems/lifecycle.py:193-195). resolve_lifecycle
     is now the sole declared authority for old-age deactivation; the passive branch''s
-    active= formula is active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks)),
-    keeping only its immediate HP-death gate. An ordinary-per-tick-progression old-age
+    active= formula no longer deactivates (TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER
+    extended the sole-authority contract from age to HP deaths: active=(life.active
+    or (new_hp > 0 and new_age < life.max_age_ticks and no death record)), the remaining
+    arm being only the initial_active=False spawn reactivation). An ordinary-per-tick-progression old-age
     death now correctly records death_reason=''OLD_AGE'' and dispatches succession/heirloom
     transfer, one tick later than the passive branch''s own former (buggy, silent)
     deactivation tick -- a documented, determinism-visible shift (docs/guidelines/intentional_divergences.md
@@ -1386,7 +1388,11 @@
     (no numeric literals).'
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_progression.py; tests/simulation_quality/test_progression_scorer.py
-  divergence_note: "Update 2026-08-08 (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION):\
+  divergence_note: "RETIRED 2026-10-01 (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION):\
+    \ the `life_arc_incoherent` half of this rule was removed with hero rebirth -- its\
+    \ premise (`generation >= 2`, a rebirth occurred) no longer exists; the\
+    \ `capability_growth_stalled` half is unchanged. The text below is history.\
+    \ Update 2026-08-08 (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION):\
     \ this rule's own precondition (`lifecycle.generation >= 2`, a rebirth having\
     \ occurred) was structurally unreachable corpus-wide -- the rebirth-granting mechanic\
     \ itself only existed in `resolve_attack()`, a combat function the real corpus\
@@ -1612,3 +1618,24 @@
     payload when EvolutionSystem genuinely evolves an entity). Does not cover real-corpus
     calibration reachability -- out of this ticket's own scope, disclosed as a known
     gap in docs/simulation_quality/event_type_coverage.md.
+- id: PROG-126
+  text: 'TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER: a passive
+    hunger/sleep-debt drain that takes HP from positive to zero records a typed
+    LifecycleComponent.passive_death_cause (STARVATION / SLEEP_DEPRIVATION, hunger
+    outranks sleep debt as a declared precedence) with its zeroing tick, and resolve_lifecycle
+    -- the sole authority for HP-death deactivation -- classifies it one kernel step
+    later with death_reason, is_permadeath, death_tick and the succession dispatch.
+    Never inferred from thresholds or role (LIMIT-04).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/apply.py (_compute_entity_changes passive branch writes
+    the cause), src/systems/lifecycle_systems/lifecycle.py (resolve_lifecycle passive/DEFEAT
+    branch + shared idempotency guard), src/engine/patches.py (LifecyclePatch.apply clears
+    a stale cause), src/core/state.py (LifecycleComponent fields, canonical dict),
+    src/core/enums.py (PassiveDeathCause). docs/simulation/lifecycle_systems_contract.md;
+    docs/guidelines/intentional_divergences.md Section 2.61.'
+  proof_type: regression
+  test_path: tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py::test_hunger_death_records_starvation_with_zeroing_tick_then_classifies_next_tick
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.61.
+  support_boundary: null

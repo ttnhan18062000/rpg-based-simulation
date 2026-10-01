@@ -33,7 +33,7 @@ This document is the canonical record of intentional behavior shifts in `src` co
 | **World / Environment** | Non-Native Faction Hazard Exposure (`town_council`/`bandit_road`) | **Intentional Gameplay Change** | RATIFIED |
 | **Engine / Observability** | DecisionTraceWriter Async Drain — Crash-Loss & Overflow-Drop Windows | **Bounded** | RATIFIED |
 | **Engine / Combat-Progression** | Opportunity-Attack Kill Reward Orphaned on the Victim | **Bug Fix** | RATIFIED |
-| **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | RATIFIED |
+| **Engine / Combat-Progression** | Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path | **Bug Fix** | **SUPERSEDED** 2026-10-01 by §2.63 |
 | **Engine / Cognition-Strategy** | Adventure-Route Defer-Reason Observability Gap | **Bounded** | RATIFIED |
 | **Strategic Cognition / Regional Danger** | Regional-Danger Stabilization No Longer Unconditionally Wins the Project Slot | **Enforced** | RATIFIED |
 | **Knowledge Gateway MCP / Packet Cache** | Level 2 Packet-Cache Freshness/Verification Column Co-location | **Bounded** | RATIFIED |
@@ -688,7 +688,22 @@ This document is the canonical record of intentional behavior shifts in `src` co
   attacker's own `identity.evolution_points_delta > 0` after full resolution).
 - **Status**: ACTIVE
 
-### 2.34 Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION)
+### 2.34 Hero's Journey Rebirth Orphaned in the Real Dominant Kill Path (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION) — SUPERSEDED
+
+> **SUPERSEDED 2026-10-01 by §2.63** (`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`). Hero rebirth
+> was retired as an undeclared resurrection, so the mechanism this entry fixed no longer exists. The body
+> below is kept readable as history only. **The `Verification` path named below no longer exists: that
+> test was deleted and replaced by a test of the opposite behaviour (a hero defender's opportunity-attack
+> zeroing is an ordinary terminal `DEFEAT`, `tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_hero_defender_is_a_terminal_defeat_without_rebirth`).
+> It is a retired reference, not a broken one.
+>
+> **Erratum 2026-10-01** (verified against `91b504fd2`): this entry states that the three functions other
+> than `resolve_attack` "already computed the same `classification` object" and that
+> `resolve_skill_usage()`/`resolve_aoe_attack()` "have the identical gap". For `resolve_aoe_attack` that was
+> never true: it does not call `classify_defeated_target()` at all, so it never had a `rebirth_eligible` to
+> read (`resolve_skill_usage` computes the classification but never read `rebirth_eligible`). There was no
+> fourth rebirth site. The ratified record was wrong when ratified; it is left as written and corrected here.
+
 - **Subsystem**: Engine / Combat-Progression
 - **Old Behavior**: `CombatResolutionSystem.resolve_attack()` (`src/engine/combat.py`) was the
   only one of 4 real kill-resolution functions (`resolve_attack`, `resolve_skill_usage`,
@@ -720,12 +735,12 @@ This document is the canonical record of intentional behavior shifts in `src` co
   the identical gap but 0 real calls observed in this session's own direct instrumentation —
   porting there too would be speculative without real data showing either path is corpus-active;
   left as a residual, lower-priority gap for a future ticket if that changes.
-- **Verification**:
+- **Verification** (RETIRED, path no longer exists; see the SUPERSEDED note above):
   `tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_hero_defender_triggers_rebirth`
   (real lethal opportunity-attack scenario, `EntityRole.HERO` defender, through the full
   `AuthoritativeApplyPipeline.refine()` path: asserts the victim's own `EntityUpdate.lifecycle.
   generation_delta == 1`).
-- **Status**: ACTIVE
+- **Status**: SUPERSEDED (2026-10-01, §2.63)
 
 ### 2.35 Adventure-Routing Phase Discarding All Earlier-Tick Updates (TCK-20260808-ROUTING-FLAG-FACTION-INFORMATION-RNG-COUPLING)
 - **Subsystem**: Engine / Pipeline
@@ -2023,6 +2038,123 @@ untouched by §2.57's fix (out of that ticket's scope).
   `tests/unit/engine/test_interaction_unknown_item_diagnostic.py`.
 - **Status**: RATIFIED
 
+### 2.61 HP-Death Deactivation Is Now `resolve_lifecycle`'s Alone; Passive Biological and Terminal-`DEFEAT` Deaths Recorded One Step Later (TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER, TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE)
+- **Subsystem**: Progression / Lifecycle (Death), Combat (Hero's Journey)
+- **Old Behavior**: `ApplyPath._compute_entity_changes`'s passive branch carried an `new_hp > 0`
+  term in its `lifecycle.active` formula, so any entity at 0 HP was silently deactivated there with
+  no `death_reason`, no succession and no lineage dispatch (passive starvation/sleep-debt zeroing,
+  and a terminal `DEFEAT` leftover). A `REBIRTH` entity was left at 0 HP with `combat.alive=False`
+  and was then deactivated by that same gate on the next life-due tick, so rebirth ended in an
+  unrecorded deactivation.
+- **New Behavior**: (1) The passive branch no longer deactivates: `resolve_lifecycle` is the sole
+  declared authority for HP-death deactivation, completing the dual-writer fix `PROG-030` left
+  half-done for the age half. The passive branch's only remaining `active` write is the
+  construction-time `initial_active=False` spawn reactivation (§2.59), now additionally gated on
+  `new_hp > 0` and no death record. (2) On the tick the passive drain takes HP from positive to zero
+  the writer records a typed `LifecycleComponent.passive_death_cause` (`PassiveDeathCause`:
+  `STARVATION` / `SLEEP_DEPRIVATION`; hunger outranks sleep debt as a declared precedence) with the
+  tick it fired (`passive_death_cause_tick`). `resolve_lifecycle` reads it on the next kernel step
+  and records `death_reason`, `is_permadeath`, `death_tick` and the usual succession dispatch. A
+  terminal `DEFEAT` outcome is classified the same way with `death_reason="DEFEAT"`.
+- **This is not behavior-neutral.** Passive and `DEFEAT` deaths are now *recorded* (they were silent)
+  and trigger succession, heirloom, nemesis and dying-wish dispatch plus the economic-vacancy
+  signal. They land one kernel step later than the old silent deactivation. Classification lands one
+  kernel step later but carries the SAME tick number: the apply path sees the new tick value and the next
+  refine sees that same value, so `death_tick` equals `passive_death_cause_tick` numerically (a
+  `death_tick = cause tick + 1` reading would be wrong); the zeroing tick
+  stays traceable in the cause field (CAUSE-05 / TIME-02) rather than being inferred from a fixed
+  offset.
+- **Rationale**: **Bug Fix** (LIMIT-04, CAUSE-01, CAUSE-05 recorded-cause requirements) for the
+  silent deaths.
+- **Verification**:
+  `tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py` (new),
+  `tests/unit/engine/test_apply.py::test_passive_branch_records_hp_death_cause_but_never_deactivates`
+  and `::test_passive_branch_never_reactivates_an_inactive_entity_younger_than_max_age`,
+  `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py` (P0 `PROG-030` path unaffected).
+- **Closed interim**: while the batch was being assembled a `REBIRTH` defender was left undeactivated (the
+  passive gate no longer deactivated it and no branch handled it); hero rebirth was retired in §2.63, so
+  that class no longer exists. HERO passive deaths are classified like any other (the earlier hold on them
+  was released by the same retirement). The hazard route is closed by §2.62.
+- **Status**: RATIFIED
+
+
+### 2.62 A Terminal Combat Outcome Is No Longer Overwritten by Same-Tick Hazard Drain; Hazard Deaths Recorded (TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND)
+- **Subsystem**: World Dynamics (Regional Hazards) / Lifecycle (Death) / Observability
+- **Old Behavior**: `WorldDynamicsSystem.resolve_dynamics` wrote `outcome_kind="HAZARD"` and
+  `alive_set=(new_hp > 0)` unconditionally on every hazard-affected entity, overwriting a same-tick
+  `KILL`/`DEFEAT`/`PERMADEATH`/`REBIRTH` that combat had already resolved. `resolve_lifecycle` then saw
+  `HAZARD` and recorded no death for that entity (no `death_reason`, no succession), and had no
+  `HAZARD` branch at all, so a hazard-only death was never recorded either. Both were deactivated
+  silently by the passive HP gate that §2.61 removed.
+- **New Behavior**: (1) The hazard drain is carried independently in `CombatUpdate.hazard_damage`
+  (accumulating, unconditional); `hazard_drain_applied` is keyed on it. (2) `outcome_kind` becomes
+  `"HAZARD"` only when no terminal combat outcome (`TERMINAL_COMBAT_OUTCOME_KINDS`, the learning
+  layer's defeated set) already holds the slot. (3) Hazard never flips `alive_set` from `False` to
+  `True`. (4) `resolve_lifecycle` records `death_reason="HAZARD"` (final, `is_permadeath=True`) when the
+  persisted `outcome_kind` is `HAZARD` and hazard's own `alive_set=False` -- i.e. the drain itself took
+  HP to 0, never inferred from region, HP or role. Attribution rule: the first cause in pipeline phase
+  order whose own effect was sufficient wins (Mechanics Bible 01 §4, Death Attribution), so combat
+  kill + hazard records `COMBAT`, while a non-lethal combat result followed by a decisive hazard drain
+  records `HAZARD`.
+- **This is not behavior-neutral.** A same-tick combat kill on a hazard-affected entity is now
+  recorded as `COMBAT` with succession dispatch (it was silent) and counts as a real combat kill in
+  observability. Hazard-only deaths now record `HAZARD` and dispatch succession. Because the extractor
+  now reads `hazard_damage` rather than `outcome_kind`, `hazard_drain_applied` payload `damage` is the
+  hazard contribution alone (identical for hazard-only drains; for a collider it excludes the combat
+  damage).
+- **Rationale**: **Bug Fix** (CAUSE-03, CAUSE-06, LIMIT-04, BODY-07).
+- **Verification**: `tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py` (new),
+  `tests/mechanic_scenarios/test_entity_death_authority_boundary.py` (collision arm equals control arm),
+  `tests/unit/observability/test_event_shapers.py::test_hazard_drain_applied_also_fires_for_an_entity_combat_already_resolved`.
+- **Status**: RATIFIED
+
+### 2.63 Hero Rebirth, the `PERMADEATH` Outcome and the `generation` Counter Retired; No Role Is Exempt From Death (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION)
+- **Subsystem**: Engine / Combat-Progression, Lifecycle, SimQ (entity-lifecycle scoring)
+- **Old Behavior** (see §2.34, superseded): a `HERO` defender taken to 0 HP was classified rebirth-eligible
+  (`combat_rewards.py`, role-gated), and `resolve_attack`/`resolve_multi_attack` produced `REBIRTH`
+  (`generation + 1`) below generation 4 and `PERMADEATH` at the cap; `resolve_attack` also forced
+  `is_lethal=False` for HERO defenders so a lethal hit on a hero never reached `KILL`. `REBIRTH` never
+  worked at runtime: it restored neither HP nor `alive` and ended in a permanent, unrecorded deactivation.
+  `LifecycleComponent.generation` (and `CorpseState.generation`) counted rebirths, and the
+  `life_arc_incoherent` detector inferred incoherence from `generation >= 2` with no growth.
+- **New Behavior**: no role is exempt. A lethal hit is an ordinary `KILL` (recorded `COMBAT` death with
+  `is_permadeath` set and the usual succession dispatch); a non-lethal zeroing is terminal `DEFEAT`
+  (§2.61). `rebirth_eligible`, the `REBIRTH`/`PERMADEATH` outcome kinds, `LifecycleComponent.generation`,
+  `CorpseState.generation`, `generation_delta` (on both `CombatUpdate` and `LifecycleUpdate`),
+  `CombatUpdate.is_permadeath_set` and its four lift guards are removed. `is_permadeath` /
+  `LifecycleUpdate.is_permadeath_set` are **kept** as a separately tracked lifecycle fact (LIFE-01): they
+  are now uniformly `True` for every recorded death by design, and are the hook a future *declared*
+  resurrection process (STR-02) would be the only thing permitted to leave `False`. The
+  `life_arc_incoherent` detector, its scorer weight and config are retired; `conclusion_coherence` is now
+  **flag-less** (`conclusion_incoherent_tags: []`, structurally always `true`, stated in `run_metadata`).
+  `COMBAT_ARENA_MORTALITY` is kept and rewritten to verify a recorded combat death. Lineage depth, if ever
+  needed, is derived from the birth record's parent links when lineage design declares it (ID-06), not
+  from a counter on the entity.
+- **This is not behavior-neutral.** Removing the HERO `is_lethal` clause makes heroes lethally killable
+  through `resolve_attack`, and heroes taken to 0 HP by opportunity attacks are now recorded `DEFEAT`
+  deaths (they previously ended in unrecorded deactivation), so mortality and population dynamics move
+  corpus-wide. The certification suite (a `regression_policy.md` §2 hard gate, including
+  `COMBAT_ARENA_MORTALITY`) was re-run after the change: identical to base (71 passed; the same 3
+  `test_cert_long_run_stability` failures and 1 `test_world_compile_determinism` collection error fail on
+  untouched base).
+- **Forward compatibility (prose, not code)**: nothing loads state from a canonical dict (`LifecycleComponent`
+  and `CorpseState` define only `to_canonical_dict`, consumed write-only), so no legacy-key shim exists.
+  Existing `final_state.canonical.json` evidence keeps its `"generation"` key with its original meaning (a
+  rebirth count as of the emitting run) and is not rewritten; previously recorded `life_arc_incoherent`
+  events likewise keep their meaning. No recorded-event consumer reads that payload key back (searched, none
+  found). No pinned canonical-hash literal moves (determinism gates compare two live runs;
+  `baseline_5k.json` is metrics-keyed): searched, none found.
+- **Rationale**: **Intentional Gameplay Change** (STR-02: undeclared resurrection; ID-02/CAUSE-04: a
+  role-exclusive exemption from death with no in-world capability; ID-06: identity across the reset never
+  declared; the reproduction/succession model already carries continuity through new identities).
+- **Verification**: `tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py`
+  (`test_lethal_hit_on_a_former_hero_is_an_ordinary_recorded_combat_death`,
+  `test_no_rebirth_or_permadeath_outcome_kind_can_be_produced_for_any_role`,
+  `test_retired_rebirth_surface_is_absent`, `test_is_permadeath_stays_a_separately_tracked_lifecycle_fact`),
+  `tests/unit/progression/test_lifecycle.py::test_kill_is_the_only_lethal_combat_outcome_and_retired_kinds_are_not_death_triggers`,
+  `tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_hero_defender_is_a_terminal_defeat_without_rebirth`,
+  `tests/unit/combat/test_rpg_core_recovery.py::test_hero_mortality_is_a_recorded_combat_death`.
+- **Status**: RATIFIED
 ---
 
 ## 3. Unsupported / Retired Behavior
