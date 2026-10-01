@@ -309,6 +309,69 @@ def test_unreadable_mutation_record_is_a_state_not_an_exception(repo):
     assert layer["records"][0]["state"] == "unreadable"
 
 
+# ── mutation baseline lifecycle (declared supersedes link, selection-changed) ──
+def _record_pair(repo: Path, v2_extra=None, v1_extra=None):
+    """v1 and v2 records on the same target; v2 optionally declares `supersedes`."""
+    target = _write(repo / "src/core/conservation.py", "x = 1\n")
+    base = {
+        "target": {"path": "src/core/conservation.py", "sha256": _sha(target)},
+        "run": {"kind": "real-target", "started_utc": "2026-09-29T16:07:35Z", "source_sha": "s"},
+        "tool": {"name": "mutmut", "version": "2.5.1"},
+        "tests": {"files": ["a"], "count": 1},
+        "counts": {"total": 2, "killed": 1, "survived": 1, "timeout": 0, "suspicious": 0, "equivalent": "not-classified"},
+        "stale_after": {"days": 30},
+        "survivors": [{"id": 1}],
+    }
+    _write(repo / "tests/mutation/baselines/a_v1.json", json.dumps({**base, **(v1_extra or {})}))
+    _write(repo / "tests/mutation/baselines/b_v2.json", json.dumps({**base, **(v2_extra or {})}))
+
+
+def _rows(repo):
+    return {r["record"]: r for r in _build(repo)["layers"]["mutation"]["records"]}
+
+
+def test_declared_supersedes_selects_the_current_record_not_the_newest_file(repo):
+    # v1's file name sorts first and v2's last; the link, not name or date, decides.
+    _record_pair(repo, v2_extra={"supersedes": "a_v1.json"})
+    rows = _rows(repo)
+    assert rows["b_v2.json"]["role"] == "current" and rows["b_v2.json"]["state"] == "fresh"
+    assert rows["a_v1.json"]["role"] == "superseded" and rows["a_v1.json"]["superseded_by"] == "b_v2.json"
+    assert rows["a_v1.json"]["state"] == "superseded" and rows["a_v1.json"]["stale_reasons"] == []
+    md = report.render_markdown(_build(repo))
+    assert "superseded** by `b_v2.json`" in md and "not comparable" in md
+
+
+def test_a_superseded_record_is_not_called_stale_even_when_old(repo):
+    old = {"run": {"kind": "real-target", "started_utc": "2025-01-01T00:00:00Z", "source_sha": "s"}}
+    _record_pair(repo, v2_extra={"supersedes": "a_v1.json"}, v1_extra=old)
+    assert _rows(repo)["a_v1.json"]["state"] == "superseded"
+
+
+def test_two_unlinked_records_on_one_target_are_ambiguous_not_guessed(repo):
+    _record_pair(repo)
+    assert {r["role"] for r in _rows(repo).values()} == {"ambiguous-current"}
+
+
+def test_selection_changed_flags_when_the_rule_resolves_differently(repo):
+    from tools.test_architecture import mutation_selection
+
+    _write(repo / "tests/unit/resource/test_cons.py", "from src.core.conservation import f\n")
+    resolved = mutation_selection.resolve(repo, "src.core.conservation")
+    sel = {"rule": "import-based-one-hop", "target_module": "src.core.conservation", "curated_additions": [],
+           "resolved_files_sha256": resolved["resolved_files_sha256"]}
+    _record_pair(repo, v2_extra={"supersedes": "a_v1.json", "selection": sel})
+    row = _rows(repo)["b_v2.json"]
+    assert row["stale_reasons"] == [] and row["state"] == "fresh"
+    _write(repo / "tests/unit/resource/test_new.py", "import src.core.conservation\n")  # re-resolving now differs
+    row = _rows(repo)["b_v2.json"]
+    assert row["state"] == "stale" and "selection-changed" in row["stale_reasons"]
+
+
+def test_record_without_a_selection_rule_gets_no_selection_verdict(repo):
+    _record_pair(repo, v2_extra={"supersedes": "a_v1.json"})
+    assert "selection-changed" not in _rows(repo)["b_v2.json"]["stale_reasons"]
+
+
 def test_escaped_defect_month_basis_is_stated(repo):
     assert "creation date" in _build(repo)["layers"]["escaped_defects"]["month_basis"]
 
