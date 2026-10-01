@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: simulation
 authority: P1
 audience: agent
 ticket_id: TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS
-phase: open
+phase: done
 date: 2026-09-21
 tags: [simulation-quality, progression]
 ---
@@ -17,7 +17,7 @@ converges every entity's species-specific base combat stats toward generic defau
 been doing so throughout every prior balance measurement of this simulation
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -86,6 +86,8 @@ silently destroying a real, demonstrated determinant of real combat outcomes eve
 below are answered (see `investigation.md` §§2-6); step 4 is re-pointed. The original wording
 ("wire it through") is now known to be the wrong fix shape — see `investigation.md` §2.
 
+**Narrowed 2026-10-01 by the rpg-feature-planning ruling (D + A) after the Step 0 measurement below: items 3 (trigger change) and 6 (re-measure) are WITHDRAWN; item 4 is re-pointed to dual-write.**
+
 Resolved scope, in order:
 1. Add a **typed durable per-entity base-stat home** (`base_hp`/`base_atk`/`base_def`/
    `base_evasion`), written once at spawn and immutable thereafter; plus a **separate typed
@@ -103,6 +105,10 @@ Resolved scope, in order:
    path reachable for the first time, so the 2026-09-30 zero is no longer the relevant number.
 
 ## Out of Scope
+- **No `stats_dirty` trigger change; no activation of the full derivation.** Spawn and the derivation
+  hold incompatible models of the whole derived-stat set (`move_cost` 10.0 -> 9.5 on every entity;
+  `atk_range` 3 -> 1 on all five ranged archetypes), so the recalculation's dormancy is
+  load-bearing. Owned by `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS`.
 - **`CoreActions.execute_allocate_ap`'s double-count (`core_actions.py:311-317`) — explicitly NOT in
   scope.** It is dormant by the recorded decision `DEV-004`
   (`docs/guidelines/intentional_divergences.md:2094`), which already owns the fix (porting
@@ -519,13 +525,80 @@ currently a reasoned inference from the code path. If a before/after measurement
 `TCK-20260915-SIMQ-CORPUS-BLIND-TO-SCALE-DEPENDENT-BEHAVIOR` (the corpus runs at ~10 entities and
 could not detect a real 58% combat-volume change), so SimQ may not be the right instrument for
 demonstrating the improvement.
-(none yet — not started)
+**Implementation, 2026-10-01 (rpg-implementer).**
+
+Step 0 probe reproduced the trap: `goblin_scout` spawns 35/8/2/0.05; recalc with base 100 -> 112; with
+base 35 -> 47; residual base 23 -> 35. A per-field probe over three worlds (seed 42) then showed the
+plan's value-neutrality claim failed once the accumulator joined the `stats_dirty` trigger: `move_cost`
+10.0 -> 9.5 on all entities (2/2, 49/49, 38/38), `atk_range` 3 -> 1 on scouts (and by the owner's widening
+all five ranged archetypes), and a clamped `worker` def residual (def 0 vs int(5*0.3)). Stopped and handed
+the design back; ruling **D + A**, no clamp.
+
+Shape shipped:
+- `CombatComponent` (host: base stats are combat stats, not identity) gains typed `base_hp/base_atk/
+  base_def/base_evasion` (defaults 100/10/5/0.05 = the derivation's historical baseline) and
+  `permanent_max_hp_bonus`. Canonical-dict fields; carried through `EntityState.to_readonly()`, which
+  re-lists the component's fields by hand and would otherwise silently reset them.
+- `src/core/derived_stats.py`: `attribute_stat_terms` (single definition, called by
+  `recalculate_combat_stats`) and `residual_base_terms` (spawn residual). One helper, so the two cannot drift.
+- The residual is written in `V2EntityBuilder.build()` (order-independent of `.combat()`/`.attributes()`),
+  only for builders that opted in with `.spawn_combat_stats_are_final()`: the three profile-driven spawn
+  paths (`archetype_factory`, `entity_spawner` legacy guard, `WorldCompiler.compile`). The opt-in is explicit
+  because the builder cannot tell a profile's FINAL value from a test/scenario's base term
+  (`test_leveling` declares `max_hp=100` as a base); undeclared builders keep the generic baseline, so
+  default-built entities behave as before. The residual is UNCLAMPED and may be negative.
+- `ApplyPath` passes the stored bases and accumulator into `get_effective_stats` ->
+  `recalculate_combat_stats`; the accumulator is a linear additive `max_hp` term.
+- Hardening keeps `max_hp_delta=5` (applied this tick, unchanged) AND adds
+  `CombatUpdate.permanent_max_hp_bonus_delta=5` (applied in `CombatPatch`), same trace keys.
+  `event_shapers.py:1829` stays correct because `max_hp_delta` is still written.
+
+**Option A is a declared interim.** This ticket closes the CONFLICTING-VALUE defect (35 vs 112), not the
+dual-path structure: max_hp is still maintained both incrementally (`max_hp_delta`) and by the derivation.
+OWN-01/OWN-03 argument: stored max_hp is a materialised derivation; incrementally maintaining it from the
+same definition is not an independent authority, and
+`test_from_scratch_derivation_equals_incrementally_maintained_max_hp` makes agreement a checked invariant.
+That holds only while the accumulator is a linear additive term (percentage/capped/attribute-dependent
+hardening would break it). Expect the OWN-01 evidence to grade PARTIAL; full single-writer consolidation is
+`TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS`.
+
+**Dormancy is load-bearing.** `stats_dirty` never firing (zero firings, 3 worlds, positive control, 2026-09-30)
+is the only thing preventing the move_cost/range drift; "latent defect" became "latent defect whose
+dormancy is load-bearing". Step 3.3 (accumulator as a trigger) was withdrawn for that reason, so the
+2026-09-30 count still stands and the planned post-fix re-measure (T12) does not apply: the trigger set is
+byte-unchanged.
+
+Known limitation: with no `stat_profile_id` stored, an entity's declared species stat is not recoverable
+from the residual once its attributes move. Not new scope; the clean answer is a typed id at spawn.
+
+No live profile clamps now (residual is unclamped); `worker` def residual is -1 and round-trips exactly.
 
 ## Test Summary
-(none yet)
+- `tests/unit/progression/test_species_base_stats_preserved.py`: 17 pass (spawn unchanged + residual 23/6/1;
+  derivation inverts it; stats_dirty gives 35, excluding 112 and 47; vitality +2 -> 39; hardening +5, +10,
+  grant survives an unrelated recalc; from-scratch == maintained max_hp after 0/1/2 grants; base immutable;
+  negative residual round-trips; builder-order independence; shared-helper agreement; exact round trip for
+  EVERY entity in frontier_living_world / crowded_frontier / quest_dense_frontier; canonical fields + stable
+  hash; every CombatComponent field survives `to_readonly()`; hardening event max_hp matches actual;
+  default builder keeps the generic baseline).
+- Regression: unit/quest, unit/progression, unit/engine, integration/progression, mechanic_scenarios (483 pass);
+  PROG-030's test_path, ALLOCATE_AP dormancy (4), unit/core, entities, worldassembly, worldbuilding,
+  observability (1725 pass); determinism/canonical/replay/fingerprint/hash/checkpoint sweep (green).
+  No recorded-hash fixture needed updating.
 
 ## Files Changed
-(none yet)
+src/core/derived_stats.py (new), src/core/state.py, src/core/updates.py, src/core/builder.py,
+src/progression/leveling.py, src/engine/rpg_depth.py, src/engine/apply.py, src/engine/patches.py,
+src/engine/pipeline_phases/hardening.py, src/entities/archetype_factory.py,
+src/worldassembly/entity_spawner.py, src/worldbuilding/compiler.py,
+tests/unit/progression/test_species_base_stats_preserved.py (new), docs/mechanics/01_entity_anatomy.md,
+docs/core/state.md, docs/parity_ledger/progression.yaml (PROG-127).
 
 ## Completion Summary
-(none yet)
+Species/profile base stats now survive a `stats_dirty` recalculation: `goblin_scout` recalculates to 35, not 112
+(original bug) or 47 (profile-value-as-base trap), and a near-death hardening grant survives it. Shipped as
+option A (declared interim, per rpg-feature-planning ruling): this closes the conflicting-value defect, not the
+dual-path structure; consolidation is `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS`.
+The recalculation remains unreachable in corpus play (trigger set unchanged) and that dormancy is load-bearing.
+Known base failure seen in the wide sweep, not caused by this change: `tests/integration/world/test_long_run_stability.py`.
+Not done by design: planned post-fix `stats_dirty` re-measure (trigger unchanged), clamp (ruled out).

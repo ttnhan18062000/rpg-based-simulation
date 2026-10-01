@@ -99,6 +99,7 @@ class V2EntityBuilder:
         self._identity = IdentityComponent()
         self._inventory = InventoryComponent()
         self._combat = CombatComponent()
+        self._spawn_combat_stats_are_final = False
         self._navigation = NavigationComponent()
         self._strategic = StrategicComponent()
         self._social = SocialComponent()
@@ -133,7 +134,25 @@ class V2EntityBuilder:
         self._cognition = component
         return self
 
+    def spawn_combat_stats_are_final(self) -> V2EntityBuilder:
+        """Mark the combat stats as FINAL spawned values from a stat profile (see build())."""
+        self._spawn_combat_stats_are_final = True
+        return self
+
     def build(self) -> EntityState:
+        # Profile-driven spawn is the sole writer of the combat-stat base terms. A stat profile
+        # declares FINAL spawned values (not base terms), so when the spawn path opted in via
+        # .spawn_combat_stats_are_final() record the residual against this entity's own
+        # attributes. Done here, not in .combat(), so it is independent of call order. Without the
+        # opt-in (tests, scenarios, generators) the combat values are base terms and the
+        # CombatComponent's generic baseline stays, exactly as before.
+        if self._spawn_combat_stats_are_final:
+            from dataclasses import replace as _replace
+            from src.core.derived_stats import residual_base_terms
+            b_hp, b_atk, b_def, b_eva = residual_base_terms(self._combat, self._attributes)
+            self._combat = _replace(
+                self._combat, base_hp=b_hp, base_atk=b_atk, base_def=b_def, base_evasion=b_eva
+            )
         navigation = _component(
             NavigationComponent,
             **{

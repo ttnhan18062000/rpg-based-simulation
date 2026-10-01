@@ -325,6 +325,7 @@ class CombatPatch(ComponentPatch):
             new_combat = replace(new_combat, 
                 hp=new_hp, 
                 max_hp=new_combat.max_hp + u_com.max_hp_delta,
+                permanent_max_hp_bonus=new_combat.permanent_max_hp_bonus + u_com.permanent_max_hp_bonus_delta,
                 alive=(new_hp > 0) if u_com.alive_set is None else u_com.alive_set,
                 atk=new_combat.atk + u_com.atk_delta,
                 def_stat=new_combat.def_stat + u_com.def_delta,

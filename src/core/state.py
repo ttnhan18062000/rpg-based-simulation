@@ -420,12 +420,29 @@ class CombatComponent:
     scars: List[ScarState] = field(default_factory=list)
     status_effects: List[StatusEffectState] = field(default_factory=list)
     latest_result: Optional["IntentResult"] = None
+    # Base terms of the combat-stat derivation (Bible 01 §2). Written once at spawn by
+    # V2EntityBuilder.build() as the RESIDUAL `spawned stat - attribute contribution` (see
+    # src.core.derived_stats.residual_base_terms) and never mutated afterwards. They are NOT declared
+    # stats and may be negative. Defaults equal the derivation's historical generic baseline, so an
+    # entity constructed without the builder behaves as before.
+    base_hp: int = 100
+    base_atk: int = 10
+    base_def: int = 5
+    base_evasion: float = 0.05
+    # Accumulated permanent max-HP grants (near-death hardening). Kept apart from base_hp so the
+    # grant stays traceable (CAUSE-05 / HP-02); the derivation adds it as its own term.
+    permanent_max_hp_bonus: int = 0
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
         if self._canonical_cache is not None:
             return self._canonical_cache
         res = {
+            "base_hp": self.base_hp,
+            "base_atk": self.base_atk,
+            "base_def": self.base_def,
+            "base_evasion": self.base_evasion,
+            "permanent_max_hp_bonus": self.permanent_max_hp_bonus,
             "hp": self.hp,
             "max_hp": self.max_hp,
             "atk": self.atk,
@@ -1113,7 +1130,12 @@ class EntityState:
                 readiness_speed=combat_comp.readiness_speed,
                 wounds=tuple(combat_comp.wounds),
                 scars=tuple(combat_comp.scars),
-                latest_result=combat_comp.latest_result
+                latest_result=combat_comp.latest_result,
+                base_hp=combat_comp.base_hp,
+                base_atk=combat_comp.base_atk,
+                base_def=combat_comp.base_def,
+                base_evasion=combat_comp.base_evasion,
+                permanent_max_hp_bonus=combat_comp.permanent_max_hp_bonus,
             )
 
         equip_comp = self.equipment

@@ -10,6 +10,8 @@ tags: [simulation-quality, progression]
 
 # Plan
 
+> **Amended 2026-10-01 at implementation (rpg-feature-planning ruling D + A):** Step 3.3 (accumulator as a `stats_dirty` trigger) is WITHDRAWN and Step 4 became a dual-write (hardening keeps `max_hp_delta` and also increments the accumulator), because Step 0 measurement showed the full derivation drifts `move_cost`/`atk_range` (and the Step 2 zero-clamp is dropped: residuals are unclamped). See the ticket's Implementation Notes. `investigation.md` §7's value-neutrality table holds only for max_hp/atk/def/evasion.
+
 **Target shape: one base owner, one grant accumulator, one derivation.** Read
 `investigation.md` §2 and §7 before starting — §2 says why the obvious fix ("pass the profile value
 as `base_hp`") is wrong, and §7 says why the whole change is value-neutral. Those two sections are
