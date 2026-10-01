@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # World Rule Family: Conflict / Combat
@@ -110,21 +110,24 @@ still loses).
 
 ### Combat outcomes form a real, differentiated vocabulary; victory ≠ kill and defeat ≠ death
 
-> A combat encounter resolves into one of several distinct outcomes — kill, non-lethal defeat,
-> rebirth, permanent death, mutual survival, rejection, or withdrawal — never a binary
-> victory/death pair.
+> A combat encounter resolves into one of several distinct outcomes — for example kill,
+> defeat (which need not mean death; LIFE-02), mutual survival, rejection, or withdrawal —
+> never a binary victory/death pair. (Example list revised 2026-10-01: it no longer names
+> specific mechanisms; the former `REBIRTH`/`PERMADEATH` outcomes were retired.)
 
 **Disposition: INHERITED — direct reuse of Batch 05's LIFE-01/LIFE-02, which already fully
 established this exact claim ("incapacitated ≠ dead," a real classification process, not one
 predetermined outcome). This batch's own contribution is confirming the vocabulary is
 *richer* than Batch 05 traced, not restating the claim.**
 
-**Repository evidence: SUPPORTED, with one additional confirmed outcome beyond Batch 05's own
-evidence.** `src/engine/combat.py`'s real `outcome_kind` values: `KILL`/`DEFEAT`/`REBIRTH`/
-`PERMADEATH`/`SURVIVE`/`REJECTED`. A further real, separately-produced outcome —
-`FLED` (`src/engine/movement.py`'s `combat_escape="EVASIVE_SUCCESS"` property update) —
-confirms withdrawal is a genuine seventh category, not merely combat resolving to one of the six
-`CombatUpdate.outcome_kind` values. **Confirmed MISSING**, checked directly: no surrender,
+**Repository evidence: PARTIAL (revised 2026-10-01).** "Victory ≠ kill" is SUPPORTED:
+`src/engine/combat.py`'s real `outcome_kind` values are `KILL`/`DEFEAT`/`SURVIVE`/`REJECTED`,
+plus a separately-produced `FLED` (`src/engine/movement.py`'s
+`combat_escape="EVASIVE_SUCCESS"`), so an encounter can end without anyone dying. "Defeat ≠
+death" is permitted, not currently realised, inherited from LIFE-02's own status: terminal
+`DEFEAT` is now a recorded, classified death (`death_reason` `DEFEAT`). The former `REBIRTH`/
+`PERMADEATH` outcomes were retired as an undeclared resurrection
+(`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`; see STR-02). **Confirmed MISSING**, checked directly: no surrender,
 capture, or forced-displacement-as-a-combat-outcome exists (`src/world/displacement.py` is an
 unrelated, calamity-driven World-Evolution mechanism, not a combat outcome — flagged as a
 naming near-collision, not a semantic overlap).

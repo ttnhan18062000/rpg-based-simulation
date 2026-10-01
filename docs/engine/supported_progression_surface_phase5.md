@@ -31,4 +31,4 @@ boundary and may change without notice.
 - Crafting may only produce items whose recipe appears in `known_recipes`.
 - Harvesting is limited to nodes within `perception_radius`.
 - Group directive propagation is single-hop; cascading hierarchies are out of scope.
-- Social contracts do not survive entity death (rebirth resets contract state).
+- Social contracts do not survive entity death (death ends the contract; there is no rebirth).

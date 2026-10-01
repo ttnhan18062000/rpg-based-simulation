@@ -71,10 +71,6 @@ class AoeActions:
                     combat=c_up,
                     wound_update=c_up.wound_update,
                     equipment=c_up.equipment_upd,
-                    lifecycle=LifecycleUpdate(
-                        generation_delta=c_up.generation_delta,
-                        is_permadeath_set=c_up.is_permadeath_set
-                    ) if (c_up.generation_delta != 0 or c_up.is_permadeath_set is not None) else None
                 )
                 
                 # Check HUNT quests if target was killed

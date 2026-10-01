@@ -37,6 +37,21 @@ An inactive entity (`active=False`) is removed from tick processing. Death is pe
 |---|---|---|
 | Old age | `age_ticks >= max_age_ticks` | "OLD_AGE" |
 | Combat death | EntityUpdate with `combat.outcome_kind == "KILL"` | "COMBAT" |
+| Terminal defeat | EntityUpdate with `combat.outcome_kind == "DEFEAT"` (non-lethal zeroing) | "DEFEAT" |
+| Hazard death | EntityUpdate with `combat.outcome_kind == "HAZARD"` and `combat.alive_set is False` (regional hazard drain itself took HP to 0, no terminal combat outcome already held the slot) | "HAZARD" |
+| Passive biological death | persisted `lifecycle.passive_death_cause` (written by the passive drain on the tick HP reached zero) | `"STARVATION"` / `"SLEEP_DEPRIVATION"` |
+
+Same-tick attribution (Mechanics Bible 01 §4): the first cause in phase order whose own effect reached 0 HP
+wins -- `WorldDynamicsSystem` never overwrites a terminal combat outcome (`TERMINAL_COMBAT_OUTCOME_KINDS`) and
+carries the drain independently in `CombatUpdate.hazard_damage`.
+
+The DEFEAT, HAZARD and passive branches share one idempotency guard: an entity that already carries a
+`death_reason` or `is_permadeath` is never classified by them again (a cross-tick property, not branch
+ordering). They read persisted typed facts only -- never `hunger`/`sleep_debt` thresholds or role
+(LIMIT-04). **Declared precedence: hunger outranks sleep debt as a recorded cause of death** when both
+thresholds hold on the fatal tick; this is a declared rule, not derived from the damage magnitudes.
+A passive cause is cleared once a different `death_reason` is recorded (it is never reported for that
+entity). `resolve_lifecycle` is the sole authority for HP-death deactivation, exactly as for old age.
 
 On death:
 1. `active = False`
@@ -60,13 +75,15 @@ an entity's `age_ticks` first reached `max_age_ticks`, the passive branch deacti
 `if not entity.lifecycle.active: continue` guard skipped the entity forever, so the death was never
 observed and no lineage consequence ever dispatched.
 
-**Resolution rule: `resolve_lifecycle`'s OLD_AGE branch is the sole declared authority for
-old-age deactivation.** The passive branch's formula is now
-`active=(new_hp > 0 and (life.active or new_age < life.max_age_ticks))` — it may still deactivate
-an entity *immediately* via its own `new_hp > 0` HP-death gate (combat-adjacent or passive HP loss
-to zero must still deactivate promptly), but it can no longer independently flip an already-active
-entity to inactive purely because its age reached the maximum; that is `resolve_lifecycle`'s job
-alone, one tick later. This is a real, documented, determinism-visible one-tick shift in when an
+**Resolution rule: `resolve_lifecycle` is the sole declared authority for old-age AND HP-death
+deactivation** (the HP half completed by TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER,
+`intentional_divergences.md` §2.61). The passive branch's formula is now
+`active=(life.active or (new_hp > 0 and new_age < life.max_age_ticks and no death record))` — it never
+deactivates; its only `active` write is the construction-time `initial_active=False` spawn
+reactivation, which must exclude zero-HP and already-dead entities (a bare
+`life.active or new_age < max_age` is True for every dead young entity and would resurrect each
+corpse). Deactivation of an aged-out or HP-zero entity is `resolve_lifecycle`'s job alone, one kernel
+step later. This is a real, documented, determinism-visible one-tick shift in when an
 old-age death is recorded — see `docs/guidelines/intentional_divergences.md` §2.59. When
 `life.active` is already `False` (a dead entity, or an `initial_active=False` construction-time
 spawn that has not yet been reactivated), the formula reduces to exactly the pre-fix expression, so
@@ -118,15 +135,13 @@ Per Mechanics Bible [`01_entity_anatomy.md` §4](../mechanics/01_entity_anatomy.
 
 Both pressures accumulate monotonically until the entity eats (resets hunger) or rests (resets sleep_debt). There is no passive decay of the pressures themselves — only of HP once a threshold is crossed.
 
-**Known gap (still open as of TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE):** when this
-passive HP loss drives an entity's `combat.hp` to 0, the passive branch sets
-`combat.alive=False, lifecycle.active=False` directly, with no corresponding `EntityUpdate` for
-`resolve_lifecycle` to observe. `resolve_lifecycle` has no HP/alive-based death-detection branch —
-only the OLD_AGE and COMBAT branches documented above — so a starvation/sleep-debt-caused death
-currently produces **no `death_reason` and no lineage dispatch**; it is empirically confirmed
-still silent, distinct from (and not fixed by) the OLD_AGE dual-writer race resolution above, since
-it is a missing detection branch rather than a timing race. Tracked by the follow-up ticket
-`TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`.
+**Passive HP death (TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER):** when this
+passive HP loss drives `combat.hp` from positive to 0 the writer records
+`lifecycle.passive_death_cause` (`STARVATION` if `hunger >= 95`, else `SLEEP_DEPRIVATION`) and
+`passive_death_cause_tick`, and leaves `lifecycle.active` untouched. `resolve_lifecycle` reads the
+cause on the next kernel step (refine runs before apply within a tick) and records the death with its
+full succession dispatch. The cause is only written for an entity with no `death_reason` or
+`is_permadeath`, and is cleared if another death is recorded first.
 
 ### Output
 

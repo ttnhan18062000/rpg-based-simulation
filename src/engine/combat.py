@@ -133,7 +133,6 @@ class CombatResolutionSystem:
         is_opportunity_attack: bool = False,
         is_lethal: bool = True
     ) -> CombatUpdate:
-        is_lethal = is_lethal and (defender.identity.role != EntityRole.HERO)
         """
         Core combat resolution logic with Tactical Modifiers.
         """
@@ -165,8 +164,6 @@ class CombatResolutionSystem:
         alive = True
         xp_gain = 0
         gold_gain = 0
-        gen_delta = 0
-        perma_set = None
         
         if new_hp <= 0:
             outcome = "KILL" if is_lethal else "DEFEAT"
@@ -179,13 +176,6 @@ class CombatResolutionSystem:
             trace["REWARD_SOURCE"] = classification.source
             trace["REWARD_CATEGORY"] = classification.category.value
 
-            if classification.rebirth_eligible:
-                if defender.lifecycle.generation < 4:
-                    gen_delta = 1
-                    outcome = "REBIRTH"
-                else:
-                    perma_set = True
-                    outcome = "PERMADEATH"
 
         # 5. Durability Decay (Phase 8)
         attacker_equip_upd, defender_equip_upd = CombatResolutionSystem._get_durability_decay(attacker, defender)
@@ -232,8 +222,6 @@ class CombatResolutionSystem:
             alive_set=alive,
             outcome_kind=outcome,
             is_lethal=is_lethal,
-            generation_delta=gen_delta,
-            is_permadeath_set=perma_set,
             equipment_upd=defender_equip_upd,
             attacker_equipment_upd=attacker_equip_upd,
             wound_update=wound_upd,
@@ -385,8 +373,6 @@ class CombatResolutionSystem:
 
         xp_gain = 0
         gold_gain = 0
-        gen_delta = 0
-        perma_set = None
         resource_transfers = []
         if not alive and defender.combat.alive:
              from src.engine.combat_rewards import CombatRewardClassificationService
@@ -396,21 +382,6 @@ class CombatResolutionSystem:
              full_trace["REWARD_SOURCE"] = classification.source
              full_trace["REWARD_CATEGORY"] = classification.category.value
 
-             # Ported from resolve_attack() (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-
-             # INVESTIGATION) -- this branch previously existed only in resolve_attack, the one
-             # real combat function this corpus's own AI never actually calls (0 real calls in
-             # 2000-tick runs), making Hero's Journey rebirth structurally unreachable regardless
-             # of HERO population size or kill rate. resolve_multi_attack already computes the
-             # correct classification (rebirth_eligible=True iff defender role is HERO) above;
-             # this only ports the consumption of that value into the path that's actually
-             # exercised (movement.py's opportunity-attack mechanic).
-             if classification.rebirth_eligible:
-                 if defender.lifecycle.generation < 4:
-                     gen_delta = 1
-                     outcome = "REBIRTH"
-                 else:
-                     perma_set = True
-                     outcome = "PERMADEATH"
 
              from src.core.updates import ResourceTransferIntent
              resource_transfers.append(ResourceTransferIntent(
@@ -445,8 +416,6 @@ class CombatResolutionSystem:
             alive_set=alive,
             outcome_kind=outcome,
             is_lethal=is_lethal,
-            generation_delta=gen_delta,
-            is_permadeath_set=perma_set,
             simultaneous_intents=intents,
             social_upd=social_upd,
             resource_transfers=resource_transfers,

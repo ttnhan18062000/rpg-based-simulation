@@ -59,11 +59,8 @@ Rewards are granted to the attacker (or their group) based on the target's level
 | **Monster** | `LVL * 10` | `LVL * 5` |
 | **Hero** | `LVL * 20` | `LVL * 50` |
 
-### The Hero's Journey (Generations)
-Heroes are uniquely resilient compared to monsters or NPCs.
-1.  **Defeat**: HP reaches 0.
-2.  **Rebirth**: If the Hero is in Generation 1-3, they are reborn (Generation increments).
-3.  **Permadeath**: If the Hero is in Generation 4, they are permanently removed from the simulation.
+### Death (No Role Is Exempt)
+No role is exempt from death. When combat takes a defender to 0 HP the outcome is `KILL` (a lethal attack) or terminal `DEFEAT` (a non-lethal attack, e.g. an opportunity attack); both are recorded by the lifecycle phase as real, final deaths (`death_reason` `COMBAT` / `DEFEAT`, `is_permadeath` set). There is no rebirth, no generation counter and no hero-only exemption: the former "Hero's Journey" rebirth law (generations 1-3 reborn, generation 4 permadeath) was an undeclared resurrection and was retired (`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`, `intentional_divergences.md` §2.63). Continuity after a death is carried by new identities through reproduction, heirs and heirlooms, not by the same entity returning.
 
 ---
 

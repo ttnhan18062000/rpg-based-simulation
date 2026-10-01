@@ -83,10 +83,14 @@ class TestPerEntityMetrics:
         stall_metrics = els.compute_entity_metrics(_path(stall_heavy), weights, ticks_observed=100)
         assert stall_metrics["growth_trajectory"] < 0
 
-    def test_conclusion_coherence_flags_incoherent_and_silent_from_spawn(self, weights):
-        incoherent = [(1, "life_arc_incoherent", "WARNING")]
-        incoherent_metrics = els.compute_entity_metrics(_path(incoherent), weights, ticks_observed=100)
-        assert incoherent_metrics["conclusion_coherence"] is False
+    def test_conclusion_coherence_is_flagless_and_flags_silent_from_spawn(self, weights):
+        """The sole incoherent-flag tag (life_arc_incoherent) was retired with hero rebirth
+        (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION): conclusion_coherence has no
+        incoherent signal defined and is structurally always True; silent_from_spawn stays live."""
+        assert weights["conclusion_incoherent_tags"] == []
+        retired = [(1, "life_arc_incoherent", "WARNING")]
+        retired_metrics = els.compute_entity_metrics(_path(retired), weights, ticks_observed=100)
+        assert retired_metrics["conclusion_coherence"] is True
 
         silent = els.compute_entity_metrics(_path([]), weights, ticks_observed=100)
         assert silent["silent_from_spawn"] is True
@@ -188,7 +192,8 @@ class TestComparability:
         long_run = els.run_metadata(800, weights)
         assert short_run["stall_detector_reachable"] is False
         assert long_run["stall_detector_reachable"] is True
-        assert short_run["life_arc_detector_reachable"] is None  # honestly reported, not guessed
+        assert "life_arc_detector_reachable" not in short_run
+        assert short_run["conclusion_coherence_flagless"] is True  # stated, so True is never read as "confirmed"
 
     def test_clustering_reliable_reflects_tick_count(self, weights):
         """TCK-20260808-ENTITY-LIFECYCLE-SCORE-CALIBRATION: dominant_shape_share was found

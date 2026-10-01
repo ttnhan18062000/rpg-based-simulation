@@ -152,26 +152,13 @@ def test_old_age_death_tick_is_pinned_one_tick_after_age_first_reaches_max():
     )
 
 
-def test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix():
-    """AC7: answered here as EMPIRICALLY CONFIRMED AFFECTED, NOT FIXED IN THIS TICKET.
-
-    This is a distinct root cause from the age dual-writer race this ticket fixes: `resolve_
-    lifecycle` (src/systems/lifecycle_systems/lifecycle.py) has exactly two death-detection
-    branches -- age_ticks >= max_age_ticks ("OLD_AGE") and ent_upd.combat.outcome_kind in ("KILL",
-    "PERMADEATH") ("COMBAT") -- and no branch anywhere that ever inspects combat.hp/alive as
-    computed by the passive decay path (apply.py:98-106's total_passive_dmg branch, driven by
-    bio.hunger>=95.0 / bio.sleep_debt>=98.0). An entity driven to hp=0 purely by that passive path
-    writes combat.hp=0, combat.alive=False, lifecycle.active=False directly, with no corresponding
-    EntityUpdate for resolve_lifecycle to ever observe -- so it never receives a death_reason and
-    never dispatches lineage consequences. This is a missing detection branch, not a timing race,
-    so this ticket's Writer-1/Writer-2 precedence fix (which only changes the age term) does not
-    and cannot touch it. The real fix is tracked separately in the follow-up ticket
-    TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP (a new resolve_lifecycle HP/alive-based
-    death-detection branch). This test pins the still-silent signature so a future, unrelated
-    change to the passive branch does not accidentally start reporting a death_reason without that
-    follow-up ticket's own dispatch wiring (heir/heirloom transfer, nemesis-feud transfer,
-    dying-wish seeding) landing alongside it.
-    """
+def test_starvation_sleep_debt_driven_hp_loss_is_recorded_post_fix():
+    """Updated by TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER (this test was
+    `..._is_still_silent_post_fix`, pinning the gap TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-
+    GAP named). An entity driven to hp=0 by the passive path writes combat.hp=0/alive=False and a
+    typed passive cause on tick N; `lifecycle.active` is left alone (resolve_lifecycle is the sole
+    authority, as PROG-030 declares for age), and resolve_lifecycle records the death on the
+    following tick with its succession dispatch."""
     starving = (
         V2EntityBuilder(3)
         .kind("HERO")
@@ -185,16 +172,14 @@ def test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix():
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(42), flags={"no_frame_pacing": True})
     try:
         kernel.tick_once()
+        zeroing = kernel.state.entities[3]
+        kernel.tick_once()
         final = kernel.state.entities[3]
     finally:
         kernel.shutdown()
 
-    assert final.combat.hp == 0
-    assert final.combat.alive is False
+    assert zeroing.combat.hp == 0 and zeroing.combat.alive is False
+    assert zeroing.lifecycle.active is True and zeroing.lifecycle.death_reason is None
+    assert zeroing.lifecycle.passive_death_cause is not None
     assert final.lifecycle.active is False
-    assert final.lifecycle.death_reason is None, (
-        "if this now records a death_reason, AC7's follow-up ticket "
-        "(TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP) may already be fixed or this test's "
-        "own fixture no longer reproduces the gap -- update this test and the ticket's "
-        "Implementation Notes accordingly, do not just delete the assertion"
-    )
+    assert final.lifecycle.death_reason == "STARVATION"

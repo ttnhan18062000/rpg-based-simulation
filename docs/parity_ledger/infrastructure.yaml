@@ -8877,7 +8877,8 @@
     fix''s own 2 events plus the ~72 migrated by TCK-20260806-SIMQ- OBSERVABILITY-PUSH-MIGRATION-EPIC/-PHASE2-EPIC
     and TCK-20260807-QUEST-EVENT-PUSH-MIGRATION) or a deliberately-undisturbed new
     signal with no legacy diffing equivalent to migrate (capability_growth_stalled/life_arc_incoherent,
-    confirmed not a gap during the same sweep).'
+    confirmed not a gap during the same sweep; life_arc_incoherent was retired 2026-10-01
+    with hero rebirth, TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION).'
   support_boundary: 'Observability delivery-mechanism migration only -- no change
     to AgencyScorer''s own scoring logic or AbandonmentEvaluator''s classification
     rules. grade_anchors.json not recalibrated: both events'' calibration_hits were

@@ -46,7 +46,7 @@ from src.core.strategic import (
     CommittedIntention,
 )
 
-from src.core.enums import EntityRole, Faction
+from src.core.enums import EntityRole, Faction, PassiveDeathCause
 from src.core.movement_modes import MovementMode
 from src.core.self_model import SelfModelBundle
 from src.core.cognition import CognitionModel
@@ -583,7 +583,8 @@ class V2EntityBuilder:
         is_permadeath: Optional[bool] = None,
         death_tick: Optional[int] = None,
         death_reason: Optional[str] = None,
-        generation: Optional[int] = None,
+        passive_death_cause: Optional[PassiveDeathCause] = None,
+        passive_death_cause_tick: Optional[int] = None,
         heir_entity_id: Optional[int] = None,
         heirlooms: Optional[List[str]] = None,
         parent_a_entity_id: Optional[int] = None,
@@ -603,7 +604,8 @@ class V2EntityBuilder:
             "is_permadeath": is_permadeath,
             "death_tick": death_tick,
             "death_reason": death_reason,
-            "generation": generation,
+            "passive_death_cause": passive_death_cause,
+            "passive_death_cause_tick": passive_death_cause_tick,
             "heir_entity_id": heir_entity_id,
             "heirlooms": _copy_list(heirlooms) if heirlooms is not None else None,
             "parent_a_entity_id": parent_a_entity_id,

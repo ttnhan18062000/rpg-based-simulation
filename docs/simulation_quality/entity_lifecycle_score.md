@@ -44,7 +44,7 @@ computed, each answering one real question, aggregated with **mean AND spread**,
 | `path_entropy` | Shannon entropy of the entity's own event-type distribution, normalized to [0,1] | [0,1] | higher | **yes**, below `minimum_sample_threshold` |
 | `loop_score` | `1 - dominant_repeating_cycle_coverage` (shortest period with ≥85% match over the sequence) | [0,1] | not simply lower-is-better — some repetition (eat/sleep/rest maintenance) is normal; only *dominating* repetition with nothing else is bad | **yes** |
 | `growth_trajectory` | `(positive-growth event count − stall-tag count) / path_length` | ~[-1,1] | higher | no |
-| `conclusion_coherence` | `not any(life_arc_incoherent tag present)` | bool | coherent-is-better | no (the tag itself is the direct signal, not a derived statistic) |
+| `conclusion_coherence` | `not any(conclusion_incoherent_tags present)` -- **flag-less**: the tag list is empty since `life_arc_incoherent` was retired with hero rebirth, so this is structurally always `true` (read as "no incoherence signal defined", never "confirmed coherent"); `silent_from_spawn` is the live signal | bool | coherent-is-better | no |
 
 `path_length`/`path_density` are **hard gates**, not just "one more metric" — when they're low,
 the reliability of `path_entropy`/`loop_score` collapses (entropy on a 2-event sequence is nearly
@@ -196,9 +196,8 @@ confound. **Real fix**: `clustering_reliable_tick_threshold: 1000` added to the 
 (L=3) to 0.26 (L=25), no sharp knee anywhere. **`minimum_sample_threshold` kept at `6`** — the
 evidence doesn't justify changing it; this is documented as a verified, deliberate non-change.
 
-**`life_arc_detector_reachable`** remains `null` — none of this ticket's own real runs reached
-Hero generation 2 either, consistent with the sibling ticket's own disclosed rarity finding, not
-resolved here.
+**`life_arc_detector_reachable`** (historical): was reported `null`; the field and the detector
+were retired with hero rebirth (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION). `run_metadata` now reports `conclusion_coherence_flagless: true` instead.
 
 ## Why `growth_trajectory` reads negative population-wide (TCK-20260808-GROWTH-TRAJECTORY-STILL-NEGATIVE-POST-FIX)
 

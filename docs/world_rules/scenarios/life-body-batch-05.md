@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
@@ -42,10 +42,7 @@ A combat loss incapacitates a subject, but it survives — no accidental `defeat
 assumption anywhere.
 
 - **Rules invoked:** LIFE-01 (active participation ≠ permanent termination), LIFE-02.
-- **Result: covered.** `CombatResolutionSystem`'s `REBIRTH` outcome (`generation_delta=1`,
-  `generation < 4`) and the `DEFEAT` outcome (Hero-role, `is_lethal=False`) both confirm a
-  defeated subject can continue existing — `is_permadeath_set` is the only truly final marker,
-  and it is not set in either case.
+- **Result: permitted, not currently realised (revised `2026-10-01`).** No current mechanism lets a defeated subject survive. `KILL` and terminal `DEFEAT` (opportunity attack, `is_lethal=False`) are both recorded, classified, final deaths. The former hero `REBIRTH` previously cited here was an undeclared resurrection and has been retired (`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`; see LIFE-02 and STR-02). The scenario's actual requirement, no *accidental* `defeat = death` assumption, still holds: each death is a declared lifecycle classification, never an implicit consequence of HP reaching zero.
 
 ## LB-S03 — HP zero boundary
 
@@ -53,11 +50,7 @@ HP reaches zero. What semantic transition is actually implied?
 
 - **Rules invoked:** BODY-01 (HP is a materialized abstraction), BODY-02 (zero HP triggers
   classification, not one automatic outcome).
-- **Result: covered — the answer was determined, not assumed in advance.** Reaching
-  `new_hp <= 0` triggers `CombatRewardClassificationService.classify_defeated_target()`, which
-  resolves to one of `KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH` depending on role and generation —
-  zero HP is a necessary trigger for a real classification process, never a sufficient cause of
-  any single predetermined result.
+- **Result: covered for cause; fate not currently realised (revised 2026-10-01).** Reaching `new_hp <= 0` still triggers a real classification, never an assumed one. Combat classifies `KILL` or terminal `DEFEAT` by the attack's own lethality (`is_lethal`; opportunity attacks are non-lethal), not by the subject's role. Lifecycle then records the death with a declared cause (`COMBAT`, `DEFEAT`, `HAZARD`, `STARVATION`, `SLEEP_DEPRIVATION`). The former role- and generation-dependent branch (`REBIRTH`/`PERMADEATH`) was retired, and the `generation` field removed. Zero HP is a necessary trigger for cause classification. Fate is not currently classified: every zero-HP outcome today is a final death, and no declared route to continued existence exists (permitted by LIFE-02 and BODY-02, not required).
 
 ## LB-S04 — Injury without combat
 

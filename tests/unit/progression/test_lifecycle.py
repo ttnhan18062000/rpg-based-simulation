@@ -57,25 +57,32 @@ def test_combat_death_classification():
     assert ent_upd.active is False
     assert ent_upd.lifecycle.death_reason_set == "COMBAT"
 
-def test_permadeath_death_classification():
-    """A PERMADEATH outcome (a rebirth-eligible Hero at generation cap, src/engine/combat.py)
-    must deactivate the entity the same as a KILL outcome -- regression for a real bug where
-    resolve_lifecycle only checked outcome_kind=="KILL", leaving a "permanently dead" Hero
-    active=True and still acting."""
+def test_kill_is_the_only_lethal_combat_outcome_and_retired_kinds_are_not_death_triggers():
+    """COMB-311's test_path (rewritten by TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION; it
+    was `test_permadeath_death_classification`). Hero rebirth/permadeath were retired: a lethal hit is
+    a plain KILL, so resolve_lifecycle's combat-death check matches exactly "KILL" (the former PERMADEATH
+    label is folded into it -- it was never a separate fact; `is_permadeath` is the lifecycle fact and
+    stays). A retired outcome kind is NOT a death trigger, so a stray one can never deactivate an entity
+    or fabricate a death record."""
     ent = (V2EntityBuilder(1)
            .location(0.0, 0.0)
            .build())
     state = AuthoritativeState(tick=100, seed=42, entities={1: ent})
 
-    permadeath_upd = CombatUpdate(outcome_kind="PERMADEATH", is_lethal=True)
-    update = StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=permadeath_upd)})
-
-    refined = LifecycleSystem.resolve_lifecycle(state, update)
-
+    kill_upd = CombatUpdate(outcome_kind="KILL", is_lethal=True)
+    refined = LifecycleSystem.resolve_lifecycle(
+        state, StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=kill_upd)}))
     ent_upd = refined.entity_updates[1]
     assert ent_upd.active is False
     assert ent_upd.lifecycle.death_reason_set == "COMBAT"
     assert ent_upd.lifecycle.is_permadeath_set is True
+
+    for retired in ("PERMADEATH", "REBIRTH"):
+        stray = CombatUpdate(outcome_kind=retired, is_lethal=True)
+        refined = LifecycleSystem.resolve_lifecycle(
+            state, StateUpdate(entity_updates={1: EntityUpdate(entity_id=1, combat=stray)}))
+        upd = refined.entity_updates.get(1)
+        assert upd is None or (upd.active is not False and (upd.lifecycle is None or upd.lifecycle.death_reason_set is None))
 
 def test_succession_and_heirloom_transfer():
     """Verify that heirlooms are transferred to the heir upon death."""

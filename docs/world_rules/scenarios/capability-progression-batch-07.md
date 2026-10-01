@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # Scenario Bank: Capability / Progression / Conflict (Batch 07)
@@ -150,12 +150,7 @@ Combat occurs; no qualifying progression cause is present; capability remains un
 A fight occurs; one participant is defeated; survives; later history/capability is affected.
 
 - **Rules invoked:** Inherited (LIFE-01/02, the combat-outcome-vocabulary entry).
-- **Result: covered — reconfirms Batch 05 with one additional real outcome.** `DEFEAT`
-  (non-lethal) and `REBIRTH` both preserve the defeated participant's continued existence; a
-  wound/scar from that defeat persists as real capability regression (CP-S08's own evidence),
-  and the encounter itself may become a `CausalMemoryEntry` (LEARN-01's own epistemic finding)
-  when the memory flag is on. `FLED` is confirmed as a further, genuinely distinct real outcome
-  beyond Batch 05's own original six-value vocabulary.
+- **Result: permitted, not currently realised (revised 2026-10-01).** No current mechanism lets a defeated participant survive. `KILL` and terminal `DEFEAT` both end in a recorded, final death, and the former hero `REBIRTH`, previously cited here as preserving continued existence, was retired as an undeclared resurrection (`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`; see LIFE-02 and STR-02). What remains real: a participant who loses HP without reaching zero (`SURVIVE`) can carry a wound or scar as a real capability regression (CP-S08's own evidence). The encounter may become a `CausalMemoryEntry` (LEARN-01's own epistemic finding) when the memory flag is on. `FLED` is a genuinely distinct real outcome, so "victory ≠ kill" holds even though "defeat ≠ death" is not currently realised.
 
 ## CP-S12 — Stronger entity still loses
 

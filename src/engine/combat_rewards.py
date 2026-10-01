@@ -21,7 +21,6 @@ class RewardClassification:
     xp_multiplier: int      # Multiplier against evolution_level; MONSTER=10, HERO=20, else=0
     gold_multiplier: int    # Multiplier against evolution_level; MONSTER=5, HERO=50, else=0
     gold_eligible: bool
-    rebirth_eligible: bool
     source: str             # e.g. "EntityRole.MONSTER"
 
 
@@ -38,7 +37,6 @@ class CombatRewardClassificationService:
             xp_multiplier=10,
             gold_multiplier=5,
             gold_eligible=True,
-            rebirth_eligible=False,
             source="EntityRole.MONSTER",
         ),
         EntityRole.HERO: RewardClassification(
@@ -46,7 +44,6 @@ class CombatRewardClassificationService:
             xp_multiplier=20,
             gold_multiplier=50,
             gold_eligible=True,
-            rebirth_eligible=True,
             source="EntityRole.HERO",
         ),
     }
@@ -56,7 +53,6 @@ class CombatRewardClassificationService:
         xp_multiplier=0,
         gold_multiplier=0,
         gold_eligible=False,
-        rebirth_eligible=False,
         source="EntityRole.NONE",
     )
 
@@ -65,7 +61,6 @@ class CombatRewardClassificationService:
         xp_multiplier=10,
         gold_multiplier=5,
         gold_eligible=True,
-        rebirth_eligible=False,
         source="hostile_relation",
     )
 
@@ -94,16 +89,11 @@ class CombatRewardClassificationService:
             context = RelationContext(combat_engaged=True)
             svc = get_faction_semantics_service()
             if svc.is_hostile_compat(attacker_faction_id, defender_faction_id, context):
-                try:
-                    defender_role = EntityRole(defender.identity.role)
-                except (ValueError, AttributeError):
-                    defender_role = None
                 return RewardClassification(
                     category=RewardCategory.HOSTILE_CREATURE,
                     xp_multiplier=10,
                     gold_multiplier=5,
                     gold_eligible=True,
-                    rebirth_eligible=(defender_role == EntityRole.HERO),
                     source="relation_projection",
                 )
         except Exception:
