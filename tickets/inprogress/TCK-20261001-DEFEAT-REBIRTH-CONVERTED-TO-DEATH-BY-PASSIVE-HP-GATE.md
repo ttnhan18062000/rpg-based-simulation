@@ -189,7 +189,14 @@ All four decisions touching this ticket ruled rule-compliant, with conditions:
 the code that makes them true — never ahead of it.** They satisfy AC5 as the catalog-side update.
 
 ## Test Summary
-_To be completed during implementation._
+Terminal `DEFEAT` is a recorded death (`death_reason="DEFEAT"`, `is_permadeath`, succession dispatch) classified by
+`resolve_lifecycle` from the persisted `outcome_kind` (T8, T10, T11', T14 in
+`tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py`; end-to-end proof in
+`tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_hero_defender_is_a_terminal_defeat_without_rebirth`).
+The planned REBIRTH HP/alive restore (S2/R3, `hp_set`) and T9/T9b were WITHDRAWN and reverted after the rule owner found
+STR-02 (resurrection needs a declared process); hero rebirth was then retired entirely by
+TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION. Catalog edits R1/R3/R4 withdrawn, R2 applied.
+Corpus boundary test rewritten (not deleted): every terminal DEFEAT recorded and inactive (was 4 unrecorded in 120 ticks).
 
 ## Files Changed
 _To be completed during implementation._
