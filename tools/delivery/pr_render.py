@@ -114,6 +114,20 @@ def find_ticket_file(ticket_id: str, tickets_root: Path = _DEFAULT_TICKETS_ROOT)
     return matches[0] if matches else None
 
 
+_NOT_CLOSED_DIRS = ("todos", "inprogress")
+
+
+def _not_closed_dir(path: Path, tickets_root: Path) -> Optional[str]:
+    """The `tickets/` subdirectory a ticket file sits in when that location says the work is not
+    closed (`todos/` = filed, `inprogress/` = still open), else None. A path outside `tickets_root`
+    or directly under it is unknown, not "open", so it stays listed."""
+    try:
+        parts = path.relative_to(tickets_root).parts
+    except ValueError:
+        return None
+    return parts[0] if len(parts) > 1 and parts[0] in _NOT_CLOSED_DIRS else None
+
+
 def load_ticket(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     fm = extract_frontmatter(text) or {}
@@ -184,7 +198,10 @@ def discover_tickets(
     The mismatch warning below is computed from the full, unexcluded `commit_ids`/`changed_ids`
     sets -- recording an exclusion changes what gets *rendered*, never whether the underlying
     commit-subject/changed-file disagreement gets *reported* (TCK-20260927-PR-RENDER-NO-RECORDED-
-    TICKET-EXCLUSION AC5)."""
+    TICKET-EXCLUSION AC5).
+
+    A ticket whose file sits under `todos/` or `inprogress/` is left out with a warning, with no flag
+    needed: a PR that files a follow-up names it in a commit subject, but cannot have closed it."""
     exclusions = exclusions or {}
     commit_ids = discover_commit_ticket_ids(run_command, base_ref)
     changed_ids = discover_changed_ticket_ids(run_command, base_ref)
@@ -215,6 +232,14 @@ def discover_tickets(
         path = find_ticket_file(ticket_id, tickets_root)
         if path is None:
             warnings.append(f"{ticket_id}: no ticket file found under {tickets_root}/")
+            continue
+        open_dir = _not_closed_dir(path, tickets_root)
+        if open_dir:
+            # a PR that files a follow-up names it in a commit subject too; its location says it is not closed
+            warnings.append(
+                f"{ticket_id}: ticket file is under {open_dir}/, not done/ -- left out of Closes: "
+                f"(filed or still open by this PR; move it to done/ if this PR really closes it)"
+            )
             continue
         tickets.append(load_ticket(path))
     return tickets, warnings

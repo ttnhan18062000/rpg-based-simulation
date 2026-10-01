@@ -861,3 +861,41 @@ def test_reason_with_double_quote_via_render_surfaces_as_a_clean_cli_error(tmp_p
             tickets_root=tickets_root, run_command=runner,
             exclusions={"TCK-20260924-B": 'named as "context" only'},
         )
+
+
+def _render_one_in(tmp_path, subdir):
+    tickets_root = tmp_path / "tickets"
+    (tickets_root / subdir).mkdir(parents=True)
+    (tickets_root / "todos").mkdir(parents=True, exist_ok=True)
+    _write_ticket(tickets_root / subdir, "TCK-20260924-A", "ai", "Closed thing")
+    _write_ticket(tickets_root / "todos", "TCK-20260924-FOLLOWUP", "ai", "Filed follow-up")
+    runner = FakeRunner([
+        _git_log_rule(["TCK-20260924-A: x", "TCK-20260924-FOLLOWUP: file the follow-up"]),
+        _git_diff_rule([f"tickets/{subdir}/TCK-20260924-A.md", "tickets/todos/TCK-20260924-FOLLOWUP.md"]),
+    ])
+    return pr_render.render(tickets_root=tickets_root, run_command=runner)
+
+
+def test_a_ticket_filed_under_todos_is_left_out_of_closes_with_a_warning(tmp_path):
+    result = _render_one_in(tmp_path, "done")
+    assert "TCK-20260924-A" in result["body"]
+    assert "TCK-20260924-FOLLOWUP" not in result["body"].split("Closes:")[-1]
+    assert any("TCK-20260924-FOLLOWUP" in w and "todos/" in w for w in result["warnings"])
+    # the follow-up must not shape the title either
+    assert result["title"] == "ai: Closed thing (1 ticket)"
+
+
+def test_a_pr_whose_every_ticket_is_still_open_renders_nothing_and_says_why(tmp_path):
+    result = _render_one_in(tmp_path, "inprogress")
+    assert any("TCK-20260924-A" in w and "inprogress/" in w for w in result["warnings"])
+    assert result["body"] is None and "no tickets discovered" in result["warnings"]
+    # control: the same ticket under done/ is listed (see the todos test above)
+
+
+def test_a_ticket_directly_under_the_root_stays_listed(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    _write_ticket(tickets_root, "TCK-20260924-FLAT", "ai", "Flat")
+    runner = FakeRunner([_git_log_rule(["TCK-20260924-FLAT: x"]), _git_diff_rule(["tickets/TCK-20260924-FLAT.md"])])
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    assert "TCK-20260924-FLAT" in result["body"] and result["warnings"] == []

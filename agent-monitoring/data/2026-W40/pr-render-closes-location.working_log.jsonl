@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-01T17:22:00.100737Z", "ticket_id": "TCK-20261002-PR-RENDER-CLOSES-LISTS-FILED-FOLLOWUPS", "title": "pr_render must not list a ticket the PR only filed in Closes:", "status": "DONE", "summary": "pr_render leaves todos/ and inprogress/ tickets out of Closes: with a warning; doc line added.", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
