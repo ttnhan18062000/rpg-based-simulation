@@ -3,7 +3,7 @@ status: authoritative
 layer: mechanics
 authority: P1
 audience: agent
-last_verified: 2026-09-04
+last_verified: 2026-10-01
 tags: [resource-conservation, atomic-law, crafting, economy, loot, home-storage]
 related_chapter: 03_economic_laws.md
 ---
@@ -223,7 +223,9 @@ add/remove/gold-spend actually happens in production.
 
 ## Concurrent Actor Protection
 
-The resolver accepts an optional `reservations` dict (`Dict[tuple[str, str|int], int]`). Before committing a NODE, GROUND_ITEM, CORPSE, QUEST, CHEST, or RECRUIT source, the resolver checks `reservations.get((source_kind, source_id), 0)`. If > 0, the second actor receives `TARGET_LOCKED`.
+The resolver accepts an optional `reservations` dict (`Dict[tuple[str, str|int], int]`). Before committing a GROUND_ITEM, CORPSE, QUEST, CHEST, or RECRUIT source, the resolver checks `reservations.get((source_kind, source_id), 0)`. If > 0, the second actor receives `TARGET_LOCKED`. For NODE the reservation is subtracted from the remaining charges (`conservation.py:82-91`), so a fully reserved node rejects with `SOURCE_DEPLETED` rather than `TARGET_LOCKED`.
+
+The apply path (`src/engine/economy.py`, `_apply_world_effects`) populates reservations only for NODE, GROUND_ITEM, and CORPSE. The QUEST, CHEST, and RECRUIT guards therefore trigger only when a caller hands `resolve()` a reservations dict directly. There is no reservation guard for buildings (SHOP_BUY / SHOP_SELL).
 
 This mechanism prevents duplication when two actors complete the same loot target in the same tick.
 
@@ -283,11 +285,15 @@ Result: accepted=False, reason=INSUFFICIENT_GOLD
 
 | Test / Group | Verified Law |
 |---|---|
-| `tests_v2/parity/test_resource_conservation_parity.py` | Atomic acceptance/rejection gate sequence |
-| `tests_v2/test_crafting_atomicity.py` | 7-gate crafting pre-check and conservation double-check |
-| `tests_v2/test_market_pricing.py` | Buy/sell price formulas including salience cap |
-| `tests_v2/test_loot_no_duplication.py` (COMB-089) | Concurrent actor reservation prevents loot duplication |
-| `tests_v2/test_home_storage.py` | Home storage capacity and withdraw/deposit symmetry |
+| `tests/unit/resource/test_resource_conservation_regression.py` | Harvest conservation: inventory-full harvest leaves the node and inventory unchanged |
+| `tests/unit/resource/test_conservation_rejection_paths.py` | Every rejection path of `resolve()`: `accepted is False`, exact `ReasonCode`, no update fields; `TARGET_LOCKED` per reservation-guarded source kind |
+| `tests/unit/resource/test_rejected_transfer_apply_path.py` | A rejected transfer leaves its transaction id out of `processed_transaction_ids`, changes no durable state, and a grouped rejection rolls back without burning ids |
+| `tests/unit/resource/test_node_charge_accounting.py` | NODE charge accounting including in-tick reservations |
+| `tests/unit/resource/test_resource_conflicts.py`, `tests/integration/kernel/test_race_conditions_v2.py` | Concurrent actor reservation prevents loot duplication (end to end through the apply path) |
+| `tests/unit/resource/test_transaction_grouping.py` | Grouped transfers commit together or roll back together |
+| `tests/unit/resource/test_resource_v2_boundary.py` | Shop sell, crafting, tax and recruitment transfers through the resolver |
+| `tests/unit/resource/test_domain_8_economy.py`, `tests/unit/resource/test_economy_hardening.py` | Shop stock and liquidity depletion; buy/sell price formulas and caps |
+| `tests/unit/resource/test_equipment_chests_storage.py` | Home storage atomicity and chest loot |
 | Parity ledger entries `town_resource.yaml` | TOWN-121 through TOWN-125 cover concurrent loot protection |
 
 ---
