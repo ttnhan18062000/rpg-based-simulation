@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK
-phase: open
+phase: done
 date: 2026-09-28
 tags: [engine, lifecycle, combat]
 ---
@@ -16,7 +16,7 @@ Do same-tick combat and hazard deaths on one entity resolve under a declared rul
 processed exactly once?
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -28,6 +28,13 @@ repair
 P1
 
 ## Request Summary
+**RESOLVED 2026-10-01 — `DEFECT_CONFIRMED`. The premise stated below was disproved by this check:
+there is no declared rule to resolve under, and the two cited comments are a same-tick
+read-freshness rule, not a precedence rule. `resolve_lifecycle` has no HP/alive death branch, so a
+hazard drain coinciding with a combat kill erases the death record rather than resolving it under
+any precedence. See Implementation Notes for the verdict and the request text below for the
+original framing, kept as the historical record of what was asked.**
+
 **A check, not a fix.** The invariant under test: same-tick deaths from combat and hazard damage
 resolve under a **declared** rule. Precedence is currently asserted in code comments
 (`src/systems/world_systems/groups.py:99`, `src/engine/pipeline_phases/clan_lifecycle.py:19`);
@@ -135,13 +142,94 @@ lifecycle ordering is written.
   the local branch `natural-aging-old-age-dispatch-fix-unreviewed`. **It is not evidence.**
 
 ## Implementation Notes
-_To be completed during implementation._
+
+**Exit state: `DEFECT_CONFIRMED`** (AC1). Observed at engine commit `e9db40f0a`, i.e. at/after
+`5d4e4a237` (PR #254) as this ticket requires. No fix written — ticket's own Out of Scope.
+
+**The defect is not the one this card hypothesised.** C1 asked whether same-tick combat and hazard
+deaths resolve under a declared rule. There is no rule to resolve *under*: `resolve_lifecycle`
+recognises only `KILL`/`PERMADEATH` → `COMBAT` and `age >= max_age` → `OLD_AGE`
+(`src/systems/lifecycle_systems/lifecycle.py:189-218`). It has **no HP/alive-based death branch**,
+and no third `death_reason` literal exists in `src/`. So the collision does not resolve wrongly —
+it destroys the combat death record outright.
+
+- **Q3's premise does not hold.** The comments at `src/systems/world_systems/groups.py:99` and
+  `src/engine/pipeline_phases/clan_lifecycle.py:19` are **not** a combat-vs-hazard precedence
+  rule; both assert a same-tick *read-freshness* rule for downstream consumers. This check
+  supersedes the Request Summary's reading. Those consumers use `is_alive()`/`is_active()` and so
+  **do** treat an `alive_set=False` entity as dead while `resolve_lifecycle` does not — which is
+  how the inconsistency becomes observable.
+- **Mechanism.** `world_dynamics.py:39` does `replace(c_upd, ..., outcome_kind="HAZARD", ...)` —
+  an unconditional overwrite — and runs at `pipeline.py:348`, between the phase writing `KILL`
+  (:297/:320) and the phase reading it (:414), inside one accumulating update. Its loop guard
+  (`world_dynamics.py:31`) reads committed state, where a victim killed earlier this tick is still
+  alive, so the victim is always eligible. The `KILL` sits on the **victim's** own `EntityUpdate`
+  (`combat.py:495`/`:553`) — exactly the key `resolve_lifecycle` reads.
+- **Q2.** The death is processed **exactly once, but as a non-death**: `death_reason`,
+  `death_tick` and `is_permadeath` are never set, so the succession/heirloom/lineage dispatch
+  inside `if is_dead:` never runs. Deactivation still lands, one tick late, via `apply.py:109`'s
+  passive HP gate. Regional trauma is booked identically to the control arm.
+- **Q1, answered in two parts (AC3).** Zero `KILL`/`PERMADEATH` in 120 unscripted ticks of
+  `frontier_marches` (kinds seen: `SURVIVE` 84, `REJECTED` 34, `DEFEAT` 4, `REBIRTH` 1); hazard
+  drain > 0 on 0.3% of eligible entity-ticks. The joint event was **not observed** — which is
+  **not** evidence of unreachability, just the expected result of sampling a conjunction of two
+  rare events. Nothing in the code prevents it.
+- **But the end-state is routine in production.** The committed signature `combat.alive=False` +
+  `lifecycle.active=True` + `death_reason=None` occurs on 8 separate ticks in that unmodified run,
+  via **three** routes that need no combat kill: hazard-only drain deaths, `DEFEAT` (because
+  `combat.py:136` forces `is_lethal=False` for `EntityRole.HERO` defenders), and `REBIRTH`.
+
+**AC2 honoured:** nothing is reported as "fine". The scripted-arm caveat is stated in both
+`investigation.md` and the test module docstring, and the unscripted corpus evidence is kept
+separate from it.
+
+**AC6/AC7 not triggered by this ticket** — no fix is written and nothing here alters who decides
+alive/dead. Both bind the follow-up ticket instead; `make semantic-control-plane-drift-check` is
+not run here because recording a clean run would be recording a check of nothing.
+
+**Four instrument errors were found and corrected before any conclusion was drawn** (faction
+immunity masking the hazard, `trauma_level` vs `trauma_score`, a two-variable differential, and a
+`round(..., 3)` artifact). A positive control confirmed the reachability probe can see kills at
+all. Details in `investigation.md` § Instrument honesty.
 
 ## Test Summary
-_To be completed during implementation._
+
+- `tests/mechanic_scenarios/test_entity_death_authority_boundary.py` (new, 3 tests) plus B0's
+  `test_combat_death_trace_encounterability.py` as an independent control: **5 passed**.
+- Scoped domain re-run, `tests/unit/progression/test_lifecycle.py` +
+  `tests/unit/engine/test_apply.py` (`-m "not slow"`): **46 passed**.
+- The new tests assert the **current, defective** behaviour on purpose; when the routed fix lands
+  they are expected to fail and must be rewritten to the fixed contract, not deleted. Stated in
+  the module docstring.
+- Known limitation, recorded not hidden: the corpus test is `@pytest.mark.slow`, which
+  `TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED` establishes is excluded from the gating
+  CI lane. It is `@slow` because it genuinely is; promoting it out of the marker to dodge that is
+  the wrong fix.
 
 ## Files Changed
-_To be completed during implementation._
+
+- `tests/mechanic_scenarios/test_entity_death_authority_boundary.py` (new)
+- `tickets/inprogress/` → `tickets/done/TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK.md`
+- `stored_artifacts/TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK/{plan,investigation,test_plan}.md`
+
+No `src/` file was modified.
 
 ## Completion Summary
-_To be completed during implementation._
+
+Card C1 answered with one exit state, `DEFECT_CONFIRMED`, and all four questions answered
+separately with evidence rather than inference. The headline is that the card's own framing was
+wrong in a way that matters: this is not an ordering/precedence defect but a **missing
+HP/alive-based death branch**, so every non-`KILL` route to `combat.alive=False` yields an entity
+dead to combat, groups, clans and regional trauma, and alive to lifecycle, with no cause recorded.
+
+Routed as two separate pieces of follow-up work, deliberately not merged:
+
+1. The missing HP/alive death branch → **`TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`**
+   (already open; this check supplies the production evidence it lacked).
+2. The unconditional `outcome_kind` overwrite at `src/engine/world_dynamics.py:39` → **no open
+   ticket covers this; a new one is needed.** A fix there touches world-dynamics/lifecycle
+   ordering, so it inherits this ticket's AC6 escalation and must be sequenced against
+   `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`, which is determinism-sensitive.
+
+Findings routed back to the systemic-world roadmap track (AC8) for the dated §3.1 addendum (AC5),
+which `world-rule-catalog-design` owns.
