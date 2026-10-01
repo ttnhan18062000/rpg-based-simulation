@@ -82,11 +82,16 @@ record the 46 to 19 history.
 The failure, `tests/integrity/test_logic_guards.py::test_autonomous_loop_determinism_drift_guard`,
 is pre-existing: it fails identically on a clean detached checkout of origin/main fe6a2f564 and
 does not read working_log.csv.
+CI on the PR then failed `tests/tools`: `test_validate_working_log.py` pins physical line numbers of the real
+log (shifted by the dedupe, fixed here) and `monitoring_anomaly_validator` vocabulary_drift counted 12
+non-canonical agent literals from this ticket's own closure events (`agent-working-implementer`, corrected to
+the tool default `claude`). Full `tests/tools` local run otherwise: 3405 passed.
 
 ## Files Changed
 - tickets/working_log.csv
 - tools/gate_checks/working_log_content_duplicate_check.py
 - tests/tools/test_working_log_content_duplicate_check.py
+- tests/tools/test_validate_working_log.py (pinned physical line numbers shifted down by the removed lines; the 1658/1666 byte-identical pair is now one row at 1643)
 
 ## Completion Summary
 Debt removed; the ratchet now pins the true count (19) so any new duplicate pair fails.
