@@ -125,3 +125,56 @@ def test_heading_with_none_prefixed_word_not_treated_as_resolved(tmp_path):
     plan = tmp_path / "plan.md"
     plan.write_text("## Unresolved Questions\n\nNonetheless, X is unresolved: should Y happen?\n")
     assert plan_has_unresolved_questions_heading(str(plan)) is True
+
+
+# --- TCK-20260930-PLAN-GATE-HEADING-SUFFIX-FALSE-NEGATIVE ----------------------------------------
+# A real planner run headed its open owner decisions with a qualifier; the bare-heading-only regex
+# returned False and the gate let the plan through to Implement.
+
+_REPORTED_HEADING = "## Unresolved Questions (decide before the implementer runs; do not decide in-plan)"
+
+
+def test_reported_suffixed_heading_with_real_questions_returns_true(tmp_path):
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan\n\n1. step\n\n" + _REPORTED_HEADING + "\n\n"
+        "1. Should the assertion cover the rejection path or only the success path?\n"
+        "2. Which owner approves the oracle change?\n3. Is the baseline refresh in scope?\n",
+        encoding="utf-8",
+    )
+    assert plan_has_unresolved_questions_heading(str(plan)) is True
+
+
+def test_suffixed_heading_with_none_body_returns_false(tmp_path):
+    plan = tmp_path / "plan.md"
+    plan.write_text("# Plan\n\n" + _REPORTED_HEADING + "\n\nNone.\n", encoding="utf-8")
+    assert plan_has_unresolved_questions_heading(str(plan)) is False
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("heading", [
+    "## Unresolved Questions: owner decisions",
+    "## Unresolved Questions - owner decisions",
+    "## Unresolved Questions \u2014 owner decisions",
+    "## Unresolved Questions [needs owner]",
+    "## Unresolved Questions(no space)",
+])
+def test_punctuation_qualified_headings_match(tmp_path, heading):
+    plan = tmp_path / "plan.md"
+    plan.write_text("# Plan\n\n" + heading + "\n\n1. A real open question.\n", encoding="utf-8")
+    assert plan_has_unresolved_questions_heading(str(plan)) is True
+
+
+def test_plain_word_after_the_title_is_deliberately_not_matched(tmp_path):
+    """Pinned decision: '## Unresolved Questions Resolved Later' reads as a different section."""
+    plan = tmp_path / "plan.md"
+    plan.write_text("# Plan\n\n## Unresolved Questions Resolved Later\n\n1. Something.\n", encoding="utf-8")
+    assert plan_has_unresolved_questions_heading(str(plan)) is False
+
+
+def test_bare_heading_behaviour_unchanged(tmp_path):
+    plan = tmp_path / "plan.md"
+    plan.write_text("# Plan\n\n## Unresolved Questions\n\n1. A real open question.\n", encoding="utf-8")
+    assert plan_has_unresolved_questions_heading(str(plan)) is True
