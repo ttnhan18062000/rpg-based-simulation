@@ -62,9 +62,9 @@ valid values" for those two fields is no longer a judgment call, it's a cited sc
 Type` (bug/feature/refactor/chore/repair) has no equivalent canonical enum or static check as of
 this ticket — still pure LLM judgment for that one field.
 
-**Step 0c — Proof Plan advisory (report only, never a condition).** For a `standard` ticket, also
+**Step 0c — Advisories (report only, never a condition).** For every ticket, also
 run `python3 -c "import sys; sys.path.insert(0,'.'); from tools.gate_checks.done_checker_static import run_advisory_checks; import json; print(json.dumps(run_advisory_checks('<ticket_id>', '<tier>')))"`.
-It returns `test_plan_proof_fields` with status `OK`/`WARN`/`NA`; a `WARN` lists the mandatory
+It returns `test_plan_proof_fields` (standard tickets only; `NA` otherwise) and `cited_evidence_tracked`, each with status `OK`/`WARN`/`NA`. A `cited_evidence_tracked` `WARN` names a cited evidence path that is gitignored or untracked. A `test_plan_proof_fields` `WARN` lists the mandatory
 `## Proof Plan` fields (level, proof kind, oracle source, expected effect, selected commands)
 missing from `test_plan.md`. Copy any `WARN` into your `summary`/notes so the implementer sees it,
 but it is **not** a checklist condition: it never makes a condition `FAIL`, never blocks READY TO
