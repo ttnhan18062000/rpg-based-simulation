@@ -16,10 +16,10 @@ default `PROD_SMALL` profile), used as the runtime instrument for the absence an
 
 - `call_counter_named_methods.py <worlds,comma> <ticks> [module:Class.method ...]` wraps the named methods,
   proves each wrapper can increment (asserts before the run), then counts calls per world. Output:
-  `output_named_methods_5worlds_2000ticks.json` (crowded_frontier, quest_dense_frontier, hero_guild_routing,
+  `output_named_methods_5worlds_2000ticks.jsonl` (crowded_frontier, quest_dense_frontier, hero_guild_routing,
   frontier_living_world, generated_frontier_3_42; 2000 ticks each). **An absent key means 0 calls.**
 - `call_counter_whole_classes.py <world> <ticks> <out.json>` wraps every method of a fixed class list; the
-  `control` object records the positive control per class. Outputs: `output_whole_classes_<world>_1000ticks.json`
+  `control` object records the positive control per class. Outputs: `output_whole_classes_<world>_1000ticks.jsonl`
   for crowded_frontier, quest_dense_frontier, frontier_living_world. Here `counts` also omits zero-call methods.
 - `wider_scope_candidate_rederivation.py` is the early ast re-derivation of the wider-scope sweep (the
   authoritative rule now lives in `tools/mechanism_registry/mechanism_registry_completeness_check.py`).

@@ -142,7 +142,11 @@ def _independently_derive_counts() -> dict:
     real bug in build_skill_usage_section rather than just confirming it agrees with itself."""
     counts: dict = {}
     pattern = re.compile(r"'skill':\s*'([^']*)'")
-    for shard in sorted(_REAL_DATA_DIR.glob("*/tools.jsonl")):
+    # Canonical week files AND per-branch shards (<branch>.tools.jsonl): load_data_glob reads both since
+    # the monitoring sharding work, so an independent derivation limited to the canonical files
+    # disagrees whenever an unconsolidated branch shard holds a Skill call.
+    shards = sorted(set(_REAL_DATA_DIR.glob("*/tools.jsonl")) | set(_REAL_DATA_DIR.glob("*/*.tools.jsonl")))
+    for shard in shards:
         with open(shard, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()

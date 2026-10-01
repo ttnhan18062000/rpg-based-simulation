@@ -47,10 +47,17 @@ def resolve_and_relocate_ticket(
     inprogress_path = inprogress_dir / f"{ticket_id}.md"
     if inprogress_path.exists():
         text = inprogress_path.read_text()
+        # TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH: on a resumed run the first
+        # Scope's `copied_from_todos` result is gone, but the copy it left behind is still on disk.
+        # Derive the path from the filesystem rather than carrying run state across the resume (no
+        # new durable state): a surviving tickets/todos/ copy is reported, so Verify keeps its
+        # "expected todos duplicate" note and Finalize deletes it. An epic-tier move deleted the
+        # todos original, so nothing is found and "" is correct.
+        surviving = sorted(todos_dir.rglob(f"{ticket_id}.md")) if todos_dir.exists() else []
         return {
             "ticket_path": str(inprogress_path),
             "tier": _section_body(text, "Tier").strip().lower() or DEFAULT_TIER,
-            "todos_source_path": "",
+            "todos_source_path": str(surviving[0]) if surviving else "",
             "action": "already_in_inprogress",
         }
 
