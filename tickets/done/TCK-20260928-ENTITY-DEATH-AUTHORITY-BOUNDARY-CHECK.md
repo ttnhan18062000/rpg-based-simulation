@@ -28,6 +28,13 @@ repair
 P1
 
 ## Request Summary
+**RESOLVED 2026-10-01 — `DEFECT_CONFIRMED`. The premise stated below was disproved by this check:
+there is no declared rule to resolve under, and the two cited comments are a same-tick
+read-freshness rule, not a precedence rule. `resolve_lifecycle` has no HP/alive death branch, so a
+hazard drain coinciding with a combat kill erases the death record rather than resolving it under
+any precedence. See Implementation Notes for the verdict and the request text below for the
+original framing, kept as the historical record of what was asked.**
+
 **A check, not a fix.** The invariant under test: same-tick deaths from combat and hazard damage
 resolve under a **declared** rule. Precedence is currently asserted in code comments
 (`src/systems/world_systems/groups.py:99`, `src/engine/pipeline_phases/clan_lifecycle.py:19`);
