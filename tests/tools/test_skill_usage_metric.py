@@ -2,14 +2,11 @@
 (TCK-20260805-SKILL-USAGE-METRIC).
 
 Mirrors tests/tools/test_retrieval_baseline_metrics.py's design: synthetic-fixture unit tests for
-the counting logic itself, plus an integration test against the REAL agent-monitoring/ corpus —
-never a tmp_path copy for the live-corpus assertion, which would make it vacuous. The live-corpus
-test independently re-derives counts via its own separate regex pass (not by calling the function
-under test twice) so it can catch a real bug in the function, not just confirm self-agreement.
+the counting logic itself, plus a frozen-fixture corpus test with literal expected counts (so the result never depends on
+which shards a branch carries), and smoke tests against the REAL agent-monitoring/ corpus.
 """
 import ast
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -20,10 +17,6 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "skill_usage_metric.py"
 _REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
-# Post-TCK-20260903-MONITORING-DATA-MIGRATION unified weekly layout: real tools.jsonl shards live
-# under agent-monitoring/data/<ISO-week>/tools.jsonl, not the legacy agent-monitoring/tools/
-# tools-*.jsonl path (that directory no longer exists).
-_REAL_DATA_DIR = _REAL_AGENT_MONITORING_DIR / "data"
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -134,45 +127,57 @@ def test_derivation_string_present_and_non_fabricated():
 
 
 # ---------------------------------------------------------------------------
-# Live-corpus integration test — independent re-derivation, not a stale fixture
+# Frozen-fixture corpus test (TCK-20260930-SKILL-USAGE-METRIC-LIVE-CORPUS-TEST-FROZEN-FIXTURE).
+# The previous version counted Skill rows in the live agent-monitoring/data/ shards, so any branch
+# that carried its own shard with a Skill row changed the expected count. The fixture below is a
+# hand-written tree covering both shard shapes; the expected counts are literals, not derived from
+# the production glob, so file discovery is checked independently of the code under test.
 # ---------------------------------------------------------------------------
 
-def _independently_derive_counts() -> dict:
-    """A deliberately separate implementation of the same extraction, so this test can catch a
-    real bug in build_skill_usage_section rather than just confirming it agrees with itself."""
-    counts: dict = {}
-    pattern = re.compile(r"'skill':\s*'([^']*)'")
-    # Canonical week files AND per-branch shards (<branch>.tools.jsonl): load_data_glob reads both since
-    # the monitoring sharding work, so an independent derivation limited to the canonical files
-    # disagrees whenever an unconsolidated branch shard holds a Skill call.
-    shards = sorted(set(_REAL_DATA_DIR.glob("*/tools.jsonl")) | set(_REAL_DATA_DIR.glob("*/*.tools.jsonl")))
-    for shard in shards:
-        with open(shard, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if rec.get("tool") != "Skill":
-                    continue
-                m = pattern.search(rec.get("input_summary", ""))
-                if m:
-                    counts[m.group(1)] = counts.get(m.group(1), 0) + 1
-    return counts
+def _write_shard(path: Path, skills: list) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = [{"tool": "Bash", "run_id": "TCK-X", "input_summary": "{'command': 'ls'}"}]
+    rows += [
+        {"tool": "Skill", "run_id": "TCK-X", "input_summary": f"{{'skill': '{name}', 'args': None}}"}
+        for name in skills
+    ]
+    path.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
 
 
-def test_live_corpus_matches_independently_derived_counts():
+@pytest.fixture
+def frozen_corpus(tmp_path):
+    data_dir = tmp_path / "agent-monitoring" / "data"
+    _write_shard(data_dir / "2026-W01" / "tools.jsonl", ["graphify", "graphify"])  # bare canonical shape
+    _write_shard(data_dir / "2026-W01" / "some-branch.tools.jsonl", ["implement-ticket"])  # per-branch shape
+    _write_shard(data_dir / "2026-W02" / "tools.jsonl", ["graphify"])
+    _write_shard(data_dir / "2026-W02" / "other-branch.tools.jsonl", ["create-tickets", "graphify"])
+    return data_dir
+
+
+def test_frozen_corpus_counts_both_shard_shapes(frozen_corpus):
+    from generate_retro import load_data_glob
+    report = build_skill_usage_section(load_data_glob(frozen_corpus, "tools"))
+    # Literal oracle: 2 bare W01 + 1 branch W01 + 1 bare W02 + 2 branch W02. A loader that drops
+    # either shard shape produces a different total.
+    assert report["per_skill"] == {"graphify": 4, "implement-ticket": 1, "create-tickets": 1}
+    assert report["total_skill_invocations"] == 6
+    assert report["unparseable"] == 0
+
+
+def test_frozen_corpus_result_ignores_live_shards(frozen_corpus, tmp_path):
+    from generate_retro import load_data_glob
+    before = build_skill_usage_section(load_data_glob(frozen_corpus, "tools"))
+    # A new shard elsewhere (a different data dir) must not change the fixture's result.
+    _write_shard(tmp_path / "elsewhere" / "2026-W03" / "x.tools.jsonl", ["graphify"])
+    after = build_skill_usage_section(load_data_glob(frozen_corpus, "tools"))
+    assert before == after
+
+
+def test_live_corpus_loads_nonempty():
+    # Smoke only: the real multi-week corpus is readable and has Skill rows. No count is pinned,
+    # because the count legitimately changes with every branch that carries its own shard.
     from generate_retro import DEFAULT_TOOLS_FILE, load_data_glob
-    tools = load_data_glob(DEFAULT_TOOLS_FILE, "tools")
-    report = build_skill_usage_section(tools)
-    expected = _independently_derive_counts()
-    assert report["per_skill"] == expected
-    # Correct-data assertion, not just "doesn't crash": the real corpus spans multiple
-    # agent-monitoring/data/<ISO-week>/ shards, so a nonzero count here proves the full
-    # multi-week corpus was actually read, not silently truncated to one shard.
+    report = build_skill_usage_section(load_data_glob(DEFAULT_TOOLS_FILE, "tools"))
     assert report["total_skill_invocations"] > 0
 
 
