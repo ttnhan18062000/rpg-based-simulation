@@ -89,7 +89,7 @@ def test_fails_when_duplicate_pair_count_exceeds_ceiling(tmp_path):
 
 
 def test_ceiling_may_only_decrease_never_used_to_paper_over_a_regression():
-    assert DUPLICATE_PAIR_CEILING == 46, (
+    assert DUPLICATE_PAIR_CEILING == 19, (
         "DUPLICATE_PAIR_CEILING changed -- if this is because a legitimate fix reduced the real "
         "duplicate-pair count, lower this value to match (never raise it to paper over a new "
         "duplicate; see the module's own docstring for why this must be a ratchet, not a "

@@ -283,24 +283,24 @@ def test_all_9_formerly_mismatched_rows_are_now_clean_and_repaired_correctly():
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
-    expected_lines = {1511, 1581, 1658, 1666, 1697, 1700, 1702, 1707, 1720}
+    expected_lines = {1501, 1571, 1643, 1675, 1678, 1680, 1685, 1698}
     for line_no in expected_lines:
         assert by_line[line_no].classification == "clean", line_no
 
     # Spot-check reconstructed content survived the repair losslessly (exact text preserved,
     # only the quoting/field-boundary shape changed).
-    assert by_line[1658].record["title"] == (
+    assert by_line[1643].record["title"] == (
         'Add an Explicit "Always the Bare Directory, Never Cherry-Picked Files" Rule to test-scoper'
     )
-    assert by_line[1697].record["title"] == (
+    assert by_line[1675].record["title"] == (
         "Magical/demonic-being reproduction path -- reuse Calamity substrate, full-adult spawn "
         "(no childhood)"
     )
-    assert by_line[1700].record["title"] == (
+    assert by_line[1678].record["title"] == (
         "Human/humanoid reproduction cadence sub-phase -- new WD-16 cycle, per-parent cooldown, "
         "NOT marriage-gated"
     )
-    assert by_line[1720].record["title"] == (
+    assert by_line[1698].record["title"] == (
         "Clan lifecycle -- joining, leaving, and succession-on-death (M4 idea 40)"
     )
     for line_no in expected_lines:
@@ -310,11 +310,11 @@ def test_all_9_formerly_mismatched_rows_are_now_clean_and_repaired_correctly():
 def test_trailing_field_comma_split_rows_reconstruct_correct_artifacts_path():
     """Line 3174 (the exact-duplicate copy of 1581) was removed by
     TCK-20260906-WORKING-LOG-MERGE-UNION-DUPLICATION-GAP's Step 6 cleanup commit -- only
-    the original row at 1581 remains."""
+    the original row remains (now line 1571 after TCK-20261001-WORKING-LOG-BYTE-DUPLICATE-DEBT's dedupe)."""
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
-    for line_no in (1581,):
+    for line_no in (1571,):
         row = by_line[line_no]
         assert row.record["artifacts_path"] == "none (epic, scope-only)"
         assert row.record["summary"].endswith("uncalibrated illustrative placeholders.")
@@ -344,10 +344,11 @@ def test_all_17_confirmed_live_quote_desync_lines_are_flagged():
     by_line = {r.line_no: r for r in result.rows}
 
     expected_lines = {
-        1100, 1101, 1102, 1103, 1318, 1320, 1329, 1332, 1337, 1400, 1401,
-        1415, 1453, 1457, 1459, 1460, 1462,
+        1090, 1091, 1092, 1093, 1308, 1310, 1319, 1322, 1327, 1390, 1391,
+        1405, 1443, 1447, 1449, 1450, 1452,
     }
     assert len(expected_lines) == 17
+    # line numbers shifted down by TCK-20261001-WORKING-LOG-BYTE-DUPLICATE-DEBT (56 duplicate lines removed)
 
     for line_no in expected_lines:
         row = by_line[line_no]
@@ -359,7 +360,7 @@ def test_quote_desync_line_1100_reconstructs_to_known_vocabulary_artifacts_path(
     result = parse_working_log(REAL_LOG_PATH)
     by_line = {r.line_no: r for r in result.rows}
 
-    row = by_line[1100]
+    row = by_line[1090]
     assert row.record["artifacts_path"] == "N/A (hotfix, no staging artifacts)"
     assert not row.record["summary"].endswith(",N/A (hotfix")
 
