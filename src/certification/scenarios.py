@@ -116,7 +116,6 @@ class ArenaInjector:
             .identity(evolution_level=1, evolution_points=0, faction=Faction.HERO_GUILD)
             .combat(hp=100, max_hp=100)
             .combat(atk=50, def_stat=10)
-            .lifecycle(generation=1)
             .inventory(max_slots=10, gold=0)
             .combat(readiness=100.0)
             .build())
@@ -128,7 +127,6 @@ class ArenaInjector:
             .identity(evolution_level=1, evolution_points=0, faction=Faction.MONSTER_HORDE)
             .combat(hp=10, max_hp=10)
             .combat(atk=5, def_stat=5)
-            .lifecycle(generation=1)
             .inventory(max_slots=10, items=[ItemStack("MONSTER_TOOTH", 1)])
             .combat(readiness=100.0) # Always set readiness to 100 in V2 unless testing illegality
             .build())
@@ -144,7 +142,7 @@ class ArenaInjector:
 
     @staticmethod
     def build_mortality_test(state: AuthoritativeState) -> AuthoritativeState:
-        """Setup a hero dying to verify rebirth/permadeath."""
+        """Setup a hero killed by a boss to verify a recorded combat death (hero rebirth was retired)."""
         from src.core.state import EntityState, IdentityComponent, CombatComponent, LifecycleComponent
         from src.core.enums import Faction
         from dataclasses import replace
@@ -167,7 +165,6 @@ class ArenaInjector:
             .identity(evolution_level=1, faction=Faction.HERO_GUILD)
             .combat(hp=5, max_hp=5)
             .combat(atk=1, def_stat=1)
-            .lifecycle(generation=3) # One away from permadeath
             .combat(readiness=100.0)
             .build())
         
@@ -295,7 +292,6 @@ class ArenaInjector:
             .identity(evolution_level=1, faction=Faction.HERO_GUILD)
             .combat(hp=100, max_hp=100)
             .combat(atk=50, def_stat=10)
-            .lifecycle(generation=1)
             .inventory(max_slots=10, gold=0)
             .strategic(projects={
                 "test_hunt": QuestState(
@@ -319,7 +315,6 @@ class ArenaInjector:
             .identity(evolution_level=1, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER)
             .combat(hp=10, max_hp=10)
             .combat(atk=5, def_stat=5)
-            .lifecycle(generation=1)
             .combat(readiness=100.0)
             .build())
         
@@ -362,7 +357,6 @@ class ArenaInjector:
             .identity(evolution_level=5, faction=Faction.HERO_GUILD, role=EntityRole.HERO)
             .combat(hp=100, max_hp=100)
             .combat(atk=100, def_stat=20, speed=10)
-            .lifecycle(generation=1)
             .inventory(max_slots=10, gold=100)
             .combat(readiness=100.0)
             .build())
@@ -374,7 +368,6 @@ class ArenaInjector:
             .identity(evolution_level=1, faction=Faction.MONSTER_HORDE, role=EntityRole.MONSTER)
             .combat(hp=1, max_hp=1)
             .combat(atk=1, def_stat=1)
-            .lifecycle(generation=1)
             .combat(readiness=100.0)
             .build())
         

@@ -240,17 +240,10 @@ class MovementSystem:
                 combat_update = CombatResolutionSystem.resolve_multi_attack(
                     attackers, entity, state_or_context, is_opportunity_attack=True, is_lethal=False
                 )
-                # Lift generation_delta/is_permadeath_set onto entity's own top-level lifecycle
-                # field, mirroring the reference pattern in combat_actions.py::execute_attack()'s
-                # defender_up construction -- left un-lifted (as with resource_transfers before
-                # it), rebirth/permadeath was computed correctly inside combat_update but never
-                # applied to real state (TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION).
-                lifecycle_upd = LifecycleUpdate(
-                    age_delta=0,
-                    generation_delta=combat_update.generation_delta,
-                    is_permadeath_set=combat_update.is_permadeath_set,
-                ) if (combat_update.generation_delta != 0 or combat_update.is_permadeath_set is not None) else None
-                updates[entity.id] = EntityUpdate(entity_id=entity.id, combat=combat_update, lifecycle=lifecycle_upd)
+                # No lifecycle update is lifted here: a terminal DEFEAT (is_lethal=False) is classified
+                # and recorded by resolve_lifecycle from the persisted outcome_kind, which
+                # synthesizes its own LifecycleUpdate (TCK-20261001-RETIRE-HERO-REBIRTH-...).
+                updates[entity.id] = EntityUpdate(entity_id=entity.id, combat=combat_update)
 
                 # combat_update.resource_transfers rewards whoever defeated `entity` (the
                 # attackers), not `entity` itself — must be lifted onto the attacker's own

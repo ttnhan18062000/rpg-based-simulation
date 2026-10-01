@@ -28,13 +28,6 @@ clustering_reliable_tick_threshold: 1000
 # long run's "0% stalled" as if they meant the same claim.
 stall_detector_window_ticks: 300
 
-# Mirrors life_arc_incoherent's own real Hero's Journey generation threshold
-# (src/observability/event_extractor.py's _LATE_GENERATION_THRESHOLD). Reaching this within a
-# short run is rare -- run_metadata() reports life_arc_detector_reachable per this ticket's own
-# documented reasoning, an empirical question the calibration sibling ticket owns, not decided
-# here with a guessed tick-count proxy.
-life_arc_generation_threshold: 2
-
 # Transition-bigram Jaccard cutoff for flagging an entity pair as "near-duplicate path" during
 # clustering. Matches the threshold used during this session's own real investigation probe.
 clustering_similarity_threshold: 0.85
@@ -70,7 +63,6 @@ lifecycle_phase_buckets:
     - equipment_durability_changed
     - progression_conversion_applied
     - capability_growth_stalled
-    - life_arc_incoherent
     - progression_plateau_detected
   EXPLORATION:
     - movement
@@ -153,8 +145,13 @@ growth_trajectory_tags:
     - capability_growth_stalled
     - progression_plateau_detected
 
-# conclusion_coherence's own incoherent-flag tag -- entities carrying this tag anywhere in their
-# path are marked incoherent regardless of path_length (this is the one metric NOT gated by
+# conclusion_coherence's own incoherent-flag tags -- entities carrying any of these tags anywhere
+# in their path are marked incoherent regardless of path_length (this is the one metric NOT gated by
 # minimum_sample_threshold, since the tag itself is the direct signal, not a derived statistic).
-conclusion_incoherent_tags:
-  - life_arc_incoherent
+#
+# FLAG-LESS pending a replacement signal (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION):
+# the sole member, `life_arc_incoherent`, was retired with hero rebirth (its premise, "a completed
+# rebirth already occurred", no longer exists). With no member, `conclusion_coherence` is
+# structurally always True -- read it as "no incoherence signal defined", never as "confirmed
+# coherent". `silent_from_spawn` remains the metric's only live signal.
+conclusion_incoherent_tags: []

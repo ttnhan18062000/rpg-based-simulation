@@ -46,10 +46,10 @@ world state for real entity metadata (role/faction/kind/region), not to drive a 
 
 The JSON has 4 top-level sections:
 
-- **`run_metadata`**: `ticks`, and `stall_detector_reachable`/`life_arc_detector_reachable` —
-  whether the run was even long enough for `capability_growth_stalled` (needs 300+ ticks) or
-  `life_arc_incoherent` (needs Hero generation 2+, no fixed tick proxy, reported `null`) to have
-  fired at all. **Always check this before reading a "0% stalled" figure as good news** — at
+- **`run_metadata`**: `ticks`, `stall_detector_reachable` and `conclusion_coherence_flagless` —
+  whether the run was even long enough for `capability_growth_stalled` (needs 300+ ticks) to have
+  fired at all, and that `conclusion_coherence` has no incoherent-flag tags (the `life_arc_incoherent`
+  detector was retired with hero rebirth) so it is structurally always `true`. **Always check this before reading a "0% stalled" figure as good news** — at
   200 ticks, `stall_detector_reachable` is `false`, meaning the detector structurally could not
   have fired yet, a different claim from "confirmed not stalling."
 - **`entity_metrics`**: per-entity, the 7 metrics plus `metadata` (role/faction/kind/region) and

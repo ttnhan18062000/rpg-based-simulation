@@ -77,6 +77,13 @@ The simulation tracks biological "Pressures" that degrade over time.
 | **Sleep Debt** | `+0.05` | 100.0 | **98.0**: Fatigue (+1 HP damage/tick) |
 | **Stamina** | `-1.0` (per move) | `Max_Stamina` | **< Exhaustion Threshold**: Exhausted state |
 
+### Death Attribution (Same-Tick Causes)
+A death records exactly one `death_reason`: the first cause, in declared pipeline phase order, whose own effect was sufficient to take the subject from `hp > 0` to `hp <= 0`. Combat resolves before world dynamics, so:
+- If a combat outcome alone reached 0 HP (`KILL` or terminal `DEFEAT`), its classification stands (`COMBAT` or `DEFEAT`). Same-tick hazard drain applied afterwards is recorded as an exposure event, not as a cause of the death.
+- If combat damage alone did not reach 0 HP and hazard drain then did, the death records `HAZARD`. The earlier combat damage stays traceable through its own events as part of the accumulated condition.
+- Hazard drain can cause death only where `EnvironmentService.calculate_hazard_drain()` returns a nonzero drain after the subject's immunities.
+Basis: world rules CAUSE-03, CAUSE-06, LIMIT-04, BODY-07 (`docs/world_rules/`). Declared by `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`.
+
 ### Stamina Service
 *   **Attack Cost**: `stamina.ATTACK_COST` (Base: 5.0)
 *   **Harvest Cost**: `stamina.HARVEST_COST` (Base: 2.0)

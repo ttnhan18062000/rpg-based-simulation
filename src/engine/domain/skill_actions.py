@@ -121,10 +121,6 @@ class SkillActions:
             combat=combat_up,
             wound_update=combat_up.wound_update,
             equipment=combat_up.equipment_upd,
-            lifecycle=LifecycleUpdate(
-                generation_delta=combat_up.generation_delta,
-                is_permadeath_set=combat_up.is_permadeath_set
-            ) if (combat_up.generation_delta != 0 or combat_up.is_permadeath_set is not None) else None
         )
         
         return {entity.id: attacker_up, target.id: defender_up}

@@ -49,7 +49,10 @@ not a restatement of an existing Rule ID under a new name.
 field entirely: `LifecycleUpdate.is_permadeath_set` (only ever set `True` under a specific
 classification path) is the true, final-death marker — matching Batch 01's own ID-05 finding
 ("Dead subject as historical reference — `active=False`, `is_permadeath_set=True`"). The two
-fields are never conflated in the same write.
+facts are never derived from one another: `alive` is written by combat at `hp <= 0`, and
+`is_permadeath_set` only by a lifecycle death classification (a `death_reason`). A final death
+legitimately has both set; what this Rule forbids is inferring permanence from `alive=False`
+alone (wording corrected 2026-10-01). No current mechanism produces a non-permanent loss of active participation: that half of this Rule is permitted, not currently realised (the former hero `REBIRTH` was retired `2026-10-01`; see LIFE-02 and STR-02). `is_permadeath_set` remains the single final-death marker, and is the field any future declared resurrection process (STR-02) would have to leave `False`.
 
 **Scenarios:** [LB-S02](../scenarios/life-body-batch-05.md#lb-s02) (defeated but not dead),
 [LB-S03](../scenarios/life-body-batch-05.md#lb-s03) (HP zero boundary).
@@ -66,18 +69,9 @@ fields are never conflated in the same write.
 operational claim about *how* a defeat resolves (a real classification process, not a binary),
 which no earlier Rule ID already states.
 
-**Repository evidence: SUPPORTED at classification; CONTRADICTED at application (corrected 2026-10-01).**
-`CombatResolutionSystem`'s outcome classification (`src/engine/combat.py`) does not stop at
-"alive/not alive" — it further classifies `KILL`, `DEFEAT` (non-lethal: the terminal outcome when `is_lethal=False` and the defender is not
-rebirth-eligible, in practice a non-`HERO` defender hit by an opportunity attack,
-`src/engine/movement.py:241`/`combat.py:251-252`; a `HERO` never ends in `DEFEAT`, since it is
-always rebirth-eligible and resolves to `REBIRTH` or `PERMADEATH`, corrected 2026-10-01), `REBIRTH` (when
-`classification.rebirth_eligible` and `defender.lifecycle.generation < 4` — `generation_delta=1`,
-identity continues), and only `PERMADEATH` (rebirth exhausted, `generation >= 4`) as truly
-final. Losing a fight and permanently dying are architecturally distinct outcomes here, not
-merely different labels for the same event.
+**Repository evidence: PERMITTED, NOT CURRENTLY REALISED (revised `2026-10-01`, `TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`).** `CombatResolutionSystem` classifies an outcome that takes HP to zero as `KILL`, or as terminal `DEFEAT` when the attack is non-lethal (`is_lethal=False`: an opportunity attack, `src/engine/movement.py:241`, `combat.py:251-252`). Lifecycle records both as real, final deaths with distinct `death_reason`s (`COMBAT` / `DEFEAT`). No current mechanism routes a defeat toward continued existence: this Rule permits such a route, does not require one, and none exists today.
 
-**Application-layer contradiction (verified 2026-10-01 at `e9db40f0a`, from `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK`).** The classification above is real, but nothing honours it downstream. `combat.py` sets `alive=False` for every outcome at `hp <= 0`, including `DEFEAT` and `REBIRTH`. No runtime writer ever sets `alive` back to `True` (every `alive=True` in `src/` is construction or a harness). `REBIRTH` restores neither HP nor `alive`. The passive HP gate in `apply.py` then sets `lifecycle.active=False` a tick later. So in production, a classified-non-lethal defeat becomes a permanent, unrecorded deactivation, and "identity continues" does not hold at runtime. Observed: 4 `DEFEAT` + 1 `REBIRTH` rows in 120 unscripted ticks of `frontier_marches`. Supporting: the combat-learning layer already treats `KILL`, `DEFEAT`, `PERMADEATH` and `REBIRTH` alike as "the defender lost" (`_DEFEATED_OUTCOME_KINDS`, `src/domains/combat_engagement/learning_outcome.py:33`); lifecycle is the only layer that fails to classify them. This is **CONFLICTING**, not INERT: the code actively produces the outcome this Rule says need not follow. Implementation-side follow-up: `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`. The Rule text and Disposition are unchanged.
+**History.** Until 2026-10-01 this Rule cited the hero `REBIRTH` outcome (the same entity continuing with `generation + 1`) as its evidence. That outcome was retired because in substance it was an undeclared resurrection (STR-02), gated on a role label (ID-02, CAUSE-04), and it never worked at runtime (every `REBIRTH` ended in a permanent, unrecorded deactivation). Calling it a "non-lethal defeat" was a reframing that hid it from STR-02. Any future route from defeat to continued existence must be a declared mechanism, and if it reverses a death, it must satisfy STR-02.
 
 **Scenarios:** [LB-S01](../scenarios/life-body-batch-05.md#lb-s01) (wounded but alive),
 [LB-S02](../scenarios/life-body-batch-05.md#lb-s02) (defeated but not dead).
@@ -184,8 +178,7 @@ check against yet).
 1. **Resolved 2026-10-01.** `DEFEAT` (non-lethal, non-rebirth-eligible) is a live, reachable
    final `outcome_kind`, not a vestigial label. It is the terminal outcome for a non-`HERO`
    defender of an opportunity attack (`is_lethal=False`; `movement.py:241`, `combat.py:251-252`),
-   observed 4 times in 120 unscripted ticks of `frontier_marches`. A `HERO` never reaches it (always
-   rebirth-eligible, `combat_rewards.py:44-51`/`:106`).
+   observed 4 times in 120 unscripted ticks of `frontier_marches`. Since the hero rebirth retirement (`2026-10-01`), any defender can reach it through an opportunity attack; no role is exempt.
 2. LIFE-05's boundary is currently enforced by the absence of any social-meaning content — this
    is correct for now, but should be re-checked once Family/Lineage is actually designed, to
    confirm that content doesn't quietly attach social meaning to `parent_a/b_entity_id`

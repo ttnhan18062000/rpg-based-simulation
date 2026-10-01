@@ -46,6 +46,8 @@ def _update_with_hazard(eid: int, hp_delta: int = -15):
     combat_upd = MagicMock()
     combat_upd.outcome_kind = "HAZARD"
     combat_upd.hp_delta = hp_delta
+    # Mirrors WorldDynamicsSystem: hazard application is carried independently of outcome_kind.
+    combat_upd.hazard_damage = -hp_delta
     eu = MagicMock()
     eu.property_updates = {}
     eu.resource_transfers = []

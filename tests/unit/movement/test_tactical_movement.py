@@ -94,16 +94,15 @@ def test_opportunity_attack_lethal_grants_resource_transfers_to_attacker():
     assert upd2.identity is not None
     assert upd2.identity.evolution_points_delta > 0
 
-def test_opportunity_attack_lethal_hero_defender_triggers_rebirth():
-    """TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION: rebirth/permadeath branching
-    previously existed only in resolve_attack() (0 real calls in the corpus) -- ported into
-    resolve_multi_attack (the real, dominant kill path via this same opportunity-attack
-    mechanic), plus the LifecycleUpdate lift movement.py itself needs to apply it."""
+def test_opportunity_attack_lethal_hero_defender_is_a_terminal_defeat_without_rebirth():
+    """Rewritten by TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION (was
+    ..._triggers_rebirth, COMB-297's test_path). Hero rebirth was retired: an opportunity attack
+    (is_lethal=False) that zeroes a HERO defender is an ordinary terminal DEFEAT, no REBIRTH outcome,
+    and the pipeline records it as a death (resolve_lifecycle classifies it from outcome_kind)."""
     state = create_mock_state()
-    # Entity 1 (HERO, generation 0) at (5, 5) with 1 HP, Hostile at (5, 6)
+    # Entity 1 (HERO) at (5, 5) with 1 HP, Hostile at (5, 6)
     e1 = create_mock_entity(1, (5.0, 5.0), faction=0, role=0)  # role=0 -> HERO defender
     e1 = replace(e1, combat=replace(e1.combat, hp=1))
-    assert e1.lifecycle.generation < 4  # real precondition for REBIRTH, not PERMADEATH
     e2 = create_mock_entity(2, (5.0, 6.0), faction=1)
     state = replace(state, entities={1: e1, 2: e2})
 
@@ -117,8 +116,13 @@ def test_opportunity_attack_lethal_hero_defender_triggers_rebirth():
 
     upd1 = refined.entity_updates.get(1)
     assert upd1 is not None
-    assert upd1.lifecycle is not None, "rebirth was computed but never lifted to a LifecycleUpdate"
-    assert upd1.lifecycle.generation_delta == 1
+    assert upd1.combat is not None and upd1.combat.outcome_kind == "DEFEAT"
+    # movement.py lifts nothing; the refined update's lifecycle is resolve_lifecycle's own synthesized
+    # record of the terminal DEFEAT (recorded death, not a silent deactivation).
+    assert upd1.lifecycle is not None
+    assert upd1.lifecycle.death_reason_set == "DEFEAT" and upd1.lifecycle.is_permadeath_set is True
+    assert upd1.active is False
+
 
 def test_hold_mode_refuses_to_yield():
     state = create_mock_state()

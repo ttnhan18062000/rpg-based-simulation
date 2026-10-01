@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Optional, Tuple
 
-from src.core.combat_constants import NEAR_DEATH_HP_RATIO
+from src.core.combat_constants import NEAR_DEATH_HP_RATIO, TERMINAL_COMBAT_OUTCOME_KINDS
 from src.core.cognition import CognitionModel
 from src.core.state import EntityState
 from src.domains.combat_engagement.learning import CombatLearning
@@ -30,7 +30,7 @@ from src.domains.combat_engagement.schema import OpponentModel
 # SURVIVE (defender lived) and REJECTED (nothing happened) are deliberately absent: both are
 # inconclusive for combat-learning purposes (Sec 13.5a) -- manufacturing confidence from an
 # unresolved fight, or from an attack that never legally happened, would corrupt the estimate.
-_DEFEATED_OUTCOME_KINDS = ("KILL", "DEFEAT", "PERMADEATH", "REBIRTH")
+_DEFEATED_OUTCOME_KINDS = TERMINAL_COMBAT_OUTCOME_KINDS
 
 # Salience severities per classification -- a near-death correction and a real loss are both
 # highly salient (Sec 13.6: "a near-death encounter is more salient than a routine win"); an easy

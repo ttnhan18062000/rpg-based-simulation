@@ -3353,7 +3353,7 @@
     unreachable regardless of HERO population size or kill rate.
 
     '
-  status: verified
+  status: unsupported
   priority: P2
   legacy_evidence: null
   v2_evidence: "Ported the existing branch verbatim into `resolve_multi_attack()`\
@@ -3365,11 +3365,14 @@
     2.33). Real, non-mocked verification through the full `AuthoritativeApplyPipeline.refine()`\
     \ path, not a hand-constructed CombatUpdate.\n"
   proof_type: regression
-  test_path: 'tests/unit/movement/test_tactical_movement.py:: test_opportunity_attack_lethal_hero_defender_triggers_rebirth
+  test_path: tests/unit/movement/test_tactical_movement.py::test_opportunity_attack_lethal_hero_defender_is_a_terminal_defeat_without_rebirth
+  divergence_note: "RETIRED 2026-10-01 (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION):\
+    \ hero rebirth/permadeath, `rebirth_eligible`, `generation_delta` and the movement.py\
+    \ LifecycleUpdate lift no longer exist; this entry is kept as history. Its former\
+    \ test_path was deleted and test_path now points at the replacement test of the\
+    \ opposite behaviour. See intentional_divergences.md \xA72.34 (SUPERSEDED) and\
+    \ \xA72.63."
 
-    '
-  divergence_note: "See intentional_divergences.md \xA72.34 (Hero's Journey Rebirth\
-    \ Orphaned in the Real Dominant Kill Path, Bug Fix)\n"
   support_boundary: null
 - id: COMB-298
   text: 'TCK-20260809-COMBAT-ATTACK-LEGALITY-ALWAYS-FALSE-INVESTIGATION -- Passive
@@ -3948,21 +3951,17 @@
     test_ws_events_stream) confirmed pre-existing" prose. Normalized to a plain multi-citation;
     the disclosure is preserved here.'
 - id: COMB-311
-  text: 'TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX -- `LifecycleSystem.resolve_lifecycle()`''s
-    combat-death check (`docs/parity_ledger/combat_movement.yaml` COMB-309''s own
-    cited authoritative `death_reason=="COMBAT"` writer) only matched `outcome_kind=="KILL"`,
-    never `"PERMADEATH"` -- the more final outcome `src/engine/combat.py` sets when
-    a rebirth-eligible target (a Hero) dies at `generation >= 4` (no more rebirth
-    generations available). A "permanently dead" Hero therefore never actually deactivated
-    (`lifecycle.active` stayed `True`) and kept acting in the simulation. Fixed by
-    checking `outcome_kind in ("KILL", "PERMADEATH")` -- both route through the identical
-    deactivation/death_reason="COMBAT" path, so COMB-309''s own fallback event-crediting
-    gate (`death_reason=="COMBAT"`) now correctly fires for PERMADEATH deaths too,
-    with no change needed to that gate itself. `CombatShaper` (`src/observability/event_shapers.py`)
-    keeps its own `outcome_kind=="KILL"`-only ownership boundary unchanged by design
-    -- PERMADEATH deaths are not "shaper-owned," so they correctly fall through to
-    the COMB-309 fallback path for event/reward crediting, not a second gap needing
-    its own fix.
+  text: 'TCK-20260826-HOTFIX-PERMADEATH-LIFECYCLE-FIX, revised by TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION
+    -- `LifecycleSystem.resolve_lifecycle()`''s combat-death check (COMB-309''s own
+    cited authoritative `death_reason=="COMBAT"` writer) matches exactly `outcome_kind=="KILL"`.
+    History: it once matched only `"KILL"` and missed `"PERMADEATH"` (the more final outcome
+    a rebirth-eligible Hero got at `generation >= 4`), fixed by checking `in ("KILL",
+    "PERMADEATH")`. Hero rebirth/permadeath were retired and the `PERMADEATH` label folded
+    into `KILL`, so the tuple is reduced back to `"KILL"` and the original requirement
+    now reads: every lethal combat outcome is a plain `KILL` that routes through the
+    deactivation/`death_reason="COMBAT"` path, and a retired outcome kind is not a death
+    trigger. COMB-309''s fallback event-crediting gate (`death_reason=="COMBAT"`) is
+    unchanged; `CombatShaper` keeps its own `outcome_kind=="KILL"` ownership boundary.
 
     '
   status: verified
@@ -3971,7 +3970,7 @@
   v2_evidence: src/systems/lifecycle_systems/lifecycle.py (resolve_lifecycle's combat-death
     check)
   proof_type: regression
-  test_path: tests/unit/progression/test_lifecycle.py::test_permadeath_death_classification
+  test_path: tests/unit/progression/test_lifecycle.py::test_kill_is_the_only_lethal_combat_outcome_and_retired_kinds_are_not_death_triggers
   divergence_note: null
   support_boundary: 'Does not address WHY genuine `combat_engagement_ended` activity
     in this corpus never resolves as KILL/ESCAPED (always PURSUIT_ABANDONED) -- a
@@ -4397,3 +4396,37 @@
     each of the 41 identity.faction read call sites individually (investigation's
     own scoped-out item; corrected 2026-09-06 from an initially-reported 31 during
     an external pre-merge review, see docs/world/affiliation_mutation.md).
+- id: COMB-324
+  text: 'TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE: a terminal
+    DEFEAT outcome (non-lethal zeroing of any defender) is a recorded
+    death: resolve_lifecycle reads the persisted outcome_kind and records death_reason="DEFEAT"
+    (distinct from COMBAT), is_permadeath, death_tick and the succession dispatch,
+    and is the sole authority that deactivates the entity. No role is exempt: a lethal hit on a Hero is a plain KILL (hero rebirth/permadeath
+    retired, intentional_divergences.md 2.63).'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/systems/lifecycle_systems/lifecycle.py (DEFEAT branch).
+    docs/guidelines/intentional_divergences.md Section 2.61.'
+  proof_type: regression
+  test_path: tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py::test_terminal_defeat_is_recorded_with_its_own_reason_and_deactivated
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.61.
+  support_boundary: null
+- id: COMB-325
+  text: 'TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND: a death records
+    exactly one death_reason -- the first cause in pipeline phase order whose own effect
+    was sufficient to take the subject from hp > 0 to hp <= 0 (Mechanics Bible 01
+    Section 4, Death Attribution). A terminal combat outcome (KILL/DEFEAT)
+    stands over same-tick hazard drain, which stays observable via CombatUpdate.hazard_damage;
+    a non-lethal combat result followed by a decisive hazard drain records HAZARD.'
+  status: verified
+  priority: P2
+  legacy_evidence: null
+  v2_evidence: 'src/engine/world_dynamics.py (resolve_dynamics hazard block), src/core/updates.py
+    (CombatUpdate.hazard_damage), src/core/combat_constants.py (TERMINAL_COMBAT_OUTCOME_KINDS),
+    src/systems/lifecycle_systems/lifecycle.py (HAZARD branch), src/observability/event_extractor.py
+    + event_shapers.py (hazard_drain_applied keyed on hazard_damage).'
+  proof_type: regression
+  test_path: tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py::test_combat_kill_plus_hazard_records_the_combat_death_and_keeps_hazard_observable
+  divergence_note: See docs/guidelines/intentional_divergences.md Section 2.62.
+  support_boundary: null

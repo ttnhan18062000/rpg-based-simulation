@@ -239,12 +239,26 @@ def test_hero_death_unrecorded_not_emitted_for_non_hero():
 def test_hazard_damage_produces_hazard_event_not_combat():
     prior = _entity(hp=100, max_hp=100)
     hazard_upd = _real_combat_upd(attacker_id=None, outcome_kind="HAZARD", hp_delta=-15)
+    hazard_upd.hazard_damage = 15  # mirrors WorldDynamicsSystem
     upd = _update({1: MagicMock(combat=hazard_upd)})
     events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10)
     types = _types(events)
     assert "hazard_drain_applied" in types
     assert "combat_damage" not in types
     assert "combat_initiated" not in types
+
+
+def test_hazard_drain_applied_also_fires_for_an_entity_combat_already_resolved():
+    """TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND (H4): a same-tick KILL keeps its
+    outcome_kind, so hazard application must be observable through `hazard_damage`, not outcome_kind."""
+    prior = _entity(hp=10, max_hp=100)
+    upd_c = _real_combat_upd(attacker_id=99, outcome_kind="KILL", hp_delta=-25, alive_set=False)
+    upd_c.hazard_damage = 15
+    upd = _update({1: MagicMock(combat=upd_c)})
+    events = CombatShaper().shape(_prior_state({1: prior}), upd, tick=10)
+    hazard = [e for e in events if e.event_type == "hazard_drain_applied"]
+    assert len(hazard) == 1 and hazard[0].payload["damage"] == 15
+    assert "entity_killed" in _types(events) or "combat_resolved" in _types(events)
 
 
 def test_biological_damage_not_misclassified_as_combat():

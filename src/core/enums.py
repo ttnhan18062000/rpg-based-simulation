@@ -20,6 +20,15 @@ class DiplomaticState(str, Enum):
     ALLIED = "ALLIED"
     VASSAL = "VASSAL"
 
+class PassiveDeathCause(str, Enum):
+    """Typed cause for an HP-zeroing passive biological drain, recorded at the writer.
+
+    Values double as the ``death_reason`` literal ``resolve_lifecycle`` records, so the typed
+    cause and the reason string cannot drift apart.
+    """
+    STARVATION = "STARVATION"
+    SLEEP_DEPRIVATION = "SLEEP_DEPRIVATION"
+
 @unique
 class Faction(IntEnum):
     HERO_GUILD = 0

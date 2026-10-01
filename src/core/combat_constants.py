@@ -16,3 +16,9 @@ from __future__ import annotations
 # classification, TCK-20260914-COMBAT-ENGAGEMENT-PERCEIVED-POWER) to keep both paths consistent
 # with a single source of truth, rather than two independently-drifting near-death cutoffs.
 NEAR_DEATH_HP_RATIO: float = 0.2
+
+# outcome_kind values that are a terminal combat result for the defender (combat damage alone took it
+# to <= 0 HP). A later same-tick writer (world dynamics' hazard drain) must not
+# overwrite one of these in `CombatUpdate.outcome_kind`. The learning layer's
+# `_DEFEATED_OUTCOME_KINDS` is this same set, derived from it so the two cannot drift.
+TERMINAL_COMBAT_OUTCOME_KINDS = ("KILL", "DEFEAT")

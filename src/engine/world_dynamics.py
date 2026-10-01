@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING
 from src.core.updates import WorldUpdate, EntityUpdate, CombatUpdate
+from src.core.combat_constants import TERMINAL_COMBAT_OUTCOME_KINDS
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, RegionState, EntityState
@@ -36,7 +37,22 @@ class WorldDynamicsSystem:
                         e_upd = refined_entity_updates.get(e_id, EntityUpdate(entity_id=e_id))
                         c_upd = e_upd.combat or CombatUpdate()
                         new_hp = max(0, entity.combat.hp + c_upd.hp_delta - hazard_dmg)
-                        c_upd = replace(c_upd, hp_delta=c_upd.hp_delta - hazard_dmg, outcome_kind="HAZARD", alive_set=(new_hp > 0))
+                        # Combat resolves first (pipeline order): a terminal combat outcome already
+                        # holds the entity's classification and is never overwritten; hazard
+                        # application stays observable through `hazard_damage` regardless. When no
+                        # terminal outcome exists the slot becomes "HAZARD" (hazard-only drain, or
+                        # a non-lethal combat result hazard then took to 0 HP -- hazard decisive).
+                        outcome_kind = (
+                            c_upd.outcome_kind if c_upd.outcome_kind in TERMINAL_COMBAT_OUTCOME_KINDS
+                            else "HAZARD"
+                        )
+                        # Hazard never flips an already-defeated `alive_set` False back to True.
+                        alive_set = (new_hp > 0) and c_upd.alive_set is not False
+                        c_upd = replace(
+                            c_upd, hp_delta=c_upd.hp_delta - hazard_dmg,
+                            hazard_damage=c_upd.hazard_damage + hazard_dmg,
+                            outcome_kind=outcome_kind, alive_set=alive_set,
+                        )
                         refined_entity_updates[e_id] = replace(e_upd, combat=c_upd)
         update = update.replace(entity_updates=refined_entity_updates)
 

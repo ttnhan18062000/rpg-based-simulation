@@ -1693,8 +1693,8 @@ deception should know this counter already exists by construction, not invent a 
 **§13.5a — What each real combat outcome teaches, and about whom (TCK-20260914-COMBAT-ENGAGEMENT-
 PERCEIVED-POWER).** `CombatLearning.learn()`'s own vocabulary (`WON_EASY`/`LOST`/`NEAR_DEATH`/
 `FLED`) answers "what did I learn about that opponent's strength" — a different question from
-`CombatUpdate.outcome_kind`'s own real values (`SURVIVE`/`KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH`/
-`REJECTED`, `src/engine/combat.py`), which only answer "what happened to this entity." The mapping
+`CombatUpdate.outcome_kind`'s own real values (`SURVIVE`/`KILL`/`DEFEAT`/`REJECTED`, plus
+`HAZARD` from world dynamics; `REBIRTH`/`PERMADEATH` were retired, `src/engine/combat.py`), which only answer "what happened to this entity." The mapping
 between them is a real semantic decision, declared here as law before being built, not left
 implicit in the resolver:
 
@@ -1712,12 +1712,12 @@ implicit in the resolver:
     (`src/observability/event_extractor.py`/`event_shapers.py`, both re-exporting the same shared
     constant now, rather than each independently defining/re-deriving it) — recorded as D-12 in
     `docs/plans/deferred_tuning_decisions_register.md` alongside D-11.
-  - **`KILL`/`DEFEAT`/`PERMADEATH` where this participant is the one who died**: `"LOST"` (the
-    opponent was stronger than expected) — regardless of `REBIRTH`/`PERMADEATH`'s own downstream
-    lifecycle branching, which is orthogonal to what was *learned*. A dead entity still writing this
-    memory is harmless (nothing reads it again) and, under `REBIRTH` specifically, is real signal
-    worth having: an entity remembering what killed it in a prior life is exactly the behavior this
-    feature should produce, not a case to special-case away.
+  - **`KILL`/`DEFEAT` where this participant is the one who died**: `"LOST"` (the opponent was
+    stronger than expected) — regardless of the lifecycle phase's own downstream death
+    classification, which is orthogonal to what was *learned*. A dead entity still writing this
+    memory is harmless (nothing reads it again). (This clause once also covered `PERMADEATH` and
+    `REBIRTH`, retired with hero rebirth, `TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`;
+    the `REBIRTH` rationale "remembering what killed it in a prior life" no longer applies.)
   - **`SURVIVE`**: inconclusive for both participants — neither side's estimate should move.
     Manufacturing confidence from a fight that resolved nothing yet (both still standing, still
     fighting) would corrupt the estimate with a non-event.

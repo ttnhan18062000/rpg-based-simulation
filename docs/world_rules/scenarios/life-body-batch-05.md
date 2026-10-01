@@ -42,10 +42,7 @@ A combat loss incapacitates a subject, but it survives — no accidental `defeat
 assumption anywhere.
 
 - **Rules invoked:** LIFE-01 (active participation ≠ permanent termination), LIFE-02.
-- **Result: covered at classification; contradicted at application** (see LIFE-02's application-layer note, corrected 2026-10-01). `CombatResolutionSystem`'s `REBIRTH` outcome (`generation_delta=1`,
-  `generation < 4`) and the terminal `DEFEAT` outcome (a non-`HERO` defender of an opportunity attack, `is_lethal=False`; a `HERO` resolves to `REBIRTH` instead) both confirm a
-  defeated subject can continue existing — `is_permadeath_set` is the only truly final marker,
-  and it is not set in either case.
+- **Result: permitted, not currently realised (revised `2026-10-01`).** No current mechanism lets a defeated subject survive. `KILL` and terminal `DEFEAT` (opportunity attack, `is_lethal=False`) are both recorded, classified, final deaths. The former hero `REBIRTH` previously cited here was an undeclared resurrection and has been retired (`TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`; see LIFE-02 and STR-02). The scenario's actual requirement, no *accidental* `defeat = death` assumption, still holds: each death is a declared lifecycle classification, never an implicit consequence of HP reaching zero.
 
 ## LB-S03 — HP zero boundary
 

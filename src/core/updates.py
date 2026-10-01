@@ -105,6 +105,10 @@ class CombatUpdate:
     attacker_id: Optional[int] = None
     is_opportunity_attack: bool = False
     alive_set: Optional[bool] = None
+    # Regional hazard drain applied this tick, carried independently of `outcome_kind` so a hazard
+    # that lands on an entity combat already resolved stays observable (hazard_drain_applied)
+    # without overwriting the combat outcome. Not a death cause; see Mechanics Bible 01 §4.
+    hazard_damage: int = 0
     outcome_kind: str = "SURVIVE" # SURVIVE, DEFEAT, KILL, REJECTED
     is_lethal: bool = False
     failure_reason: Optional[str] = None
@@ -112,8 +116,6 @@ class CombatUpdate:
     atk_delta: int = 0
     def_delta: int = 0
     speed_delta: int = 0
-    generation_delta: int = 0 # Lifecycle changes for the defender
-    is_permadeath_set: Optional[bool] = None
     simultaneous_intents: List[CombatIntent] = field(default_factory=list)
     resource_transfers: List[ResourceTransferIntent] = field(default_factory=list)
     equipment_upd: Optional[EquipmentUpdate] = None # For defender
@@ -125,8 +127,8 @@ class CombatUpdate:
 
     def is_noop(self) -> bool:
         return (self.damage_taken == 0 and self.hp_delta == 0 and self.attacker_id is None and 
-                self.alive_set is None and self.max_hp_delta == 0 and self.atk_delta == 0 and 
-                self.def_delta == 0 and self.speed_delta == 0 and self.generation_delta == 0 and 
+                self.alive_set is None and self.hazard_damage == 0 and self.max_hp_delta == 0 and self.atk_delta == 0 and 
+                self.def_delta == 0 and self.speed_delta == 0 and 
                 not self.simultaneous_intents and not self.resource_transfers)
 
     def merge(self, other: CombatUpdate) -> CombatUpdate:
@@ -139,6 +141,7 @@ class CombatUpdate:
         if other.attacker_id is not None: changes["attacker_id"] = other.attacker_id
         if other.is_opportunity_attack: changes["is_opportunity_attack"] = True
         if other.alive_set is not None: changes["alive_set"] = other.alive_set
+        if other.hazard_damage != 0: changes["hazard_damage"] = self.hazard_damage + other.hazard_damage
         if other.outcome_kind != "SURVIVE":
              changes["outcome_kind"] = other.outcome_kind if (self.outcome_kind == "SURVIVE" or other.outcome_kind == "KILL") else self.outcome_kind
         if other.is_lethal: changes["is_lethal"] = True
@@ -146,8 +149,6 @@ class CombatUpdate:
         if other.atk_delta != 0: changes["atk_delta"] = self.atk_delta + other.atk_delta
         if other.def_delta != 0: changes["def_delta"] = self.def_delta + other.def_delta
         if other.speed_delta != 0: changes["speed_delta"] = self.speed_delta + other.speed_delta
-        if other.generation_delta != 0: changes["generation_delta"] = self.generation_delta + other.generation_delta
-        if other.is_permadeath_set is not None: changes["is_permadeath_set"] = other.is_permadeath_set
         if other.simultaneous_intents: changes["simultaneous_intents"] = self.simultaneous_intents + other.simultaneous_intents
         if other.resource_transfers: changes["resource_transfers"] = self.resource_transfers + other.resource_transfers
         if other.equipment_upd: changes["equipment_upd"] = other.equipment_upd
@@ -444,7 +445,6 @@ class AttributeUpdate:
 class LifecycleUpdate:
     """Updates to aging and death mechanics."""
     age_delta: int = 0
-    generation_delta: int = 0
     is_permadeath_set: Optional[bool] = None
     death_tick_set: Optional[int] = None
     death_reason_set: Optional[str] = None
@@ -459,7 +459,7 @@ class LifecycleUpdate:
     genetic_profile_set: Optional[GeneticProfile] = None
 
     def is_noop(self) -> bool:
-        return (self.age_delta == 0 and self.generation_delta == 0 and
+        return (self.age_delta == 0 and
                 self.is_permadeath_set is None and self.death_tick_set is None and
                 self.death_reason_set is None and self.heir_entity_id_set is None and
                 not self.heirlooms_add and self.parent_a_entity_id_set is None and
@@ -473,7 +473,6 @@ class LifecycleUpdate:
             return self
         changes = {}
         if other.age_delta != 0: changes["age_delta"] = self.age_delta + other.age_delta
-        if other.generation_delta != 0: changes["generation_delta"] = self.generation_delta + other.generation_delta
         if other.is_permadeath_set is not None: changes["is_permadeath_set"] = other.is_permadeath_set
         if other.death_tick_set is not None: changes["death_tick_set"] = other.death_tick_set
         if other.death_reason_set is not None: changes["death_reason_set"] = other.death_reason_set

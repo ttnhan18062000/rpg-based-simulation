@@ -63,10 +63,6 @@ _XP_PLATEAU_TICKS = 50
 # capability_growth_stalled fires (TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE)
 _CAPABILITY_STALL_TICKS = 300
 
-# Minimum lifecycle.generation (a completed Hero's Journey rebirth already occurred) for
-# life_arc_incoherent to be eligible
-_LATE_GENERATION_THRESHOLD = 2
-
 # Project kinds inconsistent with a high-urgency DANGER concern (decision_divergence_detected)
 _NON_SURVIVAL_PROJECT_KINDS = frozenset(("harvesting", "exploration", "social", "crafting"))
 
@@ -97,7 +93,6 @@ class EventExtractor:
     # tick (not 0) so an entity first seen mid-run isn't immediately treated as stalled.
     _last_capability_growth_tick: dict[int, int] = {}
     _emitted_capability_stalled: set[int] = set()
-    _emitted_life_arc_incoherent: set[int] = set()
 
     _SOCIAL_MEMORY_THRESHOLD = 0.3  # minimum trust_history delta to emit
     _CONTRACT_MILESTONE_THRESHOLDS = ((0.25, "25%"), (0.50, "50%"), (0.75, "75%"))
@@ -113,7 +108,6 @@ class EventExtractor:
         cls._emitted_contract_milestones.clear()
         cls._last_capability_growth_tick.clear()
         cls._emitted_capability_stalled.clear()
-        cls._emitted_life_arc_incoherent.clear()
 
     @staticmethod
     def extract(
@@ -771,19 +765,20 @@ class EventExtractor:
                                 payload={"source_id": _info_src},
                             ))
 
-                # World: hazard_drain_applied (WorldDynamicsSystem sets outcome_kind="HAZARD").
+                # World: hazard_drain_applied (WorldDynamicsSystem records `hazard_damage`,
+                # independently of outcome_kind, so it also fires for an entity combat already
+                # resolved this tick).
                 # Flag-gated, same rollback pattern as the economy loop above — migrated alongside
                 # COMBAT per TCK-20260806-PUSH-SHAPER-REGISTRY-COMBAT's Decision 1.
                 combat_upd = getattr(e_upd_ext, "combat", None)
-                if not _push_shapers_active and combat_upd and getattr(combat_upd, "outcome_kind", None) == "HAZARD":
-                    hp_delta = getattr(combat_upd, "hp_delta", 0)
-                    if hp_delta < 0:
-                        events.append(SimulationEvent(
-                            event_type="hazard_drain_applied", event_category="combat",
-                            tick=tick, entity_id=eid, severity="WARNING",
-                            source_system="event_extractor", message="",
-                            payload={"damage": int(-hp_delta)},
-                        ))
+                _hazard_damage = getattr(combat_upd, "hazard_damage", 0) if combat_upd else 0
+                if not _push_shapers_active and isinstance(_hazard_damage, int) and _hazard_damage > 0:
+                    events.append(SimulationEvent(
+                        event_type="hazard_drain_applied", event_category="combat",
+                        tick=tick, entity_id=eid, severity="WARNING",
+                        source_system="event_extractor", message="",
+                        payload={"damage": _hazard_damage},
+                    ))
 
             # Cognition: lead_certainty_changed (PP-30 side effect — state diff)
             # Information: lead_certainty_updated (band-crossing), belief_stale, decision signals
@@ -1279,22 +1274,6 @@ class EventExtractor:
                             source_system="event_extractor", message="",
                             payload={"ticks_since_growth": _since_growth, "level": _cap_curr_level},
                         ))
-
-                _cap_generation = getattr(entity.lifecycle, "generation", 1)
-                if (
-                    eid not in EventExtractor._emitted_life_arc_incoherent
-                    and isinstance(_cap_generation, int)
-                    and _cap_generation >= _LATE_GENERATION_THRESHOLD
-                    and _cap_levels_numeric and _cap_curr_level <= 1
-                    and not set(_cap_curr_skills)
-                ):
-                    EventExtractor._emitted_life_arc_incoherent.add(eid)
-                    events.append(SimulationEvent(
-                        event_type="life_arc_incoherent", event_category="lifecycle",
-                        tick=tick, entity_id=eid, severity="INFO",
-                        source_system="event_extractor", message="",
-                        payload={"generation": _cap_generation, "level": _cap_curr_level},
-                    ))
 
         # Agency: rejection_cascade_tick — post-entity-loop population aggregate. Flag-gated
         # (TCK-20260807-REJECTION-CASCADE-TICK-PUSH-MIGRATION-GAP): live behind AgencyShaper when

@@ -274,40 +274,22 @@ class TestCapabilityGrowthStalled:
 # ── life_arc_incoherent ────────────────────────────────────────────────────────
 # TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE
 
-class TestLifeArcIncoherent:
-    def test_fires_when_late_generation_with_no_growth(self):
-        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset()),
-                          generation=2)
-        state = _state({1: entity}, tick=100)
-        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
-        assert "life_arc_incoherent" in _types(events)
+class TestLifeArcIncoherentRetired:
+    """The life_arc_incoherent detector was retired with hero rebirth
+    (TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION): its premise ("a completed rebirth
+    already occurred") no longer exists, and re-pointing it at a lineage reading would false-positive on
+    an ordinary young descendant. Asserts the event can no longer be emitted and the literals are gone."""
 
-    def test_not_fired_at_generation_one(self):
-        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset()),
-                          generation=1)
-        state = _state({1: entity}, tick=100)
-        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
-        assert "life_arc_incoherent" not in _types(events)
+    def test_no_entity_shape_emits_it(self):
+        for level, skills in ((1, frozenset()), (5, frozenset()), (1, frozenset({"archery"}))):
+            entity = _entity(identity=_identity(evolution_level=level, learned_skills=skills))
+            state = _state({1: entity}, tick=100)
+            events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
+            assert "life_arc_incoherent" not in _types(events)
 
-    def test_not_fired_when_level_above_one(self):
-        entity = _entity(identity=_identity(evolution_level=5, learned_skills=frozenset()),
-                          generation=2)
-        state = _state({1: entity}, tick=100)
-        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
-        assert "life_arc_incoherent" not in _types(events)
-
-    def test_not_fired_when_skills_present(self):
-        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset({"archery"})),
-                          generation=2)
-        state = _state({1: entity}, tick=100)
-        events = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
-        assert "life_arc_incoherent" not in _types(events)
-
-    def test_fires_only_once_per_entity_per_run(self):
-        entity = _entity(identity=_identity(evolution_level=1, learned_skills=frozenset()),
-                          generation=2)
-        state = _state({1: entity}, tick=100)
-        evts1 = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
-        evts2 = EventExtractor.extract(state, state, _update(1), ObservabilityMode.NORMAL)
-        count = sum(1 for e in evts1 + evts2 if e.event_type == "life_arc_incoherent")
-        assert count == 1
+    def test_detector_literals_are_gone(self):
+        import inspect
+        from src.observability import event_extractor
+        src = inspect.getsource(event_extractor)
+        assert "life_arc_incoherent" not in src and "_LATE_GENERATION_THRESHOLD" not in src
+        assert not hasattr(EventExtractor, "_emitted_life_arc_incoherent")

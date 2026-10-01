@@ -79,7 +79,6 @@ class LifecyclePatch(ComponentPatch):
             new_dependents.extend(u_life.dependent_entity_ids_add)
             new_lifecycle = replace(new_lifecycle,
                 age_ticks=new_lifecycle.age_ticks + u_life.age_delta,
-                generation=new_lifecycle.generation + u_life.generation_delta,
                 is_permadeath=u_life.is_permadeath_set if u_life.is_permadeath_set is not None else new_lifecycle.is_permadeath,
                 death_tick=u_life.death_tick_set if u_life.death_tick_set is not None else new_lifecycle.death_tick,
                 death_reason=u_life.death_reason_set if u_life.death_reason_set is not None else new_lifecycle.death_reason,
@@ -96,6 +95,13 @@ class LifecyclePatch(ComponentPatch):
                 ),
                 genetic_profile=u_life.genetic_profile_set if u_life.genetic_profile_set is not None else new_lifecycle.genetic_profile,
             )
+            # A passive cause is only meaningful while no other death is recorded: once a different
+            # death_reason lands (e.g. COMBAT on the same tick the passive write fired), the stale
+            # cause is cleared so it never surfaces on that entity's record.
+            stale_cause = new_lifecycle.passive_death_cause
+            if (stale_cause is not None and new_lifecycle.death_reason is not None
+                    and new_lifecycle.death_reason != stale_cause.value):
+                new_lifecycle = replace(new_lifecycle, passive_death_cause=None, passive_death_cause_tick=None)
         if new_lifecycle is not entity.lifecycle:
             changes["lifecycle"] = new_lifecycle
 

@@ -342,7 +342,13 @@
     \ bug, same class, separate cause). TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE\
     \ fixed the last remaining never-declared module, moon_cult_ruins (moon_cave region),\
     \ gaining a new \"ARCANE_CORRUPTION\" hazard_kind matched by a new arcane_circle\
-    \ hazard_immunities entry \u2014 exercised by generated_frontier_3_42."
+    \ hazard_immunities entry \u2014 exercised by generated_frontier_3_42.\
+    \ TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND: the call site\
+    \ (src/engine/world_dynamics.py) now records the drain in CombatUpdate.hazard_damage\
+    \ independently of outcome_kind, no longer overwrites a terminal combat outcome\
+    \ (TERMINAL_COMBAT_OUTCOME_KINDS), never flips alive_set False->True, and a drain\
+    \ that itself takes HP to 0 is recorded by resolve_lifecycle as death_reason HAZARD\
+    \ (intentional_divergences.md Section 2.62)."
   proof_type: parity
   test_path: tests/unit/world/test_regional_consequences.py, tests/unit/worldassembly/test_corpus_diversity.py::test_hazard_kind_matches_populating_faction_immunity,
     tests/unit/worldassembly/test_corpus_diversity.py::test_population_stability,

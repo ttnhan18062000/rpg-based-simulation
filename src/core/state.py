@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from src.domains.fame.legend import LegendFact
     from src.domains.belief_institution.model import BeliefInstitution
 from src.core.strategic import StrategicComponent
-from src.core.enums import Faction, EntityRole, DiplomaticState
+from src.core.enums import Faction, EntityRole, DiplomaticState, PassiveDeathCause
 from src.core.movement_modes import MovementMode
 from src.core.governance import RuntimeMode
 from src.core.models.inventory import ItemKind, EquipSlot, ItemStack, InventoryComponent, ItemInstance, AcquiredMethod
@@ -166,7 +166,12 @@ class LifecycleComponent:
     is_permadeath: bool = False
     death_tick: Optional[int] = None
     death_reason: Optional[str] = None
-    generation: int = 1
+    # Passive biological death cause, written by ApplyPath's passive branch on the tick HP is
+    # driven to zero (a cause fact crossing a tick boundary: resolve_lifecycle reads it at N+1).
+    # The tick is kept alongside so the zeroing tick stays traceable once death_tick lands later
+    # (CAUSE-05 / TIME-02). Ignored and cleared once another death_reason is recorded.
+    passive_death_cause: Optional[PassiveDeathCause] = None
+    passive_death_cause_tick: Optional[int] = None
     heir_entity_id: Optional[int] = None
     heirlooms: list[str] = field(default_factory=list)
     parent_a_entity_id: Optional[int] = None
@@ -188,7 +193,8 @@ class LifecycleComponent:
             "is_permadeath": self.is_permadeath,
             "death_tick": self.death_tick,
             "death_reason": self.death_reason,
-            "generation": self.generation,
+            "passive_death_cause": self.passive_death_cause.value if self.passive_death_cause is not None else None,
+            "passive_death_cause_tick": self.passive_death_cause_tick,
             "heir_entity_id": self.heir_entity_id,
             "heirlooms": sorted(list(self.heirlooms)),
             "parent_a_entity_id": self.parent_a_entity_id,
@@ -1221,7 +1227,6 @@ class CorpseState:
     position: tuple[float, float]
     items: List[ItemStack]
     decay_tick: int
-    generation: int = 1
     _canonical_cache: Any = field(default=None, init=False, repr=False, compare=False)
 
     def to_canonical_dict(self) -> Dict[str, Any]:
@@ -1233,7 +1238,6 @@ class CorpseState:
             "position": self.position,
             "items": [i.to_canonical_dict() for i in sorted(self.items, key=lambda x: x.item_id)],
             "decay_tick": self.decay_tick,
-            "generation": self.generation
         }
         object.__setattr__(self, "_canonical_cache", res)
         return res
