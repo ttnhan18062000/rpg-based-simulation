@@ -491,18 +491,62 @@ def mutation_layer(repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
     if not records:
         return {"state": "not-run", "records": []}
     rows = []
+    declared: Dict[str, Dict[str, Any]] = {}
     for path in records:
         try:
-            rows.append(_mutation_row(path, repo_root, as_of))
+            rec = json.loads(path.read_text(encoding="utf-8"))
+            declared[path.name] = {"target": rec["target"]["path"], "supersedes": rec.get("supersedes")}
+            rows.append(_mutation_row(path, repo_root, as_of, rec))
         except (OSError, ValueError, KeyError, TypeError) as exc:
             rows.append({"record": path.name, "state": "unreadable", "reason": type(exc).__name__})
+    _apply_baseline_roles(rows, declared)
     return {"state": "recorded", "records": rows}
 
 
-def _mutation_row(path: Path, repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
-    rec = json.loads(path.read_text(encoding="utf-8"))
+def _apply_baseline_roles(rows: List[Dict[str, Any]], declared: Dict[str, Dict[str, Any]]) -> None:
+    """Which record applies to a target comes from a declared `supersedes` link, never from file recency.
+
+    A record another record names in `supersedes` is `superseded` (history: no staleness verdict). Of the rest,
+    exactly one per target is `current`; more than one unlinked record on a target is `ambiguous-current` and
+    is left unjudged rather than guessing by name or date."""
+    superseded_by = {d["supersedes"]: name for name, d in declared.items() if d["supersedes"]}
+    by_target: Dict[str, List[str]] = {}
+    for name, d in declared.items():
+        if name not in superseded_by:
+            by_target.setdefault(d["target"], []).append(name)
+    for row in rows:
+        name = row["record"]
+        if name not in declared:
+            continue
+        row["supersedes"] = declared[name]["supersedes"]
+        if name in superseded_by:
+            row.update({"role": "superseded", "superseded_by": superseded_by[name], "stale_reasons": [],
+                        "state": "superseded"})
+        elif len(by_target[declared[name]["target"]]) > 1:
+            row.update({"role": "ambiguous-current", "state": "ambiguous-current"})
+        else:
+            row["role"] = "current"
+
+
+def _selection_changed(rec: Dict[str, Any], repo_root: Path) -> Optional[bool]:
+    """True when re-resolving the record's declared selection rule differs from its recorded list hash.
+
+    None when the record declares no machine-resolvable rule (v1 records): no verdict, not "unchanged"."""
+    sel = rec.get("selection")
+    if not isinstance(sel, dict) or sel.get("rule") != "import-based-one-hop":
+        return None
+    from tools.test_architecture import mutation_selection
+
+    resolved = mutation_selection.resolve(repo_root, sel["target_module"], sel.get("curated_additions", []))
+    return resolved["resolved_files_sha256"] != sel["resolved_files_sha256"]
+
+
+def _mutation_row(path: Path, repo_root: Path, as_of: dt.date, rec: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    rec = rec if rec is not None else json.loads(path.read_text(encoding="utf-8"))
     target = repo_root / rec["target"]["path"]
     reasons: List[str] = []
+    if _selection_changed(rec, repo_root):
+        reasons.append("selection-changed")
     current_sha = _sha256_file(target) if target.is_file() else None
     if current_sha is None:
         reasons.append("target-missing")
@@ -515,6 +559,7 @@ def _mutation_row(path: Path, repo_root: Path, as_of: dt.date) -> Dict[str, Any]
     counts = rec["counts"]
     return {
         "record": path.name,
+        "baseline_id": rec.get("baseline_id", path.stem),
         "target": rec["target"]["path"],
         "state": "stale" if reasons else "fresh",
         "stale_reasons": reasons,
@@ -583,7 +628,7 @@ def escaped_defects_layer(repo_root: Path, as_of: dt.date) -> Dict[str, Any]:
     return {
         "state": "counting",
         "tag_registered": added.isoformat(),
-        "month_basis": "ticket creation date (frontmatter `date`); includes open tickets under todos/ and inprogress/",
+        "month_basis": "ticket creation date (frontmatter `date`); all tickets, open and closed (todos/, inprogress/ and done/)",
         "denominator": {"tickets_scanned": scanned},
         "months": months,
         "total_in_window": sum(months.values()),
@@ -743,7 +788,13 @@ def render_markdown(report: Dict[str, Any]) -> str:
             out.append(f"- `{r['record']}`: **unreadable** ({r['reason']})")
             continue
         c2 = r["counts"]
-        out.append(f"- `{r['target']}`: **{r['state']}** {r['stale_reasons'] or ''} (age {r['age_days']} d, "
+        if r.get("role") == "superseded":
+            out.append(f"- `{r['record']}` (`{r['target']}`): **superseded** by `{r['superseded_by']}`, history only; "
+                       f"its counts (killed {c2['killed']}, survived {c2['survived']} / {r['denominator']['mutants']} mutants) "
+                       "come from a different test selection and are not comparable with the current record's")
+            continue
+        label = f"`{r['record']}` " if r.get("supersedes") else ""
+        out.append(f"- {label}`{r['target']}`: **{r['state']}** {r['stale_reasons'] or ''} (age {r['age_days']} d, "
                    f"{r['run_kind']}, {r['tool']}); killed {c2['killed']}, survived {c2['survived']}, "
                    f"timeout {c2['timeout']}, suspicious {c2['suspicious']}, equivalent {c2['equivalent']} / "
                    f"{r['denominator']['mutants']} mutants; {r['material_survivors']} material survivors flagged")
