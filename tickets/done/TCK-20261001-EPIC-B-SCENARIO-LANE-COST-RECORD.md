@@ -61,7 +61,7 @@ tickets/todos/test-architecture/
 - Test counts were not retrieved (job JUnit not available); recorded as "not recorded", not 0.
 
 ## Implementation Notes
-Runs and job times from `gh api .../actions/runs?head_sha=` and `.../runs/<id>/jobs`. #271 heads `a9646c9de` and `e75ff2e77` have no run. Routing counts re-derived by running `scenario_lane_paths` on each PR's file list.
+Runs and job times from `gh api .../actions/runs?head_sha=` and `.../runs/<id>/jobs`. All five heads have a run: #271 `369acbac3`, `a9646c9de`, `e75ff2e77` (workflow failed in `API / tools / logging` while the scenario job passed), `248372a26`; #275 `e147d7514`, `d15ff2163`. A first version of this record wrongly said two #271 heads had no run (an empty query result is not evidence of no run); the reviewer caught it and it was re-queried by full SHA. Routing counts re-derived by running `scenario_lane_paths` on each PR's file list.
 
 ## Test Summary
 Text only. `tests/unit/tools` and `tests/docs` re-run after the edit; frontmatter validated.
@@ -70,4 +70,4 @@ Text only. `tests/unit/tools` and `tests/docs` re-run after the edit; frontmatte
 tickets/todos/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md; docs/REGISTRY.yaml.
 
 ## Completion Summary
-Cost record started with three rows (#271 two heads, #275 one head): 51 s, 34 s, 48 s whole-job. Criterion 4 stays open.
+Cost record started with six rows (#271 four heads: 51 s, 50 s, 50 s, 34 s; #275 two heads: 48 s, 47 s), whole-job wall time. One #271 head shows a passing scenario job inside a failing workflow. Criterion 4 stays open at 2 of about 10 PRs.
