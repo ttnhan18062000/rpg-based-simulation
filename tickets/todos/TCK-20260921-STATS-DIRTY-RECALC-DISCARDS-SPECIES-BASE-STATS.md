@@ -261,6 +261,165 @@ run, an equipment-heavy scenario, or any future code that sets `update.attribute
 it should not be fixed *first*, and it should not be described as having corrupted past
 measurements.
 
+### 2026-10-01 — DESIGN RESOLUTION (planning session's call, with the rule owner consulted)
+
+**Decision: Option B+ — "one base owner, one derivation." Option A is ruled out on code facts,
+Option C is ruled out on coverage. B as the ticket words it is necessary but NOT sufficient.**
+
+All code facts below were read at HEAD on 2026-10-01, not inferred from structure.
+
+#### Option A (resolve the profile at recalc time) is dead — two independent blockers
+
+1. **There is no entity→profile link.** `EntityState` (`src/core/state.py:879`) carries `kind: str`
+   and no `archetype_id`, `species_id` or `stat_profile_id`; neither does `IdentityComponent`.
+   `grep archetype_id src/core/` returns exactly one unrelated hit (`registries.py:517`). The base
+   values are reached only via the required `ArchetypeDefinition.stat_profile` field
+   (`src/content/schema.py:230`, resolved at `src/content/resolver.py:446`).
+   `entity.kind` is **not** a usable substitute: on the archetype-native path it is set to
+   `arch.species_id` (`src/entities/contract_builder.py:31`, whose own comment adds "may be
+   overridden by spawn context"), and a species id is not a stat-profile id; on the legacy builder
+   path it defaults to the literal `"hero"` (`src/core/builder.py:95`) and is freely settable
+   (`:117`). This closes the ticket's own explicitly-unconfirmed caveat: **`kind` does not resolve
+   to a profile id.**
+2. **The apply path has no catalog.** `ApplyPath.apply_generation` (`src/engine/apply.py:189-198`)
+   is a static method taking `prior_state`/`update`/`next_tick`/`next_world_time`/`cadence`/
+   `audit_mode`/`audit_dirty_set`/`passive` — no catalog or repository parameter, and the file
+   contains no `catalog`/`repo` reference at all. This is the precedent the ticket flagged
+   (`WorldCompiler.compile()` having to be handed `context.legacy_roles`), confirmed to apply here.
+
+**Note the asymmetry this exposes:** the resolved contract already computes `archetype_id` and
+`species_id` (`contract_builder.py:28-29`) and `EntityState` then **discards both**. The base
+identity is resolved at spawn and thrown away — which is precisely why B is a real durable-state
+gap and not a convenience field.
+
+#### Option C (retire the full-recalc path) is dead on the coverage test
+
+`world-rule-catalog-design` supplied the governing rule and the test that decides between B and C:
+
+- **OWN-01** (`docs/world_rules/foundations/state-ownership.md:23`, ACCEPT) — "Every durable
+  authoritative state concept has an unambiguous canonical owner … must not independently establish
+  conflicting authoritative truth for the same concept." Two writers producing 35 vs 112 for the
+  same `max_hp` is a direct violation. **OWN-03** adds that stored `max_hp`/`atk`/`def` is a
+  materialised derivation (Bible 01 §2: `base + VIT·2 + END·0.5 + gear`), so two derivations of it
+  cannot both be authoritative. **The dual authority, not the wrong default, is the rule-level
+  defect.**
+- But OWN-01 requires *one* owner without saying which. The deciding question is **coverage**:
+  retiring the recalc is legitimate only if the additive writers already emit a correct delta for
+  **every** input of the §2 formula. **They do not.** The additive writers emit nothing for
+  equipment, trait, learned-skill, breakthrough or class changes — all of which are `stats_dirty`
+  triggers (`apply.py:595-608`) and all of which have real terms in the recalc
+  (`leveling.py:110-150`). Retiring it would leave derived stats stale after those changes — an
+  OWN-03 violation in the opposite direction. The rule owner also notes Bible 01 §5 breakthrough
+  bonuses and Elder Attribute Modifiers depend on that propagation.
+
+So exactly one writer must survive, and it has to be the full derivation.
+
+#### Why B as worded is insufficient: the recalc cannot represent accumulated permanent grants
+
+`recalculate_combat_stats` (`leveling.py:99-150`) computes `max_hp` **absolutely** —
+`base_hp + vitality*2 + int(endurance*0.5)`, plus gear/trait terms. It has **no term for an
+accumulated permanent grant.** But permanent grants exist and are written additively through
+`CombatUpdate.max_hp_delta`, merged absolutely at `patches.py:321`
+(`max_hp = new_combat.max_hp + u_com.max_hp_delta`):
+
+- **`src/engine/pipeline_phases/hardening.py:84`** — `max_hp_delta=5`, declared in that phase's own
+  LAW block as "a small **permanent** max-HP increase" for surviving a near-death hit.
+- **`src/engine/domain/core_actions.py:317`** — `max_hp_delta=amount * 10` on vitality allocation,
+  and **`:313`** `atk_delta=amount * 2` on strength allocation.
+
+Therefore **fixing only the base still erases every accumulated hardening grant** the first time
+`stats_dirty` fires. A correct base is necessary and not sufficient.
+
+#### And a third finding: attribute allocation double-counts, at a divergent weight
+
+`CoreActions.execute_allocate_ap` (`core_actions.py:311-317`) sets the attribute delta **and** a
+hand-written combat delta for the same point:
+
+| allocation | attribute delta | hand-written combat delta | the §2 formula's own term |
+|---|---|---|---|
+| vitality | `vitality_delta=amount` | `max_hp_delta=amount*10` | `vitality*2` |
+| strength | `strength_delta=amount` | `atk_delta=amount*2` | `strength*0.5` |
+
+Setting `update.attributes` **is** the primary `stats_dirty` trigger, so when this path runs the
+same allocated point is counted twice — once at the hand-written weight, once by the recalc — at
+**5× and 4× divergent weights** respectively, on top of the wrong-base rebuild. This is the
+cleanest OWN-01 violation of the three.
+
+`ALLOCATE_AP` is wired, not dead code: `action_router.py:55-56` dispatches it and
+`src/domains/progression/generator.py:79` generates `ConversionKind.ALLOCATE_AP`. It evidently did
+not fire in the three measured worlds (zero `stats_dirty` firings), but **the ticket's own
+2026-09-30 re-raise condition — "re-raise immediately if any change starts setting
+`update.attributes`" — is already met in committed code**, just not reached at corpus run lengths.
+Whether the progression generator runs in corpus play is **not measured here**; do not assume
+either way.
+
+#### Two corrections to this ticket's own earlier notes
+
+1. **`leveling.py:123,147` are not a level-up writer.** The 2026-09-30 note cites them as
+   "`LevelingService`'s own `max_hp += …`" constituting a second additive writer. Read directly,
+   `:123` is `max_hp += defn.properties.get("hp_bonus", 0)` (equipment) and `:147` is
+   `max_hp += 20` (the `Tough` trait) — **both are inside `recalculate_combat_stats` itself**, i.e.
+   terms of the single derivation, not a competing writer. There is no additive level-up HP writer
+   in `leveling.py`.
+2. **The observed `+5/+10/+15/+20` movement was near-death hardening, not level-up HP grants.**
+   The increments match `hardening.py`'s `max_hp_delta=5` applied repeatedly, and that phase fires
+   on surviving near-death combat — consistent with the 40 deaths the probe recorded. The earlier
+   note's "consistent with level-up HP grants" attribution is withdrawn.
+
+   Neither correction changes the 2026-09-30 measurement itself (zero firings stands, with its
+   positive control) or the P2 re-rating. They change what the second writer *is*, which is what
+   the fix shape depends on.
+
+#### One correction from the rule owner, affecting severity framing
+
+The generic profiles do **not** fully coincide with the recalc defaults. `hero_base`,
+`commoner_base` and `monster_base` are `100/10/`**`0`** (`data/content/entities/stat_profiles.yaml`),
+while `rpg_depth.py:349-352` defaults `base_def=`**`5`**. So erosion is observable on
+`commoner_base` too, as `def 0 → 5` — and `commoner_base` is live
+(`entity_archetypes.yaml:98`). It is **not** confined to the `LEGACY-EXPORT` goblin/wolf/spider
+profiles, as a first reading of the catalog suggests.
+
+#### The resolved target shape
+
+1. **A typed durable per-entity base-stat home** is the single canonical owner of base values —
+   `base_hp`/`base_atk`/`base_def`/`base_evasion`, or the `stat_profile_id` plus a resolution step.
+   Durable State Rule applies in full: typed model, stable location in entity state, defined
+   lifecycle, inspection/debug visibility, tests. **Not** `identity.properties` — CLAUDE.md forbids
+   durable meaning in free-form metadata. Written at spawn from the already-resolved contract.
+2. **Permanent grants mutate the base, not a parallel overlay.** Near-death hardening's `+5`
+   becomes `+5` to durable `base_hp`. This is what makes the base the single owner and lets a
+   purely-derived `max_hp` survive a recalc without losing history.
+3. **The full derivation is the sole writer of `max_hp`/`atk`/`def_stat`/`evasion`**, fed the real
+   base. `execute_allocate_ap` stops emitting `max_hp_delta`/`atk_delta` entirely — the attribute
+   delta alone propagates through the derivation, which removes the double-count and the weight
+   divergence in one move.
+4. **Declare the weight change.** Today's hand-written weights (10 HP/point, 2 ATK/point) differ
+   from the §2 formula's (2 HP/point, 0.5 ATK/point). Collapsing to one writer necessarily changes
+   the per-point yield wherever that path fires, so it needs an
+   `docs/guidelines/intentional_divergences.md` entry or an explicit Bible §2 reconciliation —
+   whichever the mechanics owner prefers. **This is a behaviour change, not a silent cleanup.**
+
+#### Consequences for scope, tier and sequencing
+
+- **This is no longer a parameter pass-through, and the ticket's Scope step 2 ("wire it through")
+  should be read as superseded.** It is a durable-state addition plus a writer-authority
+  consolidation across three files, with a declared balance change. Tier stays `standard`; scope
+  grows. It may warrant splitting (durable base field; then writer consolidation; then the declared
+  weight reconciliation) — but the pieces are **ordered**, not independent.
+- **P2 stands.** The erosion still does not fire at corpus run lengths. What changed is that two of
+  the three OWN-01 violations are in committed, wired code rather than hypothetical.
+- **Authority basis to cite:** OWN-01 and OWN-03 for the single-writer obligation; the
+  user-accepted 2026-09-30 ruling on this ticket (species profile values are the entity's spawn
+  stats and a recalc must not discard them) plus CLAUDE.md's Durable State Rule for the typed home.
+  **There is no catalog Rule declaring species-derived base stats** — the rule owner checked
+  `docs/world_rules/` and confirmed none exists; ID-02/STR-01 permit classification-driven
+  properties without requiring them, and Bible 01 §3 declares *class* bases (NOVICE 100/10/5), not
+  species. Do not cite a species-base Rule; it does not exist. The rule owner made **no catalog
+  edit** and judged none warranted until the fix lands.
+- A `progression.yaml` parity entry does not exist for base-stat preservation and will need to be
+  **added**, not updated. (`#276` removed the rebirth/generation entries — re-read the ledger
+  before assuming any neighbouring id.)
+
 ### Sequencing note
 
 The ticket's own claim that this invalidates prior combat-balance observations is plausible and
