@@ -101,6 +101,13 @@ waiting to be fixed, it is a latent defect whose *dormancy is load-bearing*.
    its declared range when the derivation runs.
 5. The exit condition from Scope 5 is stated explicitly, so a later ticket knows when activation is
    safe.
+6. **A guard test or explicit tripwire, not prose.** "`stats_dirty` never firing is load-bearing" is a
+   **hazard**, not just a finding: any change that makes `stats_dirty` fire before this ticket lands
+   triggers the measured field drift (`move_cost` on every entity; ranged archetypes made melee). A
+   test must fail — loudly, naming this ticket — if the trigger set widens or the derivation becomes
+   reachable while the per-field authority decisions (AC1) are still open. Required by the rule owner
+   as a condition of accepting the interim OWN-01 position on the parent ticket; the prose framing
+   alone is insufficient.
 
 ## Related Tickets
 - `TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` — parent; found during its
@@ -138,7 +145,34 @@ waiting to be fixed, it is a latent defect whose *dormancy is load-bearing*.
   measured**; the catalog declares five, which is sufficient to block activation regardless.
 
 ## Implementation Notes
-(none yet)
+
+### 2026-10-01 — Provenance narrowing introduced by the parent ticket's residual base (rule owner)
+
+Recorded here at `world-rule-catalog-design`'s request, because it is a consequence of the parent
+ticket that this ticket inherits rather than a defect in either.
+
+The parent ticket's stored base is **`declared profile value − attribute contribution at spawn`**, not
+the declared value itself. Combined with two existing facts — entities carry **no `stat_profile_id`
+pointer** (`EntityState` has only `kind`; the resolved contract computes `archetype_id`/`species_id`
+and discards both), and **attributes change after spawn** — the consequence is:
+
+> **Once an entity's attributes move, its declared species stat is no longer recoverable from entity
+> state.** The residual plus current attributes reconstructs the *current* derived value, not the
+> original declared one.
+
+**This is not a rule violation.** It is a **narrowing of what the base can answer**, and it is the
+honest cost of the residual shape (which is itself required — see the parent's `investigation.md` §2;
+storing the declared value directly would inflate every entity). Rated accordingly: a documented
+limitation, not a defect.
+
+**If anything needs "what was this entity's declared species stat?"** — the de-hero inventory's
+"re-ground capability on real state" is the live candidate — **the clean answer is a typed
+`stat_profile_id` stored at spawn**, not reconstructing it from the residual. Reconstruction would
+require inverting the formula against *spawn-time* attributes that are themselves no longer stored, so
+it is not merely awkward but impossible in general.
+
+**Noted as an option, explicitly NOT new scope** for this ticket or the parent. Whoever needs the
+declared value should file it.
 
 ## Test Summary
 (none yet)
