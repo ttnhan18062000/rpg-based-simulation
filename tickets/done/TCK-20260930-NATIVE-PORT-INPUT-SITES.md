@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-NATIVE-PORT-INPUT-SITES
-phase: open
+phase: done
 date: 2026-10-01
 tags: [ai, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 Port the 5 input-class bash sites to runCommand
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -59,9 +59,15 @@ Input sites compute values handed to agents or gates; failure is visible to the 
 - None beyond the parent epic's.
 
 ## Implementation Notes
+Ported 6 sites via `sh`: input rows 19, 22, 26, 27 (arch static checks, expected test dirs, expected parity subsystems, next ledger id) and the two plain-runcommand control rows 13 and 33 (frontmatter-FAIL classification, docs-changed check), which the epic split had not assigned to a child. Row 28 (parity-ledger git status) stays for the attested-gates child as the classification says. Native runtime now returns INVALID_ARGS before any work when `args.start_ts` or `args.execution_id_suffix` is missing (design review notes 1 and 3); `startTs` prefers `args.start_ts`. Legacy runtime unchanged: both args are optional there.
 
 ## Test Summary
+1058 passed, 10 skipped, 1 xfailed across all tests referencing implement-ticket; new test pins the INVALID_ARGS gate ahead of any work. One pin (startTs line) updated to the new expression.
 
 ## Files Changed
+- `.claude/workflows/implement-ticket.js`
+- `tests/tools/test_implement_ticket_bash_site_classification.py`, `tests/tools/test_step0_ts_orchestrator.py`
+- `stored_artifacts/TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION/classification.jsonl`
 
 ## Completion Summary
+6 more sites ported (29 of 38 total); 9 gate/attested sites remain for ATTESTED-GATE-SITES. Native INVALID_ARGS gate added.

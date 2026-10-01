@@ -69,6 +69,19 @@ const sh = async (cmd, label) => {
 }
 const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
 
+// Native runtime has no clock and no shell, so the caller supplies the run's identity up front
+// (TCK-20260930-NATIVE-PORT-INPUT-SITES). Checked before any work so a missing value cannot leave a
+// half-scoped ticket behind. The legacy runtime keeps generating both itself (unchanged).
+if (!legacyBash) {
+  const missingNativeArgs = ['start_ts', 'execution_id_suffix'].filter((k) => !(args && args[k]))
+  if (missingNativeArgs.length) {
+    return {
+      status: 'INVALID_ARGS',
+      message: `Native Workflow runtime requires args: ${missingNativeArgs.join(', ')}. start_ts=<ISO timestamp from \`date -u +%Y-%m-%dT%H:%M:%SZ\`>, execution_id_suffix=<unique string, e.g. epoch-ms plus a random hex>.`,
+    }
+  }
+}
+
 // Scope-phase sidecar coverage (net-new — TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION,
 // the follow-up explicitly recommended by TCK-20260710-CURRENT-RUN-SIDECAR-BASH's Decision 1:
 // "extend .claude/current_run sidecar coverage to call sites that have never had one — Scope-phase
@@ -304,7 +317,7 @@ const execIdSuffix = (args && args.execution_id_suffix) || (execIdMarker !== -1 
 const executionId = `${PROVIDER}-${tid}-${execIdSuffix}`
 
 const tier = tierOverride || ticketInfo.tier || 'standard'
-const startTs = scopeTs || null
+const startTs = (args && args.start_ts) || scopeTs || null
 
 // ─── Agent Monitoring Setup ────────────────────────────────────────────────────
 // Hard rule: mandatory for every run (including hotfix). Failure is non-fatal.
@@ -427,7 +440,7 @@ const classifyChecklistFailure = async (checklist, ticketId, ticketTier) => {
   for (const item of checklist || []) {
     if (item.status === 'FAIL') {
       if (item.condition === 'frontmatter_valid' && ticketId && ticketTier) {
-        const out = await bash(
+        const out = await sh(
           `python3 -c "
 import sys
 sys.path.insert(0, 'tools/gate_checks')
@@ -1065,7 +1078,7 @@ if (tier !== 'hotfix') {
   phase('Architecture-Verify')
 
   const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-  const archCheckOutput = await bash(
+  const archCheckOutput = await sh(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1251,7 +1264,7 @@ const TEST_SCHEMA = {
 // which keeps test_step0_ts_orchestrator.py's exact captureTs()->writeSidecar()->agent() literal-
 // adjacency assertion for this phase intact.
 const filesChangedArgsForExpectedDirs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-const expectedTestDirsOutput = await bash(
+const expectedTestDirsOutput = await sh(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1461,7 +1474,7 @@ if (paritySkipEligible && !parityForceFullRun) {
   // Orchestrator-run, before the agent() call — mirrors the p0ScanOutput bash() call's shape above
   // (args passed as individually quoted argv elements, never JSON-embedded in the -c string).
   const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-  const expectedSubsystemsOutput = await bash(
+  const expectedSubsystemsOutput = await sh(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1474,7 +1487,7 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
   // one next_available_id lookup per distinct candidate shard named across all changed files.
   // A shard with no entry with a valid id (next_available_id raises ValueError) is reported as
   // "unavailable: <reason>" rather than failing the phase — this is a hint for the agent, not a gate.
-  const nextIdOutput = await bash(
+  const nextIdOutput = await sh(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1925,7 +1938,7 @@ if (finalizeFailures.length > 0) {
 // is to close a silent gap, not reintroduce one. Fail-open per the same convention as the
 // monitoring-write/tag-drift checks directly below: a stale search index degrades future
 // search_docs() quality but must never block ticket close.
-const docsChangedOutput = await bash(`git status --porcelain -- docs/ 2>/dev/null`)
+const docsChangedOutput = await sh(`git status --porcelain -- docs/ 2>/dev/null`)
 if (docsChangedOutput && docsChangedOutput.trim().length > 0) {
   const reindexOutput = await sh(`make knowledge-index-update 2>&1 || echo "REINDEX_FAILED"`)
   if (reindexOutput.includes('REINDEX_FAILED')) {

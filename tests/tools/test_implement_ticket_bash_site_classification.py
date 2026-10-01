@@ -82,7 +82,8 @@ def test_ported_rows_route_through_sh_helpers_and_legacy_bash_is_kept():
     assert "if (legacyBash) return legacyBash(cmd)" in text
     assert "const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')" in text
     ported = [r for r in _rows() if r.get("ported_by")]
-    assert len(ported) == 23 and {r["ported_by"] for r in ported} == {"TCK-20260930-NATIVE-PORT-BOOKKEEPING-ADVISORY-SITES"}
+    assert len(ported) == 29 and {r["ported_by"] for r in ported} == {
+        "TCK-20260930-NATIVE-PORT-BOOKKEEPING-ADVISORY-SITES", "TCK-20260930-NATIVE-PORT-INPUT-SITES"}
 
 
 def test_sh_helpers_behave_per_runtime_under_node():
@@ -110,3 +111,13 @@ def test_sh_helpers_behave_per_runtime_under_node():
     got = json.loads(out.stdout)
     assert got["legacy"] == {"a": "legacy-out", "b": "legacy-out", "calls": ["bash", "bash"]}
     assert got["native"] == {"a": "native-out", "b": "", "calls": ["agent"]}
+
+
+def test_native_runtime_requires_start_ts_and_execution_id_suffix_before_any_work():
+    text = SCRIPT.read_text(encoding="utf-8")
+    gate = text.index("if (!legacyBash) {\n  const missingNativeArgs = ['start_ts', 'execution_id_suffix']")
+    assert "status: 'INVALID_ARGS'" in text[gate: gate + 600]
+    # before the first agent dispatch or ticket-mutating command
+    assert gate < text.index("const TICKET_SCHEMA")
+    assert gate < text.index("const resolveSeqOffset")
+    assert "const startTs = (args && args.start_ts) || scopeTs || null" in text
