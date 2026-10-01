@@ -45,7 +45,7 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §2–3.
 
 ## Scope
 
-**Decision record (2026-09-30).** D-M2 and D-MF are approved with changes (roadmap §11); both HOLDs are lifted. Approval does not close this epic: criteria 1–2 are not met and criterion 4 is open.
+**Decision record (2026-09-30).** D-M2 and D-MF are approved with changes (roadmap §11); both HOLDs are lifted. Approval does not close this epic. Status 2026-10-01: criterion 1 met with a caveat, criterion 2 not met (partially demonstrated), criterion 4 open, criterion 5 met (text only).
 
 1. **Test-plan fields** (existing `investigator`):
    - mandatory: proof kind, oracle source (Bible/contract section + parity-ledger id), expected
@@ -77,13 +77,14 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §2–3.
 
 ## Acceptance Criteria
 
-1. **NOT MET (2026-09-30).** On at least 2 tickets (real, or clearly labelled synthetic), the mandatory `test_plan.md` fields
+1. **MET (2026-10-01), with a caveat.** (Earlier status, 2026-09-30: not met, because the `done-checker` check did not exist.) On at least 2 tickets (real, or clearly labelled synthetic), the mandatory `test_plan.md` fields
    are present and `done-checker` checks their presence. The fields were present in the pilot, but the `done-checker` check was
    removed from PR #265 as a contested area and does not exist. agent-working-design agreed (2026-09-30) to an **advisory WARN** (never
    blocking), owned and built by agent-working (`agent-working-implementer`, its next batch); they will report the PR number. This criterion
    stays not met until that PR merges. A blocking variant is not to be built here; a request for one goes back to agent-working-design.
-2. **NOT MET (2026-09-30).** The checklist runs on changed tests. Each substantive finding is acted on, or declined with a
-   reason. The checklist has never run on changed tests; the real-pipeline exercise (Epic D) is what exercises it.
+   **Update 2026-10-01:** that PR (#268, `TCK-20260930-DONE-CHECKER-PROOF-PLAN-ADVISORY`) merged. The advisory ran inside a real `implement-ticket` run at Verify on `TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP` and reported OK (fields written by the real investigator), and the same check run afterwards by hand on pilot D1's stored `test_plan.md` also reported OK. Caveat: D1 was checked after the fact with the same script, not inside a pipeline.
+2. **NOT MET; partially demonstrated (2026-10-01).** The checklist runs on changed tests. Each substantive finding is acted on, or declined with a
+   reason. **Update 2026-10-01:** in the real pipeline run on `TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP` the checklist ran at Architecture-Verify on the two changed test files and found nothing, **but only because the orchestrator added a prompt sentence asking about it** (the workflow script does not contain it). The checklist is wired into `.claude/agents/architecture-reviewer.md`, so it should run unprompted; this run shows only that it runs when asked, and a clean diff shows nothing about detection. The criterion closes on the first later pipeline run that changes tests with the orchestrator prompt unmodified.
 3. The triage procedure is one document, and the other sources link to it. A drill classifies at
    least one real case (the Epic A leak) and one synthetic case, and routes each to the right role.
 4. **Open** (rule text recorded; no ticket has yet exercised it). A ticket that changes an expectation shows the document and ledger change before
@@ -110,7 +111,7 @@ None.
 `docs/testing/regression_policy.md`.
 
 ## Assumptions / Open Questions
-- **D-M2, D-MF approved with changes (2026-09-30).** Criteria 1–2 not met, criterion 4 open, criterion 5 met (text only). This epic stays open in `todos/`.
+- **D-M2, D-MF approved with changes (2026-09-30).** As of 2026-10-01: criterion 1 met (caveat above), criterion 2 not met (partially demonstrated), criterion 4 open, criterion 5 met (text only). This epic stays open in `todos/`.
 - The installed `obra/superpowers` `testing-anti-patterns.md` is the checklist basis.
 
 ## Implementation Notes

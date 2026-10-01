@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "kind": "mutation_rerun",
+  "purpose": "Measure the effect of the rejection-path tests added for the coverage gap on the src/core/conservation.py mutation baseline. Coverage gap measurement only; production code is unchanged and no live defect is implied.",
+  "baseline_record": "tests/mutation/baselines/src_core_conservation.json",
+  "baseline_refreshed": false,
+  "baseline_note": "This re-run does not refresh the baseline. The baseline still goes stale on 2026-10-30 (30 days from 2026-09-29) or when the target sha256 changes.",
+  "report_visibility": "The core-RPG report's mutation layer reads only tests/mutation/baselines/*.json, so this re-run record is invisible to it.",
+  "target": {
+    "path": "src/core/conservation.py",
+    "sha256": "bb5484ebbed8621841b868b4f9d1da1cdc36d80815715f342664a7c7ac52e99d",
+    "sha256_prefix_matches_baseline": "bb5484ebbed8",
+    "lines": 334
+  },
+  "source": {
+    "commit_sha": "e9db40f0ab069f91ee1808a182c51fa80a20efee",
+    "note": "HEAD of the working tree; the two new test files were untracked at measurement time. src/ is unchanged versus origin/main."
+  },
+  "tool": {
+    "name": "mutmut",
+    "version": "2.5.1",
+    "install": "pip --target in a private scratch directory (not a project dependency, shared venv untouched); each pass ran from a scratch copy of the tree outside the repo, with a cleared mutmut cache",
+    "why_not_3x": "mutmut 3.x trampoline rejects modules whose import path starts with 'src.'"
+  },
+  "passes": [
+    {
+      "name": "pass_1_positive_control",
+      "purpose": "Baseline selection only (the unchanged 8 files); must reproduce the baseline counts before any delta is reported.",
+      "command": "mutmut run --paths-to-mutate src/core/conservation.py --runner \"python -m pytest -x -q -p no:cacheprovider tests/integration/domains/adventure/test_harvest_to_event.py tests/integration/pipeline/test_transaction_completion.py tests/unit/combat/test_combat_matrix.py tests/unit/content/test_resolvers.py tests/unit/domains/adventure/test_craft_upgrade_execution.py tests/unit/economy/test_gold_sink.py tests/unit/quest/test_quest_rewards.py tests/unit/resource/test_durability_repair.py\" --no-progress",
+      "tests": {
+        "files": [
+          "tests/integration/domains/adventure/test_harvest_to_event.py",
+          "tests/integration/pipeline/test_transaction_completion.py",
+          "tests/unit/combat/test_combat_matrix.py",
+          "tests/unit/content/test_resolvers.py",
+          "tests/unit/domains/adventure/test_craft_upgrade_execution.py",
+          "tests/unit/economy/test_gold_sink.py",
+          "tests/unit/quest/test_quest_rewards.py",
+          "tests/unit/resource/test_durability_repair.py"
+        ],
+        "count": 165
+      },
+      "runtime_seconds": 404,
+      "started_utc": "2026-10-01T02:53:26Z",
+      "counts": {
+        "total": 177,
+        "killed": 60,
+        "survived": 117,
+        "timeout": 0,
+        "suspicious": 0,
+        "equivalent": "not-classified"
+      },
+      "reproduces_baseline_177_60_117": true
+    },
+    {
+      "name": "pass_2_delta",
+      "purpose": "Baseline selection plus the two new test files.",
+      "command": "mutmut run --paths-to-mutate src/core/conservation.py --runner \"python -m pytest -x -q -p no:cacheprovider tests/integration/domains/adventure/test_harvest_to_event.py tests/integration/pipeline/test_transaction_completion.py tests/unit/combat/test_combat_matrix.py tests/unit/content/test_resolvers.py tests/unit/domains/adventure/test_craft_upgrade_execution.py tests/unit/economy/test_gold_sink.py tests/unit/quest/test_quest_rewards.py tests/unit/resource/test_durability_repair.py tests/unit/resource/test_conservation_rejection_paths.py tests/unit/resource/test_rejected_transfer_apply_path.py\" --no-progress",
+      "tests": {
+        "files": [
+          "tests/integration/domains/adventure/test_harvest_to_event.py",
+          "tests/integration/pipeline/test_transaction_completion.py",
+          "tests/unit/combat/test_combat_matrix.py",
+          "tests/unit/content/test_resolvers.py",
+          "tests/unit/domains/adventure/test_craft_upgrade_execution.py",
+          "tests/unit/economy/test_gold_sink.py",
+          "tests/unit/quest/test_quest_rewards.py",
+          "tests/unit/resource/test_durability_repair.py",
+          "tests/unit/resource/test_conservation_rejection_paths.py",
+          "tests/unit/resource/test_rejected_transfer_apply_path.py"
+        ],
+        "count": 225
+      },
+      "runtime_seconds": 530,
+      "started_utc": "2026-10-01T03:00:31Z",
+      "counts": {
+        "total": 177,
+        "killed": 143,
+        "survived": 34,
+        "timeout": 0,
+        "suspicious": 0,
+        "equivalent": "not-classified"
+      }
+    }
+  ],
+  "before_after_test_sets_differ": true,
+  "before_after_test_set_note": "Pass 2 adds tests/unit/resource/test_conservation_rejection_paths.py and tests/unit/resource/test_rejected_transfer_apply_path.py to the 8 baseline files. The delta is attributable to those two files only.",
+  "delta": {
+    "survivors_before": 117,
+    "survivors_after": 34,
+    "newly_killed": 83,
+    "newly_surviving": 0,
+    "source_lines_82_91_exclusion": {
+      "rule": "Mutants on src/core/conservation.py source lines 82-91 were killed by tests/unit/resource/test_node_charge_accounting.py (outside the baseline selection and outside this selection); they are neither credited to this change nor re-counted as survivors of it.",
+      "mutants_on_lines_82_91": 15,
+      "survivors_on_lines_82_91_before": 12,
+      "survivors_on_lines_82_91_after": 12,
+      "survivors_outside_lines_82_91_before": 105,
+      "survivors_outside_lines_82_91_after": 22,
+      "newly_killed_outside_lines_82_91": 83,
+      "surviving_mutant_ids_outside_lines_82_91_after": [
+        1,
+        2,
+        19,
+        88,
+        101,
+        103,
+        104,
+        112,
+        114,
+        116,
+        118,
+        119,
+        122,
+        142,
+        157,
+        163,
+        164,
+        166,
+        168,
+        172,
+        174,
+        176
+      ]
+    }
+  },
+  "flag_flip_survivors": {
+    "description": "The 22 accepted=False to accepted=True flip mutants that survived in the baseline. Ids are mutmut 2.5.1 mutant ids; 'source_line' is the 1-based line of src/core/conservation.py.",
+    "id_vs_line_note": "Mutant ids 82, 86 and 91 are ids, not source lines: they sit on source lines 139, 144 and 158 (CRAFTING and SHOP_BUY), outside the lines 82-91 exclusion, and are credited to this change. None of the 22 flip mutants lies on source lines 82-91.",
+    "entries": [
+      {
+        "mutant_id": 22,
+        "source_line": 59,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 32,
+        "source_line": 77,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 54,
+        "source_line": 101,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 57,
+        "source_line": 104,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 63,
+        "source_line": 108,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 67,
+        "source_line": 118,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 76,
+        "source_line": 125,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 80,
+        "source_line": 136,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 82,
+        "source_line": 139,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 86,
+        "source_line": 144,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 91,
+        "source_line": 158,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 96,
+        "source_line": 162,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 100,
+        "source_line": 169,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 111,
+        "source_line": 198,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 113,
+        "source_line": 201,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 117,
+        "source_line": 206,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 132,
+        "source_line": 240,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 153,
+        "source_line": 277,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 155,
+        "source_line": 280,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 169,
+        "source_line": 309,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 171,
+        "source_line": 314,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      },
+      {
+        "mutant_id": 175,
+        "source_line": 320,
+        "baseline_selection": "alive",
+        "with_new_tests": "killed"
+      }
+    ],
+    "killed_count_with_new_tests": 22,
+    "alive_count_with_new_tests": 0
+  },
+  "observations": {
+    "reservation_condition_mutants": "Survivors on source lines 104-126 (reservation and source-lookup conditions) fell from 16 to 0 as a side effect; this is an observation, not a requirement.",
+    "existing_end_to_end_target_locked_coverage_outside_selection": [
+      "tests/unit/resource/test_resource_conflicts.py:76",
+      "tests/integration/kernel/test_race_conditions_v2.py:89",
+      "tests/integration/kernel/test_race_conditions_v2.py:113"
+    ],
+    "existing_coverage_note": "These three assert ReasonCode.TARGET_LOCKED through the apply path with two actors. They are deliberately not in either mutmut selection, so a surviving mutant in the baseline selection does not mean the behaviour was untested.",
+    "building_reservation": "resolve() has no reservation guard for buildings; no building lock test exists and no src/ guard was added.",
+    "quest_recruit_chest_reservations": "QUEST, RECRUIT and CHEST locks are reachable only by a direct resolve() call; the apply path populates reservations only for NODE, GROUND_ITEM and CORPSE."
+  },
+  "kill_rate_claim": "none",
+  "equivalent": "not-classified"
+}
