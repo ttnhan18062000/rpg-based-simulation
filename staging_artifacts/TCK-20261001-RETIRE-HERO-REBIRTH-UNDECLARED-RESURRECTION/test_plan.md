@@ -51,23 +51,64 @@ is exempt" means. Covers AC5.
 
 ## `generation` removal (AC3)
 
-**R4 — legacy `"generation"` keys load without error.** `LifecycleComponent.from_dict` **and**
-`CorpseState` deserialization each accept a dict containing a legacy `"generation"` key and **ignore**
-it. Required by the rule owner so old saves, replays and fixtures still load. Assert no exception and no
-attribute created. **This is the test most likely to be skipped and most likely to matter** — a hard
-failure here breaks replay of every pre-retirement run.
+**~~R4~~ — DROPPED (architecture review + rule-owner withdrawal, 2026-10-01).** v1 required
+`LifecycleComponent.from_dict` and `CorpseState` deserialization to tolerate a legacy `"generation"`
+key. **Neither deserializer exists** — both types define only `to_canonical_dict()`, consumed
+write-only, and the only `from_dict`s in `src/core/state.py` are `SiegeState`/`FactionSentiment`/
+`FactionState`/`ClanState`. Writing this test would have required *inventing* a deserializer on a frozen
+durable component with no caller, purely to satisfy it. The rule owner withdrew the condition
+("adding a deserializer with no caller just to satisfy my condition would be new durable surface for
+nothing"). There is nothing left for R4 to assert.
+
+**R4′ — the pinned-expectation sweep is performed and its result stated.** Removing the field from
+`to_canonical_dict()` changes canonical state hashes. Search for every pinned expectation that moves:
+stored state hashes, checkpoint/certification golden values, canonical-JSON fixtures, and determinism
+tests comparing against a *recorded* hash rather than two live runs. **The architecture review searched
+and found none** — the determinism gates compare two runs to each other
+(`test_world_compile_determinism.py:56`, `:141`; `test_event_observability_parity.py:55`) and
+`tests/regression/baseline_5k.json` is metrics-keyed, not hash-keyed. **Verify that independently and
+record the outcome either way.** "Searched, none found" is a valid result but must be stated, not
+implied. Anything found is re-baselined in the same change per
+`TCK-20260824-TOWN-CENTER-POINTER-FIX` — disclosed, never loosened — with a follow-up filed for
+anything out of scope.
+
+**R4″ — no recorded-event consumer reads the `"generation"` payload back.** Condition 3 from the rule
+owner: S4.5's sweep is written for *writers* of `life_arc_incoherent`; this asserts there is no
+**reader** of the emitted payload's `"generation"` value. If one exists it must be handled in the same
+change.
 
 **R5 — no consumer still reads `generation`.** A structural check: assert no `src/` reference to
-`lifecycle.generation`, `CorpseState.generation` or `generation_delta` survives, excluding the
-deliberately-unrelated `ApplyPath.apply_generation` and the lab `generation` directory/status. Prevents
-the dead-plumbing outcome the investigation's Finding 4 warns about, where a field exists, is threaded
-through four lift sites and a patch, and can never be non-zero.
+`lifecycle.generation`, `CorpseState.generation` or `generation_delta` survives. Prevents the
+dead-plumbing outcome the investigation's Finding 4 warns about.
 
-**R6 — `life_arc_incoherent` is retired cleanly, with nothing orphaned.** Assert the detector no longer
-emits, and that no registered or consumed `life_arc_incoherent` literal remains in the event-type
-registry, SimQ scorers, tests, docs or parity entries. The failure mode this guards is a scorer or
-registry entry left pointing at an event type that can never fire again — silent dead weight that looks
-like coverage.
+**The exclusion list must be mechanical, or a naive `generation` grep drowns** — same-word,
+deliberately-unrelated hits: `ApplyPath.apply_generation`; the lab `generation` directory/status in
+`audit.py`/`session.py`; `src/api/agent_ops_dashboard/ingest.py:240` ("legacy generations");
+`GeneticsSystem`'s "first-generation parent" prose; and the `*_generation` identifiers
+(`quest_generation`, `lead_generation_system`, `baseline_generator`). Match on the specific attribute
+accesses, not the bare word.
+
+**R6 — `life_arc_incoherent` leaves no orphaned literal. (v1's first clause was VACUOUS — deleted.)**
+v1 said "assert the detector no longer emits". **It never emitted** — its own closed record
+(`TCK-20260806-SIMQ-PROGRESSION-CAPABILITY-LIFECYCLE`) shows 0 firings, and the `generation >= 2`
+threshold was structurally unreachable per `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION`.
+Worse, `event_extractor.py:1283` reads `getattr(..., "generation", 1)`, so after removal the detector
+would read the default `1`, fall below the threshold, and go **silently inert if left in place** —
+non-emission proves nothing either way.
+
+So assert **absence of the literals**, across the full set in plan S4.5: `event_extractor.py:66-67`,
+`:100` (`_emitted_life_arc_incoherent`), `:116`, `:1283-1297`;
+`simulation_quality/scorers/progression.py:27, :160, :162, :163-164`;
+`config/simulation_quality/scoring_weights.yaml:106`;
+`config/simulation_quality/entity_lifecycle_weights.yaml:31-36, :73, :160`;
+`tools/entity_lifecycle_score.py:454-458`; the six docs; and the two parity entries
+(`progression.yaml:1364-1391`, `infrastructure.yaml:8879`). **Carve out
+`docs/audits/D21_entity_lifecycle_foundation_layers.md`** — dated audit, must NOT be swept.
+
+**R6b — `conclusion_coherence`'s fate is decided, not defaulted.** `conclusion_incoherent_tags` has
+exactly **one** member. Deleting it leaves the published metric structurally always "coherent". Assert
+whichever the ticket decides — the metric is retired, or it is explicitly flag-less pending a
+replacement signal. A silently-always-passing scored metric is the failure this guards.
 
 **R8 — `src/certification/scenarios.py:170` ("One away from permadeath") is retired or rewritten, not
 stripped.** That scenario exists to test rebirth. Assert either that it is gone, or that its rewritten
@@ -76,20 +117,56 @@ name and intent no longer match anything — the exact drift this ticket is clea
 
 ## Architecture tests
 
-**RA1 — `is_permadeath` survives as a separately tracked fact.** Assert the field still exists and is
-still written by a lifecycle death classification, **not** derived from `death_reason` being non-`None`.
+**RA1 — `is_permadeath` survives as a separately tracked fact. (v1 was near-tautological — strengthen
+it.)** Asserting "the field exists and is written" passes trivially. Pin the **writer**: assert
+`resolve_lifecycle`'s death classification is what sets `is_permadeath_set`, and that nothing derives it
+from `death_reason` or `active`. The assertion must be able to **fail** if someone replaces the write
+with a derivation.
+
 This is the STR-02 hook: a future declared resurrection process is the only thing permitted to produce a
 recorded death with `is_permadeath False`. **This test's job is to make a future "simplification" fail
 loudly**, so its docstring must say that in as many words.
+
+**RA1b — the right `is_permadeath_set` is removed and the right one kept.** Two fields share the name
+and have opposite fates (plan S5). Assert `LifecycleUpdate.is_permadeath_set` and `patches.py:83`
+survive, **and** that `CombatUpdate.is_permadeath_set` and `patches.py:82` are gone along with all four
+lift guards. Without this, v1's contradictory instructions ("don't remove `is_permadeath`" + "the guards
+reduce to `is_permadeath_set is not None`") would leave four guards that can never be true feeding a
+field that can never be set.
 
 **RA2 — no role-gated lifecycle exemption remains on this path.** Assert no code path grants different
 *lifecycle* outcomes on the basis of `EntityRole` (ID-02, CAUSE-04). Scope it to the lifecycle/death
 path — the wider `HERO` privilege sweep is the separate de-hero epic, and this test must not be written
 so broadly that it fails on reward or content coupling that is deliberately still in place.
 
-**RA3 — determinism.** A named seed/world produces identical results across two runs after the change.
-Field removal changes canonical dicts, so the corpus baseline hash will shift **once** — re-baseline
-deliberately, state the old and new values, and never loosen an assertion to absorb it.
+**RA3 — determinism, re-pointed at the REAL exposure (v1 guarded the wrong thing).** v1 said "the
+corpus baseline hash will shift once". **That has no referent** — no canonical-hash literal is pinned
+anywhere (see R4′). The self-consistency assertion (same seed/world → identical results across two
+runs) is still worth keeping, but it is not where the risk is.
+
+**The real exposure is behavioural.** Removing `combat.py:136` makes `EntityRole.HERO` entities lethally
+killable through `resolve_attack` for the first time, and `V2EntityBuilder` defaults to role HERO — so
+mortality and population dynamics move **corpus-wide**. That lands on grade anchors, corpus-diversity
+floors, `baseline_5k.json` **metrics**, and the **certification suite, a
+`docs/testing/regression_policy.md` §2 hard gate** whose registered scenario list includes
+`COMBAT_ARENA_MORTALITY` (`src/certification/scenarios.py:525`, `:559`).
+
+So RA3 must: (a) keep the two-run self-consistency check; (b) **name and re-run the certification
+suite explicitly** (plan S2b), stating its result; (c) treat moved metrics as a disclosed re-baseline
+under `regression_policy.md` §9-11, never a loosened assertion.
+
+**RA4 — inventory the tests that pin the removed mechanism BEFORE editing them.** The plan's "Starting
+state" names two files; the architecture review found **at least ten**:
+`tests/unit/progression/test_lifecycle.py`, `tests/unit/combat/test_combat_rewards.py`,
+`tests/unit/combat/test_rpg_core_recovery.py`, `tests/unit/movement/test_tactical_movement.py` (incl.
+`:121`), `tests/unit/domains/combat_engagement/test_learning_outcome.py`,
+`tests/unit/engine/test_combat_actions_learning_wiring.py`,
+`tests/unit/world/test_world_lifecycle_regression.py:17`,
+`tests/unit/observability/test_event_extractor_progression.py`,
+`tests/simulation_quality/test_progression_scorer.py`, `tests/tools/test_entity_lifecycle_score.py`.
+Deleting a test that pins deliberately-removed behaviour is legitimate under `regression_policy.md` §6,
+**but two of these are parity `test_path`s** (COMB-297, COMB-311) — so each deletion must be an
+**itemized decision recorded with the parity update**, not discovered mid-implementation.
 
 ## Regression-prone paths
 
