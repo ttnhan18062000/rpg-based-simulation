@@ -50,11 +50,7 @@ HP reaches zero. What semantic transition is actually implied?
 
 - **Rules invoked:** BODY-01 (HP is a materialized abstraction), BODY-02 (zero HP triggers
   classification, not one automatic outcome).
-- **Result: covered — the answer was determined, not assumed in advance.** Reaching
-  `new_hp <= 0` triggers `CombatRewardClassificationService.classify_defeated_target()`, which
-  resolves to one of `KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH` depending on role and generation —
-  zero HP is a necessary trigger for a real classification process, never a sufficient cause of
-  any single predetermined result.
+- **Result: covered for cause; fate not currently realised (revised 2026-10-01).** Reaching `new_hp <= 0` still triggers a real classification, never an assumed one. Combat classifies `KILL` or terminal `DEFEAT` by the attack's own lethality (`is_lethal`; opportunity attacks are non-lethal), not by the subject's role. Lifecycle then records the death with a declared cause (`COMBAT`, `DEFEAT`, `HAZARD`, `STARVATION`, `SLEEP_DEPRIVATION`). The former role- and generation-dependent branch (`REBIRTH`/`PERMADEATH`) was retired, and the `generation` field removed. Zero HP is a necessary trigger for cause classification. Fate is not currently classified: every zero-HP outcome today is a final death, and no declared route to continued existence exists (permitted by LIFE-02 and BODY-02, not required).
 
 ## LB-S04 — Injury without combat
 
