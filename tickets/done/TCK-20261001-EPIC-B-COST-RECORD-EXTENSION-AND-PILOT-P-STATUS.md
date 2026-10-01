@@ -32,7 +32,7 @@ Records only, no product code. Requested through test-architecture-reviewer (pla
 ## Scope
 - Epic B cost record: rows for #272, #273, #274, #276 (final heads, full 40-character SHA queries), one fixed routing vocabulary, a header note that routing counts are recomputed locally, Perf wall time labelled as including non-scenario work.
 - e75ff2e77 attribution: my own earlier report plus fix `248372a26`; only the failing job and step names confirmed.
-- Pilot report: capability row 8 (pilot P blocked/inconclusive, waiting on surface stability, dated planner confirmation) and a cost-record update in the CI addendum.
+- Pilot report: capability row 8 (pilot P blocked/inconclusive, no settled progression ticket yet, dated planner confirmation) and a cost-record update in the CI addendum.
 - Epic D limit (4) and the INDEX row updated to the 6-PR record, without any claim that all gaps are closed.
 
 ## Out of Scope
@@ -43,7 +43,7 @@ Records only, no product code. Requested through test-architecture-reviewer (pla
 ## Acceptance Criteria
 1. Four new rows match the Actions runs and jobs API for the named head SHAs; #274 and #276 are recorded as skipped with Perf as the executing job, never as docs-only skips.
 2. Every row carries a routing category (real trigger match / tests-only fail-open / skipped, Perf covers it); src/progression trigger and docs-only skip stay in the unobserved list.
-3. Pilot report row 8 says blocked/inconclusive (waiting on surface stability) with the reason; no oracle id is assumed.
+3. Pilot report row 8 says blocked/inconclusive (no settled progression ticket yet; next candidate expected after the typed durable base-stat field lands), with one clause noting the surface-stability merge gate was satisfied by #276; no oracle id is assumed.
 4. Epic D text contains no "all gaps closed" claim; all four epics stay `phase: open` in tickets/todos/test-architecture/.
 
 ## Related Tickets
@@ -56,7 +56,8 @@ docs/testing/core_rpg_test_pilot_2026-09-30.md, docs/plans/test_architecture/roa
 None (hotfix).
 
 ## Related Code Areas
-tickets/todos/test-architecture/, docs/testing/
+- tickets/todos/test-architecture/
+- docs/testing/
 
 ## Assumptions / Open Questions
 - Route: hand-orchestrated hotfix.
@@ -73,4 +74,4 @@ Text only. Frontmatter and registry checks run after the edit.
 tickets/todos/test-architecture/TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION.md; tickets/todos/test-architecture/TCK-20260929-EPIC-CORE-RPG-TEST-PILOT.md; tickets/todos/test-architecture/INDEX.md; docs/testing/core_rpg_test_pilot_2026-09-30.md; docs/REGISTRY.yaml.
 
 ## Completion Summary
-Cost record is at 6 of about 10 PRs: lane ran and succeeded on four (#271, #272, #273, #275) and was skipped on two because Perf covered the scenario tests (#274, #276). The src/progression trigger and docs-only skip remain unobserved; criterion 4 stays open. Pilot P is recorded as blocked/inconclusive (waiting on surface stability). Epic D limits restated with no "all gaps closed" claim.
+Cost record is at 6 of about 10 PRs: lane ran and succeeded on four (#271, #272, #273, #275) and was skipped on two because Perf covered the scenario tests (#274, #276). The src/progression trigger and docs-only skip remain unobserved; criterion 4 stays open. Pilot P is recorded as blocked/inconclusive (no settled progression ticket yet; next candidate expected after the typed durable base-stat field lands); the earlier surface-stability merge gate was satisfied by #276 (`786f9ee9b`). Epic D limits restated with no "all gaps closed" claim.
