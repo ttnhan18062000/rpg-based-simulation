@@ -18,7 +18,14 @@ just the heading's presence.
 """
 import re
 
-_HEADING_RE = re.compile(r"^##\s+Unresolved Questions\s*$", re.MULTILINE)
+# The heading may carry a qualifier introduced by punctuation, e.g. "## Unresolved Questions (decide
+# before the implementer runs; do not decide in-plan)" or "## Unresolved Questions: owner decisions"
+# (TCK-20260930-PLAN-GATE-HEADING-SUFFIX-FALSE-NEGATIVE: the bare-heading-only form let a real plan
+# with 3 open owner decisions through the gate, silently, because this module is fail-open). A plain
+# word after the title ("## Unresolved Questions Resolved Later") is deliberately NOT matched: it
+# reads as a different section, and the planner is told to flag open questions "under 'Unresolved
+# Questions'", not to qualify the title with prose.
+_HEADING_RE = re.compile(r"^##\s+Unresolved Questions(?:[ \t]*[(:\[\u2013\u2014-].*)?[ \t]*$", re.MULTILINE)
 _NEXT_H2_RE = re.compile(r"^##\s+\S", re.MULTILINE)
 # Word-boundary match, not a bare substring check — "None." / "None" / "none:" all count as the
 # resolved word "None", but "Nonetheless, ..." must not (it isn't the same word, even though

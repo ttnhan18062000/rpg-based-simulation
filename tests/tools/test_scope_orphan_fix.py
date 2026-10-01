@@ -158,3 +158,40 @@ def test_ticket_scoper_prompt_no_longer_unconditionally_copies():
     assert "scopeOrphanInfo.ticket_path" in source
     assert "scopeOrphanInfo.tier" in source
     assert "scopeOrphanInfo.todos_source_path" in source
+
+
+# ---------------------------------------------------------------------------
+# 5. TCK-20260930-SCOPE-RELOCATE-RESUME-LOSES-TODOS-SOURCE-PATH: a resumed run (ticket already in
+#    inprogress/) must still report a surviving tickets/todos/ copy, derived from the filesystem.
+# ---------------------------------------------------------------------------
+
+
+def test_resumed_run_reports_the_surviving_todos_copy(tmp_path):
+    inprogress_dir, todos_dir, done_dir = _make_dirs(tmp_path)
+    todos_path = todos_dir / "TCK-20260930-R.md"
+    _write_ticket(todos_path, "TCK-20260930-R", "standard")
+    first = resolve_and_relocate_ticket("TCK-20260930-R", inprogress_dir, todos_dir, done_dir)
+    assert first["action"] == "copied_from_todos" and first["todos_source_path"] == str(todos_path)
+
+    resumed = resolve_and_relocate_ticket("TCK-20260930-R", inprogress_dir, todos_dir, done_dir)
+    assert resumed["action"] == "already_in_inprogress"
+    assert resumed["todos_source_path"] == str(todos_path)
+    assert todos_path.exists()  # reporting must not mutate anything
+
+
+def test_resumed_run_finds_a_copy_in_a_todos_subfolder(tmp_path):
+    inprogress_dir, todos_dir, done_dir = _make_dirs(tmp_path)
+    sub = todos_dir / "some-folder"
+    sub.mkdir()
+    _write_ticket(sub / "TCK-20260930-S.md", "TCK-20260930-S", "standard")
+    resolve_and_relocate_ticket("TCK-20260930-S", inprogress_dir, todos_dir, done_dir)
+    resumed = resolve_and_relocate_ticket("TCK-20260930-S", inprogress_dir, todos_dir, done_dir)
+    assert resumed["todos_source_path"] == str(sub / "TCK-20260930-S.md")
+
+
+def test_resumed_epic_tier_run_has_no_todos_copy_left(tmp_path):
+    inprogress_dir, todos_dir, done_dir = _make_dirs(tmp_path)
+    _write_ticket(todos_dir / "TCK-20260930-E.md", "TCK-20260930-E", "epic")
+    resolve_and_relocate_ticket("TCK-20260930-E", inprogress_dir, todos_dir, done_dir)  # moves it
+    resumed = resolve_and_relocate_ticket("TCK-20260930-E", inprogress_dir, todos_dir, done_dir)
+    assert resumed["action"] == "already_in_inprogress" and resumed["todos_source_path"] == ""

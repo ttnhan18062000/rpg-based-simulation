@@ -142,10 +142,9 @@ def _independently_derive_counts() -> dict:
     real bug in build_skill_usage_section rather than just confirming it agrees with itself."""
     counts: dict = {}
     pattern = re.compile(r"'skill':\s*'([^']*)'")
-    # Both shard shapes the production loader reads (monitoring_shard_paths.shard_paths): the bare
-    # `<week>/tools.jsonl` and the per-identifier `<week>/<id>.tools.jsonl` files a branch carries
-    # until its post-merge consolidation. Reading only the bare shape under-counts whenever a
-    # branch's own shard holds a Skill row.
+    # Canonical week files AND per-branch shards (<branch>.tools.jsonl): load_data_glob reads both since
+    # the monitoring sharding work, so an independent derivation limited to the canonical files
+    # disagrees whenever an unconsolidated branch shard holds a Skill call.
     shards = sorted(set(_REAL_DATA_DIR.glob("*/tools.jsonl")) | set(_REAL_DATA_DIR.glob("*/*.tools.jsonl")))
     for shard in shards:
         with open(shard, encoding="utf-8") as f:
