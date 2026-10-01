@@ -112,7 +112,7 @@ def test_instrumentation_never_blocks_or_raises_regardless_of_detection_outcome(
 
     workflow_source = _WORKFLOW_PATH.read_text(encoding="utf-8")
     assert (
-        'await bash(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)'
+        'await sh(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)'
         in workflow_source
     )
 

@@ -548,7 +548,7 @@ def test_scope_phase_wires_detection_call_at_tid_confirmation_point():
 
     assert tid_idx < detection_call_idx < write_sidecar_def_idx
     assert (
-        'await bash(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)'
+        'await sh(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)'
         in source
     )
 
