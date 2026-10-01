@@ -92,10 +92,43 @@ unmodified `frontier_marches` @ seed 42 within 120 ticks, on 8 separate ticks:
 (The hazard-only rows show no `outcome_kind` because the probe samples *before* `resolve_dynamics`
 writes its own hazard update; their drain ≥ hp and no combat update exists.)
 
-**Three independent production routes** reach the same unrecorded-death state. None of them is
+**Three independent production routes** reach the same committed signature. None of them is
 the combat+hazard collision. `DEFEAT` arises because `src/engine/combat.py:136` forces
 `is_lethal=False` for `EntityRole.HERO` defenders, so a lethal blow on a HERO yields `DEFEAT`
 (with `alive_set=False`) rather than `KILL` — and `resolve_lifecycle` ignores `DEFEAT`.
+
+> **CORRECTION, 2026-10-01, after `rpg-implementer (2)` pushed back during follow-up planning.**
+> The table above is correct row by row, but grouping all 8 rows under one "unrecorded death"
+> heading **conflates two opposite defects that happen to share one committed signature**:
+>
+> - The **hazard-only rows** are *deaths that go unrecorded*. `resolve_lifecycle` should record
+>   them and does not. This is the defect this ticket confirmed.
+> - The **`DEFEAT` and `REBIRTH` rows are the reverse: non-deaths that become deaths.**
+>   `docs/world_rules/life-body/lifecycle.md` **LIFE-02** ("Incapacitation/defeat does not
+>   necessarily mean death", Disposition: **ACCEPT**) names exactly these two as the *intended
+>   non-lethal* classifications — `DEFEAT` "explicitly non-lethal, e.g. for `EntityRole.HERO`,
+>   where `is_lethal` is forced `False`", `REBIRTH` "`generation_delta=1`, identity continues" —
+>   with "only `PERMADEATH` … as truly final". For these rows the bug is **not** a missing death
+>   record. It is that `apply.py:109`'s passive HP gate deactivates them a tick later anyway, so a
+>   classified-non-lethal outcome silently becomes a permanent death.
+>
+> Verified while making this correction: **no runtime writer ever sets `alive=True` again** —
+> every `alive=True` in `src/` is construction (`worldbuilding/compiler.py`,
+> `worldassembly/entity_spawner.py`, `perf/scenarios.py`, the readiness harness) — and
+> `combat.py:182-187` on `REBIRTH` sets `generation_delta=1` while leaving `perma_set` False and
+> restoring neither HP nor `alive`.
+>
+> Consequence for routing: recording `DEFEAT`/`REBIRTH` as deaths would contradict accepted rule
+> LIFE-02, so they are **excluded** from
+> `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`'s fix and belong to a separate ticket
+> framed as "a classified-non-lethal `DEFEAT`/`REBIRTH` outcome is silently converted into a
+> permanent death by the passive HP gate".
+>
+> Also noted for the catalog owner: LIFE-02's own "Repository evidence: **SUPPORTED**" is
+> **overstated**. It holds at the classification layer (`combat.py` really does classify these
+> distinctly) and is contradicted at the application layer (nothing keeps them alive). That is a
+> catalog-side finding, not a C1 verdict change — this ticket's `DEFECT_CONFIRMED` stands on the
+> hazard/overwrite evidence alone.
 
 ### Q3 — Does the commented precedence actually hold?
 

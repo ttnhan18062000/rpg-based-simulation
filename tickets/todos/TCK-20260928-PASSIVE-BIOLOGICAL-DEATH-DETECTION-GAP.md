@@ -57,7 +57,7 @@ production evidence this ticket previously lacked. Observed at engine commit `e9
 
 In **120 unscripted ticks of `frontier_marches` @ seed 42** — no staging, no injection, no forced
 dispatch — the signature `combat.alive=False` **and** `lifecycle.active=True` **and**
-`death_reason=None` occurs on **8 separate ticks**, via **three distinct routes**:
+`death_reason=None` occurs on **8 separate ticks**, via **three distinct routes** (only the first is this ticket's):
 
 | tick | entity | hp | hazard drain | `outcome_kind` present | route |
 |---|---|---|---|---|---|
@@ -65,19 +65,33 @@ dispatch — the signature `combat.alive=False` **and** `lifecycle.active=True` 
 | 4 | 55 | 0 | 30 | none | hazard-only drain death |
 | 5 | 20 | 0 | 20 | none | hazard-only drain death |
 | 5 | 21 | 0 | 20 | none | hazard-only drain death |
-| 20 | 40 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
-| 68 | 60 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
-| 88 | 33 | 0 | 0 | `REBIRTH` | rebirth path |
-| 113 | 44 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
-| 115 | 26 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
+| 20 | 40 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal — **out of scope, see correction below** |
+| 68 | 60 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal — **out of scope** |
+| 88 | 33 | 0 | 0 | `REBIRTH` | rebirth path — **out of scope** |
+| 113 | 44 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal — **out of scope** |
+| 115 | 26 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal — **out of scope** |
 
-**`DEFEAT` is a route this ticket's Scope does not currently name.** `src/engine/combat.py:136`
-forces `is_lethal = is_lethal and (defender.identity.role != EntityRole.HERO)`, so a lethal blow on
-a `HERO` defender yields `outcome_kind="DEFEAT"` with `alive_set=False` rather than `KILL` — and
-`resolve_lifecycle:202` matches only `("KILL","PERMADEATH")`. `REBIRTH` behaves the same way. Any
-fix written against the hazard/passive case alone will leave both of these unclassified, so the new
-branch should be keyed on **`combat.alive=False` with no `death_reason`**, not on an allow-list of
-outcome kinds.
+**Correction, 2026-10-01 — `DEFEAT` and `REBIRTH` are explicitly OUT OF SCOPE for this ticket,
+and the first version of this note got that wrong.** It originally said both should be swept into
+this ticket's new branch. That was wrong:
+`docs/world_rules/life-body/lifecycle.md` **LIFE-02** ("Incapacitation/defeat does not necessarily
+mean death", Disposition: **ACCEPT**) names exactly these two as the *intended non-lethal*
+classifications — `DEFEAT` "explicitly non-lethal, e.g. for `EntityRole.HERO`, where `is_lethal` is
+forced `False`" (`src/engine/combat.py:136`), `REBIRTH` "`generation_delta=1`, identity continues"
+(`combat.py:182-187`, which leaves `perma_set` False) — with "only `PERMADEATH` … as truly final".
+**Recording either as an `is_permadeath_set=True` death would contradict an accepted world rule.**
+
+For those two rows the defect runs the other way: a classified-non-lethal outcome is silently
+converted into a permanent death by `apply.py:109`'s passive HP gate a tick later. That is a
+separate ticket, not this one. (Verified while correcting this: no runtime writer ever sets
+`alive=True` again — every `alive=True` in `src/` is construction.)
+
+**What this ticket's branch should key on.** Not an outcome-kind allow-list, and not simply
+"`combat.alive=False` with no `death_reason`" either: when passive damage drives `new_hp` to 0,
+`apply.py:106`/`:109` set `combat.alive=False` **and** `lifecycle.active=False` in the same apply,
+and `resolve_lifecycle`'s loop guard (`:147-148`) then skips the entity permanently. So the passive
+route needs a retroactive pass over **already-inactive, unreasoned** entities, while the hazard
+route can be caught same-tick from the update. Two shapes, one ticket.
 
 **Not a new death_reason literal decision.** Only `OLD_AGE` and `COMBAT` exist repo-wide; what the
 missing branch should record (a `HAZARD` literal, a generic `UNKNOWN`/`INJURY`, or per-route
