@@ -179,7 +179,7 @@ Steps:
    The file MUST begin with a YAML frontmatter block (before the # heading):
    ---
    status: active
-   layer: <infer from scope — registered in registries/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
+   layer: <infer from scope — registered in registries/layer_registry.jsonl, \`python3 tools/layer_registry.py list\` to see valid values>
    authority: P1
    audience: agent
    ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
@@ -258,7 +258,9 @@ import secrets, time
 print('EXECID:' + str(int(time.time() * 1000)) + '-' + secrets.token_hex(4))
 " 2>/dev/null`)
 const execIdMarker = (execIdSuffixRaw || '').indexOf('EXECID:')
-const execIdSuffix = execIdMarker !== -1 ? execIdSuffixRaw.slice(execIdMarker + 'EXECID:'.length).trim() : `${Date.now()}-fallback`
+// args.execution_id_suffix (native Workflow runtime: no clock/shell, so the caller supplies identity)
+// wins outright; otherwise the legacy bash-generated suffix is used, with a clock-free fallback.
+const execIdSuffix = (args && args.execution_id_suffix) || (execIdMarker !== -1 ? execIdSuffixRaw.slice(execIdMarker + 'EXECID:'.length).trim() : 'fallback')
 const executionId = `${PROVIDER}-${tid}-${execIdSuffix}`
 
 const tier = tierOverride || ticketInfo.tier || 'standard'
@@ -1752,7 +1754,7 @@ await agent(
 Complete these steps in order:
 
 1. Update ${ticketInfo.ticket_path}:
-   - In the YAML frontmatter block at the top of the file: set `phase: done` and `status: historical`
+   - In the YAML frontmatter block at the top of the file: set \`phase: done\` and \`status: historical\`
    - Set Status to DONE in the ## Status section
    - Fill in "Completion Summary" section: what was implemented, tests added, files changed
    - Fill in "Files Changed" section if not already done
