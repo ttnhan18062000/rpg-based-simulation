@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN
-phase: open
+phase: done
 date: 2026-10-01
 tags: [ai, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 Design and prototype verifiable gate results for agent-run commands in a native workflow
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -60,9 +60,13 @@ The native runtime has no shell, so every gate in `implement-ticket.js` would be
 - Needs a real native run with agents; requires the user's explicit Workflow opt-in.
 
 ## Implementation Notes
+Design, prototype, forgery evidence and recommendation: `stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/design.md`. The forgery attempt used an `Agent` subagent, not the native Workflow runtime (user chose hand-orchestration); stated in the design.
 
 ## Test Summary
+Checker exercised with node on 5 cases (evidence.jsonl): honest pass/fail, tamper, cheat-subagent forgery ACCEPTED, wrong-nonce control rejected. No repo tests added (throwaway prototype).
 
 ## Files Changed
+- `stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/` (design.md, evidence.jsonl, prototype/, plan/investigation/test_plan)
 
 ## Completion Summary
+Recommendation: adopt for gates only (anti-misreport, NOT tamper-proof: a cheating agent forged it first try), plus an orchestrator-side re-run of the static checks and CI as the unforgeable backstop. Cost ~50k tokens/~19 s per gate dispatch measured; ~450k/3 min if all 9 sites reached (extrapolated).
