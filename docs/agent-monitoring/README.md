@@ -255,6 +255,27 @@ does not change, and `.claude/settings.json` hook changes affect every concurren
 immediately, a larger blast radius than a single ticket should decide unilaterally. Flagged as a
 follow-up recommendation for whoever next revisits this area.
 
+## Closing a finished week
+
+Per-batch shards (`<batch>.runs.jsonl` and siblings) are folded into the canonical `runs.jsonl`,
+`events.jsonl` and `tools.jsonl` by an explicit, on-demand close, not by the retro:
+
+```
+make agent-monitoring-close-week WEEK=2026-W39
+```
+
+- Refuses the current ISO week and any week that has not ended (exit 2, nothing touched).
+- Deterministic: rows ordered by `ts` then `seq`, exact duplicates dropped and counted. A second close
+  changes nothing.
+- That week's pending `*.working_log.jsonl` shards go through `working_log_writer.consolidate_pending_rows`,
+  so `tickets/working_log.csv` keeps its single writer.
+- A shard that arrives after its week was closed (a branch merging late) is folded by the next close of
+  that week.
+- `retro_nudge_hook.py` adds a report-only line when a finished week still holds shards. It never blocks
+  and the close is never scheduled: one session closes one week, and the implementer commits it.
+
+Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
+
 ## Navigation
 
 | Doc | Contents |

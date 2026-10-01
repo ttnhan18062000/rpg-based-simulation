@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND
-phase: open
+phase: done
 date: 2026-10-01
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Explicit week-close command: fold a finished week's monitoring shards into the three canonical files
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -68,13 +68,20 @@ None.
 - Open: the first real close is W40, at the start of W41.
 
 ## Implementation Notes
+New `tools/agent-monitoring/week_close.py` and `make agent-monitoring-close-week WEEK=<YYYY-Www>`. Reuses `per_identifier_shard_paths` and `monitoring_consolidation.DEFAULT_DATA_DIR`; unlike the existing fold it rewrites the canonical file sorted by (ts, seq) with exact-line dedup (tmp file + os.replace, shards deleted after), so a crash between replace and delete is healed on the next close. working_log shards go through `consolidate_pending_rows`, which gained an optional `week` filter (default unchanged). Nudge: `week_close_nudge.py`, wired into the existing `retro_nudge_hook.py` instead of a new settings.json hook entry (a governing-file edit needing separate user approval). No manifest; the 'W40 first real close' question stays with the user and W40 was NOT closed.
 Draft by agent-working-design; the implementer commits it.
 
 ## Test Summary
+10 tests in tests/tools/test_week_close.py (one per AC plus unparseable-line ordering, other-week working_log shard untouched, crash-heal, hook integration); 46 passed with the retro-nudge, consolidation and working_log_writer suites. Real-repo check: closing W40 exits 2 (unfinished) and the nudge reports no finished week with shards.
 Not started.
 
 ## Files Changed
+- `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`, `retro_nudge_hook.py`
+- `tools/working_log_writer.py` (optional week filter), `Makefile`
+- `tests/tools/test_week_close.py`
+- `docs/agent-monitoring/README.md`, `docs/plans/agent_infrastructure/agent_working_direction.md`
 None yet.
 
 ## Completion Summary
+A finished week can now be closed explicitly and deterministically; the retro can stop folding (next ticket).
 Not started.

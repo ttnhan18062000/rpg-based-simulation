@@ -405,6 +405,9 @@ ticket-stats-report: ## Print a ticket-corpus stats report (velocity/tier/priori
 agent-monitoring-retro: ## Generate current-week agent monitoring retro report
 	python3 tools/agent-monitoring/generate_retro.py
 
+agent-monitoring-close-week: ## Close a finished ISO week: fold its shards into canonical runs/events/tools files and its working_log shards into the CSV (WEEK=2026-W40; refuses an unfinished week)
+	python3 tools/agent-monitoring/week_close.py --week $(WEEK)
+
 agent-monitoring-consolidate: ## Fold per-ticket monitoring shard files into the canonical per-week files (on demand; also runs automatically before every retro)
 	python3 tools/agent-monitoring/monitoring_consolidation.py
 
