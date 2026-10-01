@@ -41,7 +41,7 @@ Status values: `shipped`, `in flight`, `next`, `idea`, `held`.
 | Native-runtime decision for the formal pipeline | in flight | shipped (PR #274): `TCK-20260930-IMPLEMENT-TICKET-PARSE-AND-NONDETERMINISM-FIX`, `TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN` (nonce-hash attestation forged first try: adopt for gates only plus an orchestrator re-run), and 3 of 5 children of `TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT` (bookkeeping/advisory sites, input sites, orchestrator backstop). Deferred by user decision until the cheap children's cost is seen: the attested-gate and native-run children |
 | Week-close: fold a finished week's shards into the three canonical files, explicitly | shipped | `TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND` (PR #274): `make agent-monitoring-close-week WEEK=...`, report-only nudge via the retro hook; W40 is not closed yet, that is the user's call |
 | Retro report is read-only | shipped | `TCK-20261001-RETRO-REPORT-READ-ONLY` (PR #274): the retro no longer folds shards; consolidation is the week-close command's job |
-| Post-merge integrity check against `origin/main` | next | hygiene batch |
+| Post-merge integrity check against `origin/main` | shipped | `TCK-20261001-POST-MERGE-MAIN-INTEGRITY-REPORT` (PR #274): `make agent-monitoring-main-integrity`, on demand and report-only; wiring it into a post-merge hook stays open |
 | Real time and cost for hand-closed work | idea | changes how every later retro reads, so it needs its own design |
 
 ### Self-diagnosing

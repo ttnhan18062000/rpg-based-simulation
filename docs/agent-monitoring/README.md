@@ -276,6 +276,17 @@ make agent-monitoring-close-week WEEK=2026-W39
 
 Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
 
+## Main-branch integrity report
+
+`make agent-monitoring-main-integrity REF=origin/main` (add `ARGS=--strict` locally, or
+`ARGS="--since-date 20260901"` to skip historical tickets) reads a git ref through `git ls-tree` /
+`git show`, never the working tree, and prints a snapshot labelled with the ref and SHA. Report-only:
+exit 0 unless `--strict`, repairs nothing, not a CI job. It reports what per-ticket checks cannot see:
+closed tickets without exactly one working-log row, per-batch shards left for a finished week,
+`stored_artifacts/` paths a closed ticket cites that are absent at the ref (the gitignored-`.json`
+case), duplicate-run records and event-seq duplicates/gaps. A closed week can still receive late
+shards, so a count is as of that commit. Code: `tools/agent-monitoring/main_integrity_report.py`.
+
 ## Navigation
 
 | Doc | Contents |

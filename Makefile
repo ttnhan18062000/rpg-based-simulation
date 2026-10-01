@@ -408,6 +408,9 @@ agent-monitoring-retro: ## Generate current-week agent monitoring retro report
 agent-monitoring-close-week: ## Close a finished ISO week: fold its shards into canonical runs/events/tools files and its working_log shards into the CSV (WEEK=2026-W40; refuses an unfinished week)
 	python3 tools/agent-monitoring/week_close.py --week $(WEEK)
 
+agent-monitoring-main-integrity: ## Report-only integrity check of a git ref's tickets, working log, shards and monitoring rows, never the working tree (REF=origin/main; add ARGS=--strict locally)
+	python3 tools/agent-monitoring/main_integrity_report.py --ref $(or $(REF),origin/main) $(ARGS)
+
 agent-monitoring-consolidate: ## Fold per-ticket monitoring shard files into the canonical per-week files (on demand, any week; the retro no longer folds - use agent-monitoring-close-week for a finished week)
 	python3 tools/agent-monitoring/monitoring_consolidation.py
 

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-POST-MERGE-MAIN-INTEGRITY-REPORT
-phase: open
+phase: done
 date: 2026-10-01
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 Report-only integrity check of origin/main after a merge (rows, shards, tracked evidence)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,13 +62,19 @@ None.
 - Open: whether to run it from the post-merge hook, or only on demand; start on demand.
 
 ## Implementation Notes
+New `tools/agent-monitoring/main_integrity_report.py` and `make agent-monitoring-main-integrity`. All reads go through one resolved SHA (`git ls-tree` + `git show`); a `RefReader` never opens the working tree. Duplicate-run and event-seq checks reuse `check_duplicate_run_records(runs=...)` and `find_seq_duplicates_and_gaps(events=...)` by passing the ref's rows. Added `--since-date` (not in the ticket) because the unfiltered corpus is dominated by pre-September tickets. Cited paths containing `...`, `*` or `<>` are treated as placeholders and skipped. On demand only, per the ticket's open question; no hook. Real-corpus reading of origin/main @ 71c4aa321 (snapshot, not final): all dates: working_log 210, shards 0, cited_evidence 47, duplicate_runs 0, event_seq 119 findings; with --since-date 20260901: 190 total (event_seq is not date-filtered). Findings are reported, not repaired.
 Draft by agent-working-design; the implementer commits it.
 
 ## Test Summary
+5 tests in tests/tools/test_main_integrity_report.py: clean ref reports nothing and is SHA-labelled (AC2); one planted defect per check, each named by ticket or path (AC1); a dirty working tree (deleted tracked file, edited CSV, untracked ticket and shard) leaves a clean-ref report unchanged (AC3); exit 0 by default and 1 only with --strict; --since-date filter. All pass.
 Not started.
 
 ## Files Changed
+- `tools/agent-monitoring/main_integrity_report.py`, `Makefile`
+- `tests/tools/test_main_integrity_report.py`
+- `docs/agent-monitoring/README.md`, `docs/plans/agent_infrastructure/agent_working_direction.md`
 None yet.
 
 ## Completion Summary
+A report-only, ref-based integrity check exists and already surfaces real findings on origin/main.
 Not started.
