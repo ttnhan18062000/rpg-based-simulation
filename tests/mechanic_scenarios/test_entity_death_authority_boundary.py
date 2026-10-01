@@ -176,7 +176,7 @@ def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
     `frontier_marches` seed-42 run once showed terminal `DEFEAT` outcomes
     (src/engine/combat.py forces is_lethal=False for HERO defenders) committed as combat-dead /
     lifecycle-alive with no death_reason. Now every terminal DEFEAT is a recorded death with its own
-    reason, deactivated by resolve_lifecycle, and no reborn entity is left combat-dead.
+    reason, deactivated by resolve_lifecycle (hero rebirth was retired).
 
     The remaining combat-dead / lifecycle-active / unrecorded residue is the hazard route
     (world_dynamics.py:39 overwrites outcome_kind), owned by
@@ -198,21 +198,12 @@ def test_defeat_deaths_are_recorded_in_unscripted_corpus_play():
     assert defeated, "expected at least one terminal DEFEAT in the 120-tick corpus run (was 4 on 71c4aa321)"
     assert all(e.lifecycle.active is False and e.combat.alive is False for e in defeated)
 
-    reborn = [e for e in entities if e.lifecycle.generation > 1]
-    # A reborn hero may legitimately die again later (the corpus run is also wall-clock-budget
-    # sensitive, so the population varies run to run); what must hold is that it is never silently
-    # deactivated, and a still-active one is not left combat-dead by rebirth itself.
-    assert all(e.lifecycle.death_reason is not None for e in reborn if not e.lifecycle.active), (
-        "a reborn entity may only be inactive with a recorded death_reason"
-    )
-
-    # Tightened by TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND: hazard deaths are
-    # now recorded and deactivated by resolve_lifecycle, so no HP-0 entity is left active/unrecorded.
-    # (A REBIRTH defender is the one remaining class until TCK-20261001-RETIRE-HERO-REBIRTH-...)
+    # Tightened by TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND and
+    # TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION: hazard deaths are recorded and
+    # deactivated by resolve_lifecycle and hero rebirth no longer exists, so NO HP-0 entity may be
+    # left active without a death record.
     residue = [
-        (e.id, e.lifecycle.generation) for e in entities
+        e.id for e in entities
         if not e.combat.alive and e.lifecycle.active and e.lifecycle.death_reason is None
     ]
-    assert all(gen > 1 for _id, gen in residue), (
-        f"HP-0 entities left active with no death record other than REBIRTH: {residue}"
-    )
+    assert residue == [], f"HP-0 entities left active with no death record: {residue}"
