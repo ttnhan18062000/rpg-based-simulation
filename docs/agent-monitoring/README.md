@@ -255,6 +255,51 @@ does not change, and `.claude/settings.json` hook changes affect every concurren
 immediately, a larger blast radius than a single ticket should decide unilaterally. Flagged as a
 follow-up recommendation for whoever next revisits this area.
 
+## Closing a finished week
+
+Per-batch shards (`<batch>.runs.jsonl` and siblings) are folded into the canonical `runs.jsonl`,
+`events.jsonl` and `tools.jsonl` by an explicit, on-demand close, not by the retro:
+
+```
+make agent-monitoring-close-week WEEK=2026-W39
+```
+
+- Refuses the current ISO week and any week that has not ended (exit 2, nothing touched).
+- Deterministic and non-reordering: a kind with no shard is not touched; otherwise existing canonical
+  lines keep their order and new shard lines are exact-deduplicated (counted) and appended ordered by
+  `ts` then `seq`. A second close changes nothing.
+- That week's pending `*.working_log.jsonl` shards go through `working_log_writer.consolidate_pending_rows`,
+  so `tickets/working_log.csv` keeps its single writer.
+- A shard that arrives after its week was closed (a branch merging late) is folded by the next close of
+  that week.
+- `retro_nudge_hook.py` adds a report-only line when a finished week still holds shards. It never blocks
+  and the close is never scheduled: one session closes one week, and the implementer commits it.
+
+Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
+
+## Main-branch integrity report
+
+`make agent-monitoring-main-integrity REF=origin/main` (add `ARGS=--strict` locally, or
+`ARGS="--since-date 20260901"` to skip historical tickets) reads a git ref through `git ls-tree` /
+`git show`, never the working tree, and prints a snapshot labelled with the ref and SHA. Report-only:
+exit 0 unless `--strict`, repairs nothing, not a CI job. It reports what per-ticket checks cannot see:
+closed tickets with no DONE working-log row or an identical duplicate row, per-batch shards left for a finished week,
+`stored_artifacts/` paths a closed ticket cites that are absent at the ref (the gitignored-`.json`
+case), duplicate-run records and event-seq duplicates/gaps. A closed week can still receive late
+shards, so a count is as of that commit. Code: `tools/agent-monitoring/main_integrity_report.py`.
+
+## Delivery rework rate
+
+`python3 tools/delivery/delivery_cost_measurement.py --ref origin/main --since-week 2026-W39 --rework`
+adds a read-only `rework` section for PRs squash-merged into the ref in the week range: first-pass CI
+rate (the first pushed SHA passed with no re-run), failed-then-fixed PRs, pushes after the first green,
+re-run attempts, and failure classes from `ci_triage_classifier` (job/step rules plus the PR's own
+changed files, read from its merge commit). CI history is two `gh api` list calls (`actions/runs` and
+closed `pulls`, matched by branch name because GitHub empties a run's `pull_requests` once the branch
+is deleted) plus job detail for failed runs only, capped at 20. If `gh` cannot be reached the section
+says so rather than reporting zeros. Baseline only: it never presents an "after" claim or judges the
+delivery epic, and it is a snapshot of the ref and SHA named in its output.
+
 ## Navigation
 
 | Doc | Contents |

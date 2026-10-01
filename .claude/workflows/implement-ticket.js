@@ -29,6 +29,59 @@ const tierOverride = (args && args.tier) || ''
 
 phase('Scope')
 
+// Native-runtime command routing (TCK-20260930-NATIVE-PORT-BOOKKEEPING-ADVISORY-SITES). The native
+// Workflow runtime provides no `bash`; the legacy runtime does. `legacyBash` is the runtime's own
+// function when present, so the legacy path runs every command exactly as before. Natively:
+//   sh()     dispatches the command through an agent (same RUN_COMMAND pattern as create-tickets.js)
+//            and returns its stdout string, so call sites keep their `out` handling unchanged.
+//   shOmit() skips the command and returns '' -- used only where the result is not worth a
+//            dispatch: tool-call-attribution sidecar writes (a dispatched agent's shell is not
+//            guaranteed to share this session's CLAUDE_CODE_SESSION_ID, so the write would be
+//            meaningless), per-phase wall-clock stamps, and the deferred shadow-reviewer paths.
+//            Batching decision: ~13 writeSidecar + 11 captureTs dispatches per full-tier run are
+//            dropped natively; event ts then comes from the agents' own reported `ts` fields.
+// Gate, control and input sites still call bash() until their own port tickets land.
+const legacyBash = typeof bash === 'function' ? bash : null
+const RUN_COMMAND_SCHEMA = {
+  type: 'object',
+  required: ['exit_code', 'stdout'],
+  properties: {
+    exit_code: { type: 'integer', description: "The command's real exit code" },
+    stdout: { type: 'string', description: "The command's raw combined stdout+stderr, verbatim, including any trailing marker line" },
+  },
+}
+const runCommand = async (cmd, label) => agent(
+  `Run the following command exactly as given, using your Bash tool. Do not interpret, modify,
+explain, or summarize it -- execute it verbatim in one Bash call and report the raw result.
+
+Command:
+${cmd}
+
+Return exit_code (the command's real exit code, as an integer) and stdout (the command's raw
+combined stdout+stderr, byte-for-byte, including any trailing marker line -- do not trim,
+reformat, or paraphrase it).`,
+  { label, schema: RUN_COMMAND_SCHEMA, effort: 'low' }
+)
+const sh = async (cmd, label) => {
+  if (legacyBash) return legacyBash(cmd)
+  const result = await runCommand(cmd, label || 'sh')
+  return result && typeof result.stdout === 'string' ? result.stdout : ''
+}
+const shOmit = async (cmd) => (legacyBash ? legacyBash(cmd) : '')
+
+// Native runtime has no clock and no shell, so the caller supplies the run's identity up front
+// (TCK-20260930-NATIVE-PORT-INPUT-SITES). Checked before any work so a missing value cannot leave a
+// half-scoped ticket behind. The legacy runtime keeps generating both itself (unchanged).
+if (!legacyBash) {
+  const missingNativeArgs = ['start_ts', 'execution_id_suffix'].filter((k) => !(args && args[k]))
+  if (missingNativeArgs.length) {
+    return {
+      status: 'INVALID_ARGS',
+      message: `Native Workflow runtime requires args: ${missingNativeArgs.join(', ')}. start_ts=<ISO timestamp from \`date -u +%Y-%m-%dT%H:%M:%SZ\`>, execution_id_suffix=<unique string, e.g. epoch-ms plus a random hex>.`,
+    }
+  }
+}
+
 // Scope-phase sidecar coverage (net-new — TCK-20260711-MONITORING-TOOLCOUNT-SIDECAR-COLLISION,
 // the follow-up explicitly recommended by TCK-20260710-CURRENT-RUN-SIDECAR-BASH's Decision 1:
 // "extend .claude/current_run sidecar coverage to call sites that have never had one — Scope-phase
@@ -48,7 +101,7 @@ phase('Scope')
 // tools.jsonl buckets. seqOffset is looked up once, here, since ticketId (the resume run_id) is
 // known here and nowhere earlier — 0 on the brand-new-ticket branch (no run_id to look up yet).
 const resolveSeqOffset = async (id) => {
-  const out = await bash(`python3 tools/agent-monitoring/seq_offset.py "${id}" 2>/dev/null`)
+  const out = await sh(`python3 tools/agent-monitoring/seq_offset.py "${id}" 2>/dev/null`)
   const markerIndex = (out || '').indexOf('MARKER:')
   if (markerIndex === -1) return 0
   try {
@@ -70,7 +123,7 @@ const resolveSeqOffset = async (id) => {
 // dispatched agent's own shell is not guaranteed to see the same $CLAUDE_CODE_SESSION_ID this
 // orchestrator process does.
 const clearSidecar = async () => {
-  const out = await bash(
+  const out = await shOmit(
     `printf '{}' > .claude/current_run
 if [ -n "$CLAUDE_CODE_SESSION_ID" ]; then printf '{}' > ".claude/current_run.$CLAUDE_CODE_SESSION_ID"; fi
 echo "CLEARSIDECAR_EXIT:$?"`
@@ -85,7 +138,7 @@ if (ticketId) {
   seqOffset = await resolveSeqOffset(ticketId)
   // TCK-20260824-SIDECAR-CROSS-SESSION-SCOPE: same additive session-scoped write as writeSidecar()
   // below — see that helper's comment for the full rationale.
-  await bash(
+  await shOmit(
     `python3 -c "
 import json, sys, os
 open('.claude/current_run', 'w').write(json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': 'Scope', 'agent': 'ticket-scoper'}))
@@ -179,7 +232,7 @@ Steps:
    The file MUST begin with a YAML frontmatter block (before the # heading):
    ---
    status: active
-   layer: <infer from scope — registered in registries/layer_registry.jsonl, `python3 tools/layer_registry.py list` to see valid values>
+   layer: <infer from scope — registered in registries/layer_registry.jsonl, \`python3 tools/layer_registry.py list\` to see valid values>
    authority: P1
    audience: agent
    ticket_id: TCK-YYYYMMDD-SHORT-SCOPE
@@ -219,13 +272,13 @@ if (!ticketInfo || !ticketInfo.ticket_id) {
   // create-tickets.js's own CREATE-TICKETS-{...} synthesis convention for a run with no real
   // ticket_id yet. Deliberately does not call captureTs()/writeSidecar() (defined later in this
   // file) to avoid any dependency on forward-reference execution order.
-  const failTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const failTsRaw = await sh('date -u +%Y-%m-%dT%H:%M:%SZ')
   const failTs = (failTsRaw || '').trim() || null
   const fallbackRunId = ticketId || `SCOPE-FAILED-${(failTs || '').replace(/[^0-9]/g, '')}`
-  await bash(
+  await sh(
     `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${fallbackRunId}","seq":1,"phase":"Scope","agent":"ticket-scoper","status":"failed","summary":"Scope agent returned null or malformed output (no ticket_id)","ts":"${failTs}"}]' 2>/dev/null || true`
   )
-  await bash(
+  await sh(
     `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${fallbackRunId}","start_ts":"${failTs}","end_ts":"${failTs}","workflow":"implement-ticket","tier":"${tierOverride || 'standard'}","final_status":"SCOPE_AGENT_FAILED","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
   )
   return {
@@ -245,7 +298,7 @@ const tid = ticketInfo.ticket_id
 // a full extra LLM call and is gated behind SHADOW_REVIEWER_LOGGING_ENABLED to bound cost), this
 // is a local file glob + JSON parse with negligible cost, so gating it would only add friction
 // with no corresponding benefit.
-await bash(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)
+await sh(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>/dev/null || true`)
 
 // Execution identity (TCK-20260730-CLAUDE-EXECUTION-IDENTITY): generated exactly once, here,
 // after tid is confirmed real by the ticket-scoper agent — never before (the Scope-agent-failed
@@ -253,16 +306,18 @@ await bash(`python3 tools/agent-monitoring/ticket_claim_detection.py "${tid}" 2>
 // identity-less, per docs/ai/monitoring_writer_decision.md §2). writeSidecar/writeMonitoring
 // close over executionId/PROVIDER the same way they already close over tid.
 const PROVIDER = 'claude'
-const execIdSuffixRaw = await bash(`python3 -c "
+const execIdSuffixRaw = await sh(`python3 -c "
 import secrets, time
 print('EXECID:' + str(int(time.time() * 1000)) + '-' + secrets.token_hex(4))
 " 2>/dev/null`)
 const execIdMarker = (execIdSuffixRaw || '').indexOf('EXECID:')
-const execIdSuffix = execIdMarker !== -1 ? execIdSuffixRaw.slice(execIdMarker + 'EXECID:'.length).trim() : `${Date.now()}-fallback`
+// args.execution_id_suffix (native Workflow runtime: no clock/shell, so the caller supplies identity)
+// wins outright; otherwise the legacy bash-generated suffix is used, with a clock-free fallback.
+const execIdSuffix = (args && args.execution_id_suffix) || (execIdMarker !== -1 ? execIdSuffixRaw.slice(execIdMarker + 'EXECID:'.length).trim() : 'fallback')
 const executionId = `${PROVIDER}-${tid}-${execIdSuffix}`
 
 const tier = tierOverride || ticketInfo.tier || 'standard'
-const startTs = scopeTs || null
+const startTs = (args && args.start_ts) || scopeTs || null
 
 // ─── Agent Monitoring Setup ────────────────────────────────────────────────────
 // Hard rule: mandatory for every run (including hotfix). Failure is non-fatal.
@@ -319,7 +374,7 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
 // write is kept unchanged for tools/retrieval_cache.py and .claude/settings.json's inline
 // sidecar-check hook, both explicitly deferred (see investigation.md) rather than migrated here.
 const writeSidecar = async (seq, phase, agent) => {
-  await bash(
+  await shOmit(
     `python3 -c "
 import json, sys, os
 data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4], 'execution_id': sys.argv[5], 'provider': sys.argv[6]})
@@ -338,12 +393,12 @@ if sid:
 // writeSidecar at each site so C1's writeSidecar-to-agent() adjacency strings (tests/tools/
 // test_current_run_sidecar_orchestrator.py) are untouched by this insertion.
 const captureTs = async () => {
-  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
+  const out = await shOmit('date -u +%Y-%m-%dT%H:%M:%SZ')
   return (out || '').trim() || null
 }
 
 const captureEpochMs = async () => {
-  const out = await bash('date +%s%3N')
+  const out = await shOmit('date +%s%3N')
   const parsed = parseInt((out || '').trim(), 10)
   return Number.isFinite(parsed) ? parsed : null
 }
@@ -363,7 +418,7 @@ const workflowStartMs = await captureEpochMs()
 // behavior for epic tier created a permanent duplicate. Copies (leaving the todos original in
 // place) for every other tier, preserving existing Finalize-reconciliation behavior.
 const resolveScopeTicketLocation = async (id) => {
-  const out = await bash(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
+  const out = await sh(`python3 tools/agent-monitoring/scope_ticket_relocate.py "${id}" 2>/dev/null`)
   const markerIndex = (out || '').indexOf('MARKER:')
   if (markerIndex === -1) return null
   try { return JSON.parse(out.slice(markerIndex + 'MARKER:'.length).trim()) }
@@ -385,7 +440,7 @@ const classifyChecklistFailure = async (checklist, ticketId, ticketTier) => {
   for (const item of checklist || []) {
     if (item.status === 'FAIL') {
       if (item.condition === 'frontmatter_valid' && ticketId && ticketTier) {
-        const out = await bash(
+        const out = await sh(
           `python3 -c "
 import sys
 sys.path.insert(0, 'tools/gate_checks')
@@ -642,7 +697,7 @@ Write both files. Then return: docs_to_update (array of the exact docs/ paths fr
   // pushEvent status or the workflow's return value. Empty candidate set — no real retrieval
   // pipeline wired in (tools/hybrid_retrieval.py wiring is explicitly deferred to a follow-up
   // ticket).
-  await bash(
+  await shOmit(
     `if [ "$SHADOW_CONTEXT_PACKET_ENABLED" = "1" ]; then timeout 10s python3 -c "
 import sys
 sys.path.insert(0, 'tools')
@@ -971,7 +1026,7 @@ const docStalenessAdvisory = docStalenessResults && docStalenessResults.find(r =
 // already has everything needed to catch it right here — orchestrator-run, deterministic, no
 // agent() call needed (mirrors the doc-staleness gate's own shape just above). Warning only, never
 // blocking or gate-failing — do NOT auto-edit the ticket's Files Changed prose.
-const filesChangedSectionText = await bash(
+const filesChangedSectionText = await sh(
   `awk '/^## Files Changed/{flag=1; next} /^## /{flag=0} flag' "${ticketInfo.ticket_path}" 2>/dev/null || true`
 )
 const missingFromFilesChanged = (docUpdate.docs_updated || [])
@@ -1023,7 +1078,7 @@ if (tier !== 'hotfix') {
   phase('Architecture-Verify')
 
   const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-  const archCheckOutput = await bash(
+  const archCheckOutput = await sh(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1084,7 +1139,7 @@ verified_by (list which findings came from the static script vs. independent jud
   // shadow candidate path is advisory-only and must never propagate ANY failure (API error,
   // timeout, thrown exception -- not just a bad verdict) to the production gate outcome, same
   // convention as SHADOW_CONTEXT_PACKET_ENABLED (INFRA-299).
-  const archShadowWindowOutput = await bash(
+  const archShadowWindowOutput = await shOmit(
     `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" != "0" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "architecture-reviewer" "${tid}" 2>/dev/null; fi`
   )
   let archShadowWindow = null
@@ -1139,7 +1194,7 @@ verified_by (list which findings came from the static script vs. independent jud
       // double-quoted argv pieces, which a `"`, backtick, or `$()` in model output could break out of.
       const archShadowPayloadEscaped = archShadowPayload.replace(/'/g, "'\\''")
 
-      await bash(
+      await shOmit(
         `timeout 15s python3 -c "
 import sys, json
 sys.path.insert(0, 'tools/agent-monitoring')
@@ -1209,7 +1264,7 @@ const TEST_SCHEMA = {
 // which keeps test_step0_ts_orchestrator.py's exact captureTs()->writeSidecar()->agent() literal-
 // adjacency assertion for this phase intact.
 const filesChangedArgsForExpectedDirs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-const expectedTestDirsOutput = await bash(
+const expectedTestDirsOutput = await sh(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1419,7 +1474,7 @@ if (paritySkipEligible && !parityForceFullRun) {
   // Orchestrator-run, before the agent() call — mirrors the p0ScanOutput bash() call's shape above
   // (args passed as individually quoted argv elements, never JSON-embedded in the -c string).
   const filesChangedArgs = implementation.files_changed.map(f => `"${f}"`).join(' ')
-  const expectedSubsystemsOutput = await bash(
+  const expectedSubsystemsOutput = await sh(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1432,7 +1487,7 @@ print(json.dumps(expected_subsystems_for_files(sys.argv[1:])))
   // one next_available_id lookup per distinct candidate shard named across all changed files.
   // A shard with no entry with a valid id (next_available_id raises ValueError) is reported as
   // "unavailable: <reason>" rather than failing the phase — this is a hint for the agent, not a gate.
-  const nextIdOutput = await bash(
+  const nextIdOutput = await sh(
     `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1564,7 +1619,7 @@ violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤
   // shell (`2>/dev/null || true`), Python (`try/except Exception: pass`), AND this entire JS block
   // (`try/catch`) -- the shadow candidate path is advisory-only and must never propagate ANY
   // failure to the production gate outcome.
-  const securityShadowWindowOutput = await bash(
+  const securityShadowWindowOutput = await shOmit(
     `if [ "$SHADOW_REVIEWER_LOGGING_ENABLED" != "0" ]; then python3 tools/agent-monitoring/shadow_reviewer_window.py "security-reviewer" "${tid}" 2>/dev/null; fi`
   )
   let securityShadowWindow = null
@@ -1614,7 +1669,7 @@ violations (empty if APPROVED), summary (one sentence: verdict + key reason, ≤
       // double-quoted argv pieces, which a `"`, backtick, or `$()` in model output could break out of.
       const securityShadowPayloadEscaped = securityShadowPayload.replace(/'/g, "'\\''")
 
-      await bash(
+      await shOmit(
         `timeout 15s python3 -c "
 import sys, json
 sys.path.insert(0, 'tools/agent-monitoring')
@@ -1752,7 +1807,7 @@ await agent(
 Complete these steps in order:
 
 1. Update ${ticketInfo.ticket_path}:
-   - In the YAML frontmatter block at the top of the file: set `phase: done` and `status: historical`
+   - In the YAML frontmatter block at the top of the file: set \`phase: done\` and \`status: historical\`
    - Set Status to DONE in the ## Status section
    - Fill in "Completion Summary" section: what was implemented, tests added, files changed
    - Fill in "Files Changed" section if not already done
@@ -1883,9 +1938,9 @@ if (finalizeFailures.length > 0) {
 // is to close a silent gap, not reintroduce one. Fail-open per the same convention as the
 // monitoring-write/tag-drift checks directly below: a stale search index degrades future
 // search_docs() quality but must never block ticket close.
-const docsChangedOutput = await bash(`git status --porcelain -- docs/ 2>/dev/null`)
+const docsChangedOutput = await sh(`git status --porcelain -- docs/ 2>/dev/null`)
 if (docsChangedOutput && docsChangedOutput.trim().length > 0) {
-  const reindexOutput = await bash(`make knowledge-index-update 2>&1 || echo "REINDEX_FAILED"`)
+  const reindexOutput = await sh(`make knowledge-index-update 2>&1 || echo "REINDEX_FAILED"`)
   if (reindexOutput.includes('REINDEX_FAILED')) {
     log('WARNING: make knowledge-index-update failed after Finalize — search index may be stale. Run it manually.')
   } else {
@@ -1903,7 +1958,7 @@ await writeMonitoring('DONE')
 // surfaced in the return message, not a gate. (Revised from an earlier hard-block design that was
 // rejected at architecture-review for silently reversing the Hard Rule — see plan.md Design
 // Decision 2.)
-const monitoringCheckOutput = await bash(
+const monitoringCheckOutput = await sh(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1930,7 +1985,7 @@ if (monitoringCheck === null || monitoringCheck.status === 'FAIL') {
 // check_monitoring_write_recorded's placement exactly: runs after status is already 'DONE',
 // never gates ticket close, uses CLEAN/FLAGGED (never PASS/FAIL) so it can never be misread as a
 // DoD blocking condition.
-const tagDriftCheckOutput = await bash(
+const tagDriftCheckOutput = await sh(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1960,7 +2015,7 @@ if (tagDriftCheck !== null && tagDriftCheck.status === 'FLAGGED') {
 // non-security-tagged ticket — see docs/agent-monitoring/schema.md and
 // test_workflow_meta_conformance.py's xfail(strict=True) guard for the underlying gap this
 // filter works around.
-const phaseMetaCheckOutput = await bash(
+const phaseMetaCheckOutput = await sh(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')
@@ -1991,7 +2046,7 @@ if (phaseMetaCheck !== null && phaseMetaCheck.status === 'FAIL') {
 // matched by commit message, plus any still-uncommitted working tree) rather than a branch-wide
 // diff, since a branch-wide diff would misattribute drift across the other unrelated tickets this
 // repo's real batches routinely bundle onto the same branch — see that function's own docstring.
-const mechDriftCheckOutput = await bash(
+const mechDriftCheckOutput = await sh(
   `python3 -c "
 import sys, json
 sys.path.insert(0, 'tools')

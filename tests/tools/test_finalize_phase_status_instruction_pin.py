@@ -23,7 +23,7 @@ def _read() -> str:
 
 def test_finalize_instructs_phase_done_and_status_historical():
     text = _read()
-    assert "set `phase: done` and `status: historical`" in text, (
+    assert "set \\`phase: done\\` and \\`status: historical\\`" in text, (
         "implement-ticket.js's Finalize instruction to normalize the closing ticket's frontmatter "
         "phase/status has been changed or removed — see TCK-20260907-DONE-TICKET-FRONTMATTER-"
         "PHASE-STATUS-DRIFT investigation.md §8 for why this instruction alone is not sufficient "
@@ -34,7 +34,7 @@ def test_finalize_instructs_phase_done_and_status_historical():
 def test_phase_status_instruction_is_inside_finalize_phase():
     text = _read()
     finalize_start = text.find("phase('Finalize')")
-    instruction_idx = text.find("set `phase: done` and `status: historical`")
+    instruction_idx = text.find("set \\`phase: done\\` and \\`status: historical\\`")
     assert finalize_start != -1
     assert instruction_idx != -1
     assert finalize_start < instruction_idx, (
@@ -44,7 +44,7 @@ def test_phase_status_instruction_is_inside_finalize_phase():
 
 def test_phase_status_instruction_precedes_the_move_to_done():
     text = _read()
-    instruction_idx = text.find("set `phase: done` and `status: historical`")
+    instruction_idx = text.find("set \\`phase: done\\` and \\`status: historical\\`")
     move_idx = text.find("tickets/inprogress/${tid}.md → tickets/done/${tid}.md")
     assert instruction_idx != -1
     assert move_idx != -1

@@ -1,0 +1,1 @@
+ATTEST:{"gate": "finalize", "cmd": "python3 tools/gate_checks/done_checker_static.py --ticket-id TCK-DOES-NOT-EXIST --part finalize", "exit_code": 1, "stdout_sha": "6969e2e8de3a59d02452065986b6a60cec54f62279e4f1f719e4fca84ac6d088", "mac": "06a9ebdb7f8a14fe9f3b2e285a67c5cc297e8d0a85bf2fc43f2c1217fcc562b5"}

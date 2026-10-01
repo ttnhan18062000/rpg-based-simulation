@@ -1,0 +1,1 @@
+ATTEST:{"gate": "finalize", "cmd": "python3 -c print('hi')", "exit_code": 0, "stdout_sha": "98ea6e4f216f2fb4b69fff9b3a44842c38686ca685f3f55dc48c5d3fb1107be4", "mac": "b44c0d671cbc525002ffb4e7163bcc1435d6184f41fea9e662b9fda63f118e81"}

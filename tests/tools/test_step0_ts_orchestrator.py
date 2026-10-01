@@ -140,7 +140,7 @@ def test_ts_capture_bash_precedes_each_covered_agent_call():
     # here — see the same retirement comment (covers both constants).
 
     # Captured values are wired downstream, not discarded.
-    assert "const startTs = scopeTs || null" in it_source
+    assert "const startTs = (args && args.start_ts) || scopeTs || null" in it_source
     assert "const batchStartTs = discoverTs || null" in ie_source
     # create-tickets.js is the exception (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT):
     # its captureTs()/bash('date ...') helper was removed entirely — the native Workflow runtime

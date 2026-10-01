@@ -54,13 +54,13 @@ def _security_review_if_block(source: str) -> str:
 
 
 def _arch_shadow_block(source: str) -> str:
-    start = source.index("const archShadowWindowOutput = await bash(")
+    start = source.index("const archShadowWindowOutput = await shOmit(")
     end = source.index("if (archVerify.verdict !== 'APPROVED') {")
     return source[start:end]
 
 
 def _security_shadow_block(source: str) -> str:
-    start = source.index("const securityShadowWindowOutput = await bash(")
+    start = source.index("const securityShadowWindowOutput = await shOmit(")
     end = source.index("if (securityReview.verdict !== 'APPROVED') {")
     return source[start:end]
 
@@ -166,7 +166,7 @@ def test_security_review_shadow_call_emits_distinct_joinable_event():
     # Confirm the production Security-Review site (and its shadow companion) only fires
     # inside the tag-gated `if` — see the Anti-Drift Test Guard test below for the exact text.
     source = _workflow_source()
-    assert "const securityShadowWindowOutput = await bash(" in source
+    assert "const securityShadowWindowOutput = await shOmit(" in source
 
 
 # ---------------------------------------------------------------------------
