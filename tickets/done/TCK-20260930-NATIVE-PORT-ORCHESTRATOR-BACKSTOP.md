@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: ai
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-NATIVE-PORT-ORCHESTRATOR-BACKSTOP
-phase: open
+phase: done
 date: 2026-10-01
 tags: [ai, agent-monitoring]
 ---
@@ -15,7 +15,7 @@ tags: [ai, agent-monitoring]
 Re-run the static gates orchestrator-side after a native run returns
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -45,6 +45,7 @@ The attestation design found agent-reported gate results forgeable. Add the unfo
 - TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN (outcome: adopt for gates only, plus backstop)
 
 ## Related Docs
+- `docs/guides/delivery_process.md`
 - `stored_artifacts/TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION/classification.md`
 - `stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/design.md`
 
@@ -59,9 +60,15 @@ The attestation design found agent-reported gate results forgeable. Add the unfo
 - None beyond the parent epic's.
 
 ## Implementation Notes
+New `tools/gate_checks/post_native_run_check.py --ticket-id T`: read-only wrapper that re-runs done_checker_static, validate_frontmatter and ticket_field_values, prints PASS/FAIL per check and exits 1 on any failure. Documented in `docs/guides/delivery_process.md` (new subsection) and in the implement-ticket skill (one paragraph). Legacy and hand-executed paths are unaffected.
 
 ## Test Summary
+4 new tests in tests/tools/test_post_native_run_check.py (missing ticket; done ticket with no working_log row fails and names done_checker_static; CLI exit code; passes for a real closed ticket). 631 passed in the related skill/orphan/doc/frontmatter selection.
 
 ## Files Changed
+- `tools/gate_checks/post_native_run_check.py`
+- `tests/tools/test_post_native_run_check.py`
+- `docs/guides/delivery_process.md`, `.claude/skills/implement-ticket/SKILL.md`
 
 ## Completion Summary
+The unforgeable post-native-run re-run exists and is documented; the attested-gates child can now rely on it.
