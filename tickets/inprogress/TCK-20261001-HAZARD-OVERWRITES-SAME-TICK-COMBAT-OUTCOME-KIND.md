@@ -17,7 +17,7 @@ tags: [engine, lifecycle, combat, determinism]
 `resolve_lifecycle` ever reads it
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

@@ -152,11 +152,100 @@ The tally above becomes: **10 of 13 class (c)**, **1 class (a) with evidence** (
 unchanged and now better supported: the anchors are not watching a regression, they are failing to be a
 stable instrument.
 
+### P2 settled, 2026-10-01: **budget-limited, fully deterministic — not flaky**
+
+Positive control run, 3 trials under the **default `medium`** budget (the condition the ticket's own
+measurement used), same clean tree at `71c4aa321`:
+
+- **3 of 3 failed, each at ~61s** (61.12s / 60.86s / 60.63s) — the known **60s SIGALRM
+  `--resource-budget medium` cap**, not an assertion failure.
+- Under `--resource-budget large` it **passes** (previous section).
+
+So P2 is **deterministic under each condition** and the variable is the resource budget, not chance. It
+is not class (c), not class (a), and not a regression. Its tick profile shows `persistence: 120.6ms`
+dominating a 139ms tick that trips the watchdog, consistent with the docstring's recorded
+`CalibrationIntegrityError` (observability queue overflow / SURVIVAL mode-shed) family rather than
+anything about population balance.
+
+**Consequence: the ticket's own measurement produced a false red for P2**, because it ran under `medium`
+while CI runs this family under `large`. P2 should be removed from the red list for CI purposes.
+
+---
+
+# THE TICKET'S CENTRAL PREMISE IS WRONG — the reporting lane already exists and already works
+
+This supersedes the ticket's framing that "`CI` does not gate on `@slow`. So these anchors can be red on
+`main` indefinitely with no signal to anyone" and "their failure is only observable to someone who runs
+them deliberately". **Verified at `71c4aa321`:**
+
+- `.github/workflows/test.yml:7-11` already has a **nightly schedule**, `cron: "0 3 * * *"`.
+- The **`slow` job** (`:806-845`) runs `if: github.ref == 'refs/heads/main' || github.event_name ==
+  'schedule' || github.event_name == 'workflow_dispatch'` — added by
+  `TCK-20260818-STANDARD-SLOW-REGRESSION-OFF-PR-PATH` precisely so the slow suite remains "a real safety
+  net" off the PR path.
+- Its **first step is dedicated to this exact family**: `make simq-corpus-diversity-slow-isolated`
+  (`:833`), from `TCK-20260715-SIMQ-CORPUS-DIVERSITY-SESSION-LOAD-FLAKE`. The `Makefile:539-551` target
+  runs **each anchor as an isolated per-test subprocess** with `--resource-budget large`, **guards
+  against silent collection drift** (`if nodeid_count -lt 32 ... exit 1`, explicitly "not silently
+  passing"), and **propagates failure** (`|| status=1` … `exit $$status`). The workflow step has no
+  `continue-on-error`.
+
+**So a red anchor does fail a scheduled CI job, every night, isolated, at the right budget.** The
+mechanism the ticket asks to be built is already built — and built more carefully than the ticket
+assumes.
+
+## Age of redness — answered with hard evidence
+
+`gh run list --workflow=test.yml --event=schedule --limit 25`: **zero successful scheduled runs** between
+2026-09-06 and 2026-09-30 (18 `failure`, 7 `cancelled`). Per-run job/step attribution confirms the
+corpus-diversity step specifically:
+
+| Night | Failing job → step |
+|---|---|
+| 2026-09-07, 09-08, 09-09, 09-15, 09-16, 09-21, 09-29 | **Slow regression → "Slow tests — corpus diversity (isolated per-test)"**, and it is the *only* failing job those nights |
+| 2026-09-10, 09-14 | `Unit · infra / observability → Run` (different job) |
+| 2026-09-13, 09-06 | `API / tools / logging → Run` (different job) |
+
+**The anchors have been failing the nightly lane at least since 2026-09-07 — about 3.5 weeks.** That
+satisfies the "at least to the nearest few weeks" acceptance criterion with CI evidence rather than
+inference, and it is independent of the class-(c) "a flaky anchor has no onset date" caveat above,
+because it dates *when the lane started reporting red*, not when any individual anchor drifted.
+
+**Important non-inference:** on the nights a different job failed, the `slow` job **never ran at all** —
+it `needs:` eleven upstream jobs. Those nights are **not** evidence the anchors were green. Absence from
+the sample is not evidence of absence.
+
+## What the real gap is, and what it means for the chosen deliverable
+
+Not "nothing reports it". **Twenty-five consecutive scheduled runs reported it and nobody acted.** The
+ticket's own argument turns out to be more precisely right than its diagnosis: "an unread assertion and
+an absent assertion are the same thing operationally" — the assertion here is not absent, it is
+**unread**.
+
+This changes the deliverable. Building a scheduled non-gating lane would **duplicate existing
+infrastructure**. The achievable work is making the existing lane's result *reach someone*:
+
+1. **Notification/readership**, not execution — route the nightly `slow` job's failure somewhere a human
+   or the agent retro cadence actually reads, rather than relying on anyone opening GitHub Actions.
+2. The AC "a test or check proving the mechanism reports a seeded failure" is **still worth doing** and
+   is cheap: the `Makefile` target's status propagation and its `-lt 32` collection guard are the two
+   things that must not silently rot, and neither is currently covered by a test.
+3. **Remove P2 from the red list** (false red under `medium`; green in CI under `large`).
+
+**Recommendation: do not build a new lane.** Re-scope this ticket to notification + a guard test, and
+record that the execution half was already solved by `TCK-20260818` and `TCK-20260715`. Filing a
+duplicate lane would be the "patch around it" failure mode, and it would also bury the real finding:
+this project's slow-lane reporting works, and has been ignored for three and a half weeks.
+
 ## What remains genuinely open
 
-1. **Re-run P2 under `--resource-budget medium`** to settle flaky-vs-budget-limited (above). Cheap.
-2. **File the #13 re-baseline ticket** per `regression_policy.md` §9-11, with enough trials to meet the
-   evidence bar.
+1. **The notification/readership design** (above) — now the ticket's substantive deliverable, and it
+   needs a user decision since the originally-chosen option is already implemented.
+2. **File the #13 re-baseline ticket** per `regression_policy.md` §9-11 with enough trials to meet the
+   evidence bar. **Done:** `TCK-20261001-FRONTIER-MARCHES-NARRATIVE-ANCHOR-ZERO-SCORE-REBASELINE`.
+3. **The other-`@slow`-families audit** — still untouched, and now sharper: the question is not whether
+   other families are unrun, but whether any are excluded from the `slow` job's own steps.
+4. Narrowing the onset before 2026-09-07 (the 25-run window's edge) if a more precise date is wanted.
 2. **Reporting-path design** — a non-gating scheduled lane, a periodic report, or promoting a
    deterministic subset out of `@slow`. Design call, not pre-decided. Note the AC requires a **test
    proving the mechanism reports a seeded failure**, which is the part that makes it real.

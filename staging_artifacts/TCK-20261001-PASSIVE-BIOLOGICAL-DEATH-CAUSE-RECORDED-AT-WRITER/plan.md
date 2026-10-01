@@ -42,16 +42,33 @@ drain runs *after* `resolve_lifecycle` within a tick (`kernel.py:776-781`), so t
 readable at tick N+1; and by then `apply.py:109` has set `active=False`, so `lifecycle.py:147`'s
 `if not entity.lifecycle.active: continue` skips the entity before any branch runs.
 
-**Change.** Drop the HP term from `apply.py:109`'s `active=` expression:
+**Change.** The passive branch must stop deciding `active` at all:
 
 ```python
-active=(life.active or new_age < life.max_age_ticks)
+active=life.active          # never changed here; resolve_lifecycle is the sole authority
 ```
 
-making `resolve_lifecycle` the **sole declared authority** for HP-death deactivation — exactly mirroring
-what `PROG-030` records for the age half of this same race. The `new_hp` computation and the
-`alive=(new_hp > 0)` write on `changes["combat"]` are **unchanged**; only the lifecycle `active=` term
-loses its HP gate.
+making `resolve_lifecycle` the **sole declared authority** for HP-death deactivation — mirroring what
+`PROG-030` records for the age half of this same race. The `new_hp` computation and the
+`alive=(new_hp > 0)` write on `changes["combat"]` are **unchanged**.
+
+> **CORRECTION, 2026-10-01 — found in implementation by `rpg-implementer`, measured not reasoned.**
+> This plan (and the architecture review it came from) originally specified
+> `active=(life.active or new_age < life.max_age_ticks)`. **That formula is wrong and re-activates every
+> corpse.** For a dead entity with `life.active=False` and `new_age < max_age_ticks` it evaluates
+> `False or True` → `True`. The removed `new_hp > 0` term was the *only* thing holding corpses down.
+>
+> `PROG-030`'s age case could never expose this, because an old-age death has
+> `new_age >= max_age_ticks`, giving `False or False` → `False`. The defect is therefore specific to
+> **non-age** deaths — exactly the population this batch introduces. Measured on frontier_marches seed
+> 42 / 400 ticks: **24 DEFEAT-classified entities ended `active=True`** under the original formula;
+> **20 correctly `active=False` with `death_reason=DEFEAT`** after the correction.
+>
+> `active=life.active` is not a deviation from R1's intent but a closer reading of it: R1's principle is
+> "the writer must stop deciding deactivation; the consumer must", and the original formula still had
+> the writer deciding, merely on a different input. **Verify as part of this change that the old-age
+> path still deactivates through `resolve_lifecycle`'s OLD_AGE branch and that `PROG-030`'s P0
+> `test_path` passes** — that is the one P0 this correction could regress.
 
 **Consequences, to be planned and not discovered:**
 
@@ -65,11 +82,37 @@ loses its HP gate.
 3. **A new live signal.** `EconomicVacancyService.check_and_emit` fires off `resolve_lifecycle`'s
    `recent_deaths`. Today a passive death never enters that list; after R1 it will. Same finding
    `PROG-030`'s ticket recorded for the age path.
-4. **An existing test becomes an expected failure.**
-   `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py:155::test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix`
-   pins the current silence. Its own docstring prescribes updating it with this follow-up, not deleting
-   the assertion. **It is named here deliberately** — an unnamed expected failure is how a real signal
-   gets mistaken for flake.
+5. **R1 creates "zombie" entities on the hazard route — the hazard fix must land before merge.**
+   Found in implementation by `rpg-implementer`, measured. HP-0 entities that **no** classifier handles —
+   the `world_dynamics.py:39` population, where `outcome_kind` is overwritten with `"HAZARD"` and
+   `resolve_lifecycle` has no `HAZARD` branch — used to be deactivated *late and silently* by the old HP
+   gate. After R1 nothing deactivates them at all: they persist as `active=True`, `hp=0`, `alive=False`,
+   `death_reason=None` indefinitely. Measured on frontier_marches seed 42 / 400 ticks: base
+   `71c4aa321` had **34 HP-0 entities, all inactive**; the R1 branch has **28 HP-0 entities — 20
+   DEFEAT-classified and correctly inactive, and 8 permanent zombies with no reason** (ticks 2, 4, 5,
+   151 (a HERO), 167, 302, 303; none biological — `hunger < 17`, cause `None`).
+
+   **User decision, 2026-10-01: stack `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND` on
+   this branch and merge nothing until it lands.** Landing this batch alone would trade a silent late
+   deactivation for a permanent broken state. The hazard fix supplies the missing classifier so that
+   population is deactivated by the sole authority. **A safety net outside `resolve_lifecycle` was
+   explicitly rejected** — it reinstates the second deactivation writer that `PROG-030`'s
+   single-declared-authority contract and R1 exist to eliminate. The hazard ticket is planned jointly
+   with `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` per its sequencing constraint, and
+   carries C1's AC6 planner escalation.
+
+6. **Four existing tests become expected failures**, all named deliberately — an unnamed expected
+   failure is how a real signal gets mistaken for flake. All four belong in the ticket's Test Summary
+   with the reason each one changed:
+   - `test_natural_aging_old_age_dispatch.py:155::test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix`
+     — pins the current silence; its own docstring prescribes updating it with this follow-up, not
+     deleting the assertion.
+   - `tests/unit/engine/test_apply.py::test_passive_branch_still_deactivates_immediately_on_hp_loss_to_zero`
+     — asserts the exact behaviour R1 removes (found in implementation by `rpg-implementer`).
+   - `test_entity_death_authority_boundary.py::test_hazard_drain_destroys_a_same_tick_combat_kill_record`
+     — its second half asserts the late deactivation (found by `rpg-implementer`).
+   - `test_entity_death_authority_boundary.py`'s `DEFEAT`/`REBIRTH`-leftovers-remain-unrecorded
+     assertion — rewritten to the new contract by the sibling's S5.
 
 **Rejected alternative:** relaxing the `continue` at `lifecycle.py:147`. A dead, deactivated entity would
 re-enter the death-detection loop every tick and re-dispatch succession, and it contradicts `PROG-030`'s
