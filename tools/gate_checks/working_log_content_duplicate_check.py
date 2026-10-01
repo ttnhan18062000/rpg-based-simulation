@@ -10,7 +10,7 @@ tool's own docstring warns of this, which makes it known but not prevented. A wr
 because both call sites ARE the one sanctioned writer, called twice; only a content check on the
 artifact itself -- are there two rows for the same (ticket_id, title)? -- can.
 
-**Why a ratchet, not zero-tolerance**: the real corpus has 46 duplicate `(ticket_id, title)` pairs
+**Why a ratchet, not zero-tolerance**: the real corpus had 46 duplicate (19 after the TCK-20261001-WORKING-LOG-BYTE-DUPLICATE-DEBT dedupe) `(ticket_id, title)` pairs
 today (measured 2026-09-14, independently reproduced by two sessions). A hard zero-tolerance
 assertion would be unlandable on day one -- the same failure mode as
 `TCK-20260913-PARITY-BASELINE-EQUALITY-GATE-PENALIZES-IMPROVEMENT` and this same ticket's own
@@ -54,7 +54,7 @@ DEFAULT_LOG_PATH = Path("tickets/working_log.csv")
 # May only decrease. Raising it to paper over a newly-introduced duplicate defeats the entire
 # point of this check -- see the module docstring above for why a zero-tolerance assertion is not
 # landable here.
-DUPLICATE_PAIR_CEILING = 46
+DUPLICATE_PAIR_CEILING = 19
 
 
 def find_duplicate_ticket_id_title_pairs(log_path: Path = DEFAULT_LOG_PATH) -> "set[tuple[str, str]]":

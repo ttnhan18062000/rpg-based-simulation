@@ -11,7 +11,7 @@ as of that commit, not final.
 
 Checks (each finding names its ticket or path):
   working_log      every closed ticket (tickets/done/**/TCK-*.md) has at least one DONE working-log row
-                   and no identical duplicate rows, over `tickets/working_log.csv` plus any pending
+                   (epic-tier: at least one row of any status, since an epic closes as EPIC_SCOPED) and no identical duplicate rows, over `tickets/working_log.csv` plus any pending
                    `*.working_log.jsonl` shard. BLOCKED progress rows and later DONE rows with a different
                    title (post-merge fix rounds) are legitimate. Narrower than `done_checker_static`'s
                    per-ticket rule on purpose; a ticket with no row at all (some epics) is reported
@@ -46,6 +46,7 @@ REPO_ROOT = _HERE.parent.parent
 _TICKET_RE = re.compile(r"^tickets/done/(?:[^/]+/)?(TCK-(\d{8})-[A-Z0-9-]+)\.md$")
 _SHARD_RE = re.compile(r"^agent-monitoring/data/(\d{4}-W\d{2})/[^/]+\.(runs|events|tools|working_log)\.jsonl$")
 _CITE_RE = re.compile(r"`(stored_artifacts/[^`\s]+)`")
+_EPIC_TIER_RE = re.compile(r"^## Tier\s*\n\s*epic\b", re.M)
 _LINE_SUFFIX_RE = re.compile(r":\d+(?:-\d+)?$")  # `investigation.md:199` cites a line, not a file named that
 
 
@@ -78,7 +79,8 @@ def _closed_tickets(reader: RefReader, since_date: str | None):
 
 
 def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
-    """A closed ticket needs at least one DONE row, and no two rows may be identical (ticket, title,
+    """A closed ticket needs at least one DONE row (an epic-tier ticket, which closes as EPIC_SCOPED, needs
+    at least one row of any status), and no two rows may be identical (ticket, title,
     status, summary: a double write). Progress rows (BLOCKED) and later DONE rows with a different title
     (post-merge fix rounds logged under the same ticket) are legitimate. Narrower than
     `done_checker_static`'s per-ticket rule on purpose; a ticket with no row at all (some epics) is
@@ -102,7 +104,11 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
     findings = []
     for tid, path in _closed_tickets(reader, since_date):
         rows = rows_by_ticket.get(tid, [])
-        if not any(status.upper() == "DONE" for _, status, _ in rows):
+        if _EPIC_TIER_RE.search(reader.show(path)):
+            # an epic closes as EPIC_SCOPED, never DONE (it tracks children), so any row satisfies it
+            if not rows:
+                findings.append(f"{tid}: epic has no working-log row ({path})")
+        elif not any(status.upper() == "DONE" for _, status, _ in rows):
             findings.append(f"{tid}: no DONE working-log row ({len(rows)} row(s) of any status) ({path})")
         dupes = [r for r, n in Counter(rows).items() if n > 1]
         if dupes:

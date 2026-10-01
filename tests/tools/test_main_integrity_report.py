@@ -164,3 +164,27 @@ def test_a_bare_directory_citation_is_skipped_but_a_missing_file_is_not(tmp_path
     _git(repo, "commit", "-q", "-m", "dir cite")
     findings = _report(repo)["findings"]["cited_evidence"]
     assert len(findings) == 1 and "evidence.json" in findings[0] and "FIRST-WAVE" not in findings[0]
+
+
+def test_an_epic_tier_ticket_needs_a_row_of_any_status_not_a_done_row(tmp_path):
+    repo = _clean_repo(tmp_path)
+    epic = "# t\n\n## Status\nEPIC_SCOPED\n\n## Tier\nepic\n\n## Type\nfeature\n"
+    _w(repo, "tickets/done/folder/TCK-20260924-AN-EPIC.md", epic)
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-24T00:00:00Z,TCK-20260924-AN-EPIC,t,EPIC_SCOPED,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "epic with EPIC_SCOPED row")
+    assert _report(repo)["findings"]["working_log"] == []
+    # control 1: an epic with no row at all IS reported, under its own wording
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "epic with no row")
+    assert any("TCK-20260924-AN-EPIC: epic has no working-log row" in x for x in _report(repo)["findings"]["working_log"])
+    # control 2: the exemption is tier-scoped; a non-epic ticket with only an EPIC_SCOPED row is still reported
+    _w(repo, "tickets/done/TCK-20260925-NOT-AN-EPIC.md", "# t\n\n## Tier\nstandard\n")
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-24T00:00:00Z,TCK-20260924-AN-EPIC,t,EPIC_SCOPED,s,\n"
+       "2026-09-25T00:00:00Z,TCK-20260925-NOT-AN-EPIC,t,EPIC_SCOPED,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "non-epic with EPIC_SCOPED row")
+    assert [x for x in _report(repo)["findings"]["working_log"] if "NOT-AN-EPIC: no DONE" in x]
