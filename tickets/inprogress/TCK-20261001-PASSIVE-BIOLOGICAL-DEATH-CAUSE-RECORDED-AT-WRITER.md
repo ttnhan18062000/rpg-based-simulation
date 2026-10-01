@@ -136,7 +136,22 @@ carries the zeroing tick** — so traceability lives in the data rather than in 
 future cadence change that would break a fixed `+1` relationship.
 
 ## Test Summary
-_To be completed during implementation._
+Implemented in commit 384f8cc44 (one batch with the three sibling tickets).
+
+New: `tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py` (T1-T7, A1-A3: hunger/sleep-debt
+death recorded at tick N and classified one kernel step later, declared hunger-over-sleep precedence, non-fatal drain records
+nothing, zero-HP leftovers invent no cause, combat death on the same tick wins and clears the stale cause, canonical dict,
+determinism, input state not mutated). Updated, not deleted, the four named expected failures:
+`test_natural_aging_old_age_dispatch.py::test_starvation_sleep_debt_driven_hp_loss_is_recorded_post_fix` (was `..._still_silent_post_fix`),
+`tests/unit/engine/test_apply.py` (passive branch records the cause but never deactivates; never reactivates an inactive young
+entity), `test_entity_death_authority_boundary.py` (two pins rewritten to the fixed contract), and
+`test_dirty_set_passive_decay_consumers.py` (no longer asserts an `active` flip). `PROG-030`'s P0 `test_path` passes.
+R1 formula correction (measured): the planned `active=(life.active or new_age < max_age)` re-activated every dead young
+entity (24 DEFEAT corpses ended active=True in 400 ticks); the passive branch now never deactivates and its only `active`
+write is the `initial_active=False` spawn reactivation gated on `new_hp > 0` and no death record.
+Broad non-slow sweep: failures are only pre-existing on base (`test_behavioral_5k_regression`, `test_long_run_stability`,
+`test_bravery_quartile_combat_rate_2x`, `test_cert_long_run_stability` x3, one collection error) or load-sensitive and
+passing in isolation; certification identical to base. SimQ deliberately not cited (anchors red on main).
 
 ## Files Changed
 _To be completed during implementation._
