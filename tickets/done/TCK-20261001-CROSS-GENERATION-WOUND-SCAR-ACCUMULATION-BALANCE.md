@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-CROSS-GENERATION-WOUND-SCAR-ACCUMULATION-BALANCE
-phase: open
+phase: done
 date: 2026-10-01
 tags: [lifecycle, combat, progression, simulation-quality]
 ---
@@ -16,7 +16,7 @@ Measure whether wound/scar penalties accumulating across all four hero generatio
 once SimQ is trustworthy enough to measure it
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -110,4 +110,19 @@ _To be completed during implementation._
 _To be completed during implementation._
 
 ## Completion Summary
-_To be completed during implementation._
+
+**WITHDRAWN, not implemented — 2026-10-01, same day it was filed. Its premise ceased to exist.**
+
+This ticket existed to measure wound/scar penalty accumulation across a hero's four rebirth
+generations. Later the same day, `TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION` retired
+hero rebirth entirely (an undeclared resurrection failing STR-02/ID-02/CAUSE-04/ID-06, per
+`world-rule-catalog-design` and a user decision). **With no rebirth there are no cross-generation
+penalties to accumulate**, so there is nothing left to measure.
+
+Closed on the explicit instruction of the rule owner that filed it: "close it rather than re-scope. Its
+premise (cross-generation accumulation) no longer exists. If injury persistence ever matters for
+balance, that's a fresh question."
+
+No code, tests or docs were changed by this ticket. The durable finding it was built on — that
+wounds/scars persist rather than being cleared, which is rule-compliant per BODY-06/HP-01/CAUSE-01 —
+survives in `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE` and is unaffected.
