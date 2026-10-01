@@ -95,9 +95,13 @@ The CLI is a read-only gate: it never writes a tracked file. The registry check 
 rewriting it. The Finalize step that does regenerate it is `--regenerate-registry` on the CLI
 (or `make docs-registry`); the formal pipeline's own call regenerates by default.
 
-The CLI also prints `[advisory]` lines from `run_advisory_checks()`, currently one:
-`test_plan_proof_fields` (`OK`/`WARN`/`NA`), which lists the mandatory `## Proof Plan` fields
-(defined in `.claude/agents/investigator.md`) missing from a standard ticket's `test_plan.md`.
+The CLI also prints `[advisory]` lines from `run_advisory_checks()`, currently two (`OK`/`WARN`/`NA`):
+`test_plan_proof_fields` lists the mandatory `## Proof Plan` fields (defined in
+`.claude/agents/investigator.md`) missing from a standard ticket's `test_plan.md`; and
+`cited_evidence_tracked` (all tiers) WARNs for a backticked `stored_artifacts/`, `staging_artifacts/`
+or `tickets/` path the ticket cites that exists locally but is gitignored (naming the matching rule)
+or untracked, so it would be absent from a clean checkout. `.gitignore` drops
+`stored_artifacts/**/*.json` except `manifest.json`, so store machine-readable evidence as `.jsonl`.
 Advisories never affect the `RESULT:` line or the exit code, and are not part of
 `run_static_precheck()`'s PASS/FAIL/NA list.
 
