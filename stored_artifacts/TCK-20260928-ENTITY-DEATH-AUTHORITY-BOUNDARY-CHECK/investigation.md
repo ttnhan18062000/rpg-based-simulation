@@ -75,7 +75,9 @@ proves the mechanism and the routing, exactly as B0's module docstring frames it
 
 **Production evidence, unscripted (no staging, no injection).** The same committed signature —
 `combat.alive=False` **and** `lifecycle.active=True` **and** `death_reason=None` — occurs in
-unmodified `frontier_marches` @ seed 42 within 120 ticks, on 8 separate ticks:
+unmodified `frontier_marches` @ seed 42 within 120 ticks — **9 rows on 8 distinct ticks**
+(count corrected 2026-10-01 by `world-rule-catalog-design`; an earlier version said
+"8 separate ticks" while listing 9 rows):
 
 | tick | entity | hp | hazard drain | `outcome_kind` at overwrite point | attributed cause |
 |---|---|---|---|---|---|
@@ -98,7 +100,7 @@ the combat+hazard collision. `DEFEAT` arises because `src/engine/combat.py:136` 
 (with `alive_set=False`) rather than `KILL` — and `resolve_lifecycle` ignores `DEFEAT`.
 
 > **CORRECTION, 2026-10-01, after `rpg-implementer (2)` pushed back during follow-up planning.**
-> The table above is correct row by row, but grouping all 8 rows under one "unrecorded death"
+> The table above is correct row by row, but grouping all 9 rows under one "unrecorded death"
 > heading **conflates two opposite defects that happen to share one committed signature**:
 >
 > - The **hazard-only rows** are *deaths that go unrecorded*. `resolve_lifecycle` should record
@@ -122,7 +124,8 @@ the combat+hazard collision. `DEFEAT` arises because `src/engine/combat.py:136` 
 > LIFE-02, so they are **excluded** from
 > `TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP`'s fix and belong to a separate ticket
 > framed as "a classified-non-lethal `DEFEAT`/`REBIRTH` outcome is silently converted into a
-> permanent death by the passive HP gate".
+> permanent death by the passive HP gate" — filed by `rpg-implementer (2)` as
+> `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`.
 >
 > Also noted for the catalog owner: LIFE-02's own "Repository evidence: **SUPPORTED**" is
 > **overstated**. It holds at the classification layer (`combat.py` really does classify these

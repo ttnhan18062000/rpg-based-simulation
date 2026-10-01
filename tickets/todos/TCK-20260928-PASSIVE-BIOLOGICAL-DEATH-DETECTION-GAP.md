@@ -57,7 +57,7 @@ production evidence this ticket previously lacked. Observed at engine commit `e9
 
 In **120 unscripted ticks of `frontier_marches` @ seed 42** — no staging, no injection, no forced
 dispatch — the signature `combat.alive=False` **and** `lifecycle.active=True` **and**
-`death_reason=None` occurs on **8 separate ticks**, via **three distinct routes** (only the first is this ticket's):
+`death_reason=None` occurs as **9 rows on 8 distinct ticks**, via **three distinct routes** (only the first is this ticket's):
 
 | tick | entity | hp | hazard drain | `outcome_kind` present | route |
 |---|---|---|---|---|---|
