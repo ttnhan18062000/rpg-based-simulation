@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP
-phase: open
+phase: done
 date: 2026-09-30
 tags: [testing, economy, resource]
 ---
@@ -16,7 +16,7 @@ No test asserts `accepted=False` on any rejection path in `ResourceTransactionRe
 including the reservation guards whose acceptance burns a durable transaction id
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -151,6 +151,16 @@ Rule exists for, and it is why this is not deferred behind the other 110 survivo
 
 ## Assumptions / Open Questions
 
+**Owner decisions, 2026-10-01 (ticket author `rpg-implementer (2)`, recorded by the pipeline run after the Plan phase listed three unresolved questions):**
+1. **AC-6's "seven named survivors" is superseded by the 22 baseline survivors.** The ticket's line numbers for the seven were wrong, and no seven-id list exists. Kill all 22 `accepted=False` to `True` flip survivors (ids 22, 32, 54, 57, 63, 67, 76, 80, 82, 86, 91, 96, 100, 111, 113, 117, 132, 153, 155, 169, 171, 175) and name which of them the rerun record shows killed. A later reader should not hunt for the original seven.
+2. **AC-4 is satisfied at resolver level** for QUEST, RECRUIT and CHEST via a direct `resolve()` call with a hand-built reservations dict. **"Building" has no reservation guard**: record it as "no such guard exists", not as a test. `src/engine/economy.py` populates reservations only for NODE, GROUND_ITEM and CORPSE (economy.py:324, 346, 350). Do not add a `src/` guard in this ticket; that would be a separate behaviour ticket.
+3. **Step 8 may correct `docs/mechanics/resource_conservation_contract.md`**: the line-226 reservation claim and the Regression Tests table (cite real test paths). Prose only; update the matching parity-ledger entry if one exists. This is a doc-only fix of existing behaviour, so no divergence entry is needed.
+4. **mutmut:** if the Test phase cannot run mutmut 2.5.1 (private scratch install; not a project dependency), report an AC-6 stop-and-report. No substitute measurement.
+5. **Mutation re-run scope (decided 2026-10-01: `rpg-implementer (2)` deferred to the planner's defaults; `test-architecture-reviewer` owns the baseline's meaning and set these conditions):**
+   - **Also run the baseline-selection-only pass** (the unchanged 8 files) as the positive control. It must reproduce 177 mutants / 60 killed / 117 survived with mutmut 2.5.1, or the deviation must be explained before any delta from the new tests is reported. If it does not reproduce, report a stop-and-report: the tool, version or environment changed, and the delta is not attributable to the new tests.
+   - **Run set for the delta pass is the baseline's 8 files plus the 2 new files.** Do not add `tests/unit/resource/test_resource_conflicts.py:76` or `tests/integration/kernel/test_race_conditions_v2.py:89,113`. The record must name them as existing TARGET_LOCKED end-to-end coverage outside the selection, so no artifact reads "survived" as "untested".
+   - **Record location:** `tests/mutation/reruns/src_core_conservation_rerun.json`, outside the `tests/mutation/baselines/*.json` glob. The record must state that the core-RPG report's mutation layer reads only `baselines/*.json`, so the re-run is invisible to the report, and that it does not refresh the baseline, which still goes stale on 2026-10-30. It must carry the exact mutmut 2.5.1 command, version, the full test file list and count, source and target shas, runtime, a statement that the before and after test sets differ, the before counts (177 / 60 / 117), and each of the 22 flag-flip ids marked killed or alive, excluding the `:82-91` kills (PR #265).
+
 - **Verified, not assumed:** the baseline record was read independently from the shared git object
   store (78,274 bytes, 117 survivor entries, counts `{total 177, killed 60, survived 117, timeout 0,
   suspicious 0}`) and the caller trace above was read from production code, not inferred from the
@@ -169,13 +179,36 @@ Rule exists for, and it is why this is not deferred behind the other 110 survivo
   lose the same hour.
 
 ## Implementation Notes
-_(open)_
+
+Tests-only plus a prose doc fix; `src/` is unchanged (`git diff --stat origin/main -- src/` is empty). This closes a coverage gap, not a live defect.
+
+- `tests/unit/resource/test_conservation_rejection_paths.py` (new): `test_resolver_rejection_table` holds 38 explicit cases, one per rejection return in `ResourceTransactionResolver.resolve()` (the 29 returns, with the shared service-fee kinds, both RECRUIT and CHEST, and building missing / not-functional split out). Each asserts `accepted is False`, the exact `ReasonCode`, and that no update field is set. `test_idempotency_violation_resolver_level` reaches `conservation.py:59` by a direct resolver call (the apply path rejects a replayed id earlier). `test_resolver_source_kind_coverage_guard` AST-scans `resolve()` for the source-kind string literals (there is no enum) and fails when a handled kind has no rejection case. `test_target_locked_per_source_kind` covers GROUND_ITEM, CORPSE, QUEST, RECRUIT and CHEST with a hand-built reservations dict plus negative controls (absent, empty, zero, other kind, other id). No building lock test exists because `resolve()` has no building reservation guard.
+- `tests/unit/resource/test_rejected_transfer_apply_path.py` (new): through `AuthoritativeApplyPipeline.refine` then `ApplyPath.apply_generation`, a rejected transfer (GROUND_ITEM and CORPSE lock losers, INVENTORY_FULL) leaves its id out of the refined and durable `processed_transaction_ids` and a later retry is not an idempotency violation; sole-rejection scenarios across nine rejection paths produce no durable change (inventories, nodes, ground items, corpses, buildings, home storage, processed ids); a lock loser contributes no change of its own; a grouped rejection rolls back without burning ids and leaves no reservation.
+- `tests/mutation/reruns/src_core_conservation_rerun.json` (new): two-pass mutmut 2.5.1 record (private `pip --target` install, scratch copy outside the repo, cleared cache). Pass 1 (baseline 8 files, 165 tests) reproduced 177 / 60 / 117, so the delta is attributable. Pass 2 (8 files plus the 2 new files, 225 tests): 177 / 143 killed / 34 survived; 83 newly killed, 0 newly surviving. All 22 flag-flip ids killed. Survivors outside source lines 82-91: 105 to 22; on lines 82-91 unchanged at 12 (killed by PR #265's test, outside both selections, excluded). Baseline JSON not touched.
+- `docs/mechanics/resource_conservation_contract.md`: prose-only. Reservation sentence corrected (resolver guards GROUND_ITEM, CORPSE, QUEST, CHEST, RECRUIT; NODE is charge accounting; apply path populates NODE, GROUND_ITEM, CORPSE only; no building guard). Regression Tests table now cites real paths. `last_verified` set to 2026-10-01.
+- A throwaway flip check in a scratch copy (flipping `accepted=False` to `True` on lines 59, 108, 125, 240, 277, 309, 334) failed the new tests each time.
+- Deviation: the plan listed mutant ids 82, 86, 91 as falling under the `:82-91` exclusion. Those are mutant ids on source lines 139, 144, 158, not lines 82-91; they are credited to this change (killed in pass 2). No flip mutant lies on lines 82-91. See plan.md Deviations.
+- Not run: `make knowledge-index-update` (docs changed; run at Finalize).
 
 ## Test Summary
-_(open)_
+
+- `pytest tests/unit/resource/test_conservation_rejection_paths.py tests/unit/resource/test_rejected_transfer_apply_path.py -q`: 60 passed.
+- Scoped regression (`tests/unit/resource`, gold sink, quest rewards, transaction completion, phase10 replay, race conditions): 200 passed, 1 skipped.
+- `tests/unit/tools/test_mutation_baseline_records.py tests/unit/tools/test_core_rpg_report.py`: 43 passed.
+- Mutation: pass 1 177/60/117 (positive control reproduced, 404 s); pass 2 177/143/34 (530 s).
+- `git diff --stat origin/main -- src/`: empty.
 
 ## Files Changed
-_(open)_
+
+- `tests/unit/resource/test_conservation_rejection_paths.py` (new)
+- `tests/unit/resource/test_rejected_transfer_apply_path.py` (new)
+- `tests/mutation/reruns/src_core_conservation_rerun.json` (new)
+- `docs/mechanics/resource_conservation_contract.md` (prose fix)
+- `tickets/inprogress/TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP.md`
+- `staging_artifacts/TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP/investigation.md`
+- `staging_artifacts/TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP/plan.md`
+- `staging_artifacts/TCK-20260930-CONSERVATION-REJECTION-PATH-ASSERTION-GAP/test_plan.md`
 
 ## Completion Summary
-_(open)_
+
+Added resolver-level and apply-path tests that pin every rejection path of `ResourceTransactionResolver.resolve()` (exact `ReasonCode`, no update fields), the non-burn of a rejected transaction id, zero durable change on rejection, and `TARGET_LOCKED` per reservation-guarded source kind, with a guard that fails when a new source kind lacks a case. A two-pass mutmut 2.5.1 re-run (positive control reproduced 177/60/117) shows survivors falling from 117 to 34 with all 22 flag-flip mutants killed, recorded in `tests/mutation/reruns/`. `src/` is unchanged; the contract doc's reservation sentence and test table were corrected as prose only. This was a coverage gap, not a live defect.
