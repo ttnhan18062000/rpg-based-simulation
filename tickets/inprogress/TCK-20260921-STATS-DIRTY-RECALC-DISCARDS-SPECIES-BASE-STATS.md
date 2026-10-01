@@ -17,7 +17,7 @@ converges every entity's species-specific base combat stats toward generic defau
 been doing so throughout every prior balance measurement of this simulation
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -81,23 +81,36 @@ ticket's own Request Summary named: it is not silently drifting something decora
 silently destroying a real, demonstrated determinant of real combat outcomes every time it fires.
 
 ## Scope
-For whoever picks this up:
-1. Confirm whether `EntityState`/`IdentityComponent`/content schema carries a real, addressable
-   per-entity base_hp/base_atk/base_def/base_evasion value anywhere (spawn-time content
-   resolution likely sets `combat.max_hp` etc. directly rather than storing a separate "base"
-   field — need to check `src/core/builder.py`/`src/content/resolver.py`'s spawn path to see if a
-   recoverable base value exists to pass through).
-2. If a real base value exists: wire it through `apply.py`'s `stats_dirty` call site so
-   recalculation preserves the entity's own base instead of substituting the generic default.
-3. If no such value is currently tracked as durable per-entity state: this is a genuine durable-
-   state gap (per this repo's own Durable State Rule — a species/content-derived base that
-   "survives beyond the current tick" needs a typed, stable location) and the fix needs to add one,
-   not just thread a value through that doesn't exist yet.
-4. Measure real corpus impact: how often does `stats_dirty` actually fire per entity per tick in
-   real corpus play, and for how many entities does the resulting base_hp/atk/def diverge
-   meaningfully from their spawned value? Not measured here.
+**Superseded 2026-10-01 by the design resolution in Implementation Notes and
+`staging_artifacts/TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS/plan.md`.** Steps 1-3
+below are answered (see `investigation.md` §§2-6); step 4 is re-pointed. The original wording
+("wire it through") is now known to be the wrong fix shape — see `investigation.md` §2.
+
+Resolved scope, in order:
+1. Add a **typed durable per-entity base-stat home** (`base_hp`/`base_atk`/`base_def`/
+   `base_evasion`), written once at spawn and immutable thereafter; plus a **separate typed
+   permanent-grant accumulator**. Full Durable State Rule applies. Not in any free-form dict.
+2. Write the base at spawn as the **residual** of the profile value minus that entity's own
+   attribute contribution — NOT the raw profile value, which would inflate `goblin_scout` 35 -> 47.
+3. Make the single derivation the sole writer of `max_hp`/`atk`/`def_stat`/`evasion`, fed the stored
+   base plus the accumulator, and add the accumulator to the `stats_dirty` trigger set so
+   near-death hardening keeps working.
+4. Re-point near-death hardening (`hardening.py:84`) to increment the accumulator instead of
+   `CombatUpdate.max_hp_delta`, preserving its trace keys and its observable `+5`.
+5. Add a **new** `progression.yaml` parity entry (none covers base-stat preservation) and update the
+   Bible 01 §2 neighbourhood.
+6. **Re-measure** `stats_dirty` firings after the fix, with a positive control — step 3 makes the
+   path reachable for the first time, so the 2026-09-30 zero is no longer the relevant number.
 
 ## Out of Scope
+- **`CoreActions.execute_allocate_ap`'s double-count (`core_actions.py:311-317`) — explicitly NOT in
+  scope.** It is dormant by the recorded decision `DEV-004`
+  (`docs/guidelines/intentional_divergences.md:2094`), which already owns the fix (porting
+  PROG-015/069 aptitude-multiplier logic into that same function). See `investigation.md` §8.
+- Re-authoring `stat_profiles.yaml` so profiles declare base terms rather than final stats — a
+  content-semantics change belonging to the mechanics/rule owners. Recorded as a future option.
+- Flipping `ENABLE_PROGRESSION_EVOLUTION`; deleting `CombatUpdate.max_hp_delta`; any SimQ
+  re-baseline (the fix is value-neutral at spawn and under hardening).
 - Fixing the value-differential instrument's own test suite — both new test files
   (`test_readiness_and_derived_stats_value_differential.py`,
   `test_evolution_xp_reward_value_differential.py`) already account for this by comparing
@@ -126,10 +139,14 @@ For whoever picks this up:
   question, per peer instruction — not merged, each stands on its own evidence.
 
 ## Related Docs
-None yet.
+- `docs/world_rules/foundations/state-ownership.md` — OWN-01 (:23, ACCEPT), OWN-03
+- `docs/guidelines/intentional_divergences.md:2094` — DEV-004 (ALLOCATE_AP dormancy)
+- `docs/mechanics/01_entity_anatomy.md` §2 — the derivation formula of record
+- `docs/architecture/rollout_flag_decisions_m1.md` — ENABLE_PROGRESSION_EVOLUTION trial
 
 ## Related Stored Artifacts
-None yet.
+`staging_artifacts/TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS/`
+(`investigation.md`, `plan.md`, `test_plan.md`) — created 2026-10-01.
 
 ## Related Code Areas
 - `src/engine/apply.py:593-624` (`stats_dirty` trigger + call site)
