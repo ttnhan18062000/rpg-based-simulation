@@ -238,7 +238,16 @@ Bible block (its `REBIRTH` bullet is contingent). Test H11 is directly affected.
 _To be completed during implementation._
 
 ## Test Summary
-_To be completed during implementation._
+New `tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py` (10 scripted tests, H1/H5/H5b/H8-H10/H12/H13,
+HA1, S5 arithmetic, terminal-set equality) and `test_entity_death_authority_boundary.py` (collision arm now equals the
+control arm; slow corpus test tightened so no HP-0 entity stays active/unrecorded). Observability: test doubles mirror the
+real producer (`hazard_damage`), new H4 test in `tests/unit/observability/test_event_shapers.py` proves
+`hazard_drain_applied` also fires for an entity combat already resolved. H11 withdrawn with rebirth.
+Measured (frontier_marches seed 42, 400 ticks, order-of-magnitude): HP-0 active/unrecorded zombies 8 -> 0 hazard-route
+(6 recorded `HAZARD`); the 2 left at that point were `REBIRTH` defenders, closed by the retirement ticket.
+H6: no canonical hash literal is pinned (determinism gates compare two live runs). AC7: `make semantic-control-plane-drift-check`
+output: "0 cited-code drift finding(s), 2 verdict drift finding(s)" (TERR-01, TERR-03 -> betrayal_siege_war,
+`contradicted -> observed`; unrelated to the LIFE rows).
 
 ## Files Changed
 _To be completed during implementation._
