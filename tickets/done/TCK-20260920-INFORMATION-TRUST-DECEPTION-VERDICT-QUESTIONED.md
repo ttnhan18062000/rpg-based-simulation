@@ -22,7 +22,7 @@ DONE
 SUPERSEDED
 
 ## Disposition Rationale
-Resolved as item 3 of `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which names this ticket as its dependency; no `src/` file changed and no separate work was done here. The registry edit that answers both acceptance criteria is `registries/mechanisms.yaml` `information_trust_deception` (state `gated` -> `orphan`, `implemented_by: src/domains/information/trust.py::SourceTrustUpdateService`, new `corpus_run` verified block). Runtime evidence, from `stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/runtime_probe/output_named_methods_5worlds_2000ticks.json` (positive control passed before the run; an absent key means 0 calls):
+Resolved as item 3 of `TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION`, which names this ticket as its dependency; no `src/` file changed and no separate work was done here. The registry edit that answers both acceptance criteria is `registries/mechanisms.yaml` `information_trust_deception` (state `gated` -> `orphan`, `implemented_by: src/domains/information/trust.py::SourceTrustUpdateService`, new `corpus_run` verified block). Runtime evidence, from `stored_artifacts/TCK-20260923-MECHANISM-IMPLEMENTED-BY-RESIDUE-RESOLUTION/runtime_probe/output_named_methods_5worlds_2000ticks.jsonl` (positive control passed before the run; an absent key means 0 calls):
 
 ```
 "positive_control_ok": true, "ticks": 2000
