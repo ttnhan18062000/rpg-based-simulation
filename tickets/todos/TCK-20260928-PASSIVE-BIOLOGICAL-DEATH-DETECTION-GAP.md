@@ -50,6 +50,45 @@ test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix`): an entity 
 silent after that ticket's writer-precedence fix landed, exactly as expected, since that fix only
 changed the age term.
 
+## Production Evidence Added 2026-10-01 (from `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK`)
+
+C1's authority-boundary check landed on this gap as its **root cause** and produced the unscripted
+production evidence this ticket previously lacked. Observed at engine commit `e9db40f0a`.
+
+In **120 unscripted ticks of `frontier_marches` @ seed 42** — no staging, no injection, no forced
+dispatch — the signature `combat.alive=False` **and** `lifecycle.active=True` **and**
+`death_reason=None` occurs on **8 separate ticks**, via **three distinct routes**:
+
+| tick | entity | hp | hazard drain | `outcome_kind` present | route |
+|---|---|---|---|---|---|
+| 2 | 63 | 0 | 30 | none | hazard-only drain death |
+| 4 | 55 | 0 | 30 | none | hazard-only drain death |
+| 5 | 20 | 0 | 20 | none | hazard-only drain death |
+| 5 | 21 | 0 | 20 | none | hazard-only drain death |
+| 20 | 40 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
+| 68 | 60 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
+| 88 | 33 | 0 | 0 | `REBIRTH` | rebirth path |
+| 113 | 44 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
+| 115 | 26 | 0 | 0 | `DEFEAT` | HERO-defender non-lethal |
+
+**`DEFEAT` is a route this ticket's Scope does not currently name.** `src/engine/combat.py:136`
+forces `is_lethal = is_lethal and (defender.identity.role != EntityRole.HERO)`, so a lethal blow on
+a `HERO` defender yields `outcome_kind="DEFEAT"` with `alive_set=False` rather than `KILL` — and
+`resolve_lifecycle:202` matches only `("KILL","PERMADEATH")`. `REBIRTH` behaves the same way. Any
+fix written against the hazard/passive case alone will leave both of these unclassified, so the new
+branch should be keyed on **`combat.alive=False` with no `death_reason`**, not on an allow-list of
+outcome kinds.
+
+**Not a new death_reason literal decision.** Only `OLD_AGE` and `COMBAT` exist repo-wide; what the
+missing branch should record (a `HAZARD` literal, a generic `UNKNOWN`/`INJURY`, or per-route
+literals) is still this ticket's call and C1 deliberately did not pre-empt it.
+
+Full evidence, instrument caveats and the separately-routed overwrite defect:
+`stored_artifacts/TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK/investigation.md`.
+Regression coverage asserting the current defective behaviour (expected to fail when this ticket's
+fix lands, and to be rewritten rather than deleted):
+`tests/mechanic_scenarios/test_entity_death_authority_boundary.py`.
+
 ## Scope
 - Add a new `resolve_lifecycle` branch that detects an already-`combat.alive=False` entity with no
   existing `death_reason` reaching this tick's refine pass (i.e. a passive-decay-caused death the

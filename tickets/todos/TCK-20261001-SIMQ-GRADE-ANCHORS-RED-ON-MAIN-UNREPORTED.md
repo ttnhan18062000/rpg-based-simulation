@@ -12,9 +12,10 @@ tags: [simulation-quality, grade-thresholds]
 # TCK-20261001-SIMQ-GRADE-ANCHORS-RED-ON-MAIN-UNREPORTED
 
 ## Title
-11 of 16 sampled SimQ grade-anchor tests in `tests/unit/worldassembly/test_corpus_diversity.py`
-fail on untouched `origin/main`, and nothing reports it because the whole family is `@slow` and CI
-does not gate on it — the anchors currently protect nothing
+13 of 15 SimQ grade-anchor tests in `tests/unit/worldassembly/test_corpus_diversity.py` fail on
+untouched `origin/main` (measured 2026-10-01 @ `e9db40f0a`; supersedes the unverified "11 of 16"
+lead), and nothing reports it because the whole family is `@slow` and CI does not gate on it —
+the anchors currently protect nothing
 
 ## Status
 OPEN
@@ -71,6 +72,53 @@ independently re-verified**. It is recorded here because it was load-bearing for
 decision and would otherwise exist only in a session transcript. **Re-run the 16 before acting on
 the count** — the first task below. The qualitative claim (some anchors are red on `main` and
 nothing reports it) is what this ticket rests on; the exact number is not yet confirmed.
+
+## Verified Measurement — 2026-10-01 (supersedes the unverified 11-of-16)
+
+**Re-run done, and it is worse than the lead claimed.** The first Scope item is complete; the rest
+of the ticket is untouched and still OPEN.
+
+- **Conditions.** `origin/main` @ `e9db40f0a`; worktree tree identical to that SHA for all `src/`
+  and `tests/` paths (only a ticket move and monitoring-shard rows differed, neither of which the
+  tests read). `python -m pytest tests/unit/worldassembly/test_corpus_diversity.py
+  -k "grade_stability or population_stability" -v -rA`. 32 selected / 61 deselected. Wall clock
+  **25m59s**. Seeds and tick budgets are per-test, as encoded in each test name.
+- **Result: 15 failed, 17 passed, 1 error.**
+- **Of the 15 `*_grade_stability` anchors, 13 fail.** Only two pass:
+  `test_simq_routing_test_seed42_1000t_cognition_grade_stability` and
+  `test_hero_guild_routing_seed42_1000t_cognition_grade_stability`.
+- Plus 2 `population_stability` failures: `[frontier_marches]` (already classified **confirmed
+  noise** in Out of Scope — not re-investigated here) and
+  `test_generated_frontier_3_42_extended_population_stability`.
+- The **1 error is not an anchor failure**: it is a session-teardown `QueueDrainWorker` leak
+  sentinel firing at teardown of the last test. Recorded separately so it is not miscounted as a
+  14th red anchor; it may deserve its own ticket.
+
+**Full red list** (13 grade + 2 population):
+`test_urban_political_seed123_500t_cognition`, `test_simq_routing_test_seed42_500t_cognition`,
+`test_unit_selfmodel_pilot_seed42_1000t_cognition_economy_narrative`,
+`test_urban_political_seed42_1000t_social`, `test_urban_political_seed123_1000t_social_economy`,
+`test_urban_political_selfmodel_probe_seed42_200t_social_world`,
+`test_generated_frontier_3_42_seed123_200t_combat_narrative`,
+`test_urban_political_seed42_200t_social`, `test_frontier_extended_seed42_200t_narrative`,
+`test_frontier_extended_seed123_200t_combat_progression_narrative`,
+`test_frontier_living_world_seed42_200t_social`,
+`test_frontier_living_world_seed123_200t_combat_narrative`,
+`test_frontier_marches_seed42_200t_narrative`;
+`test_population_stability[frontier_marches]`,
+`test_generated_frontier_3_42_extended_population_stability`.
+
+**What this does and does not establish.** The qualitative claim the ticket rests on is
+**confirmed**: anchors are red on untouched `main` and nothing reports it. The count is now
+measured rather than inherited — **13 of 15 grade anchors**, not 11 of 16. What remains entirely
+**unaddressed**: how long they have been red, the per-anchor (a)/(b)/(c) classification, the
+reporting path, and the other-`@slow`-families audit. **No anchor value was touched**, per Out of
+Scope.
+
+**Provenance.** Measured by `rpg-feature-planning`, run alongside
+`TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK` as a verification-only re-run on the
+recommendation of `world-rule-catalog-design`. Single run per anchor — **flakiness was not
+re-tested here**, so class (c) remains open for every one of the 13.
 
 ## Scope
 - Re-run the 16 sampled anchors on current `origin/main` and record which fail, with counts and
