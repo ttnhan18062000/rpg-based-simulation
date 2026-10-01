@@ -57,10 +57,15 @@ always-`False` field is dead structure of the kind this ticket exists to delete.
 No `REBIRTH` or `PERMADEATH` `outcome_kind` is produced. A lethal hit records an ordinary `COMBAT` death
 with `death_tick`, `is_permadeath=True`, and succession/heirs/heirlooms firing as for any subject.
 
-- Both labels drop out of `_DEFEATED_OUTCOME_KINDS` (`learning_outcome.py:33`); `KILL` is already there,
-  so the combat-learning layer sees an unchanged "defender lost" signal.
-- `resolve_lifecycle:202`'s `("KILL", "PERMADEATH")` tuple reduces to `("KILL",)`. **Coordinate with the
-  death batch**, which is adding `DEFEAT` to that same branch — do not collide.
+- **CORRECTED 2026-10-01 by `rpg-implementer`, against its in-progress diff: shrink ONE constant, not
+  two lists.** `TERMINAL_COMBAT_OUTCOME_KINDS` now lives in `src/core/combat_constants.py` and
+  `_DEFEATED_OUTCOME_KINDS` is **derived** from it. It still contains `"REBIRTH"` and `"PERMADEATH"`.
+  Remove them from that single constant and the derived list follows. Editing
+  `learning_outcome.py:33` directly, as this plan originally said, would now be editing a derived value.
+  `KILL` remains, so the combat-learning layer sees an unchanged "defender lost" signal.
+- `resolve_lifecycle`'s `("KILL", "PERMADEATH")` tuple reduces to `("KILL",)`. **This edit lands on top
+  of the death batch's diff**, which has already added `DEFEAT`, `HAZARD` and passive-cause branches
+  through one shared idempotency guard while leaving that tuple intact. Do not collide with it.
 - **`is_permadeath` stays a separately tracked fact**, even though it becomes `True` for every recorded
   death and looks redundant with "has a `death_reason`". It is the hook STR-02 needs: a future
   *declared* resurrection process is the only thing permitted to produce a recorded death with
@@ -117,6 +122,27 @@ Per-consumer, verified by the rule owner on `origin/main` — **re-grep at imple
   path, but the death batch already touched it).
 - Catalog text **C1–C5** in `catalog_edits.md` — lands in **this** ticket's commit, written against the
   state after both the death batch and this ticket.
+
+## Starting state — this ticket lands ON TOP of the death batch + hazard diff
+
+Reported by `rpg-implementer` 2026-10-01 from its in-progress worktree (branch
+`entity-death-cause-at-writer`, nothing committed or pushed). Implement against this, not against
+`71c4aa321`:
+
+- **`combat.py` is untouched** by the death batch and the hazard work — the rebirth restore was reverted,
+  so S1/S2/S3 start from pre-batch `combat.py`.
+- **`lifecycle.py` has gained** `DEFEAT`, `HAZARD` and passive-cause branches through **one shared
+  idempotency guard**. The `("KILL", "PERMADEATH")` tuple is still intact, so S2 edits it on top of that
+  diff.
+- **`TERMINAL_COMBAT_OUTCOME_KINDS` is now in `src/core/combat_constants.py`** with
+  `_DEFEATED_OUTCOME_KINDS` derived from it (see S2 — shrink the one constant).
+- **`patches.py` / `updates.py` are clean** — the `hp_set` additions were reverted with the restore, so
+  S4.2's `generation_delta` removal starts from unmodified files.
+- **Two test files reference `REBIRTH` and `generation`** and need coordinated R-series edits:
+  `tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py` and the boundary
+  test.
+- The implementer's new tests currently default to role HERO; it will switch them to explicit roles once
+  retirement lands, at which point the HERO hold is moot.
 
 ## Scope guards
 
