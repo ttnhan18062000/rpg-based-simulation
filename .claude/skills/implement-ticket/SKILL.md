@@ -50,6 +50,8 @@ If the input is a natural language sentence, treat it as `request`.
 
 **Null-`ts` events.** When writing events, an event pushed without a `ts` (the skipped Parity/Investigate/Plan/Review events) gets END_TS. Pass `--default-ts "<END_TS>"` to `record_events.py` so a missed substitution no longer aborts the whole batch; the flag fills only missing/null `ts` and never overrides an existing one.
 
+**Native-run backstop.** After a native `Workflow` run of implement-ticket returns, and before committing, run `python3 tools/gate_checks/post_native_run_check.py --ticket-id <TCK-ID>` yourself and report a non-zero exit as a gate failure, whatever the run's own verdicts said (a native run's gate results are agent reports and can be forged; see `docs/guides/delivery_process.md`). Not needed on the hand-executed path above, where you run the gates yourself.
+
 ## Pipeline (standard tier)
 
 0. **Context search** (REQUIRED before Scope — before any file reads or grep):

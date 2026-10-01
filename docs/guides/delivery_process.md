@@ -105,6 +105,21 @@ or untracked, so it would be absent from a clean checkout. `.gitignore` drops
 Advisories never affect the `RESULT:` line or the exit code, and are not part of
 `run_static_precheck()`'s PASS/FAIL/NA list.
 
+### After a native Workflow run: re-run the gates yourself
+
+A native `implement-ticket` run has no shell, so every gate result in it is an agent's report, and an
+agent can forge one (`stored_artifacts/TCK-20260930-NATIVE-GATE-RESULT-ATTESTATION-DESIGN/design.md`:
+a nonce-hash attestation was forged on the first try). The top-level session therefore runs one
+command after the run returns and before committing, and trusts none of the run's own gate verdicts:
+
+```
+python3 tools/gate_checks/post_native_run_check.py --ticket-id TCK-YYYYMMDD-SHORT-SCOPE
+```
+
+It re-runs `done_checker_static.py`, `validate_frontmatter.py` and `ticket_field_values.py`, prints
+`PASS`/`FAIL` per check, and exits non-zero on any failure. Read-only. CI re-runs the same gates on the
+PR as the second backstop. The legacy path does not need it: its gates run in the orchestrator itself.
+
 ---
 
 ## Branch Naming

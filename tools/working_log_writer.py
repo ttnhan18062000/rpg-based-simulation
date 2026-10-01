@@ -135,7 +135,7 @@ def append_working_log_row(
 
 
 def consolidate_pending_rows(
-    data_root: Path = _DEFAULT_DATA_ROOT, csv_path: Path = _WORKING_LOG_PATH
+    data_root: Path = _DEFAULT_DATA_ROOT, csv_path: Path = _WORKING_LOG_PATH, week: str | None = None
 ) -> dict:
     """Folds every pending `<batch-id>.working_log.jsonl` shard under `data_root` into `csv_path`,
     sorted by each row's own `timestamp` (Python's stable sort keeps file/line order as the
@@ -145,13 +145,16 @@ def consolidate_pending_rows(
     pattern: rows are appended to the canonical CSV, then their shard files are deleted only after
     that append succeeds, so a second run finds nothing left to reprocess.
 
+    `week` (e.g. "2026-W40") limits the fold to that week's shards (week-close command); the
+    default folds every week's.
+
     Returns `{"consolidated_rows": N, "shard_files": M}` (both 0 if nothing was pending)."""
     data_root = _anchored(data_root)
     csv_path = _anchored(csv_path)
     if not data_root.exists():
         return {"consolidated_rows": 0, "shard_files": 0}
 
-    shard_files = sorted(data_root.glob("*/*.working_log.jsonl"))
+    shard_files = sorted(data_root.glob(f"{week or '*'}/*.working_log.jsonl"))
     if not shard_files:
         return {"consolidated_rows": 0, "shard_files": 0}
 

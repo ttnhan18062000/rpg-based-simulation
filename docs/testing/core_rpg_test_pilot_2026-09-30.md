@@ -90,6 +90,17 @@ All three passes: 172 tool calls (33 + 31 + 108). A tests-only standard-tier tic
 
 **Same CI run, other findings.** `API / tools / logging` failed on this PR: `tests/tools/test_skill_usage_metric.py::test_live_corpus_matches_independently_derived_counts` compared the production count (92 `implement-ticket` Skill invocations, which reads both bare and per-branch monitoring shards) with a test-side "independent" derivation that read only the bare `*/tools.jsonl` shards (91). The branch's own shard holds one Skill row, so the stale oracle under-counted. Classified as a test defect (wrong oracle, `regression_policy.md` §13.2): the derivation now reads both shard shapes, and the assertion is otherwise unchanged. `Slow regression` was also red on `main` at e9db40f0a and f2d807c35 before this PR (a different job, not caused by this change).
 
+## Addendum 2026-10-01: scenario CI execution, kept separate from D1's original record
+
+This addendum does not rewrite the rows above; it separates two different facts.
+
+- **D1's original scenario job (PR #265):** `Perf / cert / arena` was `skipped`, so scenario tests did **not** run in CI for D1. That row stands as written.
+- **The later dedicated run (PR #271):** the new `Scenario lane` job ran once and succeeded (51 s for the whole job). Perf was skipped. That is **one** run, on a tests/docs-only PR.
+
+What this does not show: the `src/progression`-only trigger and the docs-only skip are unobserved; #271's first push also had other CI failures, so a green scenario job is not a green PR. The routing summary states routing only ("routed to ..."); the job's own conclusion is the execution record. The lane stays non-required (roadmap §6).
+
+The escaped-defect layer counts **all** tickets, open and closed, bucketed by frontmatter creation date; an earlier wording of its `month_basis` read as "only open tickets" and was corrected.
+
 ## Mutation baseline (cited, not changed)
 
 `tests/mutation/baselines/src_core_conservation.json` was recorded 2026-09-29 (177 mutants: 60 killed,
@@ -103,6 +114,8 @@ belong to this pilot's tests, not to that ticket's fix. The pilot makes no claim
 change: the drill fault was also caught by an existing test
 (`tests/unit/resource/test_harvest_channeling.py`), so a survivor in the baseline reflects that
 baseline's own selected test set, not an absence of coverage in the repository.
+
+**Update 2026-10-01 (v2 baseline).** `tests/mutation/baselines/src_core_conservation_v2.json` now supersedes the record above as the current baseline for this target (declared by its `supersedes` field; the report shows v2 current and v1 superseded). It is a **new comparison population**, not a re-measurement: its selection is an import-based rule (9 files, 116 tests; two v1 files are not matched by the rule and were dropped, recorded in the record), so v1's 60 of 177 killed and v2's 152 of 177 killed (25 survivors) must not be read as a score change. The selection is a reproducible starting point, not proof that every relevant test is selected. No survivor-count threshold applies and no survivor is called a defect. The report flags `selection-changed` if re-resolving the rule gives a different file list.
 
 ## Per-intervention review (directional; keep / revise / inconclusive)
 

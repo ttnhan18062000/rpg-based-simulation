@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """PostToolUse hook: nudges to run /agent-monitoring-retro once enough
-implement-ticket runs have completed DONE since the last dated retro report.
+implement-ticket runs have completed DONE since the last dated retro report, and (report-only)
+to close a finished ISO week that still holds per-batch shards
+(TCK-20261001-MONITORING-WEEK-CLOSE-COMMAND).
 
 Advisory only — never raises, never blocks the tool call. Fires at most once
 per session (tracked via a small state file keyed by session_id from the hook
@@ -16,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import load_data_glob  # noqa: E402
+from week_close_nudge import nudge_message, weeks_needing_close  # noqa: E402
 
 THRESHOLD = 5
 RUNS_FILE = Path("agent-monitoring/data")
@@ -69,18 +72,24 @@ try:
     cutoff = _last_dated_retro_mtime()
     count = _count_done_since(cutoff)
 
+    messages = []
     if count >= THRESHOLD:
-        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATE_FILE.write_text(json.dumps({"session_id": session_id, "ts": now}))
-        message = (
+        messages.append(
             f"agent-monitoring-retro: {count} implement-ticket runs have completed "
             f"DONE since the last dated retro report (threshold {THRESHOLD}). "
             "Run /agent-monitoring-retro to review the accumulated data."
         )
+    close_message = nudge_message(weeks_needing_close(RUNS_FILE))
+    if close_message:
+        messages.append(close_message)
+
+    if messages:
+        STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        STATE_FILE.write_text(json.dumps({"session_id": session_id, "ts": now}))
         print(json.dumps({
             "hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
-                "additionalContext": message,
+                "additionalContext": "\n\n".join(messages),
             }
         }))
 except Exception:

@@ -75,11 +75,16 @@ def test_acorn_parse_status_matches_pilot_recorded_baseline():
     # Pins the acorn parse status pilot_measurement.md records for every workflow script at pilot
     # time (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT AC7's "one-line acorn parse status
     # for all .claude/workflows/*.js"), so a future silent regression or fix is visible here first.
-    # implement-ticket.js and simq-audit.js are OUT OF SCOPE for this ticket (their own backtick
-    # fix is a future porting ticket's job, not asserted as a requirement here) — this only pins
-    # today's known status so drift is visible, not enforced.
+    # implement-ticket.js parses since TCK-20260930-IMPLEMENT-TICKET-PARSE-AND-NONDETERMINISM-FIX;
+    # simq-audit.js is still out of scope — this pins today's known status so drift is visible.
     results = _acorn_parse_all_workflows()
     assert results["create-tickets.js"]["ok"] is True
     assert results["implement-epic.js"]["ok"] is True
-    assert results["implement-ticket.js"]["ok"] is False
+    assert results["implement-ticket.js"]["ok"] is True
     assert results["simq-audit.js"]["ok"] is False
+
+
+def test_implement_ticket_js_has_no_nondeterministic_calls():
+    import re
+    src = (_WORKFLOWS_DIR / "implement-ticket.js").read_text()
+    assert not re.search(r"Date\.now\(|Math\.random\(|new Date\(\s*\)", src)
