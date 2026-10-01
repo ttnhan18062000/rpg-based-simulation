@@ -77,8 +77,8 @@ def test_each_planted_defect_is_reported_with_its_ticket_or_path(tmp_path):
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "planted")
     f = _report(repo)["findings"]
-    assert any("TCK-20260921-NOROW: 0 working-log row" in x for x in f["working_log"])
-    assert any("TCK-20260922-TWOROWS: 2 working-log row" in x for x in f["working_log"])
+    assert any("TCK-20260921-NOROW: no DONE working-log row" in x for x in f["working_log"])
+    assert any("TCK-20260922-TWOROWS: 1 identical duplicate" in x for x in f["working_log"])
     assert not any("GOOD" in x for x in f["working_log"])
     assert [x for x in f["shards"] if "b1.tools.jsonl" in x] and not any("W40" in x for x in f["shards"])
     assert any("TCK-20260923-CITES" in x and "evidence.json" in x for x in f["cited_evidence"])
@@ -118,3 +118,49 @@ def test_since_date_limits_ticket_checks(tmp_path):
     _git(repo, "commit", "-q", "-m", "old")
     assert any("TCK-20260101-OLD" in x for x in _report(repo)["findings"]["working_log"])
     assert _report(repo, since_date="20260901")["findings"]["working_log"] == []
+
+
+# --- positive controls for the false-positive shapes found in review of the first reading ---
+
+def test_progress_rows_before_the_closing_done_row_are_not_a_finding(tmp_path):
+    repo = _clean_repo(tmp_path)
+    _w(repo, "tickets/done/TCK-20260924-PROGRESS.md", "# t\n")
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-24T00:00:00Z,TCK-20260924-PROGRESS,t,BLOCKED,first block,\n2026-09-24T01:00:00Z,TCK-20260924-PROGRESS,t,BLOCKED,second block,\n"
+       "2026-09-24T02:00:00Z,TCK-20260924-PROGRESS,t,DONE,s,\n"
+       "2026-09-25T02:00:00Z,TCK-20260924-PROGRESS,fix round 2,DONE,s2,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "progress rows")
+    assert _report(repo)["findings"]["working_log"] == []
+    # control: the same ticket with only BLOCKED rows IS reported (no closing DONE row)
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-24T00:00:00Z,TCK-20260924-PROGRESS,t,BLOCKED,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "no done row")
+    assert any("TCK-20260924-PROGRESS: no DONE" in x for x in _report(repo)["findings"]["working_log"])
+
+
+def test_a_cited_path_with_a_line_suffix_is_checked_as_the_file_not_reported(tmp_path):
+    repo = _clean_repo(tmp_path)
+    _w(repo, "tickets/done/TCK-20260926-LINECITE.md", "# t\n\nSee `stored_artifacts/TCK-20260920-GOOD/plan.md:199` and `stored_artifacts/TCK-20260920-GOOD/plan.md:10-20`.\n")
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-26T00:00:00Z,TCK-20260926-LINECITE,t,DONE,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "line cite")
+    assert _report(repo)["findings"]["cited_evidence"] == []
+    # control: a line suffix on a file that really is absent is still reported, under the stripped name
+    _w(repo, "tickets/done/TCK-20260926-LINECITE.md", "# t\n\n`stored_artifacts/TCK-20260920-GOOD/missing.md:5`\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "absent file with line")
+    assert any("missing.md, which does not exist" in x for x in _report(repo)["findings"]["cited_evidence"])
+
+
+def test_a_bare_directory_citation_is_skipped_but_a_missing_file_is_not(tmp_path):
+    repo = _clean_repo(tmp_path)
+    _w(repo, "tickets/done/TCK-20260927-DIRCITE.md", "# t\n\n`stored_artifacts/TCK-20260927-FIRST-WAVE/` and `stored_artifacts/TCK-20260927-DIRCITE/evidence.json`\n")
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-27T00:00:00Z,TCK-20260927-DIRCITE,t,DONE,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "dir cite")
+    findings = _report(repo)["findings"]["cited_evidence"]
+    assert len(findings) == 1 and "evidence.json" in findings[0] and "FIRST-WAVE" not in findings[0]

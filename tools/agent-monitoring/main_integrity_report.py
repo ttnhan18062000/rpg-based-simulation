@@ -10,10 +10,14 @@ as a snapshot of that ref and SHA: a closed week can still receive late shards, 
 as of that commit, not final.
 
 Checks (each finding names its ticket or path):
-  working_log      every closed ticket (tickets/done/**/TCK-*.md) has exactly one working-log row,
-                   counting `tickets/working_log.csv` plus any pending `*.working_log.jsonl` shard
+  working_log      every closed ticket (tickets/done/**/TCK-*.md) has at least one DONE working-log row
+                   and no identical duplicate rows, over `tickets/working_log.csv` plus any pending
+                   `*.working_log.jsonl` shard. BLOCKED progress rows and later DONE rows with a different
+                   title (post-merge fix rounds) are legitimate. Narrower than `done_checker_static`'s
+                   per-ticket rule on purpose; a ticket with no row at all (some epics) is reported
   shards           no per-batch `<id>.{runs,events,tools,working_log}.jsonl` shard left for a finished ISO week
-  cited_evidence   every backticked `stored_artifacts/...` path a closed ticket cites exists at the ref
+  cited_evidence   every backticked `stored_artifacts/...` file path a closed ticket cites exists at the ref
+                   (a trailing `:LINE` is stripped; a directory citation ending in `/` is skipped)
   duplicate_runs   `duplicate_run_record_check.check_duplicate_run_records` over the ref's run rows
   event_seq        `event_seq_integrity_check.find_seq_duplicates_and_gaps` over the ref's event rows
 
@@ -42,7 +46,7 @@ REPO_ROOT = _HERE.parent.parent
 _TICKET_RE = re.compile(r"^tickets/done/(?:[^/]+/)?(TCK-(\d{8})-[A-Z0-9-]+)\.md$")
 _SHARD_RE = re.compile(r"^agent-monitoring/data/(\d{4}-W\d{2})/[^/]+\.(runs|events|tools|working_log)\.jsonl$")
 _CITE_RE = re.compile(r"`(stored_artifacts/[^`\s]+)`")
-_KINDS = ("runs", "events")
+_LINE_SUFFIX_RE = re.compile(r":\d+(?:-\d+)?$")  # `investigation.md:199` cites a line, not a file named that
 
 
 def _git(repo_root, *args, text=True):
@@ -74,20 +78,35 @@ def _closed_tickets(reader: RefReader, since_date: str | None):
 
 
 def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
-    counts: Counter = Counter()
+    """A closed ticket needs at least one DONE row, and no two rows may be identical (ticket, title,
+    status, summary: a double write). Progress rows (BLOCKED) and later DONE rows with a different title
+    (post-merge fix rounds logged under the same ticket) are legitimate. Narrower than
+    `done_checker_static`'s per-ticket rule on purpose; a ticket with no row at all (some epics) is
+    reported, since the closure tool does append one."""
+    rows_by_ticket: dict = {}
+
+    def add(row):
+        rows_by_ticket.setdefault(row.get("ticket_id", ""), []).append(
+            tuple(str(row.get(k, "")).strip() for k in ("title", "status", "summary"))
+        )
+
     if "tickets/working_log.csv" in reader.paths:
         for row in csv.DictReader(io.StringIO(reader.show("tickets/working_log.csv"))):
-            counts[row.get("ticket_id", "")] += 1
+            add(row)
     for p in reader.paths:
         m = _SHARD_RE.match(p)
         if m and m.group(2) == "working_log":
             for line in reader.show(p).splitlines():
                 if line.strip():
-                    counts[json.loads(line).get("ticket_id", "")] += 1
+                    add(json.loads(line))
     findings = []
     for tid, path in _closed_tickets(reader, since_date):
-        if counts[tid] != 1:
-            findings.append(f"{tid}: {counts[tid]} working-log row(s) ({path})")
+        rows = rows_by_ticket.get(tid, [])
+        if not any(status.upper() == "DONE" for _, status, _ in rows):
+            findings.append(f"{tid}: no DONE working-log row ({len(rows)} row(s) of any status) ({path})")
+        dupes = [r for r, n in Counter(rows).items() if n > 1]
+        if dupes:
+            findings.append(f"{tid}: {len(dupes)} identical duplicate working-log row(s), e.g. {dupes[0][0][:60]!r} ({path})")
     return findings
 
 
@@ -105,7 +124,9 @@ def check_cited_evidence(reader: RefReader, since_date: str | None) -> list[str]
     findings = []
     for tid, path in _closed_tickets(reader, since_date):
         for cited in sorted(set(_CITE_RE.findall(reader.show(path)))):
-            cited = cited.rstrip(".,;:)")
+            if cited.endswith("/"):
+                continue  # a directory citation, not a file path
+            cited = _LINE_SUFFIX_RE.sub("", cited.rstrip(".,;:)"))
             if "..." in cited or any(ch in cited for ch in "*<>{}"):
                 continue  # a glob or placeholder, not a concrete path
             if not reader.exists(cited):

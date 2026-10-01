@@ -265,8 +265,9 @@ make agent-monitoring-close-week WEEK=2026-W39
 ```
 
 - Refuses the current ISO week and any week that has not ended (exit 2, nothing touched).
-- Deterministic: rows ordered by `ts` then `seq`, exact duplicates dropped and counted. A second close
-  changes nothing.
+- Deterministic and non-reordering: a kind with no shard is not touched; otherwise existing canonical
+  lines keep their order and new shard lines are exact-deduplicated (counted) and appended ordered by
+  `ts` then `seq`. A second close changes nothing.
 - That week's pending `*.working_log.jsonl` shards go through `working_log_writer.consolidate_pending_rows`,
   so `tickets/working_log.csv` keeps its single writer.
 - A shard that arrives after its week was closed (a branch merging late) is folded by the next close of
@@ -282,7 +283,7 @@ Code: `tools/agent-monitoring/week_close.py`, `week_close_nudge.py`.
 `ARGS="--since-date 20260901"` to skip historical tickets) reads a git ref through `git ls-tree` /
 `git show`, never the working tree, and prints a snapshot labelled with the ref and SHA. Report-only:
 exit 0 unless `--strict`, repairs nothing, not a CI job. It reports what per-ticket checks cannot see:
-closed tickets without exactly one working-log row, per-batch shards left for a finished week,
+closed tickets with no DONE working-log row or an identical duplicate row, per-batch shards left for a finished week,
 `stored_artifacts/` paths a closed ticket cites that are absent at the ref (the gitignored-`.json`
 case), duplicate-run records and event-seq duplicates/gaps. A closed week can still receive late
 shards, so a count is as of that commit. Code: `tools/agent-monitoring/main_integrity_report.py`.
