@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # World Rule Family: Body / Condition
@@ -178,7 +178,8 @@ reuses Batch 04's SPC-S04/S05/S13 evidence directly.
 ### BODY-02 — HP reaching zero triggers a real classification process, not a single automatic outcome
 
 > Reaching zero HP does not, by itself, determine what happens next — it triggers a real
-> classification (`KILL`/`DEFEAT`/`REBIRTH`/`PERMADEATH`), not one hardcoded "death" transition.
+> classification (a declared outcome and, where it is a death, a declared cause), not one
+> hardcoded "death" transition. (Wording revised 2026-10-01: it no longer names retired mechanisms.)
 
 **Disposition: INHERITED — direct reuse of this same batch's own LIFE-02 finding, restated at
 the HP-zero-boundary level. Reclassified 2026-09-22 (normalization pass): the original draft
@@ -188,11 +189,14 @@ semantics LIFE-02 does not already state.** Kept here because the batch instruct
 Zero Boundary" probe specifically required checking this at the HP level, not because the claim
 itself is new.
 
-**Repository evidence: SUPPORTED**, reusing LIFE-02's own evidence: `new_hp <= 0` is the
-trigger condition, but `CombatRewardClassificationService.classify_defeated_target()` and the
-generation/rebirth-eligibility check determine the actual outcome — reaching zero is a
-necessary condition for several different transitions, never a sufficient one for any single
-predetermined result.
+**Repository evidence: PARTIAL (revised 2026-10-01), reusing LIFE-02's own status.**
+`new_hp <= 0` is the trigger condition, and a real classification follows: combat classifies
+`KILL` or terminal `DEFEAT`, and lifecycle records each death with a declared cause
+(`COMBAT`, `DEFEAT`, `HAZARD`, `STARVATION` or `SLEEP_DEPRIVATION`). Classification of
+*cause* is SUPPORTED. Classification of *fate* is not currently realised: every zero-HP
+outcome today ends in a recorded death, and no declared route to continued existence exists
+(permitted by LIFE-02, not required). The former generation/rebirth-eligibility check cited
+here was retired with hero `REBIRTH`.
 
 **Scenarios:** [LB-S03](../scenarios/life-body-batch-05.md#lb-s03).
 
