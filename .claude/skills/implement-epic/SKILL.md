@@ -26,6 +26,21 @@ ticket is already its own tracking surface.
 
 If the input is ambiguous (no prefix), treat as a folder path if it contains `/` or starts with `tickets/`, otherwise as a natural language request.
 
+## Native Workflow runtime status (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT)
+
+`.claude/workflows/implement-epic.js` is **ported to the native `Workflow` runtime** (no `bash()`, no
+`Date.now()`; `start_ts` is a required arg; every shell step is a `runCommand()` agent dispatch with a
+fail-open warning; run records carry `"execution_mode":"workflow"`). It parses under acorn. What is **not**
+possible yet: the child loop calls `workflow('implement-ticket', ...)`, and `workflow()` nests exactly one
+level (measured 2026-10-01) but `implement-ticket.js` itself still uses `bash()` and fails to parse, so a
+native run stops at the first child with `WORKFLOW_ERROR` and the fallback below. A native run is therefore
+useful today only for `INVALID_ARGS`, `EPIC_CREATED` and `NOTHING_TO_DO` outcomes. Until
+`TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT` lands, **the primary path for an epic that has pending children is
+the hand-translation below.** If you do invoke the native tool, run `date -u +%Y-%m-%dT%H:%M:%SZ` first and use
+`Workflow({scriptPath: '.claude/workflows/implement-epic.js', args: {folder|epic_id|request, start_ts}})`
+(`scriptPath`, never `name`, from a worktree). When hand-translating, use `"execution_mode":"pipeline"`, not the
+JS literal `"workflow"`, and run each `runCommand(cmd, label)` yourself via Bash.
+
 ## Action
 
 **Do not call the Workflow tool — it is not available.** Execute the workflow directly:

@@ -31,7 +31,7 @@ parse under acorn with `sourceType: 'module'`, `allowReturnOutsideFunction: true
 prompt string breaks that silently (no file/line pointer), which is exactly what blocked
 `create-tickets.js` until the pilot ticket fixed it.
 
-Only one script — `create-tickets.js` — has actually been ported and piloted so far. Its
+Two scripts have been ported: `create-tickets.js` (piloted, `TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT`) and `implement-epic.js` (`TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT`: parses, no `bash()`, `start_ts` arg, `runCommand()` for its 11 bookkeeping-only shell steps; its child loop cannot complete natively until `implement-ticket.js` is ported, because `workflow()` nests one level and the child still uses `bash()`; see `.claude/skills/implement-epic/SKILL.md`). The `create-tickets.js`
 `SKILL.md` now invokes the native tool as the primary path:
 
 ```
@@ -45,11 +45,11 @@ current worktree's, so it would silently run a stale version whenever the two di
 translation (reading the JS and manually issuing the equivalent tool calls) is kept as a
 documented **fallback only**, for when the tool call itself errors.
 
-The other three scripts (`implement-ticket.js`, `implement-epic.js`, `simq-audit.js`) are **not**
-ported yet — `implement-ticket.js` and `simq-audit.js` still fail the acorn parse outright (same
+The other two scripts (`implement-ticket.js`, `simq-audit.js`) are **not**
+ported yet — both still fail the acorn parse outright (same
 nested-backtick defect class, unfixed — out of this pilot's scope, see
 `stored_artifacts/TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT/pilot_measurement.md` for the
-full parse-status list and the go/no-go on porting them). Their skills still hand-translate only,
+full parse-status list and the go/no-go on porting them). Their skills still hand-translate only (as does `/implement-epic` for any epic with pending children),
 same as before this pilot:
 
 ```

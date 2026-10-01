@@ -8,7 +8,11 @@ export const meta = {
   ],
 }
 
-// Args: { folder?, epic_id?, request?, tier_override? }
+// Args: { start_ts, folder?, epic_id?, request?, tier_override? }
+//
+// start_ts    — REQUIRED. ISO timestamp marking run start (e.g. from `date -u +%Y-%m-%dT%H:%M:%SZ`). The native
+//              Workflow runtime has no Date.now()/new Date() and no bash(), so the caller supplies it
+//              (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT).
 //
 // folder     — path to a directory containing TCK-*.md files
 //              e.g. "tickets/todos/monitoring/"
@@ -26,16 +30,71 @@ const folder = (args && args.folder) || ''
 const epicId = (args && args.epic_id) || ''
 const request = (args && args.request) || ''
 const tierOverride = (args && args.tier_override) || ''
+const startTs = (args && args.start_ts) || ''
+
+// Structured INVALID_ARGS with no monitoring record: a run record needs a timestamp and the only
+// source of one is args.start_ts, so there is nothing truthful to write without it.
+if (!startTs) {
+  return {
+    status: 'INVALID_ARGS',
+    message: 'Provide start_ts=<ISO timestamp>, e.g. start_ts=2026-10-01T00:00:00Z (run `date -u +%Y-%m-%dT%H:%M:%SZ` first — the Workflow runtime has no clock of its own).',
+  }
+}
+
+// Narrow command-runner (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT, same helper as
+// create-tickets.js, TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT): the native runtime has
+// no bash() (measured 2026-10-01: the script's globals are log/phase/console/budget/setTimeout/
+// agent/parallel/pipeline/workflow/args only), so each shell step dispatches one low-effort agent()
+// told to run the command verbatim and report {exit_code, stdout}. Every site in this file is
+// bookkeeping (timestamps, sidecar, monitoring writes) -- none decides a pass/fail verdict; the
+// classification is in stored_artifacts/TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT/. Each site
+// keeps its fail-open WARNING behavior: monitoring write failure must never fail the workflow.
+const RUN_COMMAND_SCHEMA = {
+  type: 'object',
+  required: ['exit_code', 'stdout'],
+  properties: {
+    exit_code: { type: 'integer', description: "The command's real exit code" },
+    stdout: {
+      type: 'string',
+      description: 'The command\'s raw combined stdout+stderr, verbatim, including any trailing marker line',
+    },
+  },
+}
+
+const runCommand = async (cmd, label) => {
+  return agent(
+    `Run the following command exactly as given, using your Bash tool. Do not interpret, modify,
+explain, or summarize it — execute it verbatim in one Bash call and report the raw result.
+
+Command:
+${cmd}
+
+Return exit_code (the command's real exit code, as an integer) and stdout (the command's raw
+combined stdout+stderr, byte-for-byte, including any trailing marker line such as
+"SOMETHING_EXIT:0" — do not trim, reformat, or paraphrase it).`,
+    { label, schema: RUN_COMMAND_SCHEMA, effort: 'low' }
+  )
+}
+
+// Fail-open monitoring write: run the command, check the exit marker, log a WARNING on failure,
+// never throw (CLAUDE.md Hard Rule: monitoring write failure must never fail the workflow).
+const runMonitoringCommand = async (cmd, label) => {
+  const result = await runCommand(`${cmd} 2>&1; echo "MONITORWRITE_EXIT:$?"`, label)
+  const out = (result && result.stdout) || ''
+  if (!out.includes('MONITORWRITE_EXIT:0')) {
+    log(`WARNING: monitoring write "${label}" failed or could not be verified: ${out.trim().slice(0, 160)}`)
+  }
+}
 
 if (!folder && !epicId && !request) {
   // No production run happened (Discover never ran) — still write a minimal monitoring record
   // rather than skip it entirely, per CLAUDE.md's "every run must record a monitoring entry" rule
-  // (previously silently skipped on this path — orchestration audit finding).
-  const invalidTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
-  const invalidTs = (invalidTsRaw || '').trim() || null
-  const invalidRunId = `EPIC-INVALID-ARGS-${(invalidTs || '').replace(/[^0-9]/g, '')}`
-  await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${invalidRunId}","start_ts":"${invalidTs}","end_ts":"${invalidTs}","workflow":"implement-epic","tier":"epic","final_status":"INVALID_ARGS","agent_count":0,"execution_mode":"pipeline"}' 2>/dev/null || true`
+  // (previously silently skipped on this path — orchestration audit finding). Both timestamps are
+  // args.start_ts (no elapsed time is tracked on this path).
+  const invalidRunId = `EPIC-INVALID-ARGS-${startTs.replace(/[^0-9]/g, '')}`
+  await runMonitoringCommand(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${invalidRunId}","start_ts":"${startTs}","end_ts":"${startTs}","workflow":"implement-epic","tier":"epic","final_status":"INVALID_ARGS","agent_count":0,"execution_mode":"workflow"}'`,
+    'record-invalid-args'
   )
   return {
     status: 'INVALID_ARGS',
@@ -79,16 +138,9 @@ const DISCOVER_SCHEMA = {
   },
 }
 
-// Orchestrator-side ts capture — replaces the former per-branch "Step 0 — run `date -u ...`"
-// agent-prompt-text instruction (TCK-20260710-STEP0-TS-ORCHESTRATOR-BASH). This file has no
-// pushEvent/writeSidecar cluster to compose alongside, so it gets its own local helper, called
-// immediately before the single `agent()` call below.
-const captureTs = async () => {
-  const out = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
-  return (out || '').trim() || null
-}
-
-const discoverTs = await captureTs()
+// Run start time comes from args.start_ts (validated at the top of this file); the former
+// captureTs()/bash('date ...') helper cannot exist in the native runtime.
+const discoverTs = startTs
 
 // batchRunId — hoisted here (previously computed after Discover, at the old
 // implement-epic.js:272-274 position) so the 4 top-level sidecar sites below (starting with
@@ -122,36 +174,34 @@ const batchRunId = epicId
 // SIDECAR-COLLISION bug class). Never use seq=0 either — post_tool_hook.py's
 // `sidecar.get("seq") or None` treats 0 as falsy and silently drops it to None.
 const writeSidecar = async (seq, phase, agentName) => {
-  await bash(
-    `python3 -c "
+  const cmd = `python3 -c "
 import json, sys, os
 data = json.dumps({'run_id': sys.argv[1], 'seq': int(sys.argv[2]), 'phase': sys.argv[3], 'agent': sys.argv[4]})
 open('.claude/current_run', 'w').write(data)
 sid = os.environ.get('CLAUDE_CODE_SESSION_ID', '')
 if sid:
     open('.claude/current_run.' + sid, 'w').write(data)
-" "${batchRunId}" "${seq}" "${phase}" "${agentName}" 2>/dev/null || true`
-  )
+" "${batchRunId}" "${seq}" "${phase}" "${agentName}" 2>&1; echo "WRITESIDECAR_EXIT:$?"`
+  const result = await runCommand(cmd, `writeSidecar:${phase}`)
+  const out = (result && result.stdout) || ''
+  if (!out.includes('WRITESIDECAR_EXIT:0')) {
+    log(`WARNING: writeSidecar failed for phase "${phase}" (seq ${seq}, agent "${agentName}") — tool-call attribution for this phase may be missing or misattributed: ${out.trim().slice(0, 160)}`)
+  }
 }
 
-// TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: this file previously had NO clear at
-// all on any exit path — writeSidecar() above only ever sets the sidecar, never empties it, so a
-// finished batch run's own (run_id, seq) kept absorbing later, unrelated tool calls in the same
-// session until the next real writeSidecar() write from any workflow. Mirrors the clearSidecar()
-// helper added to implement-ticket.js/create-tickets.js by the same ticket: dual-writes `{}` to
-// both the shared .claude/current_run and the per-session-scoped
-// .claude/current_run.$CLAUDE_CODE_SESSION_ID file — tools/agent-monitoring/post_tool_hook.py
-// reads ONLY the scoped file whenever a session_id is present (always, for real hooks), so a
-// clear that only empties the shared file (as the other two files' own pre-fix clears did) is a
-// silent no-op for real attribution.
+// TCK-20260928-SIDECAR-CLEAR-MISSES-SESSION-SCOPED-FILE: dual-writes `{}` to both the shared
+// .claude/current_run and the per-session .claude/current_run.$CLAUDE_CODE_SESSION_ID file
+// (post_tool_hook.py reads ONLY the scoped file whenever a session_id is present). Runs through
+// runCommand() natively; whether a workflow subagent's shell sees the same session id is the
+// pilot's measured "Sidecar session scope" finding (it does).
 const clearSidecar = async () => {
-  const out = await bash(
-    `printf '{}' > .claude/current_run
+  const cmd = `printf '{}' > .claude/current_run
 if [ -n "$CLAUDE_CODE_SESSION_ID" ]; then printf '{}' > ".claude/current_run.$CLAUDE_CODE_SESSION_ID"; fi
 echo "CLEARSIDECAR_EXIT:$?"`
-  )
-  if (!(out || '').includes('CLEARSIDECAR_EXIT:0')) {
-    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${(out || '').trim()}`)
+  const result = await runCommand(cmd, 'clearSidecar')
+  const out = (result && result.stdout) || ''
+  if (!out.includes('CLEARSIDECAR_EXIT:0')) {
+    log(`WARNING: clearSidecar failed to empty the tool-tracking sidecar — later tool calls in this session may still be misattributed to this finished run: ${out.trim()}`)
   }
 }
 
@@ -244,7 +294,7 @@ Step 1 — create an epic ticket using the ticket-scoper approach:
   - Set Tier: epic, Status: OPEN
   - The ## Related Tickets section should list the child tickets that will need to be created
   - In ## Implementation Notes, instruct the user to: (1) create child tickets, (2) re-run with epic_id=<this ticket id>
-  - In ## Implementation Notes, also add an empty `### Shared test fixtures and patterns` subsection. Children that share test fixtures or patterns record them there; each child's investigator reads it (`.claude/agents/investigator.md`) and reuses them.
+  - In ## Implementation Notes, also add an empty \`### Shared test fixtures and patterns\` subsection. Children that share test fixtures or patterns record them there; each child's investigator reads it (\`.claude/agents/investigator.md\`) and reuses them.
 
 Step 2 — return:
   mode="request"
@@ -276,15 +326,16 @@ if (discovery.mode === 'request') {
   // ticketIds is known) rather than skip it entirely (orchestration audit finding). Uses a fixed
   // literal summary, not discovery.summary, to avoid embedding arbitrary agent-returned text into
   // a shell single-quoted JSON string — this file's own established quote-corruption risk.
-  const epicCreatedTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
-  const epicCreatedTs = (epicCreatedTsRaw || '').trim() || null
+  const epicCreatedTs = startTs
   const createdEpicId = (discovery.epic_ticket_path || '').replace(/^.*\//, '').replace(/\.md$/, '').replace(/[^a-zA-Z0-9-]/g, '-') || 'UNKNOWN'
   const epicCreatedRunId = 'EPIC-' + createdEpicId
-  await bash(
-    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${epicCreatedRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Epic ticket created; no child tickets yet","ts":"${epicCreatedTs}"}]' 2>/dev/null || true`
+  await runMonitoringCommand(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${epicCreatedRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Epic ticket created; no child tickets yet","ts":"${epicCreatedTs}"}]'`,
+    'record-epic-created-events'
   )
-  await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
+  await runMonitoringCommand(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${epicCreatedRunId}","start_ts":"${batchStartTs || epicCreatedTs}","end_ts":"${epicCreatedTs}","workflow":"implement-epic","tier":"epic","final_status":"EPIC_CREATED","agent_count":1,"execution_mode":"workflow"}'`,
+    'record-epic-created-run'
   )
   await clearSidecar()
   return {
@@ -302,16 +353,17 @@ if (ticketIds.length === 0) {
   // the EPIC_CREATED fix above; this path also returns before the batch-monitoring-write agent()
   // call below) rather than skip it entirely (orchestration audit finding). batchRunId matches
   // exactly what the batch-monitoring-write section below would compute had the batch proceeded.
-  const nothingTsRaw = await bash('date -u +%Y-%m-%dT%H:%M:%SZ')
-  const nothingTs = (nothingTsRaw || '').trim() || null
+  const nothingTs = startTs
   const nothingRunId = epicId
     ? 'EPIC-' + epicId
     : 'FOLDER-' + folder.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-  await bash(
-    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done, all blocked, or none found)","ts":"${nothingTs}"}]' 2>/dev/null || true`
+  await runMonitoringCommand(
+    `python3 tools/agent-monitoring/record_events.py --data '[{"run_id":"${nothingRunId}","seq":1,"phase":"Discover","agent":"implement-epic","status":"ok","summary":"Discover found no tickets to implement (all done, all blocked, or none found)","ts":"${nothingTs}"}]'`,
+    'record-nothing-events'
   )
-  await bash(
-    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1,"execution_mode":"pipeline"}' 2>/dev/null || true`
+  await runMonitoringCommand(
+    `python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${nothingRunId}","start_ts":"${batchStartTs || nothingTs}","end_ts":"${nothingTs}","workflow":"implement-epic","tier":"epic","final_status":"NOTHING_TO_DO","agent_count":1,"execution_mode":"workflow"}'`,
+    'record-nothing-run'
   )
   await clearSidecar()
   return {
@@ -346,7 +398,11 @@ for (const tid of ticketIds) {
   try {
     result = await workflow('implement-ticket', ticketArgs)
   } catch (e) {
-    result = { status: 'WORKFLOW_ERROR', ticket_id: tid, message: String(e) }
+    result = {
+      status: 'WORKFLOW_ERROR',
+      ticket_id: tid,
+      message: String(e) + ' — workflow() nests one level and implement-ticket cannot run on the native runtime yet (it still calls the removed shell helper and fails to parse; see TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT). Until then dispatch the children from the top-level session, one /implement-ticket per ticket_id.',
+    }
   }
 
   // workflow() can return null on fatal agent error
@@ -418,7 +474,7 @@ but prefix the WARNING in Step 3's failure message with "EVENTS-MISSING: " so a 
 retro run can distinguish this from an ordinary write failure.
 
 Step 3 — write batch run record (replace <END_TS> with the value from Step 1):
-  python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length},"execution_mode":"pipeline"}'
+  python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${batchRunId}","start_ts":"${batchStartTsLiteral}","end_ts":"<END_TS>","workflow":"implement-epic","tier":"epic","final_status":"${batchStatus}","agent_count":${results.length},"execution_mode":"workflow"}'
 
 If any command fails, print "WARNING: batch monitoring write failed: <error>" but do NOT raise. Return "done".`,
   { label: 'batch-monitoring-write' }

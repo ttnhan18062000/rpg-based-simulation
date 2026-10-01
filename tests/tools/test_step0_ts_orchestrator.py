@@ -229,13 +229,13 @@ def test_captureTs_helper_defined_once_after_writeSidecar():
     classify_idx = it_source.index("const classifyChecklistFailure")
     assert write_sidecar_idx < capture_ts_idx < classify_idx
 
-    # implement-epic.js still defines its own local equivalent (no shared module scope with
-    # implement-ticket.js). create-tickets.js does not any more (TCK-20260929-CREATE-TICKETS-
-    # WORKFLOW-RUNTIME-PILOT) — it was the one file ported to the native Workflow runtime, which
-    # has no bash(), so its captureTs() helper was removed rather than kept as dead code.
+    # create-tickets.js (TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT) and implement-epic.js
+    # (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT) were ported to the native Workflow runtime,
+    # which has no bash(), so their captureTs() helpers were removed rather than kept as dead code
+    # (the run start time comes from args.start_ts).
     ie_source = _read_implement_epic()
     ct_source = _read_create_tickets()
-    assert ie_source.count("const captureTs = async ()") == 1
+    assert ie_source.count("const captureTs = async ()") == 0
     assert ct_source.count("const captureTs = async ()") == 0
 
 
