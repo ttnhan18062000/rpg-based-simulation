@@ -8,7 +8,7 @@ returns `(status, evidence)` with status `OK` / `WARN` / `NA`, never raises, nev
 
 Citations are the backticked tokens of the ticket body that start with `stored_artifacts/`,
 `staging_artifacts/` or `tickets/` and end in a file extension. Wildcards and `{placeholder}` forms
-are skipped. A cited path that does not exist on disk is skipped (a ticket cites its own
+are skipped. A path written in plain prose or a markdown link is never checked. A cited path that does not exist on disk is skipped (a ticket cites its own
 `tickets/inprogress/` path, which is skipped outright, and `staging_artifacts/` paths that migrate
 to `stored_artifacts/` at close); a `staging_artifacts/X` citation is checked at `stored_artifacts/X` once migrated.
 """
