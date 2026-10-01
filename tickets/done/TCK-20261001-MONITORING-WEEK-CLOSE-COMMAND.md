@@ -68,11 +68,11 @@ None.
 - Open: the first real close is W40, at the start of W41.
 
 ## Implementation Notes
-New `tools/agent-monitoring/week_close.py` and `make agent-monitoring-close-week WEEK=<YYYY-Www>`. Reuses `per_identifier_shard_paths` and `monitoring_consolidation.DEFAULT_DATA_DIR`; unlike the existing fold it rewrites the canonical file sorted by (ts, seq) with exact-line dedup (tmp file + os.replace, shards deleted after), so a crash between replace and delete is healed on the next close. working_log shards go through `consolidate_pending_rows`, which gained an optional `week` filter (default unchanged). Nudge: `week_close_nudge.py`, wired into the existing `retro_nudge_hook.py` instead of a new settings.json hook entry (a governing-file edit needing separate user approval). No manifest; the 'W40 first real close' question stays with the user and W40 was NOT closed.
+New `tools/agent-monitoring/week_close.py` and `make agent-monitoring-close-week WEEK=<YYYY-Www>`. Reuses `per_identifier_shard_paths` and `monitoring_consolidation.DEFAULT_DATA_DIR`; a kind with no shard file is skipped entirely, and otherwise the canonical file's existing lines keep their order while the new shard lines are exact-line de-duplicated and appended sorted by (ts, seq) (tmp file + os.replace, shards deleted after; a crash between the two is healed on the next close). Review fix: the first version re-sorted the whole canonical file, which reordered real, already-consolidated weeks (W38/W39 are not in ts order); a copy of real W39 now reports no rewrite and identical hashes. working_log shards go through `consolidate_pending_rows`, which gained an optional `week` filter (default unchanged). Nudge: `week_close_nudge.py`, wired into the existing `retro_nudge_hook.py` instead of a new settings.json hook entry (a governing-file edit needing separate user approval). No manifest; the 'W40 first real close' question stays with the user and W40 was NOT closed.
 Draft by agent-working-design; the implementer commits it.
 
 ## Test Summary
-10 tests in tests/tools/test_week_close.py (one per AC plus unparseable-line ordering, other-week working_log shard untouched, crash-heal, hook integration); 46 passed with the retro-nudge, consolidation and working_log_writer suites. Real-repo check: closing W40 exits 2 (unfinished) and the nudge reports no finished week with shards.
+12 tests in tests/tools/test_week_close.py (one per AC plus unparseable-line ordering, other-week working_log shard untouched, crash-heal, hook integration); 46 passed with the retro-nudge, consolidation and working_log_writer suites. Real-repo check: closing W40 exits 2 (unfinished) and the nudge reports no finished week with shards.
 Not started.
 
 ## Files Changed

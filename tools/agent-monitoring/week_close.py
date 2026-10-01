@@ -11,12 +11,13 @@ report-only nudge (`week_close_nudge.py`) rather than scheduled.
 Rules:
 - Refuses the current ISO week and any week that has not ended (a week is finished once today is after
   its Sunday), and any malformed week id. Refusal touches nothing and exits 2.
-- Deterministic: per kind, rows are the union of the canonical file's lines and every shard's lines,
-  exact-line de-duplicated, ordered by (`ts`, `seq`) with unparseable lines last in original order.
-- Idempotent: a second close finds no shard and rewrites nothing (the canonical file is only replaced
-  when its content would change). The write is tmp-file + `os.replace`; shards are deleted only after
-  that succeeds, and a crash between the two is healed by the next close because exact duplicates are
-  dropped.
+- Deterministic and non-reordering: a kind with no shard file is not touched at all (real canonical
+  files are not in ts order, so re-sorting an already-consolidated week would reorder it). Otherwise the
+  canonical file's existing lines stay where they are and the new shard lines, exact-line de-duplicated
+  against it and each other, are appended ordered by (`ts`, `seq`), unparseable lines last.
+- Idempotent: a second close finds no shard and rewrites nothing. The write is tmp-file +
+  `os.replace`; shards are deleted only after that succeeds, and a crash between the two is healed by
+  the next close because exact duplicates are dropped.
 - Late-shard policy: a shard for an already-closed week that arrives later (a branch merging after its
   week ended) is folded by the next close of that week, like any other shard.
 - working_log rows go through `working_log_writer.consolidate_pending_rows(week=...)`, the CSV's single
@@ -73,24 +74,30 @@ def _sort_key(indexed: tuple[int, str]):
 
 
 def _fold_kind(week_dir: Path, kind: str) -> dict:
+    """Fold this kind's shard files into the canonical file. A kind with no shard file is skipped
+    entirely: real canonical files are not in ts order today, so re-sorting an already-consolidated
+    week would reorder it. Existing canonical lines keep their existing order; only the new shard
+    lines are exact-line de-duplicated (against the canonical file and each other) and appended,
+    ordered by (ts, seq)."""
     canonical = week_dir / f"{kind}.jsonl"
     shards = per_identifier_shard_paths(week_dir, kind)
-    existing = canonical.read_text(encoding="utf-8").splitlines() if canonical.exists() else []
-    existing = [ln for ln in existing if ln.strip()]
+    if not shards:
+        return {"shard_files": 0, "lines_in": 0, "lines_out": 0, "duplicates_dropped": 0, "rewrote_canonical": False}
+    existing_text = canonical.read_text(encoding="utf-8") if canonical.exists() else ""
+    existing = [ln for ln in existing_text.splitlines() if ln.strip()]
     shard_lines = []
     for f in shards:
         shard_lines.extend(ln for ln in f.read_text(encoding="utf-8").splitlines() if ln.strip())
-    lines_in = len(existing) + len(shard_lines)
-    seen, unique = set(), []
-    for ln in existing + shard_lines:
+    seen = set(existing)
+    fresh = []
+    for ln in shard_lines:
         if ln not in seen:
             seen.add(ln)
-            unique.append(ln)
-    ordered = [ln for _, ln in sorted(enumerate(unique), key=_sort_key)]
-    new_text = "".join(ln + "\n" for ln in ordered)
-    changed = (not canonical.exists() and ordered) or (
-        canonical.exists() and canonical.read_text(encoding="utf-8") != new_text
-    )
+            fresh.append(ln)
+    appended = [ln for _, ln in sorted(enumerate(fresh), key=_sort_key)]
+    new_text = existing_text if existing_text.endswith("\n") or not existing_text else existing_text + "\n"
+    new_text += "".join(ln + "\n" for ln in appended)
+    changed = new_text != existing_text
     if changed:
         tmp = canonical.with_name(canonical.name + ".closing")
         tmp.write_text(new_text, encoding="utf-8")
@@ -99,9 +106,9 @@ def _fold_kind(week_dir: Path, kind: str) -> dict:
         f.unlink()
     return {
         "shard_files": len(shards),
-        "lines_in": lines_in,
-        "lines_out": len(ordered),
-        "duplicates_dropped": lines_in - len(ordered),
+        "lines_in": len(existing) + len(shard_lines),
+        "lines_out": len(existing) + len(appended),
+        "duplicates_dropped": len(shard_lines) - len(appended),
         "rewrote_canonical": bool(changed),
     }
 

@@ -89,10 +89,11 @@ def test_rows_are_ordered_by_ts_then_seq_with_exact_duplicates_reported(tmp_path
     data = _fixture(tmp_path)
     result = wc.close_week(WEEK, data, AFTER)
     runs = _lines(data / WEEK / "runs.jsonl")
-    assert [r["run_id"] for r in runs] == ["B", "A"]  # 3 lines in, exact duplicate of A dropped
+    assert [r["run_id"] for r in runs] == ["A", "B"]  # existing A stays first; B appended; shard's duplicate A dropped
     assert result["runs"]["lines_in"] == 3 and result["runs"]["lines_out"] == 2 and result["runs"]["duplicates_dropped"] == 1
     events = _lines(data / WEEK / "events.jsonl")
-    assert [(e["run_id"], e["seq"]) for e in events] == [("B", 1), ("A", 1), ("A", 2)]  # ts, then seq
+    # existing line first; the two shard lines appended ordered by ts (B 09-21 before A 09-22)
+    assert [(e["run_id"], e["seq"]) for e in events] == [("A", 2), ("B", 1), ("A", 1)]
     for kind in ("events", "tools"):
         assert result[kind]["duplicates_dropped"] == 0
         assert result[kind]["lines_in"] == result[kind]["lines_out"]
@@ -126,7 +127,7 @@ def test_late_shard_is_folded_by_the_next_close(tmp_path):
     _w(data / WEEK / "late.runs.jsonl", [{"run_id": "LATE", "start_ts": "2026-09-23T00:00:00Z"}])
     result = wc.close_week(WEEK, data, date(2026, 10, 12))
     assert result["runs"]["shard_files"] == 1
-    assert [r["run_id"] for r in _lines(data / WEEK / "runs.jsonl")] == ["B", "A", "LATE"]
+    assert [r["run_id"] for r in _lines(data / WEEK / "runs.jsonl")] == ["A", "B", "LATE"]
     assert not (data / WEEK / "late.runs.jsonl").exists()
 
 
@@ -163,3 +164,31 @@ def test_retro_nudge_hook_also_emits_the_close_week_nudge_even_below_the_retro_t
     assert proc.returncode == 0
     ctx = json.loads(proc.stdout)["hookSpecificOutput"]["additionalContext"]
     assert "agent-monitoring-close-week" in ctx and "2026-W01" in ctx
+
+
+def test_week_with_no_shards_leaves_an_out_of_order_canonical_file_byte_identical(tmp_path):
+    # Real canonical files are not in ts order today; closing an already-consolidated week must not reorder them.
+    data = tmp_path / "agent-monitoring" / "data"
+    wk = data / WEEK
+    _w(wk / "runs.jsonl", [{"run_id": "LATER", "start_ts": "2026-09-25T00:00:00Z"}, {"run_id": "EARLIER", "start_ts": "2026-09-21T00:00:00Z"}])
+    _w(wk / "events.jsonl", [{"run_id": "X", "seq": 5, "ts": "2026-09-25T00:00:00Z"}, {"run_id": "X", "seq": 1, "ts": "2026-09-21T00:00:00Z"}])
+    _w(wk / "tools.jsonl", [{"run_id": "X", "seq": 2, "ts": "2026-09-24T00:00:00Z"}, {"run_id": "X", "seq": 1, "ts": "2026-09-22T00:00:00Z"}])
+    before = _snapshot(tmp_path)
+    result = wc.close_week(WEEK, data, AFTER)
+    assert _snapshot(tmp_path) == before
+    assert not any(result[k]["rewrote_canonical"] for k in ("runs", "events", "tools"))
+
+
+def test_week_with_a_shard_keeps_existing_lines_in_place_and_appends_sorted_new_lines(tmp_path):
+    data = tmp_path / "agent-monitoring" / "data"
+    wk = data / WEEK
+    existing = [{"run_id": "LATER", "start_ts": "2026-09-25T00:00:00Z"}, {"run_id": "EARLIER", "start_ts": "2026-09-21T00:00:00Z"}]
+    _w(wk / "runs.jsonl", existing)
+    _w(wk / "b1.runs.jsonl", [{"run_id": "N2", "start_ts": "2026-09-23T00:00:00Z"}, {"run_id": "N1", "start_ts": "2026-09-22T00:00:00Z"},
+                              existing[1]])  # a shard line already in the canonical file
+    before_lines = (wk / "runs.jsonl").read_text(encoding="utf-8").splitlines()
+    result = wc.close_week(WEEK, data, AFTER)
+    after_lines = (wk / "runs.jsonl").read_text(encoding="utf-8").splitlines()
+    assert after_lines[:2] == before_lines  # existing lines untouched, in place
+    assert [json.loads(ln)["run_id"] for ln in after_lines[2:]] == ["N1", "N2"]  # new lines sorted by ts
+    assert result["runs"]["duplicates_dropped"] == 1
