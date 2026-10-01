@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP
-phase: open
+phase: done
 date: 2026-09-28
 tags: [bug, lifecycle, engine, determinism]
 ---
@@ -16,7 +16,7 @@ Passive starvation/sleep-debt HP-loss deaths are silent: `resolve_lifecycle` has
 death-detection branch
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -197,7 +197,11 @@ persisted cause that does not exist today (see Implementation Notes).
   (entities 20, 21, 55, 63), now recorded as `HAZARD`.
 
 ## Test Summary
-_See Files Changed; final run recorded at close._
+- `tests/mechanic_scenarios` (incl. the three rewritten/retained death-authority-boundary tests, one slow), `tests/parity`,
+  `tests/docs`, `tests/architecture`: pass. Wider lane run (`simulation_quality`, `integration`, `unit/engine`,
+  `unit/progression`): 2056 passed; `test_bravery_quartile_combat_rate_2x` and `test_long_run_stability` fail
+  identically on the untouched base (control run), so they are not caused by this change.
+- The passive starvation test is unchanged and still pins the open gap.
 
 ## Files Changed
 - `src/systems/lifecycle_systems/lifecycle.py`
@@ -205,4 +209,8 @@ _See Files Changed; final run recorded at close._
 - `docs/simulation/lifecycle_systems_contract.md`, `docs/parity_ledger/progression.yaml` (PROG-126)
 
 ## Completion Summary
-_To be completed at close._
+Partial delivery by decision (user, via rpg-feature-planning, 2026-10-01): the same-tick `HAZARD` death route is
+recorded with the existing succession dispatch. Passive hunger/sleep-debt deaths remain unrecorded (a known,
+reversible gap); their fix is `TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`, and the
+defeat-becomes-death defect is `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`. LIFE-02's
+evidence note was corrected in `docs/world_rules/life-body/lifecycle.md`.
