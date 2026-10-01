@@ -32,6 +32,8 @@ Child of `TCK-20260930-IMPLEMENT-TICKET-NATIVE-PORT`. Depends on: none in this b
 ## Scope
 Advisory (12) and bookkeeping (11) sites per classification.jsonl: `args` for start timestamp and execution id, `runCommand` otherwise, shadow-reviewer sites omitted. Includes the batching decision for 13 writeSidecar and 11 captureTs invocations (per-phase timestamps stamped by the existing monitoring agent, sidecar writes folded into the preceding agent) so the port does not add ~40 dispatches per run.
 
+- Carried over from the parse-fix hotfix: take `start_ts` from `args` (today `scopeTs = await captureTs()` is a bash site pinned by tests), and decide the execution-id fallback: the clock-free `'fallback'` suffix means two runs of one ticket share an `execution_id` when the bash suffix fails and no `args.execution_id_suffix` is passed. Native path: return INVALID_ARGS when the arg is missing; legacy path: record the choice.
+
 ## Out of Scope
 - Any other workflow script; sites owned by a sibling child.
 

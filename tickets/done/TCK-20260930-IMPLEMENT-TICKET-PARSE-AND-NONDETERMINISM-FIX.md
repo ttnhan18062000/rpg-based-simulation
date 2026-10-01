@@ -40,7 +40,7 @@ P2
 ## Acceptance Criteria
 1. implement-ticket.js parses with the runtime's acorn options.
 2. No `Date.now(`, `Math.random(` or argless `new Date(` remains.
-3. Existing implement-ticket tests pass unchanged.
+3. Existing implement-ticket tests pass; the only edits are to three pinned-string assertions that now match the escaped backticks (assertions not weakened).
 
 ## Related Tickets
 - TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION (the classification this follows from)
