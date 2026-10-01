@@ -137,14 +137,53 @@ lands.
 - `src/observability/event_extractor.py:66`, `:1283`; `src/engine/apply_plan.py:347`
 
 ## Assumptions / Open Questions
-- **Retire vs fold `REBIRTH`/`PERMADEATH` into `KILL`:** open. `PERMADEATH` is currently the "truly
-  final" marker and `_DEFEATED_OUTCOME_KINDS`/`learning_outcome.py:33` reads both; folding changes what
-  the learning layer sees. Decide with evidence, not convenience.
-- **`lifecycle.generation`'s fate:** open (remove vs re-ground as lineage birth order). The user's
-  reproduction model may want a real lineage generation, which argues for re-grounding rather than
-  deletion — but that is a design call, not a refactor.
-- Whether retiring `PERMADEATH` loses the LIFE-01 "single final marker" that LB-S02 relies on must be
-  checked before removing it.
+
+**Both open questions are now CLOSED (2026-10-01). Full reasoning in `staging_artifacts/`.**
+
+- **Q1 CLOSED — fold `REBIRTH` and `PERMADEATH` into `KILL`; retire both outcome kinds; keep
+  `is_permadeath`.** Decided by `world-rule-catalog-design`. LIFE-01's single final marker was never the
+  `PERMADEATH` *outcome kind* — its evidence names the lifecycle field `LifecycleUpdate.is_permadeath_set`
+  (and ID-05's `active=False, is_permadeath_set=True`). `PERMADEATH` is a combat classification *label*;
+  `is_permadeath` is the lifecycle *fact*. Both labels simply drop out of `_DEFEATED_OUTCOME_KINDS`
+  (`learning_outcome.py:33`), where `KILL` already sits, so the combat-learning layer sees an unchanged
+  "defender lost" signal. **`is_permadeath` stays a separately tracked fact** even though it becomes
+  `True` for every recorded death: it is the hook STR-02 requires, since a future *declared* resurrection
+  process is the only thing permitted to produce a recorded death with `is_permadeath False`. Flagged so
+  it is not "simplified away" later as redundant with `death_reason`.
+- **Q2 CLOSED — remove `lifecycle.generation`.** The user delegated this decision explicitly
+  ("ask `world-rule-catalog-design`"); the owner decided **removal**, not re-grounding and not deferral.
+  Lineage depth is derivable from the birth record's parent links and a derived value cannot drift from
+  it; with two parents "generation" is ill-defined until lineage design exists; and decisively,
+  `event_extractor.py:1283-1297` emits `life_arc_incoherent` with `payload={"generation": ...}`, so
+  recorded events already encode the rebirth meaning and re-grounding would **retroactively change the
+  meaning of data already on disk**. The divergence entry must record that *lineage depth, if needed, is
+  derived from the birth record's parent links when lineage design declares it (ID-06)*, so the deferred
+  question has a written owner rather than a missing field.
+
+### Findings that widen the blast radius beyond this ticket's first draft
+
+- **There are TWO rebirth sites, and the live one is the second.** `combat.py:401-413`
+  (`resolve_multi_attack`) as well as `:181-187` (`resolve_attack`). Its own comment records that
+  `resolve_attack` is "the one real combat function this corpus's own AI never actually calls (0 real
+  calls in 2000-tick runs)" — ported by `TCK-20260808-LIFE-ARC-REBIRTH-REACHABILITY-INVESTIGATION`.
+  **Retiring only `:183` would leave rebirth fully live on the only path that runs.** This is also a
+  second confirmation of the premise: an earlier ticket found rebirth structurally unreachable and
+  hardened its reachability without anyone asking whether the mechanic should exist.
+- **`generation` is durable on a second object:** `CorpseState.generation`, written at
+  `apply_plan.py:347`. It must be removed with the same legacy-key tolerance.
+- **An observability detector depends on the rebirth meaning.** `life_arc_incoherent`
+  (`event_extractor.py:1283-1297`) infers "late generation + level ≤ 1 + no skills = incoherent", which
+  is only valid if `generation` counts lives that should have accumulated capability. Under any lineage
+  reading it would false-positive on an ordinary young descendant. **Retire the detector**, don't
+  re-point it, and sweep its registered/consumed literals so nothing is orphaned.
+- **`generation_delta` must not be left as dead plumbing** — four lift sites plus `patches.py:82` whose
+  guards reduce to `is_permadeath_set is not None` once it can never be non-zero.
+
+### Still open
+- **Architecture review has not been run on this plan.** It removes durable fields from the
+  authoritative path, so run `architecture-reviewer` before implementation, as the death batch did.
+- Whether `rebirth_eligible` disappears from `RewardClassification` entirely or remains always-`False` —
+  plan prefers removal; an always-`False` field is the dead structure this ticket exists to delete.
 
 ## Implementation Notes
 _To be completed during implementation._
