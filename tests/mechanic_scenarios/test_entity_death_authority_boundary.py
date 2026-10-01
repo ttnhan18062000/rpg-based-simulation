@@ -124,7 +124,7 @@ def test_immune_hazard_kind_is_the_negative_control_and_records_a_combat_death()
     assert orc.lifecycle.is_permadeath is True
 
 
-def test_hazard_drain_destroys_a_same_tick_combat_kill_record():
+def test_hazard_drain_overwrites_same_tick_combat_kill_attribution_but_records_a_hazard_death():
     """Collision arm, and C1's Q2/Q3 finding. Changing ONLY the region's hazard_kind to one
     orc_clan does not endure makes `WorldDynamicsSystem.resolve_dynamics`
     (src/engine/world_dynamics.py:39) unconditionally overwrite the victim's own
@@ -147,21 +147,19 @@ def test_hazard_drain_destroys_a_same_tick_combat_kill_record():
     assert first.combat.hp == 0
     assert first.combat.alive is False
 
-    # ...but lifecycle books no death at all, and still does not a tick later.
-    assert first.lifecycle.active is True, (
-        "C1 finding: the victim of a same-tick combat kill + hazard drain is NOT deactivated on "
-        f"the kill tick, got active={first.lifecycle.active}"
-    )
-    assert first.lifecycle.death_reason is None
-    assert second.lifecycle.active is False, (
-        "the late deactivation comes from apply.py:109's passive HP gate on the following tick"
-    )
-    assert second.lifecycle.death_reason is None, (
-        "C1 finding: the combat death record is destroyed outright -- death_reason stays None "
-        f"even after deactivation, got {second.lifecycle.death_reason!r}"
-    )
-    assert second.lifecycle.death_tick is None
-    assert second.lifecycle.is_permadeath is False
+    # TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP: lifecycle now books the death on the
+    # kill tick itself, as a HAZARD death, and keeps it on the next tick.
+    for snap in (first, second):
+        assert snap.lifecycle.active is False
+        assert snap.lifecycle.death_reason == "HAZARD"
+        assert snap.lifecycle.death_tick == 0
+        assert snap.lifecycle.is_permadeath is True
+
+    # STILL DEFECTIVE, and deliberately pinned: the combat attribution is lost. The victim's own
+    # outcome_kind="KILL" is overwritten by "HAZARD" (world_dynamics.py:39), so the death is
+    # recorded as HAZARD, not COMBAT. Closing that is TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-
+    # COMBAT-OUTCOME-KIND, not this fix; when it lands this assertion flips to "COMBAT".
+    assert first.lifecycle.death_reason != "COMBAT"
 
     # The world, meanwhile, books the death: +1.0 regional trauma fires off alive_set=False
     # (world_dynamics.py:47-60), identically to the control arm. That asymmetry -- the region
@@ -186,37 +184,37 @@ def test_hazard_drain_destroys_a_same_tick_combat_kill_record():
 
 
 @pytest.mark.slow
-def test_unrecorded_deaths_occur_in_unscripted_corpus_play():
-    """C1's Q1/Q2 production finding, unscripted: the committed signature
-    `combat.alive=False` AND `lifecycle.active=True` AND `death_reason=None` is reached in an
-    unmodified corpus world within 120 ticks, by routes that need no combat KILL at all --
-    hazard-only drain deaths, and `DEFEAT` outcomes (src/engine/combat.py:136 forces
-    is_lethal=False for EntityRole.HERO defenders, so a lethal blow on a HERO yields DEFEAT with
-    alive_set=False, which resolve_lifecycle ignores).
-
-    This is the evidence that the defect's consequence is routine even though the specific
-    combat+hazard collision is rare. Asserts the defective behaviour deliberately."""
+def test_unscripted_corpus_hazard_deaths_are_recorded_and_defeat_rebirth_leftovers_remain():
+    """C1's Q1/Q2 production finding, rewritten to the fixed contract by
+    TCK-20260928-PASSIVE-BIOLOGICAL-DEATH-DETECTION-GAP. In 120 unscripted ticks of
+    `frontier_marches` the hazard-only drain deaths (entities 20, 21, 55, 63) are now recorded
+    with death_reason='HAZARD'. What stays unrecorded is the `DEFEAT` / `REBIRTH` leftovers
+    (src/engine/combat.py:136 forces is_lethal=False for EntityRole.HERO defenders, so a lethal
+    blow yields DEFEAT with alive_set=False): still combat-dead with no death_reason. Those are
+    deliberately NOT classified by that ticket -- the Bible's rebirth law makes their meaning a
+    separate decision. When that decision lands, flip the second assertion."""
     repo = WorldRepository(os.path.join("data", "worlds"))
     spec, context = repo.load_world_with_context("frontier_marches")
     state, _report = WorldCompiler.compile(spec, SEED, context=context)
 
     kernel = Kernel(profile=PROD_SMALL, state=state, rng=DeterministicRNG(SEED),
                     flags={"no_frame_pacing": True})
-    unrecorded = []
     try:
-        for i in range(120):
+        for _ in range(120):
             kernel.tick_once()
-            for e_id, e in kernel._state.entities.items():
-                if (e.combat and not e.combat.alive
-                        and e.lifecycle and e.lifecycle.active
-                        and e.lifecycle.death_reason is None):
-                    unrecorded.append((i, e_id))
+        final = dict(kernel._state.entities)
     finally:
         kernel.shutdown()
 
+    hazard_dead = {20, 21, 55, 63}
+    assert {e_id for e_id in hazard_dead if final[e_id].lifecycle.death_reason == "HAZARD"} == hazard_dead
+
+    unrecorded = {
+        e_id for e_id, e in final.items()
+        if e.combat and not e.combat.alive and e.lifecycle.death_reason is None
+    }
     assert unrecorded, (
-        "C1 finding: expected at least one entity committed as combat-dead but lifecycle-alive "
-        "with no death_reason in 120 unscripted ticks of frontier_marches. If this stops "
-        "reproducing, the routed fix may have landed -- rewrite this test to the fixed contract "
-        "rather than deleting it."
+        "expected DEFEAT/REBIRTH leftovers to remain combat-dead and unrecorded; if this is empty "
+        "the DEFEAT/REBIRTH decision has landed -- rewrite to the new contract, do not delete"
     )
+    assert not (unrecorded & hazard_dead)

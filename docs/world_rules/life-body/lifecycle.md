@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # World Rule Family: Lifecycle
@@ -66,7 +66,7 @@ fields are never conflated in the same write.
 operational claim about *how* a defeat resolves (a real classification process, not a binary),
 which no earlier Rule ID already states.
 
-**Repository evidence: SUPPORTED, and this is a genuinely rich instance.**
+**Repository evidence: SUPPORTED at classification; CONTRADICTED at application (corrected 2026-10-01).**
 `CombatResolutionSystem`'s outcome classification (`src/engine/combat.py`) does not stop at
 "alive/not alive" — it further classifies `KILL`, `DEFEAT` (explicitly non-lethal, e.g. for
 `EntityRole.HERO`, where `is_lethal` is forced `False`), `REBIRTH` (when
@@ -74,6 +74,8 @@ which no earlier Rule ID already states.
 identity continues), and only `PERMADEATH` (rebirth exhausted, `generation >= 4`) as truly
 final. Losing a fight and permanently dying are architecturally distinct outcomes here, not
 merely different labels for the same event.
+
+**Application-layer contradiction (verified 2026-10-01 at `e9db40f0a`, from `TCK-20260928-ENTITY-DEATH-AUTHORITY-BOUNDARY-CHECK`).** The classification above is real, but nothing honours it downstream. `combat.py` sets `alive=False` for every outcome at `hp <= 0`, including `DEFEAT` and `REBIRTH`. No runtime writer ever sets `alive` back to `True` (every `alive=True` in `src/` is construction or a harness). `REBIRTH` restores neither HP nor `alive`. The passive HP gate in `apply.py` then sets `lifecycle.active=False` a tick later. So in production, a classified-non-lethal defeat becomes a permanent, unrecorded deactivation, and "identity continues" does not hold at runtime. Observed: 4 `DEFEAT` + 1 `REBIRTH` rows in 120 unscripted ticks of `frontier_marches`. This is **CONFLICTING**, not INERT: the code actively produces the outcome this Rule says need not follow. Implementation-side follow-up: `TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE`. The Rule text and Disposition are unchanged.
 
 **Scenarios:** [LB-S01](../scenarios/life-body-batch-05.md#lb-s01) (wounded but alive),
 [LB-S02](../scenarios/life-body-batch-05.md#lb-s02) (defeated but not dead).

@@ -16,7 +16,7 @@ Passive starvation/sleep-debt HP-loss deaths are silent: `resolve_lifecycle` has
 death-detection branch
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -104,18 +104,13 @@ fix lands, and to be rewritten rather than deleted):
 `tests/mechanic_scenarios/test_entity_death_authority_boundary.py`.
 
 ## Scope
-- Add a new `resolve_lifecycle` branch that detects an already-`combat.alive=False` entity with no
-  existing `death_reason` reaching this tick's refine pass (i.e. a passive-decay-caused death the
-  passive branch already recorded but no writer has yet classified).
-- Assign a new `death_reason` for this path (e.g. `"STARVATION"` or `"BIOLOGICAL"` — this ticket's
-  own investigation should decide the exact string, and whether hunger- and sleep-debt-caused
-  deaths need distinct reasons or can share one).
-- Wire the new branch through the same lineage-dispatch path `OLD_AGE` and `COMBAT` already use
-  (heir/heirloom transfer, nemesis-feud transfer, dying-wish seeding, `EconomicVacancyService`
-  vacancy detection via `recent_deaths`).
-- Add regression coverage proving the previously-silent starvation/sleep-debt death path now
-  produces a real `death_reason` and dispatches its full lineage consequences, matching the shape
-  of `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE`'s own AC1-AC3.
+**Narrowed 2026-10-01 (user decision, via rpg-feature-planning): partial delivery.** This ticket ships
+only the same-tick `HAZARD` half. The passive hunger/sleep-debt half moves to
+`TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER`, because classifying it needs a
+persisted cause that does not exist today (see Implementation Notes).
+- Add a `resolve_lifecycle` branch that records `death_reason="HAZARD"` for a same-tick hazard-drain death
+  (`outcome_kind == "HAZARD"`, `alive_set is False`) and runs the existing lineage dispatch.
+- Rewrite the two C1 pinned-defect tests to the fixed contract; update the contract and parity ledger.
 
 ## Out of Scope
 - `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE`'s own writer-precedence fix (already
@@ -128,30 +123,16 @@ fix lands, and to be rewritten rather than deleted):
   pre-decided here.
 
 ## Acceptance Criteria
-1. An entity whose HP is driven to 0 purely by passive hunger/sleep-debt decay is recorded dead
-   with a real, non-`None` `death_reason`.
-2. That death dispatches its full lineage consequences (heir inventory/heirloom transfer,
-   nemesis-feud transfer, dying-wish seeding), matching `OLD_AGE`/`COMBAT`'s existing behavior.
-3. `EconomicVacancyService`'s vacancy detection correctly observes this death via `recent_deaths`,
-   the same as it now does for `OLD_AGE` (per `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE`'s
-   own Step 4 finding).
-4. No tick exists where the entity is `active=False`/`combat.alive=False` with `death_reason=None`
-   as a terminal state, for this specific passive-decay-driven path.
-5. Existing death, inheritance, passive-decay, group/clan-lifecycle and economy-vacancy tests pass
-   unmodified, in particular
-   `tests/unit/engine/test_dirty_set_passive_decay_consumers.py` (all 4 tests — directly exercises
-   an already-combat-dead entity on the passive path) and
-   `tests/mechanic_scenarios/test_natural_aging_old_age_dispatch.py::
-   test_starvation_sleep_debt_driven_hp_loss_is_still_silent_post_fix` (this test's own final
-   assertion, `death_reason is None`, must be updated as part of *this* ticket once the fix lands
-   — it is deliberately pinning the pre-this-ticket gap, not a permanent invariant).
-6. `docs/simulation/lifecycle_systems_contract.md`'s forward-reference note (added by
-   `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE`'s Step 8) is updated to reflect the gap is
-   now closed, and the death-trigger table gains the new row.
-7. **No parity ledger entry appears to exist for passive biological death** (checked
-   `docs/parity_ledger/progression.yaml` and `world_dynamics.yaml`, 2026-10-01, by
-   `rpg-feature-planning` — a grep, so indicative rather than exhaustive). Creating one is in scope
-   under the repo's "If no entry exists, add one" rule.
+1. A hazard-drain death is recorded with `death_reason="HAZARD"` the tick it happens, and dispatches
+   succession/heirloom/feud/dying-wish like `OLD_AGE`/`COMBAT`.
+2. The C1 pinned-defect tests are rewritten to the fixed contract, not deleted; the negative control
+   still passes.
+3. Passive starvation/sleep-debt deaths are explicitly NOT classified here and the gap stays documented
+   as open in `docs/simulation/lifecycle_systems_contract.md`; the follow-up ticket exists.
+4. `DEFEAT` / `REBIRTH` are not classified as deaths (LIFE-02); that defect has its own ticket.
+5. Existing death, inheritance, passive-decay, clan-lifecycle and vacancy tests pass unmodified.
+6. Parity ledger entry PROG-126 added; the contract's death-trigger table gains the `HAZARD` row.
+**Not delivered (moved):** the original AC1-AC4 for passive bio deaths.
 
 ## Related Tickets
 - `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — parent investigation. Fixed the age
@@ -195,13 +176,33 @@ fix lands, and to be rewritten rather than deleted):
   resolve against the real phase-ordering trace, not assumed here.
 
 ## Implementation Notes
-_To be completed during implementation._
+- Design history, recorded because it explains the narrowing. A first version recorded passive deaths
+  retroactively (inactive, combat-dead, unrecorded entity at hunger >= 95 / sleep_debt >= 98 ->
+  `STARVATION`/`SLEEP_DEPRIVATION`, with succession). It was dropped: `outcome_kind` is not persisted,
+  `DEFEAT` can also hit non-HERO entities (opportunity attacks force `is_lethal=False`, `combat.py:251`,
+  `movement.py:241`), so a `DEFEAT` leftover at a threshold would be stamped dead with succession fired.
+  Inferring cause from being at a threshold fabricates provenance (`LIMIT-04`, `CAUSE-01`, `HP-02`,
+  `CAUSE-05`, `LIFE-02`). A role gate does not close the hole.
+- Accepted risk of shipping only `HAZARD`: ALL passive bio deaths stay unrecorded, exactly as today. A
+  known, reversible gap, not new damage.
+- The sound fix records the cause at the writer: when `apply.py`'s passive branch takes HP from positive to
+  zero (`comb.hp > 0 and new_hp == 0`). A `DEFEAT`/`REBIRTH` entity is already at `hp == 0`, so that
+  condition excludes every combat-caused zero with no role or outcome inference. It needs a typed field
+  (Durable State Rule) and an architecture-reviewer pass first; filed as its own ticket.
+- `resolve_lifecycle`: new same-tick `HAZARD` branch after the `COMBAT` check; `is_permadeath_set=True`
+  and the full dispatch are reused unchanged.
+- The combat+hazard collision is now recorded as `HAZARD`, not `COMBAT`: an improvement, not a fix for
+  `TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND`.
+- Evidence is two-source: a `frontier_marches` probe here reproduced C1's four hazard-death rows
+  (entities 20, 21, 55, 63), now recorded as `HAZARD`.
 
 ## Test Summary
-_To be completed during implementation._
+_See Files Changed; final run recorded at close._
 
 ## Files Changed
-_To be completed during implementation._
+- `src/systems/lifecycle_systems/lifecycle.py`
+- `tests/mechanic_scenarios/test_entity_death_authority_boundary.py`
+- `docs/simulation/lifecycle_systems_contract.md`, `docs/parity_ledger/progression.yaml` (PROG-126)
 
 ## Completion Summary
-_To be completed during implementation._
+_To be completed at close._
