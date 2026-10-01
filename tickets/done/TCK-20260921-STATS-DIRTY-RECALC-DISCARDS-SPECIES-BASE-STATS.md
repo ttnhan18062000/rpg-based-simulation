@@ -543,7 +543,10 @@ Shape shipped:
   `recalculate_combat_stats`) and `residual_base_terms` (spawn residual). One helper, so the two cannot drift.
 - The residual is written in `V2EntityBuilder.build()` (order-independent of `.combat()`/`.attributes()`),
   only for builders that opted in with `.spawn_combat_stats_are_final()`: the three profile-driven spawn
-  paths (`archetype_factory`, `entity_spawner` legacy guard, `WorldCompiler.compile`). The opt-in is explicit
+  paths (`archetype_factory`, `entity_spawner` legacy guard, `WorldCompiler.compile`) and all seven
+  `EntityGenerator` paths (`src/systems/world_systems/generator.py`: hero, monster, offspring, demonic,
+  humanoid offspring, goblin, stronghold), whose difficulty-scaled literals are final spawned stats too
+  (the monster/boss population spawns through `spawn_monster`; found by rpg-feature-planning review). The opt-in is explicit
   because the builder cannot tell a profile's FINAL value from a test/scenario's base term
   (`test_leveling` declares `max_hp=100` as a base); undeclared builders keep the generic baseline, so
   default-built entities behave as before. The residual is UNCLAMPED and may be negative.
@@ -590,7 +593,7 @@ No live profile clamps now (residual is unclamped); `worker` def residual is -1 
 src/core/derived_stats.py (new), src/core/state.py, src/core/updates.py, src/core/builder.py,
 src/progression/leveling.py, src/engine/rpg_depth.py, src/engine/apply.py, src/engine/patches.py,
 src/engine/pipeline_phases/hardening.py, src/entities/archetype_factory.py,
-src/worldassembly/entity_spawner.py, src/worldbuilding/compiler.py,
+src/worldassembly/entity_spawner.py, src/worldbuilding/compiler.py, src/systems/world_systems/generator.py,
 tests/unit/progression/test_species_base_stats_preserved.py (new), docs/mechanics/01_entity_anatomy.md,
 docs/core/state.md, docs/parity_ledger/progression.yaml (PROG-127).
 

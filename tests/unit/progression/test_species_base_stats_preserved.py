@@ -298,3 +298,30 @@ def test_builder_without_spawn_opt_in_keeps_generic_baseline():
     e = V2EntityBuilder(5).combat(hp=100, max_hp=100, atk=10, def_stat=5).build()
     c = e.combat
     assert (c.base_hp, c.base_atk, c.base_def, c.base_evasion) == (100, 10, 5, 0.05)
+
+
+@pytest.mark.parametrize("spawn", [
+    lambda g, tier: g.spawn_monster((1.0, 1.0), difficulty_tier=tier),
+    lambda g, tier: g.spawn_goblin((1.0, 1.0), difficulty_tier=tier),
+    lambda g, tier: g.spawn_hero((1.0, 1.0), difficulty_tier=tier),
+])
+@pytest.mark.parametrize("tier", [1, 3, 5])
+def test_generator_spawns_round_trip_at_non_default_tier(spawn, tier):
+    """EntityGenerator's literals are FINAL spawned stats (the whole monster/boss population goes
+    through spawn_monster), so a recalculation must reproduce them, e.g. a tier-5 boss must not
+    recalculate to the generic ~112."""
+    from src.systems.world_systems.generator import EntityGenerator
+
+    e = spawn(EntityGenerator(seed=7), tier)
+    c = e.combat
+    out = LevelingService.recalculate_combat_stats(
+        e.attributes, base_hp=c.base_hp, base_atk=c.base_atk,
+        base_def=c.base_def, base_evasion=c.base_evasion,
+        permanent_max_hp_bonus=c.permanent_max_hp_bonus,
+    )
+    assert out["max_hp"] == c.max_hp
+    assert out["atk"] == c.atk
+    assert out["def_stat"] == c.def_stat
+    assert out["evasion"] == pytest.approx(c.evasion, abs=1e-12)
+    if tier == 5:
+        assert c.max_hp != 112 and c.base_hp != 100
