@@ -23,6 +23,7 @@ from src.core.state import (
     CampState,
 )
 from src.core.builder import V2EntityBuilder
+from src.core.registries import ResourceRegistry
 from src.core.enums import EntityRole, Faction
 from src.replay.fingerprint import StateFingerprinter
 from src.engine.checkpoint import CanonicalStateHasher
@@ -501,14 +502,24 @@ class WorldCompiler:
                 y = rng.get_int(Domain.WORLD, 0, next_resource_id, min_y, max_y, sub_id=1)
 
                 required_ticks = 10
+                # `resource_type` names the resource KIND (herb_patch); the node must yield the
+                # catalog's ITEM (herb). Resolved by the assembly context, else by ResourceRegistry.
+                yields_item = res_spec.resource_type
                 if context is not None and res_spec.id in context.resources:
-                    required_ticks = context.resources[res_spec.id].required_ticks
+                    profile = context.resources[res_spec.id]
+                    required_ticks = profile.required_ticks
+                    if profile.yield_item:
+                        yields_item = profile.yield_item
+                    elif ResourceRegistry.contains(res_spec.resource_type):
+                        yields_item = ResourceRegistry.get(res_spec.resource_type).yield_item
+                elif ResourceRegistry.contains(res_spec.resource_type):
+                    yields_item = ResourceRegistry.get(res_spec.resource_type).yield_item
 
                 resource_nodes[next_resource_id] = ResourceNodeState(
                     id=next_resource_id,
                     kind=res_spec.resource_type,
                     position=(float(x), float(y)),
-                    yields_item=res_spec.resource_type,
+                    yields_item=yields_item,
                     remaining_charges=res_spec.count,
                     max_charges=res_spec.count,
                     required_ticks=required_ticks,

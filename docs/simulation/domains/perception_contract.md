@@ -1,7 +1,7 @@
 ---
-status: active
+status: historical
 layer: simulation
-authority: P1
+authority: P2
 audience: agent
 last_verified: 2026-09-01
 ---
@@ -13,6 +13,8 @@ last_verified: 2026-09-01
 **Authoritative status:** Read-phase direct update — NOT a StateUpdate producer. Uses `dataclasses.replace` to overwrite `entity.cognition.subjective.perception` in-place per entity.
 
 **Note:** `PerceptionUpdatePhase` currently has zero call sites in `AuthoritativeApplyPipeline.refine()` and does not run in any production pipeline tick today, independent of the path fix below (see TCK-20260831-DEAD-COGNITION-SCHEMA-DECISION; pipeline wiring is tracked as a separate, out-of-scope follow-up).
+
+**Designed, not in effect:** this contract describes a designed attention-based perception model that is not in effect at runtime. Distance governs perception today (the `PerceptionGate` call site in `src/engine/tactical.py`), not the attention/capacity model described below. The choice between the distance and attention models is deferred to a future perception-foundation epic and is not settled by this document; nothing here has been deleted, and this relabel does not decide the mechanism. See `TCK-20260920-PERCEPTION-UPDATE-PHASE-NEVER-INSTANTIATED`.
 
 ---
 

@@ -64,6 +64,19 @@ class InventoryService:
         return True
 
     @staticmethod
+    def unknown_item_ids(item_stacks: List[ItemStack]) -> List[str]:
+        """Item ids in `item_stacks` that `ItemRegistry` does not know, in first-seen order.
+
+        Pure read. `can_add_items` returns False both for an unknown id and for lack of capacity;
+        callers that need to tell those apart (to surface the unknown-id case) ask this first.
+        """
+        unknown: List[str] = []
+        for stack in item_stacks:
+            if ItemRegistry.get(stack.item_id) is None and stack.item_id not in unknown:
+                unknown.append(stack.item_id)
+        return unknown
+
+    @staticmethod
     def can_add_items(inventory: InventoryComponent, item_stacks: List[ItemStack]) -> bool:
         """Check if a list of item stacks can be added without exceeding slots or weight."""
         temp_items = list(inventory.items)

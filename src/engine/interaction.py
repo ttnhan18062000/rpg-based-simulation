@@ -3,12 +3,18 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, Dict, List
 
-from src.core.updates import InteractionUpdate, ResourceNodeUpdate, IdentityUpdate
+from src.core.enums import ReasonCode
+from src.core.updates import InteractionUpdate, RejectionEvent, ResourceNodeUpdate, IdentityUpdate
 
 
 if TYPE_CHECKING:
     from src.core.state import AuthoritativeState, EntityState
     from src.core.updates import StateUpdate, EntityUpdate
+
+
+# Key in `rejections_delta` / `AuthoritativeState.rejection_registry` counting interactions
+# rejected because the target would yield an item id `ItemRegistry` does not know.
+UNKNOWN_ITEM_REJECTION_KEY = "INTERACTION_UNKNOWN_ITEM"
 
 
 class InteractionSystem:
@@ -126,6 +132,24 @@ class InteractionSystem:
                         
                 if not InventoryService.can_add_items(entity.inventory, proposed_items):
                     refined_entity_updates[e_id] = replace(ent_upd, interaction=InteractionUpdate(reset=True))
+                    # can_add_items is False for an unknown item id AND for lack of capacity. Only
+                    # the unknown-id case is a content defect; record it through the authoritative
+                    # rejection audit (counter + typed event) so it is loud without being fatal.
+                    if InventoryService.unknown_item_ids(proposed_items):
+                        update = replace(
+                            update,
+                            rejections_delta={
+                                **update.rejections_delta,
+                                UNKNOWN_ITEM_REJECTION_KEY: update.rejections_delta.get(UNKNOWN_ITEM_REJECTION_KEY, 0) + 1,
+                            },
+                            rejection_events=[*update.rejection_events, RejectionEvent(
+                                tick=state.tick,
+                                actor_id=e_id,
+                                action_kind="interact",
+                                reason=ReasonCode.UNKNOWN_ITEM,
+                                target_id=target_id,
+                            )],
+                        )
                     continue
 
                 intents = list(ent_upd.resource_transfers)

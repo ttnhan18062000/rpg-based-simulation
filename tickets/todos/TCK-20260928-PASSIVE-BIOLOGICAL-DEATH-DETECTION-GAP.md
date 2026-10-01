@@ -95,6 +95,10 @@ changed the age term.
 6. `docs/simulation/lifecycle_systems_contract.md`'s forward-reference note (added by
    `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE`'s Step 8) is updated to reflect the gap is
    now closed, and the death-trigger table gains the new row.
+7. **No parity ledger entry appears to exist for passive biological death** (checked
+   `docs/parity_ledger/progression.yaml` and `world_dynamics.yaml`, 2026-10-01, by
+   `rpg-feature-planning` — a grep, so indicative rather than exhaustive). Creating one is in scope
+   under the repo's "If no entry exists, add one" rule.
 
 ## Related Tickets
 - `TCK-20260928-NATURAL-AGING-DEATH-DUAL-WRITER-RACE` — parent investigation. Fixed the age
@@ -123,9 +127,15 @@ changed the age term.
   signature this ticket's own fix must update.
 
 ## Assumptions / Open Questions
-- **Death-reason string(s).** Whether to use a single `"STARVATION"`/`"BIOLOGICAL"` reason for both
-  hunger- and sleep-debt-driven deaths, or distinguish them, is not pre-decided — real design
-  choice for this ticket's own investigation/plan phase.
+- ~~**Death-reason string(s).**~~ **DECIDED 2026-10-01 by `rpg-feature-planning`: use two distinct
+  death reasons, one for hunger-driven and one for sleep-debt-driven death. Do not collapse them
+  into a single `"BIOLOGICAL"` reason.** Rationale: this repo produced four separate instances in
+  one week of a single field carrying multiple meanings — `owner_faction_id`'s three concepts, the
+  `resource_type` node-kind-vs-yield-item collision (`TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND`),
+  the same-name class pairs (`TCK-20260930-SAME-NAME-DIVERGENT-CLASS-PAIRS`), and a `social_memory`
+  homonym that produced a false `depends_on` edge in `registries/mechanisms.yaml`. Two distinct
+  death causes sharing one reason string is that same failure, made prospectively. The exact string
+  values are an implementation detail for Plan.
 - **Detection mechanism shape.** Whether the new `resolve_lifecycle` branch should read
   `entity.combat.alive` (pre-tick, already `False` from a *prior* tick's passive write) or inspect
   something staged this same tick is an implementation detail for the investigation phase to
