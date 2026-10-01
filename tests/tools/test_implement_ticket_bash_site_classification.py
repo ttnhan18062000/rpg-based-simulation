@@ -1,7 +1,7 @@
 """TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION: the stored classification of
 implement-ticket.js's `bash(` call sites stays in step with the file.
 
-The classification itself is a decision record (stored_artifacts/<ticket>/classification.json); this
+The classification itself is a decision record (stored_artifacts/<ticket>/classification.jsonl); this
 test only guards that it covers every real call site and that every row is complete, so a new
 `bash(` added to the script without a classification fails here.
 """
@@ -14,14 +14,14 @@ sys.path.insert(0, str(REPO / "tools"))
 
 from workflow_bash_sites import find_bash_call_sites  # noqa: E402
 
-TABLE = REPO / "stored_artifacts" / "TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION" / "classification.json"
+TABLE = REPO / "stored_artifacts" / "TCK-20260930-IMPLEMENT-TICKET-GATE-VS-BOOKKEEPING-CLASSIFICATION" / "classification.jsonl"
 SCRIPT = REPO / ".claude" / "workflows" / "implement-ticket.js"
 CLASSES = {"gate", "advisory", "bookkeeping", "input", "control"}
 ROUTES = {"args", "runcommand", "runcommand-attested", "defer"}
 
 
 def _rows():
-    return json.loads(TABLE.read_text(encoding="utf-8"))
+    return [json.loads(line) for line in TABLE.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 def test_row_count_matches_real_call_sites_not_grep_matches():

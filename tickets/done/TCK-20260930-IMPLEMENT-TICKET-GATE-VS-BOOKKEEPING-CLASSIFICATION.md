@@ -87,7 +87,7 @@ nothing.
 - Open: is there any non-agent shell path in the native runtime? The pilot suggests not.
 
 ## Implementation Notes
-**The "50" is a grep over-count.** `grep -c 'bash('` matches 12 comments; there are **38 real call sites** (`tools/workflow_bash_sites.py` counts them; a test fails if the table and the file disagree). Classification (`stored_artifacts/<this ticket>/classification.json` and `.md`): 7 gate, 3 control, 5 input, 12 advisory, 11 bookkeeping; routes: 3 `args`, 20 `runcommand`, 9 `runcommand-attested`, 6 `defer`.
+**The "50" is a grep over-count.** `grep -c 'bash('` matches 12 comments; there are **38 real call sites** (`tools/workflow_bash_sites.py` counts them; a test fails if the table and the file disagree). Classification (`stored_artifacts/<this ticket>/classification.jsonl` and `.md`): 7 gate, 3 control, 5 input, 12 advisory, 11 bookkeeping; routes: 3 `args`, 20 `runcommand`, 9 `runcommand-attested`, 6 `defer`.
 
 **Measured, not assumed (scope 4; zero-agent probe `wf_df41616a-229`, user opt-in 2026-10-01):** the native script runtime exposes only `log, phase, console, budget, setTimeout, agent, parallel, pipeline, workflow, args` plus plain JS built-ins. There is **no shell, `require`, `process`, `fetch` or `fs`**, so "stays orchestrator-side" is not a route that exists: every command is an `args` value or an agent dispatch. `workflow()` nests one level (parent to child, args pass) and throws inside a child.
 
@@ -105,7 +105,7 @@ nothing.
 
 ## Files Changed
 - `tools/workflow_bash_sites.py` (new), `tests/tools/test_implement_ticket_bash_site_classification.py` (new)
-- `stored_artifacts/<this ticket>/` (classification.json/.md, runtime_probe/, plan/investigation/test_plan)
+- `stored_artifacts/<this ticket>/` (classification.jsonl/.md, runtime_probe/, plan/investigation/test_plan)
 - three follow-up tickets in `tickets/todos/`; this ticket
 
 ## Completion Summary

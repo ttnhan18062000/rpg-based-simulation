@@ -12,7 +12,7 @@ tags: [ai]
 
 Source: `.claude/workflows/implement-ticket.js` at origin/main `f2d807c35`. `grep -c 'bash('` says 50; **38 are real call
 sites** (12 matches are comments). `tools/workflow_bash_sites.py` counts them and `tests/tools/test_implement_ticket_bash_site_classification.py`
-fails if this table and the file disagree. Machine-readable table: `classification.json`.
+fails if this table and the file disagree. Machine-readable table: `classification.jsonl`.
 
 ## Summary
 | class | sites | meaning |
