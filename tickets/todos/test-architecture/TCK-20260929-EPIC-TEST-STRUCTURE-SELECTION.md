@@ -80,7 +80,7 @@ Roadmap: `docs/plans/test_architecture/roadmap.md` §3.
 3. Each worked example runs green in its declared lane and is labelled synthetic or
    confirmed-stable. The replay-diff helper returns `outside-verified-scope` for inputs outside the
    envelope.
-4. **Open** (job implemented; the ~10-PR cost record has not started). A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
+4. **Open** (job implemented; the ~10-PR cost record is started: 2 PRs of about 10, both tests-only fail-open routing, see the cost record under Implementation Notes). A PR touching only `src/progression/**` runs the scenario tests. A docs-only PR
    does not. An unknown path runs them and appears in the job summary. Lane wall time is recorded for
    the first ~10 relevant PRs. The measured cost is shared with the feature teams before any rule promotion.
 5. The impact report, run on sample changes (local rule, shared substrate, cross-domain,
@@ -112,6 +112,18 @@ None.
 **Gap flagged:** "tactical navigation" has no code root; the impact report lists such paths as `impact-unknown` and invents none.
 
 Scenario-lane cost is assumed at 1–3 min per relevant PR; measured under criterion 4.
+
+**Criterion 4 cost record (started 2026-10-01; every head SHA the job ran on, grouped per PR; figures from the Actions jobs API, re-checked).** The job that executed `tests/mechanic_scenarios` is named per row, never inferred from the routing statement.
+
+| PR | Head SHA | Workflow run | Executing job | Conclusion | Job wall time (started to completed) | Why routed | Test count |
+|---|---|---|---|---|---|---|---|
+| #271 | `369acbac3` | 36810173881 | Scenario lane (perf-cert-arena skipped) | success | 51 s (03:23:37Z to 03:24:28Z) | tests-only fail-open: 0 matched, 3 unknown, 15 irrelevant paths at this head | not recorded (job JUnit not retrieved) |
+| #271 | `248372a26` (final head) | 36815393173 | Scenario lane (perf-cert-arena skipped) | success | 34 s (04:31:37Z to 04:32:11Z) | tests-only fail-open: 0 matched, 3 unknown (`tests/mutation/reruns/...rerun.json`, `tests/unit/resource/test_conservation_rejection_paths.py`, `.../test_rejected_transfer_apply_path.py`), 16 irrelevant | not recorded |
+| #275 | `e147d7514` (only head) | 36837239759 | Scenario lane (perf-cert-arena skipped) | success | 48 s (08:36:17Z to 08:37:05Z) | tests-only fail-open: 0 matched, 6 unknown (`tests/mutation/baselines/src_core_conservation_v2.json` and five `tests/unit/tools/test_*.py` files), 17 irrelevant | not recorded |
+
+PR #271's heads `a9646c9de` and `e75ff2e77` have no workflow run of their own (the runs API returns none for those SHAs), so they have no row. The "why routed" counts come from running `scenario_lane_paths` locally on each PR's changed file list (for `369acbac3`, the pilot report's recorded figures); the CI step summary could not be retrieved from the API.
+
+Reading this record: **2 of about 10 PRs are recorded.** Both are tests-only fail-open routing. Neither is a `src/progression/**` trigger or a docs-only skip, so those two criterion 4 cases are still **unobserved** and the criterion stays open. The wall time is the **whole job** (checkout and `pip install` included), not test duration. This is **not yet the "shared with feature teams" step**: nothing here has been sent to them and nothing authorizes promotion of the lane to required.
 
 ## Test Summary
 Defined by child tickets.
