@@ -194,6 +194,12 @@ Rules:
   count alone.
 - Cadence "every relevant PR" is a target; whether CI runs the scenario lane on a given PR is decided by
   the CI rule, not by this document.
+- The scenario-lane path rule (`tools/test_architecture/scenario_lane_paths.py`) lists prefixes as
+  irrelevant (`docs/`, `tickets/`, `tools/`, `registries/`, ...). That is a rule over prefixes: a new
+  path inside one is irrelevant by rule, not unknown, and does not fail open.
+  `tests/unit/tools/test_scenario_lane_exclusions.py` fails if scenario-reachable code imports `tools` or
+  names a path under such a prefix; if it does, move the prefix out of the irrelevant list. Its summary
+  states routing only ("routed to ..."); the job's own result is the execution record.
 
 ## 6. Technique Criteria
 

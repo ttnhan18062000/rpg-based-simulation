@@ -4,6 +4,15 @@ A changed path is one of: `trigger` (src/**, a known scenario dependency, or the
 themselves), `irrelevant` (listed explicitly, with evidence in the ticket's investigation.md), or
 `unknown` (anything else). Unknown paths fail open: they run the lane and are named in the summary.
 
+Limits of the irrelevant list: it is a rule over path prefixes, not a record of what scenarios read. A
+new file inside an excluded prefix (for example a new `tools/` module) is irrelevant by rule, not
+unknown, so it never fails open. `tests/unit/tools/test_scenario_lane_exclusions.py` guards that
+assumption: scenario-reachable code (src/, tests/mechanic_scenarios/, tests/helpers/, tests/conftest.py)
+must not import top-level `tools` or name a path under an irrelevant prefix. If a dependency appears, move
+that prefix out of the irrelevant list instead of extending the test's allowlist.
+
+The summary reports routing only ("routed to ..."); whether a job ran, and its outcome, is that job's result.
+
 The lane runs when any path is a trigger or unknown, and also when the path list is empty or this
 script errors (fail open, same shape as the existing changed-files step).
 
@@ -59,7 +68,12 @@ def classify(paths: Iterable[str]) -> Dict[str, object]:
 
 def render_summary(result: Dict[str, object], perf_covers: bool) -> str:
     if result["run"]:
-        state = "runs in perf-cert-arena (no separate job)" if perf_covers else "runs in the scenario-lane job"
+        # A routing statement, not an execution record: whether the job ran, and its outcome, is that job's own result.
+        state = (
+            "routed to perf-cert-arena; scenario execution is that job's result"
+            if perf_covers
+            else "routed to the scenario-lane job; scenario execution is that job's result"
+        )
     else:
         state = "skipped: no changed path is a scenario trigger or unknown"
     out = [f"### Scenario lane: {state}", ""]

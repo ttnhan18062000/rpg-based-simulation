@@ -244,6 +244,18 @@ Neither is a gate. Both feed the post-pilot review (§6).
 
 No phase has a date; each starts on its predecessor's decision.
 
+**Post-pilot review: owner decisions (recorded 2026-10-01).** Evidence base: **one** pilot exercise (D1, resource
+conservation), **one** dedicated scenario-lane CI run, **one** real pipeline run of the oracle and checklist steps.
+Sample size is 1 for each, so no false-positive rate or cost rate is stated or implied.
+
+| Item | Decision |
+|---|---|
+| `marker_check`, test-quality checklist, oracle review | stay **advisory** |
+| Tracked-file guard | stays **unbuilt** until a second tracked-file leak occurs |
+| Scenario lane | stays **non-required**. Promotion to required is a later owner decision; the roughly 10-PR cost record is an observation checkpoint, not an authorization |
+| Domain roll-out | **none**. Instead a second pilot surface in progression |
+| Still the owner's, later | promotion to required, any scale-out, any §9 cleanup target |
+
 ## 7 · Epics (Phase 1)
 
 | Epic | Outcome | Depends on | Parts that were gated (decision recorded 2026-09-30) |
@@ -287,8 +299,13 @@ approves that decision. Ungated work is independently startable. As of 2026-09-3
 The assessment found cost without matching protection (F5). Pruning by line-count ratio alone is
 **not** allowed.
 
-1. **Measure first.** Once Epic A's report exists, it adds a per-directory cost view: test count,
-   runtime, failure history, and whether tests protect a declared behaviour or only assert text.
+1. **Measure first.** The cost view is `tools/test_architecture/junit_cost_report.py`, a report-only
+   module beside Epic A's report (it is not embedded in `core_rpg_report`). From supplied JUnit it gives, per
+   run and per directory, test count, an **observed test duration** (the sum of recorded per-test time, not
+   wall time or compute cost) and outcomes. **Failure history is unavailable** from it, and whether tests
+   protect a declared behaviour or only assert text is not measured by it. CI uploads JUnit only from
+   `api-tools` today, so most directories read `not-in-supplied-runs`. It enables cleanup *investigation*
+   and authorizes nothing: points 3 and 4 still apply.
 2. **Candidates:**
    - the `agent_codex_*` suites (deletion intent approved 2026-09-28 as D6, execution still pending);
    - doc/source-text assertion tests;
@@ -326,6 +343,12 @@ The assessment found cost without matching protection (F5). Pruning by line-coun
 | D-PR | Which PR carries these plan docs | resolved by owner instruction: plan PR #256 | — |
 
 **Deferred items and their triggers:**
+
+Trigger status at 2026-10-01: *broader mutation testing* **fired** and is met by the v2 baseline of the same
+target (new selection, `tests/mutation/baselines/`), not by more targets. The §9 cleanup **precondition**
+(a cost view) is being built (`junit_cost_report.py`), but the trigger has **not fired**: it also needs an
+accepted cleanup batch. *Seeded-fault harness*, *JUnit upload from every CI job* and *core-RPG perf
+baselines* have **not fired**.
 
 | Item | Trigger |
 |---|---|
