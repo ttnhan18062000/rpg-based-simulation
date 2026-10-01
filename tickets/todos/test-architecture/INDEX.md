@@ -10,7 +10,7 @@ approved with changes; D-P deferred; D-PERF assigned when its trigger fires; D-P
 | Order | Epic | Starts when | Status (2026-09-30) |
 |---|---|---|---|
 | 1 | `TCK-20260929-EPIC-TEST-BASELINE-RELIABILITY` (A) | now | parts done; see the epic |
-| 2 | `TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION` (B) | now; its report-dependent criterion needs A's report v0 | part 2 (CI scenario-lane rule, D-R2 approved): implemented; the job ran once and succeeded in PR #271 (51 s); criterion 4 half observed (src/progression-only trigger and docs-only skip unobserved) |
+| 2 | `TCK-20260929-EPIC-TEST-STRUCTURE-SELECTION` (B) | now; its report-dependent criterion needs A's report v0 | part 2 (CI scenario-lane rule, D-R2 approved): implemented; cost record at 6 PRs: the job ran and succeeded on #271, #272, #273, #275 and was skipped on #274, #276 (Perf covered the scenario tests); criterion 4 part observed (src/progression-only trigger and docs-only skip unobserved) |
 | 3 | `TCK-20260929-EPIC-TEST-WORKFLOW-FAILURE-HANDLING` (C) | after B's taxonomy doc | criterion 1 met with a caveat (done-checker advisory, PR #268), criterion 2 not met (partially demonstrated: checklist ran only with an added prompt sentence); criterion 4 open, criterion 5 met (text only); part 5 and 6 text landed (part 5 oracle rule and part 6 quarantine text land in this batch, text only) |
 | 4 | `TCK-20260929-EPIC-CORE-RPG-TEST-PILOT` (D) | minimum usable workflow: A report v0 + A known-leak fix (≥ provisional) + B taxonomy doc + C test-plan fields + C triage procedure | open: real-pipeline gap closed by capability 7 (with interventions); CI scenario execution recorded from this change's own CI |
 
