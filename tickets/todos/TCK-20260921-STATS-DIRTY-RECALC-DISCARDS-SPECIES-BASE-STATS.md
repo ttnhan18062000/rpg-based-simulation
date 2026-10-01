@@ -381,23 +381,49 @@ profiles, as a first reading of the catalog suggests.
 
 #### The resolved target shape
 
-1. **A typed durable per-entity base-stat home** is the single canonical owner of base values —
+1. **A typed durable per-entity base-stat home** holds the declared spawn values —
    `base_hp`/`base_atk`/`base_def`/`base_evasion`, or the `stat_profile_id` plus a resolution step.
    Durable State Rule applies in full: typed model, stable location in entity state, defined
    lifecycle, inspection/debug visibility, tests. **Not** `identity.properties` — CLAUDE.md forbids
-   durable meaning in free-form metadata. Written at spawn from the already-resolved contract.
-2. **Permanent grants mutate the base, not a parallel overlay.** Near-death hardening's `+5`
-   becomes `+5` to durable `base_hp`. This is what makes the base the single owner and lets a
-   purely-derived `max_hp` survive a recalc without losing history.
-3. **The full derivation is the sole writer of `max_hp`/`atk`/`def_stat`/`evasion`**, fed the real
-   base. `execute_allocate_ap` stops emitting `max_hp_delta`/`atk_delta` entirely — the attribute
+   durable meaning in free-form metadata. Written **once at spawn** from the already-resolved
+   contract and **immutable afterwards**; its provenance is the stat profile.
+2. **Permanent grants go in their own typed accumulator — do NOT fold them into the base.**
+   Near-death hardening's `+5` accumulates in e.g. `permanent_max_hp_bonus`, with its grant events
+   traceable, not by mutating `base_hp`.
+
+   **This reverses an earlier draft of this resolution, on the rule owner's correction, and the
+   reason is traceability rather than ownership.** My first shape folded grants into the base on the
+   theory that the base had to be the single owner. That misreads OWN-01: OWN-01 governs who writes
+   the **derived** stats, and one derivation writer satisfies it however many typed inputs it reads —
+   a typed permanent-grant input is an *owned input*, not a second owner of `max_hp`. Folding
+   destroys provenance: after a few grants the base can no longer say how much came from the declared
+   species profile and how much was earned. **CAUSE-05** (causal history stays traceable within its
+   declared reach) and **HP-02** (provenance needs a real causal ancestor) both cut against that, and
+   so would any later question like "what is this entity's species base?" — including the de-hero
+   inventory's "re-ground capability on real state". Base-mutation would not be an outright rule
+   violation, but it would require explicitly recording the provenance loss; the accumulator shape
+   costs nothing and loses nothing, so take it.
+3. **The full derivation is the sole writer of `max_hp`/`atk`/`def_stat`/`evasion`**, reading
+   **base + attributes + gear + permanent grants** — one writer of derived stats, every input with
+   exactly one owner, nothing erased. `execute_allocate_ap` stops emitting `max_hp_delta`/`atk_delta` entirely — the attribute
    delta alone propagates through the derivation, which removes the double-count and the weight
    divergence in one move.
 4. **Declare the weight change.** Today's hand-written weights (10 HP/point, 2 ATK/point) differ
    from the §2 formula's (2 HP/point, 0.5 ATK/point). Collapsing to one writer necessarily changes
-   the per-point yield wherever that path fires, so it needs an
-   `docs/guidelines/intentional_divergences.md` entry or an explicit Bible §2 reconciliation —
-   whichever the mechanics owner prefers. **This is a behaviour change, not a silent cleanup.**
+   the per-point yield wherever that path fires. **This is a behaviour change, not a silent
+   cleanup**, and it is the **mechanics owner's call, not the rule owner's** (so ruled by
+   `world-rule-catalog-design`, which declined it as outside `docs/world_rules/`).
+
+   **Default disposition, and the reasoning to hand the mechanics owner:** CLAUDE.md gives the
+   Mechanics Bible precedence, so **§2 is the law and the hand-written 10/2 weights are the
+   deviation** — not the reverse. Collapsing to §2 is therefore a **`Bug Fix`-class
+   `intentional_divergences.md` entry that discloses the yield change**, *not* a §2 rewrite. It flips
+   to an **`Intentional Gameplay Change`** with a real §2 edit only if the user wants the higher
+   yields kept as a design choice. Either way it is disclosed and never silent.
+
+   **Worth measuring first:** whether the progression generator actually dispatches `ALLOCATE_AP` in
+   corpus play. That number tells the user how much the yield change matters before they rule on it —
+   and it is not measured today.
 
 #### Consequences for scope, tier and sequencing
 
