@@ -1993,6 +1993,36 @@ untouched by §2.57's fix (out of that ticket's scope).
   accidental one this fix deliberately preserves is also deferred, to the systemic-world roadmap.
 - **Status**: RATIFIED
 
+### 2.60 Compile-Time Resource Nodes Yield the Catalog Item, Not the Resource-Kind String; Unknown-Item Interaction Rejections Are Recorded (TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND, TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS)
+- **Subsystem**: World / Resource Nodes and Interaction
+- **Old Behavior**: `WorldCompiler` set `ResourceNodeState.yields_item` from a module's
+  `resource_type`, which names a resource *kind* (`herb_patch`) rather than an item id (`herb`).
+  Every compile-time node therefore yielded an unregistered item; `InventoryService.can_add_items`
+  returned False on the unknown id and `InteractionSystem.enforce` reset the interaction every
+  tick, so harvesting such nodes silently never completed. Measured (production loader, real
+  `Kernel`, seed 42): `ItemRegistry.get` misses, all `herb_patch`, in `frontier_living_world`
+  and `crowded_frontier`; zero harvest completions and no harvested item in any inventory.
+- **New Behavior**: The node yields the catalog item of its kind, resolved by the assembly context
+  (`ResolvedResourceProfile.yield_item`), falling back to `ResourceRegistry`, and only then to the
+  declared string. `wood_node` and `iron_vein` nodes were the same shape and are fixed by the same
+  change. Separately, an interaction rejected because the yielded item id is unknown is now also
+  counted in `rejections_delta["INTERACTION_UNKNOWN_ITEM"]` with a typed `RejectionEvent`
+  (`ReasonCode.UNKNOWN_ITEM`); the reset itself stays non-fatal. "Raise" was not chosen: it would
+  have thrown on the apply path at the first herb interaction in two corpus worlds.
+- **This is not behavior-neutral.** Herb harvesting now completes for the first time, putting real
+  items and resource flow into the economy and the interaction/social streams of every world that
+  places a herb patch. Corpus baselines taken before this change are not comparable to ones taken
+  after. The one slow-tier SimQ anchor measured to move because of it is
+  `unit_selfmodel_pilot_seed42_1000t` ECONOMY (anchor 0.1465, now about 0.287, upward); its
+  re-baseline is deferred to its own ticket under `docs/testing/regression_policy.md`.
+- **Rationale**: **Bug Fix** — one field carried two meanings (resource kind vs yielded item); the
+  correct resolution already existed in `registries.py` and `ecology.py` and is now shared by the
+  compiler through the assembly context rather than duplicated at the compile site.
+- **Verification**: `tests/unit/worldbuilding/test_compiled_node_yields_item.py` (every corpus
+  world's compiled nodes yield a registered item; herb/wood/iron mapping pinned),
+  `tests/unit/engine/test_interaction_unknown_item_diagnostic.py`.
+- **Status**: RATIFIED
+
 ---
 
 ## 3. Unsupported / Retired Behavior

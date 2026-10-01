@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: core
 authority: P1
 audience: agent
 ticket_id: TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS
-phase: open
+phase: done
 date: 2026-09-14
 tags: [core]
 ---
@@ -18,7 +18,7 @@ raises `KeyError` on an unregistered id, the other returns `None` — meaning wh
 item bug is loud or silent depends entirely on which import a given call site happens to use
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -75,10 +75,10 @@ call, depending on which module they imported from.
   turns out to exist.
 
 ## Acceptance Criteria
-- [ ] A complete call-site map for both `ItemRegistry` classes.
-- [ ] A real, evidence-backed recommendation on consolidation vs. a documented dual-registry
+- [x] A complete call-site map for both `ItemRegistry` classes.
+- [x] A real, evidence-backed recommendation on consolidation vs. a documented dual-registry
       boundary, with the failure-semantics risk explicitly addressed either way.
-- [ ] Findings brought to peer/user review before implementation, given the cross-cutting scope.
+- [x] Findings brought to peer/user review before implementation, given the cross-cutting scope.
 
 ## Related Tickets
 - `TCK-20260914-LAIR-WORLD-BOSS-MATURITY-GATE-REACHABILITY` (the investigation that surfaced this)
@@ -87,7 +87,7 @@ call, depending on which module they imported from.
 - None yet.
 
 ## Related Stored Artifacts
-None yet — standard tier, staging artifacts created when picked up.
+- `stored_artifacts/TCK-20260914-ITEM-REGISTRY-DUAL-CLASS-DIVERGENT-FAILURE-SEMANTICS/` (investigation.md, plan.md, test_plan.md)
 
 ## Related Code Areas
 - `src/core/items.py` (`ItemRegistry`, the real pipeline's registry)
@@ -190,13 +190,34 @@ whether the diagnostic lives at the `items.py` `get` boundary or at the consumin
 **Scope after this decision:** consolidation is no longer the goal — in catalog mode both
 registries already hold the same data, with one bootstrap authority. Remaining work: the
 diagnostic, and documenting which class governs which call sites.
-_(not started)_
+**Implemented (option 3).** The diagnostic lives at the consuming call site, `InteractionSystem.enforce`, where
+`can_add_items` returns False; `InventoryService.unknown_item_ids` (pure read) separates the unknown-id case from the
+capacity case, which a single `get`-boundary log could not. It is recorded through the existing authoritative
+rejection audit: `rejections_delta["INTERACTION_UNKNOWN_ITEM"]` (-> `state.rejection_registry`) plus a typed
+`RejectionEvent` with new `ReasonCode.UNKNOWN_ITEM`. The interaction reset stays non-fatal; `enforce` still reads
+state and returns a refined update only, so no durable mutation outside the apply path and no determinism change.
+Call-site governance (which class governs which consumer) is documented in the staging investigation and parity
+TOWN-195. Only the interaction call site is instrumented; equipment, shop, leveling and possession still return None
+silently on an unknown id (recorded as TOWN-195's support boundary).
+
+**Post-fix check.** After `TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND`, unknown-id misses are 0 in
+all three measured worlds, as predicted; no residual misses, so no new ticket.
 
 ## Test Summary
-_(not started)_
+- New: `tests/unit/engine/test_interaction_unknown_item_diagnostic.py` (5 tests: unknown recorded and non-fatal,
+  capacity not reported as unknown, success records nothing, purity and determinism, helper).
+- Regression: `tests/unit/core/test_interaction_recovery.py`, `tests/integrity/test_logic_guards.py`, and the scoped
+  non-slow run (1294 passed, 3 skipped, 1 xfailed).
 
 ## Files Changed
-_(not started)_
+- `src/core/inventory.py`, `src/core/enums.py`, `src/engine/interaction.py`
+- `tests/unit/engine/test_interaction_unknown_item_diagnostic.py` (new)
+- `docs/parity_ledger/town_resource.yaml` (TOWN-195), `docs/guidelines/intentional_divergences.md` (section 2.60)
 
 ## Completion Summary
-_(not started)_
+Consolidation was not the goal: in catalog mode both registries hold the same data, and the divergence is only in
+failure semantics for genuinely unknown ids. Decision (user-approved): keep the non-fatal None on the apply path and
+make the silence visible. An interaction rejected for an unknown item id is now counted and recorded as a typed
+rejection; the raise option was priced out by measurement. Call-site governance is documented. The KeyError-class
+callers remain static-only findings (never reached in measured worlds).
+

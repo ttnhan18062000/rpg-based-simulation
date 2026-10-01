@@ -5,14 +5,19 @@ not a live crafting-time proximity check -- confirmed via grep, no such gate exi
 `src/systems/*/crafting*.py`/`harvest*.py`. `mountain_pass.yaml` (already composed into
 `hero_guild_routing`, confirmed via `world.yaml:28`) is the only world_module in this composition
 whose own `resources:` block declares `frost_shard_cluster` -- an entity can only ever obtain that
-material by harvesting a node from this specific module's own placed content, since a compiled
-resource node's real `kind`/`yields_item` field is literally `frost_shard_cluster` (there is no
-separate `frost_shard` item name -- another citation the ticket's own text got wrong).
+material by harvesting a node from this specific module's own placed content. A compiled node's
+`kind` is the resource kind `frost_shard_cluster` and its `yields_item` is the catalog item
+`frost_shard` (resource definition `frost_shard_cluster`, material/resource_type `frost_shard`).
+This file originally asserted `yields_item == "frost_shard_cluster"` and claimed there was no
+separate `frost_shard` item name; that pinned the kind/item field collision fixed by
+TCK-20260930-RESOURCE-NODE-YIELDS-ITEM-COLLIDES-WITH-RESOURCE-KIND, so the assertion now checks the
+real catalog item.
 """
 from __future__ import annotations
 
 import yaml
 
+from src.core.items import ItemRegistry
 from src.worldbuilding.compiler import WorldCompiler
 from src.worldbuilding.repository import WorldRepository
 
@@ -42,4 +47,5 @@ def test_frost_shard_cluster_compiles_into_a_real_resource_node():
 
     nodes = [n for n in state.resource_nodes.values() if n.kind == "frost_shard_cluster"]
     assert nodes, "hero_guild_routing must compile at least one real frost_shard_cluster resource node"
-    assert all(n.yields_item == "frost_shard_cluster" for n in nodes)
+    assert all(n.yields_item == "frost_shard" for n in nodes)
+    assert all(ItemRegistry.get(n.yields_item) is not None for n in nodes), "yielded item must be registered"

@@ -71,8 +71,12 @@ class ResolvedBuildingProfile(BaseModel):
 class ResolvedResourceProfile(BaseModel):
     """Internal compile-ready properties for a specific resource type."""
     required_ticks: int
-    resource_type: str
+    resource_type: str  # the resource KIND (e.g. "herb_patch"), not an item id
     yield_policy: Optional[str] = None
+    # The item id a harvest of this kind yields (e.g. "herb"), resolved from the catalog resource
+    # definition the same way CatalogToResourceRegistryAdapter does (runtime_kind or resource_type).
+    # None when the kind has no catalog definition; the compiler then falls back to ResourceRegistry.
+    yield_item: Optional[str] = None
 
 
 class ResolvedFactionEconomyProfile(BaseModel):

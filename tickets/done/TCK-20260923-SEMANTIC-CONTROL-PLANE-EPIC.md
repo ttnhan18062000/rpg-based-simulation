@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20260923-SEMANTIC-CONTROL-PLANE-EPIC
-phase: open
+phase: done
 date: 2026-09-23
 tags: [architecture, documentation, schema]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, documentation, schema]
 Simulation Semantic Control Plane — connect the World Rule Catalog to the Mechanism Registry (M0–M4)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -63,11 +63,11 @@ of it. This epic tracks scoping the child tickets only, milestone by milestone, 
   M4 as live state to re-check at that milestone, not something this scoping pass touches.
 
 ## Acceptance Criteria
-- [ ] A real, investigated `TCK-*.md` M0 ticket (or tickets, if `create-tickets`' Investigate
+- [x] A real, investigated `TCK-*.md` M0 ticket (or tickets, if `create-tickets`' Investigate
       phase finds the three schemas warrant separate tickets) exists and is linked in this epic's
       Related Tickets section.
-- [ ] The M0 ticket(s) do not include any M1–M4 deliverable and do not populate real mapping data.
-- [ ] This epic ticket is not moved to `tickets/done/` until M0–M4 each have a disposition (done,
+- [x] The M0 ticket(s) do not include any M1–M4 deliverable and do not populate real mapping data.
+- [x] This epic ticket is not moved to `tickets/done/` until M0–M4 each have a disposition (done,
       blocked, or explicitly deferred) — per `roadmap.md`'s own milestone gating.
 
 ## Related Tickets
@@ -216,3 +216,25 @@ substance, not gate-routing.
 
 
 ## Completion Summary
+Closed 2026-10-01. Every milestone row in Related Tickets carries a disposition (M0, M1, M2, M4 done; M3's one hard
+bar met; the status-vocabulary reconciliation done), so acceptance criterion 3 holds; criteria 1 and 2 were satisfied at M0.
+
+**What this epic delivered:** its bounded M0-M4 proof-of-generalization goal - the mapping schemas and validator, two real
+domain slices (Territory, Combat/Conflict), drift detection, and a first cross-domain view.
+
+**What closing it does not claim:** the mapping itself is not finished. `rollout_plan.md` Stages D/E/F continue
+indefinitely, and M3 (finding ingestion) is a permanent stream with no complete state. Closing the epic closes the
+proof, not the programme. M2 consciously descoped drift class 2 (split/merge); the reason is written in that
+milestone's `investigation.md`.
+
+**Open items this epic surfaced, kept visible rather than buried by the closure:**
+- *Regional-sovereignty threshold disagreement* (+-100 in the Mechanics Bible and `src/engine/world_dynamics.py` vs +-50 in the
+  runtime contract and `src/world/influence.py`; two live ownership-transfer paths on different thresholds - a parity
+  violation, not doc drift). Filed as `TCK-20260924-REGIONAL-SOVEREIGNTY-THRESHOLD-DISAGREEMENT`. As of this closure that
+  ticket is itself done (`tickets/done/`) and recorded as divergence section 2.58 (threshold unified to +-50); this
+  epic's own milestones did not do that work.
+- *Compass section 10 is materially weaker than its prominence suggests.* Zero mechanism rows carry a section-10 value, no
+  validator checks any section-10 term, and only 2 of its 10 values (STARVED, REACH-LIMITED) are defined in prose anywhere.
+  The epic recorded this as a live gap in the compass itself that needs an owner decision, and deliberately did not file
+  a ticket from the epic. That stays true: no ticket is filed by this closure, and the gap remains open for that owner
+  decision.
