@@ -9,7 +9,7 @@ Two literals are in play now, not one: `create-tickets.js` was ported to run on 
 Claude Code `Workflow` tool by the pilot ticket above, so its own record_run.py call always
 writes `"execution_mode":"workflow"` — this code path only ever executes through that tool (hand-
 narration, by definition, never runs this literal JS, it reads it and manually issues equivalent
-tool calls instead). The other three workflow scripts are still hand-narrated only and keep
+tool calls instead). `implement-epic.js` was ported the same way (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT) and writes the same literal. The other two workflow scripts are still hand-narrated only and keep
 `"execution_mode":"pipeline"` until each gets its own porting ticket (out of scope here — see the
 pilot ticket's Out of Scope and pilot_measurement.md's go/no-go).
 
@@ -41,7 +41,7 @@ def _record_run_calls(js_path: Path) -> list:
     "filename,expected_min_calls,expected_mode",
     [
         ("implement-ticket.js", 2, "pipeline"),
-        ("implement-epic.js", 4, "pipeline"),
+        ("implement-epic.js", 4, "workflow"),  # ported by TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT
         ("create-tickets.js", 1, "workflow"),
         ("simq-audit.js", 1, "pipeline"),
     ],
@@ -74,17 +74,18 @@ def test_no_workflow_js_file_sets_execution_mode_hand():
         )
 
 
-def test_only_create_tickets_js_sets_execution_mode_workflow():
-    # "workflow" means the native Workflow tool actually executed the script (TCK-20260929-
-    # CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT). The other three scripts are still hand-narration-
-    # only until each gets its own porting ticket — a stray "workflow" literal in one of them
-    # would claim native execution that was never actually piloted or measured.
+def test_only_ported_workflow_js_files_set_execution_mode_workflow():
+    # "workflow" means the file was ported to run on the native Workflow tool (create-tickets.js by
+    # TCK-20260929-CREATE-TICKETS-WORKFLOW-RUNTIME-PILOT, implement-epic.js by
+    # TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT). A stray "workflow" literal in any other
+    # script would claim native execution that was never ported.
+    ported = {"create-tickets.js", "implement-epic.js"}
     for js_path in _WORKFLOWS_DIR.glob("*.js"):
         text = js_path.read_text(encoding="utf-8")
-        if js_path.name == "create-tickets.js":
-            assert '"execution_mode":"workflow"' in text
+        if js_path.name in ported:
+            assert '"execution_mode":"workflow"' in text, js_path.name
         else:
             assert '"execution_mode":"workflow"' not in text, (
-                f"{js_path.name} sets execution_mode to 'workflow' but has not been piloted on "
-                f"the native Workflow tool -- only create-tickets.js has, so far"
+                f"{js_path.name} sets execution_mode to 'workflow' but has not been ported to "
+                f"the native Workflow tool -- only {sorted(ported)} have, so far"
             )

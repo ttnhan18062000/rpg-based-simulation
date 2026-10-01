@@ -292,23 +292,20 @@ def test_implement_epic_and_create_tickets_records_now_computed_from_real_tools_
     }
 
 
-def test_zero_tool_call_no_sidecar_paths_compute_zero_not_null(tmp_path, monkeypatch):
-    # implement-epic.js's 2 fire-and-forget bash()-only early-return paths (request mode's
-    # EPIC_CREATED path, and the ticketIds.length===0 NOTHING_TO_DO path) never call agent(), so
-    # they have no (run_id, seq) tool-call group to attribute in the first place — once the filter
-    # widens, compute_tool_stats()'s existing unconditional-entry-per-wanted-key behavior must
-    # legitimately return (0, 0.0) for these records, not omit the key (they genuinely made zero
-    # tracked tool calls, not a gap in coverage).
+def test_epic_early_exit_rows_are_omitted_not_false_zero(tmp_path, monkeypatch):
+    # implement-epic.js's NOTHING_TO_DO / EPIC_CREATED early-exit paths write an event at seq 1, but
+    # the Discover agent that ran before them made its tool calls at seq -1 (the epic's top-level
+    # sidecar range). A real native run (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT) recorded
+    # 0 / 0.0 at seq 1 although Discover made 9 calls -- a false zero. Positive-seq implement-epic
+    # rows have no sidecar of their own, so they are unattributed (omitted -> null), not confirmed 0.
+    # (Before that run this test pinned (0, 0.0) on the reasoning that these paths "genuinely made
+    # zero tracked tool calls"; the measurement showed otherwise.)
     monkeypatch.chdir(tmp_path)
     records = [
         {**_VALID_EVENT, "run_id": "EPIC-TCK-FAKE-EPIC-CREATED", "seq": 1},
         {**_VALID_EVENT, "run_id": "FOLDER-tickets-todos-nothing", "seq": 1},
     ]
-    stats = compute_tool_stats(records)
-    assert stats == {
-        ("EPIC-TCK-FAKE-EPIC-CREATED", 1): (0, 0.0),
-        ("FOLDER-tickets-todos-nothing", 1): (0, 0.0),
-    }
+    assert compute_tool_stats(records) == {}
 
 
 def test_compute_tool_stats_targets_implement_ticket_implement_epic_and_create_tickets(tmp_path, monkeypatch):
@@ -368,16 +365,15 @@ def test_batch_top_level_negative_seq_and_child_ticket_positive_seq_do_not_cross
         {**_VALID_EVENT, "run_id": run_id, "seq": -1},
         {**_VALID_EVENT, "run_id": run_id, "seq": -2},
     ]
-    # (agent stays "investigator" here, so seq=2 is not an epic child batch row and keeps its
-    # confirmed-zero (0, 0.0); the child-row omission is pinned by the test below.)
     stats = compute_tool_stats(records)
 
     # (run_id, 1): only its own 1 row, not seq=-1's 2 rows or seq=-2's 1 row.
     assert stats[(run_id, 1)] == (1, compute_cost_proxy_score([
         {"run_id": run_id, "seq": 1, "tool": "Edit", "duration_ms": 1},
     ]))
-    # (run_id, 2): genuinely zero — not leaking seq=-2's row.
-    assert stats[(run_id, 2)] == (0, 0.0)
+    # (run_id, 2): no tool rows of its own and not leaking seq=-2's row. A positive-seq implement-epic
+    # row never has a sidecar, so it is unattributed (omitted), not a confirmed zero.
+    assert (run_id, 2) not in stats
     # (run_id, -1): only its own 2 rows.
     assert stats[(run_id, -1)] == (2, compute_cost_proxy_score([
         {"run_id": run_id, "seq": -1, "tool": "Bash", "duration_ms": 500},
@@ -406,7 +402,7 @@ def test_epic_child_batch_rows_without_tool_rows_are_omitted_not_false_zero(tmp_
     _write_tools_jsonl(tmp_path, [{"run_id": run_id, "seq": 1, "tool": "Edit", "duration_ms": 1}])
     stats = compute_tool_stats(records)
     assert stats[(run_id, 1)][0] == 1 and (run_id, 2) not in stats
-    # Only implement-epic batch rows are affected: a non-epic implement-ticket row keeps (0, 0.0).
+    # Any positive-seq implement-epic row (whatever its agent) is affected too, but a non-epic run is not.
     plain = {**child, "run_id": "TCK-PLAIN-RUN", "seq": 1}
     assert compute_tool_stats([plain]) == {("TCK-PLAIN-RUN", 1): (0, 0.0)}
 

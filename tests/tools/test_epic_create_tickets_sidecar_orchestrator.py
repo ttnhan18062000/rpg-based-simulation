@@ -113,7 +113,7 @@ def test_implement_epic_has_exactly_one_batchRunId_declaration_hoisted_before_di
     assert source.count("const batchRunId = ") == 1
 
     batch_run_id_idx = source.index("const batchRunId = ")
-    discover_ts_idx = source.index("const discoverTs = await captureTs()")
+    discover_ts_idx = source.index("const discoverTs = startTs")  # args.start_ts, TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT
     discover_agent_idx = source.index("const discovery = await agent(")
 
     assert discover_ts_idx < batch_run_id_idx < discover_agent_idx
@@ -157,19 +157,25 @@ def test_create_tickets_write_pipeline_callback_has_no_sidecar_write():
 
 
 def test_implement_epic_fire_and_forget_paths_still_use_bash_only_no_agent_call():
+    # Name kept for traceability. Since TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT the shell
+    # steps run through runMonitoringCommand() (a runCommand() agent dispatch) instead of the removed
+    # orchestrator bash(); what this still pins is that these two early-exit paths dispatch no
+    # Discover-style work agent of their own, only the fail-open monitoring writes.
     source = _read_epic_source()
 
     request_mode_start = source.index("if (discovery.mode === 'request') {")
     request_mode_end = source.index("const ticketIds = discovery.ticket_ids")
     request_mode_region = source[request_mode_start:request_mode_end]
     assert "await agent(" not in request_mode_region
-    assert "await bash(" in request_mode_region
+    assert "await runMonitoringCommand(" in request_mode_region
+    assert "await bash(" not in request_mode_region
 
     nothing_to_do_start = source.index("if (ticketIds.length === 0) {")
     nothing_to_do_end = source.index("log(`Implementing ${ticketIds.length}")
     nothing_to_do_region = source[nothing_to_do_start:nothing_to_do_end]
     assert "await agent(" not in nothing_to_do_region
-    assert "await bash(" in nothing_to_do_region
+    assert "await runMonitoringCommand(" in nothing_to_do_region
+    assert "await bash(" not in nothing_to_do_region
 
 
 # ---------------------------------------------------------------------------
