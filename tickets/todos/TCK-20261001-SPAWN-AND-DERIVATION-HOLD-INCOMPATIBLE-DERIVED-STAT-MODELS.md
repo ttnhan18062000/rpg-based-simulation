@@ -167,9 +167,17 @@ limitation, not a defect.
 
 **If anything needs "what was this entity's declared species stat?"** — the de-hero inventory's
 "re-ground capability on real state" is the live candidate — **the clean answer is a typed
-`stat_profile_id` stored at spawn**, not reconstructing it from the residual. Reconstruction would
-require inverting the formula against *spawn-time* attributes that are themselves no longer stored, so
-it is not merely awkward but impossible in general.
+`stat_profile_id` stored at spawn**, not reconstructing it from the residual.
+
+**And reconstruction is a reliability trap, not merely a gap — this is the part to not miss.**
+Inverting the residual requires the *spawn-time* attributes, which are not stored. So reconstruction is
+**impossible in general, but coincidentally correct for any entity whose attributes have never moved
+since spawn** — because then current attributes happen to equal spawn attributes. A reconstruction
+helper would therefore **work in short corpus runs and fail silently in long ones**, as soon as a
+breakthrough, elder modifier or future allocation touches an attribute. That failure mode passes a
+naive test and produces wrong declared-species values later, which is worse than an outright gap.
+It is the strongest reason the typed `stat_profile_id` is the only honest answer if anyone needs the
+declared value. (Nuance supplied by `world-rule-catalog-design`.)
 
 **Noted as an option, explicitly NOT new scope** for this ticket or the parent. Whoever needs the
 declared value should file it.
