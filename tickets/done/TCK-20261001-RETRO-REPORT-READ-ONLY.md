@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: observability
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-RETRO-REPORT-READ-ONLY
-phase: open
+phase: done
 date: 2026-10-01
 tags: [agent-monitoring, data-quality]
 ---
@@ -15,7 +15,7 @@ tags: [agent-monitoring, data-quality]
 The retro report must not mutate the working tree
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -62,13 +62,19 @@ None.
 - Depends on the week-close ticket; if it slips, this ticket waits, otherwise shards pile up with no trigger.
 
 ## Implementation Notes
+Removed the `consolidate_all()` call and import from `generate_retro.py`; `main()` now only reads. Reader check (scope 2): the retro loads runs/events/tools through `_load_runs_and_events`/`_load_source` -> `load_data_glob`, the SQLite index build (`build_index.py`) uses `load_data_glob`, and the staleness probe uses `shard_paths`: all shard-aware, nothing reads canonical files only. The retro does not read the working log at all. Caller check (scope 3): `post_tool_hook.py` (comment at line ~185) and `record_hand_orchestrated_closure.py` (comment about a past cross-checkout bug) only mention consolidation in comments; `done_checker_static` and `record_hand_orchestrated_closure` read pending working_log shards directly, so none depended on the retro's fold. Only the Makefile help text and docs claimed it ran before every retro; both updated. Test hygiene: two lines in test_generate_retro.py that monkeypatched `generate_retro.consolidate_all` were removed (the attribute no longer exists); the module-level guard that fails if a test changes real monitoring paths stays.
 Draft by agent-working-design; the implementer commits it.
 
 ## Test Summary
+tests/tools/test_generate_retro.py 188 passed, including two new tests: a retro run over per-batch shards leaves the data tree byte-identical and the shard files in place (AC1), and the report equals the one produced from the same data as a closed week (AC2, separate index per run). 571 passed across the retro/monitoring/consolidation/week_close/skill selection.
 Not started.
 
 ## Files Changed
+- `tools/agent-monitoring/generate_retro.py`, `tests/tools/test_generate_retro.py`
+- `Makefile` (help text), `docs/guides/agent_monitoring.md`, `.claude/skills/agent-monitoring-retro/SKILL.md`
+- `docs/plans/agent_infrastructure/agent_working_direction.md`
 None yet.
 
 ## Completion Summary
+The retro report no longer mutates the working tree; consolidation is the explicit week-close command's job (previous ticket).
 Not started.

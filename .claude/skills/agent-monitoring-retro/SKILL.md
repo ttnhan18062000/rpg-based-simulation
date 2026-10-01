@@ -21,7 +21,9 @@ walks through the retrospective process so the findings actually get acted on.
 1. Runs `make agent-monitoring-retro`, which invokes
    `python3 tools/agent-monitoring/generate_retro.py` for the current ISO week.
    The report is written to `agent-monitoring/retro/RETRO-<week>.md` and
-   `agent-monitoring/retro/index.md` is updated automatically.
+   `agent-monitoring/retro/index.md` is updated automatically. The run is read-only for monitoring
+   data: it does not fold or delete per-batch shards. Closing a finished week is a separate,
+   explicit step (`make agent-monitoring-close-week WEEK=<YYYY-Www>`), nudged but never automatic.
 2. Reads the generated report and summarizes the sections that need attention:
    - **Run Summary** — DONE rate below 80%? Average duration above 20 min?
    - **Gate Failure Breakdown** — which gates block most runs?

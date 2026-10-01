@@ -53,10 +53,10 @@ def _protected_paths_git_status() -> str:
 
 @pytest.fixture(scope="module", autouse=True)
 def _fail_if_this_module_touches_tracked_monitoring_files():
-    """Regression guard (TCK-20260930-GENERATE-RETRO-MAIN-CONSOLIDATES-REAL-SHARDS): main() calls
-    consolidate_all() against the real checkout unless a test isolates it, which folds other
-    sessions' pending shards into the canonical week files and deletes them. Fail loudly here if
-    any test in this module leaves one of these real paths changed."""
+    """Regression guard (TCK-20260930-GENERATE-RETRO-MAIN-CONSOLIDATES-REAL-SHARDS): main() once
+    folded other sessions' pending shards in the real checkout into the canonical week files and
+    deleted them (removed by TCK-20261001-RETRO-REPORT-READ-ONLY). Fail loudly here if any test in
+    this module leaves one of these real paths changed."""
     before = _protected_paths_git_status()
     yield
     after = _protected_paths_git_status()
@@ -78,9 +78,6 @@ def _isolate_monitoring_index(monkeypatch, tmp_path):
     (query.py/validate.py). tmp_path is function-scoped, so this points every test's index at its
     own private, nonexistent-by-default location."""
     monkeypatch.setattr(generate_retro, "DEFAULT_DB_PATH", tmp_path / "monitoring.db")
-    # main() folds pending shards in the real checkout via consolidate_all(); no test here may
-    # trigger that (only a real CLI invocation should).
-    monkeypatch.setattr(generate_retro, "consolidate_all", lambda: None)
 
 
 _BASE_RUN = {
@@ -3257,3 +3254,62 @@ def test_generate_over_real_corpus_including_legacy_hand_orchestrated_rows_is_de
     second = generate(real_runs, real_events, "real-corpus-label")
     assert first == second
     assert "**By execution mode**" in first
+
+
+# --- TCK-20261001-RETRO-REPORT-READ-ONLY ---
+
+def _write_retro_fixture(data_dir, shaped_as_shards):
+    wk = data_dir / "2026-W39"
+    wk.mkdir(parents=True)
+    run_a = '{"run_id":"TCK-A","start_ts":"2026-09-22T10:00:00Z","end_ts":"2026-09-22T10:10:00Z","workflow":"implement-ticket","tier":"standard","final_status":"DONE","agent_count":2,"duration_s":600}\n'
+    run_b = '{"run_id":"TCK-B","start_ts":"2026-09-23T10:00:00Z","end_ts":"2026-09-23T10:10:00Z","workflow":"implement-ticket","tier":"hotfix","final_status":"DOD_BLOCKED","agent_count":2,"duration_s":600}\n'
+    ev_a = '{"run_id":"TCK-A","seq":1,"phase":"Implement","agent":"implementer","status":"ok","summary":"done","ts":"2026-09-22T10:05:00Z"}\n'
+    ev_b = '{"run_id":"TCK-B","seq":1,"phase":"Verify","agent":"done-checker","status":"failed","summary":"x","ts":"2026-09-23T10:05:00Z"}\n'
+    tl = '{"run_id":"TCK-A","seq":1,"tool":"Read"}\n'
+    if shaped_as_shards:
+        (wk / "b1.runs.jsonl").write_text(run_a)
+        (wk / "b2.runs.jsonl").write_text(run_b)
+        (wk / "b1.events.jsonl").write_text(ev_a)
+        (wk / "b2.events.jsonl").write_text(ev_b)
+        (wk / "b1.tools.jsonl").write_text(tl)
+    else:
+        (wk / "runs.jsonl").write_text(run_a + run_b)
+        (wk / "events.jsonl").write_text(ev_a + ev_b)
+        (wk / "tools.jsonl").write_text(tl)
+
+
+def _snapshot_tree(root):
+    return {str(p.relative_to(root)): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+
+
+def test_retro_run_leaves_per_batch_shards_untouched_and_reports_the_same_numbers_as_a_closed_week(tmp_path, monkeypatch):
+    shards_dir, closed_dir = tmp_path / "shards", tmp_path / "closed"
+    _write_retro_fixture(shards_dir, shaped_as_shards=True)
+    _write_retro_fixture(closed_dir, shaped_as_shards=False)
+    reports = {}
+    for name, data_dir in (("shards", shards_dir), ("closed", closed_dir)):
+        out_dir = tmp_path / f"retro-{name}"
+        out_dir.mkdir()
+        monkeypatch.setattr(generate_retro, "RUNS_FILE", data_dir)
+        monkeypatch.setattr(generate_retro, "EVENTS_FILE", data_dir)
+        monkeypatch.setattr(generate_retro, "DEFAULT_TOOLS_FILE", data_dir)
+        monkeypatch.setattr(generate_retro, "RETRO_DIR", out_dir)
+        monkeypatch.setattr(generate_retro, "DEFAULT_DB_PATH", tmp_path / f"{name}.db")  # no shared index
+        monkeypatch.setattr(sys, "argv", ["generate_retro.py", "--week", "2026-W39"])
+        before = _snapshot_tree(data_dir)
+        generate_retro.main()
+        assert _snapshot_tree(data_dir) == before, f"retro run mutated the {name} data tree"
+        reports[name] = (out_dir / "RETRO-2026-W39.md").read_text()
+    # AC1: the shard fixture still has all five shard files and no canonical file appeared.
+    assert sorted(p.name for p in (shards_dir / "2026-W39").iterdir()) == [
+        "b1.events.jsonl", "b1.runs.jsonl", "b1.tools.jsonl", "b2.events.jsonl", "b2.runs.jsonl"]
+    # AC2: same numbers whether the week is shards or closed (strip the generation timestamp line).
+    def _numbers(text):
+        return [ln for ln in text.splitlines() if "Generated" not in ln and "generated" not in ln]
+    assert _numbers(reports["shards"]) == _numbers(reports["closed"])
+
+
+def test_generate_retro_no_longer_imports_the_consolidator():
+    text = (Path(generate_retro.__file__)).read_text(encoding="utf-8")
+    assert "consolidate_all" not in text.split("def main", 1)[1]
+    assert "from monitoring_consolidation import" not in text

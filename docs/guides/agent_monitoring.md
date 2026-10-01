@@ -33,6 +33,12 @@ skill directly instead of waiting for the nudge.
 
 ## How to Generate a Report
 
+The retro report is read-only with respect to monitoring data: it reads per-batch shards through the
+shard-aware loaders and never folds or deletes them (`TCK-20261001-RETRO-REPORT-READ-ONLY`). Folding
+a finished week into the canonical `runs.jsonl`/`events.jsonl`/`tools.jsonl` is the week-close
+command's job (`make agent-monitoring-close-week WEEK=<YYYY-Www>`, see `docs/agent-monitoring/README.md`);
+a report-only nudge from the retro hook says when a finished week still has shards.
+
 ```bash
 # Current ISO week (default)
 python3 tools/agent-monitoring/generate_retro.py
@@ -272,7 +278,8 @@ regressed (`TCK-20260824-RETRO-METRIC-CAVEATS`).
 
 ```bash
 make agent-monitoring-index          # (re)build the derived SQLite index — required by query.py/validate.py
-make agent-monitoring-retro          # generate current-week retro report
+make agent-monitoring-retro          # generate current-week retro report (read-only; does not fold shards)
+make agent-monitoring-close-week WEEK=2026-W39  # fold a finished week's shards into canonical files
 make agent-monitoring-validate       # cross-check integrity
 make agent-monitoring-query          # open interactive query (pass ARGS="...")
 make agent-monitoring-epic-staleness # report open epics with no recent child-ticket activity
