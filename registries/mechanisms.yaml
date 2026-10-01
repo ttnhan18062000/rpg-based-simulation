@@ -472,6 +472,8 @@ mechanisms:
     state: done
     implemented_by:
       - src/engine/rpg_depth.py::SkillScalingService::get_effective_stats
+      - src/core/derived_stats.py::attribute_stat_terms
+      - src/core/derived_stats.py::residual_base_terms
     verified:
       instrument: scenario
       verdict: observed
@@ -502,6 +504,35 @@ mechanisms:
         stats_dirty trigger). Does not invalidate this entry's own delta-based value-differential
         above (both arms of every comparison undergo the identical default-base substitution), but
         is a materially different defect worth its own disposition.
+        **Durable base + grant accumulator added 2026-10-02**
+        (TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS, PR #279): the derivation no
+        longer falls back to generic defaults (`base_hp=100, base_atk=10, base_def=5,
+        base_evasion=0.05`) that silently erased an entity's species values -- a `goblin_scout`
+        spawned at `max_hp=35` recalculated to `112`. It now reads typed durable per-entity
+        `base_*` fields on `CombatComponent` plus a `permanent_max_hp_bonus` accumulator.
+        `src/core/derived_stats.py` is bound above because it is the single definition of §2's
+        attribute-contribution terms, called by both the derivation and the spawn-time residual so
+        the two cannot drift; the companion test asserts that round trip exactly for every entity
+        in three corpus worlds. The stored base is a **residual**
+        (`profile_value - attribute_stat_terms(attributes)`), deliberately unclamped, because stat
+        profiles declare FINAL spawned values while the derivation treats its base as a term
+        attributes are added to -- passing the profile value through directly would have inflated
+        that same `goblin_scout` to `47`.
+        Three qualifications a reader of this entry needs:
+        (1) **This is a declared interim, not full single-writer compliance.** It resolves the
+        conflicting-value defect (35 vs 112), not the dual-path structure. `world-rule-catalog-design`
+        accepted an OWN-03 materialised-view reading on condition it be recorded as interim and
+        graded **OWN-01 PARTIAL**; full consolidation is owned by
+        TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS.
+        (2) **The equivalence that justifies it is conditional**: it holds only because the
+        accumulator enters the derivation as a linear additive term. If near-death hardening ever
+        becomes percentage-based, capped or attribute-dependent, that argument breaks and
+        single-writer authority must be revisited.
+        (3) **The derivation is still unreached in ordinary corpus play.** The `stats_dirty` trigger
+        set was deliberately left unchanged, and that dormancy turned out to be *load-bearing*:
+        activating the derivation today would shift `move_cost` on every entity and strip the
+        declared range from five ranged archetypes. Do not read this entry as evidence the
+        derivation now runs.
   - id: race_archetype
     layer: entity
     systems: [progression]
