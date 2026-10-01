@@ -174,7 +174,7 @@ resolve under a declared rule (roadmap §3.1).
 back in roadmap §3.1. A harness limitation is never reported as fine.
 
 **C1 is a check, not a change.** Two constraints apply to any defect it routes:
-- **Sequencing.** `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` (open, held) is **out of
+- **Sequencing.** `TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION` (open; not held, confirmed by the owner 2026-10-01) is **out of
   scope for C1**. That ticket consolidates two durable ownership writers whose triggers and phase
   positions differ: one is death-gated in lifecycle, the other is the world-dynamics sweep that runs
   before lifecycle. Any fix C1 routes that touches the ordering between world dynamics and lifecycle

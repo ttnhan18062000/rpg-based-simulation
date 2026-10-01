@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-01"
 ---
 
 # Scenario Bank: Life / Body / Survival / Ecology (Batch 05)
@@ -42,8 +42,8 @@ A combat loss incapacitates a subject, but it survives — no accidental `defeat
 assumption anywhere.
 
 - **Rules invoked:** LIFE-01 (active participation ≠ permanent termination), LIFE-02.
-- **Result: covered.** `CombatResolutionSystem`'s `REBIRTH` outcome (`generation_delta=1`,
-  `generation < 4`) and the `DEFEAT` outcome (Hero-role, `is_lethal=False`) both confirm a
+- **Result: covered at classification; contradicted at application** (see LIFE-02's application-layer note, corrected 2026-10-01). `CombatResolutionSystem`'s `REBIRTH` outcome (`generation_delta=1`,
+  `generation < 4`) and the terminal `DEFEAT` outcome (a non-`HERO` defender of an opportunity attack, `is_lethal=False`; a `HERO` resolves to `REBIRTH` instead) both confirm a
   defeated subject can continue existing — `is_permadeath_set` is the only truly final marker,
   and it is not set in either case.
 
