@@ -162,6 +162,13 @@ def warn_vocabulary_drift(record: dict) -> None:
 def main():
     parser = argparse.ArgumentParser(description="Append event records to agent-monitoring/data/<ISO-week>/events.jsonl")
     parser.add_argument("--data", required=True, help="JSON array of event records (or single object)")
+    parser.add_argument(
+        "--default-ts", default=None,
+        help="ISO timestamp applied ONLY to records whose \"ts\" is missing or null (e.g. a skipped "
+        "event pushed with no ts). Explicit and caller-supplied: without this flag a missing ts still "
+        "aborts the whole batch, and the tool never invents a timestamp "
+        "(TCK-20260930-SKILL-PATH-MONITORING-NULL-TS-AND-VERDICT-STRICTNESS).",
+    )
     args = parser.parse_args()
 
     try:
@@ -171,6 +178,12 @@ def main():
         sys.exit(1)
 
     records = data if isinstance(data, list) else [data]
+
+    if args.default_ts:
+        records = [
+            {**r, "ts": args.default_ts} if isinstance(r, dict) and r.get("ts") in (None, "") else r
+            for r in records
+        ]
 
     errors = []
     for i, record in enumerate(records):

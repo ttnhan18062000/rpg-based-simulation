@@ -441,7 +441,9 @@ Step 2 — build and write events:
   computes both deterministically from the real per-branch tools shard
   (agent-monitoring/data/YYYY-Www/<branch>.tools.jsonl) ground truth at write time
   and always overrides whatever you pass, so omit both keys entirely from each event object.
-  Run: python3 tools/agent-monitoring/record_events.py --data '<final JSON array>'
+  Run: python3 tools/agent-monitoring/record_events.py --default-ts "<END_TS>" --data '<final JSON array>'
+  (--default-ts is a safety net for exactly the "ts is null or missing" case above — it never overrides
+  a ts an event already has, and without it a missing ts aborts the whole batch.)
 
 Step 3 — write run record (replace <END_TS> with the value from Step 1):
   Run: python3 tools/agent-monitoring/record_run.py --data '{"run_id":"${tid}","execution_id":"${executionId}","provider":"${PROVIDER}","ticket_id":"${tid}","start_ts":"${startTsLiteral}","end_ts":"<END_TS>","workflow":"implement-ticket","tier":"${tier}","final_status":"${finalStatus}","agent_count":${eventsCount},"execution_mode":"pipeline"}'

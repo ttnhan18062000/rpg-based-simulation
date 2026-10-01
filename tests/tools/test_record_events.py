@@ -636,3 +636,49 @@ def test_batch_write_holds_contiguous_lines_under_concurrent_writer(tmp_path):
     batch_indices = [i for i, r in enumerate(records) if r.get("run_id") == "TCK-BATCH-CONTIG-TEST"]
     assert len(batch_indices) == batch_size
     assert batch_indices == list(range(batch_indices[0], batch_indices[0] + batch_size))
+
+
+# --- TCK-20260930-SKILL-PATH-MONITORING-NULL-TS-AND-VERDICT-STRICTNESS: --default-ts ----------------
+# The exact failing input: implement-ticket.js pushes the Parity-skipped event with no "ts".
+
+_PARITY_SKIPPED_NO_TS = {
+    "run_id": "TCK-NULL-TS-FIXTURE", "seq": 7, "phase": "Parity", "agent": "implement-ticket-orchestrator",
+    "status": "skipped", "summary": "Parity skipped: no src/ changes",
+}
+
+
+def _run_events(tmp_path, batch, *extra):
+    _init_git_repo_on_test_branch(tmp_path)
+    return subprocess.run(
+        [sys.executable, str(_RECORD_PATH), *extra, "--data", json.dumps(batch)],
+        capture_output=True, text=True, cwd=tmp_path,
+    )
+
+
+def _written_events(tmp_path):
+    iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
+    f = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+    return [json.loads(l) for l in f.read_text().splitlines()] if f.exists() else []
+
+
+def test_missing_ts_still_aborts_the_whole_batch_without_the_flag(tmp_path):
+    good = {**_VALID_EVENT, "run_id": "TCK-NULL-TS-FIXTURE", "seq": 1}
+    result = _run_events(tmp_path, [good, _PARITY_SKIPPED_NO_TS])
+    assert result.returncode == 1 and "ts" in result.stderr
+    assert _written_events(tmp_path) == []  # atomic: nothing written, strictness unchanged
+
+
+def test_default_ts_fills_only_the_missing_ts(tmp_path):
+    good = {**_VALID_EVENT, "run_id": "TCK-NULL-TS-FIXTURE", "seq": 1, "ts": "2026-10-01T00:00:00Z"}
+    result = _run_events(tmp_path, [good, _PARITY_SKIPPED_NO_TS, {**_PARITY_SKIPPED_NO_TS, "seq": 8, "ts": None}],
+                         "--default-ts", "2026-10-01T09:00:00Z")
+    assert result.returncode == 0, result.stderr
+    rows = {r["seq"]: r for r in _written_events(tmp_path)}
+    assert rows[1]["ts"] == "2026-10-01T00:00:00Z"  # an existing ts is never overridden
+    assert rows[7]["ts"] == "2026-10-01T09:00:00Z" and rows[8]["ts"] == "2026-10-01T09:00:00Z"
+
+
+def test_default_ts_does_not_rescue_other_invalid_fields(tmp_path):
+    bad = {**_PARITY_SKIPPED_NO_TS, "summary": None}
+    result = _run_events(tmp_path, [bad], "--default-ts", "2026-10-01T09:00:00Z")
+    assert result.returncode == 1 and _written_events(tmp_path) == []
