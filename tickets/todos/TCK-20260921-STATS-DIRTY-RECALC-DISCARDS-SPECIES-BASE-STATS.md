@@ -345,13 +345,56 @@ same allocated point is counted twice — once at the hand-written weight, once 
 **5× and 4× divergent weights** respectively, on top of the wrong-base rebuild. This is the
 cleanest OWN-01 violation of the three.
 
-`ALLOCATE_AP` is wired, not dead code: `action_router.py:55-56` dispatches it and
-`src/domains/progression/generator.py:79` generates `ConversionKind.ALLOCATE_AP`. It evidently did
-not fire in the three measured worlds (zero `stats_dirty` firings), but **the ticket's own
-2026-09-30 re-raise condition — "re-raise immediately if any change starts setting
-`update.attributes`" — is already met in committed code**, just not reached at corpus run lengths.
-Whether the progression generator runs in corpus play is **not measured here**; do not assume
-either way.
+**CORRECTED 2026-10-01, same day, before anyone acted on it — this path is dormant by a recorded,
+verified decision, and my first write-up of it was wrong.** I originally wrote that "`ALLOCATE_AP`
+is wired, not dead code: `action_router.py:55-56` dispatches it and `generator.py:79` generates
+`ConversionKind.ALLOCATE_AP`", and concluded the ticket's own re-raise condition was already met in
+committed code. **Both halves were wrong, and the error was name-matching two distinct
+`ALLOCATE_AP` paths instead of tracing either one:**
+
+- **The generator path never reaches `execute_allocate_ap`.** `ConversionKind.ALLOCATE_AP` resolves
+  at `src/domains/progression/resolver.py:82-91` to `IdentityUpdate(unspent_ap_delta=-1)` — a
+  decrement-only, **zero-attribute-gain** no-op returned directly as an `EntityUpdate`
+  (`src/domains/progression/phase.py:73`), never through `ActionRouter`. It therefore never sets
+  `update.attributes` and **cannot trigger `stats_dirty` at all**. Different path, same name.
+- **No production code constructs the router payload.** The only `{"action": "ALLOCATE_AP", …}`
+  constructors in the repo are two cases in `tests/unit/quest/test_progression_regression.py`
+  (`:47`, `:68`). `execute_allocate_ap` has **zero `src/` payload producers**.
+
+**This is `DEV-004`** (`docs/guidelines/intentional_divergences.md:2094`,
+`TCK-20260824-ALLOCATE-AP-BRANCH-DECISION`): "Keep `execute_allocate_ap` wired but dormant." It
+ratifies `SUB-376` (`substrate.yaml`) and `ENTITY-008` (`docs/event_ledger/entity.yaml`), and its
+2026-08-30 update records a **real 4-leg corpus trial** (`docs/architecture/
+rollout_flag_decisions_m1.md` § "ENABLE_PROGRESSION_EVOLUTION — Validation Trial Result") finding
+the branch unreachable for **two independent** reasons, both of which I re-verified at HEAD today:
+
+1. `ENABLE_PROGRESSION_EVOLUTION` is `FeatureMode.OFF` (`src/domains/optimization/
+   feature_flags.py:48`), gating the whole `progression_conversion` phase (`pipeline.py:387`).
+2. Its only trigger path (a ledger XP entry) has no live producer — `RewardLedgerService` appears
+   only at its own definition (`src/domains/progression/ledger.py:13`), **zero callers**. The trial's
+   diagnostic replay had 100% of sampled decisions converging on `SAVE_FOR_LATER`.
+
+**Dormancy is test-guaranteed and passing at HEAD** (4 passed, run 2026-10-01):
+`tests/integration/progression/test_allocate_ap_dormancy.py::
+test_allocate_ap_unreachable_via_real_kernel_tick` and
+`tests/unit/quest/test_progression_regression.py`.
+
+**So the re-raise claim is WITHDRAWN.** The ticket's 2026-09-30 condition ("re-raise immediately if
+any change starts setting `update.attributes`") is **not** met: nothing live sets it. The
+double-count at `core_actions.py:311-317` is real in code and is still the cleanest OWN-01 violation
+of the three *on the page*, but it has no live caller, it changes no observable behaviour today, and
+its dormancy is a decided, documented, tested position rather than an oversight. **Do not re-raise
+severity on it, and do not describe it as live.**
+
+Two further notes for whoever implements:
+- **This double-count should fold into DEV-004's own recommended-but-not-created follow-up**, not be
+  filed fresh. DEV-004 already recommends "porting [`AllocateAttributeAction`'s] correct PROG-015/
+  PROG-069 aptitude-multiplier logic into `core_actions.execute_allocate_ap` and correcting the
+  resulting PROG-068/069/015 parity gap". Fixing the weights is the same edit to the same function;
+  doing it twice from two tickets is how the weights diverged in the first place.
+- **DEV-004's line citation has drifted.** It locates `execute_allocate_ap` at
+  `core_actions.py:146-176` and its dispatch at `action_router.py:49-50`; today they are `:295-317`
+  and `:55-56`. The decision is unchanged — only the line numbers moved.
 
 #### Two corrections to this ticket's own earlier notes
 
@@ -421,9 +464,14 @@ profiles, as a first reading of the catalog suggests.
    to an **`Intentional Gameplay Change`** with a real §2 edit only if the user wants the higher
    yields kept as a design choice. Either way it is disclosed and never silent.
 
-   **Worth measuring first:** whether the progression generator actually dispatches `ALLOCATE_AP` in
-   corpus play. That number tells the user how much the yield change matters before they rule on it —
-   and it is not measured today.
+   **The measurement this originally asked for has already been done, and it settles the stakes:
+   near zero.** See the DEV-004 correction above — `execute_allocate_ap` has **no live payload
+   producer**, the generator path never reaches it, and dormancy is verified by a 4-leg corpus trial
+   plus a passing dormancy test. **So the yield change alters no observable behaviour today.** It
+   still must be disclosed (a dormant branch can be woken, and DEV-004 explicitly contemplates a
+   future producer), but it is a disclosure-on-a-dormant-path, **not** a live balance change, and it
+   should not be escalated as one. Fold the disclosure into DEV-004's own recommended follow-up,
+   which already owns the correctness of this function.
 
 #### Consequences for scope, tier and sequencing
 
