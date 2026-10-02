@@ -132,6 +132,29 @@ risks the same fate as a second search engine nobody asked for.
 - Do not stop normal RPG-core engineering work until the mapping is "complete" — there is no
   planned completion point; Stage D is permanent, ongoing maintenance, not a project with an end
   date.
+  > **Partly superseded by owner decision 7, 2026-10-02** (`docs/plans/systemic_world/owner_decision_memo.md`,
+  > row 7 — the only copy of the definitions; they are deliberately not restated here).
+  > The owner has gated RPG **feature, balance and dormant-path parity** work on a bounded
+  > foundation milestone. Only hard RPG bug fixes proceed meanwhile. So the first clause of this
+  > non-goal no longer holds for feature work, and a future reader must not cite it to resume an
+  > epic — read row 7 first.
+  >
+  > Two parts of this non-goal **do** still hold, and the distinction matters:
+  > - **Hard-bug engineering never stopped.** Decision 7 gates features, not defect repair, so
+  >   "do not stop normal RPG-core engineering work" remains true of the work that actually
+  >   protects world truth.
+  > - **Stage D still has no completion point.** Row 7 defines a bounded milestone *inside* the
+  >   continuing mapping — scoped to the 93 mechanisms that currently carry `implemented_by`, plus
+  >   the 25 core-tier registry bindings — not an end to Stage D. Reaching it does not finish the
+  >   mapping, and the mapping is expected to stay majority-`UNKNOWN` indefinitely (`architecture.md`
+  >   §7, and §7's own "172 × 93" framing).
+  >
+  > The evidence the owner chose from is the yield of the two finished slices, measured rather than
+  > estimated: M1 (Territory) produced 2 filed defect tickets from 4 classified Rules, M4
+  > (Combat/Conflict) produced 0 from 10, and 6 of the 14 existing rows re-cite another row's
+  > evidence. That is why the milestone is anchored to mechanisms rather than to all 172 Rules —
+  > which also preserves this plan's own position that an all-or-nothing ROI question is the wrong
+  > one at 172 × 93 scale.
 - Do not require a formal ROI proof before Stage B starts (contrast with the Mechanism Registry's
   own `system`-tier value investigation, which *was* an appropriate gate at that smaller scale —
   at 172×93 scale, an all-or-nothing ROI question is the wrong question; the right one is "does

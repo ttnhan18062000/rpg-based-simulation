@@ -4,7 +4,7 @@ layer: architecture
 authority: P2
 audience: agent
 tags: [architecture, documentation, roadmap]
-last_verified: "2026-09-27"
+last_verified: "2026-10-02"
 ---
 
 # Systemic World Roadmap — PROPOSED / FOR REVIEW
@@ -743,6 +743,11 @@ Region ownership (FAC-010) stays on its own track.
 2. **Population and succession re-measurement**, at a named engine commit, over a long run on a world where succession actually dispatches (e.g. `frontier_marches`; `lifecycle_full_coverage_world` would show nothing). Re-measure J3's four levels on ordinary runs. Identify which consequence drives the extra deaths (disable feud inheritance and dying-wish seeding one at a time). Watch for population collapse. If it collapses, the remedy is Epic K, reproduction rates, or bounding the conflict loop, never a revival of defeat-survival.
 3. A perception-foundation epic (B0's failure branch, §11 item 3) stays a candidate behind K, not yet proposed.
 
+**Sequencing superseded, 2026-10-02 (owner decision 7, `owner_decision_memo.md`): foundation before features.** The second-wave list above is kept as the record of what was proposed on 2026-10-01, but none of it is scheduled now. Only hard RPG bugs are fixed until the mechanism registry and the rule map are complete. Memo row 7 gives the definitions of "hard RPG bug" and "complete", and they are not restated here. Status of each item:
+- **Epic K** (item 1) is parked, and its order relative to a perception-foundation epic (item 3) is unchanged for when features resume.
+- **Item 2** is parked as a re-measurement. The cause of the post-#276 mortality rise is pursued now only if it turns out to be a hard bug, for example if the one-tick-later deactivation produces a wrong outcome. A disclosed behavioural change is not a hard bug.
+- **Next work** is the foundation programme in memo row 7 (a) and (b), run through the formal pipeline (row 7 (c)), plus the hard-bug queue.
+
 ## 9. Evidence workflow — existing registry/Semantic Control Plane tooling
 
 Per the finalize instruction's §1: real commands run against the current repo, not invented ones.
@@ -795,14 +800,15 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has six
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has seven
 entries:
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
 3. whether individual and institutional standing are distinct concepts;
 4. what `public_reputation` means;
 5. how world time scale relates to feasible run length;
-6. where player-inference evidence will come from.
+6. where player-inference evidence will come from;
+7. whether RPG features wait for the semantic foundation (decided 2026-10-02: they do).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
