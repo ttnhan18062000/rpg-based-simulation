@@ -10,6 +10,7 @@ from src.core.updates import StateUpdate
 from src.domains.commitment.abandonment import AbandonmentEvaluator, AbandonmentCategory
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.config import ObservabilityConfig, ObservabilityMode
+from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.observability.events import (
     SimulationEvent, CombatDamageEvent, CombatKillEvent,
     GoldTransactionEvent, QuestEvent, MovementEvent, LifecycleEvent
@@ -1352,7 +1353,7 @@ class EventExtractor:
         if not _push_shapers_phase2_active and tick % _SPAWN_INTERVAL == 0:
             _spawned_monsters = [
                 e for e in (getattr(update, "entities_add", None) or [])
-                if getattr(e, "kind", None) not in (None, "world_boss", "ancient_sentinel", "goblin_raider", "dragonkin")
+                if getattr(e, "kind", None) not in SPAWN_CADENCE_EXCLUDED_KINDS
             ]
             if _spawned_monsters:
                 events.append(SimulationEvent(
@@ -1456,10 +1457,9 @@ class EventExtractor:
 
         # boss_spawned / narrative_milestone (boss variant) / raid_party_spawned: flag-gated
         # (TCK-20260806-PUSH-CUTOVER-PHASE2), same rollback pattern.
-        _BOSS_KINDS = frozenset(("world_boss", "ancient_sentinel", "dragonkin"))
         for new_ent in ([] if _push_shapers_phase2_active else (getattr(update, "entities_add", None) or [])):
             kind = getattr(new_ent, "kind", None)
-            if kind in _BOSS_KINDS:
+            if kind in BOSS_ENTITY_KINDS:
                 events.append(SimulationEvent(
                     event_type="boss_spawned", event_category="lifecycle",
                     tick=tick, entity_id=getattr(new_ent, "id", None), severity="WARNING",
