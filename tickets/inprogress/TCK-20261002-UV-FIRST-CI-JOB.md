@@ -15,7 +15,7 @@ tags: [delivery]
 M2b: Migrate exactly one CI job to uv sync
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

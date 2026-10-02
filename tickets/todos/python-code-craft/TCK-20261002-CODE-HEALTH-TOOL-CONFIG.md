@@ -99,6 +99,7 @@ None.
 - Layer is `misc`: no registered layer covers repo-wide Python code-health/dependency tooling; this matches the sibling TCK-20261002-UV-DECLARE-AND-LOCK. No new layer was registered.
 - Source concern IDs: C4
 - From the review of `TCK-20261002-PYTHON-CODE-STANDARD-DOC` (2026-10-02): `docs/guidelines/python_code_standard.md` rules E2 (`BLE001`) and M1 (`PLC0415`) express a justified exception as `# noqa: <code>` plus the reason, in new or changed code only; the ruff config must honour `noqa` for those codes, and existing `src/` violations stay in the external baseline. Rule S7 names `PLR1702`, a ruff preview rule, so the config needs preview or `explicit-preview-rules` for it, or S7's marker must change. Confirm every ruff code named in the standard and update the standard where a code is replaced.
+- From the review of `TCK-20261002-UV-DECLARE-AND-LOCK` (2026-10-02): `pandas` (`src/observability/mining/dataset.py`) and `clickhouse_connect` (`src/observability/warehouse/clickhouse.py`) are optional function-level imports in `src/` and are undeclared in `pyproject.toml`. deptry will report them; decide here whether they become an opt-in dependency group or a deptry ignore.
 
 ## Implementation Notes
 

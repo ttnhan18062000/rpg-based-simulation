@@ -53,6 +53,8 @@ dev = [
     "coverage>=7.0.0",
     "mypy",
     "jsonschema>=4.0.0",
+    # Also declared as the `search-mcp` extra, which existing tests pin; the dev group makes
+    # the default export (requirements.txt) reach it for tests/tools/test_search_mcp.py.
     "mcp>=1.0.0",
     "websockets>=12.0",
 ]
