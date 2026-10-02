@@ -190,7 +190,57 @@ it and no dormancy protects it.
 - Which other `GoalKind`s reach the generic branch has not been enumerated. Scope 4 covers it.
 
 ## Implementation Notes
-_(not started)_
+
+### 2026-10-02 — THIS FIX IS NOT SAFE TO LAND ALONE (found before implementation)
+
+Raised by `world-rule-catalog-design`'s decision-7 triage and then **verified directly here**, because
+it changes what this ticket must contain.
+
+`CombatEngageScorer` selects its target with a **raw legacy-enum** comparison
+(`src/ai/goals/scorers.py:108`):
+
+```python
+hostiles = [n for n in neighbors if n.identity.faction != entity.identity.faction and n.combat.alive]
+```
+
+`Faction` is a **4-value `IntEnum`** (`src/core/enums.py:33-37`: `HERO_GUILD`, `MONSTER_HORDE`,
+`TOWN_COUNCIL`, `NEUTRAL`), so every content faction collapses onto four slots.
+
+Meanwhile the engagement path no longer uses that test. `LegalityServiceV2._is_engagement_hostile`
+(`src/engine/legality.py:516-544`) resolves real faction ids and asks the content catalog
+(`is_hostile_compat`). Its own docstring states the measured delta, quoted verbatim:
+
+> "Replaces the prior raw `entity.identity.faction != other.identity.faction` legacy-enum comparison,
+> which never consulted the content catalog and was measured to disagree with it on **34%-97% of every
+> pair either source flagged as hostile**
+> (`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS`)."
+
+**So today the scorer's wrong target choice is harmless only because this ticket's defect throws the
+choice away.** Repairing dispatch without unifying the scorer's hostility test would start dispatching
+attacks at targets chosen by a test known to disagree with the engagement test on 34-97% of flagged
+pairs. The dormancy is load-bearing in the same way `stats_dirty`'s was.
+
+**Consequence for Scope 3 — a third reading, now the most likely one.** The Assumptions section offered
+two: either the `reach_location` objective was suppressing engagement, or the hostile-engagement branch
+was already catching entities and the mislabel was cosmetic. There is a third: the fix produces
+**decided attacks that the engagement path then rejects**, because scorer and legality disagree on who
+is hostile. The measurement must therefore count *rejected* attack attempts and stuck/abandoned combat
+objectives, not only successful attacks. A rise in rejections is the signature of this reading.
+
+**Scope change, to be reflected in the plan:** unifying `scorers.py:108` onto the catalog test is a
+**prerequisite within this batch**, not a follow-up. The triage recommended landing it "with or right
+after" the dispatch fix; the 34-97% figure argues against "right after" — between the two commits the
+simulation would be actively dispatching mis-targeted attacks.
+
+`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP` owns the full sweep of raw-enum sites (with
+`TCK-20260915-SENSORY-FILTER-SALIENCY-USES-LEGACY-FACTION-ENUM` to be folded into it). Only the
+`scorers.py:108` site is claimed here, because only it is coupled to this defect. **Do not absorb the
+rest of the sweep into this ticket** — note that `SensoryFilter.filter_saliency` runs on the line
+immediately above (`scorers.py:107`) and is a sweep site of its own, so the boundary needs stating
+explicitly in the plan rather than assumed.
+
+Unverified and deliberately not claimed: how often either path fires in corpus play. The 34-97% figure
+is a disagreement rate over flagged pairs, **not** a frequency of occurrence.
 
 ## Test Summary
 _(not started)_
