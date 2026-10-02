@@ -75,7 +75,8 @@ _UNOWNED_DOMAIN_IMPORT_PREFIXES = (  # "Party / group" row: no oracle and no own
 )
 
 V0_LIMITS = (
-    "Execution data is a supplied input: in CI only the `api-tools` job uploads JUnit, so most lanes have no "
+    "Execution data is a supplied input: in CI only the three jobs split from the former `api-tools` job "
+    "(`tools-a-e`, `tools-f-z`, `api-cli-engine`) upload JUnit, so most lanes have no "
     "JUnit artifact to supply unless a local run produces one.",
     "There is no CI coverage job. Package coverage comes only from a supplied local run (`provisional-local`); "
     "otherwise it shows `no-coverage-artifact`.",
