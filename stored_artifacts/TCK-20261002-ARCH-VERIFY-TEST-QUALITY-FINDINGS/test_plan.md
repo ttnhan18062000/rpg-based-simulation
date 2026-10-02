@@ -33,3 +33,5 @@ Negative controls: each new test must fail on origin/main. Scoped run: tests/too
 | AC4 | unit | fixture plus real-file pin | fixture JS with nested braces/quoted keys; real `ARCH_VERIFY_SCHEMA` | schema-order key sentence; unknown schema exits 1 | `pytest tests/tools/test_arch_verify_test_quality_findings.py -k helper` |
 | AC5 | doc pin | text assertions | both SKILL.md copies and schema.md | rule and field documented | `pytest tests/tools/test_arch_verify_test_quality_findings.py -k "skill or schema_md"` |
 | AC6 | regression | existing suites | `test_record_events.py`, `test_record_hand_orchestrated_closure.py`, `test_workflow_runtime_acorn_parse.py` | all unchanged and green | `pytest tests/tools/test_record_events.py tests/tools/test_record_hand_orchestrated_closure.py tests/tools/test_workflow_runtime_acorn_parse.py` |
+
+| AC7 | unit | fixture shards plus a real-data spot check | tools/events fixture rows; the real shards for a past run | the four classes behave; cut paths only POSSIBLY-READ; shadow ignored | `pytest tests/tools/test_arch_verify_read_check.py` |

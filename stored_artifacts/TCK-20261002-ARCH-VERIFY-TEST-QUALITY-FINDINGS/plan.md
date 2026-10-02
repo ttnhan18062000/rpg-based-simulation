@@ -21,3 +21,6 @@ tags: [agent-monitoring, workflows]
 7. Tests as in test_plan.md; send the diff to test-architecture-implementer before merge.
 
 Scope guards: no edit to the Architecture-Verify prompt wording or the reviewer agent file; no real Workflow run.
+
+## Addendum: Read-row checker (follow-up, same batch)
+`tools/agent-monitoring/arch_verify_read_check.py`: changed `tests/` files from `git diff base...HEAD` vs `Read` rows of the run's Architecture-Verify phase (production reviewer only) in the tools shards. Four classes (READ / POSSIBLY-READ / NOT-READ / UNATTRIBUTED); unattributed Read rows are counted inside the phase's events time window. Report-only, always exit 0. Limits stated in the docstring: Bash reads leave no Read row, attribution needs the pre-dispatch sidecar, and the hook cuts the absolute path to 120 chars.
