@@ -748,6 +748,20 @@ Region ownership (FAC-010) stays on its own track.
 - **Item 2** is parked as a re-measurement. The cause of the post-#276 mortality rise is pursued now only if it turns out to be a hard bug, for example if the one-tick-later deactivation produces a wrong outcome. A disclosed behavioural change is not a hard bug.
 - **Next work** is the foundation programme in memo row 7 (a) and (b), run through the formal pipeline (row 7 (c)), plus the hard-bug queue.
 
+**Approved work order, 2026-10-02 (owner).** This list sets sequence only. Definitions stay in memo rows 7 and 8.
+1. **Goal-dispatch fix with the scorer hostility site, as one batch** (`TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND`, including `scorers.py`'s target selection). Neither half may land alone: the scorer's raw-enum targeting is harmless only while the dispatch defect discards its choice.
+2. **Faction-hostility sweep** (`TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP`, with the sensory-filter saliency ticket folded in). Live sites include splash damage, concern intake, flanking, saliency/panic and cooperation.
+3. **Regional ownership: one writer** (`TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION`). A hard bug since #276 made influence live: two live writers of `owner_faction_id`.
+4. **Two bounded probes, filed only if the run confirms a defect:**
+   - the global raid spawn anchored at `(0,0)` (`RaidService.check_for_raid`), checking for raiders placed off-map;
+   - the post-#276 mortality rise, checking whether the one-tick-later deactivation lets a dead entity act or be targeted.
+   Otherwise mortality stays parked as a disclosed behaviour change.
+5. **World-definition split first in the foundation programme** (`TCK-20260909-WORLD-COMPOSITION-CONTENT-RECONCILIATION`, with `TCK-20260930-WORLD-ID-HAS-TWO-DIVERGENT-DEFINITIONS` merged toward it; check `docs/architecture/world_repository_layout.md` first). It goes first because every later probe and rule-map slice collects evidence by running worlds, and a world id that resolves to different module sets by entry point makes that evidence incomparable.
+6. **Memo row 7 (b) before (a).** Registry binding changes the mechanism set that (a) is defined over. Then the rule map, sliced by mechanism cluster (3–5 mechanisms per pipeline ticket).
+7. **Yield checkpoint after the first two rule-map slices.** Report defects found per mechanism. If both slices read zero, re-scope before continuing.
+
+Feature *design* in the catalog and this roadmap may continue alongside. Feature *implementation planning* waits for row 7.
+
 ## 9. Evidence workflow — existing registry/Semantic Control Plane tooling
 
 Per the finalize instruction's §1: real commands run against the current repo, not invented ones.
@@ -800,7 +814,7 @@ question above already has a working answer today.
 
 ## 10. Owner decisions
 
-Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has seven
+Owner-level choices live in one place only: `owner_decision_memo.md` in this folder. It has eight
 entries:
 1. the first-wave epic set;
 2. whether inheritance is meant to be player-understandable;
@@ -808,7 +822,8 @@ entries:
 4. what `public_reputation` means;
 5. how world time scale relates to feasible run length;
 6. where player-inference evidence will come from;
-7. whether RPG features wait for the semantic foundation (decided 2026-10-02: they do).
+7. whether RPG features wait for the semantic foundation (decided 2026-10-02: they do);
+8. which perception is authoritative (decided 2026-10-02: the perception that runs today).
 
 Engineering choices (record types, class reuse, the fate of the unused `ActionProposal` model,
 field layouts, the technical fix for §7.1) belong to the ticket planner and implementation agents,
