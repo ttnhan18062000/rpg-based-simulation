@@ -372,6 +372,13 @@ jobs:
         run: |
           pytest tests/observability -m "not slow and not extra_slow" --tb=short -q \
                  --junit-xml=reports/junit/api-tools-observability.xml
+      # TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: the drawing tools' unit tests and the boundary guard run
+      # here; the Aseprite-backed integration tests skip cleanly (no Aseprite in CI, plan U-14).
+      - name: "Run: tests/visual_assets"
+        if: always()
+        run: |
+          pytest tests/visual_assets -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/api-tools-visual_assets.xml
       - name: Merge JUnit XML
         if: always()
         run: |
@@ -381,7 +388,8 @@ jobs:
                  reports/junit/api-tools-tools.xml \
                  reports/junit/api-tools-logging.xml \
                  reports/junit/api-tools-engine.xml \
-                 reports/junit/api-tools-observability.xml
+                 reports/junit/api-tools-observability.xml \
+                 reports/junit/api-tools-visual_assets.xml
       - name: Upload JUnit XML
         if: always()
         uses: actions/upload-artifact@v4
@@ -404,12 +412,18 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           if [ -d /tmp/base-checkout ]; then
+            # A base branch from before TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT lacks the
+            # visual_assets test directory, and pytest aborts the whole collection on a missing
+            # path, so create it empty in the base checkout first. The path list below stays
+            # identical to the head 'Run' steps.
+            mkdir -p /tmp/base-checkout/tests/visual_assets
             cd /tmp/base-checkout && pytest tests/api \
                    tests/cli \
                    tests/tools \
                    tests/logging \
                    tests/engine \
                    tests/observability \
+                   tests/visual_assets \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary

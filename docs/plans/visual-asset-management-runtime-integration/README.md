@@ -9,6 +9,16 @@ tags: [assets, rendering, live-map, hud, planning, architecture]
 
 # Visual Asset Management and Runtime Integration — Draft Milestone Plan Package
 
+
+## Status update 2026-10-02
+
+The physical home for the store and the drawing tools is chosen and partly built: see
+[`../visual-asset-foundation/README.md`](../visual-asset-foundation/README.md) (structure, layering, decisions D1-D7) and
+`docs/architecture/visual_asset_foundation_adr.md`. Built so far: `visual_assets/drawing/` (the Aseprite tools, moved from the
+spike) and empty `visual_assets/store/` / `visual_assets/catalog/` skeletons. The foundation is planned to implement minimal
+first versions of `AM1-W02`, `AM1-W05`, `AM1-W12` and mechanisms for `AM4-W01`..`W10` on synthetic fixtures (children 2-6, not yet
+filed). Nothing here is activated; `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13` and `AM-M5`..`M7` remain open.
+
 ## Status and authorization boundary
 
 This package translates the P2
