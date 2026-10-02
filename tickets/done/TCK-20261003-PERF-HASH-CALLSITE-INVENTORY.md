@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-HASH-CALLSITE-INVENTORY
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, determinism, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, determinism, engine]
 Inventory every state-hash and fingerprint call site and every consumer of the result (PA-03A, call-site half; evidence only, no measurement)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -55,13 +55,13 @@ Produce the call-site and consumer inventory that PERF-D5 needs. This is the fir
 - Wiring `--check` into CI or any gate
 
 ## Acceptance Criteria
-- [ ] `python3 tools/perf/hash_callsite_inventory.py --format json` runs without importing `src`, and two consecutive runs are byte-identical
-- [ ] Every call site of the listed hash and fingerprint functions in `src/` appears with file, line, enclosing function, mechanism, and guard expression; a manual `grep` for the function names in `src/` finds no call the script missed, and the comparison is recorded in the test plan
-- [ ] `docs/performance/hash_callsite_inventory.md` records, for every call site, run condition, state tick versus computation tick, all consumers with file and line, scheme, and staleness path
-- [ ] The document states which scheduling mechanism governs each call site and names the ungoverned ones
-- [ ] Every contradiction between the three named documents and the code is listed with file and line on both sides; none of those documents is edited
-- [ ] Tests pass; the real-source test does not pin line numbers or a total count
-- [ ] `git diff` touches only `tools/`, `tests/tools/`, `docs/performance/`, `docs/REGISTRY.yaml`, `tickets/`, `stored_artifacts/`, `agent-monitoring/`, and the test-scope map file
+- [x] `python3 tools/perf/hash_callsite_inventory.py --format json` runs without importing `src`, and two consecutive runs are byte-identical
+- [x] Every call site of the listed hash and fingerprint functions in `src/` appears with file, line, enclosing function, mechanism, and guard expression; a manual `grep` for the function names in `src/` finds no call the script missed, and the comparison is recorded in the test plan
+- [x] `docs/performance/hash_callsite_inventory.md` records, for every call site, run condition, state tick versus computation tick, all consumers with file and line, scheme, and staleness path
+- [x] The document states which scheduling mechanism governs each call site and names the ungoverned ones
+- [x] Every contradiction between the three named documents and the code is listed with file and line on both sides; none of those documents is edited
+- [x] Tests pass; the real-source test does not pin line numbers or a total count
+- [x] `git diff` touches only `tools/`, `tests/tools/`, `docs/performance/`, `docs/REGISTRY.yaml`, `tickets/`, `stored_artifacts/`, `agent-monitoring/`, and the test-scope map file
 
 ## Related Tickets
 - TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC (this is its `PERF-M0-T07` evidence half)
@@ -81,6 +81,7 @@ Produce the call-site and consumer inventory that PERF-D5 needs. This is the fir
 
 ## Related Stored Artifacts
 - `stored_artifacts/TCK-20260913-PERF-M0-SOURCE-AUDIT/source_inventory.md`
+- `stored_artifacts/TCK-20261003-PERF-HASH-CALLSITE-INVENTORY/` (plan.md, investigation.md, test_plan.md)
 
 ## Related Code Areas
 - `src/engine/checkpoint.py`, `src/engine/kernel.py`, `src/replay/fingerprint.py`, `src/core/state.py`, `src/certification/harness.py`, `src/worldbuilding/compiler.py` (all read only)
@@ -94,9 +95,16 @@ Produce the call-site and consumer inventory that PERF-D5 needs. This is the fir
 - The planner session reviews the inventory document before this ticket closes
 
 ## Implementation Notes
+Hand-orchestrated by perf-implementer. Stdlib `ast` only, receivers resolved by name (imports, aliases, `x = Class()` assignments); unresolved receivers are listed, not guessed. A text prefilter keeps the real-tree scan to about 1.6 s. `--update-doc` rewrites only the marked generated block of the markdown so the hand-written analysis survives regeneration. Calls inside the mechanisms' own modules are marked as delegations, and the hasher's own `hashlib` use is not reported as a bypass.
 
 ## Test Summary
+`python3 -m pytest tests/tools/test_hash_callsite_inventory.py tests/tools/test_test_scope_coverage_static.py -q` -> 48 passed (19 new). No test pins a line number or a total count. Manual grep comparison (recorded in the test plan): 13 calls plus the hashlib site, scanner reports 14, none missed. Two JSON runs byte-identical; `--check` exits 0. perf-planner reviewed with no changes.
 
 ## Files Changed
+- tools/perf/hash_callsite_inventory.py, tests/tools/test_hash_callsite_inventory.py (new)
+- tools/gate_checks/test_scope_coverage_static.py (one line in `_TOOLS_PERF_BASENAME_MAP`)
+- docs/performance/hash_callsite_inventory.md, docs/performance/hash_callsite_inventory.json
+- tickets/todos/perf-evidence-inventories/ -> tickets/done/ (this file); stored_artifacts/; tickets/working_log.csv, docs/REGISTRY.yaml, agent-monitoring/ (closure bookkeeping)
 
 ## Completion Summary
+Call-site inventory delivered: 14 call sites in `src/`; `CanonicalHashScheduler` governs only the two certification-harness calls, `BudgetedCanonicalHasher` governs nothing, and the kernel's per-tick and shutdown hashes, the compile-time hash and a hand-rolled SHA-256 in the harness are ungoverned; the MD5 fingerprint family is a separate scheme; the per-tick hash describes tick T+1 and the REFINED_UPDATE fingerprint tick T; seven document statements contradict the code. No `src/` or document edit. Not traced: what reads the replay files. Known follow-up from the sibling ticket still open: `.claude/agents/test-scoper.md` carries a copy of the test-scope map and was not updated for the two new `tools/perf` tools; perf-planner raises it with the user.
