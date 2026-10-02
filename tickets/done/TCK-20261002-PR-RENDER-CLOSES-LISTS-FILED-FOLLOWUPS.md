@@ -52,6 +52,7 @@ rpg-feature-planning (PR #276, #279); verified by `agent-working-design` on #279
 
 ## Related Docs
 - docs/guides/delivery_process.md
+- docs/plans/agent_infrastructure/agent_working_direction.md
 
 ## Related Stored Artifacts
 none (hotfix)
@@ -75,6 +76,7 @@ Negative control: with the tool reverted, the 2 new behavioural tests fail (2 fa
 - tools/delivery/pr_render.py
 - tests/tools/test_delivery_pr_render.py
 - docs/guides/delivery_process.md
+- docs/plans/agent_infrastructure/agent_working_direction.md (rows for #277 and #280, text from agent-working-design)
 
 ## Completion Summary
 A PR that only files a follow-up no longer claims to close it.
