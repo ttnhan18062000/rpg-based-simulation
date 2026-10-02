@@ -113,6 +113,7 @@ class CombatUpdate:
     is_lethal: bool = False
     failure_reason: Optional[str] = None
     max_hp_delta: int = 0
+    permanent_max_hp_bonus_delta: int = 0 # Durable grant accumulator (CombatComponent.permanent_max_hp_bonus)
     atk_delta: int = 0
     def_delta: int = 0
     speed_delta: int = 0
@@ -127,7 +128,7 @@ class CombatUpdate:
 
     def is_noop(self) -> bool:
         return (self.damage_taken == 0 and self.hp_delta == 0 and self.attacker_id is None and 
-                self.alive_set is None and self.hazard_damage == 0 and self.max_hp_delta == 0 and self.atk_delta == 0 and 
+                self.alive_set is None and self.hazard_damage == 0 and self.max_hp_delta == 0 and self.permanent_max_hp_bonus_delta == 0 and self.atk_delta == 0 and 
                 self.def_delta == 0 and self.speed_delta == 0 and 
                 not self.simultaneous_intents and not self.resource_transfers)
 
@@ -146,6 +147,7 @@ class CombatUpdate:
              changes["outcome_kind"] = other.outcome_kind if (self.outcome_kind == "SURVIVE" or other.outcome_kind == "KILL") else self.outcome_kind
         if other.is_lethal: changes["is_lethal"] = True
         if other.max_hp_delta != 0: changes["max_hp_delta"] = self.max_hp_delta + other.max_hp_delta
+        if other.permanent_max_hp_bonus_delta != 0: changes["permanent_max_hp_bonus_delta"] = self.permanent_max_hp_bonus_delta + other.permanent_max_hp_bonus_delta
         if other.atk_delta != 0: changes["atk_delta"] = self.atk_delta + other.atk_delta
         if other.def_delta != 0: changes["def_delta"] = self.def_delta + other.def_delta
         if other.speed_delta != 0: changes["speed_delta"] = self.speed_delta + other.speed_delta

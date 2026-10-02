@@ -47,6 +47,16 @@ Evasion = base_evasion + (agility * 0.001) + gear_evasion
 Move_Cost = max(5.0, 10.0 + (total_weight / 5.0) - (agility * 0.1))
 ```
 
+`base_hp`, `base_atk`, `base_def` and `base_evasion` are per-entity durable state on the combat
+component, written once at spawn and never mutated afterwards. A stat profile declares the FINAL
+spawned stat, so for a profile-spawned entity each base is the residual `spawned stat - attribute
+contribution` (it may be negative); entities built without a profile keep the generic baseline
+`100 / 10 / 5 / 0.05`. Near-death hardening adds its permanent max-HP grant to a separate
+`permanent_max_hp_bonus` accumulator, which enters `Max_HP` as a plain additive term. The recalculation
+is the sole definition of the four derived stats; the formulas above are unchanged. The recalculation
+is currently unreachable in corpus play and must not be activated before spawn and derivation agree on
+`Move_Cost`, attack range, readiness speed and tactical role (see parity ledger `PROG-127`).
+
 ### Tactical Role Selection
 An entity's `TacticalRole` is derived from its highest attribute. To prevent "flickering" between roles, a **5-point hysteresis** is applied.
 *   **VANGUARD**: Derived from **Strength**.

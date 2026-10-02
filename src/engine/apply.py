@@ -645,7 +645,12 @@ class ApplyPath:
                 traits=new_id.traits,
                 current_role=new_com.tactical_role,
                 active_breakthroughs=new_id.active_breakthroughs,
-                class_id=new_id.class_id
+                class_id=new_id.class_id,
+                base_hp=new_com.base_hp,
+                base_atk=new_com.base_atk,
+                base_def=new_com.base_def,
+                base_evasion=new_com.base_evasion,
+                permanent_max_hp_bonus=new_com.permanent_max_hp_bonus,
             )
             
             new_com = replace(new_com,

@@ -61,6 +61,7 @@ To ensure that state snapshots can be shared across machines or saved to disk, e
 ### 📜 The Canonical Protocol
 - **Determinism**: Dictionaries are always sorted by key during serialization.
 - **Efficiency**: A hidden `_canonical_cache` stores the serialized result to avoid redundant work.
+- **Combat base terms**: `CombatComponent.base_hp/base_atk/base_def/base_evasion` and `permanent_max_hp_bonus` are canonical fields. `EntityState.to_readonly()` rebuilds `CombatComponent` field by field, so any new component field must be carried there (guarded by `test_every_combat_component_field_survives_to_readonly`).
 - **Comparison**: Two `EntityState` objects are considered bit-identical if their canonical dictionaries are identical.
 
 ## Regional State & Trauma

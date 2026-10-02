@@ -1639,3 +1639,33 @@
   test_path: tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py::test_hunger_death_records_starvation_with_zeroing_tick_then_classifies_next_tick
   divergence_note: See docs/guidelines/intentional_divergences.md Section 2.61.
   support_boundary: null
+- id: PROG-127
+  text: 'Combat-stat base terms are per-entity durable state, and a stats_dirty recalculation
+    reproduces the spawned max_hp/atk/def/evasion (TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS).
+    Stat profiles declare FINAL spawned values while recalculate_combat_stats treats its
+    base as a term attributes are then added to, so passing the profile value through
+    as the base would give goblin_scout 47, not 35, and the generic 100 baseline gave
+    112.'
+  status: verified
+  priority: P1
+  legacy_evidence: null
+  v2_evidence: 'CombatComponent.base_hp/base_atk/base_def/base_evasion (src/core/state.py)
+    are written once at spawn by V2EntityBuilder.build() as the unclamped residual
+    `spawned stat - attribute contribution` (src/core/derived_stats.py::residual_base_terms,
+    opted into by the three profile-driven spawn paths via .spawn_combat_stats_are_final()).
+    The derivation and the residual share src/core/derived_stats.py::attribute_stat_terms.
+    ApplyPath passes the stored bases into SkillScalingService.get_effective_stats.
+    Hardening additionally increments CombatComponent.permanent_max_hp_bonus
+    (CombatUpdate.permanent_max_hp_bonus_delta), a linear additive derivation term, so
+    a later recalc keeps the grant. stats_dirty trigger set is UNCHANGED: the recalculation
+    still never fires in corpus play, and that dormancy is load-bearing until
+    TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS reconciles
+    move_cost/range/readiness_speed/tactical_role.'
+  proof_type: regression
+  test_path: tests/unit/progression/test_species_base_stats_preserved.py::test_stats_dirty_trigger_does_not_erode_species_base
+  divergence_note: null
+  support_boundary: Covers max_hp/atk/def/evasion only. Does not cover range, move_cost,
+    readiness_speed or tactical_role, which spawn and the derivation still model incompatibly
+    (the full derivation must not be activated until that is reconciled). The declared
+    species stat is not recoverable from the residual once an entity's attributes move
+    (no stat_profile_id is stored).
