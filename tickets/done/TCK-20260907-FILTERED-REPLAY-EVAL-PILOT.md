@@ -312,7 +312,7 @@ of its tests still pass against the 6 new modules.
   durable output).
 - `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/conversion_log.yaml` — new (Step 2
   durable output).
-- `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/pilot_run_raw_output.json` — new (raw
+- `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/pilot_run_raw_output.jsonl` — new (raw
   per-run results feeding Step 8's report).
 - `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` — new (Step 8 full report).
 - `docs/plans/agent_infrastructure/ai_first_hardening_epics/agent_evaluation_foundation_experiment.md`

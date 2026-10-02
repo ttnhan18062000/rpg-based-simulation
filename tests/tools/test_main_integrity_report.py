@@ -188,3 +188,19 @@ def test_an_epic_tier_ticket_needs_a_row_of_any_status_not_a_done_row(tmp_path):
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "non-epic with EPIC_SCOPED row")
     assert [x for x in _report(repo)["findings"]["working_log"] if "NOT-AN-EPIC: no DONE" in x]
+
+
+def test_a_ticket_left_under_inprogress_on_the_ref_is_reported_but_done_and_gitkeep_are_not(tmp_path):
+    repo = _clean_repo(tmp_path)
+    assert _report(repo)["findings"]["inprogress"] == []  # control: the clean ref reports nothing
+    _w(repo, "tickets/inprogress/.gitkeep", "")
+    _w(repo, "tickets/inprogress/TCK-20260930-NEVER-FINALIZED.md", "# t\n")
+    _w(repo, "tickets/done/TCK-20260930-FINALIZED.md", "# t\n")
+    _w(repo, "tickets/working_log.csv", CSV_HEADER + "2026-09-20T00:00:00Z,TCK-20260920-GOOD,t,DONE,s,\n"
+       "2026-09-30T00:00:00Z,TCK-20260930-FINALIZED,t,DONE,s,\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "one never finalized")
+    found = _report(repo)["findings"]["inprogress"]
+    assert found == ["TCK-20260930-NEVER-FINALIZED: still under tickets/inprogress/ at the ref "
+                     "(tickets/inprogress/TCK-20260930-NEVER-FINALIZED.md)"]
+    assert _report(repo, since_date="20261001")["findings"]["inprogress"] == []  # --since-date limits it

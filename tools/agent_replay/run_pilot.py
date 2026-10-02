@@ -6,7 +6,8 @@ sample into fixtures (Step 2), applies the M2 detector to every real converted f
 detector to its own synthetic/clean fixtures only (Steps 3-4 — M3 has no real per-ticket
 historical signal, see defect_detectors.py's module docstring), replays the sample twice under
 isolation (Step 5), and computes the 3-tier metrics (Step 6). Writes
-`stored_artifacts/{ticket_id}/{sample_manifest,conversion_log,pilot_run_raw_output}.{yaml,json}`
+`stored_artifacts/{ticket_id}/{sample_manifest,conversion_log}.yaml` and `pilot_run_raw_output.jsonl`
+(one JSON object per line: `.gitignore` drops `stored_artifacts/**/*.json`, so a `.json` here never reaches the remote)
 and generates `results.md` plus the `## Results`/`## Decision` doc sections (Step 8).
 
 Orchestration only — no dedicated unit test of its own (test_plan.md); its correctness is the
@@ -246,8 +247,8 @@ def execute_pilot() -> dict:
         },
     }
 
-    output_path = STORED_ARTIFACTS_DIR / "pilot_run_raw_output.json"
-    output_path.write_text(json.dumps(payload, indent=2, sort_keys=False), encoding="utf-8")
+    output_path = STORED_ARTIFACTS_DIR / "pilot_run_raw_output.jsonl"
+    output_path.write_text(json.dumps(payload, sort_keys=False) + "\n", encoding="utf-8")
     return payload
 
 
