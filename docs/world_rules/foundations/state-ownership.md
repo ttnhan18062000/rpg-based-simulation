@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 tags: [architecture, world, content]
-last_verified: "2026-09-23"
+last_verified: "2026-10-02"
 ---
 
 # World Rule Family: State Ownership
@@ -29,10 +29,48 @@ prose.
 **Disposition: ACCEPT.** This is the Rule-Catalog restatement of an already-adopted P1 principle
 — nothing new is being decided here, only made citable at Rule granularity.
 
-**Repository evidence: SUPPORTED architecturally.** The authoritative apply pipeline (typed
-`*Update` objects → `*Patch.apply()` → `AuthoritativeState`) is the concrete mechanism that makes
-this rule true by construction rather than by convention alone — a durable field can only be
-written through the one apply path its own Patch class owns.
+**Repository evidence: SUPPORTED architecturally; PARTIAL for derived combat stats (revised
+2026-10-02).** The authoritative apply pipeline (typed `*Update` objects → `*Patch.apply()` →
+`AuthoritativeState`) is the concrete mechanism that makes this rule true by construction rather
+than by convention alone — a durable field can only be written through the one apply path its own
+Patch class owns. That guarantees one *apply path*, not one *producer*. Two producers can still feed
+the same path with conflicting values, and one real case was found.
+
+**Counterexample, resolved for value and open for structure: derived combat stats.** An entity's
+`max_hp`/`atk`/`def_stat`/`evasion` had two writers that established conflicting truth:
+- Spawn wrote species-specific values from the stat profile.
+- The `stats_dirty` recalculation (`LevelingService.recalculate_combat_stats`) re-derived them from
+  generic defaults.
+
+A `goblin_scout` spawned at `max_hp` 35 recalculated to 112.
+`TCK-20260921-STATS-DIRTY-RECALC-DISCARDS-SPECIES-BASE-STATS` (PR #279, `78ea7c465`) closed this
+**conflicting-value** violation:
+- Spawn now stores an immutable, typed per-entity base on `CombatComponent`
+  (`base_hp`/`base_atk`/`base_def`/`base_evasion`). The base is the residual "profile value minus
+  attribute contribution", deliberately unclamped.
+- Permanent max-HP grants (near-death hardening) accumulate separately in `permanent_max_hp_bonus`.
+  They are never folded into the base, so spawn provenance and later grants stay separately
+  traceable (CAUSE-05, HP-02).
+- `src/core/derived_stats.py` is the single definition of the attribute terms that both the
+  residual and the derivation use.
+
+This is verified by an exact spawn → derivation round trip for every entity in three corpus worlds
+and at non-default generator tiers (`tests/unit/progression/test_species_base_stats_preserved.py`).
+
+**What remains, and why the grade is PARTIAL:**
+- **The dual-path structure persists by design.** Spawn writes final values and the derivation can
+  re-derive them. This is accepted as a declared interim under OWN-03: a materialised view,
+  maintained incrementally and equivalence-tested. The equivalence holds only while the grant
+  accumulator enters the derivation as a linear additive term.
+- **The derivation is not yet a complete model of what spawn declares.** Activating it would rewrite
+  `move_cost` on every entity. It would also strip the declared non-melee `attack_range` from the
+  five ranged stat profiles, because it sources range only from a main-hand weapon. So the
+  recalculation's current dormancy is load-bearing.
+- **Ownership of the fix:** consolidation into one model belongs to
+  `TCK-20261001-SPAWN-AND-DERIVATION-HOLD-INCOMPATIBLE-DERIVED-STAT-MODELS`. Its AC6 is a failing-test
+  tripwire against making the derivation reachable before the per-field authority decisions exist.
+- **The declared species value cannot be recovered from state.** The stored base is a residual, not
+  the declared species value. A typed `stat_profile_id` is a noted option, not a decision.
 
 **Scenarios:** [FND-S07](../scenarios/foundational-batch-01.md#fnd-s07), [FND-S08](../scenarios/foundational-batch-01.md#fnd-s08), [FND-S15](../scenarios/foundational-batch-01.md#fnd-s15), [FND-S16](../scenarios/foundational-batch-01.md#fnd-s16) (adversarial expansion — death→succession chain).
 
