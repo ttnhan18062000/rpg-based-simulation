@@ -343,8 +343,34 @@ const truncateSummary = (s) => {
   return str.length > 200 ? str.slice(0, 196) + ' […]' : str
 }
 
-const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode) => {
-  events.push({
+// Optional per-event list (TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS): the reviewer's advisory
+// `test_quality_findings`, carried into the events shard instead of being hand-copied. The reviewer's own
+// definition only says "a list", and on the skill path the schema is not shown to the agent, so an item may
+// arrive as an object ({severity, file, finding}) -- never drop one. Every item is kept: a string verbatim,
+// anything else as its JSON string; a non-array reply becomes a one-item list. `normalized` counts what was
+// NOT carried verbatim (an object/other item serialized, a lone non-array reply wrapped, a single quote
+// swapped for a typographic one, an empty or null item dropped) and is written beside the list so a
+// transformed list is never mistaken for a verbatim one. null/undefined (no reply) -> no key at all, so
+// "absent" means "reviewer returned nothing", and a clean review is an empty list reaching here as [] -> [].
+// The quote swap exists because writeMonitoring embeds the events JSON in ONE single-quoted shell argument.
+const cleanFindings = (raw) => {
+  if (raw === undefined || raw === null) return null
+  const wrapped = !Array.isArray(raw)
+  const items = wrapped ? [raw] : raw
+  let normalized = wrapped ? 1 : 0
+  const findings = []
+  for (const item of items) {
+    if (item === undefined || item === null || item === '') { normalized++; continue }
+    let text
+    if (typeof item === 'string') { text = item } else { text = JSON.stringify(item); normalized++ }
+    if (text.includes("'")) { text = text.replace(/'/g, '’'); normalized++ }
+    findings.push(text)
+  }
+  return { findings, normalized }
+}
+
+const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, reasonCode, testQualityFindings) => {
+  const event = {
     seq: events.length + 1 + seqOffset,
     phase: phaseLabel,
     agent: agentName,
@@ -353,7 +379,13 @@ const pushEvent = (phaseLabel, agentName, status, summary, ts, toolCallCount, re
     ts: ts || null,
     tool_call_count: toolCallCount != null ? toolCallCount : null,
     reason_code: reasonCode || null,
-  })
+  }
+  const cleaned = cleanFindings(testQualityFindings)
+  if (cleaned) {
+    event.test_quality_findings = cleaned.findings
+    if (cleaned.normalized > 0) event.test_quality_findings_normalized = cleaned.normalized
+  }
+  events.push(event)
 }
 
 // Orchestrator-side sidecar write — replaces the former per-prompt "Step 0b" (and Finalize's combined
@@ -1103,6 +1135,7 @@ print('ARCH_CHECK_JSON:' + json.dumps(run_architecture_checks(sys.argv[1:])))
       summary: { type: 'string', description: 'One sentence: verdict + key reason (≤200 chars)' },
       ts: { type: 'string', description: 'ISO timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ` at start of this phase' },
       verified_by: { type: 'array', items: { type: 'string' }, description: 'Agent self-report of which findings came from tools/gate_checks/architecture_reviewer_static.py vs. independent judgment, e.g. ["static:architecture_reviewer_static", "llm"].' },
+      test_quality_findings: { type: 'array', items: { type: 'string' }, description: 'Optional, advisory (no verdict effect): test-quality findings scoped to the changed test files; an empty list means the changed tests were read and are clean.' },
     },
   }
 
@@ -1216,7 +1249,7 @@ except Exception:
     if (archVerify.violations.length > 0) {
       log(`Violations: ${archVerify.violations.join(' | ')}`)
     }
-    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs)
+    pushEvent('Architecture-Verify', 'architecture-reviewer', 'failed', archVerify.summary || 'Architecture-Verify: ' + archVerify.verdict, archVerifyTs, null, null, archVerify.test_quality_findings)
     await writeMonitoring(archVerify.verdict)
     return {
       status: archVerify.verdict,
@@ -1226,7 +1259,7 @@ except Exception:
     }
   }
 
-  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs)
+  pushEvent('Architecture-Verify', 'architecture-reviewer', 'ok', archVerify.summary || 'Architecture-Verify: APPROVED', archVerifyTs, null, null, archVerify.test_quality_findings)
   log('Architecture-Verify: APPROVED')
 } else {
   pushEvent('Architecture-Verify', 'architecture-reviewer', 'skipped', 'Hotfix tier — architecture verify skipped')
