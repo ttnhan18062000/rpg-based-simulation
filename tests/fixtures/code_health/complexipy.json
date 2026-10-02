@@ -1,0 +1,44 @@
+[
+  {
+    "complexity": 41,
+    "file_name": "bad.py",
+    "function_name": "risky",
+    "path": "sample_src/bad.py",
+    "refactor_plans": []
+  },
+  {
+    "complexity": 18,
+    "file_name": "dup_a.py",
+    "function_name": "first_copy",
+    "path": "sample_src/dup_a.py",
+    "refactor_plans": []
+  },
+  {
+    "complexity": 18,
+    "file_name": "dup_b.py",
+    "function_name": "second_copy",
+    "path": "sample_src/dup_b.py",
+    "refactor_plans": []
+  },
+  {
+    "complexity": 0,
+    "file_name": "long.py",
+    "function_name": "long_function",
+    "path": "sample_src/long.py",
+    "refactor_plans": []
+  },
+  {
+    "complexity": 0,
+    "file_name": "nested.py",
+    "function_name": "Worker::step",
+    "path": "sample_src/nested.py",
+    "refactor_plans": []
+  },
+  {
+    "complexity": 0,
+    "file_name": "nested.py",
+    "function_name": "step",
+    "path": "sample_src/nested.py",
+    "refactor_plans": []
+  }
+]

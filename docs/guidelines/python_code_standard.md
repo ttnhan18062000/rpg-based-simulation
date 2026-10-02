@@ -29,11 +29,11 @@ Every rule has an Enforcement cell with one of:
 
 - **reviewer**: a person or review agent judges it on the diff. No tool checks it.
 - **a named tool, configured**: the tool is configured in this repo (`pyproject.toml`) and can be
-  run on demand (below), but it is **not gated**: no CI job or hook fails on it, and the violations
-  that already exist in `src/` are not yet held in a baseline (the counts from the first run are in
-  `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot). Until
-  the ratchet (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`) and CI gating (roadmap M4) land, such a
-  rule is enforced by review plus the on-demand report.
+  run on demand (below), but it is **not gated**: no CI job or hook fails on it. The violations that
+  already exist in `src/` are held in `registries/code_health_exceptions.jsonl`, and `make code-health`
+  fails only on a new or worse one, but it is run by hand, not by CI (roadmap M4 gates it). Until
+  then such a rule is enforced by review plus that on-demand check. The first-run counts are in
+  `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Blocking is planned
   for roadmap M4.
@@ -49,6 +49,13 @@ in `pyproject.toml` (`[tool.ruff.lint.mccabe]`, `[tool.ruff.lint.pylint]`, `[too
 | `make code-health-complexity` | functions over the cognitive-complexity limit (complexipy) |
 | `make code-health-size` | functions, classes and modules over the length limits |
 | `make code-health-dup` | duplicated Python blocks under `src/` (jscpd, pinned in the Makefile) |
+| `make code-health` | all four tools, then the ratchet: fails only on a violation that is new or above its row in `registries/code_health_exceptions.jsonl` |
+
+The registry rows are matched by file, symbol, tool and rule, never by line, so moving code does
+not make an old violation look new. Do not edit the file by hand: `python3 -m tools.code_health
+tighten` lowers ceilings and removes rows for debt you paid, `delete` removes one row, and a ruff or
+complexipy version bump needs `seed --force`. The match key for each tool is documented in
+`tools/code_health/findings.py`.
 
 Where a rule allows a justified exception and also names a tool (E2, M1), the tool cannot read a
 plain comment. In new or changed code the exception is written as `# noqa: <code>` followed by the
@@ -131,12 +138,18 @@ Python identifier conventions that section does not state.
 | ID | Rule | Enforcement |
 |---|---|---|
 | M1 | Imports are at the top of the module, grouped standard library, third party, first party. A justified function-level import (for example to break a circular import) carries `# noqa: PLC0415` and the reason. | ruff `I001` and `PLC0415`, configured; reviewer |
-| M2 | No wildcard imports. | ruff `F403`, configured |
+| M2 | No wildcard imports. | ruff `F403` (part of `F`), configured |
 | M3 | No I/O and no mutation of unrelated global state when a module is imported. Registering into an existing registry at import time, through that registry's established pattern, is allowed. | reviewer |
 | M4 | New repo tooling goes under `tools/` per `docs/guidelines/repo_tooling_layout.md`. | reviewer |
 | M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer |
 
-## 10. Related
+## 10. Correctness
+
+| ID | Rule | Enforcement |
+|---|---|---|
+| X1 | New or changed code has no pyflakes error: no undefined name, unused import or variable, redefinition of an unused name, or f-string without a placeholder; and no syntax error. | ruff `F` and `E9`, configured |
+
+## 11. Related
 
 - `docs/plans/codebase_health/python_code_craft_roadmap.md`: plan, evidence and toolchain.
 - `docs/guidelines/design_patterns.md`: extension points.

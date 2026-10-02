@@ -171,13 +171,18 @@ def _python_files(paths: Sequence[Path]) -> list[Path]:
     return sorted(found, key=lambda p: p.as_posix())
 
 
-def measure_paths(paths: Sequence[Path], limits: Thresholds | None = None) -> Report:
-    """Measure every `.py` file under `paths`, in a stable order."""
+def measure_paths(
+    paths: Sequence[Path], limits: Thresholds | None = None, relative_to: Path | None = None
+) -> Report:
+    """Measure every `.py` file under `paths`, in a stable order.
+
+    If `relative_to` is given, reported paths are relative to it (for example the repository root).
+    """
     limits = limits or Thresholds()
     records: list[SizeRecord] = []
     errors: list[str] = []
     for file in _python_files(paths):
-        posix = file.as_posix()
+        posix = (file.relative_to(relative_to) if relative_to else file).as_posix()
         try:
             records.extend(measure_source(file.read_text(encoding="utf-8"), posix, limits))
         except (SyntaxError, UnicodeDecodeError, ValueError) as exc:
@@ -200,18 +205,17 @@ def _format_text(report: Report, flagged_only: bool) -> str:
     return "\n".join(lines)
 
 
+def report_to_dict(report: Report, flagged_only: bool = False) -> dict[str, object]:
+    """The JSON-serialisable form of a report, as read by `tools.code_health.adapters`."""
+    return {
+        "thresholds": asdict(report.thresholds),
+        "records": [asdict(r) for r in report.records if not (flagged_only and r.level == LEVEL_OK)],
+        "errors": list(report.errors),
+    }
+
+
 def _format_json(report: Report, flagged_only: bool) -> str:
-    return json.dumps(
-        {
-            "thresholds": asdict(report.thresholds),
-            "records": [
-                asdict(r) for r in report.records if not (flagged_only and r.level == LEVEL_OK)
-            ],
-            "errors": list(report.errors),
-        },
-        indent=2,
-        sort_keys=True,
-    )
+    return json.dumps(report_to_dict(report, flagged_only), indent=2, sort_keys=True)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

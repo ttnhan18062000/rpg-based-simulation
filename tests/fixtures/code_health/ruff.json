@@ -1,0 +1,400 @@
+[
+  {
+    "cell": null,
+    "code": "D100",
+    "end_location": {
+      "column": 1,
+      "row": 1
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 1,
+      "row": 1
+    },
+    "message": "Missing docstring in public module",
+    "name": "undocumented-public-module",
+    "noqa_row": 1,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/undocumented-public-module"
+  },
+  {
+    "cell": null,
+    "code": "F401",
+    "end_location": {
+      "column": 10,
+      "row": 1
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": {
+      "applicability": "safe",
+      "edits": [
+        {
+          "content": "",
+          "end_location": {
+            "column": 1,
+            "row": 2
+          },
+          "location": {
+            "column": 1,
+            "row": 1
+          }
+        }
+      ],
+      "message": "Remove unused import: `os`"
+    },
+    "location": {
+      "column": 8,
+      "row": 1
+    },
+    "message": "`os` imported but unused",
+    "name": "unused-import",
+    "noqa_row": 1,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/unused-import"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 10,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "`risky` is too complex (13 > 10)",
+    "name": "complex-structure",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "PLR0912",
+    "end_location": {
+      "column": 10,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "Too many branches (13 > 12)",
+    "name": "too-many-branches",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/too-many-branches"
+  },
+  {
+    "cell": null,
+    "code": "ANN201",
+    "end_location": {
+      "column": 10,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "Missing return type annotation for public function `risky`",
+    "name": "missing-return-type-undocumented-public-function",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-return-type-undocumented-public-function"
+  },
+  {
+    "cell": null,
+    "code": "D103",
+    "end_location": {
+      "column": 10,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "Missing docstring in public function",
+    "name": "undocumented-public-function",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/undocumented-public-function"
+  },
+  {
+    "cell": null,
+    "code": "ANN001",
+    "end_location": {
+      "column": 17,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 4
+    },
+    "message": "Missing type annotation for function argument `values`",
+    "name": "missing-type-function-argument",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-type-function-argument"
+  },
+  {
+    "cell": null,
+    "code": "ANN001",
+    "end_location": {
+      "column": 24,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 19,
+      "row": 4
+    },
+    "message": "Missing type annotation for function argument `cache`",
+    "name": "missing-type-function-argument",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-type-function-argument"
+  },
+  {
+    "cell": null,
+    "code": "B006",
+    "end_location": {
+      "column": 27,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": "None",
+          "end_location": {
+            "column": 27,
+            "row": 4
+          },
+          "location": {
+            "column": 25,
+            "row": 4
+          }
+        },
+        {
+          "content": "    if cache is None:\n        cache = {}\n",
+          "end_location": {
+            "column": 1,
+            "row": 5
+          },
+          "location": {
+            "column": 1,
+            "row": 5
+          }
+        }
+      ],
+      "message": "Replace with `None`; initialize within function"
+    },
+    "location": {
+      "column": 25,
+      "row": 4
+    },
+    "message": "Do not use mutable data structures for argument defaults",
+    "name": "mutable-argument-default",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/mutable-argument-default"
+  },
+  {
+    "cell": null,
+    "code": "PLR1702",
+    "end_location": {
+      "column": 20,
+      "row": 26
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 5
+    },
+    "message": "Too many nested blocks (8 > 5)",
+    "name": "too-many-nested-blocks",
+    "noqa_row": 5,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/too-many-nested-blocks"
+  },
+  {
+    "cell": null,
+    "code": "E722",
+    "end_location": {
+      "column": 11,
+      "row": 25
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/bad.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 25
+    },
+    "message": "Do not use bare `except`",
+    "name": "bare-except",
+    "noqa_row": 25,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/bare-except"
+  },
+  {
+    "cell": null,
+    "code": "ANN201",
+    "end_location": {
+      "column": 15,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/dup_a.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "Missing return type annotation for public function `first_copy`",
+    "name": "missing-return-type-undocumented-public-function",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-return-type-undocumented-public-function"
+  },
+  {
+    "cell": null,
+    "code": "ANN201",
+    "end_location": {
+      "column": 16,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/dup_b.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "Missing return type annotation for public function `second_copy`",
+    "name": "missing-return-type-undocumented-public-function",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-return-type-undocumented-public-function"
+  },
+  {
+    "cell": null,
+    "code": "PLR0915",
+    "end_location": {
+      "column": 18,
+      "row": 4
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/long.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 4
+    },
+    "message": "Too many statements (85 > 50)",
+    "name": "too-many-statements",
+    "noqa_row": 4,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/too-many-statements"
+  },
+  {
+    "cell": null,
+    "code": "ANN201",
+    "end_location": {
+      "column": 13,
+      "row": 7
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/nested.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": " -> int",
+          "end_location": {
+            "column": 19,
+            "row": 7
+          },
+          "location": {
+            "column": 19,
+            "row": 7
+          }
+        }
+      ],
+      "message": "Add return type annotation: `int`"
+    },
+    "location": {
+      "column": 9,
+      "row": 7
+    },
+    "message": "Missing return type annotation for public function `step`",
+    "name": "missing-return-type-undocumented-public-function",
+    "noqa_row": 7,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-return-type-undocumented-public-function"
+  },
+  {
+    "cell": null,
+    "code": "ANN201",
+    "end_location": {
+      "column": 9,
+      "row": 12
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/nested.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 12
+    },
+    "message": "Missing return type annotation for public function `step`",
+    "name": "missing-return-type-undocumented-public-function",
+    "noqa_row": 12,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-return-type-undocumented-public-function"
+  },
+  {
+    "cell": null,
+    "code": "ANN202",
+    "end_location": {
+      "column": 13,
+      "row": 15
+    },
+    "filename": "/FIXTURE_ROOT/sample_src/nested.py",
+    "fix": {
+      "applicability": "unsafe",
+      "edits": [
+        {
+          "content": " -> int",
+          "end_location": {
+            "column": 15,
+            "row": 15
+          },
+          "location": {
+            "column": 15,
+            "row": 15
+          }
+        }
+      ],
+      "message": "Add return type annotation: `int`"
+    },
+    "location": {
+      "column": 9,
+      "row": 15
+    },
+    "message": "Missing return type annotation for private function `step`",
+    "name": "missing-return-type-private-function",
+    "noqa_row": 15,
+    "severity": "error",
+    "url": "https://docs.astral.sh/ruff/rules/missing-return-type-private-function"
+  }
+]

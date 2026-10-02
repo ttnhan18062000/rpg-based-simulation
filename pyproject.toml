@@ -138,8 +138,8 @@ exclude = [
 # Check only: no formatter is adopted (roadmap decision 8.3), so there is no [tool.ruff.format].
 # Existing violations are held in an external baseline, not fixed or suppressed in src/.
 [tool.ruff.lint]
-# Only the rules the standard names. Selecting these replaces ruff's default E/F set, so the
-# baseline stays about the standard and not about unrelated style.
+# The rules the standard names, plus pyflakes `F` and `E9` as a correctness group. Selecting these
+# replaces ruff's default set, so pycodestyle style rules (the rest of `E`, `W`) stay off.
 select = [
     "ANN",      # T1: annotations on every argument and return value
     "B006",     # F3: no mutable default arguments
@@ -148,7 +148,10 @@ select = [
     "C901",     # S3: cyclomatic complexity
     "D100", "D101", "D102", "D103", "D104",  # D1: public module/class/method/function/package docstrings
     "E722",     # E1: no bare except
-    "F403",     # M2: no wildcard imports
+    "F",        # X1, M2: pyflakes correctness (undefined names, unused imports and variables,
+                #     redefinitions); includes F403 wildcard imports. A correctness group, not one of
+                #     the standard's style rules: a new undefined name must be visible to the ratchet.
+    "E9",       # X1: syntax errors and I/O errors
     "I001",     # M1: import grouping
     "N",        # N2: PEP 8 identifier case
     "PLC0415",  # M1: imports at module top (justify with `# noqa: PLC0415` plus reason)

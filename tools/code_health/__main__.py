@@ -1,0 +1,140 @@
+"""Command line for the code-health registry and ratchet.
+
+    python3 -m tools.code_health check [--from DIR]    scan (or reuse a scan) and run the ratchet
+    python3 -m tools.code_health scan [--out DIR]      run the tools, keep their raw JSON
+    python3 -m tools.code_health seed [--from DIR] [--force]
+    python3 -m tools.code_health validate
+    python3 -m tools.code_health list [--tool T] [--file PREFIX]
+    python3 -m tools.code_health delete FILE TOOL RULE [--symbol S]
+    python3 -m tools.code_health tighten [--from DIR]
+
+`check` exits 1 if a violation is new or worse than its row, 2 if a tool or the registry is
+unusable, 0 otherwise. This is the entry point behind `make code-health`; nothing in CI runs it.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+from typing import Callable, Sequence
+
+from tools.code_health import ratchet, registry, scan
+from tools.code_health.findings import Finding
+
+DEFAULT_SCAN_DIR = Path("reports/code_health/scan")
+
+
+def _findings(args: argparse.Namespace, root: Path) -> list[Finding]:
+    out_dir = args.source if args.source else root / DEFAULT_SCAN_DIR
+    if not args.source:
+        scan.run_scan(root, out_dir)
+    return scan.collect_findings(out_dir, root, args.scan_root)
+
+
+def _cmd_check(args: argparse.Namespace, root: Path, path: Path) -> int:
+    rows = registry.load_rows(path, root, check_files=False)
+    result = ratchet.compare(_findings(args, root), rows)
+    print(ratchet.format_report(result, args.limit))
+    return 1 if result.failed else 0
+
+
+def _cmd_scan(args: argparse.Namespace, root: Path, path: Path) -> int:
+    out_dir = args.out or root / DEFAULT_SCAN_DIR
+    scan.run_scan(root, out_dir)
+    print(f"raw tool output written to {out_dir}")
+    return 0
+
+
+def _cmd_seed(args: argparse.Namespace, root: Path, path: Path) -> int:
+    if path.exists() and path.read_text(encoding="utf-8").strip() and not args.force:
+        print(f"error: {path} already has rows; use --force to reseed", file=sys.stderr)
+        return 2
+    rows = registry.seed_rows(_findings(args, root))
+    registry.write_rows(path, rows)
+    print(f"seeded {len(rows)} rows into {path} (all reviewed: false)")
+    return 0
+
+
+def _cmd_validate(args: argparse.Namespace, root: Path, path: Path) -> int:
+    problems = registry.validate_file(path, root)
+    for problem in problems:
+        print(problem, file=sys.stderr)
+    print(f"{path}: {'INVALID' if problems else 'valid'} ({len(problems)} problems)")
+    return 2 if problems else 0
+
+
+def _cmd_list(args: argparse.Namespace, root: Path, path: Path) -> int:
+    for row in registry.load_rows(path, root, check_files=False):
+        if (args.tool and row.tool != args.tool) or (args.file and not row.file.startswith(args.file)):
+            continue
+        print(f"{row.file} {row.symbol or '-'} [{row.tool} {row.rule}] value={row.value} ceiling={row.ceiling}")
+    return 0
+
+
+def _cmd_delete(args: argparse.Namespace, root: Path, path: Path) -> int:
+    rows = registry.load_rows(path, root, check_files=False)
+    try:
+        remaining = registry.delete_row(rows, (args.file, args.symbol, args.tool, args.rule))
+    except KeyError:
+        print("error: no such row", file=sys.stderr)
+        return 2
+    registry.write_rows(path, remaining)
+    print(f"deleted 1 row; {len(remaining)} remain")
+    return 0
+
+
+def _cmd_tighten(args: argparse.Namespace, root: Path, path: Path) -> int:
+    rows, changes = registry.tighten(registry.load_rows(path, root, check_files=False), _findings(args, root))
+    registry.write_rows(path, rows)
+    print("\n".join(changes) or "nothing to tighten")
+    return 0
+
+
+COMMANDS: dict[str, Callable[[argparse.Namespace, Path, Path], int]] = {
+    "check": _cmd_check, "scan": _cmd_scan, "seed": _cmd_seed, "validate": _cmd_validate,
+    "list": _cmd_list, "delete": _cmd_delete, "tighten": _cmd_tighten,
+}
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """The argument parser; `--root` and `--registry` exist so tests can use a scratch repository."""
+    parser = argparse.ArgumentParser(prog="python3 -m tools.code_health", description=__doc__)
+    parser.add_argument("--root", type=Path, default=registry.REPO_ROOT, help=argparse.SUPPRESS)
+    parser.add_argument("--registry", type=Path, default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--scan-root", default=scan.SCAN_ROOT, help=argparse.SUPPRESS)
+    sub = parser.add_subparsers(dest="command", required=True)
+    for name in ("check", "seed", "tighten"):
+        sp = sub.add_parser(name)
+        sp.add_argument("--from", dest="source", type=Path, help="reuse the raw output of an earlier scan")
+        if name == "check":
+            sp.add_argument("--limit", type=int, default=ratchet.DEFAULT_REPORT_LIMIT)
+        if name == "seed":
+            sp.add_argument("--force", action="store_true")
+    sub.add_parser("scan").add_argument("--out", type=Path)
+    sub.add_parser("validate")
+    lister = sub.add_parser("list")
+    lister.add_argument("--tool")
+    lister.add_argument("--file")
+    deleter = sub.add_parser("delete")
+    deleter.add_argument("file")
+    deleter.add_argument("tool")
+    deleter.add_argument("rule")
+    deleter.add_argument("--symbol")
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run one subcommand; returns the process exit code."""
+    args = build_parser().parse_args(argv)
+    root = args.root
+    path = args.registry or registry.registry_path(root)
+    try:
+        return COMMANDS[args.command](args, root, path)
+    except (registry.RegistryError, scan.ToolUnavailableError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

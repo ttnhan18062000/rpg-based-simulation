@@ -1,0 +1,128 @@
+{
+  "errors": [],
+  "records": [
+    {
+      "end_line": 26,
+      "kind": "module",
+      "level": "ok",
+      "lines": 26,
+      "path": "sample_src/bad.py",
+      "start_line": 1,
+      "symbol": "<module>"
+    },
+    {
+      "end_line": 26,
+      "kind": "function",
+      "level": "ok",
+      "lines": 23,
+      "path": "sample_src/bad.py",
+      "start_line": 4,
+      "symbol": "risky"
+    },
+    {
+      "end_line": 28,
+      "kind": "module",
+      "level": "ok",
+      "lines": 28,
+      "path": "sample_src/dup_a.py",
+      "start_line": 1,
+      "symbol": "<module>"
+    },
+    {
+      "end_line": 28,
+      "kind": "function",
+      "level": "ok",
+      "lines": 25,
+      "path": "sample_src/dup_a.py",
+      "start_line": 4,
+      "symbol": "first_copy"
+    },
+    {
+      "end_line": 28,
+      "kind": "module",
+      "level": "ok",
+      "lines": 28,
+      "path": "sample_src/dup_b.py",
+      "start_line": 1,
+      "symbol": "<module>"
+    },
+    {
+      "end_line": 28,
+      "kind": "function",
+      "level": "ok",
+      "lines": 25,
+      "path": "sample_src/dup_b.py",
+      "start_line": 4,
+      "symbol": "second_copy"
+    },
+    {
+      "end_line": 89,
+      "kind": "module",
+      "level": "ok",
+      "lines": 89,
+      "path": "sample_src/long.py",
+      "start_line": 1,
+      "symbol": "<module>"
+    },
+    {
+      "end_line": 89,
+      "kind": "function",
+      "level": "fail",
+      "lines": 86,
+      "path": "sample_src/long.py",
+      "start_line": 4,
+      "symbol": "long_function"
+    },
+    {
+      "end_line": 18,
+      "kind": "module",
+      "level": "ok",
+      "lines": 18,
+      "path": "sample_src/nested.py",
+      "start_line": 1,
+      "symbol": "<module>"
+    },
+    {
+      "end_line": 9,
+      "kind": "class",
+      "level": "ok",
+      "lines": 6,
+      "path": "sample_src/nested.py",
+      "start_line": 4,
+      "symbol": "Worker"
+    },
+    {
+      "end_line": 9,
+      "kind": "function",
+      "level": "ok",
+      "lines": 3,
+      "path": "sample_src/nested.py",
+      "start_line": 7,
+      "symbol": "Worker.step"
+    },
+    {
+      "end_line": 18,
+      "kind": "function",
+      "level": "ok",
+      "lines": 7,
+      "path": "sample_src/nested.py",
+      "start_line": 12,
+      "symbol": "step"
+    },
+    {
+      "end_line": 16,
+      "kind": "function",
+      "level": "ok",
+      "lines": 2,
+      "path": "sample_src/nested.py",
+      "start_line": 15,
+      "symbol": "step.<locals>.step"
+    }
+  ],
+  "thresholds": {
+    "class_lines": 500,
+    "function_fail_lines": 80,
+    "function_warn_lines": 50,
+    "module_lines": 1000
+  }
+}
