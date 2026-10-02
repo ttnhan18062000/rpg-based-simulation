@@ -15,6 +15,8 @@ Checks (each finding names its ticket or path):
                    `*.working_log.jsonl` shard. BLOCKED progress rows and later DONE rows with a different
                    title (post-merge fix rounds) are legitimate. Narrower than `done_checker_static`'s
                    per-ticket rule on purpose; a ticket with no row at all (some epics) is reported
+  inprogress       no ticket still under `tickets/inprogress/` at the ref (merged work whose Finalize never ran,
+                   or work in flight on main); a PR-time render cannot see this, only the ref can
   shards           no per-batch `<id>.{runs,events,tools,working_log}.jsonl` shard left for a finished ISO week
   cited_evidence   every backticked `stored_artifacts/...` file path a closed ticket cites exists at the ref
                    (a trailing `:LINE` is stripped; a directory citation ending in `/` is skipped)
@@ -45,6 +47,7 @@ sys.path.insert(0, str(_HERE.parent / "gate_checks"))
 REPO_ROOT = _HERE.parent.parent
 _TICKET_RE = re.compile(r"^tickets/done/(?:[^/]+/)?(TCK-(\d{8})-[A-Z0-9-]+)\.md$")
 _SHARD_RE = re.compile(r"^agent-monitoring/data/(\d{4}-W\d{2})/[^/]+\.(runs|events|tools|working_log)\.jsonl$")
+_INPROGRESS_RE = re.compile(r"^tickets/inprogress/(TCK-(\d{8})-[A-Z0-9-]+)\.md$")
 _CITE_RE = re.compile(r"`(stored_artifacts/[^`\s]+)`")
 _EPIC_TIER_RE = re.compile(r"^## Tier\s*\n\s*epic\b", re.M)
 _LINE_SUFFIX_RE = re.compile(r":\d+(?:-\d+)?$")  # `investigation.md:199` cites a line, not a file named that
@@ -116,6 +119,20 @@ def check_working_log(reader: RefReader, since_date: str | None) -> list[str]:
     return findings
 
 
+def check_inprogress_on_ref(reader: RefReader, since_date: str | None) -> list[str]:
+    """A ticket still under `tickets/inprogress/` on the merged ref is either work that merged without its
+    Finalize ever running (the src change is on main, the ticket never closed) or work deliberately in
+    flight. No per-PR render-time check can see the first case, since nothing in the PR changed after the
+    merge; only a look at the ref can. Reported for a person to judge, never inferred from commit subjects
+    (a squash merge leaves only the PR title)."""
+    findings = []
+    for p in sorted(reader.paths):
+        m = _INPROGRESS_RE.match(p)
+        if m and (not since_date or m.group(2) >= since_date):
+            findings.append(f"{m.group(1)}: still under tickets/inprogress/ at the ref ({p})")
+    return findings
+
+
 def check_leftover_shards(reader: RefReader, today: date) -> list[str]:
     from week_close import is_finished
     findings = []
@@ -171,6 +188,7 @@ def build_report(ref: str, repo_root: Path = REPO_ROOT, today: date | None = Non
     today = today or date.today()
     findings = {
         "working_log": check_working_log(reader, since_date),
+        "inprogress": check_inprogress_on_ref(reader, since_date),
         "shards": check_leftover_shards(reader, today),
         "cited_evidence": check_cited_evidence(reader, since_date),
         "duplicate_runs": check_duplicate_runs(reader),
