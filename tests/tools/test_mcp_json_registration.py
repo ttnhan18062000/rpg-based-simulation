@@ -65,3 +65,20 @@ def test_generalized_check_still_fails_if_knowledge_gateway_reappears():
     servers = {"knowledge-search", "github", "knowledge-gateway"}
     with pytest.raises(AssertionError):
         _assert_no_knowledge_gateway(servers)
+
+
+def test_aseprite_pixel_art_entry_has_the_registered_shape():
+    # Added by TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: the drawing-tools server moved from the
+    # user-scope experiment registration into the repo, launched through visual_assets/start_mcp.sh.
+    entry = _load_mcp_config()["mcpServers"]["aseprite-pixel-art"]
+    assert entry["command"] == "bash"
+    assert entry["args"] == ["visual_assets/start_mcp.sh"]
+    assert entry["env"] == {}
+    assert entry["description"]
+    assert (_REPO_ROOT / entry["args"][0]).is_file()
+
+
+def test_registering_aseprite_pixel_art_did_not_disturb_the_other_servers():
+    servers = _load_mcp_config()["mcpServers"]
+    assert {"knowledge-search", "github", "headroom", "aseprite-pixel-art"} <= set(servers)
+    assert servers["headroom"]["args"] == ["tools/start_headroom_mcp.sh"]
