@@ -251,7 +251,7 @@ output: "0 cited-code drift finding(s), 2 verdict drift finding(s)" (TERR-01, TE
 
 ## Files Changed
 Landed in PR #276 (`786f9ee9b`, implementation commit `384f8cc44`).
-- `src/engine/world_dynamics.py` (hazard write no longer destroys a same-tick combat outcome), `src/systems/lifecycle_systems/lifecycle.py` (`HAZARD`-keyed classification), `src/observability/event_extractor.py`, `src/observability/event_shapers.py`.
+- `src/engine/world_dynamics.py` (hazard write no longer destroys a same-tick combat outcome), `src/systems/lifecycle_systems/lifecycle.py` (`HAZARD`-keyed classification), `src/observability/event_extractor.py`, `src/observability/event_shapers.py`, `src/core/combat_constants.py` (adds `TERMINAL_COMBAT_OUTCOME_KINDS = ("KILL", "DEFEAT")`, the single source of truth for which outcome kinds a same-tick hazard write must not overwrite), `src/domains/combat_engagement/learning_outcome.py` (rebinds `_DEFEATED_OUTCOME_KINDS` to that constant so the two sets cannot drift; the same edit also drops `PERMADEATH`/`REBIRTH`, which belongs to `TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`).
 - Tests: `tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py` (new), `test_entity_death_authority_boundary.py`, `tests/unit/observability/test_event_shapers.py`.
 - Docs: `docs/parity_ledger/combat_movement.yaml`, `world_dynamics.yaml`, `docs/simulation/lifecycle_systems_contract.md`.
 
