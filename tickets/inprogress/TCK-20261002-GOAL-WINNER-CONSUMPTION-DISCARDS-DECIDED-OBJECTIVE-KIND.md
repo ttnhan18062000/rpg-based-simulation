@@ -180,16 +180,52 @@ it and no dormancy protects it.
 - `ObjectiveKind` is a `str` Enum, so the raw `"reach_location"` literal compares equal to
   `ObjectiveKind.REACH_LOCATION`. This is a style inconsistency, **not** a type defect — do not
   report it as one.
-- The generic branch sets `score=best_candidate.utility`, while all three bespoke branches use
-  `metadata["raw_score"]` and carry an explicit "NEVER best_candidate.utility" warning about a
-  scale mismatch (`_score_scale_max()`'s 2.9-ceiling scale vs utility's 100-ceiling normalisation).
-  Whether the generic branch is therefore also wrong depends on how `_score_scale_max()` classifies a
-  `kind` that is a `GoalKind` rather than a real `ProjectKind` — **unverified, and out of scope to
-  fix**, but it should be checked and recorded, because if it is wrong it is a second live defect in
-  the same eight lines.
+- ~~The generic branch sets `score=best_candidate.utility` … possibly a second live defect.~~
+  **RESOLVED 2026-10-02: not a defect, the two are consistent.** `_score_scale_max()` classifies by
+  enum class, so a `GoalKind` correctly selects the 100.0 ceiling that `utility` is already on. See
+  Implementation Notes — and note the **scope guard** recorded there: do not change
+  `ProjectState.kind` to a real `ProjectKind` while fixing `obj.kind`, or the score scale silently
+  flips to the 2.9 ceiling. This ticket changes `obj.kind` only.
 - Which other `GoalKind`s reach the generic branch has not been enumerated. Scope 4 covers it.
 
 ## Implementation Notes
+
+### 2026-10-02 — RESOLVED: the generic branch's `score` is CORRECT. Do not "clean up" `ProjectState.kind`.
+
+The Assumptions section flagged `score=best_candidate.utility` in the generic branch as possibly a second
+defect, because all three bespoke branches carry an explicit "NEVER best_candidate.utility" warning.
+**Checked, and it is not a defect — the two are consistent.** No separate ticket is needed. But the
+reason it is consistent is a trap, so it is recorded here as a scope guard.
+
+`_score_scale_max()` (`intelligence.py:111-128`) classifies **by the actual Python enum class**, not by
+string value:
+
+```python
+if isinstance(kind, ProjectKind):
+    return _ADVENTURE_ROUTE_SCORE_MAX     # 2.9  (intelligence.py:32)
+return _GOAL_UTILITY_SCORE_MAX            # 100.0 (intelligence.py:47)
+```
+
+- The **bespoke** branches set `ProjectState.kind = proj_kind`, a real `ProjectKind` → the **2.9**
+  ceiling → so they must *not* store a 100-scale `utility`, hence their warning and their use of
+  `metadata["raw_score"]`.
+- The **generic** branch sets `kind = best_candidate.kind`, a `GoalKind` (`:1718`) → the **100.0**
+  ceiling → which is exactly the scale `best_candidate.utility` is already on. Correct as written.
+
+**SCOPE GUARD — the trap, and the most likely way this ticket introduces a regression.** A natural
+instinct while fixing the objective kind is to also "fix the type confusion" by making
+`ProjectState.kind` a real `ProjectKind` instead of a `GoalKind`. **Do not.** That single change silently
+flips the score scale from the 100.0 ceiling to the 2.9 ceiling while `score` still holds a utility
+value — so a score of, say, 80.0 would be read against a 2.9 ceiling. The existing comment at
+`:1699-1703` ("read back through `_score_scale_max()`'s 2.9-ceiling scale **once kind is a real
+ProjectKind**") is describing precisely this coupling, and `_score_scale_max`'s own docstring warns
+against a value-based check because `ProjectKind.HARVESTING` and `GoalKind.HARVESTING` share a string
+value.
+
+So this ticket changes **`obj.kind` only**. `ProjectState.kind` and `score` in the generic branch stay
+exactly as they are. If the `GoalKind`/`ProjectKind` vocabulary split is ever to be unified, that is
+already tracked elsewhere (`_score_scale_max`'s docstring cites D22/C4) and must move `kind` and `score`
+together, in its own ticket, with the scale change declared.
 
 ### 2026-10-02 — THIS FIX IS NOT SAFE TO LAND ALONE (found before implementation)
 
