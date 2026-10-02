@@ -75,7 +75,9 @@ Second half of finishing the uv adoption: CI installs with pip install -r requir
 - docs/parity_ledger/infrastructure.yaml
 
 ## Related Stored Artifacts
-None.
+- staging_artifacts/TCK-20261002-UV-FIRST-CI-JOB/plan.md
+- staging_artifacts/TCK-20261002-UV-FIRST-CI-JOB/investigation.md
+- staging_artifacts/TCK-20261002-UV-FIRST-CI-JOB/test_plan.md
 
 ## Related Code Areas
 - .github/workflows/test.yml
@@ -104,9 +106,27 @@ None.
 - Tag relevance: `delivery` — registered note centres on the git/PR/CI delivery lane and tools/delivery/; this ticket changes a CI job's install step in .github/workflows/test.yml, which is the CI part of that lane but not tools/delivery/
 
 ## Implementation Notes
+**State: implemented and verified locally; open until a green real PR run is recorded here.** Push and PR wait for the owner.
+
+- Job chosen: `simulation-quality` (single pytest step, no `needs`, no path-filter gate, not one of the two pinned jobs). Reasons in `investigation.md`.
+- Install step: `astral-sh/setup-uv@v10.2.0` with `version: "0.11.2"` (the uv version is pinned too, since the action's default is latest), `python-version: "3.13"`, `activate-environment: true`, `enable-cache: true`, then `uv sync --locked --no-install-project`. `--locked` fails the job if `uv.lock` is stale.
+- Decision recorded: `--no-install-project` is used, matching CI today (no editable install; pytest uses `pythonpath = ["."]`). Verified from a neutral directory that the project is not installed in the resulting environment.
+- No extra or group is selected, so the knowledge stack is not installed; verified locally that torch is absent.
+- Test edit: one entry, `astral-sh/setup-uv@v10.2.0`, added to `_PRE_EXISTING_USES` in `tests/static/test_ci_step_summary_reporting.py` with a comment. No assertion changed.
+- Unverified until the PR run: that `setup-uv@v10.2.0` activates `.venv` for later steps as its `action.yml` describes, provisions Python 3.13, and caches against `uv.lock`; and that the job is green on a runner.
+- Evidence to record after the run: PR link, run link, the `Simulation quality` job result, and the install step's log (no torch or sentence-transformers; `uv` 0.11.2).
 
 ## Test Summary
+Local only so far (an environment from `uv sync --locked --no-install-project`):
+- `pytest tests/static/ tests/tools/test_dashboard_makefile_targets.py tests/tools/test_ci_workflow_test_coverage.py`: 89 passed.
+- `pytest tests/simulation_quality -m "not slow and not extra_slow"`: 504 passed, 64 skipped, 27 deselected.
+- `grep -c "uv sync"` in `test.yml`: 1; `grep -c "pip install -r requirements.txt"`: 13 (was 14).
+- Diff against 7dfd1349 touches only `.github/workflows/test.yml` and `tests/static/test_ci_step_summary_reporting.py` among the guarded paths; no `src/`, `.claude/`, `CLAUDE.md` or Makefile path.
+- PR run: not yet run.
 
 ## Files Changed
+- .github/workflows/test.yml
+- tests/static/test_ci_step_summary_reporting.py
 
 ## Completion Summary
+Not complete: waiting for the real PR run.
