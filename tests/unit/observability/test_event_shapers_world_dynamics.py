@@ -121,6 +121,26 @@ def test_boss_spawned_and_narrative_milestone():
     assert milestone.payload["milestone"] == "first_boss_spawned"
 
 
+def test_dragonkin_spawn_emits_boss_spawned_and_first_boss_milestone():
+    dragon = _entity(10, kind="dragonkin")
+    events = WorldDynamicsShaper().shape(_prior_state(), _update(entities_add=[dragon]), tick=10)
+    types = _types(events)
+    assert "boss_spawned" in types
+    assert "raid_party_spawned" not in types
+    milestone = next(e for e in events if e.event_type == "narrative_milestone")
+    assert milestone.payload["milestone"] == "first_boss_spawned"
+
+
+def test_dragonkin_is_excluded_from_spawn_cadence_count():
+    dragon = _entity(10, kind="dragonkin")
+    villager = _entity(11, kind="villager")
+    only_dragon = WorldDynamicsShaper().shape(_prior_state(), _update(entities_add=[dragon]), tick=50)
+    assert "spawn_cadence_fired" not in _types(only_dragon)
+    mixed = WorldDynamicsShaper().shape(_prior_state(), _update(entities_add=[dragon, villager]), tick=50)
+    cadence = next(e for e in mixed if e.event_type == "spawn_cadence_fired")
+    assert cadence.payload["spawned_count"] == 1
+
+
 def test_raid_party_spawned():
     raider = _entity(8, kind="goblin_raider")
     prior = _prior_state()
