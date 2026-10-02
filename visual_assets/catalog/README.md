@@ -26,3 +26,10 @@ reference this path.
 
 Nothing here activates anything at runtime: activation, runtime resolution and any `src/` or `frontend/`
 consumption are out of scope of this foundation (`docs/plans/visual-asset-foundation/README.md`).
+
+## What is committed and what stays local (decided 2026-10-02)
+
+Only assets a human has adopted are committed: their source under `sources/` and their generated PNGs under
+`generated/`. Candidates, and anything still being looked at, stay local: intake staging in `.quarantine/` and
+review previews in `.review/`, both gitignored. Assets are chosen carefully and are not always used, so nothing
+unaccepted enters git history.

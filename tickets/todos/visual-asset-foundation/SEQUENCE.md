@@ -13,11 +13,12 @@ and layering rules: `docs/plans/visual-asset-foundation/README.md`. All children
 2. Store contracts and identities (not yet filed) — `visual_assets/store/contracts`, `identities`, semantic
    registry; pure and fully CI-tested. Blocks 3-5.
 3. Intake (not yet filed) — `CandidateHandoffPackage` builder in `drawing/handoff.py`, quarantine, independent
-   validator, `IntakeResult`.
+   validator, `IntakeResult`; `review` export of candidate previews into the local gitignored `.review/` area.
 4. Adoption and provenance (not yet filed) — human-gated `adopt` and `revoke`, records, audit-reconstruction test.
    Re-confirm decision D2 with the user before starting.
 5. Build and release candidate (not yet filed) — sandboxed export, canonical hash, manifest, `verify`, `gc`.
-   Re-confirm decisions D3 and D4 with the user before starting.
+   D3 is decided (only adopted assets' PNGs are committed; a local gitignored `.review/` area holds candidate
+   previews). Re-confirm decision D4 with the user before starting.
 6. Store docs and read-only MCP store tools (not yet filed) — `docs/assets/store_contract.md` completed;
    `store_list`, `store_show`, `submit_candidate` on the server; never adopt/build/release/revoke.
 

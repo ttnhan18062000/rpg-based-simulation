@@ -311,3 +311,5 @@ website/.docusaurus/
 
 # TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: intake staging for the asset store, never committed
 visual_assets/catalog/.quarantine/
+# candidate previews kept locally for human review; only adopted assets are committed
+visual_assets/catalog/.review/

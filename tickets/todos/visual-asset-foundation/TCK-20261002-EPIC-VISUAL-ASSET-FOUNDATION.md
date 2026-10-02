@@ -66,8 +66,10 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 
 ## Assumptions / Open Questions
 - The user approved the structure and the root-folder name `visual_assets/` on 2026-10-02.
-- Decisions D2-D4 (no LFS, commit generated PNGs, canonical pixel hash) were proposed by the planner and not
-  individually confirmed by the user; they only take effect in children 4-5 and should be re-confirmed there.
+- D3 decided by the user on 2026-10-02: commit generated PNGs only for adopted assets; candidates and anything
+  under review stay local in the gitignored `visual_assets/catalog/.review/` area.
+- D2 (no LFS for sources) and D4 (canonical pixel hash) were proposed by the planner and are not yet confirmed
+  by the user; they take effect in children 4-5 and must be re-confirmed there.
 
 ## Implementation Notes
 Epic: see children.

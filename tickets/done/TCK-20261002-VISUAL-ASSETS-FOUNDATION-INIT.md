@@ -134,6 +134,17 @@ Extra tests added beyond the 209 (49 total): `test_boundaries.py` (41: one per m
 that feed the checker source with a broken rule), `unit/test_workspace_isolation.py` (5: each patched config name is observed from the module that
 consumes it), `unit/test_pin.py` (3).
 
+### Post-push CI defect and fix (2026-10-02, asset-planner)
+The first push of this ticket (0286705d) failed CI job "Architecture / docs / static": the base-branch collection
+list used `$([ -d tests/visual_assets ] && echo tests/visual_assets)` (deviation 6), which
+`tests/static/test_ci_step_summary_reporting.py` tokenises as an extra path (`tests/visual_assets)`), breaking the
+required head/base path parity. The planner accepted that deviation in review without running `tests/static`.
+Fix: list the path plainly, like the others, and create the directory in the base checkout on its own line first
+(`mkdir -p /tmp/base-checkout/tests/visual_assets`), so a base branch without it does not abort collection. A first
+attempt at the fix failed two guards (a comment containing a `tests/...` token, and a broken
+`cd /tmp/base-checkout && pytest` prefix) and was corrected. Verified: the job's test set passes locally (277 passed),
+and the base collection was simulated on an `origin/main` checkout that lacks the directory (exit 0, 3479 collected).
+
 ## Test Summary
 All commands from the worktree root with the main checkout's venv.
 - **R1 regression:** the 209 pre-move test ids (function + parameters) are identical by name under `tests/visual_assets`

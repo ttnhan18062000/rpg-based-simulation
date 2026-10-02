@@ -412,13 +412,18 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           if [ -d /tmp/base-checkout ]; then
+            # A base branch from before TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT lacks the
+            # visual_assets test directory, and pytest aborts the whole collection on a missing
+            # path, so create it empty in the base checkout first. The path list below stays
+            # identical to the head 'Run' steps.
+            mkdir -p /tmp/base-checkout/tests/visual_assets
             cd /tmp/base-checkout && pytest tests/api \
                    tests/cli \
                    tests/tools \
                    tests/logging \
                    tests/engine \
                    tests/observability \
-                   $([ -d tests/visual_assets ] && echo tests/visual_assets) \
+                   tests/visual_assets \
                    -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
           fi
       - name: Job summary

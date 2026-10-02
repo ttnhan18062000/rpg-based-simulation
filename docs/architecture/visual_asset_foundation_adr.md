@@ -31,7 +31,7 @@ paths were deliberately left open. Full structure, layering rules and command ta
 | D6 | Release **candidates** only; no active pointer, no runtime resolver | **decided** | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
 | D7 | One CI step `Run: tests/visual_assets` in the `api-tools` job | **decided** | CI lists test directories explicitly, so a new test root runs nowhere until added | never |
 | D2 | Commit adopted `.aseprite` sources directly, no Git LFS | proposed | 16-32 px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
-| D3 | Commit generated PNGs and verify them in CI by canonical pixel hash | proposed | CI has no Aseprite, so it cannot rebuild | CI gains Aseprite, or the frontend build takes over generation |
+| D3 | Commit generated PNGs only for adopted assets; candidates and anything under review stay local in gitignored `visual_assets/catalog/.review/`; verify the committed ones in CI by canonical pixel hash | **decided (user, 2026-10-02)** | assets are chosen carefully and not always used, so nothing unaccepted enters git history; CI has no Aseprite, so it cannot rebuild | CI gains Aseprite, or the frontend build takes over generation |
 | D4 | Hash artifacts by decoded pixels, not file bytes | proposed | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 
 ## Decisions taken while implementing the move (no behaviour change)

@@ -33,9 +33,11 @@ So the structure separates three things physically, in three different places:
 |---|---|---|
 | **Experiment workspace** (candidates, every drawing revision) | outside the repo: `~/.cache/rpg-aseprite-mcp/` | the drawing tools (agent) |
 | **Intake quarantine** (copies of handed-off candidates under validation) | outside the tracked tree: `visual_assets/catalog/.quarantine/` (gitignored) | the store's intake step only |
+| **Local review area** (previews and exports of candidates, kept for a human to look at and choose from) | outside the tracked tree: `visual_assets/catalog/.review/` (gitignored) | the store's `review` export; never read by build or release |
 | **Managed store** (adopted sources, definitions, provenance, artifacts, release candidates) | in the repo: `visual_assets/catalog/` | the store's human-gated commands only |
 
-An agent can draw and hand off. Only a human-run command can adopt. Nothing in this foundation activates
+An agent can draw and hand off. Only a human-run command can adopt. Only what a human has adopted is ever committed:
+candidate images stay local until then. Nothing in this foundation activates
 anything at runtime.
 
 ## Full structure
@@ -125,6 +127,7 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
       candidates/<catalog_id>/<release_id>.json   # immutable release CANDIDATES only; no "active" pointer
     fixtures/                        #   synthetic fixtures for tests; cannot be mistaken for production assets
     .quarantine/                     #   gitignored intake staging
+    .review/                         #   gitignored: candidate previews/exports kept locally for human review, never committed
 
 tests/
   visual_assets/drawing/
@@ -184,6 +187,7 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 | Command | Gate | Effect |
 |---|---|---|
 | `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` |
+| `review <intake_id>` | none | export previews of an intake-passed candidate into the local, gitignored `.review/` area for a human to look at; writes nothing tracked |
 | `adopt <intake_id> --visual-key K --approver NAME --licence STATE` | **human** | new `sources/<id>/rNNNN` + `AdoptionRecord`; refuses a failed, revoked or already-adopted intake |
 | `build [<source_asset_id>]` | none; needs Aseprite | export adopted sources per `build-config` into `generated/` with `ArtifactRecord`s |
 | `release --catalog C` | none | assemble an immutable **release candidate** manifest from definitions + artifacts |
@@ -198,7 +202,7 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 | D1 | One root folder `visual_assets/` with `drawing/`, `store/`, `catalog/`; tests in `tests/visual_assets/` | not `src/`: that is the installable engine (`include = ["src*"]`) and asset systems must never touch simulation state; not `tools/`: 94 unrelated entries; root subsystems have precedent (`agent-orchestration/`, `frontend/`). Underscore so it is importable; the proposal's illustrative `visual-assets/` data tree becomes `catalog/` | the store needs to ship inside the installable package |
 | D7 | Add one CI step for `tests/visual_assets` | CI lists test directories explicitly, so a new test root runs nowhere until added | never |
 | D2 | Commit adopted `.aseprite` sources directly, no Git LFS | 16-32px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
-| D3 | Commit generated PNGs and verify them in CI by canonical pixel hash | CI has no Aseprite, so it cannot rebuild; committed bytes make `verify` meaningful there | CI gains Aseprite, or the frontend build takes over generation |
+| D3 | Commit generated PNGs **only for adopted assets**; candidates and anything still under review stay local in a gitignored review area. Verify the committed ones in CI by canonical pixel hash | **decided by the user 2026-10-02**: assets are not always used and are chosen carefully, so nothing unaccepted enters git history. CI has no Aseprite, so committed bytes are what makes `verify` meaningful there | CI gains Aseprite, or the frontend build takes over generation |
 | D4 | Hash artifacts by decoded pixels (canonical hash), not file bytes | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 | D5 | Human gates are CLI-only and absent from the MCP surface | proposal §6: no agent or MCP server may collapse the gates | never without a new decision |
 | D6 | Release **candidates** only; no active pointer, no runtime resolver | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
