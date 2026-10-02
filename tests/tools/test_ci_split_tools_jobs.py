@@ -8,6 +8,7 @@ mistake a glob word for a covered path.
 """
 from __future__ import annotations
 
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -141,3 +142,43 @@ def test_a_file_matching_neither_glob_runs_in_both_tools_jobs(tmp_path):
     assert a_e == {"test_alpha.py", "test_9digits.py", "test_Upper.py"}
     assert f_z == {"test_zulu.py", "test_9digits.py", "test_Upper.py"}
     assert a_e | f_z == {"test_alpha.py", "test_zulu.py", "test_9digits.py", "test_Upper.py"}
+
+
+def _doubled_backslash_lines(text: str) -> list[int]:
+    """1-based numbers of lines that end in two backslashes (see the test below for why that is a bug)."""
+    return [n for n, line in enumerate(text.splitlines(), start=1) if line.rstrip().endswith("\\\\")]
+
+
+def test_no_workflow_line_ends_in_a_doubled_backslash():
+    """Inside a `run: |` block two trailing backslashes are one escaped backslash and a real newline,
+    so the next line runs as its own command and the step fails."""
+    bad = _doubled_backslash_lines(_WORKFLOW.read_text(encoding="utf-8"))
+    assert not bad, f"doubled trailing backslash on test.yml line(s) {bad}"
+
+
+def _joined_command(script: str) -> list[str]:
+    """The words of the script's single shell command after joining backslash continuations."""
+    return shlex.split(script.replace("\\\n", " "))
+
+
+def test_the_merge_step_lists_exactly_the_xml_files_the_run_steps_write():
+    job = _jobs()["api-cli-engine"]
+    written = []
+    for step in _run_steps(job):
+        words = _joined_command(step["run"])
+        written.append(next(w.split("=", 1)[1] for w in words if w.startswith("--junit-xml=")))
+    merge = next(s for s in job["steps"] if s.get("name") == "Merge JUnit XML")
+    words = _joined_command(merge["run"])
+    assert words[:2] == ["python3", "tools/ci_junit_merge.py"]
+    out = words[words.index("--out") + 1]
+    inputs = [w for w in words[2:] if w.startswith("reports/") and w != out]
+    assert out == "reports/junit/api-cli-engine.xml"
+    assert inputs == written, "the merge must take exactly the per-directory XML files, in order"
+    assert len(words) == 2 + 2 + len(written), "no stray argument such as a lone backslash"
+
+
+def test_the_doubled_backslash_detector_flags_the_broken_form_and_passes_the_good_one():
+    good = "python3 merge.py --out o.xml \\\n    a.xml \\\n    b.xml\n"
+    broken = "python3 merge.py --out o.xml \\\n    a.xml \\\\\n    b.xml\n"
+    assert _doubled_backslash_lines(good) == []
+    assert _doubled_backslash_lines(broken) == [2]

@@ -381,12 +381,8 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements.txt
-      # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
-      # 440-520 s `api-tools` job) is cut in two by file name. The two --ignore-glob patterns are
-      # complementary: a file matching neither runs in both jobs and no file can match both, so
-      # nothing can be skipped. Keep the literal path `tests/tools` in both jobs
-      # (tools/gate_checks/ci_workflow_test_coverage.py reads it as the covered directory). To
-      # rebalance, change the letter ranges here and in the sibling tools job together.
+      # Sibling of `tools-a-e` (TCK-20261003-CI-SPLIT-API-TOOLS-JOB); see the comment there for why
+      # the two --ignore-glob patterns must stay complementary and how to rebalance them.
       - name: "Run: tests/tools (f–z)"
         if: always()
         run: |
@@ -473,11 +469,11 @@ jobs:
         if: always()
         run: |
           python3 tools/ci_junit_merge.py --out reports/junit/api-cli-engine.xml \
-                 reports/junit/api-cli-engine-api.xml \\
-                 reports/junit/api-cli-engine-cli.xml \\
-                 reports/junit/api-cli-engine-logging.xml \\
-                 reports/junit/api-cli-engine-engine.xml \\
-                 reports/junit/api-cli-engine-observability.xml \\
+                 reports/junit/api-cli-engine-api.xml \
+                 reports/junit/api-cli-engine-cli.xml \
+                 reports/junit/api-cli-engine-logging.xml \
+                 reports/junit/api-cli-engine-engine.xml \
+                 reports/junit/api-cli-engine-observability.xml \
                  reports/junit/api-cli-engine-visual_assets.xml
       - name: Upload JUnit XML
         if: always()
