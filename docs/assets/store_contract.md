@@ -34,7 +34,8 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 | What | Where | Who may write | State |
 |---|---|---|---|
 | Experiment workspace (every drawing revision) | `~/.cache/rpg-aseprite-mcp/` | the drawing tools | built |
-| Intake quarantine | `visual_assets/catalog/.quarantine/` (gitignored) | the store's intake step only | designed; directory ignored, nothing writes it |
+| Intake quarantine | `visual_assets/catalog/.quarantine/` (gitignored) | the store's intake step only | **built** (store side); holds the staged files and the `IntakeResult` until adoption |
+| Local review area | `visual_assets/catalog/.review/` (gitignored) | `review` only | **built** |
 | Managed store | `visual_assets/catalog/` | the store's human-gated commands only | layout built (empty); commands designed |
 
 ## What is built now
@@ -48,6 +49,12 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 - Identities with no normalisation: `VisualKey`, eight opaque id types, `SourceRevision`, `FileHash` (`sha256:`), `PixelHash`
   (`pixels-v1:`; the algorithm is child 5), `UtcTimestamp`.
 - Registry loader: duplicate YAML keys, anchors, alias problems and the reserved `fixture.*` namespace are rejected; nothing registers dynamically.
+- Intake (store side; `python -m visual_assets.store intake|review|list|show`): the package directory is opened without following symlinks and read
+  into memory first (refused before any byte is copied, leaving no quarantine directory, for a symlink, extra file or sub-directory, oversize file,
+  FIFO or hard-linked file; these are `StageError`s, not findings). The independent validator then judges the bytes with one policy for every
+  producer class and records an immutable `IntakeResult` **inside the quarantine directory** (`in-` + 16 hex of the `package.json` hash). Re-submitting the
+  identical package returns the existing result and writes nothing; the same `package.json` with different source or preview bytes is refused.
+  `review` re-verifies the staged hashes and exports the preview plus a text summary of a PASSED intake to `.review/`. No intake step adopts anything.
 - `tests/visual_assets/test_boundaries.py`: `drawing` has no write path into `catalog/` (it may not even reference the path),
   `store` does not import `drawing`, nothing imports `src/` and `src/` never imports `visual_assets`.
 
@@ -60,6 +67,16 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 | Build / release candidate | sandboxed allowlisted export, canonical pixel hash, immutable candidate manifests, no "active" pointer | 5 |
 | `verify` / `gc` | whole-store integrity in pure Python (runs in CI); reachability-based dry-run gc | 5 |
 | MCP store tools | read-only `store_list` / `store_show` and `submit_candidate`; never adopt, build, release, revoke or gc | 6 |
+
+## Known gaps (stated, not hidden)
+
+- Animation metadata beyond `frame_count` and `tag_count` (per-frame durations, tag ranges, loop modes) is not part of the handoff package or checked by intake
+  (proposal 9.6 lists "animation metadata"; ticket 3 adds only the producer state).
+- **Palette size is unverifiable for an all-opaque-black stored palette.** Aseprite 1.3.18.6 rebuilds such a palette from the image when it loads a file
+  (size = 1 + distinct opaque colours), which needs pixel decoding. Intake quarantines it with `PALETTE_UNVERIFIABLE`. Only a never-edited first revision
+  carries one; any edit re-saves a palette with real entries. Every other palette is checked exactly against what Aseprite reports.
+- Intake accepts only 32-bit RGBA sources (`SOURCE_UNSUPPORTED_COLOR_DEPTH` otherwise); the package carries no colour-depth claim, so it is a support policy, not a claim check.
+- The unsupported-feature list (`unsupported:tilemap`, `...indexed_color`, `...grayscale`, `...linked_cels`, `...external_reference`) and the preview/file size bounds are provisional (`U-05`).
 
 ## Decisions still open
 

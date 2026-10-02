@@ -74,6 +74,12 @@ def _check_dim(value: int) -> int:
     return value
 
 
+def _check_positive_count(value: int) -> int:
+    if not 1 <= value <= 65535:
+        raise ValueError("count must be 1..65535")
+    return value
+
+
 def _check_count(value: int) -> int:
     if not 0 <= value <= 65535:
         raise ValueError("count must be 0..65535")
@@ -81,6 +87,7 @@ def _check_count(value: int) -> int:
 
 
 Dimension = Annotated[int, AfterValidator(_check_dim)]
+PositiveCount = Annotated[int, AfterValidator(_check_positive_count)]
 Count = Annotated[int, AfterValidator(_check_count)]
 
 
@@ -156,6 +163,6 @@ def parse_record(cls: type[RecordT], data: bytes) -> RecordT:
         first = exc.errors()[0]
         code = {"extra_forbidden": "unknown_field", "missing": "missing_field"}.get(first["type"], "invalid_record")
         where = ".".join(str(p) for p in first["loc"])
-        raise ContractError(code, f"{where}: {first['msg']}") from None
+        raise ContractError(code, f"{where}: {first['msg']}", field=where) from None
     except (ValueError, UnicodeError) as exc:
         raise ContractError("invalid_record", str(exc)) from None

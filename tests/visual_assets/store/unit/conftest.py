@@ -38,3 +38,39 @@ def dump(data: dict) -> bytes:
 @pytest.fixture(params=RECORD_TYPES, ids=lambda c: c.__name__)
 def record_cls(request):
     return request.param
+
+
+@pytest.fixture
+def roots(tmp_path, monkeypatch):
+    """Patch the store's writable roots into tmp_path (`config.NAME` is read at call time)."""
+    from visual_assets.store import config
+
+    quarantine, review = tmp_path / "quarantine", tmp_path / "review"
+    monkeypatch.setattr(config, "QUARANTINE_ROOT", quarantine)
+    monkeypatch.setattr(config, "REVIEW_ROOT", review)
+    return quarantine, review
+
+
+def snapshot(root) -> dict[str, tuple]:
+    """Relative path -> (kind, size, sha256) for everything under `root` (symlinks not followed)."""
+    import hashlib
+    import os
+    import stat as st
+    from pathlib import Path
+
+    out: dict[str, tuple] = {}
+    root = Path(root)
+    if not root.exists():
+        return out
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        for name in dirnames + filenames:
+            path = Path(dirpath) / name
+            mode = path.lstat().st_mode
+            rel = str(path.relative_to(root))
+            if st.S_ISREG(mode):
+                out[rel] = ("file", path.lstat().st_size, hashlib.sha256(path.read_bytes()).hexdigest())
+            elif st.S_ISLNK(mode):
+                out[rel] = ("link", os.readlink(path))
+            else:
+                out[rel] = ("dir" if st.S_ISDIR(mode) else "special",)
+    return out

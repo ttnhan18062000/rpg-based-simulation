@@ -53,6 +53,10 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "identities": {"identities", "errors"},
     "contracts": {"contracts", "identities", "errors", "config"},
     "catalog": {"catalog", "contracts", "identities", "errors", "config"},
+    # intake does file I/O (the quarantine) but takes timestamps as parameters; only `cli` reads the clock
+    "intake": {"intake", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "intake", "contracts", "identities", "errors", "config"},
+    "__main__": {"cli"},
 }
 # no I/O, clock or process access in the pure layers; PyYAML only in `catalog`
 PURE_STORE_LAYERS = {"contracts", "identities"}
@@ -315,8 +319,8 @@ def test_every_store_module_has_a_known_layer():
 
 
 def test_planted_unknown_store_layer_is_caught():
-    problems = check_source("visual_assets/store/intake/stage.py", "import json\n")
-    assert any("unknown store layer 'intake'" in p for p in problems), problems
+    problems = check_source("visual_assets/store/adoption/adopt.py", "import json\n")
+    assert any("unknown store layer 'adoption'" in p for p in problems), problems
 
 
 def test_planted_store_layering_violations_are_caught():

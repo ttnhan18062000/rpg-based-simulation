@@ -8,7 +8,30 @@ class StoreError(Exception):
 
 
 class ContractError(StoreError):
-    """A record failed to parse or validate. `code` is stable and machine-readable."""
+    """A record failed to parse or validate. `code` is stable and machine-readable.
+
+    `field` is the dotted path of the first offending field when the failure is about one field, else `None`.
+    It can echo producer-controlled text (an unknown key), so it is never trusted as safe to display.
+    """
+
+    def __init__(self, code: str, message: str, field: str | None = None) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+        self.field = field
+
+
+class StageError(StoreError):
+    """A candidate package was refused before any byte was copied (so nothing was staged). Not a finding."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
+class IntakeError(StoreError):
+    """An intake or review request cannot proceed (unknown id, not PASSED, staged bytes changed, ...)."""
 
     def __init__(self, code: str, message: str) -> None:
         super().__init__(f"{code}: {message}")

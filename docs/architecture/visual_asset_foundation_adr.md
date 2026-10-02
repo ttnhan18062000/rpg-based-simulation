@@ -47,6 +47,11 @@ paths were deliberately left open. Full structure, layering rules and command ta
   `identities` stay free of `os`, `pathlib`, `io`, `time`, `datetime`, `subprocess`, `yaml` and `open()` (AST rule in
   `tests/visual_assets/test_boundaries.py`); only `store/catalog` may import `yaml`. A store layer without a row in
   `STORE_ALLOWED` fails the test, so each later ticket adds its own.
+- `IntakeResult` is written inside the gitignored quarantine directory, not the tracked `provenance/intake/` (the structure doc's placement). Intake has no
+  human gate, and D3 says nothing unaccepted enters git history; `adopt` (ticket 4) copies the result into `provenance/intake/`.
+- Store layers `intake`, `cli`, `__main__` have their own `STORE_ALLOWED` rows; `intake` does file I/O, only `cli` reads the clock.
+- Aseprite file facts used by intake were verified against the pinned Aseprite 1.3.18.6 by round-tripping files through the real binary (integration tests).
+  Notably an all-opaque-black stored palette is unverifiable without decoding pixels (see `docs/assets/store_contract.md`, known gaps).
 - `pin_hash.sh` became `python -m visual_assets.drawing.pin`; `backend/lua/ops.lua` is byte-identical to the spike's.
 
 ## Consequences

@@ -1,6 +1,6 @@
 # visual_assets/store — asset store logic (contracts built, writers not yet)
 
-**Status: the pure contract layer exists. No store writer exists yet (intake, adoption, build, release, verify, gc, CLI);
+**Status: the pure contract layer and candidate intake exist. No tracked-catalog writer exists yet (adoption, build, release, verify, gc);
 see `tickets/todos/visual-asset-foundation/SEQUENCE.md` for the tickets that build them, in order.**
 
 ## What exists
@@ -12,6 +12,8 @@ see `tickets/todos/visual-asset-foundation/SEQUENCE.md` for the tickets that bui
 | `identities.py` | `VisualKey`, eight opaque id types, `SourceRevision`, `FileHash`, `PixelHash`, `UtcTimestamp`; no normalisation |
 | `contracts/` | strict, frozen, versioned records and `canonical_json` / `parse_record`; pure (no file, clock or path access) |
 | `catalog/registry.py` | read-only loader for `catalog/definitions/visual_keys.yaml`; `Registry.resolve` follows at most one alias |
+| `intake/` | `quarantine.py` (safe read, exclusive write), `aseprite.py` / `png.py` (bounded pure readers), `validator.py` (one policy, no producer branch), `service.py` (`intake`, `review`, `list_results`, `show`) |
+| `cli.py`, `__main__.py` | `python -m visual_assets.store intake <dir> | review <id> | list | show <id>`; exit 0 passed, 1 quarantined, 2 refused/error; the only code that reads the clock |
 
 The committed catalog has **zero** keys, sources and artifacts. Synthetic fixtures live only in `visual_assets/catalog/fixtures/`.
 Design, command/gate table and layering rules: `docs/plans/visual-asset-foundation/README.md`; contract summary (designed vs built):

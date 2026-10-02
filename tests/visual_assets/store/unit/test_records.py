@@ -215,7 +215,7 @@ def test_handoff_expected_parent_is_a_revision_or_not_applicable():
 
 
 def test_handoff_bounds(monkeypatch):
-    for field, bad in (("width", 0), ("width", 129), ("height", -1), ("frame_count", -1), ("palette_size", 70000),
+    for field, bad in (("width", 0), ("width", 129), ("height", -1), ("frame_count", -1), ("frame_count", 0), ("layer_count", 0), ("palette_size", 70000),
                        ("width", True), ("width", 16.0), ("declared_limitations", ["x"] * 17),
                        ("declared_limitations", ["x" * 257])):
         assert code_of(CandidateHandoffPackage, _handoff(**{field: bad})) == "invalid_record", (field, bad)
@@ -354,7 +354,7 @@ def test_revocation_target_is_a_typed_union():
 
 
 def test_intake_verdict_must_agree_with_findings():
-    finding = {"code": "HASH_MISMATCH", "detail": "source hash differs"}
+    finding = {"code": "SOURCE_HASH_MISMATCH", "detail": "source hash differs"}
     assert parse_record(IntakeResult, _with(IntakeResult, verdict="QUARANTINED", findings=[finding]))
     assert code_of(IntakeResult, _with(IntakeResult, verdict="PASSED", findings=[finding])) == "invalid_record"
     assert code_of(IntakeResult, _with(IntakeResult, verdict="QUARANTINED", findings=[])) == "invalid_record"
@@ -363,7 +363,7 @@ def test_intake_verdict_must_agree_with_findings():
     data["staged_files"] = data["staged_files"] + data["staged_files"][:1]
     assert code_of(IntakeResult, dump(data)) == "invalid_record"
     data = fixture_dict(IntakeResult)
-    data["staged_files"][0]["name"] = "../handoff.json"
+    data["staged_files"][0]["name"] = "../package.json"
     assert code_of(IntakeResult, dump(data)) == "invalid_record"
 
 
@@ -417,3 +417,79 @@ def test_free_text_still_accepts_ordinary_unicode_and_inner_spaces():
     # edge whitespace (including non-breaking space) is still rejected, never trimmed
     for bad in (" x", "x ", " x", "x ", "　x"):
         assert code_of(AdoptionRecord, _with(AdoptionRecord, approver_name=bad)) == "invalid_record", repr(bad)
+
+
+# --------------------------------------------------------------------------- ticket 3 contract additions
+
+
+def test_producer_state_is_required_and_only_takes_the_three_states():
+    assert code_of(CandidateHandoffPackage, _handoff(producer_state=...)) == "missing_field"
+    for state in ("ACTIVE", "QUARANTINED", "REVOKED"):
+        assert parse_record(CandidateHandoffPackage, _handoff(producer_state=state)).producer_state.value == state
+    for bad in ("active", "WITHDRAWN", "", None, 1, True):
+        assert code_of(CandidateHandoffPackage, _handoff(producer_state=bad)) == "invalid_record", bad
+
+
+def test_frame_and_layer_counts_are_one_based_the_others_may_be_zero():
+    for field in ("frame_count", "layer_count"):
+        assert code_of(CandidateHandoffPackage, _handoff(**{field: 0})) == "invalid_record", field
+        assert parse_record(CandidateHandoffPackage, _handoff(**{field: 1}))
+    for field in ("cel_count", "tag_count", "palette_size"):
+        assert parse_record(CandidateHandoffPackage, _handoff(**{field: 0}))
+
+
+def test_intake_candidate_id_may_be_unavailable_only_for_a_quarantined_result():
+    finding = [{"code": "PACKAGE_UNREADABLE", "detail": "package.json rejected (invalid_json)"}]
+    unavailable = _with(IntakeResult, candidate_id="UNAVAILABLE", verdict="QUARANTINED", findings=finding)
+    assert parse_record(IntakeResult, unavailable).candidate_id == "UNAVAILABLE"
+    # the other direction: a PASSED result must name its candidate
+    assert code_of(IntakeResult, _with(IntakeResult, candidate_id="UNAVAILABLE")) == "invalid_record"
+    for bad in ("NOT_APPLICABLE", None, "", "Cand-1"):
+        assert code_of(IntakeResult, _with(IntakeResult, candidate_id=bad, verdict="QUARANTINED", findings=finding)) == "invalid_record", bad
+    # the marker is uppercase and an id never is, so a real candidate may legitimately be called "unavailable"
+    assert parse_record(IntakeResult, _with(IntakeResult, candidate_id="unavailable")).candidate_id == "unavailable"
+
+
+def test_a_passed_intake_stages_exactly_the_three_files_in_order():
+    data = fixture_dict(IntakeResult)
+    assert [f["name"] for f in data["staged_files"]] == ["package.json", "source.aseprite", "preview.png"]
+    for staged in (data["staged_files"][:2], data["staged_files"][::-1], data["staged_files"][1:] + data["staged_files"][:1], []):
+        assert code_of(IntakeResult, dump({**data, "staged_files": staged})) == "invalid_record"
+    finding = [{"code": "PACKAGE_UNREADABLE", "detail": "package.json rejected (invalid_json)"}]
+    partial = {**data, "staged_files": data["staged_files"][:2], "verdict": "QUARANTINED", "findings": finding}
+    assert parse_record(IntakeResult, dump(partial))  # a quarantined result may record fewer files
+
+
+def test_refusal_only_cases_are_errors_not_finding_codes():
+    from visual_assets.store.contracts.intake import IntakeFindingCode
+
+    names = {c.value for c in IntakeFindingCode}
+    for refused_before_staging in ("SYMLINK", "EXTRA_ENTRY", "SUB_DIRECTORY", "OVERSIZE_FILE", "PATH_ESCAPE", "HARD_LINK",
+                                   "NOT_REGULAR_FILE", "MISSING_FILE", "UNKNOWN_FILE", "OVERSIZE"):
+        assert refused_before_staging not in names, refused_before_staging
+
+
+def test_every_finding_code_is_distinct_and_prefixed_by_its_subject():
+    from visual_assets.store.contracts.intake import IntakeFindingCode
+
+    values = [c.value for c in IntakeFindingCode]
+    assert len(values) == len(set(values)) and all(c.name == c.value for c in IntakeFindingCode)
+    # the ticket's cases each have their own code (hash x2, magic, header size, w/h/frames/layers/tags, bound, chunk, assertion,
+    # licence, unknown field, duplicate key)
+    needed = {"SOURCE_HASH_MISMATCH", "PREVIEW_HASH_MISMATCH", "SOURCE_BAD_MAGIC", "SOURCE_HEADER_SIZE_MISMATCH",
+              "WIDTH_MISMATCH", "HEIGHT_MISMATCH", "FRAME_COUNT_MISMATCH", "LAYER_COUNT_MISMATCH", "TAG_COUNT_MISMATCH",
+              "DIMENSION_OUT_OF_BOUNDS", "SOURCE_TRUNCATED_CHUNK", "ASSERTION_MISSING", "LICENCE_WITHDRAWN",
+              "PACKAGE_UNKNOWN_FIELD", "PACKAGE_DUPLICATE_KEY"}
+    assert needed <= set(values)
+
+
+def test_contract_error_carries_the_failing_field():
+    with pytest.raises(ContractError) as err:
+        parse_record(CandidateHandoffPackage, _handoff(width=0))
+    assert err.value.code == "invalid_record" and err.value.field == "width"
+    with pytest.raises(ContractError) as err:
+        parse_record(CandidateHandoffPackage, _handoff(assertion=...))
+    assert err.value.code == "missing_field" and err.value.field == "assertion"
+    with pytest.raises(ContractError) as err:
+        parse_record(CandidateHandoffPackage, b"not json")
+    assert err.value.field is None

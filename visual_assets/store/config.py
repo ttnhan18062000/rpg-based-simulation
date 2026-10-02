@@ -21,3 +21,5 @@ MAX_VISUAL_KEYS = 4096  # provisional (U-05)
 MAX_ALIASES = 1024  # provisional (U-05)
 MAX_SOURCE_BYTES = 100 * 1024  # provisional (U-05); the D2 (no Git LFS) reversal trigger
 MAX_DIM = 128  # provisional (U-05)
+MAX_PREVIEW_BYTES = 512 * 1024  # provisional (U-05)
+MAX_PREVIEW_DIM = 2048  # provisional (U-05); 128 px at the largest drawing-tool scale (16x)

@@ -1,0 +1,268 @@
+"""intake / review / list / show: idempotence, immutability, write confinement, review gates."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from tests.visual_assets.store import builders as b
+from tests.visual_assets.store.unit.conftest import snapshot
+from visual_assets.store import config
+from visual_assets.store.contracts import canonical_json, parse_record
+from visual_assets.store.contracts.base import IntakeVerdict
+from visual_assets.store.contracts.intake import IntakeFindingCode as Code
+from visual_assets.store.contracts.intake import IntakeResult
+from visual_assets.store.errors import IntakeError
+from visual_assets.store.intake import intake, list_results, quarantine, review, show
+
+NOW = "2026-01-01T00:00:00Z"
+LATER = "2026-02-02T00:00:00Z"
+
+
+@pytest.fixture
+def pkg(tmp_path):
+    package, source, preview = b.good_files(tags=1)
+    return b.write_dir(tmp_path / "pkg", package, source, preview)
+
+
+@pytest.fixture
+def bad_pkg(tmp_path):
+    return b.write_dir(tmp_path / "bad", *b.bad_files())
+
+
+@pytest.fixture
+def untouched(tmp_path):
+    """Snapshots of everything intake must never modify: the real tracked catalog and a stand-in workspace."""
+    workspace = tmp_path / "workspace"
+    (workspace / "sprites" / "x").mkdir(parents=True)
+    (workspace / "sprites" / "x" / "r0001.aseprite").write_bytes(b"sprite")
+    state = lambda: (snapshot(config.CATALOG_ROOT), snapshot(workspace))  # noqa: E731
+    return state, state()
+
+
+def test_a_passing_package_is_staged_and_recorded(pkg, roots, untouched):
+    state, before = untouched
+    result = intake(pkg, created_at=NOW)
+    assert result.verdict is IntakeVerdict.PASSED and result.findings == ()
+    assert result.intake_id.startswith("in-") and len(result.intake_id) == 19
+    staged = roots[0] / result.intake_id
+    on_disk = parse_record(IntakeResult, (staged / "intake_result.json").read_bytes())
+    assert on_disk == result and canonical_json(result) == (staged / "intake_result.json").read_bytes()
+    for name in quarantine.STAGED_NAMES:
+        assert (staged / name).read_bytes() == (pkg / name).read_bytes()
+    assert [f.name for f in result.staged_files] == list(quarantine.STAGED_NAMES)
+    assert state() == before  # tracked catalog and workspace byte-identical
+    assert not roots[1].exists()  # intake never touches the review area
+
+
+def test_a_defective_package_is_quarantined_with_findings(bad_pkg, roots):
+    result = intake(bad_pkg, created_at=NOW)
+    assert result.verdict is IntakeVerdict.QUARANTINED
+    assert Code.SOURCE_BAD_MAGIC in [f.code for f in result.findings]
+    assert (roots[0] / result.intake_id / "intake_result.json").is_file()  # the evidence is kept
+
+
+def test_an_unparseable_package_has_no_candidate_id(tmp_path, roots):
+    _, source, preview = b.good_files()
+    directory = b.write_dir(tmp_path / "junk", b"{not json", source, preview)
+    result = intake(directory, created_at=NOW)
+    assert result.candidate_id == "UNAVAILABLE" and result.verdict is IntakeVerdict.QUARANTINED
+    assert Code.PACKAGE_UNREADABLE in [f.code for f in result.findings]
+
+
+def test_resubmitting_an_identical_package_returns_the_same_result_and_writes_nothing(pkg, roots):
+    first = intake(pkg, created_at=NOW)
+    staged = roots[0] / first.intake_id
+    before = snapshot(roots[0])
+    mtimes = {p.name: p.stat().st_mtime_ns for p in staged.iterdir()}
+    second = intake(pkg, created_at=LATER)  # a later timestamp must not rewrite the recorded one
+    assert second == first and second.created_at == NOW
+    assert snapshot(roots[0]) == before
+    assert {p.name: p.stat().st_mtime_ns for p in staged.iterdir()} == mtimes
+
+
+def test_an_existing_result_is_never_overwritten(pkg, roots):
+    first = intake(pkg, created_at=NOW)
+    result_path = roots[0] / first.intake_id / "intake_result.json"
+    original = result_path.read_bytes()
+    for _ in range(3):
+        intake(pkg, created_at=LATER)
+    assert result_path.read_bytes() == original
+
+
+def test_same_package_json_with_different_bytes_is_refused_not_merged(pkg, roots):
+    intake(pkg, created_at=NOW)
+    (pkg / "preview.png").write_bytes(b.png(16 * 8, 16 * 8) + b"\x00")  # same package.json, different bytes
+    before = snapshot(roots[0])
+    with pytest.raises(IntakeError) as err:
+        intake(pkg, created_at=LATER)
+    assert err.value.code == "conflicting_resubmission"
+    assert snapshot(roots[0]) == before
+
+
+def test_a_stage_directory_without_a_result_is_reported_not_adopted_or_deleted(pkg, roots):
+    result = intake(pkg, created_at=NOW)
+    (roots[0] / result.intake_id / "intake_result.json").unlink()
+    with pytest.raises(IntakeError) as err:
+        intake(pkg, created_at=LATER)
+    assert err.value.code == "incomplete_stage"
+    assert (roots[0] / result.intake_id / "package.json").is_file()  # nothing we did not finish is deleted
+
+
+def test_a_failed_write_removes_the_partial_stage(pkg, roots, monkeypatch):
+    real = quarantine.write_new
+    calls = {"n": 0}
+
+    def flaky(path, data):
+        calls["n"] += 1
+        if calls["n"] == 3:
+            raise OSError("disk full")
+        real(path, data)
+
+    monkeypatch.setattr(quarantine, "write_new", flaky)
+    with pytest.raises(OSError):
+        intake(pkg, created_at=NOW)
+    assert list(roots[0].iterdir()) == []
+    monkeypatch.setattr(quarantine, "write_new", real)
+    assert intake(pkg, created_at=NOW).verdict is IntakeVerdict.PASSED  # and a retry works
+
+
+@pytest.mark.parametrize("bad", ["", "2026-01-01", "2026-02-30T00:00:00Z", "2026-01-01T00:00:00+00:00", None, 5])
+def test_created_at_must_be_a_real_utc_timestamp(pkg, roots, bad):
+    with pytest.raises(IntakeError) as err:
+        intake(pkg, created_at=bad)
+    assert err.value.code == "bad_created_at"
+    assert not roots[0].exists()
+
+
+def test_library_code_never_reads_the_clock():
+    import ast
+
+    for path in Path(config.__file__).parent.rglob("*.py"):
+        if path.name == "cli.py":
+            continue
+        tree = ast.parse(path.read_text())
+        for node in ast.walk(tree):
+            names = [a.name for a in node.names] if isinstance(node, (ast.Import, ast.ImportFrom)) else []
+            module = node.module if isinstance(node, ast.ImportFrom) else None
+            assert "datetime" not in names and module != "datetime" and "time" not in names, path
+
+
+# --------------------------------------------------------------------------- review
+
+
+def test_review_exports_the_preview_and_a_summary(pkg, roots, untouched):
+    state, before = untouched
+    result = intake(pkg, created_at=NOW)
+    target = review(result.intake_id)
+    assert target == roots[1] / result.intake_id
+    assert sorted(p.name for p in target.iterdir()) == ["preview.png", "summary.txt"]
+    assert (target / "preview.png").read_bytes() == (pkg / "preview.png").read_bytes()
+    text = (target / "summary.txt").read_text()
+    assert "NOT adopted" in text and result.intake_id in text and "cand-0123456789abcdef" in text
+    assert state() == before
+
+
+def test_review_is_idempotent_and_refuses_a_changed_review_area(pkg, roots):
+    result = intake(pkg, created_at=NOW)
+    first = review(result.intake_id)
+    snap = snapshot(roots[1])
+    assert review(result.intake_id) == first and snapshot(roots[1]) == snap
+    (first / "summary.txt").write_text("tampered")
+    with pytest.raises(IntakeError) as err:
+        review(result.intake_id)
+    assert err.value.code == "review_exists_differs"
+    (first / "summary.txt").unlink()  # a half-removed review directory is refused too, never silently repaired
+    with pytest.raises(IntakeError):
+        review(result.intake_id)
+
+
+def test_review_refuses_a_quarantined_intake(bad_pkg, roots):
+    result = intake(bad_pkg, created_at=NOW)
+    with pytest.raises(IntakeError) as err:
+        review(result.intake_id)
+    assert err.value.code == "not_passed"
+    assert not roots[1].exists()
+
+
+@pytest.mark.parametrize("bad", ["in-0000000000000000", "nope", "", "../x", "in-" + "g" * 16, "IN-0000000000000000", "in-0000000000000000/.."])
+def test_review_and_show_refuse_unknown_or_malformed_ids(roots, bad):
+    for fn in (review, show):
+        with pytest.raises(IntakeError) as err:
+            fn(bad)
+        assert err.value.code in {"unknown_intake", "bad_intake_id"}
+    assert not roots[1].exists()
+
+
+@pytest.mark.parametrize("name", ["package.json", "source.aseprite", "preview.png"])
+def test_review_refuses_when_staged_bytes_no_longer_match(pkg, roots, name):
+    result = intake(pkg, created_at=NOW)
+    staged = roots[0] / result.intake_id / name
+    staged.write_bytes(staged.read_bytes() + b"\x00")
+    with pytest.raises(IntakeError) as err:
+        review(result.intake_id)
+    assert err.value.code == "staged_bytes_changed"
+    assert not roots[1].exists()
+
+
+def test_review_refuses_a_symlinked_staged_file(pkg, roots, tmp_path):
+    result = intake(pkg, created_at=NOW)
+    staged = roots[0] / result.intake_id / "preview.png"
+    copy = tmp_path / "copy.png"
+    copy.write_bytes(staged.read_bytes())
+    staged.unlink()
+    staged.symlink_to(copy)
+    from visual_assets.store.errors import StageError
+
+    with pytest.raises(StageError):
+        review(result.intake_id)
+    assert not roots[1].exists()
+
+
+def test_review_refuses_a_corrupt_result(pkg, roots):
+    result = intake(pkg, created_at=NOW)
+    (roots[0] / result.intake_id / "intake_result.json").write_text("{}")
+    with pytest.raises(IntakeError) as err:
+        review(result.intake_id)
+    assert err.value.code == "corrupt_result"
+
+
+def test_review_does_not_follow_a_symlinked_stage_directory(pkg, roots, tmp_path):
+    result = intake(pkg, created_at=NOW)
+    moved = tmp_path / "moved"
+    (roots[0] / result.intake_id).rename(moved)
+    (roots[0] / result.intake_id).symlink_to(moved, target_is_directory=True)
+    with pytest.raises(IntakeError) as err:
+        review(result.intake_id)
+    assert err.value.code == "unknown_intake"
+
+
+# --------------------------------------------------------------------------- list / show
+
+
+def test_list_and_show_read_quarantine_results_only(pkg, bad_pkg, roots):
+    assert list_results() == ([], [])
+    one = intake(pkg, created_at=NOW)
+    two = intake(bad_pkg, created_at=NOW)
+    results, problems = list_results()
+    assert {r.intake_id for r in results} == {one.intake_id, two.intake_id} and problems == []
+    assert show(one.intake_id) == one and show(two.intake_id) == two
+
+
+def test_list_reports_unreadable_directories_and_ignores_strangers(pkg, roots):
+    one = intake(pkg, created_at=NOW)
+    (roots[0] / "in-ffffffffffffffff").mkdir()
+    (roots[0] / "stray.txt").write_text("x")
+    (roots[0] / "not-an-intake").mkdir()
+    results, problems = list_results()
+    assert [r.intake_id for r in results] == [one.intake_id] and problems == ["in-ffffffffffffffff"]
+
+
+def test_the_intake_id_depends_only_on_package_json(pkg, tmp_path, roots):
+    a = intake(pkg, created_at=NOW)
+    copy = b.write_dir(tmp_path / "copy", (pkg / "package.json").read_bytes(), (pkg / "source.aseprite").read_bytes(),
+                       (pkg / "preview.png").read_bytes())
+    assert intake(copy, created_at=LATER).intake_id == a.intake_id
+    assert json.loads((pkg / "package.json").read_bytes())["candidate_id"] == "cand-0123456789abcdef"

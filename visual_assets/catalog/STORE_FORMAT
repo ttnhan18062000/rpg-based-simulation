@@ -1,2 +1,2 @@
 store_format_version: 1
-status: contracts built (typed records, identities, semantic registry loader); no store writer, record or asset exists yet; see tickets/todos/visual-asset-foundation/SEQUENCE.md
+status: contracts and candidate intake built (intake writes only the gitignored quarantine and review areas); no tracked-catalog writer, record or asset exists yet; see tickets/todos/visual-asset-foundation/SEQUENCE.md

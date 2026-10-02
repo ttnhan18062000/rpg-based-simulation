@@ -12,6 +12,7 @@ from visual_assets.store.contracts.base import (
     Count,
     Dimension,
     LicenceState,
+    PositiveCount,
     ProducerClass,
     ProvenanceText,
     StoreRecord,
@@ -26,6 +27,14 @@ MAX_LIMITATIONS = 16  # provisional (U-05)
 
 class SourceFormat(str, Enum):
     ASEPRITE = "ASEPRITE"
+
+
+class ProducerState(str, Enum):
+    """Lifecycle state the producer reports (proposal 9.6). Intake quarantines anything not ACTIVE."""
+
+    ACTIVE = "ACTIVE"
+    QUARANTINED = "QUARANTINED"
+    REVOKED = "REVOKED"
 
 
 class ProducerValidation(str, Enum):
@@ -53,8 +62,8 @@ class CandidateHandoffPackage(StoreRecord):
     source_format: SourceFormat
     width: Dimension
     height: Dimension
-    frame_count: Count
-    layer_count: Count
+    frame_count: PositiveCount
+    layer_count: PositiveCount
     cel_count: Count
     tag_count: Count
     palette_size: Count
@@ -63,6 +72,7 @@ class CandidateHandoffPackage(StoreRecord):
     human_review_ref: ProvenanceText
     licence_state: LicenceState
     licence_evidence_ref: ProvenanceText
+    producer_state: ProducerState
     producer_validation: ProducerValidation
     declared_limitations: Annotated[tuple[BoundedText, ...], Field(max_length=MAX_LIMITATIONS)]
     assertion: Literal["HANDOFF_IS_NOT_ADOPTION_PUBLICATION_OR_ACTIVATION"]

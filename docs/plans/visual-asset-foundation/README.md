@@ -89,8 +89,10 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
       release.py                   #   ReleaseCandidateManifest
       definitions.py               #   semantic registry entries (visual_key, family, allowed variants)
     intake/
-      quarantine.py                #   bounded copy into .quarantine, never trusts producer paths
-      validator.py                 #   claims vs staged bytes: hashes, format, bounds, symlink/traversal, licence state
+      quarantine.py                #   bounded copy into .quarantine, never trusts producer paths (built)
+      aseprite.py  png.py          #   bounded pure readers for the facts intake checks (built)
+      validator.py                 #   claims vs staged bytes: hashes, format, bounds, licence state, one policy for every producer (built)
+      service.py                   #   intake / review / list / show; writes IntakeResult inside the quarantine (built)
     adoption.py                    #   HUMAN-GATED: adopt an intake-passed candidate as a new source revision
     build/
       exporter.py                  #   allowlisted export of sources -> generated artifacts (sandboxed Aseprite)
@@ -114,7 +116,9 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
         r0001.aseprite               #   adopted editable source, immutable revision
         r0001.source.json            #   SourceRecord (hash, parent, adoption_id)
     provenance/
-      intake/<intake_id>.json        #   IntakeResult (immutable)
+      intake/<intake_id>.json        #   IntakeResult (immutable); COPIED here by `adopt` only. Until then it lives in
+                                     #   .quarantine/<intake_id>/ (decided 2026-10-02: intake has no human gate and D3 says
+                                     #   nothing unaccepted enters git history)
       adoptions/<adoption_id>.json   #   AdoptionRecord (immutable)
       revocations/<id>.json
       licences/                      #   rights evidence references
@@ -174,6 +178,9 @@ store.config, store.errors  ->  (nothing)
 store.identities            ->  errors                      # helpers raise IdentityError
 store.contracts             ->  identities, errors, config  # + pydantic; no os/pathlib/io/time/datetime/subprocess/yaml, no open()
 store.catalog               ->  contracts, identities, errors, config  # + yaml (the only layer that may import it)
+store.intake                ->  contracts, identities, errors, config  # file I/O (quarantine); takes created_at as a parameter
+store.cli                   ->  intake, contracts, identities, errors, config  # the only module that reads the clock
+store.__main__              ->  cli
 store.*                     ->  contracts, config, errors; build -> drawing.backend.sandbox (shared sandbox)
 # each later store layer adds its own row to STORE_ALLOWED in the boundary test; an unlisted layer fails it
 ```
@@ -190,7 +197,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 
 | Command | Gate | Effect |
 |---|---|---|
-| `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` |
+| `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` inside the quarantine directory (nothing tracked) |
 | `review <intake_id>` | none | export previews of an intake-passed candidate into the local, gitignored `.review/` area for a human to look at; writes nothing tracked |
 | `adopt <intake_id> --visual-key K --approver NAME --licence STATE` | **human** | new `sources/<id>/rNNNN` + `AdoptionRecord`; refuses a failed, revoked or already-adopted intake |
 | `build [<source_asset_id>]` | none; needs Aseprite | export adopted sources per `build-config` into `generated/` with `ArtifactRecord`s |
@@ -234,7 +241,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 
 1. **Foundation init** (`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`): move and restructure the drawing tools into `visual_assets/drawing/`, tests into `tests/visual_assets/drawing/`, no behaviour change; boundary test; CI step; `.mcp.json` + launcher; `store/` and `catalog/` skeletons (READMEs and package markers only, no logic); docs and ADR; plan-package status updates.
 2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `catalog/registry`), pure, fully CI-tested. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`).
-3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`.
+3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. Store side **built** (quarantine, validator, review, `intake` / `review` / `list` / `show` CLI); drawing-side `export_handoff` pending (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`).
 4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test.
 5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`.
 6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server.
