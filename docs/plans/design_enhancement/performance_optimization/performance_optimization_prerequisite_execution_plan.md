@@ -133,7 +133,7 @@ working tree; an untracked source cannot safely govern ticket execution.
 ## 5. Existing-plan conflict register
 
 Standalone approval handoff:
-`docs/plans/design_enhancement/performance_optimization_conflict_approval_review.md`.
+`docs/plans/design_enhancement/performance_optimization/performance_optimization_conflict_approval_review.md`.
 
 ### Conflict severity
 

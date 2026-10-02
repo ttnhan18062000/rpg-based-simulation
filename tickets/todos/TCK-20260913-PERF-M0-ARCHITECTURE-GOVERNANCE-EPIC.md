@@ -19,6 +19,14 @@ tags: [architecture, performance, determinism]
 > investigated, debugged, or re-scoped as part of this move.** Anyone picking this up should
 > treat it as unstarted backlog work and re-validate its premises first, since it predates a
 > large amount of change in this repo.
+>
+> **Re-validated 2026-10-02 by the `perf-planner` session** against `origin/main` at `7dfd1349`.
+> Findings and corrections are in `performance_optimization_roadmap.md`, "Plan review, 2026-10-02".
+> Two things changed for this epic: the owner decided the ownership model, so naming ten role
+> owners is no longer a blocker (see Out of Scope below); and an RPG-core stability entry gate now
+> limits what may start to documents, tickets, and read-only tooling. Both child tickets were
+> rewritten the same day. Work happens in the worktree `/home/vboxuser/Work/rpg-perf`, branch
+> `perf-optimization-foundation`.
 
 ## Title
 Performance-optimization M0: architecture governance — decision ownership, conflict triage, PERF-D1..D6
@@ -69,11 +77,12 @@ semantic-deferred-work pattern anywhere in `src/`, matching the proposal's own d
   found to have adequate built-in gates — per-item determinism/fidelity justification, a hard
   sequencing dependency on `subphase_domain_contracts_epic.md` before M3, and a SimQ/arena
   regression-comparison requirement for M3/M4).
-- Naming the actual accountable owners for the 10 roles the epic doc's Entry Conditions require
+- Assigning owners beyond the ownership model the owner decided on 2026-10-02: the `perf-planner`
+  session plans and reviews, the `perf-implementer` session implements, and the repository owner
+  approves any change to an authority-P1 document. The 10 role names the epic doc lists
   (Architecture, Engine Architecture, Simulation Correctness, Simulation Semantics, Performance,
-  Testing/CI, Arena, Simulation Quality, Release/Certification, Observability/Replay) — that is a
-  human/organizational decision this ticket cannot make; `PERF-M0-T02`'s own scope is to produce
-  the matrix structure, not to unilaterally assign people to it.
+  Testing/CI, Arena, Simulation Quality, Release/Certification, Observability/Replay) are review
+  perspectives under that model; `PERF-M0-T02` records the mapping and adds nothing to it.
 
 ## Acceptance Criteria
 - [ ] `PERF-M0-T01` and `PERF-M0-T02` exist as real, investigated `TCK-*.md` tickets linked to this

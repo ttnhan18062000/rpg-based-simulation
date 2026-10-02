@@ -30,13 +30,14 @@ P2
 Deliver an owner/approver matrix and dispositions for conflicts C-01 through C-17, depending on T01's inventory landing first.
 
 ## Scope
-- Produce a durable owner/approver matrix doc naming an accountable owner, or an explicit 'unassigned — approval blocker' placeholder, for each of the 10 required roles
-- Record a disposition for all 17 conflicts C-01 through C-17, reusing the dispositions already adopted 2026-09-13 in design_enhancement_roadmap.md Section A, including both later corrections (C-03/C-04 half-fixed by TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER; C-07 excludes M2 item 4/DOD)
+- Create `docs/architecture/performance_optimization_decisions.md` (the decision-record home the prerequisite plan names) and record in it the ownership model the owner decided on 2026-10-02 (performance_optimization_roadmap.md, "Ownership model"): one review matrix that maps each of the 10 role names in the M0 epic, the 7 in the prerequisite plan's R0A, and the conflict review's approval-matrix groupings onto the three functions — planner/reviewer session, implementer session, repository owner as approver of P1 changes
+- Record a disposition for all 17 conflicts C-01 through C-17, reusing the dispositions already adopted 2026-09-13 in design_enhancement_roadmap.md Section A, including both later corrections (C-03/C-04 half-fixed by TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER; C-07 excludes M2 item 4/DOD), and updating C-02 (count is 44, not 43) and C-17 from the PERF-M0-T01 inventory
 - Seed a PERF-D decision-record template/stub for T03-T08 containing every required field: context, decision, rejected-alternatives, trade-offs, evidence, authority, named-approvers, compatibility, verification, child-packages, revisit-condition
 - Depend on the sibling PERF-M0-T01 ticket (TCK-20260913-PERF-M0-SOURCE-AUDIT, created in this same batch) landing its registered-source inventory first
 
 ## Out of Scope
-- Naming actual accountable real people — use role-based ownership or the explicit placeholder only
+- Inventing any owner or approver beyond the decided ownership model, or recording a planner review as owner approval
+- Editing any authority-P1 document — this ticket records dispositions; P1 edits are PERF-M0-T09 and need the owner's approval
 - Hand-editing docs/REGISTRY.yaml
 - Declaring any P2 doc supersedes a P1 doc
 - Re-deriving C-01..C-17 dispositions from scratch instead of reusing the already-adopted, corrected set
@@ -44,8 +45,8 @@ Deliver an owner/approver matrix and dispositions for conflicts C-01 through C-1
 - Treating the performance_optimization/ folder as anything but review scope until M0 closes
 
 ## Acceptance Criteria
-- [ ] A durable owner/approver matrix doc names an accountable owner or explicit 'unassigned — approval blocker' placeholder for each of the 10 required roles
-- [ ] All 17 of C-01..C-17 have a recorded disposition that reuses the already-adopted dispositions from design_enhancement_roadmap.md Section A, including both later corrections
+- [ ] `docs/architecture/performance_optimization_decisions.md` exists with valid frontmatter and a review matrix in which every role name used by the M0 epic, the prerequisite plan's R0A, and the conflict review's approval matrix maps to exactly one of the three functions in the decided ownership model
+- [ ] All 17 of C-01..C-17 have a recorded disposition, evidence status, and safe interim interpretation that reuses the already-adopted dispositions from design_enhancement_roadmap.md Section A, including both later corrections, with C-02 and C-17 updated from the PERF-M0-T01 inventory
 - [ ] Any PERF-D decision-record template/stub seeded for T03-T08 contains every required field (context, decision, rejected-alternatives, trade-offs, evidence, authority, named-approvers, compatibility, verification, child-packages, revisit-condition)
 - [ ] git diff for this ticket touches only docs/ and tickets/ paths, and validate_frontmatter.py plus make docs-registry pass clean
 
@@ -72,7 +73,8 @@ None.
 
 ## Assumptions / Open Questions
 - Hard dependency on TCK-20260913-PERF-M0-SOURCE-AUDIT's inventory landing first — this ticket cannot be considered unblocked until then
-- Must actively guard against crossing the 'no naming real people' boundary during matrix authoring
+- Re-validated 2026-10-02 by the planner session. The original ticket forbade naming owners and allowed an 'unassigned — approval blocker' placeholder; the owner has since decided the ownership model, so the matrix records that decision instead of placeholders
+- The "Related Code Areas" entry for the epic ticket is stale: the epic is at tickets/todos/TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC.md, not tickets/inprogress/
 - 6 further child tickets (T03-T09) block on this ticket's matrix format, so its structure has downstream effect
 - No automated structural check exists yet for PERF-D record field completeness; verification here is manual
 

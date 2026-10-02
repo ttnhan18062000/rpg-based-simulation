@@ -20,8 +20,11 @@ it does not change runtime behavior.
   review inputs.
 - P1 owners agree to review conflicts without treating this P2 plan as their replacement.
 - Architecture, Engine Architecture, Simulation Correctness, Simulation Semantics, Performance,
-  Testing/CI, Arena, Simulation Quality, Release/Certification, and Observability/Replay roles
-  receive named accountable owners.
+  Testing/CI, Arena, Simulation Quality, Release/Certification, and Observability/Replay are
+  covered as review perspectives under the ownership model the owner decided on 2026-10-02
+  (`performance_optimization_roadmap.md`, "Ownership model"): the `perf-planner` session plans and
+  reviews, the `perf-implementer` session implements, and the repository owner approves any change
+  to an authority-P1 document. This condition is met; it no longer waits on naming ten people.
 
 ## Candidate child tickets
 
@@ -34,7 +37,7 @@ it does not change runtime behavior.
 | PERF-M0-T05 | PERF-D3 debt-semantics decision | T02 | Capacity-debt definition and boundary for any future semantic deferred-work queue |
 | PERF-M0-T06 | PERF-D4 performance-authority charter | T02, informed by T04 | Selected P1 authority and clause-reconciliation mandate for M2 |
 | PERF-M0-T07 | PA-03A hash audit and PERF-D5 decision | T02 | Call-site/consumer/freshness/cost evidence, followed by approved policy or blocked disposition |
-| PERF-M0-T08 | PA-05A phase inventory and PERF-D6 decision | T02 | Executable inventory, counted-unit reconciliation, catalog-authority decision |
+| PERF-M0-T08 | PA-05A phase inventory and PERF-D6 decision | T02 | Re-runnable inventory script under `tools/` (the static call count moved from 43 to 44 between 2026-09-08 and 2026-10-02), counted-unit reconciliation, catalog-authority decision |
 | PERF-M0-T09 | P1 roadmap and contract reconciliation | T03–T08 | Updated/superseded P1 plans through their owners; one discoverable execution order |
 
 These are candidate scopes, not tickets. T03–T08 may run in parallel after T02 except where T04
