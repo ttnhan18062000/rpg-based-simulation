@@ -27,6 +27,16 @@ def make_intake(tmp: Path, width: int = 16, *, passed: bool = True) -> IntakeRes
     return intake(directory, created_at="2026-01-01T00:00:00Z")
 
 
+def make_intake_same_bytes(tmp: Path, original: IntakeResult, brief: str = "brief-b") -> IntakeResult:
+    """Re-export the SAME source and preview bytes with a different brief: a new handoff and so a new intake id."""
+    from visual_assets.store import config
+
+    staged = config.QUARANTINE_ROOT / original.intake_id
+    source, preview = (staged / "source.aseprite").read_bytes(), (staged / "preview.png").read_bytes()
+    directory = b.write_dir(tmp / f"again-{brief}", b.package_bytes(source, preview, brief_id=brief), source, preview)
+    return intake(directory, created_at="2026-01-02T00:00:00Z")
+
+
 def yes(expected: str, notices) -> bool:
     CALLS.append((expected, tuple(notices)))
     return True

@@ -136,6 +136,12 @@ extended `list` / `show`. The drawing code cannot import `adoption`, `revoke` or
 7. `audit_chain` reports leftover `.tmp-*` directories as notes, and skips orphan checks it cannot make reliably after an unreadable record (with a note) instead of reporting a cascade of false orphans.
 8. Two existing tests changed for legitimate reasons: the unknown-layer planted test now uses `release`, and the CLI help test now expects `adopt` / `revoke` (and still no build/release/gc/verify).
 
+### Review follow-up (asset-planner, finding R4)
+A revocation could be sidestepped through a second intake of the same bytes (after H1 and R1 a re-export with a different brief is a new intake id). `adopt` now compares the staged
+source hash with every existing SourceRecord across all assets before confirmation and refuses, each leaving the tree byte-identical: `source_bytes_revoked` (the bytes equal a revoked
+revision, named in the message, or an intake revoked locally on this machine) and `duplicate_source` (the bytes equal a live revision of any asset). The local-revocation cover is
+cheap (one scan of the quarantine) but local to this machine; that limit is stated in `docs/assets/store_contract.md`.
+
 ## Test Summary
 Run with the main checkout's venv. `tests/visual_assets` + static + architecture + docs: 1016 passed, 2 skipped, 1 xfailed. CI-like (missing Aseprite binary): 590 passed, 192 skipped. Store unit tests and boundary test
 also pass under the system python (526). The committed catalog contains no source, adoption or revocation file.

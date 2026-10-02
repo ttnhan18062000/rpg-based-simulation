@@ -84,6 +84,9 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 - **The human gate does not authenticate the person.** The terminal check and the typed id stop accidental and scripted adoption; the approver name and role are recorded, not proven.
 - **The catalog alone cannot catch a consistent forgery.** Someone who edits an adoption record and the hash in its SourceRecord together still passes `audit_chain`; git history is the
   backstop. (Ticket 5 binds artifacts to the SourceRecord bytes, so a release manifest anchors the whole chain.)
+- **A local intake revocation is local.** Revoking an un-adopted intake writes only into this machine's gitignored quarantine, so it covers other intakes of the same bytes
+  on this machine only; another checkout does not see it. A revoked SOURCE REVISION is tracked and covers its bytes everywhere: `adopt` refuses the same bytes through any
+  other intake (`source_bytes_revoked`) and refuses identical bytes already live under any asset (`duplicate_source`).
 - **Agents never run `adopt` or `revoke`.** They are absent from the MCP server and a boundary test forbids the drawing code from importing them.
 - **The preview is producer-supplied and unproven.** A human reviews `preview.png` but adopts `source.aseprite`; intake checks only the PNG signature, IHDR and scale, so a
   producer could hand off a good-looking preview with a different source. Until `TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE` lands (store-rendered review with a

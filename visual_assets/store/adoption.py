@@ -123,6 +123,21 @@ def adopt(
     except (StageError, ContractError) as exc:
         raise _refuse("catalog_unreadable", f"an adoption record could not be read ({exc.code})") from None
 
+    try:  # the SAME BYTES must not reach the catalog through another intake (R4): not after a revocation, not twice
+        copies = records.revisions_with_source_hash(staged["source.aseprite"])
+        revoked_copies = [(sid, rev) for sid, rev in copies if rev in records.revoked_revisions(sid)]
+        local_copy = records.locally_revoked_source_hashes().get(staged["source.aseprite"])
+    except (StageError, ContractError) as exc:
+        raise _refuse("catalog_unreadable", f"existing records could not be read ({exc.code})") from None
+    if revoked_copies:
+        sid, rev = revoked_copies[0]
+        raise _refuse("source_bytes_revoked", f"these exact bytes are revoked revision {sid} {rev}; a revocation cannot be sidestepped by a new intake")
+    if local_copy is not None and local_copy != intake_id:
+        raise _refuse("source_bytes_revoked", f"these exact bytes belong to {local_copy}, which was revoked on this machine")
+    if copies:
+        sid, rev = copies[0]
+        raise _refuse("duplicate_source", f"these exact bytes are already adopted as {sid} {rev}; adopt a genuinely different source")
+
     try:
         known = (registry if registry is not None else load_registry()).keys
     except RegistryError as exc:

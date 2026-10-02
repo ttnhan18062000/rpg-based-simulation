@@ -102,6 +102,36 @@ def find_adoption_for_intake(intake_id: str, root: Path | None = None) -> Adopti
     return None
 
 
+def revisions_with_source_hash(source_hash: str, root: Path | None = None) -> list[tuple[str, str]]:
+    """Every (source_asset_id, revision) whose SourceRecord holds exactly these source bytes' hash, across ALL assets."""
+    found = []
+    for sid in list_source_ids(root):
+        for revision in list_revisions(sid, root):
+            if load_source(sid, revision, root).source_hash == source_hash:
+                found.append((sid, revision))
+    return found
+
+
+def locally_revoked_source_hashes() -> dict[str, str]:
+    """source hash -> intake id, for every un-adopted intake whose quarantine directory carries a local revocation.
+
+    Local means this machine's gitignored quarantine only: another checkout does not see it (stated limit).
+    """
+    from visual_assets.store.contracts import IntakeResult  # local import keeps the module header unchanged
+
+    out: dict[str, str] = {}
+    base = config.QUARANTINE_ROOT
+    if not base.is_dir() or base.is_symlink():
+        return out
+    for entry in sorted(base.iterdir()):
+        if re.fullmatch(r"in-[0-9a-f]{16}", entry.name) and intake_revoked_locally(entry.name):
+            result, _ = parse_file(IntakeResult, entry / quarantine.RESULT_FILE)
+            for staged in result.staged_files:  # type: ignore[union-attr]
+                if staged.name == "source.aseprite":
+                    out[staged.file_hash] = entry.name
+    return out
+
+
 def all_revocations(root: Path | None = None) -> list[RevocationRecord]:
     """Every revocation record. Raises on an unreadable one: callers decide whether to fail closed."""
     base = revocations_dir(root)

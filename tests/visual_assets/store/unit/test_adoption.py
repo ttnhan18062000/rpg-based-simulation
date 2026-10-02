@@ -324,3 +324,73 @@ def test_the_committed_catalog_is_never_touched_by_these_tests():
     committed = config.CATALOG_ROOT
     for name in ("sources", "provenance/adoptions", "provenance/intake", "provenance/revocations"):
         assert [p.name for p in (committed / name).iterdir() if p.name != ".gitkeep"] == [] if (committed / name).exists() else True
+
+
+# --------------------------------------------------------------------------- R4: the same bytes through another intake
+
+
+def test_a_revocation_cannot_be_sidestepped_by_a_second_intake_of_the_same_bytes(env):
+    from visual_assets.store.revoke import revoke
+
+    first = s.make_intake(env.tmp)
+    s.do_adopt(first.intake_id)
+    revoke("hero/r0001", reason="rights withdrawn", approver="Pat", approver_role="lead", decided_at=s.NOW, confirm=s.yes)
+    again = s.make_intake_same_bytes(env.tmp, first)
+    assert again.intake_id != first.intake_id and again.staged_files[1] == first.staged_files[1]
+    before = snapshot(env.catalog)
+    s.CALLS.clear()
+    for kwargs in (dict(source_asset_id="hero-again"), dict(source_asset_id="hero", new=False, parent=None)):
+        with pytest.raises(GateError) as err:
+            s.do_adopt(again.intake_id, **kwargs)
+        assert err.value.code in {"source_bytes_revoked", "invalid_mode"}
+    with pytest.raises(GateError) as err:
+        s.do_adopt(again.intake_id, source_asset_id="hero-again")
+    assert err.value.code == "source_bytes_revoked" and "hero r0001" in err.value.message
+    assert snapshot(env.catalog) == before and s.CALLS == []
+
+
+def test_the_same_bytes_cannot_be_adopted_twice_as_two_live_assets(env):
+    first = s.make_intake(env.tmp)
+    s.do_adopt(first.intake_id)
+    again = s.make_intake_same_bytes(env.tmp, first)
+    before = snapshot(env.catalog)
+    s.CALLS.clear()
+    with pytest.raises(GateError) as err:
+        s.do_adopt(again.intake_id, source_asset_id="rock")
+    assert err.value.code == "duplicate_source" and "hero r0001" in err.value.message
+    with pytest.raises(GateError) as err:  # also not as the next revision of the same asset
+        s.do_adopt(again.intake_id, new=False, parent="r0001")
+    assert err.value.code == "duplicate_source"
+    assert snapshot(env.catalog) == before and s.CALLS == []
+
+
+def test_a_genuinely_different_source_still_adopts(env):
+    first = s.make_intake(env.tmp, 16)
+    s.do_adopt(first.intake_id)
+    different = s.make_intake(env.tmp, 17)
+    assert s.do_adopt(different.intake_id, source_asset_id="rock").source_revision == "r0001"
+
+
+def test_a_locally_revoked_intake_covers_its_source_bytes_for_other_intakes(env):
+    from visual_assets.store.revoke import revoke
+
+    first = s.make_intake(env.tmp)
+    revoke(first.intake_id, reason="not wanted", approver="Pat", approver_role="lead", decided_at=s.NOW, confirm=s.yes)
+    again = s.make_intake_same_bytes(env.tmp, first)
+    s.CALLS.clear()
+    with pytest.raises(GateError) as err:
+        s.do_adopt(again.intake_id)
+    assert err.value.code == "source_bytes_revoked" and first.intake_id in err.value.message
+    assert snapshot(env.catalog) == {} and s.CALLS == []
+
+
+def test_a_revoked_revision_wins_over_a_live_duplicate_in_the_message(env):
+    from visual_assets.store.revoke import revoke
+
+    a = s.make_intake(env.tmp, 16)
+    s.do_adopt(a.intake_id)
+    revoke("hero/r0001", reason="x", approver="Pat", approver_role="lead", decided_at=s.NOW, confirm=s.yes)
+    again = s.make_intake_same_bytes(env.tmp, a)
+    with pytest.raises(GateError) as err:
+        s.do_adopt(again.intake_id, source_asset_id="other")
+    assert err.value.code == "source_bytes_revoked"
