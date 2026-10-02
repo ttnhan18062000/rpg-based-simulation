@@ -92,14 +92,107 @@ def test_an_existing_result_is_never_overwritten(pkg, roots):
     assert result_path.read_bytes() == original
 
 
-def test_same_package_json_with_different_bytes_is_refused_not_merged(pkg, roots):
-    intake(pkg, created_at=NOW)
-    (pkg / "preview.png").write_bytes(b.png(16 * 8, 16 * 8) + b"\x00")  # same package.json, different bytes
+def test_the_same_package_json_with_different_bytes_is_a_different_intake(pkg, roots):
+    """asset-planner R1: wrong bytes under a genuine package.json must not take the id for the genuine package."""
+    package = (pkg / "package.json").read_bytes()
+    genuine_preview = (pkg / "preview.png").read_bytes()
+    (pkg / "preview.png").write_bytes(genuine_preview + b"\x00")  # same package.json, wrong preview bytes
+    wrong = intake(pkg, created_at=NOW)
+    assert wrong.verdict is IntakeVerdict.QUARANTINED and Code.PREVIEW_HASH_MISMATCH in [f.code for f in wrong.findings]
+    (pkg / "preview.png").write_bytes(genuine_preview)  # now the genuine package arrives
+    right = intake(pkg, created_at=LATER)
+    assert right.verdict is IntakeVerdict.PASSED and right.intake_id != wrong.intake_id
+    assert (pkg / "package.json").read_bytes() == package
+    results, problems = list_results()
+    assert {r.intake_id for r in results} == {wrong.intake_id, right.intake_id} and problems == []
+    assert show(wrong.intake_id) == wrong  # the first record is untouched
+
+
+def test_an_id_collision_is_refused_and_writes_nothing(pkg, tmp_path, roots, monkeypatch):
+    from visual_assets.store.intake import service
+
+    monkeypatch.setattr(service, "_intake_id", lambda files: "in-0123456789abcdef")
+    first = intake(pkg, created_at=NOW)
+    other = b.write_dir(tmp_path / "other", *b.bad_files())
     before = snapshot(roots[0])
     with pytest.raises(IntakeError) as err:
-        intake(pkg, created_at=LATER)
-    assert err.value.code == "conflicting_resubmission"
-    assert snapshot(roots[0]) == before
+        intake(other, created_at=LATER)
+    assert err.value.code == "intake_id_collision"
+    assert snapshot(roots[0]) == before and show(first.intake_id) == first
+
+
+def test_the_intake_id_is_derived_from_all_three_files(pkg, tmp_path, roots):
+    a = intake(pkg, created_at=NOW)
+    same = b.write_dir(tmp_path / "same", (pkg / "package.json").read_bytes(), (pkg / "source.aseprite").read_bytes(),
+                       (pkg / "preview.png").read_bytes())
+    assert intake(same, created_at=LATER).intake_id == a.intake_id  # identical files, identical id
+    import hashlib
+    from visual_assets.store.intake.validator import file_hash
+
+    joined = "\n".join(file_hash((pkg / n).read_bytes()) for n in ("package.json", "source.aseprite", "preview.png"))
+    assert a.intake_id == "in-" + hashlib.sha256(joined.encode()).hexdigest()[:16]
+    for name, new in (("source.aseprite", b"x"), ("preview.png", b"y")):
+        changed = b.write_dir(tmp_path / f"c-{name}", (pkg / "package.json").read_bytes(), (pkg / "source.aseprite").read_bytes(),
+                              (pkg / "preview.png").read_bytes())
+        (changed / name).write_bytes(new)
+        assert intake(changed, created_at=LATER).intake_id != a.intake_id, name
+
+
+def test_a_killed_process_leaves_only_an_ignored_temporary_directory(pkg, roots):
+    """asset-planner R2: staging is atomic, so a kill never blocks a later intake of the same package."""
+    quarantine_root = roots[0]
+    quarantine_root.mkdir(parents=True)
+    leftover = quarantine_root / f"{quarantine.TEMP_PREFIX}in-0123456789abcdef-deadbeef"
+    leftover.mkdir()
+    (leftover / "package.json").write_bytes(b"half")  # what a killed writer would leave behind
+    assert list_results() == ([], [])  # ignored by list
+    for fn in (show, review):
+        with pytest.raises(IntakeError) as err:
+            fn(leftover.name)
+        assert err.value.code == "bad_intake_id"
+    result = intake(pkg, created_at=NOW)  # a fresh intake of the package succeeds
+    assert result.verdict is IntakeVerdict.PASSED
+    assert leftover.is_dir() and (leftover / "package.json").read_bytes() == b"half"  # never touched
+    assert [r.intake_id for r in list_results()[0]] == [result.intake_id]
+    assert review(result.intake_id).is_dir()
+    import shutil
+
+    shutil.rmtree(leftover)  # safe to delete
+    assert show(result.intake_id) == result
+
+
+def test_the_final_directory_only_ever_appears_complete(pkg, roots, monkeypatch):
+    seen: list[list[str]] = []
+    real_rename = quarantine.os.rename
+
+    def spy(src, dst):
+        seen.append(sorted(p.name for p in Path(src).iterdir()))  # what the directory holds at the moment it is published
+        real_rename(src, dst)
+
+    monkeypatch.setattr(quarantine.os, "rename", spy)
+    intake(pkg, created_at=NOW)
+    assert seen == [["intake_result.json", "package.json", "preview.png", "source.aseprite"]]
+
+
+def test_a_failed_publish_leaves_no_temporary_directory(pkg, roots, monkeypatch):
+    def boom(src, dst):
+        raise OSError("cross-device")
+
+    monkeypatch.setattr(quarantine.os, "rename", boom)
+    from visual_assets.store.errors import StageError
+
+    with pytest.raises(StageError):
+        intake(pkg, created_at=NOW)
+    assert list(roots[0].iterdir()) == []
+
+
+def test_an_oversize_preview_has_its_own_finding_code(monkeypatch):
+    package, source, preview = b.good_files()
+    monkeypatch.setattr(config, "MAX_PREVIEW_DIM", 64)  # the 128x128 preview is now over the bound
+    from visual_assets.store.intake.validator import validate
+
+    codes = [f.code for f in validate(package, source, preview).findings]
+    assert Code.PREVIEW_OUT_OF_BOUNDS in codes and Code.PNG_MALFORMED not in codes
 
 
 def test_a_stage_directory_without_a_result_is_reported_not_adopted_or_deleted(pkg, roots):
@@ -258,11 +351,3 @@ def test_list_reports_unreadable_directories_and_ignores_strangers(pkg, roots):
     (roots[0] / "not-an-intake").mkdir()
     results, problems = list_results()
     assert [r.intake_id for r in results] == [one.intake_id] and problems == ["in-ffffffffffffffff"]
-
-
-def test_the_intake_id_depends_only_on_package_json(pkg, tmp_path, roots):
-    a = intake(pkg, created_at=NOW)
-    copy = b.write_dir(tmp_path / "copy", (pkg / "package.json").read_bytes(), (pkg / "source.aseprite").read_bytes(),
-                       (pkg / "preview.png").read_bytes())
-    assert intake(copy, created_at=LATER).intake_id == a.intake_id
-    assert json.loads((pkg / "package.json").read_bytes())["candidate_id"] == "cand-0123456789abcdef"

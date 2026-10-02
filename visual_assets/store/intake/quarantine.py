@@ -10,6 +10,7 @@ created, so a refused package leaves nothing behind. The quarantine directory an
 from __future__ import annotations
 
 import os
+import secrets
 import shutil
 import stat
 from dataclasses import dataclass
@@ -150,14 +151,44 @@ def ensure_root(root: Path) -> Path:
     return root
 
 
-def create_stage_dir(intake_id: str) -> Path:
-    root = ensure_root(config.QUARANTINE_ROOT)
-    target = root / intake_id
+TEMP_PREFIX = ".tmp-"  # can never match an intake id (`in-` + 16 hex) or the IntakeId pattern, so it is ignored everywhere
+
+
+def _fsync_directory(path: Path) -> None:
+    fd = os.open(os.fspath(path), _DIR_FLAGS)
     try:
-        os.mkdir(target, 0o700)
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def stage_atomically(intake_id: str, files: dict[str, bytes]) -> Path:
+    """Write `files` into a temporary sibling directory, fsync, then rename it to `<intake_id>`.
+
+    A process killed part-way leaves only a `.tmp-*` directory (ignored by list/show/review and safe to delete), never a
+    half-filled `<intake_id>` that would block every later intake of the same package. The rename fails rather than
+    replacing an existing intake directory.
+    """
+    root = ensure_root(config.QUARANTINE_ROOT)
+    final = root / intake_id
+    temp = root / f"{TEMP_PREFIX}{intake_id}-{secrets.token_hex(4)}"
+    try:
+        os.mkdir(temp, 0o700)
     except FileExistsError:
-        raise StageError("exists", "a quarantine directory for this intake already exists") from None
-    return target
+        raise StageError("exists", "a temporary stage directory with this name already exists") from None
+    try:
+        for name, data in files.items():
+            write_new(temp / name, data)
+        _fsync_directory(temp)
+        try:
+            os.rename(temp, final)  # atomic; refuses a non-empty existing directory
+        except OSError:
+            raise StageError("exists", "a quarantine directory for this intake already exists") from None
+        _fsync_directory(root)
+    except BaseException:
+        remove_partial(temp)
+        raise
+    return final
 
 
 def remove_partial(directory: Path) -> None:

@@ -52,8 +52,9 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 - Intake (store side; `python -m visual_assets.store intake|review|list|show`): the package directory is opened without following symlinks and read
   into memory first (refused before any byte is copied, leaving no quarantine directory, for a symlink, extra file or sub-directory, oversize file,
   FIFO or hard-linked file; these are `StageError`s, not findings). The independent validator then judges the bytes with one policy for every
-  producer class and records an immutable `IntakeResult` **inside the quarantine directory** (`in-` + 16 hex of the `package.json` hash). Re-submitting the
-  identical package returns the existing result and writes nothing; the same `package.json` with different source or preview bytes is refused.
+  producer class and records an immutable `IntakeResult` **inside the quarantine directory** (`in-` + 16 hex of a hash over the package, source and preview file hashes, so
+  different bytes are a different intake). Staging is atomic: the files are written to a `.tmp-*` sibling and renamed, so a killed process leaves only an ignored,
+  deletable temporary directory. Re-submitting identical files returns the existing result and writes nothing.
   `review` re-verifies the staged hashes and exports the preview plus a text summary of a PASSED intake to `.review/`. No intake step adopts anything.
 - `tests/visual_assets/test_boundaries.py`: `drawing` has no write path into `catalog/` (it may not even reference the path),
   `store` does not import `drawing`, nothing imports `src/` and `src/` never imports `visual_assets`.
@@ -70,6 +71,9 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 
 ## Known gaps (stated, not hidden)
 
+- **The preview is producer-supplied and unproven.** A human reviews `preview.png` but adopts `source.aseprite`; intake checks only the PNG signature, IHDR and scale, so a
+  producer could hand off a good-looking preview with a different source. Until `TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE` lands (store-rendered review with a
+  pixel-hash comparison, and `adopt` refusing a mismatch), treat the preview as unverified.
 - Animation metadata beyond `frame_count` and `tag_count` (per-frame durations, tag ranges, loop modes) is not part of the handoff package or checked by intake
   (proposal 9.6 lists "animation metadata"; ticket 3 adds only the producer state).
 - **Palette size is unverifiable for an all-opaque-black stored palette.** Aseprite 1.3.18.6 rebuilds such a palette from the image when it loads a file

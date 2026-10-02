@@ -152,8 +152,11 @@ def test_staged_files_are_private_and_never_overwritten(package_dir, roots):
         assert (path.stat().st_mode & 0o777) == 0o600
     with pytest.raises(FileExistsError):
         quarantine.write_new(staged / "package.json", b"replacement")
-    with pytest.raises(StageError):
-        quarantine.create_stage_dir(result.intake_id)
+    with pytest.raises(StageError) as err:  # publishing over an existing intake directory is refused, never replaced
+        quarantine.stage_atomically(result.intake_id, {"package.json": b"replacement"})
+    assert err.value.code == "exists"
+    assert (staged / "package.json").read_bytes() == (package_dir / "package.json").read_bytes()
+    assert [p.name for p in roots[0].iterdir()] == [result.intake_id]  # and no temporary directory is left
 
 
 def test_a_special_file_is_never_even_opened(package_dir, roots, monkeypatch):

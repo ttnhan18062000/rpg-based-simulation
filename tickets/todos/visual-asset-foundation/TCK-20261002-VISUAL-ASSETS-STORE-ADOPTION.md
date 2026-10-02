@@ -64,7 +64,9 @@ branch (`visual-assets-store`).
    `test_cli.py`.
 9. Docs: `docs/assets/store_contract.md` (adoption, revoke **built**; what an agent may and may not run),
    structure doc, store and catalog READMEs. Add to `docs/assets/drawing_tools.md` or the store README a plain
-   rule for agents: an agent never runs `adopt` or `revoke`.
+   rule for agents: an agent never runs `adopt` or `revoke`. Also state, in the store docs, the known gap carried from
+   ticket 3 until ticket 5 lands: the human reviews `preview.png` but adopts `source.aseprite`, and intake cannot prove
+   the preview depicts the source (added by asset-planner 2026-10-03).
 
 ## Out of Scope
 - Build, release, `verify`, `gc` (child 5). MCP store tools (child 6).

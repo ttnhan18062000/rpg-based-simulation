@@ -68,6 +68,17 @@ integrity in pure Python (so CI can do it without Aseprite), and list unreachabl
    (`needs_aseprite`) for the exporter.
 9. Docs: `docs/assets/store_contract.md` (build, release candidate, verify, gc **built**; the exact `pixels-v1`
    definition), ADR (D4 algorithm recorded), structure doc, READMEs.
+10. **Preview-to-source binding (added by asset-planner 2026-10-03).** The human reviews `preview.png` but adopts
+    `source.aseprite`, and intake cannot prove the preview depicts the source (it checks only the PNG signature, IHDR
+    and scale). So:
+    a. Put the bounded PNG reader in a store layer that `intake` may import (not under `build`) and make intake
+       fully validate the preview structure with it (new finding codes as needed).
+    b. `review`, when Aseprite is available, renders the staged source through the sandboxed exporter into the review
+       area as the image the human looks at, compares its pixel hash with the producer's preview at the same scale,
+       and shows a mismatch prominently in `summary.txt` and records it. Without Aseprite, `review` says plainly that
+       the preview is producer-supplied and unverified.
+    c. `adopt` refuses an intake whose store-rendered review is missing or whose preview did not match, with its own
+       error code.
 
 ## Out of Scope
 - Activation, runtime manifest locators, client compatibility ranges, signing (`AM-M5`-`M7`, `AM1-W08`).
@@ -95,6 +106,13 @@ integrity in pure Python (so CI can do it without Aseprite), and list unreachabl
       `sources/`, `provenance/`, `manifests/`.
 - [ ] Boundary test: only `store/build` imports `drawing.backend.sandbox`; no other store module imports
       `drawing`.
+- [ ] (added by asset-planner 2026-10-03) The PNG reader lives in a layer `intake` may import; intake fully validates
+      preview structure (not just signature, IHDR and scale), each defect with its own finding code.
+- [ ] (added by asset-planner 2026-10-03) With Aseprite, `review` renders the staged source into the review area and
+      compares pixel hashes with the producer's preview at the same scale; a mismatch is shown prominently in
+      `summary.txt` and recorded; without Aseprite it says the preview is producer-supplied and unverified.
+- [ ] (added by asset-planner 2026-10-03) `adopt` refuses an intake whose store-rendered review is missing or whose
+      preview did not match, with its own error code.
 - [ ] `pytest tests/visual_assets -m "not slow and not extra_slow"` green without Aseprite; integration green
       with it.
 

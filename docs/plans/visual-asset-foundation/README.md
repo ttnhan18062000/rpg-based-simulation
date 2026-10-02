@@ -197,7 +197,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 
 | Command | Gate | Effect |
 |---|---|---|
-| `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` inside the quarantine directory (nothing tracked) |
+| `intake <package>` | none (agent or human) | copy into `.quarantine`, validate claims vs bytes, write an immutable `IntakeResult` inside the quarantine directory (nothing tracked); staging is atomic (`.tmp-*` then rename) |
 | `review <intake_id>` | none | export previews of an intake-passed candidate into the local, gitignored `.review/` area for a human to look at; writes nothing tracked |
 | `adopt <intake_id> --visual-key K --approver NAME --licence STATE` | **human** | new `sources/<id>/rNNNN` + `AdoptionRecord`; refuses a failed, revoked or already-adopted intake |
 | `build [<source_asset_id>]` | none; needs Aseprite | export adopted sources per `build-config` into `generated/` with `ArtifactRecord`s |

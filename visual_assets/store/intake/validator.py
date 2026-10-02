@@ -118,7 +118,7 @@ def _check_preview(
         return [_finding(code, str(exc))]
     out: list[IntakeFinding] = []
     if header.width > config.MAX_PREVIEW_DIM or header.height > config.MAX_PREVIEW_DIM:
-        out.append(_finding(Code.PNG_MALFORMED, f"preview is {header.width}x{header.height}; limit is {config.MAX_PREVIEW_DIM}"))
+        out.append(_finding(Code.PREVIEW_OUT_OF_BOUNDS, f"preview is {header.width}x{header.height}; limit is {config.MAX_PREVIEW_DIM}"))
     facts, _ = aseprite.read_facts(source)
     if facts is not None and facts.width >= 1 and facts.height >= 1:
         scale = header.width // facts.width

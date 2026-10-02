@@ -8,6 +8,7 @@ gitignored review area for a human to look at. Neither adopts anything.
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 
@@ -24,8 +25,14 @@ SUMMARY_FILE = "summary.txt"
 PREVIEW_COPY = "preview.png"
 
 
-def _intake_id(package_bytes: bytes) -> str:
-    return "in-" + validator.file_hash(package_bytes)[len("sha256:") :][:16]
+def _intake_id(files: quarantine.PackageFiles) -> str:
+    """`in-` + 16 hex of sha256 over the package, source and preview FileHash strings, in that fixed order.
+
+    Derived from all three files (asset-planner decision 2026-10-03), so the same package.json with different bytes is a
+    different intake, never a stale result for other bytes.
+    """
+    joined = "\n".join(validator.file_hash(blob) for blob in (files.package, files.source, files.preview))
+    return "in-" + hashlib.sha256(joined.encode("ascii")).hexdigest()[:16]
 
 
 def _staged_files(files: quarantine.PackageFiles) -> tuple[StagedFile, ...]:
@@ -63,7 +70,7 @@ def intake(package_dir: Path | str, *, created_at: str) -> IntakeResult:
     except IdentityError:
         raise IntakeError("bad_created_at", "created_at must be a real YYYY-MM-DDTHH:MM:SSZ timestamp") from None
     files = quarantine.read_directory(Path(package_dir))
-    intake_id = _intake_id(files.package)
+    intake_id = _intake_id(files)
     staged = _staged_files(files)
 
     existing_dir = config.QUARANTINE_ROOT / intake_id
@@ -71,8 +78,8 @@ def intake(package_dir: Path | str, *, created_at: str) -> IntakeResult:
         existing = _load_result(existing_dir)
         if existing.staged_files != staged:
             raise IntakeError(
-                "conflicting_resubmission",
-                f"{intake_id} already exists for a package.json whose source or preview bytes differ; nothing was written",
+                "intake_id_collision",
+                f"{intake_id} already exists with different staged files (an id collision); nothing was written",
             )
         return existing
 
@@ -91,15 +98,15 @@ def intake(package_dir: Path | str, *, created_at: str) -> IntakeResult:
     )
     result_bytes = canonical_json(result)
 
-    directory = quarantine.create_stage_dir(intake_id)
-    try:
-        quarantine.write_new(directory / quarantine.PACKAGE_FILE, files.package)
-        quarantine.write_new(directory / quarantine.SOURCE_FILE, files.source)
-        quarantine.write_new(directory / quarantine.PREVIEW_FILE, files.preview)
-        quarantine.write_new(directory / quarantine.RESULT_FILE, result_bytes)
-    except BaseException:
-        quarantine.remove_partial(directory)
-        raise
+    quarantine.stage_atomically(
+        intake_id,
+        {
+            quarantine.PACKAGE_FILE: files.package,
+            quarantine.SOURCE_FILE: files.source,
+            quarantine.PREVIEW_FILE: files.preview,
+            quarantine.RESULT_FILE: result_bytes,
+        },
+    )
     return result
 
 

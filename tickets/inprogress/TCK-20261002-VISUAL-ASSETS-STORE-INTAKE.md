@@ -58,8 +58,13 @@ git-tracked file. Blocked by `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`. Same 
    signature and IHDR dimensions consistent with the source; `licence_state` is not `WITHDRAWN`; no declared
    limitation is in the unsupported list. Any finding gives verdict `QUARANTINED`; none gives `PASSED`.
 5. `intake(package_dir, *, created_at)`: stage, validate, write `intake_result.json` **inside the quarantine
-   directory** (exclusive create). `intake_id = "in-" + first 16 hex of sha256(package.json bytes)`; submitting
-   the identical package again returns the existing result and writes nothing.
+   directory** (exclusive create). `intake_id = "in-" + first 16 hex of sha256` over the package, source and
+   preview `FileHash` strings joined with `\n` in that fixed order (**rule changed by asset-planner 2026-10-03**; the
+   ticket first said package.json alone, which let wrong bytes under a genuine package.json take the id for good).
+   Submitting the identical files again returns the existing result and writes nothing; an existing directory whose
+   staged hashes differ is an `intake_id_collision` error. Staging is atomic (asset-planner R2): the four files are
+   written and fsynced in a `.tmp-*` sibling directory that is then renamed to `<intake_id>`, so a killed process
+   leaves only an ignored, deletable temporary directory. A preview above `MAX_PREVIEW_DIM` is `PREVIEW_OUT_OF_BOUNDS`.
 6. `review(intake_id)`: for a `PASSED` intake only, re-verify the staged hashes, then copy `preview.png` and a
    short text summary to `config.REVIEW_ROOT/<intake_id>/`. No Aseprite needed. Writes nothing tracked.
 7. `visual_assets/store/cli.py` + `__main__.py`: `python -m visual_assets.store intake <dir>`, `review <id>`,

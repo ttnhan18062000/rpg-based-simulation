@@ -28,6 +28,6 @@ Store side first (independent of the drawing tools), drawing side last. Each ste
 ## Deviations from the ticket (all reported to asset-planner)
 - Colour depth: the package has no colour-depth claim, so intake enforces a support policy (32-bit RGBA only) instead of comparing a claim.
 - Also verified: `cel_count`, `palette_size`, `source_format`; all frames are walked (chunk headers only), not just the first.
-- Re-submitting the same `package.json` with different source or preview bytes is refused (`conflicting_resubmission`), so a stale result is never returned for other bytes.
+- asset-planner changes after the checkpoint review: R1 intake id derives from all three file hashes (collision guard `intake_id_collision`); R2 atomic staging via a `.tmp-*` sibling and rename; R3 `PREVIEW_OUT_OF_BOUNDS`. The ticket 5 addition (preview-to-source binding) is recorded in ticket 5 and the known gaps.
 - Palette size is unverifiable for an all-opaque-black stored palette (Aseprite rebuilds it from pixels): `PALETTE_UNVERIFIABLE`, quarantined.
 - `producer_validation = FAILED` also quarantines (`PRODUCER_VALIDATION_FAILED`).
