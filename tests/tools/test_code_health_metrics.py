@@ -80,6 +80,21 @@ def test_live_metrics_count_each_dimension_separately():
     assert metrics["craft_highest_cognitive_complexity"] == 40
 
 
+def test_correctness_matches_pyflakes_and_e9_exactly_not_any_f_prefix():
+    findings = [_f("ruff", "F401", 1), _f("ruff", "FURB105", 10), _f("ruff", "FBT001", 100), _f("ruff", "E902", 1000)]
+    metrics = compute_craft_metrics(findings, [])
+    assert metrics["craft_correctness_findings"] == 1001
+    assert metrics["craft_ruff_findings"] == 1111  # the total still counts every selected rule
+
+
+def test_docstring_and_annotation_families_match_exactly():
+    findings = [_f("ruff", "D100", 1), _f("ruff", "D104", 2), _f("ruff", "D105", 4), _f("ruff", "D200", 8),
+                _f("ruff", "ANN001", 16), _f("ruff", "ANN401", 32), _f("ruff", "ANNOTATION", 64)]
+    metrics = compute_craft_metrics(findings, [])
+    assert metrics["craft_missing_public_docstrings"] == 3
+    assert metrics["craft_missing_annotations"] == 48
+
+
 def test_e9_syntax_errors_count_as_correctness():
     assert compute_craft_metrics([_f("ruff", "E902", 1)], [])["craft_correctness_findings"] == 1
     assert compute_craft_metrics([_f("ruff", "E722", 1)], [])["craft_correctness_findings"] == 0

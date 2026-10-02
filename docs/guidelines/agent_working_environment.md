@@ -131,6 +131,14 @@ uv lock --system-certs
 uv export --frozen --no-hashes --no-emit-project -o requirements.txt
 ```
 
+**After the Python Code Craft branch merges, every existing environment (the main checkout's
+`.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
+`ruff` and `complexipy` are now dev dependencies, and the codebase-health snapshot measures with them
+live, so tests such as `tests/tools/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
+in an older environment with `complexipy not found: install the project environment (uv sync)`. That
+failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
+`requirements.txt` carries both tools.
+
 `uv lock --check` exits non-zero if `uv.lock` is out of date with `pyproject.toml`. Re-running the
 export on an unchanged lock produces no diff. The export leaves out extras, so `torch`,
 `sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach `requirements.txt`

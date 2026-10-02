@@ -19,6 +19,7 @@ Every key is a plain integer. There is deliberately no aggregate: each dimension
 
 from __future__ import annotations
 
+import re
 import tempfile
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -55,7 +56,7 @@ REGISTRY_KEYS = (
 CRAFT_METRIC_KEYS = LIVE_KEYS + REGISTRY_KEYS
 
 CRAFT_LABELS = {
-    "craft_ruff_findings": "Craft: ruff findings (standard's rules)",
+    "craft_ruff_findings": "Craft: ruff findings (all selected rules)",
     "craft_correctness_findings": "Craft: pyflakes/syntax findings",
     "craft_missing_public_docstrings": "Craft: public items without a docstring",
     "craft_missing_annotations": "Craft: missing type annotations",
@@ -71,12 +72,17 @@ CRAFT_LABELS = {
     "craft_baseline_duplicated_lines": "Craft: duplicated lines (registry)",
 }
 
-_DOCSTRING_RULES = ("D100", "D101", "D102", "D103", "D104")
+# Rule codes are matched exactly by shape: "F" followed by a digit is pyflakes, not every code that
+# starts with F (FURB, FBT, FA, ...), and likewise for the other families.
+_ANY_RULE = re.compile(r".")
+_CORRECTNESS_RULE = re.compile(r"^(F\d|E9\d)")
+_DOCSTRING_RULE = re.compile(r"^D10[0-4]$")
+_ANNOTATION_RULE = re.compile(r"^ANN\d")
 
 
-def _ruff_total(findings: Iterable[Finding], prefixes: tuple[str, ...] = ("",)) -> int:
-    """The number of ruff findings whose rule code starts with any of `prefixes` (default: all)."""
-    return sum(f.value for f in findings if f.tool == TOOL_RUFF and f.rule.startswith(prefixes))
+def _ruff_total(findings: Iterable[Finding], rule: re.Pattern[str] = _ANY_RULE) -> int:
+    """The number of ruff findings whose rule code matches `rule` (default: every code)."""
+    return sum(f.value for f in findings if f.tool == TOOL_RUFF and rule.search(f.rule))
 
 
 def _count(findings: Iterable[Finding], tool: str, rule: str) -> int:
@@ -92,9 +98,9 @@ def compute_craft_metrics(findings: Sequence[Finding], rows: Sequence[Row]) -> d
     duplicates = [row for row in rows if row.tool == TOOL_JSCPD and row.rule == RULE_DUPLICATE]
     return {
         "craft_ruff_findings": _ruff_total(findings),
-        "craft_correctness_findings": _ruff_total(findings, ("F", "E9")),
-        "craft_missing_public_docstrings": _ruff_total(findings, _DOCSTRING_RULES),
-        "craft_missing_annotations": _ruff_total(findings, ("ANN",)),
+        "craft_correctness_findings": _ruff_total(findings, _CORRECTNESS_RULE),
+        "craft_missing_public_docstrings": _ruff_total(findings, _DOCSTRING_RULE),
+        "craft_missing_annotations": _ruff_total(findings, _ANNOTATION_RULE),
         "craft_functions_over_cognitive_limit": _count(findings, TOOL_COMPLEXIPY, "cognitive-complexity"),
         "craft_functions_over_length_limit": _count(findings, TOOL_LINE_COUNT, "function-length"),
         "craft_classes_over_length_limit": _count(findings, TOOL_LINE_COUNT, "class-length"),
