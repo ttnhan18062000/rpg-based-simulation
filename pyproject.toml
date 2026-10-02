@@ -29,6 +29,11 @@ dev = [
     "memray>=1.0.0",
     "mypy",
 ]
+# Sampling profiler for tools/perf/profile_tick.py (TCK-20261003-PERF-PROFILING-TOOLKIT). Optional on
+# purpose: it is not in requirements.txt and CI does not install it. memray is in the `dev` group above.
+perf = [
+    "py-spy>=0.3.14",
+]
 # torch must be installed separately from the CPU wheel before this extra:
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
 knowledge = [

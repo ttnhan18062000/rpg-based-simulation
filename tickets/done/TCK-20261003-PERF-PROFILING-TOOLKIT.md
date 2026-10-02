@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-PROFILING-TOOLKIT
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, observability, engine]
 ---
@@ -15,7 +15,7 @@ tags: [performance, observability, engine]
 Profiling toolkit: sampling profiles, differential comparison, and feature-flag on/off phase attribution as repeatable tools
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -52,15 +52,15 @@ Add the profiling half of the performance management loop (`performance_optimiza
 - Investigating or fixing any hotspot the tools reveal
 
 ## Acceptance Criteria
-- [ ] `py-spy` is installable through the new optional group and is absent from `requirements.txt`
-- [ ] `python3 tools/perf/profile_tick.py --scenario <name> --entities <n> --ticks <n>` writes a speedscope JSON, a folded-stack file, and a per-phase table under `reports/perf/`, each with the full PROVISIONAL header; one real run is recorded in the test plan with its command and output paths
-- [ ] `profile_diff.py` on two folded-stack files lists the largest increases and decreases in sample share with both values
-- [ ] `flag_attribution.py --flag ENABLE_COMBAT_ENGAGEMENT` (or another real flag) produces the off/on per-phase table with deltas, shares of the total delta, spread across K repetitions, and event counts; one real run is recorded in the test plan
-- [ ] Selecting the metropolis scenario prints the known-defect warning
-- [ ] The tools run without modifying any tracked file, and `git status` after a run shows nothing new outside ignored paths
-- [ ] Tests pass with the profiler binary absent
-- [ ] `docs/guides/performance_profiling.md` exists with valid frontmatter and states the explains-not-certifies rule
-- [ ] `git diff` touches only `tools/`, `tests/tools/`, `docs/guides/`, `docs/REGISTRY.yaml`, `pyproject.toml`, `tickets/`, `stored_artifacts/`, and `agent-monitoring/`
+- [x] `py-spy` is installable through the new optional group and is absent from `requirements.txt`
+- [x] `python3 tools/perf/profile_tick.py --scenario <name> --entities <n> --ticks <n>` writes a speedscope JSON, a folded-stack file, and a per-phase table under `reports/perf/`, each with the full PROVISIONAL header; one real run is recorded in the test plan with its command and output paths
+- [x] `profile_diff.py` on two folded-stack files lists the largest increases and decreases in sample share with both values
+- [x] `flag_attribution.py --flag ENABLE_COMBAT_ENGAGEMENT` (or another real flag) produces the off/on per-phase table with deltas, shares of the total delta, spread across K repetitions, and event counts; one real run is recorded in the test plan
+- [x] Selecting the metropolis scenario prints the known-defect warning
+- [x] The tools run without modifying any tracked file, and `git status` after a run shows nothing new outside ignored paths
+- [x] Tests pass with the profiler binary absent
+- [x] `docs/guides/performance_profiling.md` exists with valid frontmatter and states the explains-not-certifies rule
+- [x] `git diff` touches only `tools/`, `tests/tools/`, `docs/guides/`, `docs/REGISTRY.yaml`, `pyproject.toml`, `tickets/`, `stored_artifacts/`, and `agent-monitoring/`
 
 ## Related Tickets
 - TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC
@@ -78,7 +78,7 @@ Add the profiling half of the performance management loop (`performance_optimiza
 - `docs/architecture/performance_optimization_decisions.md` (PERF-D1, PERF-D4)
 
 ## Related Stored Artifacts
-None.
+- stored_artifacts/TCK-20261003-PERF-PROFILING-TOOLKIT/ (plan.md, investigation.md, test_plan.md)
 
 ## Related Code Areas
 - `tools/perf/` (new tools beside `profile_engine.py`, `profile_sweep.py`)
@@ -94,9 +94,25 @@ None.
 - The planner session reviews one real output of each tool before this ticket closes
 
 ## Implementation Notes
+Hand-orchestrated by perf-implementer. Shared helpers in `tools/perf/_profiling_common.py`; `profile_tick.py` runs the kernel in a child under `py-spy record` (nonblocking by default) and keeps only stacks inside the measured-tick loop; `flag_attribution.py` reuses the child mode with a forced flag. Forcing a flag builds a new state with `dataclasses.replace` (never writes through the freeze) and wraps `FeatureFlagManager.get_flag_mode` in the child process only. py-spy lives only in the optional `perf` group of `pyproject.toml`.
 
 ## Test Summary
+`python3 -m pytest tests/tools/test_profiling_toolkit.py tests/tools/test_test_scope_coverage_static.py -q` -> 58 passed, 1 skipped without py-spy (the skipped end-to-end test passes with py-spy on PATH). Real runs of all three tools and a memray smoke run are recorded in the test plan; `git status` after them showed nothing outside ignored paths. perf-planner reviewed one real output of each tool and requested one change (`dataclasses.replace` instead of writing through the freeze), made and re-verified with a fresh `flag_attribution` run.
 
 ## Files Changed
+- tools/perf/_profiling_common.py, profile_tick.py, profile_diff.py, flag_attribution.py (new)
+- tests/tools/test_profiling_toolkit.py (new)
+- docs/guides/performance_profiling.md (new)
+- pyproject.toml (new optional `perf` group: py-spy)
+- tools/gate_checks/test_scope_coverage_static.py (four entries in `_TOOLS_PERF_BASENAME_MAP`)
+- tickets/todos/perf-evidence-inventories/ -> tickets/done/ (this file); stored_artifacts/; tickets/working_log.csv, docs/REGISTRY.yaml, agent-monitoring/ (closure bookkeeping)
 
 ## Completion Summary
+Profiling half of the performance management loop delivered as tooling: `profile_tick.py` (py-spy sampling and a per-phase table with RuntimeMode and work counters, `--memory` via memray), `profile_diff.py` (share-of-samples differences for functions and phases) and `flag_attribution.py` (flag off/on per-phase deltas over K interleaved repetitions), every output stamped PROVISIONAL, plus the guide. No `src/` edit, no baseline, nothing generated is committed.
+
+Findings recorded for follow-up (taken forward by perf-planner):
+1. **Two flag mechanisms.** `AuthoritativeApplyPipeline.refine` builds a fresh default `FeatureFlagManager()` every tick (`pipeline.py:70`) that cannot be given overrides, while `state.feature_flags` is a separate dict the kernel merges at construction (`kernel.py:110-112`); forcing a flag needs both (related: TCK-20260913-FEATURE-FLAG-DEFAULT-DOES-NOT-PROPAGATE-TO-STATE-FEATURE-FLAGS).
+2. **The governor leaves NORMAL at small entity counts.** In this sandbox a 60-entity `combat` scenario under `PROD_LARGE` goes DEGRADED then SURVIVAL within ten ticks; under `PROD_STRESS` it stays NORMAL with the flag off but reaches CONSTRAINED or DEGRADED with `ENABLE_COMBAT_ENGAGEMENT` on, so a flag delta can include a mode change. The tools warn when this happens.
+3. **Sampler overhead.** Per tick, same scenario with the flag on: about 235 ms unprofiled, about 1,990 ms with blocking py-spy, about 274 ms with `--nonblocking` (one scenario, one sandbox, provisional). The tool defaults to nonblocking.
+
+Known follow-up still open: `.claude/agents/test-scoper.md` carries a copy of the test-scope map and was not updated for the `tools/perf` tools added by the three tickets in this batch; agent files are outside this track and perf-planner raises it with the user.
