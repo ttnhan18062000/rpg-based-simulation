@@ -56,15 +56,21 @@ obj = ObjectiveState(
 `target_id` (the nearest hostile's entity id) and `target_pos` (that hostile's position). So a
 COMBAT_ENGAGE win becomes a `reach_location` objective aimed at the hostile.
 
-**The consequence is exact, and it is not merely a mislabel.** `ObjectiveIntentResolver`
-(`src/domains/adventure/resolver.py:58-64`) maps objective kind to action intent:
+**The consequence is worse than a mislabel, and the mechanism is NOT the one this ticket first
+claimed** — see the measurement in Implementation Notes, which corrects it. `ObjectiveIntentResolver`
+(`src/domains/adventure/resolver.py:58-64`) does map `REACH_LOCATION`→`MOVE_TO` and
+`DEFEAT_ENEMY`→`ATTACK_TARGET`, **but it is never consulted for either kind on this path.**
+`tactical.py:262` intercepts `obj.kind == "reach_location"` in a dedicated inline branch and returns
+before the resolver is reached; `tactical.py:308` explicitly excludes `DEFEAT_ENEMY` from the resolver
+path too. So `ATTACK_TARGET` is structurally unreachable here — not because the mapping is wrong, but
+because the mapping is never asked.
 
-| objective kind | resolved action intent |
-|---|---|
-| `REACH_LOCATION` | `MOVE_TO` |
-| `DEFEAT_ENEMY` | `ATTACK_TARGET` |
+What actually happens, measured: the objective's `target` is the **enemy's entity id**, which
+`_resolve_target_position` cannot resolve to a node or building, so it falls back to
+`obj.target_position` — the enemy's position **frozen at the tick the goal was won**. The entity walks
+to that stale point, arrives, and hits `tactical.py:297-299`'s bare `EntityUpdate(entity_id=...)`: an
+empty, do-nothing update. Indefinitely.
 
-So the entity decides to engage, and the pipeline dispatches it to **walk toward** the enemy.
 `ObjectiveKind.DEFEAT_ENEMY` is produced nowhere on this path — its only producer in `src/` is
 `src/domains/adventure/mapper.py:37` (`RouteFamily.HUNT_WEAK_ENEMY`), an unrelated route-generation
 path. The branch is dead by construction.
@@ -115,15 +121,32 @@ it and no dormancy protects it.
 ## Acceptance Criteria
 - [ ] A winning `GoalKind.COMBAT_ENGAGE` materialises an objective of kind
       `ObjectiveKind.DEFEAT_ENEMY`, with the hostile's entity id as `target`.
-- [ ] `ObjectiveIntentResolver` resolves that objective to `ATTACK_TARGET`, asserted end-to-end
-      through a real `Kernel.tick_once()` path rather than by constructing an `ObjectiveState`
-      directly — the defect lives in the wiring, so a unit test on the resolver alone would have
-      passed before the fix.
+- [ ] **(REWRITTEN 2026-10-02 — the original wording named a mechanism that does not operate.)** An
+      entity holding a won `COMBAT_ENGAGE` goal, whose target the **content catalog** agrees is
+      hostile, actually attacks it. Asserted end-to-end through a real `Kernel.tick_once()` loop, not
+      by constructing an `ObjectiveState` or calling the resolver directly — the defect is in the
+      wiring, so a unit test on `ObjectiveIntentResolver` alone passes both before and after.
+      Do **not** assert "the objective resolves to `ATTACK_TARGET` via `ObjectiveIntentResolver`":
+      measurement shows the resolver is **never consulted** for these objectives (`tactical.py:262`
+      intercepts `reach_location` and returns; `:308` excludes `DEFEAT_ENEMY`). A `DEFEAT_ENEMY`
+      objective reaches combat through the **hostile-engagement branch**, gated on `hostiles`, so
+      that is what the test must exercise.
+- [ ] `hostiles` is non-empty for such an entity. This is the measured blocker: it was non-empty in
+      **0 of 236** tactical calls on CE-goal holders, including all 12 where the target was within
+      1 tile, and in 204/216 `crowded_frontier` cases the *only* exclusion was the catalog hostility
+      test. If this criterion fails, the fix has not worked no matter what `obj.kind` says.
 - [ ] No goal kind that previously produced a correct `reach_location` objective changes kind. The
       generic fallback stays `REACH_LOCATION` for every scorer that publishes no `obj_kind`.
 - [ ] The decision-driven `ATTACK` path volume is measured before and after on at least two corpus
       worlds, and the number is reported in `## Test Summary` **whatever it shows** — including if it
-      is unchanged. A zero delta is a finding about `tactical.py:308`, not a failed ticket.
+      is unchanged. **The before-baseline is already measured** (Implementation Notes): decision-path
+      vs opportunity attacks were 2 vs 119 (`crowded_frontier`) and 3 vs 783
+      (`frontier_living_world`), seed 42 / 2000 ticks, with **0** `ATTACK` emissions from CE-goal
+      holders and both decision-path attacks coming from entities *without* a `combat_engage` project.
+      Re-measure after with the same method and worlds, and report the **catalog-hostile vs raw-only
+      target ratio** alongside — at 54% / 34% raw-only (a floor), that ratio is what bounds how far the
+      volume can move at all. A smaller-than-hoped delta is a finding about the hostility divergence,
+      not a failed ticket.
 - [ ] Determinism holds: canonical/replay/fingerprint/hash sweep green, and any recorded-hash
       fixture that moves is identified and explained rather than regenerated silently.
 - [ ] The per-`GoalKind` audit from Scope 4 is recorded in `investigation.md`.
@@ -168,6 +191,14 @@ it and no dormancy protects it.
 - `src/domains/adventure/mapper.py:37` — the only other `DEFEAT_ENEMY` producer
 
 ## Assumptions / Open Questions
+- **SETTLED 2026-10-02 by measurement — see Implementation Notes.** Reading B is **falsified**
+  (`hostiles` non-empty in 0 of 236 CE-goal tactical calls, including all 12 within 1 tile). Reading A
+  is substantially true but by a different mechanism than stated (arrive at a stale point and emit an
+  empty update, 96.8% / 70% of calls — not a pursuit that never lands a blow). Reading C's *mechanism*
+  is confirmed and is the proximate cause, but its *predicted signature* is refuted: there are **0**
+  decision-path rejections because no attack is ever decided. The original two-reading text is kept
+  below for provenance; **do not re-run this discrimination.**
+
 - **The fix's behavioural delta is genuinely uncertain and must not be assumed positive.**
   `src/engine/tactical.py:308`'s comment states DEFEAT_ENEMY is "excluded — handled entirely by the
   hostile-engagement branch below (gated on `hostiles`, not `obj.kind`)". If that branch already
@@ -189,6 +220,98 @@ it and no dormancy protects it.
 - Which other `GoalKind`s reach the generic branch has not been enumerated. Scope 4 covers it.
 
 ## Implementation Notes
+
+### 2026-10-02 — MEASURED. Verdict: two defects compound, and a third was found. Three corrections to this ticket.
+
+Probe run on **current unmodified code**, real `Kernel.tick_once()` loop, reusing
+`TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION`'s own method (`PROD_SMALL`,
+`DeterministicRNG(42)`, `LocalSequentialExecutor()` explicitly — that artifact's guard against
+concurrent-evaluation probe corruption), seed 42, **2000 ticks**, worlds `crowded_frontier` (38
+entities), `frontier_living_world` (49), `quest_dense_frontier` (6). No `src/` file touched. All
+figures below are **post-`TCK-20260919`** and are **not comparable** to any pre-fix number in older
+tickets.
+
+**Correction 1 — `COMBAT_ENGAGE` is not a rare winner. It is the most frequent one.**
+
+| world | goal competitions | `combat_engage` wins | share |
+|---|---|---|---|
+| `crowded_frontier` | 1767 | **485** | 27.4% |
+| `frontier_living_world` | 1744 | **568** | **32.6% — top winner** |
+| `quest_dense_frontier` | 410 | 0 | 0% (scorer returned `utility == 0.0` in 410/410; no raw-enum-different-faction live neighbour in radius 10 for its 6 entities — a real zero, contributes nothing either way) |
+
+So this is a **high-volume** defect, not an edge case. The prior chain's "zero `DEFEAT_ENEMY`
+objectives ever sampled" reproduces, and the cause is now pinned: the goal wins constantly and
+winner-consumption converts **every** win to `reach_location` — 50 279/50 279 and 60 835/60 835
+objective samples, zero `defeat_enemy`.
+
+**Correction 2 — the resolver is never consulted, so `ATTACK_TARGET` is structurally unreachable.**
+`ObjectiveIntentResolver.resolve` was called **only** with `investigate` objectives (360 / 154 times,
+all → `MOVE_TO`) and **never once** for a `combat_engage` project's objective. `tactical.py:262`
+intercepts `reach_location` and returns first; `tactical.py:308` excludes `DEFEAT_ENEMY` as well. This
+ticket's original AC2 was written against a mechanism that does not operate — fixed below.
+
+**Correction 3 — reading B is FALSIFIED, and reading C's mechanism is the proximate cause.**
+`hostiles` was non-empty in **0 of 236** tactical calls on entities holding a won `COMBAT_ENGAGE`
+project, across both worlds — *including* the 12 calls where the target was within 1 tile. Being gated
+on proximity rather than `obj.kind` does not save it, because the same catalog test `hostiles` uses
+rejects the very target the scorer chose. The discriminating measurement, `crowded_frontier` (216
+calls): **204 had the target alive, in the perception-filtered neighbour list, and passing the
+perception gate — the only thing excluding it from `hostiles` was the catalog hostility test.**
+
+Raw-enum vs catalog on the targets actually selected (catalog called exactly as
+`_is_engagement_hostile` does):
+
+| world | selections | raw-enum hostile | catalog hostile | **raw-only (disagreement)** | catalog-only |
+|---|---|---|---|---|---|
+| `crowded_frontier` | 683 | 683 (100%, by construction) | 314 | **369 (54.0%)** | 0 |
+| `frontier_living_world` | 773 | 773 (100%) | 513 | **260 (33.6%)** | 0 |
+
+Inside the 34-97% band `legality.py:516-544`'s docstring cites. **These are FLOORS:** the probe used
+`RelationContext(distance=1.0, combat_engaged=True)` (legality's own context), while
+`tactical.py:210-223` builds its context with real distance, real `combat_engaged` and species ids —
+and 2 calls where the probe said catalog=True still had empty `hostiles`. Real disagreement is
+*higher* than 54% / 34%.
+
+**Reading C's predicted signature is refuted.** There are **0 decision-path rejections** from
+CE-goal holders — because no attack is ever decided. 0/216 and 0/20 `ATTACK` emissions. The divergence
+bites **upstream** of any attack decision, so there is nothing to reject. Decision-path vs incidental
+attacks reproduce the chain's shape: 2 vs 119 (`crowded_frontier`), 3 vs 783
+(`frontier_living_world`) — and **both decision-path attacks came from entities NOT holding a
+`combat_engage` project.**
+
+**THE THIRD DEFECT, not previously in this ticket: the objective targets a moving entity through a
+fixed-point mechanism, and never terminates.** `CombatEngageScorer` sets `target_id=str(hostile.id)`,
+which *is* int-castable, so `_resolve_target_position` parses it, finds no `resource_nodes[15]` and no
+`buildings[15]`, leaves `node_id`/`building_id` as `None`, and falls through to the
+`obj.target_position` fallback added by `TCK-20260807-TOWN-RETURN-TARGET-RESOLUTION-BUG` for scorers
+with non-int-castable ids like `"town_center"`. That fallback is correct for its own purpose and here
+**silently converts "a moving entity" into "a fixed stale point".** Measured: position source was
+`obj.target_position` in **100%** of cases; the entity hit the arrived-and-do-nothing branch in
+**209/216 (96.8%)** and **14/20 (70%)**; the **live** target was ≥3 tiles from the stale point in
+**183/212 (86%)**; `movement_mode` was `WANDER`, not `PURSUE`; and **0** of 50 279 / 60 835 objective
+samples was ever in a status other than `ACTIVE`, so the project slot is held permanently. Distance to
+the live target: 9 calls at 0-1, 20 at 2-3, **176 at 4-10**, 8 at >10 — they are not adjacent and
+failing to swing, they are standing still where the enemy used to be.
+
+**Consequence for the plan — neither fix alone works, and two is probably not enough.** Fixing only
+`obj.kind` routes the objective to the hostile-engagement branch, where `hostiles` is still empty from
+the catalog divergence. Fixing only the hostility source leaves winner-consumption still writing
+`reach_location`. And fixing both still leaves an objective whose `target` is an entity id that nothing
+on this path can track, and which never terminates. **The plan must decide explicitly whether the
+third defect is in this batch or its own ticket** — my lean is its own ticket, filed before
+implementation starts so the batch's scope stays honest, because the target-resolution and
+non-termination problems are not about the decided objective *kind* at all.
+
+Floors, caveats and what was not measured, carried from the probe rather than dropped: the
+disagreement percentages are floors (above); opportunity-path rejection reasons are unmeasured
+(`resolve_multi_attack` surfaces only an aggregate `outcome_kind`); "0 objectives abandoned" means no
+sample showed a non-`ACTIVE` status, not provably never — 27 and 36 distinct CE projects did churn;
+tactical **call counts** drift ±~3% run to run (212/213/216/218 over four identical-seed runs) while
+every **simulation outcome** was exactly reproducible (485 wins, 2 decision attacks, 119 opportunity,
+every run) — believed to be the governor's latency-adaptive brain scheduling, not chased to root
+cause; `hero_guild_routing` and `metropolis` were not run. Instrument positive control held: the probe
+did capture the 1 `ATTACK` per world from non-CE entities and their downstream dispatches, so the zero
+from the CE bucket is a real zero, not a blind wrap.
 
 ### 2026-10-02 — RESOLVED: the generic branch's `score` is CORRECT. Do not "clean up" `ProjectState.kind`.
 
