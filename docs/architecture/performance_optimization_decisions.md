@@ -13,7 +13,7 @@ Stage 0). Created by `TCK-20260913-PERF-M0-OWNER-TRIAGE` on 2026-10-02. This fil
 dispositions and decision records; it does not change any behavior, and it does not edit or
 supersede any authority-P1 document. A planner review is not owner approval (§1.3).
 
-Status of this version: **reviewed by perf-planner on 2026-10-02; not owner-approved — no P1 document is changed by this file.** PERF-D1, D2, D4, D5 and D6 are empty stubs on purpose; the planner session drafts them.
+Status of this version: **reviewed by perf-planner on 2026-10-02; not owner-approved — no P1 document is changed by this file.** PERF-D1, D2 and D4 were drafted by the planner session on 2026-10-03 and await the owner's decision; PERF-D5 and D6 stay empty until the hash call-site and phase inventories exist.
 
 ## Owner decisions in force (2026-10-02)
 
@@ -185,14 +185,192 @@ completeness is verified by reading (ticket assumption).
 Each follows §3.1 and is intentionally empty.
 
 #### PERF-D1 — Determinism contracts (Canonical and Live bounded)
-- **Status:** open — drafted by `perf-planner`. All other fields: pending.
-- Related dispositions: C-03 (ratify or revise the worker-zero fix; define queue-zero), C-04, C-05.
+
+- **Status:** drafted by `perf-planner` on 2026-10-03; **not owner-approved**. It changes two P1
+  documents, so it stays a draft until the repository owner accepts it.
+- **Context:** `docs/engine/deterministic_execution.md` (P1) promises that sequential execution is
+  bit-identical for the same seed and initial state. Three wall-clock inputs break that promise
+  today, in every execution mode unless `audit_mode` is on:
+  1. `ResourceGovernor._get_indicated_mode()` chooses `RuntimeMode` from `tick_compute_ms`, RSS
+     memory, and worker/queue utilization (`src/engine/governor.py:76-109`); the mode then sets
+     cadence, LOD, scan policy, and phase budgets.
+  2. `Kernel._phase_resolution()` compares elapsed wall-clock time with
+     `profile.max_tick_budget_ms` while processing results; when exceeded and `audit_mode` is off
+     it drops the remaining results, records dropped work, and forces `DEGRADED`
+     (`src/engine/kernel.py:614-616`, `:588`).
+  3. An end-of-tick check records dropped work when the final compute time exceeds the budget
+     after tick 5 (`src/engine/kernel.py:461-463`).
+
+  `docs/engine/runtime_profiles.md` §4 (the same profile yields identical semantics on different
+  hardware classes) is false for the same reason. `INFRA-363` labels a run that reached
+  `DEGRADED`/`SURVIVAL` as `verification_level = REDUCED`, which discloses the problem per run and
+  does not make any run reproducible. The P1 determinism envelope epic asks the maintainer to
+  choose a canonical mode **or** a live bounded mode (conflict C-04).
+- **Decision (proposed):** adopt **both**, as two named contracts for two uses.
+  - **Canonical contract.** No wall-clock or host-resource reading may influence authoritative
+    state. Pressure signals are deterministic proxies (work-unit counts, queue depth against a
+    fixed ceiling, work debt); the mid-tick cutoff and end-of-tick drop are driven by a work-unit
+    budget or are off. Guarantee: same build, configuration, seed, and initial state give the same
+    canonical hash at every tick, whatever the host load. Required for certification, determinism
+    and replay tests, Simulation Quality calibration, and any benchmark that claims hash parity.
+  - **Live bounded contract.** Real wall-clock and resource signals are allowed. Every decision
+    that changes what is computed is either written to a versioned, bounded control trace or is
+    derivable from one that is. Guarantee: a Live run is reproducible **given its trace** — a
+    Canonical-mode replay that consumes the trace reaches the same hashes. The trace is not
+    predictable in advance, and that is accepted.
+  - **Control-input classification (answers C-05):**
+
+    | Decision | Treatment |
+    |---|---|
+    | `RuntimeMode` transition (tick, from, to) | Recorded |
+    | Mid-tick cutoff: how many sorted results were applied before the drop | Recorded (the mode alone does not say which results were lost) |
+    | End-of-tick dropped-work marker | Recorded |
+    | Phase budgets emitted from measured sub-phase cost | Recorded as emitted values; the costs that produced them are not |
+    | Scan policy, cadence, LOD, sweep interval | Derived from the recorded mode and budgets; a test proves the derivation |
+    | Worker completion order | Not recorded; results are canonically sorted before resolution |
+    | Frame pacing, GC timing | Not recorded; no effect on authoritative state |
+
+  - **Zero-capacity semantics (answers C-03):** zero workers means synchronous execution, so
+    worker utilization does not apply and reports `0.0`. This **ratifies** the fix made by
+    `TCK-20260911-WORKER-UTILIZATION-ZERO-WORKERS-DEGRADED-MISTRIGGER`. Zero queue depth with zero
+    workers means no queue exists, and queue utilization likewise reports `0.0`. Zero queue depth
+    with one or more workers is a configuration error and is rejected when the worker manager is
+    built, instead of being reported as permanent saturation. Idle is `0.0`, saturated is `1.0`,
+    and "unavailable" is never encoded as a utilization value.
+  - **Tied worker results:** the sort key `(class_priority, -local_priority, entity_id)` is
+    assumed total because entity ids are unique. System-level results that share id zero are not
+    covered by that argument; `PERF-M1-T04` verifies it and this decision does not change the key.
+- **Rejected alternatives:** Canonical only (the live server could not shed load under real
+  pressure); Live only (certification and regression tests could not be reproduced, which is the
+  current failure); keep `REDUCED` labeling alone (honest, but nothing becomes reproducible);
+  record only mode transitions (insufficient: the mid-tick cutoff discards specific results the
+  mode does not identify).
+- **Trade-offs:** two pressure-signal paths to maintain and test; trace storage and a format to
+  version; Canonical runs model overload in work units, so they do not exercise real timing
+  behavior, which only Live runs do.
+- **Evidence:** the code locations above, read on 2026-10-03;
+  `TCK-20260822-STANDARD-SLOW-REGRESSION-CI-JOB-EXIT-CODE-2` records the same seed passing and
+  failing `test_1000_tick_determinism` on consecutive runs through input 2, and
+  `TCK-20260908-DEGRADED-POLICY-NONURGENT-MOVEMENT-STARVATION` records a gameplay consequence.
+  **Uncertainty:** the three inputs are the ones found by reading the governor and the kernel
+  tick path; a complete inventory of wall-clock and host-resource reads that reach authoritative
+  state has not been made. Whether zero queue depth with workers occurs in any shipped profile is
+  not checked.
+- **Authority:** `docs/engine/deterministic_execution.md` becomes the home of both contracts;
+  `docs/plans/design_enhancement/determinism_envelope_epic.md` M1 item 1 is answered "both";
+  `docs/engine/runtime_profiles.md` §4 is qualified to the Canonical contract.
+- **Named approvers:** repository owner. Reviewed from the Architecture and Simulation
+  Correctness perspectives by `perf-planner`.
+- **Compatibility:** no behavior changes on approval; this is a contract. Existing results from
+  runs without `audit_mode` cannot be claimed hash-stable. `verification_level = REDUCED` remains
+  the label for a Live run without a verified trace. Baselines taken before the Canonical path
+  exists are provisional.
+- **Verification:** a test that two Canonical runs with artificially injected delay produce the
+  same mode sequence and hashes; a trace-replay test for Live; a static inventory of wall-clock
+  and resource reads in the tick path, re-runnable like the phase and hash inventories.
+- **Child packages:** releases the design of `PERF-M1-T01` (zero-capacity) and `PERF-M1-T04`
+  (tied results), and an evidence-only inventory ticket for wall-clock reads. Implementation of
+  any of them edits `src/engine/` and stays blocked by the RPG-core entry gate. Gives the parked
+  slow-regression ticket its fix direction (run those tests under the Canonical contract).
+- **Revisit condition:** the control trace cannot be bounded; a new executor (free-threaded or
+  native) adds a semantics-affecting input not in the table; the inventory finds a fourth input.
+- Related dispositions: C-03, C-04, C-05.
 
 #### PERF-D2 — Portability
-- **Status:** open — drafted by `perf-planner`. All other fields: pending.
+
+- **Status:** drafted by `perf-planner` on 2026-10-03; **not owner-approved** (it changes
+  `docs/engine/deterministic_execution.md`).
+- **Context:** the determinism contract does not say across which environments the guarantee
+  holds. `pyproject.toml` allows Python 3.11 and later, CI runs 3.13, and the contract lists
+  float-rounding edge cases as a known risk. The owner's technology direction adds compiled
+  kernels and possibly a free-threaded interpreter, each of which is a new runtime identity.
+- **Decision (proposed):** state the guarantee in tiers, and claim only what a test matrix proves.
+
+  | Tier | Scope | Claim |
+  |---|---|---|
+  | DET-PORT-0 | Same build, same interpreter minor version, same OS and CPU architecture, sequential executor, Canonical contract | Guaranteed; this is the certification reference |
+  | DET-PORT-1 | DET-PORT-0 environment with a different executor backend (thread, process) or worker count, and any `PYTHONHASHSEED` | Guaranteed only for backends and counts in a passing parity matrix; otherwise unclaimed |
+  | DET-PORT-2 | Different OS, CPU architecture, interpreter minor version, or native-extension build | Not guaranteed; a combination is promoted to a claim only after it passes the same matrix |
+
+  The reference runtime is the one CI runs (CPython 3.13 on Linux x86-64). Every benchmark
+  result, baseline, and hash proof records its tier and its runtime identity: interpreter
+  version and build flavor, OS, architecture, and the versions of any native kernels.
+- **Rejected alternatives:** claim cross-platform determinism now (untested; float library and
+  interpreter differences are a known risk); claim nothing beyond one machine (too weak — executor
+  parity is already partly tested in `tests/perf/test_concurrency_parity.py`).
+- **Trade-offs:** a hash proof is only comparable within its tier; moving the reference runtime
+  invalidates DET-PORT-0 proofs and needs a migration note.
+- **Evidence:** `pyproject.toml` (`requires-python >=3.11`), `.github/workflows/test.yml` (3.13),
+  `docs/engine/deterministic_execution.md` "Known non-determinism sources".
+  **Uncertainty:** which executor backends and worker counts pass parity today has not been
+  measured; the current contract text calls concurrent mode out of scope, which DET-PORT-1 would
+  replace only for combinations that pass.
+- **Authority:** `docs/engine/deterministic_execution.md`, "Scope of the guarantee".
+- **Named approvers:** repository owner. Reviewed from the Architecture and Release/Certification
+  perspectives by `perf-planner`.
+- **Compatibility:** none until a claim is promoted; existing artifacts gain a tier label when
+  their identity is known and are otherwise treated as unlabeled.
+- **Verification:** the parity matrix in the prerequisite plan §9 (backends, worker counts,
+  randomized completion order, several `PYTHONHASHSEED` values), run under the Canonical contract.
+- **Child packages:** feeds PERF-D4 (runtime and hardware identity fields) and `PERF-M2-T02`
+  (benchmark identity schema). No ticket is released by this decision alone.
+- **Revisit condition:** adoption of a native kernel, a free-threaded interpreter, or a second
+  supported platform.
 
 #### PERF-D4 — Performance-contract authority
-- **Status:** open — drafted by `perf-planner`. All other fields: pending.
+
+- **Status:** drafted by `perf-planner` on 2026-10-03; **not owner-approved** (it changes three
+  P1 documents).
+- **Context:** three P1 documents and the live gate disagree (conflict C-13).
+  `docs/engine/performance_contract.md` and `docs/performance/perf_baseline_policy.md` require 100
+  warmup and 1,000 sampled ticks; the gate runs 10 and 50. The policy specifies p50/p95/p99 and
+  memory bounds enforced by `PerfRegressionGate`; that class has no consumer, and the gate checks
+  only an average against `max(5 ms, baseline × 1.25)`. The policy's hardware classes conflict
+  with `docs/engine/contracts/certification_contract.md` §3, which the policy itself notes. A
+  missing baseline is skipped. Threshold checks warn by default.
+- **Decision (proposed):**
+  1. `docs/engine/performance_contract.md` is the single clause-level authority for how
+     performance is measured, compared, and claimed.
+  2. `docs/engine/contracts/certification_contract.md` §3 is the single definition of hardware
+     class (the logical-cores **and** RAM rule). The baseline policy's table is removed in its
+     favor.
+  3. `docs/performance/perf_baseline_policy.md` becomes the calibration procedure only; its §3
+     thresholds, which describe a mechanism that does not run, are moved into the contract as
+     targets for the controlled projection or deleted.
+  4. The contract defines two executable projections with different names and different claims:
+     a **tripwire** (fast, every relevant PR, detects change, makes no capacity claim) and a
+     **capacity run** (warmup and sample sizes from the contract, percentiles, memory, repeated,
+     on a controlled runner). The current 10/50 average check is honestly the tripwire.
+  5. Every projection returns `PASS`, `REGRESSION`, `INCONCLUSIVE`, or `NOT_APPLICABLE`. A
+     missing or incompatible baseline is `INCONCLUSIVE`, never a skip that reads as success.
+  6. Every result carries the PERF-D2 runtime identity, the PERF-D1 contract it ran under, the
+     `RuntimeMode` sequence, and the processed-work count.
+  7. Per the owner's technology direction, the projections are built on established tooling
+     (`performance_stack_survey.md`, section A), not by extending the bespoke harness.
+- **Rejected alternatives:** make the baseline policy the authority (it describes a mechanism
+  with no consumer); keep three documents and reconcile wording only (the drift recurs); harden
+  the existing checks first and write the contract later (blocking gates on a broken instrument).
+- **Trade-offs:** the contract grows; the baseline policy loses content; gates that now pass
+  silently will report `INCONCLUSIVE` until baselines exist.
+- **Evidence:** the three documents as read on 2026-10-03;
+  `tests/perf/test_perf_regression_baseline.py` (10/50 ticks, average only, skip on missing
+  baseline, empty hard-scenario set); 12 of 53 `assert_perf_threshold` call sites pass
+  `hard=True`; `perf_baseline_policy.md` §3's own 2026-08-08 correction note.
+  **Uncertainty:** the clause-by-clause inventory (`PERF-M2-T01`) has not been done; this decision
+  selects the authority and the shape, and the inventory may add clauses.
+- **Authority:** `docs/engine/performance_contract.md`.
+- **Named approvers:** repository owner. Reviewed from the Performance and Release/Certification
+  perspectives by `perf-planner`.
+- **Compatibility:** existing JSON baselines in `tests/perf/baselines/` are tripwire references
+  only and carry no capacity claim. No gate changes state on approval; changing a warning to a
+  failure reaches RPG-core PRs through the `perf-cert-arena` job and waits for the entry gate.
+- **Verification:** `PERF-M2-T06`'s gate-conformance map: each live gate names the clauses it
+  enforces; tests for absent baseline, stale identity, and percentile handling.
+- **Child packages:** releases `PERF-M2-T01` (clause inventory, documents and read-only) now.
+  `PERF-M2-T02` to `T06` follow owner approval and, where they change gate behavior, the entry
+  gate. Gate A materiality thresholds are **not** set here: they need the owner's scale target.
+- **Revisit condition:** the clause inventory finds a clause this shape cannot express; a hosted
+  tracking service is adopted and changes what a result record contains.
 - Related dispositions: C-13, C-15.
 
 #### PERF-D5 — Hash policy
