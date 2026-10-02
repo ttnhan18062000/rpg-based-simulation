@@ -84,8 +84,12 @@ minimal local fix. This changes how candidates are chosen, not whether they are 
   and are not relaxed by this direction. A modern design is adopted in a form that keeps them, or
   it comes back to the owner as an explicit trade-off.
 
-The planner session owes a stack survey — candidate tools and designs per layer, with what each
-would replace — before any tooling ticket in the foundation slice is written.
+The stack survey is `performance_stack_survey.md`: candidate tools and designs per layer, with
+what each would replace. The owner accepted its recommendations on 2026-10-02 and decided two
+points: a Rust toolchain (PyO3 and maturin) is acceptable in the build and CI, and the
+ECS/data-oriented core is scoped now as an architecture proposal only, in parallel with the
+foundation. That second decision moves M6-T05's proposal ahead of Gate B as a document; it
+authorizes no implementation, and Gate A and Gate B keep their roles for everything that is built.
 
 ### Live-state corrections
 
