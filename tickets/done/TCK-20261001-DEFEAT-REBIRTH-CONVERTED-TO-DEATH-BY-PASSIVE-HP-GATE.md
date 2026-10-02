@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-DEFEAT-REBIRTH-CONVERTED-TO-DEATH-BY-PASSIVE-HP-GATE
-phase: open
+phase: done
 date: 2026-10-01
 tags: [bug, lifecycle, engine]
 ---
@@ -16,7 +16,7 @@ A `DEFEAT` / `REBIRTH` outcome, classified non-lethal, is silently converted int
 `apply.py`'s passive HP gate one tick later
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -199,7 +199,10 @@ TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION. Catalog edits R1/R3/R4
 Corpus boundary test rewritten (not deleted): every terminal DEFEAT recorded and inactive (was 4 unrecorded in 120 ticks).
 
 ## Files Changed
-_To be completed during implementation._
+Landed in PR #276 (`786f9ee9b`, implementation commit `384f8cc44`).
+- `src/systems/lifecycle_systems/lifecycle.py` (`resolve_lifecycle` records terminal `DEFEAT` from the persisted `outcome_kind`), `src/engine/apply.py` (active gate agrees with the recorded death).
+- Tests: `tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py`, `test_entity_death_authority_boundary.py` (corpus test rewritten), `tests/unit/movement/test_tactical_movement.py`.
+- Docs: `docs/world_rules/life-body/lifecycle.md` (R2 applied), `docs/mechanics/02_combat_laws.md`, parity ledger.
 
 ## Completion Summary
-_To be completed during implementation._
+Terminal `DEFEAT` is now a recorded death (`death_reason="DEFEAT"`) instead of a silent deactivation; only that recorded-death half of the ticket shipped, the `REBIRTH` restore half never did. The planned `REBIRTH` HP/alive restore was withdrawn and reverted after the rule owner found STR-02 (resurrection needs a declared process); `REBIRTH` was retired entirely by `TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION`. AC2 (reborn entity stays active) is therefore superseded, not met. Catalog edits R1/R3/R4 withdrawn, R2 applied.
