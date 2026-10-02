@@ -45,6 +45,8 @@ refused. Provenance is what the tools know (adapter version and Lua pin, Aseprit
 `UNAVAILABLE` / `NOT_APPLICABLE` otherwise, e.g. the creator. It is a **candidate, not an adoption**: nothing is written to the asset store, and the
 next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, build, release, revoke or gc tool.
 
+**Rule for agents: an agent never runs `adopt` or `revoke`** (`python -m visual_assets.store adopt|revoke`). They are human decisions that write the tracked catalog; they refuse to run without a terminal and make the operator type the id, and the drawing code cannot import them.
+
 Every sprite summary (`new_sprite`, `apply_ops`, `branch_sprite`, `inspect`) also carries `cels` (number of cels as Aseprite stores them,
 linked cels included) and `aseprite_version` (string, from the running binary). Both are read-only facts added for candidate handoff.
 Note: `palette_size` of `new_sprite` is the in-memory palette; `inspect` reports the size Aseprite gives after reloading the file.

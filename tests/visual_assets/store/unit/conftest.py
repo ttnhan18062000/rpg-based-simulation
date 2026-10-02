@@ -74,3 +74,19 @@ def snapshot(root) -> dict[str, tuple]:
             else:
                 out[rel] = ("dir" if st.S_ISDIR(mode) else "special",)
     return out
+
+
+@pytest.fixture
+def env(tmp_path, monkeypatch):
+    """An isolated catalog root plus quarantine and review roots; `config.NAME` is read at call time everywhere."""
+    from types import SimpleNamespace
+
+    from visual_assets.store import config
+
+    catalog = tmp_path / "catalog"
+    catalog.mkdir()
+    quarantine, review = tmp_path / "quarantine", tmp_path / "review"
+    monkeypatch.setattr(config, "CATALOG_ROOT", catalog)
+    monkeypatch.setattr(config, "QUARANTINE_ROOT", quarantine)
+    monkeypatch.setattr(config, "REVIEW_ROOT", review)
+    return SimpleNamespace(catalog=catalog, quarantine=quarantine, review=review, tmp=tmp_path)

@@ -13,7 +13,8 @@ see `tickets/todos/visual-asset-foundation/SEQUENCE.md` for the tickets that bui
 | `contracts/` | strict, frozen, versioned records and `canonical_json` / `parse_record`; pure (no file, clock or path access) |
 | `catalog/registry.py` | read-only loader for `catalog/definitions/visual_keys.yaml`; `Registry.resolve` follows at most one alias |
 | `intake/` | `quarantine.py` (safe read, exclusive write), `aseprite.py` / `png.py` (bounded pure readers), `validator.py` (one policy, no producer branch), `service.py` (`intake`, `review`, `list_results`, `show`) |
-| `cli.py`, `__main__.py` | `python -m visual_assets.store intake <dir> | review <id> | list | show <id>`; exit 0 passed, 1 quarantined, 2 refused/error; the only code that reads the clock |
+| `records.py`, `catalogwrite.py`, `adoption.py`, `revoke.py`, `audit.py` | catalog record reads; all-or-nothing tracked publish; **human-gated** `adopt` and `revoke` (+ `is_build_eligible`, fails closed); read-only `audit_chain` |
+| `cli.py`, `__main__.py` | `python -m visual_assets.store intake <dir> | review <id> | list | show <id> | audit | adopt ... | revoke ...` (adopt and revoke: HUMAN ONLY, terminal plus typed id); exit 0 passed, 1 quarantined, 2 refused/error; the only code that reads the clock |
 
 The committed catalog has **zero** keys, sources and artifacts. Synthetic fixtures live only in `visual_assets/catalog/fixtures/`.
 Design, command/gate table and layering rules: `docs/plans/visual-asset-foundation/README.md`; contract summary (designed vs built):

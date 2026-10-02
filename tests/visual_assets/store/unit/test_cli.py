@@ -68,7 +68,7 @@ def test_list_show_and_review(good, bad, roots, capsys):
 
 
 def test_unknown_commands_and_missing_arguments_are_usage_errors(capsys):
-    for argv in ([], ["adopt", "x"], ["intake"], ["revoke"], ["gc"], ["build"]):
+    for argv in ([], ["adopt", "x"], ["intake"], ["revoke"], ["gc"], ["build"], ["release"], ["verify"]):
         with pytest.raises(SystemExit) as err:
             cli.main(argv)
         assert err.value.code == 2
@@ -78,7 +78,9 @@ def test_the_module_runs_as_a_script_and_has_no_gate_commands():
     env = {**os.environ, "PYTHONPATH": str(REPO)}  # inherit: user-site packages (pydantic) must stay importable
     run = subprocess.run([sys.executable, "-m", "visual_assets.store", "--help"], capture_output=True, text=True, env=env, cwd=REPO)
     assert run.returncode == 0
-    for command in ("intake", "review", "list", "show"):
-        assert command in run.stdout
-    for gate in ("adopt", "revoke", "build", "release", "gc", "verify"):
-        assert gate not in run.stdout.split("positional arguments")[-1].split("options")[0], gate
+    commands = run.stdout.split("positional arguments")[-1].split("options")[0]
+    for command in ("intake", "review", "list", "show", "audit", "adopt", "revoke"):
+        assert command in commands, command
+    assert commands.count("HUMAN ONLY") == 2  # adopt and revoke say so in their own help
+    for later in ("build", "release", "gc", "verify"):  # not built yet (ticket 5)
+        assert f"\n    {later}" not in commands, later

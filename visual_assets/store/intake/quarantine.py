@@ -23,6 +23,7 @@ PACKAGE_FILE = "package.json"
 SOURCE_FILE = "source.aseprite"
 PREVIEW_FILE = "preview.png"
 RESULT_FILE = "intake_result.json"
+REVOCATION_FILE = "revocation.json"  # local revocation of an un-adopted intake (written by `revoke`)
 STAGED_NAMES = (PACKAGE_FILE, SOURCE_FILE, PREVIEW_FILE)
 
 _DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
@@ -43,6 +44,7 @@ def _limit(name: str) -> int:
         SOURCE_FILE: config.MAX_SOURCE_BYTES,
         PREVIEW_FILE: config.MAX_PREVIEW_BYTES,
         RESULT_FILE: config.MAX_RECORD_BYTES,
+        REVOCATION_FILE: config.MAX_RECORD_BYTES,
     }[name]
 
 

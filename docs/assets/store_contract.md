@@ -49,6 +49,16 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 - Identities with no normalisation: `VisualKey`, eight opaque id types, `SourceRevision`, `FileHash` (`sha256:`), `PixelHash`
   (`pixels-v1:`; the algorithm is child 5), `UtcTimestamp`.
 - Registry loader: duplicate YAML keys, anchors, alias problems and the reserved `fixture.*` namespace are rejected; nothing registers dynamically.
+- Adoption and revocation (**human-gated**, `python -m visual_assets.store adopt|revoke`; the first writers of the tracked catalog): `adopt` takes the licence state and its
+  evidence ONLY from the human's own arguments (never from the package, whose licence statement is only a claim), refuses an Evidence marker as evidence and anything but
+  `CLEARED`, requires an explicit `--source-asset-id` and exactly one of `--new` or `--parent rNNNN` (the latest unrevoked revision), checks the visual key against the
+  registry, and refuses, each with its own code and before writing anything: an unknown, failed, revoked or already-adopted intake, changed staged bytes, an oversize source
+  (ADR D2), a revoked or closed lineage. It prints the preview warning and what is being decided, then makes the operator type the id. The four files (source bytes, intake
+  copy, adoption record, SourceRecord) are published all together or not at all, the SourceRecord last. `revoke` never deletes: a source revision gets a tracked revocation
+  record, an un-adopted intake a local one; `is_build_eligible` fails closed. A revoked revision does not freeze its asset: the next revision continues the numbering and takes the
+  latest UNREVOKED revision as its parent; an asset whose every revision is revoked is closed.
+- `audit_chain` rebuilds intake result -> adoption record -> SourceRecord -> source bytes from the tree alone using the hashes the records carry (`AdoptionRecord.intake_hash`,
+  `SourceRecord.adoption_hash`) and reports every break by code; leftover `.tmp-*` directories are notes.
 - Handoff builder (drawing side): `export_handoff` writes a candidate directory inside the experiment workspace (see `docs/assets/drawing_tools.md`); it never writes the store.
 - Intake (store side; `python -m visual_assets.store intake|review|list|show`): the package directory is opened without following symlinks and read
   into memory first (refused before any byte is copied, leaving no quarantine directory, for a symlink, extra file or sub-directory, oversize file,
@@ -65,13 +75,16 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 | Piece | Designed behaviour | Child ticket |
 |---|---|---|
 | Intake | bounded copy into quarantine, claims checked against staged bytes (hashes, format, bounds, symlinks, traversal, licence state), immutable `IntakeResult` | 3 |
-| Adoption / revoke | human-gated, record a named approver and licence state, refuse a failed, revoked or already-adopted intake | 4 |
 | Build / release candidate | sandboxed allowlisted export, canonical pixel hash, immutable candidate manifests, no "active" pointer | 5 |
 | `verify` / `gc` | whole-store integrity in pure Python (runs in CI); reachability-based dry-run gc | 5 |
 | MCP store tools | read-only `store_list` / `store_show` and `submit_candidate`; never adopt, build, release, revoke or gc | 6 |
 
 ## Known gaps (stated, not hidden)
 
+- **The human gate does not authenticate the person.** The terminal check and the typed id stop accidental and scripted adoption; the approver name and role are recorded, not proven.
+- **The catalog alone cannot catch a consistent forgery.** Someone who edits an adoption record and the hash in its SourceRecord together still passes `audit_chain`; git history is the
+  backstop. (Ticket 5 binds artifacts to the SourceRecord bytes, so a release manifest anchors the whole chain.)
+- **Agents never run `adopt` or `revoke`.** They are absent from the MCP server and a boundary test forbids the drawing code from importing them.
 - **The preview is producer-supplied and unproven.** A human reviews `preview.png` but adopts `source.aseprite`; intake checks only the PNG signature, IHDR and scale, so a
   producer could hand off a good-looking preview with a different source. Until `TCK-20261002-VISUAL-ASSETS-STORE-BUILD-RELEASE` lands (store-rendered review with a
   pixel-hash comparison, and `adopt` refusing a mismatch), treat the preview as unverified.

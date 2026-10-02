@@ -39,6 +39,15 @@ class IntakeError(StoreError):
         self.message = message
 
 
+class GateError(StoreError):
+    """A human-gated command (`adopt`, `revoke`) refused. Nothing was written. `code` is stable."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
 class IdentityError(StoreError):
     """A value is not a canonical identity of the requested type."""
 

@@ -20,6 +20,7 @@ class SourceRecord(StoreRecord):
     source_hash: FileHash
     parent_revision: SourceRevision | None
     adoption_id: AdoptionId
+    adoption_hash: FileHash  # hash of the exact AdoptionRecord bytes; an edited approver no longer matches
     source_format: SourceFormat
     width: Dimension
     height: Dimension

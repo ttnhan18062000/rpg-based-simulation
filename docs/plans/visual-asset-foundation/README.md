@@ -103,7 +103,8 @@ visual_assets/                     # ONE ROOT FOLDER: code and managed data toge
     verify.py                      #   whole-store integrity: every record <-> bytes <-> hashes (pure Python, runs in CI)
     revoke.py                      #   quarantine/revoke a candidate or source revision; blocks build eligibility
     gc.py                          #   reachability-based dry-run GC of .quarantine and unreferenced generated files
-    cli.py  __main__.py            #   python -m visual_assets.store <intake|adopt|build|release|verify|revoke|gc|list|show>
+    cli.py  __main__.py            #   python -m visual_assets.store <intake|review|adopt|revoke|audit|list|show> built; build|release|verify|gc later
+    records.py catalogwrite.py audit.py   # safe record reads; all-or-nothing tracked publish; read-only chain audit (built)
     README.md
 
   catalog/                         # MANAGED STORE DATA (proposal §8 logical tree, made physical)
@@ -179,6 +180,9 @@ store.identities            ->  errors                      # helpers raise Iden
 store.contracts             ->  identities, errors, config  # + pydantic; no os/pathlib/io/time/datetime/subprocess/yaml, no open()
 store.catalog               ->  contracts, identities, errors, config  # + yaml (the only layer that may import it)
 store.intake                ->  contracts, identities, errors, config  # file I/O (quarantine); takes created_at as a parameter
+store.records / audit       ->  intake (safe reader), contracts, identities, errors, config   # read-only
+store.catalogwrite          ->  intake, errors, config     # the all-or-nothing tracked writer; drawing may never import it
+store.adoption / revoke     ->  records, catalogwrite, intake, contracts, identities, errors, config  # HUMAN-GATED; drawing may never import them
 store.cli                   ->  intake, contracts, identities, errors, config  # the only module that reads the clock
 store.__main__              ->  cli
 store.*                     ->  contracts, config, errors; build -> drawing.backend.sandbox (shared sandbox)
@@ -242,7 +246,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 1. **Foundation init** (`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`): move and restructure the drawing tools into `visual_assets/drawing/`, tests into `tests/visual_assets/drawing/`, no behaviour change; boundary test; CI step; `.mcp.json` + launcher; `store/` and `catalog/` skeletons (READMEs and package markers only, no logic); docs and ADR; plan-package status updates.
 2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `catalog/registry`), pure, fully CI-tested. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`).
 3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`): quarantine, validator, review, the `intake` / `review` / `list` / `show` CLI, and the drawing-side `export_handoff` (16 tools).
-4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test.
+4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-ADOPTION`).
 5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`.
 6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server.
 

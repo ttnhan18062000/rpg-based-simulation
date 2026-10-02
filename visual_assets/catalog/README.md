@@ -7,7 +7,7 @@ and synthetic test fixtures under `fixtures/contracts/`; **no real asset, record
 
 ## Who may write here
 
-Only the store's own human-gated commands (a later ticket). The drawing tools (`visual_assets/drawing`) and
+Only the store's own human-gated commands: `adopt` (source bytes, intake copy, adoption record, source record) and `revoke` (revocation records), published all together or not at all. The drawing tools (`visual_assets/drawing`) and
 the MCP server **never** write here: an agent can draw and hand off a candidate, but only a human-run
 command can adopt it. `tests/visual_assets/test_boundaries.py` enforces that the drawing code cannot even
 reference this path.

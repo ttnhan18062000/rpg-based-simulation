@@ -49,6 +49,9 @@ paths were deliberately left open. Full structure, layering rules and command ta
   `STORE_ALLOWED` fails the test, so each later ticket adds its own.
 - `IntakeResult` is written inside the gitignored quarantine directory, not the tracked `provenance/intake/` (the structure doc's placement). Intake has no
   human gate, and D3 says nothing unaccepted enters git history; `adopt` (ticket 4) copies the result into `provenance/intake/`.
+- Adoption binds its records by hash (`AdoptionRecord.intake_hash`, `SourceRecord.adoption_hash`) because `adoption_id` alone cannot show an edited approver; the remaining limit (a consistent
+  edit of both records) is stated in `docs/assets/store_contract.md`. `source_asset_id` is never defaulted: naming an asset is a deliberate human act.
+- Store layers `records`, `catalogwrite`, `adoption`, `revoke`, `audit` have rows too; `adoption`, `revoke` and `catalogwrite` are the human-gated writers the drawing code may never import.
 - Store layers `intake`, `cli`, `__main__` have their own `STORE_ALLOWED` rows; `intake` does file I/O, only `cli` reads the clock.
 - Aseprite file facts used by intake were verified against the pinned Aseprite 1.3.18.6 by round-tripping files through the real binary (integration tests).
   Notably an all-opaque-black stored palette is unverifiable without decoding pixels (see `docs/assets/store_contract.md`, known gaps).

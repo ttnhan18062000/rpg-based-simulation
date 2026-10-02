@@ -79,6 +79,8 @@ integrity in pure Python (so CI can do it without Aseprite), and list unreachabl
        the preview is producer-supplied and unverified.
     c. `adopt` refuses an intake whose store-rendered review is missing or whose preview did not match, with its own
        error code.
+11. **Chain anchoring (added by asset-planner 2026-10-03).** `ArtifactRecord` carries the hash of the exact `SourceRecord` bytes it was built from, so the release manifest
+    (which carries artifact hashes) anchors the whole chain intake -> adoption -> source record -> artifact. `verify` checks it.
 
 ## Out of Scope
 - Activation, runtime manifest locators, client compatibility ranges, signing (`AM-M5`-`M7`, `AM1-W08`).

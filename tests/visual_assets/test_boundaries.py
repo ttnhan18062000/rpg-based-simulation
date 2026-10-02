@@ -55,9 +55,17 @@ STORE_ALLOWED: dict[str, set[str]] = {
     "catalog": {"catalog", "contracts", "identities", "errors", "config"},
     # intake does file I/O (the quarantine) but takes timestamps as parameters; only `cli` reads the clock
     "intake": {"intake", "contracts", "identities", "errors", "config"},
-    "cli": {"cli", "intake", "contracts", "identities", "errors", "config"},
+    "cli": {"cli", "intake", "adoption", "revoke", "audit", "records", "catalog", "contracts", "identities", "errors", "config"},
     "__main__": {"cli"},
+    # catalog records and the human-gated writers (adoption, revoke, catalogwrite) are never reachable from the drawing tools
+    "records": {"records", "intake", "contracts", "identities", "errors", "config"},
+    "catalogwrite": {"catalogwrite", "intake", "errors", "config"},
+    "adoption": {"adoption", "records", "catalogwrite", "catalog", "intake", "contracts", "identities", "errors", "config"},
+    "revoke": {"revoke", "records", "catalogwrite", "intake", "contracts", "identities", "errors", "config"},
+    "audit": {"audit", "records", "intake", "contracts", "identities", "errors", "config"},
 }
+# store layers that write the tracked catalog (human gates): no drawing module may import them, not even the server
+GATE_LAYERS = {"adoption", "revoke", "catalogwrite"}
 # no I/O, clock or process access in the pure layers; PyYAML only in `catalog`
 PURE_STORE_LAYERS = {"contracts", "identities"}
 PURE_FORBIDDEN_IMPORTS = {"os", "pathlib", "io", "time", "datetime", "subprocess", "yaml"}
@@ -136,6 +144,9 @@ def check_source(rel: str, source: str) -> list[str]:
             allowed = set()
         for module, node in mods:
             if module.startswith("visual_assets.store"):
+                if store_layer(module) in GATE_LAYERS:
+                    problems.append(f"{rel}:{node.lineno}: drawing must never import the human-gated store layer ({module})")
+                    continue
                 if own == "handoff" and not module.startswith("visual_assets.store.contracts"):
                     problems.append(f"{rel}:{node.lineno}: handoff may import only store.contracts ({module})")
                 elif own not in ("handoff", "server"):
@@ -319,8 +330,8 @@ def test_every_store_module_has_a_known_layer():
 
 
 def test_planted_unknown_store_layer_is_caught():
-    problems = check_source("visual_assets/store/adoption/adopt.py", "import json\n")
-    assert any("unknown store layer 'adoption'" in p for p in problems), problems
+    problems = check_source("visual_assets/store/release/manifest.py", "import json\n")
+    assert any("unknown store layer 'release'" in p for p in problems), problems
 
 
 def test_planted_store_layering_violations_are_caught():
@@ -370,3 +381,29 @@ def test_planted_store_from_config_import_is_caught():
     problems = check_source("visual_assets/store/contracts/base.py", "from ..config import MAX_DIM\n")
     assert any("never `from ...config import NAME`" in p for p in problems), problems
     assert check_source("visual_assets/store/contracts/base.py", "from visual_assets.store import config\n") == []
+
+
+def test_planted_drawing_importing_a_human_gate_is_caught():
+    for gate in ("adoption", "revoke", "catalogwrite"):
+        for rel in ("visual_assets/drawing/server/handoff_tools.py", "visual_assets/drawing/handoff.py", "visual_assets/drawing/api.py"):
+            for src in (f"from visual_assets.store import {gate}\n", f"import visual_assets.store.{gate}\n",
+                        f"from visual_assets.store.{gate} import x\n"):
+                problems = check_source(rel, src)
+                assert any("human-gated store layer" in p for p in problems), (gate, rel, src, problems)
+    # the allowed link from drawing to the store is unchanged
+    assert check_source("visual_assets/drawing/handoff.py", "from visual_assets.store.contracts import canonical_json\n") == []
+
+
+def test_planted_store_layering_for_the_gated_layers_is_caught():
+    cases = {
+        "visual_assets/store/audit.py": "from visual_assets.store import adoption\n",  # audit is read-only: no gate module
+        "visual_assets/store/records.py": "from visual_assets.store import catalogwrite\n",
+        "visual_assets/store/catalogwrite.py": "from visual_assets.store import records\n",
+        "visual_assets/store/intake/service.py": "from visual_assets.store import adoption\n",  # intake never adopts
+        "visual_assets/store/revoke.py": "from visual_assets.store import adoption\n",
+    }
+    for rel, src in cases.items():
+        problems = check_source(rel, src)
+        assert any("must not import layer" in p for p in problems), (rel, problems)
+    assert check_source("visual_assets/store/adoption.py", "from visual_assets.store import records, catalogwrite\n") == []
+    assert check_source("visual_assets/store/cli.py", "from visual_assets.store import adoption, revoke, audit\n") == []

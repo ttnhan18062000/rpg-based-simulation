@@ -40,6 +40,7 @@ class AdoptionRecord(StoreRecord):
     schema_version: Literal[1]
     adoption_id: AdoptionId
     intake_id: IntakeId
+    intake_hash: FileHash  # hash of the exact IntakeResult bytes copied to provenance/intake/
     candidate_id: CandidateId
     approver_name: PersonText
     approver_role: PersonText
