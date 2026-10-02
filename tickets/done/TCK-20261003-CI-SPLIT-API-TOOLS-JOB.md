@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: testing
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-CI-SPLIT-API-TOOLS-JOB
-phase: open
+phase: done
 date: 2026-10-03
 tags: [delivery, testing]
 ---
@@ -15,7 +15,7 @@ tags: [delivery, testing]
 Split the `API / tools / logging` CI job into three parallel jobs
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -73,22 +73,22 @@ create-tickets workflow.
 - Weakening any assertion in the edited tests: only the job names and lists change
 
 ## Acceptance Criteria
-- [ ] `.github/workflows/test.yml` has no `api-tools` job and has the three jobs named in Scope; a
+- [x] `.github/workflows/test.yml` has no `api-tools` job and has the three jobs named in Scope; a
       search of the repository for `api-tools` finds only historical text (done tickets, stored
       artifacts, evidence fields) and the JUnit names this ticket deliberately keeps, if any
-- [ ] The set of test IDs collected by the three jobs together equals the set the old job
+- [x] The set of test IDs collected by the three jobs together equals the set the old job
       collected, shown by a `--collect-only` comparison recorded in the ticket: no ID missing; an
       ID collected by both tools jobs is listed and explained
-- [ ] A test file under `tests/tools` whose name matches neither glob (for example a name not
+- [x] A test file under `tests/tools` whose name matches neither glob (for example a name not
       starting with `test_` plus a letter) is shown to run in at least one job
-- [ ] `python3 tools/gate_checks/ci_workflow_test_coverage.py` reports no uncovered directory, and
+- [x] `python3 tools/gate_checks/ci_workflow_test_coverage.py` reports no uncovered directory, and
       `pytest tests/static/ tests/tools/test_ci_workflow_test_coverage.py` passes
-- [ ] Every edit to an existing test file is listed in the ticket and is limited to job names and
+- [x] Every edit to an existing test file is listed in the ticket and is limited to job names and
       job lists
-- [ ] The `slow` job's `needs:` lists all three new jobs and no longer lists `api-tools`
-- [ ] All three jobs are green on a real PR run, each writes a Job summary and uploads its JUnit
+- [x] The `slow` job's `needs:` lists all three new jobs and no longer lists `api-tools`
+- [x] All three jobs are green on a real PR run, each writes a Job summary and uploads its JUnit
       artifact, and the run link and the three job durations are recorded in the ticket
-- [ ] `git diff --stat <base>...HEAD` for this ticket's commits lists no path under `src/`,
+- [x] `git diff --stat <base>...HEAD` for this ticket's commits lists no path under `src/`,
       `.claude/` and not `CLAUDE.md`
 
 ## Related Tickets
@@ -158,12 +158,23 @@ Owner decision 2026-10-03 ("yes, do it in this PR"), relayed by `codebase-planne
 - Not an epic child: `TCK-20261002-PYTHON-CODE-CRAFT-EPIC` keeps its seven.
 - Still to record after a real run: the run link, the three job durations, and the before figures (440 s and 517 s from runs 37032971448 and 36997263937).
 
+**Real PR run (all green), recorded for the last acceptance criterion:** PR #288, run 37042722995 (https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37042722995), head `21265f2a`. Job durations:
+
+| Job | Result | Duration |
+|---|---|---|
+| `Tools · a–e` | success | 194 s |
+| `Tools · f–z` | success | 231 s |
+| `API / CLI / engine / logging` | success | 186 s |
+| `Integration` (now the longest) | success | 324 s |
+
+Before (the old single job, from the draft's measured runs 37032971448 and 36997263937): 440 s and 517 s. Each new job's `Run`, `Upload JUnit XML` and `Job summary` steps succeeded and each uploaded its artifact (`tools-a-e-junit-<sha>`, `tools-f-z-junit-<sha>`, `api-cli-engine-junit-<sha>`). The glob quoting reached pytest intact on the runner (the log shows the literal `--ignore-glob='tests/tools/test_[a-e]*.py'`). The two tools jobs were slower than the draft's 2.5 to 3 minute estimate for `f–z` (231 s); the split will drift as files are added, and rebalancing is a one-line glob change. An earlier run on this PR (37041076145) had `Tools · f–z` red only because of 8 mis-recorded monitoring rows, corrected under `TCK-20261002-PYTHON-CODE-STANDARD-DOC`; it was not caused by the split.
+
 ## Test Summary
 - `pytest tests/tools/test_ci_split_tools_jobs.py` (new, 16 tests): old job gone, three jobs present, `slow.needs`, each tools job's ignore glob in both its `Run` and base-collection steps, complementary letter ranges over the real `tests/tools` file names, the per-directory steps and JUnit merge of `api-cli-engine`, reporting steps in each new job, pip install kept, parser reads `{tests/tools}` for both tools jobs and ignores the glob word (real and synthetic), a file matching neither glob runs in both, no workflow line ends in a doubled backslash, and the merge step's argument list equals the six XML files the `Run` steps write (parsed with `shlex` after joining continuations).
 - `pytest tests/static tests/tools/test_ci_workflow_test_coverage.py tests/tools/test_dashboard_makefile_targets.py tests/unit/tools/test_core_rpg_report.py tests/docs tests/tools/test_tools_orphan_check.py`: 217 passed, 2 skipped, 1 xfailed.
 - `python3 tools/gate_checks/ci_workflow_test_coverage.py`: exit 0.
 - No `src/`, `.claude/` or `CLAUDE.md` path in the diff.
-- Real PR run: not yet.
+- Real PR run: green, run 37042722995 (see Implementation Notes for the durations).
 
 ## Files Changed
 - .github/workflows/test.yml
@@ -174,4 +185,4 @@ Owner decision 2026-10-03 ("yes, do it in this PR"), relayed by `codebase-planne
 - staging_artifacts/TCK-20261003-CI-SPLIT-API-TOOLS-JOB/
 
 ## Completion Summary
-Not complete: waiting for a real PR run to record the green result and the job durations.
+The `API / tools / logging` job is split into `tools-a-e`, `tools-f-z` and `api-cli-engine`, which run the same 4,040 tests in parallel. On a fully green real PR run the three jobs took 194 s, 231 s and 186 s against 440 s and 517 s for the old single job, and the longest job on a PR run is now `Integration` at 324 s.
