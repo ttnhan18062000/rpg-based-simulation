@@ -22,6 +22,7 @@ from src.core.enums import EntityRole
 from src.core.state import AuthoritativeState
 from src.core.updates import StateUpdate
 from src.observability.config import ObservabilityMode
+from src.observability.entity_kind_constants import BOSS_ENTITY_KINDS, SPAWN_CADENCE_EXCLUDED_KINDS
 from src.domains.world_emergence.schema import WorldEventCategory
 from src.observability.event_extractor import (
     _real_combat_update, _NEAR_DEATH_THRESHOLD,
@@ -1141,7 +1142,7 @@ class WorldDynamicsShaper:
         WorldEventCategory.TERRITORY_TRANSFERRED,
         WorldEventCategory.WAR_ENDED_EXHAUSTION,
     })
-    _BOSS_KINDS = frozenset(("world_boss", "ancient_sentinel"))
+    _BOSS_KINDS = BOSS_ENTITY_KINDS
 
     def shape(
         self,
@@ -1213,7 +1214,7 @@ class WorldDynamicsShaper:
         # spawn_cadence_fired — tick-modulo + non-boss entities_add
         if tick % 50 == 0:
             spawned = [e for e in (getattr(update, "entities_add", None) or [])
-                       if getattr(e, "kind", None) not in (None, "world_boss", "ancient_sentinel", "goblin_raider")]
+                       if getattr(e, "kind", None) not in SPAWN_CADENCE_EXCLUDED_KINDS]
             if spawned:
                 events.append(SimulationEvent(
                     event_type="spawn_cadence_fired", event_category="lifecycle",
