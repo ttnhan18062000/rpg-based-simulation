@@ -30,7 +30,7 @@ def drawn() -> str:
 def test_a_handoff_is_three_files_built_from_the_exact_revision():
     rev = drawn()
     result = handoff.build_handoff("hero", rev, **KW)
-    directory = config.WORKSPACE / "handoffs" / result["candidate_id"]
+    directory = config.WORKSPACE / "handoffs" / result["handoff_id"]
     assert str(directory) == result["directory"] and sorted(p.name for p in directory.iterdir()) == sorted(handoff.FILES)
     source = (config.WORKSPACE / "sprites" / "hero" / f"{rev}.aseprite").read_bytes()
     assert (directory / "source.aseprite").read_bytes() == source
@@ -47,7 +47,7 @@ def test_a_handoff_is_three_files_built_from_the_exact_revision():
 def test_provenance_comes_from_what_the_tools_know_and_markers_otherwise():
     rev = drawn()
     result = handoff.build_handoff("hero", rev, **KW)
-    package = parse_record(CandidateHandoffPackage, (config.WORKSPACE / "handoffs" / result["candidate_id"] / "package.json").read_bytes())
+    package = parse_record(CandidateHandoffPackage, (config.WORKSPACE / "handoffs" / result["handoff_id"] / "package.json").read_bytes())
     info = api.inspect_sprite("hero", rev)
     assert package.tool_version == info["aseprite_version"] and package.tool == "Aseprite" == package.editor
     assert __version__ in package.adapter and config.LUA_SHA256[:12] in package.adapter
@@ -55,22 +55,55 @@ def test_provenance_comes_from_what_the_tools_know_and_markers_otherwise():
     assert package.producer_validation.value == "NOT_RUN"
     assert (package.brief_id, package.licence_state.value, package.licence_evidence_ref) == ("brief-7", "CLEARED", "note-1")
     assert package.human_review_ref.value == "NOT_APPLICABLE"
-    first = parse_record(CandidateHandoffPackage, json.dumps({**json.loads((config.WORKSPACE / "handoffs" / result["candidate_id"] / "package.json").read_bytes()), "source_revision": "r0001", "expected_parent": "NOT_APPLICABLE"}).encode())
+    first = parse_record(CandidateHandoffPackage, json.dumps({**json.loads((config.WORKSPACE / "handoffs" / result["handoff_id"] / "package.json").read_bytes()), "source_revision": "r0001", "expected_parent": "NOT_APPLICABLE"}).encode())
     assert first.expected_parent == "NOT_APPLICABLE"
 
 
-def test_rebuilding_the_same_revision_is_idempotent_and_never_overwrites():
+def test_rebuilding_the_same_revision_is_idempotent_and_each_handoff_is_immutable():
     rev = drawn()
     first = handoff.build_handoff("hero", rev, **KW)
-    directory = config.WORKSPACE / "handoffs" / first["candidate_id"]
+    directory = config.WORKSPACE / "handoffs" / first["handoff_id"]
     before = snapshot(directory)
     mtimes = {p.name: p.stat().st_mtime_ns for p in directory.iterdir()}
     assert handoff.build_handoff("hero", rev, **KW) == first
     assert snapshot(directory) == before and {p.name: p.stat().st_mtime_ns for p in directory.iterdir()} == mtimes
-    with pytest.raises(AdapterError, match="different handoff already exists"):
-        handoff.build_handoff("hero", rev, **{**KW, "licence_state": "RESTRICTED"})
+    assert [p.name for p in (config.WORKSPACE / "handoffs").iterdir()] == [first["handoff_id"]]  # no temp dir left
+
+
+def test_handoff_id_is_the_candidate_id_plus_the_package_hash():
+    rev = drawn()
+    result = handoff.build_handoff("hero", rev, **KW)
+    package = (config.WORKSPACE / "handoffs" / result["handoff_id"] / "package.json").read_bytes()
+    assert result["handoff_id"] == f"{result['candidate_id']}--{hashlib.sha256(package).hexdigest()[:12]}"
+    assert result["handoff_id"].startswith(result["candidate_id"] + "--") and len(result["handoff_id"].split("--")[1]) == 12
+
+
+def test_a_corrected_input_for_the_same_revision_is_a_new_handoff_not_a_permanent_refusal(tmp_path, monkeypatch):
+    """asset-planner H1: fixing the brief or licence statement must not need a new drawing revision."""
+    rev = drawn()
+    first = handoff.build_handoff("hero", rev, **KW)
+    second = handoff.build_handoff("hero", rev, **{**KW, "brief_id": "brief-8-corrected"})
+    third = handoff.build_handoff("hero", rev, **{**KW, "licence_state": "RESTRICTED"})
+    assert first["candidate_id"] == second["candidate_id"] == third["candidate_id"]  # same source bytes
+    assert len({first["handoff_id"], second["handoff_id"], third["handoff_id"]}) == 3
+    assert sorted(p.name for p in (config.WORKSPACE / "handoffs").iterdir()) == sorted(r["handoff_id"] for r in (first, second, third))
+    for r in (first, second, third):  # each is complete and immutable
+        assert sorted(p.name for p in (config.WORKSPACE / "handoffs" / r["handoff_id"]).iterdir()) == sorted(handoff.FILES)
+    monkeypatch.setattr(store_config, "QUARANTINE_ROOT", tmp_path / "q")
+    monkeypatch.setattr(store_config, "REVIEW_ROOT", tmp_path / "r")
+    outcomes = [intake(r["directory"], created_at="2026-01-01T00:00:00Z") for r in (first, second)]
+    assert outcomes[0].intake_id != outcomes[1].intake_id  # intake tells them apart
+
+
+def test_an_id_collision_is_refused_and_writes_nothing(monkeypatch):
+    rev = drawn()
+    first = handoff.build_handoff("hero", rev, **KW)
+    directory = config.WORKSPACE / "handoffs" / first["handoff_id"]
+    (directory / "preview.png").write_bytes(b"tampered")
+    before = snapshot(directory)
+    with pytest.raises(AdapterError, match="id collision"):
+        handoff.build_handoff("hero", rev, **KW)
     assert snapshot(directory) == before
-    assert [p.name for p in (config.WORKSPACE / "handoffs").iterdir()] == [first["candidate_id"]]  # no temp dir left
 
 
 def test_a_handoff_writes_only_inside_its_own_workspace_directory(tmp_path):

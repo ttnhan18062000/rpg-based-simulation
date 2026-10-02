@@ -34,7 +34,8 @@ delete. Finish the store documentation and close the epic's bookkeeping. Blocked
 
 ## Scope
 1. `visual_assets/drawing/server/store_readonly_tools.py`, three tools:
-   - `submit_candidate(candidate_id)`: runs store intake on a package previously written by `export_handoff`
+   - `submit_candidate(handoff_id)` (changed by asset-planner 2026-10-03: the handoff id returned by `export_handoff`, i.e. `<candidate_id>--<12 hex of
+     package.json sha256>`, not the candidate id, because several handoffs may exist for one candidate): runs store intake on a package previously written by `export_handoff`
      (looked up by id inside the experiment workspace, never by a caller-supplied path); returns the verdict and
      findings. Writes only the quarantine.
    - `store_list(kind)`: bounded listing of intakes, sources, artifacts, release candidates.
@@ -61,7 +62,7 @@ delete. Finish the store documentation and close the epic's bookkeeping. Blocked
 ## Acceptance Criteria
 - [ ] `export_handoff` then `submit_candidate` over stdio gives a `PASSED` intake for a real revision
       (integration, needs Aseprite); a tampered package gives `QUARANTINED` with findings.
-- [ ] `submit_candidate` with an unknown id, a path-like id or `..` is refused and writes nothing.
+- [ ] `submit_candidate` with an unknown handoff id, a path-like id or `..` is refused and writes nothing; a bare candidate id is refused (handoff id required).
 - [ ] `store_list` and `store_show` change no file (tree byte-identical before and after), bound their output,
       and return no absolute path.
 - [ ] Tool-surface and boundary tests of scope items 2-3 pass, and each planted violation fails for its rule.

@@ -1,6 +1,6 @@
 """Package one exact drawing revision as a `CandidateHandoffPackage` for the store's intake.
 
-Writes only inside the experiment workspace (`<workspace>/handoffs/<candidate_id>/`): `package.json`, `source.aseprite`
+Writes only inside the experiment workspace (`<workspace>/handoffs/<handoff_id>/`, where `handoff_id` is `<candidate_id>--<12 hex of sha256 of package.json>`): `package.json`, `source.aseprite`
 (the revision's exact bytes) and `preview.png`. It never touches the asset store; getting the package into quarantine is a
 separate, explicit `python -m visual_assets.store intake <dir>`. Provenance is filled from what the tools actually know
 (adapter version, Aseprite version, Lua pin) and is an explicit `UNAVAILABLE`/`NOT_APPLICABLE` otherwise, never invented.
@@ -116,10 +116,13 @@ def build_handoff(
         raise AdapterError(f"handoff rejected ({exc.code}): {exc.message}") from None
 
     files = {"package.json": package, "source.aseprite": source, "preview.png": preview}
-    directory = _handoffs_root() / candidate_id
+    # H1 (asset-planner): candidate_id identifies the source bytes; the directory also identifies the exact package.json, so a
+    # corrected brief or licence statement for the same revision is a new, separate, immutable handoff instead of a permanent refusal.
+    handoff_id = f"{candidate_id}--{hashlib.sha256(package).hexdigest()[:12]}"
+    directory = _handoffs_root() / handoff_id
     if directory.exists() or directory.is_symlink():
         if not _same_files(directory, files):
-            raise AdapterError(f"a different handoff already exists for {candidate_id}; nothing was written")
+            raise AdapterError(f"handoff {handoff_id} already exists with different files (an id collision); nothing was written")
     else:
         try:
             _publish(directory, files)
@@ -127,6 +130,7 @@ def build_handoff(
             if not _same_files(directory, files):  # a concurrent identical build is fine; anything else is an error
                 raise AdapterError("could not write the handoff (storage error); nothing was saved") from None
     return {
+        "handoff_id": handoff_id,
         "candidate_id": candidate_id,
         "revision": rev,
         "directory": str(directory),

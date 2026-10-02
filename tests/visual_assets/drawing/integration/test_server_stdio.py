@@ -93,7 +93,7 @@ def test_export_handoff_over_stdio_writes_a_candidate_directory_and_nothing_else
     ok, again = run(go())
     assert not ok.isError and data(ok) == data(again)
     result = data(ok)
-    directory = tmp_path / "ws" / "handoffs" / result["candidate_id"]
+    directory = tmp_path / "ws" / "handoffs" / result["handoff_id"]
     assert sorted(p.name for p in directory.iterdir()) == ["package.json", "preview.png", "source.aseprite"]
     assert result["directory"] == str(directory) and "does not adopt" in result["next"]
     assert sorted(p.name for p in (tmp_path / "ws").iterdir() if p.name != ".jobs") == ["handoffs", "sprites"]

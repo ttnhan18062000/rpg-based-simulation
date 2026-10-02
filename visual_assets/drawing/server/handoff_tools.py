@@ -21,7 +21,8 @@ def export_handoff(
     limitations: list[str] | None = None,
 ) -> dict:
     """Package one exact revision (r0001 style, required) as a candidate handoff directory in the experiment workspace:
-    package.json, the source's exact bytes and a preview. It is a candidate, NOT an adoption: a human decides later.
+    package.json, the source's exact bytes and a preview. Returns a handoff_id (candidate_id plus a hash of package.json): changing
+    any input for the same revision makes a new handoff. It is a candidate, NOT an adoption: a human decides later.
     licence_state: UNREVIEWED|CLEARED|RESTRICTED|WITHDRAWN. The *_ref values are short text or UNAVAILABLE/NOT_APPLICABLE."""
     return call(
         handoff.build_handoff, name, revision, licence_state=licence_state, licence_evidence_ref=licence_evidence_ref,

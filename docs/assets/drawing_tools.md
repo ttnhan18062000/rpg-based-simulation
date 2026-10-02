@@ -38,10 +38,11 @@ tags, palette, colours, optional 32x32 region), `preview` (one frame or one laye
 `list_sprites`, `export_handoff`.
 
 `export_handoff {name, revision, licence_state, licence_evidence_ref, brief_id, review_evidence_ref, limitations}` packages one exact
-revision (the revision is required, never defaulted) as a candidate directory `<workspace>/handoffs/<candidate_id>/` with exactly
+revision (the revision is required, never defaulted) as a handoff directory `<workspace>/handoffs/<handoff_id>/` with exactly
 `package.json` (a `CandidateHandoffPackage`), `source.aseprite` (the revision's exact bytes) and `preview.png`. `candidate_id` is `cand-` plus 16
-hex of the source's sha256; rebuilding the same revision with the same inputs is idempotent, and different inputs for the same source are
-refused. Provenance is what the tools know (adapter version and Lua pin, Aseprite version, counts from Aseprite itself) and an explicit
+hex of the source's sha256 (it identifies the source bytes); `handoff_id` is `<candidate_id>--` plus 12 hex of the sha256 of `package.json`. Each handoff directory is
+immutable: rebuilding with the same inputs is idempotent, and changing any input (a corrected brief, a different licence statement) for the same revision creates a new handoff,
+so several handoffs may exist for one candidate (intake tells them apart). Provenance is what the tools know (adapter version and Lua pin, Aseprite version, counts from Aseprite itself) and an explicit
 `UNAVAILABLE` / `NOT_APPLICABLE` otherwise, e.g. the creator. It is a **candidate, not an adoption**: nothing is written to the asset store, and the
 next step is the separate `python -m visual_assets.store intake <directory>`. The server has no adopt, build, release, revoke or gc tool.
 
