@@ -116,6 +116,8 @@ Second half of finishing the uv adoption: CI installs with pip install -r requir
 - Unverified until the PR run: that `setup-uv@v10.2.0` activates `.venv` for later steps as its `action.yml` describes, provisions Python 3.13, and caches against `uv.lock`; and that the job is green on a runner.
 - Evidence to record after the run: PR link, run link, the `Simulation quality` job result, and the install step's log (no torch or sentence-transformers; `uv` 0.11.2).
 
+**Real runner evidence (PR #288, run 37036290781, head ac11c33e):** the migrated job `Simulation quality` is green: https://github.com/ttnhan18062000/rpg-based-simulation/actions/runs/37036290781/job/110935214963. Steps: `Run astral-sh/setup-uv@v10.2.0` success, `Run uv sync --locked --no-install-project` success, the pytest `Run` step success, base-branch collect-only steps success. `setup-uv` activation and Python 3.13 provisioning worked as read from its `action.yml`; the fallback (`uv run --no-sync`) was not needed. The install log contains no `torch` or `sentence-transformers` line. The other 13 pip jobs passed with the new `requirements.txt`. **This ticket stays open:** the same run has one failing job, `API / tools / logging` (the monitoring `vocabulary_drift` ratchet, caused by 8 wrongly-recorded agent literals on this branch, not by this ticket's change); close it once the branch's CI is fully green so the run cited as evidence has no failing job.
+
 ## Test Summary
 Local only so far (an environment from `uv sync --locked --no-install-project`):
 - `pytest tests/static/ tests/tools/test_dashboard_makefile_targets.py tests/tools/test_ci_workflow_test_coverage.py`: 89 passed.
