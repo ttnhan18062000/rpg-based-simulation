@@ -165,8 +165,15 @@ def test_snapshot_payload_built_from_real_build_report_dict_not_reimplemented(tm
     record = chs.build_snapshot_record(tmp_path)
     live_report = chb.build_report(tmp_path)
 
-    record_without_version = {k: v for k, v in record.items() if k != "snapshot_schema_version"}
-    assert record_without_version == live_report
+    # Schema version 2 (TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS): the craft keys come from a
+    # second metric source, so they are excluded here; everything else must still equal
+    # build_report() exactly.
+    record_without_version_or_craft = {
+        k: v
+        for k, v in record.items()
+        if k != "snapshot_schema_version" and k not in chs.CRAFT_METRIC_KEYS
+    }
+    assert record_without_version_or_craft == live_report
 
 
 def test_schema_mismatch_raises_loudly_not_silently(tmp_path, monkeypatch):

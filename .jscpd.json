@@ -1,0 +1,9 @@
+{
+  "format": ["python"],
+  "minLines": 8,
+  "minTokens": 70,
+  "ignore": ["**/__pycache__/**"],
+  "reporters": ["console", "json"],
+  "output": "reports/code_health/jscpd",
+  "silent": true
+}

@@ -23,7 +23,9 @@ _FASTLANE_JOBS = [
     "unit-gameplay",
     "unit-infra",
     "integration",
-    "api-tools",
+    "tools-a-e",
+    "tools-f-z",
+    "api-cli-engine",
     "agent-orchestration",
     "simulation-quality",
     "arch-docs",
@@ -38,6 +40,9 @@ _PRE_EXISTING_USES = {
     # 'frontend' job -- a legitimate, expected new Action (mirrors deploy-docs.yml's existing
     # actions/setup-node@v4 usage), not scope creep on this ticket's own dependency guard.
     "actions/setup-node@v4",
+    # astral-sh/setup-uv added by TCK-20261002-UV-FIRST-CI-JOB for the first job installed with
+    # `uv sync` (owner decision, python_code_craft_roadmap.md 8.11).
+    "astral-sh/setup-uv@v10.2.0",
 }
 
 _BANNED_REQUIREMENTS_ENTRIES = ("pytest-cov", "pytest-html")
@@ -68,7 +73,9 @@ needs:
   - unit-gameplay
   - unit-infra
   - integration
-  - api-tools
+  - tools-a-e
+  - tools-f-z
+  - api-cli-engine
   - agent-orchestration
   - simulation-quality
   - arch-docs
