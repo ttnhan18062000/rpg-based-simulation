@@ -34,7 +34,9 @@ class NearDeathHardeningPhase:
             - projected HP is <= 10% of current max HP
 
         Effect:
-            - CombatUpdate.max_hp_delta += 5
+            - CombatUpdate.max_hp_delta += 5 (applied to max_hp this tick)
+            - CombatUpdate.permanent_max_hp_bonus_delta += 5 (durable grant accumulator, so a later
+              stat derivation keeps the grant; both are maintained from the same +5)
             - EmotionalModel updated via EmotionUpdateService.update_on_event(..., "near_death")
               (fear/panic increase, confidence decreases), merged into the entity's
               cognition_bundle_set alongside any cognition changes already staged earlier
@@ -82,6 +84,7 @@ class NearDeathHardeningPhase:
             hardened_combat = combat_update.merge(
                 CombatUpdate(
                     max_hp_delta=5,
+                    permanent_max_hp_bonus_delta=5,
                     trace={
                         "NEAR_DEATH_HARDENING": 5.0,
                         "NEAR_DEATH_PROJECTED_HP": float(projected_hp),

@@ -55,6 +55,7 @@ class EntityGenerator:
             .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD, evolution_level=evolution_level)
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
+            .spawn_combat_stats_are_final()
             .build())
 
     def spawn_monster(self, pos: tuple[float, float], state: AuthoritativeState | None = None, kind: str = "monster", difficulty_tier: int = 1) -> EntityState:
@@ -81,6 +82,7 @@ class EntityGenerator:
             .navigation(home_position=pos, leash_radius=10.0)
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
+            .spawn_combat_stats_are_final()
             .build())
 
     def spawn_natural_creature_offspring(
@@ -122,6 +124,7 @@ class EntityGenerator:
             .inventory(gold=int(base_gold))
             .lifecycle(age_ticks=short_clock_age)
             .birth_record(parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=birth_tick, birth_city_id=None)
+            .spawn_combat_stats_are_final()
             .build())
 
     def spawn_magical_demonic_entity(
@@ -154,6 +157,7 @@ class EntityGenerator:
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
             .birth_record(parent_a_entity_id=None, parent_b_entity_id=None, birth_tick=birth_tick, birth_city_id=None)
+            .spawn_combat_stats_are_final()
             .build())
 
     def spawn_humanoid_offspring(
@@ -207,6 +211,7 @@ class EntityGenerator:
                 parent_a_public_reputation=parent_a_public_reputation,
                 parent_b_public_reputation=parent_b_public_reputation,
             )
+            .spawn_combat_stats_are_final()
             .build())
 
     def spawn_goblin(self, pos: tuple[float, float], state: AuthoritativeState | None = None, difficulty_tier: int = 1) -> EntityState:
@@ -233,6 +238,7 @@ class EntityGenerator:
             .navigation(home_position=pos, leash_radius=8.0)
             .combat(hp=int(base_hp), max_hp=int(base_hp), atk=int(base_atk), def_stat=int(base_def), readiness=100.0)
             .inventory(gold=int(base_gold))
+            .spawn_combat_stats_are_final()
             .build())
 
     def spawn_stronghold(self, state: AuthoritativeState, pos: tuple[float, float]) -> EntityState:
@@ -249,4 +255,5 @@ class EntityGenerator:
             .location(*pos)
             .identity(role=EntityRole.MONSTER, faction=Faction.MONSTER_HORDE, evolution_level=1)
             .combat(hp=int(hp), max_hp=int(hp), atk=0, def_stat=int(def_val), readiness=100.0)
+            .spawn_combat_stats_are_final()
             .build())
