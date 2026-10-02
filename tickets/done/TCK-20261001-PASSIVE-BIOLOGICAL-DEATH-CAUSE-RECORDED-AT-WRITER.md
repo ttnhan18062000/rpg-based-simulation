@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P2
 audience: agent
 ticket_id: TCK-20261001-PASSIVE-BIOLOGICAL-DEATH-CAUSE-RECORDED-AT-WRITER
-phase: open
+phase: done
 date: 2026-10-01
 tags: [bug, lifecycle, engine, determinism]
 ---
@@ -15,7 +15,7 @@ tags: [bug, lifecycle, engine, determinism]
 Record the cause of a passive hunger/sleep-debt death at the writer, then classify it in `resolve_lifecycle`
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -154,7 +154,10 @@ Broad non-slow sweep: failures are only pre-existing on base (`test_behavioral_5
 passing in isolation; certification identical to base. SimQ deliberately not cited (anchors red on main).
 
 ## Files Changed
-_To be completed during implementation._
+Landed in PR #276 (`786f9ee9b`, implementation commit `384f8cc44`).
+- `src/engine/apply.py` (passive branch records the cause at the HP>0 -> 0 transition; never deactivates), `src/core/updates.py`, `src/core/state.py`, `src/core/enums.py`, `src/systems/lifecycle_systems/lifecycle.py` (`resolve_lifecycle` reads the typed field, records `STARVATION` / `SLEEP_DEPRIVATION`).
+- Tests: `tests/mechanic_scenarios/test_passive_death_cause_and_rebirth_defeat_lifecycle.py` (new), `test_natural_aging_old_age_dispatch.py`, `test_entity_death_authority_boundary.py`, `tests/unit/engine/test_apply.py`, `test_dirty_set_passive_decay_consumers.py`.
+- Docs: `docs/simulation/lifecycle_systems_contract.md`, parity ledger, `docs/guidelines/intentional_divergences.md`.
 
 ## Completion Summary
-_To be completed during implementation._
+Passive hunger / sleep-debt deaths now persist a typed cause at the apply-path writer and `resolve_lifecycle` classifies them (`STARVATION` / `SLEEP_DEPRIVATION`, permadeath, succession dispatched) without inferring from thresholds, role or outcome. Zero-HP leftovers never get a cause. The R1 formula correction (passive branch never deactivates) is recorded in Implementation Notes. Architecture-reviewer verdict was recorded pre-implementation. All ACs met; SimQ deliberately not cited (anchors red on main).

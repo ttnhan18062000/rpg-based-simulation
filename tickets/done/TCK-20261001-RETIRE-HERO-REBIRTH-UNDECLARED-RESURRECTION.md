@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: combat
 authority: P1
 audience: agent
 ticket_id: TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION
-phase: open
+phase: done
 date: 2026-10-01
 tags: [lifecycle, combat, progression, architecture]
 ---
@@ -16,7 +16,7 @@ Retire hero `REBIRTH` — it is an undeclared resurrection mechanism that fails 
 and duplicates the reproduction/succession continuity model
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -186,7 +186,7 @@ lands.
   plan prefers removal; an always-`False` field is the dead structure this ticket exists to delete.
 
 ## Implementation Notes
-_To be completed during implementation._
+Design decisions and the itemized rewrite/removal list are recorded in `stored_artifacts/TCK-20261001-RETIRE-HERO-REBIRTH-UNDECLARED-RESURRECTION/` (`plan.md`, `investigation.md`, `test_plan.md`, `catalog_edits*.md`).
 
 ## Test Summary
 Both rebirth sites retired (`resolve_attack` and the live `resolve_multi_attack`); `rebirth_eligible`, `REBIRTH`/`PERMADEATH`,
@@ -207,7 +207,10 @@ live runs; baseline_5k.json is metrics-keyed). R4'' searched for readers of the 
 R4 (legacy-key tolerance) dropped by the rule owner: nothing deserializes state, so no shim.
 
 ## Files Changed
-_To be completed during implementation._
+Landed in PR #276 (`786f9ee9b`, implementation commit `384f8cc44`).
+- Removed `rebirth_eligible`, `REBIRTH`/`PERMADEATH` outcome kinds, `lifecycle.generation`, `CorpseState.generation`, `generation_delta`, `CombatUpdate.is_permadeath_set` + lift guards, and the `life_arc_incoherent` detector across `src/engine/combat.py`, `combat_rewards.py`, `apply.py`, `apply_plan.py`, `patches.py`, `src/core/{state,updates,enums,builder}.py`, `src/observability/*`, `src/simulation_quality/scorers/progression.py`.
+- Tests rewritten per the ticket's itemized legacy test decisions (`test_combat_rewards.py`, `test_tactical_movement.py`, `test_lifecycle.py`, etc.).
+- Docs: `docs/mechanics/02_combat_laws.md`, `docs/guidelines/intentional_divergences.md`, parity ledger, world-rules catalog edits (`catalog_edits*.md`).
 
 ## Completion Summary
-_To be completed during implementation._
+Hero `REBIRTH` is retired per the user's 2026-10-01 decision: a lethal hit on a former hero is now an ordinary recorded `COMBAT` death with succession. The rebirth surface (`rebirth_eligible`, `REBIRTH`/`PERMADEATH` kinds, `lifecycle.generation`, `generation_delta`) is removed; `is_permadeath` is kept. The second zombie class is closed. Certification identical to base. Intentional divergence recorded; catalog text landed with the code.

@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: engine
 authority: P1
 audience: agent
 ticket_id: TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND
-phase: open
+phase: done
 date: 2026-10-01
 tags: [engine, lifecycle, combat, determinism]
 ---
@@ -17,7 +17,7 @@ tags: [engine, lifecycle, combat, determinism]
 `resolve_lifecycle` ever reads it
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -235,7 +235,7 @@ ID granting a role-specific lifecycle exemption. Until that resolves: **do not l
 Bible block (its `REBIRTH` bullet is contingent). Test H11 is directly affected. Note
 `V2EntityBuilder` defaults to role **HERO, gen 1**, so any fixture not explicitly setting
 `.identity(role=...)` is a hero.
-_To be completed during implementation._
+Design decisions (AC2 amendment, write-precedence shape) are recorded in `stored_artifacts/TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND/` (`plan.md`, `investigation.md`, `test_plan.md`, `catalog_edits.md`).
 
 ## Test Summary
 New `tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py` (10 scripted tests, H1/H5/H5b/H8-H10/H12/H13,
@@ -250,7 +250,10 @@ output: "0 cited-code drift finding(s), 2 verdict drift finding(s)" (TERR-01, TE
 `contradicted -> observed`; unrelated to the LIFE rows).
 
 ## Files Changed
-_To be completed during implementation._
+Landed in PR #276 (`786f9ee9b`, implementation commit `384f8cc44`).
+- `src/engine/world_dynamics.py` (hazard write no longer destroys a same-tick combat outcome), `src/systems/lifecycle_systems/lifecycle.py` (`HAZARD`-keyed classification), `src/observability/event_extractor.py`, `src/observability/event_shapers.py`.
+- Tests: `tests/mechanic_scenarios/test_hazard_same_tick_death_attribution.py` (new), `test_entity_death_authority_boundary.py`, `tests/unit/observability/test_event_shapers.py`.
+- Docs: `docs/parity_ledger/combat_movement.yaml`, `world_dynamics.yaml`, `docs/simulation/lifecycle_systems_contract.md`.
 
 ## Completion Summary
-_To be completed during implementation._
+A same-tick combat KILL is no longer erased by hazard drain, and a hazard-only drain death is now recorded as `HAZARD` with succession dispatched. The `HAZARD` discriminant still separates hazard from combat for the event extractor. Measured on frontier_marches seed 42 / 400 ticks: HP-0 active/unrecorded hazard-route zombies 8 -> 0. AC7 drift check was run and shown (0 cited-code drift, 2 unrelated verdict drifts: TERR-01, TERR-03). AC2 was amended in-ticket (see Implementation Notes).
