@@ -308,3 +308,6 @@ website/.docusaurus/
 # per cwd -- several sessions share the main checkout). Session-local working state, meaningless
 # and merge-conflict-prone in another clone or after the handoff it describes is stale.
 .claude/handover/
+
+# TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: intake staging for the asset store, never committed
+visual_assets/catalog/.quarantine/
