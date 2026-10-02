@@ -52,8 +52,8 @@ so a skill-path format tail is generated from the schema's key list and never ha
 
 ## Acceptance Criteria
 - AC1: `ARCH_VERIFY_SCHEMA` has optional `test_quality_findings` (array of strings) and it is not in `required`.
-- AC2: an Architecture-Verify event pushed with findings carries them verbatim in `test_quality_findings`; without findings the key is absent; `summary` stays <= 200 chars.
-- AC3: `record_events.py` accepts the field when it is a list of strings and rejects another shape; the closure tool carries it through to the events shard.
+- AC2: an Architecture-Verify event pushed with findings carries every item in `test_quality_findings` (strings verbatim, other items as JSON strings, with `test_quality_findings_normalized` counting any non-verbatim item); without a reply the key is absent; `summary` stays <= 200 chars.
+- AC3: `record_events.py` accepts the field when it is a list of strings (and the optional normalized count when a non-negative integer) and rejects another shape; the closure tool carries it through to the events shard.
 - AC4: `schema_format_tail.py` output lists every `ARCH_VERIFY_SCHEMA` property name in schema order (including `test_quality_findings`), pinned against the real JS file so a schema change cannot drift.
 - AC5: both SKILL.md copies state the rule; `docs/agent-monitoring/schema.md` documents the field.
 - AC6: monitoring writes never fail the workflow because of the new field (fail-open unchanged).
@@ -83,13 +83,13 @@ so a skill-path format tail is generated from the schema's key list and never ha
 ## Implementation Notes
 - Carry-through option (a), chosen over (b) an extra event row (phantom agent, shifts `agent_count`/seq semantics for every consumer) and (c) a side file (new write path and location convention, invisible to events consumers). Reasoning in `investigation.md`.
 - Found while investigating: `record_hand_orchestrated_closure.build_records` rebuilt events from a fixed key list and dropped extras, so the field is carried there too; that is the path the test-architecture hand-orchestrated run actually uses.
-- `pushEvent` gained an optional 8th parameter; `cleanFindings` omits the key for absent/empty input (never a false `[]`) and swaps `'` for a typographic apostrophe because `writeMonitoring` embeds the events JSON in one single-quoted shell argument.
+- `pushEvent` gained an optional 8th parameter. Review fix (test-architecture-implementer, PR #282): the first cut kept only string items and dropped the rest, but the reviewer's own definition says only "a list" and a shadow reviewer returned objects, so an object-valued list would have vanished and "key absent" would have looked like "reviewer found nothing". Now **no item is dropped**: a string is kept as is, any other item as its JSON string, a non-array reply is wrapped as a one-item list; only an empty/null item is dropped. `test_quality_findings_normalized` (int, present only when something was not carried verbatim) says how many items were serialized, wrapped, quote-swapped or dropped. An absent key means no reply at all; `[]` means the reviewer read the tests and found nothing. The `'` to typographic-apostrophe swap stays (`writeMonitoring` embeds the events JSON in one single-quoted shell argument) and is now documented in `schema.md` and counted.
 - `schema_format_tail.py` brace-matches the real JS (skipping strings/comments, handling quoted keys) and fails loudly on an unknown schema. It reproduces the key list for all 10 `*_SCHEMA` constants checked by hand; only ARCH_VERIFY_SCHEMA is pinned.
 - Not touched, per test-architecture's evidence rule: the Architecture-Verify prompt text and `.claude/agents/architecture-reviewer.md`. The `.agents/` SKILL.md copy is an older fork; the rule is mirrored in both and the drift stays tracked by TCK-20260804-SKILL-JS-PHASE-SYNC.
 - Known limit: on the native runtime the monitoring agent must echo the new event key. It already echoes other keys, but that can only be proven by a real run (needs the user's opt-in), so it is tested at the record_events/closure boundary and by executing pushEvent in node.
 
 ## Test Summary
-`tests/tools/test_arch_verify_test_quality_findings.py`: 19 passed (new; imports a module absent on origin/main, and its schema/doc pins fail there). Full `tests/tools` + `tests/docs`: 3500 passed, 1 failed (`test_generate_registry` real-tree drift, expected before the ticket-close registry regeneration; it passes after it). `test_workflow_runtime_acorn_parse.py`: 3 passed (the edited workflow still parses under acorn).
+`tests/tools/test_arch_verify_test_quality_findings.py`: 24 passed after the review fix (new; imports a module absent on origin/main, and its schema/doc pins fail there). Full `tests/tools` + `tests/docs`: 3500 passed, 1 failed (`test_generate_registry` real-tree drift, expected before the ticket-close registry regeneration; it passes after it). `test_workflow_runtime_acorn_parse.py`: 3 passed (the edited workflow still parses under acorn).
 
 ## Files Changed
 - .claude/workflows/implement-ticket.js (schema key, `cleanFindings`, `pushEvent` param, two call sites)

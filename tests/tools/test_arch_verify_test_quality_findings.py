@@ -77,29 +77,56 @@ def _run_push_event(calls: list) -> list:
     return json.loads(out.stdout)
 
 
+def _av(findings):
+    return ["Architecture-Verify", "architecture-reviewer", "ok", "APPROVED", "2026-10-02T00:00:00Z", None, None, findings]
+
+
 @pytest.mark.skipif(_NODE is None, reason="node not installed")
-def test_push_event_carries_findings_verbatim_and_omits_the_key_when_there_are_none():
+def test_push_event_carries_string_findings_verbatim_and_distinguishes_empty_from_absent():
     events = _run_push_event([
-        ["Architecture-Verify", "architecture-reviewer", "ok", "APPROVED", "2026-10-02T00:00:00Z", None, None,
-         ["tests/a.py: asserts nothing about X", "tests/b.py: mock hides Y"]],
-        ["Architecture-Verify", "architecture-reviewer", "ok", "APPROVED", "2026-10-02T00:00:01Z", None, None, []],
-        ["Architecture-Verify", "architecture-reviewer", "ok", "APPROVED", "2026-10-02T00:00:02Z", None, None, None],
+        _av(["tests/a.py: asserts nothing about X", "tests/b.py: mock hides Y"]),
+        _av([]),
+        _av(None),
         ["Scope", "ticket-scoper", "ok", "scoped", "2026-10-02T00:00:03Z"],
     ])
     assert events[0]["test_quality_findings"] == ["tests/a.py: asserts nothing about X", "tests/b.py: mock hides Y"]
-    assert [("test_quality_findings" in e) for e in events] == [True, False, False, False]
-    assert events[0]["seq"] == 1 and events[3]["seq"] == 4
+    assert "test_quality_findings_normalized" not in events[0]  # verbatim: no marker
+    assert events[1]["test_quality_findings"] == [] and "test_quality_findings_normalized" not in events[1]
+    assert "test_quality_findings" not in events[2] and "test_quality_findings" not in events[3]
+    assert [e["seq"] for e in events] == [1, 2, 3, 4]
     assert all(len(e["summary"]) <= 200 for e in events)
 
 
 @pytest.mark.skipif(_NODE is None, reason="node not installed")
-def test_push_event_drops_non_strings_and_neutralises_single_quotes():
-    events = _run_push_event([
-        ["Architecture-Verify", "architecture-reviewer", "failed", "NEEDS_CHANGES", None, None, None,
-         ["it's a finding", 7, "", None, "ok"]],
-    ])
-    assert events[0]["test_quality_findings"] == ["it’s a finding", "ok"]
-    assert all("'" not in x for x in events[0]["test_quality_findings"])
+def test_push_event_keeps_object_items_as_json_strings_and_says_so():
+    """The reviewer's own definition says only 'a list'; a shadow reviewer returned objects. They must
+    survive (as their JSON text) with the transformation recorded, never be dropped or rejected."""
+    obj = {"severity": "high", "file": "tests/x.py", "finding": "asserts on a mock"}
+    event = _run_push_event([_av(["plain finding", obj])])[0]
+    assert event["test_quality_findings"][0] == "plain finding"
+    assert json.loads(event["test_quality_findings"][1]) == obj
+    assert event["test_quality_findings_normalized"] == 1
+    assert validate_event(_event(**{k: event[k] for k in ("test_quality_findings", "test_quality_findings_normalized")})) == []
+
+
+@pytest.mark.skipif(_NODE is None, reason="node not installed")
+def test_push_event_wraps_a_non_array_reply_and_drops_only_empty_items():
+    wrapped = _run_push_event([_av("one lone string"), _av({"finding": "lone object"})])
+    assert wrapped[0]["test_quality_findings"] == ["one lone string"] and wrapped[0]["test_quality_findings_normalized"] == 1
+    assert json.loads(wrapped[1]["test_quality_findings"][0]) == {"finding": "lone object"}
+    assert wrapped[1]["test_quality_findings_normalized"] == 2  # wrapped + serialized
+    dropped = _run_push_event([_av(["keep", "", None])])[0]
+    assert dropped["test_quality_findings"] == ["keep"] and dropped["test_quality_findings_normalized"] == 2
+    all_empty = _run_push_event([_av(["", None])])[0]
+    assert all_empty["test_quality_findings"] == [] and all_empty["test_quality_findings_normalized"] == 2
+
+
+@pytest.mark.skipif(_NODE is None, reason="node not installed")
+def test_push_event_swaps_single_quotes_and_counts_it():
+    event = _run_push_event([_av(["it's a finding", "ok"])])[0]
+    assert event["test_quality_findings"] == ["it\u2019s a finding", "ok"]
+    assert event["test_quality_findings_normalized"] == 1
+    assert all("'" not in x for x in event["test_quality_findings"])
 
 
 def test_both_architecture_verify_outcomes_pass_the_findings_to_push_event():
@@ -133,6 +160,13 @@ def _closure_events(events):
     return recs
 
 
+def test_record_events_validates_the_normalized_count():
+    assert validate_event(_event(test_quality_findings=["a"], test_quality_findings_normalized=2)) == []
+    for bad in (-1, "2", 1.5, True):
+        errs = validate_event(_event(test_quality_findings=["a"], test_quality_findings_normalized=bad))
+        assert errs and "test_quality_findings_normalized must be a non-negative integer" in errs[0], bad
+
+
 def test_closure_tool_carries_findings_per_event_and_adds_no_key_otherwise():
     recs = _closure_events([
         {"phase": "Architecture-Verify", "status": "ok", "summary": "s", "test_quality_findings": ["x", "y"]},
@@ -142,6 +176,10 @@ def test_closure_tool_carries_findings_per_event_and_adds_no_key_otherwise():
     assert recs[0]["test_quality_findings"] == ["x", "y"]
     assert "test_quality_findings" not in recs[1]
     assert recs[2]["test_quality_findings"] == []
+    carried = _closure_events([{"phase": "Architecture-Verify", "status": "ok", "summary": "s",
+                                "test_quality_findings": ["{}"], "test_quality_findings_normalized": 1}])[0]
+    assert carried["test_quality_findings_normalized"] == 1 and validate_event(carried) == []
+    assert "test_quality_findings_normalized" not in recs[0]
     assert all(validate_event(r) == [] for r in recs)
 
 
@@ -198,4 +236,5 @@ def test_both_skill_copies_state_the_generated_format_tail_rule(path):
 
 def test_schema_md_documents_the_optional_event_field():
     text = (_REPO_ROOT / "docs" / "agent-monitoring" / "schema.md").read_text(encoding="utf-8")
-    assert "`test_quality_findings`" in text
+    assert "`test_quality_findings`" in text and "`test_quality_findings_normalized`" in text
+    assert "No item is dropped" in text

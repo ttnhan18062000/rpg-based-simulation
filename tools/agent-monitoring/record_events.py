@@ -35,6 +35,11 @@ def validate_record(record: dict) -> list[str]:
     findings = record.get("test_quality_findings")
     if findings is not None and not (isinstance(findings, list) and all(isinstance(x, str) for x in findings)):
         errors.append("test_quality_findings must be a list of strings")
+    # How many items were not carried verbatim (serialized, wrapped, quote-swapped, dropped); only
+    # present beside a list that was transformed, so its absence means "verbatim".
+    normalized = record.get("test_quality_findings_normalized")
+    if normalized is not None and not (isinstance(normalized, int) and not isinstance(normalized, bool) and normalized >= 0):
+        errors.append("test_quality_findings_normalized must be a non-negative integer")
     return errors
 
 

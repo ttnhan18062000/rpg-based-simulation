@@ -26,6 +26,7 @@ tags: [agent-monitoring, workflows]
 - (c) side file: a new write path with its own failure and location convention, invisible to the events consumers. Rejected.
 
 ## Risks
+- Review finding (test-architecture-implementer): the reviewer's definition (`architecture-reviewer.md:123`) says only "a list", and on the skill path the schema is not shown to the agent, so items may be objects. Dropping non-strings would make a transformed or lost list indistinguishable from a clean review. Resolution: carry every item (non-strings as JSON text), wrap a non-array reply, record the non-verbatim count in `test_quality_findings_normalized`.
 - The monitoring agent embeds the events JSON in a single-quoted shell argument; a `'` in a finding would break it (same pre-existing risk as `summary`). Mitigation: replace `'` with the typographic apostrophe in the JS before pushing the field.
 - On the native path the monitoring agent must echo the extra field; it already echoes unknown keys today. Not provable without a real run (needs user opt-in), so it is tested at the record_events boundary instead.
 - Helper parses JS: brace matching must skip strings; pinned against the real file.
