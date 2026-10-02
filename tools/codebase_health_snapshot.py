@@ -22,14 +22,30 @@ directly, mirroring `tools/agent-monitoring/record_run.py`'s own
 `sys.path.insert(0, str(Path(__file__).resolve().parent))` pattern, pointed at
 the sibling directory instead of the file's own parent.
 
-**Schema freeze**: `EXPECTED_SNAPSHOT_KEYS` is a frozen, hand-copied allowlist
-of `build_report()`'s real return-dict keys. `build_snapshot_record` validates
-`set(report.keys()) == EXPECTED_SNAPSHOT_KEYS` exactly (not a subset/superset
+**Second metric source (schema version 2, TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS)**:
+Python craft metrics (lint findings, over-limit functions, duplication, ...) are computed by
+`tools/code_health/metrics.py` from the code-health tools' findings and the code-health
+registry, and merged into each record next to `build_report()`'s keys. This module still never
+computes any metric itself: it persists what `build_report()` and `tools.code_health.metrics`
+return. `build_report()` and `make codebase-health-baseline` are unchanged, so the baseline
+target does not depend on the code-health tools. Craft keys all start `craft_`; those starting
+`craft_baseline_` are read from `registries/code_health_exceptions.jsonl` (the baselined state, not
+a live measurement), the rest are measured live by the offline Python tools (never jscpd, which
+needs `npx`). The snapshot is taken with `craft_metrics=None` (measure live) in production; a
+caller may pass a prepared dict, which is how tests keep a snapshot of a throwaway repository
+from running the tools.
+
+**Schema freeze**: `EXPECTED_BASELINE_KEYS` is a frozen, hand-copied allowlist
+of `build_report()`'s real return-dict keys, and `EXPECTED_SNAPSHOT_KEYS` is that set plus
+`tools.code_health.metrics.CRAFT_METRIC_KEYS`. `build_snapshot_record` validates
+`set(report.keys()) == EXPECTED_BASELINE_KEYS` and the craft source's keys against
+`CRAFT_METRIC_KEYS` exactly (not a subset/superset
 check) and raises `RuntimeError` loudly on any mismatch — a future
 `build_report()` field rename/add/remove becomes a visible breaking change
 instead of a silently drifting snapshot shape. `SNAPSHOT_SCHEMA_VERSION` is
 stamped onto every written record and must be bumped by hand, in the same
-commit as any `EXPECTED_SNAPSHOT_KEYS` edit.
+commit as any `EXPECTED_SNAPSHOT_KEYS` edit. History may mix versions: `build_scorecard`
+shows a craft dimension as "no trend data yet" when the previous record predates it.
 
 **No aggregate/combined score, anywhere** — the source audit (D24 §J/§M) and
 this epic's own "Out of scope" bullet are explicit: trend arrows per
@@ -62,6 +78,17 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 from codebase_health_baseline import build_report  # noqa: E402
 
+# tools/code_health/ is a real package (`from tools.code_health...`); a script run as
+# `python3 tools/codebase_health_snapshot.py` has only tools/ on sys.path, so the repo root is added
+# for that one import. The flat tools/codebase_health_*.py files are not moved.
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from tools.code_health.metrics import (  # noqa: E402
+    CRAFT_LABELS,
+    CRAFT_METRIC_KEYS,
+    measure_craft_metrics,
+)
+
 sys.path.insert(0, str(_REPO_ROOT / "tools" / "agent-monitoring"))
 from writer import write_line  # noqa: E402
 
@@ -70,13 +97,15 @@ from writer import write_line  # noqa: E402
 # for what a valid snapshot record must contain. Never edit this without also
 # bumping SNAPSHOT_SCHEMA_VERSION and updating
 # docs/agent-monitoring/codebase_health_history_schema.md in the same commit.
-EXPECTED_SNAPSHOT_KEYS = frozenset({
+EXPECTED_BASELINE_KEYS = frozenset({
     "source_loc", "source_files", "test_loc", "test_files", "test_source_ratio",
     "top_level_src_packages", "test_subdirectories", "commit_count", "doc_count",
     "registry_size_bytes", "registry_size_lines", "dead_bytecode_files",
     "unused_core_dependencies", "churn_lines_changed_excl_bookkeeping",
 })
-SNAPSHOT_SCHEMA_VERSION = 1
+# build_report()'s keys plus the second metric source's (tools/code_health/metrics.py).
+EXPECTED_SNAPSHOT_KEYS = EXPECTED_BASELINE_KEYS | frozenset(CRAFT_METRIC_KEYS)
+SNAPSHOT_SCHEMA_VERSION = 2
 DEFAULT_HISTORY_PATH = _REPO_ROOT / "agent-monitoring" / "codebase_health_history.jsonl"
 
 # The 11 scalar dimensions that get a Δ + arrow trend row.
@@ -94,7 +123,11 @@ REGISTRY_DIMENSION_KEY = "registry_size_lines"
 # Δ/arrow branch.
 NON_SCALAR_DIMENSION_KEY = "unused_core_dependencies"
 
-DIMENSION_ORDER = SCALAR_DIMENSIONS + (REGISTRY_DIMENSION_KEY, NON_SCALAR_DIMENSION_KEY)
+# Craft dimensions are scalars from the second metric source. Unlike the dimensions above they are
+# optional per record, so a history that still holds schema-1 records does not raise.
+CRAFT_DIMENSIONS = tuple(CRAFT_METRIC_KEYS)
+
+DIMENSION_ORDER = SCALAR_DIMENSIONS + (REGISTRY_DIMENSION_KEY, NON_SCALAR_DIMENSION_KEY) + CRAFT_DIMENSIONS
 
 DIMENSION_LABELS = {
     "source_loc": "Source LoC",
@@ -110,35 +143,41 @@ DIMENSION_LABELS = {
     "churn_lines_changed_excl_bookkeeping": "Churn (lines changed, excl. bookkeeping)",
     "registry_size_lines": "docs/REGISTRY.yaml size (lines)",
     "unused_core_dependencies": "Declared-but-unused core dependencies",
+    **CRAFT_LABELS,
 }
 
 NO_TREND_DATA_LABEL = "no trend data yet"
 
 
-def build_snapshot_record(repo_root: Path) -> dict:
-    """Build one snapshot record from a real, live `build_report()` call.
+def _check_keys(actual: set, expected: frozenset, source: str) -> None:
+    if actual != expected:
+        raise RuntimeError(
+            f"{source}'s return shape no longer matches its expected keys — "
+            f"missing keys: {sorted(expected - actual)}, unexpected keys: "
+            f"{sorted(actual - expected)}. If this is an intentional change, "
+            "update EXPECTED_BASELINE_KEYS or tools/code_health/metrics.py's CRAFT_METRIC_KEYS, "
+            "bump SNAPSHOT_SCHEMA_VERSION, and update "
+            "docs/agent-monitoring/codebase_health_history_schema.md in the same commit."
+        )
+
+
+def build_snapshot_record(repo_root: Path, craft_metrics: dict | None = None) -> dict:
+    """Build one snapshot record from a real, live `build_report()` call plus the craft metrics.
 
     Never re-derives/recomputes any individual metric — `report` is used
-    exactly as `build_report()` returns it, with only a schema-version field
-    stamped on top.
+    exactly as `build_report()` returns it, the craft metrics exactly as
+    `tools.code_health.metrics` returns them (measured live from `repo_root`
+    unless a prepared `craft_metrics` dict is passed), with only a
+    schema-version field stamped on top.
     """
     report = build_report(repo_root)
-    actual_keys = set(report.keys())
-    if actual_keys != EXPECTED_SNAPSHOT_KEYS:
-        missing = sorted(EXPECTED_SNAPSHOT_KEYS - actual_keys)
-        added = sorted(actual_keys - EXPECTED_SNAPSHOT_KEYS)
-        raise RuntimeError(
-            "build_report()'s return shape no longer matches "
-            f"EXPECTED_SNAPSHOT_KEYS — missing keys: {missing}, unexpected "
-            f"keys: {added}. If this is an intentional build_report() change, "
-            "update EXPECTED_SNAPSHOT_KEYS, bump SNAPSHOT_SCHEMA_VERSION, and "
-            "update docs/agent-monitoring/codebase_health_history_schema.md "
-            "in the same commit."
-        )
-    return {**report, "snapshot_schema_version": SNAPSHOT_SCHEMA_VERSION}
+    _check_keys(set(report.keys()), EXPECTED_BASELINE_KEYS, "build_report()")
+    craft = measure_craft_metrics(repo_root) if craft_metrics is None else craft_metrics
+    _check_keys(set(craft.keys()), frozenset(CRAFT_METRIC_KEYS), "tools.code_health.metrics")
+    return {**report, **craft, "snapshot_schema_version": SNAPSHOT_SCHEMA_VERSION}
 
 
-def write_snapshot(repo_root: Path, history_path: Path) -> bool:
+def write_snapshot(repo_root: Path, history_path: Path, craft_metrics: dict | None = None) -> bool:
     """Append one snapshot record to `history_path`.
 
     `history_path` has no default (see module docstring) — every call site
@@ -146,7 +185,7 @@ def write_snapshot(repo_root: Path, history_path: Path) -> bool:
     raises contract in a try/except; a `False` return is the caller's signal
     to warn, not this function's job to escalate.
     """
-    record = build_snapshot_record(repo_root)
+    record = build_snapshot_record(repo_root, craft_metrics)
     line = json.dumps(record, separators=(",", ":"))
     # write_line acquires its lock file (a sibling of history_path) before
     # its own mkdir call, so the parent directory must already exist —
@@ -175,7 +214,7 @@ def read_snapshots(history_path: Path) -> list:
 
 
 def _build_scalar_row(latest: dict, previous: dict | None, key: str) -> dict:
-    if previous is None:
+    if previous is None or key not in previous:
         return {
             "latest": latest[key],
             "previous": None,
@@ -235,6 +274,9 @@ def build_scorecard(snapshots: list) -> dict:
     for key in SCALAR_DIMENSIONS + (REGISTRY_DIMENSION_KEY,):
         dimensions[key] = _build_scalar_row(latest, previous, key)
     dimensions[NON_SCALAR_DIMENSION_KEY] = _build_non_scalar_row(latest, previous)
+    for key in CRAFT_DIMENSIONS:
+        if key in latest:  # a schema-1 latest record has no craft dimensions to show
+            dimensions[key] = _build_scalar_row(latest, previous, key)
 
     return {"no_snapshots_yet": False, "dimensions": dimensions}
 
@@ -273,6 +315,8 @@ def format_scorecard(scorecard: dict) -> str:
     lines = [header, rule]
     dimensions = scorecard["dimensions"]
     for key in DIMENSION_ORDER:
+        if key not in dimensions:
+            continue
         row = dimensions[key]
         label = DIMENSION_LABELS[key]
 

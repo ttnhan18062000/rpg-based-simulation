@@ -15,7 +15,7 @@ tags: [schema]
 M3c: Add craft metrics to the codebase health snapshot and take the first snapshot
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard

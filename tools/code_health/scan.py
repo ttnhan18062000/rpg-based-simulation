@@ -35,6 +35,12 @@ JSCPD_DIR = "jscpd"
 JSCPD_REPORT = "jscpd-report.json"
 DEFAULT_COMPLEXITY_LIMIT = 15
 
+# jscpd needs npx and the npm registry; the others are Python tools in the project environment.
+# `OFFLINE_TOOLS` is what the codebase-health snapshot uses, so a snapshot never needs the network.
+TOOL_JSCPD_NAME = "jscpd"
+ALL_TOOLS = ("ruff", "complexipy", TOOL_JSCPD_NAME, "line_count")
+OFFLINE_TOOLS = ("ruff", "complexipy", "line_count")
+
 
 class ToolUnavailableError(RuntimeError):
     """A required tool could not be started or produced no output."""
@@ -49,7 +55,9 @@ def jscpd_version(makefile: Path) -> str:
 
 
 def complexity_limit(pyproject: Path) -> int:
-    """`max-complexity-allowed` from `[tool.complexipy]`."""
+    """`max-complexity-allowed` from `[tool.complexipy]`; the default if there is no such file or table."""
+    if not pyproject.is_file():
+        return DEFAULT_COMPLEXITY_LIMIT
     with pyproject.open("rb") as handle:
         table = tomllib.load(handle).get("tool", {}).get("complexipy", {})
     return int(table.get("max-complexity-allowed", DEFAULT_COMPLEXITY_LIMIT))
@@ -73,18 +81,41 @@ def _run(command: Sequence[str], root: Path, ok_codes: Sequence[int]) -> subproc
     return done
 
 
-def run_scan(root: Path, out_dir: Path) -> None:
-    """Run ruff, complexipy, jscpd and the line-count report over `src/`, writing raw JSON to `out_dir`."""
-    out_dir.mkdir(parents=True, exist_ok=True)
+def _scan_ruff(root: Path, out_dir: Path) -> None:
     ruff = _run([sys.executable, "-m", "ruff", "check", SCAN_ROOT, "--output-format", "json"], root, (0, 1))
     (out_dir / RUFF_JSON).write_text(ruff.stdout, encoding="utf-8")
-    _run([_find("complexipy"), "-q", "--output-format", "json", "--output", str(out_dir / COMPLEXIPY_JSON)],
-         root, (0, 1))
+
+
+def _scan_complexipy(root: Path, out_dir: Path) -> None:
+    # The path is given explicitly: complexipy stops with an error if neither it nor a config names one.
+    command = [_find("complexipy"), SCAN_ROOT, "-q", "--output-format", "json", "--output", str(out_dir / COMPLEXIPY_JSON)]
+    _run(command, root, (0, 1))
+
+
+def _scan_jscpd(root: Path, out_dir: Path) -> None:
     version = jscpd_version(root / "Makefile")
-    _run(["npx", "--yes", f"jscpd@{version}", SCAN_ROOT, "--config", ".jscpd.json",
-          "--output", str(out_dir / JSCPD_DIR)], root, (0,))
+    command = ["npx", "--yes", f"jscpd@{version}", SCAN_ROOT, "--config", ".jscpd.json", "--output", str(out_dir / JSCPD_DIR)]
+    _run(command, root, (0,))
+
+
+def _scan_line_count(root: Path, out_dir: Path) -> None:
     report = measure_paths([root / SCAN_ROOT], load_thresholds(root / "pyproject.toml"), relative_to=root)
     (out_dir / LINE_COUNT_JSON).write_text(json.dumps(report_to_dict(report), indent=1), encoding="utf-8")
+
+
+_SCANNERS = {
+    "ruff": _scan_ruff,
+    "complexipy": _scan_complexipy,
+    TOOL_JSCPD_NAME: _scan_jscpd,
+    "line_count": _scan_line_count,
+}
+
+
+def run_scan(root: Path, out_dir: Path, tools: Sequence[str] = ALL_TOOLS) -> None:
+    """Run `tools` (default: all four) over `src/`, writing each one's raw JSON to `out_dir`."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for name in tools:
+        _SCANNERS[name](root, out_dir)
 
 
 def _load(path: Path) -> Any:
@@ -94,12 +125,17 @@ def _load(path: Path) -> Any:
         raise ToolUnavailableError(f"{path}: {exc}") from exc
 
 
-def collect_findings(out_dir: Path, root: Path, scan_root: str = SCAN_ROOT) -> list[Finding]:
-    """Every adapter's findings for the raw output in `out_dir`; `scan_root` is the directory that was scanned."""
-    limit = complexity_limit(root / "pyproject.toml")
-    return [
-        *adapters.adapt_ruff(_load(out_dir / RUFF_JSON), str(root)),
-        *adapters.adapt_complexipy(_load(out_dir / COMPLEXIPY_JSON), limit),
-        *adapters.adapt_jscpd(_load(out_dir / JSCPD_DIR / JSCPD_REPORT), scan_root),
-        *adapters.adapt_line_count(_load(out_dir / LINE_COUNT_JSON)),
-    ]
+def collect_findings(
+    out_dir: Path, root: Path, scan_root: str = SCAN_ROOT, tools: Sequence[str] = ALL_TOOLS
+) -> list[Finding]:
+    """The adapters' findings for the raw output of `tools` in `out_dir`; `scan_root` is what was scanned."""
+    findings: list[Finding] = []
+    if "ruff" in tools:
+        findings += adapters.adapt_ruff(_load(out_dir / RUFF_JSON), str(root))
+    if "complexipy" in tools:
+        findings += adapters.adapt_complexipy(_load(out_dir / COMPLEXIPY_JSON), complexity_limit(root / "pyproject.toml"))
+    if TOOL_JSCPD_NAME in tools:
+        findings += adapters.adapt_jscpd(_load(out_dir / JSCPD_DIR / JSCPD_REPORT), scan_root)
+    if "line_count" in tools:
+        findings += adapters.adapt_line_count(_load(out_dir / LINE_COUNT_JSON))
+    return findings
