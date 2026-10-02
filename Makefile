@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py lint-py code-health-size code-health-complexity code-health-dup perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
 
 # Default
 help: ## Show available commands
@@ -265,6 +265,20 @@ lint: ## Run linters (frontend)
 
 typecheck: ## Run TypeScript type checking
 	cd frontend && npx tsc --noEmit
+
+lint-py: ## Lint Python under src/ with ruff (check only: no formatter, no --fix). Reports existing violations; the baseline ratchet is TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY
+	python3 -m ruff check src
+
+code-health-size: ## Report modules/classes/functions over the length limits in [tool.code_health.size] (report-only)
+	python3 -m tools.code_health.line_count src --flagged-only
+
+code-health-complexity: ## Report functions over the cognitive-complexity limit in [tool.complexipy] (report-only)
+	complexipy --failed --ignore-complexity
+
+# jscpd is a Node tool outside uv.lock; its version is pinned here and fetched with npx.
+JSCPD_VERSION ?= 5.4.0
+code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (report-only; JSON in reports/code_health/jscpd/)
+	npx --yes jscpd@$(JSCPD_VERSION) src --config .jscpd.json
 
 typecheck-py: ## Run Python type checking via mypy (src/ only, informational first pass)
 	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true

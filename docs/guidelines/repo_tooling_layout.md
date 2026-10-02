@@ -20,7 +20,7 @@ top-level script relying on a `sys.path.insert` hack. This follows the existing
 
 Domain subpackages under `tools/` today: `agent_codex_*`, `agent_orchestration_*`,
 `agent_replay_*` (Codex integration, out of scope for reorganization —
-`TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC`), `delivery/`, `gate_checks/`, `maintenance/`,
+`TCK-20260730-CODEX-RUNTIME-ACTIVATION-EPIC`), `code_health/`, `delivery/`, `gate_checks/`, `maintenance/`,
 `mechanism_registry/`, `perf/`, `release/`, `semantic_control_plane/`.
 
 The ~70 existing flat top-level `tools/*.py` files are not required to move into a subpackage

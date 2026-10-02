@@ -57,6 +57,11 @@ dev = [
     # the default export (requirements.txt) reach it for tests/tools/test_search_mcp.py.
     "mcp>=1.0.0",
     "websockets>=12.0",
+    # Code-health tools (TCK-20261002-CODE-HEALTH-TOOL-CONFIG). Pinned exactly: a new release
+    # can add or retune rules, which would change the measured baseline without a code change.
+    # jscpd is a Node tool and is pinned separately (JSCPD_VERSION in the Makefile).
+    "ruff==0.16.10",
+    "complexipy==8.0.1",
 ]
 profiling = [
     "memray>=1.0.0",
@@ -128,3 +133,54 @@ exclude = [
     "src/entities/",
     "src/progression/",
 ]
+
+# ── Code health (python_code_craft_roadmap.md section 6; docs/guidelines/python_code_standard.md) ──
+# Check only: no formatter is adopted (roadmap decision 8.3), so there is no [tool.ruff.format].
+# Existing violations are held in an external baseline, not fixed or suppressed in src/.
+[tool.ruff.lint]
+# Only the rules the standard names. Selecting these replaces ruff's default E/F set, so the
+# baseline stays about the standard and not about unrelated style.
+select = [
+    "ANN",      # T1: annotations on every argument and return value
+    "B006",     # F3: no mutable default arguments
+    "B904",     # E4: chain re-raised exceptions
+    "BLE001",   # E2: no blind `except Exception` (justify with `# noqa: BLE001` plus reason)
+    "C901",     # S3: cyclomatic complexity
+    "D100", "D101", "D102", "D103", "D104",  # D1: public module/class/method/function/package docstrings
+    "E722",     # E1: no bare except
+    "F403",     # M2: no wildcard imports
+    "I001",     # M1: import grouping
+    "N",        # N2: PEP 8 identifier case
+    "PLC0415",  # M1: imports at module top (justify with `# noqa: PLC0415` plus reason)
+    "PLR0912",  # S6: branches
+    "PLR0913",  # S5: arguments
+    "PLR0915",  # S2: statements
+    "PLR1702",  # S7: nesting depth (a preview rule, see below)
+]
+# T2 (`Any` in a public signature) is a reviewer rule in the standard, not a tool rule.
+ignore = ["ANN401"]
+# PLR1702 is preview-only. Preview behaviour is enabled but every preview *rule* must be
+# selected by its exact code, so no other preview rule turns on.
+preview = true
+explicit-preview-rules = true
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-branches = 12
+max-statements = 50
+max-nested-blocks = 5
+
+# Cognitive complexity limit; complexipy reads this table and exits non-zero above it.
+[tool.complexipy]
+paths = ["src"]
+max-complexity-allowed = 15
+
+# Length limits read by tools/code_health/line_count.py.
+[tool.code_health.size]
+function-warn-lines = 50
+function-fail-lines = 80
+class-lines = 500
+module-lines = 1000
