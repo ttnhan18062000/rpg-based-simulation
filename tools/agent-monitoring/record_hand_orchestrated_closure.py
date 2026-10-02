@@ -176,6 +176,9 @@ def build_records(
             "status": e["status"],
             "summary": e["summary"],
             "ts": e.get("ts", now),
+            # optional advisory list carried verbatim (TCK-20261002-ARCH-VERIFY-TEST-QUALITY-FINDINGS);
+            # the key is absent, never a false [], when the event has none
+            **({"test_quality_findings": e["test_quality_findings"]} if e.get("test_quality_findings") is not None else {}),
         }
         for i, e in enumerate(events, start=1)
     ]
