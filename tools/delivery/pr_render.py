@@ -109,9 +109,30 @@ def discover_changed_ticket_ids(run_command=default_run_command, base_ref: str =
     return _dedup_preserve_order(ids)
 
 
+def discover_changed_files(run_command=default_run_command, base_ref: str = "origin/main") -> list:
+    result = run_command(["git", "diff", "--name-only", f"{base_ref}..HEAD"])
+    if result.returncode != 0:
+        return []
+    return sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
+
+
 def find_ticket_file(ticket_id: str, tickets_root: Path = _DEFAULT_TICKETS_ROOT) -> Optional[Path]:
     matches = sorted(tickets_root.rglob(f"{ticket_id}.md"))
     return matches[0] if matches else None
+
+
+_NOT_CLOSED_DIRS = ("todos", "inprogress")
+
+
+def _not_closed_dir(path: Path, tickets_root: Path) -> Optional[str]:
+    """The `tickets/` subdirectory a ticket file sits in when that location says the work is not
+    closed (`todos/` = filed, `inprogress/` = still open), else None. A path outside `tickets_root`
+    or directly under it is unknown, not "open", so it stays listed."""
+    try:
+        parts = path.relative_to(tickets_root).parts
+    except ValueError:
+        return None
+    return parts[0] if len(parts) > 1 and parts[0] in _NOT_CLOSED_DIRS else None
 
 
 def load_ticket(path: Path) -> dict:
@@ -184,7 +205,10 @@ def discover_tickets(
     The mismatch warning below is computed from the full, unexcluded `commit_ids`/`changed_ids`
     sets -- recording an exclusion changes what gets *rendered*, never whether the underlying
     commit-subject/changed-file disagreement gets *reported* (TCK-20260927-PR-RENDER-NO-RECORDED-
-    TICKET-EXCLUSION AC5)."""
+    TICKET-EXCLUSION AC5).
+
+    A ticket whose file sits under `todos/` or `inprogress/` is left out with a warning, with no flag
+    needed: a PR that files a follow-up names it in a commit subject, but cannot have closed it."""
     exclusions = exclusions or {}
     commit_ids = discover_commit_ticket_ids(run_command, base_ref)
     changed_ids = discover_changed_ticket_ids(run_command, base_ref)
@@ -215,6 +239,22 @@ def discover_tickets(
         path = find_ticket_file(ticket_id, tickets_root)
         if path is None:
             warnings.append(f"{ticket_id}: no ticket file found under {tickets_root}/")
+            continue
+        if ticket_id not in changed_set:
+            # a follow-up commit to an already-closed ticket names it (the repo's own commit
+            # convention) without touching its file; a PR that closes a ticket always changes it
+            warnings.append(
+                f"{ticket_id}: named in a commit subject but its ticket file is not changed by this "
+                f"branch -- cited, not closed; left out of Closes:"
+            )
+            continue
+        open_dir = _not_closed_dir(path, tickets_root)
+        if open_dir:
+            # a PR that files a follow-up names it in a commit subject too; its location says it is not closed
+            warnings.append(
+                f"{ticket_id}: ticket file is under {open_dir}/, not done/ -- left out of Closes: "
+                f"(filed or still open by this PR; move it to done/ if this PR really closes it)"
+            )
             continue
         tickets.append(load_ticket(path))
     return tickets, warnings
@@ -372,10 +412,29 @@ def render(
     layer_registry_path: Path = _DEFAULT_LAYER_REGISTRY,
     run_command=default_run_command,
     exclusions: Optional[Dict[str, str]] = None,
+    scope: Optional[str] = None,
+    why: Optional[str] = None,
 ) -> dict:
     tickets, warnings = discover_tickets(run_command, tickets_root, base_ref, exclusions=exclusions)
     if not tickets:
-        return {"title": None, "body": None, "warnings": warnings + ["no tickets discovered"]}
+        warnings = warnings + ["no tickets discovered"]
+        if not (theme and scope and why):
+            warnings.append(
+                "a branch that closes no ticket can still be rendered: pass --theme, --scope (a "
+                "registered layer) and --why"
+            )
+            return {"title": None, "body": None, "warnings": warnings}
+        registry = _load_layer_registry(layer_registry_path)
+        if registry and scope not in registry:
+            warnings.append(f"scope {scope!r} is not in {layer_registry_path} — reported, not defaulted")
+        spec = json.loads(Path(spec_path).read_text(encoding="utf-8"))
+        files = discover_changed_files(run_command, base_ref)
+        return {
+            "title": f"{scope}: {_collapse_whitespace(theme)} (no tickets)",
+            "body": render_ticketless_body(_collapse_whitespace(theme), why.strip(), files, spec, warnings),
+            "warnings": warnings,
+            "hints": [],
+        }
 
     scope, tie_warning, unregistered_warning = choose_scope(tickets, layer_registry_path)
     for w in (tie_warning, unregistered_warning):
@@ -392,6 +451,33 @@ def render(
             "recently closed ticket; pass --theme \"<one-line batch headline>\" (also to --check)."
         )
     return {"title": title, "body": body, "warnings": warnings, "hints": hints}
+
+
+def render_ticketless_body(theme: str, why: str, files: list, spec: dict, warnings: list) -> str:
+    """Body for a branch that closes no ticket (docs-only or record-only). Nothing here is invented:
+    the theme and the why come from the caller, the file summary from the diff, and `Closes:` is
+    explicitly empty."""
+    by_dir: Dict[str, int] = {}
+    for f in files:
+        parent = "/".join(f.split("/")[:-1]) or "."
+        by_dir[parent] = by_dir.get(parent, 0) + 1
+    summary = "\n".join(f"- {d}/ ({n} file{'s' if n != 1 else ''})" for d, n in sorted(by_dir.items()))
+    sections = {
+        "## What landed": f"{theme}\n\nChanged files ({len(files)}):\n{summary}" if files else theme,
+        "## Tickets": "(none: this PR closes no ticket)",
+        "## Why": why,
+        "## Verification": "- Tests: (none recorded: no ticket on this branch)\n- Known gaps: none stated"
+        + (f"\n- Discovery warnings: {'; '.join(warnings)}" if warnings else ""),
+        "## Review notes": _REVIEW_NOTES_PLACEHOLDER,
+    }
+    parts = []
+    for section in spec["sections"]:
+        heading = section["heading"]
+        if heading == "Closes:":
+            continue
+        parts += [heading, sections[heading], ""]
+    parts.append("Closes: (none)")
+    return "\n".join(parts).strip() + "\n"
 
 
 _CLOSES_RE = re.compile(r"^Closes:\s*(.*)$", re.MULTILINE)
@@ -526,6 +612,8 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--pr", default=None, help="PR number, used only by --check")
     parser.add_argument("--theme", default=None)
+    parser.add_argument("--scope", default=None, help="Layer for a branch that closes no ticket (with --theme and --why).")
+    parser.add_argument("--why", default=None, help="Why text for a branch that closes no ticket.")
     parser.add_argument("--base-ref", default="origin/main")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -552,9 +640,9 @@ def main(argv=None) -> int:
 
     try:
         if args.check:
-            result = check_against_live(pr=args.pr, theme=args.theme, base_ref=args.base_ref)
+            result = check_against_live(pr=args.pr, theme=args.theme, base_ref=args.base_ref, scope=args.scope, why=args.why)
         else:
-            result = render(theme=args.theme, base_ref=args.base_ref, exclusions=exclusions)
+            result = render(theme=args.theme, base_ref=args.base_ref, exclusions=exclusions, scope=args.scope, why=args.why)
     except Exception as exc:  # noqa: BLE001 - the one deliberate non-zero-exit path
         print(f"INTERNAL ERROR: {exc}", file=sys.stderr)
         return 1

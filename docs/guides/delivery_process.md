@@ -228,6 +228,15 @@ attribution guidance generally ([[feedback_no_coauthor_footer_in_pr]]). The
 `.github/pull_request_template.md` skeleton is the one place that omission must be structurally
 impossible to forget.
 
+The renderer leaves out of `Closes:` (with a warning) any ticket whose file is still under `tickets/todos/` or
+`tickets/inprogress/`, since a PR that only *files* a follow-up names it in a commit subject without closing it;
+move it to `tickets/done/` if the PR really does close it.
+
+It likewise leaves out a ticket that a commit subject only *cites* (its file is not changed by the branch), such as a
+follow-up commit to an already-closed ticket. A branch that closes no ticket at all (docs-only or record-only) renders
+with `--theme`, `--scope` (a registered layer) and `--why`: the title ends `(no tickets)`, the body lists the changed
+directories, and the last line is `Closes: (none)`. Pass the same three flags to `--check`.
+
 `## Known gaps` is load-bearing and deliberate: the repo's Gate Integrity rule says a blocking gate
 result is information to report, never an obstacle to route around. Giving it a fixed slot in every
 PR body makes reporting it the default rather than an act of virtue.
