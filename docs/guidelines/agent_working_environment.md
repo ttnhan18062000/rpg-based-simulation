@@ -17,8 +17,10 @@ This document is the single reference for setting up and operating the local con
 | Requirement | Version | Notes |
 |---|---|---|
 | Docker Engine | 24+ | Required for `make search-server-docker` (primary) |
-| Python | 3.11+ | For index build and CLI fallback |
-| `pip install -r requirements.txt` | — | Core app deps: `fastapi`, `uvicorn`, etc. Installed by CI too. |
+| Python | 3.11+ (floor); 3.13 is the CI-tested version | The floor is `requires-python` in `pyproject.toml`, which is the source; `[tool.mypy] python_version` follows it. CI (`.github/workflows/test.yml`) runs 3.13. The floor stays at 3.11 because `.venv-knowledge` is on 3.12. |
+| `uv` | 0.11+ | Resolves and installs from `pyproject.toml` and `uv.lock`. On this machine every `uv` network command needs `--system-certs` (see "TLS interception" below). |
+| `uv sync --system-certs` | — | Core app, test and dev deps from `uv.lock` (`fastapi`, `uvicorn`, `pytest`, etc.). Dependencies are declared once, in `pyproject.toml`. |
+| `pip install -r requirements.txt` | — | Same set, for jobs not yet on uv; CI still installs this way. `requirements.txt` is a **generated export** of `uv.lock`: never edit it by hand (see "Changing a dependency" below). |
 | `pip install -r requirements-knowledge.txt` | — | Knowledge-search stack: `torch`, `sentence-transformers`, `sqlite-vec`, `rank_bm25`. Local agent tooling only — CI never installs this. |
 
 First-time model download: `all-MiniLM-L6-v2` (~22 MB) is downloaded automatically on first `make knowledge-index`. Subsequent builds use the local cache.
@@ -88,8 +90,11 @@ uv pip install --python .venv/bin/python3 --system-certs -r requirements.txt
 Run these once after cloning or after a clean checkout.
 
 ```bash
-# 1. Install core Python dependencies
-pip install -r requirements.txt
+# 1. Install core Python dependencies into .venv from uv.lock
+#    (drop --system-certs on a network without TLS interception)
+uv sync --python 3.13 --system-certs
+#    Equivalent without uv, as CI does it today:
+#    pip install -r requirements.txt
 
 # 1b. Install the knowledge-search stack (torch must come from the CPU wheel index)
 pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -108,6 +113,28 @@ curl -s http://localhost:8765/api/health
 ```
 
 The Docker container runs with `restart: unless-stopped` — it will come back automatically after system restarts as long as Docker Engine is running.
+
+`uv sync` installs the default dependencies plus the `dev` group, and installs this package itself
+as editable. It does not install the knowledge-search stack: that stays in
+`requirements-knowledge.txt` and `.venv-knowledge` (step 1b), unchanged. The opt-in `profiling`
+group (`memray`) is installed with `uv sync --group profiling`.
+
+### Changing a dependency
+
+Dependencies are declared in one place, `pyproject.toml` (`TCK-20261002-UV-DECLARE-AND-LOCK`):
+runtime packages under `[project] dependencies`, test and dev tooling under
+`[dependency-groups] dev`. After editing it, refresh the lock and regenerate the export, and commit
+all three files together:
+
+```bash
+uv lock --system-certs
+uv export --frozen --no-hashes --no-emit-project -o requirements.txt
+```
+
+`uv lock --check` exits non-zero if `uv.lock` is out of date with `pyproject.toml`. Re-running the
+export on an unchanged lock produces no diff. The export leaves out extras, so `torch`,
+`sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach `requirements.txt`
+(`tests/static/test_ci_requirements_no_ml_stack.py` pins this).
 
 ---
 
