@@ -127,6 +127,7 @@ Add a new guideline, `docs/guidelines/python_code_standard.md`, containing short
 - `tools/validate_frontmatter.py`: OK on the new doc, the ticket and the three artifacts.
 - `pytest tests/docs/`: 69 passed, 2 skipped, 1 xfailed (includes `test_subsystem_ownership_lifecycle_doc.py` and `test_design_patterns_currency.py`, both unmodified).
 - Marker script (test plan): 39 rule rows, every Enforcement cell names a tool or `reviewer`; every not-yet-configured tool is labelled planned.
+- **Superseded after this ticket closed:** the 39-rule count and the "planned" marker above describe the first commit only. Planner review cut the standard to 35 rules; `TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY` then added one correctness rule (X1), so it now has 36 rules. When `TCK-20261002-CODE-HEALTH-TOOL-CONFIG` configured the tools, every "planned" marker became "configured" (not gated), and no "planned" marker remains.
 - Diff against 7dfd1349 has no `src/`, `tests/`, `.claude/` or `CLAUDE.md` path.
 - No new test added: docs only, no behaviour change.
 
