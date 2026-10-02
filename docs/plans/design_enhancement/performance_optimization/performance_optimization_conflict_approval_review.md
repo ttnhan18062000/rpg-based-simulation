@@ -17,7 +17,7 @@ Determine whether the project should approve the new evidence-gated performance 
 by:
 
 - `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md`;
-- `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md`.
+- `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md`.
 
 The review must not assume those authority-P2 documents override active authority-P1 documents.
 If the new approach is approved, identify which P1 documents must be amended or superseded, by
@@ -462,7 +462,7 @@ Return a review report with exact recommended document changes and unresolved bl
 ## 9. Sources
 
 - `docs/brainstorm/codex/system-design/performance_optimization_architecture_proposal.md`
-- `docs/plans/design_enhancement/performance_optimization_prerequisite_execution_plan.md`
+- `docs/plans/design_enhancement/performance_optimization/performance_optimization_prerequisite_execution_plan.md`
 - `docs/plans/design_enhancement/design_enhancement_roadmap.md`
 - `docs/plans/design_enhancement/determinism_envelope_epic.md`
 - `docs/plans/design_enhancement/subphase_domain_contracts_epic.md`
