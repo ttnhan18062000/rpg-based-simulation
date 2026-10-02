@@ -160,7 +160,10 @@ select = [
 # T2 (`Any` in a public signature) is a reviewer rule in the standard, not a tool rule.
 ignore = ["ANN401"]
 # PLR1702 is preview-only. Preview behaviour is enabled but every preview *rule* must be
-# selected by its exact code, so no other preview rule turns on.
+# selected by its exact code, so no other preview rule turns on. Note that `preview = true` also
+# switches the selected stable rules to their preview behaviour; with ruff pinned exactly in the
+# dev group that is stable, but a ruff version bump can change findings and needs a baseline
+# reseed (registries/code_health_exceptions.jsonl).
 preview = true
 explicit-preview-rules = true
 

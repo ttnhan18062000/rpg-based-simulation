@@ -125,6 +125,7 @@ No tool was dropped.
 - **CI effect:** `requirements.txt` gains `ruff==0.16.10` and `complexipy==8.0.1`, so every pip-installing CI job installs them. Plain `pip install -r requirements.txt` into a clean 3.13 environment succeeds.
 - The orphan checker reads tracked files only: `tools/code_health/` is invisible to it until staged.
 - `make knowledge-index-update` was not run (worktree has no `knowledge-index/`; post-merge step is in the epic).
+- **Follow-up after planner review (2026-10-02):** the `pyproject.toml` comment now says `preview = true` also changes stable rules to their preview behaviour and that a ruff bump needs a baseline reseed; the standard no longer embeds measured counts. Raised by the same review and handled in `TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY` because it must precede seeding: ruff's default `F` set (pyflakes) was turned off by the explicit `select`, hiding 1,043 existing findings (F401 846, F821 111, F841 39, F541 27, F811 20); it is added back as a labelled correctness group. Also noted for later tickets: the code-health tools belong in their own dependency group once CI moves to uv, and jscpd needs a lockfile before it can be a blocking gate.
 
 ## Test Summary
 - `pytest tests/tools/test_code_health_line_count.py`: 22 passed (nested function and same-named method distinct, decorators, async, nested classes, conditional definitions, function 50/51/80/81, class 500/501, module 1000/1001, empty module, unparseable file reported, stable order, CLI, config agreement, `lint-py` check-only).

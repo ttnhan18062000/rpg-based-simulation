@@ -100,6 +100,7 @@ None.
 - Other domains' worktrees build their environments from `requirements.txt` today; removing the file would affect them, which is why keeping it as a generated export is the default
 - A green run requires a push and PR, which the user drives; this ticket cannot close on local evidence alone
 - Layer `testing` and tag `delivery` follow the sibling ticket TCK-20261002-UV-FIRST-CI-JOB
+- From the review of `TCK-20261002-CODE-HEALTH-TOOL-CONFIG` (2026-10-02): `ruff` and `complexipy` are in the `dev` group, so every job that syncs or pip-installs the export installs them although only one future job needs them. When jobs move to uv, put the code-health tools in their own dependency group (for example `lint`) that test jobs do not sync, and regenerate the export accordingly.
 
 ## Implementation Notes
 

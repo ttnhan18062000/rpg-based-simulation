@@ -29,10 +29,11 @@ Every rule has an Enforcement cell with one of:
 
 - **reviewer**: a person or review agent judges it on the diff. No tool checks it.
 - **a named tool, configured**: the tool is configured in this repo (`pyproject.toml`) and can be
-  run on demand (below), but it is **not gated**: no CI job or hook fails on it, and the 5,422 ruff
-  findings, 384 cognitive-complexity findings and the length findings that already exist in `src/` (all measured 2026-10-02)
-  are not yet held in a baseline. Until the ratchet (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`)
-  and CI gating (roadmap M4) land, such a rule is enforced by review plus the on-demand report.
+  run on demand (below), but it is **not gated**: no CI job or hook fails on it, and the violations
+  that already exist in `src/` are not yet held in a baseline (the counts from the first run are in
+  `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`; later counts belong to the code-health snapshot). Until
+  the ratchet (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`) and CI gating (roadmap M4) land, such a
+  rule is enforced by review plus the on-demand report.
 - **mypy, advisory today**: mypy is configured (`[tool.mypy]` in `pyproject.toml`) but runs
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Blocking is planned
   for roadmap M4.

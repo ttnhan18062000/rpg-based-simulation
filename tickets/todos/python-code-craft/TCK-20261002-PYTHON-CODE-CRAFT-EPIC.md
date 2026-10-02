@@ -136,6 +136,7 @@ None.
 - Search tooling was degraded during investigation (graphify graph and local knowledge index absent); no duplicate was found via search_docs, REGISTRY.yaml, working_log.csv and the open-ticket scanner
 - Tag fit: `planning` is registered for plan/roadmap-tracking doc artifacts and `tracking` for index/tracking docs; both are used here for an epic ticket that tracks a roadmap and its child tickets, a near but not exact fit
 - Post-merge step (from `TCK-20261002-PYTHON-CODE-STANDARD-DOC`): after this branch merges, run `make knowledge-index-update` in the main checkout. It was not run in the `rpg-code-craft` worktree, which has no `knowledge-index/`; the served index lives in the main checkout.
+- Roadmap M4 note (from the review of `TCK-20261002-CODE-HEALTH-TOOL-CONFIG`): jscpd runs through `npx --yes` with the version pinned but its transitive dependencies unpinned, so it must not become a blocking CI gate in that form. Before gating, give it a lockfile (a small `package.json` plus `package-lock.json` under `tools/code_health/`) or replace it.
 
 ## Implementation Notes
 
