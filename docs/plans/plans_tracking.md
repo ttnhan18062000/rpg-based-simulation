@@ -8,7 +8,7 @@ tags: [planning, tracking, documentation]
 
 # Plans Tracking — Quick Overview
 
-Date: 2026-09-13 (updated: added 2 previously-missing render-and-art sibling packages; archived 2 fully-shipped roadmaps — see Maintenance note; rest of the table is unchanged from the 2026-09-09 snapshot)
+Date: 2026-10-02 (updated: added the Python Code Craft roadmap row; the Scope counts were incremented by that row's 2 files and 1 record, not re-audited. Previous update 2026-09-13: added 2 previously-missing render-and-art sibling packages; archived 2 fully-shipped roadmaps — see Maintenance note; rest of the table is unchanged from the 2026-09-09 snapshot)
 
 ## Scope
 
@@ -18,8 +18,8 @@ authority come from document frontmatter; brainstorm sources are listed only whe
 references `docs/brainstorm/`.
 
 `docs/plans/archive/` is excluded. Multi-file plan packages are collapsed into one program row, so
-milestone and supporting files are not repeated individually. This snapshot summarizes 97 Markdown
-files as 37 plan records; `plans_tracking.md` excludes itself.
+milestone and supporting files are not repeated individually. This snapshot summarizes 99 Markdown
+files as 38 plan records; `plans_tracking.md` excludes itself.
 
 ### Status key
 
@@ -41,6 +41,7 @@ files as 37 plan records; `plans_tracking.md` excludes itself.
 | [Implementation Plan: Provider-Agnostic Agent Orchestration](agent_infrastructure/provider_agnostic_orchestration/implementation_plan.md) | Implementation plan for Provider-Agnostic Agent Orchestration. | `historical` | `P1` | — | 1 |
 | [Aseprite Agent-Controlled Pixel-Art — Draft Milestone Plan Package](aseprite-mcp-pixel-art/README.md) | Draft milestone plan for agent-controlled Aseprite pixel-art drawing (CAP-A/CAP-B), gated behind authority/preflight contracts; execution remains NO-GO pending separate authorization. | `active` | `P1` | [aseprite_mcp_pixel_art_workflow_proposal.md](../brainstorm/render-and-art/aseprite_mcp_pixel_art_workflow_proposal.md) | 8 |
 | [Audit Fix Plan — Remaining Open Issues](audit_fix_plan.md) | Audit Fix Plan — Remaining Open Issues. | `active` | `P1` | — | 1 |
+| [Python Code Craft Roadmap — Standard, Modern Toolchain, Debt Registry, Refactor Lane](codebase_health/python_code_craft_roadmap.md) | Plans a Python code standard, lint/complexity/duplication toolchain, a code-health exception registry with a ratchet, and a deferred refactor lane; `src/` frozen. | `active` | `P2` | — | 2 |
 | [Design Enhancement Roadmap — Performance-First, With Scoped Non-Performance Additions](design_enhancement/design_enhancement_roadmap.md) | Design Enhancement Roadmap — Performance-First, With Scoped Non-Performance Additions. | `active` | `P1` | [performance_evolution_roadmap.html](../brainstorm/performance_evolution_roadmap.html)<br>[simulation_design_taxonomy.html](../brainstorm/simulation_design_taxonomy.html) | 1 |
 | [Epic Plan — Determinism Envelope for Wall-Clock-Driven Mode Escalation](design_enhancement/determinism_envelope_epic.md) | Delivery program for Determinism Envelope for Wall-Clock-Driven Mode Escalation. | `active` | `P1` | — | 1 |
 | [Epic Plan — Performance Evolution, Sequenced by Risk](design_enhancement/performance_milestones_epic.md) | Delivery program for Performance Evolution, Sequenced by Risk. | `active` | `P1` | [performance_evolution_roadmap.html](../brainstorm/performance_evolution_roadmap.html) | 1 |
