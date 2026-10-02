@@ -342,9 +342,8 @@
     \ bug, same class, separate cause). TCK-20260708-GENERATED-FRONTIER-LATE-TICK-POPULATION-COLLAPSE\
     \ fixed the last remaining never-declared module, moon_cult_ruins (moon_cave region),\
     \ gaining a new \"ARCANE_CORRUPTION\" hazard_kind matched by a new arcane_circle\
-    \ hazard_immunities entry \u2014 exercised by generated_frontier_3_42.\
-    \ TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND: the call site\
-    \ (src/engine/world_dynamics.py) now records the drain in CombatUpdate.hazard_damage\
+    \ hazard_immunities entry \u2014 exercised by generated_frontier_3_42. TCK-20261001-HAZARD-OVERWRITES-SAME-TICK-COMBAT-OUTCOME-KIND:\
+    \ the call site (src/engine/world_dynamics.py) now records the drain in CombatUpdate.hazard_damage\
     \ independently of outcome_kind, no longer overwrites a terminal combat outcome\
     \ (TERMINAL_COMBAT_OUTCOME_KINDS), never flips alive_set False->True, and a drain\
     \ that itself takes HP to 0 is recorded by resolve_lifecycle as death_reason HAZARD\
@@ -1436,11 +1435,12 @@
     for the spawn_cadence_fired tuple) so check_for_lair_spawn''s new dragonkin lair-occupant
     does not misfire as a cadence spawn or get missed as a boss-kind arrival. The
     live-default apply-layer WorldDynamicsShaper (src/observability/event_shapers.py,
-    WORLD-115) maintains its OWN separate copies of both lists and was intentionally
-    left unchanged -- it still excludes only world_boss/ancient_sentinel/goblin_raider,
-    with no dragonkin recognition. TCK-20260904-LAIR-ENTITY-ANCHOR scoped dragonkin
-    boss-kind recognition to the rollback path only; extending event_shapers.py to
-    match is out of scope and a known follow-up gap, not a defect in this entry.'
+    WORLD-115) previously kept its own copies of both lists without dragonkin; under
+    TCK-20260914-BOSS-KINDS-OBSERVABILITY-CONSTANT-DRIFT both modules now import BOSS_ENTITY_KINDS
+    and SPAWN_CADENCE_EXCLUDED_KINDS from src/observability/entity_kind_constants.py,
+    so dragonkin spawns emit boss_spawned + narrative_milestone (first_boss_spawned)
+    on the live default path and no longer count toward spawn_cadence_fired.spawned_count.
+    goblin_raider stays out of the boss set.'
   status: verified
   priority: P1
   legacy_evidence: null
@@ -1458,17 +1458,15 @@
     \ the separate DeferredInstrumentationShaper (src/observability/event_shapers.py),\
     \ not WorldDynamicsShaper. event_extractor.py's block above is now the flag-gated\
     \ (_push_shapers_phase2_active) rollback path for all three (plus boss_spawned/narrative_milestone/raid_party_spawned),\
-    \ not the sole terminus. event_shapers.py's WorldDynamicsShaper keeps its own,\
-    \ separately-maintained _BOSS_KINDS = frozenset((\"world_boss\", \"ancient_sentinel\"\
-    )) and its own spawn_cadence_fired exclusion tuple (None, \"world_boss\", \"ancient_sentinel\"\
-    , \"goblin_raider\") -- neither includes dragonkin. TCK-20260904-LAIR-ENTITY-ANCHOR\
-    \ only extended event_extractor.py's two rollback-path lists; the live-default\
-    \ path's dragonkin recognition remains an open follow-up, not part of this ticket's\
-    \ scope."
+    \ not the sole terminus. Both event_extractor.py and event_shapers.py's WorldDynamicsShaper\
+    \ import BOSS_ENTITY_KINDS and SPAWN_CADENCE_EXCLUDED_KINDS from src/observability/entity_kind_constants.py\
+    \ (TCK-20260914-BOSS-KINDS-OBSERVABILITY-CONSTANT-DRIFT), pinned by tests/unit/observability/test_entity_kind_constants.py\
+    \ and test_event_shapers_world_dynamics.py dragonkin tests."
   proof_type: parity
   test_path: tests/unit/observability/test_event_extractor_world_dynamics.py::TestSpawnCadrenceFired;
     tests/unit/observability/test_event_extractor_world_dynamics.py::TestNodeRecharged;
-    tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved
+    tests/unit/observability/test_event_extractor_world_dynamics.py::TestThreatEvolved;
+    tests/unit/observability/test_entity_kind_constants.py
   divergence_note: 'camp_constructed remains blocked, but the content half of the
     gap is now closed and the reason has narrowed again. As of TCK-20260904-CAMPSTATE-PLACE-BRIDGE,
     WorldCompiler.compile() constructs a real CampState alongside a PlaceState(kind=CAMP/NEST)
@@ -1652,6 +1650,11 @@
     See STRAT-247''s update note and infrastructure.yaml INFRA-326 for the run_shadow_shapers()
     default-lockstep bug found and fixed during this cutover, verified fixed via real
     5-world runs.'
+  update_2026_10_02: 'TCK-20260914-BOSS-KINDS-OBSERVABILITY-CONSTANT-DRIFT: the shaper
+    now recognizes dragonkin as a boss kind and excludes it from spawn_cadence_fired
+    via the shared BOSS_ENTITY_KINDS / SPAWN_CADENCE_EXCLUDED_KINDS in src/observability/entity_kind_constants.py
+    (see WORLD-109); tests/unit/observability/test_entity_kind_constants.py pins identity
+    and membership.'
 - id: WORLD-116
   text: 'QuestKind gained an ESCORT member (appended after BOUNTY, not inserted --
     enum ordinal stability preserved for any positional/serialized use). The world-content
