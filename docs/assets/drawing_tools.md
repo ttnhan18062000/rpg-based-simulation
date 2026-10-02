@@ -37,6 +37,10 @@ repo in `~/.cache/rpg-aseprite-mcp` (override: `ASEPRITE_MCP_WORKSPACE`; binary 
 tags, palette, colours, optional 32x32 region), `preview` (one frame or one layer, 1-16x), `filmstrip`,
 `list_sprites`.
 
+Every sprite summary (`new_sprite`, `apply_ops`, `branch_sprite`, `inspect`) also carries `cels` (number of cels as Aseprite stores them,
+linked cels included) and `aseprite_version` (string, from the running binary). Both are read-only facts added for candidate handoff.
+Note: `palette_size` of `new_sprite` is the in-memory palette; `inspect` reports the size Aseprite gives after reloading the file.
+
 Operations inside `apply_ops` (targeted ops take optional `layer` name and `frame`):
 
 | Group | Ops |

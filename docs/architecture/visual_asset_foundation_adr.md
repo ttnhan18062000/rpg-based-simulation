@@ -52,7 +52,8 @@ paths were deliberately left open. Full structure, layering rules and command ta
 - Store layers `intake`, `cli`, `__main__` have their own `STORE_ALLOWED` rows; `intake` does file I/O, only `cli` reads the clock.
 - Aseprite file facts used by intake were verified against the pinned Aseprite 1.3.18.6 by round-tripping files through the real binary (integration tests).
   Notably an all-opaque-black stored palette is unverifiable without decoding pixels (see `docs/assets/store_contract.md`, known gaps).
-- `pin_hash.sh` became `python -m visual_assets.drawing.pin`; `backend/lua/ops.lua` is byte-identical to the spike's.
+- `pin_hash.sh` became `python -m visual_assets.drawing.pin`; `backend/lua/ops.lua` was byte-identical to the spike's until `TCK-20261002-VISUAL-ASSETS-STORE-INTAKE` added one
+  read-only line to `summary()` (`res.cels`, `res.aseprite_version`) in its own reviewed commit and re-pinned `LUA_SHA256`; no op and no existing key changed.
 
 ## Consequences
 
