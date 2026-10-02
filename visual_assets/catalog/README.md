@@ -1,8 +1,9 @@
-# visual_assets/catalog — managed store data (empty skeleton)
+# visual_assets/catalog — managed store data (zero assets)
 
 This tree will hold the **managed** asset store: adopted sources, semantic definitions, provenance records,
 build configuration, generated artifacts, release-candidate manifests and synthetic test fixtures. At this
-point it contains only the empty directory layout and `STORE_FORMAT`; **no asset, record or definition exists.**
+point it contains the directory layout, `STORE_FORMAT` (version 1), the semantic registry `definitions/visual_keys.yaml` with **zero keys**,
+and synthetic test fixtures under `fixtures/contracts/`; **no real asset, record or key exists.**
 
 ## Who may write here
 

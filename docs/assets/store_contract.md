@@ -7,12 +7,13 @@ date: 2026-10-02
 tags: [architecture, mcp, documentation, rendering]
 ---
 
-# Visual asset store contract (designed, NOT built)
+# Visual asset store contract (partly built)
 
-**Status: nothing in this document is implemented.** `visual_assets/store/` and `visual_assets/catalog/` are
-empty skeletons created by `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`. This page records what the store is meant
-to guarantee so later tickets build to one contract. Each section is marked **designed** or **built**; today the
-only **built** items are the layout, the layering test and the rule that drawing tools cannot write the catalog.
+**Status: the typed records, identities and the semantic registry loader are built; every store writer is still
+designed only.** `visual_assets/store/` and `visual_assets/catalog/` were created as skeletons by
+`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`; `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS` added the pure contract layer.
+This page records what the store is meant to guarantee so later tickets build to one contract. Each section is marked
+**designed** or **built**.
 
 Source of truth for vocabulary and gates: `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md`
 (sections 6-9) and `docs/plans/visual-asset-management-runtime-integration/`. Physical layout, layering rules and the
@@ -38,7 +39,15 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 
 ## What is built now
 
-- `visual_assets/store/` (package marker and README only) and `visual_assets/catalog/` (README, `STORE_FORMAT`, seven empty directories).
+- `visual_assets/store/` with `errors`, `config`, `identities`, `contracts/` and `catalog/registry.py` (read-only), and `visual_assets/catalog/`
+  (README, `STORE_FORMAT` = version 1, the zero-key `definitions/visual_keys.yaml`, synthetic `fixtures/contracts/`, other directories empty).
+- Typed records (`extra="forbid"`, frozen, strict, `record_type` + `schema_version`, no free-form field): `CandidateHandoffPackage`,
+  `IntakeResult`, `AdoptionRecord`, `RevocationRecord`, `SourceRecord`, `ArtifactRecord`, `ReleaseCandidateManifest`,
+  `VisualKeyRegistry`. Canonical JSON (`canonical_json`) and strict parsing (`parse_record`: oversize, UTF-8, duplicate keys, NaN,
+  unknown fields, wrong type, unsupported version each rejected with a stable `ContractError.code`).
+- Identities with no normalisation: `VisualKey`, eight opaque id types, `SourceRevision`, `FileHash` (`sha256:`), `PixelHash`
+  (`pixels-v1:`; the algorithm is child 5), `UtcTimestamp`.
+- Registry loader: duplicate YAML keys, anchors, alias problems and the reserved `fixture.*` namespace are rejected; nothing registers dynamically.
 - `tests/visual_assets/test_boundaries.py`: `drawing` has no write path into `catalog/` (it may not even reference the path),
   `store` does not import `drawing`, nothing imports `src/` and `src/` never imports `visual_assets`.
 
@@ -46,17 +55,14 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 
 | Piece | Designed behaviour | Child ticket |
 |---|---|---|
-| Typed records | versioned strict records: handoff package, intake result, adoption record, source, artifact, release candidate manifest, definitions | 2 |
-| Identities | `visual_key`, `source_asset_id`, `source_revision`, `artifact_id`, `catalog_id` | 2 |
 | Intake | bounded copy into quarantine, claims checked against staged bytes (hashes, format, bounds, symlinks, traversal, licence state), immutable `IntakeResult` | 3 |
 | Adoption / revoke | human-gated, record a named approver and licence state, refuse a failed, revoked or already-adopted intake | 4 |
 | Build / release candidate | sandboxed allowlisted export, canonical pixel hash, immutable candidate manifests, no "active" pointer | 5 |
 | `verify` / `gc` | whole-store integrity in pure Python (runs in CI); reachability-based dry-run gc | 5 |
 | MCP store tools | read-only `store_list` / `store_show` and `submit_candidate`; never adopt, build, release, revoke or gc | 6 |
 
-## Decisions still open (not made by this ticket)
+## Decisions still open
 
-D2 (commit sources without Git LFS), D3 (commit generated PNGs and verify by canonical pixel hash in CI) and D4 (hash
-artifacts by decoded pixels) are **proposed** in `docs/architecture/visual_asset_foundation_adr.md`; they are re-confirmed with
-the user before the tickets that depend on them. Deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
-retention numbers, the Aseprite licence review (`U-02`) and CI with Aseprite (`U-14`) remain open.
+D2 (sources committed directly, no Git LFS), D3 (only adopted assets' PNGs committed; verified in CI by pixel hash) and D4
+(artifact identity is the decoded-pixel hash) are **decided** (`docs/architecture/visual_asset_foundation_adr.md`). Still open: deployment profile (`AM1-W01`), signing/trust channel (`AM1-W08`),
+retention numbers, the Aseprite licence review (`U-02`), numeric budgets (`U-05`) and CI with Aseprite (`U-14`).

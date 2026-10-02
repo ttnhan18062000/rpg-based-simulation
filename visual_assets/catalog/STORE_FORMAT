@@ -1,2 +1,2 @@
-store_format_version: 0
-status: skeleton (no store logic or records yet; see tickets/todos/visual-asset-foundation/SEQUENCE.md)
+store_format_version: 1
+status: contracts built (typed records, identities, semantic registry loader); no store writer, record or asset exists yet; see tickets/todos/visual-asset-foundation/SEQUENCE.md

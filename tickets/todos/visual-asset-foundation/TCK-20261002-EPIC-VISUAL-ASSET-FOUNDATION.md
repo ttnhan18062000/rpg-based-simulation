@@ -50,7 +50,7 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 
 ## Related Tickets
 - TCK-20261002-ASEPRITE-MCP-SPIKE-HARDENING, TCK-20261002-ASEPRITE-MCP-HIGHLEVEL-PIXEL-ART-TOOLS (done; the code being moved)
-- TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT (child 1, in progress)
+- TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT (child 1, done; merged in PR #286)
 
 ## Related Docs
 - docs/plans/visual-asset-foundation/README.md
@@ -68,8 +68,8 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 - The user approved the structure and the root-folder name `visual_assets/` on 2026-10-02.
 - D3 decided by the user on 2026-10-02: commit generated PNGs only for adopted assets; candidates and anything
   under review stay local in the gitignored `visual_assets/catalog/.review/` area.
-- D2 (no LFS for sources) and D4 (canonical pixel hash) were proposed by the planner and are not yet confirmed
-  by the user; they take effect in children 4-5 and must be re-confirmed there.
+- D2 (no LFS for sources) and D4 (canonical pixel hash) were proposed by the planner and confirmed by the user on
+  2026-10-02.
 
 ## Implementation Notes
 Epic: see children.

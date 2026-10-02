@@ -11,7 +11,7 @@ tags: [assets, planning, architecture, mcp]
 
 ## Status
 
-**Structure approved by the user on 2026-10-02 (root folder `visual_assets/`). Only ticket 1 (foundation init) is in progress; the store logic is not built yet.** It proposes where the Aseprite drawing tools
+**Structure approved by the user on 2026-10-02 (root folder `visual_assets/`). Ticket 1 (foundation init) is merged (PR #286); ticket 2 (store contracts) is built on branch `visual-assets-store`; the store's writers (tickets 3-6) are not built yet.** It proposes where the Aseprite drawing tools
 (today in `experiments/aseprite_mcp/`, PR #286) and a new asset store live in the project, how they are
 layered, and which parts of the existing plan packages they implement. Vocabulary, identities and gates are
 taken from `docs/brainstorm/render-and-art/asset_management_and_runtime_integration_proposal.md` (§6-§9) and
@@ -170,8 +170,12 @@ compose    ->  api, technique
 handoff    ->  api, store.contracts                # the only link from drawing tools to the store: a typed package
 server     ->  api, compose, handoff, store (read-only functions only)
 
-store.contracts  ->  (pydantic only)
-store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox (shared sandbox)
+store.config, store.errors  ->  (nothing)
+store.identities            ->  errors                      # helpers raise IdentityError
+store.contracts             ->  identities, errors, config  # + pydantic; no os/pathlib/io/time/datetime/subprocess/yaml, no open()
+store.catalog               ->  contracts, identities, errors, config  # + yaml (the only layer that may import it)
+store.*                     ->  contracts, config, errors; build -> drawing.backend.sandbox (shared sandbox)
+# each later store layer adds its own row to STORE_ALLOWED in the boundary test; an unlisted layer fails it
 ```
 
 - Nothing under `visual_assets/` imports `src/`. `src/` never imports `visual_assets`. (Asset systems are presentation-only
@@ -201,9 +205,9 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 |---|---|---|---|
 | D1 | One root folder `visual_assets/` with `drawing/`, `store/`, `catalog/`; tests in `tests/visual_assets/` | not `src/`: that is the installable engine (`include = ["src*"]`) and asset systems must never touch simulation state; not `tools/`: 94 unrelated entries; root subsystems have precedent (`agent-orchestration/`, `frontend/`). Underscore so it is importable; the proposal's illustrative `visual-assets/` data tree becomes `catalog/` | the store needs to ship inside the installable package |
 | D7 | Add one CI step for `tests/visual_assets` | CI lists test directories explicitly, so a new test root runs nowhere until added | never |
-| D2 | Commit adopted `.aseprite` sources directly, no Git LFS | 16-32px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
+| D2 | Commit adopted `.aseprite` sources directly, no Git LFS | **decided by the user 2026-10-02**: 16-32px sources are about 1-5 KB each (`MAX_SOURCE_BYTES` = 100 KiB is the reversal trigger) | sources exceed about 100 KB or history grows past an agreed size |
 | D3 | Commit generated PNGs **only for adopted assets**; candidates and anything still under review stay local in a gitignored review area. Verify the committed ones in CI by canonical pixel hash | **decided by the user 2026-10-02**: assets are not always used and are chosen carefully, so nothing unaccepted enters git history. CI has no Aseprite, so committed bytes are what makes `verify` meaningful there | CI gains Aseprite, or the frontend build takes over generation |
-| D4 | Hash artifacts by decoded pixels (canonical hash), not file bytes | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
+| D4 | Hash artifacts by decoded pixels (canonical hash), not file bytes | **decided by the user 2026-10-02**: PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 | D5 | Human gates are CLI-only and absent from the MCP surface | proposal §6: no agent or MCP server may collapse the gates | never without a new decision |
 | D6 | Release **candidates** only; no active pointer, no runtime resolver | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
 
@@ -226,10 +230,10 @@ store.*          ->  contracts, config, errors; build -> drawing.backend.sandbox
 | `AM4-W01`..`W10` (candidate record, source/artifact separation, allowlisted build, provenance, validation, audit reconstruction, cleanup, intake, revocation) | store commands + tests, on synthetic fixtures | implemented as mechanism, `REHEARSAL_ONLY` evidence |
 | `AM1-W01`, `W03`, `W04`, `W06`-`W11`, `W13`; `AM-M5`..`M7` | not covered | open |
 
-## Proposed delivery (one epic, child tickets, same branch and PR #286)
+## Delivery (one epic, child tickets; child 1 merged in PR #286, children 2-6 land together on branch `visual-assets-store`, one PR)
 
 1. **Foundation init** (`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`): move and restructure the drawing tools into `visual_assets/drawing/`, tests into `tests/visual_assets/drawing/`, no behaviour change; boundary test; CI step; `.mcp.json` + launcher; `store/` and `catalog/` skeletons (READMEs and package markers only, no logic); docs and ADR; plan-package status updates.
-2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `definitions`), pure, fully CI-tested.
+2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `catalog/registry`), pure, fully CI-tested. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`).
 3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`.
 4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test.
 5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`.

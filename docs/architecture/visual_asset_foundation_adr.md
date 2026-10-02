@@ -11,9 +11,10 @@ tags: [architecture, mcp, documentation, rendering]
 
 ## Status
 
-Accepted for D1, D5, D6, D7 (decided by the user on 2026-10-02 or forced by existing CI constraints). **Proposed, not decided:**
-D2, D3, D4. Delivered so far: `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT` (the move, the skeletons, the boundary test, CI step,
-`.mcp.json` entry). The store logic is not built.
+Accepted for D1-D7 (decided by the user on 2026-10-02 or forced by existing CI constraints); nothing is still proposed.
+Delivered so far: `TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT` (the move, the skeletons, the boundary test, CI step,
+`.mcp.json` entry; merged in PR #286) and `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS` (typed records, identities and the semantic
+registry loader, on branch `visual-assets-store`). The store's writers (intake, adoption, build, release, verify, gc) are not built.
 
 ## Context
 
@@ -30,9 +31,9 @@ paths were deliberately left open. Full structure, layering rules and command ta
 | D5 | Human gates (`adopt`, `revoke`, release, gc deletion) are CLI-only and absent from the MCP surface | **decided** | proposal section 6: no agent or MCP server may collapse the gates | never without a new decision |
 | D6 | Release **candidates** only; no active pointer, no runtime resolver | **decided** | deployment profile A vs B (`AM1-W01`) is not selected; activation is `AM-M6` | profile selected and M5 gates pass |
 | D7 | One CI step `Run: tests/visual_assets` in the `api-tools` job | **decided** | CI lists test directories explicitly, so a new test root runs nowhere until added | never |
-| D2 | Commit adopted `.aseprite` sources directly, no Git LFS | proposed | 16-32 px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
+| D2 | Commit adopted `.aseprite` sources directly, no Git LFS | **decided (user, 2026-10-02)** | 16-32 px sources are about 1-5 KB each | sources exceed about 100 KB or history grows past an agreed size |
 | D3 | Commit generated PNGs only for adopted assets; candidates and anything under review stay local in gitignored `visual_assets/catalog/.review/`; verify the committed ones in CI by canonical pixel hash | **decided (user, 2026-10-02)** | assets are chosen carefully and not always used, so nothing unaccepted enters git history; CI has no Aseprite, so it cannot rebuild | CI gains Aseprite, or the frontend build takes over generation |
-| D4 | Hash artifacts by decoded pixels, not file bytes | proposed | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
+| D4 | Hash artifacts by decoded pixels, not file bytes | **decided (user, 2026-10-02)** | PNG byte determinism across Aseprite versions is unproven | byte-exact reproducibility is demonstrated |
 
 ## Decisions taken while implementing the move (no behaviour change)
 
@@ -41,11 +42,17 @@ paths were deliberately left open. Full structure, layering rules and command ta
   Enforced by `tests/visual_assets/test_boundaries.py` and `tests/visual_assets/drawing/unit/test_workspace_isolation.py`.
 - `technique/` may import the leaf modules `errors` and `colors` (it raises `AdapterError` and parses colours) in addition to
   other `technique` modules; it imports no I/O layer. The structure doc's table said "nothing".
+- Store layering deviates from the structure doc (`store.contracts -> (pydantic only)`): `contracts` also imports the store leaves
+  `identities`, `errors` and `config`, and `identities` imports `errors` (its helpers raise `IdentityError`). `contracts` and
+  `identities` stay free of `os`, `pathlib`, `io`, `time`, `datetime`, `subprocess`, `yaml` and `open()` (AST rule in
+  `tests/visual_assets/test_boundaries.py`); only `store/catalog` may import `yaml`. A store layer without a row in
+  `STORE_ALLOWED` fails the test, so each later ticket adds its own.
 - `pin_hash.sh` became `python -m visual_assets.drawing.pin`; `backend/lua/ops.lua` is byte-identical to the spike's.
 
 ## Consequences
 
 - Drawing tools are in the project, registered in `.mcp.json`, unit-tested in CI; Aseprite-backed tests still run only where
   Aseprite and bwrap exist (`U-14` open).
-- The catalog and store are empty skeletons: no asset, record or definition exists and nothing activates at runtime.
+- The store has typed records, identities and a registry loader but no writer; the committed catalog holds zero keys, sources and
+  artifacts (synthetic fixtures only, under `catalog/fixtures/`). Nothing activates at runtime.
 - Plan packages gain dated status notes; open items there (`U-02`, `U-05`, `U-07`..`U-14`, `AM1-W01` ...) are unchanged.
