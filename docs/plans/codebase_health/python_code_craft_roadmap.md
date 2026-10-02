@@ -176,9 +176,15 @@ The home-grown part, needed because ruff and ast-grep have no baseline.
   retiring ticket). CLI and validator follow `tools/capability_envelope_baseline.py`.
 - `tools/code_health/`: adapters that read each tool's JSON output and normalise it, and one ratchet
   command that fails only when a violation is new or worse than its row.
-- Tools with a native baseline (mypy-baseline, basedpyright, complexipy) keep their own baseline
-  file; the registry records that the file exists and its size, so the trend is still visible in
-  one place.
+- Tools with a native baseline (mypy-baseline, basedpyright) keep their own baseline file; the
+  registry records that the file exists and its size, so the trend is still visible in one place.
+  complexipy was planned the same way but goes through an adapter into the registry instead
+  (`TCK-20261002-CODE-HEALTH-RATCHET-REGISTRY`, accepted in review 2026-10-02): its JSON already
+  names the function, so one ratchet covers it with symbol-level keys. Reverting means dropping
+  `adapt_complexipy` and recording complexipy's snapshot file in the registry.
+- The registry is seeded from one snapshot of `src/`, which other sessions keep changing. Before
+  the ratchet gates anything (M4), it is reseeded on `main` at the start of the soak, and a reseed
+  must carry over `reviewed`, `retiring_ticket` and `added_date` for rows whose key persists.
 - Rows are **deleted** when debt is paid, so this registry is not append-only. Trend history goes to
   the existing snapshot tool.
 - A moved or renamed function must not resurface as "new". Matching is by file and symbol, not line.

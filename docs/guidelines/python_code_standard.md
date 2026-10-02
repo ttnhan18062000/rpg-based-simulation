@@ -54,7 +54,7 @@ in `pyproject.toml` (`[tool.ruff.lint.mccabe]`, `[tool.ruff.lint.pylint]`, `[too
 The registry rows are matched by file, symbol, tool and rule, never by line, so moving code does
 not make an old violation look new. Do not edit the file by hand: `python3 -m tools.code_health
 tighten` lowers ceilings and removes rows for debt you paid, `delete` removes one row, and a ruff or
-complexipy version bump needs `seed --force`. The match key for each tool is documented in
+complexipy version bump needs `seed --force` (which keeps each surviving row's `reviewed`, `retiring_ticket` and `added_date`). The match key for each tool is documented in
 `tools/code_health/findings.py`.
 
 Where a rule allows a justified exception and also names a tool (E2, M1), the tool cannot read a

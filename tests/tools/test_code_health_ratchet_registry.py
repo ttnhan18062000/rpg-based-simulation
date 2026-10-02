@@ -110,6 +110,23 @@ def test_rows_round_trip_sorted_by_key(tmp_path):
     assert path.read_text().splitlines() == sorted(path.read_text().splitlines(), key=lambda s: (json.loads(s)["file"], json.loads(s)["rule"]))
 
 
+def test_reseed_carries_over_review_data_resets_measurements_and_drops_vanished_keys():
+    earlier = [
+        Row("a.py", None, "ruff", "F401", 5, 5, "2026-01-01", True, "TCK-20260101-X"),
+        Row("gone.py", None, "ruff", "F401", 1, 1, "2026-01-01", False, None),
+    ]
+    reseeded = {
+        r.file: r
+        for r in registry.seed_rows([_f("a.py", "F401", 8), _f("new.py", "F401", 2)], _TODAY, previous=earlier)
+    }
+    assert set(reseeded) == {"a.py", "new.py"}
+    kept = reseeded["a.py"]
+    assert (kept.reviewed, kept.retiring_ticket, kept.added_date) == (True, "TCK-20260101-X", "2026-01-01")
+    assert (kept.value, kept.ceiling) == (8, 8)
+    fresh = reseeded["new.py"]
+    assert (fresh.reviewed, fresh.retiring_ticket, fresh.added_date) == (False, None, "2026-10-02")
+
+
 def test_a_duplication_row_touching_a_same_name_pair_file_links_that_ticket_and_nothing_else_is_linked():
     dup = _f("src/strategy/capacity.py", "duplicate-block", 12, symbol="dup:src/strategy/other.py", tool="jscpd")
     other = _f("src/x.py", "duplicate-block", 9, symbol="dup:src/strategy/cognition_capacity.py", tool="jscpd")
@@ -287,10 +304,36 @@ def test_seed_refuses_to_overwrite_without_force(seeded):
     assert _run(seeded, "seed", *_scan_arg(seeded), "--force") == 0
 
 
-def test_tighten_command_lowers_a_ceiling(seeded):
-    _edit_ruff(seeded, lambda data: data.__delitem__(slice(0, 1)))  # one fewer finding
+def test_tighten_command_lowers_a_ceiling_without_confirmation(seeded):
+    # Duplicate one finding first so the seed has a count of 2, then drop one: lowered, not deleted.
+    _edit_ruff(seeded, lambda data: data.append(dict(data[0])))
+    assert _run(seeded, "seed", *_scan_arg(seeded), "--force") == 0
+    _edit_ruff(seeded, lambda data: data.pop())
     assert _run(seeded, "tighten", *_scan_arg(seeded)) == 0
     assert _run(seeded, "check", *_scan_arg(seeded)) == 0
+
+
+def test_tighten_refuses_to_delete_rows_without_yes_and_writes_nothing(seeded, capsys):
+    before = (seeded / "reg.jsonl").read_text()
+    (seeded / "scan" / "ruff.json").write_text("[]")  # a partial scan: every ruff row looks gone
+    assert _run(seeded, "tighten", *_scan_arg(seeded)) == 2
+    assert (seeded / "reg.jsonl").read_text() == before
+    assert "refusing" in capsys.readouterr().err
+    assert _run(seeded, "tighten", *_scan_arg(seeded), "--yes") == 0
+    assert (seeded / "reg.jsonl").read_text() != before
+
+
+def test_reseed_keeps_review_data_for_keys_that_persist(seeded):
+    path = seeded / "reg.jsonl"
+    rows = registry.load_rows(path, seeded, check_files=False)
+    marked = rows[0]
+    edited = [replace(marked, reviewed=True, retiring_ticket="TCK-20260101-X", added_date="2026-01-01"), *rows[1:]]
+    registry.write_rows(path, edited)
+    assert _run(seeded, "seed", *_scan_arg(seeded), "--force") == 0
+    after = {r.key: r for r in registry.load_rows(path, seeded, check_files=False)}
+    kept = after[marked.key]
+    assert (kept.reviewed, kept.retiring_ticket, kept.added_date) == (True, "TCK-20260101-X", "2026-01-01")
+    assert all(r.reviewed is False for key, r in after.items() if key != marked.key)
 
 
 def test_list_validate_and_unusable_inputs(seeded, capsys):

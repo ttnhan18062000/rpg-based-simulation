@@ -191,13 +191,28 @@ def _retiring_ticket(finding: Finding) -> str | None:
     return SAME_NAME_PAIRS_TICKET if touched & SAME_NAME_PAIR_FILES else None
 
 
-def seed_rows(findings: Iterable[Finding], today: date | None = None) -> list[Row]:
-    """A row for every finding, ceiling equal to its measured value, `reviewed: false`."""
+def seed_rows(
+    findings: Iterable[Finding], today: date | None = None, previous: Iterable[Row] = ()
+) -> list[Row]:
+    """A row for every finding, ceiling equal to its measured value.
+
+    A new key is stamped `today` and `reviewed: false`. A key that is also in `previous` (a reseed)
+    keeps its `reviewed`, `retiring_ticket` and `added_date`, so reseeding after a tool version bump
+    never throws away review work; its value and ceiling are reset to the new measurement. Keys in
+    `previous` that no longer have a finding are dropped.
+    """
     stamp = (today or date.today()).isoformat()
-    rows = [
-        Row(f.file, f.symbol, f.tool, f.rule, f.value, f.value, stamp, False, _retiring_ticket(f))
-        for f in findings
-    ]
+    earlier = {row.key: row for row in previous}
+    rows = []
+    for f in findings:
+        before = earlier.get(f.key)
+        if before is None:
+            rows.append(Row(f.file, f.symbol, f.tool, f.rule, f.value, f.value, stamp, False, _retiring_ticket(f)))
+        else:
+            ticket = before.retiring_ticket or _retiring_ticket(f)
+            rows.append(
+                Row(f.file, f.symbol, f.tool, f.rule, f.value, f.value, before.added_date, before.reviewed, ticket)
+            )
     return sorted(rows, key=_sort_key)
 
 

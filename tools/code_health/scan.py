@@ -5,6 +5,9 @@ through the adapters. They are separate so the ratchet can be tested on captured
 scan can be reused (`python3 -m tools.code_health check --from DIR`).
 
 Tools are found next to the running interpreter first (the project environment), then on PATH.
+ruff ships a `__main__`, so it is started as `python -m ruff`, which always uses the interpreter's
+own environment; complexipy has no `__main__` and is only a console script, so it is looked up
+beside the interpreter, falling back to PATH.
 jscpd is a Node tool: it runs through `npx` at the version pinned by `JSCPD_VERSION` in the
 Makefile, the one place that pin lives.
 """

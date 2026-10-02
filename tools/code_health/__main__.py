@@ -6,7 +6,7 @@
     python3 -m tools.code_health validate
     python3 -m tools.code_health list [--tool T] [--file PREFIX]
     python3 -m tools.code_health delete FILE TOOL RULE [--symbol S]
-    python3 -m tools.code_health tighten [--from DIR]
+    python3 -m tools.code_health tighten [--from DIR] [--yes]
 
 `check` exits 1 if a violation is new or worse than its row, 2 if a tool or the registry is
 unusable, 0 otherwise. This is the entry point behind `make code-health`; nothing in CI runs it.
@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Callable, Sequence
 
@@ -50,9 +51,11 @@ def _cmd_seed(args: argparse.Namespace, root: Path, path: Path) -> int:
     if path.exists() and path.read_text(encoding="utf-8").strip() and not args.force:
         print(f"error: {path} already has rows; use --force to reseed", file=sys.stderr)
         return 2
-    rows = registry.seed_rows(_findings(args, root))
+    previous = registry.load_rows(path, root, check_files=False) if path.exists() else []
+    rows = registry.seed_rows(_findings(args, root), previous=previous)
     registry.write_rows(path, rows)
-    print(f"seeded {len(rows)} rows into {path} (all reviewed: false)")
+    kept = sum(1 for row in rows if row.added_date != date.today().isoformat() or row.reviewed)
+    print(f"seeded {len(rows)} rows into {path}; {len(previous)} earlier rows read, review data kept where keys persist ({kept})")
     return 0
 
 
@@ -86,8 +89,16 @@ def _cmd_delete(args: argparse.Namespace, root: Path, path: Path) -> int:
 
 def _cmd_tighten(args: argparse.Namespace, root: Path, path: Path) -> int:
     rows, changes = registry.tighten(registry.load_rows(path, root, check_files=False), _findings(args, root))
-    registry.write_rows(path, rows)
+    deletions = sum(1 for change in changes if change.startswith("deleted"))
     print("\n".join(changes) or "nothing to tighten")
+    if deletions and not args.yes:
+        print(
+            f"refusing: {deletions} rows would be deleted as gone. A stale or partial scan directory looks "
+            "the same as paid-off debt; check the list above, then re-run with --yes. Nothing was written.",
+            file=sys.stderr,
+        )
+        return 2
+    registry.write_rows(path, rows)
     return 0
 
 
@@ -110,7 +121,9 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "check":
             sp.add_argument("--limit", type=int, default=ratchet.DEFAULT_REPORT_LIMIT)
         if name == "seed":
-            sp.add_argument("--force", action="store_true")
+            sp.add_argument("--force", action="store_true", help="reseed an existing registry (keeps review data)")
+        if name == "tighten":
+            sp.add_argument("--yes", action="store_true", help="confirm deleting rows whose violation is gone")
     sub.add_parser("scan").add_argument("--out", type=Path)
     sub.add_parser("validate")
     lister = sub.add_parser("list")
