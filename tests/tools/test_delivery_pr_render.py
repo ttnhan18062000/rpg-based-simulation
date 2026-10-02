@@ -636,7 +636,7 @@ def test_known_gap_two_tickets_render_as_separate_tagged_entries_not_run_on(tmp_
 # TCK-20260927-PR-RENDER-NO-RECORDED-TICKET-EXCLUSION
 # ---------------------------------------------------------------------------
 
-def _three_ticket_fixture(tmp_path, subdir="tickets"):
+def _three_ticket_fixture(tmp_path, subdir="tickets", b_changed=False):
     """Three discovered tickets, one of which (B) is the 'phantom' shape from the real PR #251
     finding: named in a commit subject but never changed on the branch (its file still exists,
     e.g. already merged in a prior PR)."""
@@ -651,7 +651,11 @@ def _three_ticket_fixture(tmp_path, subdir="tickets"):
         ]),
         # B's file exists (found by find_ticket_file) but was never actually changed on this
         # branch -- the real PR #251 shape.
-        _git_diff_rule(["tickets/TCK-20260924-A.md", "tickets/TCK-20260924-C.md"]),
+        _git_diff_rule(
+            ["tickets/TCK-20260924-A.md"]
+            + (["tickets/TCK-20260924-B.md"] if b_changed else [])
+            + ["tickets/TCK-20260924-C.md"]
+        ),
     ])
     return tickets_root, runner
 
@@ -679,8 +683,9 @@ def test_ac1_excluded_ticket_omitted_from_title_and_all_five_sections(tmp_path):
 def test_ac1_isolated_diff_shape_matches_the_bug_that_found_this(tmp_path):
     """Same isolated-diff method that found the original bug: compare a fully-excluded render
     against the untouched full render and confirm exactly the expected sections differ (because
-    the ticket count genuinely changed), not more and not fewer."""
-    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    the ticket count genuinely changed), not more and not fewer. B is a changed ticket here: an
+    unchanged (cited-only) one is now left out automatically, see the cited-only tests below."""
+    tickets_root, runner = _three_ticket_fixture(tmp_path, b_changed=True)
     full = pr_render.render(tickets_root=tickets_root, run_command=runner)
     excluded = pr_render.render(
         tickets_root=tickets_root, run_command=runner,
@@ -744,7 +749,7 @@ def test_ac3_check_with_no_operator_flags_reproduces_recorded_exclusion_from_liv
 
 
 def test_ac4_excluding_a_ticket_not_in_the_discovered_set_is_reported(tmp_path):
-    tickets_root, runner = _three_ticket_fixture(tmp_path)
+    tickets_root, runner = _three_ticket_fixture(tmp_path, b_changed=True)
     result = pr_render.render(
         tickets_root=tickets_root, run_command=runner,
         exclusions={"TCK-99999999-NOT-DISCOVERED": "typo'd id"},
@@ -899,3 +904,71 @@ def test_a_ticket_directly_under_the_root_stays_listed(tmp_path):
     runner = FakeRunner([_git_log_rule(["TCK-20260924-FLAT: x"]), _git_diff_rule(["tickets/TCK-20260924-FLAT.md"])])
     result = pr_render.render(tickets_root=tickets_root, run_command=runner)
     assert "TCK-20260924-FLAT" in result["body"] and result["warnings"] == []
+
+
+# ---------------------------------------------------------------------------
+# A ticket only CITED by a commit subject, and a branch that closes no ticket
+# ---------------------------------------------------------------------------
+
+def test_a_ticket_cited_but_not_changed_is_left_out_of_closes_automatically(tmp_path):
+    tickets_root, runner = _three_ticket_fixture(tmp_path)  # B is cited-only (the PR #251 shape)
+    result = pr_render.render(tickets_root=tickets_root, run_command=runner)
+    assert "(2 tickets)" in result["title"]
+    assert "TCK-20260924-B" not in result["body"].split("Closes:")[-1]
+    assert any("TCK-20260924-B" in w and "cited, not closed" in w for w in result["warnings"])
+
+
+def _docs_only_runner(subjects):
+    return FakeRunner([
+        _git_log_rule(subjects),
+        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "stored_artifacts/X/evidence.jsonl"]),
+    ])
+
+
+def test_a_docs_only_branch_citing_a_closed_ticket_renders_a_ticketless_body(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    (tickets_root / "done").mkdir(parents=True)
+    _write_ticket(tickets_root / "done", "TCK-20260924-A", "ai", "Already closed upstream")
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=_docs_only_runner(["TCK-20260924-A: follow-up evidence"]),
+        theme="Record the derived-stat ownership evidence", scope="ai", why="Evidence for a closed ticket.",
+    )
+    assert result["title"] == "ai: Record the derived-stat ownership evidence (no tickets)"
+    body = result["body"]
+    assert body.rstrip().endswith("Closes: (none)")
+    assert "TCK-20260924-A" not in body.split("Closes:")[-1]
+    assert "- docs/world_rules/foundations/ (1 file)" in body and "- stored_artifacts/X/ (1 file)" in body
+    assert "Evidence for a closed ticket." in body
+
+
+def test_a_ticketless_branch_without_theme_scope_and_why_says_what_to_pass(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    result = pr_render.render(tickets_root=tickets_root, run_command=_docs_only_runner([]))
+    assert result["title"] is None and result["body"] is None
+    assert any("--theme" in w and "--scope" in w and "--why" in w for w in result["warnings"])
+
+
+def test_a_ticketless_branch_with_an_unregistered_scope_is_reported_not_defaulted(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    result = pr_render.render(
+        tickets_root=tickets_root, run_command=_docs_only_runner([]),
+        theme="t", scope="not-a-layer", why="w",
+    )
+    assert result["title"] == "not-a-layer: t (no tickets)"
+    assert any("not-a-layer" in w and "not in" in w for w in result["warnings"])
+
+
+def test_check_matches_a_ticketless_body_when_given_the_same_flags(tmp_path):
+    tickets_root = tmp_path / "tickets"
+    tickets_root.mkdir()
+    kw = dict(theme="Record evidence", scope="ai", why="Because.")
+    rendered = pr_render.render(tickets_root=tickets_root, run_command=_docs_only_runner([]), **kw)
+    runner = FakeRunner([
+        (lambda cmd: cmd[:2] == ["gh", "pr"],
+         CommandResult(0, json.dumps({"title": rendered["title"], "body": rendered["body"]}), "")),
+        _git_log_rule([]),
+        _git_diff_rule(["docs/world_rules/foundations/state-ownership.md", "stored_artifacts/X/evidence.jsonl"]),
+    ])
+    assert pr_render.check_against_live(run_command=runner, tickets_root=tickets_root, **kw)["matches"] is True
