@@ -99,11 +99,13 @@ colour (12, the rest from shading three materials). Test-side mistakes fixed: a 
 without rounding tolerance, a vacuous `or >= 0` assertion, an uppercase sprite name, a wrong remap count.
 
 ## Test Summary
-`test_highlevel.py`: 49 passed, run in a private scratch copy made of the main checkout's coherent
-`adapter.py` + `lua/ops.lua` and this ticket's three files. Not yet run green in the shared worktree: at the
-time of writing its `lua/ops.lua` did not match `LUA_SHA256` (hardening ticket mid-edit), so every
-Aseprite-backed test there fails closed on the pin. Visual check: a 16x16 knight (flat vs shaded+outlined),
-three ramps and a dither gradient were rendered and inspected. No mutation check done yet (open AC).
+`.venv/bin/python -m pytest experiments/aseprite_mcp -q -p no:cacheprovider` in the shared worktree: **209 passed, 0 skipped**
+(57 in `test_highlevel.py`; the rest belong to the hardening ticket and the stdio file). Mutation checks were run by
+asset-implementer's independent review and are listed under Review findings: shading direction, dither threshold, selout colour
+reuse, ramp base/neutral hue, tool registration and seven stroke mutants killed; two stroke mutants survive and are equivalent.
+Visual check by the author: a 16x16 knight (flat vs shaded and outlined), three ramps and a dither gradient were rendered and inspected.
+History: this section first recorded 49 passed in a private scratch copy, before the shared worktree's Lua pin was coherent and
+before any mutation check; that state is superseded by the figures above.
 
 ## Files Changed
 New (asset-planner): experiments/aseprite_mcp/highlevel.py, highlevel_tools.py, test_highlevel.py, TECHNIQUE_GUIDE.md.
