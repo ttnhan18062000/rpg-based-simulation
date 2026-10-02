@@ -405,7 +405,29 @@ is a disagreement rate over flagged pairs, **not** a frequency of occurrence.
 _(not started)_
 
 ## Files Changed
-_(not started)_
+
+Implementation has not started. The entries below are **docs this ticket's branch already carries and
+that its commit subjects already name** — recorded here because `done_checker`'s
+`docs_to_update_coverage` reverse check correctly flagged them as touched-but-unrecorded, and the honest
+fix is to make the record true rather than to quiet the check.
+
+**Not part of the dispatch fix.** They are the owner-decision work that rode on this branch because the
+branch needed a ticket file for `pr_render` to produce a body at all (see
+`feedback_pr_render_closes_includes_filed_tickets` — a ticketless branch cannot be PR'd). Listing them
+so a reviewer is not surprised by them in the diff:
+
+- `docs/plans/systemic_world/owner_decision_memo.md` — owner decision 7 (row 7, foundation before
+  features) and decision 8 (row 8, perception authority). **Row 7 and row 8 are the only copy of their
+  definitions.** Verbatim text authored by `world-rule-catalog-design`.
+- `docs/plans/systemic_world/roadmap.md` — the §8 decision-7 superseding note, the §8 approved work
+  order, and the §10 count and list. Verbatim, same author.
+- `docs/plans/simulation_semantic_control_plane/rollout_plan.md` — annotation of the explicit non-goal
+  that decision 7 partly supersedes ("Do not stop normal RPG-core engineering work until the mapping is
+  complete"). Written by this session, not the rule owner, and it is an SCP plan doc this session owns.
+
+Docs this ticket's **own fix** will change, per `plan.md` step 4 — not yet touched:
+- `docs/mechanics/04_strategic_cognition.md`
+- `docs/parity_ledger/strategic_cognition.yaml`
 
 ## Completion Summary
 _(not started)_
