@@ -22,6 +22,8 @@ EXPECTED_TOOLS = {
     # high-level layer (server/highlevel_tools.register)
     "make_ramp", "shade", "dither", "stroke", "auto_outline", "remap_palette", "lint_sprite",
     "ascii_view",
+    # handoff (server/handoff_tools)
+    "export_handoff",
 }
 
 

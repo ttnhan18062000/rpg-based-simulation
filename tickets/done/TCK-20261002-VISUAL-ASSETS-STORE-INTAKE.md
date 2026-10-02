@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261002-VISUAL-ASSETS-STORE-INTAKE
-phase: inprogress
+phase: done
 date: 2026-10-02
 tags: [architecture, mcp, testing, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, mcp, testing, documentation]
 Candidate handoff from the drawing tools and independent intake into quarantine, with local review export
 
 ## Status
-INPROGRESS
+DONE
 
 ## Tier
 standard
@@ -82,23 +82,23 @@ git-tracked file. Blocked by `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`. Same 
 - Any write under the tracked part of `visual_assets/catalog/`.
 
 ## Acceptance Criteria
-- [ ] A handoff built from a real revision passes intake end to end (integration, needs Aseprite).
-- [ ] A hand-built `MANUAL` package with `NOT_APPLICABLE`/`UNAVAILABLE` provenance passes under the same policy
+- [x] A handoff built from a real revision passes intake end to end (integration, needs Aseprite).
+- [x] A hand-built `MANUAL` package with `NOT_APPLICABLE`/`UNAVAILABLE` provenance passes under the same policy
       as a `CAP_A` package (no producer-specific branch in the validator).
-- [ ] Each of these is `QUARANTINED` with its own finding code: source hash mismatch, preview hash mismatch,
+- [x] Each of these is `QUARANTINED` with its own finding code: source hash mismatch, preview hash mismatch,
       wrong magic, header size mismatch, width/height/frames/layers/tags mismatch, over-`MAX_DIM`, truncated
       chunk, missing assertion, `WITHDRAWN` licence, unknown field or duplicate key in `package.json`.
-- [ ] Each of these is refused before any byte is copied, and leaves no quarantine directory: symlinked file,
+- [x] Each of these is refused before any byte is copied, and leaves no quarantine directory: symlinked file,
       symlinked package directory entry, extra file, sub-directory, oversize file, FIFO.
-- [ ] After every intake and review test, the only paths written are under the patched `QUARANTINE_ROOT` and
+- [x] After every intake and review test, the only paths written are under the patched `QUARANTINE_ROOT` and
       `REVIEW_ROOT`; the tracked catalog tree and the experiment workspace are byte-identical to before.
-- [ ] Re-submitting an identical package returns the same `intake_id` and does not modify the existing result;
+- [x] Re-submitting an identical package returns the same `intake_id` and does not modify the existing result;
       an existing `intake_result.json` is never overwritten.
-- [ ] `review` refuses a `QUARANTINED` or unknown intake, and refuses when staged bytes no longer match the
+- [x] `review` refuses a `QUARANTINED` or unknown intake, and refuses when staged bytes no longer match the
       recorded hashes.
-- [ ] Boundary test: `drawing` still cannot reference the catalog; `store` still does not import `drawing`.
-- [ ] The MCP tool list contains `export_handoff` and no adopt, build, release, revoke or gc tool.
-- [ ] `pytest tests/visual_assets -m "not slow and not extra_slow"` green without Aseprite; integration green
+- [x] Boundary test: `drawing` still cannot reference the catalog; `store` still does not import `drawing`.
+- [x] The MCP tool list contains `export_handoff` and no adopt, build, release, revoke or gc tool.
+- [x] `pytest tests/visual_assets -m "not slow and not extra_slow"` green without Aseprite; integration green
       with it.
 
 ## Related Tickets
@@ -129,13 +129,46 @@ git-tracked file. Blocked by `TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`. Same 
 - `created_at` is supplied by the caller (the CLI reads the clock); library code never does.
 
 ## Implementation Notes
-(to be filled)
+Built in three commits plus planner-requested changes; staging artifacts are in `stored_artifacts/TCK-20261002-VISUAL-ASSETS-STORE-INTAKE/`.
+
+- **Store side** (`b058a435`, `5cc836ec`): `store/intake/{quarantine,aseprite,png,validator,service}.py`, `store/cli.py`, `store/__main__.py`. All three files are read into
+  memory through an `O_NOFOLLOW` directory descriptor and verified before anything is written; the stage is written to a `.tmp-*` sibling and renamed. One policy for every
+  producer class; findings carry only numbers, hash prefixes and fixed tokens, never producer text.
+- **Pinned template change** (`40d16d74`, its own commit, user decision option (a)): one read-only line in `summary()` of `ops.lua` plus the re-pin; `cels` and
+  `aseprite_version` now appear in every sprite summary. The first attempt at this edit was blocked by the session permission check and was only made after the user approved.
+- **Drawing side**: `api.read_revision`, `drawing/handoff.py` (`build_handoff`), `drawing/server/handoff_tools.py` (`export_handoff`; 16 tools, no gate tool).
+- `needs_aseprite` marker and skip hook moved from `tests/visual_assets/drawing/conftest.py` to `tests/visual_assets/conftest.py`.
+
+### Where ticket and reality differed (all reported to asset-planner)
+1. Staged file is `package.json` (my ticket-2 proposal said `handoff.json`); `IntakeResult.candidate_id` may be `UNAVAILABLE` for an unparseable package (QUARANTINED only).
+2. The validator also verifies `cel_count`, `palette_size`, `source_format`, walking all frames' chunk headers (ticket said first frame, counts for layers/tags only). The package has no
+   colour-depth claim, so colour depth is a support policy (32-bit RGBA only).
+3. **Palette size** equals what Aseprite 1.3.18.6 reports after loading, verified by round-tripping 14 palette setups through the real binary, except an all-opaque-black stored palette:
+   Aseprite rebuilds it from the pixels (1 + distinct opaque colours), which needs pixel decoding, so intake reports `PALETTE_UNVERIFIABLE` and quarantines it (only a never-edited r0001).
+4. `intake_id` rule **changed by asset-planner 2026-10-03** (hash over all three file hashes; collision guard `intake_id_collision`); staging made atomic; `PREVIEW_OUT_OF_BOUNDS` added.
+5. Added `producer_state` (ACTIVE/QUARANTINED/REVOKED) per planner; `producer_validation = FAILED` also quarantines; the unsupported-limitation tokens and preview bounds are provisional (`U-05`).
+6. The preview-to-source gap (a human reviews the preview but adopts the source) is recorded as a known gap in `store_contract.md`; ticket 5 carries the fix (added by asset-planner).
+7. One existing test changed for a legitimate reason: the unknown-store-layer planted test now uses `adoption` because `intake` became a known layer.
 
 ## Test Summary
-(to be filled)
+Run with the main checkout's venv (the system python lacks `mcp`).
+- `tests/visual_assets` + static + architecture + docs: 888 passed, 2 skipped, 1 xfailed. With `ASEPRITE_MCP_BINARY` pointing at a missing binary (what CI sees): 462 passed, 192 skipped,
+  so every new store unit test and the store/handoff unit tests run in CI; the `needs_aseprite` integration tests run locally.
+- Real Aseprite is the oracle: parser facts equal Aseprite's own counts on drawing-tool revisions, on every revision of an edited sprite, on 14 palette setups and on the synthetic builder files;
+  the Lua cel count equals the store reader's at every revision of a sprite with an empty layer and a multi-frame layer; a real handoff passes intake end to end; an untouched r0001 is
+  quarantined with `PALETTE_UNVERIFIABLE` only; a WITHDRAWN licence is packaged but quarantined.
+- Mutation checks: 21 mutants of the store intake guards, 6 of the R1-R3 changes, 8 of the handoff builder, each failing the intended test (survivors found along the way led to new tests:
+  special files never opened, frame-header check, temp-directory cleanup, post-read hash re-check).
+- Not run: the full suite; `tests/tools/test_knowledge_search.py::TestLiveQueryDocsMechanics` (known local timeout).
 
 ## Files Changed
-(to be filled)
+Added: `visual_assets/store/intake/*`, `visual_assets/store/{cli,__main__}.py`, `visual_assets/drawing/{handoff.py,server/handoff_tools.py}`, `tests/visual_assets/conftest.py`,
+`tests/visual_assets/store/{builders.py,unit/test_{intake_validator,quarantine,intake_service,cli}.py,integration/test_real_aseprite.py}`,
+`tests/visual_assets/drawing/{unit/test_handoff_unit.py,integration/test_handoff.py,integration/test_summary_facts.py}`.
+Changed: contracts (`handoff`, `intake`, `base`, `__init__`), `errors.py`, `config.py`, `drawing/{api.py,config.py (pin),backend/lua/ops.lua (one line),server/__init__.py}`,
+`tests/visual_assets/{test_boundaries.py,drawing/conftest.py,drawing/stdio_support.py,drawing/test_server_stdio.py,drawing/integration/test_server_stdio.py}`, fixtures `package.json` naming,
+docs (`store_contract.md`, ADR, plan README, `drawing_tools.md`, READMEs), tickets 4 and 5 (planner additions), `STORE_FORMAT`.
+No `src/`, `frontend/`, requirements or pyproject change.
 
 ## Completion Summary
-(open)
+A candidate can be packaged from one exact drawing revision, staged into a bounded quarantine, judged by an independent validator that is cross-checked against real Aseprite, and exported to a local review area, without adopting anything or writing a tracked file. The intake id, atomic staging and the pinned-template change were done as the planner and user decided; palette size is exact except where Aseprite itself makes it depend on pixels, which is quarantined rather than guessed.

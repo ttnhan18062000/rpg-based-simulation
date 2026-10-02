@@ -5,6 +5,7 @@ Everything below `new_sprite` is what callers (the MCP server, the high-level co
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -182,6 +183,18 @@ def render_filmstrip(name: str, revision: str | None = None, scale: int = 4) -> 
     return export_png(
         name, revision, [], ["--sheet", "/job/out.png", "--sheet-type", "horizontal"], scale
     )
+
+
+def read_revision(name: str, revision: str) -> tuple[str, bytes, str]:
+    """The exact bytes of one named revision (no default), re-checked against its content-hash sidecar."""
+    check_name(name)
+    if revision is None:
+        raise AdapterError("a revision is required (r0001 style)")
+    rev, path, digest = revisions.resolve_revision(name, revision)
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != digest:
+        raise AdapterError(f"{name}/{rev} changed while being read; refusing to use it")
+    return rev, data, digest
 
 
 def list_sprites() -> list[dict]:

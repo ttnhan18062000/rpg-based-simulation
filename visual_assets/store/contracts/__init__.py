@@ -8,6 +8,7 @@ from visual_assets.store.contracts.handoff import CandidateHandoffPackage
 from visual_assets.store.contracts.intake import IntakeResult
 from visual_assets.store.contracts.release import ReleaseCandidateManifest
 from visual_assets.store.contracts.source import SourceRecord
+from visual_assets.store.errors import ContractError
 
 RECORD_TYPES = (
     CandidateHandoffPackage,
@@ -20,4 +21,4 @@ RECORD_TYPES = (
     VisualKeyRegistry,
 )
 
-__all__ = ["RECORD_TYPES", "canonical_json", "parse_record", *(c.__name__ for c in RECORD_TYPES)]
+__all__ = ["RECORD_TYPES", "ContractError", "canonical_json", "parse_record", *(c.__name__ for c in RECORD_TYPES)]

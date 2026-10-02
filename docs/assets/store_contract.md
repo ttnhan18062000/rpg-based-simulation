@@ -49,6 +49,7 @@ nothing in this foundation activates anything at runtime (`AM-M5`-`M7` are out o
 - Identities with no normalisation: `VisualKey`, eight opaque id types, `SourceRevision`, `FileHash` (`sha256:`), `PixelHash`
   (`pixels-v1:`; the algorithm is child 5), `UtcTimestamp`.
 - Registry loader: duplicate YAML keys, anchors, alias problems and the reserved `fixture.*` namespace are rejected; nothing registers dynamically.
+- Handoff builder (drawing side): `export_handoff` writes a candidate directory inside the experiment workspace (see `docs/assets/drawing_tools.md`); it never writes the store.
 - Intake (store side; `python -m visual_assets.store intake|review|list|show`): the package directory is opened without following symlinks and read
   into memory first (refused before any byte is copied, leaving no quarantine directory, for a symlink, extra file or sub-directory, oversize file,
   FIFO or hard-linked file; these are `StageError`s, not findings). The independent validator then judges the bytes with one policy for every

@@ -76,3 +76,24 @@ def test_high_level_tools_work_over_the_protocol(tmp_path):
     assert "#808080" in body  # the base colour is kept in the ramp
     assert bad.isError and text(bad)
     assert not lint.isError and text(lint)
+
+
+def test_export_handoff_over_stdio_writes_a_candidate_directory_and_nothing_else(tmp_path):
+    async def go():
+        async with session(tmp_path / "ws") as s:
+            await s.call_tool("new_sprite", {"name": "s", "width": 8, "height": 8})
+            edited = await s.call_tool("apply_ops", {"name": "s", "base_revision": "r0001", "ops": [
+                {"op": "pixels", "pixels": [{"x": 1, "y": 1, "color": "#ff0000"}]}]})
+            ok = await s.call_tool("export_handoff", {"name": "s", "revision": data(edited)["revision"],
+                                                       "licence_state": "CLEARED", "licence_evidence_ref": "note"})
+            again = await s.call_tool("export_handoff", {"name": "s", "revision": data(edited)["revision"],
+                                                          "licence_state": "CLEARED", "licence_evidence_ref": "note"})
+            return ok, again
+
+    ok, again = run(go())
+    assert not ok.isError and data(ok) == data(again)
+    result = data(ok)
+    directory = tmp_path / "ws" / "handoffs" / result["candidate_id"]
+    assert sorted(p.name for p in directory.iterdir()) == ["package.json", "preview.png", "source.aseprite"]
+    assert result["directory"] == str(directory) and "does not adopt" in result["next"]
+    assert sorted(p.name for p in (tmp_path / "ws").iterdir() if p.name != ".jobs") == ["handoffs", "sprites"]

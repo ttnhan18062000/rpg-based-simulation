@@ -241,7 +241,7 @@ store.*                     ->  contracts, config, errors; build -> drawing.back
 
 1. **Foundation init** (`TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT`): move and restructure the drawing tools into `visual_assets/drawing/`, tests into `tests/visual_assets/drawing/`, no behaviour change; boundary test; CI step; `.mcp.json` + launcher; `store/` and `catalog/` skeletons (READMEs and package markers only, no logic); docs and ADR; plan-package status updates.
 2. **Store contracts and identities** (`visual_assets/store/contracts`, `identities`, `catalog/registry`), pure, fully CI-tested. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-CONTRACTS`).
-3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. Store side **built** (quarantine, validator, review, `intake` / `review` / `list` / `show` CLI); drawing-side `export_handoff` pending (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`).
+3. **Intake**: handoff package builder in the drawing tools, quarantine, validator, `IntakeResult`. **Built** (`TCK-20261002-VISUAL-ASSETS-STORE-INTAKE`): quarantine, validator, review, the `intake` / `review` / `list` / `show` CLI, and the drawing-side `export_handoff` (16 tools).
 4. **Adoption and provenance**: human-gated `adopt`, `revoke`, records, audit reconstruction test.
 5. **Build and release candidate**: sandboxed export, canonical hash, manifest, `verify`, `gc`.
 6. **Store docs and MCP read-only store tools**: `docs/assets/store_contract.md` completed, `store_list` / `store_show` / `submit_candidate` on the server.
