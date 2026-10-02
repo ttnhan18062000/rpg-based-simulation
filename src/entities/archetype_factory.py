@@ -113,6 +113,7 @@ class ArchetypeEntityFactory:
                 alive=spawn.initial_alive,
                 action_style=get_action_style_for_bravery(personality.bravery),
             )
+            .spawn_combat_stats_are_final()
         )
 
         entity = builder.build()

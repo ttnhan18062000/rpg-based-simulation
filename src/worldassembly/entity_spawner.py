@@ -151,5 +151,6 @@ class WorldEntitySpawner:
                 alive=True,
                 action_style=get_action_style_for_bravery(personality.bravery),
             )
+            .spawn_combat_stats_are_final()
             .build()
         )

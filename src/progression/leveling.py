@@ -82,12 +82,13 @@ class LevelingService:
         base_hp: int = 100,
         base_atk: int = 10,
         base_def: int = 5,
-        base_evasion: float = 0.05
+        base_evasion: float = 0.05,
+        permanent_max_hp_bonus: int = 0
     ) -> Dict[str, Any]:
         """
         Derive combat stats from attributes, equipment, and passive skills.
         VERIFIED v2: stat_recalculation_parity
-        HP: base_hp + (vitality * 2) + (endurance * 0.5) + gear_hp
+        HP: base_hp + (vitality * 2) + (endurance * 0.5) + gear_hp + permanent_max_hp_bonus
         ATK: base_atk + (strength * 0.5) + gear_atk
         DEF: base_def + (vitality * 0.3) + gear_def
         Evasion: base_evasion + (agility * 0.001) + gear_evasion + skill_passive
@@ -97,10 +98,12 @@ class LevelingService:
         from src.core.state import EquipSlot
         
         # 1. Base from Attributes
-        max_hp = base_hp + (attributes.vitality * 2) + int(attributes.endurance * 0.5)
-        atk = base_atk + int(attributes.strength * 0.5)
-        def_stat = base_def + int(attributes.vitality * 0.3)
-        evasion = base_evasion + (attributes.agility * 0.001)
+        from src.core.derived_stats import attribute_stat_terms
+        hp_term, atk_term, def_term, evasion_term = attribute_stat_terms(attributes)
+        max_hp = base_hp + hp_term + permanent_max_hp_bonus
+        atk = base_atk + atk_term
+        def_stat = base_def + def_term
+        evasion = base_evasion + evasion_term
         readiness_speed = max(1.0, 10.0 + (attributes.agility - 5) * 1.0)
         atk_range = 1
         

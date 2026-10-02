@@ -352,7 +352,8 @@ class SkillScalingService:
         base_def: int = 5,
         base_evasion: float = 0.05,
         active_breakthroughs: Optional[Set[str]] = None,
-        class_id: Optional[str] = None
+        class_id: Optional[str] = None,
+        permanent_max_hp_bonus: int = 0
     ) -> Dict[str, Any]:
         """
         Full effective stat recomputation:
@@ -370,7 +371,8 @@ class SkillScalingService:
             effective_attributes, equipment, learned_skills, traits,
             current_role=current_role,
             base_hp=base_hp, base_atk=base_atk, base_def=base_def,
-            base_evasion=base_evasion
+            base_evasion=base_evasion,
+            permanent_max_hp_bonus=permanent_max_hp_bonus
         )
 
         # Apply wound penalties

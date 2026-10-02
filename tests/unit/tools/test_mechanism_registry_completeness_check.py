@@ -188,7 +188,7 @@ def test_wider_scope_every_wired_candidate_has_a_recorded_disposition():
 
 def test_wider_scope_numbers_pinned():
     wider = build_report(_real_registry_data()).wider
-    assert wider["scope_files"] == 295
+    assert wider["scope_files"] == 296
     assert wider["unbound_files"] == 233  # files no implemented_by entry names
     assert wider["candidates"] == 74  # unbound mechanism-shaped classes, wired or not
     assert len(wider["wired"]) == 21  # ... of which referenced from another top-level package

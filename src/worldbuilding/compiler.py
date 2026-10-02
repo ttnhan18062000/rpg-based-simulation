@@ -673,6 +673,7 @@ class WorldCompiler:
                             readiness=readiness,
                             action_style=get_action_style_for_bravery(personality.bravery)
                         )
+                        .spawn_combat_stats_are_final()
                         .lifecycle(active=True)
                     )
                     entities[next_entity_id] = builder.build()
