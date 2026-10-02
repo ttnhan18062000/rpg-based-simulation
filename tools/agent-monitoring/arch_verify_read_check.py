@@ -31,6 +31,10 @@ Limits (do not over-read the output)
    the test file's repo-relative path and reach into the tests/ directory.
 3. Only the Read tool leaves a Read row. A reviewer that read a file through Bash (`cat`, `grep`,
    `sed -n`) leaves a Bash row, so NOT-READ means "no Read-tool row", not "never looked at".
+5. The run sidecar (`.claude/current_run`) is shared across concurrent sessions, so a row tagged with this ticket's
+   run_id could in principle come from another session. READ therefore means "a Read row tagged with this run_id
+   and phase names the file", not proof that it came from this reviewer run. NOT-READ on its own never decides
+   anything: it means only "no Read-tool row", and the reviewer's own output still has to show it read the tests.
 4. Only the production reviewer (`agent == architecture-reviewer`) counts; the advisory shadow
    reviewer's rows (`architecture-reviewer-shadow`) are ignored.
 
@@ -57,7 +61,9 @@ CUT = 120  # post_tool_hook._input_summary's cap for a Read's file_path
 
 
 def changed_test_files(base_ref: str, run=subprocess.run) -> list[str]:
-    out = run(["git", "diff", "--name-only", f"{base_ref}...HEAD"], capture_output=True, text=True)
+    """Test files the branch added or modified. Deleted files are excluded (--diff-filter=d): a deleted file cannot be
+    read, so it would be a false NOT-READ; a renamed file is listed under its new path."""
+    out = run(["git", "diff", "--name-only", "--diff-filter=d", f"{base_ref}...HEAD"], capture_output=True, text=True)
     if out.returncode != 0:
         raise RuntimeError(f"git diff failed: {out.stderr.strip()}")
     return sorted({ln.strip() for ln in out.stdout.splitlines() if ln.strip().startswith("tests/")})

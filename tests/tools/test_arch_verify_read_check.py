@@ -96,6 +96,7 @@ def test_changed_test_files_keeps_only_tests_paths_and_uses_a_three_dot_diff():
 
     assert m.changed_test_files("origin/main", run=fake) == ["tests/a.py", "tests/b.py"]
     assert seen["cmd"][-1] == "origin/main...HEAD"
+    assert "--diff-filter=d" in seen["cmd"]
 
 
 def test_changed_test_files_raises_on_a_failed_diff():
@@ -120,5 +121,25 @@ def test_cli_is_report_only_and_prints_each_class(tmp_path):
 
 def test_docstring_states_the_limits():
     doc = m.__doc__
-    for needle in ("Bash row", "writeSidecar", "cut to 120", "UNATTRIBUTED", "NOT-READ", "shadow"):
+    for needle in ("Bash row", "writeSidecar", "cut to 120", "UNATTRIBUTED", "NOT-READ", "shadow", "shared across concurrent sessions"):
         assert needle in doc, needle
+
+
+def test_a_deleted_test_file_is_not_listed_but_an_added_and_a_renamed_one_are(tmp_path):
+    """Real git: a deleted test file cannot be read, so it must not become a false NOT-READ."""
+    def git(*a):
+        subprocess.run(["git", *a], cwd=tmp_path, check=True, capture_output=True,
+                       env={"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+                            "GIT_COMMITTER_EMAIL": "t@t", "PATH": "/usr/bin:/bin"})
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "keep.py").write_text("keep\n" * 20)
+    (tmp_path / "tests" / "gone.py").write_text("gone\n" * 20)
+    (tmp_path / "tests" / "old_name.py").write_text("rename me\n" * 20)
+    git("init", "-q", "-b", "main"); git("add", "-A"); git("commit", "-q", "-m", "base")
+    git("checkout", "-q", "-b", "work")
+    (tmp_path / "tests" / "gone.py").unlink()
+    git("mv", "tests/old_name.py", "tests/new_name.py")
+    (tmp_path / "tests" / "added.py").write_text("added\n")
+    git("add", "-A"); git("commit", "-q", "-m", "change")
+    out = m.changed_test_files("main", run=lambda cmd, **kw: subprocess.run(cmd, cwd=tmp_path, **kw))
+    assert out == ["tests/added.py", "tests/new_name.py"]
