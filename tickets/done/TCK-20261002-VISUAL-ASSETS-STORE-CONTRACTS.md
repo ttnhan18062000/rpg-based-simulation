@@ -196,6 +196,12 @@ record plan, investigation and test plan.
    With the new "unknown store layer fails" rule that path now reports the unknown layer `build`, so the assertion is narrowed to the rule
    the test is about (the drawing-import exception). The unknown-layer behaviour has its own planted test; child 5 adds the `build` row.
 
+### Review follow-up (asset-planner, finding F1)
+The free-text pattern let control characters through at the first and last position (`\S` matches them). Fixed in a separate commit: no
+character may be a control character in any position, and Unicode categories `Cc`, `Cf` (U+200B, U+202E, U+FEFF, ...), `Zl` and `Zp` are
+rejected by an `AfterValidator` using `unicodedata` (applies to `BoundedText`, `PersonText` and therefore every provenance value). Ordinary
+non-ASCII text and inner spaces still pass; edge whitespace, including U+00A0, is still rejected, never trimmed.
+
 ## Test Summary
 Run with the main checkout's venv (`/home/vboxuser/Work/rpg-based-simulation/.venv`; the system python lacks `mcp`).
 - `tests/visual_assets/store/unit/` (identities, records, registry): 184 + 18 passed, no Aseprite.

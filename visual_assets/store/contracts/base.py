@@ -7,6 +7,7 @@ coerce (a list is not silently accepted for a tuple field, a string never become
 from __future__ import annotations
 
 import json
+import unicodedata
 from enum import Enum
 from typing import Annotated, Any, TypeVar, get_args
 
@@ -17,7 +18,12 @@ from visual_assets.store.errors import ContractError
 
 SCHEMA_VERSION = 1
 
-_TEXT_PATTERN = r"^\S(?:[^\x00-\x1f\x7f]*\S)?$"  # non-empty, no control characters, no edge whitespace
+# non-empty, no edge whitespace, and no control character in ANY position (including first and last)
+_TEXT_PATTERN = r"^[^\x00-\x1f\x7f\s](?:[^\x00-\x1f\x7f]*[^\x00-\x1f\x7f\s])?$"
+# Unicode categories never allowed anywhere in free text: control (also C1), format (U+200B, U+202E, U+FEFF, ...),
+# line and paragraph separators. A name or reason is audit evidence; invisible or direction-changing characters
+# would let two different strings look identical.
+_FORBIDDEN_CATEGORIES = frozenset({"Cc", "Cf", "Zl", "Zp"})
 
 
 class Evidence(str, Enum):
@@ -44,14 +50,21 @@ class IntakeVerdict(str, Enum):
     QUARANTINED = "QUARANTINED"
 
 
+def _plain_text(value: str) -> str:
+    for ch in value:
+        if unicodedata.category(ch) in _FORBIDDEN_CATEGORIES:
+            raise ValueError(f"text contains a forbidden character (U+{ord(ch):04X})")
+    return value
+
+
 def _not_evidence_marker(value: str) -> str:
     if value in {m.value for m in Evidence}:
         raise ValueError("an evidence marker is not a value")
     return value
 
 
-BoundedText = Annotated[str, StringConstraints(max_length=256, pattern=_TEXT_PATTERN)]
-PersonText = Annotated[str, StringConstraints(max_length=128, pattern=_TEXT_PATTERN)]
+BoundedText = Annotated[str, StringConstraints(max_length=256, pattern=_TEXT_PATTERN), AfterValidator(_plain_text)]
+PersonText = Annotated[str, StringConstraints(max_length=128, pattern=_TEXT_PATTERN), AfterValidator(_plain_text)]
 # a provenance value or an explicit marker; a real value can never spell a marker
 ProvenanceText = Annotated[BoundedText, AfterValidator(_not_evidence_marker)] | Evidence
 

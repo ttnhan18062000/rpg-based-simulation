@@ -385,3 +385,35 @@ def test_registry_record_rejects_bad_axes():
     data = fixture_dict(VisualKeyRegistry)
     data["keys"][0]["variant_axes"] = data["keys"][0]["variant_axes"] * 2
     assert code_of(VisualKeyRegistry, dump(data)) == "invalid_record"
+
+
+# --------------------------------------------------------------------------- free-text characters (F1)
+
+CONTROLS = ["\x00", "\x01", "\x1f", "\x7f", "\x85", "\x9f", "\n", "\r", "\t"]
+INVISIBLES = ["​", "‎", "‮", "⁦", "﻿", "­", " ", " "]
+
+
+def _text_variants(bad: str) -> list[str]:
+    """The bad character alone, first, last and in the middle of otherwise fine text."""
+    return [bad, bad + "ab", "ab" + bad, "a" + bad + "b", "a" + bad + "b" + bad + "c"]
+
+
+def test_free_text_rejects_control_and_invisible_characters_in_every_position():
+    for char in CONTROLS + INVISIBLES:
+        for value in _text_variants(char):
+            for field in ("approver_name", "approver_role"):  # PersonText
+                assert code_of(AdoptionRecord, _with(AdoptionRecord, **{field: value})) == "invalid_record", (field, value)
+            assert code_of(RevocationRecord, _with(RevocationRecord, reason=value)) == "invalid_record", value
+            for field in ("creator", "brief_id", "licence_evidence_ref"):  # ProvenanceText (BoundedText)
+                assert code_of(CandidateHandoffPackage, _handoff(**{field: value})) == "invalid_record", (field, value)
+            findings = [{"code": "PACKAGE_INVALID", "detail": value}]
+            assert code_of(IntakeResult, _with(IntakeResult, verdict="QUARANTINED", findings=findings)) == "invalid_record", value
+
+
+def test_free_text_still_accepts_ordinary_unicode_and_inner_spaces():
+    for good in ("Fixture Approver", "Zoë Müller", "山田 太郎", "a b  c", "O'Neil-Smith", "x", "emoji 🙂 ok"):
+        assert parse_record(AdoptionRecord, _with(AdoptionRecord, approver_name=good)).approver_name == good
+        assert parse_record(CandidateHandoffPackage, _handoff(creator=good)).creator == good
+    # edge whitespace (including non-breaking space) is still rejected, never trimmed
+    for bad in (" x", "x ", " x", "x ", "　x"):
+        assert code_of(AdoptionRecord, _with(AdoptionRecord, approver_name=bad)) == "invalid_record", repr(bad)
