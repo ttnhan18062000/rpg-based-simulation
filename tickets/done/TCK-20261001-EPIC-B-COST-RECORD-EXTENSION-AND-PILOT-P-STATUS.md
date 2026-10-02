@@ -12,7 +12,7 @@ tags: [testing]
 # TCK-20261001-EPIC-B-COST-RECORD-EXTENSION-AND-PILOT-P-STATUS
 
 ## Title
-Extend the Epic B scenario-lane cost record to PRs #272-#276, record pilot P as blocked/inconclusive, and record the Epic D CI-gap limits
+Extend the Epic B scenario-lane cost record to PRs #272-#276, record pilot P as blocked (named cause), and record the Epic D CI-gap limits
 
 ## Status
 DONE
