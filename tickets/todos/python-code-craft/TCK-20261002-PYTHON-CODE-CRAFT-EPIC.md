@@ -135,6 +135,7 @@ None.
 - Roadmap Section 5.1 says only the implementer seat runs git; who commits these tickets follows that convention
 - Search tooling was degraded during investigation (graphify graph and local knowledge index absent); no duplicate was found via search_docs, REGISTRY.yaml, working_log.csv and the open-ticket scanner
 - Tag fit: `planning` is registered for plan/roadmap-tracking doc artifacts and `tracking` for index/tracking docs; both are used here for an epic ticket that tracks a roadmap and its child tickets, a near but not exact fit
+- Post-merge step (from `TCK-20261002-PYTHON-CODE-STANDARD-DOC`): after this branch merges, run `make knowledge-index-update` in the main checkout. It was not run in the `rpg-code-craft` worktree, which has no `knowledge-index/`; the served index lives in the main checkout.
 
 ## Implementation Notes
 

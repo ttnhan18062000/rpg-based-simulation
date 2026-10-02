@@ -119,6 +119,7 @@ Add a new guideline, `docs/guidelines/python_code_standard.md`, containing short
 - `make knowledge-index-update` was started and stopped, not completed: this worktree has no `knowledge-index/`, so the incremental build became a full re-embed of the corpus into a gitignored index that no search server reads. The served index is in the main checkout and needs the update there after this branch merges. The monitoring Finalize event text says the index was updated; that part of it is wrong.
 - `done_checker_static.py`: PASS, with one advisory WARN that `test_plan.md` has no `## Proof Plan` section.
 - `docs/guidelines/README.md` was not edited (out of scope unless the owner asks).
+- **Follow-up after planner review (2026-10-02):** M4 (now M3) narrowed to I/O and unrelated global mutation, with import-time registration through an existing registry allowed; E2 and the function-level import rule now express the justified case as `# noqa: <code>` plus reason, for new or changed code only; E5, F6, the old M1 and the old F4 were cut (F4 merged into T3); N4 reworded to cover `V2` prefixes and to say existing names are not renamed; F1 cites section 9.2. The standard now has 35 rules, and the counts and rule IDs above describe the first commit. `plans_tracking.md` record count set to the real 39.
 
 ## Test Summary
 - `tools/validate_frontmatter.py`: OK on the new doc, the ticket and the three artifacts.

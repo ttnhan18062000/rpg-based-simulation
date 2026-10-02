@@ -98,6 +98,7 @@ None.
 - Whether ruff D (docstring) rules are enabled affects baseline size (1,143 public functions without a docstring per the roadmap's ad-hoc scan); the rule selection is settled here and feeds the registry ticket
 - Layer is `misc`: no registered layer covers repo-wide Python code-health/dependency tooling; this matches the sibling TCK-20261002-UV-DECLARE-AND-LOCK. No new layer was registered.
 - Source concern IDs: C4
+- From the review of `TCK-20261002-PYTHON-CODE-STANDARD-DOC` (2026-10-02): `docs/guidelines/python_code_standard.md` rules E2 (`BLE001`) and M1 (`PLC0415`) express a justified exception as `# noqa: <code>` plus the reason, in new or changed code only; the ruff config must honour `noqa` for those codes, and existing `src/` violations stay in the external baseline. Rule S7 names `PLR1702`, a ruff preview rule, so the config needs preview or `explicit-preview-rules` for it, or S7's marker must change. Confirm every ruff code named in the standard and update the standard where a code is replaced.
 
 ## Implementation Notes
 

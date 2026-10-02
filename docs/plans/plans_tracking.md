@@ -8,7 +8,7 @@ tags: [planning, tracking, documentation]
 
 # Plans Tracking — Quick Overview
 
-Date: 2026-10-02 (updated: added the Python Code Craft roadmap row; the Scope counts were incremented by that row's 2 files and 1 record, not re-audited. Previous update 2026-09-13: added 2 previously-missing render-and-art sibling packages; archived 2 fully-shipped roadmaps — see Maintenance note; rest of the table is unchanged from the 2026-09-09 snapshot)
+Date: 2026-10-02 (updated: added the Python Code Craft roadmap row; the record count is the table's 39 rows; the file count was incremented by that row's 2 files, not re-audited. Previous update 2026-09-13: added 2 previously-missing render-and-art sibling packages; archived 2 fully-shipped roadmaps — see Maintenance note; rest of the table is unchanged from the 2026-09-09 snapshot)
 
 ## Scope
 
@@ -19,7 +19,7 @@ references `docs/brainstorm/`.
 
 `docs/plans/archive/` is excluded. Multi-file plan packages are collapsed into one program row, so
 milestone and supporting files are not repeated individually. This snapshot summarizes 99 Markdown
-files as 38 plan records; `plans_tracking.md` excludes itself.
+files as 39 plan records; `plans_tracking.md` excludes itself.
 
 ### Status key
 

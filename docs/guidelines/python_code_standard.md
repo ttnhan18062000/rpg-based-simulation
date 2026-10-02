@@ -36,19 +36,22 @@ Every rule has an Enforcement cell with one of:
   non-blocking in `make typecheck-py` and CI, and five packages are excluded. Blocking is planned
   for roadmap M4.
 
+Where a rule allows a justified exception and also names a tool (E2, M1), the tool cannot read a
+plain comment. In new or changed code the exception is written as `# noqa: <code>` followed by the
+reason on the same line. This applies only to code you are writing; existing violations in `src/`
+stay in the external baseline and get no inline suppression.
+
 As of 2026-10-02 no rule in this doc is blocked by a tool.
 
 ## 3. Function and class design
 
 | ID | Rule | Enforcement |
 |---|---|---|
-| F1 | A function has one responsibility. If its description needs "and", split it. | reviewer |
+| F1 | A function has one responsibility: one of the kinds of work listed in `docs/engine/architecture_reference.md` section 9.2. If its description needs "and", split it. | reviewer |
 | F2 | Do not copy existing logic. Search for a helper first; if the same logic is needed twice, extract it. | reviewer; jscpd, planned |
 | F3 | Do not use mutable default arguments. | ruff `B006`, planned |
-| F4 | Pass and return typed models, not free-form dicts, for anything that crosses a module boundary (see the Durable State Rule in `CLAUDE.md`). | reviewer |
-| F5 | A nested function is a short closure. Logic that needs its own tests is a module-level function or a method. | reviewer |
-| F6 | A class has one reason to change. A class that only groups unrelated helpers is a module instead. | reviewer |
-| F7 | New extension points follow an existing pattern in `docs/guidelines/design_patterns.md`; do not invent a parallel mechanism. | reviewer |
+| F4 | A nested function is a short closure. Logic that needs its own tests is a module-level function or a method. | reviewer |
+| F5 | New extension points follow an existing pattern in `docs/guidelines/design_patterns.md`; do not invent a parallel mechanism. | reviewer |
 
 ## 4. Size and complexity thresholds
 
@@ -80,7 +83,7 @@ Python identifier conventions that section does not state.
 | N1 | Follow `docs/engine/architecture_reference.md` section 9 for what a name means. | reviewer |
 | N2 | Functions, methods, variables and modules are `snake_case`; classes are `PascalCase`; module-level constants are `UPPER_SNAKE_CASE`. | ruff `N` rules, planned |
 | N3 | A leading underscore marks a name as private to its module or class. Do not import a `_private` name from another module. | reviewer |
-| N4 | No version or sequence suffixes on new names (`_v2`, `2`, `_new`). Replace the old thing or name the difference. | reviewer |
+| N4 | No version or sequence markers in new names (`V2` prefix or suffix, `_v2`, `2`, `_new`). Replace the old thing or name the difference. Existing `V2` names are not to be renamed. | reviewer |
 
 ## 6. Docstrings
 
@@ -97,7 +100,7 @@ Python identifier conventions that section does not state.
 |---|---|---|
 | T1 | Every function has annotations on all arguments and on the return value. | ruff `ANN` rules, planned; mypy, advisory today |
 | T2 | Do not use `Any` in a public signature unless the value is a serialization boundary. Say why in the docstring. | reviewer |
-| T3 | Durable or cross-module data is a typed model (dataclass or Pydantic), not `dict[str, Any]`. | reviewer |
+| T3 | Durable data, and anything passed or returned across a module boundary, is a typed model (dataclass or Pydantic), not `dict[str, Any]` (see the Durable State Rule in `CLAUDE.md`). | reviewer |
 | T4 | New code passes mypy under the repo config without a new `# type: ignore`. | mypy, advisory today |
 
 ## 8. Error handling
@@ -105,21 +108,19 @@ Python identifier conventions that section does not state.
 | ID | Rule | Enforcement |
 |---|---|---|
 | E1 | No bare `except:`. | ruff `E722`, planned |
-| E2 | Catch the narrowest exception that the code can handle. `except Exception` needs a comment saying why. | ruff `BLE001`, planned; reviewer |
+| E2 | Catch the narrowest exception that the code can handle. A justified `except Exception` carries `# noqa: BLE001` and the reason. | ruff `BLE001`, planned; reviewer |
 | E3 | Do not swallow an exception silently. Handle it, log it with context, or re-raise. | reviewer |
 | E4 | When re-raising as a different type, chain it with `raise ... from err`. | ruff `B904`, planned |
-| E5 | Do not use exceptions for expected control flow inside the tick loop. Return a typed result. | reviewer |
 
 ## 9. Module layout
 
 | ID | Rule | Enforcement |
 |---|---|---|
-| M1 | Order within a module: docstring, imports, constants, public API, private helpers. | reviewer |
-| M2 | Imports are at the top of the module, grouped standard library, third party, first party. A function-level import needs a comment giving the reason (for example a circular import). | ruff `I001` and `PLC0415`, planned |
-| M3 | No wildcard imports. | ruff `F403`, planned |
-| M4 | No import-time side effects: no I/O, registration or global mutation when a module is imported. | reviewer |
-| M5 | New repo tooling goes under `tools/` per `docs/guidelines/repo_tooling_layout.md`. | reviewer |
-| M6 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer |
+| M1 | Imports are at the top of the module, grouped standard library, third party, first party. A justified function-level import (for example to break a circular import) carries `# noqa: PLC0415` and the reason. | ruff `I001` and `PLC0415`, planned; reviewer |
+| M2 | No wildcard imports. | ruff `F403`, planned |
+| M3 | No I/O and no mutation of unrelated global state when a module is imported. Registering into an existing registry at import time, through that registry's established pattern, is allowed. | reviewer |
+| M4 | New repo tooling goes under `tools/` per `docs/guidelines/repo_tooling_layout.md`. | reviewer |
+| M5 | A new module belongs to the package whose responsibility it shares. Do not create a new top-level `src/` package without an owner decision. | reviewer |
 
 ## 10. Related
 
