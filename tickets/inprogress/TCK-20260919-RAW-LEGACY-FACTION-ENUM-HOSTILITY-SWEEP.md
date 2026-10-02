@@ -18,7 +18,7 @@ found at least 7 more real, load-bearing ones across combat, cognition, cooperat
 strategic subsystems — triage and prioritize, do not fix all at once)
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
@@ -247,7 +247,48 @@ _(none yet — filed as a sweep finding, not yet investigated per-site)_
   consumer that misuses them — left open, not asserted as settled.
 
 ## Implementation Notes
-**2026-09-19, `ai/goals/scorers.py:108` investigated, paused, sweep track suspended per user
+
+### 2026-10-02 — RESUMED as work-order item 2. Site inventory re-verified; three corrections.
+
+Resumed under owner decision 7's approved work order (`docs/plans/systemic_world/roadmap.md` §8, item
+2), which classes this as a hard bug. Site inventory re-verified against `origin/main` **`4c133297b`**
+by shape (`identity.faction [!=]= *.identity.faction`), not by name, the same way the original sweep was
+done. Full record in `staging_artifacts/TCK-20260919-RAW-LEGACY-FACTION-ENUM-HOSTILITY-SWEEP/investigation.md`.
+
+**The inventory holds — 9 real sites, no new ones, none disappeared.** Three corrections:
+
+1. **`src/engine/combat.py`'s splash site has drifted: `538` → `507`.** Every other cited line number
+   below is still exact. Cite `:507`.
+2. **Site 1 (`scorers.py:108`) is no longer this ticket's.** It is claimed by
+   `TCK-20261002-GOAL-WINNER-CONSUMPTION-DISCARDS-DECIDED-OBJECTIVE-KIND` (work-order item 1), which
+   must fix it *in the same batch* as the dispatch defect — the two are mutually load-bearing. **Do not
+   fix `scorers.py:108` here.** Note `SensoryFilter.filter_saliency` is called on the line immediately
+   above it (`:107`) and **does** remain this ticket's (site 6-adjacent, `cognition.py:44`).
+3. **This ticket's own "deferred because inert" rationale for site 1 is obsolete, and its stated root
+   cause was wrong.** The 2026-09-19 note below concluded: *"The real gate for the arc's own standing
+   'why does the decision layer never engage' question is `AdventureGoalScorer`'s own
+   eligibility/routing logic … not this scorer, and not this ticket's own anti-pattern."* **Measurement
+   on 2026-10-02 disproves that.** The real gate is winner-consumption hardcoding `reach_location`,
+   exactly as the note's own trace found — `AdventureGoalScorer` is a red herring for this question and
+   nobody should spend a cycle on it. The note also predicted the divergence "becomes a live,
+   observable defect the moment someone fixes `AdventureGoalScorer`'s own gate (or any other future path
+   that lets `COMBAT_ENGAGE` matter)". That prediction was right; the trigger is item 1, not
+   `AdventureGoalScorer`.
+
+   Measured evidence (real `Kernel.tick_once()`, seed 42, 2000 ticks, `crowded_frontier` +
+   `frontier_living_world`): `COMBAT_ENGAGE` is the **most frequent** goal winner (485/1767 and
+   568/1744), **100%** of its objectives are `reach_location` across 111 114 samples, and the raw enum
+   disagrees with the catalog on **54.0%** and **33.6%** of the targets the scorer actually selected
+   (both **floors**). So this site was never "0.5%-impact" inert — it was high-volume and masked.
+
+**Also checked and found NOT a problem, recorded so nobody re-chases it:** `intelligence.py:83` imports
+`ConcernIntakeSystem` from `src.systems.world_systems.intake` while `:861` imports it from
+`src.systems.intake`. That is **not** a duplicate class — `src/systems/intake.py` is a 3-line
+re-export shim with one `__all__`. Sites 4 and 5 are **one** fix location each, not two.
+
+### 2026-09-19 — original investigation (superseded in part by the above)
+
+**`ai/goals/scorers.py:108` investigated, paused, sweep track suspended per user
 direction.** No code changed — investigation only, matching this ticket's own explicit scope
 against fixing sites without measurement first.
 
