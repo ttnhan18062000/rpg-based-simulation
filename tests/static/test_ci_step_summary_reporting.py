@@ -23,7 +23,9 @@ _FASTLANE_JOBS = [
     "unit-gameplay",
     "unit-infra",
     "integration",
-    "api-tools",
+    "tools-a-e",
+    "tools-f-z",
+    "api-cli-engine",
     "agent-orchestration",
     "simulation-quality",
     "arch-docs",
@@ -71,7 +73,9 @@ needs:
   - unit-gameplay
   - unit-infra
   - integration
-  - api-tools
+  - tools-a-e
+  - tools-f-z
+  - api-cli-engine
   - agent-orchestration
   - simulation-quality
   - arch-docs

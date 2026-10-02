@@ -325,8 +325,104 @@ jobs:
         run: python3 tools/ci_junit_summary.py "reports/junit/integration.xml" "integration" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── API / CLI / tools ─────────────────────────────────────────────────────
-  api-tools:
-    name: "API / tools / logging"
+  tools-a-e:
+    name: "Tools · a–e"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
+      # 440-520 s `api-tools` job) is cut in two by file name. The two --ignore-glob patterns are
+      # complementary: a file matching neither runs in both jobs and no file can match both, so
+      # nothing can be skipped. Keep the literal path `tests/tools` in both jobs
+      # (tools/gate_checks/ci_workflow_test_coverage.py reads it as the covered directory). To
+      # rebalance, change the letter ranges here and in the sibling tools job together.
+      - name: "Run: tests/tools (a–e)"
+        if: always()
+        run: |
+          pytest tests/tools --ignore-glob='tests/tools/test_[f-z]*.py' -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/tools-a-e.xml
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tools-a-e-junit-${{ github.sha }}
+          path: reports/junit/tools-a-e*.xml
+          retention-days: 30
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[f-z]*.py' \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/tools-a-e.xml" "tools-a-e" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
+
+  tools-f-z:
+    name: "Tools · f–z"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements.txt
+      # TCK-20261003-CI-SPLIT-API-TOOLS-JOB: tests/tools (211 flat files, about 275-340 s of the old
+      # 440-520 s `api-tools` job) is cut in two by file name. The two --ignore-glob patterns are
+      # complementary: a file matching neither runs in both jobs and no file can match both, so
+      # nothing can be skipped. Keep the literal path `tests/tools` in both jobs
+      # (tools/gate_checks/ci_workflow_test_coverage.py reads it as the covered directory). To
+      # rebalance, change the letter ranges here and in the sibling tools job together.
+      - name: "Run: tests/tools (f–z)"
+        if: always()
+        run: |
+          pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' -m "not slow and not extra_slow" --tb=short -q \
+                 --junit-xml=reports/junit/tools-f-z.xml
+      - name: Upload JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tools-f-z-junit-${{ github.sha }}
+          path: reports/junit/tools-f-z*.xml
+          retention-days: 30
+      - name: Fetch base branch for collect-only diff
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git fetch origin "${{ github.base_ref }}" --depth=1 2>&1; then
+            echo "::warning::base-branch fetch failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+          if ! git worktree add /tmp/base-checkout FETCH_HEAD 2>&1; then
+            echo "::warning::base-branch worktree add failed — new/existing breakdown will be skipped"
+            exit 0
+          fi
+      - name: Base branch test collection
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -d /tmp/base-checkout ]; then
+            cd /tmp/base-checkout && pytest tests/tools --ignore-glob='tests/tools/test_[a-e]*.py' \
+                   -m "not slow and not extra_slow" --collect-only -q > /tmp/base-collect.txt 2>&1 || true
+          fi
+      - name: Job summary
+        if: always()
+        run: python3 tools/ci_junit_summary.py "reports/junit/tools-f-z.xml" "tools-f-z" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
+
+  api-cli-engine:
+    name: "API / CLI / engine / logging"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -335,67 +431,60 @@ jobs:
       - run: pip install -r requirements.txt
       # Split into one step per test directory, each with if: always(), so a failure names its
       # own directory via step conclusions alone -- readable even when raw logs are unreachable
-      # (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS, applied here by
-      # TCK-20260925-CI-API-TOOLS-LOGGING-PER-DIRECTORY-STEPS after this job went without it and
-      # a deterministic PR #246 failure could not be localized any other way). Verified against
-      # the prior single-step form: identical pass/fail/skip/deselect totals and order. Each step
-      # writes its own junit-xml; "Merge JUnit XML" below recombines them into the same
-      # reports/junit/api-tools.xml path the existing "Job summary" step already reads, so
-      # nothing downstream changes.
+      # (TCK-20260916-CI-PER-DIRECTORY-STEPS-FOR-BLOCKED-LOGS, applied to the former `api-tools` job
+      # by TCK-20260925-CI-API-TOOLS-LOGGING-PER-DIRECTORY-STEPS). Each step writes its own
+      # junit-xml; "Merge JUnit XML" below recombines them into the one
+      # reports/junit/api-cli-engine.xml path the "Job summary" step reads. This job is the
+      # non-tools half of the former `api-tools` job (TCK-20261003-CI-SPLIT-API-TOOLS-JOB); the
+      # tests/tools half is the two `tools-*` jobs above.
       - name: "Run: tests/api"
         if: always()
         run: |
           pytest tests/api -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-api.xml
+                 --junit-xml=reports/junit/api-cli-engine-api.xml
       - name: "Run: tests/cli"
         if: always()
         run: |
           pytest tests/cli -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-cli.xml
-      - name: "Run: tests/tools"
-        if: always()
-        run: |
-          pytest tests/tools -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-tools.xml
+                 --junit-xml=reports/junit/api-cli-engine-cli.xml
       - name: "Run: tests/logging"
         if: always()
         run: |
           pytest tests/logging -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-logging.xml
+                 --junit-xml=reports/junit/api-cli-engine-logging.xml
       - name: "Run: tests/engine"
         if: always()
         run: |
           pytest tests/engine -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-engine.xml
+                 --junit-xml=reports/junit/api-cli-engine-engine.xml
       - name: "Run: tests/observability"
         if: always()
         run: |
           pytest tests/observability -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-observability.xml
+                 --junit-xml=reports/junit/api-cli-engine-observability.xml
       # TCK-20261002-VISUAL-ASSETS-FOUNDATION-INIT: the drawing tools' unit tests and the boundary guard run
       # here; the Aseprite-backed integration tests skip cleanly (no Aseprite in CI, plan U-14).
       - name: "Run: tests/visual_assets"
         if: always()
         run: |
           pytest tests/visual_assets -m "not slow and not extra_slow" --tb=short -q \
-                 --junit-xml=reports/junit/api-tools-visual_assets.xml
+                 --junit-xml=reports/junit/api-cli-engine-visual_assets.xml
       - name: Merge JUnit XML
         if: always()
         run: |
-          python3 tools/ci_junit_merge.py --out reports/junit/api-tools.xml \
-                 reports/junit/api-tools-api.xml \
-                 reports/junit/api-tools-cli.xml \
-                 reports/junit/api-tools-tools.xml \
-                 reports/junit/api-tools-logging.xml \
-                 reports/junit/api-tools-engine.xml \
-                 reports/junit/api-tools-observability.xml \
-                 reports/junit/api-tools-visual_assets.xml
+          python3 tools/ci_junit_merge.py --out reports/junit/api-cli-engine.xml \
+                 reports/junit/api-cli-engine-api.xml \\
+                 reports/junit/api-cli-engine-cli.xml \\
+                 reports/junit/api-cli-engine-logging.xml \\
+                 reports/junit/api-cli-engine-engine.xml \\
+                 reports/junit/api-cli-engine-observability.xml \\
+                 reports/junit/api-cli-engine-visual_assets.xml
       - name: Upload JUnit XML
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: api-tools-junit-${{ github.sha }}
-          path: reports/junit/api-tools*.xml
+          name: api-cli-engine-junit-${{ github.sha }}
+          path: reports/junit/api-cli-engine*.xml
           retention-days: 30
       - name: Fetch base branch for collect-only diff
         if: github.event_name == 'pull_request'
@@ -419,7 +508,6 @@ jobs:
             mkdir -p /tmp/base-checkout/tests/visual_assets
             cd /tmp/base-checkout && pytest tests/api \
                    tests/cli \
-                   tests/tools \
                    tests/logging \
                    tests/engine \
                    tests/observability \
@@ -428,13 +516,13 @@ jobs:
           fi
       - name: Job summary
         if: always()
-        run: python3 tools/ci_junit_summary.py "reports/junit/api-tools.xml" "api-tools" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
+        run: python3 tools/ci_junit_summary.py "reports/junit/api-cli-engine.xml" "api-cli-engine" "/tmp/base-collect.txt" >> "$GITHUB_STEP_SUMMARY"
 
   # ── Agent orchestration / codex / replay ──────────────────────────────────
   # TCK-20260817-CI-COVERAGE-GAP-16-ORPHANED-TEST-DIRS: these 12 directories (added by commit
   # 29d78798, "Simulation quality #20") were never wired into any CI job -- 439 of their 440
   # tests had never run in CI at all until this batch of fixes. Own dedicated job (not folded
-  # into api-tools) given the volume (83 files).
+  # into the former `api-tools` job, now `api-cli-engine`) given the volume (83 files).
   agent-orchestration:
     name: "Agent orchestration / codex / replay"
     runs-on: ubuntu-latest
@@ -835,7 +923,9 @@ jobs:
       - unit-gameplay
       - unit-infra
       - integration
-      - api-tools
+      - tools-a-e
+      - tools-f-z
+      - api-cli-engine
       - agent-orchestration
       - simulation-quality
       - arch-docs

@@ -304,7 +304,8 @@ The assessment found cost without matching protection (F5). Pruning by line-coun
    run and per directory, test count, an **observed test duration** (the sum of recorded per-test time, not
    wall time or compute cost) and outcomes. **Failure history is unavailable** from it, and whether tests
    protect a declared behaviour or only assert text is not measured by it. CI uploads JUnit only from
-   `api-tools` today, so most directories read `not-in-supplied-runs`. It enables cleanup *investigation*
+   `tools-a-e`, `tools-f-z` and `api-cli-engine` (the former `api-tools` job, split by
+   `TCK-20261003-CI-SPLIT-API-TOOLS-JOB`) today, so most directories read `not-in-supplied-runs`. It enables cleanup *investigation*
    and authorizes nothing: points 3 and 4 still apply.
 2. **Candidates:**
    - the `agent_codex_*` suites (deletion intent approved 2026-09-28 as D6, execution still pending);
@@ -356,7 +357,7 @@ baselines* have **not fired**.
 | Seeded-fault evaluation harness | Before the impact report is ever used to skip a test or lane, or after the first recorded CI selection failure |
 | Per-test coverage contexts | A recorded selection failure where static inputs missed a dynamic dependency |
 | Quarantine enforcement tooling | The first real case needing quarantine |
-| JUnit upload from every CI job | When manual JUnit input to the report becomes the recurring bottleneck (today only `api-tools` uploads) |
+| JUnit upload from every CI job | When manual JUnit input to the report becomes the recurring bottleneck (today only `tools-a-e`, `tools-f-z` and `api-cli-engine`, the former `api-tools` job, upload) |
 | CI coverage job | After its runtime is measured and its information is judged useful (not an owner-decision gate) |
 | Broader mutation testing (more targets, scheduled runs) | The post-pilot review, if the baseline showed useful survivors |
 | Core-RPG perf baselines | A feature change needing a perf claim, or the post-pilot review (D-PERF) |
