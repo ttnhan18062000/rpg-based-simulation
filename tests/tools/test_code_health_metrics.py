@@ -87,6 +87,11 @@ def test_correctness_matches_pyflakes_and_e9_exactly_not_any_f_prefix():
     assert metrics["craft_ruff_findings"] == 1111  # the total still counts every selected rule
 
 
+def test_a_file_ruff_cannot_parse_counts_as_correctness():
+    metrics = compute_craft_metrics([_f("ruff", "syntax-error", 2)], [])
+    assert metrics["craft_correctness_findings"] == 2 and metrics["craft_ruff_findings"] == 2
+
+
 def test_docstring_and_annotation_families_match_exactly():
     findings = [_f("ruff", "D100", 1), _f("ruff", "D104", 2), _f("ruff", "D105", 4), _f("ruff", "D200", 8),
                 _f("ruff", "ANN001", 16), _f("ruff", "ANN401", 32), _f("ruff", "ANNOTATION", 64)]

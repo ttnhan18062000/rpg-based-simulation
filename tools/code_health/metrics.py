@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 from tools.code_health import registry, scan
-from tools.code_health.adapters import RULE_DUPLICATE
+from tools.code_health.adapters import RULE_DUPLICATE, RULE_SYNTAX_ERROR
 from tools.code_health.findings import (
     TOOL_COMPLEXIPY,
     TOOL_JSCPD,
@@ -75,7 +75,8 @@ CRAFT_LABELS = {
 # Rule codes are matched exactly by shape: "F" followed by a digit is pyflakes, not every code that
 # starts with F (FURB, FBT, FA, ...), and likewise for the other families.
 _ANY_RULE = re.compile(r".")
-_CORRECTNESS_RULE = re.compile(r"^(F\d|E9\d)")
+# A file ruff cannot parse has no rule code; the adapter records it as RULE_SYNTAX_ERROR.
+_CORRECTNESS_RULE = re.compile(rf"^(F\d|E9\d|{re.escape(RULE_SYNTAX_ERROR)}$)")
 _DOCSTRING_RULE = re.compile(r"^D10[0-4]$")
 _ANNOTATION_RULE = re.compile(r"^ANN\d")
 
