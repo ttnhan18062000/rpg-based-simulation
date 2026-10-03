@@ -12,7 +12,7 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 _JOBS = yaml.safe_load((_ROOT / ".github" / "workflows" / "test.yml").read_text())["jobs"]
 _NO_PYTHON_INSTALL = {"changed-files", "frontend"}
 # code-health runs the ratchet itself (ruff, complexipy), so it syncs `lint` too.
-_LINT_JOBS = {"tools-a-e", "code-health"}
+_LINT_JOBS = {"tools-a-e", "code-health", "code-health-sarif"}
 
 
 def _run_lines(job: dict) -> list[str]:

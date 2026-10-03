@@ -43,6 +43,9 @@ _PRE_EXISTING_USES = {
     # astral-sh/setup-uv added by TCK-20261002-UV-FIRST-CI-JOB for the first job installed with
     # `uv sync` (owner decision, python_code_craft_roadmap.md 8.11).
     "astral-sh/setup-uv@v10.2.0",
+    # github/codeql-action/upload-sarif added by TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK for the advisory
+    # `code-health-sarif` job (the only job with `security-events: write`); pinned by full commit SHA, v4.38.2.
+    "github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2",
 }
 
 _BANNED_REQUIREMENTS_ENTRIES = ("pytest-cov", "pytest-html")
@@ -449,6 +452,8 @@ def test_no_cross_job_aggregate_step_or_job_added() -> None:
         # TCK-20261003-CODE-HEALTH-RESEED-AND-ADVISORY-CI-JOB: the advisory ratchet job (no pytest, so it is
         # not in _FASTLANE_JOBS and has no JUnit/base-collection reporting).
         "code-health",
+        # TCK-20261003-CODE-HEALTH-SARIF-PR-FEEDBACK: the changed-line SARIF upload job (no pytest).
+        "code-health-sarif",
     }
     assert set(_jobs().keys()) == expected_job_names, (
         "job set changed -- a new CI job must be added to this expected set deliberately (no cross-job "

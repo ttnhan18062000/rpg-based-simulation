@@ -137,7 +137,7 @@ uv export --frozen --no-hashes --no-emit-project -o requirements.txt
 
 **After the Python Code Craft branch merges, every existing environment (the main checkout's
 `.venv`, other worktrees) must re-run `uv sync --system-certs` or `pip install -r requirements.txt`.**
-`ruff` and `complexipy` are now `lint` dependencies (the advisory `Code health (advisory)` job syncs them too), and the codebase-health snapshot measures with them
+`ruff` and `complexipy` are now `lint` dependencies (the advisory `Code health (advisory)` and `Code health SARIF (advisory)` jobs sync them too), and the codebase-health snapshot measures with them
 live, so tests such as `tests/tools/test_codebase_health_snapshot.py`'s throwaway-repository tests fail
 in an older environment with `complexipy not found: install the project environment (uv sync)`. That
 failure is deliberate: the snapshot never silently skips its craft metrics. CI is unaffected because
@@ -147,6 +147,32 @@ the one job that runs those tests (`tools-a-e`) syncs the `lint` group, and `req
 export on an unchanged lock produces no diff. The export leaves out extras, so `torch`,
 `sentence-transformers`, `sqlite-vec` and `rank-bm25` never reach `requirements.txt`
 (`tests/static/test_ci_requirements_no_ml_stack.py` pins this).
+
+### Reading code-health results on a PR (advisory soak)
+
+Three advisory CI jobs report on a pull request; none of them can fail it during the soak (roadmap M4,
+`TCK-20261003-CODE-HEALTH-GATES-FLIP-BLOCKING` flips them after two weeks).
+
+1. **Job summary first** (the run's Summary page, which agents can read without special access):
+   `Code health (advisory)` (the ratchet over `src/`, new or worse violations, those in files the PR
+   changed first), `Code health SARIF (advisory)` (what the SARIF filter kept and dropped) and the typecheck
+   job's `mypy` step (new mypy errors and the baseline size). A failing check also leaves one
+   `::warning::` annotation; a tool that could not run says "could not run" in the summary and warning
+   instead of looking like a pass.
+2. **Code scanning second** (the PR's Files view and the Security tab, category `code-health`):
+   `Code health SARIF (advisory)` uploads findings in the PR's changed `src/**/*.py` files that the
+   registry does not already hold. SARIF results have no identity, so the filter works per ratchet unit: a
+   ruff (file, rule) group above its ceiling is shown **whole, older findings of that rule in the file
+   included**, and the summary says so; do not read every finding of such a group as new. A function is
+   shown when its cognitive complexity is above its row's ceiling. The job runs only for pull requests from
+   this repository (a fork's token is read-only) and uploads an empty SARIF when no `src` Python file
+   changed, so the upload path is exercised on every such PR. If the upload is rejected, enabling code
+   scanning for the repository is an owner setting; the job stays green either way. Security note: this job
+   runs the PR's own `uv.lock`, `pyproject.toml` and `tools/` while it holds `security-events: write`; that is
+   accepted only because the `if` keeps fork PRs out and a same-repository author already has write access.
+   Do not widen that `if` (for example to `pull_request_target`) without a new security review.
+3. Locally: `make code-health` (ratchet), `make typecheck-py` (mypy through the baseline) and
+   `python3 -m tools.code_health.sarif_feedback --changed FILE --out SARIF` (the SARIF the job would upload).
 
 ---
 
