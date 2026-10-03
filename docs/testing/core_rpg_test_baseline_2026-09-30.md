@@ -124,6 +124,22 @@ has to allow for the per-test time budget.
 8. **Run-to-run variance is not measured.** Each SHA was run once for this document (the 11 carried
    failures did repeat across four runs, which is the only variance evidence).
 
+### Re-verification of the known leak (2026-10-03, `TCK-20261003-EPIC-A-LEAK-REVERIFY-AND-PILOT-CI-RUN-CROSS-CHECK`)
+
+Run in a worktree at the merge of `origin/main` 243e798ad (no tracked `src/` or `tests/` file differs from that commit), Python 3.12.3, the shared `.venv`. Scoped, not the whole suite; every command is the plain `python -m pytest -q -p no:cacheprovider ...` form.
+
+| Check | Result |
+|---|---|
+| Each of the 8 polluter files followed by `tests/unit/domains/progression` | 8 of 8 pass (34 to 49 tests each, 0 failures) |
+| Combined `tests/unit/content tests/unit/core tests/unit/domains/progression` in default order (all 8 polluters run before the progression files) | 532 passed, 0 failed |
+| `tests/unit/domains` alone | 1058 passed, 0 failed |
+| Seeded random order of the 8 polluters plus the progression directory, seeds 1-10 | 78 tests, all 10 seeds pass |
+| Positive control (scratch copy of `c0980e27a` with the catalog-registry reset in `tests/conftest.py` disabled) | the same polluter-then-progression run fails: 11 failures after `test_adapter_heuristic_reporting.py`, 7 after `test_registry_parity.py`, so the instrument detects the leak |
+
+The random-order plugin is committed this time: `agent-working/stored_artifacts/TCK-20261003-EPIC-A-LEAK-REVERIFY-AND-PILOT-CI-RUN-CROSS-CHECK/seeded_shuffle_plugin.py` (a private `random.Random(seed)`, seed from `SEEDED_SHUFFLE_SEED`; no project RNG is used). The command is `SEEDED_SHUFFLE_SEED=<n> PYTHONPATH=<that directory> python -m pytest -p seeded_shuffle_plugin -q -p no:cacheprovider <the 8 polluters> tests/unit/domains/progression`. The positive control was not repeated under the shuffle, so the shuffle's own detection power is untested; the default-order control is what shows the leak is detectable. This does **not** re-verify the whole fast suite (the 11 other combined-run failures in unknown 1 were not re-run) and does not widen the verified set (unknown 2 stands).
+
+Tracked-file writer check (verify-only): `tests/tools/test_done_checker_static.py` was run alone in a clean worktree (164 passed) and `git status --porcelain` afterwards showed only the monitoring tools shard that the session's own tool-call hook appends to. **No tracked-file write was reproduced** from that file at this SHA, so unknown 3's attribution to it is **not reproduced** when the file runs alone; whether another test in a full run writes `docs/REGISTRY.yaml` or `working_log.csv` was not re-examined (the tracking ticket `TCK-20260929-DONE-CHECKER-TESTS-WRITE-TRACKED-FILES` is unchanged).
+
 ## Handoff to Epic B
 
 `tests/mutation/baselines/` is a new tree under `tests/` that holds data, not tests. It should be on
