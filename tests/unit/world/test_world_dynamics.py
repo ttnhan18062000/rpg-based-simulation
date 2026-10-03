@@ -61,12 +61,17 @@ def test_regional_transformation():
 
 def test_world_dynamics_raid_spawning():
     # RAID_INTERVAL_DAYS=5, TICKS_PER_DAY=100 -> 500 ticks
-    state = AuthoritativeState(tick=500, seed=42)
+    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global raid
+    # needs a real CITY place to target now; it no longer raids the hardcoded world origin.
+    from src.core.state import PlaceState, PlaceKind
+    city = PlaceState(place_id="city_1", region_id="hometown", kind=PlaceKind.CITY,
+                      position=(130.0, 130.0))
+    state = AuthoritativeState(tick=500, seed=42, places={"city_1": city})
     generator = EntityGenerator(42)
     update = StateUpdate()
-    
+
     refined = WorldDynamicsSystem.resolve_dynamics(state, update, generator)
-    
+
     # Raiders should be added (default 3 + maturity 0 = 3)
     raiders = [e for e in refined.entities_add if e.kind == "goblin_raider"]
     assert len(raiders) == 3

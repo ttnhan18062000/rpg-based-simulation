@@ -2157,6 +2157,61 @@ untouched by §2.57's fix (out of that ticket's scope).
 - **Status**: RATIFIED
 ---
 
+### 2.64 The Global Tick-Cadence Raid Anchors on a Real Place Instead of World Coordinate `(0,0)` (TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION)
+- **Subsystem**: World / Calamity-Raid
+- **Old Behavior**: `RaidService.check_for_raid` passed `origin=(0, 0), target=(0, 0)` as literals, so
+  `spawn_raid` placed every raider on the radius-25 ring (`SANCTUARY_RADIUS + 10`) around world
+  coordinate `(0,0)` and set each raider's `navigation.target` to `(0,0)`. The hardcode encoded a
+  single-settlement-at-origin world. `TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX` fixed the
+  camp-triggered caller, deliberately left this one byte-identical, and recorded the open question
+  "confirm whether the existing global (non-camp) raid path should keep its `(0,0)` assumption".
+- **Measured consequence, which is why this changed**: instrumented runs at `958aa103d`
+  (`audit_mode=True`, `max_tick_budget_ms` raised, `dropped_work_total == 0`, repeated
+  byte-identically) over `frontier_marches`/42 and `crowded_frontier`/7 caught 4 raid events. All 12
+  raiders spawned outside every region with `navigation.region_id = None` — `frontier_marches`' nine
+  region bounds all start at ≥ 10 — and had not moved 100–600 ticks later. One raider reached exactly
+  `(0.0, 0.0)`. The mechanic consumed entity ids and produced no raid.
+- **New Behavior**: both `origin` and `target` come from `RaidService.global_raid_anchor()`, which
+  prefers a `PlaceKind.CITY` (every corpus world has exactly one, verified) and otherwise falls back to
+  a region's `center`. Raiders therefore spawn on that anchor's outskirts and converge on it. Only a
+  world with neither cities nor regions yields no anchor, and then no raid fires. Both selections are
+  deterministic: cities and regions are each sorted by id and indexed with the seeded RNG
+  (`sub_id=1`/`sub_id=2`, kept distinct from `spawn_raid`'s own angle draw), so no choice depends on
+  dict ordering.
+- **This is a placement change, deliberately not a frequency change.** Requiring a city would have
+  suppressed raids entirely in city-less worlds; that was tried and regressed
+  `tests/integration/world/test_phase9_stability.py::test_1000_tick_stability`, which passes on
+  untouched base. The region fallback exists precisely so raids keep firing exactly as often as
+  before. Raid size, cadence (`tick % 500`), the tick-0 exclusion, mob kind and
+  `max_active_projects=0` (§ TCK-20260913) are all unchanged.
+- **The camp-triggered path is untouched** and still passes its own `origin=camp.position`,
+  `target=nearest_city.position`.
+- **Not behavior-neutral**: raiders now spawn inside the playable world and pursue a real settlement,
+  so they can engage, be engaged, and affect regional influence and population where previously they
+  were inert debris outside every region. Corpus-wide raid outcomes move as a result. Three existing
+  tests encoded the old assumption and were updated with their reasoning recorded, not quietly
+  relaxed: `test_calamity_raid_spawning` asserted `navigation.target == (0, 0)` outright;
+  `test_world_dynamics_raid_spawning` had no places; and
+  `test_calamity_raid_spawn_positions_unchanged_by_spawn_raid_extraction` recomputed expected
+  positions from a zero origin — it was additionally **passing vacuously** once the anchor existed
+  (no anchor meant no raiders, so its assertion loop never ran), and now carries an explicit
+  non-empty assertion so that cannot recur.
+- **Rationale**: **Bug Fix** (a mechanic that ran on its cadence and produced no raid, placing durable
+  entities outside every region; WORLD-032/033/034).
+- **Verification**: `tests/unit/world/test_raid_spawn_origin.py`
+  (`test_global_raid_spawns_near_a_city_not_at_world_origin`,
+  `test_global_raid_raiders_land_inside_a_region`,
+  `test_global_raid_falls_back_to_a_region_when_no_city_exists`,
+  `test_global_raid_does_not_fire_with_nowhere_to_raid`,
+  `test_global_raid_city_choice_is_deterministic`, `test_city_places_is_sorted_and_filters_non_cities`,
+  `test_global_raid_still_gated_by_cadence`),
+  `tests/unit/world/test_calamity_raid.py::test_calamity_raid_spawn_positions_are_the_ring_around_the_chosen_anchor`.
+  Every behavioural test above was confirmed to fail on the unfixed code by restoring the `(0,0)`
+  literals and re-running. Scope: `tests/unit/world/` + `tests/integration/world/` + `tests/unit/engine`
+  = 594 passed, 1 skipped.
+- **Status**: RATIFIED
+---
+
 ## 3. Unsupported / Retired Behavior
 
 The following legacy behaviors have been intentionally omitted or retired.

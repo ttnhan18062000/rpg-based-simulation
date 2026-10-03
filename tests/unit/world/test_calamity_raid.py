@@ -22,16 +22,25 @@ def test_calamity_raid_maturity_advancement():
 def test_calamity_raid_spawning():
     generator = EntityGenerator(seed=42)
     # Raid occurs every 5 days (500 ticks)
-    state = AuthoritativeState(tick=500, seed=42, maturity=2)
-    
+    # TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-REGION: the global raid
+    # now targets a real CITY place instead of the hardcoded world origin, so this fixture needs
+    # one. Previously it needed no places at all, which is exactly how the (0,0) assumption
+    # survived unnoticed. Every corpus world has exactly one CITY (verified), so one here matches
+    # production. The no-city case is covered by
+    # tests/unit/world/test_raid_spawn_origin.py::test_global_raid_does_not_fire_with_no_city_to_raid.
+    from src.core.state import PlaceState, PlaceKind
+    city = PlaceState(place_id="city_1", region_id="hometown", kind=PlaceKind.CITY,
+                      position=(130.0, 130.0))
+    state = AuthoritativeState(tick=500, seed=42, maturity=2, places={"city_1": city})
+
     update = RaidService.check_for_raid(state, generator)
 
     # Raid size = Base (3) + Maturity (2) = 5
     assert len(update.entities_add) == 5
     for mob in update.entities_add:
         assert mob.kind == "goblin_raider"
-        # Navigation target should be town (0,0)
-        assert mob.navigation.target == (0, 0)
+        # Navigation target is the raided city, not the world origin (behaviour change above).
+        assert mob.navigation.target == city.position
         # TCK-20260913-HOTFIX-GUILDNEEDSCORER-HIJACKS-HOSTILE-ENTITY-NAVIGATION: a raid mob's
         # navigation.target is a raw assignment with no accompanying strategic project, so any
         # capacity-gated goal scorer (confirmed real: GuildNeedScorer, once its own flag actually
@@ -42,24 +51,38 @@ def test_calamity_raid_spawning():
         assert mob.strategic.profile.max_active_projects == 0
 
 
-def test_calamity_raid_spawn_positions_unchanged_by_spawn_raid_extraction():
+def test_calamity_raid_spawn_positions_are_the_ring_around_the_chosen_anchor():
     """
-    TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX: check_for_raid() was refactored to delegate to a
-    new RaidService.spawn_raid(origin, target, raid_size) so the camp-triggered path could reuse
-    the composition logic with a real origin/target. This proves the global (non-camp) caller's
-    output is byte-identical to before the extraction -- not just kind/target (already covered
-    above) but the exact spawn positions, independently recomputed from the same RNG call the
-    pre-refactor code made directly.
+    Spawn positions are the deterministic ring around whatever anchor the global raid chose,
+    independently recomputed from the same RNG call the service makes.
+
+    Originally TCK-20260908-CAMP-RAID-ORIGIN-SPAWN-FIX asserted byte-identical positions against
+    a hardcoded (0,0) origin. TCK-20261003-GLOBAL-RAID-SPAWNS-AT-HARDCODED-ORIGIN-OUTSIDE-EVERY-
+    REGION replaced that origin with a real anchor, so the expectation is now recomputed from
+    `global_raid_anchor()` instead of from zero. The ring geometry it was really guarding is
+    unchanged and still asserted.
+
+    The fixture now carries a region: without one this test went *vacuously green* -- no anchor
+    meant no raid, `entities_add` was empty, and the loop body never ran. The explicit
+    non-empty assertion below is what stops that from recurring.
     """
     generator = EntityGenerator(seed=42)
-    state = AuthoritativeState(tick=500, seed=42, maturity=2)
+    region = RegionState(id="hometown", name="Hometown", bounds=(100, 100, 160, 160))
+    state = AuthoritativeState(tick=500, seed=42, maturity=2, regions={"hometown": region})
 
     update = RaidService.check_for_raid(state, generator)
+    assert update.entities_add, "no raiders spawned -- this test would otherwise pass vacuously"
+
+    anchor = RaidService.global_raid_anchor(state)
+    assert anchor is not None
 
     rng = DeterministicRNG(state.seed)
     angle = rng.get_float(Domain.CALAMITY, state.tick, 0) * 2 * math.pi
     dist = RaidService.SANCTUARY_RADIUS + 10
-    expected_spawn_pos = (int(math.cos(angle) * dist), int(math.sin(angle) * dist))
+    expected_spawn_pos = (
+        anchor[0] + int(math.cos(angle) * dist),
+        anchor[1] + int(math.sin(angle) * dist),
+    )
 
     for i, mob in enumerate(update.entities_add):
         expected_pos = (
