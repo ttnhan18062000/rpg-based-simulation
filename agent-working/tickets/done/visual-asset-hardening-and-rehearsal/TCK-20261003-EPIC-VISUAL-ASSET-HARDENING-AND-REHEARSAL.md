@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL
-phase: open
+phase: done
 date: 2026-10-03
 tags: [architecture, mcp, testing, live-map]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, mcp, testing, live-map]
 Visual assets after the foundation: licence-bound local Aseprite evidence, budgets, runtime manifest and an isolated AM-M5 surface rehearsal
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -48,11 +48,11 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 - More than one scale class, atlases, animation export.
 
 ## Acceptance Criteria
-- [ ] Every child in `SEQUENCE.md` is closed.
-- [ ] ADR D8-D10 and `docs/assets/aseprite_licence_review.md` match what was built.
-- [ ] Every bound in `visual_assets/` that was marked "provisional (U-05)" either carries an owner-approved value from `docs/assets/budgets.md` or is listed there as deliberately unset, with the reason.
-- [ ] The `AM-M5` rehearsal records a result per gate (`PASS` / `FAIL` / `BLOCKED` / `INCONCLUSIVE`) with its evidence, never a pass by default.
-- [ ] Boundary tests stay green: no `src/` <-> `visual_assets` import; the normal frontend path does not import the rehearsal code.
+- [x] Every child in `SEQUENCE.md` is closed.
+- [x] ADR D8-D10 and `docs/assets/aseprite_licence_review.md` match what was built.
+- [ ] Every bound in `visual_assets/` that was marked "provisional (U-05)" either carries an owner-approved value from `docs/assets/budgets.md` or is listed there as deliberately unset, with the reason. **Not yet satisfied, by design:** every row is `PROPOSED` (retention is listed as unset with its reason); the owner approves in PR review and the planner flips the rows to `APPROVED <date>`. The PR does not merge before that.
+- [x] The `AM-M5` rehearsal records a result per gate (`PASS` / `FAIL` / `BLOCKED` / `INCONCLUSIVE`) with its evidence, never a pass by default.
+- [x] Boundary tests stay green: no `src/` <-> `visual_assets` import; the normal frontend path does not import the rehearsal code.
 
 ## Related Tickets
 - TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION (done; PR #286, #299)
@@ -76,13 +76,19 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 - `.github/workflows/test.yml`, `Makefile` and `tests/static/test_ci_step_summary_reporting.py` are also being changed by another session on branch `python-code-craft-gates`; keep this batch's edits to them small and local so a merge stays easy.
 
 ## Implementation Notes
-Epic: see children.
+Children, in order, all in `done/`, one commit each on branch `visual-asset-hardening-and-rehearsal` (the last two after planner reviews):
+1. `TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE`: strict local real-Aseprite run, pin check, CI skip line, D10 guard.
+2. `TCK-20261003-VISUAL-ASSETS-BUDGETS`: every bound measured and recorded as `PROPOSED` (`docs/assets/budgets.md`) with a parity test; the review found and fixed a real defect (per-type record size bounds, split PNG file bound).
+3. `TCK-20261003-VISUAL-ASSETS-SANDBOX-TIMEOUT-LEAK`: a timed-out sandbox job killed only the outer bwrap; `kill_tree` now freezes and kills the whole tree (two review rounds found a stop race and an interrupt hang).
+4. `TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST`: `RuntimeManifest`, `export-runtime`, a committed synthetic three-shape fixture.
+5. `TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL`: the isolated `AM-M5` rehearsal; result `docs/assets/surface_rehearsal_result.md`, overall `INCONCLUSIVE`.
+Still open and unfiled: owner approval of the budget numbers, `AM-M6`/`M7` (dormant), a predeclared client matrix, an M4 rehearsal for `AM5-W09`/`AM-C09`, rollback/recall authority for `AM-C06`.
 
 ## Test Summary
-Epic: see children.
+Final state of the branch: `tests/visual_assets` without Aseprite 979 passed, 202 skipped; `make visual-assets-aseprite-local` 202 passed, 0 skipped (run twice in a row after the sandbox fix); `tests/static tests/architecture tests/docs` 240 passed; frontend `npx vitest run` 11 files, 94 tests passed; `npm run build` passes. Details per child ticket.
 
 ## Files Changed
-Epic: see children.
+See the children. New top-level pieces: `docs/assets/{budgets,surface_rehearsal_result}.md`, `frontend/src/visualAssets/`, `frontend/rehearsal.html`, `tools/visual_assets_*.py`.
 
 ## Completion Summary
-Not started.
+All five children are done. The batch makes the real-Aseprite evidence strict and local (D10), measures and proposes every bound (owner approval pending in PR review), fixes the record-size and sandbox-timeout defects found along the way, adds the runtime manifest and its export, and records an honest isolated `AM-M5` result (`INCONCLUSIVE`). Nothing is activated.

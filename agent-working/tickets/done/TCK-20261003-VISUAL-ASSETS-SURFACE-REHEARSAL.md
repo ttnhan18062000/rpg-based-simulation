@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: frontend
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL
-phase: open
+phase: done
 date: 2026-10-03
 tags: [live-map, rendering, testing, architecture]
 ---
@@ -15,7 +15,7 @@ tags: [live-map, rendering, testing, architecture]
 AM-M5 surface compatibility rehearsal in an isolated frontend harness: strict runtime-manifest parser, read-only resolver, fallbacks, single-generation loading, isolation proof and a per-gate result record
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -77,14 +77,14 @@ All new code lives in `frontend/src/visualAssets/`; nothing in the normal app im
 - New npm dependencies (if one seems needed, ask the planner first).
 
 ## Acceptance Criteria
-- [ ] Parser rejection cases each have a test; a valid fixture parses into a frozen snapshot.
-- [ ] Resolver: every fallback reason has a test; an unknown key performs no fetch (spy).
-- [ ] Out-of-order completions across two generations never show the older one (test).
-- [ ] Fallback output keeps a text label for every family and the three fixture keys are distinguishable without colour (test on the fixture alpha masks or the fallback glyphs).
-- [ ] Isolation test passes; production build output has no fixture and no `visualAssets` chunk; the normal-path files are unchanged.
-- [ ] `npx vitest run` and `npm run build` pass; `npm run lint` passes for the new files.
-- [ ] `docs/assets/surface_rehearsal_result.md` has a result for every `AM5-W*` deliverable and every M5 gate, with evidence or the reason it could not run.
-- [ ] Epic closed: all five children in `done/`, folder moved, plan statuses updated.
+- [x] Parser rejection cases each have a test; a valid fixture parses into a frozen snapshot.
+- [x] Resolver: every fallback reason has a test; an unknown key performs no fetch (spy).
+- [x] Out-of-order completions across two generations never show the older one (test).
+- [x] Fallback output keeps a text label for every family and the three fixture keys are distinguishable without colour (test on the fixture alpha masks or the fallback glyphs).
+- [x] Isolation test passes; production build output has no fixture and no `visualAssets` chunk; the normal-path files are unchanged.
+- [x] `npx vitest run` and `npm run build` pass; `npm run lint` passes for the new files.
+- [x] `docs/assets/surface_rehearsal_result.md` has a result for every `AM5-W*` deliverable and every M5 gate, with evidence or the reason it could not run.
+- [x] Epic closed: all five children in `done/`, folder moved, plan statuses updated.
 
 ## Related Tickets
 - TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL (parent)
@@ -97,7 +97,7 @@ All new code lives in `frontend/src/visualAssets/`; nothing in the normal app im
 - docs/architecture/visual_asset_foundation_adr.md (D6, D8)
 
 ## Related Stored Artifacts
-- None yet; staging artifacts go to `agent-working/staging_artifacts/TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL/`.
+- `agent-working/stored_artifacts/TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL/` (plan, investigation, test_plan)
 
 ## Related Code Areas
 - frontend/src/visualAssets/ (new), frontend/rehearsal.html (new, dev-only), frontend/src/constants/ (`CELL_SIZE`, read only), frontend/vite.config.ts (read only)
@@ -107,9 +107,24 @@ All new code lives in `frontend/src/visualAssets/`; nothing in the normal app im
 - The plan's "named owners for every participating surface" is the user for the Live Map seam in this rehearsal (authorized 2026-10-03).
 
 ## Implementation Notes
+- Re-check against what landed: ticket 3's fixture and the `RuntimeManifest` field names are as the ticket assumed. The manifest parser mirrors `contracts/runtime.py` and is stricter in one way the Python side cannot be: it reads the JSON text itself so a duplicate object key is a `duplicate_key` error (no stated gap).
+- Nothing outside `frontend/src/visualAssets/` imports the module, and the module imports only React and itself (its `CELL_SIZE` is a copy of the app's, asserted equal in a test).
+- Single generation: `SnapshotLoader.mount` returns a `View` and supersedes the previous one; a completion for a superseded view is closed, recorded in `loader.dropped` and the view resolves that file as `late_result_dropped`.
+- No frontend dependencies existed on this machine; `npm ci` installed the locked set (no change to `package.json`/lockfile).
+- A real-browser capture (Chromium 148 headless, local) showed the role letter of the hollow-frame fallback invisible; fixed and covered by a contrast test, capture rerun.
+- Result record: overall `INCONCLUSIVE` (W09, C06, C09 `BLOCKED`; W03, W05, W07, C05, C07 `INCONCLUSIVE`; W01, W02, W04, W06, W08 `PASS` within their stated scope). The HUD is out of scope and not passed.
+- Planner's two small items folded in: the `store_contract.md` fixture command uses the module form; the `runtime_export.py` rename comment now states that an empty directory would be replaced on Linux.
 
 ## Test Summary
+- `npx vitest run` (frontend): 11 files, 94 tests pass (an earlier full run had one unrelated existing test, `useSimulation ... CONNECTING_LIVE`, fail once under parallel load; it passed alone and in the next full run). New: manifest 29, resolver 9, loader 4, fallback 7, scene 5, harness 4, isolation 5 (it builds the production bundle into a temp directory).
+- `npx eslint src/visualAssets`: clean; the whole-repo `npm run lint` shows 18 existing errors in other files and none in the new ones. `npm run build` (`tsc -b && vite build`): passes; `dist/` has no match for `visualAssets`, `rehearsal` or `runtime_manifest`; the production JS bundle hash is unchanged by this ticket.
+- Mutants, each killed by its named test: loader keeps late completions; duplicate JSON keys allowed; unknown key does a lookup; cross glyph equals diamond; letter always dark (survived a string-inequality check, killed by the contrast check); the app imports the parser (static check; the build check also fails once the import is used); the config also builds `rehearsal.html`.
+- Local Chromium capture (twice, see the result record): 4 spec tests pass; the three drawn cells are pixel-identical to the fixture PNGs.
+- `git diff 2cfa8ab1 --stat` over `src/`, `frontend/src/{App.tsx,hooks,components,constants,contexts,lib,types,main.tsx}`, `vite.config.ts`, `index.html`, `package*.json`, `.github/workflows`: empty except the earlier ticket-1 workflow step (not part of this ticket). Python (final state): `tests/visual_assets` without Aseprite 979 passed, 202 skipped; `make visual-assets-aseprite-local` 202 passed, 0 skipped; `tests/static tests/architecture tests/docs` 240 passed.
 
 ## Files Changed
+- New: `frontend/src/visualAssets/{manifest,resolver,fallback,loader,scene,cell,fixtureSource,browserDecode}.ts`, `RehearsalHarness.tsx`, `rehearsalMain.tsx`, `__tests__/` (helpers + 7 test files); `frontend/rehearsal.html`; `frontend/playwright.rehearsal.config.ts`, `frontend/rehearsal-capture/rehearsal.capture.ts`; `docs/assets/surface_rehearsal_result.md`
+- Changed: `docs/assets/store_contract.md`, `docs/plans/visual-asset-management-runtime-integration/{README,05_surface_compatibility_rehearsal_plan}.md`, `docs/plans/visual-asset-foundation/README.md`, `visual_assets/store/runtime_export.py` (comment only)
 
 ## Completion Summary
+The isolated `AM-M5` rehearsal is built and run: a strict manifest parser, read-only resolver, typed fallbacks and single-generation loader in `frontend/src/visualAssets/`, proven isolated from the normal app and the production build, with an honest per-deliverable and per-gate result (overall `INCONCLUSIVE`, nothing passed toward activation).

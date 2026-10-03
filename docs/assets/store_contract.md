@@ -108,7 +108,7 @@ candidate strictly, re-decodes every artifact PNG and checks its pixel hash, and
 (the drawing server may not import it). Refusals, each leaving no output and the catalog unchanged (exit code 2): `verify_failed`, `unknown_release`, `registry_mismatch` (the registry
 changed since the candidate was assembled), `artifact_mismatch`, `out_exists` (also a symlink, and an output that appears while exporting), `out_inside_catalog`,
 `out_parent_missing`, `invalid_catalog_id`, `invalid_release_id`, `registry_invalid`, `catalog_unreadable`. A committed synthetic export (three `fixture.rehearsal.*` images in
-different shapes) lives at `frontend/src/visualAssets/__fixtures__/rehearsal/`; `tests/visual_assets/store/runtime_fixture.py --write` refreshes it and a test checks it equals a fresh
+different shapes) lives at `frontend/src/visualAssets/__fixtures__/rehearsal/`; `python -m tests.visual_assets.store.runtime_fixture --write` (run from the repo root, module form) refreshes it and a test checks it equals a fresh
 regeneration. Wiring the export into the real frontend build is `AM-M6` (dormant).
 
 ## Commands (`python -m visual_assets.store <command>`)
@@ -142,8 +142,10 @@ There is no MCP tool that adopts, revokes, builds, releases, deletes or activate
 
 ## Not built (outside this foundation's scope)
 
-Runtime activation, a resolver, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
-(`AM-M5`-`M7`, `AM1-W08`). Open decisions are listed at the end of this page.
+Runtime activation, a resolver in the real client, Live Map and HUD consumption, signing, client compatibility ranges, more than one scale class, atlases and animation export
+(`AM-M6`/`M7`, `AM1-W08`). Built since: the runtime manifest and `export-runtime` (above) and an **isolated** `AM-M5` surface rehearsal on synthetic fixtures in
+`frontend/src/visualAssets/` (a strict parser, resolver, typed fallbacks and single-generation loader that nothing in the normal app imports); its per-gate result, overall
+`INCONCLUSIVE`, is `docs/assets/surface_rehearsal_result.md`. Open decisions are listed at the end of this page.
 
 ## Known gaps (stated, not hidden)
 

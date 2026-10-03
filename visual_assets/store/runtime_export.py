@@ -111,7 +111,9 @@ def export_runtime(catalog_id: str, release_id: str, out_dir: Path | str, *, all
         for name, png in sorted(files.items()):
             _write_new(staging / name, png)
         try:
-            os.rename(staging, out)  # fails if `out` appeared meanwhile (a non-empty directory); nothing is replaced
+            # `out` was checked absent up front. If something appeared meanwhile: a file or a NON-empty directory makes rename fail and
+            # nothing is replaced; on Linux an EMPTY directory is replaced, which loses nothing (a narrow race the pre-check makes unlikely).
+            os.rename(staging, out)
         except OSError:
             raise BuildError("out_exists", f"{out.name} appeared while exporting; nothing was written") from None
     except BaseException:
