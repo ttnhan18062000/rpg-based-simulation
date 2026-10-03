@@ -261,6 +261,15 @@ def test_end_to_end_an_unusable_registry_writes_no_sarif_and_reports_could_not_r
     assert "::warning::code-health SARIF could not run (advisory):" in capsys.readouterr().out
 
 
+def test_end_to_end_a_missing_changed_list_is_could_not_run_not_an_empty_upload(project, capsys):
+    out = project / "out.sarif"
+    summary = project / "summary.md"
+    assert run(project, project / "absent-changed.txt", out, summary, annotate=True) == 2
+    assert not out.exists(), "no changed list means no SARIF: an empty upload would clear earlier alerts"
+    assert "could not run:" in summary.read_text()
+    assert "::warning::code-health SARIF could not run (advisory):" in capsys.readouterr().out
+
+
 def test_end_to_end_malformed_tool_output_is_reported_not_swallowed(project, monkeypatch):
     def broken(command, root, label):
         class Done:

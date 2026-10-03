@@ -64,6 +64,24 @@ def test_the_upload_runs_whenever_the_filter_ran_even_with_no_changed_files_but_
     assert upload["with"]["sarif_file"] == "reports/code_health/code-health.sarif" and upload["with"]["category"] == "code-health"
 
 
+def test_a_failed_changed_paths_step_fails_closed_nothing_is_filtered_or_uploaded() -> None:
+    """The shell creates a redirect target before the command runs, so a failed `git diff` must not leave a file."""
+    steps = {s.get("name"): s for s in _JOBS[_UPLOAD_JOB]["steps"]}
+    changed = steps["Paths this PR changed"]
+    assert changed["id"] == "changed" and changed["continue-on-error"] is True
+    assert "/tmp/changed.partial" in changed["run"] and "&& mv /tmp/changed.partial /tmp/changed.txt" in changed["run"], (
+        "write to a temporary name and move into place only when git succeeded"
+    )
+    assert changed["run"].count("> /tmp/changed.txt") == 0, "never redirect straight into the final name"
+    assert "steps.changed.outcome == 'success'" in steps["Code health SARIF"]["if"]
+    report = steps["Report that the changed paths are unavailable"]
+    assert "steps.changed.outcome != 'success'" in report["if"]
+    assert "could not run: changed paths unavailable" in report["run"] and "::warning::" in report["run"]
+    names = [s.get("name") for s in _JOBS[_UPLOAD_JOB]["steps"]]
+    assert names.index("Paths this PR changed") < names.index("Report that the changed paths are unavailable") < names.index("Code health SARIF")
+    assert "steps.sarif.outcome == 'success'" in steps["Upload SARIF to code scanning"]["if"], "a skipped filter step uploads nothing"
+
+
 def test_checkout_does_not_keep_the_token_and_untrusted_text_is_never_interpolated_into_a_run_step() -> None:
     checkout = next(s for s in _JOBS[_UPLOAD_JOB]["steps"] if s.get("uses", "").startswith("actions/checkout"))
     assert checkout["with"]["persist-credentials"] is False

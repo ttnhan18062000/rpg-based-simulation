@@ -967,11 +967,21 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
         with: { version: "0.11.2", python-version: "3.13", activate-environment: true, enable-cache: true }
       - run: uv sync --locked --no-install-project
+      # The list is written to a temporary name and moved into place only when git succeeds: the shell creates the
+      # redirect target before git runs, so a failed `git diff` would otherwise leave an empty file that reads as
+      # "no src file changed" and would upload an empty SARIF, wrongly clearing this PR's earlier alerts.
       - name: Paths this PR changed
-        run: git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > /tmp/changed.txt
+        id: changed
+        run: git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" > /tmp/changed.partial && mv /tmp/changed.partial /tmp/changed.txt
         continue-on-error: true
+      - name: Report that the changed paths are unavailable
+        if: ${{ steps.changed.outcome != 'success' }}
+        run: |
+          echo "**Code health SARIF (advisory):** could not run: changed paths unavailable" >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::code-health SARIF could not run (advisory): changed paths unavailable"
       - name: Code health SARIF
         id: sarif
+        if: ${{ steps.changed.outcome == 'success' }}
         run: python3 -m tools.code_health.sarif_feedback --changed /tmp/changed.txt --out reports/code_health/code-health.sarif --summary-out "$GITHUB_STEP_SUMMARY" --annotate
         continue-on-error: true
       - name: Upload SARIF to code scanning
