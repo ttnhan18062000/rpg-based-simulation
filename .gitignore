@@ -9,6 +9,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+# visual_assets/store/build/ is a source package (sandboxed export), not build output; the rule above would hide it.
+!visual_assets/store/build/
 develop-eggs/
 dist/
 downloads/
