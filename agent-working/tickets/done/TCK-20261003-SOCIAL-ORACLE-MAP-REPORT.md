@@ -97,7 +97,7 @@ All figures re-measured at the then-current `origin/main`, with the full SHA.
 ## Test Summary
 
 No test added or changed. A read-only script over `docs/parity_ledger/social_narrative.yaml` produced the
-counts and lists at `origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6`; all 23 cited test files exist.
+counts and lists at `origin/main` `9640ff942877cc7264e83309f35d19022a4a3fe6`; all 63 distinct test files cited by the ledger's `test_path` values exist (an earlier count of 23 came from a first-path-only parse and was wrong; corrected in the report, section 3.1).
 Source lines re-checked with `sed -n '46p;64p'`.
 
 ## Files Changed
