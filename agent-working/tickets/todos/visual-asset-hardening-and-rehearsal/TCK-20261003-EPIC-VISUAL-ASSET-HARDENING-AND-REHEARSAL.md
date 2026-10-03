@@ -35,7 +35,7 @@ fixtures is authorized. `AM-M6` (activation) and `AM-M7` (migration) stay dorman
 human-selected role, and each needs its own authorization.
 
 The decisions themselves (D8-D10, the licence review, plan-package status notes) are planner-owned and land in the
-planning commit. The four children implement what follows from them.
+planning commit. The children implement what follows from them.
 
 ## Scope
 Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
@@ -56,7 +56,7 @@ Tracks the child tickets in `SEQUENCE.md`. No direct implementation.
 
 ## Related Tickets
 - TCK-20261002-EPIC-VISUAL-ASSET-FOUNDATION (done; PR #286, #299)
-- Children: TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE, TCK-20261003-VISUAL-ASSETS-BUDGETS, TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST, TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL
+- Children: TCK-20261003-VISUAL-ASSETS-LOCAL-ASEPRITE-EVIDENCE, TCK-20261003-VISUAL-ASSETS-BUDGETS, TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST, TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL, TCK-20261003-VISUAL-ASSETS-SANDBOX-TIMEOUT-LEAK (added after the ticket 2 review)
 
 ## Related Docs
 - docs/architecture/visual_asset_foundation_adr.md (D8-D10)

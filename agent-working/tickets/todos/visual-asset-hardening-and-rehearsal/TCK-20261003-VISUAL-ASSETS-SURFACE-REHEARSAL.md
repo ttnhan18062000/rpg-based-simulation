@@ -68,7 +68,7 @@ All new code lives in `frontend/src/visualAssets/`; nothing in the normal app im
    something not run.
 9. **Docs and close-out**: `docs/assets/store_contract.md` "Not built" list, the runtime-integration README status, the M5 plan
    status note, the foundation README's "As built" section if anything deviates; epic close per CLAUDE.md (move the folder to
-   `done/` when all four children are done).
+   `done/` when all five children are done).
 
 ## Out of Scope
 - Any change to the normal Live Map, HUD, `App.tsx`, `src/` or the WebSocket path; any real asset; wiring the resolver into gameplay
@@ -84,7 +84,7 @@ All new code lives in `frontend/src/visualAssets/`; nothing in the normal app im
 - [ ] Isolation test passes; production build output has no fixture and no `visualAssets` chunk; the normal-path files are unchanged.
 - [ ] `npx vitest run` and `npm run build` pass; `npm run lint` passes for the new files.
 - [ ] `docs/assets/surface_rehearsal_result.md` has a result for every `AM5-W*` deliverable and every M5 gate, with evidence or the reason it could not run.
-- [ ] Epic closed: all four children in `done/`, folder moved, plan statuses updated.
+- [ ] Epic closed: all five children in `done/`, folder moved, plan statuses updated.
 
 ## Related Tickets
 - TCK-20261003-EPIC-VISUAL-ASSET-HARDENING-AND-REHEARSAL (parent)

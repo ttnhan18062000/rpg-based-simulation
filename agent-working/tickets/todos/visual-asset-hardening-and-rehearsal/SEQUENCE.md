@@ -4,7 +4,7 @@
 Decisions it rests on: ADR `D8`-`D10` in `docs/architecture/visual_asset_foundation_adr.md` and
 `docs/assets/aseprite_licence_review.md` (decided by the user on 2026-10-03, landed in the planning commit).
 
-All four children are built by `asset-implementer` on branch `visual-asset-hardening-and-rehearsal`, one commit per ticket,
+All five children are built by `asset-implementer` on branch `visual-asset-hardening-and-rehearsal`, one commit per ticket,
 each reviewed by `asset-planner`. One PR for the whole batch, opened only when the planner says it is ready and the user
 authorizes the push.
 
@@ -14,6 +14,9 @@ authorizes the push.
    CI skip reporting, a guard that no workflow installs Aseprite. Gives ticket 2 its local timings.
 2. `TCK-20261003-VISUAL-ASSETS-BUDGETS` (P1, standard) — measure, propose every U-05 bound in `docs/assets/budgets.md`,
    parity test between the doc and the code. Numbers approved by the owner in PR review.
+2b. `TCK-20261003-VISUAL-ASSETS-SANDBOX-TIMEOUT-LEAK` (P1, hotfix; added 2026-10-03 after the ticket 2 review) — a timed-out
+   job can orphan a bwrap sandbox process, and the timeout test then fails machine-wide. Fixed before ticket 3 so later strict
+   local runs are trustworthy.
 3. `TCK-20261003-VISUAL-ASSETS-RUNTIME-MANIFEST` (P1, standard) — the minimal runtime manifest (proposal 9.3) exported from
    one release candidate; a synthetic fixture release made without Aseprite; the frontend fixture is generated from it.
 4. `TCK-20261003-VISUAL-ASSETS-SURFACE-REHEARSAL` (P1, standard) — `AM-M5` in an isolated frontend harness: strict
