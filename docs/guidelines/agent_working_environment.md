@@ -190,9 +190,14 @@ automatically (no make target, script, CI step or session hook), and CI stays th
   hooks run and restores them afterwards.
 - **Install affects every worktree on this machine.** `.git/hooks` is the common directory shared by all
   worktrees of this repository, so once anyone installs, the pre-commit hook runs on every commit in every
-  worktree, including ones with no project environment. The hooks therefore never block for a missing
-  environment: without ruff, without the registry, without `tools.code_health` or without `uv` they print one
-  visible `... skipped: ...` line and exit 0. Only a real new or worse violation (or a stale `uv.lock`) blocks.
+  worktree, including ones with no project environment and ones on a branch cut before this config existed. The
+  hooks therefore never block for a missing environment: without ruff, without the registry, without
+  `tools.code_health` or without `uv` they print one visible `... skipped: ...` line and exit 0. The same holds for
+  prek's own hook: the installer uses `--allow-missing-config` (a tree with no `.pre-commit-config.yaml` commits
+  normally, silently) and adds a guard to prek's generated `pre-commit` script, so if prek itself cannot be found (the
+  environment was re-synced without it, or deleted) it prints `pre-commit hook skipped: prek not found ...` and
+  exits 0 instead of failing every commit on the machine. Only a real new or worse violation (or a stale
+  `uv.lock`) blocks, and only where the config, prek and the project environment are all present.
 - **`make install-prek-hooks` never overwrites.** `post-commit` is installed only when absent (identical ->
   no change; a different one is kept and reported). An existing foreign `pre-commit` hook is kept by prek as
   `pre-commit.legacy` and still runs. Running it twice changes nothing. By contrast the older

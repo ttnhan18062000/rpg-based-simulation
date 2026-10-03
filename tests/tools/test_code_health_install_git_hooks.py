@@ -181,6 +181,98 @@ def test_a_worktree_without_the_project_environment_is_not_blocked(repo):
     assert "code-health hook skipped: environment not synced" in done.stdout + done.stderr
 
 
+# ── the shared hooks directory must never block a worktree that cannot run the hook ─────────────────
+
+
+def _bare_env() -> dict:
+    """A PATH with no prek and no project environment: what a worktree on a plain machine has."""
+    env = {**os.environ, "PATH": "/usr/bin:/bin"}
+    assert shutil.which("prek", path=env["PATH"]) is None
+    return env
+
+
+def test_a_commit_in_a_checkout_without_the_config_file_is_not_blocked(repo):
+    """A branch cut before .pre-commit-config.yaml existed has no config; prek's shim would fail every commit there."""
+    _install(repo)
+    _git(repo, "rm", "-q", ".pre-commit-config.yaml")
+    (repo / "src" / "b.py").write_text(_BARE)  # would be rejected if the hooks ran, but there is no config
+    _git(repo, "add", "src/b.py")
+    done = _git(repo, "commit", "-q", "-m", "no config in this tree", env=_env(), check=False)
+    assert done.returncode == 0, done.stdout + done.stderr
+
+
+def test_control_a_plain_prek_install_without_the_flag_does_block_a_commit_without_the_config(repo):
+    """Proves the test above discriminates: prek's own default install fails here (exit 1)."""
+    done = subprocess.run([str(Path(sys.executable).parent / "prek"), "install", "--hook-type", "pre-commit"], cwd=repo, capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    _git(repo, "rm", "-q", ".pre-commit-config.yaml")
+    (repo / "src" / "b.py").write_text("x = 2\n")
+    _git(repo, "add", "src/b.py")
+    blocked = _git(repo, "commit", "-q", "-m", "x", env=_env(), check=False)
+    assert blocked.returncode != 0 and "pre-commit-config.yaml` found in the current directory" in blocked.stdout + blocked.stderr
+
+
+def _install_with_a_removable_prek(repo: Path, tmp_path: Path) -> Path:
+    copy = tmp_path / "bin" / "prek"
+    copy.parent.mkdir()
+    shutil.copy(Path(sys.executable).parent / "prek", copy)
+    done = subprocess.run([sys.executable, str(_REPO / "tools" / "hooks" / "install_git_hooks.py"), "install", "--repo", str(repo), "--prek", str(copy)],
+                          capture_output=True, text=True, env=_env())
+    assert done.returncode == 0, done.stderr
+    return copy
+
+
+def test_a_commit_where_prek_cannot_be_resolved_skips_with_a_visible_line_instead_of_failing(repo, tmp_path):
+    copy = _install_with_a_removable_prek(repo, tmp_path)
+    assert str(copy) in _hook(repo, "pre-commit").read_text(), "the shim hard-codes the prek it was installed with"
+    copy.unlink()  # the environment was re-synced without prek, or deleted
+    (repo / "src" / "b.py").write_text("x = 2\n")
+    _git(repo, "add", "src/b.py")
+    done = _git(repo, "commit", "-q", "-m", "prek is gone", env=_bare_env(), check=False)
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "pre-commit hook skipped: prek not found (project environment not synced: uv sync)" in done.stdout + done.stderr
+
+
+def test_control_an_unguarded_shim_with_no_prek_does_fail_every_commit(repo, tmp_path):
+    """Proves the test above discriminates: prek's own shim, with prek gone, exits non-zero ('prek: not found')."""
+    copy = tmp_path / "bin" / "prek"
+    copy.parent.mkdir()
+    shutil.copy(Path(sys.executable).parent / "prek", copy)
+    subprocess.run([str(copy), "install", "--hook-type", "pre-commit", "--allow-missing-config"], cwd=repo, check=True, capture_output=True)
+    copy.unlink()
+    (repo / "src" / "b.py").write_text("x = 2\n")
+    _git(repo, "add", "src/b.py")
+    blocked = _git(repo, "commit", "-q", "-m", "x", env=_bare_env(), check=False)
+    assert blocked.returncode != 0
+
+
+def test_the_guard_is_added_once_and_an_older_unguarded_shim_is_upgraded(repo):
+    subprocess.run([str(Path(sys.executable).parent / "prek"), "install", "--hook-type", "pre-commit", "--allow-missing-config"], cwd=repo, check=True, capture_output=True)
+    assert "guard added by" not in _hook(repo, "pre-commit").read_text()
+    upgraded = _install(repo)
+    assert "pre-commit: prek hook already installed, missing-prek guard added" in upgraded.stdout
+    once = _hook(repo, "pre-commit").read_bytes()
+    again = _install(repo)
+    assert _hook(repo, "pre-commit").read_bytes() == once and "unchanged" in again.stdout
+    assert once.count(b"guard added by tools/hooks/install_git_hooks.py") == 1
+
+
+def test_prek_uninstall_still_recognises_and_removes_the_guarded_shim(repo):
+    _install(repo)
+    assert "guard added by" in _hook(repo, "pre-commit").read_text()
+    done = _install(repo, "uninstall")
+    assert done.returncode == 0, done.stderr
+    assert not _hook(repo, "pre-commit").exists()
+
+
+def test_a_new_violation_still_blocks_when_the_config_and_prek_are_both_present(repo):
+    _install(repo)
+    (repo / "src" / "b.py").write_text(_BARE)
+    _git(repo, "add", "src/b.py")
+    done = _git(repo, "commit", "-q", "-m", "violation", env=_env(), check=False)
+    assert done.returncode != 0 and "NEW violations (no baseline row)" in done.stdout + done.stderr
+
+
 # ── static: the config and the opt-in rule ────────────────────────────────────
 
 
