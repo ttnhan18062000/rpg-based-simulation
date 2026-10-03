@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-03T07:14:59.320487Z", "ticket_id": "TCK-20261003-OLD-ROOT-RESIDUE-GUARD", "title": "Ignore pre-move index residue and guard old roots", "status": "DONE", "summary": "Three old-root index ignore rules, guard test over git ls-files, path-map cleanup section", "artifacts_path": "none (hotfix \u2014 no staging artifacts)"}
