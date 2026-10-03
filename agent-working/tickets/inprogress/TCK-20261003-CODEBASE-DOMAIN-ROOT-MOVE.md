@@ -4,7 +4,7 @@ layer: architecture
 authority: P1
 audience: agent
 ticket_id: TCK-20261003-CODEBASE-DOMAIN-ROOT-MOVE
-phase: open
+phase: inprogress
 date: 2026-10-03
 tags: [architecture, delivery]
 ---
@@ -15,7 +15,7 @@ tags: [architecture, delivery]
 Move the codebase domain's tooling and baselines into a top-level codebase/ domain root
 
 ## Status
-OPEN
+INPROGRESS
 
 ## Tier
 standard
