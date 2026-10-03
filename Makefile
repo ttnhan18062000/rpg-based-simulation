@@ -1,4 +1,4 @@
-.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py lint-py code-health-size code-health-complexity code-health-dup code-health perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
+.PHONY: help install install-py install-fe build dev serve stop clean lint profile-api memray-profile docs-serve docs-build docs-registry tag-report docs-artifacts brainstorm-idea-index knowledge-index knowledge-index-update search-server search-server-docker search-server-stop search-server-logs install-hooks install-prek-hooks uninstall-prek-hooks eval-search evaluate evaluate-full simq-full-audit simq-full-audit-full simq-full-audit-slow simq-corpus-diversity-slow-isolated mcp-server-test world-list world-validate world-compile world-resolve world-inspect world-template catalog-list sim sim-debug sim-quick sim-world sim-sweep check-resources export-run retention-plan retention-clean warehouse-init warehouse-ingest typecheck-py typecheck-baseline-sync lint-py code-health-size code-health-complexity code-health-dup code-health perf-measure dashboard-install dashboard-build dashboard-dev dashboard-serve ticket-stats-report test-collect agent-monitoring-index simq-corpus-registry parity-index parity-index-check simq-long-run-lifecycle-observation content-inventory codebase-health-snapshot codebase-health-scorecard codebase-health-pr-impact docs-registry-check setup-merge-drivers working-log-duplicate-check working-log-content-duplicate-check duplicate-run-record-check sidecar-attribution-coverage-check tool-call-count-mismatch-check event-seq-integrity-check monitoring-integrity-backlog-check monitoring-anomaly-validate premise-staleness-check tools-orphan-check planning-doc-staleness-check
 
 # Default
 help: ## Show available commands
@@ -282,11 +282,14 @@ code-health-dup: ## Report duplicated Python blocks under src/ with jscpd (repor
 
 # `code-health` is the Python craft-debt ratchet (tools/code_health/, registries/code_health_exceptions.jsonl).
 # It is unrelated to the codebase-health-* targets, which belong to tools/codebase_health_*.py.
-code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than registries/code_health_exceptions.jsonl (on demand; not run in CI)
+code-health: ## Run ruff, complexipy, jscpd and the line-count report over src/; fail only on violations new or worse than registries/code_health_exceptions.jsonl (also the advisory `Code health (advisory)` CI job during the soak: reports, never fails the PR)
 	python3 -m tools.code_health check
 
-typecheck-py: ## Run Python type checking via mypy (src/ only, informational first pass)
-	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary || true
+typecheck-py: ## Run mypy over src/ and show only errors not in registries/mypy_baseline.txt (advisory during the soak: never fails)
+	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline filter || true
+
+typecheck-baseline-sync: ## Rewrite registries/mypy_baseline.txt from a fresh mypy run. Codebase domain only, on main, together with the code-health reseed (make code-health seed); never to hide a new error
+	python3 -m mypy src/ --config-file pyproject.toml --no-error-summary | python3 -m mypy_baseline sync
 
 # ── Documentation Site ───────────────────────────────────
 
@@ -520,10 +523,16 @@ search-server: ## FALLBACK ONLY — start search server directly via uvicorn (ex
 	@echo "[search-server] Fallback mode — use make search-server-docker for persistent deployment"
 	uvicorn tools.search_server:app --host 127.0.0.1 --port 8765 --reload
 
-install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ or agent-working/tickets/done/ changed)
+install-hooks: ## Install git hooks (post-commit incremental reindex when docs/ or agent-working/tickets/done/ changed). OVERWRITES an existing post-commit hook; install-prek-hooks does not
 	cp tools/hooks/post-commit-reindex.sh .git/hooks/post-commit
 	chmod +x .git/hooks/post-commit
 	@echo "[hooks] post-commit hook installed"
+
+install-prek-hooks: ## OPT-IN: install the prek pre-commit hook (ruff ratchet on staged src files, offline uv.lock check) and the post-commit reindex hook, never overwriting; affects EVERY worktree on this machine
+	python3 tools/hooks/install_git_hooks.py install
+
+uninstall-prek-hooks: ## Remove what install-prek-hooks installed (prek pre-commit shim, restoring any legacy hook; post-commit only if it is ours); never touches post-merge
+	python3 tools/hooks/install_git_hooks.py uninstall
 
 eval-search: ## Run search quality evaluation — Recall@5, MRR@10 (requires knowledge-index)
 	$(PYTHON_KNOWLEDGE) tools/eval_search.py
