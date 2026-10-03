@@ -180,6 +180,27 @@ inside the PR keeps the rename commit pure: (1) Stage 1 paths module + guard tes
 file R100); (3) Stage 2b constants flip + live-reference rewrite + governing-file diffs (each owner-confirmed) + regenerated
 `AGENTS.md` / `docs/REGISTRY.yaml`; (4) Stage 3 validators and index rebuilds. The implementer commits (design hands drafts).
 
+
+### Sweep checklist (closed 2026-10-03, scoped tests green except 7 pre-existing missing-`complexipy` failures)
+
+Zero-hit search for each old root (`<root>/` not preceded by a path character) outside the frozen set: clean, apart from
+this ticket and the plan's M-1 row, which describe the old names on purpose. Each group's references were rewritten
+by one rule (`<root>/` -> `agent-working/<root>/`, generated indexes -> `agent-working/.index/<name>/`) plus the constants.
+
+| Group | Status |
+|---|---|
+| `tools/` | closed: constants module, depth logic computed from `AGENT_MONITORING.parts` |
+| `tests/` | closed: fixtures use the constants (`mkdir(parents=True)`), guard test added with seeded failures |
+| `docs/` (non-archive) | closed; `docs/guides/agent_working_path_map.md` added |
+| `.claude/workflows/`, `.claude/agents/`, `.claude/skills/`, `.agents/` | closed (regenerated Codex guidance) |
+| `agent-working/agent-orchestration/` | closed |
+| `settings.json`, `Makefile`, `.gitignore`, `.gitattributes`, `.mcp.json`, `.graphifyignore` | closed; `settings.json` diff owner-confirmed |
+| `src/` | closed (no runtime path reads besides the dashboard ingest) |
+| `CLAUDE.md`, `AGENTS.md` | closed; owner-confirmed, `AGENTS.md` regenerated |
+
+Not verified: AC 9's `implement-ticket` hotfix `Workflow` dry run (needs the owner's explicit `Workflow` opt-in). Open
+side effect: the `search_docs` MCP server of an already-running session still points at the old index path until restarted.
+
 ## Test Summary
 Defined at planning.
 
