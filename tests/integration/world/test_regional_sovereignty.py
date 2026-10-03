@@ -192,3 +192,42 @@ def test_governance_maintenance_and_degradation():
     assert next_state_broke.global_resources["faction_hero_guild_gold"] == -90.0
     # Building should be disabled
     assert next_state_broke.buildings[1].functional is False
+
+
+def test_ownership_reevaluated_for_region_with_no_death_that_tick():
+    """Ownership must be re-checked for a region with no death that tick.
+
+    Guards AC-4 of TCK-20260925-SOVEREIGNTY-OWNERSHIP-WRITER-CONSOLIDATION: the
+    unconditional world_dynamics sweep, not the death-gated influence path, is what
+    re-evaluates ownership. A consolidation that only evaluated ownership inside
+    FactionInfluenceService.process_influence_shift (which is gated on `recent_deaths`)
+    would silently narrow when ownership is checked and break non-death conquest.
+    Logic ID: WORLD-024 (Regional Sovereignty)
+    """
+    from src.engine.pipeline import AuthoritativeApplyPipeline
+
+    region = RegionState(
+        id="forest", name="Grim Forest", bounds=(0, 0, 100, 100),
+        influence=99.5, owner_faction_id=None,
+    )
+    bystander = (
+        V2EntityBuilder(1).kind("hero").location(50, 50)
+        .identity(role=EntityRole.HERO, faction=Faction.HERO_GUILD)
+        .combat(hp=10, alive=True).build()
+    )
+    state = AuthoritativeState(tick=7, seed=42, entities={1: bystander},
+                               regions={"forest": region})
+
+    # No death anywhere this tick -- asserted so the fixture cannot silently acquire one
+    # and turn this into a death-driven flip without anyone noticing.
+    assert all(e.combat.alive for e in state.entities.values())
+
+    update = StateUpdate(world_updates={
+        "forest": WorldUpdate(region_id="forest", influence_delta=10.0)
+    })
+    refined = AuthoritativeApplyPipeline.refine(state, update)
+    final = ApplyPath.apply_generation(state, refined, next_tick=8)
+
+    assert final.regions["forest"].owner_faction_id == Faction.HERO_GUILD, (
+        "ownership was not re-evaluated for a region with no death that tick"
+    )

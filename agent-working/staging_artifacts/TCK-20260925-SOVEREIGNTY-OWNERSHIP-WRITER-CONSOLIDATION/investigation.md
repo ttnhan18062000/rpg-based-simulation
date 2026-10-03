@@ -119,6 +119,32 @@ configuration.
 | Durable ownership flips observed | **2**, both writer-1-only (`goblin_camp` t1203, t1503; `None → HERO_GUILD`) |
 | Flip same-tick as the causing death | **No** — writer 1 structurally cannot see this tick's death influence (§5a) |
 
+### 5b. Instrument caveat found afterwards — the counts carry noise, the zeros do not
+
+**These runs were NOT made with `audit_mode=True`, and they should have been.** A follow-up probe
+confirmed engine nondeterminism on this exact world/seed, and traced it to
+`src/engine/kernel.py:612-620`: when `not self._audit_mode and elapsed > max_tick_budget_ms`, the
+mid-tick emergency throttle **drops the remaining authoritative result items**. This is the known,
+documented, deliberately deferred mechanism — `INFRA-273`, `docs/audits/D06_longrun_health.md`
+§F6/§F7, `TCK-20260818-STANDARD-LONGRUN-DETERMINISM-WATCHDOG-AUDITMODE` — **not a new defect, and
+deliberately not filed as one.** `docs/engine/deterministic_execution.md` Extension Rule 5 already
+mandates `audit_mode` for any run verifying determinism.
+
+What this does and does not undermine:
+
+- **The counts above are noise-prone and should not be quoted as exact.** Dropped result items mean
+  per-tick counters can under-report. Treat ~230 calls / 3 writes / 24,000 executions as
+  order-of-magnitude.
+- **The zeros still hold, but on the structural argument, not the count.** Writer 2's liberation
+  branch needs an invader owner AND influence ≥ +50 AND an in-region death in one tick, and writer 1
+  destroys that state on the first tick it exists; both conquest branches emit the same value, so no
+  disagreement is expressible. The constructed scenario independently proved the path is live. A
+  dropped-item artifact could hide an occurrence, which is exactly why the conclusion rests on the
+  structure and is stated as "true zero for this corpus, not proof of impossibility".
+- **Any future per-tick measurement on this corpus must set `audit_mode=True`** and preferably relax
+  `max_tick_budget_ms`, or it is measuring the throttle. Sequential execution does **not** fix it —
+  that was measured: a single-threaded `LocalSequentialExecutor` still diverged.
+
 **Positive controls, both directions.** The writer-1 hook captured a real write
 (`tick=1203, goblin_camp, HERO_GUILD, owner_before=None, influence=50.0`) matching the independently
 observed durable transition. The writer-2 hook fired on every death tick (27–60 calls/run), proving it
