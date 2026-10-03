@@ -12,7 +12,7 @@
  * visible and the live WS delta stream is driving redraws.
  *
  * Two harness-only techniques used here, neither of which edits
- * frontend/src/ or src/ (see staging_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION/
+ * frontend/src/ or src/ (see agent-working/staging_artifacts/TCK-20260821-LIVE-MAP-PERF-VALIDATION/
  * investigation.md "Auth gate" and "Dev-proxy ws: true gap" sections, and
  * plan.md's Open Question 1 resolution -- both ruled in-scope):
  *

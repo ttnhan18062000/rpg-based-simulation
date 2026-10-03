@@ -9,7 +9,7 @@ tags: [architecture, content, feature-flags]
 # Epic Plan — RPG Design Roadmap, Milestone 1: Quick Wins & Housekeeping
 
 **Status: DONE (2026-08-30).** 22/22 child tickets complete, folder archived to
-`tickets/done/m1-quick-wins/` (`SEQUENCE.md` preserved). All work landed on branch `m1-quick-wins`,
+`agent-working/tickets/done/m1-quick-wins/` (`SEQUENCE.md` preserved). All work landed on branch `m1-quick-wins`,
 PR'd as [#90](https://github.com/ttnhan18062000/rpg-based-simulation/pull/90) with all 13 CI checks
 green as of 2026-08-31. See **Implementation Summary** below for what actually shipped, what was
 decided, and what real follow-up work the batch's own changes surfaced. The rest of this document
@@ -27,7 +27,7 @@ gates on something upstream of it.
 **2026-08-29 review note**: this section was reconciled against
 `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` for documentation accuracy
 only (ticket count, lane grouping, idea 16/7/17 bookkeeping below). **No ticket content, scope, or sequence
-was changed** — the 21 tickets already in flight under `tickets/todos/m1-quick-wins/` are being implemented
+was changed** — the 21 tickets already in flight under `agent-working/tickets/todos/m1-quick-wins/` are being implemented
 as originally scoped, and this review deliberately did not touch them. The confirmed final-permadeath
 lifecycle defect is explicitly **not** part of this batch — see the parent roadmap's M5 section for its
 owner.
@@ -44,7 +44,7 @@ list (chronological): `ROLLOUT-FLAG-DECISIONS`, `ALLOCATE-AP-BRANCH-DECISION`,
 `WIRE-ORPHANED-MECHANISMS`, `WOUND-PENALTY-FORMULA-WIRING`, `AFFECTION-CONTRACT-GATE`,
 `PERSONAL-ECONOMY-SCOPE-BLOCK`, `WOUND-HEALING-DECISION`, `WOUND-THRESHOLD-DECISION`,
 `TACTICAL-WOUND-SCAR-WIRING`, and `TCK-20260828-REPUTATION-WITNESSED-EVENT-WIRING` (all
-`TCK-20260824-*` unless noted). One-paragraph summaries for each are in `tickets/working_log.csv`.
+`TCK-20260824-*` unless noted). One-paragraph summaries for each are in `agent-working/tickets/working_log.csv`.
 
 **Key governance decisions actually made:**
 - **Idea 9 (flag governance)**: of the 8 flags reviewed, `ENABLE_BELIEF_ASSIMILATION` and
@@ -129,7 +129,7 @@ specified. This epic exists to turn "well-understood gap" into "ticketed."
 
 ## Scope
 
-**21 child tickets now exist** under `tickets/todos/m1-quick-wins/` for 19 of these 20 ideas (idea 16
+**21 child tickets now exist** under `agent-working/tickets/todos/m1-quick-wins/` for 19 of these 20 ideas (idea 16
 required no behavior-change ticket — see item B below); ideas 7 and 17 were each split into two tickets by
 responsibility. Grouped by shape below (see Acceptance Signal for the one real sequencing note), and by
 these four execution lanes for review/scheduling purposes only (the committed build order remains
@@ -251,7 +251,7 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
 
 ## Acceptance Signal for This Epic
 
-- All 21 child tickets exist under `tickets/todos/m1-quick-wins/` (19 ideas, with ideas 7 and 17 each split
+- All 21 child tickets exist under `agent-working/tickets/todos/m1-quick-wins/` (19 ideas, with ideas 7 and 17 each split
   into two tickets; idea 16 needs none), each referencing its source idea number in the atlas — **confirmed
   as of 2026-08-29**.
 - Idea 9's flag-governance ticket lands before any other M1 ticket that adds new flag-gated behavior, per
@@ -277,6 +277,6 @@ Idea 16 (Ranger doctrine) needs no ticket — already answered by a separate, al
   Risk & Blast Radius; Shared Implementation Opportunities; Phase Placement & Testing Strategy
 - `docs/brainstorm/design_merit_scorecard.html` — per-idea scores
 - `docs/plans/rpg_design_roadmap/rpg_design_roadmap.md` — parent roadmap, sequencing rules, temporal axis
-- `tickets/todos/m1-quick-wins/SEQUENCE.md` — the real, executable ticket ordering
+- `agent-working/tickets/todos/m1-quick-wins/SEQUENCE.md` — the real, executable ticket ordering
 - `docs/brainstorm/codex/2026-08-27-core-rpg-plan-brainstorm-update-request.md` — documentation-sync review
   this section was reconciled against, 2026-08-29 (scope/tickets unchanged)

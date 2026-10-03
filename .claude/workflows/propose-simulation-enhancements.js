@@ -22,12 +22,12 @@ Step 0 — REQUIRED context search (before any file reads):
    If graphify unavailable, read graphify-out/GRAPH_REPORT.md for community structure instead.
 Use returned paths as primary targets below; fall back to directory scans only if search returns nothing.
 
-${sessionId ? `Session ID: ${sessionId} — read investigation/investigation_report.md and investigation/investigation_report.json` : 'No session ID — find the most recent investigation report under investigation/ or stored_artifacts/.'}
+${sessionId ? `Session ID: ${sessionId} — read investigation/investigation_report.md and investigation/investigation_report.json` : 'No session ID — find the most recent investigation report under investigation/ or agent-working/stored_artifacts/.'}
 
 Also read:
 - docs/mechanics/ for relevant balance laws (use search_docs results above to target specific chapters)
 - enhancement/ folder for any prior proposals (to avoid duplication)
-- tickets/ for any open balance-related tickets
+- agent-working/tickets/ for any open balance-related tickets
 
 Return a structured summary: anomalies found, their severity, any prior proposals for the same issues, and the relevant mechanics laws that constrain valid fixes.`,
   { label: 'load-investigation' }

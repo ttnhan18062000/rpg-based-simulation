@@ -89,8 +89,8 @@ class TestFindBlockedTicketIds:
         assert "TCK-NORMAL" not in blocked
 
     def test_epic_id_mode_scattered_children_across_multiple_search_roots(self, tmp_path):
-        """AC #4: the epic_id-mode code path (children scattered across tickets/inprogress/,
-        tickets/todos/, tickets/done/, not a single folder) gets the equivalent fix."""
+        """AC #4: the epic_id-mode code path (children scattered across agent-working/tickets/inprogress/,
+        agent-working/tickets/todos/, agent-working/tickets/done/, not a single folder) gets the equivalent fix."""
         inprogress = tmp_path / "inprogress"
         todos = tmp_path / "todos"
         _write_ticket(inprogress / "TCK-INPROGRESS-NORMAL.md", "INPROGRESS")

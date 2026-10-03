@@ -12,6 +12,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, TICKETS
 
 _MONITORING_TOOLS_DIR = Path(__file__).parent.parent.parent / "tools" / "agent-monitoring"
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
@@ -32,7 +33,7 @@ def _consolidate(tmp_path: Path, log_path: Path) -> dict:
     working_log row rather than writing the CSV directly -- fold pending shards under this test's
     isolated cwd into log_path before asserting on its content, mirroring what a real
     `monitoring_consolidation.py` run would do."""
-    return consolidate_pending_rows(data_root=tmp_path / "agent-monitoring" / "data", csv_path=log_path)
+    return consolidate_pending_rows(data_root=tmp_path / AGENT_MONITORING / "data", csv_path=log_path)
 
 _RECORD_PATH = _MONITORING_TOOLS_DIR / "record_hand_orchestrated_closure.py"
 
@@ -159,9 +160,9 @@ class TestCLIWritesRealRecords:
 
     def test_regenerates_registry_with_the_closed_tickets_done_entry(self, tmp_path):
         """TCK-20260930-DONE-CHECKER-DISPOSITION-CLOSURES (Scope 3 addendum): a hand closure
-        leaves docs/REGISTRY.yaml regenerated, carrying the ticket's tickets/done/ entry."""
+        leaves docs/REGISTRY.yaml regenerated, carrying the ticket's agent-working/tickets/done/ entry."""
         _init_git_repo_on_test_branch(tmp_path)
-        done = tmp_path / "tickets" / "done"
+        done = tmp_path / TICKETS / "done"
         done.mkdir(parents=True)
         (done / "TCK-FAKE-REG.md").write_text(
             "---\nstatus: historical\nlayer: ai\nauthority: P1\naudience: agent\n"
@@ -175,7 +176,7 @@ class TestCLIWritesRealRecords:
         )
         assert result.returncode == 0, result.stderr
         registry = (tmp_path / "docs" / "REGISTRY.yaml").read_text(encoding="utf-8")
-        assert "TCK-FAKE-REG" in registry and "tickets/done/TCK-FAKE-REG.md" in registry
+        assert "TCK-FAKE-REG" in registry and "agent-working/tickets/done/TCK-FAKE-REG.md" in registry
 
     def test_writes_one_run_and_n_event_records(self, tmp_path):
         _init_git_repo_on_test_branch(tmp_path)
@@ -186,8 +187,8 @@ class TestCLIWritesRealRecords:
         assert result.returncode == 0, result.stderr
 
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
-        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+        runs_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
 
         run_record = json.loads(runs_file.read_text().strip())
         assert run_record["run_id"] == "TCK-FAKE-CLI"
@@ -215,7 +216,7 @@ class TestCLIWritesRealRecords:
         )
         assert result.returncode == 1
         assert "missing required fields" in result.stderr
-        assert not (tmp_path / "agent-monitoring").exists()
+        assert not (tmp_path / AGENT_MONITORING).exists()
 
     def test_empty_events_array_rejected(self, tmp_path):
         result = self._run(
@@ -236,7 +237,7 @@ class TestCLIWritesRealRecords:
         )
         assert result.returncode == 0, result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        runs_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
+        runs_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl"
         run_record = json.loads(runs_file.read_text().strip())
         assert run_record["final_status"] == "NEEDS_HUMAN_INPUT"
         assert run_record["workflow"] == "implement-epic"
@@ -262,7 +263,7 @@ class TestUnattributedStatsAreOmittedNotZero:
         )
         assert result.returncode == 0, result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
         for event in event_lines:
             assert "tool_call_count" not in event
@@ -273,7 +274,7 @@ class TestUnattributedStatsAreOmittedNotZero:
         # live workflow before finishing via hand-orchestration); seq=2 has none.
         _init_git_repo_on_test_branch(tmp_path)
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        week_dir = tmp_path / "agent-monitoring" / "data" / iso_week
+        week_dir = tmp_path / AGENT_MONITORING / "data" / iso_week
         week_dir.mkdir(parents=True, exist_ok=True)
         with open(week_dir / "tools.jsonl", "w") as f:
             f.write(json.dumps({"run_id": "TCK-MIXED-CLI", "seq": 1, "tool": "Read", "duration_ms": 5}) + "\n")
@@ -287,7 +288,7 @@ class TestUnattributedStatsAreOmittedNotZero:
             tmp_path,
         )
         assert result.returncode == 0, result.stderr
-        events_file = tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
+        events_file = tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.events.jsonl"
         event_lines = [json.loads(l) for l in events_file.read_text().strip().splitlines()]
         seq1, seq2 = event_lines[0], event_lines[1]
         assert seq1["tool_call_count"] == 1
@@ -297,7 +298,7 @@ class TestUnattributedStatsAreOmittedNotZero:
 
 class TestWorkingLogCsvAppended:
     """TCK-20260906-HAND-ORCHESTRATED-CLOSURE-STATS-AND-LOG-GAP: the wrapper must append its own
-    tickets/working_log.csv row -- previously never written at all for this call path."""
+    agent-working/tickets/working_log.csv row -- previously never written at all for this call path."""
 
     def _run(self, args, tmp_path):
         return subprocess.run(
@@ -306,7 +307,7 @@ class TestWorkingLogCsvAppended:
         )
 
     def _seed_working_log(self, tmp_path):
-        log_path = tmp_path / "tickets" / "working_log.csv"
+        log_path = tmp_path / TICKETS / "working_log.csv"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_path.write_text(_WORKING_LOG_HEADER)
         return log_path
@@ -340,7 +341,7 @@ class TestWorkingLogCsvAppended:
         assert result.returncode == 0, result.stderr
         _consolidate(tmp_path, log_path)
         rows = list(csv.reader(log_path.read_text().splitlines()))
-        assert rows[1][5] == "stored_artifacts/TCK-LOG-STANDARD"
+        assert rows[1][5] == "agent-working/stored_artifacts/TCK-LOG-STANDARD"
 
     def test_explicit_artifacts_path_overrides_default(self, tmp_path):
         log_path = self._seed_working_log(tmp_path)
@@ -374,15 +375,15 @@ class TestWorkingLogCsvAppended:
             tmp_path,
         )
         assert result.returncode != 0
-        assert not (tmp_path / "agent-monitoring").exists()
+        assert not (tmp_path / AGENT_MONITORING).exists()
 
     def test_missing_working_log_parent_dir_no_longer_warns_since_the_write_no_longer_touches_it(self, tmp_path):
         """TCK-20260925-WORKING-LOG-PER-TICKET-WRITE-TARGET: append_working_log_row() now stages
-        to agent-monitoring/data/, not tickets/working_log.csv directly, and creates its own
+        to agent-working/agent-monitoring/data/, not agent-working/tickets/working_log.csv directly, and creates its own
         parent dirs -- the missing-tickets/-dir OSError this test originally exercised can no
         longer happen at all, a strictly stronger guarantee than "warns but doesn't fail" (which
         still holds too, per CLAUDE.md's Hard Rule, just via a different mechanism now)."""
-        # No tickets/ dir at all in this isolated cwd.
+        # No agent-working/tickets/ dir at all in this isolated cwd.
         _init_git_repo_on_test_branch(tmp_path)
         result = self._run(
             ["--ticket-id", "TCK-LOG-NODIR", "--tier", "hotfix", "--events", json.dumps(_MINIMAL_EVENTS),
@@ -392,8 +393,8 @@ class TestWorkingLogCsvAppended:
         assert result.returncode == 0, result.stderr
         assert "working_log.csv" not in result.stderr
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
-        assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.working_log.jsonl").exists()
+        assert (tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
+        assert (tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.working_log.jsonl").exists()
 
 
 class TestDuplicateWorkingLogRowRefused:
@@ -408,7 +409,7 @@ class TestDuplicateWorkingLogRowRefused:
         )
 
     def _seed_working_log(self, tmp_path):
-        log_path = tmp_path / "tickets" / "working_log.csv"
+        log_path = tmp_path / TICKETS / "working_log.csv"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_path.write_text(_WORKING_LOG_HEADER)
         return log_path
@@ -422,7 +423,7 @@ class TestDuplicateWorkingLogRowRefused:
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-DUP-TEST", "Same title", "DONE", "First write.",
-            "stored_artifacts/TCK-DUP-TEST", path=log_path,
+            "agent-working/stored_artifacts/TCK-DUP-TEST", path=log_path,
         )
 
         result = self._run(
@@ -448,7 +449,7 @@ class TestDuplicateWorkingLogRowRefused:
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-DUP-MONITORING", "Same title", "DONE", "First write.",
-            "stored_artifacts/TCK-DUP-MONITORING", path=log_path,
+            "agent-working/stored_artifacts/TCK-DUP-MONITORING", path=log_path,
         )
 
         result = self._run(
@@ -459,7 +460,7 @@ class TestDuplicateWorkingLogRowRefused:
 
         assert result.returncode != 0
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        assert (tmp_path / "agent-monitoring" / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
+        assert (tmp_path / AGENT_MONITORING / "data" / iso_week / f"{_TEST_BRANCH}.runs.jsonl").exists()
 
     def test_different_title_same_ticket_id_is_not_treated_as_a_duplicate(self, tmp_path):
         """A different-title reopen for the same ticket_id is a different defect class
@@ -471,7 +472,7 @@ class TestDuplicateWorkingLogRowRefused:
         log_path = self._seed_working_log(tmp_path)
         append_working_log_row(
             "2026-09-14T00:00:00Z", "TCK-REOPEN-TEST", "Original title", "BLOCKED", "First write.",
-            "stored_artifacts/TCK-REOPEN-TEST", path=log_path,
+            "agent-working/stored_artifacts/TCK-REOPEN-TEST", path=log_path,
         )
 
         result = self._run(
@@ -689,7 +690,7 @@ class TestRealClosureProducesExactlyThreePerPRFiles:
         # Seed pre-existing shared files, simulating "another ticket already closed on a
         # different branch" -- these must be provably untouched by this closure.
         iso_week = datetime.now(timezone.utc).strftime("%G-W%V")
-        week_dir = tmp_path / "agent-monitoring" / "data" / iso_week
+        week_dir = tmp_path / AGENT_MONITORING / "data" / iso_week
         week_dir.mkdir(parents=True)
         seeded_runs = json.dumps({"run_id": "TCK-OTHER-BRANCH", "start_ts": "2026-01-01T00:00:00Z"}) + "\n"
         seeded_events = json.dumps({"run_id": "TCK-OTHER-BRANCH", "seq": 1, "phase": "Scope"}) + "\n"

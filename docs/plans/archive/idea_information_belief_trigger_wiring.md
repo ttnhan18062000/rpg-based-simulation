@@ -25,7 +25,7 @@ short-circuits `InformationBeliefPhase`, and `AuthoritativeState.information_sou
 never populated in any compiled world. `TCK-20260702-SIMQ-UPLIFT2-INFORMATION` was scoped to lift
 both gates.
 
-Investigation on 2026-07-03 (see `stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-INFORMATION/investigation.md`)
+Investigation on 2026-07-03 (see `agent-working/stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-INFORMATION/investigation.md`)
 found this diagnosis is incomplete: **even with both named gates lifted, `InformationBeliefPhase.apply()`
 has zero reachable trigger conditions in the current engine.** Seeding profiles and flipping the flag
 compiles cleanly and passes `make evaluate --dry-run`, but produces **zero** `belief_assimilated` /
@@ -130,7 +130,7 @@ compiler-plumbing pattern was established as a reusable template.
 
 ## Related
 
-- `stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-INFORMATION/investigation.md` — full investigation
+- `agent-working/stored_artifacts/TCK-20260702-SIMQ-UPLIFT2-INFORMATION/investigation.md` — full investigation
   writeup with file:line references (source of truth for this doc's claims)
 - `TCK-20260702-SIMQ-UPLIFT2-INFORMATION` — shipped the scaffolding (schema/compiler/resolver plumbing
   + corrected world content); did not attempt trigger wiring. Recalibrated 2026-07-03 across all 7

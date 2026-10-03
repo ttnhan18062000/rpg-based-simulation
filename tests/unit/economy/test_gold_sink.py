@@ -1,6 +1,6 @@
 """Unit tests for GoldSinkSystem (TCK-20260619-E33C-GOLD-SINK).
 
-Test plan: staging_artifacts/TCK-20260619-E33C-GOLD-SINK/test_plan.md
+Test plan: agent-working/staging_artifacts/TCK-20260619-E33C-GOLD-SINK/test_plan.md
 """
 from __future__ import annotations
 

@@ -4,7 +4,7 @@
 TCK-20260719-WEIGHT-SENSITIVITY-PROMOTE — the experiment that produced it is documented in
 `experiments/cost_proxy_calibration/RESULTS.md`).
 
-Recomputes `cost_proxy_score` for every real `(run_id, seq)` group in `agent-monitoring/
+Recomputes `cost_proxy_score` for every real `(run_id, seq)` group in `agent-working/agent-monitoring/
 tools.jsonl` under two weight sets — the currently-shipped weights (by default, read directly
 from `cost_proxy.py`, never a second hardcoded copy) and a candidate weight set supplied on the
 CLI — then compares the resulting spend-by-phase / spend-by-agent RANK ORDER. This is the
@@ -12,7 +12,7 @@ required check before ever proposing a `cost_proxy.py` weight change: a candidat
 doesn't materially reorder spend rankings isn't worth the churn of changing; one that does needs
 that reordering to be a deliberate, reviewed decision, not a surprise discovered after the fact.
 
-Read-only against `agent-monitoring/*.jsonl`. Never modifies `tools/agent-monitoring/cost_proxy.py`
+Read-only against `agent-working/agent-monitoring/*.jsonl`. Never modifies `tools/agent-monitoring/cost_proxy.py`
 — this tool informs a weight-change decision, it does not make one. Deliberately carries no
 baked-in second weight set to compare against (the experiment's own Fit C numbers are not shipped
 here as a default) — a candidate must always be supplied explicitly via `--candidate-weights`.
@@ -26,9 +26,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cost_proxy import W_AGENT, W_BASH, W_EDIT  # noqa: E402
 from validate import load_data_glob  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
-TOOLS_FILE = Path("agent-monitoring/data")
-EVENTS_FILE = Path("agent-monitoring/data")
+TOOLS_FILE = AGENT_MONITORING / "data"
+EVENTS_FILE = AGENT_MONITORING / "data"
 
 _EDIT_TOOLS = {"Read", "Edit", "Write", "MultiEdit"}
 

@@ -7,7 +7,7 @@ GO/NO-GO/INCONCLUSIVE decision at docs/ai/parity_readpath_gate_a_decision.md
 script or a prose-only transcript). It:
 
   1. Re-verifies every real corpus case's pinned git blob content and
-     canonical_fragment_hash against staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/
+     canonical_fragment_hash against agent-working/staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/
      gate_a_corpus.json (TestCorpusIntegrity).
   2. Runs the two legacy comparison surfaces -- tools/parity_ledger_scan.find_p0_intersection
      and tools/gate_checks/parity_updater_static.derive_mapping -- and the Phase-2 index read
@@ -36,6 +36,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from tools.agent_working_paths import STAGING_ARTIFACTS
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _TOOLS_DIR = _REPO_ROOT / "tools"
@@ -48,7 +49,7 @@ import parity_index as pi  # noqa: E402
 from parity_ledger_scan import find_p0_intersection, ShardParseError  # noqa: E402
 from gate_checks.parity_updater_static import derive_mapping  # noqa: E402
 
-_ARTIFACT_DIR = _REPO_ROOT / "staging_artifacts" / "TCK-20260731-PARITY-READPATH-GATE"
+_ARTIFACT_DIR = _REPO_ROOT / STAGING_ARTIFACTS / "TCK-20260731-PARITY-READPATH-GATE"
 _CORPUS_PATH = _ARTIFACT_DIR / "gate_a_corpus.json"
 _RESULTS_PATH = _ARTIFACT_DIR / "gate_a_results.json"
 _DECISION_DOC_PATH = _REPO_ROOT / "docs" / "ai" / "parity_readpath_gate_a_decision.md"
@@ -58,7 +59,7 @@ _SKIP_REASON = (
     "gate_a_corpus.json and gate_a_results.json were never committed to this repository at any "
     "point in its history — confirmed via exhaustive `git log --all` search on 2026-08-17 "
     "(TCK-20260817-TESTS-TOOLS-LANE-STALE-REFERENCE-SWEEP): no date-ranged history search, no "
-    "grep-by-name search, and no diff-filter=A search against staging_artifacts/"
+    "grep-by-name search, and no diff-filter=A search against agent-working/staging_artifacts/"
     "TCK-20260731-PARITY-READPATH-GATE/ found any trace of either file. The raw corpus/results "
     "JSON is unrecoverable. This does NOT invalidate the Gate A GO decision itself — "
     "docs/ai/parity_readpath_gate_a_decision.md narrates its own real findings (including the "

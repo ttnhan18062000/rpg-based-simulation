@@ -9,7 +9,7 @@ session and matches PROPOSAL.md's own cited TVD(sandbox_world, dungeon_crawl) ~=
 anchor to full precision (0.23161981243456373), and dungeon_crawl's structural
 same-spec/different-seed invariance (0.0 exactly, since none of its four composed
 modules declare terrain_variants), per
-staging_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
+agent-working/staging_artifacts/TCK-20260821-VISUAL-VARIANTS-METRIC/investigation.md.
 
 compute_terrain_histogram is reused directly from this package's density.py sibling
 (TCK-20260821-VISUAL-DENSITY-METRIC), never reimplemented -- normalize_histogram exists

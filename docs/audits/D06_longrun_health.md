@@ -256,7 +256,7 @@ audit does not have to rediscover the mechanism from scratch.
 
 > **Resolved 2026-07-11, `TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY`:** all 18 `SLOW_ANCHOR_KEYS`
 > entries re-run 3 independent same-seed trials each (54 total runs, real throttled `Kernel`, no
-> `audit_mode`), transcribed in `staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
+> `audit_mode`), transcribed in `agent-working/staging_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`
 > and documented per-key in `docs/simulation_quality/eval_matrix_results.md`'s "Anchor Reliability
 > Verification" section. Result: **18/18 keys stable** — every one of 540 pillar/trial data points
 > landed within the existing ±1-`GRADE_ORDER` band, despite confirmed throttle-timing variance

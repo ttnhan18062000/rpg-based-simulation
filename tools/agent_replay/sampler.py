@@ -1,15 +1,15 @@
 """Stratified sample manifest builder for the filtered replay eval pilot
 (TCK-20260907-FILTERED-REPLAY-EVAL-PILOT, Step 1).
 
-Selects 20-40 tickets from `tickets/done/*.md` (top-level `TCK-*.md` files only, excluding
+Selects 20-40 tickets from `agent-working/tickets/done/*.md` (top-level `TCK-*.md` files only, excluding
 tracking subfolders), stratified by `## Tier` (hotfix/standard/epic), frontmatter `layer:`, and
-a success/failure outcome derived from `agent-monitoring/data/*/runs.jsonl`'s `final_status`
+a success/failure outcome derived from `agent-working/agent-monitoring/data/*/runs.jsonl`'s `final_status`
 field. Splits the selection into dev/validation/holdout (~60/20/20) and persists the result as a
 real, re-loadable YAML file — never held only as a local variable, per this ticket's Scope item 1.
 
-Reads `agent-monitoring/data/*/runs.jsonl` via
+Reads `agent-working/agent-monitoring/data/*/runs.jsonl` via
 `tools/agent_replay_codex/monitoring_shards.py::source_paths()` (sharding-aware, matches the real
-`agent-monitoring/data/<week>/<source>.jsonl` layout including the `unknown-week` fallback
+`agent-working/agent-monitoring/data/<week>/<source>.jsonl` layout including the `unknown-week` fallback
 bucket) — never the four forbidden `tools/agent-monitoring/` scripts named in
 `docs/ai/replay_fixture_spec.md`'s unconditional containment law.
 
@@ -74,7 +74,7 @@ class SampleManifest:
 
 def enumerate_done_tickets(done_dir: Path) -> list[Path]:
     """Top-level `TCK-*.md` files directly under `done_dir` — excludes tracking subfolders
-    (e.g. `tickets/done/m1-quick-wins/`), matching investigation.md Current Behavior §6's
+    (e.g. `agent-working/tickets/done/m1-quick-wins/`), matching investigation.md Current Behavior §6's
     methodology."""
     return sorted(p for p in done_dir.glob("TCK-*.md") if p.is_file())
 

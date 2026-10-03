@@ -56,8 +56,8 @@ contract for this subsystem) — this file is the review artifact, not the desti
 > depends on.
 
 Ticket: `TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION`. Full investigation evidence:
-`stored_artifacts/TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION/investigation.md` (once
-moved) / `staging_artifacts/.../investigation.md` (current).
+`agent-working/stored_artifacts/TCK-20260914-FACTION-WAR-DECLARATION-DESIGN-QUESTION/investigation.md` (once
+moved) / `agent-working/staging_artifacts/.../investigation.md` (current).
 
 ## 1. Problem, restated
 

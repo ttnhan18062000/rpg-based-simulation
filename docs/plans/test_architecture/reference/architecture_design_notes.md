@@ -11,12 +11,12 @@ tags: [testing, architecture, planning]
 > **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
 > for the detail planner and implementer agents. The **binding** plan is
 > [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
-> `tickets/done/test-architecture/`. Where this document is more specific than those, treat it as a
+> `agent-working/tickets/done/test-architecture/`. Where this document is more specific than those, treat it as a
 > suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
 > otherwise.
 
 
-**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: (ticket outlines removed; see ../../../../tickets/done/test-architecture/). This roadmap owns **how
+**Status: REVISION 2026-09-29h, reviewable version (all listed decisions PENDING owner approval)** (g: D-MF tooling deferred; review-record validator, seeded-fault harness and coverage contexts moved to evidence-triggered tickets; no second proof-status registry). Revision f changes: §3.5, §6.2, §6.3, §7.3. Ticket outlines: (ticket outlines removed; see ../../../../agent-working/tickets/done/test-architecture/). This roadmap owns **how
 tests are planned, written, selected, organized, executed, measured, reviewed, maintained and
 repaired**. It does **not** own the design or schedule of RPG mechanics; another group of agents
 is reworking those. Core RPG is the **first application and validation scope**, not a feature
@@ -399,7 +399,7 @@ This unifies and extends the existing rules rather than replacing them in parall
   - A `tests/conftest.py` collection hook enforces it:
     - **Exact node:** the marker must be on the test function itself (checked via
       `item.own_markers`); a class-level or module-level quarantine is a collection error.
-    - **Fields:** all present; `ticket` must exist in `tickets/todos|inprogress` (not done); expiry
+    - **Fields:** all present; `ticket` must exist in `agent-working/tickets/todos|inprogress` (not done); expiry
       at most N days after the marker is added (N [D], proposed 14).
     - **Active** (UTC date ≤ `expires`): the hook adds `xfail(strict=True, raises=<declared or
       AssertionError>)`. A fixed test therefore fails as `XPASS(strict)`, forcing quarantine
@@ -451,11 +451,11 @@ obsolete as feature teams rework mechanics.
 - **Combat call sites (2026-09-28)** [O]:
   - `resolve_multi_attack()` is called only from `src/engine/movement.py:240`, with `is_lethal=False`;
   - the decision path goes through `src/engine/domain/combat_actions.py:65`;
-  - a 3-world, 1000-tick measurement [H] (`tickets/todos/TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION.md:455-470`)
+  - a 3-world, 1000-tick measurement [H] (`agent-working/tickets/todos/TCK-20260915-CROSS-FACTION-COMBAT-RARITY-INVESTIGATION.md:455-470`)
     found most combat on the movement path. **Superseded, needs re-measurement:** a later fix (`TCK-20260919-COMBAT-ENGAGED-HOSTILES-UNIFY-CATALOG-SEMANTICS`) changed real combat volume substantially, so no combat-volume figure here should be reused (per `rpg-feature-planning`, 2026-09-29).
 - **`COMBAT_ENGAGE` dispatch finding: still live** (re-confirmed by `rpg-feature-planning`,
   2026-09-29): the goal is scored and registered but has no dispatch consumer. Source:
-  `tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md`, 2026-09-19
+  `agent-working/tickets/done/TCK-20260917-TACTICAL-ATTACK-PATH-NEVER-FIRES-INVESTIGATION.md`, 2026-09-19
   addendum. A **feature-owner design decision**, outside this roadmap. It lives in
   strategic-cognition code (now mapped in §3.1).
 - **Scenario PR gap** [O]: `PERF_RE` omits several core-RPG paths (OV §3). This one is an

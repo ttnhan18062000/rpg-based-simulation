@@ -43,7 +43,7 @@ detail to implement directly.** This document sequences and sizes the work; each
 Investigate step still runs against current repo state before implementation, per standard workflow.
 
 > **Ticketing pass completed 2026-07-10.** All 6 phases now have a real ticket (or, for Phase 1,
-> two) filed under `tickets/todos/simq-roadmap-phase{0-5}-*/`, per explicit user instruction to
+> two) filed under `agent-working/tickets/todos/simq-roadmap-phase{0-5}-*/`, per explicit user instruction to
 > travel through every proposed phase and pre-file the full roadmap before implementing anything.
 > Scoping surfaced substantial corrections to this document's original assumptions — most
 > significantly, **Phase 3's premise was largely stale**: most of the corpus already has
@@ -147,7 +147,7 @@ fell within the existing ±1-`GRADE_ORDER` band despite confirmed throttle-timin
 (`budget_warnings` 41–539/run, `watchdog_trips` 1–3/run, up to ~4× elapsed-time spread for
 identical seed/code). Zero anchors required conversion to a tolerance-based guard; zero flagged
 unverified. Full evidence: `docs/simulation_quality/eval_matrix_results.md` "Anchor Reliability
-Verification" section, `stored_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`.
+Verification" section, `agent-working/stored_artifacts/TCK-20260710-SIMQ-ANCHOR-RELIABILITY-VERIFY/raw_calibration_sweep.md`.
 `kernel.py` and `grade_anchors.json` left untouched, per scope guard.
 
 ### 0.2 — Contract Acceptance Criteria closeout — **DONE (2026-07-11)**
@@ -174,7 +174,7 @@ current source (both explicit safety-invariant items — `QUALITY_SCORING_DISABL
 output and scoring-exception isolation — re-confirmed by direct code read plus a live passing test
 run, not by pointing at the 2026-06-28 parity entries). 1 genuine gap found (Traceability item 3, no
 end-to-end §9 integration test) and filed as a linked follow-up:
-`tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md` (standard tier). A stale
+`agent-working/tickets/todos/TCK-20260711-SIMQ-TRACEABILITY-PATH-INTEGRATION-TEST.md` (standard tier). A stale
 `docs/parity_ledger/infrastructure.yaml` INFRA-233 test-path citation was also found and corrected
 in the same session.
 
@@ -343,7 +343,7 @@ candidate worlds if honest investigation finds none remain.
 - `TCK-20260710-SIMQ-DEPTH-INFORMATION` — standard tier. No duplicate work; confirmed
   `InformationBeliefPhase` Branch A mechanism intact; UQ-1 (high severity) flags the
   zero-candidates finding above. Both tickets sit in the same folder
-  (`tickets/todos/simq-roadmap-phase3-depth-faction-information/`) and reference each other.
+  (`agent-working/tickets/todos/simq-roadmap-phase3-depth-faction-information/`) and reference each other.
 
 > **Closure (2026-07-10, `TCK-20260710-SIMQ-DEPTH-FACTION` done) — FACTION half closed as
 > already-satisfied.** Investigation re-verified all 17 corpus worlds against live
@@ -473,10 +473,10 @@ diverged too much for one blanket verdict):
 quality visibility, regression detection, balance/tuning support) are judged adequately served by
 the corpus's current staged depth. No further pillar-depth expansion work is queued.
 
-**Folder status:** `tickets/todos/simq-roadmap-phase5-coverage-gate/` held only a `SEQUENCE.md`
+**Folder status:** `agent-working/tickets/todos/simq-roadmap-phase5-coverage-gate/` held only a `SEQUENCE.md`
 placeholder (filed 2026-07-10 so the roadmap's full structure was represented under
-`tickets/todos/`) until `TCK-20260713-SIMQ-COVERAGE-DECISION-GATE` landed this ruling; the folder
-moves to `tickets/done/` on that ticket's close, per the standard folder-completion rule.
+`agent-working/tickets/todos/`) until `TCK-20260713-SIMQ-COVERAGE-DECISION-GATE` landed this ruling; the folder
+moves to `agent-working/tickets/done/` on that ticket's close, per the standard folder-completion rule.
 
 ---
 
@@ -499,7 +499,7 @@ moves to `tickets/done/` on that ticket's close, per the standard folder-complet
 
 ## Related
 
-- `tickets/todos/simq-roadmap-phase{0,1,2,3,4,5}-*/` — the 6 phase folders this roadmap is filed
+- `agent-working/tickets/todos/simq-roadmap-phase{0,1,2,3,4,5}-*/` — the 6 phase folders this roadmap is filed
   into (all 6 exist as of 2026-07-10; Phase 5's is a placeholder with no ticket yet, per design).
   Each folder has its own `SEQUENCE.md`. This is where the actual, current ticket state lives —
   treat it as more current than this document's prose wherever the two disagree.
@@ -525,6 +525,6 @@ moves to `tickets/done/` on that ticket's close, per the standard folder-complet
 *Raised: 2026-07-10, following a user request for a complete, top-down SimQ development roadmap
 rather than continued reactive small-fix work. Two scope decisions (staged corpus depth, Non-Goals
 held) were made explicitly by the user before drafting. Ticketed the same day, per explicit user
-instruction to travel through every phase and pre-file all tickets into `tickets/todos/` — nothing
+instruction to travel through every phase and pre-file all tickets into `agent-working/tickets/todos/` — nothing
 implemented yet. Phase 5 is the next point at which this document should be revisited, not rewritten
 from scratch.*

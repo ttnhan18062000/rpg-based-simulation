@@ -1,5 +1,5 @@
 """Artifact-requirements conformance test: LIVE `tools/gate_checks/done_checker_static.py`
-extraction vs. `agent-orchestration/contract.yaml`'s `artifact_requirements` field
+extraction vs. `agent-working/agent-orchestration/contract.yaml`'s `artifact_requirements` field
 (TCK-20260904-PROVIDER-PORTABILITY-CONFORMANCE-TEST, AC #2).
 
 Diffed live-code -> contract (never the reverse), matching this ticket's own Scope instruction and
@@ -16,9 +16,10 @@ from tools.agent_orchestration_claude_adapter.artifact_requirements_extractor im
     extract_live_artifact_requirements,
 )
 from tools.agent_orchestration_claude_adapter.divergence_log import is_approved, load_divergences
+from tools.agent_working_paths import AGENT_ORCHESTRATION  # noqa: E402
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_DIVERGENCE_LOG_PATH = _REPO_ROOT / "agent-orchestration" / "intentional-divergences.md"
+_DIVERGENCE_LOG_PATH = _REPO_ROOT / AGENT_ORCHESTRATION / "intentional-divergences.md"
 
 
 def test_artifact_requirements_conformance_full_match():

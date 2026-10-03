@@ -304,7 +304,7 @@ composition changes substantially (e.g. a stress-tier world deliberately designe
 failures across pillars) or a real incident surfaces correlated degradation manually.
 
 **Governing doc:** none — investigated, no build justified. See
-`stored_artifacts/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION/investigation.md` for
+`agent-working/stored_artifacts/TCK-20260805-SIMQ-CROSS-PILLAR-CORRELATION-INVESTIGATION/investigation.md` for
 the full analysis.
 
 ---

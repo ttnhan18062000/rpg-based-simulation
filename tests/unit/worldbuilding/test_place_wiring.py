@@ -122,7 +122,7 @@ def test_place_participates_in_canonical_hash():
 
 def test_lair_kind_place_compiles_via_worldcompiler():
     """Synthetic fixture (not real corpus content, per TCK-20260904-LAIR-ENTITY-ANCHOR's
-    Option-A/content decision -- see stored_artifacts/TCK-20260904-LAIR-ENTITY-ANCHOR/plan.md)
+    Option-A/content decision -- see agent-working/stored_artifacts/TCK-20260904-LAIR-ENTITY-ANCHOR/plan.md)
     proving a LAIR-kind PlaceSpec compiles to a real PlaceState with occupant_entity_id
     defaulting to None (unwritten in that ticket -- Option A keys Lair occupancy off
     entity-side identity.properties, not this field)."""

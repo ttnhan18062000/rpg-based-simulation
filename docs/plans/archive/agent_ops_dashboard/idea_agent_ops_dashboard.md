@@ -14,7 +14,7 @@ tags: [idea, agent-infrastructure, observability, dashboard, reporting]
 **Archived:** 2026-07-19 — the v1 dashboard (Recent Activity Gantt, Tickets, Replay Timeline views,
 FastAPI backend + React/Vite SPA) shipped by `TCK-20260716-AGENTOPS-DASHBOARD-BACKEND`,
 `TCK-20260716-AGENTOPS-ACTIVITY-GANTT`, `TCK-20260716-AGENTOPS-TICKETS-VIEW`,
-`TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`tickets/done/`), documented by
+`TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`agent-working/tickets/done/`), documented by
 `TCK-20260717-AGENTOPS-DASHBOARD-DOCS`. All four decisions below (stack, gap-fix sequencing,
 ticket↔run ambiguity, concurrency) were implemented as decided. A live UI review after shipping
 found further legibility/scalability issues — see [`proposal_ui_review_findings.md`](proposal_ui_review_findings.md)
@@ -33,7 +33,7 @@ real, unticketed follow-up; see that doc's own Archived note for the precise spl
 
 > **Maturity: SHIPPED.** Implemented by `TCK-20260716-AGENTOPS-DASHBOARD-BACKEND`,
 > `TCK-20260716-AGENTOPS-ACTIVITY-GANTT`, `TCK-20260716-AGENTOPS-TICKETS-VIEW`,
-> `TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`tickets/done/`), documented by
+> `TCK-20260716-AGENTOPS-REPLAY-TIMELINE` (`agent-working/tickets/done/`), documented by
 > `TCK-20260717-AGENTOPS-DASHBOARD-DOCS`. Full investigation trail, exact API/data schemas, and UX
 > detail previously lived in `experiments/agent_ops_dashboard/` (`PROPOSAL.md` + 5 companion
 > documents); deleted 2026-08-04 (`TCK-20260804-PLANS-EXPERIMENTS-SWEEP`) as fully-shipped
@@ -51,7 +51,7 @@ charts beyond a Markdown table. Direct request was for something "advanced, visu
 feature-rich" for reviewing the whole agent working process, not just weekly retro snapshots.
 
 Checked before proposing anything new (`search_docs` + `graphify query` + direct reads, per this
-repo's Context Scan rule): `agent-monitoring/{runs,events,tools}.jsonl` is the real, live data
+repo's Context Scan rule): `agent-working/agent-monitoring/{runs,events,tools}.jsonl` is the real, live data
 source (~617 runs / ~2,981 events / ~54,876 tool-call rows as of 2026-07-16), already fully
 documented in `docs/agent-monitoring/schema.md` and already turned into static retro Markdown by
 `tools/agent-monitoring/generate_retro.py`. Three prior "dashboard" tickets exist
@@ -70,7 +70,7 @@ decision below.
 ## Idea
 
 **Read-only viewer + rich client-side filters/drill-downs** over two v1 data domains: ticket
-lifecycle (`tickets/inprogress` + `tickets/done` + `tickets/todos`) and agent-monitoring
+lifecycle (`agent-working/tickets/inprogress` + `agent-working/tickets/done` + `agent-working/tickets/todos`) and agent-monitoring
 runs/events/tools. Three views:
 
 - **Tickets view** — filterable/sortable table (tier/layer/status/priority/tag), row-click links to
@@ -123,7 +123,7 @@ being put to the user:
 4. **Concurrency: `RLock`-per-method**, directly reusing `src/api/read_model_cache.py`'s
    `ReadModelCache` pattern rather than a build-outside-lock/atomic-swap design. Simpler, already
    proven in this codebase, and justified by the confirmed sub-second full-rebuild time at current
-   data volume — revisit only if `agent-monitoring/*.jsonl` growth (confirmed **unbounded**: no
+   data volume — revisit only if `agent-working/agent-monitoring/*.jsonl` growth (confirmed **unbounded**: no
    retention/rotation policy targets these files anywhere in the repo, unlike `data/runs/`'s
    `RetentionPolicy`/`RetentionManager`) ever makes rebuild time noticeable.
 
@@ -133,7 +133,7 @@ being put to the user:
   boundary rule).
 - Ticket data must be parsed directly from frontmatter (`extract_frontmatter()`) across all three
   lifecycle directories — `docs/REGISTRY.yaml` is confirmed **not** a viable source: it only ever
-  contains `tickets/done/` entries, and its ticket-type rows omit `status`/`layer`/`priority`
+  contains `agent-working/tickets/done/` entries, and its ticket-type rows omit `status`/`layer`/`priority`
   entirely (three of the four filter dimensions this dashboard needs).
 - `tier`, `ticket_type`, `priority`, and workflow `## Status` are **body-section fields, never
   frontmatter**, for any ticket — reuse `generate_registry.py::parse_body_section()`/
@@ -181,7 +181,7 @@ and tier/type/priority distribution as **not built** — was later resolved by
 - Whether frontend CI (lint/typecheck/vitest wired into `.github/workflows/test.yml`) should be
   added as part of this dashboard's own ticket, given the repo currently has none for any frontend —
   a real scope-size question, not resolved by the stack decision alone.
-- Whether the confirmed-unbounded growth of `agent-monitoring/*.jsonl` warrants its own retention
+- Whether the confirmed-unbounded growth of `agent-working/agent-monitoring/*.jsonl` warrants its own retention
   policy as separate, prerequisite work, or stays purely an in-memory-cache concern for this
   dashboard to revisit later.
 - `experiments/agent_ops_dashboard/TEST_PLAN.md` row 9's ticket-data-quality signal (a ticket with

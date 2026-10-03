@@ -42,9 +42,8 @@ TRIGGER_RE = re.compile(
 )
 
 IRRELEVANT_RE = re.compile(
-    r"^(docs/|tickets/|agent-monitoring/|agent-orchestration/|stored_artifacts/|staging_artifacts/"
-    r"|frontend/|dashboard-frontend/|website/|grafana/|reviews/|experiments/|registries/|tools/"
-    r"|pilot_requests/|skills-lock\.json$|[^/]+\.md$)"
+    r"^(docs/|agent-working/|frontend/|dashboard-frontend/|website/|grafana/|experiments/|registries/|tools/"
+    r"|skills-lock\.json$|[^/]+\.md$)"
 )
 
 

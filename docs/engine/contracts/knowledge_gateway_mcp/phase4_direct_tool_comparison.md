@@ -83,9 +83,9 @@ the direct call's `raw_results`/`raw_stdout`/`entry_result`) — never derived f
 TEMPLATES` for Q4; `TCK-20260810-CONTEXT-TOOLING-EFFECTIVENESS-TRACKING` and `TCK-20260728-CONTEXT-
 PACKET-SCHEMA` for Q6 — the second of which is the literal ticket the query asked the status of)
 turned out, on direct inspection of the gateway's own `response["context"]`, to already be present
-— just represented under a `file:stored_artifacts/<ticket>/investigation.md` identifier rather than
+— just represented under a `file:agent-working/stored_artifacts/<ticket>/investigation.md` identifier rather than
 the bare ticket-id-shaped `doc_id` the direct Context Search call's raw result carries for
-`stored_artifacts/` files. This is a real limitation of the imported, frozen
+`agent-working/stored_artifacts/` files. This is a real limitation of the imported, frozen
 `_normalize_phase1_source_id()`/`_path_only()` (built to reconcile `doc:`/`ticket:`/`file:`/
 `symbol:` prefixes, never a bare ticket-id `doc_id` against a `file:`-prefixed `stored_artifacts`
 path) — not a real gateway content drop. It is disclosed here and in each entry's own
@@ -94,8 +94,8 @@ own Do-Not-Touch guard on `_compute_threshold_4_3()`).
 
 For Q1, Q3, and Q7, the recorded misses (`TCK-20260425-PH8-M3`, `TCK-20260804-RETRIEVAL-RAW-
 INVESTIGATION-METRIC`, `TCK-20260405-LOGFIX` respectively) are real, if narrow, content drops: each
-is a second `tickets/working_log.csv`-sourced chunk that the gateway's evidence-id builder collapses
-into the single `file:tickets/working_log.csv` context item it already keeps (its anchor-dedup logic
+is a second `agent-working/tickets/working_log.csv`-sourced chunk that the gateway's evidence-id builder collapses
+into the single `file:agent-working/tickets/working_log.csv` context item it already keeps (its anchor-dedup logic
 only disambiguates `docs/`-prefixed paths, not `file:`-shaped ones) — the specific log line is
 genuinely dropped, though the file itself remains cited.
 
@@ -163,7 +163,7 @@ separate, later, human-reviewer call.
   different, cache-warm comparison).
 - `docs/plans/knowledge-gateway-mcp-proposal.md` §20 Phase 4's fourth bullet ("Compare gateway
   packets against existing direct-tool behavior") — the requirement this document answers.
-- `staging_artifacts/TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON/plan.md` — Architecture-Review-
+- `agent-working/staging_artifacts/TCK-20260816-KGMCP-P4-DIRECT-TOOL-COMPARISON/plan.md` — Architecture-Review-
   approved plan (2 passes) governing this ticket's own design, including the Step 1 full-fresh-run
   decision, the Step 5 derivation-string provenance fix, and the Step 6 falsifiable
   reviewer-judgment procedure.

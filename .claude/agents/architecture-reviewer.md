@@ -16,7 +16,7 @@ If `docs/REGISTRY.yaml` does not exist, use the chapter and contract tables belo
 
 ## What to Review
 
-You receive a plan (from `staging_artifacts/{ticket_id}/plan.md` or inline). Review it against all of the following:
+You receive a plan (from `agent-working/staging_artifacts/{ticket_id}/plan.md` or inline). Review it against all of the following:
 
 ### Core Architecture Boundaries
 

@@ -11,15 +11,16 @@ import pytest
 
 from tools.agent_codex_pilot_entrypoint.preparation import prepare_context, prepare_policy
 from tools.agent_codex_realrepo_pilot_harness.proofs import capture_policy_baseline, tree_digest
+from tools.agent_working_paths import PILOT_REQUESTS, TICKETS, posix  # noqa: E402
 
 
 def test_prepare_policy_binds_fixed_candidate_and_excludes_its_own_policy(tmp_path):
     root = tmp_path
-    request = root / "pilot_requests" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
-    target = root / "tickets" / "done" / "TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
+    request = root / PILOT_REQUESTS / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
+    target = root / TICKETS / "done" / "TCK-20260721-MONITORING-WRITER-UNIFICATION.md"
     request.parent.mkdir(parents=True)
     target.parent.mkdir(parents=True)
-    candidate = root / "tickets" / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
+    candidate = root / TICKETS / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
     candidate.parent.mkdir(parents=True)
     candidate.write_text("candidate\n")
     request.write_text("ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE\nhuman_owner: tnhan\nrollback_plan_summary: restore\n")
@@ -30,9 +31,9 @@ def test_prepare_policy_binds_fixed_candidate_and_excludes_its_own_policy(tmp_pa
 
     assert data["candidate_ticket_id"] == "TCK-20260801-MONITORING-WRITER-STATUS-STALE"
     assert ".codex/config.toml" in data["allowed_paths"]
-    assert "tickets/inprogress/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md" in data["allowed_paths"]
-    assert "tickets/done/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md" in data["allowed_paths"]
-    assert "tickets/working_log.csv" in data["allowed_paths"]
+    assert f"{posix(TICKETS)}/inprogress/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md" in data["allowed_paths"]
+    assert f"{posix(TICKETS)}/done/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md" in data["allowed_paths"]
+    assert f"{posix(TICKETS)}/working_log.csv" in data["allowed_paths"]
     assert "docs/REGISTRY.yaml" in data["allowed_paths"]
     assert data["baseline_sha256"] == result.baseline_sha256
     assert data["bounded_tool_suffix"]["max_tool_calls"] == 200
@@ -40,7 +41,7 @@ def test_prepare_policy_binds_fixed_candidate_and_excludes_its_own_policy(tmp_pa
 
 
 def test_prepare_policy_refuses_when_fixed_candidate_is_missing(tmp_path):
-    request = tmp_path / "pilot_requests" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
+    request = tmp_path / PILOT_REQUESTS / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
     request.parent.mkdir(parents=True)
     request.write_text("ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE\nhuman_owner: tnhan\nrollback_plan_summary: restore\n")
 
@@ -50,8 +51,8 @@ def test_prepare_policy_refuses_when_fixed_candidate_is_missing(tmp_path):
 
 def test_prepare_context_uses_only_fixed_candidate_paths(tmp_path):
     root = tmp_path
-    request = root / "pilot_requests" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
-    candidate = root / "tickets" / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
+    request = root / PILOT_REQUESTS / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
+    candidate = root / TICKETS / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
     request.parent.mkdir(parents=True)
     candidate.parent.mkdir(parents=True)
     request.write_text("ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE\nhuman_owner: tnhan\nrollback_plan_summary: restore\n")
@@ -60,14 +61,14 @@ def test_prepare_context_uses_only_fixed_candidate_paths(tmp_path):
     context = prepare_context(root, "codex-TCK-20260801-MONITORING-WRITER-STATUS-STALE-1-deadbeef")
 
     assert context.ticket_id == "TCK-20260801-MONITORING-WRITER-STATUS-STALE"
-    assert context.candidate_path == "tickets/inprogress/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
+    assert context.candidate_path == f"{posix(TICKETS)}/inprogress/TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
     assert context.enabled_hook_events == frozenset({"PostToolUse"})
 
 
 def test_policy_is_deterministic_for_unchanged_injected_root(tmp_path):
     root = tmp_path
-    request = root / "pilot_requests" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
-    candidate = root / "tickets" / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
+    request = root / PILOT_REQUESTS / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
+    candidate = root / TICKETS / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
     request.parent.mkdir(parents=True); candidate.parent.mkdir(parents=True)
     request.write_text("ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE\nhuman_owner: tnhan\nrollback_plan_summary: restore\n")
     candidate.write_text("candidate\n")
@@ -78,8 +79,8 @@ def test_policy_is_deterministic_for_unchanged_injected_root(tmp_path):
 
 def test_prepared_policy_detects_later_baseline_drift(tmp_path):
     root = tmp_path
-    request = root / "pilot_requests" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
-    candidate = root / "tickets" / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
+    request = root / PILOT_REQUESTS / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
+    candidate = root / TICKETS / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
     request.parent.mkdir(parents=True); candidate.parent.mkdir(parents=True)
     request.write_text("ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE\nhuman_owner: tnhan\nrollback_plan_summary: restore\n")
     candidate.write_text("before\n")
@@ -96,8 +97,8 @@ def test_entrypoint_package_has_no_subprocess_or_live_invocation_import():
 
 
 def test_prepare_only_cli_emits_context_evidence_without_invocation(tmp_path):
-    request = tmp_path / "pilot_requests" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
-    candidate = tmp_path / "tickets" / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
+    request = tmp_path / PILOT_REQUESTS / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.yaml"
+    candidate = tmp_path / TICKETS / "inprogress" / "TCK-20260801-MONITORING-WRITER-STATUS-STALE.md"
     request.parent.mkdir(parents=True); candidate.parent.mkdir(parents=True)
     request.write_text("ticket_id: TCK-20260801-MONITORING-WRITER-STATUS-STALE\nhuman_owner: tnhan\nrollback_plan_summary: restore\n")
     candidate.write_text("candidate\n")

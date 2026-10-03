@@ -25,7 +25,7 @@ dependency-aware manifest system.
 
 **Gate condition satisfied:** ≥3 independent features proven via existing extension
 patterns; E53A–D (faction diplomacy at scale), E61 (progression), E62 (culture drift)
-all complete. See `stored_artifacts/TCK-20260619-E63A-GATE-VERIFY/gate_verification_memo.md`.
+all complete. See `agent-working/stored_artifacts/TCK-20260619-E63A-GATE-VERIFY/gate_verification_memo.md`.
 
 ---
 

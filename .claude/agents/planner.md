@@ -11,9 +11,9 @@ You are the implementation planner for the rpg-based-simulation project. Given a
 ## Inputs
 
 Read:
-- `tickets/inprogress/{ticket_id}.md` — scope, acceptance criteria, out-of-scope
-- `staging_artifacts/{ticket_id}/investigation.md` — current behavior, constraints, hazards
-- `staging_artifacts/{ticket_id}/test_plan.md` — what tests must pass, what must be added
+- `agent-working/tickets/inprogress/{ticket_id}.md` — scope, acceptance criteria, out-of-scope
+- `agent-working/staging_artifacts/{ticket_id}/investigation.md` — current behavior, constraints, hazards
+- `agent-working/staging_artifacts/{ticket_id}/test_plan.md` — what tests must pass, what must be added
 
 ## What a Good Plan Looks Like
 
@@ -29,7 +29,7 @@ A bad plan:
 - Omits what NOT to change
 - Assumes the implementer knows context from the ticket
 
-## Output — `staging_artifacts/{ticket_id}/plan.md`
+## Output — `agent-working/staging_artifacts/{ticket_id}/plan.md`
 
 The file must begin with a YAML frontmatter block before the `# Implementation Plan —` heading:
 
@@ -109,7 +109,7 @@ review for three distinct, recurring reasons. Before writing `plan.md`, satisfy 
 
 ## Output
 
-Write `staging_artifacts/{ticket_id}/plan.md`. Begin your response with **one sentence** (≤200 chars) summarizing the plan approach — this is used as the agent monitoring event summary. Then return the ordered step list (one line per step), plus any unresolved questions that need a decision before implementation begins.
+Write `agent-working/staging_artifacts/{ticket_id}/plan.md`. Begin your response with **one sentence** (≤200 chars) summarizing the plan approach — this is used as the agent monitoring event summary. Then return the ordered step list (one line per step), plus any unresolved questions that need a decision before implementation begins.
 
 ## Background Commands
 

@@ -49,7 +49,7 @@ redoing again once those milestones land.
   `TCK-20260713-SIMQ-COGNITION-PIPELINE-WIRE` and `TCK-20260713-SIMQ-RAWSCORE-PERSIST`,
   both landed 2026-07-13, both verified live directly against source in this refresh. That
   mistake traced back to trusting `current_state.md`'s older "Recommended next features" section
-  at face value instead of re-checking `tickets/done/` and the actual code; both are now corrected
+  at face value instead of re-checking `agent-working/tickets/done/` and the actual code; both are now corrected
   here and there. No tickets needed for either.
 - **WORLD's regression gate is now trustworthy** — `TCK-20260805-SIMQ-WORLD-ANCHOR-RECALIBRATION`
   recalibrated all 37 affected anchors; WORLD-specific `test_grade_regression.py` failures went
@@ -306,7 +306,7 @@ stronger characterization than the "partial cascading divergence" previously doc
 `grade_anchors.json` was left unrecalibrated — recalibrating against a pre-existing, unrelated
 infrastructure issue would have silently masked it under this migration's commit. See
 `docs/parity_ledger/infrastructure.yaml` `INFRA-273`'s 2026-08-06 update and
-`stored_artifacts/TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION/investigation.md` for the full
+`agent-working/stored_artifacts/TCK-20260806-PUSH-CUTOVER-COMBAT-ECONOMY-FACTION/investigation.md` for the full
 repro methodology.
 
 **Phase 2 (quest/demographic/XP domains) remains unscoped** — deliberately, per the epic's own
@@ -346,7 +346,7 @@ own root cause), now visible on 5 more scenario/test combinations because Phase 
 delivery to AGENCY/COGNITION/INFORMATION/PROGRESSION/WORLD/SOCIAL — not a Phase 2 regression.
 `grade_anchors.json` left unrecalibrated, for the same reason as Phase 1's own cutover. See
 `docs/parity_ledger/infrastructure.yaml` `INFRA-273`'s 2026-08-07 update and
-`stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md` for the full repro
+`agent-working/stored_artifacts/TCK-20260806-PUSH-CUTOVER-PHASE2/investigation.md` for the full repro
 methodology.
 
 **The push-based migration is now functionally complete for both the observability epic's own

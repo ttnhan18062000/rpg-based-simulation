@@ -4,7 +4,7 @@
 Mirrors tests/tools/test_agent_monitoring_manifest.py's design: inline-dict unit tests for each
 section function (no file I/O), ast/source-text reuse guards proving this module composes
 existing generate_retro.py/legacy_reader.py/manifest.py functions rather than reimplementing
-them, and a dirty-tree-aware zero-mutation integration test against the REAL agent-monitoring/
+them, and a dirty-tree-aware zero-mutation integration test against the REAL agent-working/agent-monitoring/
 corpus — never a tmp_path copy, which would make that assertion vacuous.
 """
 import ast
@@ -12,11 +12,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from tools.agent_working_paths import AGENT_MONITORING, posix
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
 _MODULE_PATH = _MONITORING_TOOLS_DIR / "retrieval_baseline_metrics.py"
-_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_AGENT_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 
 if str(_MONITORING_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_MONITORING_TOOLS_DIR))
@@ -105,7 +106,7 @@ def test_baseline_report_tool_never_imports_writer_module():
 # ---------------------------------------------------------------------------
 
 def test_load_all_sources_tools_reads_across_multiple_week_folders(tmp_path, monkeypatch):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W01").mkdir(parents=True)
     (data_dir / "2026-W02").mkdir(parents=True)
     (data_dir / "2026-W01" / "tools.jsonl").write_text(
@@ -132,7 +133,7 @@ def test_load_all_sources_tools_reads_across_multiple_week_folders(tmp_path, mon
 
 
 def test_load_all_sources_uses_load_data_glob_directly_on_directory_valued_default(tmp_path):
-    data_dir = tmp_path / "agent-monitoring" / "data"
+    data_dir = tmp_path / AGENT_MONITORING / "data"
     (data_dir / "2026-W10").mkdir(parents=True)
     (data_dir / "2026-W11").mkdir(parents=True)
     (data_dir / "2026-W10" / "tools.jsonl").write_text(
@@ -368,12 +369,12 @@ def test_baseline_report_review_rework_proxy_ignores_reason_code_alone():
 
 
 # ---------------------------------------------------------------------------
-# AC5 — zero mutation of agent-monitoring/*.jsonl
+# AC5 — zero mutation of agent-working/agent-monitoring/*.jsonl
 # ---------------------------------------------------------------------------
 
 def _porcelain_snapshot() -> str:
     result = subprocess.run(
-        ["git", "status", "--porcelain", "--", "agent-monitoring/"],
+        ["git", "status", "--porcelain", "--", f"{posix(AGENT_MONITORING)}/"],
         cwd=str(_REPO_ROOT), capture_output=True, text=True, check=True,
     )
     return result.stdout
@@ -390,7 +391,7 @@ def test_baseline_report_tool_causes_zero_diff_on_real_corpus():
 
     post_porcelain = _porcelain_snapshot()
     assert pre_porcelain == post_porcelain, (
-        "retrieval_baseline_metrics mutated agent-monitoring/: "
+        "retrieval_baseline_metrics mutated agent-working/agent-monitoring/: "
         f"pre={pre_porcelain!r} post={post_porcelain!r}"
     )
 

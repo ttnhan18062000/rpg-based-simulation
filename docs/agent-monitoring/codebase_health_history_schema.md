@@ -17,7 +17,7 @@ is meaningful on its own; the value is in the sequence. Since schema version 2
 (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`) each record also carries Python craft
 metrics from a second source, `tools/code_health/metrics.py` — see "Second metric source".
 
-**File path:** `agent-monitoring/codebase_health_history.jsonl`
+**File path:** `agent-working/agent-monitoring/codebase_health_history.jsonl`
 
 This lives inside the same directory family as `runs.jsonl`/`events.jsonl`/
 `tools.jsonl` purely for writer/lock/diagnostic-infrastructure reuse — it is
@@ -62,7 +62,7 @@ path constant with `RUNS_FILE`.
 
 ## Append-only contract
 
-`agent-monitoring/codebase_health_history.jsonl` is append-only for all
+`agent-working/agent-monitoring/codebase_health_history.jsonl` is append-only for all
 writes — mirroring `docs/agent-monitoring/schema.md`'s own wording for
 `runs.jsonl`. The writer
 (`tools/codebase_health_snapshot.py::write_snapshot`, via
@@ -102,7 +102,7 @@ rename/add/remove is a visible breaking change here, never silent drift.
 | `registry_size_lines` | int | `docs/REGISTRY.yaml`'s line count at snapshot time. This is the unit the scorecard actually trends for registry size (the more human-legible of the two, matching `format_report()`'s own presentation order). |
 | `dead_bytecode_files` | int | Count of `.pyc` files anywhere in the live tree with no corresponding `.py` source. |
 | `unused_core_dependencies` | list[string] | `pyproject.toml` `[project.dependencies]` entries with no matching `import`/`from` statement anywhere in the git-tracked tree. Not a scalar — the scorecard renders this dimension as a raw value/count, never through the Δ/arrow trend branch. |
-| `churn_lines_changed_excl_bookkeeping` | int | Total insertions+deletions across full history, excluding `agent-monitoring/*.jsonl`, `tickets/working_log.csv`, and `docs/REGISTRY.yaml` via a real git pathspec exclusion. |
+| `churn_lines_changed_excl_bookkeeping` | int | Total insertions+deletions across full history, excluding `agent-working/agent-monitoring/*.jsonl`, `agent-working/tickets/working_log.csv`, and `docs/REGISTRY.yaml` via a real git pathspec exclusion. |
 | `snapshot_schema_version` | int | Version of this snapshot record's own shape (distinct from any individual field's meaning) — see below. |
 
 ---
@@ -154,7 +154,7 @@ manually incremented whenever `EXPECTED_SNAPSHOT_KEYS` changes.
 
 | Version | Keys |
 |---|---|
-| 1 | `build_report()`'s 14 keys. No record of this version has been written to `agent-monitoring/codebase_health_history.jsonl`. |
+| 1 | `build_report()`'s 14 keys. No record of this version has been written to `agent-working/agent-monitoring/codebase_health_history.jsonl`. |
 | 2 | Version 1's keys plus the 14 `craft_*` keys above (`TCK-20261002-CODE-HEALTH-SNAPSHOT-METRICS`). |
 
 A schema-version bump is always a **paired change**, landed in the same

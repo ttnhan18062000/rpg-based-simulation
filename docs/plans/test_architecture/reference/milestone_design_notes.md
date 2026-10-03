@@ -11,12 +11,12 @@ tags: [testing, architecture, planning]
 > **NON-BINDING REFERENCE (2026-09-29).** This document is investigation and design material kept
 > for the detail planner and implementer agents. The **binding** plan is
 > [`../roadmap.md`](../roadmap.md) plus the four epic tickets in
-> `tickets/done/test-architecture/`. Where this document is more specific than those, treat it as a
+> `agent-working/tickets/done/test-architecture/`. Where this document is more specific than those, treat it as a
 > suggestion, not a commitment. Decisions marked here remain **pending** unless the roadmap says
 > otherwise.
 
 
-**Status: DRAFT 2026-09-29h, reviewable; decisions PENDING** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in (ticket outlines removed; see ../../../../tickets/done/test-architecture/)). Centred on test architecture and operations, following the owner's
+**Status: DRAFT 2026-09-29h, reviewable; decisions PENDING** (g: deferrals per owner direction; see epic status) (revision f: R2 `tools/` mapping, freshness split, quarantine enforcement, evidence classification, MT scope; ticket outlines in (ticket outlines removed; see ../../../../agent-working/tickets/done/test-architecture/)). Centred on test architecture and operations, following the owner's
 scope clarification: feature teams own mechanic behaviour and feature proofs (epic §1). Derived
 from [`architecture_design_notes.md`](architecture_design_notes.md) and
 [`current_test_system_overview.md`](current_test_system_overview.md) (OV). **No tickets exist**;
@@ -137,7 +137,7 @@ G-P deferred (party oracle and owner unknown)
    | Outcome | Paths |
    |---|---|
    | **relevant** (scenario lane runs) | `src/**`; `tests/mechanic_scenarios/**`, `tests/helpers/**`, `tests/conftest.py`; `data/**` (incl. `data/worlds/**`); `config/**`; `requirements*.txt`, `pyproject.toml`, `.github/workflows/test.yml`; **`tools/` paths mapped as scenario-input producers** |
-   | **not relevant** | `docs/**`, `tickets/**`, `agent-monitoring/**`, `frontend/**`, `dashboard-frontend/**`, `tmp/**`; **`tools/` paths mapped as scenario-irrelevant** |
+   | **not relevant** | `docs/**`, `agent-working/tickets/**`, `agent-working/agent-monitoring/**`, `frontend/**`, `dashboard-frontend/**`, `tmp/**`; **`tools/` paths mapped as scenario-irrelevant** |
    | **impact-unknown → conservative fallback: run the lane** | any path not matched above, including **unmapped `tools/` paths** |
 
    **`tools/` mapping** [O evidence, 2026-09-29; I design]:

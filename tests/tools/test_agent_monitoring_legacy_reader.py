@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _MONITORING_TOOLS_DIR = _REPO_ROOT / "tools" / "agent-monitoring"
@@ -199,7 +200,7 @@ def test_tools_interactive_null_is_excluded_from_legacy_warning_rule():
 # Section 3 — round-trip readability of recent real current-schema records
 # ---------------------------------------------------------------------------
 
-_REAL_MONITORING_DIR = _REPO_ROOT / "agent-monitoring"
+_REAL_MONITORING_DIR = _REPO_ROOT / AGENT_MONITORING
 _SAMPLE_SIZE = 20
 
 

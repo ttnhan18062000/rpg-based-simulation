@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only baseline over agent-monitoring/data/*/tools.jsonl for Read-call ranged-vs-whole-file
+"""Read-only baseline over agent-working/agent-monitoring/data/*/tools.jsonl for Read-call ranged-vs-whole-file
 behavior (TCK-20260917-SELECTIVE-REPOSITORY-RETRIEVAL-OVER-WHOLE-FILE-READS).
 
 `read_ranged` is a new field this ticket adds to `post_tool_hook.py`'s own record schema — no
@@ -11,7 +11,7 @@ Acceptance Criteria ask for; (2) a `known`/`unknown` split for `read_ranged` its
 is expected to be the entire historical corpus until real usage accumulates after this field ships.
 Re-running this script later is the actual "after" comparison.
 
-Prints a JSON report to stdout by default; never writes into agent-monitoring/ itself.
+Prints a JSON report to stdout by default; never writes into agent-working/agent-monitoring/ itself.
 """
 import argparse
 import json

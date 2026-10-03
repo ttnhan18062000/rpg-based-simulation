@@ -116,8 +116,8 @@ later grew further to 40.
 ## Batch History (2026-07-02 → 2026-07-11)
 
 Every batch below closed with 0 regressions on the corpus scope it touched. Ticket-level detail
-(root causes, exact evidence) lives in each ticket's own `tickets/done/` record and
-`stored_artifacts/`; this table is the index, not the full account.
+(root causes, exact evidence) lives in each ticket's own `agent-working/tickets/done/` record and
+`agent-working/stored_artifacts/`; this table is the index, not the full account.
 
 ### SimQ Uplift Batch 1 (2026-07-02)
 

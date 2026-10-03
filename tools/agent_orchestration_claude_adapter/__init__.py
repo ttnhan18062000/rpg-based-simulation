@@ -1,9 +1,9 @@
-"""Claude-adapter conformance tooling for the agent-orchestration/ contract.
+"""Claude-adapter conformance tooling for the agent-working/agent-orchestration/ contract.
 
 Kept as a fresh package, structurally separate from tools/agent_orchestration/ (owned by
 TCK-20260721-ORCHESTRATION-CONTRACT-CORE): this package only reads that package's
 `load_contract()` output read-only, never edits `tools/agent_orchestration/{loader.py,generator.py}`
-or any of agent-orchestration/'s original six contract files.
+or any of agent-working/agent-orchestration/'s original six contract files.
 
 Built by TCK-20260721-CLAUDE-CONFORMANCE-ADAPTER. Renders a read-only Claude-shaped projection of
 the contract and cross-checks it against the live Claude workflow source file under

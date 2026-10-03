@@ -23,7 +23,7 @@ architecture toolchain; a registry of known violations with a ratchet; agent-fac
 review for craft; a package inventory for `src/`; later, a behaviour-preserving refactor lane.
 
 **Out of scope:** RPG features and mechanics, performance work, test architecture (owned by the
-`testing` domain, `tickets/done/test-architecture/`), resilience and failure modes (D23), and any
+`testing` domain, `agent-working/tickets/done/test-architecture/`), resilience and failure modes (D23), and any
 change to simulation behaviour.
 
 **Hard constraint (owner, 2026-10-02): no file under `src/` is modified by this plan until the owner
@@ -250,7 +250,7 @@ Recorded 2026-10-02:
 12. **Python version:** keep the `>=3.11` floor and document 3.13 as the CI-tested version; raising
     the floor would break the 3.12 knowledge-search venv.
 
-Tickets: `tickets/todos/python-code-craft/` (epic plus seven children, order in `SEQUENCE.md`).
+Tickets: `agent-working/tickets/todos/python-code-craft/` (epic plus seven children, order in `SEQUENCE.md`).
 
 ## 9. Risks
 

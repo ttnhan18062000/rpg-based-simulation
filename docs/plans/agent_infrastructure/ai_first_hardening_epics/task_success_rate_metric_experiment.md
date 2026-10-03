@@ -37,14 +37,14 @@ took for its own pilot.
 ## Hypothesis
 
 A task-success-rate metric, built from item 13's own scoring vocabulary (gate-failure rate from
-`agent-monitoring/*/runs.jsonl`'s terminal statuses, plus the 2 known recurring defect-class flag
+`agent-working/agent-monitoring/*/runs.jsonl`'s terminal statuses, plus the 2 known recurring defect-class flag
 rates from `tools/agent_replay/defect_detectors.py`), computed before and after a real agent-prompt
 change over a comparable replayed sample, produces a real, reportable delta — not noise — that a
 retro reader can act on when deciding whether to keep, revert, or iterate on a prompt change.
 
 ## Baseline (item 13's real, already-executed results — reused, not re-derived)
 
-- **Source**: `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and
+- **Source**: `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` and
   `agent_evaluation_foundation_experiment.md`'s own appended `## Results`/`## Decision` sections.
 - **Gate-failure-rate baseline**: item 13's own real-corpus figure (freshly re-derived at that
   pilot's own execution time, per its Acceptance Criteria requirement to measure live rather than
@@ -154,5 +154,5 @@ abandoned or quietly rescoped into a smaller claim.
 - `roadmap.md` — item 19's Horizon-3 placement.
 - `tools/agent_replay/` — the sampling/replay/isolation infrastructure this metric's re-run step
   reuses.
-- `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` — the real baseline data
+- `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md` — the real baseline data
   this spec's Baseline section cites.

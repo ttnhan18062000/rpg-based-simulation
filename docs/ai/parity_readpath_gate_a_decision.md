@@ -15,7 +15,7 @@ a real workflow or agent context. This document **decides and evidences only** â
 nothing, wires nothing into any workflow, and changes no file under `tools/parity_index.py`,
 `tools/parity_ledger_scan.py`, `tools/gate_checks/parity_updater_static.py`, or any
 `docs/parity_ledger/*.yaml` shard. Every number below is either a real, freshly-computed field
-from `staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/gate_a_results.json` (produced by
+from `agent-working/staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/gate_a_results.json` (produced by
 `tests/tools/test_gate_a_readpath_review.py`, re-run against real, git-pinned ledger data) or an
 explicitly labeled estimate/proxy â€” never an unattributed round number.
 
@@ -35,15 +35,15 @@ This document reviews exactly that: `tools/parity_index.py`'s unmodified `entry(
 `health()` against `tools/parity_ledger_scan.py::find_p0_intersection` and
 `tools/gate_checks/parity_updater_static.py::derive_mapping`/`cross_reference_touched`, on a
 9-case corpus (6 real, git-pinned, ticket-derived cases; 3 freshly-authored synthetic
-legacy-edge-case fixtures), per `staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/plan.md`.
+legacy-edge-case fixtures), per `agent-working/staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/plan.md`.
 
 ---
 
 ## 2. Corpus
 
-Full case data lives in `staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/gate_a_corpus.json`
+Full case data lives in `agent-working/staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/gate_a_corpus.json`
 (frozen before any result was computed) and
-`staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/gate_a_results.json` (filled in by the test
+`agent-working/staging_artifacts/TCK-20260731-PARITY-READPATH-GATE/gate_a_results.json` (filled in by the test
 run). This table cites them by path rather than re-embedding the JSON.
 
 ### 2.1 Real, ticket-derived cases (`ground_truth_or_judgement: "ground_truth"`)

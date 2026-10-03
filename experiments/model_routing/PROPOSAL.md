@@ -19,7 +19,7 @@ by `TCK-20260708-AGENT-COST-OBSERVABILITY`) states directly:
 That doc also poses the open question this proposal exists to answer: *"Does a model-routing policy
 need its own quality-regression audit before anyone trusts it in the critical path?"*
 
-**Not a duplicate of `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md`** — checked
+**Not a duplicate of `agent-working/tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md`** — checked
 directly. That ticket is about *how* workflows execute (porting `.claude/workflows/*.js` from
 LLM-narrated phase sequencing to real runtime code via a Claude Agent SDK program); it says nothing
 about which model runs each phase. This proposal is about *which model*, and applies identically
@@ -27,7 +27,7 @@ whether orchestration stays narrated or is later ported to real code — it does
 backlog item and is not blocked by it.
 
 No ticket exists yet for model routing itself (confirmed via `grep -ril` across `docs/` and
-`tickets/` for "model-rout", "model tier", "cost-aware", "model selection") — this is the first time
+`agent-working/tickets/` for "model-rout", "model tier", "cost-aware", "model selection") — this is the first time
 it's been scoped past the one-paragraph mention above.
 
 ## 2. The prerequisite already shipped
@@ -108,7 +108,7 @@ already-recorded historical data first**:
 
 - **Metric:** proxy-score delta per phase (`cost_proxy_score`, aggregated the same way
   `generate_retro.py` already does) between the current uniform-tier baseline and a routed policy,
-  computed by replaying historical `agent-monitoring/events.jsonl` phase/agent distributions against
+  computed by replaying historical `agent-working/agent-monitoring/events.jsonl` phase/agent distributions against
   the proposed routing table.
 - **Guard:** gate-failure-rate must not regress — specifically, the rate of `NEEDS_CHANGES`,
   `BLOCKED`, `DOD_BLOCKED`, and `TAGS_NOT_REGISTERED` outcomes for any phase whose model tier changes.
@@ -131,7 +131,7 @@ feature:
 
 | Existing feature | How model routing binds to it |
 |---|---|
-| `agent-monitoring/` (`tools.jsonl`, `events.jsonl`, `runs.jsonl`) | Source of the historical replay data in §6, and where a routed run's own `cost_proxy_score` continues to be recorded identically — no schema change needed, `model` used per call is already implicit in the agent call itself and could be added as a field if routing ships for real. |
+| `agent-working/agent-monitoring/` (`tools.jsonl`, `events.jsonl`, `runs.jsonl`) | Source of the historical replay data in §6, and where a routed run's own `cost_proxy_score` continues to be recorded identically — no schema change needed, `model` used per call is already implicit in the agent call itself and could be added as a field if routing ships for real. |
 | `make agent-monitoring-retro` / `generate_retro.py` | Where the *result* of routing must show up to be trusted — the existing spend-by-phase/spend-by-agent breakdown is the exact before/after comparison surface. A shipped routing policy should make retro's next report show the spend drop directly, not require a separate report. |
 | `verified_by` gate-provenance field | The existing signal for "how much of this gate is already mechanical" — the routing table in §4 should be derived from this field's real distribution across recent runs, not guessed per-phase. |
 | **CLAUDE.md's retro cadence rule** | *"before changing any agent prompt/phase/tier rule"* is one of the three retro triggers already defined in this repo. A model-routing policy change **is** a tier rule change by this project's own definition — so shipping this for real must run `/agent-monitoring-retro` first (there's already a pending nudge: 9 completed `implement-ticket` runs since the last dated retro, threshold 5, as of this session) and again after, to have a real before/after baseline instead of an assumed one. |
@@ -164,4 +164,4 @@ feature:
 - `tools/agent-monitoring/cost_proxy.py` — the exact formula this proposal's metric reuses
 - `tools/agent-monitoring/generate_retro.py` — the existing spend-by-phase/spend-by-agent surface
 - `experiments/loop/PROPOSAL.md` — the sibling proposal whose keep/discard validation shape this reuses
-- `tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` — confirmed non-duplicate, independent axis (how vs. which model)
+- `agent-working/tickets/backlogs/TCK-20260710-EXECUTABLE-WORKFLOW-RUNTIME.md` — confirmed non-duplicate, independent axis (how vs. which model)

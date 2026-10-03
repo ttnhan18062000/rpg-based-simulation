@@ -20,6 +20,7 @@ from agent_replay.pilot_isolation import (  # noqa: E402
     run_pilot_isolated,
 )
 from agent_replay_codex.errors import ContainmentViolationError  # noqa: E402
+from tools.agent_working_paths import AGENT_MONITORING  # noqa: E402
 
 _REAL_FIXTURE_PATH = (
     _REPO_ROOT / "tests" / "fixtures" / "agent_replay" / "TCK-20260721-ORCHESTRATION-CONTRACT-ADR.yaml"
@@ -40,11 +41,11 @@ def test_isolation_produces_zero_diff_across_agent_monitoring_shards():
 
 def test_isolation_watch_set_actually_detects_a_deliberate_mutation():
     """Regression guard mirroring test_no_mutation_snapshot.py's own precedent — proves the
-    watch set actually fires on a real mutation under the sharded agent-monitoring/data/ layout,
+    watch set actually fires on a real mutation under the sharded agent-working/agent-monitoring/data/ layout,
     not merely that the snapshot helpers run without error (the exact vacuous-pass failure mode
     a naive 'assert no diff' implementation could silently have)."""
     probe_path = (
-        _REPO_ROOT / "agent-monitoring" / "data" / "unknown-week" / "_pilot_isolation_probe.jsonl"
+        _REPO_ROOT / AGENT_MONITORING / "data" / "unknown-week" / "_pilot_isolation_probe.jsonl"
     )
     assert not probe_path.exists(), "stale probe file from a previous failed run — clean it up first"
 
@@ -56,7 +57,7 @@ def test_isolation_watch_set_actually_detects_a_deliberate_mutation():
         post = capture(_REPO_ROOT)
 
         assert pre.content_hash != post.content_hash or pre.porcelain != post.porcelain, (
-            "watch set did not detect a deliberate mutation under agent-monitoring/data/"
+            "watch set did not detect a deliberate mutation under agent-working/agent-monitoring/data/"
         )
         # a mutation NOT attributed to the pilot's own run_id must not raise
         assert_isolation_held(pre, post, pilot_run_id="TCK-20260907-FILTERED-REPLAY-EVAL-PILOT")
@@ -72,7 +73,7 @@ def test_isolation_detects_a_pilot_attributed_line_as_a_violation():
     Uses a dedicated new shard directory (never a real, currently-shared shard file) so this test
     never risks clobbering a concurrent session's own in-flight append."""
     pilot_run_id = "TCK-20260907-FILTERED-REPLAY-EVAL-PILOT"
-    probe_week_dir = _REPO_ROOT / "agent-monitoring" / "data" / "_pilot_isolation_test_week"
+    probe_week_dir = _REPO_ROOT / AGENT_MONITORING / "data" / "_pilot_isolation_test_week"
     probe_path = probe_week_dir / "runs.jsonl"
     assert not probe_week_dir.exists(), "stale probe shard from a previous failed run — clean it up first"
 

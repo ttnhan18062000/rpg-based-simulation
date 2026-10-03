@@ -99,7 +99,7 @@ def test_positive_fire_on_synthetic_secret_shaped_command(command_text):
     [
         "pytest tests/tools -q",
         "python3 tools/parity_index.py build",
-        "ls -la tickets/inprogress",
+        "ls -la agent-working/tickets/inprogress",
     ],
 )
 def test_negative_no_fire_on_ordinary_commands(command_text):
@@ -167,6 +167,6 @@ def test_existing_bash_and_sidecar_hooks_untouched():
     edit_write_command = pre_tool_use[3]["hooks"][0]["command"]
     assert pre_tool_use[3]["matcher"] == "Edit|Write"
     assert (
-        "sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
+        "sidecar-check: agent-working/tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
         in edit_write_command
     )

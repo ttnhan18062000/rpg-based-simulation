@@ -11,7 +11,7 @@ tags: [dashboard, observability]
 
 # Proposal: Agent-name glossary descriptions (extend the existing glossary registry with an "agent" category)
 
-**Archived:** 2026-07-19 — shipped by `TCK-20260719-AGENT-ROLE-GLOSSARY` (`tickets/done/`):
+**Archived:** 2026-07-19 — shipped by `TCK-20260719-AGENT-ROLE-GLOSSARY` (`agent-working/tickets/done/`):
 `_load_agent_role_descriptions()` added to `src/api/agent_ops_dashboard/ingest.py` as a third
 `get_glossary()` merge source (category `"agent"`), reading every `.claude/agents/*.md` role file's
 own frontmatter `description:` field; the Stats view's Top Agents table `Agent` column wrapped in
@@ -52,7 +52,7 @@ than writing new layer descriptions.
 
 **Important scope-limiting finding**: the "Agent" column in the Stats
 view's "Top agents by call volume" table is keyed by
-`agent-monitoring/events.jsonl`'s free-text `agent` field
+`agent-working/agent-monitoring/events.jsonl`'s free-text `agent` field
 (`tools/agent-monitoring/generate_retro.py:277`,
 `agent_stats[e.get("agent", "?")]`) — this is **not** strictly limited to
 the 13 `.claude/agents/*.md` role names. Confirmed via a live Stats view
@@ -78,7 +78,7 @@ glossary lookup — no new logic needed for it, just don't assume every
   descriptions into `glossary_registry.jsonl` itself as a second source of
   truth for the same content. Category should be `"agent"`.
 - Term key = the agent's `name:` frontmatter field (matches the exact
-  string `agent-monitoring/events.jsonl`'s `agent` field uses for a real
+  string `agent-working/agent-monitoring/events.jsonl`'s `agent` field uses for a real
   agent-role run, per `docs/agent-monitoring/schema.md`'s own documented
   convention: "Agent identifier (matches `.claude/agents/{agent}.md`
   filename)").
@@ -126,7 +126,7 @@ glossary lookup — no new logic needed for it, just don't assume every
 - Writing NEW descriptions for agent roles — every description already
   exists in each file's own frontmatter; this is pure extraction/reuse, not
   content authorship.
-- Any change to how `agent-monitoring/events.jsonl`'s `agent` field is
+- Any change to how `agent-working/agent-monitoring/events.jsonl`'s `agent` field is
   populated, or to what values it can hold — this proposal only documents
   existing values that happen to match a real `.claude/agents/*.md` file,
   never invents new ones for workflow/orchestrator labels.

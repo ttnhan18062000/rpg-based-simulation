@@ -18,7 +18,7 @@ from tools.agent_replay_codex.monitoring_shards import hash_source
 from .errors import PilotConfigToggleGuardError, PilotRollbackVerificationError
 
 # The empirically-discovered hook-registration TOML syntax, recorded in
-# stored_artifacts/TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE/ (tickets/done/
+# agent-working/stored_artifacts/TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE/ (agent-working/tickets/done/
 # TCK-20260721-CODEX-GUIDANCE-FIXTURE-CAPTURE.md Implementation Notes, Step 11). `command = "true"`
 # is a deliberate no-op placeholder: this mechanism is never wired to a real Codex invocation, so
 # even if the rendered config were somehow used, the hook command is inert by construction.
@@ -58,7 +58,7 @@ def disable(scratch_config_path: Path, repo_root: Path, baseline_bytes: bytes) -
 
 def snapshot_rollback_scope(agent_monitoring_dir: Path, pilot_ticket_path: Path) -> dict[str, str]:
     """sha256 of each of the 3 monitoring sources (a single legacy <source>.jsonl, or the weekly
-    agent-monitoring/data/<week>/<source>.jsonl shards) + pilot_ticket_path, whole-file.
+    agent-working/agent-monitoring/data/<week>/<source>.jsonl shards) + pilot_ticket_path, whole-file.
 
     Strict hash-equality IS correct here, unlike the baseline-manifest gate's prefix-preservation
     check — the rollback drill must leave these files completely untouched, not merely

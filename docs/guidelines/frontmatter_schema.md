@@ -13,7 +13,7 @@ Every markdown file in this project must carry a YAML frontmatter block that cla
 the file by content type, status, layer, authority, and audience.
 
 This schema is the foundation for Docusaurus navigation, Registry generation, and agent
-doc discovery. It applies to all `.md` files under `docs/`, `tickets/`, `stored_artifacts/`,
+doc discovery. It applies to all `.md` files under `docs/`, `agent-working/tickets/`, `agent-working/stored_artifacts/`,
 and `docs/archive/`.
 
 The validator `tools/validate_frontmatter.py` enforces this schema. The enum constants in
@@ -29,8 +29,8 @@ the frontmatter overrides path inference.
 
 | Path prefix | Inferred content type |
 |---|---|
-| `tickets/` | `ticket` |
-| `stored_artifacts/` | `artifact` |
+| `agent-working/tickets/` | `ticket` |
+| `agent-working/stored_artifacts/` | `artifact` |
 | `docs/archive/` | `archive` |
 | All other `docs/` | `doc` |
 | Anything else | `doc` (fallback) |
@@ -71,7 +71,7 @@ tags: [combat, damage]
 
 ### `ticket` — Ticket files
 
-Applies to files under `tickets/done/` and `tickets/inprogress/`.
+Applies to files under `agent-working/tickets/done/` and `agent-working/tickets/inprogress/`.
 
 | Field | Required | Type | Valid Values |
 |---|---|---|---|
@@ -85,23 +85,23 @@ Applies to files under `tickets/done/` and `tickets/inprogress/`.
 | `tags` | no | list of strings | see `docs/guidelines/tag_taxonomy.md` — controlled vocabulary, forward-only enforced from `2026-07-04` |
 
 **Cross-field rule (location consistency):** beyond the per-field enums above, `status`/`phase`
-must also agree with which `tickets/` subdirectory the file physically sits in — added by
+must also agree with which `agent-working/tickets/` subdirectory the file physically sits in — added by
 `TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT` after a corpus audit found 395
-`tickets/done/*.md` files with individually enum-valid but location-inconsistent `status`/`phase`
+`agent-working/tickets/done/*.md` files with individually enum-valid but location-inconsistent `status`/`phase`
 values (a class the per-field enum checks above can never catch, since neither field is invalid in
 isolation).
 
 | Location | Requires |
 |---|---|
-| `tickets/done/` | `status: historical` and `phase: done` |
-| `tickets/inprogress/` | `phase` must never be `done` |
+| `agent-working/tickets/done/` | `status: historical` and `phase: done` |
+| `agent-working/tickets/inprogress/` | `phase` must never be `done` |
 
 Enforced by `check_ticket_location_consistency(path, fm)` in `tools/validate_frontmatter.py` —
 deliberately **not** folded into the per-field `_validate_ticket`/`validate_file` sweep above, so a
-plain `validate_file`/`validate_directory` call over `tickets/` doesn't silently start enforcing
+plain `validate_file`/`validate_directory` call over `agent-working/tickets/` doesn't silently start enforcing
 directory placement too. Called explicitly by two consumers: `done_checker_static.py`'s
 `check_frontmatter_valid()` (per-ticket, at Verify time) and a corpus test in
-`tests/tools/test_validate_frontmatter.py` that sweeps every real `tickets/done/**/*.md` file
+`tests/tools/test_validate_frontmatter.py` that sweeps every real `agent-working/tickets/done/**/*.md` file
 independent of how each ticket was closed.
 
 Example:
@@ -121,7 +121,7 @@ date: 2026-06-06
 
 ### `artifact` — Stored staging artifacts
 
-Applies to files under `stored_artifacts/` (plan.md, investigation.md, test_plan.md).
+Applies to files under `agent-working/stored_artifacts/` (plan.md, investigation.md, test_plan.md).
 
 | Field | Required | Type | Valid Values |
 |---|---|---|---|
@@ -208,8 +208,8 @@ Run against an entire directory tree:
 
 ```bash
 python3 tools/validate_frontmatter.py docs/
-python3 tools/validate_frontmatter.py tickets/done/
-python3 tools/validate_frontmatter.py stored_artifacts/
+python3 tools/validate_frontmatter.py agent-working/tickets/done/
+python3 tools/validate_frontmatter.py agent-working/stored_artifacts/
 ```
 
 Override content type inference (useful for files at non-standard paths):
@@ -231,11 +231,11 @@ Errors are printed to `stderr`; the summary line is printed to `stdout`.
 | Tool | Purpose |
 |---|---|
 | `tools/validate_frontmatter.py` | Validate any file or directory against this schema |
-| `tools/generate_registry.py` | Read frontmatter from all docs + tickets/done/ → emit `docs/REGISTRY.yaml` |
+| `tools/generate_registry.py` | Read frontmatter from all docs + agent-working/tickets/done/ → emit `docs/REGISTRY.yaml` |
 | `tools/add_frontmatter_live.py` | Bulk-apply frontmatter to live docs/ (re-run if adding a new directory) |
 | `tools/add_frontmatter_archive.py` | Bulk-apply minimal archive frontmatter to docs/archive/ etc. |
-| `tools/add_frontmatter_tickets.py` | Bulk-apply frontmatter to tickets/done/ and stored_artifacts/ |
-| `tools/generate_artifact_pages.py` | Generate stored_artifacts/*/index.md landing pages for Docusaurus |
+| `tools/add_frontmatter_tickets.py` | Bulk-apply frontmatter to agent-working/tickets/done/ and agent-working/stored_artifacts/ |
+| `tools/generate_artifact_pages.py` | Generate agent-working/stored_artifacts/*/index.md landing pages for Docusaurus |
 
 See `make docs-serve` (Docusaurus 3 at `website/`) and `make docs-registry` for the consumer side of this schema.
 

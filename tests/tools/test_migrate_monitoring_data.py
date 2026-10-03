@@ -3,7 +3,7 @@
 
 Mirrors tests/tools/test_migrate_tools_shards.py's own structure: synthetic-fixture
 unit tests, then integration tests against a copy of the real historical corpus (never
-the real agent-monitoring/ directory directly), then architecture guards that only run
+the real agent-working/agent-monitoring/ directory directly), then architecture guards that only run
 meaningfully once retirement (git rm + .gitattributes edit) has actually happened.
 """
 import collections
@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from tools.agent_working_paths import AGENT_MONITORING
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "tools" / "agent-monitoring"))
 
@@ -27,10 +28,10 @@ from migrate_monitoring_data import (  # noqa: E402
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_REAL_RUNS = _REPO_ROOT / "agent-monitoring" / "runs.jsonl"
-_REAL_EVENTS = _REPO_ROOT / "agent-monitoring" / "events.jsonl"
-_REAL_TOOLS_DIR = _REPO_ROOT / "agent-monitoring" / "tools"
-_REAL_DATA_DIR = _REPO_ROOT / "agent-monitoring" / "data"
+_REAL_RUNS = _REPO_ROOT / AGENT_MONITORING / "runs.jsonl"
+_REAL_EVENTS = _REPO_ROOT / AGENT_MONITORING / "events.jsonl"
+_REAL_TOOLS_DIR = _REPO_ROOT / AGENT_MONITORING / "tools"
+_REAL_DATA_DIR = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def _line(**fields) -> str:
@@ -201,26 +202,26 @@ def test_migration_uses_one_write_lines_call_per_week_per_source(tmp_path, monke
 def _copy_real_corpus_into(tmp_path):
     """Copies whatever of the real runs.jsonl/events.jsonl/tools/ still exist (each
     source independently — post-retirement some or all may be gone, which is this
-    ticket's own intended end state) plus any real agent-monitoring/data/*/ week
-    folders, into tmp_path. Never touches the real agent-monitoring/ directory.
+    ticket's own intended end state) plus any real agent-working/agent-monitoring/data/*/ week
+    folders, into tmp_path. Never touches the real agent-working/agent-monitoring/ directory.
 
     Returns a dict of per-source availability so tests can skip a source's own checks
     once that source has already been retired, without failing the whole test.
     """
     repo_copy = tmp_path / "repo"
-    (repo_copy / "agent-monitoring").mkdir(parents=True)
-    data_dir = repo_copy / "agent-monitoring" / "data"
+    (repo_copy / AGENT_MONITORING).mkdir(parents=True)
+    data_dir = repo_copy / AGENT_MONITORING / "data"
 
     available = {"runs": False, "events": False, "tools": False}
 
     if _REAL_RUNS.exists():
-        (repo_copy / "agent-monitoring" / "runs.jsonl").write_text(_REAL_RUNS.read_text())
+        (repo_copy / AGENT_MONITORING / "runs.jsonl").write_text(_REAL_RUNS.read_text())
         available["runs"] = True
     if _REAL_EVENTS.exists():
-        (repo_copy / "agent-monitoring" / "events.jsonl").write_text(_REAL_EVENTS.read_text())
+        (repo_copy / AGENT_MONITORING / "events.jsonl").write_text(_REAL_EVENTS.read_text())
         available["events"] = True
     if _REAL_TOOLS_DIR.is_dir():
-        copy_tools_dir = repo_copy / "agent-monitoring" / "tools"
+        copy_tools_dir = repo_copy / AGENT_MONITORING / "tools"
         copy_tools_dir.mkdir()
         for shard_path in sorted(_REAL_TOOLS_DIR.glob("tools-*.jsonl")):
             (copy_tools_dir / shard_path.name).write_text(shard_path.read_text())
@@ -240,13 +241,13 @@ def _copy_real_corpus_into(tmp_path):
 
 def _run_one_source(repo_copy, data_dir, source):
     if source == "tools":
-        tools_dir = repo_copy / "agent-monitoring" / "tools"
+        tools_dir = repo_copy / AGENT_MONITORING / "tools"
         buckets = relocate_tools_shards(tools_dir)
         source_lines = []
         for week_key in sorted(buckets.keys()):
             source_lines.extend(buckets[week_key])
     else:
-        source_path = repo_copy / "agent-monitoring" / f"{source}.jsonl"
+        source_path = repo_copy / AGENT_MONITORING / f"{source}.jsonl"
         source_lines = source_path.read_text().splitlines()
         field_priority = RUNS_FIELD_PRIORITY if source == "runs" else EVENTS_FIELD_PRIORITY
         buckets = bucket_lines_by_week_multi_field(source_lines, field_priority)
@@ -322,11 +323,11 @@ def test_tools_relocation_is_route_only_not_re_bucketed(tmp_path):
     repo_copy, data_dir, available = _copy_real_corpus_into(tmp_path)
     if not available["tools"]:
         pytest.skip(
-            "agent-monitoring/tools/ has already been retired by this ticket's own migration "
+            "agent-working/agent-monitoring/tools/ has already been retired by this ticket's own migration "
             "run -- nothing left to copy for this real-corpus integration test."
         )
 
-    tools_dir = repo_copy / "agent-monitoring" / "tools"
+    tools_dir = repo_copy / AGENT_MONITORING / "tools"
     for shard_path in sorted(tools_dir.glob("tools-*.jsonl")):
         week_key = shard_path.stem[len("tools-"):]
         shard_lines = shard_path.read_text().splitlines()
@@ -344,19 +345,19 @@ def test_tools_relocation_is_route_only_not_re_bucketed(tmp_path):
 
 def test_legacy_paths_removed_after_migration():
     assert not _REAL_RUNS.exists(), (
-        "agent-monitoring/runs.jsonl must no longer exist in the working tree after this "
+        "agent-working/agent-monitoring/runs.jsonl must no longer exist in the working tree after this "
         "ticket's retirement step (git rm) -- full history recoverable via "
-        "`git log --follow -- agent-monitoring/runs.jsonl`"
+        "`git log --follow -- agent-working/agent-monitoring/runs.jsonl`"
     )
     assert not _REAL_EVENTS.exists(), (
-        "agent-monitoring/events.jsonl must no longer exist in the working tree after this "
+        "agent-working/agent-monitoring/events.jsonl must no longer exist in the working tree after this "
         "ticket's retirement step (git rm) -- full history recoverable via "
-        "`git log --follow -- agent-monitoring/events.jsonl`"
+        "`git log --follow -- agent-working/agent-monitoring/events.jsonl`"
     )
     assert not _REAL_TOOLS_DIR.exists(), (
-        "agent-monitoring/tools/ must no longer exist in the working tree after this ticket's "
+        "agent-working/agent-monitoring/tools/ must no longer exist in the working tree after this ticket's "
         "retirement step (git rm -r) -- full history recoverable via "
-        "`git log --follow -- agent-monitoring/tools/`"
+        "`git log --follow -- agent-working/agent-monitoring/tools/`"
     )
 
 
@@ -367,7 +368,7 @@ def test_gitattributes_no_longer_references_any_of_the_3_retired_paths():
     from tests.integrity.test_no_duplicate_content_blocks import _merge_union_glob_patterns
 
     content = (_REPO_ROOT / ".gitattributes").read_text()
-    assert "agent-monitoring/runs.jsonl merge=union" not in content
-    assert "agent-monitoring/events.jsonl merge=union" not in content
-    assert "agent-monitoring/tools/*.jsonl merge=union" not in content
-    assert "agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()
+    assert "agent-working/agent-monitoring/runs.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/events.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/tools/*.jsonl merge=union" not in content
+    assert "agent-working/agent-monitoring/data/*/*.jsonl" in _merge_union_glob_patterns()

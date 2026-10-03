@@ -12,7 +12,7 @@ which produced a wrong, meaningless FOREST fill-ratio of 0.716 (two unrelated 1.
 rectangles averaged together) instead of the correct 1.000/1.000 pair. No prototype script
 exists to promote for this metric family (confirmed via
 `find experiments/spatial_rendering/prototype/ -iname "*shape*"` -> no hits,
-staging_artifacts/TCK-20260821-VISUAL-SHAPE-METRIC/investigation.md) -- this module is written
+agent-working/staging_artifacts/TCK-20260821-VISUAL-SHAPE-METRIC/investigation.md) -- this module is written
 fresh from PROPOSAL.md's inline prose/code, same situation
 TCK-20260821-VISUAL-CONNECTIVITY-METRIC's BFS was in before it was ported into connectivity.py.
 

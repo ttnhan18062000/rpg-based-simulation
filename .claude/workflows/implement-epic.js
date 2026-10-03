@@ -15,8 +15,8 @@ export const meta = {
 //              (TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT).
 //
 // folder     — path to a directory containing TCK-*.md files
-//              e.g. "tickets/todos/monitoring/"
-//              discovers all TCK-*.md files, skips ones already in tickets/done/
+//              e.g. "agent-working/tickets/todos/monitoring/"
+//              discovers all TCK-*.md files, skips ones already in agent-working/tickets/done/
 //
 // epic_id    — an existing epic ticket ID (TCK-YYYYMMDD-...)
 //              reads ## Related Tickets section, skips already-done children
@@ -47,7 +47,7 @@ if (!startTs) {
 // agent/parallel/pipeline/workflow/args only), so each shell step dispatches one low-effort agent()
 // told to run the command verbatim and report {exit_code, stdout}. Every site in this file is
 // bookkeeping (timestamps, sidecar, monitoring writes) -- none decides a pass/fail verdict; the
-// classification is in stored_artifacts/TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT/. Each site
+// classification is in agent-working/stored_artifacts/TCK-20260930-IMPLEMENT-EPIC-NATIVE-WORKFLOW-PORT/. Each site
 // keeps its fail-open WARNING behavior: monitoring write failure must never fail the workflow.
 const RUN_COMMAND_SCHEMA = {
   type: 'object',
@@ -119,7 +119,7 @@ const DISCOVER_SCHEMA = {
     already_done: {
       type: 'array',
       items: { type: 'string' },
-      description: 'Ticket IDs already in tickets/done/ — skipped',
+      description: 'Ticket IDs already in agent-working/tickets/done/ — skipped',
     },
     blocked: {
       type: 'array',
@@ -151,7 +151,7 @@ const discoverTs = startTs
 // request mode has no real identifier yet (the epic ticket doesn't exist until Discover's own
 // agent() call creates it) — mints a provisional EPIC-REQUEST-<ts> value from the
 // already-captured discoverTs, same convention as this file's own EPIC-INVALID-ARGS-<ts> no-op
-// path. See staging_artifacts/TCK-20260904-COST-PROXY-EPIC-TICKETS/plan.md Step 1 for the
+// path. See agent-working/staging_artifacts/TCK-20260904-COST-PROXY-EPIC-TICKETS/plan.md Step 1 for the
 // request-mode residual-limitation writeup (the real epicCreatedRunId, computed later at
 // line ~187, is a different, unreconciled string from this provisional value).
 const batchRunId = epicId
@@ -226,8 +226,8 @@ Step 3 — build the ordered ticket list:
   sorted alphabetically.
 
 Step 4 — check which are already done:
-  Run: ls tickets/done/
-  A ticket is already done if tickets/done/{ticket_id}.md exists.
+  Run: ls agent-working/tickets/done/
+  A ticket is already done if agent-working/tickets/done/{ticket_id}.md exists.
 
 Step 4a — check which of the NOT-yet-done tickets (from Step 4) are BLOCKED
 (TCK-20260904-EPIC-SKIP-BLOCKED-TICKETS): a BLOCKED ticket cannot structurally proceed, so it must
@@ -243,7 +243,7 @@ DOC-STALENESS-GAP). Skip entirely if SEQUENCE.md was not found in Step 2.
 Step 5 — return:
   mode="folder"
   ticket_ids = ordered list of ticket IDs NOT yet done AND NOT blocked (SEQUENCE.md order if available, else alphabetical)
-  already_done = ticket IDs that ARE already in tickets/done/
+  already_done = ticket IDs that ARE already in agent-working/tickets/done/
   blocked = the ticket IDs from Step 4a — excluded from ticket_ids above, never attempted
   epic_ticket_path = "" (no epic ticket for folder mode)
   tracking_doc = the value from Step 4b, or "" if SEQUENCE.md was not found / no declaration present
@@ -255,7 +255,7 @@ Do not implement anything. Discovery only.`
     ? `Discover child tickets for epic "${epicId}".
 
 Step 1 — find and read the epic ticket:
-  Check tickets/inprogress/${epicId}.md, tickets/done/${epicId}.md, tickets/todos/ subdirectories.
+  Check agent-working/tickets/inprogress/${epicId}.md, agent-working/tickets/done/${epicId}.md, agent-working/tickets/todos/ subdirectories.
   Read the file. Extract the ## Related Tickets section.
 
 Step 2 — parse ticket IDs from the Related Tickets section.
@@ -263,21 +263,21 @@ Step 2 — parse ticket IDs from the Related Tickets section.
   Preserve the order they appear in the section.
 
 Step 3 — check which are already done:
-  Run: ls tickets/done/
-  A ticket is already done if tickets/done/{ticket_id}.md exists.
+  Run: ls agent-working/tickets/done/
+  A ticket is already done if agent-working/tickets/done/{ticket_id}.md exists.
 
 Step 3a — check which of the NOT-yet-done children (from Step 3) are BLOCKED
 (TCK-20260904-EPIC-SKIP-BLOCKED-TICKETS): a BLOCKED ticket cannot structurally proceed, so it must
 be excluded from ticket_ids and reported separately, not attempted or silently dropped. Child
-tickets can live in tickets/inprogress/, tickets/todos/ (including subfolders), or occasionally
-tickets/done/ (already excluded above) — search all three.
-  Run: python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_blocked_status_static import find_blocked_ticket_ids; print(' '.join(find_blocked_ticket_ids([<the not-yet-done child ticket IDs from Step 3, as a Python list literal of quoted strings>], ['tickets/inprogress', 'tickets/todos', 'tickets/done'])))"
+tickets can live in agent-working/tickets/inprogress/, agent-working/tickets/todos/ (including subfolders), or occasionally
+agent-working/tickets/done/ (already excluded above) — search all three.
+  Run: python3 -c "import sys; sys.path.insert(0,'tools'); from gate_checks.epic_blocked_status_static import find_blocked_ticket_ids; print(' '.join(find_blocked_ticket_ids([<the not-yet-done child ticket IDs from Step 3, as a Python list literal of quoted strings>], ['agent-working/tickets/inprogress', 'agent-working/tickets/todos', 'agent-working/tickets/done'])))"
   The printed space-separated IDs (may be empty) are the blocked ticket IDs.
 
 Step 4 — return:
   mode="epic_id"
   ticket_ids = ordered list of child ticket IDs NOT yet done AND NOT blocked
-  already_done = child ticket IDs already in tickets/done/
+  already_done = child ticket IDs already in agent-working/tickets/done/
   blocked = the ticket IDs from Step 3a — excluded from ticket_ids above, never attempted
   epic_ticket_path = path of the epic ticket found in step 1
   tracking_doc = "" (epic_id mode has no SEQUENCE.md; the epic ticket itself is its own tracking
@@ -289,8 +289,8 @@ Step 4 — return:
 Request: ${request}
 
 Step 1 — create an epic ticket using the ticket-scoper approach:
-  - Scan tickets/ (including inprogress/, done/, and backlogs/) for overlapping scope — a hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned
-  - Draft the epic ticket at tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md
+  - Scan agent-working/tickets/ (including inprogress/, done/, and backlogs/) for overlapping scope — a hit in backlogs/ means the work was already investigated and deliberately deprioritized, not abandoned
+  - Draft the epic ticket at agent-working/tickets/inprogress/TCK-YYYYMMDD-SHORT-SCOPE.md
   - Set Tier: epic, Status: OPEN
   - The ## Related Tickets section should list the child tickets that will need to be created
   - In ## Implementation Notes, instruct the user to: (1) create child tickets, (2) re-run with epic_id=<this ticket id>
@@ -489,15 +489,15 @@ If any command fails, print "WARNING: batch monitoring write failed: <error>" bu
 // phrases telling the sub-agent what to substitute itself, since only the sub-agent — reading the
 // folder at execution time — knows which file is the epic parent and its real ticket_id.
 //
-// `moveDestination` (a `tickets/done/...` path string, or falsy) controls whether this step moves
+// `moveDestination` (a `agent-working/tickets/done/...` path string, or falsy) controls whether this step moves
 // the file itself: epic_id mode passes a real destination (the epic ticket has no surrounding
 // folder of its own, so this step is the only thing that ever archives it). Folder mode passes
 // falsy — the epic parent must land INSIDE its archived folder
-// (`tickets/done/<folder>/<EPIC-ID>.md`), matching both existing precedents
-// (`tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md`,
-// `tickets/done/world-rendering-core/TCK-20260820-EPIC-WORLD-RENDERING-CORE.md`) and CLAUDE.md's
+// (`agent-working/tickets/done/<folder>/<EPIC-ID>.md`), matching both existing precedents
+// (`agent-working/tickets/done/mechanism-registry/TCK-20260915-EPIC-MECHANISM-REGISTRY.md`,
+// `agent-working/tickets/done/world-rendering-core/TCK-20260820-EPIC-WORLD-RENDERING-CORE.md`) and CLAUDE.md's
 // "move the entire folder" rule — a flat individual mv here would strand it directly under
-// tickets/done/ instead, outside the folder the surrounding step is about to archive.
+// agent-working/tickets/done/ instead, outside the folder the surrounding step is about to archive.
 const buildEpicCloseInstructions = (epicIdValue, epicTicketPath, childCount, moveDestination) => `Close the epic ticket itself now that all its children are done.
 
 The epic "${epicIdValue}" (at "${epicTicketPath}") had all ${childCount} child ticket(s) implemented successfully. Close the epic ticket file itself:
@@ -514,17 +514,17 @@ Step 2 — update the file in place:
   - If a "## Completion Summary" section exists and is empty, fill it with one sentence noting all ${childCount} child ticket(s) completed via this batch run.
 
 ${moveDestination ? `Step 3 — move the file:
-  If the epic ticket is not already under tickets/done/, move it there:
+  If the epic ticket is not already under agent-working/tickets/done/, move it there:
     Run: mv "${epicTicketPath}" "${moveDestination}"
-  If it is already under tickets/done/ (already closed in a prior run), skip this step.
+  If it is already under agent-working/tickets/done/ (already closed in a prior run), skip this step.
 
-Step 4 — print "Closed epic ${epicIdValue} -> ${moveDestination}" (or the SKIPPED message from Step 1 if applicable).` : `Step 3 — do NOT move this file by itself. Leave it at "${epicTicketPath}" — a later step moves the whole surrounding folder in one operation, carrying this file with it, matching the existing precedent of an epic parent staying inside its archived folder rather than landing flat in tickets/done/.
+Step 4 — print "Closed epic ${epicIdValue} -> ${moveDestination}" (or the SKIPPED message from Step 1 if applicable).` : `Step 3 — do NOT move this file by itself. Leave it at "${epicTicketPath}" — a later step moves the whole surrounding folder in one operation, carrying this file with it, matching the existing precedent of an epic parent staying inside its archived folder rather than landing flat in agent-working/tickets/done/.
 
 Step 4 — print "Closed epic ${epicIdValue} in place (the folder move will archive it)" (or the SKIPPED message from Step 1 if applicable).`}`
 
 // ─── Folder cleanup (folder mode, all non-epic tickets done) ──────────────────
 // TCK-20260928-EPIC-FOLDER-ARCHIVE-BLOCKED-BY-EPIC-PARENT: the folder's own epic-tier parent
-// (if it has one) is excluded from the "every TCK-*.md must already be in tickets/done/"
+// (if it has one) is excluded from the "every TCK-*.md must already be in agent-working/tickets/done/"
 // requirement below, and closed here (reusing buildEpicCloseInstructions above) before the move
 // — previously this check could never pass for an epic folder, since the epic parent never
 // closes on its own (folder mode's `epic_ticket_path` is always "", so the epic-close block below
@@ -534,7 +534,7 @@ if (batchStatus === 'DONE' && folder) {
   const folderName = folder.replace(/\/$/, '').replace(/^.*\//, '')
   await writeSidecar(-3, 'Implement', 'folder-cleanup')
   await agent(
-    `Move the completed tickets/todos folder to tickets/done/. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
+    `Move the completed agent-working/tickets/todos folder to agent-working/tickets/done/. This is bookkeeping — do NOT fail the workflow if anything goes wrong.
 
 The folder "${folder}" had all non-epic tickets implemented successfully. Move the entire folder (including SEQUENCE.md and any non-ticket metadata files) to its done archive, closing the folder's own epic-tier parent ticket first if it has one:
 
@@ -548,13 +548,13 @@ Step 2 — check "all_children_done" and "stale_child_copies":
   If "all_children_done" is false, print "SKIPPED: unfinished tickets still in folder" (the
   "open_children" list names which ones) and return "done" without moving or closing anything.
   If "stale_child_copies" is non-empty (a non-epic child's file is still physically in this
-  folder even though that same ticket_id is already closed flat in tickets/done/ — a resurrected
+  folder even though that same ticket_id is already closed flat in agent-working/tickets/done/ — a resurrected
   pre-close copy, the exact shape TCK-20260928-CLOSED-TICKETS-RESURRECTED-INTO-TODOS guards
   against elsewhere, never a legitimate state), print "SKIPPED: folder has stale pre-close copies
-  of already-done tickets: <stale_child_copies> — delete these stale copies (the tickets/done/
+  of already-done tickets: <stale_child_copies> — delete these stale copies (the agent-working/tickets/done/
   versions are authoritative), then re-run" and return "done" without moving or closing anything.
 
-Step 3 — if "epic_parent" is not null and not already under tickets/done/, close it now, exactly as follows (using "epic_parent_ticket_id" and "epic_parent" from Step 1's JSON):
+Step 3 — if "epic_parent" is not null and not already under agent-working/tickets/done/, close it now, exactly as follows (using "epic_parent_ticket_id" and "epic_parent" from Step 1's JSON):
 
 ${buildEpicCloseInstructions(
       '"epic_parent_ticket_id" from Step 1\'s JSON',
@@ -563,11 +563,11 @@ ${buildEpicCloseInstructions(
       null
     )}
 
-  If "epic_parent" is null, or it is already under tickets/done/, skip this step entirely.
+  If "epic_parent" is null, or it is already under agent-working/tickets/done/, skip this step entirely.
 
 Step 4 — move the whole folder (every file in it is now done, and Step 2 confirmed no stale copies remain):
-  Run: mv "${folder.replace(/\/$/, '')}" "tickets/done/${folderName}"
-  Print "Moved ${folder} → tickets/done/${folderName}/"
+  Run: mv "${folder.replace(/\/$/, '')}" "agent-working/tickets/done/${folderName}"
+  Print "Moved ${folder} → agent-working/tickets/done/${folderName}/"
 
 Step 5 — if the folder no longer exists (already moved in a prior run), print "SKIPPED: folder not found" and return "done".
 
@@ -578,7 +578,7 @@ Return "done".`,
 
 // ─── Epic ticket close (epic_id mode, all children done) ─────────────────────
 // TCK-20260911-IMPLEMENT-EPIC-CLOSE-STEP-MISSING: `epic_id` mode had no equivalent of the
-// folder-cleanup block above — every epic ticket previously reached tickets/done/ by hand or in a
+// folder-cleanup block above — every epic ticket previously reached agent-working/tickets/done/ by hand or in a
 // batch commit (confirmed in that ticket's investigation.md, citing
 // TCK-20260907-DONE-TICKET-FRONTMATTER-PHASE-STATUS-DRIFT's own finding of 91.7% frontmatter drift
 // on implement-epic-run epics). Mirrors the folder-cleanup block's own shape and bookkeeping tone
@@ -589,7 +589,7 @@ Return "done".`,
 if (batchStatus === 'DONE' && epicId) {
   await writeSidecar(-5, 'Implement', 'epic-close')
   await agent(
-    `${buildEpicCloseInstructions(epicId, discovery.epic_ticket_path, ticketIds.length, `tickets/done/${epicId}.md`)}
+    `${buildEpicCloseInstructions(epicId, discovery.epic_ticket_path, ticketIds.length, `agent-working/tickets/done/${epicId}.md`)}
 
 This is bookkeeping — do NOT fail the workflow if anything goes wrong. Return "done".`,
     { label: 'epic-close' }

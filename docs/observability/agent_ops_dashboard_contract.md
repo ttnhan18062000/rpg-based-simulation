@@ -12,8 +12,8 @@ tags: [documentation, observability, api-design]
 
 The Agent Ops Dashboard backend (`src/api/agent_ops_dashboard/main.py`) is a
 standalone FastAPI app — not mounted on `src/api/server.py`, the main
-simulation API — exposing read-only, typed projections over `tickets/**` and
-`agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl` (every week shard,
+simulation API — exposing read-only, typed projections over `agent-working/tickets/**` and
+`agent-working/agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl` (every week shard,
 globbed and concatenated) for the dashboard SPA. It never
 touches `AuthoritativeState` or the tick loop; it is a separate product on a
 separate port. Content here reflects the shipped state as of
@@ -33,7 +33,7 @@ relying on exact behavior after further code changes.
 | `GET /api/runs/{run_id}` | `RunDetail`, 404 on miss | — | `DashboardCache.get_run` |
 | `GET /api/runs/{run_id}/timeline` | `RunTimeline`, 404 on miss | — | `DashboardCache.get_timeline` |
 | `GET /api/stats/agent-monitoring` | `AgentMonitoringStats` | `days` (int, optional), `all` (bool, default `false`, query alias `all`), `week` (ISO-week string, optional) — mirrors `generate_retro.py`'s own CLI period-selection flags; priority order `all` > `days` > `week` (defaults to the current ISO week if none are set), no combination validation at the route | `DashboardCache.get_agent_monitoring_stats` |
-| `GET /api/stats/tickets` | `TicketCorpusStats` | — (whole `tickets/done/` corpus, no time window) | `DashboardCache.get_ticket_corpus_stats` |
+| `GET /api/stats/tickets` | `TicketCorpusStats` | — (whole `agent-working/tickets/done/` corpus, no time window) | `DashboardCache.get_ticket_corpus_stats` |
 | `GET /api/glossary` | `GlossaryResponse` | — | `DashboardCache.get_glossary` |
 | `GET /api/health` | `HealthStatus` | — | `DashboardCache.get_health` |
 
@@ -151,7 +151,7 @@ all verified disjoint — 88 total).
 
 ### Ingest / cache (`ingest.py`)
 
-All file reads over `tickets/**` and `agent-monitoring/data/*/{runs,events,tools}.jsonl`
+All file reads over `agent-working/tickets/**` and `agent-working/agent-monitoring/data/*/{runs,events,tools}.jsonl`
 (globbed across every ISO-week folder) live in this
 module — `main.py` never reads a file directly. It reuses, rather than
 reimplements:
@@ -186,7 +186,7 @@ with the field and its import.
 
 `get_ticket_corpus_stats` is the **one** `DashboardCache` method that does not
 read from the mtime-cached parse state at all — it performs its own fresh
-`tickets/done/` file walk on every call (via
+`agent-working/tickets/done/` file walk on every call (via
 `tools/ticket_stats_report.py`'s imported functions), since that tool's
 output shape (velocity/distribution/artifact-completeness) isn't a subset of
 what `parse_ticket_file` already extracts and caches. This is a deliberate,
@@ -387,7 +387,7 @@ genuine gap in the type, not a nullable field, confirmed unchanged as of
 unconditional "phase unknown — run still in progress" caption in
 `ReplayTimelineView.tsx` rather than any derived or guessed value. **The
 source data this type would need now exists**: `TCK-20260719-LIVE-PHASE-AGENT-LABEL`
-added nullable `phase`/`agent` fields to the raw `agent-monitoring/tools.jsonl`
+added nullable `phase`/`agent` fields to the raw `agent-working/agent-monitoring/tools.jsonl`
 records themselves (populated for workflow runs after 2026-07-19) — but that
 ticket deliberately stopped at the data-production boundary and never touched
 `models.py`/`ingest.py`/`ReplayTimelineView.tsx`. Wiring `RawToolCall` and its

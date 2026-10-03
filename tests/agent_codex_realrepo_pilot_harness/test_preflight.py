@@ -15,6 +15,7 @@ from tools.agent_codex_realrepo_pilot_harness.proofs import (
     capture_tree,
 )
 from tools.agent_codex_realrepo_pilot_harness.rollback import ScratchConfigAdapter
+from tools.agent_working_paths import TICKETS, posix  # noqa: E402
 
 
 def _race_executor_claim(root: str, barrier: Barrier, results: Queue) -> None:
@@ -61,7 +62,7 @@ def test_authority_requires_both_exact_consent_values():
 
 def test_policy_is_bound_to_its_captured_bytes(tmp_path):
     policy_path = tmp_path / "pilot-policy.json"
-    policy_path.write_text('{"version":1,"candidate_ticket_id":"TCK-001","request_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","baseline_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","target_path":"tickets/done/x.md","target_transitions":{"status":["active","historical"],"phase":["open","done"],"body_status":["OPEN","DONE"]},"allowed_paths":["tickets/done/x.md"],"monitoring_suffixes":{"runs.jsonl":[],"events.jsonl":[],"tools.jsonl":[]}}')
+    policy_path.write_text('{"version":1,"candidate_ticket_id":"TCK-001","request_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","baseline_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","target_path":"agent-working/tickets/done/x.md","target_transitions":{"status":["active","historical"],"phase":["open","done"],"body_status":["OPEN","DONE"]},"allowed_paths":["agent-working/tickets/done/x.md"],"monitoring_suffixes":{"runs.jsonl":[],"events.jsonl":[],"tools.jsonl":[]}}')
     policy = load_policy_file(policy_path, "TCK-001")
     policy_path.write_text(policy_path.read_text() + " ")
 
@@ -94,8 +95,8 @@ def test_fake_invoker_runs_only_with_authority_and_never_needs_a_process():
 
 def test_proof_accepts_declared_lifecycle_write_and_rejects_unrelated_ticket(tmp_path):
     root = tmp_path / "scratch"
-    target = root / "tickets" / "done" / "historical.md"
-    candidate = root / "tickets" / "inprogress" / "candidate.md"
+    target = root / TICKETS / "done" / "historical.md"
+    candidate = root / TICKETS / "inprogress" / "candidate.md"
     target.parent.mkdir(parents=True)
     candidate.parent.mkdir(parents=True)
     target.write_text("before")
@@ -104,12 +105,12 @@ def test_proof_accepts_declared_lifecycle_write_and_rejects_unrelated_ticket(tmp
     target.write_text("after")
     candidate.write_text("done")
     assert_expected_changes(
-        before, capture_tree(root), {"tickets/done/historical.md", "tickets/inprogress/candidate.md"}
+        before, capture_tree(root), {f"{posix(TICKETS)}/done/historical.md", f"{posix(TICKETS)}/inprogress/candidate.md"}
     )
-    (root / "tickets" / "done" / "other.md").write_text("unexpected")
+    (root / TICKETS / "done" / "other.md").write_text("unexpected")
     with pytest.raises(ValueError, match="not allowlisted"):
         assert_expected_changes(
-            before, capture_tree(root), {"tickets/done/historical.md", "tickets/inprogress/candidate.md"}
+            before, capture_tree(root), {f"{posix(TICKETS)}/done/historical.md", f"{posix(TICKETS)}/inprogress/candidate.md"}
         )
 
 
@@ -127,7 +128,7 @@ def test_rollback_restores_exact_scratch_config_and_requires_owner_identity(tmp_
     assert adapter.is_hook_free() is True
 
 
-@pytest.mark.parametrize("target", ["/absolute.md", "../escaped.md", "tickets/../escaped.md"])
+@pytest.mark.parametrize("target", ["/absolute.md", "../escaped.md", f"{posix(TICKETS)}/../escaped.md"])
 def test_policy_refuses_unsafe_target_paths_before_a_harness_can_use_them(tmp_path, target):
     policy_path = tmp_path / "pilot-policy.json"
     policy_path.write_text(json.dumps({
@@ -139,7 +140,7 @@ def test_policy_refuses_unsafe_target_paths_before_a_harness_can_use_them(tmp_pa
             "phase": ["open", "done"],
             "body_status": ["OPEN", "DONE"],
         },
-        "allowed_paths": ["tickets/done/x.md"],
+        "allowed_paths": [f"{posix(TICKETS)}/done/x.md"],
         "monitoring_suffixes": {"runs.jsonl": [], "events.jsonl": [], "tools.jsonl": []},
     }))
     with pytest.raises(ValueError, match="safe relative"):
@@ -149,7 +150,7 @@ def test_policy_refuses_unsafe_target_paths_before_a_harness_can_use_them(tmp_pa
 def test_policy_refuses_non_string_transition_entries(tmp_path):
     policy_path = tmp_path / "pilot-policy.json"
     policy_path.write_text(
-        '{"version":1,"candidate_ticket_id":"TCK-001","target_path":"tickets/done/x.md","transitions":[3]}'
+        '{"version":1,"candidate_ticket_id":"TCK-001","target_path":"agent-working/tickets/done/x.md","transitions":[3]}'
     )
     with pytest.raises(ValueError, match="transitions"):
         load_policy_file(policy_path, "TCK-001")
@@ -200,7 +201,7 @@ def test_rollback_adapter_refuses_paths_outside_its_scratch_root(tmp_path):
 def test_rollback_adapter_preserves_non_config_scratch_paths(tmp_path):
     root = tmp_path / "scratch"
     config = root / ".codex" / "config.toml"
-    unrelated = root / "tickets" / "candidate.md"
+    unrelated = root / TICKETS / "candidate.md"
     config.parent.mkdir(parents=True)
     unrelated.parent.mkdir(parents=True)
     config.write_bytes(b"# disabled\n")

@@ -8,14 +8,14 @@ measured the pre-fix boolean-OR design directly against the real corpus and foun
 "actually"/"confirmed"). This file re-measures the IDF-weighted, ranked, capped replacement the
 same way, so the claim "this is now usable" is evidence, not assertion.
 
-**Frozen corpus, not the live tree (peer review round 4)**: the live `tickets/todos/`/
-`tickets/inprogress/` tree changes on every merge -- the target ticket these assertions depend on
+**Frozen corpus, not the live tree (peer review round 4)**: the live `agent-working/tickets/todos/`/
+`agent-working/tickets/inprogress/` tree changes on every merge -- the target ticket these assertions depend on
 will eventually close and leave the open corpus, and any new open ticket touching the same code
 areas could become a close runner-up and collapse the measured margin, both failing an unrelated
 future PR for a reason that has nothing to do with this tool (the same defect class as
 TCK-20260929-RUN-DEDUP-BASELINE-PINS-GROWING-CORPUS: an exact assertion over a corpus that keeps
 changing). `tests/fixtures/open_ticket_overlap/corpus/` is a frozen snapshot of a subset of the
-real `tickets/todos/`+`tickets/inprogress/` trees (~21 real tickets -- the target, its measured
+real `agent-working/tickets/todos/`+`agent-working/tickets/inprogress/` trees (~21 real tickets -- the target, its measured
 runners-up, and ~15 ordinary unrelated ones for a realistic IDF base; trimmed down from an initial
 full 82-ticket copy in peer review round 5, since that many real-looking ticket copies polluted a
 repo-wide grep and duplicated content unnecessarily -- source commit SHA and the full rationale in

@@ -24,6 +24,10 @@ if str(_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(_TOOLS_DIR))
 
 from parity_ledger_scan import CANONICAL_LEDGER_FILES  # noqa: E402
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[1])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import STAGING_ARTIFACTS  # noqa: E402
 
 ENTRY_COUNT_HISTORICAL_REFERENCE = 1936
 HISTORICAL_REFERENCE_SOURCE = (
@@ -194,9 +198,7 @@ def serialize_manifest(manifest: dict) -> str:
 
 def main() -> None:
     manifest = build_manifest()
-    output_path = Path(
-        "staging_artifacts/TCK-20260731-PARITY-INDEX-BASELINE/baseline_manifest.json"
-    )
+    output_path = STAGING_ARTIFACTS / "TCK-20260731-PARITY-INDEX-BASELINE" / "baseline_manifest.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(serialize_manifest(manifest))
     print(f"Wrote {output_path}")

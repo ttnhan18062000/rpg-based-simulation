@@ -41,12 +41,12 @@ possible defect type, because no adjudicated ground-truth labels exist for that 
 
 ## Baseline (Level A data, already available — no new measurement needed to start)
 
-- **Corpus size**: `tickets/done/` holds 1,752 top-level ticket files (1,331 standard-tier, 292
+- **Corpus size**: `agent-working/tickets/done/` holds 1,752 top-level ticket files (1,331 standard-tier, 292
   hotfix-tier, 45 epic-tier).
 - **Artifact coverage**: 1,099 of the 1,331 standard-tier tickets (82.6%) have a complete matching
-  `stored_artifacts/{id}/` directory (investigation.md/plan.md/test_plan.md) — this is the eligible
+  `agent-working/stored_artifacts/{id}/` directory (investigation.md/plan.md/test_plan.md) — this is the eligible
   pool, not the pilot sample size.
-- **Real failure-rate baseline**: `agent-monitoring/runs.jsonl` (1,388 total records) shows a 6.3%
+- **Real failure-rate baseline**: `agent-working/agent-monitoring/runs.jsonl` (1,388 total records) shows a 6.3%
   baseline gate-failure rate (DOD_BLOCKED, NEEDS_HUMAN_INPUT, NEEDS_CHANGES, CONFLICTS_DETECTED,
   TESTS_FAILED, and related terminal statuses combined).
 - **Two known, independently-confirmed recurring defect classes** to check replay detection
@@ -136,12 +136,12 @@ abandoned, and not quietly rescoped into a smaller claim without saying so.
   scores against.
 - `workflow_reliability_epic.md` — the sidecar-isolation prerequisite this experiment's Method
   depends on.
-- `tickets/done/`, `stored_artifacts/`, `agent-monitoring/runs.jsonl` — the real corpus and
+- `agent-working/tickets/done/`, `agent-working/stored_artifacts/`, `agent-working/agent-monitoring/runs.jsonl` — the real corpus and
   baseline data this spec cites.
 
 ## Results
 
-Executed by TCK-20260907-FILTERED-REPLAY-EVAL-PILOT (2026-09-07T08:37:37.538526+00:00). Full report: `stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md`.
+Executed by TCK-20260907-FILTERED-REPLAY-EVAL-PILOT (2026-09-07T08:37:37.538526+00:00). Full report: `agent-working/stored_artifacts/TCK-20260907-FILTERED-REPLAY-EVAL-PILOT/results.md`.
 
 1. **Repeatable scoring established** — MET
 2. **Sample quality accepted for the 2 target defect classes** — MET

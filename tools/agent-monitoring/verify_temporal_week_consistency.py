@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify each record's own authoritative timestamp field is consistent with the
 ISO week of the folder it physically lives in, across the multi-week
-agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl corpus
+agent-working/agent-monitoring/data/<ISO-week>/{runs,events,tools}.jsonl corpus
 (TCK-20260904-MONITORING-TEMPORAL-WEEK-CONSISTENCY-CHECK).
 
 This is a single-file, single-record self-consistency check — a record's own
@@ -259,7 +259,7 @@ def build_parser():
         description=(
             "Verify each record's own timestamp is consistent with the ISO week "
             "of the folder it lives in, across "
-            "agent-monitoring/data/<week>/{runs,events,tools}.jsonl"
+            "agent-working/agent-monitoring/data/<week>/{runs,events,tools}.jsonl"
         )
     )
     parser.add_argument(

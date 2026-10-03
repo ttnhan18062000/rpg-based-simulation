@@ -53,6 +53,10 @@ from retrieval_cache import (  # noqa: E402
     QUERY_CACHE_CATEGORY,
     PACKET_CACHE_CATEGORY,
 )
+_REPO_ROOT_STR = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT_STR not in sys.path:
+    sys.path.append(_REPO_ROOT_STR)
+from tools.agent_working_paths import AGENT_MONITORING, AGENT_MONITORING_INDEX, PARITY_INDEX, TICKETS, posix  # noqa: E402
 
 # Repo root — two levels above tools/agent-monitoring/, matching this file's actual depth.
 # Anchored (not cwd-relative) so every constant below resolves to THIS checkout's own data
@@ -64,11 +68,11 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _DEFAULT_TICKETS_ROOT = _REPO_ROOT
 _DEFAULT_SKILLS_DIR = _DEFAULT_TICKETS_ROOT / ".claude" / "skills"
 
-RUNS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
-EVENTS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
-RETRO_DIR = _REPO_ROOT / "agent-monitoring" / "retro"
-DEFAULT_DB_PATH = _REPO_ROOT / "agent-monitoring-index" / "monitoring.db"
-DEFAULT_TOOLS_FILE = _REPO_ROOT / "agent-monitoring" / "data"
+RUNS_FILE = _REPO_ROOT / AGENT_MONITORING / "data"
+EVENTS_FILE = _REPO_ROOT / AGENT_MONITORING / "data"
+RETRO_DIR = _REPO_ROOT / AGENT_MONITORING / "retro"
+DEFAULT_DB_PATH = _REPO_ROOT / AGENT_MONITORING_INDEX / "monitoring.db"
+DEFAULT_TOOLS_FILE = _REPO_ROOT / AGENT_MONITORING / "data"
 
 
 def load_jsonl(path):
@@ -85,8 +89,8 @@ def _load_source(path, source):
 
 def _source_mtime(path, source_name):
     """Newest relevant mtime for one source: max mtime across
-    agent-monitoring/data/*/<source_name>.jsonl AND the per-identifier-shaped
-    agent-monitoring/data/*/*.<source_name>.jsonl, via the shared
+    agent-working/agent-monitoring/data/*/<source_name>.jsonl AND the per-identifier-shaped
+    agent-working/agent-monitoring/data/*/*.<source_name>.jsonl, via the shared
     `monitoring_shard_paths.shard_paths()` resolver (TCK-20260926-MONITORING-READ-PATH-
     CONSOLIDATION) if path is the data-dir root (a directory), else the literal file's own mtime
     if it exists, else None."""
@@ -309,8 +313,8 @@ def _is_unsafe_parity_build_call(tool_row):
         return False
     summary = tool_row.get("input_summary") or ""
     if "--db-path" not in summary:
-        return True  # no override -> defaults to the real repo parity-index/parity.db path
-    return "parity-index/parity.db" in summary
+        return True  # no override -> defaults to the real repo agent-working/.index/parity-index/parity.db path
+    return f"{posix(PARITY_INDEX)}/parity.db" in summary
 
 
 # Path-anchored so a bare filename match (e.g. tests/tools/test_parity_index.py, whose character
@@ -655,18 +659,18 @@ def compute_zero_invocation_skill_flags(
 
 
 def _collect_inprogress_tagged_tickets(root):
-    """Walk tickets/inprogress/ (rglob, future-proofed against subfolders even
+    """Walk agent-working/tickets/inprogress/ (rglob, future-proofed against subfolders even
     though it is flat today) applying the same three skip rules
-    collect_completed_tickets applies to tickets/done/: unparseable/missing
+    collect_completed_tickets applies to agent-working/tickets/done/: unparseable/missing
     frontmatter, pre-taxonomy or unparseable ticket_id date, empty/missing
     tags. Returns a list of (ticket_id, tags, rel_path) tuples in the same
     shape collect_completed_tickets returns.
 
-    tickets/inprogress/ is outside collect_completed_tickets's contract
-    (hardcoded to tickets/done/), so this is a small parallel implementation
+    agent-working/tickets/inprogress/ is outside collect_completed_tickets's contract
+    (hardcoded to agent-working/tickets/done/), so this is a small parallel implementation
     built from the same reusable primitives, not a duplicate of that function.
     """
-    inprogress_dir = root / "tickets" / "inprogress"
+    inprogress_dir = root / TICKETS / "inprogress"
     included = []
 
     if not inprogress_dir.is_dir():
@@ -697,8 +701,8 @@ def _collect_inprogress_tagged_tickets(root):
 
 
 def _collect_tagged_tickets(root):
-    """Return {ticket_id: tags} merged across tickets/done/ (recursive, via
-    collect_completed_tickets — unmodified) and tickets/inprogress/ (recursive,
+    """Return {ticket_id: tags} merged across agent-working/tickets/done/ (recursive, via
+    collect_completed_tickets — unmodified) and agent-working/tickets/inprogress/ (recursive,
     via _collect_inprogress_tagged_tickets). Later write wins on a collision —
     a ticket_id should only exist under one directory at a time in practice."""
     ticket_tag_map = {}
@@ -841,7 +845,7 @@ def compute_retro_metrics(
     reason_counter = Counter(e.get("reason_code") for e in events if e.get("reason_code"))
 
     # Tag breakdown — run_id resolved live against ticket_tag_map (built above from
-    # tickets/done/ + tickets/inprogress/ frontmatter). A run_id with no matching entry
+    # agent-working/tickets/done/ + agent-working/tickets/inprogress/ frontmatter). A run_id with no matching entry
     # (EPIC-*/FOLDER-*/CREATE-TICKETS-*/ad-hoc/legacy/missing-file/pre-taxonomy/no-tags) is
     # simply not in the dict and falls through here — no prefix-based special-casing, the dict
     # lookup itself is the universal "unresolvable" fallback.
@@ -1245,7 +1249,7 @@ def compute_tool_safety_metrics(events: list[dict], tools: list[dict]) -> dict:
     a run that ALSO invokes parity_index.py's build path (same run_id, anywhere in that run's own
     tool history — a normal parity-ledger edit alone, with no co-occurring build call in the same
     run, is not flagged; TCK-20260807-PARITY-WRITE-SAFETY-METRIC-RESCOPE), and of
-    `parity_index.py build` invocations targeting the real repo parity-index/parity.db path
+    `parity_index.py build` invocations targeting the real repo agent-working/.index/parity-index/parity.db path
     instead of a scratch path. Never calls write_lines/write_line or opens any file; operates
     entirely on its `events`/`tools` arguments.
 
@@ -2017,7 +2021,7 @@ def generate(
     # same shape as Shadow vs. Baseline above -- omitted entirely (not rendered empty) whenever the
     # caller has nothing to report, rather than ever touching the filesystem itself. This is the
     # one section in this report sourced from local ~/.claude/projects/ transcripts, not
-    # agent-monitoring/data/*.jsonl -- developer-machine-only, never available in CI or from a
+    # agent-working/agent-monitoring/data/*.jsonl -- developer-machine-only, never available in CI or from a
     # fresh clone.
     if real_token_report is not None:
         lines.append("## Token Usage (Real)")
@@ -2025,7 +2029,7 @@ def generate(
         lines.append(
             "_Real per-request token usage read directly from this machine's local Claude Code "
             "transcripts (`~/.claude/projects/**/*.jsonl`) via `tools/agent-monitoring/"
-            "real_token_usage.py` -- not from `agent-monitoring/data/*.jsonl`, which carries no "
+            "real_token_usage.py` -- not from `agent-working/agent-monitoring/data/*.jsonl`, which carries no "
             "token field. Developer-machine-only: unavailable in CI or from a fresh clone, and "
             "never persisted back into this repo._"
         )

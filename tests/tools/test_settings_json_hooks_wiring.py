@@ -2,7 +2,7 @@
 
 Placement note: this is a new file rather than an addition to
 tests/agent_orchestration/test_contract_structure.py, deliberately. That file's own tests assert
-content governed by the agent-orchestration/ contract bundle (contract.yaml, hook-events.yaml,
+content governed by the agent-working/agent-orchestration/ contract bundle (contract.yaml, hook-events.yaml,
 hook-surface-policy.yaml, roles/, etc. -- everything `agent_orchestration.loader.load_contract`
 parses). `.claude/settings.json` is a real, separate, Claude-Code-native config file that the
 contract bundle does not govern or load at all -- it is read directly here, by plain `json.load`,
@@ -119,7 +119,7 @@ def test_edit_write_hook_still_fail_open_and_advisory():
     assert "2>/dev/null || true" in run_id_subshell
 
     assert (
-        "sidecar-check: tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
+        "sidecar-check: agent-working/tickets/inprogress/ has an active ticket but .claude/current_run has no run_id."
         in command
     )
 

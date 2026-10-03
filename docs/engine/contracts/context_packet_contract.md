@@ -75,9 +75,9 @@ the idea doc's Proposed Architecture §1:
   - `hash` — a content hash of the cited excerpt, used by the consumer to detect staleness (see
     the load-bearing constraint above: packets with a stale hash must be rejected, not trusted).
   - `authority` — the source's authority ranking. For a `docs/REGISTRY.yaml`-indexed `kind`
-    (`doc`, `ticket` under `tickets/done/`), this is populated directly from that source's
+    (`doc`, `ticket` under `agent-working/tickets/done/`), this is populated directly from that source's
     registry `authority` value (`P0`/`P1`/`P2`). For every other `kind` — `code_symbol`, `test`,
-    `graphify_node`, a `tickets/inprogress/` ticket body, or a `parity_ledger_entry` — no
+    `graphify_node`, a `agent-working/tickets/inprogress/` ticket body, or a `parity_ledger_entry` — no
     REGISTRY.yaml value exists to copy; see §3 "Extension — non-registry-backed source fallback"
     for the exact value this field must carry instead.
   - `freshness` — the source's recency ranking. For a REGISTRY-backed `kind`, this is derived from
@@ -106,7 +106,7 @@ the idea doc's Proposed Architecture §1:
 
 **Core resolution.** A packet's `authority`/`freshness` fields are not a new, independently
 invented vocabulary. For any `included[]` entry whose `kind` identifies a source indexed by
-`docs/REGISTRY.yaml` (a doc under `docs/` outside `_SKIP_DOC_SUBDIRS`, or a `tickets/done/`
+`docs/REGISTRY.yaml` (a doc under `docs/` outside `_SKIP_DOC_SUBDIRS`, or a `agent-working/tickets/done/`
 entry):
 
 - `authority` is populated directly from that source's frontmatter `authority` field — one of
@@ -123,10 +123,10 @@ entry):
 ### Extension — non-registry-backed source fallback (this ticket's addition, not in the idea doc's original field list)
 
 `tools/generate_registry.py`'s `_SKIP_DOC_SUBDIRS` (`{"archive", "parity_ledger", "scenarios",
-"entity", "brainstorm"}`, line 61) and its restriction to `docs/` plus `tickets/done/` mean several `included[]`
+"entity", "brainstorm"}`, line 61) and its restriction to `docs/` plus `agent-working/tickets/done/` mean several `included[]`
 `kind` values have no `docs/REGISTRY.yaml` entry to read `authority`/`status` from at all:
 
-- **`code_symbol`, `test`, `graphify_node`, or a `tickets/inprogress/` ticket body** carry no
+- **`code_symbol`, `test`, `graphify_node`, or a `agent-working/tickets/inprogress/` ticket body** carry no
   authority/freshness primitive anywhere in the repo today. For these `kind` values, the packet's
   `authority` and `freshness` fields must both be set to the literal value `unrated` — a sentinel
   used only within this contract's `included[]` field, distinct from and not one of REGISTRY's
@@ -191,7 +191,7 @@ No code enforces this contract yet — there is no `ContextPacket`/`ContextReque
 constructor, or serializer anywhere in `src/` or `tools/` as of this document landing. A future
 Phase 3 ticket that implements `ContextPacket` construction/serialization must add its own
 `tests/`-path verification for that code. That future ticket will not need a
-`docs/parity_ledger/` entry: this contract governs agent-orchestration/retrieval tooling, not
+`docs/parity_ledger/` entry: this contract governs agent-working/agent-orchestration/retrieval tooling, not
 simulation logic, the same posture already recorded for agent-monitoring tooling under
 `docs/parity_ledger/infrastructure.yaml`'s INFRA-281 through INFRA-292 entries (`support_boundary`
 field). A future reader should not read the absence of a parity ledger entry here as a gap.
@@ -219,7 +219,7 @@ source fallback" above already states that the `unrated` sentinel "must never im
 for example, defaulting to P2/historical as if that were a real registry read." That constraint
 was written about a single entry's own field population, but it is equally binding on any
 cross-kind ordering: an ordering rule that silently places every `unrated` candidate (`code_symbol`,
-`test`, `graphify_node`, an in-progress `tickets/inprogress/` ticket body — see
+`test`, `graphify_node`, an in-progress `agent-working/tickets/inprogress/` ticket body — see
 `unrated_candidate()`, `tools/context_packet_assembler.py:98-122`, which sets both `authority` and
 `freshness` to `UNRATED` at line 119-120) below every `P2` document would functionally reproduce
 the exact fabricated-default behavior §3 already forbids, just moved from a single field into an
@@ -304,21 +304,21 @@ silent coercion §3 already warns against.
 
 ## 6. Open Decision 8 Resolution
 
-> Should `stored_artifacts/{ticket_id}/*.md` (`investigation.md`/`plan.md`/`test_plan.md`,
+> Should `agent-working/stored_artifacts/{ticket_id}/*.md` (`investigation.md`/`plan.md`/`test_plan.md`,
 > each carrying real frontmatter — `artifact_type`, `status`, `authority`) become its own
 > registry-indexed `kind` (e.g. `stored_artifact`), so the rationale/decision content
 > inside a closed ticket's artifacts is retrievable on its own terms rather than only
 > visible via the parent ticket's `artifact_files` path list (`tools/generate_registry.py`
-> ::`join_artifact_files()`)? Relatedly: confirm whether `staging_artifacts/`'s current
+> ::`join_artifact_files()`)? Relatedly: confirm whether `agent-working/staging_artifacts/`'s current
 > total exclusion from `generate_registry.py`'s scan (correct today, since it holds
 > in-progress/scratch content for open tickets) should be recorded as an explicit,
 > permanent design decision rather than an implicit gap, once/if Decision 8 gives
-> `stored_artifacts/` its own retrieval treatment.
+> `agent-working/stored_artifacts/` its own retrieval treatment.
 
-**Core resolution — yes.** `stored_artifacts/{ticket_id}/*.md` (scoped to the canonical
+**Core resolution — yes.** `agent-working/stored_artifacts/{ticket_id}/*.md` (scoped to the canonical
 `investigation.md`/`plan.md`/`test_plan.md` triplet — see the corpus-heterogeneity caveat below)
 warrants a new registry-indexed `kind`, `stored_artifact`. The status quo being changed:
-`tools/generate_registry.py::join_artifact_files()` (lines 105-112) globs `stored_artifacts/
+`tools/generate_registry.py::join_artifact_files()` (lines 105-112) globs `agent-working/stored_artifacts/
 {ticket_id}/*.md` non-recursively and returns only a **flat sorted list of path strings** into the
 parent ticket's `artifact_files` field — no frontmatter (`status`/`authority`/`artifact_type`) from
 any artifact file is read or copied anywhere today. This is the concrete gap the "yes" verdict
@@ -328,7 +328,7 @@ authority/freshness-ranked source in a `ContextPacket`.
 
 **Branch classification — Branch 1, REGISTRY-backed direct mapping.** Of §3's three named
 branches (REGISTRY-backed direct mapping / `unrated` sentinel / differently-shaped-primitive
-mapping), `stored_artifact` falls into **Branch 1**. `stored_artifacts/{ticket_id}/*.md`
+mapping), `stored_artifact` falls into **Branch 1**. `agent-working/stored_artifacts/{ticket_id}/*.md`
 frontmatter carries six fields — `status`, `layer`, `authority`, `audience`, `ticket_id`,
 `artifact_type` — validated by `tools/validate_frontmatter.py::_validate_artifact()` (lines
 214-225), and its `status` values (`historical`/`active`/`authoritative`/`archive`) and
@@ -338,7 +338,7 @@ frontmatter carries six fields — `status`, `layer`, `authority`, `audience`, `
 5-value `status` enum is (Branch 3, §3's parity extension). This rules out Branch 2 (`unrated`
 sentinel) for the corpus's schema-current majority: unlike `code_symbol`/`test`/`graphify_node`/
 in-progress-ticket-body sources, which carry **no** authority/freshness primitive anywhere in the
-repo, most `stored_artifacts/*.md` files carry real, populated values — an empirical corpus scan
+repo, most `agent-working/stored_artifacts/*.md` files carry real, populated values — an empirical corpus scan
 of the canonical `investigation.md`/`plan.md`/`test_plan.md` triplet (2,368 files) found an
 `authority` spread of `P0=3`/`P1=230`/`P2=1,556` (1,789 files, 75.5%), with the remaining
 **579 files (24.5%) carrying no `authority` field at all** — legacy artifacts predating
@@ -354,7 +354,7 @@ canonical-triplet file has a real `authority` value to read. The field-shape mat
 schema-current majority means the only reason `docs/REGISTRY.yaml` doesn't already treat these as a
 REGISTRY-backed kind is that `collect_docs()`
 (`tools/generate_registry.py:186-238`) walks `root / "docs"` only (`docs_dir = root / "docs"`,
-line 192; `docs_dir.rglob("*.md")`, line 199) — `stored_artifacts/` sits at repo root, a sibling of
+line 192; `docs_dir.rglob("*.md")`, line 199) — `agent-working/stored_artifacts/` sits at repo root, a sibling of
 `docs/`, structurally unreachable by that walk regardless of `_SKIP_DOC_SUBDIRS` — a
 **directory-scope gap**, not a schema mismatch that would push this toward Branch 2 or 3.
 
@@ -367,7 +367,7 @@ freshness for a `stored_artifact` kind would derive from `status` alone
 (`historical`/`active`/etc.), the same partial-derivation already tolerated for any REGISTRY-backed
 doc lacking `last_verified` today.
 
-**Corpus-heterogeneity caveat — scope boundary, not resolved here.** The real `stored_artifacts/`
+**Corpus-heterogeneity caveat — scope boundary, not resolved here.** The real `agent-working/stored_artifacts/`
 corpus is not uniform. Alongside the canonical triplet (`investigation`: 639, `plan`: 620,
 `test_plan`: 582 files), the same directory tree also contains 412 `index.md` files — a separate,
 deliberate `tools/generate_artifact_pages.py` Docusaurus-build output with a structurally different
@@ -381,16 +381,16 @@ non-recursive glob already picks up today. This "yes" verdict applies to the can
 would need to filter to that triplet or define separate handling for `index`/other shapes. This
 paragraph flags that complexity as a scope boundary for that future ticket; it does not resolve it.
 
-**`staging_artifacts/` exclusion — intentional, permanent design.** `staging_artifacts/`'s total
+**`agent-working/staging_artifacts/` exclusion — intentional, permanent design.** `agent-working/staging_artifacts/`'s total
 exclusion from `generate_registry.py`'s scan is intentional permanent design, not an accidental
 gap. Four points of evidence support this: (a) the idea doc's own Open Decision 8 text quoted
 above already asserts this is "correct today, since it holds in-progress/scratch content for open
 tickets"; (b) `tools/gate_checks/done_checker_static.py` (lines 279-282) already documents
 awareness of the asymmetry via its comment on `content_type_override="artifact"`, showing this is
-known, existing behavior, not an overlooked one; (c) empirically, `staging_artifacts/{ticket_id}/`
-directories that exist on disk map 1:1 to open `tickets/inprogress/` tickets, none orphaned —
-consistent with the "Move staging artifacts to `stored_artifacts/`" step in this project's workflow
-rule, which treats the transition as a move, not a copy, so a `staging_artifacts/` directory's
+known, existing behavior, not an overlooked one; (c) empirically, `agent-working/staging_artifacts/{ticket_id}/`
+directories that exist on disk map 1:1 to open `agent-working/tickets/inprogress/` tickets, none orphaned —
+consistent with the "Move staging artifacts to `agent-working/stored_artifacts/`" step in this project's workflow
+rule, which treats the transition as a move, not a copy, so a `agent-working/staging_artifacts/` directory's
 lifetime is bounded to exactly the ticket's open window; (d) indexing ephemeral WIP content as a
 retrievable, authority-ranked source would conflict with this contract's own load-bearing principle
 that "packets with a stale hash must be rejected, not trusted" — staging content is expected to

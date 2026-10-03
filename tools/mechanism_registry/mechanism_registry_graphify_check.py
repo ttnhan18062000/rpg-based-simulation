@@ -6,7 +6,7 @@ TCK-20260915-MECHANISM-REGISTRY-FOUNDATION Scope item 5: "flag any declared depe
 no supporting call/import path as suspicious. Report, never fail: graphify's graph is advisory
 here."
 
-Per staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md's own feasibility
+Per agent-working/staging_artifacts/TCK-20260915-MECHANISM-REGISTRY-FOUNDATION/investigation.md's own feasibility
 finding: a bare "does *any* path exist" check is unreliable at this codebase's scale -- unrelated
 services route through near-universal hub types (EntityState, StateUpdate) within a handful of
 hops, so a naive reachability check would essentially never flag anything. This script is the

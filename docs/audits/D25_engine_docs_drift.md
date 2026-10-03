@@ -86,7 +86,7 @@ simulation_kernel_contract.md — `simulation_kernel_contract.md` §9 is the sta
 
 **Resolved-by-cross-reference, not re-fixed here.** Owned by
 `TCK-20260817-FIX-CONCURRENCY-DOC-CONTRADICTION` (status `OPEN`,
-`tickets/todos/kernel-concurrency-design-review/`). See also D17 (`TCK-20260618-AUDIT-D17-DOCS`)
+`agent-working/tickets/todos/kernel-concurrency-design-review/`). See also D17 (`TCK-20260618-AUDIT-D17-DOCS`)
 and P0-DOC-REPAIR (`TCK-20260619-P0-DOC-REPAIR`), which previously fixed kernel.md's first
 dual-phase-table contradiction — this concurrency contradiction is a different, still-open issue
 in the same area.

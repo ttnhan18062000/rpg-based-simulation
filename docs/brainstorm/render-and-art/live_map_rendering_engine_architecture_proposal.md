@@ -1075,7 +1075,7 @@ Every phase that performs an experiment has two mandatory milestone deliverables
 
 Phase 1A may run after Phase 0 in parallel with protocol/Canvas/Pixi work when its strategic workflow trigger is approved, including after PixiJS passes browser performance gates. It produces capability evidence only and does not advance the live-integration sequence.
 
-Phase 3 is the comparison role for `tickets/todos/live-map-rendering-performance/TCK-20260821-EPIC-LIVE-MAP-RENDERING-PERFORMANCE.md`: reuse or amend that active epic rather than creating parallel Canvas scope. Interest/visibility implementation remains owned by `tickets/todos/live-map-interest-management/TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.md`; this proposal supplies requirements and measurements only.
+Phase 3 is the comparison role for `agent-working/tickets/todos/live-map-rendering-performance/TCK-20260821-EPIC-LIVE-MAP-RENDERING-PERFORMANCE.md`: reuse or amend that active epic rather than creating parallel Canvas scope. Interest/visibility implementation remains owned by `agent-working/tickets/todos/live-map-interest-management/TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.md`; this proposal supplies requirements and measurements only.
 Cross-surface integration is a separate milestone sequence: core ports may be planned independently, renderer experiments remain Live-Map-only, and production integration waits for both directional adapter gates. See the companion architecture; these steps do not alter the renderer phase numbering.
 
 Except for explicitly parallel Phase 1A, each phase requires the prior applicable exit gate and an explicit evidence review. Passing a phase authorizes only the next applicable phase, not production adoption. The earlier Canvas-extension plan remains operative until a later ADR, backed by these gates, supersedes it.
@@ -1447,14 +1447,14 @@ Do not create implementation tickets for all phases at once; each exit review de
 - `docs/plans/live_map_scaling_roadmap.md`
 - `docs/plans/idea_frontend_canvas_render_tiers.md`
 - `docs/plans/world_rendering/idea_world_rendering_core.md`
-- `docs/performance/perf_baseline_policy.md`, `docs/audits/D28_live_map_functional_correctness.md`, `docs/archive/performance/performance-report-api-payload.md`, and `tickets/done/TCK-20260821-LIVE-MAP-PERF-VALIDATION.md`
+- `docs/performance/perf_baseline_policy.md`, `docs/audits/D28_live_map_functional_correctness.md`, `docs/archive/performance/performance-report-api-payload.md`, and `agent-working/tickets/done/TCK-20260821-LIVE-MAP-PERF-VALIDATION.md`
 - `docs/brainstorm/render-and-art/rendering-overview.md`
 - `docs/brainstorm/render-and-art/visual-system-planning.md`
 - `docs/brainstorm/render-and-art/render-and-art-review-handoff.md`
 - `docs/brainstorm/codex/taxonomy/content-taxonomy.md`
-- `tickets/todos/live-map-rendering-performance/TCK-20260821-EPIC-LIVE-MAP-RENDERING-PERFORMANCE.md`
-- `tickets/todos/live-map-interest-management/TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.md`
-- `docs/plans/hud_delivery_roadmap.md` and `tickets/todos/hud-design-system-foundation/TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION.md`
+- `agent-working/tickets/todos/live-map-rendering-performance/TCK-20260821-EPIC-LIVE-MAP-RENDERING-PERFORMANCE.md`
+- `agent-working/tickets/todos/live-map-interest-management/TCK-20260821-EPIC-LIVE-MAP-INTEREST-MANAGEMENT.md`
+- `docs/plans/hud_delivery_roadmap.md` and `agent-working/tickets/todos/hud-design-system-foundation/TCK-20260822-EPIC-HUD-DESIGN-SYSTEM-FOUNDATION.md`
 - `docs/brainstorm/render-and-art/live_map_hud_surface_integration_architecture.md`
 - `frontend/src/App.tsx`, `frontend/src/components/Sidebar.tsx`, `frontend/src/components/InspectPanel.tsx`, `frontend/src/components/EntityList.tsx`, and `frontend/src/components/EventLog.tsx`
 - `frontend/src/components/BuildingPanel.tsx`, `frontend/src/components/LootPanel.tsx`, `frontend/src/components/ClassHallPanel.tsx`, `frontend/src/components/ControlPanel.tsx`, `frontend/src/components/Legend.tsx`, and `frontend/src/components/SimulationLoadingGate.tsx`

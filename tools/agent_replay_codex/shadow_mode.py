@@ -1,7 +1,7 @@
 """Shadow-mode comparison (TCK-20260721-CODEX-REPLAY-PARITY, Step 11, AC #7).
 
 Claude's side is read directly from the fixture's own embedded phases/source data — already
-real, already derived from the done ticket + real agent-monitoring/events.jsonl rows (see the
+real, already derived from the done ticket + real agent-working/agent-monitoring/events.jsonl rows (see the
 fixture file's own header comment) — never a new live query, never a write anywhere.
 """
 from __future__ import annotations

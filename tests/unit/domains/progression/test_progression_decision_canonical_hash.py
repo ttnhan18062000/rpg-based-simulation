@@ -9,7 +9,7 @@ Regression coverage: ProgressionConversionPhase.execute() must produce a
 ProgressionDecisionResult dataclass was stored directly into property_updates, and
 CanonicalStateHasher.to_canonical_json() calls plain json.dumps() with no custom encoder --
 this crashed deterministically the first time ENABLE_PROGRESSION_EVOLUTION ran through a
-real Kernel loop (see stored_artifacts/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION).
+real Kernel loop (see agent-working/stored_artifacts/TCK-20260826-PROGRESSION-EVOLUTION-FLAG-VALIDATION).
 """
 from __future__ import annotations
 

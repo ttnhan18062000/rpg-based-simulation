@@ -221,8 +221,8 @@ Not created yet — this epic is scope-only. Prospective child tickets:
    migration (those tiles were already silently overwritten with flat `"forest"`); confirmed
    cosmetic and legality-inert (`swamp` has no blocking/cover/high-ground effect), not a
    correctness risk, and accepted rather than fixed — see Decision 3b in this ticket's
-   `investigation.md` (`staging_artifacts/TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md`,
-   or its `stored_artifacts/` copy after ticket close). 5 new tests added
+   `investigation.md` (`agent-working/staging_artifacts/TCK-20260821-WOLF-DEN-NOISE-MIGRATION/investigation.md`,
+   or its `agent-working/stored_artifacts/` copy after ticket close). 5 new tests added
    (field-preservation, per-tile variation, overlap-winner identity via exact RNG recomputation,
    and bit-identical same-seed recompilation); 234 tests across the scoped verification command
    pass, including every real composition where the cross-module consequence is actually
