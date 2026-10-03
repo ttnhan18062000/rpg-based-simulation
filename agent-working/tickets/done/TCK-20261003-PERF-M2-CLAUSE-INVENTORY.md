@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-M2-CLAUSE-INVENTORY
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, documentation]
 Clause-level inventory of the performance contract, certification contract, baseline policy, gate code, tests, and CI selectors (PERF-M2-T01; documents and read-only)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -51,11 +51,11 @@ PERF-D4 (owner-approved 2026-10-03) makes `docs/engine/performance_contract.md` 
 - Setting Gate A materiality thresholds
 
 ## Acceptance Criteria
-- [ ] Every normative clause in the five named documents (and the two partial ones) has a row with source line, kind, enforcing code, tests, CI selector, hard/soft, and status; the test plan records how completeness was checked (for example, every number with a unit and every "must"/"shall"/"required" in each document is either a row or listed as non-normative with a reason)
-- [ ] The reverse table lists every live performance check with no documented clause
-- [ ] Every clause has a PERF-D4 destination, and any clause the PERF-D4 shape cannot express is flagged in its own section
-- [ ] The `assert_perf_threshold` table matches the current tree; if a helper script was added, two runs are byte-identical and its tests pass
-- [ ] No document listed in Scope is edited; `git diff` touches only `docs/performance/performance_clause_inventory.md`, `docs/REGISTRY.yaml`, `agent-working/tickets/`, `agent-working/stored_artifacts/`, `agent-working/agent-monitoring/`, and (only if the helper is added) `tools/perf/`, `tests/tools/`, `tools/gate_checks/test_scope_coverage_static.py`
+- [x] Every normative clause in the five named documents (and the two partial ones) has a row with source line, kind, enforcing code, tests, CI selector, hard/soft, and status; the test plan records how completeness was checked (for example, every number with a unit and every "must"/"shall"/"required" in each document is either a row or listed as non-normative with a reason)
+- [x] The reverse table lists every live performance check with no documented clause
+- [x] Every clause has a PERF-D4 destination, and any clause the PERF-D4 shape cannot express is flagged in its own section
+- [x] The `assert_perf_threshold` table matches the current tree; if a helper script was added, two runs are byte-identical and its tests pass
+- [x] No document listed in Scope is edited; `git diff` touches only `docs/performance/performance_clause_inventory.md`, `docs/REGISTRY.yaml`, `agent-working/tickets/`, `agent-working/stored_artifacts/`, `agent-working/agent-monitoring/`, and (only if the helper is added) `tools/perf/`, `tests/tools/`, `tools/gate_checks/test_scope_coverage_static.py`
 
 ## Related Tickets
 - TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC (parent program)
@@ -82,9 +82,19 @@ PERF-D4 (owner-approved 2026-10-03) makes `docs/engine/performance_contract.md` 
 - perf-planner reviews the inventory before this ticket closes
 
 ## Implementation Notes
+- Inventory: `docs/performance/performance_clause_inventory.md` (76 clause rows, reverse table, 15 disagreements, PERF-D4 mapping with codes STAY/CERT/CAP/CAPRUN/TRIP/HW/DEL/N/A/FLAG, call-site table).
+- Helper `tools/perf/perf_threshold_inventory.py` (stdlib `ast`, deterministic) with a test and a test-scope map line.
+- Headline findings: 0 of 55 call sites pass literal `hard=True`; `PerfRegressionGate` has no production caller; 12 of 15 baselines are 20-tick samples; calibration steps cite a missing module and directory; one cited test is missing.
+- perf-planner review: approved with three fixes (CERT code and single-count totals, phase counts by unit from `phase_inventory.md`, neutral wording for the "12 of 53" figure); all applied.
 
 ## Test Summary
+- `tests/tools/test_perf_threshold_inventory.py`: 8 passed. `tests/tools/test_test_scope_coverage_static.py` and `tests/tools/test_hash_callsite_inventory.py`: 48 passed. Two helper runs byte-identical. `validate_frontmatter.py` OK on the document, ticket and artifacts.
 
 ## Files Changed
+- docs/performance/performance_clause_inventory.md (new)
+- tools/perf/perf_threshold_inventory.py (new)
+- tests/tools/test_perf_threshold_inventory.py (new)
+- tools/gate_checks/test_scope_coverage_static.py (one map line)
 
 ## Completion Summary
+Clause inventory delivered; no listed document, threshold, `hard` flag, baseline, CI job or `src/` file was edited and nothing was measured. T09 consumes sections 3, 4 and 6. Sections 6.2 items 4 and 5 are left for T09 to decide.
