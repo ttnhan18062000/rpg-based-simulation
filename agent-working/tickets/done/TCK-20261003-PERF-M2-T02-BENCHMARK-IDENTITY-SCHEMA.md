@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: performance
 authority: P2
 audience: agent
 ticket_id: TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA
-phase: open
+phase: done
 date: 2026-10-03
 tags: [performance, benchmarking, schema, documentation]
 ---
@@ -15,7 +15,7 @@ tags: [performance, benchmarking, schema, documentation]
 PERF-M2-T02 design draft: versioned benchmark identity and result schema, from an inventory of every result format that exists today (provisional; documents only)
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 standard
@@ -55,15 +55,15 @@ Deliverable: `docs/performance/benchmark_identity_schema.md` (frontmatter `statu
 - The hosted benchmark-tracking decision (open with the owner)
 
 ## Acceptance Criteria
-- [ ] `docs/performance/benchmark_identity_schema.md` exists, passes frontmatter validation, and states its provisional status under the entry gate in its opening lines
-- [ ] The inventory covers every format named in Scope item 1 plus any found by following imports, each with writer, reader, and fields cited by path
-- [ ] The coverage matrix has a cell for every required dimension × format
-- [ ] Every schema field has a type, a required/optional status, and a source or "not yet available" with a milestone
-- [ ] The comparability rule maps every identity field to blocking or recorded-only
-- [ ] The tool mapping cites the `pytest-benchmark` and `pyperf` output documentation with versions
-- [ ] Open questions include the M1-dependent identity fields
-- [ ] `tests/docs` and `tests/static` pass
-- [ ] `git diff` touches only `docs/performance/benchmark_identity_schema.md`, the M2 epic doc's T02 row, at most one pointer line in `docs/engine/performance_contract.md`, `agent-working/`, `docs/REGISTRY.yaml`, and the knowledge index files
+- [x] `docs/performance/benchmark_identity_schema.md` exists, passes frontmatter validation, and states its provisional status under the entry gate in its opening lines
+- [x] The inventory covers every format named in Scope item 1 plus any found by following imports, each with writer, reader, and fields cited by path
+- [x] The coverage matrix has a cell for every required dimension × format
+- [x] Every schema field has a type, a required/optional status, and a source or "not yet available" with a milestone
+- [x] The comparability rule maps every identity field to blocking or recorded-only
+- [x] The tool mapping cites the `pytest-benchmark` and `pyperf` output documentation with versions
+- [x] Open questions include the M1-dependent identity fields
+- [x] `tests/docs` and `tests/static` pass
+- [x] `git diff` touches only `docs/performance/benchmark_identity_schema.md`, the M2 epic doc's T02 row, at most one pointer line in `docs/engine/performance_contract.md`, `agent-working/`, `docs/REGISTRY.yaml`, and the knowledge index files
 
 ## Related Tickets
 - TCK-20261003-PERF-M2-CLAUSE-INVENTORY (PERF-M2-T01)
@@ -81,6 +81,7 @@ Deliverable: `docs/performance/benchmark_identity_schema.md` (frontmatter `statu
 
 ## Related Stored Artifacts
 - `agent-working/stored_artifacts/TCK-20261003-PERF-M2-CLAUSE-INVENTORY/`
+- `agent-working/stored_artifacts/TCK-20261003-PERF-M2-T02-BENCHMARK-IDENTITY-SCHEMA/` (plan, investigation, test plan)
 
 ## Related Code Areas
 Read only: `tools/perf/`, `tests/perf/`, `tests/tools/perf_assertions.py`, `src/perf/regression_gate.py`, `src/observability/performance/`
@@ -90,13 +91,16 @@ Read only: `tools/perf/`, `tests/perf/`, `tests/tools/perf_assertions.py`, `src/
 - If the inventory shows a current format that already claims capacity, record it as a finding for perf-planner; do not correct it here.
 
 ## Implementation Notes
-
+Deliverable written in one pass from a read-only format inventory (25 formats, F1-F25) and spot-checked claims; see the stored investigation. Scope item 8: `docs/engine/performance_contract.md` already had a pending-schema pointer for T02 (line 51), so the draft link was added inside that sentence, nothing else in the file. The M2 epic's T02 row links the draft. `pytest-benchmark` 5.3.0 key names come from its source; its `machine_info` keys and the exact `pyperf` release are unverified and listed as open questions. Seven findings for perf-planner are in the deliverable section 1 (the main one: `generate_optimization_proof` writes fixed prose conclusions without identity).
 
 ## Test Summary
-
+`tests/docs` + `tests/static` (not slow): 127 passed, 2 skipped, 1 xfailed. The embedded JSON Schema parses and passes `Draft202012Validator.check_schema`. Frontmatter valid.
 
 ## Files Changed
-
+- docs/performance/benchmark_identity_schema.md (new)
+- docs/plans/design_enhancement/performance_optimization/performance_m2_performance_contract_epic.md (T02 row link)
+- docs/engine/performance_contract.md (draft link inside the existing pending sentence)
+- this ticket and its stored artifacts, docs/REGISTRY.yaml, knowledge index, monitoring shards
 
 ## Completion Summary
-
+Provisional benchmark identity and result schema drafted from an inventory of every current result format; nothing implemented, no measurement taken.

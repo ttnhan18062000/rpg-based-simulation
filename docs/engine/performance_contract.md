@@ -48,7 +48,7 @@ Performance claims are ONLY valid when combined with:
 - **RuntimeMode**: (NORMAL — see §7 Adaptive Phase Budget Governor for the ladder; a claim
   measured while the Governor left NORMAL is not a valid baseline claim without stating so)
 
-Every result record also carries (PERF-D4, approved; the record shape is pending `PERF-M2-T02`): the PERF-D2 runtime identity (interpreter version and build flavor, OS, architecture, native-kernel versions) and its DET-PORT tier; the PERF-D1 contract it ran under (Canonical or Live bounded); the `RuntimeMode` sequence observed during sampling; and the processed-work count. A comparison between results with different identities is not valid and returns `INCONCLUSIVE` (§3.3).
+Every result record also carries (PERF-D4, approved; the record shape is pending `PERF-M2-T02`; provisional draft in `docs/performance/benchmark_identity_schema.md`): the PERF-D2 runtime identity (interpreter version and build flavor, OS, architecture, native-kernel versions) and its DET-PORT tier; the PERF-D1 contract it ran under (Canonical or Live bounded); the `RuntimeMode` sequence observed during sampling; and the processed-work count. A comparison between results with different identities is not valid and returns `INCONCLUSIVE` (§3.3).
 
 ### 3.2 measurement Protocol
 These minimums apply to the **capacity run** (§3.3). The **tripwire** is a cheaper projection and uses smaller, stated sizes.
