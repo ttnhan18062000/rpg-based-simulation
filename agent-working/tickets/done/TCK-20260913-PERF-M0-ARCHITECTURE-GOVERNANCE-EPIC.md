@@ -1,10 +1,10 @@
 ---
-status: active
+status: historical
 layer: architecture
 authority: P2
 audience: agent
 ticket_id: TCK-20260913-PERF-M0-ARCHITECTURE-GOVERNANCE-EPIC
-phase: open
+phase: done
 date: 2026-09-13
 tags: [architecture, performance, determinism]
 ---
@@ -32,7 +32,7 @@ tags: [architecture, performance, determinism]
 Performance-optimization M0: architecture governance — decision ownership, conflict triage, PERF-D1..D6
 
 ## Status
-OPEN
+DONE
 
 ## Tier
 epic
@@ -89,7 +89,7 @@ semantic-deferred-work pattern anywhere in `src/`, matching the proposal's own d
       epic's Related Tickets section.
 - [x] Neither child ticket changes runtime behavior, governors, schedulers, hashing, pipeline
       execution, or client-facing behavior.
-- [ ] This epic ticket is not moved to `agent-working/tickets/done/` until `PERF-M0-T01`-`T09` all have a
+- [x] This epic ticket is not moved to `agent-working/tickets/done/` until `PERF-M0-T01`-`T09` all have a
       disposition (done, blocked, or explicitly deferred) — per the source epic doc's own Exit
       Criteria.
 
@@ -98,6 +98,12 @@ semantic-deferred-work pattern anywhere in `src/`, matching the proposal's own d
 - TCK-20260913-PERF-M0-OWNER-TRIAGE
 - TCK-20261003-PERF-PHASE-INVENTORY-SCRIPT (evidence half of `PERF-M0-T08`)
 - TCK-20261003-PERF-HASH-CALLSITE-INVENTORY (evidence half of `PERF-M0-T07`, call sites only)
+- TCK-20261003-PERF-PROFILING-TOOLKIT (PR #296; profiling tooling delivered beside the M0 inventories, not an M0 candidate)
+- TCK-20261003-PERF-M2-CLAUSE-INVENTORY (PR #306; input to T06's clause reconciliation and T09)
+- TCK-20261003-PERF-WALL-CLOCK-READ-INVENTORY (PR #306; PERF-D1 amendment A1)
+- TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT (PR #306; `PERF-M0-T09`)
+- TCK-20261003-PERF-PHASE-COUNT-PINNED-TEXT (PR #306; pairs with T09 items 6-7)
+- TCK-20261003-PERF-M0-EPIC-CLOSURE (closes this epic)
 
 ## Related Docs
 - `docs/plans/design_enhancement/performance_optimization/performance_m0_architecture_governance_epic.md`
@@ -131,12 +137,34 @@ None.
   (hash call-site audit) and `PERF-M0-T08` (re-runnable phase inventory) are the next tickets to
   create, as evidence-only work; `T03`, `T04`, `T06`, and `T09` follow the drafts and need the
   owner's approval where a P1 document changes.
+- 2026-10-03 closure (`TCK-20261003-PERF-M0-EPIC-CLOSURE`). Dispositions, from `agent-working/tickets/done/` and `git log origin/main`:
+
+  | Candidate | Disposition | Closing record |
+  |---|---|---|
+  | T01 source audit | done | `TCK-20260913-PERF-M0-SOURCE-AUDIT` (PR #287) |
+  | T02 owner triage, C-01..C-17 | done | `TCK-20260913-PERF-M0-OWNER-TRIAGE` (PR #287) |
+  | T03 PERF-D1 determinism | closed without a ticket | PERF-D1 with amendment A1 in `docs/architecture/performance_optimization_decisions.md` §3.3, owner-approved 2026-10-03; P1 text applied by `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT` (PR #306). Implementation deferred to `PERF-M1` |
+  | T04 PERF-D2 portability | closed without a ticket | PERF-D2, same file, owner-approved 2026-10-03; P1 text via T09 |
+  | T05 PERF-D3 debt semantics | closed without a ticket | PERF-D3, §3.2 (recorded 2026-09-13) |
+  | T06 PERF-D4 authority | closed without a ticket | PERF-D4, owner-approved 2026-10-03; inputs `TCK-20261003-PERF-M2-CLAUSE-INVENTORY` (PR #306); P1 text via T09 |
+  | T07 PA-03A hash audit, PERF-D5 | done (evidence) and closed (decision) | `TCK-20261003-PERF-HASH-CALLSITE-INVENTORY` (PR #296); PERF-D5 owner-approved 2026-10-03. Mechanism changes deferred to `PERF-M1-T03` |
+  | T08 PA-05A inventory, PERF-D6 | done (evidence) and closed (decision) | `TCK-20261003-PERF-PHASE-INVENTORY-SCRIPT` (PR #296); PERF-D6 owner-approved 2026-10-03. Typed catalog deferred to `PERF-M3-T01` |
+  | T09 P1 reconciliation | done | `TCK-20261003-PERF-M0-T09-P1-DOC-ALIGNMENT` and `TCK-20261003-PERF-PHASE-COUNT-PINNED-TEXT` (PR #306); the owner reviewed and merged the P1 wording |
+
+- Exit Criteria of the M0 epic doc, each checked on 2026-10-03:
+  1. PERF-D1..D6 approved or blocked: met. D1, D2, D4, D5, D6 approved 2026-10-03; D3 closed (decisions file, status lines under §3).
+  2. C-01..C-17 each with evidence status, owner, route, safe interim reading: met (decisions file §2, one row per ID; C-17 resolved).
+  3. P1 owners reconciled the older roadmap and epics: met (PR #306; `design_enhancement_roadmap.md` "Execution plan and authority" records C-01 as applied).
+  4. Exactly one program-navigation outcome: met (`design_enhancement_roadmap.md` "One discoverable execution order", eight steps each naming its gate; the P1 roadmap is the parent authority).
+  5. M1/M2/M3 entry gates evaluable without unstated assumptions: met (the same ordered list, the RPG-core stability entry gate in `performance_optimization_roadmap.md`, and the decision records state each gate).
+- The one acceptance criterion that was unchecked (a disposition for every T01..T09) is now met. The P2 roadmap's "Until M0 closes" sentence was updated to record the closure.
+- Not met and carried forward, not M0 exit criteria: `docs/parity_ledger` schema validation (330 pre-existing errors), and the entry gate, which still bars `src/` edits and baselines for M1+.
 
 ## Test Summary
-
+Bookkeeping only; no code changed. `python3 tools/validate_frontmatter.py` run on the closed epic and the closure ticket (result recorded in the closure ticket).
 
 ## Files Changed
-
+This file; `docs/plans/design_enhancement/performance_optimization/performance_optimization_roadmap.md` (one status sentence).
 
 ## Completion Summary
-
+All nine candidates PERF-M0-T01..T09 are done, closed by an approved decision, or deferred to a named M1/M3 ticket, and every M0 Exit Criterion is met. Closed 2026-10-03 by `TCK-20261003-PERF-M0-EPIC-CLOSURE`.

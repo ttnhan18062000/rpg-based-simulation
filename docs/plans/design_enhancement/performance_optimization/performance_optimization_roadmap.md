@@ -294,7 +294,7 @@ stable.
 | Performance/certification/baseline P1 docs | Sampling, metrics, baseline, and failure rules drift from live gates | M2 reconciles clause by clause before M4 baselines |
 | Live performance and SimQ CI gates | Performance thresholds can warn without failing; missing baselines/calibration can skip; full SimQ audit is informational while known drift remains | M2 defines result/debt policy; M4 separates old debt from new deltas, calibrates trustworthy hard gates, and assigns an expiry/owner to temporary informational status |
 
-Until M0 closes, this folder is a P2 decomposition for review—not implementation authorization.
+M0 closed on 2026-10-03 (`TCK-20261003-PERF-M0-EPIC-CLOSURE`). This folder remains a P2 decomposition beneath the P1 roadmap, and M1–M6 stay gated by the RPG-core stability entry gate above, so it is still not implementation authorization.
 
 ## Completion outcomes
 

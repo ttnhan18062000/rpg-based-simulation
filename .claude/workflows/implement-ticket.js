@@ -1366,8 +1366,8 @@ This ticket is tagged \`performance\` — always include \`tests/unit/perf/\` an
 \`-m "not slow"\`) in the scoped pytest command regardless of which src/ paths were touched. A
 performance-motivated change is frequently outside src/perf/ itself (e.g. a hot-path optimization
 in src/engine/ or src/world/), so the naming-convention mapping in Step 1 alone would miss the real
-regression-gate check (PerfRegressionGate, docs/performance/perf_baseline_policy.md §3) this tag
-exists to trigger.` : ''}
+regression check (the tripwire in tests/perf/test_perf_regression_baseline.py; clause authority is
+docs/engine/performance_contract.md §5) this tag exists to trigger.` : ''}
 ${expectedTestDirs.length > 0 ? `
 Computed floor (from tools/gate_checks/test_scope_coverage_static.py's own expected_test_dirs_for(),
 the exact function the post-agent gate re-checks this command against): the scoped pytest command
