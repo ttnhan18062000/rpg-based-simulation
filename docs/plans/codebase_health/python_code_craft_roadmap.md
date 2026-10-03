@@ -23,7 +23,7 @@ architecture toolchain; a registry of known violations with a ratchet; agent-fac
 review for craft; a package inventory for `src/`; later, a behaviour-preserving refactor lane.
 
 **Out of scope:** RPG features and mechanics, performance work, test architecture (owned by the
-`testing` domain, `tickets/todos/test-architecture/`), resilience and failure modes (D23), and any
+`testing` domain, `tickets/done/test-architecture/`), resilience and failure modes (D23), and any
 change to simulation behaviour.
 
 **Hard constraint (owner, 2026-10-02): no file under `src/` is modified by this plan until the owner
